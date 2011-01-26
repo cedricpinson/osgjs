@@ -77,6 +77,7 @@ osgViewer.Viewer.prototype = {
     },
     draw: function() {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        this.state.applyWithoutProgram();
         this.cullVisitor.renderBin.drawImplementation(this.state);
     },
 
@@ -119,9 +120,11 @@ osgViewer.Viewer.prototype = {
     },
 
     run: function() {
-        if (this.scene !== undefined) {
-            this.view.addChild(this.scene);
+        if (this.scene === undefined) {
+            this.scene = new osg.Node();
         }
+        this.view.addChild(this.scene);
+
         var that = this;
         setInterval( function() { that.frame(); }
                      , 16);
@@ -172,11 +175,13 @@ osgViewer.Viewer.prototype = {
                 manipulator.clientX = pos[0];
                 manipulator.clientY = pos[1];
                 manipulator.pushButton();
+                return false;
             },
             mouseup: function(ev) {
                 manipulator.dragging = false;
                 manipulator.panning = false;
                 manipulator.releaseButton();
+                return false;
             },
             mousemove: function(ev) {
                 var scaleFactor;
@@ -197,37 +202,21 @@ osgViewer.Viewer.prototype = {
                 if (manipulator.dragging || manipulator.panning) {
                     manipulator.update(deltaX, deltaY);
                 }
-            },
-            dblclick: function(ev) {
-                if (manipulator.currentMode === "drag") {
-                    manipulator.currentMode = "pan";
-                } else {
-                    manipulator.currentMode = "drag";
-                }
+                return false;
             }
         });
 
-        if (false) {
-            jQuery(document).mousewheel(function(objEvent, intDelta) {
+         if (true) {
+            jQuery(document).mousewheel(function(objEvent, intDelta, deltaX, deltaY) {
 	        if (intDelta > 0){
-                    view.manipulator.distanceIncrease();
-	        }
-	        else if (intDelta < 0){
-                    view.manipulator.distanceDecrease();
-	        }
-	    });
-        }
-
-        if (true) {
-            jQuery(document).bind({'keydown' : function(event) {
-                if (event.keyCode === 33) { // pageup
                     manipulator.distanceIncrease();
                     return false;
-                } else if (event.keyCode === 34) { //pagedown
+	        } else if (intDelta < 0){
                     manipulator.distanceDecrease();
                     return false;
-                }
-            }});
+	        }
+                return false;
+	    });
         }
     }
 };

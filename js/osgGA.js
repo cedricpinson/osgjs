@@ -1,4 +1,4 @@
-/** -*- compile-command: "jslint-cli init.js" -*-
+/** -*- compile-command: "jslint-cli osgGA.js" -*-
  *
  * Copyright (C) 2010 Cedric Pinson
  *
@@ -23,23 +23,35 @@
  */
 
 osgGA = {};
+osgGA.OrbitManipulatorMode = {
+    Rotate: 0,
+    Pan: 1,
+    Zoom: 2,
+};
 
 osgGA.OrbitManipulator = function () {
-    this.distance = 25;
-    this.target = [ 0,0, 0];
-    this.eye = [ 0, this.distance, 0];
-    this.rotation = osg.Matrix.makeRotate(-Math.PI/3.0, 1,0,0); // osg.Quat.makeIdentity();
-    this.up = [0, 0, 1];
-    this.time = 0.0;
-    this.dx = 0.0;
-    this.dy = 0.0;
-    this.buttonup = true;
-    this.scale = 1.0;
-    this.targetDistance = this.distance;
-    this.currentMode = "rotate";
+    this.init();
 }
 
 osgGA.OrbitManipulator.prototype = {
+    init: function() {
+        this.distance = 25;
+        this.target = [ 0,0, 0];
+        this.eye = [ 0, this.distance, 0];
+        this.rotation = osg.Matrix.makeRotate(-Math.PI/3.0, 1,0,0); // osg.Quat.makeIdentity();
+        this.up = [0, 0, 1];
+        this.time = 0.0;
+        this.dx = 0.0;
+        this.dy = 0.0;
+        this.buttonup = true;
+        this.scale = 1.0;
+        this.targetDistance = this.distance;
+        this.currentMode = osgGA.OrbitManipulatorMode.Rotate;
+    },
+    reset: function() {
+        this.init();
+    },
+
     panModel: function(dx, dy) {
 
         var inv = osg.Matrix.inverse(this.rotation);
@@ -50,6 +62,10 @@ osgGA.OrbitManipulator.prototype = {
 
         osg.Vec3.add(this.target, osg.Vec3.mult(x, -dx), this.target);
         osg.Vec3.add(this.target, osg.Vec3.mult(y, -dy), this.target);
+    },
+
+    zoomModel: function(dx, dy) {
+        this.distance += dy;
     },
 
     computeRotation: function(dx, dy) {
@@ -99,10 +115,12 @@ osgGA.OrbitManipulator.prototype = {
         }
 
         if (Math.abs(dx) + Math.abs(dy) > 0.0) {
-            if (this.currentMode === "drag") {
+            if (this.currentMode === osgGA.OrbitManipulatorMode.Pan) {
                 this.panModel(dx/this.scale, dy/this.scale);
-            } else {
+            } else if ( this.currentMode === osgGA.OrbitManipulatorMode.Rotate) {
                 this.computeRotation(dx, dy);
+            } else if ( this.currentMode === osgGA.OrbitManipulatorMode.Zoom) {
+                this.zoomModel(dx, dy);
             }
         }
     },
@@ -119,13 +137,19 @@ osgGA.OrbitManipulator.prototype = {
         this.timeMotion = (new Date()).getTime();
     },
     distanceIncrease: function() {
+        var d = this.targetDistance + 10/this.scale;
+        if (d > 20.0)
+            return;
         this.distance = this.targetDistance;
-        this.targetDistance += 10/this.scale;
+        this.targetDistance = d;
         this.timeMotion = (new Date()).getTime();
     },
     distanceDecrease: function() {
+        var d = this.targetDistance - 10/this.scale;
+        if (d < 1.0)
+            return;
         this.distance = this.targetDistance;
-        this.targetDistance -= 10/this.scale;
+        this.targetDistance = d;
         this.timeMotion = (new Date()).getTime();
     },
 
