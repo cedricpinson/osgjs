@@ -1943,6 +1943,11 @@ osg.State.prototype = {
         this.programs.pop();
     },
 
+    applyWithoutProgram: function() {
+        this.applyAttributeMap(this.attributeMap);
+        this.applyTextureAttributeMapList(this.textureAttributeMapList);
+    },
+
     apply: function() {
         this.applyAttributeMap(this.attributeMap);
         this.applyTextureAttributeMapList(this.textureAttributeMapList);
@@ -2439,6 +2444,17 @@ osg.Texture.prototype = {
         this.dirty = false;
     },
 
+    isImageReady: function() {
+        var image = this.image;
+        if (image && image.complete) {
+            if (typeof image.naturalWidth !== "undefined" &&  image.naturalWidth === 0) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    },
+
     compile: function() {
         var image = this.image;
         if (image && image.complete) {
@@ -2465,7 +2481,7 @@ osg.Texture.prototype = {
         }
     },
 
-    apply: function(state) {
+    applyOld: function(state) {
         if (!this.textureObject && this.image) {
             this.init();
         }
@@ -2476,6 +2492,39 @@ osg.Texture.prototype = {
             if (this.dirty) {
                 this.compile();
             }
+        }
+    },
+
+    apply: function(state) {
+        osg.log("apply image " , this.image);
+        if (this.image !== undefined) {
+            if (!this.textureObject) {
+                if (this.isImageReady()) {
+                    if (!this.textureObject) {
+                        this.init();
+                    }
+                    gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
+                    this.applyFilterParameter();
+                } else {
+                    gl.bindTexture(gl.TEXTURE_2D, null);
+                }
+            } else {
+                gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
+            }
+        } else if (this.textureHeight !== 0 && this.textureWidth !== 0 ) {
+            if (!this.textureObject) {
+                this.init();
+                gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.textureWidth, this.textureHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                this.applyFilterParameter();
+            } else {
+                gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
+            }
+        } else if (this.textureObject !== undefined) {
+            gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
+        } else {
+            gl.bindTexture(gl.TEXTURE_2D, null);
         }
     },
 
