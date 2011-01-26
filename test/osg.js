@@ -173,12 +173,60 @@ test("osg.Matrix.mult", function() {
 	                 0, 300, 0, 0,
 	                 0, 0, 0.5, 0,
 	                 400, 300, 0.5, 1]), "check postMult");
+
+
+    // test to check equivalent
+    translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
+    scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
+
+    var ident = osg.Matrix.makeIdentity();
+    osg.Matrix.preMult(ident, scale);
+
+    osg.Matrix.preMult(ident, translate);
+    near(ident, [400, 0, 0, 0,
+	                 0, 300, 0, 0,
+	                 0, 0, 0.5, 0,
+	                 400, 300, 0.5, 1]);
+    osg.Matrix.preMult(scale, translate);
+    near(scale, [400, 0, 0, 0,
+	         0, 300, 0, 0,
+	         0, 0, 0.5, 0,
+	         400, 300, 0.5, 1] );
+
 });
 
 
 
-test("osg.Matrix.inverse", function() {
+test("osg.Matrix.inverse4x3", function() {
 
+    var m = [ 1,
+	      0,
+	      0,
+	      0,
+	      0,
+	      1,
+	      0,
+	      0,
+	      0,
+	      0,
+	      1,
+	      0,
+	      10,
+	      10,
+	      10,
+	      1];
+
+    var result = [];
+    var valid = osg.Matrix.inverse4x3(m,result);
+    ok(true, valid);
+    near(result, [1.0, 0, 0, 0,
+                  0  , 1, 0, 0,
+                  0  , 0, 1, 0,
+                  -10  , -10, -10, 1]);
+});
+
+test("osg.Matrix.inverse", function() {
+    var result = [];
     var m = [ -1144.3119511948212,
 	      23.865014474735936,
 	      -0.12300358188893337,
@@ -187,25 +235,34 @@ test("osg.Matrix.inverse", function() {
 	      -1441.499918560778,
 	      -1.619653642392287,
 	      -1.6180339887498945,
-	      0,
-	      0,
-	      0,
-	      0,
+	      0.0,
+	      0.0,
+	      0.0,
+	      0.0,
 	      25190.498321578874,
 	      13410.539616344166,
 	      21.885543812039796,
 	      21.963658268227753];
 
-    ok(true, osg.Matrix.inverse(m));
+    ok(true, osg.Matrix.inverse(m,result));
+
+    var result2 = [];
+    var m2 = [ 0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1375333.5195828325,-4275596.259263198,4514838.703939765,1.0];
+    var valid = osg.Matrix.inverse(m2,result2);
+    ok(true, valid);
+    osg.log("inverse " + result2.toString());
+//    ok(true, valid);
+    
 
 });
 
 test("osg.NodeVisitor", function() {
 
     var FindItemAnchor = function(search) {
+        osg.NodeVisitor.call(this);
         this.search = search
         this.result = [];
-    }
+    };
     FindItemAnchor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         apply: function( node ) {
             if (node.getName !== undefined) {
@@ -353,3 +410,82 @@ test("CheckMixAutogenaratedProgram", function() {
     cullVisitor.renderBin.drawImplementation(state);
 
 });
+
+
+test("osg.ShaderGenerator", function() {
+
+    var state = new osg.State();
+
+    var stateSet0 = new osg.StateSet();
+    stateSet0.setAttributeAndMode(new osg.Material());
+
+    var stateSet1 = new osg.StateSet();
+    stateSet1.setTextureAttributeAndMode(0,new osg.Texture.create(undefined));
+
+    state.pushStateSet(stateSet0);
+    state.pushStateSet(stateSet1);
+    state.apply();
+
+    
+});
+
+
+test("osg.CullVisitor_RenderStage", function() {
+
+    var camera0 = new osg.Camera();
+    camera0.setRenderOrder(osg.Transform.NESTED_RENDER);
+    var node0 = new osg.Node();
+    var node1 = new osg.Node();
+    camera0.addChild(node0);
+    camera0.addChild(node1);
+
+    var camera1 = new osg.Camera();
+    camera1.setRenderOrder(osg.Transform.NESTED_RENDER);
+    var node00 = new osg.Node();
+    var node10 = new osg.Node();
+    camera1.addChild(node00);
+    camera1.addChild(node10);
+
+    camera0.addChild(camera1);
+
+    var cull = new osg.CullVisitorNew();
+    var rs = new osg.RenderStage();
+    var sg = new osg.StateGraph();
+    cull.setRenderStage(rs);
+    cull.setStateGraph(sg);
+
+    camera0.accept(cull);
+
+    ok(cull.rootRenderStage === cull.currentRenderBin, "renderStage should stay the render bin and id " + cull.rootRenderStage === cull.currentRenderBin);
+});
+
+
+test("osg.CullVisitor_RenderStage_test0", function() {
+    var state = new osg.State();
+    var camera0 = new osg.Camera();
+    camera0.setViewport(new osg.Viewport());
+    camera0.setRenderOrder(osg.Transform.NESTED_RENDER);
+    var geom = osg.createTexuredQuad(-10/2.0, 0, -10/2.0,
+                                     20, 0, 0,
+                                     0, 0 , 20,
+                                     1,1);
+    camera0.addChild(geom);
+
+
+    var cull = new osg.CullVisitorNew();
+    var rs = new osg.RenderStage();
+    var sg = new osg.StateGraph();
+    rs.setViewport(camera0.getViewport());
+
+    cull.setRenderStage(rs);
+    cull.setStateGraph(sg);
+
+    camera0.accept(cull);
+
+    ok(cull.rootRenderStage === cull.currentRenderBin, "renderStage should stay the render bin and id " + cull.rootRenderStage === cull.currentRenderBin);
+
+    rs.draw(state);
+    
+
+});
+
