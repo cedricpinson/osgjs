@@ -30,3 +30,5 @@ osgAnimation.EaseOutCubic = function(t) { t = t-1.0; return (t*t*t + 1); };
 osgAnimation.EaseInCubic = function(t) { return (t*t*t); };
 osgAnimation.EaseOutQuart = function(t) { t = t - 1; return - (t*t*t*t -1); };
 osgAnimation.EaseInQuart = function(t) { return (t*t*t*t); };
+osgAnimation.EaseOutElastic = function(t) { return Math.pow(2.0, -10.0 * t) * Math.sin((t - 0.3 / 4.0) * (2.0 * Math.PI) / 0.3) + 1.0; };
+//osgAnimation.EaseInElastic = function(t) { return ; };

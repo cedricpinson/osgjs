@@ -52,8 +52,51 @@ osgGA.OrbitManipulator.prototype = {
         this.init();
     },
 
-    panModel: function(dx, dy) {
+    mouseup: function(ev) {
+        this.dragging = false;
+        this.panning = false;
+        this.releaseButton(ev);
+    },
+    mousedown: function(ev) {
+        this.panning = true;
+        this.dragging = true;
+        var pos = this.convertEventToCanvas(ev);
+        this.clientX = pos[0];
+        this.clientY = pos[1];
+        this.pushButton(ev);
+    },
+    mousemove: function(ev) {
+        if (this.buttonup === true) {
+            return;
+        }
+        var scaleFactor;
+        var curX;
+        var curY;
+        var deltaX;
+        var deltaY;
+        var pos = this.convertEventToCanvas(ev);
+        curX = pos[0];
+        curY = pos[1];
 
+        scaleFactor = 10.0;
+        deltaX = (this.clientX - curX) / scaleFactor;
+        deltaY = (this.clientY - curY) / scaleFactor;
+        this.clientX = curX;
+        this.clientY = curY;
+
+        this.update(deltaX, deltaY);
+        return false;
+    },
+    dblclick: function(ev) {
+    },
+    touchDown: function(ev) {
+    },
+    touchUp: function(ev) {
+    },
+    touchMove: function(ev) {
+    },
+
+    panModel: function(dx, dy) {
         var inv = osg.Matrix.inverse(this.rotation);
         var x = [ osg.Matrix.get(inv, 0,0), osg.Matrix.get(inv, 0,1), 0 ];
         x = osg.Vec3.normalize(x);
@@ -78,7 +121,7 @@ osgGA.OrbitManipulator.prototype = {
         // test that the eye is not too up and not too down to not kill
         // the rotation matrix
         var eye = osg.Matrix.transformVec3([0, 0, this.distance], osg.Matrix.inverse(r2));
-        if (eye[2] > 0.9*this.distance || eye[2] < 0.0) {
+        if (eye[2] > 0.99*this.distance || eye[2] < -.99*this.distance) {
             //discard rotation on y
             this.rotation = r;
             return;

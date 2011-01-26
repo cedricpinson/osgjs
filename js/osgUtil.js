@@ -59,9 +59,8 @@ osgUtil.TriangleIntersect.prototype = {
         var idx;
         var v0,v1,v2;
         var i;
-        var l = node.primitives.length;
         this.index = 0;
-        for (i = 0; i < l; i++) {
+        for (i = 0, l = node.primitives.length; i < l; i++) {
             primitive = node.primitives[i];
             if (primitive.getIndices !== undefined) {
                 vertexes = node.getAttributes().Vertex.getElements();
@@ -335,12 +334,18 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
 
         if (node.primitives) {
             var matrix = [];
-            matrix = osg.Matrix.copy(this.getWindowMatrix(), matrix);
-            matrix = osg.Matrix.preMult(matrix, this.getProjectionMatrix());
-            matrix = osg.Matrix.preMult(matrix, this.getViewMatrix());
-            matrix = osg.Matrix.preMult(matrix, this.getModelMatrix());
+            osg.Matrix.copy(this.getWindowMatrix(), matrix);
+            osg.Matrix.preMult(matrix, this.getProjectionMatrix());
+            osg.Matrix.preMult(matrix, this.getViewMatrix());
+            osg.Matrix.preMult(matrix, this.getModelMatrix());
             
-            var inv = osg.Matrix.inverse(matrix);
+            var inv = [];
+            var valid = osg.Matrix.inverse(matrix, inv);
+            // if matrix is invalid do nothing on this node
+            if (!valid) {
+                return;
+            }
+
             var ns = osg.Matrix.preMultVec3(inv, this.start);
             var ne = osg.Matrix.preMultVec3(inv, this.end);
             this.intersectSegmentWithGeometry(ns, ne, node);

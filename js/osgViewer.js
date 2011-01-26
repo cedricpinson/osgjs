@@ -1,4 +1,4 @@
-/** -*- compile-command: "jslint-cli init.js" -*-
+/** -*- compile-command: "jslint-cli osgViewer.js" -*-
  *
  * Copyright (C) 2010 Cedric Pinson
  *
@@ -26,8 +26,7 @@ var osgViewer = {};
 
 osgViewer.Viewer = function(canvas) {
     try {
-        gl = canvas.getContext("experimental-webgl", {antialias : true});
-        //gl = canvas.getContext("experimental-webgl");
+        gl = canvas.getContext("experimental-webgl", {alpha: true, antialias : true });
         osg.init();
     } catch(e) {
         alert("Could not initialise WebGL, sorry :-(" + e);
@@ -35,7 +34,9 @@ osgViewer.Viewer = function(canvas) {
     }
 
     this.canvas = canvas;
-
+    this.frameRate = 60.0;
+    osgUtil.UpdateVisitor = osg.UpdateVisitor;
+    osgUtil.CullVisitor = osg.CullVisitorNew;
 };
 
 
@@ -49,19 +50,23 @@ osgViewer.Viewer.prototype = {
         var ratio = this.canvas.width/this.canvas.height;
         this.view.setViewport(new osg.Viewport(0,0, this.canvas.width, this.canvas.height));
         this.view.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]));
-        this.view.setProjectionMatrix(osg.Matrix.makePerspective(60, ratio, 0.1, 100.0));
+        this.view.setProjectionMatrix(osg.Matrix.makePerspective(60, ratio, 1.0, 1000.0));
 
         this.view.light = new osg.Light();
+        this.view.getOrCreateStateSet().setAttributeAndMode(new osg.Material());
 
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.clearDepth(1.0);
         gl.enable(gl.DEPTH_TEST);
         gl.enable(gl.BLEND);
-        gl.depthFunc(gl.LEQUAL);
+        gl.enable(gl.CULL_FACE);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-        this.updateVisitor = new osg.UpdateVisitor();
-        this.cullVisitor = new osg.CullVisitor();
+
+        this.updateVisitor = new osgUtil.UpdateVisitor();
+        this.cullVisitor = new osgUtil.CullVisitor();
+
+        this.renderStage = new osg.RenderStage();
+        this.stateGraph = new osg.StateGraph();
+        this.renderStage.setViewport(this.view.getViewport());
 
         //this.cullTime;
         //this.frameTime;
@@ -72,13 +77,22 @@ osgViewer.Viewer.prototype = {
         this.view.accept(this.updateVisitor);
     },
     cull: function() {
+        this.stateGraph.clean();
+        this.renderStage.reset();
+
         this.cullVisitor.reset();
+        this.cullVisitor.setStateGraph(this.stateGraph);
+        this.cullVisitor.setRenderStage(this.renderStage);
+
+        //this.renderStage.setViewport(this.view.getClearDepth());
+        this.renderStage.setClearDepth(this.view.getClearDepth());
+        this.renderStage.setClearColor(this.view.getClearColor());
+        this.renderStage.setClearMask(this.view.getClearMask());
+
         this.view.accept(this.cullVisitor);
     },
     draw: function() {
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        this.state.applyWithoutProgram();
-        this.cullVisitor.renderBin.drawImplementation(this.state);
+        this.renderStage.draw(this.state);
     },
 
     frame: function() {
@@ -124,18 +138,26 @@ osgViewer.Viewer.prototype = {
             this.scene = new osg.Node();
         }
         this.view.addChild(this.scene);
-
         var that = this;
-        setInterval( function() { that.frame(); }
-                     , 16);
+        var call = function() {
+            that.frame();
+        };
+        var t = Math.floor(1.0/this.frameRate*1000.0);
+        osg.log("run loop at " + this.frameRate + " fps");
+        setInterval( call , t);
     }, 
 
-    setupManipulator: function() {
+    getManipulator: function() { return this.manipulator; },
+    setupManipulator: function(manipulator, dontBindDefaultEvent) {
+        if (manipulator === undefined) {
+            manipulator = new osgGA.OrbitManipulator();
+        }
 
-        var manipulator = new osgGA.OrbitManipulator();
         this.manipulator = manipulator;
+        this.manipulator.view = this.view;
+
         var that = this;
-        var convertEventToCanvas = function(e) {
+        this.manipulator.convertEventToCanvas = function(e) {
             var myObject = that.canvas;
             var posx,posy;
 	    if (e.pageX || e.pageY) {
@@ -167,56 +189,78 @@ osgViewer.Viewer.prototype = {
             return [posx,posy];
         };
 
-        jQuery(this.canvas).bind( {
-            mousedown: function(ev) {
-                manipulator.panning = true;
-                manipulator.dragging = true;
-                var pos = convertEventToCanvas(ev);
-                manipulator.clientX = pos[0];
-                manipulator.clientY = pos[1];
-                manipulator.pushButton();
-                return false;
-            },
-            mouseup: function(ev) {
-                manipulator.dragging = false;
-                manipulator.panning = false;
-                manipulator.releaseButton();
-                return false;
-            },
-            mousemove: function(ev) {
-                var scaleFactor;
-                var curX;
-                var curY;
-                var deltaX;
-                var deltaY;
-                var pos = convertEventToCanvas(ev);
-                curX = pos[0];
-                curY = pos[1];
+        if (dontBindDefaultEvent === undefined || dontBindDefaultEvent === false) {
 
-                scaleFactor = 10.0;
-                deltaX = (manipulator.clientX - curX) / scaleFactor;
-                deltaY = (manipulator.clientY - curY) / scaleFactor;
-                manipulator.clientX = curX;
-                manipulator.clientY = curY;
+            var disableMouse = false;
 
-                if (manipulator.dragging || manipulator.panning) {
-                    manipulator.update(deltaX, deltaY);
+            var touchDown = function(ev)
+            {
+                disableMouse = true;
+                return Viewer.getManipulator().touchDown(ev);
+            };
+            var touchUp = function(ev)
+            {
+                disableMouse = true;
+                return Viewer.getManipulator().touchUp(ev);
+            };
+            var touchMove = function(ev)
+            {
+                disableMouse = true;
+                return Viewer.getManipulator().touchMove(ev);
+            };
+
+            document.addEventListener("MozTouchDown", touchDown, false);
+            document.addEventListener("MozTouchUp", touchUp, false);
+            document.addEventListener("MozTouchMove", touchMove, false);
+
+            jQuery(this.canvas).bind( {
+                mousedown: function(ev) {
+                    if (disableMouse === false) {
+                        return manipulator.mousedown(ev);
+                    }
+                },
+                mouseup: function(ev) {
+                    if (disableMouse === false) {
+                        return manipulator.mouseup(ev);
+                    }
+                },
+                mousemove: function(ev) {
+                    if (disableMouse === false) {
+                        return manipulator.mousemove(ev);
+                    }
+                },
+                dblclick: function(ev) {
+                    if (disableMouse === false) {
+                        return manipulator.dblclick(ev);
+                    }
                 }
-                return false;
-            }
-        });
+            });
 
-         if (true) {
-            jQuery(document).mousewheel(function(objEvent, intDelta, deltaX, deltaY) {
-	        if (intDelta > 0){
-                    manipulator.distanceIncrease();
-                    return false;
-	        } else if (intDelta < 0){
-                    manipulator.distanceDecrease();
-                    return false;
-	        }
-                return false;
-	    });
+            if (true) {
+                if (jQuery(document).mousewheel !== undefined) {
+                    jQuery(document).mousewheel(function(objEvent, intDelta, deltaX, deltaY) {
+	                if (intDelta > 0){
+                            manipulator.distanceDecrease();
+	                }
+	                else if (intDelta < 0){
+                            manipulator.distanceIncrease();
+	                }
+                        return false;
+	            });
+                }
+            }
+
+            if (true) {
+                jQuery(document).bind({'keydown' : function(event) {
+                    if (event.keyCode === 33) { // pageup
+                        manipulator.distanceIncrease();
+                        return false;
+                    } else if (event.keyCode === 34) { //pagedown
+                        manipulator.distanceDecrease();
+                        return false;
+                    }
+                }});
+            }
         }
     }
 };

@@ -36,40 +36,72 @@ osg.log = function(str) {
         jQuery("#debug").append("<li> + " + str + "</li>");
     }
 };
+osg.reportErrorGL = false;
 
 osg.init = function() {
     if (Float32Array.set === undefined) {
         Float32Array.prototype.set = function(array) {
-            var l = array.length;
-            for (var i = 0; i < l; ++i ) {
+            for (var i = 0, l = array.length; i < l; ++i ) {
                 this[i] = array[i];
             }
         };
     }
     if (Int32Array.set === undefined) {
         Int32Array.prototype.set = function(array) {
-            var l = array.length;
-            for (var i = 0; i < l; ++i ) {
+            for (var i = 0, l = array.length; i < l; ++i ) {
                 this[i] = array[i];
             }
         };
     }
 };
 
+osg.checkError = function(error) {
+    if (error === 0) {
+        return;
+    }
+    if (error === 0x0500) {
+        osg.log("detected error INVALID_ENUM");
+    } else if (error === 0x0501) {
+        osg.log("detected error INVALID_VALUE");
+    } else if (error === 0x0502) {
+        osg.log("detected error INVALID_OPERATION");
+    } else if (error === 0x0505) {
+        osg.log("detected error OUT_OF_MEMORY");
+    } else if (error === 0x0506) {
+        osg.log("detected error INVALID_FRAMEBUFFER_OPERATION");
+    } else {
+        osg.log("detected error UNKNOWN");
+    }
+};
+
+osg.initGL = function(canvas) {
+        try {
+            gl = canvas.getContext("experimental-webgl", {antialias : true});
+            //gl = canvas.getContext("experimental-webgl");
+            osg.init();
+        } catch(e) {
+
+        }
+
+        if (!gl) {
+            alert("Could not initialise WebGL, sorry :-(");
+        }
+};
+
 osg.objectInehrit = function(base, extras) {
-        function F(){};
-        F.prototype = base;
-        var obj = new F();
-        if(extras) osg.objectMix(obj, extras, false);
-        return obj;
+    function F(){}
+    F.prototype = base;
+    F.prototype.superObject = base;
+    var obj = new F();
+    if(extras)  {osg.objectMix(obj, extras, false); }
+    return obj;
 };
 osg.objectMix = function(obj, properties, test){
-    for (var key in properties){
-        if(!(test && obj[key])) obj[key] = properties[key];
+    for (var key in properties) {
+        if(!(test && obj[key])) { obj[key] = properties[key]; }
     }
     return obj;
 };
-
 
 
 osg.Matrix = {
@@ -85,8 +117,11 @@ osg.Matrix = {
         return ((a[rIndex + 0] * b[0 + c]) + (a[rIndex + 1] * b[4 + c]) + (a[rIndex +2] * b[8 + c]) + (a[rIndex + 3] * b[12 + c]));
     },
 
+    set: function(matrix, row, col, value) {
+        return matrix[row * 4 + col] = value;
+    },
+
     get: function(matrix, row, col) {
-        var r = row*4+col;
         return matrix[row * 4 + col];
     },
 
@@ -130,77 +165,81 @@ osg.Matrix = {
         return result;
     },
 
-    preMult: function(source, other) {
+    /* premult a,b means in math MatrixA = MatrixA * MatrixB*/
+    preMult: function(a, b) {
         var t = [];
         for (var col = 0; col < 4; col++) {
-            t[0] = osg.Matrix.innerProduct(other, source, 0, col);
-            t[1] = osg.Matrix.innerProduct(other, source, 1, col);
-            t[2] = osg.Matrix.innerProduct(other, source, 2, col);
-            t[3] = osg.Matrix.innerProduct(other, source, 3, col);
-            source[0 + col] = t[0];
-            source[4 + col] = t[1];
-            source[8 + col] = t[2];
-            source[12 + col] = t[3];
+            t[0] = osg.Matrix.innerProduct(b, a, 0, col);
+            t[1] = osg.Matrix.innerProduct(b, a, 1, col);
+            t[2] = osg.Matrix.innerProduct(b, a, 2, col);
+            t[3] = osg.Matrix.innerProduct(b, a, 3, col);
+            a[0 + col] = t[0];
+            a[4 + col] = t[1];
+            a[8 + col] = t[2];
+            a[12 + col] = t[3];
         }
-        return source;
+        return a;
     },
 
-    postMult: function(source, other) {
+    /* postmult a,b means in math MatrixA = MatrixB * MatrixA*/
+    postMult: function(a, b) {
         var t = [];
         for (var row = 0; row < 4; row++) {
-            t[0] = osg.Matrix.innerProduct(source, other, row, 0);
-            t[1] = osg.Matrix.innerProduct(source, other, row, 1);
-            t[2] = osg.Matrix.innerProduct(source, other, row, 2);
-            t[3] = osg.Matrix.innerProduct(source, other, row, 3);
-            this.setRow(source, row, t[0], t[1], t[2], t[3]);
+            t[0] = osg.Matrix.innerProduct(a, b, row, 0);
+            t[1] = osg.Matrix.innerProduct(a, b, row, 1);
+            t[2] = osg.Matrix.innerProduct(a, b, row, 2);
+            t[3] = osg.Matrix.innerProduct(a, b, row, 3);
+            this.setRow(a, row, t[0], t[1], t[2], t[3]);
         }
-        return source;
+        return a;
     },
 
-    mult: function(source, other, r) {
-        if (r === source) {
-            return this.postMult(r, other);
+    /* mult a,b means in math result = MatrixB * MatrixA */
+    /* mult a,b is equivalent to preMult(b,a) */
+    mult: function(a, b, r) {
+        if (r === a) {
+            return this.postMult(r, b);
         }
-        if (r === other) {
-            return this.preMult(r, source);
+        if (r === b) {
+            return this.preMult(r, a);
         }
         if (r === undefined) {
             r = [];
         }
 
-        var s00 = source[0];
-        var s01 = source[1];
-        var s02 = source[2];
-        var s03 = source[3];
-        var s10 = source[4];
-        var s11 = source[5];
-        var s12 = source[6];
-        var s13 = source[7];
-        var s20 = source[8];
-        var s21 = source[9];
-        var s22 = source[10];
-        var s23 = source[11];
-        var s30 = source[12];
-        var s31 = source[13];
-        var s32 = source[14];
-        var s33 = source[15];
+        var s00 = a[0];
+        var s01 = a[1];
+        var s02 = a[2];
+        var s03 = a[3];
+        var s10 = a[4];
+        var s11 = a[5];
+        var s12 = a[6];
+        var s13 = a[7];
+        var s20 = a[8];
+        var s21 = a[9];
+        var s22 = a[10];
+        var s23 = a[11];
+        var s30 = a[12];
+        var s31 = a[13];
+        var s32 = a[14];
+        var s33 = a[15];
 
-        var o00 = other[0];
-        var o01 = other[1];
-        var o02 = other[2];
-        var o03 = other[3];
-        var o10 = other[4];
-        var o11 = other[5];
-        var o12 = other[6];
-        var o13 = other[7];
-        var o20 = other[8];
-        var o21 = other[9];
-        var o22 = other[10];
-        var o23 = other[11];
-        var o30 = other[12];
-        var o31 = other[13];
-        var o32 = other[14];
-        var o33 = other[15];
+        var o00 = b[0];
+        var o01 = b[1];
+        var o02 = b[2];
+        var o03 = b[3];
+        var o10 = b[4];
+        var o11 = b[5];
+        var o12 = b[6];
+        var o13 = b[7];
+        var o20 = b[8];
+        var o21 = b[9];
+        var o22 = b[10];
+        var o23 = b[11];
+        var o30 = b[12];
+        var o31 = b[13];
+        var o32 = b[14];
+        var o33 = b[15];
 
         r[0] =  s00 * o00 + s01 * o10 + s02 * o20 + s03 * o30;
         r[1] =  s00 * o01 + s01 * o11 + s02 * o21 + s03 * o31;
@@ -249,8 +288,9 @@ osg.Matrix = {
 
     makeLookAt: function(eye, center, up, result) {
 
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
 
         var f = osg.Vec3.sub(center, eye);
         osg.Vec3.normalize(f, f);
@@ -272,6 +312,25 @@ osg.Matrix = {
         result[12]=  0; result[13]=  0; result[14]=  0;  result[15]=1.0;
 
         osg.Matrix.preMultTranslate(result, osg.Vec3.neg(eye), result);
+        return result;
+    },
+    makeOrtho: function(left, right,
+                        bottom, top,
+                        zNear, zFar, result)
+    {
+        if (result === undefined) {
+            result = [];
+        }
+        // note transpose of Matrix_implementation wr.t OpenGL documentation, since the OSG use post multiplication rather than pre.
+        // we will change this convention later
+        var tx = -(right+left)/(right-left);
+        var ty = -(top+bottom)/(top-bottom);
+        var tz = -(zFar+zNear)/(zFar-zNear);
+        var row = osg.Matrix.setRow;
+        row(result, 0, 2.0/(right-left),              0.0,               0.0, 0.0);
+        row(result, 1,              0.0, 2.0/(top-bottom),               0.0, 0.0);
+        row(result, 2,              0.0,              0.0, -2.0/(zFar-zNear), 0.0);
+        row(result, 3,               tx,               ty,                tz, 1.0);
         return result;
     },
 
@@ -317,7 +376,7 @@ osg.Matrix = {
         }
 
         // check the diagonal
-        if (j==0)
+        if (j===0)
         {
             /* perform instant calculation */
             result[3] = tq[0];
@@ -365,7 +424,7 @@ osg.Matrix = {
         }
 
         var val;
-        if (translate[0] != 0.0) {
+        if (translate[0] !== 0.0) {
             val = translate[0];
             result[12] += val * mat[0];
             result[13] += val * mat[1];
@@ -373,7 +432,7 @@ osg.Matrix = {
             result[15] += val * mat[3];
         }
 
-        if (translate[1] != 0.0) {
+        if (translate[1] !== 0.0) {
             val = translate[1];
             result[12] += val * mat[4];
             result[13] += val * mat[5];
@@ -381,7 +440,7 @@ osg.Matrix = {
             result[15] += val * mat[7];
         }
 
-        if (translate[2] != 0.0) {
+        if (translate[2] !== 0.0) {
             val = translate[2];
             result[12] += val * mat[8];
             result[13] += val * mat[9];
@@ -477,26 +536,6 @@ osg.Matrix = {
             osg.Vec3.copy(tmp, result);
         }
         return result;
-
-        // old version in fact it's a post, I hate this notation, I will update Matrix for regular Math convention after the demo
-        var d = 1.0/(matrix[12] * vector[0] + matrix[13] * vector[1] * matrix[14] * vector[2] + matrix[15]);
-        if (result === undefined) {
-            result = [];
-        }
-        var tmp;
-        if (result === vector) {
-            tmp = [];
-        } else {
-            tmp = result;
-        }
-        tmp[0] = (matrix[0] * vector[0] + matrix[1] * vector[1] + matrix[2] * vector[2] + matrix[3]) * d;
-        tmp[1] = (matrix[4] * vector[0] + matrix[5] * vector[1] + matrix[6] * vector[2] + matrix[7]) * d;
-        tmp[2] = (matrix[8] * vector[0] + matrix[9] * vector[1] + matrix[10] * vector[2] + matrix[11]) * d;
-
-        if (result === vector) {
-            osg.Vec3.copy(tmp, result);
-        }
-        return result;
     },
 
     transformVec4: function(vector, matrix, result) {
@@ -543,9 +582,26 @@ osg.Matrix = {
         return result;
     },
 
-    inverse: function(matrix, result) {
-        if (result === undefined) {
+    inverse: function(matrix, resultArg) {
+        return this.inverse4x4(matrix,resultArg);
+        // it's not working yet, need to debug inverse 4x3
+        if (matrix[3] === 0.0 && matrix[7] === 0.0 && matrix[11] === 0.0 && matrix[15] === 1.0) {
+            return this.inverse4x3(matrix,resultArg);
+        } else {
+            return this.inverse4x4(matrix,resultArg);
+        }
+    },
+
+    /**
+     *  if a result argument is given the return of the function is true or false
+     *  depending if the matrix can be inverted, else if no result argument is given
+     *  the return is identity if the matrix can not be inverted and the matrix overthise
+     */
+    inverse4x4: function(matrix, resultArg) {
+        if (resultArg === undefined) {
             result = [];
+        } else {
+            result = resultArg;
         }
         var tmp_0 = matrix[10] * matrix[15];
         var tmp_1 = matrix[14] * matrix[11];
@@ -581,10 +637,14 @@ osg.Matrix = {
         var t3 = ((tmp_5 * matrix[1] + tmp_8 * matrix[5] + tmp_11 * matrix[9]) -
                   (tmp_4 * matrix[1] + tmp_9 * matrix[5] + tmp_10 * matrix[9]));
 
-        var d1 = (matrix[0] * t0 + matrix[4] * t1 + matrix[8] * t2 + matrix[12] * t3)
+        var d1 = (matrix[0] * t0 + matrix[4] * t1 + matrix[8] * t2 + matrix[12] * t3);
         if (Math.abs(d1) < 1e-5) {
-            //osg.log("Warning can't inverse matrix " + matrix);
-            return osg.Matrix.makeIdentity(result);
+            osg.log("Warning can't inverse matrix " + matrix);
+            if (resultArg !== undefined) {
+                return false;
+            } else {
+                osg.Matrix.makeIdentity(result);
+            }
         }
         var d = 1.0 / d1;
 
@@ -636,6 +696,104 @@ osg.Matrix = {
         result[3*4+1] = out_31;
         result[3*4+2] = out_32;
         result[3*4+3] = out_33;
+
+        if (resultArg !== undefined) {
+            return true;
+        }
+        return result;
+    },
+
+    inverse4x3: function(matrix, resultArg) {
+        if (resultArg === undefined) {
+            result = [];
+        } else {
+            result = resultArg;
+        }
+
+        // _mat[0][0] = r11*r22 - r12*r21;
+        result[0] = matrix[5] * matrix[10] - matrix[6] * matrix[9];
+
+        // _mat[0][1] = r02*r21 - r01*r22;
+        result[1] = matrix[2] * matrix[9] - matrix[1] * matrix[10];
+
+        // _mat[0][2] = r01*r12 - r02*r11;
+        result[2] = matrix[1] * matrix[6] - matrix[2] * matrix[5];
+
+        var r00 = matrix[0];
+        var r10 = matrix[4];
+        var r20 = matrix[8];
+        
+        var one_over_det = 1.0/(r00*result[0] + r10*result[1] + r20*result[2]);
+        r00 *= one_over_det; r10 *= one_over_det; r20 *= one_over_det;  // Saves on later computations
+
+        result[0] *= one_over_det;
+        result[1] *= one_over_det;
+        result[2] *= one_over_det;
+        result[3] = 0.0;
+
+        result[4] = matrix[6]*r20 - r10*matrix[10]; // Have already been divided by det
+        result[5] = r00*matrix[10] - matrix[2]*r20; // same
+        result[6] = matrix[2]*r10 - r00*matrix[6]; // same
+        result[7] = 0.0;
+
+        result[8] = r10*matrix[9] - matrix[5]*r20; // Have already been divided by det
+        result[9] = matrix[1]*r20 - r00*matrix[9]; // same
+        result[10]= r00*matrix[5] - matrix[1]*r10; // same
+        result[11]= 0.0;
+        result[15]= 1.0;
+
+        var d  = matrix[15];
+        var d2 = d-1.0;
+        var tx, ty, tz;
+        if( d2*d2 > 1.0e-6 ) { // Involves perspective, so we must
+                               // compute the full inverse
+            var TPinv = [];
+            result[12] = result[13] = result[15] = 0.0;
+
+            var a = matrix[3];
+            var b = matrix[7];
+            var c = matrix[11];
+            var px = result[0] * a + result[1] * b + result[2]*c;
+            var py = result[4] * a + result[5] * b + result[6]*c;
+            var pz = result[8] * a + result[9] * b + result[10]*c;
+
+            tx = matrix[12];
+            ty = matrix[13];
+            tz = matrix[14];
+            var one_over_s  = 1.0/(d - (tx*px + ty*py + tz*pz));
+
+            tx *= one_over_s; ty *= one_over_s; tz *= one_over_s;  // Reduces number of calculations later on
+            // Compute inverse of trans*corr
+            TPinv[0] = tx*px + 1.0;
+            TPinv[1] = ty*px;
+            TPinv[2] = tz*px;
+            TPinv[3] = -px * one_over_s;
+            TPinv[4] = tx*py;
+            TPinv[5] = ty*py + 1.0;
+            TPinv[6] = tz*py;
+            TPinv[7] = -py * one_over_s;
+            TPinv[8] = tx*pz;
+            TPinv[9] = ty*pz;
+            TPinv[10]= tz*pz + 1.0;
+            TPinv[11]= -pz * one_over_s;
+            TPinv[12]= -tx;
+            TPinv[13]= -ty;
+            TPinv[14]= -tz;
+            TPinv[15]= one_over_s;
+            
+            this.preMult(result, TPinv); // Finish computing full inverse of mat
+        } else {
+
+            tx = matrix[12]; ty = matrix[13]; tz = matrix[14];
+            // Compute translation components of mat'
+            result[12] = -(tx*result[0] + ty*result[4] + tz*result[8]);
+            result[13] = -(tx*result[1] + ty*result[5] + tz*result[9]);
+            result[14] = -(tx*result[2] + ty*result[6] + tz*result[10]);
+        }
+
+        if (resultArg !== undefined) {
+            return true;
+        }
         return result;
     },
 
@@ -810,8 +968,111 @@ osg.Matrix = {
 };
 
 
+osg.Vec2 = {
+    copy: function(src, res) {
+        if (res === undefined) {
+            res = [];
+        }
+        res[0] = src[0];
+        res[1] = src[1];
+        return res;
+    },
+
+    valid: function(vec) {
+        if (isNaN(vec[0])) {
+            return false;
+        }
+        if (isNaN(vec[1])) {
+            return false;
+        }
+        return true;
+    },
+
+    mult: function(vec, a, result) {
+        if (result === undefined) {
+            result = [];
+        }
+        result[0] = vec[0] * a;
+        result[1] = vec[1] * a;
+        return result;
+    },
+
+    length2: function(a) {
+        return a[0]*a[0] + a[1]*a[1];
+    },
+
+    length: function(a) {
+        return Math.sqrt( a[0]*a[0] + a[1]* a[1]);
+    },
+
+    normalize: function(a, result) {
+        if (result === undefined) {
+            result = a;
+        }
+
+        var norm = this.length2(a);
+        if (norm > 0.0) {
+            var inv = 1.0/Math.sqrt(norm);
+            result[0] = a[0] * inv;
+            result[1] = a[1] * inv;
+        }
+        return result;
+    },
+
+    dot: function(a, b) {
+        return a[0]*b[0]+a[1]*b[1];
+    },
+
+    sub: function(a, b, r) {
+        if (r === undefined) {
+            r = [];
+        }
+        r[0] = a[0]-b[0];
+        r[1] = a[1]-b[1];
+        return r;
+    },
+
+    add: function(a, b, r) {
+        if (r === undefined) {
+            r = [];
+        }
+        r[0] = a[0]+b[0];
+        r[1] = a[1]+b[1];
+        return r;
+    },
+
+    neg: function(a, r) {
+        if (r === undefined) {
+            r = [];
+        }
+        r[0] = -a[0];
+        r[1] = -a[1];
+        return r;
+    },
+
+    lerp: function(t, a, b, r) {
+        if (r === undefined) {
+            r = [];
+        }
+        var tmp = 1.0-t;
+        r[0] = a[0]*tmp + t*b[0];
+        r[1] = a[1]*tmp + t*b[1];
+        return r;
+    }
+
+};
 
 osg.Vec3 = {
+    copy: function(src, res) {
+        if (res === undefined) {
+            res = [];
+        }
+        res[0] = src[0];
+        res[1] = src[1];
+        res[2] = src[2];
+        return res;
+    },
+
     cross: function(a, b, result) {
         if (result === undefined) {
             result = [];
@@ -824,12 +1085,15 @@ osg.Vec3 = {
     },
 
     valid: function(vec) {
-        if (isNaN(vec[0]))
+        if (isNaN(vec[0])) {
             return false;
-        if (isNaN(vec[1]))
+        }
+        if (isNaN(vec[1])) {
             return false;
-        if (isNaN(vec[2]))
+        }
+        if (isNaN(vec[2])) {
             return false;
+        }
         return true;
     },
 
@@ -922,8 +1186,9 @@ osg.Vec4 = {
     },
 
     copy: function(src, res) {
-        if (res === undefined)
+        if (res === undefined) {
             res = [];
+        }
         res[0] = src[0];
         res[1] = src[1];
         res[2] = src[2];
@@ -1005,8 +1270,9 @@ osg.Quat = {
     },
 
     sub: function(a, b, result) {
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
         result[0] = a[0] - b[0];
         result[1] = a[1] - b[1];
         result[2] = a[2] - b[2];
@@ -1015,8 +1281,9 @@ osg.Quat = {
     },
 
     add: function(a, b, result) {
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
         result[0] = a[0] + b[0];
         result[1] = a[1] + b[1];
         result[2] = a[2] + b[2];
@@ -1033,8 +1300,9 @@ osg.Quat = {
     },
 
     neg: function(a, result) {
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
         result[0] = -a[0];
         result[1] = -a[1];
         result[2] = -a[2];
@@ -1053,8 +1321,9 @@ osg.Quat = {
         var coshalfangle = Math.cos( 0.5*angle );
         var sinhalfangle = Math.sin( 0.5*angle );
 
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
         result[0] = x * sinhalfangle * inversenorm;
         result[1] = y * sinhalfangle * inversenorm;
         result[2] = z * sinhalfangle * inversenorm;
@@ -1063,8 +1332,9 @@ osg.Quat = {
     },
 
     lerp: function(t, from, to, result){
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
 
         var t1 = 1.0 - t;
         result[0] = from[0]*t1 + quatTo[0]*t;
@@ -1108,8 +1378,9 @@ osg.Quat = {
             scale_to = t ;
         }
 
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
 
         result[0] = from[0]*scale_from + quatTo[0]*scale_to;
         result[1] = from[1]*scale_from + quatTo[1]*scale_to;
@@ -1120,8 +1391,9 @@ osg.Quat = {
 
     // we suppose to have unit quaternion
     conj: function(a, result) {
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
         result[0] = -a[0];
         result[1] = -a[1];
         result[2] = -a[2];
@@ -1129,10 +1401,10 @@ osg.Quat = {
         return result;
     },
 
-    // we suppose to have unit quaternion
     inverse: function(a, result) {
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
         var div = 1.0/ this.length2(a);
         this.conj(a, result);
         result[0] *= div;
@@ -1144,8 +1416,9 @@ osg.Quat = {
 
     // we suppose to have unit quaternion
     mult: function(a, b, result) {
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
         var x = b[3]*a[0] + b[0]*a[3] + b[1]*a[2] - b[2]*a[1];
         var y = b[3]*a[1] - b[0]*a[2] + b[1]*a[3] + b[2]*a[0];
         var z = b[3]*a[2] + b[0]*a[1] - b[1]*a[0] + b[2]*a[3];
@@ -1157,8 +1430,9 @@ osg.Quat = {
         return result;
     },
     div: function(a, b, result) {
-        if (result === undefined)
+        if (result === undefined) {
             result = [];
+        }
         var d = 1.0/b;
         result[0] = a[0] * d;
         result[1] = a[1] * d;
@@ -1173,8 +1447,9 @@ osg.Quat = {
         if (r > 0.00001) {
             s = et * Math.sin(r)/r;
         }
-        if (res === undefined)
+        if (res === undefined) {
             res = [];
+        }
         res[0] = s*a[0];
         res[1] = s*a[1];
         res[2] = s*a[2];
@@ -1189,8 +1464,9 @@ osg.Quat = {
         if (r>0.00001) {
             t= Math.atan2(r,a[3])/r;
         }
-        if (res === undefined)
+        if (res === undefined) {
             res = [];
+        }
         n += a[3]*a[3];
         res[0] = t*a[0];
         res[1] = t*a[1];
@@ -1217,9 +1493,9 @@ osg.Quat = {
     // q2 is qcur+1
     // compute tangent in of q1
     computeTangent: function(q0, qcur, q2, r) {
-        if (r === undefined)
+        if (r === undefined) {
             r = [];
-
+        }
         // first step
         var invq = this.inv(qcur);
         var qa,qb;
@@ -1255,7 +1531,7 @@ osg.Quat = {
 };
 
 
-osg.Uniform = function () { this.transpose = false;}
+osg.Uniform = function () { this.transpose = false;};
 osg.Uniform.prototype = {
     set: function(array) {
         this.data = array;
@@ -1404,7 +1680,7 @@ osg.Uniform.createMatrix4 = function(mat4, name) {
 };
 
 
-osg.Stack = function() {}
+osg.Stack = function() {};
 osg.Stack.create = function()
 {
     var a = [];
@@ -1425,7 +1701,7 @@ osg.ShaderGeneratorType = {
     FragmentMain: 5
 };
 
-osg.Shader = function() {}
+osg.Shader = function() {};
 osg.Shader.prototype = {
     compile: function() {
         this.shader = gl.createShader(this.type);
@@ -1437,7 +1713,7 @@ osg.Shader.prototype = {
                 var tmpText = "\n" + this.text;
                 var splittedText = tmpText.split("\n");
                 var newText = "\n";
-                for (var i = 0; i < splittedText.length; ++i ) {
+                for (var i = 0, l = splittedText.length; i < l; ++i ) {
                     newText += i + " " + splittedText[i] + "\n";
                 }
                 console.log(newText);
@@ -1492,7 +1768,10 @@ osg.Program.prototype = {
             }
 
             this.uniformsCache = {};
+            this.uniformsCache.uniformKeys = [];
             this.attributesCache = {};
+            this.attributesCache.attributeKeys = [];
+
             this.cacheUniformList(this.vertex.text);
             this.cacheUniformList(this.fragment.text);
             //osg.log(this.uniformsCache);
@@ -1507,11 +1786,15 @@ osg.Program.prototype = {
     cacheUniformList: function(str) {
         var r = str.match(/uniform\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (i in r) {
+            for (var i in r) {
                 var uniform = r[i].match(/uniform\s+\w+\s+(\w+)/)[1];
                 var l = gl.getUniformLocation(this.program, uniform);
-                if (l !== -1 && l !== undefined)
-                    this.uniformsCache[uniform] = l;
+                if (l !== undefined && l !== null) {
+                    if (this.uniformsCache[uniform] === undefined) {
+                        this.uniformsCache[uniform] = l;
+                        this.uniformsCache.uniformKeys.push(uniform);
+                    }
+                }
             }
         }
     },
@@ -1519,11 +1802,15 @@ osg.Program.prototype = {
     cacheAttributeList: function(str) {
         var r = str.match(/attribute\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (i in r) {
+            for (var i in r) {
                 var attr = r[i].match(/attribute\s+\w+\s+(\w+)/)[1];
                 var l = gl.getAttribLocation(this.program, attr);
-                if (l !== -1 && l !== undefined)
-                    this.attributesCache[attr] = l;
+                if (l !== -1 && l !== undefined) {
+                    if (this.attributesCache[attr] === undefined) {
+                        this.attributesCache[attr] = l;
+                        this.attributesCache.attributeKeys.push(attr);
+                    }
+                }
             }
         }
     }
@@ -1541,104 +1828,156 @@ osg.Program.create = function(vShader, fShader) {
 };
 
 
-osg.ShaderGenerator = function() {};
+osg.ShaderGenerator = function() {
+    this.cache = [];
+};
 osg.ShaderGenerator.prototype = {
 
-    createTextureAttributeMapList: function(attributes, attributeKeys) {
-        var textureAttributeMapList = [];
-        var element;
-        if (attributes) {
-            jQuery.each(attributes, function(index, attributesForUnit) {
-                            if (attributesForUnit === undefined) {
-                                return;
-                            }
-                            if (textureAttributeMapList[index] === undefined) {
-                                textureAttributeMapList[index] = {};
-                            }
-
-                            jQuery.each(attributesForUnit, function(key, attributeStack) {
-                                            if (attributeStack === undefined) {
-                                                return;
-                                            }
-                                            if (attributeStack.length === 0) {
-                                                element = attributeStack.globalDefault;
-                                            } else {
-                                                element = attributeStack.back();
-                                            }
-                                            // do not take invalid texture
-                                            if (!element.textureObject) {
-                                                return;
-                                            }
-                                            textureAttributeMapList[index][key] = element;
-                                            attributeKeys[element.getType() + index] = true;
-                                        }
-                                       );
-                        }
-                       );
+    getActiveTypeMember: function(state) {
+        // we should check attribute is active or not
+        var types = [];
+        for (var j = 0, k = state.attributeMap.attributeKeys.length; j < k; j++) {
+            var keya = state.attributeMap.attributeKeys[j];
+            var attributeStack = state.attributeMap[keya];
+            if (attributeStack.length === 0 && attributeStack.globalDefault.applyPositionedUniform === undefined) {
+                continue;
+            }
+            if (attributeStack.globalDefault.getOrCreateUniforms !== undefined || attributeStack.globalDefault.writeToShader !== undefined) {
+                types.push(keya);
+            }
         }
-        return textureAttributeMapList;
-    },
 
-    createAttributeMap: function(attributes, attributeKeys) {
-        var attributeMap = {};
-        var element;
-        if (attributes) {
-            jQuery.each(attributes, function(key, attributeStack) {
-                            if (attributeStack === undefined) {
-                                return;
-                            }
-                            if (attributeStack.length === 0) {
-                                element = attributeStack.globalDefault;
-                            } else {
-                                element = attributeStack.back();
-                            }
-                            attributeMap[key] = element;
-                            attributeKeys[key] = true;
-                        }
-                       );
+        for (var i = 0, l = state.textureAttributeMapList.length; i < l; i++) {
+            var attributesForUnit = state.textureAttributeMapList[i];
+            if (attributesForUnit === undefined) {
+                continue;
+            }
+            for (var h = 0, m = attributesForUnit.attributeKeys.length; h < m; h++) {
+                var key = attributesForUnit.attributeKeys[h];
+                var textureAttributeStack = attributesForUnit[key];
+                if (textureAttributeStack.length === 0) {
+                    continue;
+                }
+                if (textureAttributeStack.globalDefault.getOrCreateUniforms !== undefined || textureAttributeStack.globalDefault.writeToShader !== undefined) {
+                    types.push(key+i);
+                }
+            }
         }
-        return attributeMap;
+        return types;
     },
 
-    createAttributes: function(attributes) {
-        var attributeKeys = {};
-        return {
-            'textureAttributeMapList': this.createTextureAttributeMapList(attributes.textureAttributeMapList, attributeKeys),
-            'attributeMap': this.createAttributeMap(attributes.attributeMap, attributeKeys),
-            'attributeKeys': attributeKeys
-        };
+    getActiveAttributeMapKeys: function(state) {
+        var keys = [];
+        for (var j = 0, k = state.attributeMap.attributeKeys.length; j < k; j++) {
+            var keya = state.attributeMap.attributeKeys[j];
+            var attributeStack = state.attributeMap[keya];
+            if (attributeStack.length === 0 && attributeStack.globalDefault.applyPositionedUniform === undefined) {
+                continue;
+            }
+            if (attributeStack.globalDefault.getOrCreateUniforms !== undefined || attributeStack.globalDefault.writeToShader !== undefined) {
+                keys.push(keya);
+            }
+        }
+        return keys;
     },
 
-    getOrCreateProgram: function(attributes) {
+    getActiveTextureAttributeMapKeys: function(state) {
+        var textureAttributeKeys = new Array(state.textureAttributeMapList.length);
+        for (var i = 0, l = state.textureAttributeMapList.length; i < l; i++) {
+            var attributesForUnit = state.textureAttributeMapList[i];
+            if (attributesForUnit === undefined) {
+                continue;
+            }
+            textureAttributeKeys[i] = [];
+            for (var j = 0, m = attributesForUnit.attributeKeys.length; j < m; j++) {
+                var key = attributesForUnit.attributeKeys[j];
+                var textureAttributeStack = attributesForUnit[key];
+                if (textureAttributeStack.length === 0) {
+                    continue;
+                }
+                if (textureAttributeStack.globalDefault.getOrCreateUniforms !== undefined || textureAttributeStack.globalDefault.writeToShader !== undefined) {
+                    textureAttributeKeys[i].push(key);
+                }
+            }
+        }
+        return textureAttributeKeys;
+    },
 
-        var modes = this.createAttributes(attributes);
+    getActiveUniforms: function(state, attributeKeys, textureAttributeKeys) {
+        var uniforms = {};
 
-        for (var i = 0; i < this.cache.length; ++i) {
-            if (this.compareAttributeMap(modes.attributeKeys, this.cache[i].attributeKeys) === 0) {
+        for (var i = 0, l = attributeKeys.length; i < l; i++) {
+            var key = attributeKeys[i];
+
+            if (state.attributeMap[key].globalDefault.getOrCreateUniforms === undefined) {
+                continue;
+            }
+            var attributeUniforms = state.attributeMap[key].globalDefault.getOrCreateUniforms();
+            for (var j = 0, m = attributeUniforms.uniformKeys.length; j < m; j++) {
+                var name = attributeUniforms.uniformKeys[j];
+                var uniform = attributeUniforms[name];
+                uniforms[uniform.name] = uniform;
+            }
+        }
+
+        for (var a = 0, n = textureAttributeKeys.length; a < n; a++) {
+            var unitAttributekeys = textureAttributeKeys[a];
+            if (unitAttributekeys === undefined) {
+                continue;
+            }
+            for (var b = 0, o = unitAttributekeys.length; b < o; b++) {
+                var attrName = unitAttributekeys[b];
+                if (state.textureAttributeMapList[a][attrName].globalDefault === undefined) {
+                    debugger;
+                }
+                var textureAttribute = state.textureAttributeMapList[a][attrName].globalDefault;
+                if (textureAttribute.getOrCreateUniforms === undefined) {
+                    continue;
+                }
+                var texUniforms = textureAttribute.getOrCreateUniforms(a);
+                for (var t = 0, tl = texUniforms.uniformKeys.length; t < tl; t++) {
+                    var tname = texUniforms.uniformKeys[t];
+                    var tuniform = texUniforms[tname];
+                    uniforms[tuniform.name] = tuniform;
+                }
+            }
+        }
+
+        var keys = [];
+        for (var ukey in uniforms) {
+            keys.push(ukey);
+        }
+        uniforms.uniformKeys = keys;
+        return uniforms;
+    },
+
+    getOrCreateProgram: function(state) {
+
+        // first get trace of active attribute and texture attributes to check
+        // if we already have generated a program for this configuration
+        var flattenKeys = this.getActiveTypeMember(state);
+        for (var i = 0, l = this.cache.length; i < l; ++i) {
+            if (this.compareAttributeMap(flattenKeys, this.cache[i].flattenKeys) === 0) {
                 return this.cache[i];
             }
         }
 
+        // extract valid attributes keys with more details
+        var attributeKeys = this.getActiveAttributeMapKeys(state);
+        var textureAttributeKeys = this.getActiveTextureAttributeMapKeys(state);
 
-        var vertexshader = this.getOrCreateVertexShader(modes);
-        var fragmentshader = this.getOrCreateFragmentShader(modes);
 
+        var vertexshader = this.getOrCreateVertexShader(state, attributeKeys, textureAttributeKeys);
+        var fragmentshader = this.getOrCreateFragmentShader(state, attributeKeys, textureAttributeKeys);
         var program = osg.Program.create(
             osg.Shader.create(gl.VERTEX_SHADER, vertexshader),
             osg.Shader.create(gl.FRAGMENT_SHADER, fragmentshader));
 
-        var attributeKeys = {};
-        jQuery.each(modes.attributeMap, function(key, element) {
-                        attributeKeys[key] = true;
-                    });
-        var textureLenght = modes.textureAttributeMapList.length;
-        var operator = function(key, element) {
-                            attributeKeys[element.getType() + textureUnit] = true;
-        };
-        for (var textureUnit = 0; textureUnit < textureLenght; ++textureUnit) {
-            jQuery.each(modes.textureAttributeMapList[textureUnit], operator);
-        }
-        program.attributeKeys = attributeKeys;
+        program.flattenKeys = flattenKeys;
+        program.activeAttributeKeys = attributeKeys;
+        program.activeTextureAttributeKeys = textureAttributeKeys;
+        program.activeUniforms = this.getActiveUniforms(state, attributeKeys, textureAttributeKeys);
+        program.generated = true;
 
         osg.log(program.vertex.text);
         osg.log(program.fragment.text);
@@ -1649,58 +1988,67 @@ osg.ShaderGenerator.prototype = {
 
     compareAttributeMap: function(attributeKeys0, attributeKeys1) {
         var key;
-        for (key in attributeKeys0) {
-            if (attributeKeys1[key] === undefined) {
+        for (var i = 0, l = attributeKeys0.length; i < l; i++) {
+            key = attributeKeys0[i];
+            if (attributeKeys1.indexOf(key) === -1 ) {
                 return 1;
             }
         }
-        for (key in attributeKeys1) {
-            if (attributeKeys0[key] === undefined) {
-                return false;
-            }
+        if (attributeKeys1.length !== attributeKeys0.length) {
+            return -1;
         }
         return 0;
     },
 
-    fillTextureShader: function (attributeMapList, mode) {
+    fillTextureShader: function (attributeMapList, validTextureAttributeKeys, mode) {
         var shader = "";
         var instanciedTypeShader = {};
-        jQuery.each(attributeMapList, function(unit, unitMap) {
-                        // process the array
-                        jQuery.each( unitMap, function(key, element) {
-                                         if (element.writeShaderInstance && instanciedTypeShader[element.getType()] === undefined) {
-                                             element.writeShaderInstance(unit, mode);
-                                             instanciedTypeShader[element.getType()] = true;
-                                         }
 
-                                         if (element.writeToShader) {
-                                             shader += element.writeToShader(unit, mode);
-                                         }
-                                     }
-                                   );
-                    }
-        );
+        for (var i = 0, l = validTextureAttributeKeys.length; i < l; i++) {
+            var attributeKeys = validTextureAttributeKeys[i];
+            if (attributeKeys === undefined) {
+                continue;
+            }
+            var attributes = attributeMapList[i];
+            for (var j = 0, m = attributeKeys.length; j < m; j++) {
+                var key = attributeKeys[j];
+
+                var element = attributes[key].globalDefault;
+
+                if (element.writeShaderInstance !== undefined && instanciedTypeShader[key] === undefined) {
+                    shader += element.writeShaderInstance(i, mode);
+                    instanciedTypeShader[key] = true;
+                }
+
+                if (element.writeToShader) {
+                    shader += element.writeToShader(i, mode);
+                }
+            }
+        }
         return shader;
     },
 
-    fillShader: function (attributeMap, mode) {
+    fillShader: function (attributeMap, validAttributeKeys, mode) {
         var shader = "";
         var instanciedTypeShader = {};
-        // process the array
-        jQuery.each( attributeMap, function(key, element) {
-                         if (element.writeShaderInstance && !instanciedTypeShader[element.getType()]) {
-                             shader += element.writeShaderInstance(mode);
-                             instanciedTypeShader[element.getType()] = true;
-                         }
-                         if (element.writeToShader) {
-                             shader += element.writeToShader(mode);
-                         }
-                     }
-                   );
+
+        for (var j = 0, m = validAttributeKeys.length; j < m; j++) {
+            var key = validAttributeKeys[j];
+            var element = attributeMap[key].globalDefault;
+
+            if (element.writeShaderInstance !== undefined && instanciedTypeShader[key] === undefined) {
+                shader += element.writeShaderInstance(mode);
+                instanciedTypeShader[key] = true;
+            }
+
+            if (element.writeToShader) {
+                shader += element.writeToShader(mode);
+            }
+        }
         return shader;
     },
 
-    getOrCreateVertexShader: function (attributes) {
+    getOrCreateVertexShader: function (state, validAttributeKeys, validTextureAttributeKeys) {
         var i;
         var mode = osg.ShaderGeneratorType.VertexInit;
         var shader = [
@@ -1717,14 +2065,8 @@ osg.ShaderGenerator.prototype = {
         ].join('\n');
 
 
-        if (attributes.textureAttributeMapList) {
-            shader += this.fillTextureShader(attributes.textureAttributeMapList, mode);
-        }
-
-        if (attributes.attributeMap) {
-            shader += this.fillShader(attributes.attributeMap, mode);
-        }
-
+        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
+        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
         mode = osg.ShaderGeneratorType.VertexFunction;
         var func = [
             "",
@@ -1733,13 +2075,8 @@ osg.ShaderGenerator.prototype = {
             "}"].join('\n');
 
         shader += func;
-        if (attributes.textureAttributeMapList) {
-            shader += this.fillTextureShader(attributes.textureAttributeMapList, mode);
-        }
-
-        if (attributes.attributeMap) {
-            shader += this.fillShader(attributes.attributeMap, mode);
-        }
+        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
+        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
 
         var body = [
             "",
@@ -1752,12 +2089,8 @@ osg.ShaderGenerator.prototype = {
 
         mode = osg.ShaderGeneratorType.VertexMain;
 
-        if (attributes.textureAttributeMapList) {
-            shader += this.fillTextureShader(attributes.textureAttributeMapList, mode);
-        }
-        if (attributes.attributeMap) {
-            shader += this.fillShader(attributes.attributeMap, mode);
-        }
+        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
+        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
 
         shader += [
             "}",
@@ -1767,7 +2100,7 @@ osg.ShaderGenerator.prototype = {
         return shader;
     },
 
-    getOrCreateFragmentShader: function (attributes) {
+    getOrCreateFragmentShader: function (state, validAttributeKeys, validTextureAttributeKeys) {
         var i;
         var shader = [
             "",
@@ -1779,12 +2112,8 @@ osg.ShaderGenerator.prototype = {
             ].join("\n");
         var mode = osg.ShaderGeneratorType.FragmentInit;
 
-        if (attributes.textureAttributeMapList) {
-            shader += this.fillTextureShader(attributes.textureAttributeMapList, mode);
-        }
-        if (attributes.attributeMap) {
-            shader += this.fillShader(attributes.attributeMap, mode);
-        }
+        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
+        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
 
         shader += [
             "void main(void) {",
@@ -1793,20 +2122,24 @@ osg.ShaderGenerator.prototype = {
             ].join('\n');
 
         mode = osg.ShaderGeneratorType.FragmentMain;
-        if (attributes.textureAttributeMapList) {
-            var result = this.fillTextureShader(attributes.textureAttributeMapList, mode);
+        if (validTextureAttributeKeys.length > 0) {
+            var result = this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
             shader += result;
 
-            for (i = 0; i < attributes.textureAttributeMapList.length; ++i) {
-                var textureUnit = attributes.textureAttributeMapList[i];
+            for (i = 0, l = validTextureAttributeKeys.length; i < l; ++i) {
+                if (validTextureAttributeKeys[i] === undefined) {
+                    continue;
+                }
+                if (validTextureAttributeKeys[i].length === 0) {
+                    continue;
+                }
+                var textureUnit = state.textureAttributeMapList[i];
                 if (textureUnit.Texture !== undefined ) {
                     shader += "fragColor = fragColor * texColor" + i + ";\n";
                 }
             }
         }
-        if (attributes.attributeMap) {
-            shader += this.fillShader(attributes.attributeMap, mode);
-        }
+        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
 
         shader += [
             "",
@@ -1818,28 +2151,22 @@ osg.ShaderGenerator.prototype = {
     }
 };
 
-osg.ShaderGenerator.create = function ()
-{
-    var sg = new osg.ShaderGenerator();
-    sg.cache = [];
-    return sg;
-};
-
-
 osg.State = function () {
-    this.shaderGeneratorAttributes = {};
     this.currentVBO = null;
     this.vertexAttribList = [];
     this.programs = osg.Stack.create();
     this.stateSets = osg.Stack.create();
     this.uniforms = {};
-
+    this.uniforms.uniformKeys = [];
+    
     this.textureAttributeMapList = [];
 
     this.attributeMap = {};
+    this.attributeMap.attributeKeys = [];
+
     this.modeMap = {};
 
-    this.shaderGenerator = osg.ShaderGenerator.create();
+    this.shaderGenerator = new osg.ShaderGenerator();
 
     this.modelViewMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ModelViewMatrix");
     this.projectionMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ProjectionMatrix");
@@ -1868,13 +2195,14 @@ osg.State.prototype = {
         }
         if (stateset.textureAttributeMapList) {
             var list = stateset.textureAttributeMapList;
-            for (var textureUnit = 0; textureUnit < list.length; textureUnit++)
+            for (var textureUnit = 0, l = list.length; textureUnit < l; textureUnit++)
             {
                 if (list[textureUnit] === undefined) {
                     continue;
                 }
                 if (!this.textureAttributeMapList[textureUnit]) {
                     this.textureAttributeMapList[textureUnit] = {};
+                    this.textureAttributeMapList[textureUnit].attributeKeys = [];
                 }
                 this.pushAttributeMap(this.textureAttributeMapList[textureUnit], list[textureUnit]);
             }
@@ -1901,7 +2229,7 @@ osg.State.prototype = {
         }
         if (stateset.textureAttributeMapList) {
             var list = stateset.textureAttributeMapList;
-            for (var textureUnit = 0; textureUnit < list.length; textureUnit++)
+            for (var textureUnit = 0, l = list.length; textureUnit < l; textureUnit++)
             {
                 if (list[textureUnit] === undefined) {
                     continue;
@@ -1912,6 +2240,49 @@ osg.State.prototype = {
 
         if (stateset.uniforms) {
             this.popUniformsList(this.uniforms, stateset.uniforms);
+        }
+    },
+
+    applyAttribute: function(attribute) {
+        var key = attribute.getTypeMember();
+        var attributeStack = this.attributeMap[key];
+        if (attributeStack === undefined) {
+            attributeStack = osg.Stack.create();
+            this.attributeMap[key] = attributeStack;
+            this.attributeMap[key].globalDefault = attribute.cloneType();
+            this.attributeMap.attributeKeys.push(key);
+        }
+
+        if (attributeStack.lastApplied !== attribute) {
+            if (attribute.apply) {
+                attribute.apply(this);
+            }
+            attributeStack.lastApplied = attribute;
+            attributeStack.asChanged = true;
+        }
+    },
+    applyTextureAttribute: function(unit, attribute) {
+        var key = attribute.getTypeMember();
+
+        if (!this.textureAttributeMapList[unit]) {
+            this.textureAttributeMapList[unit] = {};
+            this.textureAttributeMapList[unit].attributeKeys = [];
+        }
+
+        var attributeStack = this.textureAttributeMapList[unit][key];
+        if (attributeStack === undefined) {
+            attributeStack = osg.Stack.create();
+            this.textureAttributeMapList[unit][key] = attributeStack;
+            attributeStack.globalDefault = attribute.cloneType();
+            this.textureAttributeMapList[unit].attributeKeys.push(key);
+        }
+
+        if (attributeStack.lastApplied !== attribute) {
+            if (attribute.apply) {
+                attribute.apply(this);
+            }
+            attributeStack.lastApplied = attribute;
+            attributeStack.asChanged = true;
         }
     },
 
@@ -1943,11 +2314,6 @@ osg.State.prototype = {
         this.programs.pop();
     },
 
-    applyWithoutProgram: function() {
-        this.applyAttributeMap(this.attributeMap);
-        this.applyTextureAttributeMapList(this.textureAttributeMapList);
-    },
-
     apply: function() {
         this.applyAttributeMap(this.attributeMap);
         this.applyTextureAttributeMapList(this.textureAttributeMapList);
@@ -1959,24 +2325,36 @@ osg.State.prototype = {
             this.programs.lastApplied = program;
         }
 
-        // note that about TextureAttribute that need uniform on unit we would need to improve
-        // the current uniformList ...
-        var uniformList = this.collectUniformsAppliedAttributes(this.shaderGeneratorAttributes);
-        this.applyUniformList(this.uniforms, uniformList);
-    },
+        if (program.generated !== undefined && program.generated === true) {
 
-    collectUniformsAppliedAttributes: function(shaderAttributeMap) {
-        var uniforms = {};
-        jQuery.each(shaderAttributeMap, function(key, attribute) {
-                        if (attribute.getOrCreateUniforms !== undefined) {
-                            jQuery.each(attribute.getOrCreateUniforms(), function(key, uniform) {
-                                            uniforms[uniform.name] = uniform;
-                                        }
-                                       );
-                        }
+            var programUniforms = program.uniformsCache;
+            var activeUniforms = program.activeUniforms;
+            var regenrateKeys = false;
+            for (var i = 0 , l = activeUniforms.uniformKeys.length; i < l; i++) {
+                var name = activeUniforms.uniformKeys[i];
+                var location = programUniforms[name];
+                if (location !== undefined) {
+                    activeUniforms[name].apply(location);
+                } else {
+                    regenrateKeys = true;
+                    delete activeUniforms[name];
+                }
+            }
+            if (regenrateKeys) {
+                var keys = [];
+                for (var key in activeUniforms) {
+                    if (key !== "uniformKeys") {
+                        keys.push(key);
                     }
-                   );
-        return uniforms;
+                }
+                activeUniforms.uniformKeys = keys;
+            }
+        } else {
+            // note that about TextureAttribute that need uniform on unit we would need to improve
+            // the current uniformList ...
+            //var uniformList = this.collectUniformsAppliedAttributes(this.shaderGeneratorAttributes);
+            this.applyUniformList(this.uniforms, {});
+        }
     },
 
     applyUniformList: function(uniformMap, uniformList) {
@@ -1990,144 +2368,39 @@ osg.State.prototype = {
         var key;
 
         var programUniforms = program.uniformsCache;
-        for (uniformKey in programUniforms) {
+
+        for (var i = 0, l = programUniforms.uniformKeys.length; i < l; i++) {
+            var uniformKey = programUniforms.uniformKeys[i];
             location = programUniforms[uniformKey];
-            if (!location)
-                continue;
+
             // get the one in the list
             uniform = uniformList[uniformKey];
 
             // not found ? check on the stack
             if (uniform === undefined) {
                 uniformStack = uniformMap[uniformKey];
-                if (uniformStack === undefined)
+                if (uniformStack === undefined) {
                     continue;
+                }
                 if (uniformStack.length === 0) {
                     uniform = uniformStack.globalDefault;
                 } else {
                     uniform = uniformStack.back();
                 }
             }
-            uniform.apply(programUniforms[uniformKey]);
-        }
-    },
-
-
-    applyUniformList2: function(uniformMap, uniformList) {
-
-        var program = this.getLastProgramApplied();
-        var programObject = program.program;
-        var location;
-        var uniformStack;
-        var uniform;
-        var uniformKeys = {};
-        var key;
-
-        // should optimize this to apply directly if uniformList is undefined
-        // ...
-
-        // get the list of current map uniform
-        for (key in uniformMap) {
-            uniformStack = uniformMap[key];
-            if (uniformStack.length === 0) {
-                uniform = uniformStack.globalDefault;
-            } else {
-                uniform = uniformStack.back();
-            }
-            uniformKeys[key] = uniform;
-        }
-
-        // get the list of current list uniform
-        if (uniformList !== undefined) {
-            for (key in uniformList) {
-                uniformKeys[key] = uniformList[key];
-            }
-        }
-
-        //osg.log(uniformKeys);
-        //if (programObject.uniforms !== undefined) {
-//
-  //      }
-
-        for (key in uniformKeys) {
-            //osg.log("key " + key);
-            uniform = uniformKeys[key];
-            location = gl.getUniformLocation(programObject, uniform.name);
-            if (location === null || location === -1) {
-                continue;
-            }
             uniform.apply(location);
         }
-
     },
-
-    applyAttribute: function (attribute) {
-        var type = attribute.getTypeMember();
-        this.applyAttributeToStack(attribute, this.attributeMap[type]);
-    },
-
-    applyAttributeToStack: function (attribute, attributeStack) {
-        if (attributeStack === undefined) {
-            attributeStack = osg.Stack.create();
-            attributeStack.globalDefault = attribute.cloneType();
-            this.attributeMap[type] = attributeStack;
-        }
-
-        if (attributeStack.lastApplied !== attribute) {
-            if (attribute.apply) {
-                attribute.apply(this);
-                this.shaderGeneratorAttributes[attribute.getTypeMember()] = attribute;
-            }
-            attributeStack.lastApplied = attribute;
-            attributeStack.asChanged = true;
-        }
-    },
-
 
     applyAttributeMap: function(attributeMap) {
-        var that = this;
-        jQuery.each(attributeMap, function(key, attributeStack) {
-                        if (attributeStack === undefined) {
-                            return;
-                        }
-                        var attribute;
-                        if (attributeStack.length === 0) {
-                            attribute = attributeStack.globalDefault;
-                        } else {
-                            attribute = attributeStack.back();
-                        }
+        var attributeStack;
+        
+        for (var i = 0, l = attributeMap.attributeKeys.length; i < l; i++) {
+            var key = attributeMap.attributeKeys[i];
 
-                        that.applyAttributeToStack(attribute, attributeStack);
-                    }
-                   );
-    },
-
-    pushUniformsList: function(uniformMap, uniformList) {
-        var name;
-        jQuery.each(uniformList, function(key, uniform) {
-                        name = uniform.name;
-                        if (uniformMap[name] === undefined) {
-                            uniformMap[name] = osg.Stack.create();
-                            uniformMap[name].globalDefault = uniform;
-                        }
-                        uniformMap[ name ].push(uniform);
-                    }
-                   );
-    },
-    popUniformsList: function(uniformMap, uniformList) {
-        var uniform;
-        var uniformLenght = uniformList.length;
-        jQuery.each(uniformList, function(key, uniform) {
-                        uniformMap[ key ].pop();
-                        }
-                   );
-    },
-
-    applyTextureAttributeMapList: function(textureAttributesMapList) {
-        var textureAttributeMap;
-        var operator = function(key, attributeStack) {
+            attributeStack = attributeMap[key];
             if (attributeStack === undefined) {
-                return;
+                continue;
             }
             var attribute;
             if (attributeStack.length === 0) {
@@ -2135,23 +2408,71 @@ osg.State.prototype = {
             } else {
                 attribute = attributeStack.back();
             }
-            if (attributeStack.lastApplied !== attribute) {
-                gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                attribute.apply(this.state);
-                attributeStack.lastApplied = attribute;
-            }
-        };
 
-        for (var textureUnit = 0; textureUnit < textureAttributesMapList.length; textureUnit++)
-        {
+            if (attributeStack.lastApplied !== attribute) {
+                if (attribute.apply) {
+                    attribute.apply(this);
+                }
+                attributeStack.lastApplied = attribute;
+                attributeStack.asChanged = true;
+            }
+        }
+    },
+
+    pushUniformsList: function(uniformMap, uniformList) {
+        var name;
+        var uniform;
+        for ( var i = 0, l = uniformList.uniformKeys.length; i < l; i++) {
+            var key = uniformList.uniformKeys[i];
+            uniform = uniformList[key];
+            name = uniform.name;
+            if (uniformMap[name] === undefined) {
+                uniformMap[name] = osg.Stack.create();
+                uniformMap[name].globalDefault = uniform;
+                uniformMap.uniformKeys.push(name);
+            }
+            uniformMap[ name ].push(uniform);
+        }
+    },
+    popUniformsList: function(uniformMap, uniformList) {
+        var uniform;
+        for (var i = 0, l = uniformList.uniformKeys.length; i < l; i++) {
+            var key = uniformList.uniformKeys[i];
+            uniformMap[key].pop();
+        }
+    },
+
+    applyTextureAttributeMapList: function(textureAttributesMapList) {
+        var textureAttributeMap;
+
+        for (var textureUnit = 0, l = textureAttributesMapList.length; textureUnit < l; textureUnit++) {
             textureAttributeMap = textureAttributesMapList[textureUnit];
             if (textureAttributeMap === undefined) {
                 continue;
             }
-            jQuery.each(textureAttributeMap, operator);
+
+            for (var i = 0, lt = textureAttributeMap.attributeKeys.length; i < lt; i++) {
+                var key = textureAttributeMap.attributeKeys[i];
+
+                var attributeStack = textureAttributeMap[key];
+                if (attributeStack === undefined) {
+                    continue;
+                }
+
+                var attribute;
+                if (attributeStack.length === 0) {
+                    attribute = attributeStack.globalDefault;
+                } else {
+                    attribute = attributeStack.back();
+                }
+                if (attributeStack.lastApplied !== attribute) {
+                    gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                    attribute.apply(this.state);
+                    attributeStack.lastApplied = attribute;
+                }
+            }
         }
     },
-
     setGlobalDefaultValue: function(attribute) {
         var key = attribute.getTypeMember();
         if (this.attributeMap[key]) {
@@ -2159,33 +2480,37 @@ osg.State.prototype = {
         } else {
             this.attributeMap[key] = osg.Stack.create();
             this.attributeMap[key].globalDefault = attribute;
+
+            this.attributeMap.attributeKeys.push(key);
         }
     },
 
     pushAttributeMap: function(attributeMap,  attributeList) {
         var attributeStack;
-        jQuery.each(attributeList, function(type, attribute) {
-                        if (attributeMap[type] === undefined) {
-                            attributeMap[type] = osg.Stack.create();
-                            attributeMap[type].globalDefault = attribute.cloneType();
-                        }
-                        attributeStack = attributeMap[type];
-                        attributeStack.push(attribute);
-                        attributeStack.asChanged = true;
-                    }
-                   );
-    },
+        for (var i = 0, l = attributeList.attributeKeys.length; i < l; i++ ) {
+            var type = attributeList.attributeKeys[i];
+            var attribute = attributeList[type];
+            if (attributeMap[type] === undefined) {
+                attributeMap[type] = osg.Stack.create();
+                attributeMap[type].globalDefault = attribute.cloneType();
 
+                attributeMap.attributeKeys.push(type);
+            }
+
+            attributeStack = attributeMap[type];
+            attributeStack.push(attribute);
+            attributeStack.asChanged = true;
+        }
+    },
     popAttributeMap: function(attributeMap,  attributeList) {
         var attributeStack;
-        jQuery.each(attributeList, function(type, attribute) {
-                        attributeStack = attributeMap[type];
-                        attributeStack.pop(attribute);
-                        attributeStack.asChanged = true;
-                    }
-                   );
+        for (var i = 0, l = attributeList.attributeKeys.length; i < l; i++) {
+            type = attributeList.attributeKeys[i];
+            attributeStack = attributeMap[type];
+            attributeStack.pop();
+            attributeStack.asChanged = true;
+        }
     },
-
 
     disableVertexAttribsExcept: function(indexList) {
         var that = indexList;
@@ -2193,29 +2518,11 @@ osg.State.prototype = {
             return (that.indexOf(element) < 0 );
         });
 
-        disableArray.forEach(function (element, index, array) {
-            gl.disableVertexAttribArray(element);
-        });
+        for (var i = 0, l = disableArray.length; i < l; i++) {
+            gl.disableVertexAttribArray(disableArray[i]);
+        }
 
         this.vertexAttribList = indexList;
-    },
-
-
-    applyTexture10: function(unit, texture) {
-        // todo: check if it's used ?
-        if (this.currentVBO !== array) {
-            if (!array.buffer) {
-                array.init();
-            }
-            gl.bindBuffer(array.type, array.buffer);
-            this.currentVBO = array;
-        }
-        if (array.dirty) {
-            array.compile();
-        }
-        this.vertexAttribList.push(attrib);
-        gl.enableVertexAttribArray(attrib);
-        gl.vertexAttribPointer(attrib, array.itemSize, gl.FLOAT, normalize, 0, 0);
     },
 
     setIndexArray: function(array) {
@@ -2250,28 +2557,35 @@ osg.State.prototype = {
         this.vertexAttribList.push(attrib);
         gl.enableVertexAttribArray(attrib);
         gl.vertexAttribPointer(attrib, array.itemSize, gl.FLOAT, normalize, 0, 0);
-    },
-    getUniformMap: function() { return this.uniforms; }
+    }
 
 };
 
 osg.State.create = function() {
     var state = new osg.State();
-    //gl.hint(gl.NICEST, gl.GENERATE_MIPMAP_HINT);
+    gl.hint(gl.NICEST, gl.GENERATE_MIPMAP_HINT);
     return state;
 };
 
 
-osg.StateSet = function () { this.id = osg.instance++; }
+osg.StateSet = function () { this.id = osg.instance++; };
 osg.StateSet.prototype = {
     addUniform: function (uniform) {
         if (!this.uniforms) {
             this.uniforms = {};
+            this.uniforms.uniformKeys = [];
         }
-        this.uniforms[uniform.name] = uniform;
+        var name = uniform.name;
+        this.uniforms[name] = uniform;
+        if (this.uniforms.uniformKeys.indexOf(name) === -1) {
+            this.uniforms.uniformKeys.push(name);
+        }
     },
     getUniformMap: function () {
         return this.uniforms;
+    },
+    setTextureAttributeAndMode: function (unit, attribute, mode) {
+        this.setTextureAttribute(unit, attribute);
     },
     setTextureAttribute: function (unit, attribute) {
         if (!this.textureAttributeMapList) {
@@ -2279,19 +2593,31 @@ osg.StateSet.prototype = {
         }
         if (this.textureAttributeMapList[unit] === undefined) {
             this.textureAttributeMapList[unit] = {};
+            this.textureAttributeMapList[unit].attributeKeys = [];
         }
-        this.textureAttributeMapList[unit][attribute.getTypeMember()] = attribute;
+        var name = attribute.getTypeMember();
+        this.textureAttributeMapList[unit][name] = attribute;
+        if (this.textureAttributeMapList[unit].attributeKeys.indexOf(name) === -1) {
+            this.textureAttributeMapList[unit].attributeKeys.push(name);
+        }
     },
     setTexture: function(unit, attribute) {
         this.setTextureAttribute(unit,attribute);
     },
-
+    getTextureAttributeMap: function(unit) {
+        return this.textureAttributeMapList[unit];
+    },
     setAttributeAndMode: function(a) { this.setAttribute(a); },
     setAttribute: function (attribute) {
         if (!this.attributeMap) {
             this.attributeMap = {};
+            this.attributeMap.attributeKeys = [];
         }
-        this.attributeMap[attribute.getTypeMember()] = attribute;
+        var name = attribute.getTypeMember();
+        this.attributeMap[name] = attribute;
+        if (this.attributeMap.attributeKeys.indexOf(name) === -1) {
+            this.attributeMap.attributeKeys.push(name);
+        }
     },
     getAttributeMap: function() { return this.attributeMap; }
 };
@@ -2303,7 +2629,8 @@ osg.StateSet.create = function() {
 
 osg.Node = function () {
     this.children = [];
-}
+    this.nodeMask = ~0;
+};
 osg.Node.prototype = {
     getOrCreateStateSet: function() {
         if (this.stateset === undefined) {
@@ -2313,11 +2640,9 @@ osg.Node.prototype = {
     },
     getStateSet: function() { return this.stateset; },
     accept: function(nv) { 
-        if (this.nodeMask === undefined) 
+        if (nv.validNodeMask(this)) {
             nv.apply(this);
-        else if (nv.validNodeMask(this)) {
-            nv.apply(this);
-        } 
+        }
     },
     setNodeMask: function(mask) { this.nodeMask = mask; }, 
     getNodeMask: function(mask) { return this.nodeMask; },
@@ -2330,9 +2655,8 @@ osg.Node.prototype = {
     getChildren: function() { return this.children; },
     removeChildren: function () { this.children.length = 0; },
     
-    removeChild: function (child) {
-        var l = this.children.length;
-        for (var i = 0; i < l; i++) {
+    removeChildOld: function (child) {
+        for (var i = 0, l = this.children.length; i < l; i++) {
             if (this.children[i] === child) {
                 if (i != l-1) {
                     this.children[i] = this.children[l-1];
@@ -2343,24 +2667,27 @@ osg.Node.prototype = {
             }
         }
     },
-
-    traverseOld: function (visitor) {
-        var l = this.children.length;
-        for (var i = 0; i < l; i++) {
-            var child = this.children[i];
-            if (child.nodeMask !== undefined)
-                child.accept(visitor);
-            else
-                visitor.apply(child);
+    // preserve order
+    removeChild: function (child) {
+        for (var i = 0, l = this.children.length; i < l; i++) {
+            if (this.children[i] === child) {
+                this.children.splice(i, 1);
+            }
         }
     },
+
     traverse: function (visitor) {
         for (var i = 0, l = this.children.length; i < l; i++) {
             var child = this.children[i];
-            if (child.nodeMask !== undefined)
-                child.accept(visitor);
-            else
+            child.accept(visitor);
+        }
+    },
+    traverseNew: function (visitor) {
+        for (var i = 0, l = this.children.length; i < l; i++) {
+            var child = this.children[i];
+            if (visitor.validNodeMask(child)) {
                 visitor.apply(child);
+            }
         }
     }
 };
@@ -2392,44 +2719,60 @@ osg.Projection.prototype = osg.objectInehrit(osg.Node.prototype, {
     setProjectionMatrix: function(m) { this.projection = m; }
 });
 osg.Projection.create = function() {
-    var p = new osg.Projection;
+    var p = new osg.Projection();
     return p;
 };
 
 
 
 osg.Texture = function() {
-    this.mag_filter = gl.LINEAR;
-    this.min_filter = gl.LINEAR_MIPMAP_NEAREST;
-    this.wrap_s = gl.REPEAT;
-    this.wrap_t = gl.REPEAT;
+    this.mag_filter = 'LINEAR';
+    this.min_filter = 'LINEAR';
+    this.wrap_s = 'CLAMP_TO_EDGE';
+    this.wrap_t = 'CLAMP_TO_EDGE';
+    this.textureWidth = 0;
+    this.textureHeight = 0;
+    this.target = 'TEXTURE_2D';
 };
 
 osg.Texture.prototype = {
     attributeType: "Texture",
-    cloneType: function() { var t = osg.Texture.create(undefined); t.default_type = true; return t;},
+    cloneType: function() { var t = new osg.Texture(); t.default_type = true; return t;},
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType; },
+    getOrCreateUniforms: function(unit) {
+        if (osg.Texture.uniforms === undefined) {
+            osg.Texture.uniforms = [];
+        }
+        if (osg.Texture.uniforms[unit] === undefined) {
+            var name = this.getType() + unit;
+            var uniforms = {};
+            uniforms[name] = osg.Uniform.createInt1(unit, name);
+            var uniformKeys = [name];
+            uniforms.uniformKeys = uniformKeys;
 
+            osg.Texture.uniforms[unit] = uniforms;
+        }
+        return osg.Texture.uniforms[unit];
+    },
+    setTextureSize: function(w,h) {
+        this.textureWidth = w;
+        this.textureHeight = h;
+    },
     init: function() {
         if (!this.textureObject) {
             this.textureObject = gl.createTexture();
             this.dirty = true;
         }
     },
-    setWrapS: function(value) {
-        this.wrap_s = value;
-    },
-    setWrapT: function(value) {
-        this.wrap_t = value;
-    },
+    getWidth: function() { return this.textureWidth; },
+    getHeight: function() { return this.textureHeight; },
 
-    setMinFilter: function(value) {
-        this.min_filter = value;
-    },
-    setMagFilter: function(value) {
-        this.mag_filter = value;
-    },
+    setWrapS: function(value) { this.wrap_s = value; },
+    setWrapT: function(value) { this.wrap_t = value; },
+
+    setMinFilter: function(value) { this.min_filter = value; },
+    setMagFilter: function(value) { this.mag_filter = value; },
 
     setImage: function(img) {
         this.image = img;
@@ -2440,6 +2783,7 @@ osg.Texture.prototype = {
         this.init();
         gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+        this.setTextureSize(canvas.width, canvas.height);
         this.applyFilterParameter();
         this.dirty = false;
     },
@@ -2469,34 +2813,19 @@ osg.Texture.prototype = {
     },
 
     applyFilterParameter: function() {
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.mag_filter);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.min_filter);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.wrap_s);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this.wrap_t);
-        if (this.min_filter === gl.NEAREST_MIPMAP_NEAREST ||
-            this.min_filter === gl.LINEAR_MIPMAP_NEAREST ||
-            this.min_filter === gl.NEAREST_MIPMAP_LINEAR ||
-            this.min_filter === gl.LINEAR_MIPMAP_LINEAR) {
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl[this.mag_filter]);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl[this.min_filter]);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl[this.wrap_s]);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl[this.wrap_t]);
+        if (this.min_filter === 'NEAREST_MIPMAP_NEAREST' ||
+            this.min_filter === 'LINEAR_MIPMAP_NEAREST' ||
+            this.min_filter === 'NEAREST_MIPMAP_LINEAR' ||
+            this.min_filter === 'LINEAR_MIPMAP_LINEAR') {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
     },
 
-    applyOld: function(state) {
-        if (!this.textureObject && this.image) {
-            this.init();
-        }
-        if (!this.textureObject) {
-            gl.bindTexture(gl.TEXTURE_2D, null);
-        } else {
-            gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-            if (this.dirty) {
-                this.compile();
-            }
-        }
-    },
-
     apply: function(state) {
-        osg.log("apply image " , this.image);
         if (this.image !== undefined) {
             if (!this.textureObject) {
                 if (this.isImageReady()) {
@@ -2541,11 +2870,11 @@ osg.Texture.prototype = {
             break;
         case osg.ShaderGeneratorType.FragmentInit:
             str = "varying vec2 FragTexCoord" + unit +";\n";
-            str += "uniform sampler2D TexUnit" + unit +";\n";
+            str += "uniform sampler2D Texture" + unit +";\n";
             str += "vec4 texColor" + unit + ";\n";
             break;
         case osg.ShaderGeneratorType.FragmentMain:
-            str = "texColor" + unit + " = texture2D( TexUnit" + unit + ", FragTexCoord" + unit + ".xy );\n";
+            str = "texColor" + unit + " = texture2D( Texture" + unit + ", FragTexCoord" + unit + ".xy );\n";
             break;
         }
         return str;
@@ -2576,9 +2905,48 @@ osg.Texture.createFromCanvas = function(ctx) {
 };
 
 
+osg.Depth = function (func, near, far, writeMask) {
+    this.func = 'LESS';
+    this.near = 0.0;
+    this.far = 1.0;
+    this.writeMask = true;
+
+    if (func !== undefined) {
+        this.func = func;
+    }
+    if (near !== undefined) {
+        this.near = near;
+    }
+    if (far !== undefined) {
+        this.far = far;
+    }
+    if (writeMask !== undefined) {
+        this.writeMask = far;
+    }
+};
+osg.Depth.prototype = {
+    attributeType: "Depth",
+    cloneType: function() {return new osg.Depth(); },
+    getType: function() { return this.attributeType;},
+    getTypeMember: function() { return this.attributeType;},
+    setRange: function(near, far) { this.near = near; this.far = far; },
+    setWriteMask: function(mask) { this.mask = mask; },
+    apply: function(state) {
+        if (this.func === 'DISABLE') {
+            gl.disable(gl.DEPTH_TEST);
+        } else {
+            gl.enable(gl.DEPTH_TEST);
+            gl.depthFunc(gl[this.func]);
+            gl.depthMask(this.writeMask);
+            gl.depthRange(this.near, this.far);
+        }
+    }
+};
+
+
 osg.BlendFunc = function (source, destination) {
-    this.sourceFactor = gl.ONE;
-    this.destinationFactor = gl.ZERO;
+    this.sourceFactor = 'ONE';
+    this.destinationFactor = 'ZERO';
     if (source !== undefined) {
         this.sourceFactor = source;
     }
@@ -2591,11 +2959,123 @@ osg.BlendFunc.prototype = {
     cloneType: function() {return new osg.BlendFunc(); },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
-    apply: function(state)
-    {
-        gl.blendFunc(this.sourceFactor, this.destinationFactor);
+    apply: function(state) { 
+        gl.blendFunc(gl[this.sourceFactor], gl[this.destinationFactor]); 
     }
 };
+
+osg.LineWidth = function (lineWidth) {
+    this.lineWidth = 1.0;
+    if (lineWidth !== undefined) {
+        this.lineWidth = lineWidth;
+    }
+};
+osg.LineWidth.prototype = {
+    attributeType: "LineWidth",
+    cloneType: function() {return new osg.LineWidth(); },
+    getType: function() { return this.attributeType;},
+    getTypeMember: function() { return this.attributeType;},
+    apply: function(state) { gl.lineWidth(this.lineWidth); }
+};
+
+
+osg.CullFace = function (mode) {
+    this.mode = 'BACK';
+    if (mode !== undefined) {
+        this.mode = mode;
+    }
+};
+osg.CullFace.prototype = {
+    attributeType: "CullFace",
+    cloneType: function() {return new osg.CullFace(); },
+    getType: function() { return this.attributeType;},
+    getTypeMember: function() { return this.attributeType;},
+    apply: function(state) { 
+        if (this.mode === 'DISABLE') {
+            gl.disable(gl.CULL_FACE);
+        } else {
+            gl.enable(gl.CULL_FACE);
+            gl.cullFace(gl[this.mode]);
+        }
+    }
+};
+
+
+osg.FrameBufferObject = function () {
+    this.fbo = undefined;
+    this.attachments = [];
+};
+osg.FrameBufferObject.prototype = {
+    attributeType: "FrameBufferObject",
+    cloneType: function() {return new osg.FrameBufferObject(); },
+    getType: function() { return this.attributeType;},
+    getTypeMember: function() { return this.attributeType;},
+    setAttachment: function(attachment) { this.attachments.push(attachment); },
+    apply: function(state) {
+        var status;
+        if (this.attachments.length > 0) {
+            if (this.fbo === undefined) {
+                this.fbo = gl.createFramebuffer();
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
+
+                for (var i = 0, l = this.attachments.length; i < l; ++i) {
+                    var texture = this.attachments[i].texture;
+
+                    // apply on unit 0 to init it
+                    state.applyTextureAttribute(1, texture);
+
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, gl[texture.target], texture.textureObject, this.attachments[i].level);
+                    //gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.textureObject, 0);
+                }
+
+                status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+                if (status !== 0x8CD5) {
+                    osg.log("framebuffer error check " + status);
+                }
+
+            } else {
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
+                status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+                if (status !== 0x8CD5) {
+                    osg.log("framebuffer error check " + status);
+                }
+            }
+        } else {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        }
+    }
+};
+
+osg.Viewport = function (x,y, w, h) {
+    if (x === undefined) { x = 0; }
+    if (y === undefined) { y = 0; }
+    if (w === undefined) { w = 800; }
+    if (h === undefined) { h = 600; }
+
+    var xstart = x;
+    var ystart = y;
+    var width = w;
+    var height = h;
+    this.x = function() { return xstart; };
+    this.y = function() { return ystart; };
+    this.width = function() { return width; };
+    this.height = function() { return height; };
+    this.computeWindowMatrix = function() {
+        var translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
+        var scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
+        var offset = osg.Matrix.makeTranslate(xstart,ystart,0.0);
+        return osg.Matrix.mult(osg.Matrix.mult(translate, scale, translate), offset, offset);
+    };
+};
+osg.Viewport.prototype = {
+    attributeType: "Viewport",
+    cloneType: function() {return new osg.Viewport(); },
+    getType: function() { return this.attributeType;},
+    getTypeMember: function() { return this.attributeType;},
+    apply: function(state) { gl.viewport(this.x(), this.y(), this.width(), this.height()); }
+};
+
 
 osg.Material = function () {
     this.ambient = [ 0.2, 0.2, 0.2, 1.0 ];
@@ -2618,6 +3098,11 @@ osg.Material.prototype = {
                                   "emission": osg.Uniform.createFloat4([ 0, 0, 0, 0], 'MaterialEmission') ,
                                   "shininess": osg.Uniform.createFloat1([ 0], 'MaterialShininess')
                                 };
+            var uniformKeys = [];
+            for (var k in osg.Material.uniforms) {
+                uniformKeys.push(k);
+            }
+            osg.Material.uniforms.uniformKeys = uniformKeys;
         }
         return osg.Material.uniforms;
     },
@@ -2695,6 +3180,12 @@ osg.Light.prototype = {
                                                      "enable": osg.Uniform.createInt1( 0, this.getParameterName('enable')),
                                                      "matrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('matrix'))
                                                    };
+
+            var uniformKeys = [];
+            for (var k in osg.Light.uniforms[this.getTypeMember()]) {
+                uniformKeys.push(k);
+            }
+            osg.Light.uniforms[this.getTypeMember()].uniformKeys = uniformKeys;
         }
         return osg.Light.uniforms[this.getTypeMember()];
     },
@@ -2888,7 +3379,12 @@ osg.BufferArray.create = function(type, elements, itemSize) {
 };
 
 
-osg.DrawArray = function () {}
+osg.DrawArray = function (mode, first, count) 
+{
+    this.mode = mode;
+    this.first = first;
+    this.count = count;
+};
 osg.DrawArray.prototype = {
     draw: function(state) {
         gl.drawArrays(this.mode, this.first, this.count);
@@ -2898,13 +3394,11 @@ osg.DrawArray.prototype = {
     getFirst: function() { return this.first; }
 };
 osg.DrawArray.create = function(mode, first, count) {
-    var d = new osg.DrawArray();
-    d.mode = mode;
-    d.first = first;
-    d.count = count;
+    var d = new osg.DrawArray(mode, first, count);
     return d;
 };
 
+osg.DrawArrays = osg.DrawArray;
 
 
 osg.DrawElements = function (mode, indices) {
@@ -2955,49 +3449,27 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
     getAttributes: function() { return this.attributes; },
 
     drawImplementation: function(state) {
+        
         var program = state.getLastProgramApplied();
-        var i;
         var attribute;
         var attributeList = [];
         var attributesCache = program.attributesCache;
 
-        for (var key in attributesCache) {
+        for (var i = 0, l = attributesCache.attributeKeys.length; i < l; i++) {
+            var key = attributesCache.attributeKeys[i];
             attribute = attributesCache[key];
-            if (attribute !== undefined && attribute !== -1) {
-                if (this.attributes[key] === undefined)
-                    continue;
-                attributeList.push(attribute);
-                state.setVertexAttribArray(attribute, this.attributes[key], false);
+
+            if (this.attributes[key] === undefined) {
+                continue;
             }
+            attributeList.push(attribute);
+            state.setVertexAttribArray(attribute, this.attributes[key], false);
         }
 
         var primitives = this.primitives;
-        var l;
         state.disableVertexAttribsExcept(attributeList);
-        for (i = 0, l = primitives.length; i < l; ++i) {
-            primitives[i].draw(state);
-        }
-    },
-
-    drawImplementationObselete: function(state) {
-        var program = state.getLastProgramApplied().program;
-        var i;
-        var attribute;
-        var attributeList = [];
-
-        for (var key in this.attributes) {
-            attribute = gl.getAttribLocation(program, key);
-            if (attribute !== -1) {
-                attributeList.push(attribute);
-                state.setVertexAttribArray(attribute, this.attributes[key], false);
-            }
-        }
-
-        var primitives = this.primitives;
-        var l;
-        state.disableVertexAttribsExcept(attributeList);
-        for (i = 0, l = primitives.length; i < l; ++i) {
-            primitives[i].draw(state);
+        for (var j = 0, m = primitives.length; j < m; ++j) {
+            primitives[j].draw(state);
         }
     }
 });
@@ -3008,68 +3480,50 @@ osg.Geometry.create = function() {
 
 
 
-
-osg.Viewport = function (x,y, w, h) {
-    var xstart = x;
-    var ystart = x;
-    var width = w;
-    var height = h;
-    this.x = function() { return xstart; }
-    this.y = function() { return ystart; }
-    this.width = function() { return width; }
-    this.height = function() { return height; }
-    this.computeWindowMatrix = function() {
-        var translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
-        var scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
-        var offset = osg.Matrix.makeTranslate(xstart,ystart,0.0);
-        return osg.Matrix.mult(osg.Matrix.mult(translate, scale, translate), offset, offset);
-    };
-};
-
-osg.RenderTargetImplementationType = {
-    FRAME_BUFFER_OBJECT: 0,
-    FRAME_BUFFER: 1
+osg.Transform = {
+    RELATIVE_RF: 0,
+    ABSOLUTE_RF: 1,
 };
 
 osg.Camera = function () {
+    if (osg.Camera.PRE_RENDER === undefined) {
+        osg.Camera.PRE_RENDER = 0;
+        osg.Camera.NESTED_RENDER = 1;
+        osg.Camera.POST_RENDER = 2;
+    }
+
     osg.Node.call(this);
 
-    this.setViewport(new osg.Viewport(0, 0, 800, 600));
-    this.setClearColor([0, 0, 0, 0]);
-    //this.setClearMask(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    this.viewport = undefined;
+    this.setClearColor([0, 0, 0, 1.0]);
+    this.setClearDepth(1.0);
+    this.setClearMask(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     this.setViewMatrix(osg.Matrix.makeIdentity());
     this.setProjectionMatrix(osg.Matrix.makeIdentity());
-
-    //this.getOrCreateStateSet().setAttributeAndMode(this.getViewport());
-
-}
+    this.renderOrder = osg.Camera.NESTED_RENDER;
+    this.renderOrderNum = 0;
+    this.referenceFrame = osg.Transform.RELATIVE_RF;
+};
 
 osg.Camera.prototype = osg.objectInehrit(osg.Node.prototype, {
-    init: function() {
-        this.renderTargetImplementation = RenderTargetImplementationType.FRAME_BUFFER;
-    },
+    setReferenceFrame: function(value) { this.referenceFrame = value; },
+    getReferenceFrame: function() { return this.referenceFrame; },
 
-    addChild: function (child) {
-        return this.children.push(child);
-    },
+    setClearDepth: function(depth) { this.clearDepth = depth;}, 
+    getClearDepth: function() { return this.clearDepth;},
 
-    traverse: function (visitor) {
-        var l = this.children.length;
-        for (var i = 0; i < l; i++) {
-            visitor.apply(this.children[i]);
-        }
-    },
+    setClearMask: function(mask) { this.clearMask = mask;}, 
+    getClearMask: function() { return this.clearMask;},
 
-    setViewport: function(vp) { this.viewport = vp; },
+    setClearColor: function(color) { this.clearColor = color;},
+    getClearColor: function() { return this.clearColor;},
+
+    setViewport: function(vp) { 
+        this.viewport = vp;
+        this.getOrCreateStateSet().setAttribute(vp);
+    },
     getViewport: function() { return this.viewport; },
 
-    setClearColor: function(color) {
-        this.clearColor = color;
-    },
-
-    setClearMask: function(clearBits) {
-        this.clearBits = clearBits;
-    },
 
     setViewMatrix: function(matrix) {
         this.modelviewMatrix = matrix;
@@ -3078,41 +3532,23 @@ osg.Camera.prototype = osg.objectInehrit(osg.Node.prototype, {
     setProjectionMatrix: function(matrix) {
         this.projectionMatrix = matrix;
     },
+
     getViewMatrix: function() { return this.modelviewMatrix; },
     getProjectionMatrix: function() { return this.projectionMatrix; },
-    setRenderTargetImplementation: function(implementation) {
-        this.renderTargetImplementation = implementation;
+    getRenderOrder: function() { return this.renderOrder; },
+    setRenderOrder: function(order, orderNum) {
+        this.renderOrder = order;
+        this.renderOrderNum = orderNum; 
     },
 
-    setRenderTarget: function(target) {
-        this.renderTarget = target;
+    attachTexture: function(bufferComponent, texture, level) {
+        if (this.attachments === undefined) {
+            this.attachments = {};
+        }
+        this.attachments[bufferComponent] = { 'texture' : texture , 'level' : level };
     },
 
-    attach: function(type) {
-
-    },
-
-    createFrameBufferObject: function(texture) {
-        texture.apply(undefined); // apply to init the texture object
-        var rttFramebuffer = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.textureObject, 0);
-
-        rttFramebuffer.width = this.textureWidth;
-        rttFramebuffer.height = this.textureHeight;
-
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        return rttFramebuffer;
-    }
 });
-
-
-osg.Camera.create = function() {
-    var cam = new osg.Camera();
-    return cam;
-};
-
 
 
 
@@ -3125,7 +3561,7 @@ osg.Camera.create = function() {
 osg.NodeVisitor = function () {
     this.traversalMask = ~0x0;
     this.nodeMaskOverride = 0;
-}
+};
 osg.NodeVisitor.prototype = {
     setTraversalMask: function(m) { this.traversalMask = m; },
     getTraversalMask: function() { return this.traversalMask; },
@@ -3141,7 +3577,21 @@ osg.NodeVisitor.prototype = {
         if (node.traverse !== undefined) {
             node.traverse(this);
         }
+    },
+
+    traverseNew: function ( node ) {
+        if (node.children) {
+            for (var i = 0, l = node.children.length; i < l; i++) {
+                var child = node.children[i];
+
+                var nm = child.getNodeMask();
+                var valid = ((this.traversalMask & (this.nodeMaskOverride | nm)) !== 0);
+                if (valid)
+                    this.apply(child);
+            }
+        }
     }
+
 };
 osg.NodeVisitor.create = function () {
     var nv = new osg.NodeVisitor();
@@ -3149,17 +3599,37 @@ osg.NodeVisitor.create = function () {
 };
 
 
-osg.StateGraph = function () {}
+osg.StateGraph = function () {
+    this.depth = 0;
+    this.children = {};
+    this.children.keys = [];
+    this.leafs = [];
+    this.stateset = undefined;
+    this.parent = undefined;
+};
+
 osg.StateGraph.prototype = {
+    clean: function() {
+        this.leafs.length = 0;
+        // keep it
+        //this.stateset = undefined;
+        //this.parent = undefined;
+        //this.depth = 0;
+        for (var i = 0, l = this.children.keys.length; i < l; i++) {
+            var key = this.children.keys[i];
+            this.children[key].clean();
+        }
+    },
     findOrInsert: function (stateset)
     {
         var sg;
         if (!this.children[stateset.id]) {
-            sg = osg.StateGraph.create();
+            sg = new osg.StateGraph();
             sg.parent = this;
             sg.depth = this.depth + 1;
             sg.stateset = stateset;
             this.children[stateset.id] = sg;
+            this.children.keys.push(stateset.id);
         } else {
             sg = this.children[stateset.id];
         }
@@ -3169,7 +3639,6 @@ osg.StateGraph.prototype = {
     {
         var stack;
         var i;
-        var stackLength;
         if (sg_new === sg_current || sg_new === undefined) {
             return;
         }
@@ -3186,8 +3655,7 @@ osg.StateGraph.prototype = {
             } while (sg_new);
 
             stack.reverse();
-            stackLength = stack.length;
-            for (i = 0; i < stackLength; ++i) {
+            for (i = 0, l = stack.length; i < l; ++i) {
                 state.pushStateSet(stack[i]);
             }
             return;
@@ -3215,7 +3683,7 @@ osg.StateGraph.prototype = {
             sg_current = sg_current.parent;
         }
 
-        // use return path to trace back steps to sg_new.
+       // use return path to trace back steps to sg_new.
         stack = [];
 
         // need to pop back up to the same depth as the curr state group.
@@ -3252,80 +3720,168 @@ osg.StateGraph.prototype = {
         }
     }
 };
-osg.StateGraph.create = function()
-{
-    var sg = new osg.StateGraph();
-    sg.depth = 0;
-    sg.children = {};
-    sg.leafs = [];
-    sg.stateset = undefined;
-    sg.parent = undefined;
-    return sg;
-};
 
-
-osg.RenderStage = function () {
-    this.positionedAttribute = [];
-    this.viewport = undefined;
-    this.clearColor = [0,0,0,1];
-    this.clearMask = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT;
-    this.camera = undefined;
-}
-osg.RenderStage.prototype = {
-
-    draw: function(state) {
-        if (this.viewport === undefined && console !== undefined) {
-            console.log("No viewport");
-        }
-        state.pushAttribute(this.viewport);
-    },
-
-    drawImplementation: function(state) {
-    }
-};
-osg.RenderStage.create = function() {
-    var r = new osg.RenderStage();
-    return r;
-};
 
 
 osg.RenderBin = function (stateGraph) {
     this.leafs = [];
     this.stateGraph = stateGraph;
     this.positionedAttribute = [];
-}
+    this.renderStage = undefined;
+    this.renderBin = {};
+    this.stateGraphList = [];
+};
 osg.RenderBin.prototype = {
+    getStage: function() { return this.renderStage; },
+    addStateGraph: function(sg) { this.stateGraphList.push(sg); },
+    reset: function() {
+        this.stateGraph = undefined;
+        this.stateGraphList.length = 0;
+        this.renderBin = {};
+        this.positionedAttribute.length = 0;
+        this.leafs.length = 0;
+    },
     applyPositionedAttribute: function(state, positionedAttibutes) {
         // the idea is to set uniform 'globally' in uniform map.
-        jQuery.each(positionedAttibutes, function(index, element) {
-                        // add or set uniforms in state
-                        var stateAttribute = element[1];
-                        var matrix = element[0];
-                        state.setGlobalDefaultValue(stateAttribute);
-                        stateAttribute.applyPositionedUniform(matrix, state);
-                    }
-                   );
+        for (var index = 0, l = positionedAttibutes.length; index < l; index++) {
+            var element = positionedAttibutes[index];
+            // add or set uniforms in state
+            var stateAttribute = element[1];
+            var matrix = element[0];
+            state.setGlobalDefaultValue(stateAttribute);
+            stateAttribute.applyPositionedUniform(matrix, state);
+        }
     },
 
-    drawImplementation: function(state) {
+    drawImplementationNew: function(state, previousRenderLeaf) {
+        var previous = previousRenderLeaf;
+        // draw prev bins
+        for (var key in this.renderBin) {
+            if (key < 0 ) {
+                previous = this.renderBin[key].drawImplementationNew(state, previous);
+            }
+        }
+        
+        // draw leafs
+        previous = this.drawLeafs(state, previous);
+
+        // draw post bins
+        for (var key in this.renderBin) {
+            if (key >= 0 ) {
+                previous = this.renderBin[key].drawImplementationNew(state, previous);
+            }
+        }
+        return previous;
+    },
+
+    drawLeafs: function(state, previousRenderLeaf) {
+        // no sort right now
+        //this.drawImplementation(state, previousRenderLeaf);
+        var stateList = this.stateGraphList;
+        var leafs = this.leafs;
+        var normalUniform;
+        var modelViewUniform;
+        var projectionUniform;
+        var program;
+        var stateset;
+        var previousLeaf = previousRenderLeaf;
+
+        if (this.positionedAttribute) {
+            this.applyPositionedAttribute(state, this.positionedAttribute);
+        }
+
+        for (var i = 0, l = stateList.length; i < l; i++) {
+            var sg = stateList[i];
+            for (var j = 0, ll = sg.leafs.length; j < ll; j++) {
+
+                var leaf = sg.leafs[j];
+                var push = false;
+                if (previousLeaf !== undefined) {
+
+                    // apply state if required.
+                    var prev_rg = previousLeaf.parent;
+                    var prev_rg_parent = prev_rg.parent;
+                    var rg = leaf.parent;
+                    if (prev_rg_parent !== rg.parent)
+                    {
+                        rg.moveStateGraph(state, prev_rg_parent, rg.parent);
+
+                        // send state changes and matrix changes to OpenGL.
+                        state.pushStateSet(rg.stateset);
+                        push = true;
+                    }
+                    else if (rg !== prev_rg)
+                    {
+                        // send state changes and matrix changes to OpenGL.
+                        state.pushStateSet(rg.stateset);
+                        push = true;
+                    }
+
+                } else {
+                    leaf.parent.moveStateGraph(state, undefined, leaf.parent.parent);
+                    state.pushStateSet(leaf.parent.stateset);
+                    push = true;
+                }
+
+                if (push === true) {
+                    //state.pushGeneratedProgram();
+                    state.apply();
+                }
+
+                program = state.getLastProgramApplied();
+                modelViewUniform = program.uniformsCache[state.modelViewMatrix.name];
+                projectionUniform = program.uniformsCache[state.projectionMatrix.name];
+                normalUniform = program.uniformsCache[state.normalMatrix.name];
+
+                if (modelViewUniform !== undefined && modelViewUniform !== null && modelViewUniform !== -1) {
+                    state.modelViewMatrix.set(leaf.modelview);
+                    state.modelViewMatrix.apply(modelViewUniform);
+                }
+                if (projectionUniform !== undefined && projectionUniform !== null && projectionUniform != -1) {
+                    state.projectionMatrix.set(leaf.projection);
+                    state.projectionMatrix.apply(projectionUniform);
+                }
+                if (normalUniform !== undefined && normalUniform !== null && normalUniform !== -1 ) {
+                    var normal = osg.Matrix.copy(leaf.modelview);
+                    osg.Matrix.setTrans(normal, 0, 0, 0);
+                    osg.Matrix.inverse(normal, normal);
+                    osg.Matrix.transpose(normal, normal);
+                    state.normalMatrix.set(normal);
+                    state.normalMatrix.apply(normalUniform);
+                }
+
+                leaf.geometry.drawImplementation(state);
+
+                if (push === true) {
+                    state.popGeneratedProgram();
+                    state.popStateSet();
+                }
+
+                previousLeaf = leaf;
+            }
+        }
+        return previousLeaf;
+    },
+
+    drawImplementation: function(state, previousRenderLeaf) {
         var stateList = this.stateGraph;
         var stackLength = stateList.length;
         var leafs = this.leafs;
-        var leafsLength = this.leafs.length;
         var normalUniform;
         var modelViewUniform;
         var projectionUniform;
         var program;
         var stateset;
         var leaf;
-        var previousLeaf;
+        var previousLeaf = previousRenderLeaf;
 
         if (this.positionedAttribute) {
             this.applyPositionedAttribute(state, this.positionedAttribute);
         }
 
-        for (var i = 0; i < leafsLength; i++) {
-//            debugger;
+        // should be re written to draw following state graph
+        for (var i = 0, leafsLength = this.leafs.length; i < leafsLength; i++) {
+
             leaf = leafs[i];
             var push = false;
             if (previousLeaf !== undefined) {
@@ -3344,7 +3900,6 @@ osg.RenderBin.prototype = {
                 }
                 else if (rg !== prev_rg)
                 {
-
                     // send state changes and matrix changes to OpenGL.
                     state.pushStateSet(rg.stateset);
                     push = true;
@@ -3359,13 +3914,6 @@ osg.RenderBin.prototype = {
             if (push === true) {
                 //state.pushGeneratedProgram();
                 state.apply();
-            }
-
-            if (false ) {
-            program = state.getLastProgramApplied().program;
-            modelViewUniform = gl.getUniformLocation(program, state.modelViewMatrix.name);
-            projectionUniform = gl.getUniformLocation(program, state.projectionMatrix.name);
-            normalUniform = gl.getUniformLocation(program, state.normalMatrix.name);
             }
 
             program = state.getLastProgramApplied();
@@ -3399,8 +3947,161 @@ osg.RenderBin.prototype = {
 
             previousLeaf = leaf;
         }
+        return previousLeaf;
     }
 };
+
+/**
+ * From OpenSceneGraph http://www.openscenegraph.org
+ * RenderStage base class. Used for encapsulate a complete stage in
+ * rendering - setting up of viewport, the projection and model
+ * matrices and rendering the RenderBin's enclosed with this RenderStage.
+ * RenderStage also has a dependency list of other RenderStages, each
+ * of which must be called before the rendering of this stage.  These
+ * 'pre' rendering stages are used for advanced rendering techniques
+ * like multistage pixel shading or impostors.
+ */
+osg.RenderStage = function () {
+    osg.RenderBin.call(this);
+    this.positionedAttribute = [];
+    this.clearDepth = 1.0;
+    this.clearColor = [0,0,0,1];
+    this.clearMask = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT;
+    this.camera = undefined;
+    this.viewport = undefined;
+    this.preRenderList = [];
+    this.postRenderList = [];
+    this.renderStage = this;
+};
+osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
+    reset: function() { 
+        this.superObject.reset.call(this);
+        this.preRenderList.length = 0;
+        this.postRenderList.length = 0;
+    },
+    setClearDepth: function(depth) { this.clearDepth = depth;},
+    getClearDepth: function() { return this.clearDepth;},
+    setClearColor: function(color) { this.clearColor = color;},
+    getClearColor: function() { return this.clearColor;},
+    setClearMask: function(mask) { this.clearMask = mask;},
+    getClearMask: function() { return this.clearMask;},
+    setViewport: function(vp) { this.viewport = vp; },
+    getViewport: function() { return this.viewport; },
+    setCamera: function(camera) { this.camera = camera; },
+    addPreRenderStage: function(rs, order) {
+        for (var i = 0, l = this.preRenderList.length; i < l; i++) {
+            var render = this.preRenderList[i];
+            if (order < render.order) {
+                break;
+            }
+        }
+        if (i < this.preRenderList.length) {
+            this.preRenderList = this.preRenderList.splice(i,0, { 'order' : order, 'renderStage' : rs });
+        } else {
+            this.preRenderList.push({ 'order' : order, 'renderStage' : rs });
+        }
+    },
+    addPostRenderStage: function(rs, order) {
+        for (var i = 0, l = this.postRenderList.length; i < l; i++) {
+            var render = this.postRenderList[i];
+            if (order < render.order) {
+                break;
+            }
+        }
+        if (i < this.postRenderList.length) {
+            this.postRenderList = this.postRenderList.splice(i,0, { 'order' : order, 'renderStage' : rs });
+        } else {
+            this.postRenderList.push({ 'order' : order, 'renderStage' : rs });
+        }
+    },
+
+    drawPreRenderStages: function(state, previousRenderLeaf) {
+        var previous = previousRenderLeaf;
+        for (var i = 0, l = this.preRenderList.length; i < l; ++i) {
+            var sg = this.preRenderList[i].renderStage;
+            previous = sg.draw(state, previous);
+        }
+        return previous;
+    },
+
+    draw: function(state, previousRenderLeaf) {
+        var previous = this.drawPreRenderStages(state, previousRenderLeaf);
+        previous = this.drawImplementation(state, previous);
+
+        previous = this.drawPostRenderStages(state, previous);
+        return previous;
+    },
+
+    drawPostRenderStages: function(state, previousRenderLeaf) {
+        var previous = previousRenderLeaf;
+        for (var i = 0, l = this.postRenderList.length; i < l; ++i) {
+            var sg = this.postRenderList[i].renderStage;
+            previous = sg.draw(state, previous);
+        }
+        return previous;
+    },
+
+    applyCamera: function(state) {
+        if (this.camera === undefined) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            return;
+        }
+        var fbo = this.camera.frameBufferObject;
+        if (this.camera.frameBufferObject === undefined) {
+            fbo = new osg.FrameBufferObject();
+            this.camera.frameBufferObject = fbo;
+            if (this.camera.attachments !== undefined) {
+                for ( var key in this.camera.attachments) {
+                    var a = this.camera.attachments[key];
+                    fbo.setAttachment({ 'attachment': key, 'texture': a.texture, 'level': 0 });
+                }
+            }
+        }
+        fbo.apply(state);
+    },
+
+    drawImplementation: function(state, previousRenderLeaf) {
+        if (osg.reportErrorGL === true) {
+            var error;
+            error = gl.getError();
+            osg.checkError(error);
+        }
+
+        this.applyCamera(state);
+
+        if (this.viewport === undefined) {
+            osg.log("RenderStage does not have a valid viewport");
+        }
+
+        state.applyAttribute(this.viewport);
+
+        if (this.clearMask & gl.COLOR_BUFFER_BIT) {
+            gl.clearColor(this.clearColor[0], this.clearColor[1], this.clearColor[2], this.clearColor[3]);
+        }
+        if (this.clearMask & gl.DEPTH_BUFFER_BIT) {
+            gl.clearDepth(this.clearDepth);
+        }
+        gl.clear(this.clearMask);
+
+        if (this.positionedAttribute) {
+            this.applyPositionedAttribute(state, this.positionedAttribute);
+        }
+
+        var previous = this.superObject.drawImplementationNew.call(this, state, previousRenderLeaf);
+
+        if (osg.reportErrorGL === true) {
+            error = gl.getError();
+            osg.checkError(error);
+        }
+
+        return previous;
+        //debugger;
+        //state.apply();
+    }
+    
+    
+});
+
 
 osg.FrameStamp = function() {
     var frame = 0;
@@ -3441,8 +4142,8 @@ osg.CullVisitor = function () {
     osg.NodeVisitor.call(this);
     this.modelviewMatrixStack = [osg.Matrix.makeIdentity()];
     this.projectionMatrixStack = [osg.Matrix.makeIdentity()];
-    this.stateGraph = osg.StateGraph.create();
-    this.stateGraph.stateset = osg.StateSet.create();
+    this.stateGraph = new osg.StateGraph();
+    this.stateGraph.stateset = new osg.StateSet();
     this.currentStateGraph = this.stateGraph;
     this.renderBin = new osg.RenderBin(this.stateGraph);
 };
@@ -3451,8 +4152,8 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     reset: function () {
         this.modelviewMatrixStack.length = 1;
         this.projectionMatrixStack.length = 1;
-        this.stateGraph = osg.StateGraph.create();
-        this.stateGraph.stateset = osg.StateSet.create();
+        this.stateGraph = new osg.StateGraph();
+        this.stateGraph.stateset = new osg.StateSet();
         this.currentStateGraph = this.stateGraph;
         this.renderBin = new osg.RenderBin(this.stateGraph);
     },
@@ -3481,13 +4182,16 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     popModelviewMatrix: function () {
         this.modelviewMatrixStack.pop();
     },
-    pushProjectionMatrix: function (matrix) {
+    pushProjectionMatrixOld: function (matrix) {
         var computeMatrix;
         var lastMatrix;
         lastMatrix = osg.Matrix.copy(this.projectionMatrixStack[this.projectionMatrixStack.length-1]);
         // need to check order
         computeMatrix = osg.Matrix.mult(matrix, lastMatrix);
         this.projectionMatrixStack.push(computeMatrix);
+    },
+    pushProjectionMatrix: function (matrix) {
+        this.projectionMatrixStack.push(matrix);
     },
     popProjectionMatrix: function () {
         this.projectionMatrixStack.pop();
@@ -3500,7 +4204,8 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         }
 
         if (node.getProjectionMatrix) {
-            this.pushProjectionMatrix(node.getProjectionMatrix());
+            var lastMatrix = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            this.pushProjectionMatrix(osg.Matrix.mult(node.getProjectionMatrix(), lastMatrix));
         }
 
         if (node.stateset) {
@@ -3538,6 +4243,228 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     }
 });
 
+
+
+osg.CullVisitorNew = function () {
+    osg.NodeVisitor.call(this);
+    this.modelviewMatrixStack = [osg.Matrix.makeIdentity()];
+    this.projectionMatrixStack = [osg.Matrix.makeIdentity()];
+    this.viewportStack = [];
+
+    this.rootStateGraph = undefined;
+    this.currentStateGraph = undefined;
+    this.currentRenderBin = undefined;
+    this.currentRenderStage = undefined;
+    this.rootRenderStage = undefined;
+};
+
+osg.CullVisitorNew.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+    setStateGraph: function(sg) {
+        this.rootStateGraph = sg;
+        this.currentStateGraph = sg;
+    },
+    setRenderStage: function(rg) {
+        this.rootRenderStage = rg;
+        this.currentRenderBin = rg;
+    },
+    reset: function () {
+        this.modelviewMatrixStack.length = 1;
+        this.projectionMatrixStack.length = 1;
+    },
+    getCurrentRenderBin: function() { return this.currentRenderBin; },
+    setCurrentRenderBin: function(rb) { this.currentRenderBin = rb; },
+    addPositionedAttribute: function (attribute) {
+        var matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length - 1];
+        this.currentRenderBin.getStage().positionedAttribute.push([matrix, attribute]);
+    },
+    pushStateSet: function (stateset) {
+        this.currentStateGraph = this.currentStateGraph.findOrInsert(stateset);
+    },
+    popStateSet: function () {
+        this.currentStateGraph = this.currentStateGraph.parent;
+    },
+    getViewport: function () {
+        if (this.viewportStack.length === 0) {
+            return undefined;
+        }
+        return this.viewportStack[this.viewportStack.length-1];
+    },
+    pushViewport: function (vp) {
+        this.viewportStack.push(vp);
+    },
+    popViewport: function () {
+        this.viewportStack.pop();
+    },
+    pushModelviewMatrix: function (matrix) {
+        this.modelviewMatrixStack.push(matrix);
+    },
+    popModelviewMatrix: function () {
+        this.modelviewMatrixStack.pop();
+    },
+    pushProjectionMatrix: function (matrix) {
+        this.projectionMatrixStack.push(matrix);
+    },
+    popProjectionMatrix: function () {
+        this.projectionMatrixStack.pop();
+    },
+
+    applyCamera: function( camera ) {
+        if (camera.stateset) {
+            this.pushStateSet(camera.stateset);
+        }
+
+        if (camera.light) {
+            this.addPositionedAttribute(camera.light);
+        }
+            
+        var originalModelView = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+
+        var modelview;
+        var projection;
+        if (camera.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
+            var lastProjectionMatrix = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            projection = osg.Matrix.mult(camera.getProjectionMatrix(), lastProjectionMatrix);
+            this.pushProjectionMatrix(projection);
+            var lastViewMatrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+            modelview = osg.Matrix.mult(camera.getViewMatrix(), lastViewMatrix);
+            this.pushModelviewMatrix(modelview);
+        } else {
+            // absolute
+            modelview = osg.Matrix.copy(camera.getViewMatrix());
+            projection = osg.Matrix.copy(camera.getProjectionMatrix());
+            this.pushProjectionMatrix(projection);
+            this.pushModelviewMatrix(modelview);
+        }
+
+        if (camera.getViewport()) {
+            this.pushViewport(camera.getViewport());
+        }
+
+        // nested camera
+        if (camera.getRenderOrder() === osg.Camera.NESTED_RENDER) {
+            
+            if (camera.traverse) {
+                this.traverse(camera);
+            }
+            
+        } else {
+            // not tested
+
+            var previous_stage = this.getCurrentRenderBin().getStage();
+
+            // use render to texture stage
+            var rtts = new osg.RenderStage();
+            rtts.setCamera(camera);
+            rtts.setClearDepth(camera.getClearDepth());
+            rtts.setClearColor(camera.getClearColor());
+
+            rtts.setClearMask(camera.getClearMask());
+         
+            var vp;
+            if (camera.getViewport() === undefined) {
+                vp = previous_stage.getViewport();
+            } else {
+                vp = camera.getViewport();
+            }
+            rtts.setViewport(vp);
+            
+            // skip positional state for now
+            // ...
+
+            var previousRenderBin = this.getCurrentRenderBin();
+
+            this.setCurrentRenderBin(rtts);
+
+            if (camera.traverse) {
+                camera.traverse(this);
+            }
+
+            this.setCurrentRenderBin(previousRenderBin);
+
+            if (camera.getRenderOrder() === osg.Camera.PRE_RENDER) {
+                this.getCurrentRenderBin().getStage().addPreRenderStage(rtts,camera.renderOrderNum);
+            } else {
+                this.getCurrentRenderBin().getStage().addPostRenderStage(rtts,camera.renderOrderNum);
+            }
+        }
+
+        this.popModelviewMatrix();
+        this.popProjectionMatrix();
+
+        if (camera.getViewport()) {
+            this.popViewport();
+        }
+
+        if (camera.stateset) {
+            this.popStateSet();
+        }
+
+    },
+
+    apply: function( node ) {
+        var lastMatrixStack;
+        var matrix;
+
+        if (node.getProjectionMatrix && node.getViewMatrix) {
+            this.applyCamera(node);
+            return;
+        }
+
+        if (node.getMatrix) {
+
+            lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+            matrix = osg.Matrix.mult(node.getMatrix(), lastMatrixStack);
+            this.pushModelviewMatrix(matrix);
+        } else if (node.getViewMatrix) {
+            lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+            matrix = osg.Matrix.mult(node.getViewMatrix(), lastMatrixStack);
+            this.pushModelviewMatrix(matrix);
+        }
+
+        if (node.getProjectionMatrix) {
+            lastMatrixStack = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            matrix = osg.Matrix.mult(node.getProjectionMatrix(), lastMatrixStack);
+            this.pushProjectionMatrix(matrix);
+        }
+
+        if (node.stateset) {
+            this.pushStateSet(node.stateset);
+        }
+        if (node.light) {
+            this.addPositionedAttribute(node.light);
+        }
+        if (node.drawImplementation) {
+            var leafs = this.currentStateGraph.leafs;
+            if (leafs.length === 0) {
+                this.currentRenderBin.addStateGraph(this.currentStateGraph);
+            }
+            leafs.push(
+                {
+                    "parent": this.currentStateGraph,
+                    "modelview": this.modelviewMatrixStack[this.modelviewMatrixStack.length-1],
+                    "projection": this.projectionMatrixStack[this.projectionMatrixStack.length-1],
+                    "geometry": node
+                }
+            );
+        }
+
+        if (node.traverse) {
+            this.traverse(node);
+        }
+
+        if (node.stateset) {
+            this.popStateSet();
+        }
+
+        if (node.getMatrix || node.getViewMatrix !== undefined) {
+            this.popModelviewMatrix();
+        }
+        if (node.getProjectionMatrix !== undefined) {
+            this.popProjectionMatrix();
+        }
+    }
+});
+
 osg.ParseSceneGraph = function (node)
 {
     var newnode;
@@ -3548,16 +4475,23 @@ osg.ParseSceneGraph = function (node)
 
         var i;
         for ( i in node.primitives) {
+            var mode = node.primitives[i].mode
             if (node.primitives[i].indices) {
                 var array = node.primitives[i].indices;
                 array = osg.BufferArray.create(gl[array.type], array.elements, array.itemSize );
-                var mode;
-                if (!node.primitives[i].mode) {
+                if (!mode) {
                     mode = gl.TRIANGLES;
                 } else {
-                    mode = gl[node.primitives[i].mode];
+                    mode = gl[mode];
                 }
                 node.primitives[i] = osg.DrawElements.create(mode, array);
+            } else {
+                mode = gl[mode];
+                var first = node.primitives[i].first;
+                var count = node.primitives[i].count;
+                if (count > 65535)
+                    count = 32740;
+                node.primitives[i] = new osg.DrawArrays(mode, first, count);
             }
         }
     }
@@ -3575,7 +4509,7 @@ osg.ParseSceneGraph = function (node)
         var newstateset = new osg.StateSet();
         if (node.stateset.textures) {
             var textures = node.stateset.textures;
-            for (var t = 0; t < textures.length; t++) {
+            for (var t = 0, tl = textures.length; t < tl; t++) {
                 if (textures[t] === undefined) {
                     continue;
                 }
@@ -3586,7 +4520,7 @@ osg.ParseSceneGraph = function (node)
                 }
                 var tex = osg.Texture.create(textures[t].file);
                 newstateset.setTexture(t, tex);
-                newstateset.addUniform(osg.Uniform.createInt1(t,"TexUnit" + t));
+                newstateset.addUniform(osg.Uniform.createInt1(t,"Texture" + t));
             }
         }
         if (node.stateset.material) {
@@ -3617,11 +4551,16 @@ osg.ParseSceneGraph = function (node)
         jQuery.extend(newnode, node);
         node = newnode;
 
-        var child;
-        var childLength = node.children.length;
-        for (child = 0; child < childLength; child++) {
+        for (var child = 0, childLength = node.children.length; child < childLength; child++) {
             node.children[child] = osg.ParseSceneGraph(node.children[child]);
         }
+    }
+
+    // no properties then we create a node by default
+    if (node.accept === undefined) {
+        newnode = new osg.Node();
+        jQuery.extend(newnode, node);
+        node = newnode;
     }
 
     return node;
@@ -3645,9 +4584,16 @@ osg.View.prototype = osg.objectInehrit(osg.Camera.prototype, {
 
 
 osg.createTexuredQuad = function(cornerx, cornery, cornerz,
-                                  wx, wy, wz,
-                                  hx, hy, hz,
-                                  s,t) {
+                                 wx, wy, wz,
+                                 hx, hy, hz,
+                                 l,b,r,t) {
+
+    if (r === undefined && t === undefined) {
+        r = l;
+        t = b;
+        l = 0;
+        b = 0;
+    }
 
     var g = new osg.Geometry();
 
@@ -3668,22 +4614,22 @@ osg.createTexuredQuad = function(cornerx, cornery, cornerz,
     vertexes[10] = cornery + wy + hy;
     vertexes[11] = cornerz + wz + hz;
 
-    if (s === undefined)
-        s = 1.0;
+    if (r === undefined)
+        r = 1.0;
     if (t === undefined)
         t = 1.0;
 
     var uvs = [];
-    uvs[0] = 0;
+    uvs[0] = l;
     uvs[1] = t;
 
-    uvs[2] = 0;
-    uvs[3] = 0;
+    uvs[2] = l;
+    uvs[3] = b;
 
-    uvs[4] = s;
-    uvs[5] = 0;
+    uvs[4] = r;
+    uvs[5] = b;
 
-    uvs[6] = s;
+    uvs[6] = r;
     uvs[7] = t;
 
     var n = osg.Vec3.cross([wx,wy,wz], [hx, hy, hz]);
@@ -3721,3 +4667,4 @@ osg.createTexuredQuad = function(cornerx, cornery, cornerz,
     g.getPrimitives().push(primitive);
     return g;
 };
+osg.createTexturedQuad = osg.createTexuredQuad;
