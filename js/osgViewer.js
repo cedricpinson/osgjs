@@ -92,6 +92,7 @@ osgViewer.Viewer.prototype = {
         this.view.accept(this.cullVisitor);
     },
     draw: function() {
+        this.state.applyWithoutProgram();
         this.renderStage.draw(this.state);
     },
 

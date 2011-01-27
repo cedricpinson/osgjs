@@ -2314,6 +2314,11 @@ osg.State.prototype = {
         this.programs.pop();
     },
 
+    applyWithoutProgram: function() {
+        this.applyAttributeMap(this.attributeMap);
+        this.applyTextureAttributeMapList(this.textureAttributeMapList);
+    },
+
     apply: function() {
         this.applyAttributeMap(this.attributeMap);
         this.applyTextureAttributeMapList(this.textureAttributeMapList);
