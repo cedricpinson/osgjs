@@ -24,7 +24,7 @@
 var gl;
 var osg = {};
 
-osg.version = '0.0.1';
+osg.version = '0.0.2';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.net';
 osg.instance = 0;
 osg.version = 0;
@@ -2660,18 +2660,6 @@ osg.Node.prototype = {
     getChildren: function() { return this.children; },
     removeChildren: function () { this.children.length = 0; },
     
-    removeChildOld: function (child) {
-        for (var i = 0, l = this.children.length; i < l; i++) {
-            if (this.children[i] === child) {
-                if (i != l-1) {
-                    this.children[i] = this.children[l-1];
-                    this.children.pop();
-                } else {
-                    this.children.pop();
-                }
-            }
-        }
-    },
     // preserve order
     removeChild: function (child) {
         for (var i = 0, l = this.children.length; i < l; i++) {
@@ -2687,14 +2675,6 @@ osg.Node.prototype = {
             child.accept(visitor);
         }
     },
-    traverseNew: function (visitor) {
-        for (var i = 0, l = this.children.length; i < l; i++) {
-            var child = this.children[i];
-            if (visitor.validNodeMask(child)) {
-                visitor.apply(child);
-            }
-        }
-    }
 };
 osg.Node.create = function() {
     var node = new osg.Node();
@@ -3582,21 +3562,7 @@ osg.NodeVisitor.prototype = {
         if (node.traverse !== undefined) {
             node.traverse(this);
         }
-    },
-
-    traverseNew: function ( node ) {
-        if (node.children) {
-            for (var i = 0, l = node.children.length; i < l; i++) {
-                var child = node.children[i];
-
-                var nm = child.getNodeMask();
-                var valid = ((this.traversalMask & (this.nodeMaskOverride | nm)) !== 0);
-                if (valid)
-                    this.apply(child);
-            }
-        }
     }
-
 };
 osg.NodeVisitor.create = function () {
     var nv = new osg.NodeVisitor();
@@ -3758,12 +3724,12 @@ osg.RenderBin.prototype = {
         }
     },
 
-    drawImplementationNew: function(state, previousRenderLeaf) {
+    drawImplementation: function(state, previousRenderLeaf) {
         var previous = previousRenderLeaf;
         // draw prev bins
         for (var key in this.renderBin) {
             if (key < 0 ) {
-                previous = this.renderBin[key].drawImplementationNew(state, previous);
+                previous = this.renderBin[key].drawImplementation(state, previous);
             }
         }
         
@@ -3773,7 +3739,7 @@ osg.RenderBin.prototype = {
         // draw post bins
         for (var key in this.renderBin) {
             if (key >= 0 ) {
-                previous = this.renderBin[key].drawImplementationNew(state, previous);
+                previous = this.renderBin[key].drawImplementation(state, previous);
             }
         }
         return previous;
@@ -3864,93 +3830,6 @@ osg.RenderBin.prototype = {
 
                 previousLeaf = leaf;
             }
-        }
-        return previousLeaf;
-    },
-
-    drawImplementation: function(state, previousRenderLeaf) {
-        var stateList = this.stateGraph;
-        var stackLength = stateList.length;
-        var leafs = this.leafs;
-        var normalUniform;
-        var modelViewUniform;
-        var projectionUniform;
-        var program;
-        var stateset;
-        var leaf;
-        var previousLeaf = previousRenderLeaf;
-
-        if (this.positionedAttribute) {
-            this.applyPositionedAttribute(state, this.positionedAttribute);
-        }
-
-        // should be re written to draw following state graph
-        for (var i = 0, leafsLength = this.leafs.length; i < leafsLength; i++) {
-
-            leaf = leafs[i];
-            var push = false;
-            if (previousLeaf !== undefined) {
-
-                // apply state if required.
-                var prev_rg = previousLeaf.parent;
-                var prev_rg_parent = prev_rg.parent;
-                var rg = leaf.parent;
-                if (prev_rg_parent !== rg.parent)
-                {
-                    rg.moveStateGraph(state, prev_rg_parent, rg.parent);
-
-                    // send state changes and matrix changes to OpenGL.
-                    state.pushStateSet(rg.stateset);
-                    push = true;
-                }
-                else if (rg !== prev_rg)
-                {
-                    // send state changes and matrix changes to OpenGL.
-                    state.pushStateSet(rg.stateset);
-                    push = true;
-                }
-
-            } else {
-                leaf.parent.moveStateGraph(state, undefined, leaf.parent.parent);
-                state.pushStateSet(leaf.parent.stateset);
-                push = true;
-            }
-
-            if (push === true) {
-                //state.pushGeneratedProgram();
-                state.apply();
-            }
-
-            program = state.getLastProgramApplied();
-            modelViewUniform = program.uniformsCache[state.modelViewMatrix.name];
-            projectionUniform = program.uniformsCache[state.projectionMatrix.name];
-            normalUniform = program.uniformsCache[state.normalMatrix.name];
-
-            if (modelViewUniform !== undefined && modelViewUniform !== null && modelViewUniform !== -1) {
-                state.modelViewMatrix.set(leaf.modelview);
-                state.modelViewMatrix.apply(modelViewUniform);
-            }
-            if (projectionUniform !== undefined && projectionUniform !== null && projectionUniform != -1) {
-                state.projectionMatrix.set(leaf.projection);
-                state.projectionMatrix.apply(projectionUniform);
-            }
-            if (normalUniform !== undefined && normalUniform !== null && normalUniform !== -1 ) {
-                var normal = osg.Matrix.copy(leaf.modelview);
-                osg.Matrix.setTrans(normal, 0, 0, 0);
-                osg.Matrix.inverse(normal, normal);
-                osg.Matrix.transpose(normal, normal);
-                state.normalMatrix.set(normal);
-                state.normalMatrix.apply(normalUniform);
-            }
-
-            leaf.geometry.drawImplementation(state);
-
-            if (push === true) {
-                state.popGeneratedProgram();
-                state.popStateSet();
-            }
-
-            previousLeaf = leaf;
         }
         return previousLeaf;
     }
@@ -4092,7 +3971,7 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
             this.applyPositionedAttribute(state, this.positionedAttribute);
         }
 
-        var previous = this.superObject.drawImplementationNew.call(this, state, previousRenderLeaf);
+        var previous = this.superObject.drawImplementation.call(this, state, previousRenderLeaf);
 
         if (osg.reportErrorGL === true) {
             error = gl.getError();
@@ -4142,115 +4021,7 @@ osg.UpdateVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     }
 });
 
-
 osg.CullVisitor = function () {
-    osg.NodeVisitor.call(this);
-    this.modelviewMatrixStack = [osg.Matrix.makeIdentity()];
-    this.projectionMatrixStack = [osg.Matrix.makeIdentity()];
-    this.stateGraph = new osg.StateGraph();
-    this.stateGraph.stateset = new osg.StateSet();
-    this.currentStateGraph = this.stateGraph;
-    this.renderBin = new osg.RenderBin(this.stateGraph);
-};
-osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
-    // should reuse object
-    reset: function () {
-        this.modelviewMatrixStack.length = 1;
-        this.projectionMatrixStack.length = 1;
-        this.stateGraph = new osg.StateGraph();
-        this.stateGraph.stateset = new osg.StateSet();
-        this.currentStateGraph = this.stateGraph;
-        this.renderBin = new osg.RenderBin(this.stateGraph);
-    },
-    addPositionedAttribute: function (attribute) {
-        var sg = this.stateGraph;
-        while (sg.parent !== undefined) {
-            sg = sg.parent;
-        }
-        var matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length - 1];
-        this.renderBin.positionedAttribute.push([matrix, attribute]);
-    },
-    pushStateSet: function (stateset) {
-        this.currentStateGraph = this.currentStateGraph.findOrInsert(stateset);
-    },
-    popStateSet: function () {
-        this.currentStateGraph = this.currentStateGraph.parent;
-    },
-    pushModelviewMatrix: function (matrix) {
-        var computeMatrix;
-        var lastMatrix;
-        lastMatrix = osg.Matrix.copy(this.modelviewMatrixStack[this.modelviewMatrixStack.length-1]);
-        // need to check order
-        computeMatrix = osg.Matrix.mult(matrix, lastMatrix);
-        this.modelviewMatrixStack.push(computeMatrix);
-    },
-    popModelviewMatrix: function () {
-        this.modelviewMatrixStack.pop();
-    },
-    pushProjectionMatrixOld: function (matrix) {
-        var computeMatrix;
-        var lastMatrix;
-        lastMatrix = osg.Matrix.copy(this.projectionMatrixStack[this.projectionMatrixStack.length-1]);
-        // need to check order
-        computeMatrix = osg.Matrix.mult(matrix, lastMatrix);
-        this.projectionMatrixStack.push(computeMatrix);
-    },
-    pushProjectionMatrix: function (matrix) {
-        this.projectionMatrixStack.push(matrix);
-    },
-    popProjectionMatrix: function () {
-        this.projectionMatrixStack.pop();
-    },
-    apply: function( node ) {
-        if (node.getMatrix) {
-            this.pushModelviewMatrix(node.getMatrix());
-        } else if (node.getViewMatrix) {
-            this.pushModelviewMatrix(node.getViewMatrix());
-        }
-
-        if (node.getProjectionMatrix) {
-            var lastMatrix = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-            this.pushProjectionMatrix(osg.Matrix.mult(node.getProjectionMatrix(), lastMatrix));
-        }
-
-        if (node.stateset) {
-            this.pushStateSet(node.stateset);
-        }
-        if (node.light) {
-            this.addPositionedAttribute(node.light);
-        }
-        if (node.drawImplementation) {
-            var leafs = this.renderBin.leafs;
-            leafs.push(
-                {
-                    "parent": this.currentStateGraph,
-                    "modelview": this.modelviewMatrixStack[this.modelviewMatrixStack.length-1],
-                    "projection": this.projectionMatrixStack[this.projectionMatrixStack.length-1],
-                    "geometry": node
-                }
-            );
-        }
-
-        if (node.traverse) {
-            this.traverse(node);
-        }
-
-        if (node.stateset) {
-            this.popStateSet();
-        }
-
-        if (node.getMatrix || node.getViewMatrix !== undefined) {
-            this.popModelviewMatrix();
-        }
-        if (node.getProjectionMatrix !== undefined) {
-            this.popProjectionMatrix();
-        }
-    }
-});
-
-
-
-osg.CullVisitorNew = function () {
     osg.NodeVisitor.call(this);
     this.modelviewMatrixStack = [osg.Matrix.makeIdentity()];
     this.projectionMatrixStack = [osg.Matrix.makeIdentity()];
@@ -4263,7 +4034,7 @@ osg.CullVisitorNew = function () {
     this.rootRenderStage = undefined;
 };
 
-osg.CullVisitorNew.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     setStateGraph: function(sg) {
         this.rootStateGraph = sg;
         this.currentStateGraph = sg;

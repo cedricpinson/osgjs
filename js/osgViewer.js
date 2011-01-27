@@ -36,7 +36,7 @@ osgViewer.Viewer = function(canvas) {
     this.canvas = canvas;
     this.frameRate = 60.0;
     osgUtil.UpdateVisitor = osg.UpdateVisitor;
-    osgUtil.CullVisitor = osg.CullVisitorNew;
+    osgUtil.CullVisitor = osg.CullVisitor;
 };
 
 
