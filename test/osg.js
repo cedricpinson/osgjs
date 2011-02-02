@@ -143,6 +143,30 @@ test("osg.Matrix.transformVec3", function() {
     near(res2 , [0, 0, 10]);
 });
 
+test("osg.Matrix.transpose", function() {
+    var m = [ 0,1,2,3,
+              4,5,6,7,
+              8,9,10,11,
+              12,13,14,15];
+    var res = osg.Matrix.transpose(m);
+    near(res , [0, 4, 8, 12,
+                1, 5, 9, 13,
+                2, 6, 10,14,
+                3, 7, 11,15]);
+
+    var res2 = osg.Matrix.transpose(m, res2);
+    near(res2 , [0, 4, 8, 12,
+                 1, 5, 9, 13,
+                 2, 6, 10,14,
+                 3, 7, 11,15]);
+
+    var res3 = osg.Matrix.transpose(m, m);
+    near(res3 , [0, 4, 8, 12,
+              1, 5, 9, 13,
+              2, 6, 10,14,
+              3, 7, 11,15]);
+});
+
 test("osg.Matrix.mult", function() {
     var width = 800;
     var height = 600;
@@ -354,63 +378,6 @@ test("osg.UpdateVisitor", function() {
 });
 
 
-test("CheckMixAutogenaratedProgram", function() {
-
-    var scene = new osg.Node();
-    var item0 = new osg.Node();
-    item0.getOrCreateStateSet().setAttributeAndMode(new osg.Material());
-    item0.addChild(osg.createTexuredQuad(0,0,0,
-                                         1,0,0,
-                                         0,0,1));
-
-    var item1 = new osg.Node();
-    item1.addChild(osg.createTexuredQuad(0,0,0,
-                                         1,0,0,
-                                         0,0,1));
-    var vertexshader = [
-        "",
-        "#ifdef GL_ES",
-        "precision highp float;",
-        "#endif",
-        "attribute vec3 Vertex;",
-        "uniform mat4 ModelViewMatrix;",
-        "uniform mat4 ProjectionMatrix;",
-        "void main(void) {",
-        "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
-        "}",
-        ""
-    ].join('\n');
-
-    var fragmentshader = [
-        "",
-        "#ifdef GL_ES",
-        "precision highp float;",
-        "#endif",
-        "void main(void) {",
-        "gl_FragColor = vec4(1.0,1.0,1.0,1.0);",
-        "}",
-        ""
-    ].join('\n');
-
-    var program = osg.Program.create(
-        osg.Shader.create(gl.VERTEX_SHADER, vertexshader),
-        osg.Shader.create(gl.FRAGMENT_SHADER, fragmentshader));
-    item1.getOrCreateStateSet().setAttributeAndMode(program);
-
-    scene.addChild(item0);
-    scene.addChild(item1);
-
-    var state = new osg.State();
-    var cullVisitor = new osg.CullVisitor();
-    scene.accept(cullVisitor);
-    cullVisitor.renderBin.drawImplementation(state);
-    
-    cullVisitor.reset();
-    scene.accept(cullVisitor);
-    cullVisitor.renderBin.drawImplementation(state);
-
-});
-
 
 test("osg.ShaderGenerator", function() {
 
@@ -425,8 +392,6 @@ test("osg.ShaderGenerator", function() {
     state.pushStateSet(stateSet0);
     state.pushStateSet(stateSet1);
     state.apply();
-
-    
 });
 
 
@@ -448,7 +413,7 @@ test("osg.CullVisitor_RenderStage", function() {
 
     camera0.addChild(camera1);
 
-    var cull = new osg.CullVisitorNew();
+    var cull = new osg.CullVisitor();
     var rs = new osg.RenderStage();
     var sg = new osg.StateGraph();
     cull.setRenderStage(rs);
@@ -472,7 +437,7 @@ test("osg.CullVisitor_RenderStage_test0", function() {
     camera0.addChild(geom);
 
 
-    var cull = new osg.CullVisitorNew();
+    var cull = new osg.CullVisitor();
     var rs = new osg.RenderStage();
     var sg = new osg.StateGraph();
     rs.setViewport(camera0.getViewport());

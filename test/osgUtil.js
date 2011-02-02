@@ -27,6 +27,7 @@ test("osgUtil_TriangleIntersect", function() {
 test("osgUtil_IntersectVisitor", function() {
 
     var view = new osg.View();
+    view.setViewport(new osg.Viewport());
     view.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]));
     view.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0));
     var quad = osg.createTexuredQuad(-0.5, -0.5,0, 1,0,0, 0,1,0, 1,1);
@@ -34,7 +35,7 @@ test("osgUtil_IntersectVisitor", function() {
 
     var iv = new osgUtil.IntersectVisitor();
     iv.addLineSegment([400,300,0.0], [400,300,1.0]);
-    iv.apply(view);
+    view.accept(iv);
     ok(iv.hits.length === 1, "Hits should be 1 and result is " + iv.hits.length );
 
 
@@ -43,6 +44,7 @@ test("osgUtil_IntersectVisitor", function() {
 test("osgUtil_IntersectVisitorScene", function() {
 
     var view = new osg.View();
+    view.setViewport(new osg.Viewport());
     view.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]));
     view.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0));
     var quad = osg.ParseSceneGraph(Scene);
