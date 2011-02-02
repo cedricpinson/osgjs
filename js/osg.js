@@ -41,7 +41,7 @@ osg.reportErrorGL = false;
 osg.init = function() {
     if (Float32Array.set === undefined) {
         Float32Array.prototype.set = function(array) {
-            for (var i = 0, l = array.length; i < l; ++i ) {
+            for (var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
                 this[i] = array[i];
             }
         };
@@ -680,22 +680,22 @@ osg.Matrix = {
         var out_33 = d * ((tmp_22 * matrix[10] + tmp_16 * matrix[2] + tmp_21 * matrix[6]) -
                           (tmp_20 * matrix[6] + tmp_23 * matrix[10] + tmp_17 * matrix[2]));
 
-        result[0*4+0] = out_00;
-        result[0*4+1] = out_01;
-        result[0*4+2] = out_02;
-        result[0*4+3] = out_03;
-        result[1*4+0] = out_10;
-        result[1*4+1] = out_11;
-        result[1*4+2] = out_12;
-        result[1*4+3] = out_13;
-        result[2*4+0] = out_20;
-        result[2*4+1] = out_21;
-        result[2*4+2] = out_22;
-        result[2*4+3] = out_23;
-        result[3*4+0] = out_30;
-        result[3*4+1] = out_31;
-        result[3*4+2] = out_32;
-        result[3*4+3] = out_33;
+        result[0] = out_00;
+        result[1] = out_01;
+        result[2] = out_02;
+        result[3] = out_03;
+        result[4] = out_10;
+        result[5] = out_11;
+        result[6] = out_12;
+        result[7] = out_13;
+        result[8] = out_20;
+        result[9] = out_21;
+        result[10] = out_22;
+        result[11] = out_23;
+        result[12] = out_30;
+        result[13] = out_31;
+        result[14] = out_32;
+        result[15] = out_33;
 
         if (resultArg !== undefined) {
             return true;
@@ -801,42 +801,35 @@ osg.Matrix = {
         if (result === undefined) {
             result = [];
         }
-        var tmp;
+        var dst;
+        var src;
         if (result === matrix) {
-            tmp = osg.Matrix.copy(matrix, result);
+            dst = matrix;
+            src = osg.Matrix.copy(matrix);
         } else {
-            tmp = result;
+            dst = result;
+            src = matrix;
+
+            dst[0] = src[0];
+            dst[5] = src[5];
+            dst[10] = src[10];
+            dst[15] = src[15];
         }
 
-        if (result !== matrix) {
-            tmp[0] = matrix[0];
-            tmp[5] = matrix[5];
-            tmp[10] = matrix[10];
-            tmp[15] = matrix[15];
-        }
+        dst[1] = src[4];
+        dst[2] = src[8];
+        dst[3] = src[12];
+        dst[4] = src[1];
+        dst[6] = src[9];
+        dst[7] = src[13];
+        dst[8] = src[2];
+        dst[9] = src[6];
+        dst[11] = src[14];
+        dst[12] = src[3];
+        dst[13] = src[7];
+        dst[14] = src[11];
 
-        tmp[1] = matrix[4];
-        tmp[2] = matrix[8];
-        tmp[3] = matrix[12];
-        tmp[4] = matrix[1];
-        tmp[6] = matrix[9];
-        tmp[7] = matrix[13];
-        tmp[8] = matrix[2];
-        tmp[9] = matrix[5];
-        tmp[11] = matrix[14];
-        tmp[12] = matrix[3];
-        tmp[13] = matrix[7];
-        tmp[14] = matrix[11];
-
-        // var i,j;
-        // for (i = 0; i < 4; i++)
-        //     for (j = 0; j < 4; j++)
-        //         tmp[j*4 +i] = matrix[i*4 +j];
-
-        if (result === matrix) {
-            osg.Matrix.copy(tmp, result);
-        }
-        return result;
+        return dst;
     },
 
     makePerspective: function(fovy, aspect, znear, zfar, result)
@@ -2169,23 +2162,14 @@ osg.State = function () {
     this.shaderGenerator = new osg.ShaderGenerator();
 
     this.modelViewMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ModelViewMatrix");
+    this.invModelViewMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "InvModelViewMatrix");
     this.projectionMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ProjectionMatrix");
     this.normalMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "NormalMatrix");
+
 
 };
 
 osg.State.prototype = {
-
-    applyModelViewAndProjectionMatrix: function(modelview, projection) {
-        this.modelViewMatrix.set(modelview);
-        this.projectionMatrix.set(projection);
-
-        var normal = osg.Matrix.copy(modelview);
-        osg.Matrix.setTrans(normal, 0,0,0);
-        osg.Matrix.inverse(normal, normal);
-        this.normalMatrix.set(normal);
-        this.getLastProgramApplied();
-    },
 
     pushStateSet: function(stateset) {
         this.stateSets.push(stateset);
@@ -2331,6 +2315,8 @@ osg.State.prototype = {
         }
 
         if (program.generated !== undefined && program.generated === true) {
+            // note that about TextureAttribute that need uniform on unit we would need to improve
+            // the current uniformList ...
 
             var programUniforms = program.uniformsCache;
             var activeUniforms = program.activeUniforms;
@@ -2355,10 +2341,106 @@ osg.State.prototype = {
                 activeUniforms.uniformKeys = keys;
             }
         } else {
-            // note that about TextureAttribute that need uniform on unit we would need to improve
-            // the current uniformList ...
-            //var uniformList = this.collectUniformsAppliedAttributes(this.shaderGeneratorAttributes);
-            this.applyUniformList(this.uniforms, {});
+            
+            //this.applyUniformList(this.uniforms, {});
+
+            // custom program so we will iterate on uniform from the program and apply them
+            // but in order to be able to use Attribute in the state graph we will check if
+            // our program want them. It must be defined by the user
+            var programObject = program.program;
+            var location;
+            var uniformStack;
+            var uniform;
+
+            var programUniforms = program.uniformsCache;
+            var uniformMap = this.uniforms;
+
+            // first time we see attributes key, so we will keep a list of uniforms from attributes
+            var activeUniforms = [];
+            var trackAttributes = program.trackAttributes;
+            var trackUniforms = program.trackUniforms;
+            // loop on wanted attributes and texture attribute to track state graph uniforms from those attributes
+            if (trackAttributes !== undefined && trackUniforms === undefined) {
+
+                var attributeKeys = program.trackAttributes['attributeKeys'];
+                for (var i = 0, l = attributeKeys.length; i < l; i++) {
+                    var key = attributeKeys[i];
+                    attributeStack = this.attributeMap[key];
+                    if (attributeStack === undefined) {
+                        continue;
+                    }
+                    // we just need the uniform list and not the attribute itself
+                    var attribute = attributeStack.globalDefault;
+                    if (attribute.getOrCreateUniforms === undefined) {
+                        continue;
+                    }
+                    var uniforms = attribute.getOrCreateUniforms();
+                    for (var a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
+                        activeUniforms.push(uniforms[uniforms.uniformKeys[a] ]);
+                    }
+                }
+
+                var textureAttributeKeysList = program.trackAttributes['textureAttributeKeys'];
+                for (var i = 0, l = textureAttributeKeysList.length; i < l; i++) {
+                    var tak = textureAttributeKeysList[i];
+                    if (tak === undefined) {
+                        continue;
+                    }
+                    for (var j = 0, m = tak.length; j < m; j++) {
+                        var key = tak[j];
+                        var attributeList = this.textureAttributeMapList[i];
+                        if (attributeList === undefined) {
+                            continue;
+                        }
+                        attributeStack = attributeList[key];
+                        if (attributeStack === undefined) {
+                            continue;
+                        }
+                        var attribute = attributeStack.globalDefault;
+                        if (attribute.getOrCreateUniforms === undefined) {
+                            continue;
+                        }
+                        var uniforms = attribute.getOrCreateUniforms(i);
+                        for (var a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
+                            activeUniforms.push(uniforms[uniforms.uniformKeys[a] ]);
+                        }
+                    }
+                }
+
+                // now we have a list on uniforms we want to track but we will filter them to use only what is needed by our program
+                // not that if you create a uniforms whith the same name of a tracked attribute, and it will override it
+                var uniformsFinal = {};
+                for (var i = 0, l = activeUniforms.length; i < l; i++) {
+                    var u = activeUniforms[i];
+                    var loc = gl.getUniformLocation(programObject, u.name);
+                    if (loc !== undefined && loc !== null) {
+                        uniformsFinal[u.name] = activeUniforms[i];
+                    }
+                }
+                program.trackUniforms = uniformsFinal;
+            }
+
+            for (var i = 0, l = programUniforms.uniformKeys.length; i < l; i++) {
+                var uniformKey = programUniforms.uniformKeys[i];
+                location = programUniforms[uniformKey];
+
+                uniformStack = uniformMap[uniformKey];
+                if (uniformStack === undefined) {
+                    if (program.trackUniforms !== undefined) {
+                        uniform = program.trackUniforms[uniformKey];
+                        if (uniform !== undefined) {
+                            uniform.apply(location);
+                        }
+                    }
+                } else {
+                    if (uniformStack.length === 0) {
+                        uniform = uniformStack.globalDefault;
+                    } else {
+                        uniform = uniformStack.back();
+                    }
+                    uniform.apply(location);
+                }
+            }
         }
     },
 
@@ -3302,6 +3384,7 @@ osg.Light.prototype = {
                     "uniform float " + this.getParameterName('constantAttenuation') + ";",
                     "uniform float " + this.getParameterName('linearAttenuation') + ";",
                     "uniform float " + this.getParameterName('quadraticAttenuation') + ";",
+//                    "uniform mat4 " + this.getParameterName('matrix') + ";",
                     "",
                     "" ].join('\n');
             break;
@@ -3752,6 +3835,7 @@ osg.RenderBin.prototype = {
         var leafs = this.leafs;
         var normalUniform;
         var modelViewUniform;
+        var invModelViewUniform;
         var projectionUniform;
         var program;
         var stateset;
@@ -3803,10 +3887,15 @@ osg.RenderBin.prototype = {
                 modelViewUniform = program.uniformsCache[state.modelViewMatrix.name];
                 projectionUniform = program.uniformsCache[state.projectionMatrix.name];
                 normalUniform = program.uniformsCache[state.normalMatrix.name];
+                invModelViewUniform = program.uniformsCache[state.invModelViewMatrix.name];
 
                 if (modelViewUniform !== undefined && modelViewUniform !== null && modelViewUniform !== -1) {
                     state.modelViewMatrix.set(leaf.modelview);
                     state.modelViewMatrix.apply(modelViewUniform);
+                }
+                if (invModelViewUniform !== undefined && invModelViewUniform !== null && invModelViewUniform !== -1) {
+                    state.invModelViewMatrix.set(osg.Matrix.inverse(leaf.modelview));
+                    state.invModelViewMatrix.apply(invModelViewUniform);
                 }
                 if (projectionUniform !== undefined && projectionUniform !== null && projectionUniform != -1) {
                     state.projectionMatrix.set(leaf.projection);
@@ -4092,7 +4181,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         if (camera.light) {
             this.addPositionedAttribute(camera.light);
         }
-            
+
         var originalModelView = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
 
         var modelview;
