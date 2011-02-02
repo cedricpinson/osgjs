@@ -47,6 +47,8 @@ osgGA.OrbitManipulator.prototype = {
         this.scale = 1.0;
         this.targetDistance = this.distance;
         this.currentMode = osgGA.OrbitManipulatorMode.Rotate;
+        this.maxDistance = 0;
+        this.minDistance = 0;
     },
     reset: function() {
         this.init();
@@ -94,6 +96,16 @@ osgGA.OrbitManipulator.prototype = {
     touchUp: function(ev) {
     },
     touchMove: function(ev) {
+    },
+    setMaxDistance: function(d) {
+        this.maxDistance =  d;
+    },
+    setMinDistance: function(d) {
+        this.minDistance =  d;
+    },
+    setDistance: function(d) {
+        this.distance = d;
+        this.targetDistance = d;
     },
 
     panModel: function(dx, dy) {
@@ -180,19 +192,29 @@ osgGA.OrbitManipulator.prototype = {
         this.timeMotion = (new Date()).getTime();
     },
     distanceIncrease: function() {
-        var d = this.targetDistance + 10/this.scale;
-        if (d > 20.0)
-            return;
-        this.distance = this.targetDistance;
-        this.targetDistance = d;
+        var h = this.distance;
+        var currentTarget = this.targetDistance;
+        var newTarget = currentTarget + h/10.0;
+        if (this.maxDistance > 0) {
+            if (newTarget > this.maxDistance) {
+                newTarget = this.maxDistance;
+            }
+        }
+        this.distance = currentTarget;
+        this.targetDistance = newTarget;
         this.timeMotion = (new Date()).getTime();
     },
     distanceDecrease: function() {
-        var d = this.targetDistance - 10/this.scale;
-        if (d < 1.0)
-            return;
-        this.distance = this.targetDistance;
-        this.targetDistance = d;
+        var h = this.distance;
+        var currentTarget = this.targetDistance;
+        var newTarget = currentTarget - h/10.0;
+        if (this.minDistance > 0) {
+            if (newTarget < this.minDistance) {
+                newTarget = this.minDistance;
+            }
+        }
+        this.distance = currentTarget;
+        this.targetDistance = newTarget;
         this.timeMotion = (new Date()).getTime();
     },
 
