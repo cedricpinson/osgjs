@@ -24,7 +24,7 @@
     }
   
 </style>
-<title>Camera</title>
+<title>Performance</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="../../js/jquery-1.4.2.js"></script>
@@ -37,60 +37,10 @@ $.noConflict();
 <script type="text/javascript" src="../../js/osgAnimation.js"></script>
 <script type="text/javascript" src="../../js/osgGA.js"></script>
 <script type="text/javascript" src="../../js/osgViewer.js"></script>
+<script type="text/javascript" src="main.js"></script>
 
 <script type="text/javascript">
 
-function createScene() {
-
-
-    var canvas = document.getElementById("3DView");
-    var rtt = new osg.Camera();
-    rtt.setName("rtt_camera");
-    rttSize = [512,512];
-//    rttSize = [1920,1200];
-    rtt.setProjectionMatrix(osg.Matrix.makeOrtho(0, rttSize[0], 0, rttSize[1], -5, 5));
-    rtt.setRenderOrder(osg.Camera.PRE_RENDER, 0);
-    rtt.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    rtt.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    var rq = osg.createTexuredQuad(0,0,0,
-                                  rttSize[0], 0 ,0,
-                                  0, rttSize[1],0);
-    rq.getOrCreateStateSet().setTextureAttributeAndMode(0, osg.Texture.create("textures/sol_trauma_periph.png"));
-    var rttTexture = new osg.Texture();
-    rttTexture.setTextureSize(rttSize[0],rttSize[1]);
-    rttTexture.setMinFilter('LINEAR');
-    rttTexture.setMagFilter('LINEAR');
-    rtt.attachTexture(gl.COLOR_ATTACHMENT0, rttTexture, 0);
-    rtt.addChild(rq);
-
-
-
-    var q = osg.createTexuredQuad(-25,-25,0,
-                                  50, 0 ,0,
-                                  0, 50 ,0);
-    //rttTexture = osg.Texture.create("textures/sol_trauma_periph.png");
-    q.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
-
-    var mainNode = new osg.Node();
-    mainNode.light = new osg.Light();
-    var stateset = mainNode.getOrCreateStateSet();
-    stateset.setAttribute(new osg.Material());
-    mainNode.addChild(q);
-
-    var camera = new osg.Camera();
-
-    camera.setProjectionMatrix(osg.Matrix.makeOrtho(0, canvas.width, 0, canvas.height, -5, 5));
-    camera.setViewMatrix(osg.Matrix.makeTranslate(25,25,0));
-    camera.setRenderOrder(osg.Camera.NESTED_RENDER, 0);
-    camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-
-    camera.addChild(q);
-    mainNode.addChild(camera);
-
-    mainNode.addChild(rtt);
-
-    return mainNode;
-}
 
 function getWindowSize() {
     var myWidth = 0, myHeight = 0;
@@ -124,7 +74,7 @@ function() {
     canvas.width = size.w;
     canvas.height = size.h;
 
-  var viewer = new osgViewer.Viewer(document.getElementById("3DView"));
+  var viewer = new osgViewer.Viewer(canvas);
   viewer.init();
   viewer.setupManipulator();
   viewer.setScene(createScene());

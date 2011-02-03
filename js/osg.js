@@ -2162,7 +2162,6 @@ osg.State = function () {
     this.shaderGenerator = new osg.ShaderGenerator();
 
     this.modelViewMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ModelViewMatrix");
-    this.invModelViewMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "InvModelViewMatrix");
     this.projectionMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ProjectionMatrix");
     this.normalMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "NormalMatrix");
 
@@ -3835,7 +3834,6 @@ osg.RenderBin.prototype = {
         var leafs = this.leafs;
         var normalUniform;
         var modelViewUniform;
-        var invModelViewUniform;
         var projectionUniform;
         var program;
         var stateset;
@@ -3887,15 +3885,10 @@ osg.RenderBin.prototype = {
                 modelViewUniform = program.uniformsCache[state.modelViewMatrix.name];
                 projectionUniform = program.uniformsCache[state.projectionMatrix.name];
                 normalUniform = program.uniformsCache[state.normalMatrix.name];
-                invModelViewUniform = program.uniformsCache[state.invModelViewMatrix.name];
 
                 if (modelViewUniform !== undefined && modelViewUniform !== null && modelViewUniform !== -1) {
                     state.modelViewMatrix.set(leaf.modelview);
                     state.modelViewMatrix.apply(modelViewUniform);
-                }
-                if (invModelViewUniform !== undefined && invModelViewUniform !== null && invModelViewUniform !== -1) {
-                    state.invModelViewMatrix.set(osg.Matrix.inverse(leaf.modelview));
-                    state.invModelViewMatrix.apply(invModelViewUniform);
                 }
                 if (projectionUniform !== undefined && projectionUniform !== null && projectionUniform != -1) {
                     state.projectionMatrix.set(leaf.projection);
