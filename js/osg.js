@@ -2792,13 +2792,7 @@ osg.Projection.create = function() {
 
 
 osg.Texture = function() {
-    this.mag_filter = 'LINEAR';
-    this.min_filter = 'LINEAR';
-    this.wrap_s = 'CLAMP_TO_EDGE';
-    this.wrap_t = 'CLAMP_TO_EDGE';
-    this.textureWidth = 0;
-    this.textureHeight = 0;
-    this.target = 'TEXTURE_2D';
+    this.setDefaultParameters();
 };
 
 osg.Texture.prototype = {
@@ -2820,6 +2814,15 @@ osg.Texture.prototype = {
             osg.Texture.uniforms[unit] = uniforms;
         }
         return osg.Texture.uniforms[unit];
+    },
+    setDefaultParameters: function() {
+        this.mag_filter = 'LINEAR';
+        this.min_filter = 'LINEAR';
+        this.wrap_s = 'CLAMP_TO_EDGE';
+        this.wrap_t = 'CLAMP_TO_EDGE';
+        this.textureWidth = 0;
+        this.textureHeight = 0;
+        this.target = 'TEXTURE_2D';
     },
     setTextureSize: function(w,h) {
         this.textureWidth = w;
