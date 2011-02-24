@@ -24,7 +24,7 @@
 
 var osgViewer = {};
 
-osgViewer.Viewer = function(canvas) {
+osgViewer.Viewer = function(canvas, canvasStats) {
     try {
         gl = canvas.getContext("experimental-webgl", {alpha: true, antialias : true });
         osg.init();
@@ -37,6 +37,8 @@ osgViewer.Viewer = function(canvas) {
     this.frameRate = 60.0;
     osgUtil.UpdateVisitor = osg.UpdateVisitor;
     osgUtil.CullVisitor = osg.CullVisitor;
+
+    this.canvasStats = canvasStats;
 };
 
 
@@ -71,6 +73,27 @@ osgViewer.Viewer.prototype = {
         //this.cullTime;
         //this.frameTime;
         //this.drawTime;
+
+        this.initStats();
+    },
+
+    initStats: function() {
+        if (this.canvasStats === undefined || this.canvasStats === null) {
+            osg.log("No Stats available, add a canvas to osg");
+            return;
+        }
+        this.stats = new Stats.Stats(this.canvasStats);
+        var that = this;
+        this.frameTime = 0;
+        this.updateTime = 0;
+        this.cullTime = 0;
+        this.drawTime = 0;
+        this.stats.addLayer(jQuery("#frameTime").css("color"), function(t) { 
+            var v = 1000/that.frameTime;
+            return v;} );
+        this.stats.addLayer(jQuery("#updateTime").css("color"), function(t) { return that.updateTime;} );
+        this.stats.addLayer(jQuery("#cullTime").css("color"), function(t) { return that.cullTime;} );
+        this.stats.addLayer(jQuery("#drawTime").css("color"), function(t) { return that.drawTime;} );
     },
 
     update: function() {
@@ -111,9 +134,22 @@ osgViewer.Viewer.prototype = {
             this.view.setViewMatrix(this.manipulator.getInverseMatrix());
         }
 
+        // time the update
+        var updateTime = (new Date()).getTime();
         this.update();
+
+        var cullTime = (new Date()).getTime();
+        updateTime = cullTime - updateTime;
+        this.updateTime = updateTime;
+
         this.cull();
+        var drawTime = (new Date()).getTime();
+        cullTime = drawTime - cullTime;
+        this.cullTime = cullTime;
+
         this.draw();
+        drawTime = (new Date()).getTime() - drawTime;
+        this.drawTime = drawTime;
 
         var f = this.updateVisitor.getFrameStamp().getFrameNumber()+1;
         this.updateVisitor.getFrameStamp().setFrameNumber(f);
@@ -122,16 +158,30 @@ osgViewer.Viewer.prototype = {
         var endFrameTime = (new Date()).getTime();
 
         frameTime = endFrameTime - frameTime;
-        if (this.numberFrame % 60 === 0.0) {
+        if (this.numberFrame % 60 === 0.0  && (this.disableDisplayFps === undefined || this.disableDisplayFps !== true)) {
             /* Run a test. */
             var nd = endFrameTime;
             var diff = nd - this.statsStartTime;
 
-            jQuery("#fps").text(this.numberFrame/(diff/1000));
+            if (this.fpsElement === undefined) {
+                var element = jQuery("#fps");
+                if (element === undefined) {
+                    this.disableDisplayFps = true;
+                } else {
+                    this.fpsElement = element;
+                }
+            }
+            if (this.fpsElement !== undefined) {
+                this.fpsElement.text((this.numberFrame*1000/diff).toFixed(1));
+            }
             this.statsStartTime = nd;
             this.numberFrame = 0;
         }
 
+        if (this.stats !== undefined) {
+            this.stats.update();
+        }
+        this.frameTime = (new Date()).getTime() - frameTime;
     },
 
     run: function() {
