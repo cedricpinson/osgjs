@@ -74,19 +74,6 @@ osg.checkError = function(error) {
     }
 };
 
-osg.initGL = function(canvas) {
-        try {
-            gl = canvas.getContext("experimental-webgl", {antialias : true});
-            //gl = canvas.getContext("experimental-webgl");
-            osg.init();
-        } catch(e) {
-
-        }
-
-        if (!gl) {
-            alert("Could not initialise WebGL, sorry :-(");
-        }
-};
 
 osg.objectInehrit = function(base, extras) {
     function F(){}
@@ -2737,6 +2724,14 @@ osg.Node.prototype = {
     getUpdateCallback: function() { return this.updateCallback; },
     setName: function(name) { this.name = name; },
     getName: function() { return this.name; },
+    hasChild: function(child) {
+        for (var i = 0, l = this.children.length; i < l; i++) {
+            if (this.children[i] === child) {
+                return true;
+            }
+        }
+        return false;
+    },
     addChild: function (child) { return this.children.push(child); },
     getChildren: function() { return this.children; },
     removeChildren: function () { this.children.length = 0; },
