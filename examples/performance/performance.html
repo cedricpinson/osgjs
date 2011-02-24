@@ -9,42 +9,6 @@
 	margin:0;
 	}
 
-    #frameTime {
-        //color: #3ba8c7;
-        color: #00ff00;
-    }
-    #updateTime {
-        color: #d07b1f;
-    }
-    #cullTime {
-        color: #73e0ff;
-    }
-    #drawTime {
-        color: #944b10;
-    }
-
-    #fps {
-        color: #ffffff;
-    }
-
-    #statsCanvas {
-        background: rgba(14,14,14,0.8);
-        float: left;
-    }
-
-    #legends {
-    position: absolute;
-    left: 0px;
-    font-size: 10;
-    }
-
-    #statsDiv {
-    float: left;
-    position: relative;
-    width: 300px;
-    height: 150;
-    z-index: 10;
-    }
 
     #viewContainer {
     position: absolute;
@@ -61,6 +25,7 @@
 $.noConflict();
 </script>
 <script type="text/javascript" src="../../js/stats.js"></script>
+<script type="text/javascript" src="../../js/webgl-utils.js"></script>
 <script type="text/javascript" src="../../js/osg.js"></script>
 <script type="text/javascript" src="../../js/osgUtil.js"></script>
 <script type="text/javascript" src="../../js/osgAnimation.js"></script>
@@ -105,7 +70,7 @@ function() {
 
     var stats = document.getElementById("Stats");
 
-  var viewer = new osgViewer.Viewer(canvas,stats);
+  var viewer = new osgViewer.Viewer(canvas);
   viewer.init();
   viewer.setupManipulator();
   viewer.setScene(createScene());
@@ -117,21 +82,7 @@ function() {
 </head>
 
 <body>
-  <div id="statsDiv">
-    <div id="legends">
-      <div id="frameTime" > frameRate </div>
-      <div id="updateTime" > updateTime </div>
-      <div id="cullTime" > cullTime </div>
-      <div id="drawTime" > drawTime </div>
-      <div id="fps"> </div>
-    </div>
 
-  <div id="statsCanvas">
-     <canvas id="Stats" width="300" height="150" ></canvas>
-  </div>
-
-  </div>
-  
   <div id="viewContainer">
   <canvas id="3DView"></canvas>
   </div>

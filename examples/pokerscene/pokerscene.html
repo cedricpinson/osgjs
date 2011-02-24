@@ -8,6 +8,9 @@
 	padding:0;
 	margin:0;
 	}
+    #viewContainer {
+    position: absolute;
+    }
 </style>
 
 <title>PokerScene</title>
@@ -18,6 +21,8 @@
 <script type="text/javascript">
 $.noConflict();
 </script>
+<script type="text/javascript" src="../../js/stats.js"></script>
+<script type="text/javascript" src="../../js/webgl-utils.js"></script>
 <script type="text/javascript" src="../../js/osg.js"></script>
 <script type="text/javascript" src="../../js/osgUtil.js"></script>
 <script type="text/javascript" src="../../js/osgAnimation.js"></script>
@@ -77,9 +82,9 @@ function() {
 
 <body>
 
+  <div id="viewContainer">
   <canvas id="3DView" style="border: none;" width="800" height="600"></canvas>
-  <div id="fps"> </div>
-
+  </div>
 
 </body>
 

@@ -25,20 +25,17 @@
 var osgViewer = {};
 
 osgViewer.Viewer = function(canvas, canvasStats) {
-    try {
-        gl = canvas.getContext("experimental-webgl", {alpha: true, antialias : true });
+    gl = WebGLUtils.setupWebGL(canvas, {antialias : true} );
+    if (gl) {
         osg.init();
-    } catch(e) {
-        alert("Could not initialise WebGL, sorry :-(" + e);
-        return;
+        this.canvas = canvas;
+        this.frameRate = 60.0;
+        osgUtil.UpdateVisitor = osg.UpdateVisitor;
+        osgUtil.CullVisitor = osg.CullVisitor;
+
+        this.canvasStats = canvasStats;
+        this.enableStats = true;
     }
-
-    this.canvas = canvas;
-    this.frameRate = 60.0;
-    osgUtil.UpdateVisitor = osg.UpdateVisitor;
-    osgUtil.CullVisitor = osg.CullVisitor;
-
-    this.canvasStats = canvasStats;
 };
 
 
@@ -74,27 +71,63 @@ osgViewer.Viewer.prototype = {
         //this.frameTime;
         //this.drawTime;
 
-        this.initStats();
+        if (this.enableStats) {
+            this.initStats();
+        }
     },
 
+
     initStats: function() {
+
+        var createDomElements = function (elementToAppend) {
+            var dom = [
+                "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150; z-index: 10;'>",
+                "<div id='StatsLegends' style='position: absolute; left: 0px; font-size: 10;color: #ffffff;'>",
+
+                "<div id='frameRate' style='color: #00ff00;' > frameRate </div>",
+                "<div id='frameTime' style='color: #ffff00;' > frameTime </div>",
+                "<div id='updateTime' style='color: #d07b1f;'> updateTime </div>",
+                "<div id='cullTime' style='color: #73e0ff;'> cullTime </div>",
+                "<div id='drawTime' style='color: #944b10;'> drawTime </div>",
+                "<div id='fps'> </div>",
+                
+                "</div>",
+
+                "<div id='StatsCanvasDiv' style='background: rgba(14,14,14,0.8); float: left;'>",
+                "<canvas id='StatsCanvas' width='300' height='150' ></canvas>",
+                "</div>",
+
+                "</div>"
+            ].join("\n");
+            if (elementToAppend === undefined) {
+                elementToAppend = "body";
+            }
+            jQuery(dom).appendTo(elementToAppend);
+            return document.getElementById("StatsCanvas");
+        };
+
         if (this.canvasStats === undefined || this.canvasStats === null) {
-            osg.log("No Stats available, add a canvas to osg");
-            return;
+            this.canvasStats = createDomElements();
         }
         this.stats = new Stats.Stats(this.canvasStats);
         var that = this;
+        this.frameRate = 1;
         this.frameTime = 0;
         this.updateTime = 0;
         this.cullTime = 0;
         this.drawTime = 0;
         var height = this.canvasStats.height-2;
-        this.stats.addLayer(jQuery("#frameTime").css("color"), function(t) { 
-            var v = height/60.0 * (1000/that.frameTime);
+        this.stats.addLayer(jQuery("#frameRate").css("color"), function(t) { 
+            var v = height/60.0 * (1000/that.frameRate);
             if (v > height) {
                 return height;
             }
             return v;} );
+        this.stats.addLayer(jQuery("#frameTime").css("color"), function(t) { 
+            if (that.frameTime > height) {
+                return height;
+            }
+            return that.frameTime;} );
         this.stats.addLayer(jQuery("#updateTime").css("color"), function(t) { 
             if (that.updateTime > height) {
                 return height;
@@ -138,6 +171,11 @@ osgViewer.Viewer.prototype = {
     frame: function() {
         var frameTime, beginFrameTime;
         frameTime = (new Date()).getTime();
+        if (this.lastFrameTime === undefined) {
+            this.lastFrameTime = 0;
+        }
+        this.frameRate = frameTime - this.lastFrameTime;
+        this.lastFrameTime = frameTime;
         beginFrameTime = frameTime;
 
         if (this.updateVisitor.getFrameStamp().getFrameNumber() === 0) {
@@ -195,7 +233,7 @@ osgViewer.Viewer.prototype = {
             this.numberFrame = 0;
         }
 
-        if (this.stats !== undefined) {
+        if (this.enableStats && this.stats !== undefined) {
             this.stats.update();
         }
         this.frameTime = (new Date()).getTime() - beginFrameTime;
@@ -207,12 +245,11 @@ osgViewer.Viewer.prototype = {
         }
         this.view.addChild(this.scene);
         var that = this;
-        var call = function() {
+        var render = function() {
+            window.requestAnimationFrame(render, this.canvas);
             that.frame();
         };
-        var t = Math.floor(1.0/this.frameRate*1000.0);
-        osg.log("run loop at " + this.frameRate + " fps");
-        setInterval( call , t);
+        render();
     }, 
 
     getManipulator: function() { return this.manipulator; },

@@ -9,18 +9,8 @@
 	margin:0;
 	}
 
-    #fps {
-       font-size: 20;
-       color: #ffffff;
-       opacity: 1.0;
-       width: 100px;
-       height: 40px;
-       position: absolute;
-       top: 8px;
-       left: 8px;
-       padding-top: 20px;
-       padding-left: 20px;
-       -moz-border-radius: 10px;
+    #viewContainer {
+    position: absolute;
     }
   
 </style>
@@ -32,6 +22,8 @@
 <script type="text/javascript">
 $.noConflict();
 </script>
+<script type="text/javascript" src="../../js/stats.js"></script>
+<script type="text/javascript" src="../../js/webgl-utils.js"></script>
 <script type="text/javascript" src="../../js/osg.js"></script>
 <script type="text/javascript" src="../../js/osgUtil.js"></script>
 <script type="text/javascript" src="../../js/osgAnimation.js"></script>
@@ -136,7 +128,9 @@ function() {
 </head>
 
 <body>
+  <div id="viewContainer">
   <canvas id="3DView"></canvas>
-  <div id="fps"> </div>
+  </div>
+
 </body>
 </html>
