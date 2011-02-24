@@ -88,12 +88,28 @@ osgViewer.Viewer.prototype = {
         this.updateTime = 0;
         this.cullTime = 0;
         this.drawTime = 0;
+        var height = this.canvasStats.height-2;
         this.stats.addLayer(jQuery("#frameTime").css("color"), function(t) { 
-            var v = 1000/that.frameTime;
+            var v = height/60.0 * (1000/that.frameTime);
+            if (v > height) {
+                return height;
+            }
             return v;} );
-        this.stats.addLayer(jQuery("#updateTime").css("color"), function(t) { return that.updateTime;} );
-        this.stats.addLayer(jQuery("#cullTime").css("color"), function(t) { return that.cullTime;} );
-        this.stats.addLayer(jQuery("#drawTime").css("color"), function(t) { return that.drawTime;} );
+        this.stats.addLayer(jQuery("#updateTime").css("color"), function(t) { 
+            if (that.updateTime > height) {
+                return height;
+            }
+            return that.updateTime;});
+        this.stats.addLayer(jQuery("#cullTime").css("color"), function(t) { 
+            if (that.cullTime > height) {
+                return height;
+            }
+            return that.cullTime;} );
+        this.stats.addLayer(jQuery("#drawTime").css("color"), function(t) { 
+            if (that.drawTime > height) {
+                return height;
+            }
+            return that.drawTime;} );
     },
 
     update: function() {
@@ -120,8 +136,9 @@ osgViewer.Viewer.prototype = {
     },
 
     frame: function() {
-        var frameTime;
+        var frameTime, beginFrameTime;
         frameTime = (new Date()).getTime();
+        beginFrameTime = frameTime;
 
         if (this.updateVisitor.getFrameStamp().getFrameNumber() === 0) {
             this.updateVisitor.getFrameStamp().setReferenceTime(frameTime/1000.0);
@@ -157,7 +174,7 @@ osgViewer.Viewer.prototype = {
         this.numberFrame++;
         var endFrameTime = (new Date()).getTime();
 
-        frameTime = endFrameTime - frameTime;
+        frameTime = endFrameTime - beginFrameTime;
         if (this.numberFrame % 60 === 0.0  && (this.disableDisplayFps === undefined || this.disableDisplayFps !== true)) {
             /* Run a test. */
             var nd = endFrameTime;
@@ -181,7 +198,7 @@ osgViewer.Viewer.prototype = {
         if (this.stats !== undefined) {
             this.stats.update();
         }
-        this.frameTime = (new Date()).getTime() - frameTime;
+        this.frameTime = (new Date()).getTime() - beginFrameTime;
     },
 
     run: function() {
