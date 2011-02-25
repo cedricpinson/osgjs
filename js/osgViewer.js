@@ -67,10 +67,6 @@ osgViewer.Viewer.prototype = {
         this.stateGraph = new osg.StateGraph();
         this.renderStage.setViewport(this.view.getViewport());
 
-        //this.cullTime;
-        //this.frameTime;
-        //this.drawTime;
-
         if (this.enableStats) {
             this.initStats();
         }
@@ -79,10 +75,13 @@ osgViewer.Viewer.prototype = {
 
     initStats: function() {
 
+        var maxMS = 50;
+        var stepMS = 10;
+        var fontsize = 14;
         var createDomElements = function (elementToAppend) {
             var dom = [
                 "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150; z-index: 10;'>",
-                "<div id='StatsLegends' style='position: absolute; left: 0px; font-size: 10;color: #ffffff;'>",
+                "<div id='StatsLegends' style='position: absolute; left: 0px; font-size: " + fontsize +"px;color: #ffffff;'>",
 
                 "<div id='frameRate' style='color: #00ff00;' > frameRate </div>",
                 "<div id='frameTime' style='color: #ffff00;' > frameTime </div>",
@@ -93,8 +92,10 @@ osgViewer.Viewer.prototype = {
                 
                 "</div>",
 
-                "<div id='StatsCanvasDiv' style='background: rgba(14,14,14,0.8); float: left;'>",
-                "<canvas id='StatsCanvas' width='300' height='150' ></canvas>",
+                "<div id='StatsCanvasDiv' style='position: relative;'>",
+                "<canvas id='StatsCanvasGrid' width='300' height='150' style='z-index:-1; position: absolute; background: rgba(14,14,14,0.8); ' ></canvas>",
+                "<canvas id='StatsCanvas' width='300' height='150' style='z-index:8; position: absolute;' ></canvas>",
+                "<canvas id='StatsCanvasFps' width='30' height='15' style='z-index:9; position: absolute; top: 130px' ></canvas>",
                 "</div>",
 
                 "</div>"
@@ -103,6 +104,25 @@ osgViewer.Viewer.prototype = {
                 elementToAppend = "body";
             }
             jQuery(dom).appendTo(elementToAppend);
+            var grid = document.getElementById("StatsCanvasGrid");
+            var ctx = grid.getContext("2d");
+            ctx.clearRect(0,0,grid.width, grid.height);
+
+            var step = Math.floor(maxMS/stepMS).toFixed(0);
+            var r = grid.height/step;
+            ctx.strokeStyle = "rgb(70,70,70)";
+            for (var i = 0, l = step; i < l; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i*r);
+                ctx.lineTo(grid.width, i*r);
+                ctx.stroke();
+            }
+
+            // setup the font for fps
+            var cfps = document.getElementById("StatsCanvasFps");
+            var ctx = cfps.getContext("2d");
+            ctx.font = "14px Sans";
+
             return document.getElementById("StatsCanvas");
         };
 
@@ -116,33 +136,39 @@ osgViewer.Viewer.prototype = {
         this.updateTime = 0;
         this.cullTime = 0;
         this.drawTime = 0;
-        var height = this.canvasStats.height-2;
+        var height = this.canvasStats.height;
+        var ratio = height / maxMS;
+        height = height - 2;
         this.stats.addLayer(jQuery("#frameRate").css("color"), function(t) { 
-            var v = height/60.0 * (1000/that.frameRate);
+            var v = (height)/60.0 * (1000/that.frameRate);
             if (v > height) {
                 return height;
             }
             return v;} );
         this.stats.addLayer(jQuery("#frameTime").css("color"), function(t) { 
-            if (that.frameTime > height) {
+            var v = that.frameTime * ratio;
+            if (v > height) {
                 return height;
             }
-            return that.frameTime;} );
+            return v;} );
         this.stats.addLayer(jQuery("#updateTime").css("color"), function(t) { 
-            if (that.updateTime > height) {
+            var v = that.updateTime * ratio;
+            if (v > height) {
                 return height;
             }
-            return that.updateTime;});
+            return v;} );
         this.stats.addLayer(jQuery("#cullTime").css("color"), function(t) { 
-            if (that.cullTime > height) {
+            var v = that.cullTime * ratio;
+            if (v > height) {
                 return height;
             }
-            return that.cullTime;} );
+            return v;} );
         this.stats.addLayer(jQuery("#drawTime").css("color"), function(t) { 
-            if (that.drawTime > height) {
+            var v = that.drawTime * ratio;
+            if (v > height) {
                 return height;
             }
-            return that.drawTime;} );
+            return v;} );
     },
 
     update: function() {
@@ -212,31 +238,24 @@ osgViewer.Viewer.prototype = {
         this.numberFrame++;
         var endFrameTime = (new Date()).getTime();
 
-        frameTime = endFrameTime - beginFrameTime;
-        if (this.numberFrame % 60 === 0.0  && (this.disableDisplayFps === undefined || this.disableDisplayFps !== true)) {
-            /* Run a test. */
-            var nd = endFrameTime;
-            var diff = nd - this.statsStartTime;
-
-            if (this.fpsElement === undefined) {
-                var element = jQuery("#fps");
-                if (element === undefined) {
-                    this.disableDisplayFps = true;
-                } else {
-                    this.fpsElement = element;
-                }
-            }
-            if (this.fpsElement !== undefined) {
-                this.fpsElement.text((this.numberFrame*1000/diff).toFixed(1));
-            }
-            this.statsStartTime = nd;
-            this.numberFrame = 0;
-        }
-
+        this.frameTime = (new Date()).getTime() - beginFrameTime;
         if (this.enableStats && this.stats !== undefined) {
             this.stats.update();
+
+            if (this.numberFrame % 60 === 0.0) {
+                var nd = endFrameTime;
+                var diff = nd - this.statsStartTime;
+                var fps = (this.numberFrame*1000/diff).toFixed(1);
+                this.statsStartTime = nd;
+                this.numberFrame = 0;
+
+                var cfps = document.getElementById("StatsCanvasFps");
+                var ctx = cfps.getContext("2d");
+                ctx.clearRect(0,0,cfps.width, cfps.height);
+                ctx.fillStyle = "rgb(255,255,255)";
+                ctx.fillText(fps, 0, cfps.height);
+            }
         }
-        this.frameTime = (new Date()).getTime() - beginFrameTime;
     },
 
     run: function() {
