@@ -2,15 +2,22 @@
 
 <head>
 <style>
-    body {
- 	background: black;
-	overflow:hidden;
-	padding:0;
-	margin:0;
-	}
-    #ViewContainer {
-    position: absolute;
-    }
+  body {
+  background: black;
+  overflow:hidden;
+  padding:0;
+  margin:0;
+  color: white;
+  }
+
+  a:link {text-decoration: none; color: grey;}
+  a:visited {text-decoration: none; color: grey}
+  a:active {text-decoration: none; color: grey}
+  a:hover {text-decoration: underline;  color: grey}
+
+  #ViewContainer {
+  position: absolute;
+  }
 </style>
 
 <title>Materials</title>
@@ -397,12 +404,16 @@ function() {
 
   canvas.width = size.w;
   canvas.height = size.h;
-
-  var viewer = new osgViewer.Viewer(canvas);
+  var viewer;
+try {
+  viewer = new osgViewer.Viewer(canvas);
   viewer.init();
   viewer.setupManipulator();
   viewer.setScene(createScene());
   viewer.run();
+} catch (er) {
+  osg.log("exception in osgViewer " + er);
+}
 
 }
 ,true);

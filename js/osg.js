@@ -29,7 +29,6 @@ osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.net';
 osg.instance = 0;
 osg.version = 0;
 osg.log = function(str) {
-
     if (window.console !== undefined) {
         window.console.log(str);
     } else {

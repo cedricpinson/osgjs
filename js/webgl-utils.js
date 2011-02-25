@@ -67,6 +67,8 @@ WebGLUtils = function() {
  */
 var makeFailHTML = function(msg) {
   return '' +
+        '<div style="margin: auto; width:500px;z-index:10000;margin-top:20em;text-align:center;">' + msg + '</div>';
+  return '' +
     '<table style="background-color: #8CE; width: 100%; height: 100%;"><tr>' +
     '<td align="center">' +
     '<div style="display: table-cell; vertical-align: middle;">' +
@@ -89,7 +91,7 @@ var GET_A_WEBGL_BROWSER = '' +
  */
 var OTHER_PROBLEM = '' +
   "It doesn't appear your computer can support WebGL.<br/>" +
-  '<a href="http://get.webgl.org/troubleshooting/">Click here for more information.</a>';
+  '<a href="http://get.webgl.org">Click here for more information.</a>';
 
 /**
  * Creates a webgl context. If creation fails it will
@@ -105,7 +107,8 @@ var OTHER_PROBLEM = '' +
  */
 var setupWebGL = function(canvas, opt_attribs, opt_onError) {
   function handleCreationError(msg) {
-    var container = canvas.parentNode;
+      var container = document.getElementsByTagName("body")[0];
+    //var container = canvas.parentNode;
     if (container) {
       var str = window.WebGLRenderingContext ?
            OTHER_PROBLEM :
@@ -128,8 +131,11 @@ var setupWebGL = function(canvas, opt_attribs, opt_onError) {
   if (!context) {
     if (!window.WebGLRenderingContext) {
       opt_onError("");
+    } else {
+      opt_onError("");
     }
   }
+
   return context;
 };
 
@@ -175,5 +181,3 @@ if (!window.requestAnimationFrame) {
            };
   })();
 }
-
-

@@ -2,17 +2,22 @@
 
 <head>
 <style>
-    body {
- 	background: black;
-	overflow:hidden;
-	padding:0;
-	margin:0;
-	}
+  body {
+  background: black;
+  overflow:hidden;
+  padding:0;
+  margin:0;
+  color: white;
+  }
 
+  a:link {text-decoration: none; color: grey;}
+  a:visited {text-decoration: none; color: grey}
+  a:active {text-decoration: none; color: grey}
+  a:hover {text-decoration: underline;  color: grey}
 
-    #viewContainer {
-    position: absolute;
-    }
+  #ViewContainer {
+  position: absolute;
+  }
 
   
 </style>
@@ -70,11 +75,17 @@ function() {
 
     var stats = document.getElementById("Stats");
 
-  var viewer = new osgViewer.Viewer(canvas);
+  var viewer;
+try {
+  viewer = new osgViewer.Viewer(canvas);
   viewer.init();
   viewer.setupManipulator();
   viewer.setScene(createScene());
   viewer.run();
+} catch (er) {
+  osg.log("exception in osgViewer " + er);
+}
+
 }
 ,true);
 
@@ -83,7 +94,7 @@ function() {
 
 <body>
 
-  <div id="viewContainer">
+  <div id="ViewContainer">
   <canvas id="3DView"></canvas>
   </div>
 </body>

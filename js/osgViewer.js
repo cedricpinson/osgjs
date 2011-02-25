@@ -24,17 +24,19 @@
 
 var osgViewer = {};
 
-osgViewer.Viewer = function(canvas, canvasStats) {
+osgViewer.Viewer = function(canvas) {
     gl = WebGLUtils.setupWebGL(canvas, {antialias : true} );
     if (gl) {
+        this.gl = gl;
         osg.init();
         this.canvas = canvas;
         this.frameRate = 60.0;
         osgUtil.UpdateVisitor = osg.UpdateVisitor;
         osgUtil.CullVisitor = osg.CullVisitor;
 
-        this.canvasStats = canvasStats;
-        this.enableStats = true;
+        this.urlOptions = true;
+    } else {
+        throw "No WebGL implementation found";
     }
 };
 
@@ -42,6 +44,7 @@ osgViewer.Viewer = function(canvas, canvasStats) {
 osgViewer.Viewer.prototype = {
     getScene: function() { return this.scene; },
     setScene: function(scene) { this.scene = scene; },
+
     init: function() {
         this.state = new osg.State();
         this.view = new osg.View();
@@ -67,17 +70,46 @@ osgViewer.Viewer.prototype = {
         this.stateGraph = new osg.StateGraph();
         this.renderStage.setViewport(this.view.getViewport());
 
-        if (this.enableStats) {
-            this.initStats();
+        if (this.urlOptions) {
+            this.parseOptions();
         }
     },
 
+    parseOptions: function() {
 
-    initStats: function() {
+        var optionsURL = function() {
+            var vars = [], hash;
+            var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+            for(var i = 0; i < hashes.length; i++)
+            {
+                hash = hashes[i].split('=');
+                vars.push(hash[0]);
+                vars[hash[0]] = hash[1];
+            }
+            return vars;
+        };
+        
+        var options = optionsURL();
+
+        if (options['stats'] === "1") {
+            this.initStats(options);
+        }
+
+    },
+
+    initStats: function(options) {
 
         var maxMS = 50;
         var stepMS = 10;
         var fontsize = 14;
+
+        if (options['statsMaxMS'] !== undefined) {
+            maxMS = parseInt(options['statsMaxMS']);
+        }
+        if (options['statsStepMS'] !== undefined) {
+            stepMS = parseInt(options['statsStepMS']);
+        }
+
         var createDomElements = function (elementToAppend) {
             var dom = [
                 "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150; z-index: 10;'>",
@@ -87,7 +119,7 @@ osgViewer.Viewer.prototype = {
                 "<div id='frameTime' style='color: #ffff00;' > frameTime </div>",
                 "<div id='updateTime' style='color: #d07b1f;'> updateTime </div>",
                 "<div id='cullTime' style='color: #73e0ff;'> cullTime </div>",
-                "<div id='drawTime' style='color: #944b10;'> drawTime </div>",
+                "<div id='drawTime' style='color: #ff0000;'> drawTime </div>",
                 "<div id='fps'> </div>",
                 
                 "</div>",
@@ -239,7 +271,7 @@ osgViewer.Viewer.prototype = {
         var endFrameTime = (new Date()).getTime();
 
         this.frameTime = (new Date()).getTime() - beginFrameTime;
-        if (this.enableStats && this.stats !== undefined) {
+        if (this.stats !== undefined) {
             this.stats.update();
 
             if (this.numberFrame % 60 === 0.0) {
