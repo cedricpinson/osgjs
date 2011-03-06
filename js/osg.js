@@ -4365,13 +4365,11 @@ osg.ParseSceneGraph = function (node)
         if (node.stateset.textures) {
             var textures = node.stateset.textures;
             for (var t = 0, tl = textures.length; t < tl; t++) {
-                if (textures[t] === undefined) {
-                    continue;
-                }
                 if (!textures[t].file) {
                     if (console !== undefined) {
                         console.log("no 'file' field for texture " + textures[t]);
                     }
+                    continue;
                 }
                 var tex = osg.Texture.create(textures[t].file);
                 newstateset.setTexture(t, tex);
