@@ -2,7 +2,7 @@
 
 
 test("osgUtil_TriangleIntersect", function() {
-    var quad = osg.createTexuredQuad(0,0,0, 1,0,0, 0,1,0, 1,1);
+    var quad = osg.createTexturedQuad(0,0,0, 1,0,0, 0,1,0, 1,1);
 
     var ti = new osgUtil.TriangleIntersect();
     var start = [0.5,0.5, -2.0];
@@ -30,7 +30,7 @@ test("osgUtil_IntersectVisitor", function() {
     view.setViewport(new osg.Viewport());
     view.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]));
     view.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0));
-    var quad = osg.createTexuredQuad(-0.5, -0.5,0, 1,0,0, 0,1,0, 1,1);
+    var quad = osg.createTexturedQuad(-0.5, -0.5,0, 1,0,0, 0,1,0, 1,1);
     view.addChild(quad);
 
     var iv = new osgUtil.IntersectVisitor();

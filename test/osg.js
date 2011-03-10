@@ -135,12 +135,28 @@ test("osg.Matrix.getLookAt", function() {
 test("osg.Matrix.transformVec3", function() {
     var m = osg.Matrix.makeRotate( Math.PI/2.0, 0, 1, 0);
     var vec = [0, 0, 10];
-    var res = osg.Matrix.transformVec3(vec, osg.Matrix.inverse(m));
+    var res = osg.Matrix.transformVec3(osg.Matrix.inverse(m), vec);
     near(res , [10, 0, 0]);
 
-
-    var res2 = osg.Matrix.transformVec3(res, m);
+    var res2 = osg.Matrix.transformVec3(m, res);
     near(res2 , [0, 0, 10]);
+
+
+    var m = [-0.00003499092540543186, 0, 0, 0, 0, 0.00003499092540543186, 0, 0, 0, 0, 1.8163636363636322, -9.989999999999977, 0.013996370162172783, -0.010497277621629587, -1.7999999999999958, 9.999999999999977];
+    var preMultVec3 = function(s, vec, result) {
+        if (result === undefined) {
+            result = [];
+        }
+        var d = 1.0/( s[3]*vec[0] + s[7] * vec[1] + s[11]*vec[2] + s[15] );
+        result[0] = (s[0] * vec[0] + s[4]*vec[1] + s[8]*vec[2] + s[12]) * d;
+        result[1] = (s[1] * vec[0] + s[5]*vec[1] + s[9]*vec[2] + s[13]) * d;
+        result[2] = (s[2] * vec[0] + s[6]*vec[1] + s[10]*vec[2] + s[14]) * d;
+        return result;
+    };
+    var r0 = preMultVec3(m, [400, 300, 1]);
+    var res = osg.Matrix.transformVec3(m, [400, 300, 1]);
+    near(res , r0);
+
 });
 
 test("osg.Matrix.transpose", function() {
@@ -175,7 +191,7 @@ test("osg.Matrix.mult", function() {
 
     translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
     scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
-    var res = osg.Matrix.mult(translate, scale);
+    var res = osg.Matrix.mult(scale, translate);
     near(res , [400, 0, 0, 0,
 	        0, 300, 0, 0,
 	        0, 0, 0.5, 0,
@@ -183,7 +199,7 @@ test("osg.Matrix.mult", function() {
 
     translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
     scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
-    res = osg.Matrix.mult(translate, scale, translate);
+    res = osg.Matrix.mult(scale, translate, scale);
     ok(check_near(res , [400, 0, 0, 0,
 	                 0, 300, 0, 0,
 	                 0, 0, 0.5, 0,
@@ -192,7 +208,7 @@ test("osg.Matrix.mult", function() {
 
     translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
     scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
-    res = osg.Matrix.mult(translate, scale, scale);
+    res = osg.Matrix.mult(scale, translate, translate);
     ok(check_near(res , [400, 0, 0, 0,
 	                 0, 300, 0, 0,
 	                 0, 0, 0.5, 0,
@@ -204,14 +220,14 @@ test("osg.Matrix.mult", function() {
     scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
 
     var ident = osg.Matrix.makeIdentity();
-    osg.Matrix.preMult(ident, scale);
+    osg.Matrix.mult(ident, scale, ident);
 
-    osg.Matrix.preMult(ident, translate);
+    osg.Matrix.mult(ident, translate, ident);
     near(ident, [400, 0, 0, 0,
 	                 0, 300, 0, 0,
 	                 0, 0, 0.5, 0,
 	                 400, 300, 0.5, 1]);
-    osg.Matrix.preMult(scale, translate);
+    osg.Matrix.mult(scale, translate, scale);
     near(scale, [400, 0, 0, 0,
 	         0, 300, 0, 0,
 	         0, 0, 0.5, 0,

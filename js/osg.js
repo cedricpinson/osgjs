@@ -152,7 +152,7 @@ osg.Matrix = {
     },
 
     /* premult a,b means in math MatrixA = MatrixA * MatrixB*/
-    preMult: function(a, b) {
+    preMultOld: function(a, b) {
         var t = [];
         for (var col = 0; col < 4; col++) {
             t[0] = osg.Matrix.innerProduct(b, a, 0, col);
@@ -168,7 +168,8 @@ osg.Matrix = {
     },
 
     /* postmult a,b means in math MatrixA = MatrixB * MatrixA*/
-    postMult: function(a, b) {
+    postMultOld: function(a, b, r) {
+        
         var t = [];
         for (var row = 0; row < 4; row++) {
             t[0] = osg.Matrix.innerProduct(a, b, row, 0);
@@ -180,52 +181,76 @@ osg.Matrix = {
         return a;
     },
 
-    /* mult a,b means in math result = MatrixB * MatrixA */
-    /* mult a,b is equivalent to preMult(b,a) */
+    /* mult a,b means in math result = MatrixA * MatrixB */
+    /* mult a,b is equivalent to preMult(a,b) */
+    /* mult b,a is equivalent to postMult(a,b) */
     mult: function(a, b, r) {
         if (r === a) {
-            return this.postMult(r, b);
+            // pre mult
+            var t = [];
+            for (var col = 0; col < 4; col++) {
+                t[0] = osg.Matrix.innerProduct(b, a, 0, col);
+                t[1] = osg.Matrix.innerProduct(b, a, 1, col);
+                t[2] = osg.Matrix.innerProduct(b, a, 2, col);
+                t[3] = osg.Matrix.innerProduct(b, a, 3, col);
+                a[0 + col] = t[0];
+                a[4 + col] = t[1];
+                a[8 + col] = t[2];
+                a[12 + col] = t[3];
+            }
+            return a;
+            //return this.preMult(r, b);
         }
         if (r === b) {
-            return this.preMult(r, a);
+            // post mult
+            var t = [];
+            for (var row = 0; row < 4; row++) {
+                t[0] = osg.Matrix.innerProduct(b, a, row, 0);
+                t[1] = osg.Matrix.innerProduct(b, a, row, 1);
+                t[2] = osg.Matrix.innerProduct(b, a, row, 2);
+                t[3] = osg.Matrix.innerProduct(b, a, row, 3);
+                this.setRow(b, row, t[0], t[1], t[2], t[3]);
+            }
+            return b;
+            //return this.postMult(r, a);
         }
         if (r === undefined) {
             r = [];
         }
 
-        var s00 = a[0];
-        var s01 = a[1];
-        var s02 = a[2];
-        var s03 = a[3];
-        var s10 = a[4];
-        var s11 = a[5];
-        var s12 = a[6];
-        var s13 = a[7];
-        var s20 = a[8];
-        var s21 = a[9];
-        var s22 = a[10];
-        var s23 = a[11];
-        var s30 = a[12];
-        var s31 = a[13];
-        var s32 = a[14];
-        var s33 = a[15];
+        var s00 = b[0];
+        var s01 = b[1];
+        var s02 = b[2];
+        var s03 = b[3];
+        var s10 = b[4];
+        var s11 = b[5];
+        var s12 = b[6];
+        var s13 = b[7];
+        var s20 = b[8];
+        var s21 = b[9];
+        var s22 = b[10];
+        var s23 = b[11];
+        var s30 = b[12];
+        var s31 = b[13];
+        var s32 = b[14];
+        var s33 = b[15];
 
-        var o00 = b[0];
-        var o01 = b[1];
-        var o02 = b[2];
-        var o03 = b[3];
-        var o10 = b[4];
-        var o11 = b[5];
-        var o12 = b[6];
-        var o13 = b[7];
-        var o20 = b[8];
-        var o21 = b[9];
-        var o22 = b[10];
-        var o23 = b[11];
-        var o30 = b[12];
-        var o31 = b[13];
-        var o32 = b[14];
-        var o33 = b[15];
+        var o00 = a[0];
+        var o01 = a[1];
+        var o02 = a[2];
+        var o03 = a[3];
+        var o10 = a[4];
+        var o11 = a[5];
+        var o12 = a[6];
+        var o13 = a[7];
+        var o20 = a[8];
+        var o21 = a[9];
+        var o22 = a[10];
+        var o23 = a[11];
+        var o30 = a[12];
+        var o31 = a[13];
+        var o32 = a[14];
+        var o33 = a[15];
 
         r[0] =  s00 * o00 + s01 * o10 + s02 * o20 + s03 * o30;
         r[1] =  s00 * o01 + s01 * o11 + s02 * o21 + s03 * o31;
@@ -248,28 +273,6 @@ osg.Matrix = {
         r[15] = s30 * o03 + s31 * o13 + s32 * o23 + s33 * o33;
 
         return r;
-    },
-
-    preMultVec3: function(s, vec, result) {
-        if (result === undefined) {
-            result = [];
-        }
-        var d = 1.0/( s[3]*vec[0] + s[7] * vec[1] + s[11]*vec[2] + s[15] );
-        result[0] = (s[0] * vec[0] + s[4]*vec[1] + s[8]*vec[2] + s[12]) * d;
-        result[1] = (s[1] * vec[0] + s[5]*vec[1] + s[9]*vec[2] + s[13]) * d;
-        result[2] = (s[2] * vec[0] + s[6]*vec[1] + s[10]*vec[2] + s[14]) * d;
-        return result;
-    },
-
-    postMultVec3: function(s, vec, result) {
-        if (result === undefined) {
-            result = [];
-        }
-        var d = 1.0/( s[12]*vec[0] + s[13] * vec[1] + s[14]*vec[2] + s[15] );
-        result[0] = (s[0] * vec[0] + s[1]*vec[1] + s[2]*vec[2] + s[3]) * d;
-        result[1] = (s[4] * vec[0] + s[5]*vec[1] + s[6]*vec[2] + s[7]) * d;
-        result[2] = (s[8] * vec[0] + s[9]*vec[1] + s[10]*vec[2] + s[11]) * d;
-        return result;
     },
 
     makeLookAt: function(eye, center, up, result) {
@@ -297,7 +300,7 @@ osg.Matrix = {
         result[8]=s[2]; result[9]=u[2]; result[10]=-f[2];result[11]=0.0;
         result[12]=  0; result[13]=  0; result[14]=  0;  result[15]=1.0;
 
-        osg.Matrix.preMultTranslate(result, osg.Vec3.neg(eye), result);
+        osg.Matrix.multTranslate(result, osg.Vec3.neg(eye), result);
         return result;
     },
     makeOrtho: function(left, right,
@@ -325,7 +328,7 @@ osg.Matrix = {
             distance = 1.0;
         }
         var inv = osg.Matrix.inverse(matrix);
-        osg.Matrix.preMultVec3(inv, [0,0,0], eye);
+        osg.Matrix.transformVec3(inv, [0,0,0], eye);
         osg.Matrix.transform3x3(matrix, [0,1,0], up);
         osg.Matrix.transform3x3(matrix, [0,0,-1], center);
         osg.Vec3.normalize(center, center);
@@ -401,7 +404,8 @@ osg.Matrix = {
         return result;
     },
 
-    preMultTranslate: function(mat, translate, result) {
+    // result = Matrix M * Matrix Translate
+    multTranslate: function(mat, translate, result) {
         if (result === undefined) {
             result = [];
         }
@@ -502,8 +506,8 @@ osg.Matrix = {
         return result;
     },
 
-    transformVec3: function(vector, matrix, result) {
-        var d = 1.0/(matrix[3] * vector[0] + matrix[7] * vector[1] * matrix[11] * vector[2] + matrix[15]); 
+    transformVec3: function(matrix, vector, result) {
+        var d = 1.0/(matrix[3] * vector[0] + matrix[7] * vector[1] + matrix[11] * vector[2] + matrix[15]); 
         if (result === undefined) {
             result = [];
         }
@@ -524,7 +528,7 @@ osg.Matrix = {
         return result;
     },
 
-    transformVec4: function(vector, matrix, result) {
+    transformVec4: function(matrix, vector, result) {
         if (result === undefined) {
             result = [];
         }
@@ -767,7 +771,7 @@ osg.Matrix = {
             TPinv[14]= -tz;
             TPinv[15]= one_over_s;
             
-            this.preMult(result, TPinv); // Finish computing full inverse of mat
+            this.mult(result, TPinv, result); // Finish computing full inverse of mat
         } else {
 
             tx = matrix[12]; ty = matrix[13]; tz = matrix[14];
@@ -3125,10 +3129,12 @@ osg.Viewport = function (x,y, w, h) {
     this.width = function() { return width; };
     this.height = function() { return height; };
     this.computeWindowMatrix = function() {
+        // res = Matrix offset * Matrix scale * Matrix translate
         var translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
         var scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
         var offset = osg.Matrix.makeTranslate(xstart,ystart,0.0);
-        return osg.Matrix.mult(osg.Matrix.mult(translate, scale, translate), offset, offset);
+        //return osg.Matrix.mult(osg.Matrix.mult(translate, scale, translate), offset, offset);
+        return osg.Matrix.mult(offset, osg.Matrix.mult(scale, translate, scale),  offset);
     };
 };
 osg.Viewport.prototype = {
@@ -4178,10 +4184,10 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         var projection;
         if (camera.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
             var lastProjectionMatrix = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-            projection = osg.Matrix.mult(camera.getProjectionMatrix(), lastProjectionMatrix);
+            projection = osg.Matrix.mult(lastProjectionMatrix, camera.getProjectionMatrix());
             this.pushProjectionMatrix(projection);
             var lastViewMatrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            modelview = osg.Matrix.mult(camera.getViewMatrix(), lastViewMatrix);
+            modelview = osg.Matrix.mult(lastViewMatrix, camera.getViewMatrix());
             this.pushModelviewMatrix(modelview);
         } else {
             // absolute
@@ -4268,17 +4274,17 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         if (node.getMatrix) {
 
             lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            matrix = osg.Matrix.mult(node.getMatrix(), lastMatrixStack);
+            matrix = osg.Matrix.mult(lastMatrixStack, node.getMatrix());
             this.pushModelviewMatrix(matrix);
         } else if (node.getViewMatrix) {
             lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            matrix = osg.Matrix.mult(node.getViewMatrix(), lastMatrixStack);
+            matrix = osg.Matrix.mult(lastMatrixStack, node.getViewMatrix());
             this.pushModelviewMatrix(matrix);
         }
 
         if (node.getProjectionMatrix) {
             lastMatrixStack = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-            matrix = osg.Matrix.mult(node.getProjectionMatrix(), lastMatrixStack);
+            matrix = osg.Matrix.mult(lastMatrixStack, node.getProjectionMatrix());
             this.pushProjectionMatrix(matrix);
         }
 

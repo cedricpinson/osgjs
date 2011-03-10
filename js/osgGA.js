@@ -125,14 +125,14 @@ osgGA.OrbitManipulator.prototype = {
 
     computeRotation: function(dx, dy) {
         var of = osg.Matrix.makeRotate(dx / 10.0, 0,0,1);
-        var r = osg.Matrix.mult(of, this.rotation);
+        var r = osg.Matrix.mult(this.rotation, of);
 
         of = osg.Matrix.makeRotate(dy / 10.0, 1,0,0);
-        var r2 = osg.Matrix.mult(r, of);
+        var r2 = osg.Matrix.mult(of, r);
 
         // test that the eye is not too up and not too down to not kill
         // the rotation matrix
-        var eye = osg.Matrix.transformVec3([0, 0, this.distance], osg.Matrix.inverse(r2));
+        var eye = osg.Matrix.transformVec3(osg.Matrix.inverse(r2), [0, 0, this.distance]);
         if (eye[2] > 0.99*this.distance || eye[2] < -.99*this.distance) {
             //discard rotation on y
             this.rotation = r;
@@ -252,7 +252,7 @@ osgGA.OrbitManipulator.prototype = {
         
         //this.targetMotion
         var inv;
-        var eye = osg.Matrix.transformVec3([0, 0, distance], osg.Matrix.inverse(this.rotation));
+        var eye = osg.Matrix.transformVec3(osg.Matrix.inverse(this.rotation), [0, 0, distance]);
         inv = osg.Matrix.makeLookAt(osg.Vec3.add(target,eye), target, [0,0,1]);
 
         return inv;
