@@ -1398,14 +1398,11 @@ osg.Quat = {
         if (result === undefined) {
             result = [];
         }
-        var x = b[3]*a[0] + b[0]*a[3] + b[1]*a[2] - b[2]*a[1];
-        var y = b[3]*a[1] - b[0]*a[2] + b[1]*a[3] + b[2]*a[0];
-        var z = b[3]*a[2] + b[0]*a[1] - b[1]*a[0] + b[2]*a[3];
 
-        result[3] = b[3]*a[3] - b[0]*a[0] - b[1]*a[1] - b[2]*a[2];
-        result[0] = x;
-        result[1] = y;
-        result[2] = z;
+        result[0] =  a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0];
+        result[1] = -a[0] * b[2] + a[1] * b[3] + a[2] * b[0] + a[3] * b[1];
+        result[2] =  a[0] * b[1] - a[1] * b[0] + a[2] * b[3] + a[3] * b[2];
+        result[3] = -a[0] * b[0] - a[1] * b[1] - a[2] * b[2] + a[3] * b[3];
         return result;
     },
     div: function(a, b, result) {
@@ -1479,16 +1476,16 @@ osg.Quat = {
         var invq = this.inv(qcur);
         var qa,qb;
 
-        this.mult(invq, q2, qa);
+        this.mult(q2, invq, qa);
         this.ln(qa, qa);
 
-        this.mult(invq, q0, qb);
+        this.mult(q0, invq , qb);
         this.ln(qb, qb);
 
         this.add(qa, qb, qa);
         this.div(qa, -4.0, qa);
         this.exp(qa, qb);
-        return this.mult(q1, qb, r);
+        return this.mult(qb, q1, r);
     },
 
     createKey: function(q, r) {

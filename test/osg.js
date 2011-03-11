@@ -71,9 +71,9 @@ test("osg.Quat.mult", function() {
     var q1 = osg.Quat.makeRotate(Math.PI/2, 0, 1, 0);
     var q2 = osg.Quat.makeRotate(Math.PI/4, 0, 0, 1);
 
-    near(osg.Quat.mult(q0,q1) , [0.707107, 4.32964e-17, -0.707107, 4.32964e-17]);
+    near(osg.Quat.mult(q1, q0) , [0.707107, 4.32964e-17, -0.707107, 4.32964e-17]);
 
-    near(osg.Quat.mult(osg.Quat.mult(q0,q1), q2) , [0.653281, 0.270598, -0.653281, 0.270598]);
+    near(osg.Quat.mult(q2, osg.Quat.mult(q1,q0)) , [0.653281, 0.270598, -0.653281, 0.270598]);
 });
 
 
