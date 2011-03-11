@@ -1,21 +1,17 @@
 /** -*- compile-command: "jslint-cli stats.js" -*-
  *
- * Copyright (C) 2010 Cedric Pinson
+ *  Copyright (C) 2010 Cedric Pinson
  *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * any later version.
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
  *
  * Authors:
  *  Cedric Pinson <cedric.pinson@plopbyte.net>
