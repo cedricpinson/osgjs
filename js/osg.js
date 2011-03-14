@@ -286,10 +286,10 @@ osg.Matrix = {
         var u = osg.Vec3.cross(s, f);
         osg.Vec3.normalize(u, u);
 
-            // s[0], u[0], -f[0], 0.0,
-            // s[1], u[1], -f[1], 0.0,
-            // s[2], u[2], -f[2], 0.0,
-            // 0,    0,    0,     1.0
+        // s[0], u[0], -f[0], 0.0,
+        // s[1], u[1], -f[1], 0.0,
+        // s[2], u[2], -f[2], 0.0,
+        // 0,    0,    0,     1.0
 
         result[0]=s[0]; result[1]=u[0]; result[2]=-f[0]; result[3]=0.0;
         result[4]=s[1]; result[5]=u[1]; result[6]=-f[1]; result[7]=0.0;
@@ -732,7 +732,7 @@ osg.Matrix = {
         var d2 = d-1.0;
         var tx, ty, tz;
         if( d2*d2 > 1.0e-6 ) { // Involves perspective, so we must
-                               // compute the full inverse
+            // compute the full inverse
             var TPinv = [];
             result[12] = result[13] = result[15] = 0.0;
 
@@ -1737,9 +1737,9 @@ osg.Program.prototype = {
             gl.attachShader(this.program, this.fragment.shader);
             gl.linkProgram(this.program);
             if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-                    osg.log("can't link program\n" + this.vertex.text + this.fragment.text);
-                    osg.log(gl.getProgramInfo(this.program));
-                    debugger;
+                osg.log("can't link program\n" + this.vertex.text + this.fragment.text);
+                osg.log(gl.getProgramInfo(this.program));
+                debugger;
                 return null;
             }
 
@@ -2059,7 +2059,7 @@ osg.ShaderGenerator.prototype = {
             "void main(void) {",
             "gl_Position = ftransform();",
             ""
-            ].join('\n');
+        ].join('\n');
 
         shader += body;
 
@@ -2085,7 +2085,7 @@ osg.ShaderGenerator.prototype = {
             "#endif",
             "vec4 fragColor;",
             ""
-            ].join("\n");
+        ].join("\n");
         var mode = osg.ShaderGeneratorType.FragmentInit;
 
         shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
@@ -2095,7 +2095,7 @@ osg.ShaderGenerator.prototype = {
             "void main(void) {",
             "fragColor = vec4(1.0, 1.0, 1.0, 1.0);",
             ""
-            ].join('\n');
+        ].join('\n');
 
         mode = osg.ShaderGeneratorType.FragmentMain;
         if (validTextureAttributeKeys.length > 0) {
@@ -2696,9 +2696,225 @@ osg.StateSet.create = function() {
     return ss;
 };
 
+
+osg.BoundingBox = function() {
+    this._min = [1,1,1];
+    this._max = [0,0,0];
+};
+
+osg.BoundingBox.prototype = {
+    init: function() {
+	this._min = [1,1,1];
+	this._max = [0,0,0];
+    },
+
+    valid: function() {
+    	return (this._max[0] >= this._min[0] &&  this._max[1] >= this._min[1] &&  this._max[2] >= this._min[2]);
+    },
+
+    expandByVec3: function(v){
+
+	if ( this.valid() ) {
+	    if ( this._min[0] > v[0] ) this._min[0] = v[0];
+	    if ( this._min[1] > v[1] ) this._min[1] = v[1];
+	    if ( this._min[2] > v[2] ) this._min[2] = v[2];
+	    if ( this._max[0] < v[0] ) this._max[0] = v[0];
+	    if ( this._max[1] < v[1] ) this._max[1] = v[1];
+	    if ( this._max[2] < v[2] ) this._max[2] = v[2];
+	} else {
+	    this._min[0] = v[0];
+	    this._min[1] = v[1];
+	    this._min[2] = v[2];
+	    this._max[0] = v[0];
+	    this._max[1] = v[1];
+	    this._max[2] = v[2];
+	}
+    },
+
+    center: function() {
+	return osg.Vec3.mult(osg.Vec3.add(this._min,this._max),0.5);
+    },
+    radius: function() {
+	return Math.sqrt(this.radius2());
+    },
+
+    radius2: function() {
+	return 0.25*(osg.Vec3.length2(osg.Vec3.sub(this._max,this._min)));
+    },
+    corner: function(pos) {
+        ret = [0.0,0.0,0.0];
+        if ( pos & 1 ) ret[0]=this._max[0]; else ret[0]=this._min[0];
+        if ( pos & 2 ) ret[1]=this._max[1]; else ret[1]=this._min[1];
+        if ( pos & 4 ) ret[2]=this._max[2]; else ret[2]=this._min[2];
+        return ret;
+    }
+
+};
+
+
+osg.BoundingSphere = function() {
+    this._center = [0.0,0.0,0.0];
+    this._radius = -1;
+};
+osg.BoundingSphere.prototype = {
+    init: function() {
+	this._center = [0.0,0.0,0.0];
+	this._radius = -1;
+    },
+    valid: function() {
+	return this._radius>=0.0;
+    },
+    set: function (center,radius)
+    {
+	this._center = center;
+	this._radius = radius;
+    },
+    center: function() {return this._center;},
+    radius: function() {return this._radius;},
+    radius2: function() {return this._radius*this._radius;},
+
+    expandByBox: function(bb) {
+	if ( bb.valid() )
+	{
+	    if (this.valid())
+	    {
+		var newbb = new osg.BoundingBox();
+		newbb._min[0]=bb._min[0];
+		newbb._min[1]=bb._min[1];
+		newbb._min[2]=bb._min[2];
+		newbb._max[0]=bb._max[0];
+		newbb._max[1]=bb._max[1];
+		newbb._max[2]=bb._max[2];
+
+		for (var i = 0 ; i < 8; i++) {
+	       	    var v = osg.Vec3.sub(bb.corner(c),this._center); // get the direction vector from corner
+		    osg.Vec3.normalize(v,v); // normalise it.
+
+		    nv[0] *= -this._radius; // move the vector in the opposite direction distance radius.
+		    nv[1] *= -this._radius; // move the vector in the opposite direction distance radius.
+		    nv[2] *= -this._radius; // move the vector in the opposite direction distance radius.
+		    nv[0] += this._center[0]; // move to absolute position.
+		    nv[1] += this._center[1]; // move to absolute position.
+		    nv[2] += this._center[2]; // move to absolute position.
+		    newbb.expandBy(nv); // add it into the new bounding box.
+		}
+
+		var c = newbb.center();
+		this._center[0] = c[0];
+		this._center[1] = c[1];
+		this._center[2] = c[2];
+		this._radius    = newbb.radius();
+
+
+	    }
+	    else
+	    {
+
+		var c = bb.center();
+		this._center[0] = c[0];
+		this._center[1] = c[1];
+		this._center[2] = c[2];
+		this._radius    = bb.radius();
+
+	    }
+	}
+
+    },
+
+    expandByVec3: function(v){
+	if ( this.valid())
+	{
+	    var dv = osg.Vec3.sub(v,this.center());
+	    r = osg.Vec3.length(dv);
+	    if (r>this.radius())
+	    {
+		dr = (r-this.radius())*0.5;
+		this._center[0] += dv[0] * (dr/r);
+		this._center[1] += dv[1] * (dr/r);
+		this._center[2] += dv[2] * (dr/r);
+		this._radius += dr;
+	    }
+	}
+	else
+	{
+	    this._center[0] = v[0];
+	    this._center[1] = v[1];
+	    this._center[2] = v[2];
+	    this._radius = 0.0;
+	}
+    },
+
+    expandBy: function(sh){
+	// ignore operation if incomming BoundingSphere is invalid.
+	if (!sh.valid()) return;
+
+	// This sphere is not set so use the inbound sphere
+	if (!this.valid())
+	{
+	    this._center[0] = sh._center[0];
+	    this._center[1] = sh._center[1];
+	    this._center[2] = sh._center[2];
+	    this._radius = sh.radius();
+
+	    return;
+	}
+
+
+	// Calculate d == The distance between the sphere centers
+	var tmp= osg.Vec3.sub( this.center() , sh.center() );
+	d = osg.Vec3.length(tmp);
+
+	// New sphere is already inside this one
+	if ( d + sh.radius() <= this.radius() )
+	{
+	    return;
+	}
+
+	//  New sphere completely contains this one
+	if ( d + this.radius() <= sh.radius() )
+	{
+	    this._center[0] = sh._center[0];
+	    this._center[1] = sh._center[1];
+	    this._center[2] = sh._center[2];
+	    this._radius    = sh._radius;
+	    return;
+	}
+
+
+	// Build a new sphere that completely contains the other two:
+	//
+	// The center point lies halfway along the line between the furthest
+	// points on the edges of the two spheres.
+	//
+	// Computing those two points is ugly - so we'll use similar triangles
+	new_radius = (this.radius() + d + sh.radius() ) * 0.5;
+	ratio = ( new_radius - this.radius() ) / d ;
+
+	this._center[0] += ( sh._center[0] - this._center[0] ) * ratio;
+	this._center[1] += ( sh._center[1] - this._center[1] ) * ratio;
+	this._center[2] += ( sh._center[2] - this._center[2] ) * ratio;
+
+	this._radius = new_radius;
+
+    },
+    contains: function(v) {
+	var vc = osg.Vec3.sub(v,this.center());
+	return valid() && (osg.Vec3.length2(vc)<=radius2());
+    },
+    intersects: function( bs ) {
+	var lc = osg.Vec3.length2(osg.Vec3.sub(this.center() , bs.center()))
+	return valid() && bs.valid() &&
+	    (lc <= (this.radius() + bs.radius())*(this.radius() + bs.radius()));
+    },
+};
+
+
 osg.Node = function () {
     this.children = [];
+    this.parents = [];
     this.nodeMask = ~0;
+    this.boundingSphere = new osg.BoundingSphere();
+    this.boundingSphereComputed = false;
 };
 osg.Node.prototype = {
     getOrCreateStateSet: function() {
@@ -2711,6 +2927,14 @@ osg.Node.prototype = {
     accept: function(nv) { 
         if (nv.validNodeMask(this)) {
             nv.apply(this);
+        }
+    },
+    dirtyBound: function() {
+        if (this.boundingSphereComputed === true) {
+            this.boundingSphereComputed = false;
+            for (var i = 0, l = this.parents.length; i < l; i++) {
+                this.parents[i].dirtyBound();
+            }
         }
     },
     setNodeMask: function(mask) { this.nodeMask = mask; }, 
@@ -2728,15 +2952,43 @@ osg.Node.prototype = {
         }
         return false;
     },
-    addChild: function (child) { return this.children.push(child); },
+    addChild: function (child) {
+	var c =  this.children.push(child);
+        child.addParent(this);
+	this.dirtyBound();
+	return c;
+    },
     getChildren: function() { return this.children; },
-    removeChildren: function () { this.children.length = 0; },
-    
+    addParent: function( parent) {
+        this.parents.push(parent);
+    },
+    removeParent: function(parent) {
+        var parents = this.parents;
+        for (var i = 0, l = this.parents.length; i < l; i++) {
+            if (parents[i] === parent) {
+                parents.splice(i, 1);
+                return;
+            }
+        }
+    },
+    removeChildren: function () {
+        var children = this.children;
+        if (children.length !== 0) {
+            for (var i = 0, l = children.length; i < l; i++) {
+                children[i].removeParent(this);
+            }
+	    this.children.length = 0;
+	    this.dirtyBound();
+        }
+    },
+
     // preserve order
     removeChild: function (child) {
         for (var i = 0, l = this.children.length; i < l; i++) {
             if (this.children[i] === child) {
+                chil.removeParent(this);
                 this.children.splice(i, 1);
+	        this.dirtyBound();
             }
         }
     },
@@ -2747,6 +2999,24 @@ osg.Node.prototype = {
             child.accept(visitor);
         }
     },
+
+    getBound: function() {
+        if(!this.boundingSphereComputed) {
+            this.computeBound(this.boundingSphere);
+            this.boundingSphereComputed = true;
+        }
+        return this.boundingSphere;
+    },
+
+    computeBound: function (boundSphere) {
+        boundSphere.init();
+	for (var i = 0, l = this.children.length; i < l; i++) {
+	    var child = this.children[i];
+	    boundSphere.expandBy(child.getBound());
+	}
+	return boundSphere;
+    },
+
 };
 osg.Node.create = function() {
     var node = new osg.Node();
@@ -3155,11 +3425,11 @@ osg.Material.prototype = {
     getOrCreateUniforms: function() {
         if (osg.Material.uniforms === undefined) {
             osg.Material.uniforms = { "ambient": osg.Uniform.createFloat4([ 0, 0, 0, 0], 'MaterialAmbient') ,
-                                  "diffuse": osg.Uniform.createFloat4([ 0, 0, 0, 0], 'MaterialDiffuse') ,
-                                  "specular": osg.Uniform.createFloat4([ 0, 0, 0, 0], 'MaterialSpecular') ,
-                                  "emission": osg.Uniform.createFloat4([ 0, 0, 0, 0], 'MaterialEmission') ,
-                                  "shininess": osg.Uniform.createFloat1([ 0], 'MaterialShininess')
-                                };
+                                      "diffuse": osg.Uniform.createFloat4([ 0, 0, 0, 0], 'MaterialDiffuse') ,
+                                      "specular": osg.Uniform.createFloat4([ 0, 0, 0, 0], 'MaterialSpecular') ,
+                                      "emission": osg.Uniform.createFloat4([ 0, 0, 0, 0], 'MaterialEmission') ,
+                                      "shininess": osg.Uniform.createFloat1([ 0], 'MaterialShininess')
+                                    };
             var uniformKeys = [];
             for (var k in osg.Material.uniforms) {
                 uniformKeys.push(k);
@@ -3220,7 +3490,7 @@ osg.Light = function () {
     this.ambient = [ 1.0, 1.0, 1.0, 1.0 ];
     this.diffuse = [ 1.0, 1.0, 1.0, 1.0 ];
     this.specular = [ 1.0, 1.0, 1.0, 1.0 ];
- };
+};
 
 osg.Light.prototype = {
     attributeType: "Light",
@@ -3233,15 +3503,15 @@ osg.Light.prototype = {
         }
         if (osg.Light.uniforms[this.getTypeMember()] === undefined) {
             osg.Light.uniforms[this.getTypeMember()] = { "ambient": osg.Uniform.createFloat4([ 0.2, 0.2, 0.2, 1], this.getParameterName("ambient")) ,
-                                                     "diffuse": osg.Uniform.createFloat4([ 0.8, 0.8, 0.8, 1], this.getParameterName('diffuse')) ,
-                                                     "specular": osg.Uniform.createFloat4([ 0.2, 0.2, 0.2, 1], this.getParameterName('specular')) ,
-                                                     "direction": osg.Uniform.createFloat3([ 0, 0, 1], this.getParameterName('direction')),
-                                                     "constant_attenuation": osg.Uniform.createFloat1( 0, this.getParameterName('constant_attenuation')),
-                                                     "linear_attenuation": osg.Uniform.createFloat1( 0, this.getParameterName('linear_attenuation')),
-                                                     "quadratic_attenuation": osg.Uniform.createFloat1( 0, this.getParameterName('quadratic_attenuation')),
-                                                     "enable": osg.Uniform.createInt1( 0, this.getParameterName('enable')),
-                                                     "matrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('matrix'))
-                                                   };
+                                                         "diffuse": osg.Uniform.createFloat4([ 0.8, 0.8, 0.8, 1], this.getParameterName('diffuse')) ,
+                                                         "specular": osg.Uniform.createFloat4([ 0.2, 0.2, 0.2, 1], this.getParameterName('specular')) ,
+                                                         "direction": osg.Uniform.createFloat3([ 0, 0, 1], this.getParameterName('direction')),
+                                                         "constant_attenuation": osg.Uniform.createFloat1( 0, this.getParameterName('constant_attenuation')),
+                                                         "linear_attenuation": osg.Uniform.createFloat1( 0, this.getParameterName('linear_attenuation')),
+                                                         "quadratic_attenuation": osg.Uniform.createFloat1( 0, this.getParameterName('quadratic_attenuation')),
+                                                         "enable": osg.Uniform.createInt1( 0, this.getParameterName('enable')),
+                                                         "matrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('matrix'))
+                                                       };
 
             var uniformKeys = [];
             for (var k in osg.Light.uniforms[this.getTypeMember()]) {
@@ -3379,7 +3649,7 @@ osg.Light.prototype = {
                     "uniform float " + this.getParameterName('constantAttenuation') + ";",
                     "uniform float " + this.getParameterName('linearAttenuation') + ";",
                     "uniform float " + this.getParameterName('quadraticAttenuation') + ";",
-//                    "uniform mat4 " + this.getParameterName('matrix') + ";",
+                    //                    "uniform mat4 " + this.getParameterName('matrix') + ";",
                     "",
                     "" ].join('\n');
             break;
@@ -3534,6 +3804,26 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
         for (var j = 0, m = primitives.length; j < m; ++j) {
             primitives[j].draw(state);
         }
+    },
+
+    computeBoundingBox: function(boundingBox) {
+	var att = this.getAttributes();
+	if ( att.Vertex.itemSize == 3 ) {
+	    vertexes = att.Vertex.getElements();
+	    for (var idx = 0, l = vertexes.length; idx < l; idx+=3) {
+		var v=[vertexes[idx],vertexes[idx+1],vertexes[idx+2]];
+		boundingBox.expandByVec3(v);
+	    }
+	}
+        return boundingBox;
+    },
+
+    computeBound: function (boundingSphere) {
+	boundingSphere.init();
+	var bb = new osg.BoundingBox();
+        this.computeBoundingBox(bb);
+	boundingSphere.expandByBox(bb);
+	return boundingSphere;
     }
 });
 osg.Geometry.create = function() {
@@ -3732,7 +4022,7 @@ osg.StateGraph.prototype = {
             sg_current = sg_current.parent;
         }
 
-       // use return path to trace back steps to sg_new.
+        // use return path to trace back steps to sg_new.
         stack = [];
 
         // need to pop back up to the same depth as the curr state group.
@@ -4213,7 +4503,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
             rtts.setClearColor(camera.getClearColor());
 
             rtts.setClearMask(camera.getClearMask());
-         
+            
             var vp;
             if (camera.getViewport() === undefined) {
                 vp = previous_stage.getViewport();
@@ -4416,7 +4706,7 @@ osg.ParseSceneGraph = function (node)
     }
 
     return node;
-}
+};
 
 
 osg.View = function() { osg.Camera.call(this); };

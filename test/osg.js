@@ -44,6 +44,69 @@ function near(a, b, threshold)
 }
 
 
+
+test("osg.BoundingSphere", function() {
+    var simpleBoundingSphere = new osg.BoundingSphere();
+    ok(simpleBoundingSphere.valid() !== 1, "BoundingSphere is invalid");
+
+    var bs_0 = new osg.BoundingSphere();
+    bs_0.expandByVec3([1.0,4.0,0.0]);
+    bs_0.expandByVec3([2.0,3.0,0.0]);
+    bs_0.expandByVec3([3.0,2.0,0.0]);
+    bs_0.expandByVec3([4.0,1.0,0.0]);
+
+    c_bs_0 = [2.5,2.5,0];
+    r_bs_0 = 2.12132;
+    var center_is_equal_bs_0 = check_near(c_bs_0,bs_0._center,0.0001) & check_near(r_bs_0,bs_0._radius,0.0001)
+    ok(center_is_equal_bs_0, "Expanding by vec3 -> bounding sphere test 1");
+    var bs_1 = new osg.BoundingSphere();
+    bs_1.expandByVec3([ -1.0, 0.0, 0.0]);
+    bs_1.expandByVec3([  2.0,-3.0, 2.0]);
+    bs_1.expandByVec3([  3.0, 3.0, 1.0]);
+    bs_1.expandByVec3([  5.0, 5.0, 0.0]);
+
+    c_bs_1 = [2.00438,0.862774,0.784302];
+    r_bs_1 = 5.16774;
+    var center_is_equal_bs_1 = check_near(c_bs_1,bs_1._center,0.0001) & check_near(r_bs_1,bs_1._radius,0.0001)
+    ok(center_is_equal_bs_1 , "Expanding by vec3 ->  bounding sphere test 2");
+
+    var bs_01 = new osg.BoundingSphere();
+    bs_01.expandBy(bs_0);
+
+    c_bs_01_0 = [2.5,2.5,0];
+    r_bs_01_0 = 2.12132;
+    var center_is_equal_bs_01_0 = check_near(c_bs_01_0,bs_01._center,0.0001) & check_near(r_bs_01_0,bs_01._radius,0.0001)
+    ok(center_is_equal_bs_01_0 , "Expanding by BoundingSphere ->  bounding sphere test 1");
+
+    bs_01.expandBy(bs_1);
+    c_bs_01_1 = [2.00438,0.862774,0.784302];
+    r_bs_01_1 = 5.16774;
+    var center_is_equal_bs_01_1 = check_near(c_bs_01_1,bs_01._center,0.0001) & check_near(r_bs_01_1,bs_01._radius,0.0001)
+    ok(center_is_equal_bs_01_1 , "Expanding by BoundingSphere ->  bounding sphere test 2");
+
+
+    var bb = new osg.BoundingBox();
+    var bb0 = [-.5,0,-2];
+    var bb1 = [1,0,-1];
+    var bb2 = [0,1,-.5];
+    var bb3 = [1,2,-.8];
+    bb.expandByVec3(bb0);
+    bb.expandByVec3(bb1);
+    bb.expandByVec3(bb2);
+    bb.expandByVec3(bb3);
+
+    var bb_test_ok = ( bb._max[0] == 1 &&  bb._max[1] == 2 &&  bb._max[2] == -0.5 &&  bb._min[0] == -.5 &&  bb._min[1] == 0 && bb._min[2] == -2);
+    ok(bb_test_ok , "Expanding by BoundingBox ->  bounding box test");
+
+
+    var o = osg.ParseSceneGraph(getBoxScene());
+    o.getBound();
+    var bb_test_scene_graph_test = ( check_near(o.boundingSphere.radius(),2.41421,0.00001) );
+    ok(bb_test_scene_graph_test , "Box.js tested  ->  bounding sphere scene graph test");
+
+});
+
+
 test("osg.Quat.init", function() {
     var q = osg.Quat.init();
     same(q, [0,0,0,1]);
@@ -470,3 +533,28 @@ test("osg.CullVisitor_RenderStage_test0", function() {
 
 });
 
+
+test("osg.Node", function() {
+
+    var n = new osg.Node();
+    ok( n.children.length === 0, "number of children must be 0");
+    ok( n.parents.length === 0, "number of parents must be 0");
+    ok( n.nodeMask === ~0, "nodemask must be ~0");
+    ok( n.boundingSphere !== undefined, "boundingSphere must not be undefined");
+    ok( n.boundingSphereComputed === false, "boundingSphereComputed must be false");
+    n.getBound();
+    ok( n.boundingSphereComputed === true, "boundingSphereComputed must be true");
+
+    var n1 = new osg.Node();
+    n.addChild(n1);
+    ok( n.children.length === 1, "n must have 1 child");
+    ok( n1.parents.length === 1, "n1 must have 1 parent");
+    ok( n.boundingSphereComputed === false, "boundingSphereComputed must be false after adding child");
+    n.getBound();
+    ok( n.boundingSphereComputed === true, "boundingSphereComputed must be true after calling getBound");
+
+    
+    n1.dirtyBound();
+    ok( n.boundingSphereComputed === false, "boundingSphereComputed must be true if a child call dirtyBound");
+
+});
