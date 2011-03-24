@@ -28,7 +28,7 @@ osg.log = function(str) {
     if (window.console !== undefined) {
         window.console.log(str);
     } else {
-        jQuery("#debug").append("<li> + " + str + "</li>");
+        jQuery("#debug").append(str + "<br>");
     }
 };
 osg.reportErrorGL = false;
@@ -73,7 +73,6 @@ osg.checkError = function(error) {
 osg.objectInehrit = function(base, extras) {
     function F(){}
     F.prototype = base;
-    F.prototype.superObject = base;
     var obj = new F();
     if(extras)  {osg.objectMix(obj, extras, false); }
     return obj;
@@ -986,7 +985,7 @@ osg.Vec2 = {
 
     normalize: function(a, result) {
         if (result === undefined) {
-            result = a;
+            result = [];
         }
 
         var norm = this.length2(a);
@@ -1096,7 +1095,7 @@ osg.Vec3 = {
 
     normalize: function(a, result) {
         if (result === undefined) {
-            result = a;
+            result = [];
         }
 
         var norm = this.length2(a);
@@ -2712,6 +2711,19 @@ osg.BoundingBox.prototype = {
     	return (this._max[0] >= this._min[0] &&  this._max[1] >= this._min[1] &&  this._max[2] >= this._min[2]);
     },
 
+    expandBySphere: function(sh) {
+        if (!sh.valid()) {
+            return;
+        }
+        if(sh._center[0]-sh._radius<this._min[0]) this._min[0] = sh._center[0]-sh._radius;
+        if(sh._center[0]+sh._radius>this._max[0]) this._max[0] = sh._center[0]+sh._radius;
+
+        if(sh._center[1]-sh._radius<this._min[1]) this._min[1] = sh._center[1]-sh._radius;
+        if(sh._center[1]+sh._radius>this._max[1]) this._max[1] = sh._center[1]+sh._radius;
+
+        if(sh._center[2]-sh._radius<this._min[2]) this._min[2] = sh._center[2]-sh._radius;
+        if(sh._center[2]+sh._radius>this._max[2]) this._max[2] = sh._center[2]+sh._radius;
+    },
     expandByVec3: function(v){
 
 	if ( this.valid() ) {
@@ -2844,6 +2856,22 @@ osg.BoundingSphere.prototype = {
 	}
     },
 
+    expandRadiusBySphere: function(sh){
+        if (sh.valid()) {
+            if (this.valid()) {
+                var sub = osg.Vec3.sub;
+                var length = osg.Vec3.length;
+                var r = length(sub(sh._center,this._center))+sh._radius;
+                if (r>this._radius) {
+                    this._radius = r;
+                }
+                // else do nothing as vertex is within sphere.
+            } else {
+                this._center = osg.Vec3.copy(sh._center);
+                this._radius = sh._radius;
+            }
+        }
+    },
     expandBy: function(sh){
 	// ignore operation if incomming BoundingSphere is invalid.
 	if (!sh.valid()) return;
@@ -2986,7 +3014,7 @@ osg.Node.prototype = {
     removeChild: function (child) {
         for (var i = 0, l = this.children.length; i < l; i++) {
             if (this.children[i] === child) {
-                chil.removeParent(this);
+                child.removeParent(this);
                 this.children.splice(i, 1);
 	        this.dirtyBound();
             }
@@ -3008,13 +3036,29 @@ osg.Node.prototype = {
         return this.boundingSphere;
     },
 
-    computeBound: function (boundSphere) {
-        boundSphere.init();
+    computeBound: function (bsphere) {
+        var bb = new osg.BoundingBox();
+        bb.init();
+        bsphere.init();
 	for (var i = 0, l = this.children.length; i < l; i++) {
 	    var child = this.children[i];
-	    boundSphere.expandBy(child.getBound());
+            if (child.referenceFrame === undefined || child.referenceFrame === osg.Transform.RELATIVE_RF) {
+	        bb.expandBySphere(child.getBound());
+            }
 	}
-	return boundSphere;
+        if (!bb.valid()) {
+            return bsphere;
+        }
+        bsphere._center = bb.center();
+        bsphere._radius = 0.0;
+	for (var i = 0, l = this.children.length; i < l; i++) {
+	    var child = this.children[i];
+            if (child.referenceFrame === undefined || child.referenceFrame === osg.Transform.RELATIVE_RF) {
+	        bsphere.expandRadiusBySphere(child.getBound());
+            }
+	}
+            
+	return bsphere;
     },
 
 };
@@ -3023,13 +3067,84 @@ osg.Node.create = function() {
     return node;
 };
 
-osg.MatrixTransform = function() {
+
+osg.Transform = function() {
     osg.Node.call(this);
+    this.referenceFrame = osg.Transform.RELATIVE_RF;
+};
+osg.Transform.RELATIVE_RF = 0;
+osg.Transform.ABSOLUTE_RF = 1;
+osg.Transform.prototype = osg.objectInehrit(osg.Node.prototype, {
+    setReferenceFrame: function(value) { this.referenceFrame = value; },
+    getReferenceFrame: function() { return this.referenceFrame; },
+
+    computeBound: function(bsphere) {
+        osg.Node.prototype.computeBound.call(this, bsphere);
+        if (!bsphere.valid()) {
+            return bsphere;
+        }
+        var matrix = osg.Matrix.makeIdentity();
+        this.computeLocalToWorldMatrix(matrix);
+
+        var xdash = osg.Vec3.copy(bsphere._center);
+        xdash[0] += bsphere._radius;
+        osg.Matrix.transformVec3(matrix,xdash, xdash);
+
+        var ydash = osg.Vec3.copy(bsphere._center);
+        ydash[1] += bsphere._radius;
+        osg.Matrix.transformVec3(matrix,ydash, ydash);
+
+        var zdash = osg.Vec3.copy(bsphere._center);
+        zdash[2] += bsphere._radius;
+        osg.Matrix.transformVec3(matrix,zdash, zdash);
+
+        osg.Matrix.transformVec3(matrix, bsphere._center, bsphere._center);
+
+        osg.Vec3.sub(xdash,bsphere._center, xdash);
+        var len_xdash = osg.Vec3.length(xdash);
+
+        osg.Vec3.sub(ydash, bsphere._center, ydash);
+        var len_ydash = osg.Vec3.length(ydash);
+
+        osg.Vec3.sub(zdash, bsphere._center, zdash);
+        var len_zdash = osg.Vec3.length(zdash);
+
+        bsphere._radius = len_xdash;
+        if (bsphere._radius<len_ydash) {
+            bsphere._radius = len_ydash;
+        }
+        if (bsphere._radius<len_zdash) {
+            bsphere._radius = len_zdash;
+        }
+        return bsphere;
+    }
+});
+
+
+osg.MatrixTransform = function() {
+    osg.Transform.call(this);
     this.matrix = osg.Matrix.makeIdentity();
 };
-osg.MatrixTransform.prototype = osg.objectInehrit(osg.Node.prototype, {
+osg.MatrixTransform.prototype = osg.objectInehrit(osg.Transform.prototype, {
     getMatrix: function() { return this.matrix; },
-    setMatrix: function(m) { this.matrix = m; }
+    setMatrix: function(m) { this.matrix = m; },
+    computeLocalToWorldMatrix: function(matrix,nodeVisitor) {
+        if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
+            osg.Matrix.mult(matrix, this.matrix, matrix);
+        } else {
+            matrix = this.matrix;
+        }
+        return true;
+    },
+    computeWorldToLocalMatrix: function(matrix,nodeVisitor) {
+        var minverse = osg.Matrix.inverse(this.matrix);
+        if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
+            osg.Matrix.mult(minverse, matrix, matrix);
+        } else {// absolute
+            matrix = inverse;
+        }
+        return true;
+    },
 });
 osg.MatrixTransform.create = function() {
     var mt = new osg.MatrixTransform();
@@ -3833,19 +3948,9 @@ osg.Geometry.create = function() {
 
 
 
-osg.Transform = {
-    RELATIVE_RF: 0,
-    ABSOLUTE_RF: 1,
-};
 
 osg.Camera = function () {
-    if (osg.Camera.PRE_RENDER === undefined) {
-        osg.Camera.PRE_RENDER = 0;
-        osg.Camera.NESTED_RENDER = 1;
-        osg.Camera.POST_RENDER = 2;
-    }
-
-    osg.Node.call(this);
+    osg.Transform.call(this);
 
     this.viewport = undefined;
     this.setClearColor([0, 0, 0, 1.0]);
@@ -3855,12 +3960,12 @@ osg.Camera = function () {
     this.setProjectionMatrix(osg.Matrix.makeIdentity());
     this.renderOrder = osg.Camera.NESTED_RENDER;
     this.renderOrderNum = 0;
-    this.referenceFrame = osg.Transform.RELATIVE_RF;
 };
+osg.Camera.PRE_RENDER = 0;
+osg.Camera.NESTED_RENDER = 1;
+osg.Camera.POST_RENDER = 2;
 
-osg.Camera.prototype = osg.objectInehrit(osg.Node.prototype, {
-    setReferenceFrame: function(value) { this.referenceFrame = value; },
-    getReferenceFrame: function() { return this.referenceFrame; },
+osg.Camera.prototype = osg.objectInehrit(osg.Transform.prototype, {
 
     setClearDepth: function(depth) { this.clearDepth = depth;}, 
     getClearDepth: function() { return this.clearDepth;},
@@ -3900,6 +4005,25 @@ osg.Camera.prototype = osg.objectInehrit(osg.Node.prototype, {
         }
         this.attachments[bufferComponent] = { 'texture' : texture , 'level' : level };
     },
+
+    computeLocalToWorldMatrix: function(matrix,nodeVisitor) {
+        if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
+            osg.Matrix.mult(matrix, this.modelviewMatrix, matrix);
+        } else {// absolute
+            matrix = this.modelviewMatrix;
+        }
+        return true;
+    },
+
+    computeWorldToLocalMatrix: function(matrix, nodeVisitor) {
+        var inverse = osg.Matrix.inverse(this.modelviewMatrix);
+        if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
+            osg.Matrix.mult(inverse, matrix, matrix);
+        } else {
+            matrix = inverse;
+        }
+        return true;
+    }
 
 });
 
@@ -4227,7 +4351,7 @@ osg.RenderStage = function () {
 };
 osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
     reset: function() { 
-        this.superObject.reset.call(this);
+        osg.RenderBin.prototype.reset.call(this);
         this.preRenderList.length = 0;
         this.postRenderList.length = 0;
     },
@@ -4339,7 +4463,7 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
             this.applyPositionedAttribute(state, this.positionedAttribute);
         }
 
-        var previous = this.superObject.drawImplementation.call(this, state, previousRenderLeaf);
+        var previous = osg.RenderBin.prototype.drawImplementation.call(this, state, previousRenderLeaf);
 
         if (osg.reportErrorGL === true) {
             error = gl.getError();
@@ -4350,8 +4474,6 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
         //debugger;
         //state.apply();
     }
-    
-    
 });
 
 
@@ -4640,7 +4762,6 @@ osg.ParseSceneGraph = function (node)
         }
     }
 
-
     if (node.attributes) {
         jQuery.each(node.attributes, function( key, element) {
             var attributeArray = node.attributes[key];
@@ -4689,9 +4810,12 @@ osg.ParseSceneGraph = function (node)
     }
 
     if (node.children) {
-        newnode = new osg.Node();
-        jQuery.extend(newnode, node);
-        node = newnode;
+
+        if (node.children === undefined) {
+            newnode = new osg.Node();
+            jQuery.extend(newnode, node);
+            node = newnode;
+        }
 
         for (var child = 0, childLength = node.children.length; child < childLength; child++) {
             node.children[child] = osg.ParseSceneGraph(node.children[child]);
@@ -4725,10 +4849,10 @@ osg.View.prototype = osg.objectInehrit(osg.Camera.prototype, {
 });
 
 
-osg.createTexuredQuad = function(cornerx, cornery, cornerz,
-                                 wx, wy, wz,
-                                 hx, hy, hz,
-                                 l,b,r,t) {
+osg.createTexturedQuad = function(cornerx, cornery, cornerz,
+                                  wx, wy, wz,
+                                  hx, hy, hz,
+                                  l,b,r,t) {
 
     if (r === undefined && t === undefined) {
         r = l;
@@ -4809,4 +4933,4 @@ osg.createTexuredQuad = function(cornerx, cornery, cornerz,
     g.getPrimitives().push(primitive);
     return g;
 };
-osg.createTexturedQuad = osg.createTexuredQuad;
+osg.createTexuredQuad = osg.createTexturedQuad;

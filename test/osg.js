@@ -104,6 +104,35 @@ test("osg.BoundingSphere", function() {
     var bb_test_scene_graph_test = ( check_near(o.boundingSphere.radius(),2.41421,0.00001) );
     ok(bb_test_scene_graph_test , "Box.js tested  ->  bounding sphere scene graph test");
 
+
+    // test case with camera and absolute transform
+    var main = new osg.Node();
+    var cam = new osg.Camera();
+    cam.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+    var q = osg.createTexuredQuad(-25,-25,0,
+                                  50, 0 ,0,
+                                  0, 50 ,0);
+    main.addChild(q);
+    var q2 = osg.createTexuredQuad(-250,0,0,
+                                  50, 0 ,0,
+                                  0, 50 ,0);
+    cam.addChild(q2);
+    main.addChild(cam);
+    var bscam = main.getBound();
+    near(bscam.center(), [0, 0, 0]);
+
+
+    // test case with invalid bounding sphere
+    var main2 = new osg.Node();
+    var q3 = osg.createTexuredQuad(-25,-25,0,
+                                  50, 0 ,0,
+                                  0, 50 ,0);
+    var mt3 = new osg.MatrixTransform();
+    mt3.setMatrix(osg.Matrix.makeTranslate(-1000,0,0));
+    main2.addChild(q3);
+    main2.addChild(mt3);
+    near(main2.getBound().center(), [0, 0, 0]);
+
 });
 
 
@@ -177,6 +206,7 @@ test("osg.Matrix.makeLookAt", function() {
 	       0, 1, -0, 0,
 	       0, -0, -1, 0,
 	       0, 0, -10, 1]);
+
 });
 
 test("osg.Matrix.getLookAt", function() {
@@ -244,6 +274,14 @@ test("osg.Matrix.transpose", function() {
               1, 5, 9, 13,
               2, 6, 10,14,
               3, 7, 11,15]);
+});
+
+test("osg.Matrix.makeRotate", function() {
+    var res = osg.Matrix.makeRotate(0, 0,0,1);
+    near(res , [1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1]);
 });
 
 test("osg.Matrix.mult", function() {
@@ -557,4 +595,16 @@ test("osg.Node", function() {
     n1.dirtyBound();
     ok( n.boundingSphereComputed === false, "boundingSphereComputed must be true if a child call dirtyBound");
 
+});
+
+test("osg.MatrixTransform", function() {
+
+    var n = new osg.MatrixTransform();
+    var scene = osgDB.readNode(getBoxScene());
+    n.setMatrix(osg.Matrix.makeTranslate(100,0,0));
+    n.addChild(scene);
+    var bs = n.getBound(); 
+    near( bs.center(), [100,0,0]);
+    near( bs.radius(), 2.414213562373095);
+    
 });

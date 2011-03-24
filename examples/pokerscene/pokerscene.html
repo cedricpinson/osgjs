@@ -74,8 +74,8 @@ function() {
 try {
   viewer = new osgViewer.Viewer(canvas);
   viewer.init();
-  viewer.setupManipulator();
   viewer.setScene(createScene());
+  viewer.setupManipulator();
   viewer.run();
 } catch (er) {
   osg.log("exception in osgViewer " + er);

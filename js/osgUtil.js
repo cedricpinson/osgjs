@@ -222,7 +222,7 @@ osgUtil.TriangleIntersect.prototype = {
         if (d>this.length) {return;}
 
         var normal = osg.Vec3.cross(v12,v23);
-        osg.Vec3.normalize(normal);
+        osg.Vec3.normalize(normal, normal);
 
         var r = d/this.length;
 

@@ -29,7 +29,6 @@ osgViewer.Viewer = function(canvas) {
         this.frameRate = 60.0;
         osgUtil.UpdateVisitor = osg.UpdateVisitor;
         osgUtil.CullVisitor = osg.CullVisitor;
-
         this.urlOptions = true;
     } else {
         throw "No WebGL implementation found";
@@ -39,11 +38,17 @@ osgViewer.Viewer = function(canvas) {
 
 osgViewer.Viewer.prototype = {
     getScene: function() { return this.scene; },
-    setScene: function(scene) { this.scene = scene; },
+    setScene: function(scene) {
+        this.root.removeChildren();
+        this.root.addChild( scene );
+        this.scene = scene;
+    },
 
     init: function() {
+        this.root = new osg.Node();
         this.state = new osg.State();
         this.view = new osg.View();
+        this.view.addChild(this.root);
 
         var ratio = this.canvas.width/this.canvas.height;
         this.view.setViewport(new osg.Viewport(0,0, this.canvas.width, this.canvas.height));
@@ -287,17 +292,13 @@ osgViewer.Viewer.prototype = {
     },
 
     run: function() {
-        if (this.scene === undefined) {
-            this.scene = new osg.Node();
-        }
-        this.view.addChild(this.scene);
         var that = this;
         var render = function() {
             window.requestAnimationFrame(render, this.canvas);
             that.frame();
         };
         render();
-    }, 
+    },
 
     getManipulator: function() { return this.manipulator; },
     setupManipulator: function(manipulator, dontBindDefaultEvent) {
@@ -305,8 +306,14 @@ osgViewer.Viewer.prototype = {
             manipulator = new osgGA.OrbitManipulator();
         }
 
+        if (manipulator.setNode !== undefined) {
+            manipulator.setNode(this.root);
+        } else {
+            // for backward compatibility
+            manipulator.view = this.view;
+        }
+
         this.manipulator = manipulator;
-        this.manipulator.view = this.view;
 
         var that = this;
         this.manipulator.convertEventToCanvas = function(e) {
@@ -388,29 +395,21 @@ osgViewer.Viewer.prototype = {
                 }
             });
 
-            if (true) {
-                if (jQuery(document).mousewheel !== undefined) {
-                    jQuery(document).mousewheel(function(objEvent, intDelta, deltaX, deltaY) {
-	                if (intDelta > 0){
-                            manipulator.distanceDecrease();
-	                }
-	                else if (intDelta < 0){
-                            manipulator.distanceIncrease();
-	                }
-                        return false;
-	            });
-                }
-            }
-
-            if (true) {
-                jQuery(document).bind({'keydown' : function(event) {
-                    if (event.keyCode === 33) { // pageup
-                        manipulator.distanceIncrease();
-                        return false;
-                    } else if (event.keyCode === 34) { //pagedown
+            if (jQuery(document).mousewheel !== undefined) {
+                jQuery(document).mousewheel(function(objEvent, intDelta, deltaX, deltaY) {
+	            if (intDelta > 0){
                         manipulator.distanceDecrease();
-                        return false;
-                    }
+	            }
+	            else if (intDelta < 0){
+                        manipulator.distanceIncrease();
+	            }
+                    return false;
+	        });
+            }
+            
+            if (manipulator.keydown !== undefined) {
+                jQuery(document).bind({'keydown': function(event) {
+                    return manipulator.keydown(event);
                 }});
             }
         }
