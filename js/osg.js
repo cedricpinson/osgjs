@@ -1,6 +1,7 @@
 /** -*- compile-command: "jslint-cli osg.js" -*-
  *
- *  Copyright (C) 2010 Cedric Pinson
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *  OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
  *
  *                  GNU LESSER GENERAL PUBLIC LICENSE
  *                      Version 3, 29 June 2007
@@ -14,14 +15,14 @@
  * License
  *
  * Authors:
- *  Cedric Pinson <cedric.pinson@plopbyte.net>
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
  *
  */
 var gl;
 var osg = {};
 
 osg.version = '0.0.2';
-osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.net';
+osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 osg.instance = 0;
 osg.version = 0;
 osg.log = function(str) {
@@ -2700,7 +2701,6 @@ osg.BoundingBox = function() {
     this._min = [1,1,1];
     this._max = [0,0,0];
 };
-
 osg.BoundingBox.prototype = {
     init: function() {
 	this._min = [1,1,1];
@@ -3890,9 +3890,19 @@ osg.Geometry = function () {
     osg.Node.call(this);
     this.primitives = [];
     this.attributes = {};
+    this.boundingBox = new osg.BoundingBox();
+    this.boundingBoxComputed = false;
 };
 
 osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
+    dirtyBound: function() {
+        if (this.boundingBoxComputed === true) {
+            this.boundingBoxComputed = false;
+        }
+        //
+        osg.Node.dirtyBound.call(this);
+    },
+
     getPrimitives: function() { return this.primitives; },
     getAttributes: function() { return this.attributes; },
 
@@ -3921,6 +3931,13 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
         }
     },
 
+    getBoundingBox: function() {
+        if(!this.boundingBoxComputed) {
+            this.computeBoundingBox(this.boundingBox);
+            this.boundingBoxComputed = true;
+        }
+        return this.boundingBox;
+    },
     computeBoundingBox: function(boundingBox) {
 	var att = this.getAttributes();
 	if ( att.Vertex.itemSize == 3 ) {
@@ -3935,8 +3952,7 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
 
     computeBound: function (boundingSphere) {
 	boundingSphere.init();
-	var bb = new osg.BoundingBox();
-        this.computeBoundingBox(bb);
+	var bb = this.getBoundingBox();
 	boundingSphere.expandByBox(bb);
 	return boundingSphere;
     }
@@ -3947,10 +3963,25 @@ osg.Geometry.create = function() {
 };
 
 
+osg.CullSettings = function() {
+    this.computeNearFar = true;
+    this.nearFarRatio = 0.0005;
+};
+osg.CullSettings.prototype = {
+    setCullSettings: function(settings) {
+        this.computeNearFar = settings.computeNearFar;
+        this.nearFarRatio = settings.nearFarRatio;
+    },
+    setNearFarRatio: function( ratio) { this.nearFarRatio = ratio; },
+    getNearFarRatio: function() { return this.nearFarRatio; },
+    setComputeNearFar: function(value) { this.computeNearFar = value; },
+    getComputeNearFar: function() { return this.computeNearFar; }
+};
 
 
 osg.Camera = function () {
     osg.Transform.call(this);
+    osg.CullSettings.call(this);
 
     this.viewport = undefined;
     this.setClearColor([0, 0, 0, 1.0]);
@@ -3965,7 +3996,8 @@ osg.Camera.PRE_RENDER = 0;
 osg.Camera.NESTED_RENDER = 1;
 osg.Camera.POST_RENDER = 2;
 
-osg.Camera.prototype = osg.objectInehrit(osg.Transform.prototype, {
+osg.Camera.prototype = osg.objectInehrit(osg.CullSettings.prototype, 
+                                         osg.objectInehrit(osg.Transform.prototype, {
 
     setClearDepth: function(depth) { this.clearDepth = depth;}, 
     getClearDepth: function() { return this.clearDepth;},
@@ -4025,7 +4057,7 @@ osg.Camera.prototype = osg.objectInehrit(osg.Transform.prototype, {
         return true;
     }
 
-});
+}));
 
 
 
@@ -4511,8 +4543,13 @@ osg.UpdateVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     }
 });
 
+
+
+
 osg.CullVisitor = function () {
     osg.NodeVisitor.call(this);
+    osg.CullSettings.call(this);
+
     this.modelviewMatrixStack = [osg.Matrix.makeIdentity()];
     this.projectionMatrixStack = [osg.Matrix.makeIdentity()];
     this.viewportStack = [];
@@ -4522,9 +4559,130 @@ osg.CullVisitor = function () {
     this.currentRenderBin = undefined;
     this.currentRenderStage = undefined;
     this.rootRenderStage = undefined;
+
+    this.computeNearFar = true;
+    this.computedNear = Number.POSITIVE_INFINITY;
+    this.computedFar = Number.NEGATIVE_INFINITY;
+
+    var lookVector =[0.0,0.0,-1.0];
+    this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
+    this.bbCornerNear = (~this.bbCornerFar)&7;
 };
 
-osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+osg.CullVisitor.prototype = osg.objectInehrit(osg.CullSettings.prototype, osg.objectInehrit(osg.NodeVisitor.prototype, {
+    distance: function(coord,matrix) {
+        return -( coord[0]*matrix[2]+ coord[1]*matrix[6] + coord[2]*matrix[10] + matrix[14]);
+    },
+    updateCalculatedNearFar: function( matrix, drawable) {
+
+        var bb = drawable.getBoundingBox();
+        var d_near, d_far;
+
+        // efficient computation of near and far, only taking into account the nearest and furthest
+        // corners of the bounding box.
+        d_near = this.distance(bb.corner(this.bbCornerNear),matrix);
+        d_far = this.distance(bb.corner(this.bbCornerFar),matrix);
+        
+        if (d_near>d_far) {
+            var tmp = d_near;
+            d_near = d_far;
+            d_far = tmp;
+        }
+
+        if (d_far<0.0) {
+            // whole object behind the eye point so discard
+            return false;
+        }
+
+        if (d_near<this.computedNear) {
+            this.computedNear = d_near;
+        }
+
+        if (d_far>this.computedFar) {
+            this.computedFar = d_far;
+        }
+
+        return true;
+    },
+
+    clampProjectionMatrix: function(projection, znear, zfar, nearFarRatio, resultNearFar) {
+        var epsilon = 1e-6;
+        if (zfar<znear-epsilon) {
+            osg.log("clampProjectionMatrix not applied, invalid depth range, znear = " + znear + "  zfar = " + zfar);
+            return false;
+        }
+        
+        if (zfar<znear+epsilon) {
+            // znear and zfar are too close together and could cause divide by zero problems
+            // late on in the clamping code, so move the znear and zfar apart.
+            var average = (znear+zfar)*0.5;
+            znear = average-epsilon;
+            zfar = average+epsilon;
+            // OSG_INFO << "_clampProjectionMatrix widening znear and zfar to "<<znear<<" "<<zfar<<std::endl;
+        }
+
+        if (Math.abs(osg.Matrix.get(projection,0,3))<epsilon  && 
+            Math.abs(osg.Matrix.get(projection,1,3))<epsilon  && 
+            Math.abs(osg.Matrix.get(projection,2,3))<epsilon ) {
+            // OSG_INFO << "Orthographic matrix before clamping"<<projection<<std::endl;
+
+            var delta_span = (zfar-znear)*0.02;
+            if (delta_span<1.0) delta_span = 1.0;
+            var desired_znear = znear - delta_span;
+            var desired_zfar = zfar + delta_span;
+
+            // assign the clamped values back to the computed values.
+            znear = desired_znear;
+            zfar = desired_zfar;
+
+            osg.Matrix.set(projection,2,2, -2.0/(desired_zfar-desired_znear));
+            osg.Matrix.set(projection,3,2, -(desired_zfar+desired_znear)/(desired_zfar-desired_znear));
+
+            // OSG_INFO << "Orthographic matrix after clamping "<<projection<<std::endl;
+        } else {
+
+            // OSG_INFO << "Persepective matrix before clamping"<<projection<<std::endl;
+            //std::cout << "_computed_znear"<<_computed_znear<<std::endl;
+            //std::cout << "_computed_zfar"<<_computed_zfar<<std::endl;
+
+            var zfarPushRatio = 1.02;
+            var znearPullRatio = 0.98;
+
+            //znearPullRatio = 0.99; 
+
+            var desired_znear = znear * znearPullRatio;
+            var desired_zfar = zfar * zfarPushRatio;
+
+            // near plane clamping.
+            var min_near_plane = zfar*nearFarRatio;
+            if (desired_znear<min_near_plane) desired_znear=min_near_plane;
+
+            // assign the clamped values back to the computed values.
+            znear = desired_znear;
+            zfar = desired_zfar;
+            
+            var m22 = osg.Matrix.get(projection,2,2);
+            var m32 = osg.Matrix.get(projection,3,2);
+            var m23 = osg.Matrix.get(projection,2,3);
+            var m33 = osg.Matrix.get(projection,3,3);
+            var trans_near_plane = (-desired_znear*m22 + m32)/(-desired_znear*m23+m33);
+            var trans_far_plane = (-desired_zfar*m22+m32)/(-desired_zfar*m23+m33);
+
+            var ratio = Math.abs(2.0/(trans_near_plane-trans_far_plane));
+            var center = -(trans_near_plane+trans_far_plane)/2.0;
+
+            var matrix = [1.0,0.0,0.0,0.0,
+                          0.0,1.0,0.0,0.0,
+                          0.0,0.0,ratio,0.0,
+                          0.0,0.0,center*ratio,1.0];
+            osg.Matrix.mult(matrix, projection, projection);
+            // OSG_INFO << "Persepective matrix after clamping"<<projection<<std::endl;
+        }
+        resultNearFar[0] = znear;
+        resultNearFar[1] = zfar;
+        return true;
+    },
+
     setStateGraph: function(sg) {
         this.rootStateGraph = sg;
         this.currentStateGraph = sg;
@@ -4571,6 +4729,14 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         this.projectionMatrixStack.push(matrix);
     },
     popProjectionMatrix: function () {
+        if (this.computeNearFar === true && this.computedFar >= this.computedNear) {
+            var m = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            var resultNearFar = [this.computedNear, this.computedFar];
+            if (this.clampProjectionMatrix(m, this.computedNear, this.computedFar, this.nearFarRatio, resultNearFar) === true) {
+                this.computedNear = resultNearFar[0];
+                this.computedFar = resultNearFar[1];
+            }
+        }
         this.projectionMatrixStack.pop();
     },
 
@@ -4605,6 +4771,16 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         if (camera.getViewport()) {
             this.pushViewport(camera.getViewport());
         }
+
+        // save current state of the camera
+        var previous_znear = this.computedNear;
+        var previous_zfar = this.computedFar;
+        var previous_cullsettings = new osg.CullSettings();
+        previous_cullsettings.setCullSettings(this);
+
+        this.computedNear = Number.POSITIVE_INFINITY;
+        this.computedFar = Number.NEGATIVE_INFINITY;
+        this.setCullSettings(camera);
 
         // nested camera
         if (camera.getRenderOrder() === osg.Camera.NESTED_RENDER) {
@@ -4657,6 +4833,11 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         this.popModelviewMatrix();
         this.popProjectionMatrix();
 
+        // restore previous state of the camera
+        this.setCullSettings(previous_cullsettings);
+        this.computedNear = previous_znear;
+        this.computedFar = previous_zfar;
+
         if (camera.getViewport()) {
             this.popViewport();
         }
@@ -4666,6 +4847,8 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         }
 
     },
+
+    
 
     apply: function( node ) {
         var lastMatrixStack;
@@ -4693,13 +4876,34 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
             this.pushProjectionMatrix(matrix);
         }
 
+
+        if (node.drawImplementation) {
+            if (matrix === undefined) {
+                matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+            }
+            var bb = node.getBoundingBox();
+            if (this.computeNearFar && bb.valid()) {
+                if (!this.updateCalculatedNearFar(matrix,node)) {
+                    if (node.traverse) {
+                        this.traverse(node);
+                        if (node.getMatrix || node.getViewMatrix !== undefined) {
+                            this.popModelviewMatrix();
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+
         if (node.stateset) {
             this.pushStateSet(node.stateset);
         }
         if (node.light) {
             this.addPositionedAttribute(node.light);
         }
+
         if (node.drawImplementation) {
+
             var leafs = this.currentStateGraph.leafs;
             if (leafs.length === 0) {
                 this.currentRenderBin.addStateGraph(this.currentStateGraph);
@@ -4729,7 +4933,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
             this.popProjectionMatrix();
         }
     }
-});
+}));
 
 osg.ParseSceneGraph = function (node)
 {

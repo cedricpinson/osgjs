@@ -12,6 +12,10 @@ function check_near(a, b, threshold) {
             }
         }
     } else {
+        if (a === undefined || b === undefined) {
+            QUnit.log(false, "undefined value : " + a + ", " + b);
+            return false;
+        }
         if (Math.abs(a-b) > threshold) {
             QUnit.log(false, a + " != " + b);
             return false;
@@ -109,11 +113,11 @@ test("osg.BoundingSphere", function() {
     var main = new osg.Node();
     var cam = new osg.Camera();
     cam.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    var q = osg.createTexuredQuad(-25,-25,0,
+    var q = osg.createTexturedQuad(-25,-25,0,
                                   50, 0 ,0,
                                   0, 50 ,0);
     main.addChild(q);
-    var q2 = osg.createTexuredQuad(-250,0,0,
+    var q2 = osg.createTexturedQuad(-250,0,0,
                                   50, 0 ,0,
                                   0, 50 ,0);
     cam.addChild(q2);
@@ -124,7 +128,7 @@ test("osg.BoundingSphere", function() {
 
     // test case with invalid bounding sphere
     var main2 = new osg.Node();
-    var q3 = osg.createTexuredQuad(-25,-25,0,
+    var q3 = osg.createTexturedQuad(-25,-25,0,
                                   50, 0 ,0,
                                   0, 50 ,0);
     var mt3 = new osg.MatrixTransform();
@@ -512,62 +516,100 @@ test("osg.ShaderGenerator", function() {
 });
 
 
-test("osg.CullVisitor_RenderStage", function() {
+test("osg.CullVisitor", function() {
 
-    var camera0 = new osg.Camera();
-    camera0.setRenderOrder(osg.Transform.NESTED_RENDER);
-    var node0 = new osg.Node();
-    var node1 = new osg.Node();
-    camera0.addChild(node0);
-    camera0.addChild(node1);
+    // check render stage and render bin
+    (function() {
+        var camera0 = new osg.Camera();
+        camera0.setRenderOrder(osg.Transform.NESTED_RENDER);
+        var node0 = new osg.Node();
+        var node1 = new osg.Node();
+        camera0.addChild(node0);
+        camera0.addChild(node1);
 
-    var camera1 = new osg.Camera();
-    camera1.setRenderOrder(osg.Transform.NESTED_RENDER);
-    var node00 = new osg.Node();
-    var node10 = new osg.Node();
-    camera1.addChild(node00);
-    camera1.addChild(node10);
+        var camera1 = new osg.Camera();
+        camera1.setRenderOrder(osg.Transform.NESTED_RENDER);
+        var node00 = new osg.Node();
+        var node10 = new osg.Node();
+        camera1.addChild(node00);
+        camera1.addChild(node10);
 
-    camera0.addChild(camera1);
+        camera0.addChild(camera1);
 
-    var cull = new osg.CullVisitor();
-    var rs = new osg.RenderStage();
-    var sg = new osg.StateGraph();
-    cull.setRenderStage(rs);
-    cull.setStateGraph(sg);
+        var cull = new osg.CullVisitor();
+        var rs = new osg.RenderStage();
+        var sg = new osg.StateGraph();
+        cull.setRenderStage(rs);
+        cull.setStateGraph(sg);
 
-    camera0.accept(cull);
-
-    ok(cull.rootRenderStage === cull.currentRenderBin, "renderStage should stay the render bin and id " + cull.rootRenderStage === cull.currentRenderBin);
-});
-
-
-test("osg.CullVisitor_RenderStage_test0", function() {
-    var state = new osg.State();
-    var camera0 = new osg.Camera();
-    camera0.setViewport(new osg.Viewport());
-    camera0.setRenderOrder(osg.Transform.NESTED_RENDER);
-    var geom = osg.createTexuredQuad(-10/2.0, 0, -10/2.0,
-                                     20, 0, 0,
-                                     0, 0 , 20,
-                                     1,1);
-    camera0.addChild(geom);
+        camera0.accept(cull);
+        
+        ok(cull.rootRenderStage === cull.currentRenderBin, "renderStage should stay the render bin and id " ); //+ cull.rootRenderStage === cull.currentRenderBin
+    })();
 
 
-    var cull = new osg.CullVisitor();
-    var rs = new osg.RenderStage();
-    var sg = new osg.StateGraph();
-    rs.setViewport(camera0.getViewport());
+    // check render stage and render bin
+    (function() {
+        var state = new osg.State();
+        var camera0 = new osg.Camera();
+        camera0.setViewport(new osg.Viewport());
+        camera0.setRenderOrder(osg.Transform.NESTED_RENDER);
+        var geom = osg.createTexturedQuad(-10/2.0, 0, -10/2.0,
+                                          20, 0, 0,
+                                          0, 0 , 20,
+                                          1,1);
+        camera0.addChild(geom);
 
-    cull.setRenderStage(rs);
-    cull.setStateGraph(sg);
 
-    camera0.accept(cull);
+        var cull = new osg.CullVisitor();
+        var rs = new osg.RenderStage();
+        var sg = new osg.StateGraph();
+        rs.setViewport(camera0.getViewport());
 
-    ok(cull.rootRenderStage === cull.currentRenderBin, "renderStage should stay the render bin and id " + cull.rootRenderStage === cull.currentRenderBin);
+        cull.setRenderStage(rs);
+        cull.setStateGraph(sg);
 
-    rs.draw(state);
-    
+        camera0.accept(cull);
+
+        ok(cull.rootRenderStage === cull.currentRenderBin, "renderStage should stay the render bin and id ");// + cull.rootRenderStage === cull.currentRenderBin);
+
+        rs.draw(state);
+    })();
+
+
+    // check the computation of nearfar
+    (function() {
+        var camera0 = new osg.Camera();
+        
+        var mt = new osg.MatrixTransform();
+        mt.setMatrix(osg.Matrix.makeTranslate(0,0, 10));
+        var geom = osg.createTexturedQuad(-5.0, -5, 0,
+                                          10, 0, 0,
+                                          0, 10 , 0,
+                                          1,1);
+        mt.addChild(geom);
+        camera0.addChild(mt);
+
+        camera0.setViewMatrix(osg.Matrix.makeLookAt([-10,0,10], [0,0,10],[0,1,0]));
+        camera0.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 1.0, 1000.0));
+
+        var stack = [];
+        function setCullSettings(settings) {
+            if (this.computedNear !== undefined) {
+                stack.push([this.computedNear, this.computedFar]);
+            }
+            osg.CullSettings.prototype.setCullSettings.call(this, settings);
+        }
+        osg.CullVisitor.prototype.setCullSettings = setCullSettings;
+        var cull = new osg.CullVisitor();
+        var rs = new osg.RenderStage();
+        var sg = new osg.StateGraph();
+        cull.setRenderStage(rs);
+        cull.setStateGraph(sg);
+        camera0.accept(cull);
+        ok(check_near(stack[1][0], 4.9), "near should be 4.9 and is " +  stack[1][0]);
+        ok(check_near(stack[1][1], 15.3), "near should be 15.3 and is " +  stack[1][1]);
+    })();
 
 });
 
