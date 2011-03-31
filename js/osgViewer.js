@@ -92,10 +92,25 @@ osgViewer.Viewer.prototype = {
         
         var options = optionsURL();
 
-        if (options['stats'] === "1") {
+        if (options['stats'] === "1" || options['STATS'] === "1" || options['Stats'] === "1" ) {
             this.initStats(options);
         }
 
+        // not the best way to do it
+        if (options['DEPTH_TEST'] === "0") {
+            gl.disable(gl.DEPTH_TEST);
+        }
+        if (options['BLEND'] === "0") {
+            gl.disable(gl.BLEND);
+        }
+        if (options['CULL_FACE'] === "0") {
+            gl.disable(gl.CULL_FACE);
+        }
+        if (options['LIGHT'] === "0") {
+            delete this.view.light;
+        }
+
+         
     },
 
     initStats: function(options) {
