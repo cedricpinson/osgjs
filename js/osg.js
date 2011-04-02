@@ -1,7 +1,7 @@
 /** -*- compile-command: "jslint-cli osg.js" -*-
  *
+ *  Copyright (C) 1998-2006 Robert Osfield - OpenSceneGraph
  *  Copyright (C) 2010-2011 Cedric Pinson
- *  OpenSceneGraph - Copyright (C) 1998-2006 Robert Osfield 
  *
  *                  GNU LESSER GENERAL PUBLIC LICENSE
  *                      Version 3, 29 June 2007
@@ -21,7 +21,7 @@
 var gl;
 var osg = {};
 
-osg.version = '0.0.2';
+osg.version = '0.0.3';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 osg.instance = 0;
 osg.version = 0;
@@ -3963,9 +3963,63 @@ osg.Geometry.create = function() {
 };
 
 
+osg.CullStack = function() {
+    this.modelviewMatrixStack = [osg.Matrix.makeIdentity()];
+    this.projectionMatrixStack = [osg.Matrix.makeIdentity()];
+    this.viewportStack = [];
+};
+osg.CullStack.prototype = {
+    getViewport: function () {
+        if (this.viewportStack.length === 0) {
+            return undefined;
+        }
+        return this.viewportStack[this.viewportStack.length-1];
+    },
+    getLookVectorLocal: function() {
+        var m = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+        return [ -m[2], -m[6], -m[10] ];
+    },
+    pushViewport: function (vp) {
+        this.viewportStack.push(vp);
+    },
+    popViewport: function () {
+        this.viewportStack.pop();
+    },
+    pushModelviewMatrix: function (matrix) {
+        this.modelviewMatrixStack.push(matrix);
+
+        var lookVector = this.getLookVectorLocal();
+        this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);        
+        this.bbCornerNear = (~this.bbCornerFar)&7;
+    },
+    popModelviewMatrix: function () {
+
+        this.modelviewMatrixStack.pop();
+        var lookVector;
+        if (this.modelviewMatrixStack.length !== 0) {
+            lookVector = this.getLookVectorLocal();
+        } else {
+            lookVector = [0,0,-1];
+        }
+        this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
+        this.bbCornerNear = (~this.bbCornerFar)&7;
+
+    },
+    pushProjectionMatrix: function (matrix) {
+        this.projectionMatrixStack.push(matrix);
+    },
+    popProjectionMatrix: function () {
+        this.projectionMatrixStack.pop();
+    }
+};
+
 osg.CullSettings = function() {
     this.computeNearFar = true;
     this.nearFarRatio = 0.0005;
+
+    var lookVector =[0.0,0.0,-1.0];
+    this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
+    this.bbCornerNear = (~this.bbCornerFar)&7;
 };
 osg.CullSettings.prototype = {
     setCullSettings: function(settings) {
@@ -4549,10 +4603,7 @@ osg.UpdateVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
 osg.CullVisitor = function () {
     osg.NodeVisitor.call(this);
     osg.CullSettings.call(this);
-
-    this.modelviewMatrixStack = [osg.Matrix.makeIdentity()];
-    this.projectionMatrixStack = [osg.Matrix.makeIdentity()];
-    this.viewportStack = [];
+    osg.CullStack.call(this);
 
     this.rootStateGraph = undefined;
     this.currentStateGraph = undefined;
@@ -4569,7 +4620,7 @@ osg.CullVisitor = function () {
     this.bbCornerNear = (~this.bbCornerFar)&7;
 };
 
-osg.CullVisitor.prototype = osg.objectInehrit(osg.CullSettings.prototype, osg.objectInehrit(osg.NodeVisitor.prototype, {
+osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objectInehrit(osg.CullSettings.prototype, osg.objectInehrit(osg.NodeVisitor.prototype, {
     distance: function(coord,matrix) {
         return -( coord[0]*matrix[2]+ coord[1]*matrix[6] + coord[2]*matrix[10] + matrix[14]);
     },
@@ -4678,8 +4729,10 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullSettings.prototype, osg.ob
             osg.Matrix.mult(matrix, projection, projection);
             // OSG_INFO << "Persepective matrix after clamping"<<projection<<std::endl;
         }
-        resultNearFar[0] = znear;
-        resultNearFar[1] = zfar;
+        if (resultNearFar !== undefined) {
+            resultNearFar[0] = znear;
+            resultNearFar[1] = zfar;
+        }
         return true;
     },
 
@@ -4706,38 +4759,6 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullSettings.prototype, osg.ob
     },
     popStateSet: function () {
         this.currentStateGraph = this.currentStateGraph.parent;
-    },
-    getViewport: function () {
-        if (this.viewportStack.length === 0) {
-            return undefined;
-        }
-        return this.viewportStack[this.viewportStack.length-1];
-    },
-    pushViewport: function (vp) {
-        this.viewportStack.push(vp);
-    },
-    popViewport: function () {
-        this.viewportStack.pop();
-    },
-    pushModelviewMatrix: function (matrix) {
-        this.modelviewMatrixStack.push(matrix);
-    },
-    popModelviewMatrix: function () {
-        this.modelviewMatrixStack.pop();
-    },
-    pushProjectionMatrix: function (matrix) {
-        this.projectionMatrixStack.push(matrix);
-    },
-    popProjectionMatrix: function () {
-        if (this.computeNearFar === true && this.computedFar >= this.computedNear) {
-            var m = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-            var resultNearFar = [this.computedNear, this.computedFar];
-            if (this.clampProjectionMatrix(m, this.computedNear, this.computedFar, this.nearFarRatio, resultNearFar) === true) {
-                this.computedNear = resultNearFar[0];
-                this.computedFar = resultNearFar[1];
-            }
-        }
-        this.projectionMatrixStack.pop();
     },
 
     applyCamera: function( camera ) {
@@ -4833,14 +4854,14 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullSettings.prototype, osg.ob
         this.popModelviewMatrix();
         this.popProjectionMatrix();
 
+        if (camera.getViewport()) {
+            this.popViewport();
+        }
+
         // restore previous state of the camera
         this.setCullSettings(previous_cullsettings);
         this.computedNear = previous_znear;
         this.computedFar = previous_zfar;
-
-        if (camera.getViewport()) {
-            this.popViewport();
-        }
 
         if (camera.stateset) {
             this.popStateSet();
@@ -4848,7 +4869,14 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullSettings.prototype, osg.ob
 
     },
 
-    
+    popProjectionMatrix: function () {
+        if (this.computeNearFar === true && this.computedFar >= this.computedNear) {
+            var m = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            this.clampProjectionMatrix(m, this.computedNear, this.computedFar, this.nearFarRatio);
+        }
+        osg.CullStack.prototype.popProjectionMatrix.call(this);
+        //this.projectionMatrixStack.pop();
+    },
 
     apply: function( node ) {
         var lastMatrixStack;
@@ -4878,9 +4906,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullSettings.prototype, osg.ob
 
 
         if (node.drawImplementation) {
-            if (matrix === undefined) {
-                matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            }
+            matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
             var bb = node.getBoundingBox();
             if (this.computeNearFar && bb.valid()) {
                 if (!this.updateCalculatedNearFar(matrix,node)) {
@@ -4933,7 +4959,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullSettings.prototype, osg.ob
             this.popProjectionMatrix();
         }
     }
-}));
+})));
 
 osg.ParseSceneGraph = function (node)
 {

@@ -88,25 +88,35 @@ test("osg.BoundingSphere", function() {
     var center_is_equal_bs_01_1 = check_near(c_bs_01_1,bs_01._center,0.0001) & check_near(r_bs_01_1,bs_01._radius,0.0001)
     ok(center_is_equal_bs_01_1 , "Expanding by BoundingSphere ->  bounding sphere test 2");
 
+    (function() {
+        var bb = new osg.BoundingBox();
+        var bb0 = [-.5,0,-2];
+        var bb1 = [1,0,-1];
+        var bb2 = [0,1,-.5];
+        var bb3 = [1,2,-.8];
+        bb.expandByVec3(bb0);
+        bb.expandByVec3(bb1);
+        bb.expandByVec3(bb2);
+        bb.expandByVec3(bb3);
 
-    var bb = new osg.BoundingBox();
-    var bb0 = [-.5,0,-2];
-    var bb1 = [1,0,-1];
-    var bb2 = [0,1,-.5];
-    var bb3 = [1,2,-.8];
-    bb.expandByVec3(bb0);
-    bb.expandByVec3(bb1);
-    bb.expandByVec3(bb2);
-    bb.expandByVec3(bb3);
-
-    var bb_test_ok = ( bb._max[0] == 1 &&  bb._max[1] == 2 &&  bb._max[2] == -0.5 &&  bb._min[0] == -.5 &&  bb._min[1] == 0 && bb._min[2] == -2);
-    ok(bb_test_ok , "Expanding by BoundingBox ->  bounding box test");
+        var bb_test_ok = ( bb._max[0] == 1 &&  bb._max[1] == 2 &&  bb._max[2] == -0.5 &&  bb._min[0] == -.5 &&  bb._min[1] == 0 && bb._min[2] == -2);
+        ok(bb_test_ok , "Expanding by BoundingBox ->  bounding box test");
 
 
-    var o = osg.ParseSceneGraph(getBoxScene());
-    o.getBound();
-    var bb_test_scene_graph_test = ( check_near(o.boundingSphere.radius(),2.41421,0.00001) );
-    ok(bb_test_scene_graph_test , "Box.js tested  ->  bounding sphere scene graph test");
+        var o = osg.ParseSceneGraph(getBoxScene());
+        o.getBound();
+        var bb_test_scene_graph_test = ( check_near(o.boundingSphere.radius(),2.41421,0.00001) );
+        ok(bb_test_scene_graph_test , "Box.js tested  ->  bounding sphere scene graph test");
+    })();
+
+    (function() {
+        var bb = new osg.BoundingBox();
+        bb._min = [1,2,3];
+        bb._max = [4,5,6];
+
+        ok(check_near(bb.corner(0), [1,2,3]) , "Box corner 0");
+        ok(check_near(bb.corner(7), [4,5,6]) , "Box corner 0");
+    })();
 
 
     // test case with camera and absolute transform
@@ -401,6 +411,14 @@ test("osg.Matrix.inverse", function() {
 
 });
 
+
+test("osg.Matrix.makePerspective", function() {
+    var result = [];
+    var m = [1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.0020020020020022, 0];
+    var res = osg.Matrix.makePerspective(60, 800/600,1.0, 1000);
+    ok(check_near(res, m), "makePerspective should be " + m + " and is " + res );
+});
+
 test("osg.NodeVisitor", function() {
 
     var FindItemAnchor = function(search) {
@@ -600,15 +618,145 @@ test("osg.CullVisitor", function() {
             }
             osg.CullSettings.prototype.setCullSettings.call(this, settings);
         }
+        var resultProjection;
+        function popProjectionMatrix() {
+            resultProjection = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            osg.CullVisitor.prototype.popProjectionMatrix.call(this);
+        }
         osg.CullVisitor.prototype.setCullSettings = setCullSettings;
         var cull = new osg.CullVisitor();
         var rs = new osg.RenderStage();
         var sg = new osg.StateGraph();
+        cull.popProjectionMatrix = popProjectionMatrix;
         cull.setRenderStage(rs);
         cull.setStateGraph(sg);
         camera0.accept(cull);
-        ok(check_near(stack[1][0], 4.9), "near should be 4.9 and is " +  stack[1][0]);
-        ok(check_near(stack[1][1], 15.3), "near should be 15.3 and is " +  stack[1][1]);
+        var supposedProjection = [1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0];
+        ok(check_near(stack[1][0], 5), "near should be 5.0 and is " +  stack[1][0]);
+        ok(check_near(stack[1][1], 15), "near should be 15.0 and is " +  stack[1][1]);
+        ok(check_near(resultProjection, supposedProjection), "check projection matrix [" + resultProjection.toString() + "] [" + supposedProjection.toString() +"]");
+    })();
+
+    // check the computation of nearfar with camera in position that it reverses near far
+    (function() {
+        var camera0 = new osg.Camera();
+        
+        var mt = new osg.MatrixTransform();
+        mt.setMatrix(osg.Matrix.makeTranslate(0,0, 10));
+        var geom = osg.createTexturedQuad(-5.0, -5, 0,
+                                          10, 0, 0,
+                                          0, 10 , 0,
+                                          1,1);
+        mt.addChild(geom);
+        camera0.addChild(mt);
+
+        camera0.setViewMatrix(osg.Matrix.makeLookAt([0,0,20], [0,0,10],[0,1,0]));
+        camera0.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 1.0, 1000.0));
+
+        var stack = [];
+        function setCullSettings(settings) {
+            if (this.computedNear !== undefined) {
+                stack.push([this.computedNear, this.computedFar]);
+            }
+            osg.CullSettings.prototype.setCullSettings.call(this, settings);
+        }
+        osg.CullVisitor.prototype.setCullSettings = setCullSettings;
+
+        var resultProjection;
+        function popProjectionMatrix() {
+            resultProjection = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            osg.CullVisitor.prototype.popProjectionMatrix.call(this);
+        }
+
+        var supposedProjection = [1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -49.999750101250868, -1, 0, 0, -499.79750101250352, 0 ];
+        var cull = new osg.CullVisitor();
+        var rs = new osg.RenderStage();
+        var sg = new osg.StateGraph();
+        cull.popProjectionMatrix = popProjectionMatrix;
+        cull.setRenderStage(rs);
+        cull.setStateGraph(sg);
+        camera0.accept(cull);
+        ok(check_near(stack[1][0], 10), "near should be 10 and is " +  stack[1][0]);
+        ok(check_near(stack[1][1], 10), "near should be 10 and is " +  stack[1][1]);
+        ok(check_near(resultProjection, supposedProjection), "check projection matrix [" + resultProjection.toString() + "] [" + supposedProjection.toString() +"]");
+
+    })();
+
+
+    (function() {
+        var camera0 = new osg.Camera();
+        
+        var geom = osg.createTexturedQuad(-5.0, -5, 0,
+                                          10, 0, 0,
+                                          0, 10 , 0,
+                                          1,1);
+        geom.getBoundingBox = function() {
+            var bb = new osg.BoundingBox();
+            bb._min = [-6131940, -6297390, -6356750];
+            bb._max = [6353000, 6326310, 6317430];
+            return bb;
+        };
+        camera0.addChild(geom);
+
+
+        var eye = [-8050356.805171473, 5038241.363464848, 5364184.10053209];
+        var target = [110530, 14460, -19660];
+
+//        var d_far = 15715646.446620844;
+//        var d_near = 6098715.042224069;
+
+        //var matrixOffset = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 9520443.940837447, 0, 0, 0, -9539501.699646605, 1];
+        // var projectionResult = [
+        //      0.9742785792574936, 0, 0, 0,
+        //      0, 1.7320508075688774, 0, 0,
+        //      0, 0, -2.1890203449875116, -1,
+        //      0, 0, -19059947.8295044, 0];
+
+// osg
+//      var projectionResult = [0.9742785792574936, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.0020020020020022, 0]
+
+
+      var d_far = 21546781.959391922;
+      var d_near =  267579.84430311248;
+//      var bbmax = [6353000, 6326310, 6317430];
+//      var bbmin = [-6131940, -6297390, -6356750];
+//      var bbCornerFar = 1;
+//      var bbCornerNear = 6;
+
+        camera0.setViewMatrix(osg.Matrix.makeLookAt(osg.Vec3.add(eye, target), target,[0,0,1]));
+        camera0.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/450, 1.0, 1000.0));
+
+        var stack = [];
+        function setCullSettings(settings) {
+            if (this.computedNear !== undefined) {
+                stack.push([this.computedNear, this.computedFar]);
+            }
+            osg.CullSettings.prototype.setCullSettings.call(this, settings);
+        }
+        osg.CullVisitor.prototype.setCullSettings = setCullSettings;
+
+        var resultProjection;
+        function popProjectionMatrix() {
+            resultProjection = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            osg.CullVisitor.prototype.popProjectionMatrix.call(this);
+        }
+
+        var supposedProjection = [
+            0.97427857925749362, 0, 0, 0,
+            0, 1.7320508075688774, 0, 0 ,
+            0, 0, -1.0241512629639544, -1,
+            0, 0, -530789.63819638337, 0];
+        var cull = new osg.CullVisitor();
+        var rs = new osg.RenderStage();
+        var sg = new osg.StateGraph();
+        cull.popProjectionMatrix = popProjectionMatrix;
+        cull.setRenderStage(rs);
+        cull.setStateGraph(sg);
+        camera0.accept(cull);
+        ok(check_near(stack[1][0], d_near,0.8), "near should be "+ d_near+ " and is " +  stack[1][0]);
+        ok(check_near(stack[1][1], d_far,0.8), "near should be " + d_far + " and is " +  stack[1][1]);
+        ok(check_near(resultProjection, supposedProjection, 0.8), "check projection matrix [" + resultProjection.toString() + "] [" + supposedProjection.toString() +"]");
+
     })();
 
 });
