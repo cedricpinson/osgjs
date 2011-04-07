@@ -2798,6 +2798,8 @@ osg.BoundingSphere.prototype = {
 		newbb._max[1]=bb._max[1];
 		newbb._max[2]=bb._max[2];
 
+                // this code is not valid c is defined after the loop
+                // FIXME
 		for (var i = 0 ; i < 8; i++) {
 	       	    var v = osg.Vec3.sub(bb.corner(c),this._center); // get the direction vector from corner
 		    osg.Vec3.normalize(v,v); // normalise it.
@@ -3169,6 +3171,7 @@ osg.Projection.create = function() {
 
 osg.Texture = function() {
     this.setDefaultParameters();
+    this.dirty = true;
 };
 
 osg.Texture.prototype = {
@@ -5011,7 +5014,13 @@ osg.ParseSceneGraph = function (node)
                     }
                     continue;
                 }
-                var tex = osg.Texture.create(textures[t].file);
+                var tex = new osg.Texture();
+                jQuery.extend(tex, textures[t]);
+                var img = new Image;
+                img.src = textures[t].file;
+                tex.setImage(img);
+                
+                //var tex = osg.Texture.create(textures[t].file);
                 newstateset.setTexture(t, tex);
                 newstateset.addUniform(osg.Uniform.createInt1(t,"Texture" + t));
             }
