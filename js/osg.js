@@ -100,7 +100,8 @@ osg.Matrix = {
     },
 
     set: function(matrix, row, col, value) {
-        return matrix[row * 4 + col] = value;
+        matrix[row * 4 + col] = value;
+	return value;
     },
 
     get: function(matrix, row, col) {
@@ -199,7 +200,7 @@ osg.Matrix = {
         }
         if (r === b) {
             // post mult
-            var t = [];
+            t = [];
             for (var row = 0; row < 4; row++) {
                 t[0] = osg.Matrix.innerProduct(b, a, row, 0);
                 t[1] = osg.Matrix.innerProduct(b, a, row, 1);
@@ -571,11 +572,13 @@ osg.Matrix = {
     inverse: function(matrix, resultArg) {
         return this.inverse4x4(matrix,resultArg);
         // it's not working yet, need to debug inverse 4x3
+/*
         if (matrix[3] === 0.0 && matrix[7] === 0.0 && matrix[11] === 0.0 && matrix[15] === 1.0) {
             return this.inverse4x3(matrix,resultArg);
         } else {
             return this.inverse4x4(matrix,resultArg);
         }
+*/
     },
 
     /**
@@ -1694,7 +1697,7 @@ osg.Shader.prototype = {
                 }
                 console.log(newText);
                 console.log(gl.getShaderInfoLog(this.shader));
-                debugger;
+                //debugger;
             } else {
                 alert(gl.getShaderInfoLog(this.shader));
             }
@@ -1739,7 +1742,7 @@ osg.Program.prototype = {
             if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
                 osg.log("can't link program\n" + this.vertex.text + this.fragment.text);
                 osg.log(gl.getProgramInfo(this.program));
-                debugger;
+                //debugger;
                 return null;
             }
 
@@ -1858,7 +1861,7 @@ osg.ShaderGenerator.prototype = {
     },
 
     getActiveTextureAttributeMapKeys: function(state) {
-        var textureAttributeKeys = new Array(state.textureAttributeMapList.length);
+        var textureAttributeKeys = [];
         for (var i = 0, l = state.textureAttributeMapList.length; i < l; i++) {
             var attributesForUnit = state.textureAttributeMapList[i];
             if (attributesForUnit === undefined) {
@@ -1904,7 +1907,7 @@ osg.ShaderGenerator.prototype = {
             for (var b = 0, o = unitAttributekeys.length; b < o; b++) {
                 var attrName = unitAttributekeys[b];
                 if (state.textureAttributeMapList[a][attrName].globalDefault === undefined) {
-                    debugger;
+                    //debugger;
                 }
                 var textureAttribute = state.textureAttributeMapList[a][attrName].globalDefault;
                 if (textureAttribute.getOrCreateUniforms === undefined) {
@@ -2296,12 +2299,15 @@ osg.State.prototype = {
             this.programs.lastApplied = program;
         }
 
+	var programUniforms;
+	var activeUniforms;
+
         if (program.generated !== undefined && program.generated === true) {
             // note that about TextureAttribute that need uniform on unit we would need to improve
             // the current uniformList ...
 
-            var programUniforms = program.uniformsCache;
-            var activeUniforms = program.activeUniforms;
+            programUniforms = program.uniformsCache;
+            activeUniforms = program.activeUniforms;
             var regenrateKeys = false;
             for (var i = 0 , l = activeUniforms.uniformKeys.length; i < l; i++) {
                 var name = activeUniforms.uniformKeys[i];
@@ -2330,23 +2336,23 @@ osg.State.prototype = {
             // but in order to be able to use Attribute in the state graph we will check if
             // our program want them. It must be defined by the user
             var programObject = program.program;
-            var location;
+            var location1;
             var uniformStack;
             var uniform;
 
-            var programUniforms = program.uniformsCache;
+            programUniforms = program.uniformsCache;
             var uniformMap = this.uniforms;
 
             // first time we see attributes key, so we will keep a list of uniforms from attributes
-            var activeUniforms = [];
+            activeUniforms = [];
             var trackAttributes = program.trackAttributes;
             var trackUniforms = program.trackUniforms;
             // loop on wanted attributes and texture attribute to track state graph uniforms from those attributes
             if (trackAttributes !== undefined && trackUniforms === undefined) {
 
-                var attributeKeys = program.trackAttributes['attributeKeys'];
-                for (var i = 0, l = attributeKeys.length; i < l; i++) {
-                    var key = attributeKeys[i];
+                var attributeKeys = program.trackAttributes.attributeKeys;
+                for (i = 0, l = attributeKeys.length; i < l; i++) {
+                    key = attributeKeys[i];
                     attributeStack = this.attributeMap[key];
                     if (attributeStack === undefined) {
                         continue;
@@ -2362,14 +2368,14 @@ osg.State.prototype = {
                     }
                 }
 
-                var textureAttributeKeysList = program.trackAttributes['textureAttributeKeys'];
-                for (var i = 0, l = textureAttributeKeysList.length; i < l; i++) {
+                var textureAttributeKeysList = program.trackAttributes.textureAttributeKeys;
+                for (i = 0, l = textureAttributeKeysList.length; i < l; i++) {
                     var tak = textureAttributeKeysList[i];
                     if (tak === undefined) {
                         continue;
                     }
                     for (var j = 0, m = tak.length; j < m; j++) {
-                        var key = tak[j];
+                        key = tak[j];
                         var attributeList = this.textureAttributeMapList[i];
                         if (attributeList === undefined) {
                             continue;
@@ -2378,12 +2384,12 @@ osg.State.prototype = {
                         if (attributeStack === undefined) {
                             continue;
                         }
-                        var attribute = attributeStack.globalDefault;
+                        attribute = attributeStack.globalDefault;
                         if (attribute.getOrCreateUniforms === undefined) {
                             continue;
                         }
-                        var uniforms = attribute.getOrCreateUniforms(i);
-                        for (var a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
+                        uniforms = attribute.getOrCreateUniforms(i);
+                        for (a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
                             activeUniforms.push(uniforms[uniforms.uniformKeys[a] ]);
                         }
                     }
@@ -2392,7 +2398,7 @@ osg.State.prototype = {
                 // now we have a list on uniforms we want to track but we will filter them to use only what is needed by our program
                 // not that if you create a uniforms whith the same name of a tracked attribute, and it will override it
                 var uniformsFinal = {};
-                for (var i = 0, l = activeUniforms.length; i < l; i++) {
+                for (i = 0, l = activeUniforms.length; i < l; i++) {
                     var u = activeUniforms[i];
                     var loc = gl.getUniformLocation(programObject, u.name);
                     if (loc !== undefined && loc !== null) {
@@ -2402,16 +2408,16 @@ osg.State.prototype = {
                 program.trackUniforms = uniformsFinal;
             }
 
-            for (var i = 0, l = programUniforms.uniformKeys.length; i < l; i++) {
+            for (i = 0, l = programUniforms.uniformKeys.length; i < l; i++) {
                 var uniformKey = programUniforms.uniformKeys[i];
-                location = programUniforms[uniformKey];
+                location1 = programUniforms[uniformKey];
 
                 uniformStack = uniformMap[uniformKey];
                 if (uniformStack === undefined) {
                     if (program.trackUniforms !== undefined) {
                         uniform = program.trackUniforms[uniformKey];
                         if (uniform !== undefined) {
-                            uniform.apply(location);
+                            uniform.apply(location1);
                         }
                     }
                 } else {
@@ -2420,7 +2426,7 @@ osg.State.prototype = {
                     } else {
                         uniform = uniformStack.back();
                     }
-                    uniform.apply(location);
+                    uniform.apply(location1);
                 }
             }
         }
@@ -2715,24 +2721,24 @@ osg.BoundingBox.prototype = {
         if (!sh.valid()) {
             return;
         }
-        if(sh._center[0]-sh._radius<this._min[0]) this._min[0] = sh._center[0]-sh._radius;
-        if(sh._center[0]+sh._radius>this._max[0]) this._max[0] = sh._center[0]+sh._radius;
+        if(sh._center[0]-sh._radius<this._min[0]) { this._min[0] = sh._center[0]-sh._radius; }
+        if(sh._center[0]+sh._radius>this._max[0]) { this._max[0] = sh._center[0]+sh._radius; }
 
-        if(sh._center[1]-sh._radius<this._min[1]) this._min[1] = sh._center[1]-sh._radius;
-        if(sh._center[1]+sh._radius>this._max[1]) this._max[1] = sh._center[1]+sh._radius;
+        if(sh._center[1]-sh._radius<this._min[1]) { this._min[1] = sh._center[1]-sh._radius; }
+        if(sh._center[1]+sh._radius>this._max[1]) { this._max[1] = sh._center[1]+sh._radius; }
 
-        if(sh._center[2]-sh._radius<this._min[2]) this._min[2] = sh._center[2]-sh._radius;
-        if(sh._center[2]+sh._radius>this._max[2]) this._max[2] = sh._center[2]+sh._radius;
+        if(sh._center[2]-sh._radius<this._min[2]) { this._min[2] = sh._center[2]-sh._radius; }
+        if(sh._center[2]+sh._radius>this._max[2]) { this._max[2] = sh._center[2]+sh._radius; }
     },
     expandByVec3: function(v){
 
 	if ( this.valid() ) {
-	    if ( this._min[0] > v[0] ) this._min[0] = v[0];
-	    if ( this._min[1] > v[1] ) this._min[1] = v[1];
-	    if ( this._min[2] > v[2] ) this._min[2] = v[2];
-	    if ( this._max[0] < v[0] ) this._max[0] = v[0];
-	    if ( this._max[1] < v[1] ) this._max[1] = v[1];
-	    if ( this._max[2] < v[2] ) this._max[2] = v[2];
+	    if ( this._min[0] > v[0] ) { this._min[0] = v[0]; }
+	    if ( this._min[1] > v[1] ) { this._min[1] = v[1]; }
+	    if ( this._min[2] > v[2] ) { this._min[2] = v[2]; }
+	    if ( this._max[0] < v[0] ) { this._max[0] = v[0]; }
+	    if ( this._max[1] < v[1] ) { this._max[1] = v[1]; }
+	    if ( this._max[2] < v[2] ) { this._max[2] = v[2]; }
 	} else {
 	    this._min[0] = v[0];
 	    this._min[1] = v[1];
@@ -2755,9 +2761,21 @@ osg.BoundingBox.prototype = {
     },
     corner: function(pos) {
         ret = [0.0,0.0,0.0];
-        if ( pos & 1 ) ret[0]=this._max[0]; else ret[0]=this._min[0];
-        if ( pos & 2 ) ret[1]=this._max[1]; else ret[1]=this._min[1];
-        if ( pos & 4 ) ret[2]=this._max[2]; else ret[2]=this._min[2];
+        if ( pos & 1 ) {
+	    ret[0]=this._max[0];
+	} else {
+	    ret[0]=this._min[0];
+	}
+        if ( pos & 2 ) {
+	    ret[1]=this._max[1];
+	} else {
+	    ret[1]=this._min[1];
+	}
+        if ( pos & 4 ) {
+	    ret[2]=this._max[2];
+	} else {
+	    ret[2]=this._min[2];
+	}
         return ret;
     }
 
@@ -2800,6 +2818,7 @@ osg.BoundingSphere.prototype = {
 
                 // this code is not valid c is defined after the loop
                 // FIXME
+		var c;
 		for (var i = 0 ; i < 8; i++) {
 	       	    var v = osg.Vec3.sub(bb.corner(c),this._center); // get the direction vector from corner
 		    osg.Vec3.normalize(v,v); // normalise it.
@@ -2813,7 +2832,7 @@ osg.BoundingSphere.prototype = {
 		    newbb.expandBy(nv); // add it into the new bounding box.
 		}
 
-		var c = newbb.center();
+		c = newbb.center();
 		this._center[0] = c[0];
 		this._center[1] = c[1];
 		this._center[2] = c[2];
@@ -2824,7 +2843,7 @@ osg.BoundingSphere.prototype = {
 	    else
 	    {
 
-		var c = bb.center();
+		c = bb.center();
 		this._center[0] = c[0];
 		this._center[1] = c[1];
 		this._center[2] = c[2];
@@ -2876,7 +2895,7 @@ osg.BoundingSphere.prototype = {
     },
     expandBy: function(sh){
 	// ignore operation if incomming BoundingSphere is invalid.
-	if (!sh.valid()) return;
+	if (!sh.valid()) { return; }
 
 	// This sphere is not set so use the inbound sphere
 	if (!this.valid())
@@ -2932,10 +2951,10 @@ osg.BoundingSphere.prototype = {
 	return valid() && (osg.Vec3.length2(vc)<=radius2());
     },
     intersects: function( bs ) {
-	var lc = osg.Vec3.length2(osg.Vec3.sub(this.center() , bs.center()))
+	var lc = osg.Vec3.length2(osg.Vec3.sub(this.center() , bs.center()));
 	return valid() && bs.valid() &&
 	    (lc <= (this.radius() + bs.radius())*(this.radius() + bs.radius()));
-    },
+    }
 };
 
 
@@ -3053,15 +3072,15 @@ osg.Node.prototype = {
         }
         bsphere._center = bb.center();
         bsphere._radius = 0.0;
-	for (var i = 0, l = this.children.length; i < l; i++) {
-	    var child = this.children[i];
+	for (i = 0, l = this.children.length; i < l; i++) {
+	    child = this.children[i];
             if (child.referenceFrame === undefined || child.referenceFrame === osg.Transform.RELATIVE_RF) {
 	        bsphere.expandRadiusBySphere(child.getBound());
             }
 	}
             
 	return bsphere;
-    },
+    }
 
 };
 osg.Node.create = function() {
@@ -3146,7 +3165,7 @@ osg.MatrixTransform.prototype = osg.objectInehrit(osg.Transform.prototype, {
             matrix = inverse;
         }
         return true;
-    },
+    }
 });
 osg.MatrixTransform.create = function() {
     var mt = new osg.MatrixTransform();
@@ -4318,7 +4337,7 @@ osg.RenderBin.prototype = {
         previous = this.drawLeafs(state, previous);
 
         // draw post bins
-        for (var key in this.renderBin) {
+        for (key in this.renderBin) {
             if (key >= 0 ) {
                 previous = this.renderBin[key].drawImplementation(state, previous);
             }
@@ -4681,7 +4700,9 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
             // OSG_INFO << "Orthographic matrix before clamping"<<projection<<std::endl;
 
             var delta_span = (zfar-znear)*0.02;
-            if (delta_span<1.0) delta_span = 1.0;
+            if (delta_span<1.0) {
+		delta_span = 1.0;
+	    }
             var desired_znear = znear - delta_span;
             var desired_zfar = zfar + delta_span;
 
@@ -4704,12 +4725,14 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
 
             //znearPullRatio = 0.99; 
 
-            var desired_znear = znear * znearPullRatio;
-            var desired_zfar = zfar * zfarPushRatio;
+            desired_znear = znear * znearPullRatio;
+            desired_zfar = zfar * zfarPushRatio;
 
             // near plane clamping.
             var min_near_plane = zfar*nearFarRatio;
-            if (desired_znear<min_near_plane) desired_znear=min_near_plane;
+            if (desired_znear<min_near_plane) {
+		desired_znear=min_near_plane;
+	    }
 
             // assign the clamped values back to the computed values.
             znear = desired_znear;
@@ -4974,7 +4997,7 @@ osg.ParseSceneGraph = function (node)
 
         var i;
         for ( i in node.primitives) {
-            var mode = node.primitives[i].mode
+            var mode = node.primitives[i].mode;
             if (node.primitives[i].indices) {
                 var array = node.primitives[i].indices;
                 array = osg.BufferArray.create(gl[array.type], array.elements, array.itemSize );
@@ -4988,8 +5011,9 @@ osg.ParseSceneGraph = function (node)
                 mode = gl[mode];
                 var first = node.primitives[i].first;
                 var count = node.primitives[i].count;
-                if (count > 65535)
+                if (count > 65535) {
                     count = 32740;
+		}
                 node.primitives[i] = new osg.DrawArrays(mode, first, count);
             }
         }
@@ -5119,10 +5143,12 @@ osg.createTexturedQuad = function(cornerx, cornery, cornerz,
     vertexes[10] = cornery + wy + hy;
     vertexes[11] = cornerz + wz + hz;
 
-    if (r === undefined)
+    if (r === undefined) {
         r = 1.0;
-    if (t === undefined)
+    }
+    if (t === undefined) {
         t = 1.0;
+    }
 
     var uvs = [];
     uvs[0] = l;
