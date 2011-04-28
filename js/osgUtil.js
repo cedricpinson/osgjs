@@ -381,3 +381,32 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
         return true;
     },
 });
+
+
+
+osgUtil.WireframeVisitor = function() {
+    osg.NodeVisitor.call(this);
+};
+
+osgUtil.WireframeVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+    
+    apply: function(node) {
+
+        if (node.primitives) {
+            for (var i = 0, l = node.primitives.length; i < l; i++) {
+                var primitive = node.primitives[i];
+                if (primitive.getIndices !== undefined) {
+                    //switch (primitive.getMode()) {
+                        //case
+                    //}
+                }
+            }
+        }
+
+        if (node.traverse) {
+            this.traverse(node);
+        }
+
+    },
+
+});
