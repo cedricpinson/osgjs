@@ -148,43 +148,14 @@ osg.Matrix = {
         return result;
     },
 
-    /* premult a,b means in math MatrixA = MatrixA * MatrixB*/
-    preMultOld: function(a, b) {
-        var t = [];
-        for (var col = 0; col < 4; col++) {
-            t[0] = osg.Matrix.innerProduct(b, a, 0, col);
-            t[1] = osg.Matrix.innerProduct(b, a, 1, col);
-            t[2] = osg.Matrix.innerProduct(b, a, 2, col);
-            t[3] = osg.Matrix.innerProduct(b, a, 3, col);
-            a[0 + col] = t[0];
-            a[4 + col] = t[1];
-            a[8 + col] = t[2];
-            a[12 + col] = t[3];
-        }
-        return a;
-    },
-
-    /* postmult a,b means in math MatrixA = MatrixB * MatrixA*/
-    postMultOld: function(a, b, r) {
-        
-        var t = [];
-        for (var row = 0; row < 4; row++) {
-            t[0] = osg.Matrix.innerProduct(a, b, row, 0);
-            t[1] = osg.Matrix.innerProduct(a, b, row, 1);
-            t[2] = osg.Matrix.innerProduct(a, b, row, 2);
-            t[3] = osg.Matrix.innerProduct(a, b, row, 3);
-            this.setRow(a, row, t[0], t[1], t[2], t[3]);
-        }
-        return a;
-    },
-
     /* mult a,b means in math result = MatrixA * MatrixB */
     /* mult a,b is equivalent to preMult(a,b) */
     /* mult b,a is equivalent to postMult(a,b) */
     mult: function(a, b, r) {
+        var t;
         if (r === a) {
             // pre mult
-            var t = [];
+            t = [];
             for (var col = 0; col < 4; col++) {
                 t[0] = osg.Matrix.innerProduct(b, a, 0, col);
                 t[1] = osg.Matrix.innerProduct(b, a, 1, col);
@@ -2301,7 +2272,8 @@ osg.State.prototype = {
 
 	var programUniforms;
 	var activeUniforms;
-
+        var i;
+        var key;
         if (program.generated !== undefined && program.generated === true) {
             // note that about TextureAttribute that need uniform on unit we would need to improve
             // the current uniformList ...
@@ -2309,7 +2281,7 @@ osg.State.prototype = {
             programUniforms = program.uniformsCache;
             activeUniforms = program.activeUniforms;
             var regenrateKeys = false;
-            for (var i = 0 , l = activeUniforms.uniformKeys.length; i < l; i++) {
+            for (i = 0 , l = activeUniforms.uniformKeys.length; i < l; i++) {
                 var name = activeUniforms.uniformKeys[i];
                 var location = programUniforms[name];
                 if (location !== undefined) {
@@ -2321,7 +2293,7 @@ osg.State.prototype = {
             }
             if (regenrateKeys) {
                 var keys = [];
-                for (var key in activeUniforms) {
+                for (key in activeUniforms) {
                     if (key !== "uniformKeys") {
                         keys.push(key);
                     }
@@ -2347,23 +2319,25 @@ osg.State.prototype = {
             activeUniforms = [];
             var trackAttributes = program.trackAttributes;
             var trackUniforms = program.trackUniforms;
+            var attribute;
+            var uniforms;
+            var a;
             // loop on wanted attributes and texture attribute to track state graph uniforms from those attributes
             if (trackAttributes !== undefined && trackUniforms === undefined) {
-
                 var attributeKeys = program.trackAttributes.attributeKeys;
-                for (i = 0, l = attributeKeys.length; i < l; i++) {
+                for ( i = 0, l = attributeKeys.length; i < l; i++) {
                     key = attributeKeys[i];
                     attributeStack = this.attributeMap[key];
                     if (attributeStack === undefined) {
                         continue;
                     }
                     // we just need the uniform list and not the attribute itself
-                    var attribute = attributeStack.globalDefault;
+                    attribute = attributeStack.globalDefault;
                     if (attribute.getOrCreateUniforms === undefined) {
                         continue;
                     }
-                    var uniforms = attribute.getOrCreateUniforms();
-                    for (var a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
+                    uniforms = attribute.getOrCreateUniforms();
+                    for (a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
                         activeUniforms.push(uniforms[uniforms.uniformKeys[a] ]);
                     }
                 }
@@ -2714,7 +2688,7 @@ osg.BoundingBox.prototype = {
     },
 
     valid: function() {
-    	return (this._max[0] >= this._min[0] &&  this._max[1] >= this._min[1] &&  this._max[2] >= this._min[2]);
+        return (this._max[0] >= this._min[0] &&  this._max[1] >= this._min[1] &&  this._max[2] >= this._min[2]);
     },
 
     expandBySphere: function(sh) {
@@ -2806,6 +2780,7 @@ osg.BoundingSphere.prototype = {
     expandByBox: function(bb) {
 	if ( bb.valid() )
 	{
+            var c;
 	    if (this.valid())
 	    {
 		var newbb = new osg.BoundingBox();
@@ -2818,18 +2793,16 @@ osg.BoundingSphere.prototype = {
 
                 // this code is not valid c is defined after the loop
                 // FIXME
-		var c;
 		for (var i = 0 ; i < 8; i++) {
-	       	    var v = osg.Vec3.sub(bb.corner(c),this._center); // get the direction vector from corner
-		    osg.Vec3.normalize(v,v); // normalise it.
-
-		    nv[0] *= -this._radius; // move the vector in the opposite direction distance radius.
-		    nv[1] *= -this._radius; // move the vector in the opposite direction distance radius.
-		    nv[2] *= -this._radius; // move the vector in the opposite direction distance radius.
-		    nv[0] += this._center[0]; // move to absolute position.
-		    nv[1] += this._center[1]; // move to absolute position.
-		    nv[2] += this._center[2]; // move to absolute position.
-		    newbb.expandBy(nv); // add it into the new bounding box.
+                    var v = osg.Vec3.sub(bb.corner(c),this._center); // get the direction vector from corner
+                    osg.Vec3.normalize(v,v); // normalise it.
+                    nv[0] *= -this._radius; // move the vector in the opposite direction distance radius.
+                    nv[1] *= -this._radius; // move the vector in the opposite direction distance radius.
+                    nv[2] *= -this._radius; // move the vector in the opposite direction distance radius.
+                    nv[0] += this._center[0]; // move to absolute position.
+                    nv[1] += this._center[1]; // move to absolute position.
+                    nv[2] += this._center[2]; // move to absolute position.
+                    newbb.expandBy(nv); // add it into the new bounding box.
 		}
 
 		c = newbb.center();
@@ -3072,10 +3045,10 @@ osg.Node.prototype = {
         }
         bsphere._center = bb.center();
         bsphere._radius = 0.0;
-	for (i = 0, l = this.children.length; i < l; i++) {
-	    child = this.children[i];
-            if (child.referenceFrame === undefined || child.referenceFrame === osg.Transform.RELATIVE_RF) {
-	        bsphere.expandRadiusBySphere(child.getBound());
+	for (var j = 0, l2 = this.children.length; j < l2; i++) {
+	    var cc = this.children[j];
+            if (cc.referenceFrame === undefined || cc.referenceFrame === osg.Transform.RELATIVE_RF) {
+	        bsphere.expandRadiusBySphere(cc.getBound());
             }
 	}
             
@@ -4545,8 +4518,8 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
     },
 
     drawImplementation: function(state, previousRenderLeaf) {
+        var error;
         if (osg.reportErrorGL === true) {
-            var error;
             error = gl.getError();
             osg.checkError(error);
         }
@@ -4685,6 +4658,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
             return false;
         }
         
+        var desired_znear, desired_zfar;
         if (zfar<znear+epsilon) {
             // znear and zfar are too close together and could cause divide by zero problems
             // late on in the clamping code, so move the znear and zfar apart.
@@ -4703,8 +4677,8 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
             if (delta_span<1.0) {
 		delta_span = 1.0;
 	    }
-            var desired_znear = znear - delta_span;
-            var desired_zfar = zfar + delta_span;
+            desired_znear = znear - delta_span;
+            desired_zfar = zfar + delta_span;
 
             // assign the clamped values back to the computed values.
             znear = desired_znear;
@@ -5040,7 +5014,7 @@ osg.ParseSceneGraph = function (node)
                 }
                 var tex = new osg.Texture();
                 jQuery.extend(tex, textures[t]);
-                var img = new Image;
+                var img = new Image();
                 img.src = textures[t].file;
                 tex.setImage(img);
                 
@@ -5111,6 +5085,103 @@ osg.View.prototype = osg.objectInehrit(osg.Camera.prototype, {
     }
 });
 
+osg.WGS_84_RADIUS_EQUATOR = 6378137.0;
+osg.WGS_84_RADIUS_POLAR = 6356752.3142;
+
+osg.EllipsoidModel = function() {
+    this._radiusEquator = osg.WGS_84_RADIUS_EQUATOR;
+    this._radiusPolar = osg.WGS_84_RADIUS_POLAR;
+    this.computeCoefficients();
+};
+osg.EllipsoidModel.prototype = {
+    setRadiusEquator: function(r) { this._radiusEquator = radius; this.computeCoefficients();},
+    getRadiusEquator: function() { return this._radiusEquator;},
+    setRadiusPolar: function(radius) { this._radiusPolar = radius; 
+                                              this.computeCoefficients(); },
+    getRadiusPolar: function() { return this._radiusPolar; },
+    convertLatLongHeightToXYZ: function ( latitude, longitude, height ) {
+        var sin_latitude = Math.sin(latitude);
+        var cos_latitude = Math.cos(latitude);
+        var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared*sin_latitude*sin_latitude);
+        var X = (N+height)*cos_latitude*Math.cos(longitude);
+        var Y = (N+height)*cos_latitude*Math.sin(longitude);
+        var Z = (N*(1-this._eccentricitySquared)+height)*sin_latitude;
+        return [X, Y, Z];
+    },
+    convertXYZToLatLongHeight: function ( X,  Y,  Z ) {
+        // http://www.colorado.edu/geography/gcraft/notes/datum/gif/xyzllh.gif
+        var p = Math.sqrt(X*X + Y*Y);
+        var theta = Math.atan2(Z*this._radiusEquator , (p*this._radiusPolar));
+        var eDashSquared = (this._radiusEquator*this._radiusEquator - this._radiusPolar*this._radiusPolar)/ (this._radiusPolar*this._radiusPolar);
+
+        var sin_theta = Math.sin(theta);
+        var cos_theta = Math.cos(theta);
+
+        latitude = Math.atan( (Z + eDashSquared*this._radiusPolar*sin_theta*sin_theta*sin_theta) /
+                         (p - this._eccentricitySquared*this._radiusEquator*cos_theta*cos_theta*cos_theta) );
+        longitude = Math.atan2(Y,X);
+
+        var sin_latitude = Math.sin(latitude);
+        var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared*sin_latitude*sin_latitude);
+
+        height = p/Math.cos(latitude) - N;
+        return [latitude, longitude, height];
+    },
+    computeLocalUpVector: function(X, Y, Z) {
+        // Note latitude is angle between normal to ellipsoid surface and XY-plane
+        var  latitude, longitude, altitude;
+        var coord = this.convertXYZToLatLongHeight(X,Y,Z,latitude,longitude,altitude);
+        latitude = coord[0];
+        longitude = coord[1];
+        altitude = coord[2];
+
+        // Compute up vector
+        return [ Math.cos(longitude) * Math.cos(latitude),
+                 Math.sin(longitude) * Math.cos(latitude),
+                 Math.sin(latitude) ];
+    },
+    isWGS84: function() { return(this._radiusEquator == osg.WGS_84_RADIUS_EQUATOR && this._radiusPolar == osg.WGS_84_RADIUS_POLAR);},
+
+    computeCoefficients: function() {
+        var flattening = (this._radiusEquator-this._radiusPolar)/this._radiusEquator;
+        this._eccentricitySquared = 2*flattening - flattening*flattening;
+    },
+    computeLocalToWorldTransformFromLatLongHeight : function(latitude, longitude, height) {
+        var pos = this.convertLatLongHeightToXYZ(latitude, longitude, height);
+        var m = osg.Matrix.makeTranslate(pos[0], pos[1], pos[2]);
+        this.computeCoordinateFrame(latitude, longitude, m);
+        return m;
+    },
+    computeLocalToWorldTransformFromXYZ : function(X, Y, Z) {
+        var lla = this.convertXYZToLatLongHeight(X, Y, Z);
+        var m = osg.Matrix.makeTranslate(X, Y, Z);
+        this.computeCoordinateFrame(lla[0], lla[1], m);
+        return m;
+    },
+    computeCoordinateFrame: function ( latitude,  longitude, localToWorld) {
+        // Compute up vector
+        var  up = [ Math.cos(longitude)*Math.cos(latitude), Math.sin(longitude)*Math.cos(latitude), Math.sin(latitude) ];
+
+        // Compute east vector
+        var east = [-Math.sin(longitude), Math.cos(longitude), 0];
+
+        // Compute north vector = outer product up x east
+        var north = osg.Vec3.cross(up,east);
+
+        // set matrix
+        osg.Matrix.set(localToWorld,0,0, east[0]);
+        osg.Matrix.set(localToWorld,0,1, east[1]);
+        osg.Matrix.set(localToWorld,0,2, east[2]);
+
+        osg.Matrix.set(localToWorld,1,0, north[0]);
+        osg.Matrix.set(localToWorld,1,1, north[1]);
+        osg.Matrix.set(localToWorld,1,2, north[2]);
+
+        osg.Matrix.set(localToWorld,2,0, up[0]);
+        osg.Matrix.set(localToWorld,2,1, up[1]);
+        osg.Matrix.set(localToWorld,2,2, up[2]);
+    }
+};
 
 osg.createTexturedQuad = function(cornerx, cornery, cornerz,
                                   wx, wy, wz,
