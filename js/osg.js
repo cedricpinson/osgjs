@@ -2007,10 +2007,13 @@ osg.ShaderGenerator.prototype = {
             "precision highp float;",
             "#endif",
             "attribute vec3 Vertex;",
+            "attribute vec4 Color;",
             "attribute vec3 Normal;",
+            "uniform int ArrayColorEnabled;",
             "uniform mat4 ModelViewMatrix;",
             "uniform mat4 ProjectionMatrix;",
             "uniform mat4 NormalMatrix;",
+            "varying vec4 VertexColor;",
             ""
         ].join('\n');
 
@@ -2032,6 +2035,10 @@ osg.ShaderGenerator.prototype = {
             "",
             "void main(void) {",
             "gl_Position = ftransform();",
+            "if (ArrayColorEnabled == 1)",
+            "  VertexColor = Color;",
+            "else",
+            "  VertexColor = vec4(1.0,1.0,1.0,1.0);",
             ""
         ].join('\n');
 
@@ -2057,6 +2064,8 @@ osg.ShaderGenerator.prototype = {
             "#ifdef GL_ES",
             "precision highp float;",
             "#endif",
+            "varying vec4 VertexColor;",
+            "uniform int ArrayColorEnabled;",
             "vec4 fragColor;",
             ""
         ].join("\n");
@@ -2067,7 +2076,7 @@ osg.ShaderGenerator.prototype = {
 
         shader += [
             "void main(void) {",
-            "fragColor = vec4(1.0, 1.0, 1.0, 1.0);",
+            "fragColor = VertexColor;",
             ""
         ].join('\n');
 
@@ -2122,6 +2131,10 @@ osg.State = function () {
     this.projectionMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ProjectionMatrix");
     this.normalMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "NormalMatrix");
 
+    this.uniformArrayState = {};
+    this.uniformArrayState.uniformKeys = [];
+    this.uniformArrayState.Color = osg.Uniform.createInt1(0, "ArrayColorEnabled");
+    this.uniformArrayState.uniformKeys.push("Color");
 
 };
 
@@ -2563,6 +2576,7 @@ osg.State.prototype = {
 
     disableVertexAttribsExcept: function(indexList) {
         var that = indexList;
+        // is 'filter' a good way to do it fast ?
         var disableArray = this.vertexAttribList.filter(function (element, index, array) {
             return (that.indexOf(element) < 0 );
         });
@@ -2571,6 +2585,19 @@ osg.State.prototype = {
             gl.disableVertexAttribArray(disableArray[i]);
         }
 
+        var program = this.programs.lastApplied;
+        if (program.generated === true) {
+            for (var j = 0, k = disableArray.length; j < k; j++) {
+                var attrib = disableArray[j];
+                if (program.attributesCache.attributeKeys[attrib] !== undefined) {
+                    var name = program.attributesCache.attributeKeys[attrib];
+                    if (name === "Color") {
+                        this.uniformArrayState[name].set([0]);
+                        this.uniformArrayState[name].apply(program.uniformsCache["ArrayColorEnabled"]);
+                    }
+                }
+            }
+        }
         this.vertexAttribList = indexList;
     },
 
@@ -2606,6 +2633,17 @@ osg.State.prototype = {
         this.vertexAttribList.push(attrib);
         gl.enableVertexAttribArray(attrib);
         gl.vertexAttribPointer(attrib, array.itemSize, gl.FLOAT, normalize, 0, 0);
+
+        var program = this.programs.lastApplied;
+        if (program.generated === true) {
+            if (program.attributesCache.attributeKeys[attrib] !== undefined) {
+                var name = program.attributesCache.attributeKeys[attrib];
+                if (name === "Color") {
+                    this.uniformArrayState[name].set([1]);
+                    this.uniformArrayState[name].apply(program.uniformsCache["ArrayColorEnabled"]);
+                }
+            }
+        }
     }
 
 };
@@ -2959,7 +2997,7 @@ osg.Node.prototype = {
             }
         }
     },
-    setNodeMask: function(mask) { this.nodeMask = mask; }, 
+    setNodeMask: function(mask) { this.nodeMask = mask; },
     getNodeMask: function(mask) { return this.nodeMask; },
     setStateSet: function(s) { this.stateset = s; },
     setUpdateCallback: function(cb) { this.updateCallback = cb; },
@@ -2985,8 +3023,7 @@ osg.Node.prototype = {
         this.parents.push(parent);
     },
     removeParent: function(parent) {
-        var parents = this.parents;
-        for (var i = 0, l = this.parents.length; i < l; i++) {
+        for (var i = 0, l = this.parents.length, parents = this.parents; i < l; i++) {
             if (parents[i] === parent) {
                 parents.splice(i, 1);
                 return;
@@ -3045,7 +3082,7 @@ osg.Node.prototype = {
         }
         bsphere._center = bb.center();
         bsphere._radius = 0.0;
-	for (var j = 0, l2 = this.children.length; j < l2; i++) {
+	for (var j = 0, l2 = this.children.length; j < l2; j++) {
 	    var cc = this.children[j];
             if (cc.referenceFrame === undefined || cc.referenceFrame === osg.Transform.RELATIVE_RF) {
 	        bsphere.expandRadiusBySphere(cc.getBound());
@@ -3057,6 +3094,7 @@ osg.Node.prototype = {
 
 };
 osg.Node.create = function() {
+    osg.log("osg.Node.create is deprecated");
     var node = new osg.Node();
     return node;
 };
@@ -3664,7 +3702,7 @@ osg.Light.prototype = {
         switch (type) {
         case osg.ShaderGeneratorType.VertexInit:
             str = [ "",
-                    "varying vec4 Color;",
+                    "varying vec4 LightColor;",
                     "vec3 EyeVector;",
                     "vec3 NormalComputed;",
                     "",
@@ -3720,7 +3758,7 @@ osg.Light.prototype = {
                     "      Diffuse  * MaterialDiffuse;",
                     "      //Specular * MaterialSpecular;",
                     "    localColor = clamp( localColor, 0.0, 1.0 );",
-                    "    Color += localColor;",
+                    "    LightColor += localColor;",
                     "",
                     "}" ].join('\n');
             break;
@@ -3728,17 +3766,17 @@ osg.Light.prototype = {
             str = [ "",
                     "EyeVector = computeEyeDirection();",
                     "NormalComputed = computeNormal();",
-                    "Color = vec4(0,0,0,0);",
+                    "LightColor = vec4(0,0,0,0);",
                     "" ].join('\n');
             break;
         case osg.ShaderGeneratorType.FragmentInit:
-            str = [ "varying vec4 Color;",
+            str = [ "varying vec4 LightColor;",
                     ""
                   ].join('\n');
             break;
         case osg.ShaderGeneratorType.FragmentMain:
             str = [ "",
-                    "fragColor *= Color;"
+                    "fragColor *= LightColor;"
                   ].join('\n');
             break;
         }
@@ -4985,9 +5023,6 @@ osg.ParseSceneGraph = function (node)
                 mode = gl[mode];
                 var first = node.primitives[i].first;
                 var count = node.primitives[i].count;
-                if (count > 65535) {
-                    count = 32740;
-		}
                 node.primitives[i] = new osg.DrawArrays(mode, first, count);
             }
         }
