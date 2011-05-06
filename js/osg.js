@@ -35,15 +35,23 @@ osg.log = function(str) {
 osg.reportErrorGL = false;
 
 osg.init = function() {
-    if (Float32Array.set === undefined) {
-        Float32Array.prototype.set = function(array) {
+    if (osg.Float32Array.set === undefined) {
+        osg.Float32Array.prototype.set = function(array) {
             for (var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
                 this[i] = array[i];
             }
         };
     }
-    if (Int32Array.set === undefined) {
-        Int32Array.prototype.set = function(array) {
+    if (osg.Int32Array.set === undefined) {
+        osg.Int32Array.prototype.set = function(array) {
+            for (var i = 0, l = array.length; i < l; ++i ) {
+                this[i] = array[i];
+            }
+        };
+    }
+
+    if (osg.Uint16Array.set === undefined) {
+        osg.Uint16Array.prototype.set = function(array) {
             for (var i = 0, l = array.length; i < l; ++i ) {
                 this[i] = array[i];
             }
@@ -70,7 +78,6 @@ osg.checkError = function(error) {
     }
 };
 
-
 osg.objectInehrit = function(base, extras) {
     function F(){}
     F.prototype = base;
@@ -84,6 +91,20 @@ osg.objectMix = function(obj, properties, test){
     }
     return obj;
 };
+
+
+osg.Float32Array = Float32Array;
+osg.Float32Array.prototype = osg.objectInehrit(Float32Array.prototype, {
+});
+
+osg.Int32Array = Int32Array;
+osg.Int32Array.prototype = osg.objectInehrit(Int32Array.prototype, {
+});
+
+osg.Uint16Array = Uint16Array;
+osg.Uint16Array.prototype = osg.objectInehrit(Uint16Array.prototype, {
+});
+
 
 
 osg.Matrix = {
@@ -1507,7 +1528,7 @@ osg.Uniform.createFloat1 = function(value, name) {
     uniform.glCall = function (location, glData) {
         gl.uniform1fv(location, glData);
     };
-    uniform.glData = new Float32Array(uniform.data);
+    uniform.glData = new osg.Float32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1518,7 +1539,7 @@ osg.Uniform.createFloat2 = function(vec2, name) {
     uniform.glCall = function (location, glData) {
         gl.uniform2fv(location, glData);
     };
-    uniform.glData = new Float32Array(uniform.data);
+    uniform.glData = new osg.Float32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1529,7 +1550,7 @@ osg.Uniform.createFloat3 = function(vec3, name) {
     uniform.glCall = function (location, glData) {
         gl.uniform3fv(location, glData);
     };
-    uniform.glData = new Float32Array(uniform.data);
+    uniform.glData = new osg.Float32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1540,7 +1561,7 @@ osg.Uniform.createFloat4 = function(vec4, name) {
     uniform.glCall = function (location, glData) {
         gl.uniform4fv(location, glData);
     };
-    uniform.glData = new Float32Array(uniform.data);
+    uniform.glData = new osg.Float32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1551,7 +1572,7 @@ osg.Uniform.createInt1 = function(value, name) {
     uniform.glCall = function (location, glData) {
         gl.uniform1iv(location, glData);
     };
-    uniform.glData = new Int32Array(uniform.data);
+    uniform.glData = new osg.Int32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1562,7 +1583,7 @@ osg.Uniform.createInt2 = function(vec2, name) {
     uniform.glCall = function (location, glData) {
         gl.uniform2iv(location, glData);
     };
-    uniform.glData = new Int32Array(uniform.data);
+    uniform.glData = new osg.Int32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1573,7 +1594,7 @@ osg.Uniform.createInt3 = function(vec3, name) {
     uniform.glCall = function (location, glData) {
         gl.uniform3iv(location, glData);
     };
-    uniform.glData = new Int32Array(uniform.data);
+    uniform.glData = new osg.Int32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1584,7 +1605,7 @@ osg.Uniform.createInt4 = function(vec4, name) {
     uniform.glCall = function (location, glData) {
         gl.uniform4iv(location, glData);
     };
-    uniform.glData = new Int32Array(uniform.data);
+    uniform.glData = new osg.Int32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1597,7 +1618,7 @@ osg.Uniform.createMatrix2 = function(mat2, name) {
     };
     uniform.apply = uniform.applyMatrix;
     uniform.transpose = false;
-    uniform.glData = new Float32Array(uniform.data);
+    uniform.glData = new osg.Float32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1610,7 +1631,7 @@ osg.Uniform.createMatrix3 = function(mat3, name) {
     };
     uniform.apply = uniform.applyMatrix;
     uniform.transpose = false;
-    uniform.glData = new Float32Array(uniform.data);
+    uniform.glData = new osg.Float32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1623,7 +1644,7 @@ osg.Uniform.createMatrix4 = function(mat4, name) {
     };
     uniform.apply = uniform.applyMatrix;
     uniform.transpose = false;
-    uniform.glData = new Float32Array(uniform.data);
+    uniform.glData = new osg.Float32Array(uniform.data);
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1684,7 +1705,14 @@ osg.Shader.create = function( type, text )
 };
 
 
-osg.Program = function () {};
+osg.Program = function () { 
+    if (osg.Program.instanceID === undefined) {
+        osg.Program.instanceID = 0;
+    }
+    this.instanceID = osg.Program.instanceID;
+    osg.Program.instanceID+= 1;
+};
+
 osg.Program.prototype = {
 
     attributeType: "Program",
@@ -2136,6 +2164,9 @@ osg.State = function () {
     this.uniformArrayState.Color = osg.Uniform.createInt1(0, "ArrayColorEnabled");
     this.uniformArrayState.uniformKeys.push("Color");
 
+    this.vertexAttribMap = {};
+    this.vertexAttribMap._disable = [];
+    this.vertexAttribMap._keys = [];
 };
 
 osg.State.prototype = {
@@ -2582,7 +2613,7 @@ osg.State.prototype = {
         });
 
         for (var i = 0, l = disableArray.length; i < l; i++) {
-            gl.disableVertexAttribArray(disableArray[i]);
+            //gl.disableVertexAttribArray(disableArray[i]);
         }
 
         var program = this.programs.lastApplied;
@@ -2598,7 +2629,7 @@ osg.State.prototype = {
                 }
             }
         }
-        this.vertexAttribList = indexList;
+        this.vertexAttribList = indexList.slice(0);
     },
 
     setIndexArray: function(array) {
@@ -2614,19 +2645,67 @@ osg.State.prototype = {
         }
     },
 
+    lazyDisablingOfVertexAttributes: function() {
+        var keys = this.vertexAttribMap._keys;
+        for (var i = 0, l = keys.length; i < l; i++) {
+            var attr = keys[i];
+            if (this.vertexAttribMap[attr] !== undefined) {
+                this.vertexAttribMap._disable[attr] = true;
+            }
+        }
+    },
+    applyDisablingOfVertexAttributes: function() {
+        var keys = this.vertexAttribMap._keys;
+        for (var i = 0, l = keys.length; i < l; i++) {
+            if (this.vertexAttribMap._disable[keys[i] ] === true) {
+                var attr = keys[i];
+                gl.disableVertexAttribArray(attr);
+                this.vertexAttribMap._disable[attr] = false;
+                this.vertexAttribMap[attr] = undefined;
+            }
+        }
+
+        var program = this.programs.lastApplied;
+        if (program.generated === true) {
+            var colorAttrib = program.attributesCache.Color;
+            if (colorAttrib !== undefined) {
+                if (this.vertexAttribMap[colorAttrib] !== undefined) {
+                    this.uniformArrayState["Color"].set([1]);
+                } else {
+                    this.uniformArrayState["Color"].set([0]);
+                }
+                this.uniformArrayState["Color"].apply(program.uniformsCache["ArrayColorEnabled"]);
+            }
+        }
+    },
+    setVertexAttribArrayLazy: function(attrib, array, normalize) {
+        this.vertexAttribMap._disable[ attrib ] = false;
+        if (!array.buffer) {
+            array.init();
+        }
+        if (array.dirty) {
+            gl.bindBuffer(array.type, array.buffer);
+            array.compile();
+        }
+        if (this.vertexAttribMap[attrib] !== array) {
+
+            gl.bindBuffer(array.type, array.buffer);
+
+            if (this.vertexAttribMap[attrib] === undefined) {
+                gl.enableVertexAttribArray(attrib);
+                this.vertexAttribMap._keys.push(attrib);
+            }
+
+            this.vertexAttribMap[attrib] = array;
+            gl.vertexAttribPointer(attrib, array.itemSize, gl.FLOAT, normalize, 0, 0);
+        }
+    },
+
     setVertexAttribArray: function(attrib, array, normalize) {
         if (!array.buffer) {
             array.init();
         }
         gl.bindBuffer(array.type, array.buffer);
-        // it does not seems interesting to check the current vbo binded
-        // if (this.currentVBO !== array) {
-        //     if (!array.buffer) {
-        //         array.init();
-        //     }
-        //     gl.bindBuffer(array.type, array.buffer);
-        //     this.currentVBO = array;
-        // }
         if (array.dirty) {
             array.compile();
         }
@@ -3825,7 +3904,13 @@ osg.Light.create = function() {
 };
 
 
-osg.BufferArray = function () {};
+osg.BufferArray = function () {
+    if (osg.BufferArray.instanceID === undefined) {
+        osg.BufferArray.instanceID = 0;
+    }
+    this.instanceID = osg.BufferArray.instanceID;
+    osg.BufferArray.instanceID += 1;
+};
 osg.BufferArray.prototype = {
     init: function() {
         if (!this.buffer && this.elements.length > 0 ) {
@@ -3851,9 +3936,9 @@ osg.BufferArray.create = function(type, elements, itemSize) {
     a.itemSize = itemSize;
     a.type = type;
     if (a.type === gl.ELEMENT_ARRAY_BUFFER) {
-        a.elements = new Uint16Array(elements);
+        a.elements = new osg.Uint16Array(elements);
     } else {
-        a.elements = new Float32Array(elements);
+        a.elements = new osg.Float32Array(elements);
     }
     a.dirty = true;
     return a;
@@ -3899,9 +3984,6 @@ osg.DrawElements = function (mode, indices) {
 osg.DrawElements.prototype = {
     getMode: function() { return this.mode; },
     draw: function(state) {
-        if (this.count > this.indices.numItems || this.count < 0) {
-            this.count = this.indices.numItems;
-        }
         state.setIndexArray(this.indices);
         gl.drawElements(this.mode, this.count, gl.UNSIGNED_SHORT, this.offset );
     },
@@ -3925,6 +4007,7 @@ osg.Geometry = function () {
     this.attributes = {};
     this.boundingBox = new osg.BoundingBox();
     this.boundingBoxComputed = false;
+    this.cacheAttributeList = {};
 };
 
 osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
@@ -3932,15 +4015,16 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
         if (this.boundingBoxComputed === true) {
             this.boundingBoxComputed = false;
         }
-        //
         osg.Node.dirtyBound.call(this);
     },
 
+    dirty: function() {
+        this.cacheAttributeList = {};
+    },
     getPrimitives: function() { return this.primitives; },
     getAttributes: function() { return this.attributes; },
 
-    drawImplementation: function(state) {
-        
+    drawImplementationTest1: function(state) {
         var program = state.getLastProgramApplied();
         var attribute;
         var attributeList = [];
@@ -3949,16 +4033,133 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
         for (var i = 0, l = attributesCache.attributeKeys.length; i < l; i++) {
             var key = attributesCache.attributeKeys[i];
             attribute = attributesCache[key];
-
-            if (this.attributes[key] === undefined) {
+            var attr = this.attributes[key];
+            if (attr === undefined) {
                 continue;
             }
             attributeList.push(attribute);
-            state.setVertexAttribArray(attribute, this.attributes[key], false);
+            state.setVertexAttribArray(attribute, attr, false);
         }
 
         var primitives = this.primitives;
         state.disableVertexAttribsExcept(attributeList);
+
+        state.setIndexArray(primitives[0].indices);
+        gl.drawElements(primitives[0].mode, primitives[0].count, gl.UNSIGNED_SHORT, primitives[0].offset );
+    },
+
+    drawImplementationGenerate: function(state) {
+        var program = state.getLastProgramApplied();
+        var prgID = program.instanceID;
+        if (this.cacheAttributeList[prgID] === undefined) {
+            var attribute;
+            var attributesCache = program.attributesCache;
+            var attributeList = []
+
+            var generated = "//generated by Geometry::implementation\nfunction(state) {\n";
+            for (var i = 0, l = attributesCache.attributeKeys.length; i < l; i++) {
+                var key = attributesCache.attributeKeys[i];
+                attribute = attributesCache[key];
+                var attr = this.attributes[key];
+                if (attr === undefined) {
+                    continue;
+                }
+                attributeList.push(attribute);
+                generated += "state.setVertexAttribArray(" + attribute + ", this.attributes[\""+key+ "\"], false);\n";
+            }
+            generated += "state.disableVertexAttribsExcept(this.cacheAttributeList["+prgID+"].attributeList);\n";
+            var primitives = this.primitives;
+            generated += "var primitives = this.primitives;\n";
+            for (var j = 0, m = primitives.length; j < m; ++j) {
+                generated += "//primitives["+j+"].draw(state);\n";
+            }
+            generated += "}";
+            var returnFunction = function() {
+                eval("var r = " + generated + ";");
+                osg.log(r);
+                return r;
+            }
+            this.cacheAttributeList[prgID] = {'attributeList': attributeList,
+                                                   'generated': returnFunction() };
+        }
+        this.cacheAttributeList[prgID].generated.call(this, state);
+    },
+
+    drawImplementation: function(state) {
+        var program = state.getLastProgramApplied();
+        var prgID = program.instanceID;
+        if (this.cacheAttributeList[prgID] === undefined) {
+            var attribute;
+            var attributesCache = program.attributesCache;
+            var attributeList = [];
+
+            var generated = "//generated by Geometry::implementation\nfunction(state) {\n";
+            generated += "state.lazyDisablingOfVertexAttributes();\n";
+
+            for (var i = 0, l = attributesCache.attributeKeys.length; i < l; i++) {
+                var key = attributesCache.attributeKeys[i];
+                attribute = attributesCache[key];
+                var attr = this.attributes[key];
+                if (attr === undefined) {
+                    continue;
+                }
+                attributeList.push(attribute);
+                generated += "state.setVertexAttribArrayLazy(" + attribute + ", this.attributes[\""+key+ "\"], false);\n";
+            }
+            generated += "state.applyDisablingOfVertexAttributes();\n";
+            var primitives = this.primitives;
+            generated += "var primitives = this.primitives;\n";
+            for (var j = 0, m = primitives.length; j < m; ++j) {
+                generated += "primitives["+j+"].draw(state);\n";
+            }
+            generated += "}";
+            var returnFunction = function() {
+                osg.log(generated);
+                eval("var r = " + generated + ";");
+                osg.log(r);
+                return r;
+            }
+            this.cacheAttributeList[prgID] = returnFunction();
+        }
+        this.cacheAttributeList[prgID].call(this, state);
+    },
+
+    drawImplementationDummy: function(state) {
+        var program = state.getLastProgramApplied();
+        var attribute;
+        var attributeList = [];
+        var attributesCache = program.attributesCache;
+
+
+        var primitives = this.primitives;
+        //state.disableVertexAttribsExcept(attributeList);
+
+        for (var j = 0, m = primitives.length; j < m; ++j) {
+            //primitives[j].draw(state);
+        }
+    },
+
+
+    drawImplementationOrig: function(state) {
+        var program = state.getLastProgramApplied();
+        var attribute;
+        var attributeList = [];
+        var attributesCache = program.attributesCache;
+
+        for (var i = 0, l = attributesCache.attributeKeys.length; i < l; i++) {
+            var key = attributesCache.attributeKeys[i];
+            attribute = attributesCache[key];
+            var attr = this.attributes[key];
+            if (attr === undefined) {
+                continue;
+            }
+            attributeList.push(attribute);
+            state.setVertexAttribArray(attribute, attr, false);
+        }
+
+        var primitives = this.primitives;
+        state.disableVertexAttribsExcept(attributeList);
+
         for (var j = 0, m = primitives.length; j < m; ++j) {
             primitives[j].draw(state);
         }
