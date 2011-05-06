@@ -21,7 +21,7 @@
 var gl;
 var osg = {};
 
-osg.version = '0.0.3';
+osg.version = '0.0.4';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 osg.instance = 0;
 osg.version = 0;
@@ -35,28 +35,6 @@ osg.log = function(str) {
 osg.reportErrorGL = false;
 
 osg.init = function() {
-    if (osg.Float32Array.set === undefined) {
-        osg.Float32Array.prototype.set = function(array) {
-            for (var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
-                this[i] = array[i];
-            }
-        };
-    }
-    if (osg.Int32Array.set === undefined) {
-        osg.Int32Array.prototype.set = function(array) {
-            for (var i = 0, l = array.length; i < l; ++i ) {
-                this[i] = array[i];
-            }
-        };
-    }
-
-    if (osg.Uint16Array.set === undefined) {
-        osg.Uint16Array.prototype.set = function(array) {
-            for (var i = 0, l = array.length; i < l; ++i ) {
-                this[i] = array[i];
-            }
-        };
-    }
 };
 
 osg.checkError = function(error) {
@@ -94,17 +72,8 @@ osg.objectMix = function(obj, properties, test){
 
 
 osg.Float32Array = Float32Array;
-osg.Float32Array.prototype = osg.objectInehrit(Float32Array.prototype, {
-});
-
 osg.Int32Array = Int32Array;
-osg.Int32Array.prototype = osg.objectInehrit(Int32Array.prototype, {
-});
-
 osg.Uint16Array = Uint16Array;
-osg.Uint16Array.prototype = osg.objectInehrit(Uint16Array.prototype, {
-});
-
 
 
 osg.Matrix = {
@@ -117,6 +86,11 @@ osg.Matrix = {
     },
     innerProduct: function(a, b, r, c) {
         var rIndex = r * 4;
+        return ((a[rIndex + 0] * b[0 + c]) + (a[rIndex + 1] * b[4 + c]) + (a[rIndex +2] * b[8 + c]) + (a[rIndex + 3] * b[12 + c]));
+    },
+    innerProductOld: function(a, b, r, c) {
+        var rIndex = r * 4;
+        osg.log("(a["+(rIndex + 0) +"] * b["+ (0 + c) + "]) + (a["+ (rIndex + 1) +"] * b["+ (4 + c) + "]) + (a["+ (rIndex + 2) +"] * b["+ (8 + c) + "]) + (a["+ (rIndex + 3) +"] * b["+ (12 + c) + "]);");
         return ((a[rIndex + 0] * b[0 + c]) + (a[rIndex + 1] * b[4 + c]) + (a[rIndex +2] * b[8 + c]) + (a[rIndex + 3] * b[12 + c]));
     },
 
@@ -169,10 +143,192 @@ osg.Matrix = {
         return result;
     },
 
+    preMult: function(a, b) {
+        var atmp0, atmp1, atmp2, atmp3;
+
+        atmp0 = (b[0] * a[0]) + (b[1] * a[4]) + (b[2] * a[8]) + (b[3] * a[12]);
+        atmp1 = (b[4] * a[0]) + (b[5] * a[4]) + (b[6] * a[8]) + (b[7] * a[12]);
+        atmp2 = (b[8] * a[0]) + (b[9] * a[4]) + (b[10] * a[8]) + (b[11] * a[12]);
+        atmp3 = (b[12] * a[0]) + (b[13] * a[4]) + (b[14] * a[8]) + (b[15] * a[12]);
+        a[0]  = atmp0;
+        a[4]  = atmp1;
+        a[8]  = atmp2;
+        a[12] = atmp3;
+
+        atmp0 = (b[0] * a[1]) + (b[1] * a[5]) + (b[2] * a[9]) + (b[3] * a[13]);
+        atmp1 = (b[4] * a[1]) + (b[5] * a[5]) + (b[6] * a[9]) + (b[7] * a[13]);
+        atmp2 = (b[8] * a[1]) + (b[9] * a[5]) + (b[10] * a[9]) + (b[11] * a[13]);
+        atmp3 = (b[12] * a[1]) + (b[13] * a[5]) + (b[14] * a[9]) + (b[15] * a[13]);
+        a[1]  = atmp0;
+        a[5]  = atmp1;
+        a[9]  = atmp2;
+        a[13] = atmp3;
+
+        atmp0 = (b[0] * a[2]) + (b[1] * a[6]) + (b[2] * a[10]) + (b[3] * a[14]);
+        atmp1 = (b[4] * a[2]) + (b[5] * a[6]) + (b[6] * a[10]) + (b[7] * a[14]);
+        atmp2 = (b[8] * a[2]) + (b[9] * a[6]) + (b[10] * a[10]) + (b[11] * a[14]);
+        atmp3 = (b[12] * a[2]) + (b[13] * a[6]) + (b[14] * a[10]) + (b[15] * a[14]);
+        a[2]  = atmp0;
+        a[6]  = atmp1;
+        a[10] = atmp2;
+        a[14] = atmp3;
+
+        atmp0 = (b[0] * a[3]) + (b[1] * a[7]) + (b[2] * a[11]) + (b[3] * a[15]);
+        atmp1 = (b[4] * a[3]) + (b[5] * a[7]) + (b[6] * a[11]) + (b[7] * a[15]);
+        atmp2 = (b[8] * a[3]) + (b[9] * a[7]) + (b[10] * a[11]) + (b[11] * a[15]);
+        atmp3 = (b[12] * a[3]) + (b[13] * a[7]) + (b[14] * a[11]) + (b[15] * a[15]);
+        a[3]  = atmp0;
+        a[7]  = atmp1;
+        a[11] = atmp2;
+        a[15] = atmp3;
+
+        return a;
+    },
+    postMult: function(a, b) {
+        // post mult
+        btmp0 = (b[0] * a[0]) + (b[1] * a[4]) + (b[2] * a[8]) + (b[3] * a[12]);
+        btmp1 = (b[0] * a[1]) + (b[1] * a[5]) + (b[2] * a[9]) + (b[3] * a[13]);
+        btmp2 = (b[0] * a[2]) + (b[1] * a[6]) + (b[2] * a[10]) + (b[3] * a[14]);
+        btmp3 = (b[0] * a[3]) + (b[1] * a[7]) + (b[2] * a[11]) + (b[3] * a[15]);
+        b[0 ] = btmp0;
+        b[1 ] = btmp1;
+        b[2 ] = btmp2;
+        b[3 ] = btmp3;
+
+        btmp0 = (b[4] * a[0]) + (b[5] * a[4]) + (b[6] * a[8]) + (b[7] * a[12]);
+        btmp1 = (b[4] * a[1]) + (b[5] * a[5]) + (b[6] * a[9]) + (b[7] * a[13]);
+        btmp2 = (b[4] * a[2]) + (b[5] * a[6]) + (b[6] * a[10]) + (b[7] * a[14]);
+        btmp3 = (b[4] * a[3]) + (b[5] * a[7]) + (b[6] * a[11]) + (b[7] * a[15]);
+        b[4 ] = btmp0;
+        b[5 ] = btmp1;
+        b[6 ] = btmp2;
+        b[7 ] = btmp3;
+
+        btmp0 = (b[8] * a[0]) + (b[9] * a[4]) + (b[10] * a[8]) + (b[11] * a[12]);
+        btmp1 = (b[8] * a[1]) + (b[9] * a[5]) + (b[10] * a[9]) + (b[11] * a[13]);
+        btmp2 = (b[8] * a[2]) + (b[9] * a[6]) + (b[10] * a[10]) + (b[11] * a[14]);
+        btmp3 = (b[8] * a[3]) + (b[9] * a[7]) + (b[10] * a[11]) + (b[11] * a[15]);
+        b[8 ] = btmp0;
+        b[9 ] = btmp1;
+        b[10] = btmp2;
+        b[11] = btmp3;
+
+        btmp0 = (b[12] * a[0]) + (b[13] * a[4]) + (b[14] * a[8]) + (b[15] * a[12]);
+        btmp1 = (b[12] * a[1]) + (b[13] * a[5]) + (b[14] * a[9]) + (b[15] * a[13]);
+        btmp2 = (b[12] * a[2]) + (b[13] * a[6]) + (b[14] * a[10]) + (b[15] * a[14]);
+        btmp3 = (b[12] * a[3]) + (b[13] * a[7]) + (b[14] * a[11]) + (b[15] * a[15]);
+        b[12] = btmp0;
+        b[13] = btmp1;
+        b[14] = btmp2;
+        b[15] = btmp3;
+
+        return b;
+    },
     /* mult a,b means in math result = MatrixA * MatrixB */
     /* mult a,b is equivalent to preMult(a,b) */
     /* mult b,a is equivalent to postMult(a,b) */
+    multa: function(a, b, r) {
+        if (r === a) {
+            return this.preMult(a,b);
+        } else if (r === b) {
+            return this.postMult(a,b);
+        } else {
+            if (r === undefined) {
+                r = [];
+            }
+            r[0] =  b[0] * a[0] + b[1] * a[4] + b[2] * a[8] + b[3] * a[12];
+            r[1] =  b[0] * a[1] + b[1] * a[5] + b[2] * a[9] + b[3] * a[13];
+            r[2] =  b[0] * a[2] + b[1] * a[6] + b[2] * a[10] + b[3] * a[14];
+            r[3] =  b[0] * a[3] + b[1] * a[7] + b[2] * a[11] + b[3] * a[15];
+
+            r[4] =  b[4] * a[0] + b[5] * a[4] + b[6] * a[8] + b[7] * a[12];
+            r[5] =  b[4] * a[1] + b[5] * a[5] + b[6] * a[9] + b[7] * a[13];
+            r[6] =  b[4] * a[2] + b[5] * a[6] + b[6] * a[10] + b[7] * a[14];
+            r[7] =  b[4] * a[3] + b[5] * a[7] + b[6] * a[11] + b[7] * a[15];
+
+            r[8] =  b[8] * a[0] + b[9] * a[4] + b[10] * a[8] + b[11] * a[12];
+            r[9] =  b[8] * a[1] + b[9] * a[5] + b[10] * a[9] + b[11] * a[13];
+            r[10] = b[8] * a[2] + b[9] * a[6] + b[10] * a[10] + b[11] * a[14];
+            r[11] = b[8] * a[3] + b[9] * a[7] + b[10] * a[11] + b[11] * a[15];
+
+            r[12] = b[12] * a[0] + b[13] * a[4] + b[14] * a[8] + b[15] * a[12];
+            r[13] = b[12] * a[1] + b[13] * a[5] + b[14] * a[9] + b[15] * a[13];
+            r[14] = b[12] * a[2] + b[13] * a[6] + b[14] * a[10] + b[15] * a[14];
+            r[15] = b[12] * a[3] + b[13] * a[7] + b[14] * a[11] + b[15] * a[15];
+
+            return r;
+        }
+    },
     mult: function(a, b, r) {
+        var t;
+        if (r === a) {
+            // pre mult
+            return osg.Matrix.preMult(a,b);
+        } else if (r === b) {
+            // post mult
+            return osg.Matrix.postMult(a,b);
+        }
+        if (r === undefined) {
+            r = [];
+        }
+
+        var s00 = b[0];
+        var s01 = b[1];
+        var s02 = b[2];
+        var s03 = b[3];
+        var s10 = b[4];
+        var s11 = b[5];
+        var s12 = b[6];
+        var s13 = b[7];
+        var s20 = b[8];
+        var s21 = b[9];
+        var s22 = b[10];
+        var s23 = b[11];
+        var s30 = b[12];
+        var s31 = b[13];
+        var s32 = b[14];
+        var s33 = b[15];
+
+        var o00 = a[0];
+        var o01 = a[1];
+        var o02 = a[2];
+        var o03 = a[3];
+        var o10 = a[4];
+        var o11 = a[5];
+        var o12 = a[6];
+        var o13 = a[7];
+        var o20 = a[8];
+        var o21 = a[9];
+        var o22 = a[10];
+        var o23 = a[11];
+        var o30 = a[12];
+        var o31 = a[13];
+        var o32 = a[14];
+        var o33 = a[15];
+
+        r[0] =  s00 * o00 + s01 * o10 + s02 * o20 + s03 * o30;
+        r[1] =  s00 * o01 + s01 * o11 + s02 * o21 + s03 * o31;
+        r[2] =  s00 * o02 + s01 * o12 + s02 * o22 + s03 * o32;
+        r[3] =  s00 * o03 + s01 * o13 + s02 * o23 + s03 * o33;
+
+        r[4] =  s10 * o00 + s11 * o10 + s12 * o20 + s13 * o30;
+        r[5] =  s10 * o01 + s11 * o11 + s12 * o21 + s13 * o31;
+        r[6] =  s10 * o02 + s11 * o12 + s12 * o22 + s13 * o32;
+        r[7] =  s10 * o03 + s11 * o13 + s12 * o23 + s13 * o33;
+
+        r[8] =  s20 * o00 + s21 * o10 + s22 * o20 + s23 * o30;
+        r[9] =  s20 * o01 + s21 * o11 + s22 * o21 + s23 * o31;
+        r[10] = s20 * o02 + s21 * o12 + s22 * o22 + s23 * o32;
+        r[11] = s20 * o03 + s21 * o13 + s22 * o23 + s23 * o33;
+
+        r[12] = s30 * o00 + s31 * o10 + s32 * o20 + s33 * o30;
+        r[13] = s30 * o01 + s31 * o11 + s32 * o21 + s33 * o31;
+        r[14] = s30 * o02 + s31 * o12 + s32 * o22 + s33 * o32;
+        r[15] = s30 * o03 + s31 * o13 + s32 * o23 + s33 * o33;
+
+        return r;
+    },
+    multOrig: function(a, b, r) {
         var t;
         if (r === a) {
             // pre mult
@@ -189,8 +345,7 @@ osg.Matrix = {
             }
             return a;
             //return this.preMult(r, b);
-        }
-        if (r === b) {
+        } else if (r === b) {
             // post mult
             t = [];
             for (var row = 0; row < 4; row++) {
@@ -1510,15 +1665,67 @@ osg.Uniform.prototype = {
     },
     apply: function(location) {
         if (this.dirty) {
-            this.glData.set(this.data);
+            this.update.call(this.glData, this.data);
         }
         this.glCall(location, this.glData);
     },
     applyMatrix: function(location) {
         if (this.dirty) {
-            this.glData.set(this.data);
+            this.update.call(this.glData, this.data);
         }
         this.glCall(location, this.transpose, this.glData);
+    },
+    update: function(array) {
+        for (var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
+            this[i] = array[i];
+        }
+    },
+    setFloat1: function(f) {
+        this[0] = f[0];
+    },
+    setFloat2: function(f) {
+        this[0] = f[0];
+        this[1] = f[1];
+    },
+    setFloat3: function(f) {
+        this[0] = f[0];
+        this[1] = f[1];
+        this[2] = f[2];
+    },
+    setFloat4: function(f) {
+        this[0] = f[0];
+        this[1] = f[1];
+        this[2] = f[2];
+        this[3] = f[3];
+    },
+    setFloat9: function(f) {
+        this[0] = f[0];
+        this[1] = f[1];
+        this[2] = f[2];
+        this[3] = f[3];
+        this[4] = f[4];
+        this[5] = f[5];
+        this[6] = f[6];
+        this[7] = f[7];
+        this[8] = f[8];
+    },
+    setFloat16: function(f) {
+        this[0] = f[0];
+        this[1] = f[1];
+        this[2] = f[2];
+        this[3] = f[3];
+        this[4] = f[4];
+        this[5] = f[5];
+        this[6] = f[6];
+        this[7] = f[7];
+        this[8] = f[8];
+        this[9] = f[9];
+        this[10] = f[10];
+        this[11] = f[11];
+        this[12] = f[12];
+        this[13] = f[13];
+        this[14] = f[14];
+        this[15] = f[15];
     }
 };
 
@@ -1529,6 +1736,7 @@ osg.Uniform.createFloat1 = function(value, name) {
         gl.uniform1fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
+    uniform.update = osg.Uniform.prototype.setFloat1;
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1540,6 +1748,7 @@ osg.Uniform.createFloat2 = function(vec2, name) {
         gl.uniform2fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
+    uniform.update = osg.Uniform.prototype.setFloat2;
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1551,6 +1760,7 @@ osg.Uniform.createFloat3 = function(vec3, name) {
         gl.uniform3fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
+    uniform.update = osg.Uniform.prototype.setFloat3;
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1562,6 +1772,7 @@ osg.Uniform.createFloat4 = function(vec4, name) {
         gl.uniform4fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
+    uniform.update = osg.Uniform.prototype.setFloat4;
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1619,6 +1830,7 @@ osg.Uniform.createMatrix2 = function(mat2, name) {
     uniform.apply = uniform.applyMatrix;
     uniform.transpose = false;
     uniform.glData = new osg.Float32Array(uniform.data);
+    uniform.update = osg.Uniform.prototype.setFloat4;
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1632,6 +1844,7 @@ osg.Uniform.createMatrix3 = function(mat3, name) {
     uniform.apply = uniform.applyMatrix;
     uniform.transpose = false;
     uniform.glData = new osg.Float32Array(uniform.data);
+    uniform.update = osg.Uniform.prototype.setFloat9;
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -1645,6 +1858,7 @@ osg.Uniform.createMatrix4 = function(mat4, name) {
     uniform.apply = uniform.applyMatrix;
     uniform.transpose = false;
     uniform.glData = new osg.Float32Array(uniform.data);
+    uniform.update = osg.Uniform.prototype.setFloat16;
     uniform.dirty = false;
     uniform.name = name;
     return uniform;
@@ -4054,7 +4268,7 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
         if (this.cacheAttributeList[prgID] === undefined) {
             var attribute;
             var attributesCache = program.attributesCache;
-            var attributeList = []
+            var attributeList = [];
 
             var generated = "//generated by Geometry::implementation\nfunction(state) {\n";
             for (var i = 0, l = attributesCache.attributeKeys.length; i < l; i++) {
@@ -4078,7 +4292,7 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
                 eval("var r = " + generated + ";");
                 osg.log(r);
                 return r;
-            }
+            };
             this.cacheAttributeList[prgID] = {'attributeList': attributeList,
                                                    'generated': returnFunction() };
         }
@@ -4118,7 +4332,7 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
                 eval("var r = " + generated + ";");
                 osg.log(r);
                 return r;
-            }
+            };
             this.cacheAttributeList[prgID] = returnFunction();
         }
         this.cacheAttributeList[prgID].call(this, state);
@@ -4568,6 +4782,8 @@ osg.RenderBin.prototype = {
         var program;
         var stateset;
         var previousLeaf = previousRenderLeaf;
+        var normal = [];
+        var normalTranspose = [];
 
         if (this.positionedAttribute) {
             this.applyPositionedAttribute(state, this.positionedAttribute);
@@ -4625,11 +4841,11 @@ osg.RenderBin.prototype = {
                     state.projectionMatrix.apply(projectionUniform);
                 }
                 if (normalUniform !== undefined && normalUniform !== null && normalUniform !== -1 ) {
-                    var normal = osg.Matrix.copy(leaf.modelview);
+                    osg.Matrix.copy(leaf.modelview, normal);
                     osg.Matrix.setTrans(normal, 0, 0, 0);
                     osg.Matrix.inverse(normal, normal);
-                    osg.Matrix.transpose(normal, normal);
-                    state.normalMatrix.set(normal);
+                    osg.Matrix.transpose(normal, normalTranspose);
+                    state.normalMatrix.set(normalTranspose);
                     state.normalMatrix.apply(normalUniform);
                 }
 
