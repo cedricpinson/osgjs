@@ -70,6 +70,15 @@ osg.objectMix = function(obj, properties, test){
     return obj;
 };
 
+osg.objectType = {};
+osg.objectType.type = 0;
+osg.objectType.generate = function(arg) {
+    var t = osg.objectType.type;
+    osg.objectType[t] = arg;
+    osg.objectType[arg] = t;
+    osg.objectType.type += 1;
+    return t;
+};
 
 osg.Float32Array = Float32Array;
 osg.Int32Array = Int32Array;
@@ -118,7 +127,6 @@ osg.Matrix = {
         if (matrix === undefined) {
             matrix = [];
         }
-
         osg.Matrix.setRow(matrix, 0,    1, 0, 0, 0 );
         osg.Matrix.setRow(matrix, 1,    0, 1, 0, 0 );
         osg.Matrix.setRow(matrix, 2,    0, 0, 1, 0 );
@@ -143,6 +151,7 @@ osg.Matrix = {
         return result;
     },
 
+    // do a * b and result in a
     preMult: function(a, b) {
         var atmp0, atmp1, atmp2, atmp3;
 
@@ -184,6 +193,8 @@ osg.Matrix = {
 
         return a;
     },
+
+    // do a * b and result in b
     postMult: function(a, b) {
         // post mult
         btmp0 = (b[0] * a[0]) + (b[1] * a[4]) + (b[2] * a[8]) + (b[3] * a[12]);
@@ -224,9 +235,6 @@ osg.Matrix = {
 
         return b;
     },
-    /* mult a,b means in math result = MatrixA * MatrixB */
-    /* mult a,b is equivalent to preMult(a,b) */
-    /* mult b,a is equivalent to postMult(a,b) */
     multa: function(a, b, r) {
         if (r === a) {
             return this.preMult(a,b);
@@ -259,19 +267,8 @@ osg.Matrix = {
             return r;
         }
     },
+    /* r = a * b */
     mult: function(a, b, r) {
-        var t;
-        if (r === a) {
-            // pre mult
-            return osg.Matrix.preMult(a,b);
-        } else if (r === b) {
-            // post mult
-            return osg.Matrix.postMult(a,b);
-        }
-        if (r === undefined) {
-            r = [];
-        }
-
         var s00 = b[0];
         var s01 = b[1];
         var s02 = b[2];
@@ -3386,11 +3383,7 @@ osg.Node.prototype = {
     }
 
 };
-osg.Node.create = function() {
-    osg.log("osg.Node.create is deprecated");
-    var node = new osg.Node();
-    return node;
-};
+osg.Node.prototype.objecType = osg.objectType.generate("Node");
 
 
 osg.Transform = function() {
@@ -3455,7 +3448,7 @@ osg.MatrixTransform.prototype = osg.objectInehrit(osg.Transform.prototype, {
     setMatrix: function(m) { this.matrix = m; },
     computeLocalToWorldMatrix: function(matrix,nodeVisitor) {
         if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
-            osg.Matrix.mult(matrix, this.matrix, matrix);
+            osg.Matrix.preMult(matrix, this.matrix);
         } else {
             matrix = this.matrix;
         }
@@ -3464,17 +3457,14 @@ osg.MatrixTransform.prototype = osg.objectInehrit(osg.Transform.prototype, {
     computeWorldToLocalMatrix: function(matrix,nodeVisitor) {
         var minverse = osg.Matrix.inverse(this.matrix);
         if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
-            osg.Matrix.mult(minverse, matrix, matrix);
+            osg.Matrix.postMult(minverse, matrix);
         } else {// absolute
             matrix = inverse;
         }
         return true;
     }
 });
-osg.MatrixTransform.create = function() {
-    var mt = new osg.MatrixTransform();
-    return mt;
-};
+osg.MatrixTransform.prototype.objectType = osg.objectType.generate("MatrixTransform");
 
 
 osg.Projection = function () {
@@ -3485,10 +3475,7 @@ osg.Projection.prototype = osg.objectInehrit(osg.Node.prototype, {
     getProjectionMatrix: function() { return this.projection; },
     setProjectionMatrix: function(m) { this.projection = m; }
 });
-osg.Projection.create = function() {
-    var p = new osg.Projection();
-    return p;
-};
+osg.Projection.prototype.objectType = osg.objectType.generate("Projection");
 
 
 
@@ -3838,7 +3825,7 @@ osg.Viewport = function (x,y, w, h) {
         var scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
         var offset = osg.Matrix.makeTranslate(xstart,ystart,0.0);
         //return osg.Matrix.mult(osg.Matrix.mult(translate, scale, translate), offset, offset);
-        return osg.Matrix.mult(offset, osg.Matrix.mult(scale, translate, scale),  offset);
+        return osg.Matrix.preMult(offset, osg.Matrix.preMult(scale, translate));
     };
 };
 osg.Viewport.prototype = {
@@ -3910,10 +3897,6 @@ osg.Material.prototype = {
         }
         return str;
     }
-};
-osg.Material.create = function() {
-    var a = new osg.Material();
-    return a;
 };
 
 
@@ -4405,10 +4388,7 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
 	return boundingSphere;
     }
 });
-osg.Geometry.create = function() {
-    var g = new osg.Geometry();
-    return g;
-};
+osg.Geometry.prototype.objectType = osg.objectType.generate("Geometry");
 
 
 osg.CullStack = function() {
@@ -4416,6 +4396,7 @@ osg.CullStack = function() {
     this.projectionMatrixStack = [osg.Matrix.makeIdentity()];
     this.viewportStack = [];
 };
+
 osg.CullStack.prototype = {
     getViewport: function () {
         if (this.viewportStack.length === 0) {
@@ -4542,7 +4523,7 @@ osg.Camera.prototype = osg.objectInehrit(osg.CullSettings.prototype,
 
     computeLocalToWorldMatrix: function(matrix,nodeVisitor) {
         if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
-            osg.Matrix.mult(matrix, this.modelviewMatrix, matrix);
+            osg.Matrix.preMult(matrix, this.modelviewMatrix);
         } else {// absolute
             matrix = this.modelviewMatrix;
         }
@@ -4552,7 +4533,7 @@ osg.Camera.prototype = osg.objectInehrit(osg.CullSettings.prototype,
     computeWorldToLocalMatrix: function(matrix, nodeVisitor) {
         var inverse = osg.Matrix.inverse(this.modelviewMatrix);
         if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
-            osg.Matrix.mult(inverse, matrix, matrix);
+            osg.Matrix.postMult(inverse, matrix);
         } else {
             matrix = inverse;
         }
@@ -4560,6 +4541,8 @@ osg.Camera.prototype = osg.objectInehrit(osg.CullSettings.prototype,
     }
 
 }));
+osg.Camera.prototype.objectType = osg.objectType.generate("Camera");
+
 
 
 
@@ -4771,7 +4754,98 @@ osg.RenderBin.prototype = {
         return previous;
     },
 
-    drawLeafs: function(state, previousRenderLeaf) {
+    drawLeafsTinted: function(state, previousRenderLeaf) {
+        // no sort right now
+        //this.drawImplementation(state, previousRenderLeaf);
+        var stateList = this.stateGraphList;
+        var leafs = this.leafs;
+        var normalUniform;
+        var modelViewUniform;
+        var projectionUniform;
+        var program;
+        var stateset;
+        var previousLeaf = previousRenderLeaf;
+        var normal = [];
+        var normalTranspose = [];
+
+        if (this.positionedAttribute) {
+            this.applyPositionedAttribute(state, this.positionedAttribute);
+        }
+
+        for (var i = 0, l = stateList.length; i < l; i++) {
+            var sg = stateList[i];
+            for (var j = 0, ll = sg.leafs.length; j < ll; j++) {
+
+                var leaf = sg.leafs[j];
+                var push = false;
+                if (previousLeaf !== undefined) {
+
+                    // apply state if required.
+                    var prev_rg = previousLeaf.parent;
+                    var prev_rg_parent = prev_rg.parent;
+                    var rg = leaf.parent;
+                    if (prev_rg_parent !== rg.parent)
+                    {
+                        rg.moveStateGraph(state, prev_rg_parent, rg.parent);
+
+                        // send state changes and matrix changes to OpenGL.
+                        state.pushStateSet(rg.stateset);
+                        push = true;
+                    }
+                    else if (rg !== prev_rg)
+                    {
+                        // send state changes and matrix changes to OpenGL.
+                        state.pushStateSet(rg.stateset);
+                        push = true;
+                    }
+
+                } else {
+                    leaf.parent.moveStateGraph(state, undefined, leaf.parent.parent);
+                    state.pushStateSet(leaf.parent.stateset);
+                    push = true;
+                }
+
+                if (push === true) {
+                    //state.pushGeneratedProgram();
+                    state.apply();
+                    program = state.getLastProgramApplied();
+
+                    modelViewUniform = program.uniformsCache[state.modelViewMatrix.name];
+                    projectionUniform = program.uniformsCache[state.projectionMatrix.name];
+                    normalUniform = program.uniformsCache[state.normalMatrix.name];
+                }
+
+
+                if (modelViewUniform !== undefined) {
+                    state.modelViewMatrix.set(leaf.modelview);
+                    state.modelViewMatrix.apply(modelViewUniform);
+                }
+                if (projectionUniform !== undefined) {
+                    state.projectionMatrix.set(leaf.projection);
+                    state.projectionMatrix.apply(projectionUniform);
+                }
+                if (normalUniform !== undefined) {
+                    osg.Matrix.copy(leaf.modelview, normal);
+                    osg.Matrix.setTrans(normal, 0, 0, 0);
+                    osg.Matrix.inverse(normal, normal);
+                    osg.Matrix.transpose(normal, normalTranspose);
+                    state.normalMatrix.set(normalTranspose);
+                    state.normalMatrix.apply(normalUniform);
+                }
+
+                leaf.geometry.drawImplementation(state);
+
+                if (push === true) {
+                    state.popGeneratedProgram();
+                    state.popStateSet();
+                }
+
+                previousLeaf = leaf;
+            }
+        }
+        return previousLeaf;
+    },
+    drawLeafsOrig: function(state, previousRenderLeaf) {
         // no sort right now
         //this.drawImplementation(state, previousRenderLeaf);
         var stateList = this.stateGraphList;
@@ -4841,6 +4915,97 @@ osg.RenderBin.prototype = {
                     state.projectionMatrix.apply(projectionUniform);
                 }
                 if (normalUniform !== undefined && normalUniform !== null && normalUniform !== -1 ) {
+                    osg.Matrix.copy(leaf.modelview, normal);
+                    osg.Matrix.setTrans(normal, 0, 0, 0);
+                    osg.Matrix.inverse(normal, normal);
+                    osg.Matrix.transpose(normal, normalTranspose);
+                    state.normalMatrix.set(normalTranspose);
+                    state.normalMatrix.apply(normalUniform);
+                }
+
+                leaf.geometry.drawImplementation(state);
+
+                if (push === true) {
+                    state.popGeneratedProgram();
+                    state.popStateSet();
+                }
+
+                previousLeaf = leaf;
+            }
+        }
+        return previousLeaf;
+    },
+    drawLeafs: function(state, previousRenderLeaf) {
+        // no sort right now
+        //this.drawImplementation(state, previousRenderLeaf);
+        var stateList = this.stateGraphList;
+        var leafs = this.leafs;
+        var normalUniform;
+        var modelViewUniform;
+        var projectionUniform;
+        var program;
+        var stateset;
+        var previousLeaf = previousRenderLeaf;
+        var normal = [];
+        var normalTranspose = [];
+
+        if (this.positionedAttribute) {
+            this.applyPositionedAttribute(state, this.positionedAttribute);
+        }
+
+        for (var i = 0, l = stateList.length; i < l; i++) {
+            var sg = stateList[i];
+            for (var j = 0, ll = sg.leafs.length; j < ll; j++) {
+
+                var leaf = sg.leafs[j];
+                var push = false;
+                if (previousLeaf !== undefined) {
+
+                    // apply state if required.
+                    var prev_rg = previousLeaf.parent;
+                    var prev_rg_parent = prev_rg.parent;
+                    var rg = leaf.parent;
+                    if (prev_rg_parent !== rg.parent)
+                    {
+                        rg.moveStateGraph(state, prev_rg_parent, rg.parent);
+
+                        // send state changes and matrix changes to OpenGL.
+                        state.pushStateSet(rg.stateset);
+                        push = true;
+                    }
+                    else if (rg !== prev_rg)
+                    {
+                        // send state changes and matrix changes to OpenGL.
+                        state.pushStateSet(rg.stateset);
+                        push = true;
+                    }
+
+                } else {
+                    leaf.parent.moveStateGraph(state, undefined, leaf.parent.parent);
+                    state.pushStateSet(leaf.parent.stateset);
+                    push = true;
+                }
+
+                if (push === true) {
+                    //state.pushGeneratedProgram();
+                    state.apply();
+                    program = state.getLastProgramApplied();
+
+                    modelViewUniform = program.uniformsCache[state.modelViewMatrix.name];
+                    projectionUniform = program.uniformsCache[state.projectionMatrix.name];
+                    normalUniform = program.uniformsCache[state.normalMatrix.name];
+                }
+
+
+                if (modelViewUniform !== undefined) {
+                    state.modelViewMatrix.set(leaf.modelview);
+                    state.modelViewMatrix.apply(modelViewUniform);
+                }
+                if (projectionUniform !== undefined) {
+                    state.projectionMatrix.set(leaf.projection);
+                    state.projectionMatrix.apply(projectionUniform);
+                }
+                if (normalUniform !== undefined) {
                     osg.Matrix.copy(leaf.modelview, normal);
                     osg.Matrix.setTrans(normal, 0, 0, 0);
                     osg.Matrix.inverse(normal, normal);
@@ -5068,6 +5233,12 @@ osg.CullVisitor = function () {
     var lookVector =[0.0,0.0,-1.0];
     this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
     this.bbCornerNear = (~this.bbCornerFar)&7;
+
+
+    // keep a matrix in memory to avoid to create matrix
+    this.reserveMatrixStack = [[]];
+    this.reserveMatrixStack.current = 0;
+
 };
 
 osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objectInehrit(osg.CullSettings.prototype, osg.objectInehrit(osg.NodeVisitor.prototype, {
@@ -5181,7 +5352,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
                           0.0,1.0,0.0,0.0,
                           0.0,0.0,ratio,0.0,
                           0.0,0.0,center*ratio,1.0];
-            osg.Matrix.mult(matrix, projection, projection);
+            osg.Matrix.postMult(matrix, projection);
             // OSG_INFO << "Persepective matrix after clamping"<<projection<<std::endl;
         }
         if (resultNearFar !== undefined) {
@@ -5202,6 +5373,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
     reset: function () {
         this.modelviewMatrixStack.length = 1;
         this.projectionMatrixStack.length = 1;
+        this.reserveMatrixStack.current = 0;
     },
     getCurrentRenderBin: function() { return this.currentRenderBin; },
     setCurrentRenderBin: function(rb) { this.currentRenderBin = rb; },
@@ -5216,113 +5388,6 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         this.currentStateGraph = this.currentStateGraph.parent;
     },
 
-    applyCamera: function( camera ) {
-        if (camera.stateset) {
-            this.pushStateSet(camera.stateset);
-        }
-
-        if (camera.light) {
-            this.addPositionedAttribute(camera.light);
-        }
-
-        var originalModelView = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-
-        var modelview;
-        var projection;
-        if (camera.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
-            var lastProjectionMatrix = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-            projection = osg.Matrix.mult(lastProjectionMatrix, camera.getProjectionMatrix());
-            this.pushProjectionMatrix(projection);
-            var lastViewMatrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            modelview = osg.Matrix.mult(lastViewMatrix, camera.getViewMatrix());
-            this.pushModelviewMatrix(modelview);
-        } else {
-            // absolute
-            modelview = osg.Matrix.copy(camera.getViewMatrix());
-            projection = osg.Matrix.copy(camera.getProjectionMatrix());
-            this.pushProjectionMatrix(projection);
-            this.pushModelviewMatrix(modelview);
-        }
-
-        if (camera.getViewport()) {
-            this.pushViewport(camera.getViewport());
-        }
-
-        // save current state of the camera
-        var previous_znear = this.computedNear;
-        var previous_zfar = this.computedFar;
-        var previous_cullsettings = new osg.CullSettings();
-        previous_cullsettings.setCullSettings(this);
-
-        this.computedNear = Number.POSITIVE_INFINITY;
-        this.computedFar = Number.NEGATIVE_INFINITY;
-        this.setCullSettings(camera);
-
-        // nested camera
-        if (camera.getRenderOrder() === osg.Camera.NESTED_RENDER) {
-            
-            if (camera.traverse) {
-                this.traverse(camera);
-            }
-            
-        } else {
-            // not tested
-
-            var previous_stage = this.getCurrentRenderBin().getStage();
-
-            // use render to texture stage
-            var rtts = new osg.RenderStage();
-            rtts.setCamera(camera);
-            rtts.setClearDepth(camera.getClearDepth());
-            rtts.setClearColor(camera.getClearColor());
-
-            rtts.setClearMask(camera.getClearMask());
-            
-            var vp;
-            if (camera.getViewport() === undefined) {
-                vp = previous_stage.getViewport();
-            } else {
-                vp = camera.getViewport();
-            }
-            rtts.setViewport(vp);
-            
-            // skip positional state for now
-            // ...
-
-            var previousRenderBin = this.getCurrentRenderBin();
-
-            this.setCurrentRenderBin(rtts);
-
-            if (camera.traverse) {
-                camera.traverse(this);
-            }
-
-            this.setCurrentRenderBin(previousRenderBin);
-
-            if (camera.getRenderOrder() === osg.Camera.PRE_RENDER) {
-                this.getCurrentRenderBin().getStage().addPreRenderStage(rtts,camera.renderOrderNum);
-            } else {
-                this.getCurrentRenderBin().getStage().addPostRenderStage(rtts,camera.renderOrderNum);
-            }
-        }
-
-        this.popModelviewMatrix();
-        this.popProjectionMatrix();
-
-        if (camera.getViewport()) {
-            this.popViewport();
-        }
-
-        // restore previous state of the camera
-        this.setCullSettings(previous_cullsettings);
-        this.computedNear = previous_znear;
-        this.computedFar = previous_zfar;
-
-        if (camera.stateset) {
-            this.popStateSet();
-        }
-
-    },
 
     popProjectionMatrix: function () {
         if (this.computeNearFar === true && this.computedFar >= this.computedNear) {
@@ -5330,10 +5395,14 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
             this.clampProjectionMatrix(m, this.computedNear, this.computedFar, this.nearFarRatio);
         }
         osg.CullStack.prototype.popProjectionMatrix.call(this);
-        //this.projectionMatrixStack.pop();
     },
 
+
     apply: function( node ) {
+        this[node.objectType].call(this, node);
+    },
+
+    applyOrig: function( node ) {
         var lastMatrixStack;
         var matrix;
 
@@ -5345,17 +5414,17 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         if (node.getMatrix) {
 
             lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            matrix = osg.Matrix.mult(lastMatrixStack, node.getMatrix());
+            matrix = osg.Matrix.mult(lastMatrixStack, node.getMatrix(), []);
             this.pushModelviewMatrix(matrix);
         } else if (node.getViewMatrix) {
             lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            matrix = osg.Matrix.mult(lastMatrixStack, node.getViewMatrix());
+            matrix = osg.Matrix.mult(lastMatrixStack, node.getViewMatrix(), []);
             this.pushModelviewMatrix(matrix);
         }
 
         if (node.getProjectionMatrix) {
             lastMatrixStack = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-            matrix = osg.Matrix.mult(lastMatrixStack, node.getProjectionMatrix());
+            matrix = osg.Matrix.mult(lastMatrixStack, node.getProjectionMatrix(), []);
             this.pushProjectionMatrix(matrix);
         }
 
@@ -5413,14 +5482,240 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         if (node.getProjectionMatrix !== undefined) {
             this.popProjectionMatrix();
         }
+    },
+
+    getReservedMatrix: function() {
+        var m = this.reserveMatrixStack[this.reserveMatrixStack.current++];
+        if (this.reserveMatrixStack.current === this.reserveMatrixStack.length) {
+            this.reserveMatrixStack.push(osg.Matrix.makeIdentity());
+        }
+        return m;
     }
+
 })));
+osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) {
+    if (camera.stateset) {
+        this.pushStateSet(camera.stateset);
+    }
+
+    if (camera.light) {
+        this.addPositionedAttribute(camera.light);
+    }
+
+    var originalModelView = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+
+    var modelview;
+    var projection;
+    if (camera.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
+        var lastProjectionMatrix = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+        projection = this.getReservedMatrix();
+        osg.Matrix.mult(lastProjectionMatrix, camera.getProjectionMatrix(), projection);
+        this.pushProjectionMatrix(projection);
+        var lastViewMatrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+        modelview = this.getReservedMatrix();
+        osg.Matrix.mult(lastViewMatrix, camera.getViewMatrix(), modelview);
+        this.pushModelviewMatrix(modelview);
+    } else {
+        // absolute
+        modelview = osg.Matrix.copy(camera.getViewMatrix());
+        projection = osg.Matrix.copy(camera.getProjectionMatrix());
+        this.pushProjectionMatrix(projection);
+        this.pushModelviewMatrix(modelview);
+    }
+
+    if (camera.getViewport()) {
+        this.pushViewport(camera.getViewport());
+    }
+
+    // save current state of the camera
+    var previous_znear = this.computedNear;
+    var previous_zfar = this.computedFar;
+    var previous_cullsettings = new osg.CullSettings();
+    previous_cullsettings.setCullSettings(this);
+
+    this.computedNear = Number.POSITIVE_INFINITY;
+    this.computedFar = Number.NEGATIVE_INFINITY;
+    this.setCullSettings(camera);
+
+    // nested camera
+    if (camera.getRenderOrder() === osg.Camera.NESTED_RENDER) {
+        
+        if (camera.traverse) {
+            this.traverse(camera);
+        }
+        
+    } else {
+        // not tested
+
+        var previous_stage = this.getCurrentRenderBin().getStage();
+
+        // use render to texture stage
+        var rtts = new osg.RenderStage();
+        rtts.setCamera(camera);
+        rtts.setClearDepth(camera.getClearDepth());
+        rtts.setClearColor(camera.getClearColor());
+
+        rtts.setClearMask(camera.getClearMask());
+        
+        var vp;
+        if (camera.getViewport() === undefined) {
+            vp = previous_stage.getViewport();
+        } else {
+            vp = camera.getViewport();
+        }
+        rtts.setViewport(vp);
+        
+        // skip positional state for now
+        // ...
+
+        var previousRenderBin = this.getCurrentRenderBin();
+
+        this.setCurrentRenderBin(rtts);
+
+        if (camera.traverse) {
+            camera.traverse(this);
+        }
+
+        this.setCurrentRenderBin(previousRenderBin);
+
+        if (camera.getRenderOrder() === osg.Camera.PRE_RENDER) {
+            this.getCurrentRenderBin().getStage().addPreRenderStage(rtts,camera.renderOrderNum);
+        } else {
+            this.getCurrentRenderBin().getStage().addPostRenderStage(rtts,camera.renderOrderNum);
+        }
+    }
+
+    this.popModelviewMatrix();
+    this.popProjectionMatrix();
+
+    if (camera.getViewport()) {
+        this.popViewport();
+    }
+
+    // restore previous state of the camera
+    this.setCullSettings(previous_cullsettings);
+    this.computedNear = previous_znear;
+    this.computedFar = previous_zfar;
+
+    if (camera.stateset) {
+        this.popStateSet();
+    }
+
+};
+
+
+osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (node) {
+
+    var lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+
+//    if (this.reserveMatrixStack.current === this.reserveMatrixStack.length) {
+//    }
+//    var matrix = this.reserveMatrixStack[this.reserveMatrixStack.current++];
+//    this.reserveMatrixStack.current = 0;
+
+    var matrix = this.getReservedMatrix();
+    osg.Matrix.mult(lastMatrixStack, node.getMatrix(), matrix);
+
+    //var matrix = osg.Matrix.mult(lastMatrixStack, node.getMatrix(), []);
+    this.pushModelviewMatrix(matrix);
+
+    if (node.stateset) {
+        this.pushStateSet(node.stateset);
+    }
+
+    if (node.light) {
+        this.addPositionedAttribute(node.light);
+    }
+
+    if (node.traverse) {
+        this.traverse(node);
+    }
+
+    if (node.stateset) {
+        this.popStateSet();
+    }
+    
+    this.popModelviewMatrix();
+
+};
+
+osg.CullVisitor.prototype[osg.Projection.prototype.objectType] = function (node) {
+    lastMatrixStack = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+    var matrix = this.getReservedMatrix();
+    osg.Matrix.mult(lastMatrixStack, node.getProjectionMatrix(), matrix);
+    this.pushProjectionMatrix(matrix);
+
+    if (node.stateset) {
+        this.pushStateSet(node.stateset);
+    }
+
+    if (node.traverse) {
+        this.traverse(node);
+    }
+
+    if (node.stateset) {
+        this.popStateSet();
+    }
+
+    this.popProjectionMatrix();
+};
+
+osg.CullVisitor.prototype[osg.Node.prototype.objectType] = function (node) {
+
+    if (node.stateset) {
+        this.pushStateSet(node.stateset);
+    }
+    if (node.light) {
+        this.addPositionedAttribute(node.light);
+    }
+
+    if (node.traverse) {
+        this.traverse(node);
+    }
+
+    if (node.stateset) {
+        this.popStateSet();
+    }
+};
+osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
+    matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+    var bb = node.getBoundingBox();
+    if (this.computeNearFar && bb.valid()) {
+        if (!this.updateCalculatedNearFar(matrix,node)) {
+            return;
+        }
+    }
+
+    if (node.stateset) {
+        this.pushStateSet(node.stateset);
+    }
+
+    var leafs = this.currentStateGraph.leafs;
+    if (leafs.length === 0) {
+        this.currentRenderBin.addStateGraph(this.currentStateGraph);
+    }
+    leafs.push(
+        {
+            "parent": this.currentStateGraph,
+            "modelview": this.modelviewMatrixStack[this.modelviewMatrixStack.length-1],
+            "projection": this.projectionMatrixStack[this.projectionMatrixStack.length-1],
+            "geometry": node
+        }
+    );
+
+    if (node.stateset) {
+        this.popStateSet();
+    }
+};
+
+
+
 
 osg.ParseSceneGraph = function (node)
 {
     var newnode;
     if (node.primitives) {
-        newnode = osg.Geometry.create();
+        newnode = new osg.Geometry();
         jQuery.extend(newnode, node);
         node = newnode;
 
@@ -5477,7 +5772,7 @@ osg.ParseSceneGraph = function (node)
         }
         if (node.stateset.material) {
             var material = node.stateset.material;
-            var newmaterial = osg.Material.create();
+            var newmaterial = new osg.Material();
             jQuery.extend(newmaterial, material);
             newstateset.setAttribute(newmaterial);
         }

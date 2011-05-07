@@ -51,7 +51,9 @@ var NbTotalNodes = 0;
 
 function createScene() {
     Texture = osg.Texture.create("textures/texture.png");
+    //var root = new osg.Node();
     var root = createItems(Deep);
+    //root.addChild(items);
 
     osg.log("Total Items " + NbTotalItems);
     osg.log("Total Nodes " + NbTotalNodes);

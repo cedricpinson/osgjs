@@ -278,7 +278,7 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
     pushModelMatrix: function(matrix) {
         if (this.matrix.length > 0 ) {
             var m = osg.Matrix.copy(this.matrix[this.matrix.length-1]);
-            osg.Matrix.mult(m, matrix, m);
+            osg.Matrix.preMult(m, matrix);
             this.matrix.push(m);
         } else {
             this.matrix.push(matrix);
@@ -331,9 +331,9 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
         if (node.primitives) {
             var matrix = [];
             osg.Matrix.copy(this.getWindowMatrix(), matrix);
-            osg.Matrix.mult(matrix, this.getProjectionMatrix(), matrix);
-            osg.Matrix.mult(matrix, this.getViewMatrix(), matrix);
-            osg.Matrix.mult(matrix, this.getModelMatrix(), matrix);
+            osg.Matrix.preMult(matrix, this.getProjectionMatrix());
+            osg.Matrix.preMult(matrix, this.getViewMatrix());
+            osg.Matrix.preMult(matrix, this.getModelMatrix());
             
             var inv = [];
             var valid = osg.Matrix.inverse(matrix, inv);

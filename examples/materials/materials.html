@@ -368,11 +368,11 @@ $.noConflict();
 function createScene() {
     var o = ReadJSON.create();
     o = osg.ParseSceneGraph(o);
-    var mainNode = osg.Node.create();
-    mainNode.light = osg.Light.create();
+    var mainNode = new osg.Node();
+    mainNode.light = new osg.Light();
     mainNode.addChild(o);
-    var stateset = osg.StateSet.create();
-    stateset.setAttribute(osg.Material.create());
+    var stateset = new osg.StateSet();
+    stateset.setAttribute(new osg.Material());
     mainNode.stateset = stateset;
     return mainNode;
 }
