@@ -19,4 +19,5 @@
  */
 
 var osgDB = {};
-osgDB.readNode = osg.ParseSceneGraph;
+//osgDB.readNode = osg.ParseSceneGraph;
+osgDB.parseSceneGraph = osg.ParseSceneGraph;

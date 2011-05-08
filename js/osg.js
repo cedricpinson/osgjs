@@ -97,11 +97,6 @@ osg.Matrix = {
         var rIndex = r * 4;
         return ((a[rIndex + 0] * b[0 + c]) + (a[rIndex + 1] * b[4 + c]) + (a[rIndex +2] * b[8 + c]) + (a[rIndex + 3] * b[12 + c]));
     },
-    innerProductOld: function(a, b, r, c) {
-        var rIndex = r * 4;
-        osg.log("(a["+(rIndex + 0) +"] * b["+ (0 + c) + "]) + (a["+ (rIndex + 1) +"] * b["+ (4 + c) + "]) + (a["+ (rIndex + 2) +"] * b["+ (8 + c) + "]) + (a["+ (rIndex + 3) +"] * b["+ (12 + c) + "]);");
-        return ((a[rIndex + 0] * b[0 + c]) + (a[rIndex + 1] * b[4 + c]) + (a[rIndex +2] * b[8 + c]) + (a[rIndex + 3] * b[12 + c]));
-    },
 
     set: function(matrix, row, col, value) {
         matrix[row * 4 + col] = value;
@@ -930,39 +925,46 @@ osg.Matrix = {
         return result;
     },
 
-    transpose: function(matrix, result) {
-        if (result === undefined) {
-            result = [];
-        }
-        var dst;
-        var src;
-        if (result === matrix) {
-            dst = matrix;
-            src = osg.Matrix.copy(matrix);
+    transpose: function(mat, dest) {
+        // from glMatrix
+        // If we are transposing ourselves we can skip a few steps but have to cache some values
+        if(mat === dest) {
+            var a01 = mat[1], a02 = mat[2], a03 = mat[3];
+            var a12 = mat[6], a13 = mat[7];
+            var a23 = mat[11];
+            
+            mat[1] = mat[4];
+            mat[2] = mat[8];
+            mat[3] = mat[12];
+            mat[4] = a01;
+            mat[6] = mat[9];
+            mat[7] = mat[13];
+            mat[8] = a02;
+            mat[9] = a12;
+            mat[11] = mat[14];
+            mat[12] = a03;
+            mat[13] = a13;
+            mat[14] = a23;
+            return mat;
         } else {
-            dst = result;
-            src = matrix;
-
-            dst[0] = src[0];
-            dst[5] = src[5];
-            dst[10] = src[10];
-            dst[15] = src[15];
+            dest[0] = mat[0];
+            dest[1] = mat[4];
+            dest[2] = mat[8];
+            dest[3] = mat[12];
+            dest[4] = mat[1];
+            dest[5] = mat[5];
+            dest[6] = mat[9];
+            dest[7] = mat[13];
+            dest[8] = mat[2];
+            dest[9] = mat[6];
+            dest[10] = mat[10];
+            dest[11] = mat[14];
+            dest[12] = mat[3];
+            dest[13] = mat[7];
+            dest[14] = mat[11];
+            dest[15] = mat[15];
+            return dest;
         }
-
-        dst[1] = src[4];
-        dst[2] = src[8];
-        dst[3] = src[12];
-        dst[4] = src[1];
-        dst[6] = src[9];
-        dst[7] = src[13];
-        dst[8] = src[2];
-        dst[9] = src[6];
-        dst[11] = src[14];
-        dst[12] = src[3];
-        dst[13] = src[7];
-        dst[14] = src[11];
-
-        return dst;
     },
 
     makePerspective: function(fovy, aspect, znear, zfar, result)
@@ -2816,33 +2818,6 @@ osg.State.prototype = {
         }
     },
 
-    disableVertexAttribsExcept: function(indexList) {
-        var that = indexList;
-        // is 'filter' a good way to do it fast ?
-        var disableArray = this.vertexAttribList.filter(function (element, index, array) {
-            return (that.indexOf(element) < 0 );
-        });
-
-        for (var i = 0, l = disableArray.length; i < l; i++) {
-            //gl.disableVertexAttribArray(disableArray[i]);
-        }
-
-        var program = this.programs.lastApplied;
-        if (program.generated === true) {
-            for (var j = 0, k = disableArray.length; j < k; j++) {
-                var attrib = disableArray[j];
-                if (program.attributesCache.attributeKeys[attrib] !== undefined) {
-                    var name = program.attributesCache.attributeKeys[attrib];
-                    if (name === "Color") {
-                        this.uniformArrayState[name].set([0]);
-                        this.uniformArrayState[name].apply(program.uniformsCache["ArrayColorEnabled"]);
-                    }
-                }
-            }
-        }
-        this.vertexAttribList = indexList.slice(0);
-    },
-
     setIndexArray: function(array) {
         if (this.currentIndexVBO !== array) {
             if (!array.buffer) {
@@ -2865,6 +2840,7 @@ osg.State.prototype = {
             }
         }
     },
+
     applyDisablingOfVertexAttributes: function() {
         var keys = this.vertexAttribMap._keys;
         for (var i = 0, l = keys.length; i < l; i++) {
@@ -2876,20 +2852,36 @@ osg.State.prototype = {
             }
         }
 
+        // it takes 4.26% of global cpu
+        // there would be a way to cache it and track state if the program has not changed ...
         var program = this.programs.lastApplied;
         if (program.generated === true) {
-            var colorAttrib = program.attributesCache.Color;
-            if (colorAttrib !== undefined) {
-                if (this.vertexAttribMap[colorAttrib] !== undefined) {
-                    this.uniformArrayState["Color"].set([1]);
-                } else {
-                    this.uniformArrayState["Color"].set([0]);
+            var updateColorUniform = false;
+            if (this.previousAppliedProgram !== this.programs.lastApplied) {
+                updateColorUniform = true;
+                this.previousAppliedProgram = this.programs.lastApplied;
+            } else {
+                var colorAttrib = program.attributesCache.Color;
+                if ( this.vertexAttribMap[colorAttrib] !== this.previousColorAttrib) {
+                    updateColorUniform = true;
                 }
-                this.uniformArrayState["Color"].apply(program.uniformsCache["ArrayColorEnabled"]);
+            }
+
+            if (updateColorUniform) {
+                var colorAttrib = program.attributesCache.Color;
+                if (colorAttrib !== undefined) {
+                    if (this.vertexAttribMap[colorAttrib] !== undefined) {
+                        this.uniformArrayState["Color"].set([1]);
+                    } else {
+                        this.uniformArrayState["Color"].set([0]);
+                    }
+                    this.previousColorAttrib = this.vertexAttribMap[colorAttrib];
+                    this.uniformArrayState["Color"].apply(program.uniformsCache["ArrayColorEnabled"]);
+                }
             }
         }
     },
-    setVertexAttribArrayLazy: function(attrib, array, normalize) {
+    setVertexAttribArray: function(attrib, array, normalize) {
         this.vertexAttribMap._disable[ attrib ] = false;
         if (!array.buffer) {
             array.init();
@@ -2909,30 +2901,6 @@ osg.State.prototype = {
 
             this.vertexAttribMap[attrib] = array;
             gl.vertexAttribPointer(attrib, array.itemSize, gl.FLOAT, normalize, 0, 0);
-        }
-    },
-
-    setVertexAttribArray: function(attrib, array, normalize) {
-        if (!array.buffer) {
-            array.init();
-        }
-        gl.bindBuffer(array.type, array.buffer);
-        if (array.dirty) {
-            array.compile();
-        }
-        this.vertexAttribList.push(attrib);
-        gl.enableVertexAttribArray(attrib);
-        gl.vertexAttribPointer(attrib, array.itemSize, gl.FLOAT, normalize, 0, 0);
-
-        var program = this.programs.lastApplied;
-        if (program.generated === true) {
-            if (program.attributesCache.attributeKeys[attrib] !== undefined) {
-                var name = program.attributesCache.attributeKeys[attrib];
-                if (name === "Color") {
-                    this.uniformArrayState[name].set([1]);
-                    this.uniformArrayState[name].apply(program.uniformsCache["ArrayColorEnabled"]);
-                }
-            }
         }
     }
 
@@ -4221,67 +4189,6 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
     getPrimitives: function() { return this.primitives; },
     getAttributes: function() { return this.attributes; },
 
-    drawImplementationTest1: function(state) {
-        var program = state.getLastProgramApplied();
-        var attribute;
-        var attributeList = [];
-        var attributesCache = program.attributesCache;
-
-        for (var i = 0, l = attributesCache.attributeKeys.length; i < l; i++) {
-            var key = attributesCache.attributeKeys[i];
-            attribute = attributesCache[key];
-            var attr = this.attributes[key];
-            if (attr === undefined) {
-                continue;
-            }
-            attributeList.push(attribute);
-            state.setVertexAttribArray(attribute, attr, false);
-        }
-
-        var primitives = this.primitives;
-        state.disableVertexAttribsExcept(attributeList);
-
-        state.setIndexArray(primitives[0].indices);
-        gl.drawElements(primitives[0].mode, primitives[0].count, gl.UNSIGNED_SHORT, primitives[0].offset );
-    },
-
-    drawImplementationGenerate: function(state) {
-        var program = state.getLastProgramApplied();
-        var prgID = program.instanceID;
-        if (this.cacheAttributeList[prgID] === undefined) {
-            var attribute;
-            var attributesCache = program.attributesCache;
-            var attributeList = [];
-
-            var generated = "//generated by Geometry::implementation\nfunction(state) {\n";
-            for (var i = 0, l = attributesCache.attributeKeys.length; i < l; i++) {
-                var key = attributesCache.attributeKeys[i];
-                attribute = attributesCache[key];
-                var attr = this.attributes[key];
-                if (attr === undefined) {
-                    continue;
-                }
-                attributeList.push(attribute);
-                generated += "state.setVertexAttribArray(" + attribute + ", this.attributes[\""+key+ "\"], false);\n";
-            }
-            generated += "state.disableVertexAttribsExcept(this.cacheAttributeList["+prgID+"].attributeList);\n";
-            var primitives = this.primitives;
-            generated += "var primitives = this.primitives;\n";
-            for (var j = 0, m = primitives.length; j < m; ++j) {
-                generated += "//primitives["+j+"].draw(state);\n";
-            }
-            generated += "}";
-            var returnFunction = function() {
-                eval("var r = " + generated + ";");
-                osg.log(r);
-                return r;
-            };
-            this.cacheAttributeList[prgID] = {'attributeList': attributeList,
-                                                   'generated': returnFunction() };
-        }
-        this.cacheAttributeList[prgID].generated.call(this, state);
-    },
-
     drawImplementation: function(state) {
         var program = state.getLastProgramApplied();
         var prgID = program.instanceID;
@@ -4301,7 +4208,7 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
                     continue;
                 }
                 attributeList.push(attribute);
-                generated += "state.setVertexAttribArrayLazy(" + attribute + ", this.attributes[\""+key+ "\"], false);\n";
+                generated += "state.setVertexAttribArray(" + attribute + ", this.attributes[\""+key+ "\"], false);\n";
             }
             generated += "state.applyDisablingOfVertexAttributes();\n";
             var primitives = this.primitives;
@@ -4312,15 +4219,16 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
             generated += "}";
             var returnFunction = function() {
                 osg.log(generated);
-                eval("var r = " + generated + ";");
-                osg.log(r);
-                return r;
+                eval("var drawImplementationAutogenerated = " + generated + ";");
+                osg.log(drawImplementationAutogenerated);
+                return drawImplementationAutogenerated;
             };
             this.cacheAttributeList[prgID] = returnFunction();
         }
         this.cacheAttributeList[prgID].call(this, state);
     },
 
+    // for testing disabling drawing
     drawImplementationDummy: function(state) {
         var program = state.getLastProgramApplied();
         var attribute;
@@ -4333,32 +4241,6 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
 
         for (var j = 0, m = primitives.length; j < m; ++j) {
             //primitives[j].draw(state);
-        }
-    },
-
-
-    drawImplementationOrig: function(state) {
-        var program = state.getLastProgramApplied();
-        var attribute;
-        var attributeList = [];
-        var attributesCache = program.attributesCache;
-
-        for (var i = 0, l = attributesCache.attributeKeys.length; i < l; i++) {
-            var key = attributesCache.attributeKeys[i];
-            attribute = attributesCache[key];
-            var attr = this.attributes[key];
-            if (attr === undefined) {
-                continue;
-            }
-            attributeList.push(attribute);
-            state.setVertexAttribArray(attribute, attr, false);
-        }
-
-        var primitives = this.primitives;
-        state.disableVertexAttribsExcept(attributeList);
-
-        for (var j = 0, m = primitives.length; j < m; ++j) {
-            primitives[j].draw(state);
         }
     },
 
@@ -4754,187 +4636,6 @@ osg.RenderBin.prototype = {
         return previous;
     },
 
-    drawLeafsTinted: function(state, previousRenderLeaf) {
-        // no sort right now
-        //this.drawImplementation(state, previousRenderLeaf);
-        var stateList = this.stateGraphList;
-        var leafs = this.leafs;
-        var normalUniform;
-        var modelViewUniform;
-        var projectionUniform;
-        var program;
-        var stateset;
-        var previousLeaf = previousRenderLeaf;
-        var normal = [];
-        var normalTranspose = [];
-
-        if (this.positionedAttribute) {
-            this.applyPositionedAttribute(state, this.positionedAttribute);
-        }
-
-        for (var i = 0, l = stateList.length; i < l; i++) {
-            var sg = stateList[i];
-            for (var j = 0, ll = sg.leafs.length; j < ll; j++) {
-
-                var leaf = sg.leafs[j];
-                var push = false;
-                if (previousLeaf !== undefined) {
-
-                    // apply state if required.
-                    var prev_rg = previousLeaf.parent;
-                    var prev_rg_parent = prev_rg.parent;
-                    var rg = leaf.parent;
-                    if (prev_rg_parent !== rg.parent)
-                    {
-                        rg.moveStateGraph(state, prev_rg_parent, rg.parent);
-
-                        // send state changes and matrix changes to OpenGL.
-                        state.pushStateSet(rg.stateset);
-                        push = true;
-                    }
-                    else if (rg !== prev_rg)
-                    {
-                        // send state changes and matrix changes to OpenGL.
-                        state.pushStateSet(rg.stateset);
-                        push = true;
-                    }
-
-                } else {
-                    leaf.parent.moveStateGraph(state, undefined, leaf.parent.parent);
-                    state.pushStateSet(leaf.parent.stateset);
-                    push = true;
-                }
-
-                if (push === true) {
-                    //state.pushGeneratedProgram();
-                    state.apply();
-                    program = state.getLastProgramApplied();
-
-                    modelViewUniform = program.uniformsCache[state.modelViewMatrix.name];
-                    projectionUniform = program.uniformsCache[state.projectionMatrix.name];
-                    normalUniform = program.uniformsCache[state.normalMatrix.name];
-                }
-
-
-                if (modelViewUniform !== undefined) {
-                    state.modelViewMatrix.set(leaf.modelview);
-                    state.modelViewMatrix.apply(modelViewUniform);
-                }
-                if (projectionUniform !== undefined) {
-                    state.projectionMatrix.set(leaf.projection);
-                    state.projectionMatrix.apply(projectionUniform);
-                }
-                if (normalUniform !== undefined) {
-                    osg.Matrix.copy(leaf.modelview, normal);
-                    osg.Matrix.setTrans(normal, 0, 0, 0);
-                    osg.Matrix.inverse(normal, normal);
-                    osg.Matrix.transpose(normal, normalTranspose);
-                    state.normalMatrix.set(normalTranspose);
-                    state.normalMatrix.apply(normalUniform);
-                }
-
-                leaf.geometry.drawImplementation(state);
-
-                if (push === true) {
-                    state.popGeneratedProgram();
-                    state.popStateSet();
-                }
-
-                previousLeaf = leaf;
-            }
-        }
-        return previousLeaf;
-    },
-    drawLeafsOrig: function(state, previousRenderLeaf) {
-        // no sort right now
-        //this.drawImplementation(state, previousRenderLeaf);
-        var stateList = this.stateGraphList;
-        var leafs = this.leafs;
-        var normalUniform;
-        var modelViewUniform;
-        var projectionUniform;
-        var program;
-        var stateset;
-        var previousLeaf = previousRenderLeaf;
-        var normal = [];
-        var normalTranspose = [];
-
-        if (this.positionedAttribute) {
-            this.applyPositionedAttribute(state, this.positionedAttribute);
-        }
-
-        for (var i = 0, l = stateList.length; i < l; i++) {
-            var sg = stateList[i];
-            for (var j = 0, ll = sg.leafs.length; j < ll; j++) {
-
-                var leaf = sg.leafs[j];
-                var push = false;
-                if (previousLeaf !== undefined) {
-
-                    // apply state if required.
-                    var prev_rg = previousLeaf.parent;
-                    var prev_rg_parent = prev_rg.parent;
-                    var rg = leaf.parent;
-                    if (prev_rg_parent !== rg.parent)
-                    {
-                        rg.moveStateGraph(state, prev_rg_parent, rg.parent);
-
-                        // send state changes and matrix changes to OpenGL.
-                        state.pushStateSet(rg.stateset);
-                        push = true;
-                    }
-                    else if (rg !== prev_rg)
-                    {
-                        // send state changes and matrix changes to OpenGL.
-                        state.pushStateSet(rg.stateset);
-                        push = true;
-                    }
-
-                } else {
-                    leaf.parent.moveStateGraph(state, undefined, leaf.parent.parent);
-                    state.pushStateSet(leaf.parent.stateset);
-                    push = true;
-                }
-
-                if (push === true) {
-                    //state.pushGeneratedProgram();
-                    state.apply();
-                }
-
-                program = state.getLastProgramApplied();
-                modelViewUniform = program.uniformsCache[state.modelViewMatrix.name];
-                projectionUniform = program.uniformsCache[state.projectionMatrix.name];
-                normalUniform = program.uniformsCache[state.normalMatrix.name];
-
-                if (modelViewUniform !== undefined && modelViewUniform !== null && modelViewUniform !== -1) {
-                    state.modelViewMatrix.set(leaf.modelview);
-                    state.modelViewMatrix.apply(modelViewUniform);
-                }
-                if (projectionUniform !== undefined && projectionUniform !== null && projectionUniform != -1) {
-                    state.projectionMatrix.set(leaf.projection);
-                    state.projectionMatrix.apply(projectionUniform);
-                }
-                if (normalUniform !== undefined && normalUniform !== null && normalUniform !== -1 ) {
-                    osg.Matrix.copy(leaf.modelview, normal);
-                    osg.Matrix.setTrans(normal, 0, 0, 0);
-                    osg.Matrix.inverse(normal, normal);
-                    osg.Matrix.transpose(normal, normalTranspose);
-                    state.normalMatrix.set(normalTranspose);
-                    state.normalMatrix.apply(normalUniform);
-                }
-
-                leaf.geometry.drawImplementation(state);
-
-                if (push === true) {
-                    state.popGeneratedProgram();
-                    state.popStateSet();
-                }
-
-                previousLeaf = leaf;
-            }
-        }
-        return previousLeaf;
-    },
     drawLeafs: function(state, previousRenderLeaf) {
         // no sort right now
         //this.drawImplementation(state, previousRenderLeaf);
@@ -4949,6 +4650,8 @@ osg.RenderBin.prototype = {
         var normal = [];
         var normalTranspose = [];
 
+        var Matrix = osg.Matrix;
+
         if (this.positionedAttribute) {
             this.applyPositionedAttribute(state, this.positionedAttribute);
         }
@@ -5006,11 +4709,15 @@ osg.RenderBin.prototype = {
                     state.projectionMatrix.apply(projectionUniform);
                 }
                 if (normalUniform !== undefined) {
-                    osg.Matrix.copy(leaf.modelview, normal);
-                    osg.Matrix.setTrans(normal, 0, 0, 0);
-                    osg.Matrix.inverse(normal, normal);
-                    osg.Matrix.transpose(normal, normalTranspose);
-                    state.normalMatrix.set(normalTranspose);
+                    Matrix.copy(leaf.modelview, normal);
+                    //Matrix.setTrans(normal, 0, 0, 0);
+                    normal[12] = 0;
+                    normal[13] = 0;
+                    normal[14] = 0;
+
+                    Matrix.inverse(normal, normal);
+                    Matrix.transpose(normal, normal);
+                    state.normalMatrix.set(normal);
                     state.normalMatrix.apply(normalUniform);
                 }
 
@@ -5239,6 +4946,8 @@ osg.CullVisitor = function () {
     this.reserveMatrixStack = [[]];
     this.reserveMatrixStack.current = 0;
 
+    this.reserveLeafStack = [{}];
+    this.reserveLeafStack.current = 0;
 };
 
 osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objectInehrit(osg.CullSettings.prototype, osg.objectInehrit(osg.NodeVisitor.prototype, {
@@ -5374,6 +5083,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         this.modelviewMatrixStack.length = 1;
         this.projectionMatrixStack.length = 1;
         this.reserveMatrixStack.current = 0;
+        this.reserveLeafStack.current = 0;
     },
     getCurrentRenderBin: function() { return this.currentRenderBin; },
     setCurrentRenderBin: function(rb) { this.currentRenderBin = rb; },
@@ -5490,7 +5200,14 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
             this.reserveMatrixStack.push(osg.Matrix.makeIdentity());
         }
         return m;
-    }
+    },
+    getReservedLeaf: function() {
+        var l = this.reserveLeafStack[this.reserveLeafStack.current++];
+        if (this.reserveLeafStack.current === this.reserveLeafStack.length) {
+            this.reserveLeafStack.push({});
+        }
+        return l;
+    },
 
 })));
 osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) {
@@ -5504,24 +5221,21 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
 
     var originalModelView = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
 
-    var modelview;
-    var projection;
+    var modelview = this.getReservedMatrix();
+    var projection = this.getReservedMatrix();
+
     if (camera.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
         var lastProjectionMatrix = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-        projection = this.getReservedMatrix();
         osg.Matrix.mult(lastProjectionMatrix, camera.getProjectionMatrix(), projection);
-        this.pushProjectionMatrix(projection);
         var lastViewMatrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-        modelview = this.getReservedMatrix();
         osg.Matrix.mult(lastViewMatrix, camera.getViewMatrix(), modelview);
-        this.pushModelviewMatrix(modelview);
     } else {
         // absolute
-        modelview = osg.Matrix.copy(camera.getViewMatrix());
-        projection = osg.Matrix.copy(camera.getProjectionMatrix());
-        this.pushProjectionMatrix(projection);
-        this.pushModelviewMatrix(modelview);
+        osg.Matrix.copy(camera.getViewMatrix(), modelview);
+        osg.Matrix.copy(camera.getProjectionMatrix(), projection);
     }
+    this.pushProjectionMatrix(projection);
+    this.pushModelviewMatrix(modelview);
 
     if (camera.getViewport()) {
         this.pushViewport(camera.getViewport());
@@ -5608,15 +5322,8 @@ osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (
 
     var lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
 
-//    if (this.reserveMatrixStack.current === this.reserveMatrixStack.length) {
-//    }
-//    var matrix = this.reserveMatrixStack[this.reserveMatrixStack.current++];
-//    this.reserveMatrixStack.current = 0;
-
     var matrix = this.getReservedMatrix();
     osg.Matrix.mult(lastMatrixStack, node.getMatrix(), matrix);
-
-    //var matrix = osg.Matrix.mult(lastMatrixStack, node.getMatrix(), []);
     this.pushModelviewMatrix(matrix);
 
     if (node.stateset) {
@@ -5694,14 +5401,13 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
     if (leafs.length === 0) {
         this.currentRenderBin.addStateGraph(this.currentStateGraph);
     }
-    leafs.push(
-        {
-            "parent": this.currentStateGraph,
-            "modelview": this.modelviewMatrixStack[this.modelviewMatrixStack.length-1],
-            "projection": this.projectionMatrixStack[this.projectionMatrixStack.length-1],
-            "geometry": node
-        }
-    );
+
+    var leaf = this.getReservedLeaf();
+    leaf.parent = this.currentStateGraph;
+    leaf.modelview = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+    leaf.projection = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+    leaf.geometry = node;
+    leafs.push(leaf);
 
     if (node.stateset) {
         this.popStateSet();
@@ -6016,4 +5722,4 @@ osg.createTexturedQuad = function(cornerx, cornery, cornerz,
     g.getPrimitives().push(primitive);
     return g;
 };
-osg.createTexuredQuad = osg.createTexturedQuad;
+
