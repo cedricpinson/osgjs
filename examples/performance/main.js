@@ -32,7 +32,7 @@ var Item = undefined;
 var Texture = undefined;
 function getOrCreateItem() {
     if (Item === undefined) {
-        var rq = osg.createTexuredQuad(-QuadSizeX/2.0, -QuadSizeY/2.0,0,
+        var rq = osg.createTexturedQuad(-QuadSizeX/2.0, -QuadSizeY/2.0,0,
                                        QuadSizeX, 0 ,0,
                                        0, QuadSizeY,0);
         rq.getOrCreateStateSet().setTextureAttributeAndMode(0, Texture);

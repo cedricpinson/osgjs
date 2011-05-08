@@ -44,7 +44,7 @@ function createScene() {
     rtt.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     rtt.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     rtt.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    var rq = osg.createTexuredQuad(0,0,0,
+    var rq = osg.createTexturedQuad(0,0,0,
                                   rttSize[0], 0 ,0,
                                   0, rttSize[1],0);
     rq.getOrCreateStateSet().setTextureAttributeAndMode(0, osg.Texture.create("textures/sol_trauma_periph.png"));
