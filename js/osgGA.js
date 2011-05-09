@@ -55,7 +55,7 @@ osgGA.OrbitManipulator.prototype = {
     computeHomePosition: function() {
         if (this.node !== undefined) {
             var bs = this.node.getBound();
-            this.setDistance(bs.radius());
+            this.setDistance(bs.radius()*1.5);
             this.target = bs.center();
         }
     },

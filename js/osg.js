@@ -1656,21 +1656,23 @@ osg.Quat = {
 };
 
 
-osg.Uniform = function () { this.transpose = false;};
+osg.Uniform = function () { this.transpose = false; this._dirty = true; };
 osg.Uniform.prototype = {
     set: function(array) {
         this.data = array;
-        this.dirty = true;
+        this._dirty = true;
     },
     apply: function(location) {
-        if (this.dirty) {
+        if (this._dirty) {
             this.update.call(this.glData, this.data);
+            this._dirty = false;
         }
         this.glCall(location, this.glData);
     },
     applyMatrix: function(location) {
-        if (this.dirty) {
+        if (this._dirty) {
             this.update.call(this.glData, this.data);
+            this._dirty = false;
         }
         this.glCall(location, this.transpose, this.glData);
     },
@@ -1736,7 +1738,6 @@ osg.Uniform.createFloat1 = function(value, name) {
     };
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype.setFloat1;
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1748,7 +1749,6 @@ osg.Uniform.createFloat2 = function(vec2, name) {
     };
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype.setFloat2;
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1760,7 +1760,6 @@ osg.Uniform.createFloat3 = function(vec3, name) {
     };
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype.setFloat3;
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1772,7 +1771,6 @@ osg.Uniform.createFloat4 = function(vec4, name) {
     };
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype.setFloat4;
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1783,7 +1781,6 @@ osg.Uniform.createInt1 = function(value, name) {
         gl.uniform1iv(location, glData);
     };
     uniform.glData = new osg.Int32Array(uniform.data);
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1794,7 +1791,6 @@ osg.Uniform.createInt2 = function(vec2, name) {
         gl.uniform2iv(location, glData);
     };
     uniform.glData = new osg.Int32Array(uniform.data);
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1805,7 +1801,6 @@ osg.Uniform.createInt3 = function(vec3, name) {
         gl.uniform3iv(location, glData);
     };
     uniform.glData = new osg.Int32Array(uniform.data);
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1816,7 +1811,6 @@ osg.Uniform.createInt4 = function(vec4, name) {
         gl.uniform4iv(location, glData);
     };
     uniform.glData = new osg.Int32Array(uniform.data);
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1830,7 +1824,6 @@ osg.Uniform.createMatrix2 = function(mat2, name) {
     uniform.transpose = false;
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype.setFloat4;
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1844,7 +1837,6 @@ osg.Uniform.createMatrix3 = function(mat3, name) {
     uniform.transpose = false;
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype.setFloat9;
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1858,7 +1850,6 @@ osg.Uniform.createMatrix4 = function(mat4, name) {
     uniform.transpose = false;
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype.setFloat16;
-    uniform.dirty = false;
     uniform.name = name;
     return uniform;
 };
@@ -1923,11 +1914,12 @@ osg.Program = function () {
         osg.Program.instanceID = 0;
     }
     this.instanceID = osg.Program.instanceID;
+    this._dirty = true;
     osg.Program.instanceID+= 1;
 };
 
 osg.Program.prototype = {
-
+    isDirty: function() { return this._dirty; },
     attributeType: "Program",
     cloneType: function() { var p = osg.Program.create(); p.default_program = true; return p; },
     getType: function() { return this.attributeType;},
@@ -1935,7 +1927,7 @@ osg.Program.prototype = {
     setVertexShader: function(vs) { program.vertex = vs; },
     setFragmentShader: function(fs) { program.fragment = fs; },
     apply: function(state) {
-        if (!this.program || this.dirty) {
+        if (!this.program || this._dirty) {
 
             if (this.default_program === true) {
                 return;
@@ -1968,7 +1960,8 @@ osg.Program.prototype = {
             //osg.log(this.uniformsCache);
 
             this.cacheAttributeList(this.vertex.text);
-            this.dirty = false;
+
+            this._dirty = false;
         }
 
         gl.useProgram(this.program);
@@ -2416,6 +2409,11 @@ osg.State.prototype = {
         this.popStateSet();
     },
 
+    popAllStateSets: function() {
+        while (this.stateSets.length) {
+            this.popStateSet();
+        }
+    },
     popStateSet: function() {
         var stateset = this.stateSets.pop();
         if (stateset.program) {
@@ -2450,7 +2448,7 @@ osg.State.prototype = {
             this.attributeMap.attributeKeys.push(key);
         }
 
-        if (attributeStack.lastApplied !== attribute) {
+        if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
             if (attribute.apply) {
                 attribute.apply(this);
             }
@@ -2474,7 +2472,7 @@ osg.State.prototype = {
             this.textureAttributeMapList[unit].attributeKeys.push(key);
         }
 
-        if (attributeStack.lastApplied !== attribute) {
+        if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
             if (attribute.apply) {
                 attribute.apply(this);
             }
@@ -2715,7 +2713,7 @@ osg.State.prototype = {
                 attribute = attributeStack.back();
             }
 
-            if (attributeStack.lastApplied !== attribute) {
+            if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
                 if (attribute.apply) {
                     attribute.apply(this);
                 }
@@ -2771,7 +2769,7 @@ osg.State.prototype = {
                 } else {
                     attribute = attributeStack.back();
                 }
-                if (attributeStack.lastApplied !== attribute) {
+                if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
                     gl.activeTexture(gl.TEXTURE0 + textureUnit);
                     attribute.apply(this.state);
                     attributeStack.lastApplied = attribute;
@@ -2826,7 +2824,7 @@ osg.State.prototype = {
             gl.bindBuffer(array.type, array.buffer);
             this.currentIndexVBO = array;
         }
-        if (array.dirty) {
+        if (array.isDirty()) {
             array.compile();
         }
     },
@@ -2886,7 +2884,7 @@ osg.State.prototype = {
         if (!array.buffer) {
             array.init();
         }
-        if (array.dirty) {
+        if (array.isDirty()) {
             gl.bindBuffer(array.type, array.buffer);
             array.compile();
         }
@@ -3351,7 +3349,7 @@ osg.Node.prototype = {
     }
 
 };
-osg.Node.prototype.objecType = osg.objectType.generate("Node");
+osg.Node.prototype.objectType = osg.objectType.generate("Node");
 
 
 osg.Transform = function() {
@@ -3449,11 +3447,12 @@ osg.Projection.prototype.objectType = osg.objectType.generate("Projection");
 
 osg.Texture = function() {
     this.setDefaultParameters();
-    this.dirty = true;
+    this._dirty = true;
 };
 
 osg.Texture.prototype = {
     attributeType: "Texture",
+    isDirty: function () { return this._dirty; },
     cloneType: function() { var t = new osg.Texture(); t.default_type = true; return t;},
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType; },
@@ -3488,7 +3487,7 @@ osg.Texture.prototype = {
     init: function() {
         if (!this.textureObject) {
             this.textureObject = gl.createTexture();
-            this.dirty = true;
+            this._dirty = true;
         }
     },
     getWidth: function() { return this.textureWidth; },
@@ -3502,7 +3501,7 @@ osg.Texture.prototype = {
 
     setImage: function(img) {
         this.image = img;
-        this.dirty = true;
+        this._dirty = true;
     },
 
     setFromCanvas: function(canvas) {
@@ -3511,7 +3510,7 @@ osg.Texture.prototype = {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
         this.setTextureSize(canvas.width, canvas.height);
         this.applyFilterParameter();
-        this.dirty = false;
+        this._dirty = false;
     },
 
     isImageReady: function() {
@@ -3534,7 +3533,7 @@ osg.Texture.prototype = {
             //gl.texImage2D(gl.TEXTURE_2D, 0, this.image, true);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
             this.applyFilterParameter();
-            this.dirty = false;
+            this._dirty = false;
         }
     },
 
@@ -3610,7 +3609,6 @@ osg.Texture.prototype = {
 
 osg.Texture.create = function(imageSource) {
     var a = new osg.Texture();
-    a.dirty = true;
     if (imageSource !== undefined) {
         var img = new Image();
         img.src = imageSource;
@@ -3620,7 +3618,6 @@ osg.Texture.create = function(imageSource) {
 };
 osg.Texture.createFromImg = function(img) {
     var a = new osg.Texture();
-    a.dirty = true;
     a.setImage(img);
     return a;
 };
@@ -3795,13 +3792,19 @@ osg.Viewport = function (x,y, w, h) {
         //return osg.Matrix.mult(osg.Matrix.mult(translate, scale, translate), offset, offset);
         return osg.Matrix.preMult(offset, osg.Matrix.preMult(scale, translate));
     };
+    this._dirty = true;
 };
 osg.Viewport.prototype = {
     attributeType: "Viewport",
+    isDirty: function() { return this._dirty; },
+    dirty: function() { this._dirty = true; },
     cloneType: function() {return new osg.Viewport(); },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
-    apply: function(state) { gl.viewport(this.x(), this.y(), this.width(), this.height()); }
+    apply: function(state) {
+        gl.viewport(this.x(), this.y(), this.width(), this.height()); 
+        this._dirty = false;
+    }
 };
 
 
@@ -3811,10 +3814,12 @@ osg.Material = function () {
     this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
     this.emission = [ 0.0, 0.0, 0.0, 1.0 ];
     this.shininess = [0.0];
+    this._dirty = true;
 };
 osg.Material.prototype = {
+    dirty: function() { this._dirty = true; },
+    isDirty: function() { return this._dirty; },
     attributeType: "Material",
-
     cloneType: function() {return new osg.Material(); },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
@@ -3843,6 +3848,7 @@ osg.Material.prototype = {
         uniforms.specular.set(this.specular);
         uniforms.emission.set(this.emission);
         uniforms.shininess.set(this.shininess);
+        this._dirty = false;
     },
 
     writeToShader: function(type)
@@ -3882,9 +3888,13 @@ osg.Light = function () {
     this.ambient = [ 1.0, 1.0, 1.0, 1.0 ];
     this.diffuse = [ 1.0, 1.0, 1.0, 1.0 ];
     this.specular = [ 1.0, 1.0, 1.0, 1.0 ];
+
+    this._dirty = true;
 };
 
 osg.Light.prototype = {
+    dirty: function() { this._dirty = true; },
+    isDirty: function() { return this._dirty; },
     attributeType: "Light",
     cloneType: function() {return new osg.Light(); },
     getType: function() { return this.attributeType; },
@@ -3939,6 +3949,8 @@ osg.Light.prototype = {
         light.linear_attenuation.set([this.linear_attenuation]);
         light.quadratic_attenuation.set([this.quadratic_attenuation]);
         light.enable.set([this.enable]);
+
+        this._dirty = false;
     },
 
     writeShaderInstance: function(type) {
@@ -4063,11 +4075,6 @@ osg.Light.prototype = {
     }
 };
 
-osg.Light.create = function() {
-    var l = new osg.Light();
-    return l;
-};
-
 
 osg.BufferArray = function () {
     if (osg.BufferArray.instanceID === undefined) {
@@ -4075,6 +4082,7 @@ osg.BufferArray = function () {
     }
     this.instanceID = osg.BufferArray.instanceID;
     osg.BufferArray.instanceID += 1;
+    this._dirty = true;
 };
 osg.BufferArray.prototype = {
     init: function() {
@@ -4084,13 +4092,12 @@ osg.BufferArray.prototype = {
             this.buffer.numItems = this.elements.length / this.itemSize;
         }
     },
-    setDirty: function() {
-        this.dirty = true;
-    },
+    dirty: function() { this._dirty = true; },
+    isDirty: function() { return this._dirty; },
     compile: function() {
-        if (this.dirty) {
+        if (this._dirty) {
             gl.bufferData(this.type, this.elements, gl.STATIC_DRAW);
-            this.dirty = false;
+            this._dirty = false;
         }
     },
     getElements: function() { return this.elements;}
@@ -4105,7 +4112,6 @@ osg.BufferArray.create = function(type, elements, itemSize) {
     } else {
         a.elements = new osg.Float32Array(elements);
     }
-    a.dirty = true;
     return a;
 };
 
@@ -4220,7 +4226,6 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
             var returnFunction = function() {
                 osg.log(generated);
                 eval("var drawImplementationAutogenerated = " + generated + ";");
-                osg.log(drawImplementationAutogenerated);
                 return drawImplementationAutogenerated;
             };
             this.cacheAttributeList[prgID] = returnFunction();
@@ -4497,6 +4502,17 @@ osg.StateGraph.prototype = {
         }
         return sg;
     },
+    moveToRootStateGraph: function(state, sg_current)
+    {
+        // need to pop back all statesets and matrices.
+        while (sg_current)
+        {
+            if (sg_current.stateSet) {
+                state.popStateSet();
+            }
+            sg_current = sg_current._parent;
+        }
+    },
     moveStateGraph: function(state, sg_current, sg_new)
     {
         var stack;
@@ -4652,6 +4668,9 @@ osg.RenderBin.prototype = {
 
         var Matrix = osg.Matrix;
 
+        if (previousRenderLeaf) {
+            stateList.moveToRootStateGraph(state, previousRenderLeaf.parent);
+        }
         if (this.positionedAttribute) {
             this.applyPositionedAttribute(state, this.positionedAttribute);
         }
@@ -5634,6 +5653,297 @@ osg.EllipsoidModel.prototype = {
         osg.Matrix.set(localToWorld,2,1, up[1]);
         osg.Matrix.set(localToWorld,2,2, up[2]);
     }
+};
+
+osg.createTexturedBox = function(centerx, centery, centerz,
+                                 sizex, sizey, sizez) {
+
+    var g = new osg.Geometry();
+    var dx,dy,dz;
+    dx = sizex/2.0;
+    dy = sizey/2.0;
+    dz = sizez/2.0;
+
+    var vertexes = [];
+    var uv = [];
+    var normal = [];
+
+    // -ve y plane
+    vertexes[0] = centerx - dx;
+    vertexes[1] = centery - dy;
+    vertexes[2] = centerz + dz;
+    normal[0] = 0;
+    normal[1] = -1;
+    normal[2] = 0;
+    uv[0] = 0;
+    uv[1] = 1;
+
+    vertexes[3] = centerx - dx;
+    vertexes[4] = centery - dy;
+    vertexes[5] = centerz - dz;
+    normal[3] = 0;
+    normal[4] = -1;
+    normal[5] = 0;
+    uv[2] = 0;
+    uv[3] = 0;
+
+    vertexes[6] = centerx + dx;
+    vertexes[7] = centery - dy;
+    vertexes[8] = centerz - dz;
+    normal[6] = 0;
+    normal[7] = -1;
+    normal[8] = 0;
+    uv[4] = 1;
+    uv[5] = 0;
+
+    vertexes[9] =  centerx + dx;
+    vertexes[10] = centery - dy;
+    vertexes[11] = centerz + dz;
+    normal[9] = 0;
+    normal[10] = -1;
+    normal[11] = 0;
+    uv[6] = 1;
+    uv[7] = 1;
+
+
+    // +ve y plane
+    vertexes[12] = centerx + dx;
+    vertexes[13] = centery + dy;
+    vertexes[14] = centerz + dz;
+    normal[12] = 0;
+    normal[13] = 1;
+    normal[14] = 0;
+    uv[8] = 0;
+    uv[9] = 1;
+
+    vertexes[15] = centerx + dx;
+    vertexes[16] = centery + dy;
+    vertexes[17] = centerz - dz;
+    normal[15] = 0;
+    normal[16] = 1;
+    normal[17] = 0;
+    uv[10] = 0;
+    uv[11] = 0;
+
+    vertexes[18] = centerx - dx;
+    vertexes[19] = centery + dy;
+    vertexes[20] = centerz - dz;
+    normal[18] = 0;
+    normal[19] = 1;
+    normal[20] = 0;
+    uv[12] = 1;
+    uv[13] = 0;
+
+    vertexes[21] = centerx - dx;
+    vertexes[22] = centery + dy;
+    vertexes[23] = centerz + dz;
+    normal[21] = 0;
+    normal[22] = 1;
+    normal[23] = 0;
+    uv[14] = 1;
+    uv[15] = 1;
+    
+
+    // +ve x plane
+    vertexes[24] = centerx + dx;
+    vertexes[25] = centery - dy;
+    vertexes[26] = centerz + dz;
+    normal[24] = 1;
+    normal[25] = 0;
+    normal[26] = 0;
+    uv[16] = 0;
+    uv[17] = 1;
+
+    vertexes[27] = centerx + dx;
+    vertexes[28] = centery - dy;
+    vertexes[29] = centerz - dz;
+    normal[27] = 1;
+    normal[28] = 0;
+    normal[29] = 0;
+    uv[18] = 0;
+    uv[19] = 0;
+
+    vertexes[30] = centerx + dx;
+    vertexes[31] = centery + dy;
+    vertexes[32] = centerz - dz;
+    normal[30] = 1;
+    normal[31] = 0;
+    normal[32] = 0;
+    uv[20] = 1;
+    uv[21] = 0;
+
+    vertexes[33] = centerx + dx;
+    vertexes[34] = centery + dy;
+    vertexes[35] = centerz + dz;
+    normal[33] = 1;
+    normal[34] = 0;
+    normal[35] = 0;
+    uv[22] = 1;
+    uv[23] = 1;
+
+    // -ve x plane
+    vertexes[36] = centerx - dx;
+    vertexes[37] = centery + dy;
+    vertexes[38] = centerz + dz;
+    normal[36] = -1;
+    normal[37] = 0;
+    normal[38] = 0;
+    uv[24] = 0;
+    uv[25] = 1;
+
+    vertexes[39] = centerx - dx;
+    vertexes[40] = centery + dy;
+    vertexes[41] = centerz - dz;
+    normal[39] = -1;
+    normal[40] = 0;
+    normal[41] = 0;
+    uv[26] = 0;
+    uv[27] = 0;
+
+    vertexes[42] = centerx - dx;
+    vertexes[43] = centery - dy;
+    vertexes[44] = centerz - dz;
+    normal[42] = -1;
+    normal[43] = 0;
+    normal[44] = 0;
+    uv[28] = 1;
+    uv[29] = 0;
+
+    vertexes[45] = centerx - dx;
+    vertexes[46] = centery - dy;
+    vertexes[47] = centerz + dz;
+    normal[45] = -1;
+    normal[46] = 0;
+    normal[47] = 0;
+    uv[30] = 1;
+    uv[31] = 1;
+
+    // top
+    // +ve z plane
+    vertexes[48] = centerx - dx;
+    vertexes[49] = centery + dy;
+    vertexes[50] = centerz + dz;
+    normal[48] = 0;
+    normal[49] = 0;
+    normal[50] = 1;
+    uv[32] = 0;
+    uv[33] = 1;
+
+    vertexes[51] = centerx - dx;
+    vertexes[52] = centery - dy;
+    vertexes[53] = centerz + dz;
+    normal[51] = 0;
+    normal[52] = 0;
+    normal[53] = 1;
+    uv[34] = 0;
+    uv[35] = 0;
+
+    vertexes[54] = centerx + dx;
+    vertexes[55] = centery - dy;
+    vertexes[56] = centerz + dz;
+    normal[54] = 0;
+    normal[55] = 0;
+    normal[56] = 1;
+    uv[36] = 1;
+    uv[37] = 0;
+
+    vertexes[57] = centerx + dx;
+    vertexes[58] = centery + dy;
+    vertexes[59] = centerz + dz;
+    normal[57] = 0;
+    normal[58] = 0;
+    normal[59] = 1;
+    uv[38] = 1;
+    uv[39] = 1;
+
+    // bottom
+    // -ve z plane
+    vertexes[60] = centerx + dx;
+    vertexes[61] = centery + dy;
+    vertexes[62] = centerz - dz;
+    normal[60] = 0;
+    normal[61] = 0;
+    normal[62] = -1;
+    uv[40] = 0;
+    uv[41] = 1;
+
+    vertexes[63] = centerx + dx;
+    vertexes[64] = centery - dy;
+    vertexes[65] = centerz - dz;
+    normal[63] = 0;
+    normal[64] = 0;
+    normal[65] = -1;
+    uv[42] = 0;
+    uv[43] = 0;
+
+    vertexes[66] = centerx - dx;
+    vertexes[67] = centery - dy;
+    vertexes[68] = centerz - dz;
+    normal[66] = 0;
+    normal[67] = 0;
+    normal[68] = -1;
+    uv[44] = 1;
+    uv[45] = 0;
+
+    vertexes[69] = centerx - dx;
+    vertexes[70] = centery + dy;
+    vertexes[71] = centerz - dz;
+    normal[69] = 0;
+    normal[70] = 0;
+    normal[71] = -1;
+    uv[46] = 1;
+    uv[47] = 1;
+
+    var indexes = [];
+    indexes[0] = 0;
+    indexes[1] = 1;
+    indexes[2] = 2;
+    indexes[3] = 0;
+    indexes[4] = 2;
+    indexes[5] = 3;
+
+    indexes[6] = 4;
+    indexes[7] = 5;
+    indexes[8] = 6;
+    indexes[9] = 4;
+    indexes[10] = 6;
+    indexes[11] = 7;
+
+    indexes[12] = 8;
+    indexes[13] = 9;
+    indexes[14] = 10;
+    indexes[15] = 8;
+    indexes[16] = 10;
+    indexes[17] = 11;
+
+    indexes[18] = 12;
+    indexes[19] = 13;
+    indexes[20] = 14;
+    indexes[21] = 12;
+    indexes[22] = 14;
+    indexes[23] = 15;
+
+    indexes[24] = 16;
+    indexes[25] = 17;
+    indexes[26] = 18;
+    indexes[27] = 16;
+    indexes[28] = 18;
+    indexes[29] = 19;
+
+    indexes[30] = 20;
+    indexes[31] = 21;
+    indexes[32] = 22;
+    indexes[33] = 20;
+    indexes[34] = 22;
+    indexes[35] = 23;
+
+    g.getAttributes().Vertex = osg.BufferArray.create(gl.ARRAY_BUFFER, vertexes, 3 );
+    g.getAttributes().Normal = osg.BufferArray.create(gl.ARRAY_BUFFER, normal, 3 );
+    g.getAttributes().TexCoord0 = osg.BufferArray.create(gl.ARRAY_BUFFER, uv, 2 );
+    
+    var primitive = new osg.DrawElements(gl.TRIANGLES, osg.BufferArray.create(gl.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
+    g.getPrimitives().push(primitive);
+    return g;
 };
 
 osg.createTexturedQuad = function(cornerx, cornery, cornerz,

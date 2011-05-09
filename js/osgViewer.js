@@ -238,8 +238,12 @@ osgViewer.Viewer.prototype = {
         this.view.accept(this.cullVisitor);
     },
     draw: function() {
-        this.state.applyWithoutProgram();
         this.renderStage.draw(this.state);
+
+        // noticed that we accumulate lot of stack, maybe because of the stateGraph
+        this.state.popAllStateSets();
+        // should not be necessary because of dirty flag now in attrubutes
+        //this.state.applyWithoutProgram();
     },
 
     frame: function() {
