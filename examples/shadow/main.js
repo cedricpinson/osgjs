@@ -93,8 +93,13 @@ LightUpdateCallback2.prototype = {
 
 //        osg.Matrix.mult(this.camera.getProjectionMatrix(), this.camera.getViewMatrix(), this.matrix);
         var biasScale = osg.Matrix.preMult(osg.Matrix.makeTranslate(0.5 , 0.5, 0.5, []), osg.Matrix.makeScale(0.5 , 0.5, 0.5, []));
-        osg.Matrix.preMult(biasScale, this.matrix);
-        this.uniform.set(this.matrix);
+
+        var shadowView = this.camera.getViewMatrix();
+        var shadowProj = osg.Matrix.copy(this.camera.getProjectionMatrix(), []);
+        osg.Matrix.preMult(shadowProj, shadowView);
+        osg.Matrix.postMult(biasScale, shadowProj);
+
+        this.uniform.set(shadowProj);
         node.light.direction = [x,y,h];
         node.light.dirty();
         node.traverse(nv);
@@ -138,11 +143,14 @@ function getTextureProjectedShadowShader()
         "uniform mat4 WorldMatrix;",
         "uniform mat4 ProjectionShadow;",
         "varying vec4 ShadowUVProjected;",
+        "varying vec2 shadow_coord;",
         "void main(void) {",
         "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
-        "  ShadowUVProjected = (ProjectionShadow * WorldMatrix * vec4(Vertex,1.0));",
+        "  vec4 shadow_device = (ProjectionShadow * WorldMatrix * vec4(Vertex,1.0));",
         "  float scale = 1.0;",
-        "  //ShadowUVProjected = vec4(Vertex,1.0)*scale;",
+        "  vec4 shadow_device_normal = shadow_device / shadow_device.w;",
+        "  shadow_coord = (shadow_device_normal.xy + 1.0) * 0.5;",
+        "  ShadowUVProjected = (ProjectionShadow * WorldMatrix * vec4(Vertex,1.0));",
         "}",
         ""
     ].join('\n');
@@ -155,8 +163,10 @@ function getTextureProjectedShadowShader()
         "uniform vec4 fragColor;",
         "uniform sampler2D Texture0;",
         "varying vec4 ShadowUVProjected;",
+        "varying vec2 shadow_coord;",
         "void main(void) {",
-        "vec4 color = texture2DProj( Texture0, ShadowUVProjected.xyz);",
+        "vec4 color = texture2DProj( Texture0, ShadowUVProjected);",
+        "//vec4 color = texture2D( Texture0, shadow_coord);",
         "gl_FragColor = color;",
         "}",
         ""
@@ -183,13 +193,14 @@ function createTextureProjectedShadowScene()
     rttSize = [512,512];
     
 //    rtt.setProjectionMatrix(osg.Matrix.makeOrtho(0, rttSize[0], 0, rttSize[1], -5, 1000));
-    rtt.setProjectionMatrix(osg.Matrix.makePerspective(10, 1, 1.0, 1000.0));
+    rtt.setProjectionMatrix(osg.Matrix.makePerspective(15, 1, 1.0, 1000.0));
+//    rtt.setProjectionMatrix(osg.Matrix.makeOrtho(-0.5, 0.5, -0.5, 0.5, 0, 1000.0));
     var lightMatrix = [];
     rtt.setViewMatrix(osg.Matrix.makeLookAt([0,0,80],[0,0,0],[0,1,0]));
     rtt.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     rtt.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     rtt.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    rtt.setClearColor([1, 1, 1, 0.0]);
+    rtt.setClearColor([0, 0, 0, 0.0]);
 
     var matDark = new osg.Material();
     var black = [0,0,0,1];
