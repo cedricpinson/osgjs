@@ -271,13 +271,13 @@ test("osg.Matrix.transpose", function() {
               4,5,6,7,
               8,9,10,11,
               12,13,14,15];
-    var res = osg.Matrix.transpose(m);
+    var res = osg.Matrix.transpose(m, []);
     near(res , [0, 4, 8, 12,
                 1, 5, 9, 13,
                 2, 6, 10,14,
                 3, 7, 11,15]);
 
-    var res2 = osg.Matrix.transpose(m, res2);
+    var res2 = osg.Matrix.transpose(m, []);
     near(res2 , [0, 4, 8, 12,
                  1, 5, 9, 13,
                  2, 6, 10,14,
@@ -306,7 +306,7 @@ test("osg.Matrix.mult", function() {
 
     translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
     scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
-    var res = osg.Matrix.mult(scale, translate);
+    var res = osg.Matrix.mult(scale, translate, []);
     near(res , [400, 0, 0, 0,
 	        0, 300, 0, 0,
 	        0, 0, 0.5, 0,
@@ -314,7 +314,7 @@ test("osg.Matrix.mult", function() {
 
     translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
     scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
-    res = osg.Matrix.mult(scale, translate, scale);
+    res = osg.Matrix.preMult(scale, translate);
     ok(check_near(res , [400, 0, 0, 0,
 	                 0, 300, 0, 0,
 	                 0, 0, 0.5, 0,
@@ -323,7 +323,7 @@ test("osg.Matrix.mult", function() {
 
     translate = osg.Matrix.makeTranslate(1.0, 1.0, 1.0);
     scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
-    res = osg.Matrix.mult(scale, translate, translate);
+    res = osg.Matrix.postMult(scale, translate);
     ok(check_near(res , [400, 0, 0, 0,
 	                 0, 300, 0, 0,
 	                 0, 0, 0.5, 0,
@@ -335,14 +335,14 @@ test("osg.Matrix.mult", function() {
     scale = osg.Matrix.makeScale(0.5*width, 0.5*height, 0.5);
 
     var ident = osg.Matrix.makeIdentity();
-    osg.Matrix.mult(ident, scale, ident);
+    osg.Matrix.preMult(ident, scale);
 
-    osg.Matrix.mult(ident, translate, ident);
+    osg.Matrix.preMult(ident, translate);
     near(ident, [400, 0, 0, 0,
 	                 0, 300, 0, 0,
 	                 0, 0, 0.5, 0,
 	                 400, 300, 0.5, 1]);
-    osg.Matrix.mult(scale, translate, scale);
+    osg.Matrix.preMult(scale, translate);
     near(scale, [400, 0, 0, 0,
 	         0, 300, 0, 0,
 	         0, 0, 0.5, 0,
@@ -531,6 +531,25 @@ test("osg.ShaderGenerator", function() {
     state.pushStateSet(stateSet0);
     state.pushStateSet(stateSet1);
     state.apply();
+});
+
+
+test("osg.State", function() {
+
+    var state = new osg.State();
+
+    var stateSet0 = new osg.StateSet();
+    var stateSet1 = new osg.StateSet();
+    var stateSet2 = new osg.StateSet();
+    stateSet0.setAttributeAndMode(new osg.Material());
+    stateSet1.setAttributeAndMode(new osg.Material(), osg.StateAttribute.OVERRIDE);
+    stateSet2.setAttributeAndMode(new osg.Material(), osg.StateAttribute.OFF);
+
+    state.pushStateSet(stateSet0);
+    state.pushStateSet(stateSet1);
+    state.pushStateSet(stateSet2);
+    ok(state.attributeMap.Material[state.attributeMap.Material.length-1] === state.attributeMap.Material[state.attributeMap.Material.length-2], "check Override in state" );
+
 });
 
 
@@ -790,7 +809,7 @@ test("osg.Node", function() {
 test("osg.MatrixTransform", function() {
 
     var n = new osg.MatrixTransform();
-    var scene = osgDB.readNode(getBoxScene());
+    var scene = osgDB.parseSceneGraph(getBoxScene());
     n.setMatrix(osg.Matrix.makeTranslate(100,0,0));
     n.addChild(scene);
     var bs = n.getBound(); 

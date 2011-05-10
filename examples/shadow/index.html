@@ -18,9 +18,10 @@
   #ViewContainer {
   position: absolute;
   }
-</style>
 
-<title>PokerScene</title>
+  
+</style>
+<title>Shadow</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="../../js/jquery-1.4.2.js"></script>
@@ -31,15 +32,16 @@ $.noConflict();
 <script type="text/javascript" src="../../js/stats.js"></script>
 <script type="text/javascript" src="../../js/webgl-utils.js"></script>
 <script type="text/javascript" src="../../js/osg.js"></script>
+<script type="text/javascript" src="../../js/osgDB.js"></script>
 <script type="text/javascript" src="../../js/osgUtil.js"></script>
 <script type="text/javascript" src="../../js/osgAnimation.js"></script>
 <script type="text/javascript" src="../../js/osgGA.js"></script>
 <script type="text/javascript" src="../../js/osgViewer.js"></script>
-<script type="text/javascript" src="../../js/osgDB.js"></script>
-<script type="text/javascript" src="pokerscene.js"></script>
 <script type="text/javascript" src="main.js"></script>
+<script type="text/javascript" src="ogre.osgjs"></script>
 
 <script type="text/javascript">
+
 
 function getWindowSize() {
     var myWidth = 0, myHeight = 0;
@@ -58,25 +60,33 @@ function getWindowSize() {
         myHeight = document.body.clientHeight;
     }
     return { 'w': myWidth, 'h': myHeight };
+//    window.alert( 'Width = ' + myWidth );
+//    window.alert( 'Height = ' + myHeight );
 }
 
 window.addEventListener("load",
 function() {
-  
-  var size = getWindowSize();
 
-  var canvas = document.getElementById("3DView");
+    var size = getWindowSize();
+    jQuery('#3DView').css("width",size.w);
+    jQuery('#3DView').css("height", size.h);
 
-  canvas.width = size.w;
-  canvas.height = size.h;
+    var canvas = document.getElementById("3DView");
+    canvas.width = size.w;
+    canvas.height = size.h;
 
+    var stats = document.getElementById("Stats");
 
   var viewer;
 try {
   viewer = new osgViewer.Viewer(canvas);
   viewer.init();
-  viewer.setScene(createScene());
   viewer.setupManipulator();
+  var rotate = new osg.MatrixTransform();
+  rotate.addChild(createScene());
+  viewer.view.setClearColor([0.3, 0.3, 0.3, 1.0]);
+  viewer.setScene(rotate);
+  viewer.getManipulator().computeHomePosition();
   viewer.run();
 } catch (er) {
   osg.log("exception in osgViewer " + er);
@@ -85,20 +95,13 @@ try {
 }
 ,true);
 
-//);
-
 </script>
-
 </head>
-
-
 
 <body>
 
   <div id="ViewContainer">
-  <canvas id="3DView" style="border: none;" width="800" height="600"></canvas>
+  <canvas id="3DView"></canvas>
   </div>
-
 </body>
-
 </html>

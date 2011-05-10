@@ -74,7 +74,7 @@ osgDB.parseSceneGraph = function (node)
                 tex.setImage(img);
                 
                 //var tex = osg.Texture.create(textures[t].file);
-                newstateset.setTexture(t, tex);
+                newstateset.setTextureAttributeAndMode(t, tex);
                 newstateset.addUniform(osg.Uniform.createInt1(t,"Texture" + t));
             }
         }
@@ -82,7 +82,7 @@ osgDB.parseSceneGraph = function (node)
             var material = node.stateset.material;
             var newmaterial = new osg.Material();
             jQuery.extend(newmaterial, material);
-            newstateset.setAttribute(newmaterial);
+            newstateset.setAttributeAndMode(newmaterial);
         }
         node.stateset = newstateset;
     }

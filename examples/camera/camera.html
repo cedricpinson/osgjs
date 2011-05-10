@@ -57,7 +57,7 @@ function createScene() {
 
 
 
-    var q = osg.createTexuredQuad(-25,-25,0,
+    var q = osg.createTexturedQuad(-25,-25,0,
                                   50, 0 ,0,
                                   0, 50 ,0);
     //rttTexture = osg.Texture.create("textures/sol_trauma_periph.png");
@@ -66,7 +66,7 @@ function createScene() {
     var mainNode = new osg.Node();
     mainNode.light = new osg.Light();
     var stateset = mainNode.getOrCreateStateSet();
-    stateset.setAttribute(new osg.Material());
+    stateset.setAttributeAndMode(new osg.Material());
     mainNode.addChild(q);
 
     var camera = new osg.Camera();

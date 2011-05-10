@@ -2487,10 +2487,10 @@ osg.State.prototype = {
 
     pushGeneratedProgram: function() {
         var program;
-        if (this.attributeMap.Program !== undefined) {
-            program = this.attributeMap.Program.back();
+        if (this.attributeMap.Program !== undefined && this.attributeMap.Program.length !== 0) {
+            program = this.attributeMap.Program.back().object;
             if (program !== undefined) {
-                this.programs.push(program);
+                this.programs.push(this.getObjectPair(program, osg.StateAttribute.ON));
                 return program;
             }
         }
@@ -2501,7 +2501,7 @@ osg.State.prototype = {
         };
 
         program = this.shaderGenerator.getOrCreateProgram(attributes);
-        this.programs.push(program);
+        this.programs.push(this.getObjectPair(program, osg.StateAttribute.ON));
         return program;
     },
 
@@ -2519,7 +2519,7 @@ osg.State.prototype = {
         this.applyTextureAttributeMapList(this.textureAttributeMapList);
 
         this.pushGeneratedProgram();
-        var program = this.programs.back();
+        var program = this.programs.back().object;
         if (this.programs.lastApplied !== program) {
             program.apply(this);
             this.programs.lastApplied = program;
@@ -2653,7 +2653,7 @@ osg.State.prototype = {
                     if (uniformStack.length === 0) {
                         uniform = uniformStack.globalDefault;
                     } else {
-                        uniform = uniformStack.back();
+                        uniform = uniformStack.back().object;
                     }
                     uniform.apply(location1);
                 }
@@ -2689,7 +2689,7 @@ osg.State.prototype = {
                 if (uniformStack.length === 0) {
                     uniform = uniformStack.globalDefault;
                 } else {
-                    uniform = uniformStack.back();
+                    uniform = uniformStack.back().object;
                 }
             }
             uniform.apply(location);
@@ -2710,7 +2710,7 @@ osg.State.prototype = {
             if (attributeStack.length === 0) {
                 attribute = attributeStack.globalDefault;
             } else {
-                attribute = attributeStack.back();
+                attribute = attributeStack.back().object;
             }
 
             if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
@@ -2723,19 +2723,30 @@ osg.State.prototype = {
         }
     },
 
+    getObjectPair: function(uniform, value) {
+        return { object: uniform, value: value};
+    },
     pushUniformsList: function(uniformMap, uniformList) {
         var name;
         var uniform;
         for ( var i = 0, l = uniformList.uniformKeys.length; i < l; i++) {
             var key = uniformList.uniformKeys[i];
-            uniform = uniformList[key];
+            uniformPair = uniformList[key];
+            uniform = uniformPair.object;
             name = uniform.name;
             if (uniformMap[name] === undefined) {
                 uniformMap[name] = osg.Stack.create();
                 uniformMap[name].globalDefault = uniform;
                 uniformMap.uniformKeys.push(name);
             }
-            uniformMap[ name ].push(uniform);
+            var stack = uniformMap[name];
+            if (stack.length === 0) {
+                stack.push(this.getObjectPair(uniform, uniformPair.value));
+            } else if ((stack[stack.length-1].value & osg.StateAttribute.OVERRIDE) && !(uniformPair.value & osg.StateAttribute.PROTECTED) ) {
+                stack.push(stack[stack.length-1]);
+            } else {
+                stack.push(this.getObjectPair(uniform, uniformPair.value));
+            }
         }
     },
     popUniformsList: function(uniformMap, uniformList) {
@@ -2767,7 +2778,7 @@ osg.State.prototype = {
                 if (attributeStack.length === 0) {
                     attribute = attributeStack.globalDefault;
                 } else {
-                    attribute = attributeStack.back();
+                    attribute = attributeStack.back().object;
                 }
                 if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
                     gl.activeTexture(gl.TEXTURE0 + textureUnit);
@@ -2793,7 +2804,8 @@ osg.State.prototype = {
         var attributeStack;
         for (var i = 0, l = attributeList.attributeKeys.length; i < l; i++ ) {
             var type = attributeList.attributeKeys[i];
-            var attribute = attributeList[type];
+            var attributePair = attributeList[type];
+            var attribute = attributePair.object;
             if (attributeMap[type] === undefined) {
                 attributeMap[type] = osg.Stack.create();
                 attributeMap[type].globalDefault = attribute.cloneType();
@@ -2802,7 +2814,14 @@ osg.State.prototype = {
             }
 
             attributeStack = attributeMap[type];
-            attributeStack.push(attribute);
+            if (attributeStack.length === 0) {
+                attributeStack.push(this.getObjectPair(attribute, attributePair.value));
+            } else if ( (attributeStack[attributeStack.length-1].value & osg.StateAttribute.OVERRIDE) && !(attributePair.value & osg.StateAttribute.PROTECTED)) {
+                attributeStack.push(attributeStack[attributeStack.length-1]);
+            } else {
+                attributeStack.push(this.getObjectPair(attribute, attributePair.value));
+            }
+
             attributeStack.asChanged = true;
         }
     },
@@ -2910,27 +2929,69 @@ osg.State.create = function() {
     return state;
 };
 
+osg.StateAttribute = function() {
+    this._dirty = true;
+};
+osg.StateAttribute.prototype = {
+    isDirty: function() { return this._dirty; },
+    dirty: function() { this._dirty = true; },
+};
+
+osg.StateAttribute.OFF = 0;
+osg.StateAttribute.ON = 1;
+osg.StateAttribute.OVERRIDE = 2;
+osg.StateAttribute.PROTECTED = 4;
+osg.StateAttribute.INHERIT = 8;
 
 osg.StateSet = function () { this.id = osg.instance++; };
 osg.StateSet.prototype = {
-    addUniform: function (uniform) {
+    getObjectPair: function(attribute, value) {
+        return {object: attribute, value: value};
+    },
+    addUniform: function (uniform, mode) {
+        if (mode === undefined) {
+            mode = osg.StateAttribute.ON;
+        }
         if (!this.uniforms) {
             this.uniforms = {};
             this.uniforms.uniformKeys = [];
         }
         var name = uniform.name;
-        this.uniforms[name] = uniform;
+        this.uniforms[name] = this.getObjectPair(uniform, mode);
         if (this.uniforms.uniformKeys.indexOf(name) === -1) {
             this.uniforms.uniformKeys.push(name);
         }
     },
-    getUniformMap: function () {
-        return this.uniforms;
+    getUniform: function (uniform) {
+        if (this.uniforms[uniform])
+            return this.uniforms[uniform].object;
+        return undefined;
     },
     setTextureAttributeAndMode: function (unit, attribute, mode) {
-        this.setTextureAttribute(unit, attribute);
+        if (mode === undefined) {
+            mode = osg.StateAttribute.ON;
+        }
+        this._setTextureAttribute(unit, this.getObjectPair(attribute, mode) );
     },
-    setTextureAttribute: function (unit, attribute) {
+    getTextureAttribute: function(unit, attribute) {
+        if (this.textureAttributeMapList[unit] === undefined || this.textureAttributeMapList[unit][attribute] === undefined) {
+            return undefined;
+        }
+        return this.textureAttributeMapList[unit][attribute].object;
+    },
+    setAttributeAndMode: function(attribute, mode) { 
+        if (mode === undefined) {
+            mode = osg.StateAttribute.ON;
+        }
+        this._setAttribute(this.getObjectPair(attribute, mode)); 
+    },
+
+    _getUniformMap: function () {
+        return this.uniforms;
+    },
+
+    // for internal use, you should not call it directly
+    _setTextureAttribute: function (unit, attributePair) {
         if (!this.textureAttributeMapList) {
             this.textureAttributeMapList = [];
         }
@@ -2938,36 +2999,25 @@ osg.StateSet.prototype = {
             this.textureAttributeMapList[unit] = {};
             this.textureAttributeMapList[unit].attributeKeys = [];
         }
-        var name = attribute.getTypeMember();
-        this.textureAttributeMapList[unit][name] = attribute;
+        var name = attributePair.object.getTypeMember();
+        this.textureAttributeMapList[unit][name] = attributePair;
         if (this.textureAttributeMapList[unit].attributeKeys.indexOf(name) === -1) {
             this.textureAttributeMapList[unit].attributeKeys.push(name);
         }
     },
-    setTexture: function(unit, attribute) {
-        this.setTextureAttribute(unit,attribute);
-    },
-    getTextureAttributeMap: function(unit) {
-        return this.textureAttributeMapList[unit];
-    },
-    setAttributeAndMode: function(a) { this.setAttribute(a); },
-    setAttribute: function (attribute) {
+    // for internal use, you should not call it directly
+    _setAttribute: function (attributePair) {
         if (!this.attributeMap) {
             this.attributeMap = {};
             this.attributeMap.attributeKeys = [];
         }
-        var name = attribute.getTypeMember();
-        this.attributeMap[name] = attribute;
+        var name = attributePair.object.getTypeMember();
+        this.attributeMap[name] = attributePair;
         if (this.attributeMap.attributeKeys.indexOf(name) === -1) {
             this.attributeMap.attributeKeys.push(name);
         }
     },
     getAttributeMap: function() { return this.attributeMap; }
-};
-
-osg.StateSet.create = function() {
-    var ss = new osg.StateSet();
-    return ss;
 };
 
 
@@ -3446,13 +3496,12 @@ osg.Projection.prototype.objectType = osg.objectType.generate("Projection");
 
 
 osg.Texture = function() {
+    osg.StateAttribute.call(this);
     this.setDefaultParameters();
-    this._dirty = true;
 };
 
-osg.Texture.prototype = {
+osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Texture",
-    isDirty: function () { return this._dirty; },
     cloneType: function() { var t = new osg.Texture(); t.default_type = true; return t;},
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType; },
@@ -3604,8 +3653,7 @@ osg.Texture.prototype = {
         }
         return str;
     }
-
-};
+});
 
 osg.Texture.create = function(imageSource) {
     var a = new osg.Texture();
@@ -3629,6 +3677,7 @@ osg.Texture.createFromCanvas = function(ctx) {
 
 
 osg.Depth = function (func, near, far, writeMask) {
+    osg.StateAttribute.call(this);
     this.func = 'LESS';
     this.near = 0.0;
     this.far = 1.0;
@@ -3647,7 +3696,7 @@ osg.Depth = function (func, near, far, writeMask) {
         this.writeMask = far;
     }
 };
-osg.Depth.prototype = {
+osg.Depth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Depth",
     cloneType: function() {return new osg.Depth(); },
     getType: function() { return this.attributeType;},
@@ -3664,10 +3713,11 @@ osg.Depth.prototype = {
             gl.depthRange(this.near, this.far);
         }
     }
-};
+});
 
 
 osg.BlendFunc = function (source, destination) {
+    osg.StateAttribute.call(this);
     this.sourceFactor = 'ONE';
     this.destinationFactor = 'ZERO';
     if (source !== undefined) {
@@ -3677,7 +3727,7 @@ osg.BlendFunc = function (source, destination) {
         this.destinationFactor = destination;
     }
 };
-osg.BlendFunc.prototype = {
+osg.BlendFunc.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "BlendFunc",
     cloneType: function() {return new osg.BlendFunc(); },
     getType: function() { return this.attributeType;},
@@ -3685,30 +3735,32 @@ osg.BlendFunc.prototype = {
     apply: function(state) { 
         gl.blendFunc(gl[this.sourceFactor], gl[this.destinationFactor]); 
     }
-};
+});
 
 osg.LineWidth = function (lineWidth) {
+    osg.StateAttribute.call(this);
     this.lineWidth = 1.0;
     if (lineWidth !== undefined) {
         this.lineWidth = lineWidth;
     }
 };
-osg.LineWidth.prototype = {
+osg.LineWidth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "LineWidth",
     cloneType: function() {return new osg.LineWidth(); },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
     apply: function(state) { gl.lineWidth(this.lineWidth); }
-};
+});
 
 
 osg.CullFace = function (mode) {
+    osg.StateAttribute.call(this);
     this.mode = 'BACK';
     if (mode !== undefined) {
         this.mode = mode;
     }
 };
-osg.CullFace.prototype = {
+osg.CullFace.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "CullFace",
     cloneType: function() {return new osg.CullFace(); },
     getType: function() { return this.attributeType;},
@@ -3720,15 +3772,17 @@ osg.CullFace.prototype = {
             gl.enable(gl.CULL_FACE);
             gl.cullFace(gl[this.mode]);
         }
+        this._dirty = false;
     }
-};
+});
 
 
 osg.FrameBufferObject = function () {
+    osg.StateAttribute.call(this);
     this.fbo = undefined;
     this.attachments = [];
 };
-osg.FrameBufferObject.prototype = {
+osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "FrameBufferObject",
     cloneType: function() {return new osg.FrameBufferObject(); },
     getType: function() { return this.attributeType;},
@@ -3768,9 +3822,11 @@ osg.FrameBufferObject.prototype = {
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         }
     }
-};
+});
 
 osg.Viewport = function (x,y, w, h) {
+    osg.StateAttribute.call(this);
+
     if (x === undefined) { x = 0; }
     if (y === undefined) { y = 0; }
     if (w === undefined) { w = 800; }
@@ -3794,10 +3850,8 @@ osg.Viewport = function (x,y, w, h) {
     };
     this._dirty = true;
 };
-osg.Viewport.prototype = {
+osg.Viewport.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Viewport",
-    isDirty: function() { return this._dirty; },
-    dirty: function() { this._dirty = true; },
     cloneType: function() {return new osg.Viewport(); },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
@@ -3805,10 +3859,11 @@ osg.Viewport.prototype = {
         gl.viewport(this.x(), this.y(), this.width(), this.height()); 
         this._dirty = false;
     }
-};
+});
 
 
 osg.Material = function () {
+    osg.StateAttribute.call(this);
     this.ambient = [ 0.2, 0.2, 0.2, 1.0 ];
     this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
     this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
@@ -3816,9 +3871,7 @@ osg.Material = function () {
     this.shininess = [0.0];
     this._dirty = true;
 };
-osg.Material.prototype = {
-    dirty: function() { this._dirty = true; },
-    isDirty: function() { return this._dirty; },
+osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Material",
     cloneType: function() {return new osg.Material(); },
     getType: function() { return this.attributeType;},
@@ -3871,10 +3924,12 @@ osg.Material.prototype = {
         }
         return str;
     }
-};
+});
 
 
 osg.Light = function () {
+    osg.StateAttribute.call(this);
+
     this.ambient = [ 0.2, 0.2, 0.2, 1.0 ];
     this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
     this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
@@ -3892,9 +3947,7 @@ osg.Light = function () {
     this._dirty = true;
 };
 
-osg.Light.prototype = {
-    dirty: function() { this._dirty = true; },
-    isDirty: function() { return this._dirty; },
+osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Light",
     cloneType: function() {return new osg.Light(); },
     getType: function() { return this.attributeType; },
@@ -4073,7 +4126,7 @@ osg.Light.prototype = {
         }
         return str;
     }
-};
+});
 
 
 osg.BufferArray = function () {
@@ -4224,7 +4277,7 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
             }
             generated += "}";
             var returnFunction = function() {
-                osg.log(generated);
+                //osg.log(generated);
                 eval("var drawImplementationAutogenerated = " + generated + ";");
                 return drawImplementationAutogenerated;
             };
@@ -4380,7 +4433,7 @@ osg.Camera.prototype = osg.objectInehrit(osg.CullSettings.prototype,
 
     setViewport: function(vp) { 
         this.viewport = vp;
-        this.getOrCreateStateSet().setAttribute(vp);
+        this.getOrCreateStateSet().setAttributeAndMode(vp);
     },
     getViewport: function() { return this.viewport; },
 
@@ -4669,7 +4722,7 @@ osg.RenderBin.prototype = {
         var Matrix = osg.Matrix;
 
         if (previousRenderLeaf) {
-            stateList.moveToRootStateGraph(state, previousRenderLeaf.parent);
+            osg.StateGraph.prototype.moveToRootStateGraph(state, previousRenderLeaf.parent);
         }
         if (this.positionedAttribute) {
             this.applyPositionedAttribute(state, this.positionedAttribute);
@@ -5117,7 +5170,6 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         this.currentStateGraph = this.currentStateGraph.parent;
     },
 
-
     popProjectionMatrix: function () {
         if (this.computeNearFar === true && this.computedFar >= this.computedNear) {
             var m = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
@@ -5126,91 +5178,8 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         osg.CullStack.prototype.popProjectionMatrix.call(this);
     },
 
-
     apply: function( node ) {
         this[node.objectType].call(this, node);
-    },
-
-    applyOrig: function( node ) {
-        var lastMatrixStack;
-        var matrix;
-
-        if (node.getProjectionMatrix && node.getViewMatrix) {
-            this.applyCamera(node);
-            return;
-        }
-
-        if (node.getMatrix) {
-
-            lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            matrix = osg.Matrix.mult(lastMatrixStack, node.getMatrix(), []);
-            this.pushModelviewMatrix(matrix);
-        } else if (node.getViewMatrix) {
-            lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            matrix = osg.Matrix.mult(lastMatrixStack, node.getViewMatrix(), []);
-            this.pushModelviewMatrix(matrix);
-        }
-
-        if (node.getProjectionMatrix) {
-            lastMatrixStack = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-            matrix = osg.Matrix.mult(lastMatrixStack, node.getProjectionMatrix(), []);
-            this.pushProjectionMatrix(matrix);
-        }
-
-
-        if (node.drawImplementation) {
-            matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-            var bb = node.getBoundingBox();
-            if (this.computeNearFar && bb.valid()) {
-                if (!this.updateCalculatedNearFar(matrix,node)) {
-                    if (node.traverse) {
-                        this.traverse(node);
-                        if (node.getMatrix || node.getViewMatrix !== undefined) {
-                            this.popModelviewMatrix();
-                        }
-                    }
-                    return;
-                }
-            }
-        }
-
-        if (node.stateset) {
-            this.pushStateSet(node.stateset);
-        }
-        if (node.light) {
-            this.addPositionedAttribute(node.light);
-        }
-
-        if (node.drawImplementation) {
-
-            var leafs = this.currentStateGraph.leafs;
-            if (leafs.length === 0) {
-                this.currentRenderBin.addStateGraph(this.currentStateGraph);
-            }
-            leafs.push(
-                {
-                    "parent": this.currentStateGraph,
-                    "modelview": this.modelviewMatrixStack[this.modelviewMatrixStack.length-1],
-                    "projection": this.projectionMatrixStack[this.projectionMatrixStack.length-1],
-                    "geometry": node
-                }
-            );
-        }
-
-        if (node.traverse) {
-            this.traverse(node);
-        }
-
-        if (node.stateset) {
-            this.popStateSet();
-        }
-
-        if (node.getMatrix || node.getViewMatrix !== undefined) {
-            this.popModelviewMatrix();
-        }
-        if (node.getProjectionMatrix !== undefined) {
-            this.popProjectionMatrix();
-        }
     },
 
     getReservedMatrix: function() {
@@ -5434,114 +5403,6 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
 };
 
 
-
-
-osg.ParseSceneGraph = function (node)
-{
-    var newnode;
-    if (node.primitives) {
-        newnode = new osg.Geometry();
-        jQuery.extend(newnode, node);
-        node = newnode;
-
-        var i;
-        for ( i in node.primitives) {
-            var mode = node.primitives[i].mode;
-            if (node.primitives[i].indices) {
-                var array = node.primitives[i].indices;
-                array = osg.BufferArray.create(gl[array.type], array.elements, array.itemSize );
-                if (!mode) {
-                    mode = gl.TRIANGLES;
-                } else {
-                    mode = gl[mode];
-                }
-                node.primitives[i] = osg.DrawElements.create(mode, array);
-            } else {
-                mode = gl[mode];
-                var first = node.primitives[i].first;
-                var count = node.primitives[i].count;
-                node.primitives[i] = new osg.DrawArrays(mode, first, count);
-            }
-        }
-    }
-
-    if (node.attributes) {
-        jQuery.each(node.attributes, function( key, element) {
-            var attributeArray = node.attributes[key];
-            node.attributes[key] = osg.BufferArray.create(gl[attributeArray.type], attributeArray.elements, attributeArray.itemSize );
-        }
-                   );
-    }
-
-    if (node.stateset) {
-        var newstateset = new osg.StateSet();
-        if (node.stateset.textures) {
-            var textures = node.stateset.textures;
-            for (var t = 0, tl = textures.length; t < tl; t++) {
-                if (!textures[t].file) {
-                    if (console !== undefined) {
-                        console.log("no 'file' field for texture " + textures[t]);
-                    }
-                    continue;
-                }
-                var tex = new osg.Texture();
-                jQuery.extend(tex, textures[t]);
-                var img = new Image();
-                img.src = textures[t].file;
-                tex.setImage(img);
-                
-                //var tex = osg.Texture.create(textures[t].file);
-                newstateset.setTexture(t, tex);
-                newstateset.addUniform(osg.Uniform.createInt1(t,"Texture" + t));
-            }
-        }
-        if (node.stateset.material) {
-            var material = node.stateset.material;
-            var newmaterial = new osg.Material();
-            jQuery.extend(newmaterial, material);
-            newstateset.setAttribute(newmaterial);
-        }
-        node.stateset = newstateset;
-    }
-
-    if (node.matrix) {
-        newnode = new osg.MatrixTransform();
-        jQuery.extend(newnode, node);
-        newnode.setMatrix(osg.Matrix.copy(node.matrix));
-        node = newnode;
-    }
-
-    if (node.projection) {
-        newnode = new osg.Projection();
-        jQuery.extend(newnode, node);
-        newnode.setProjectionMatrix(osg.Matrix.copy(node.projection));
-        node = newnode;
-    }
-
-    if (node.children) {
-
-        if (node.children === undefined) {
-            newnode = new osg.Node();
-            jQuery.extend(newnode, node);
-            node = newnode;
-        }
-
-        for (var child = 0, childLength = node.children.length; child < childLength; child++) {
-            node.children[child] = osg.ParseSceneGraph(node.children[child]);
-        }
-    }
-
-    // no properties then we create a node by default
-    if (node.accept === undefined) {
-        newnode = new osg.Node();
-        jQuery.extend(newnode, node);
-        node = newnode;
-    }
-
-    return node;
-};
-
-
 osg.View = function() { osg.Camera.call(this); };
 osg.View.prototype = osg.objectInehrit(osg.Camera.prototype, {
     computeIntersections: function (x, y, traversalMask) {
@@ -5653,6 +5514,11 @@ osg.EllipsoidModel.prototype = {
         osg.Matrix.set(localToWorld,2,1, up[1]);
         osg.Matrix.set(localToWorld,2,2, up[2]);
     }
+};
+
+osg.ParseSceneGraph = function (node) {
+    osg.log("drepecated use osgDB.parseSceneGraph");
+    return osgDB.parseSceneGraph(node);
 };
 
 osg.createTexturedBox = function(centerx, centery, centerz,

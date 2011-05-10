@@ -35,6 +35,7 @@ $.noConflict();
 <script type="text/javascript" src="../../js/osgAnimation.js"></script>
 <script type="text/javascript" src="../../js/osgGA.js"></script>
 <script type="text/javascript" src="../../js/osgViewer.js"></script>
+<script type="text/javascript" src="../../js/osgDB.js"></script>
 
 <script type="text/javascript">
 
@@ -367,12 +368,12 @@ $.noConflict();
 
 function createScene() {
     var o = ReadJSON.create();
-    o = osg.ParseSceneGraph(o);
+    o = osgDB.parseSceneGraph(o);
     var mainNode = new osg.Node();
     mainNode.light = new osg.Light();
     mainNode.addChild(o);
     var stateset = new osg.StateSet();
-    stateset.setAttribute(new osg.Material());
+    stateset.setAttributeAndMode(new osg.Material());
     mainNode.stateset = stateset;
     return mainNode;
 }

@@ -35,6 +35,6 @@ function createScene() {
         this.target = 'TEXTURE_2D';
     };
 
-    o = osg.ParseSceneGraph(getPokerScene());
+    o = osgDB.parseSceneGraph(getPokerScene());
     return o;
 }
