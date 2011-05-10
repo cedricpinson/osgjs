@@ -74,8 +74,8 @@ LightUpdateCallback.prototype = {
 };
 
 
-var LightUpdateCallback2 = function(matrix, uniform, rtt) { this.matrix = matrix, this.uniform = uniform; this.camera = rtt};
-LightUpdateCallback2.prototype = {
+var LightUpdateCallbackProjectedTexture = function(matrix, uniform, rtt) { this.matrix = matrix, this.uniform = uniform; this.camera = rtt};
+LightUpdateCallbackProjectedTexture.prototype = {
     update: function(node, nv) {
         var currentTime = nv.getFrameStamp().getSimulationTime();
 
@@ -85,15 +85,8 @@ LightUpdateCallback2.prototype = {
         osg.Matrix.makeTranslate(x ,y,h, node.getMatrix());
 
         osg.Matrix.makeLookAt([x,y,80],[0,0,-5],[0,-1,0], this.camera.getViewMatrix());
-        //osg.Matrix.makeLookAt([0,0,80],[0,0,-5],[0,-1,0], this.viewMatrix);
 
-        createShadowMatrix([0,0,1,5],
-                           [x,y,h,1],
-                           this.matrix);
-
-//        osg.Matrix.mult(this.camera.getProjectionMatrix(), this.camera.getViewMatrix(), this.matrix);
         var biasScale = osg.Matrix.preMult(osg.Matrix.makeTranslate(0.5 , 0.5, 0.5, []), osg.Matrix.makeScale(0.5 , 0.5, 0.5, []));
-
         var shadowView = this.camera.getViewMatrix();
         var shadowProj = osg.Matrix.copy(this.camera.getProjectionMatrix(), []);
         osg.Matrix.preMult(shadowProj, shadowView);
@@ -143,14 +136,11 @@ function getTextureProjectedShadowShader()
         "uniform mat4 WorldMatrix;",
         "uniform mat4 ProjectionShadow;",
         "varying vec4 ShadowUVProjected;",
-        "varying vec2 shadow_coord;",
         "void main(void) {",
         "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
-        "  vec4 shadow_device = (ProjectionShadow * WorldMatrix * vec4(Vertex,1.0));",
-        "  float scale = 1.0;",
-        "  vec4 shadow_device_normal = shadow_device / shadow_device.w;",
-        "  shadow_coord = (shadow_device_normal.xy + 1.0) * 0.5;",
-        "  ShadowUVProjected = (ProjectionShadow * WorldMatrix * vec4(Vertex,1.0));",
+        "  vec4 uv = (ProjectionShadow * WorldMatrix * vec4(Vertex,1.0));",
+        "  //ShadowUVProjected = (uv/uv.w).xy;",
+        "  ShadowUVProjected = uv;",
         "}",
         ""
     ].join('\n');
@@ -163,11 +153,56 @@ function getTextureProjectedShadowShader()
         "uniform vec4 fragColor;",
         "uniform sampler2D Texture0;",
         "varying vec4 ShadowUVProjected;",
-        "varying vec2 shadow_coord;",
+        "float shift = 1.0/512.0;",
+        "float shadowed[9];",
+        "float getSmoothTexelFilter(vec2 uv) {",
+        "  vec4 c;",
+        "  shadowed[0] = texture2D( Texture0,  uv).a;",
+        "  shadowed[1] = texture2D( Texture0,  uv+vec2(0,shift)).a;",
+        "  shadowed[2] = texture2D( Texture0, uv+vec2(shift,shift)).a;",
+        "  shadowed[3] = texture2D( Texture0, uv+vec2(shift,0)).a;",
+        "  shadowed[4] = texture2D( Texture0, uv+vec2(shift,-shift)).a;",
+        "  shadowed[5] = texture2D( Texture0, uv+vec2(0,-shift)).a;",
+        "  shadowed[6] = texture2D( Texture0, uv+vec2(-shift,-shift)).a;",
+        "  shadowed[7] = texture2D( Texture0, uv+vec2(-shift,0)).a;",
+        "  shadowed[8] = texture2D( Texture0, uv+vec2(-shift,shift)).a;",
+        "  int nb = 0;",
+        "  for (int i = 0; i < 9; i++) {",
+        "    if (shadowed[i] > 0.5)",
+        "       nb += 1;",
+        "  }",
+        "  return float(nb)/9.0;",
+        "}",
+        "vec4 getSmoothTexel(vec2 uv) {",
+        "  vec4 c;",
+        "  c = texture2D( Texture0,  uv);",
+        "  c += texture2D( Texture0,  uv+vec2(0,shift));",
+        "  c += texture2D( Texture0, uv+vec2(shift,shift));",
+        "  c += texture2D( Texture0, uv+vec2(shift,0));",
+        "  c += texture2D( Texture0, uv+vec2(shift,-shift));",
+        "  c += texture2D( Texture0, uv+vec2(0,-shift));",
+        "  c += texture2D( Texture0, uv+vec2(-shift,-shift));",
+        "  c += texture2D( Texture0, uv+vec2(-shift,0));",
+        "  c += texture2D( Texture0, uv+vec2(-shift,shift));",
+        "  return c;",
+        "}",
+        "vec4 getSmoothTexel4(vec4 uv) {",
+        "  vec4 c;",
+        "  c = texture2DProj( Texture0,  uv+vec4(0,shift,0,0));",
+        "  c += texture2DProj( Texture0, uv+vec4(shift,shift,0,0));",
+        "  c += texture2DProj( Texture0, uv+vec4(shift,0,0,0));",
+        "  c += texture2DProj( Texture0, uv+vec4(shift,-shift,0,0));",
+        "  c += texture2DProj( Texture0, uv+vec4(0,-shift,0,0));",
+        "  c += texture2DProj( Texture0, uv+vec4(-shift,-shift,0,0));",
+        "  c += texture2DProj( Texture0, uv+vec4(-shift,0,0,0));",
+        "  c += texture2DProj( Texture0, uv+vec4(-shift,shift,0,0));",
+        "  return c;",
+        "}",
         "void main(void) {",
-        "vec4 color = texture2DProj( Texture0, ShadowUVProjected);",
-        "//vec4 color = texture2D( Texture0, shadow_coord);",
-        "gl_FragColor = color;",
+        "//vec4 color = texture2DProj( Texture0, ShadowUVProjected);",
+        "//color = (color + getSmoothTexel((ShadowUVProjected/ShadowUVProjected.w).xy)) / 9.0;",
+        "//fragColor = vec4(0,0,0,);",
+        "gl_FragColor = vec4(0,0,0, getSmoothTexelFilter((ShadowUVProjected/ShadowUVProjected.w).xy));",
         "}",
         ""
     ].join('\n');
@@ -231,9 +266,9 @@ function createTextureProjectedShadowScene()
     q.getOrCreateStateSet().addUniform(uniform);
     var world = new osg.Uniform.createMatrix4(osg.Matrix.makeTranslate(0,0,0, []), "WorldMatrix");
     q.getOrCreateStateSet().addUniform(world);
-    light.setUpdateCallback(new LightUpdateCallback2(shadowMatrix, 
-                                                     uniform,
-                                                     rtt));
+    light.setUpdateCallback(new LightUpdateCallbackProjectedTexture(shadowMatrix, 
+                                                                    uniform,
+                                                                    rtt));
 
     root.addChild(model);
     root.addChild(light);
