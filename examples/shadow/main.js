@@ -173,6 +173,24 @@ function getTextureProjectedShadowShader()
         "  }",
         "  return float(nb)/9.0;",
         "}",
+        "float getSmoothTexelFilter2(vec2 uv) {",
+        "  vec4 c;",
+        "  shadowed[0] = texture2D( Texture0,  uv).a;",
+        "  shadowed[1] = texture2D( Texture0,  uv+vec2(0,shift)).a;",
+        "  shadowed[2] = texture2D( Texture0, uv+vec2(shift,shift)).a;",
+        "  shadowed[3] = texture2D( Texture0, uv+vec2(shift,0)).a;",
+        "  shadowed[4] = texture2D( Texture0, uv+vec2(shift,-shift)).a;",
+        "  shadowed[5] = texture2D( Texture0, uv+vec2(0,-shift)).a;",
+        "  shadowed[6] = texture2D( Texture0, uv+vec2(-shift,-shift)).a;",
+        "  shadowed[7] = texture2D( Texture0, uv+vec2(-shift,0)).a;",
+        "  shadowed[8] = texture2D( Texture0, uv+vec2(-shift,shift)).a;",
+        "  int nb = 0;",
+        "  for (int i = 0; i < 9; i++) {",
+        "    if (shadowed[i] > 0.5)",
+        "       nb += 1;",
+        "  }",
+        "  return float(nb)/9.0;",
+        "}",
         "vec4 getSmoothTexel(vec2 uv) {",
         "  vec4 c;",
         "  c = texture2D( Texture0,  uv);",
@@ -199,10 +217,64 @@ function getTextureProjectedShadowShader()
         "  return c;",
         "}",
         "void main(void) {",
-        "//vec4 color = texture2DProj( Texture0, ShadowUVProjected);",
-        "//color = (color + getSmoothTexel((ShadowUVProjected/ShadowUVProjected.w).xy)) / 9.0;",
-        "//fragColor = vec4(0,0,0,);",
-        "gl_FragColor = vec4(0,0,0, getSmoothTexelFilter((ShadowUVProjected/ShadowUVProjected.w).xy));",
+        "gl_FragColor = texture2DProj( Texture0, ShadowUVProjected);",
+        "",
+        "//gl_FragColor = vec4(0,0,0, getSmoothTexelFilter((ShadowUVProjected/ShadowUVProjected.w).xy));",
+        "",
+        "//vec2 uv = (ShadowUVProjected/ShadowUVProjected.w).xy;",
+        "//gl_FragColor = vec4(uv[0],uv[1],0, 1.0);",
+        "}",
+        ""
+    ].join('\n');
+
+    var program = osg.Program.create(
+        osg.Shader.create(gl.VERTEX_SHADER, vertexshader),
+        osg.Shader.create(gl.FRAGMENT_SHADER, fragmentshader));
+
+    return program;
+}
+
+function getBlurrShader()
+{
+    var vertexshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "attribute vec3 Vertex;",
+        "attribute vec2 TexCoord0;",
+        "uniform mat4 ModelViewMatrix;",
+        "uniform mat4 ProjectionMatrix;",
+        "varying vec2 uv0;",
+        "void main(void) {",
+        "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
+        "  uv0 = TexCoord0;",
+        "}",
+        ""
+    ].join('\n');
+
+    var fragmentshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "uniform sampler2D Texture0;",
+        "varying vec2 uv0;",
+        "float shift = 1.0/512.0;",
+        "vec4 getSmoothTexelFilter(vec2 uv) {",
+        "  vec4 c = texture2D( Texture0,  uv);",
+        "  c += texture2D( Texture0, uv+vec2(0,shift));",
+        "  c += texture2D( Texture0, uv+vec2(shift,shift));",
+        "  c += texture2D( Texture0, uv+vec2(shift,0));",
+        "  c += texture2D( Texture0, uv+vec2(shift,-shift));",
+        "  c += texture2D( Texture0, uv+vec2(0,-shift));",
+        "  c += texture2D( Texture0, uv+vec2(-shift,-shift));",
+        "  c += texture2D( Texture0, uv+vec2(-shift,0));",
+        "  c += texture2D( Texture0, uv+vec2(-shift,shift));",
+        "  return c/9.0;",
+        "}",
+        "void main(void) {",
+        "   gl_FragColor = getSmoothTexelFilter( uv0);",
         "}",
         ""
     ].join('\n');
@@ -227,9 +299,7 @@ function createTextureProjectedShadowScene()
     rtt.setName("rtt_camera");
     rttSize = [512,512];
     
-//    rtt.setProjectionMatrix(osg.Matrix.makeOrtho(0, rttSize[0], 0, rttSize[1], -5, 1000));
     rtt.setProjectionMatrix(osg.Matrix.makePerspective(15, 1, 1.0, 1000.0));
-//    rtt.setProjectionMatrix(osg.Matrix.makeOrtho(-0.5, 0.5, -0.5, 0.5, 0, 1000.0));
     var lightMatrix = [];
     rtt.setViewMatrix(osg.Matrix.makeLookAt([0,0,80],[0,0,0],[0,1,0]));
     rtt.setRenderOrder(osg.Camera.PRE_RENDER, 0);
@@ -270,8 +340,29 @@ function createTextureProjectedShadowScene()
                                                                     uniform,
                                                                     rtt));
 
+    var blurr = new osg.Camera();
+    blurr.setProjectionMatrix(osg.Matrix.makeOrtho(0, rttSize[0], 0, rttSize[1], -5, 5));
+    blurr.setRenderOrder(osg.Camera.PRE_RENDER, 0);
+    blurr.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+    blurr.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
+    var quad = osg.createTexturedQuad(0,0,0,
+                                      rttSize[0], 0 ,0,
+                                      0, rttSize[1],0);
+    quad.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
+    quad.getOrCreateStateSet().setAttributeAndMode(getBlurrShader());
+    var blurredTexture = new osg.Texture();
+    blurredTexture.setTextureSize(rttSize[0],rttSize[1]);
+    blurredTexture.setMinFilter('LINEAR');
+    blurredTexture.setMagFilter('LINEAR');
+    blurr.attachTexture(gl.COLOR_ATTACHMENT0, blurredTexture, 0);
+    blurr.addChild(quad);
+
+    // the one used for the final
+    q.getOrCreateStateSet().setTextureAttributeAndMode(0, blurredTexture);
+    
     root.addChild(model);
     root.addChild(light);
+    root.addChild(blurr);
     root.addChild(q);
 
     return root;
