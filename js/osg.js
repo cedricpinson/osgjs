@@ -3797,19 +3797,25 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                 gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
 
                 for (var i = 0, l = this.attachments.length; i < l; ++i) {
-                    var texture = this.attachments[i].texture;
-
-                    // apply on unit 0 to init it
-                    state.applyTextureAttribute(1, texture);
-
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, gl[texture.target], texture.textureObject, this.attachments[i].level);
-                    //gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.textureObject, 0);
+                    
+                    if (this.attachments[i].texture === undefined) { // render buffer
+                        var rb = gl.createRenderbuffer();
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+                        gl.renderbufferStorage(gl.RENDERBUFFER, this.attachments[i].format, this.attachments[i].width, this.attachments[i].height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, this.attachments[i].attachment, gl.RENDERBUFFER, rb);
+                    } else {
+                        var texture = this.attachments[i].texture;
+                        // apply on unit 0 to init it
+                        state.applyTextureAttribute(1, texture);
+                        
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, gl[texture.target], texture.textureObject, this.attachments[i].level);
+                    }
                 }
-
                 status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
                 if (status !== 0x8CD5) {
                     osg.log("framebuffer error check " + status);
                 }
+                gl.bindRenderbuffer(null);
 
             } else {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
@@ -4463,6 +4469,13 @@ osg.Camera.prototype = osg.objectInehrit(osg.CullSettings.prototype,
         this.attachments[bufferComponent] = { 'texture' : texture , 'level' : level };
     },
 
+    attachRenderBuffer: function(bufferComponent, internalFormat) {
+        if (this.attachments === undefined) {
+            this.attachments = {};
+        }
+        this.attachments[bufferComponent] = { 'format' : internalFormat };
+    },
+
     computeLocalToWorldMatrix: function(matrix,nodeVisitor) {
         if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
             osg.Matrix.preMult(matrix, this.modelviewMatrix);
@@ -4904,6 +4917,7 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             return;
         }
+        var viewport = this.camera.getViewport();
         var fbo = this.camera.frameBufferObject;
         if (this.camera.frameBufferObject === undefined) {
             fbo = new osg.FrameBufferObject();
@@ -4911,7 +4925,24 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
             if (this.camera.attachments !== undefined) {
                 for ( var key in this.camera.attachments) {
                     var a = this.camera.attachments[key];
-                    fbo.setAttachment({ 'attachment': key, 'texture': a.texture, 'level': 0 });
+                    var attach = undefined;
+                    if (a.texture === undefined) { //renderbuffer
+                        attach = { attachment: key, 
+                                   format: a.format, 
+                                   width: viewport.width(),
+                                   height: viewport.height()
+                                 };
+                    } else if (a.texture !== undefined) {
+                        attach = { 
+                            attachment: key, 
+                            texture: a.texture, 
+                            level: a.level 
+                        };
+                        if (a.format) {
+                            attach.format = a.format;
+                        }
+                    }
+                    fbo.setAttachment(attach);
                 }
             }
         }
@@ -4953,8 +4984,6 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
         }
 
         return previous;
-        //debugger;
-        //state.apply();
     }
 });
 
