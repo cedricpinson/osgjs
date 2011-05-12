@@ -491,6 +491,47 @@ test("osg.NodeVisitor", function() {
 });
 
 
+test("osg.computeLocalToWorld", function() {
+
+    (function() { 
+        // test visit parents
+        var GetRootItem = function() {
+            osg.NodeVisitor.call(this, osg.NodeVisitor.TRAVERSE_PARENTS);
+            this.node = undefined;
+        };
+        GetRootItem.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+            apply: function( node ) {
+                this.node = node;
+                this.traverse(node);
+            }
+        });
+
+        var root = new osg.MatrixTransform();
+        root.setName("root");
+        root.setMatrix(osg.Matrix.makeTranslate(10, 0, 0, []));
+
+        var child0 = new osg.Camera();
+        child0.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+        child0.setViewMatrix(osg.Matrix.makeTranslate(0, 10, 0, []));
+
+        var child1 = new osg.MatrixTransform();
+        child1.setMatrix(osg.Matrix.makeTranslate(0, -10, 0, []));
+
+        var child2 = new osg.MatrixTransform();
+        child2.setMatrix(osg.Matrix.makeTranslate(0, 0, 10, []));
+
+        root.addChild(child0);
+        child0.addChild(child1);
+        child1.addChild(child2);
+
+        path = [root, child0, child1, child2];
+        var matrix = osg.computeLocalToWorld(path);
+        var trans = osg.Matrix.getTrans(matrix, []);
+        var result = [ 0, -10, 10 ];
+        ok(check_near(trans, result) , "Translation of matrix should be " + result);
+    })();
+});
+
 
 test("osg.UpdateVisitor", function() {
 
@@ -834,6 +875,9 @@ test("osg.Node", function() {
     
     n1.dirtyBound();
     ok( n.boundingSphereComputed === false, "boundingSphereComputed must be true if a child call dirtyBound");
+
+    var matrixes = n1.getWorldMatrices();
+    ok( (matrixes.length === 1) && (matrixes[0][0] === 1.0) && (matrixes[0][5] === 1.0) && (matrixes[0][10] === 1.0) && (matrixes[0][15] === 1.0) , "getWorldMatrices should return one identity matrix");
 
 });
 

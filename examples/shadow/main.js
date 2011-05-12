@@ -342,8 +342,8 @@ function getShadowMapShaderLight()
         "    );",
         "}",
         "void main(void) {",
-        "  //gl_FragColor = pack(((-z) - nearShadow)/ (farShadow-nearShadow));",
-        "  gl_FragColor = pack2(((-z) - nearShadow)/ (farShadow-nearShadow));",
+        "  gl_FragColor = pack(((-z) - nearShadow)/ (farShadow-nearShadow));",
+        "  //gl_FragColor = pack2(((-z) - nearShadow)/ (farShadow-nearShadow));",
         "}",
         ""
     ].join('\n');
@@ -418,15 +418,15 @@ function getShadowMapShaderGround()
         "float shadowed = 0.0;",
         "for(float y = -1.5; y<=1.5; y+=1.0){",
         "    for(float x = -1.5; x<=1.5; x+=1.0){",
-        "#if 0 ",
+        "#if 1 ",
         "       vec2 moments = unpack(texture2D(Texture0, shadowCoord.xy+vec2(x,y)/vec2(510.0, 510.0)));",
         "        float p = float(z >= moments.x);",
         "        float variance = max(0.000015, moments.y - (moments.x*moments.x));",
         "        float d = (z - moments.x) ;",
         "        float p_max = variance/(variance + d*d);",
         "        p_max = smoothstep(0.3, 1.0, p_max); ",
-        "        //shadowed += max(p, p_max);",
-        "        shadowed += (d >= 0.01 ) ? (1.0) : (0.0);",
+        "        shadowed += max(p, p_max);",
+        "        //shadowed += (d >= 0.01 ) ? (1.0) : (0.0);",
         "#else",
         "       float zz = unpack2(texture2D(Texture0, shadowCoord.xy+vec2(x,y)/vec2(510.0, 510.0)));",
         "        float d = z - zz;",
@@ -462,6 +462,7 @@ LightUpdateCallbackShadowMap.prototype = {
     update: function(node, nv) {
         var currentTime = nv.getFrameStamp().getSimulationTime();
 
+        currentTime = 50.0;
         var x = 50 * Math.cos(currentTime);
         var y = 50 * Math.sin(currentTime);
         var h = 80;

@@ -3296,7 +3296,9 @@ osg.Node.prototype = {
     getStateSet: function() { return this.stateset; },
     accept: function(nv) { 
         if (nv.validNodeMask(this)) {
+            nv.pushOntoNodePath(this);
             nv.apply(this);
+            nv.popFromNodePath();
         }
     },
     dirtyBound: function() {
@@ -3408,22 +3410,69 @@ osg.Node.prototype = {
             
 	return bsphere;
     },
+
     getWorldMatrices: function(halt) {
         var CollectParentPaths = function(halt) {
-            osg.NodeVisitor.call(this, osg.NodeVisitor.TRAVERSE_PARENTS);
+            this.nodePaths = [];
             this.halt = halt;
-            this.apply = function(node) {
-                if (node.getNumParents() === 0 || node = this.halt) {
-                    //this.nodePaths.push(
-                }
-            };
+            osg.NodeVisitor.call(this, osg.NodeVisitor.TRAVERSE_PARENTS);
         };
+        CollectParentPaths.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+            apply: function(node) {
+                if (node.parents.length === 0 || node === this.halt) {
+                    // copy
+                    this.nodePaths.push(this.nodePath.slice(0));
+                } else {
+                    this.traverse(node);
+                }
+            }
+        });
+        var collected = new CollectParentPaths(halt);
+        this.accept(collected);
+        var matrixList = [];
+
+        for(var i = 0, l = collected.nodePaths.length; i < l; i++) {
+            var np = collected.nodePaths[i];
+            if (np.length === 0) {
+                matrixList.push(osg.Matrix.makeIdentity());
+            } else {
+                matrixList.push(osg.computeLocalToWorld(np));
+            }
+        }
+        return matrixList;
     }
     
 
 };
 osg.Node.prototype.objectType = osg.objectType.generate("Node");
 
+
+osg.computeLocalToWorld = function (nodePath, ignoreCameras) {
+    var ignoreCamera = ignoreCameras;
+    if (ignoreCamera === undefined) {
+        ignoreCamera = true;
+    }
+    var matrix = osg.Matrix.makeIdentity();
+
+    var j = 0;
+    if (ignoreCamera) {
+        for (j = nodePath.length-1; j > 0; j--) {
+            var camera = nodePath[j];
+            if (camera.objectType === osg.Camera.prototype.objectType &&
+                (camera.getReferenceFrame !== osg.Transform.RELATIVE_RF || camera.getParents().length === 0 )) {
+                break;
+            }
+        }
+    }
+
+    for (var i = j, l = nodePath.length; i < l; i++) {
+        var node = nodePath[i];
+        if (node.computeLocalToWorldMatrix) {
+            node.computeLocalToWorldMatrix(matrix);
+        }
+    }
+    return matrix;
+}
 
 osg.Transform = function() {
     osg.Node.call(this);
@@ -4537,6 +4586,7 @@ osg.NodeVisitor = function (traversalMode) {
     if (traversalMode === undefined) {
         this.traversalMode = osg.NodeVisitor.TRAVERSE_ALL_CHILDREN;
     }
+    this.nodePath = [];
 };
 //osg.NodeVisitor.TRAVERSE_NONE = 0;
 osg.NodeVisitor.TRAVERSE_PARENTS = 1;
@@ -4546,10 +4596,24 @@ osg.NodeVisitor._traversalFunctions = {};
 osg.NodeVisitor._traversalFunctions[osg.NodeVisitor.TRAVERSE_PARENTS] = function(node) { node.ascend(this); };
 osg.NodeVisitor._traversalFunctions[osg.NodeVisitor.TRAVERSE_ALL_CHILDREN] = function(node) { node.traverse(this); };
 
+osg.NodeVisitor._pushOntoNodePath = {};
+osg.NodeVisitor._pushOntoNodePath[osg.NodeVisitor.TRAVERSE_PARENTS] = function(node) { this.nodePath.unshift(node); };
+osg.NodeVisitor._pushOntoNodePath[osg.NodeVisitor.TRAVERSE_ALL_CHILDREN] = function(node) { this.nodePath.push(node); };
+
+osg.NodeVisitor._popFromNodePath = {};
+osg.NodeVisitor._popFromNodePath[osg.NodeVisitor.TRAVERSE_PARENTS] = function() { return this.nodePath.shift(); };
+osg.NodeVisitor._popFromNodePath[osg.NodeVisitor.TRAVERSE_ALL_CHILDREN] = function() { this.nodePath.pop(); };
+
 osg.NodeVisitor.prototype = {
     setTraversalMask: function(m) { this.traversalMask = m; },
     getTraversalMask: function() { return this.traversalMask; },
-    validNodeMask: function(node) { 
+    pushOntoNodePath: function(node) {
+        osg.NodeVisitor._pushOntoNodePath[this.traversalMode].call(this, node);
+    },
+    popFromNodePath: function() {
+        osg.NodeVisitor._popFromNodePath[this.traversalMode].call(this);
+    },
+    validNodeMask: function(node) {
         var nm = node.getNodeMask();
         return ((this.traversalMask & (this.nodeMaskOverride | nm)) !== 0);
     },
