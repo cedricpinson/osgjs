@@ -426,6 +426,7 @@ test("osg.NodeVisitor", function() {
         this.search = search
         this.result = [];
     };
+
     FindItemAnchor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
         apply: function( node ) {
             if (node.getName !== undefined) {
@@ -457,6 +458,36 @@ test("osg.NodeVisitor", function() {
     root.accept(v);
     ok(v.result.length === 0, "Should not find item named 'c' because of node mask");
 
+
+    (function() { 
+        // test visit parents
+        var GetRootItem = function() {
+            osg.NodeVisitor.call(this, osg.NodeVisitor.TRAVERSE_PARENTS);
+            this.node = undefined;
+        };
+        GetRootItem.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+            apply: function( node ) {
+                this.node = node;
+                this.traverse(node);
+            }
+        });
+
+        var root = new osg.Node();
+        root.setName("root");
+        var child0 = new osg.Node();
+        var child1 = new osg.Node();
+        var child2 = new osg.Node();
+
+        root.addChild(child0);
+        root.addChild(child1);
+        child1.addChild(child2);
+
+        var visit = new GetRootItem();
+        child2.accept(visit);
+        
+        ok(visit.node.getName() === "root", "Should get the root node");
+        
+    })();
 });
 
 

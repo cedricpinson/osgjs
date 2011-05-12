@@ -327,6 +327,9 @@ function getShadowMapShaderLight()
         "varying float z;",
         "uniform float nearShadow;",
         "uniform float farShadow;",
+        "vec4 pack2(float value) {",
+        "  return vec4(floor(value * 256.0)/255.0, floor(fract(value * 256.0) * 256.0)/255.0 , floor(fract(value * 65536.0) * 256.0)/255.0, 0.0);",
+        "}",
         "vec4 pack(float value){",
         "    float depth = value;",
         "    float depth1 = depth*255.0*255.0;",
@@ -339,7 +342,8 @@ function getShadowMapShaderLight()
         "    );",
         "}",
         "void main(void) {",
-        "  gl_FragColor = pack(((-z) - nearShadow)/ (farShadow-nearShadow));",
+        "  //gl_FragColor = pack(((-z) - nearShadow)/ (farShadow-nearShadow));",
+        "  gl_FragColor = pack2(((-z) - nearShadow)/ (farShadow-nearShadow));",
         "}",
         ""
     ].join('\n');
@@ -395,6 +399,9 @@ function getShadowMapShaderGround()
         "uniform float farShadow;",
         "uniform mat4 ProjectionShadow;",
         "uniform mat4 ModelViewShadow;",
+        "float unpack2(vec4 depth) {",
+        "  return depth[0] * 255.0 / 256.0 + depth[1] * 255.0 / (256.0 * 256.0) + depth[2] * 255.0 / (256.0 * 256.0 * 256.0);",
+        "}",
         "vec2 unpack(vec4 src){",
         "    return vec2(",
         "    src.x/255.0+src.y,",
@@ -411,13 +418,20 @@ function getShadowMapShaderGround()
         "float shadowed = 0.0;",
         "for(float y = -1.5; y<=1.5; y+=1.0){",
         "    for(float x = -1.5; x<=1.5; x+=1.0){",
+        "#if 0 ",
         "       vec2 moments = unpack(texture2D(Texture0, shadowCoord.xy+vec2(x,y)/vec2(510.0, 510.0)));",
         "        float p = float(z >= moments.x);",
         "        float variance = max(0.000015, moments.y - (moments.x*moments.x));",
-        "        float d = z - moments.x;",
+        "        float d = (z - moments.x) ;",
         "        float p_max = variance/(variance + d*d);",
         "        p_max = smoothstep(0.3, 1.0, p_max); ",
-        "        shadowed += max(p, p_max);",
+        "        //shadowed += max(p, p_max);",
+        "        shadowed += (d >= 0.01 ) ? (1.0) : (0.0);",
+        "#else",
+        "       float zz = unpack2(texture2D(Texture0, shadowCoord.xy+vec2(x,y)/vec2(510.0, 510.0)));",
+        "        float d = z - zz;",
+        "        shadowed += (d >= 0.01 ) ? (1.0) : (0.0);",
+        "#endif",
         "     }",
         " }",
         "shadowed = shadowed / 16.0;",
@@ -426,8 +440,8 @@ function getShadowMapShaderGround()
         "  //float depth = moments.x;",
         "  //float shadowed  = ((depth - z) > -0.0001) ? (0.0) : (1.0);",
 
-        "  gl_FragColor = vec4(0.0,0.0,0.0,shadowed);",
-        "  //float debug = unpackVec4ToFloat(texture2D(Texture0, uv0));",
+        "  gl_FragColor = vec4(1.0-shadowed,1.0-shadowed,1.0-shadowed,1.0);",
+        "  //debug = unpack2(texture2D(Texture0, uv0));",
         "  //z = unpackVec4ToFloat(texture2D(Texture0, uv0));",
         "  //debug = depth;",
         "  //gl_FragColor = vec4(debug,debug,debug,1);",
@@ -483,6 +497,10 @@ function createShadowMapScene()
     rtt.setName("rtt_camera");
     rttSize = [512,512];
     
+
+    var shadowedModel = new osg.Node();
+    shadowedModel.addChild(model);
+
     // important because we use linear zbuffer
     var near = 60.0;
     var far = 120.0;
@@ -521,8 +539,8 @@ function createShadowMapScene()
                                   20, 0 ,0,
                                   0, 20 ,0);
     q.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('ONE', 'ONE_MINUS_SRC_ALPHA'));
-    q.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
-    q.getOrCreateStateSet().setAttributeAndMode( getShadowMapShaderGround());
+    q.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    q.getOrCreateStateSet().setAttributeAndMode( getShadowMapShaderGround(), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
     q.getOrCreateStateSet().addUniform(projectionShadow);
     q.getOrCreateStateSet().addUniform(modelViewShadow);
     q.getOrCreateStateSet().addUniform(nearShadow);
@@ -530,8 +548,10 @@ function createShadowMapScene()
     light.setUpdateCallback(new LightUpdateCallbackShadowMap(projectionShadow,
                                                              modelViewShadow,
                                                              rtt));
+    shadowedModel.setStateSet(q.getOrCreateStateSet());
 
-    root.addChild(model);
+    //root.addChild(model);
+    root.addChild(shadowedModel);
     root.addChild(light);
     root.addChild(q);
 
@@ -542,7 +562,7 @@ function createScene() {
     var root = new osg.Camera();
     root.setComputeNearFar(false);
 
-    if (false) {
+    if (true) {
         var project = createProjectedShadowScene();
         project.setMatrix(osg.Matrix.makeTranslate(-10,0,0,[]));
         root.addChild(project);

@@ -2888,12 +2888,12 @@ osg.State.prototype = {
                 var colorAttrib = program.attributesCache.Color;
                 if (colorAttrib !== undefined) {
                     if (this.vertexAttribMap[colorAttrib]) {
-                        this.uniformArrayState["Color"].set([1]);
+                        this.uniformArrayState.Color.set([1]);
                     } else {
-                        this.uniformArrayState["Color"].set([0]);
+                        this.uniformArrayState.Color.set([0]);
                     }
                     this.previousColorAttrib = this.vertexAttribMap[colorAttrib];
-                    this.uniformArrayState["Color"].apply(program.uniformsCache["ArrayColorEnabled"]);
+                    this.uniformArrayState.Color.apply(program.uniformsCache.ArrayColorEnabled);
                 }
             }
         }
@@ -2937,7 +2937,7 @@ osg.StateAttribute = function() {
 };
 osg.StateAttribute.prototype = {
     isDirty: function() { return this._dirty; },
-    dirty: function() { this._dirty = true; },
+    dirty: function() { this._dirty = true; }
 };
 
 osg.StateAttribute.OFF = 0;
@@ -2966,8 +2966,9 @@ osg.StateSet.prototype = {
         }
     },
     getUniform: function (uniform) {
-        if (this.uniforms[uniform])
+        if (this.uniforms[uniform]) {
             return this.uniforms[uniform].object;
+        }
         return undefined;
     },
     setTextureAttributeAndMode: function (unit, attribute, mode) {
@@ -3368,6 +3369,13 @@ osg.Node.prototype = {
         }
     },
 
+    ascend: function (visitor) {
+        for (var i = 0, l = this.parents.length; i < l; i++) {
+            var parent = this.parents[i];
+            parent.accept(visitor);
+        }
+    },
+
     getBound: function() {
         if(!this.boundingSphereComputed) {
             this.computeBound(this.boundingSphere);
@@ -3399,7 +3407,19 @@ osg.Node.prototype = {
 	}
             
 	return bsphere;
+    },
+    getWorldMatrices: function(halt) {
+        var CollectParentPaths = function(halt) {
+            osg.NodeVisitor.call(this, osg.NodeVisitor.TRAVERSE_PARENTS);
+            this.halt = halt;
+            this.apply = function(node) {
+                if (node.getNumParents() === 0 || node = this.halt) {
+                    //this.nodePaths.push(
+                }
+            };
+        };
     }
+    
 
 };
 osg.Node.prototype.objectType = osg.objectType.generate("Node");
@@ -4510,10 +4530,22 @@ osg.Camera.prototype.objectType = osg.objectType.generate("Camera");
 
 
 
-osg.NodeVisitor = function () {
+osg.NodeVisitor = function (traversalMode) {
     this.traversalMask = ~0x0;
     this.nodeMaskOverride = 0;
+    this.traversalMode = traversalMode;
+    if (traversalMode === undefined) {
+        this.traversalMode = osg.NodeVisitor.TRAVERSE_ALL_CHILDREN;
+    }
 };
+//osg.NodeVisitor.TRAVERSE_NONE = 0;
+osg.NodeVisitor.TRAVERSE_PARENTS = 1;
+osg.NodeVisitor.TRAVERSE_ALL_CHILDREN = 2;
+//osg.NodeVisitor.TRAVERSE_ACTIVE_CHILDREN = 3;
+osg.NodeVisitor._traversalFunctions = {};
+osg.NodeVisitor._traversalFunctions[osg.NodeVisitor.TRAVERSE_PARENTS] = function(node) { node.ascend(this); };
+osg.NodeVisitor._traversalFunctions[osg.NodeVisitor.TRAVERSE_ALL_CHILDREN] = function(node) { node.traverse(this); };
+
 osg.NodeVisitor.prototype = {
     setTraversalMask: function(m) { this.traversalMask = m; },
     getTraversalMask: function() { return this.traversalMask; },
@@ -4524,16 +4556,9 @@ osg.NodeVisitor.prototype = {
     apply: function ( node ) {
         this.traverse(node);
     },
-
     traverse: function ( node ) {
-        if (node.traverse !== undefined) {
-            node.traverse(this);
-        }
+        osg.NodeVisitor._traversalFunctions[this.traversalMode].call(this, node);
     }
-};
-osg.NodeVisitor.create = function () {
-    var nv = new osg.NodeVisitor();
-    return nv;
 };
 
 
