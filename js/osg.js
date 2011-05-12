@@ -2852,7 +2852,7 @@ osg.State.prototype = {
         var keys = this.vertexAttribMap._keys;
         for (var i = 0, l = keys.length; i < l; i++) {
             var attr = keys[i];
-            if (this.vertexAttribMap[attr] !== undefined) {
+            if (this.vertexAttribMap[attr]) {
                 this.vertexAttribMap._disable[attr] = true;
             }
         }
@@ -2865,7 +2865,7 @@ osg.State.prototype = {
                 var attr = keys[i];
                 gl.disableVertexAttribArray(attr);
                 this.vertexAttribMap._disable[attr] = false;
-                this.vertexAttribMap[attr] = undefined;
+                this.vertexAttribMap[attr] = false;
             }
         }
 
@@ -2887,7 +2887,7 @@ osg.State.prototype = {
             if (updateColorUniform) {
                 var colorAttrib = program.attributesCache.Color;
                 if (colorAttrib !== undefined) {
-                    if (this.vertexAttribMap[colorAttrib] !== undefined) {
+                    if (this.vertexAttribMap[colorAttrib]) {
                         this.uniformArrayState["Color"].set([1]);
                     } else {
                         this.uniformArrayState["Color"].set([0]);
@@ -2911,9 +2911,12 @@ osg.State.prototype = {
 
             gl.bindBuffer(array.type, array.buffer);
 
-            if (this.vertexAttribMap[attrib] === undefined) {
+            if (! this.vertexAttribMap[attrib]) {
                 gl.enableVertexAttribArray(attrib);
-                this.vertexAttribMap._keys.push(attrib);
+                
+                if ( this.vertexAttribMap[attrib] === undefined) {
+                    this.vertexAttribMap._keys.push(attrib);
+                }
             }
 
             this.vertexAttribMap[attrib] = array;
