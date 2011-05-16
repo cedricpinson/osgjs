@@ -2457,6 +2457,7 @@ osg.State.prototype = {
         }
     },
     applyTextureAttribute: function(unit, attribute) {
+        gl.activeTexture(gl.TEXTURE0 + unit);
         var key = attribute.getTypeMember();
 
         if (!this.textureAttributeMapList[unit]) {
@@ -2489,8 +2490,9 @@ osg.State.prototype = {
         var program;
         if (this.attributeMap.Program !== undefined && this.attributeMap.Program.length !== 0) {
             program = this.attributeMap.Program.back().object;
-            if (program !== undefined) {
-                this.programs.push(this.getObjectPair(program, osg.StateAttribute.ON));
+            value = this.attributeMap.Program.back().value;
+            if (program !== undefined && value !== osg.StateAttribute.OFF) {
+                this.programs.push(this.getObjectPair(program, value));
                 return program;
             }
         }
@@ -2598,32 +2600,33 @@ osg.State.prototype = {
                 }
 
                 var textureAttributeKeysList = program.trackAttributes.textureAttributeKeys;
-                for (i = 0, l = textureAttributeKeysList.length; i < l; i++) {
-                    var tak = textureAttributeKeysList[i];
-                    if (tak === undefined) {
-                        continue;
-                    }
-                    for (var j = 0, m = tak.length; j < m; j++) {
-                        key = tak[j];
-                        var attributeList = this.textureAttributeMapList[i];
-                        if (attributeList === undefined) {
+                if (textureAttributeKeysList !== undefined) {
+                    for (i = 0, l = textureAttributeKeysList.length; i < l; i++) {
+                        var tak = textureAttributeKeysList[i];
+                        if (tak === undefined) {
                             continue;
                         }
-                        attributeStack = attributeList[key];
-                        if (attributeStack === undefined) {
-                            continue;
-                        }
-                        attribute = attributeStack.globalDefault;
-                        if (attribute.getOrCreateUniforms === undefined) {
-                            continue;
-                        }
-                        uniforms = attribute.getOrCreateUniforms(i);
-                        for (a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
-                            activeUniforms.push(uniforms[uniforms.uniformKeys[a] ]);
+                        for (var j = 0, m = tak.length; j < m; j++) {
+                            key = tak[j];
+                            var attributeList = this.textureAttributeMapList[i];
+                            if (attributeList === undefined) {
+                                continue;
+                            }
+                            attributeStack = attributeList[key];
+                            if (attributeStack === undefined) {
+                                continue;
+                            }
+                            attribute = attributeStack.globalDefault;
+                            if (attribute.getOrCreateUniforms === undefined) {
+                                continue;
+                            }
+                            uniforms = attribute.getOrCreateUniforms(i);
+                            for (a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
+                                activeUniforms.push(uniforms[uniforms.uniformKeys[a] ]);
+                            }
                         }
                     }
                 }
-
                 // now we have a list on uniforms we want to track but we will filter them to use only what is needed by our program
                 // not that if you create a uniforms whith the same name of a tracked attribute, and it will override it
                 var uniformsFinal = {};
@@ -3878,7 +3881,7 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                     } else {
                         var texture = this.attachments[i].texture;
                         // apply on unit 0 to init it
-                        state.applyTextureAttribute(1, texture);
+                        state.applyTextureAttribute(0, texture);
                         
                         gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, gl[texture.target], texture.textureObject, this.attachments[i].level);
                     }
