@@ -20,8 +20,11 @@
 
 var osgViewer = {};
 
-osgViewer.Viewer = function(canvas) {
-    gl = WebGLUtils.setupWebGL(canvas, {antialias : true} );
+osgViewer.Viewer = function(canvas, options) {
+    if (options === undefined) {
+        options = {antialias : true};
+    }
+    gl = WebGLUtils.setupWebGL(canvas, options );
     if (gl) {
         this.gl = gl;
         osg.init();

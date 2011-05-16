@@ -3,7 +3,7 @@
 <head>
 <style>
   body {
-  background: black;
+  background: rgb(76,76,76);
   overflow:hidden;
   padding:0;
   margin:0;
@@ -20,8 +20,10 @@
   }
 
   #explanation {
+  overflow:auto;
   position: absolute;
-  left: 70%;
+  left: 65%;
+  height: 100%;
   }
 
   code {
@@ -87,7 +89,7 @@ function() {
 
   var viewer;
 try {
-  viewer = new osgViewer.Viewer(canvas);
+  viewer = new osgViewer.Viewer(canvas, {antialias : true, alpha: false});
   viewer.init();
   viewer.setupManipulator();
   var rotate = new osg.MatrixTransform();
