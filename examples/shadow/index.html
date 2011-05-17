@@ -91,7 +91,7 @@ function() {
 try {
   viewer = new osgViewer.Viewer(canvas, {antialias : true, alpha: false});
   viewer.init();
-  viewer.setupManipulator(new osgGA.FirstPersonManipulator());
+  viewer.setupManipulator();
   //viewer.setupManipulator(new osgGA.FirstPersonManipulator());
   var rotate = new osg.MatrixTransform();
   rotate.addChild(createScene());
