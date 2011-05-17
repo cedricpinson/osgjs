@@ -172,6 +172,12 @@ test("osg.Quat.makeRotate", function() {
 });
 
 
+// test("osg.Quat.rotateVec3", function() {
+//     var q0 = osg.Quat.makeRotate(Math.PI, 1, 0, 0);
+//     var result = osg.Quat.rotateVec3(q0, [10, 0,0], []);
+//     near(result , [-10.0, 0, 0]);
+// });
+
 test("osg.Quat.mult", function() {
     var q0 = osg.Quat.makeRotate(Math.PI, 1, 0, 0);
     var q1 = osg.Quat.makeRotate(Math.PI/2, 0, 1, 0);

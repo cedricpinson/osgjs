@@ -1543,6 +1543,7 @@ osg.Quat = {
     },
 
     // we suppose to have unit quaternion
+    // multiply 2 quaternions
     mult: function(a, b, result) {
         if (result === undefined) {
             result = [];
@@ -1652,7 +1653,6 @@ osg.Quat = {
         r.tangent = [];
         return r;
     }
-
 };
 
 

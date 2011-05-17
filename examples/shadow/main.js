@@ -643,11 +643,15 @@ function getOgreShadowMapShader()
     "return depth[0] * 255.0 / 256.0 + depth[1] * 255.0 / (256.0 * 256.0) + depth[2] * 255.0 / (256.0 * 256.0 * 256.0);",
     "}",
     "",
+	"float getShadowedTerm(vec2 uv) {",
+    "   float d = shadowZ - unpack2(texture2D(Texture1, uv ));",
+    "   return (d >= 0.01 ) ? (1.0) : (0.0);",
+	"}",
     "float computeShadowTerm() {",
     "vec4 uv = shadowVertexProjected;",
     "vec2 shadowUV = (uv.xy/uv.w).xy;",
-    "float shadowed = 0.0;",
-
+        "float shadowed = 0.0;",
+	"#if 1", 
         "vec2 fetch[16];",
         "fetch[0] = shadowUV.xy + vec2(-1.5, -1.5)/vec2(510.0, 510.0);",
         "fetch[1] = shadowUV.xy + vec2(-0.5, -1.5)/vec2(510.0, 510.0);",
@@ -665,13 +669,34 @@ function getOgreShadowMapShader()
         "fetch[13] = shadowUV.xy + vec2(-0.5, 1.5)/vec2(510.0, 510.0);",
         "fetch[14] = shadowUV.xy + vec2(0.5, 1.5)/vec2(510.0, 510.0);",
         "fetch[15] = shadowUV.xy + vec2(1.5, 1.5)/vec2(510.0, 510.0);",
-        "for(int i = 0; i < 16; i++) {",
-        "   float zz = unpack2(texture2D(Texture1, fetch[i]));",
-        "   float d = shadowZ - zz;",
-        "   shadowed += (d >= 0.01 ) ? (1.0) : (0.0);",
-        " }",
-        "shadowed = shadowed / 16.0;",
-    "return shadowed;",
+        "#if 1 // inline",
+	"shadowed += getShadowedTerm(fetch[0]);",
+	"shadowed += getShadowedTerm(fetch[1]);",
+	"shadowed += getShadowedTerm(fetch[2]);",
+	"shadowed += getShadowedTerm(fetch[3]);",
+	"shadowed += getShadowedTerm(fetch[4]);",
+	"shadowed += getShadowedTerm(fetch[5]);",
+	"shadowed += getShadowedTerm(fetch[6]);",
+	"shadowed += getShadowedTerm(fetch[7]);",
+	"shadowed += getShadowedTerm(fetch[8]);",
+	"shadowed += getShadowedTerm(fetch[9]);",
+	"shadowed += getShadowedTerm(fetch[10]);",
+	"shadowed += getShadowedTerm(fetch[11]);",
+	"shadowed += getShadowedTerm(fetch[12]);",
+	"shadowed += getShadowedTerm(fetch[13]);",
+	"shadowed += getShadowedTerm(fetch[14]);",
+	"shadowed += getShadowedTerm(fetch[15]);",
+        "shadowed /= 16.0;",
+        "#else",
+        "for (int i = 0; i < 16; i++)",
+	"   shadowed += getShadowedTerm(fetch[i]);",
+        "#endif",
+	"#else",
+        "       // only one fetch to debug",
+	"       shadowed += getShadowedTerm(shadowUV.xy);",
+	"#endif",
+	
+        "return shadowed;",
     "}",
     "",
     "void main(void) {",
@@ -682,6 +707,7 @@ function getOgreShadowMapShader()
     "float dark = computeShadowTerm();",
     "fragColor.xyz *= 0.5 + (0.5* (1.0-dark));",
         "fragColor.w = dark;",
+	"//fragColor = vec4(unpack2(texture2D(Texture1, FragTexCoord0 )));",
     "gl_FragColor = fragColor;",
     "}",
     ].join('\n');
@@ -757,7 +783,7 @@ function createShadowMapScene()
     
 
     // important because we use linear zbuffer
-    var near = 80.0;
+    var near = 70.0;
     var far = 110.0;
 
     var nearShadow = new osg.Uniform.createFloat1(near, "nearShadow");
