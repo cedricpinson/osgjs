@@ -1883,20 +1883,15 @@ osg.Shader.prototype = {
         gl.shaderSource(this.shader, this.text);
         gl.compileShader(this.shader);
         if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS)) {
-            if (console !== undefined) {
-                console.log("can't compile shader:\n" + this.text + "\n");
-                var tmpText = "\n" + this.text;
-                var splittedText = tmpText.split("\n");
-                var newText = "\n";
-                for (var i = 0, l = splittedText.length; i < l; ++i ) {
-                    newText += i + " " + splittedText[i] + "\n";
-                }
-                console.log(newText);
-                console.log(gl.getShaderInfoLog(this.shader));
-                //debugger;
-            } else {
-                alert(gl.getShaderInfoLog(this.shader));
+            osg.log("can't compile shader:\n" + this.text + "\n");
+            var tmpText = "\n" + this.text;
+            var splittedText = tmpText.split("\n");
+            var newText = "\n";
+            for (var i = 0, l = splittedText.length; i < l; ++i ) {
+                newText += i + " " + splittedText[i] + "\n";
             }
+            osg.log(newText);
+            osg.log(gl.getShaderInfoLog(this.shader));
         }
     }
 };
@@ -1943,10 +1938,11 @@ osg.Program.prototype = {
             gl.attachShader(this.program, this.vertex.shader);
             gl.attachShader(this.program, this.fragment.shader);
             gl.linkProgram(this.program);
+            gl.validateProgram(this.program);
             if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-                osg.log("can't link program\n" + this.vertex.text + this.fragment.text);
-                osg.log(gl.getProgramInfo(this.program));
-                //debugger;
+                osg.log("can't link program\n" + "vertex shader:\n" + this.vertex.text +  "\n fragment shader:\n" + this.fragment.text);
+                osg.log(gl.getProgramInfoLog(this.program));
+                debugger;
                 return null;
             }
 
