@@ -420,10 +420,14 @@ osgViewer.Viewer.prototype = {
             if (jQuery(document).mousewheel !== undefined) {
                 jQuery(document).mousewheel(function(objEvent, intDelta, deltaX, deltaY) {
 	            if (intDelta > 0){
-                        manipulator.distanceDecrease();
+                        if (manipulator.distanceDecrease) {
+                            manipulator.distanceDecrease();
+                        }
 	            }
 	            else if (intDelta < 0){
-                        manipulator.distanceIncrease();
+                        if (manipulator.distanceIncrease) {
+                            manipulator.distanceIncrease();
+                        }
 	            }
                     return false;
 	        });
