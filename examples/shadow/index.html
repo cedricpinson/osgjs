@@ -25,6 +25,8 @@
   left: 70%;
   height: 100%;
   }
+  
+  #explanation:focus { outline: none; }
 
   code {
     font-size: 10px;
@@ -100,6 +102,10 @@ try {
   viewer.getManipulator().computeHomePosition();
   viewer.run();
 
+  jQuery("#explanation").bind( { mousedown: function(ev) {
+     ev.stopPropagation();
+  },
+});
 } catch (er) {
   osg.log("exception in osgViewer " + er);
 }
