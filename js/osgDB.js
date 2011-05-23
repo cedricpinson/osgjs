@@ -62,9 +62,8 @@ osgDB.parseSceneGraph = function (node)
             var textures = node.stateset.textures;
             for (var t = 0, tl = textures.length; t < tl; t++) {
                 if (!textures[t].file) {
-                    if (console !== undefined) {
-                        console.log("no 'file' field for texture " + textures[t]);
-                    }
+                    osg.log("no texture on unit " + t + " skip it")
+                    //osg.log(textures[t]);
                     continue;
                 }
                 var tex = new osg.Texture();

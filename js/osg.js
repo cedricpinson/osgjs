@@ -118,6 +118,13 @@ osg.Matrix = {
         return matrix;
     },
 
+    /**
+     * @param {Number} x position
+     * @param {Number} y position
+     * @param {Number} z position
+     * @param {Array} matrix to write result
+     * @type {Array} return result matrix the same as above
+     */
     makeTranslate: function(x, y, z, matrix) {
         if (matrix === undefined) {
             matrix = [];
@@ -1254,6 +1261,10 @@ osg.Vec3 = {
             result[0] = a[0] * inv;
             result[1] = a[1] * inv;
             result[2] = a[2] * inv;
+        } else {
+            result[0] = a[0];
+            result[1] = a[1];
+            result[2] = a[2];
         }
         return result;
     },
@@ -3644,19 +3655,6 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         return false;
     },
 
-    compile: function() {
-        var image = this.image;
-        if (image && image.complete) {
-            if (typeof image.naturalWidth !== "undefined" &&  image.naturalWidth === 0) {
-                return;
-            }
-            //gl.texImage2D(gl.TEXTURE_2D, 0, this.image, true);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            this.applyFilterParameter();
-            this._dirty = false;
-        }
-    },
-
     applyFilterParameter: function() {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl[this.mag_filter]);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl[this.min_filter]);
@@ -3951,6 +3949,14 @@ osg.Material = function () {
     this._dirty = true;
 };
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+    /** @lends Material */
+
+    /** setAmbient */
+    setAmbient: function(a) { this.ambient = a; this._dirty = true; },
+    /** setSpecular */
+    setSpecular: function(a) { this.specular = a; this._dirty = true; },
+    /** setDiffuse */
+    setDiffuse: function(a) { this.diffuse = a; this._dirty = true; },
     attributeType: "Material",
     cloneType: function() {return new osg.Material(); },
     getType: function() { return this.attributeType;},
@@ -5643,6 +5649,11 @@ osg.ParseSceneGraph = function (node) {
     return osgDB.parseSceneGraph(node);
 };
 
+
+/**
+ * Create a Textured Box on the given center with given size
+ * @name osg.createTexturedBox
+ */
 osg.createTexturedBox = function(centerx, centery, centerz,
                                  sizex, sizey, sizez) {
 
@@ -5933,6 +5944,7 @@ osg.createTexturedBox = function(centerx, centery, centerz,
     g.getPrimitives().push(primitive);
     return g;
 };
+
 
 osg.createTexturedQuad = function(cornerx, cornery, cornerz,
                                   wx, wy, wz,

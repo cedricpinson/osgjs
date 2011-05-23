@@ -14,7 +14,7 @@
  * License
  *
  * Authors:
- *  Cedric Pinson <cedric.pinson@plopbyte.net>
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
  *
  */
 
@@ -70,6 +70,8 @@ osgGA.OrbitManipulator.prototype = {
             return false;
         }
     },
+    keyup: function(ev) {
+    },
     mouseup: function(ev) {
         this.dragging = false;
         this.panning = false;
@@ -82,6 +84,7 @@ osgGA.OrbitManipulator.prototype = {
         this.clientX = pos[0];
         this.clientY = pos[1];
         this.pushButton(ev);
+        ev.preventDefault();
     },
     mousemove: function(ev) {
         if (this.buttonup === true) {

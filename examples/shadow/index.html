@@ -89,7 +89,7 @@ function() {
 
   var viewer;
 try {
-  viewer = new osgViewer.Viewer(canvas, {antialias : true, alpha: false});
+  viewer = new osgViewer.Viewer(canvas, {antialias : true, alpha: false });
   viewer.init();
   viewer.setupManipulator();
   //viewer.setupManipulator(new osgGA.FirstPersonManipulator());
@@ -99,6 +99,7 @@ try {
   viewer.setScene(rotate);
   viewer.getManipulator().computeHomePosition();
   viewer.run();
+
 } catch (er) {
   osg.log("exception in osgViewer " + er);
 }
@@ -114,7 +115,7 @@ try {
   <div id="ViewContainer">
   <canvas id="3DView"></canvas>
   </div>
-  <div id="explanation">
+  <div id="explanation" tabIndex="0" >
     <h1>Shadow example with <a href="http://osgjs.org">osgjs</a></h1>
     This sample demonstrate how to do different type of shadow with osgjs. The model used for this example comes from <a href="http://www.ogre3d.org"> Ogre project</a>
 

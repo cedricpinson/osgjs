@@ -14,7 +14,7 @@
  * License
  *
  * Authors:
- *  Cedric Pinson <cedric.pinson@plopbyte.net>
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
  *
  */
 
@@ -24,6 +24,7 @@ osgViewer.Viewer = function(canvas, options) {
     if (options === undefined) {
         options = {antialias : true};
     }
+
     gl = WebGLUtils.setupWebGL(canvas, options );
     if (gl) {
         this.gl = gl;
@@ -33,6 +34,13 @@ osgViewer.Viewer = function(canvas, options) {
         osgUtil.UpdateVisitor = osg.UpdateVisitor;
         osgUtil.CullVisitor = osg.CullVisitor;
         this.urlOptions = true;
+
+        this.mouseWheelEventNode = canvas;
+        this.eventNode = document;
+        if (options && options.mouseWheelEventNode) {
+            this.mouseWheelEventNode = options.mouseWheelEventNode;
+        }
+
     } else {
         throw "No WebGL implementation found";
     }
@@ -390,11 +398,11 @@ osgViewer.Viewer.prototype = {
                 return Viewer.getManipulator().touchMove(ev);
             };
 
-            document.addEventListener("MozTouchDown", touchDown, false);
-            document.addEventListener("MozTouchUp", touchUp, false);
-            document.addEventListener("MozTouchMove", touchMove, false);
+            this.canvas.addEventListener("MozTouchDown", touchDown, false);
+            this.canvas.addEventListener("MozTouchUp", touchUp, false);
+            this.canvas.addEventListener("MozTouchMove", touchMove, false);
 
-            jQuery(this.canvas).bind( {
+            jQuery(this.eventNode).bind( {
                 mousedown: function(ev) {
                     if (disableMouse === false) {
                         return manipulator.mousedown(ev);
@@ -418,7 +426,7 @@ osgViewer.Viewer.prototype = {
             });
 
             if (jQuery(document).mousewheel !== undefined) {
-                jQuery(document).mousewheel(function(objEvent, intDelta, deltaX, deltaY) {
+                jQuery(this.canvas).mousewheel(function(objEvent, intDelta, deltaX, deltaY) {
 	            if (intDelta > 0){
                         if (manipulator.distanceDecrease) {
                             manipulator.distanceDecrease();
@@ -434,8 +442,13 @@ osgViewer.Viewer.prototype = {
             }
             
             if (manipulator.keydown !== undefined) {
-                jQuery(document).bind({'keydown': function(event) {
+                jQuery(this.eventNode).bind({'keydown': function(event) {
                     return manipulator.keydown(event);
+                }});
+            }
+            if (manipulator.keyup !== undefined) {
+                jQuery(this.eventNode).bind({'keyup': function(event) {
+                    return manipulator.keyup(event);
                 }});
             }
         }
