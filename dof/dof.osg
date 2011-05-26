@@ -1,0 +1,72 @@
+Group {
+  name "db"
+  nodeMask 0xffffffff
+  cullingActive TRUE
+  num_children 1
+  osgSim::DOFTransform {
+    name "d1"
+    nodeMask 0xffffffff
+    cullingActive TRUE
+    referenceFrame RELATIVE
+    PutMatrix {
+      1 0 0 0
+      0 1 0 0
+      0 0 1 0
+      -0 -0 -0 1
+      }
+    minHPR             -0.20944 0 0
+    maxHPR             0.872665 0 0
+    incrementHPR       0 0 0
+    currentHPR         0.785398 0 0
+    minTranslate       1.5 0 0
+    maxTranslate       5 0 0
+    incrementTranslate 0 0 0
+    currentTranslate   3.8 0 0
+    minScale           0.5 0 0
+    maxScale           2 1 1
+    incrementScale     0 0 0
+    currentScale       1.2 1 1
+    multOrder          PRH
+    limitationFlags    0x86000000
+    animationOn        FALSE
+    num_children 1
+    Geode {
+      DataVariance STATIC
+      name "p2"
+      nodeMask 0xffffffff
+      cullingActive TRUE
+      StateSet {
+        DataVariance STATIC
+        rendering_hint DEFAULT_BIN
+        renderBinMode INHERIT
+        GL_CULL_FACE ON
+        GL_LIGHTING OFF
+        CullFace {
+          UniqueID CullFace_0
+          mode BACK
+        }
+      }
+      num_drawables 1
+      Geometry {
+        DataVariance STATIC
+        useDisplayList TRUE
+        useVertexBufferObjects FALSE
+        PrimitiveSets 1
+        {
+          DrawArrays TRIANGLES 0 3
+        }
+        VertexArray Vec3Array 3
+        {
+          -10 0 0
+          10 0 0
+          0 10 0
+        }
+        ColorBinding OVERALL
+        ColorArray Vec4Array 1
+        {
+          1 1 1 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "children": [ {
+      "children": [ {
+          "children": [ {
+              "children": [ {
+                  "attributes": {
+                    "Color": {
+                      "elements": [ 1, 1, 1, 1 ], 
+                      "itemSize": 4, 
+                      "type": "ARRAY_BUFFER"
+                    }, 
+                    "Vertex": {
+                      "elements": [ -10, 0, 0, 10, 0, 0, 0, 10, 0 ], 
+                      "itemSize": 3, 
+                      "type": "ARRAY_BUFFER"
+                    }
+                  }, 
+                  "name": "", 
+                  "primitives": [ {
+                      "count": 3, 
+                      "first": 0, 
+                      "mode": "TRIANGLES"
+                    }
+                  ]
+                }
+              ], 
+              "name": "p2"
+            }
+          ], 
+          "name": "d1"
+        }
+      ], 
+      "name": "db"
+    }
+  ]
+}
