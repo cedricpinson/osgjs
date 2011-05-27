@@ -103,7 +103,7 @@ test("osg.BoundingSphere", function() {
         ok(bb_test_ok , "Expanding by BoundingBox ->  bounding box test");
 
 
-        var o = osg.ParseSceneGraph(getBoxScene());
+        var o = osgDB.parseSceneGraph(getBoxScene());
         o.getBound();
         var bb_test_scene_graph_test = ( check_near(o.boundingSphere.radius(),2.41421,0.00001) );
         ok(bb_test_scene_graph_test , "Box.js tested  ->  bounding sphere scene graph test");

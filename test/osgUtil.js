@@ -47,7 +47,7 @@ test("osgUtil_IntersectVisitorScene", function() {
     view.setViewport(new osg.Viewport());
     view.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]));
     view.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0));
-    var quad = osg.ParseSceneGraph(Scene);
+    var quad = osgDB.parseSceneGraph(Scene);
     view.addChild(quad);
 
     var result = view.computeIntersections(400,300);

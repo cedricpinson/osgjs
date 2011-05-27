@@ -1,0 +1,124 @@
+<html>
+
+<head>
+<style>
+    body {
+ 	background: black;
+	overflow:hidden;
+	padding:0;
+	margin:0;
+	}
+
+    #viewContainer {
+    position: absolute;
+    }
+  
+</style>
+<title>Camera</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="../../build/osg.js"></script>
+
+<script type="text/javascript">
+
+function createScene() {
+
+
+    var canvas = document.getElementById("3DView");
+    var rtt = new osg.Camera();
+    rtt.setName("rtt_camera");
+    rttSize = [512,512];
+//    rttSize = [1920,1200];
+    rtt.setProjectionMatrix(osg.Matrix.makeOrtho(0, rttSize[0], 0, rttSize[1], -5, 5));
+    rtt.setRenderOrder(osg.Camera.PRE_RENDER, 0);
+    rtt.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+    rtt.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
+    var rq = osg.createTexturedQuad(0,0,0,
+                                  rttSize[0], 0 ,0,
+                                  0, rttSize[1],0);
+    rq.getOrCreateStateSet().setTextureAttributeAndMode(0, osg.Texture.create("textures/sol_trauma_periph.png"));
+    var rttTexture = new osg.Texture();
+    rttTexture.setTextureSize(rttSize[0],rttSize[1]);
+    rttTexture.setMinFilter('LINEAR');
+    rttTexture.setMagFilter('LINEAR');
+    rtt.attachTexture(gl.COLOR_ATTACHMENT0, rttTexture, 0);
+    rtt.addChild(rq);
+
+
+
+    var q = osg.createTexturedQuad(-25,-25,0,
+                                  50, 0 ,0,
+                                  0, 50 ,0);
+    //rttTexture = osg.Texture.create("textures/sol_trauma_periph.png");
+    q.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
+
+    var mainNode = new osg.Node();
+    mainNode.light = new osg.Light();
+    var stateset = mainNode.getOrCreateStateSet();
+    stateset.setAttributeAndMode(new osg.Material());
+    mainNode.addChild(q);
+
+    var camera = new osg.Camera();
+
+    camera.setProjectionMatrix(osg.Matrix.makeOrtho(0, canvas.width, 0, canvas.height, -5, 5));
+    camera.setViewMatrix(osg.Matrix.makeTranslate(25,25,0));
+    camera.setRenderOrder(osg.Camera.NESTED_RENDER, 0);
+    camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+
+    camera.addChild(q);
+    mainNode.addChild(camera);
+
+    mainNode.addChild(rtt);
+
+    return mainNode;
+}
+
+function getWindowSize() {
+    var myWidth = 0, myHeight = 0;
+    
+    if( typeof( window.innerWidth ) == 'number' ) {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+    } else if( document.documentElement && ( document.documentElement.clientWidth || document.documentElement.clientHeight ) ) {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+    } else if( document.body && ( document.body.clientWidth || document.body.clientHeight ) ) {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+    }
+    return { 'w': myWidth, 'h': myHeight };
+//    window.alert( 'Width = ' + myWidth );
+//    window.alert( 'Height = ' + myHeight );
+}
+
+window.addEventListener("load",
+function() {
+
+    var size = getWindowSize();
+    var canvas = document.getElementById("3DView");
+    canvas.style.width = size.w;
+    canvas.style.height = size.h;
+    canvas.width = size.w;
+    canvas.height = size.h;
+
+  var viewer = new osgViewer.Viewer(document.getElementById("3DView"));
+  viewer.init();
+  viewer.setupManipulator();
+  viewer.setScene(createScene());
+  viewer.run();
+}
+,true);
+
+</script>
+</head>
+
+<body>
+  <div id="viewContainer">
+  <canvas id="3DView"></canvas>
+  </div>
+
+</body>
+</html>
