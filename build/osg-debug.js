@@ -1,4 +1,4 @@
-// osg-debug-0.0.4.js commit 3097cb4f79165e0b7ca6cbb280d266b561bcc8b7 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.4.js commit 6917a3bff5e6e8561e94f880d78548603833c4c5 - http://github.com/cedricpinson/osgjs
 var osg = {};
 
 osg.version = '0.0.4';
@@ -8,8 +8,6 @@ osg.version = 0;
 osg.log = function(str) {
     if (window.console !== undefined) {
         window.console.log(str);
-    } else {
-        jQuery("#debug").append(str + "<br>");
     }
 };
 osg.reportErrorGL = false;

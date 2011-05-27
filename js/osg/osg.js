@@ -7,8 +7,6 @@ osg.version = 0;
 osg.log = function(str) {
     if (window.console !== undefined) {
         window.console.log(str);
-    } else {
-        jQuery("#debug").append(str + "<br>");
     }
 };
 osg.reportErrorGL = false;
