@@ -1,4 +1,4 @@
-// osg-debug-0.0.4.js commit 6917a3bff5e6e8561e94f880d78548603833c4c5 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.4.js commit 6b23edda6bc0d8cae65b5c90152dfe2ab08a5043 - http://github.com/cedricpinson/osgjs
 var osg = {};
 
 osg.version = '0.0.4';
@@ -150,49 +150,125 @@ osg.Float32Array = Float32Array;
 osg.Int32Array = Int32Array;
 osg.Uint16Array = Uint16Array;
 
-osg.Vec3 = {
-    copy: function(src, res) {
-        if (res === undefined) {
-            res = [];
-        }
-        res[0] = src[0];
-        res[1] = src[1];
-        res[2] = src[2];
-        return res;
+
+/** @class Vec2 Operations */
+osg.Vec2 = {
+    copy: function(a, r) {
+        r[0] = a[0];
+        r[1] = a[1];
+        return r;
     },
 
-    cross: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
-
-        result[0] = a[1]*b[2]-a[2]*b[1];
-        result[1] = a[2]*b[0]-a[0]*b[2];
-        result[2] = a[0]*b[1]-a[1]*b[0];
-        return result;
-    },
-
-    valid: function(vec) {
-        if (isNaN(vec[0])) {
+    valid: function(a) {
+        if (isNaN(a[0])) {
             return false;
         }
-        if (isNaN(vec[1])) {
-            return false;
-        }
-        if (isNaN(vec[2])) {
+        if (isNaN(a[1])) {
             return false;
         }
         return true;
     },
 
-    mult: function(vec, a, result) {
-        if (result === undefined) {
-            result = [];
+    mult: function(a, b, r) {
+        r[0] = a[0] * b;
+        r[1] = a[1] * b;
+        return r;
+    },
+
+    length2: function(a) {
+        return a[0]*a[0] + a[1]*a[1];
+    },
+
+    length: function(a) {
+        return Math.sqrt( a[0]*a[0] + a[1]* a[1]);
+    },
+
+    /** 
+        normalize an Array of 2 elements and write it in r
+     */
+    normalize: function(a, r) {
+        var norm = this.length2(a);
+        if (norm > 0.0) {
+            var inv = 1.0/Math.sqrt(norm);
+            r[0] = a[0] * inv;
+            r[1] = a[1] * inv;
+        } else {
+            r[0] = a[0];
+            r[1] = a[1];
         }
-        result[0] = vec[0] * a;
-        result[1] = vec[1] * a;
-        result[2] = vec[2] * a;
-        return result;
+        return r;
+    },
+
+    /** 
+        Compute the dot product 
+    */
+    dot: function(a, b) {
+        return a[0]*b[0]+a[1]*b[1];
+    },
+
+    /**
+       Compute a - b and put the result in r
+     */
+    sub: function(a, b, r) {
+        r[0] = a[0]-b[0];
+        r[1] = a[1]-b[1];
+        return r;
+    },
+
+    add: function(a, b, r) {
+        r[0] = a[0]+b[0];
+        r[1] = a[1]+b[1];
+        return r;
+    },
+
+    neg: function(a, r) {
+        r[0] = -a[0];
+        r[1] = -a[1];
+        return r;
+    },
+
+    lerp: function(t, a, b, r) {
+        var tmp = 1.0-t;
+        r[0] = a[0]*tmp + t*b[0];
+        r[1] = a[1]*tmp + t*b[1];
+        return r;
+    }
+
+};
+/** @class Vec3 Operations */
+osg.Vec3 = {
+    copy: function(a, r) {
+        r[0] = a[0];
+        r[1] = a[1];
+        r[2] = a[2];
+        return r;
+    },
+
+    cross: function(a, b, r) {
+        r[0] = a[1]*b[2]-a[2]*b[1];
+        r[1] = a[2]*b[0]-a[0]*b[2];
+        r[2] = a[0]*b[1]-a[1]*b[0];
+        return r;
+    },
+
+    valid: function(a) {
+        if (isNaN(a[0])) {
+            return false;
+        }
+        if (isNaN(a[1])) {
+            return false;
+        }
+        if (isNaN(a[2])) {
+            return false;
+        }
+        return true;
+    },
+
+    mult: function(a, b, r) {
+        r[0] = a[0] * b;
+        r[1] = a[1] * b;
+        r[2] = a[2] * b;
+        return r;
     },
 
     length2: function(a) {
@@ -203,23 +279,19 @@ osg.Vec3 = {
         return Math.sqrt( a[0]*a[0] + a[1]* a[1] + a[2]*a[2] );
     },
 
-    normalize: function(a, result) {
-        if (result === undefined) {
-            result = [];
-        }
-
+    normalize: function(a, r) {
         var norm = this.length2(a);
         if (norm > 0.0) {
             var inv = 1.0/Math.sqrt(norm);
-            result[0] = a[0] * inv;
-            result[1] = a[1] * inv;
-            result[2] = a[2] * inv;
+            r[0] = a[0] * inv;
+            r[1] = a[1] * inv;
+            r[2] = a[2] * inv;
         } else {
-            result[0] = a[0];
-            result[1] = a[1];
-            result[2] = a[2];
+            r[0] = a[0];
+            r[1] = a[1];
+            r[2] = a[2];
         }
-        return result;
+        return r;
     },
 
     dot: function(a, b) {
@@ -227,9 +299,6 @@ osg.Vec3 = {
     },
 
     sub: function(a, b, r) {
-        if (r === undefined) {
-            r = [];
-        }
         r[0] = a[0]-b[0];
         r[1] = a[1]-b[1];
         r[2] = a[2]-b[2];
@@ -237,9 +306,6 @@ osg.Vec3 = {
     },
 
     add: function(a, b, r) {
-        if (r === undefined) {
-            r = [];
-        }
         r[0] = a[0]+b[0];
         r[1] = a[1]+b[1];
         r[2] = a[2]+b[2];
@@ -247,9 +313,6 @@ osg.Vec3 = {
     },
 
     neg: function(a, r) {
-        if (r === undefined) {
-            r = [];
-        }
         r[0] = -a[0];
         r[1] = -a[1];
         r[2] = -a[2];
@@ -257,9 +320,6 @@ osg.Vec3 = {
     },
 
     lerp: function(t, a, b, r) {
-        if (r === undefined) {
-            r = [];
-        }
         var tmp = 1.0-t;
         r[0] = a[0]*tmp + t*b[0];
         r[1] = a[1]*tmp + t*b[1];
@@ -270,27 +330,23 @@ osg.Vec3 = {
 };
 
 
+
+/** @class Vec4 Operations */
 osg.Vec4 = {
 
     dot: function(a, b) {
         return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
     },
 
-    copy: function(src, res) {
-        if (res === undefined) {
-            res = [];
-        }
-        res[0] = src[0];
-        res[1] = src[1];
-        res[2] = src[2];
-        res[3] = src[3];
-        return res;
+    copy: function(a, r) {
+        r[0] = a[0];
+        r[1] = a[1];
+        r[2] = a[2];
+        r[3] = a[3];
+        return r;
     },
 
     sub: function(a, b, r) {
-        if (r === undefined) {
-            r = [];
-        }
         r[0] = a[0] - b[0];
         r[1] = a[1] - b[1];
         r[2] = a[2] - b[2];
@@ -298,21 +354,15 @@ osg.Vec4 = {
         return r;
     },
 
-    mult: function(vec, a, result) {
-        if (result === undefined) {
-            result = [];
-        }
-        result[0] = vec[0] * a;
-        result[1] = vec[1] * a;
-        result[2] = vec[2] * a;
-        result[3] = vec[3] * a;
-        return result;
+    mult: function(a, b, result) {
+        r[0] = a[0] * b;
+        r[1] = a[1] * b;
+        r[2] = a[2] * b;
+        r[3] = a[3] * b;
+        return r;
     },
 
     add: function(a, b, r) {
-        if (r === undefined) {
-            r = [];
-        }
         r[0] = a[0] + b[0];
         r[1] = a[1] + b[1];
         r[2] = a[2] + b[2];
@@ -321,9 +371,6 @@ osg.Vec4 = {
     },
 
     neg: function(a, r) {
-        if (r === undefined) {
-            r = [];
-        }
         r[0] = -a[0];
         r[1] = -a[1];
         r[2] = -a[2];
@@ -332,9 +379,6 @@ osg.Vec4 = {
     },
 
     lerp: function(t, a, b, r) {
-        if (r === undefined) {
-            r = [];
-        }
         var tmp = 1.0-t;
         r[0] = a[0]*tmp + t*b[0];
         r[1] = a[1]*tmp + t*b[1];
@@ -344,6 +388,8 @@ osg.Vec4 = {
     }
 };
 
+
+/** @class Matrix Operations */
 osg.Matrix = {
     setRow: function(matrix, row, v0, v1, v2, v3) {
         var rowIndex = row*4;
@@ -682,13 +728,13 @@ osg.Matrix = {
             result = [];
         }
 
-        var f = osg.Vec3.sub(center, eye);
+        var f = osg.Vec3.sub(center, eye, []);
         osg.Vec3.normalize(f, f);
 
-        var s = osg.Vec3.cross(f, up);
+        var s = osg.Vec3.cross(f, up, []);
         osg.Vec3.normalize(s, s);
 
-        var u = osg.Vec3.cross(s, f);
+        var u = osg.Vec3.cross(s, f, []);
         osg.Vec3.normalize(u, u);
 
         // s[0], u[0], -f[0], 0.0,
@@ -701,7 +747,7 @@ osg.Matrix = {
         result[8]=s[2]; result[9]=u[2]; result[10]=-f[2];result[11]=0.0;
         result[12]=  0; result[13]=  0; result[14]=  0;  result[15]=1.0;
 
-        osg.Matrix.multTranslate(result, osg.Vec3.neg(eye), result);
+        osg.Matrix.multTranslate(result, osg.Vec3.neg(eye, []), result);
         return result;
     },
     makeOrtho: function(left, right,
@@ -728,12 +774,12 @@ osg.Matrix = {
         if (distance === undefined) {
             distance = 1.0;
         }
-        var inv = osg.Matrix.inverse(matrix);
+        var inv = osg.Matrix.inverse(matrix, []);
         osg.Matrix.transformVec3(inv, [0,0,0], eye);
         osg.Matrix.transform3x3(matrix, [0,1,0], up);
         osg.Matrix.transform3x3(matrix, [0,0,-1], center);
         osg.Vec3.normalize(center, center);
-        osg.Vec3.add(osg.Vec3.mult(center, distance), eye, center);
+        osg.Vec3.add(osg.Vec3.mult(center, distance, [] ), eye, center);
     },
 
     //getRotate_David_Spillings_Mk1
@@ -1569,6 +1615,10 @@ osg.Uniform.createMatrix4 = function(mat4, name) {
     uniform.name = name;
     return uniform;
 };
+/** 
+ *  Node that can contains child node
+ *  @class
+ */
 osg.Node = function () {
     this.children = [];
     this.parents = [];
@@ -1576,7 +1626,13 @@ osg.Node = function () {
     this.boundingSphere = new osg.BoundingSphere();
     this.boundingSphereComputed = false;
 };
+
+/** @lends osg.Node.prototype */
 osg.Node.prototype = {
+    /**
+        Return StateSet and create it if it does not exist yet
+        @type osg.StateSet
+     */
     getOrCreateStateSet: function() {
         if (this.stateset === undefined) {
             this.stateset = new osg.StateSet();
@@ -1602,7 +1658,33 @@ osg.Node.prototype = {
     setNodeMask: function(mask) { this.nodeMask = mask; },
     getNodeMask: function(mask) { return this.nodeMask; },
     setStateSet: function(s) { this.stateset = s; },
+
+    /**
+       <p>
+        Set update node callback, called during update traversal.
+        The Object must have the following method
+        update(node, nodeVisitor) {}
+        note, callback is responsible for scenegraph traversal so
+        they must call traverse(node,nv) to ensure that the
+        scene graph subtree (and associated callbacks) are traversed.
+        </p>
+        <p>
+        Here a dummy UpdateCallback example
+        </p>
+        @example
+        var DummyUpdateCallback = function() {};
+        DummyUpdateCallback.prototype = {
+            update: function(node, nodeVisitor) {
+                node.traverse(nodeVisitor);
+            }
+        };
+
+        @param Oject callback
+     */
     setUpdateCallback: function(cb) { this.updateCallback = cb; },
+    /** Get update node callback, called during update traversal.
+        @type Oject
+     */
     getUpdateCallback: function() { return this.updateCallback; },
     setName: function(name) { this.name = name; },
     getName: function() { return this.name; },
@@ -1798,27 +1880,33 @@ osg.Transform.prototype = osg.objectInehrit(osg.Node.prototype, {
         var matrix = osg.Matrix.makeIdentity();
         this.computeLocalToWorldMatrix(matrix);
 
-        var xdash = osg.Vec3.copy(bsphere._center);
+        var xdash = osg.Vec3.copy(bsphere._center, []);
         xdash[0] += bsphere._radius;
-        osg.Matrix.transformVec3(matrix,xdash, xdash);
+        osg.Matrix.transformVec3(matrix, xdash, xdash);
 
-        var ydash = osg.Vec3.copy(bsphere._center);
+        var ydash = osg.Vec3.copy(bsphere._center, []);
         ydash[1] += bsphere._radius;
-        osg.Matrix.transformVec3(matrix,ydash, ydash);
+        osg.Matrix.transformVec3(matrix, ydash, ydash);
 
-        var zdash = osg.Vec3.copy(bsphere._center);
+        var zdash = osg.Vec3.copy(bsphere._center, []);
         zdash[2] += bsphere._radius;
-        osg.Matrix.transformVec3(matrix,zdash, zdash);
+        osg.Matrix.transformVec3(matrix, zdash, zdash);
 
         osg.Matrix.transformVec3(matrix, bsphere._center, bsphere._center);
 
-        osg.Vec3.sub(xdash,bsphere._center, xdash);
+        osg.Vec3.sub(xdash,
+                     bsphere._center, 
+                     xdash);
         var len_xdash = osg.Vec3.length(xdash);
 
-        osg.Vec3.sub(ydash, bsphere._center, ydash);
+        osg.Vec3.sub(ydash, 
+                     bsphere._center, 
+                     ydash);
         var len_ydash = osg.Vec3.length(ydash);
 
-        osg.Vec3.sub(zdash, bsphere._center, zdash);
+        osg.Vec3.sub(zdash, 
+                     bsphere._center, 
+                     zdash);
         var len_zdash = osg.Vec3.length(zdash);
 
         bsphere._radius = len_xdash;
@@ -1858,6 +1946,10 @@ osg.computeLocalToWorld = function (nodePath, ignoreCameras) {
     }
     return matrix;
 };
+/** 
+ *  Manage Blending mode
+ *  @class
+ */
 osg.BlendFunc = function (source, destination) {
     osg.StateAttribute.call(this);
     this.sourceFactor = 'ONE';
@@ -1869,11 +1961,31 @@ osg.BlendFunc = function (source, destination) {
         this.destinationFactor = destination;
     }
 };
+/** @lends osg.BlendFunc.prototype */
 osg.BlendFunc.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+    /** 
+        StateAttribute type of BlendFunc
+        @type String
+     */
     attributeType: "BlendFunc",
+    /** 
+        Create an instance of this StateAttribute
+        @returns an instance of osg.BlendFunc object
+        @type osg.BlendFunc
+    */ 
     cloneType: function() {return new osg.BlendFunc(); },
+    /** 
+        @type String
+    */ 
     getType: function() { return this.attributeType;},
+    /** 
+        @type String
+    */ 
     getTypeMember: function() { return this.attributeType;},
+    /** 
+        Apply the mode, must be called in the draw traversal
+        @param state
+    */
     apply: function(state) { 
         gl.blendFunc(gl[this.sourceFactor], gl[this.destinationFactor]); 
     }
@@ -1925,14 +2037,18 @@ osg.BoundingBox.prototype = {
     },
 
     center: function() {
-	return osg.Vec3.mult(osg.Vec3.add(this._min,this._max),0.5);
+	return osg.Vec3.mult(osg.Vec3.add(this._min,
+                                          this._max, 
+                                          []),
+                             0.5,
+                            []);
     },
     radius: function() {
 	return Math.sqrt(this.radius2());
     },
 
     radius2: function() {
-	return 0.25*(osg.Vec3.length2(osg.Vec3.sub(this._max,this._min)));
+	return 0.25*(osg.Vec3.length2(osg.Vec3.sub(this._max,this._min, [])));
     },
     corner: function(pos) {
         ret = [0.0,0.0,0.0];
@@ -1993,7 +2109,7 @@ osg.BoundingSphere.prototype = {
                 // this code is not valid c is defined after the loop
                 // FIXME
 		for (var i = 0 ; i < 8; i++) {
-                    var v = osg.Vec3.sub(bb.corner(c),this._center); // get the direction vector from corner
+                    var v = osg.Vec3.sub(bb.corner(c),this._center, []); // get the direction vector from corner
                     osg.Vec3.normalize(v,v); // normalise it.
                     nv[0] *= -this._radius; // move the vector in the opposite direction distance radius.
                     nv[1] *= -this._radius; // move the vector in the opposite direction distance radius.
@@ -2029,7 +2145,7 @@ osg.BoundingSphere.prototype = {
     expandByVec3: function(v){
 	if ( this.valid())
 	{
-	    var dv = osg.Vec3.sub(v,this.center());
+	    var dv = osg.Vec3.sub(v,this.center(), []);
 	    r = osg.Vec3.length(dv);
 	    if (r>this.radius())
 	    {
@@ -2054,13 +2170,16 @@ osg.BoundingSphere.prototype = {
             if (this.valid()) {
                 var sub = osg.Vec3.sub;
                 var length = osg.Vec3.length;
-                var r = length(sub(sh._center,this._center))+sh._radius;
+                var r = length( sub(sh._center,
+                                    this._center, 
+                                    [])
+                              ) + sh._radius;
                 if (r>this._radius) {
                     this._radius = r;
                 }
                 // else do nothing as vertex is within sphere.
             } else {
-                this._center = osg.Vec3.copy(sh._center);
+                this._center = osg.Vec3.copy(sh._center, []);
                 this._radius = sh._radius;
             }
         }
@@ -2082,7 +2201,7 @@ osg.BoundingSphere.prototype = {
 
 
 	// Calculate d == The distance between the sphere centers
-	var tmp= osg.Vec3.sub( this.center() , sh.center() );
+	var tmp= osg.Vec3.sub( this.center() , sh.center(), [] );
 	d = osg.Vec3.length(tmp);
 
 	// New sphere is already inside this one
@@ -2119,11 +2238,13 @@ osg.BoundingSphere.prototype = {
 
     },
     contains: function(v) {
-	var vc = osg.Vec3.sub(v,this.center());
+	var vc = osg.Vec3.sub(v,this.center(), []);
 	return valid() && (osg.Vec3.length2(vc)<=radius2());
     },
     intersects: function( bs ) {
-	var lc = osg.Vec3.length2(osg.Vec3.sub(this.center() , bs.center()));
+	var lc = osg.Vec3.length2(osg.Vec3.sub(this.center() , 
+                                               bs.center(),
+                                              []));
 	return valid() && bs.valid() &&
 	    (lc <= (this.radius() + bs.radius())*(this.radius() + bs.radius()));
     }
@@ -3075,6 +3196,8 @@ osg.Projection.prototype = osg.objectInehrit(osg.Node.prototype, {
     setProjectionMatrix: function(m) { this.projection = m; }
 });
 osg.Projection.prototype.objectType = osg.objectType.generate("Projection");
+
+/** @class Quaternion Operations */
 osg.Quat = {
     makeIdentity: function(element) { return osg.Quat.init(element); },
 
@@ -4374,7 +4497,7 @@ osg.createTexturedQuad = function(cornerx, cornery, cornerz,
     uvs[6] = r;
     uvs[7] = t;
 
-    var n = osg.Vec3.cross([wx,wy,wz], [hx, hy, hz]);
+    var n = osg.Vec3.cross([wx,wy,wz], [hx, hy, hz], []);
     var normal = [];
     normal[0] = n[0];
     normal[1] = n[1];
@@ -5976,7 +6099,7 @@ osgUtil.TriangleIntersect.prototype = {
     set: function(start, end) {
         this.start = start;
         this.end = end;
-        this.dir = osg.Vec3.sub(end, start);
+        this.dir = osg.Vec3.sub(end, start, []);
         this.length = osg.Vec3.length(this.dir);
         var l = 1.0/this.length;
         osg.Vec3.mult(this.dir, l, this.dir);
@@ -6067,10 +6190,10 @@ osgUtil.TriangleIntersect.prototype = {
 
         if (v1==v2 || v2==v3 || v1==v3) { return;}
 
-        var v12 = osg.Vec3.sub(v2,v1);
-        var n12 = osg.Vec3.cross(v12, this.dir);
-        var ds12 = osg.Vec3.dot(osg.Vec3.sub(this.start,v1),n12);
-        var d312 = osg.Vec3.dot(osg.Vec3.sub(v3,v1),n12);
+        var v12 = osg.Vec3.sub(v2,v1, []);
+        var n12 = osg.Vec3.cross(v12, this.dir, []);
+        var ds12 = osg.Vec3.dot(osg.Vec3.sub(this.start,v1,[]),n12);
+        var d312 = osg.Vec3.dot(osg.Vec3.sub(v3,v1,[]),n12);
         if (d312>=0.0)
         {
             if (ds12<0.0) { return;}
@@ -6082,10 +6205,10 @@ osgUtil.TriangleIntersect.prototype = {
             if (ds12<d312) { return;}
         }
 
-        var v23 = osg.Vec3.sub(v3,v2);
-        var n23 = osg.Vec3.cross(v23,this.dir);
-        var ds23 = osg.Vec3.dot(osg.Vec3.sub(this.start,v2),n23);
-        var d123 = osg.Vec3.dot(osg.Vec3.sub(v1,v2),n23);
+        var v23 = osg.Vec3.sub(v3,v2, []);
+        var n23 = osg.Vec3.cross(v23,this.dir, []);
+        var ds23 = osg.Vec3.dot(osg.Vec3.sub(this.start,v2, []),n23);
+        var d123 = osg.Vec3.dot(osg.Vec3.sub(v1,v2, []),n23);
         if (d123>=0.0)
         {
             if (ds23<0.0) {return;}
@@ -6097,10 +6220,10 @@ osgUtil.TriangleIntersect.prototype = {
             if (ds23<d123) {return; }
         }
 
-        var v31 = osg.Vec3.sub(v1,v3);
-        var n31 = osg.Vec3.cross(v31,this.dir);
-        var ds31 = osg.Vec3.dot(osg.Vec3.sub(this.start,v3),n31);
-        var d231 = osg.Vec3.dot(osg.Vec3.sub(v2,v3),n31);
+        var v31 = osg.Vec3.sub(v1,v3, []);
+        var n31 = osg.Vec3.cross(v31,this.dir, []);
+        var ds31 = osg.Vec3.dot(osg.Vec3.sub(this.start,v3, []),n31);
+        var d231 = osg.Vec3.dot(osg.Vec3.sub(v2,v3, []),n31);
         if (d231>=0.0)
         {
             if (ds31<0.0) {return;}
@@ -6139,8 +6262,12 @@ osgUtil.TriangleIntersect.prototype = {
         }
         
         var inside = [];
-        osg.Vec3.add(osg.Vec3.mult(v1,r1),  osg.Vec3.mult(v2,r2), inside);
-        osg.Vec3.add(osg.Vec3.mult(v3,r3), inside, inside);
+        osg.Vec3.add(osg.Vec3.mult(v1,r1, []),  
+                     osg.Vec3.mult(v2,r2, []), 
+                     inside);
+        osg.Vec3.add(osg.Vec3.mult(v3,r3, []), 
+                     inside, 
+                     inside);
         if (!osg.Vec3.valid(inside)) {
             osg.log("Warning: TriangleIntersect ");
             osg.log("hit:     " + inside );
@@ -6150,12 +6277,14 @@ osgUtil.TriangleIntersect.prototype = {
             return;
         }
 
-        var d = osg.Vec3.dot(osg.Vec3.sub(inside,this.start), this.dir);
+        var d = osg.Vec3.dot(osg.Vec3.sub(inside,
+                                          this.start, 
+                                          []), this.dir);
 
         if (d<0.0) {return;}
         if (d>this.length) {return;}
 
-        var normal = osg.Vec3.cross(v12,v23);
+        var normal = osg.Vec3.cross(v12,v23, []);
         osg.Vec3.normalize(normal, normal);
 
         var r = d/this.length;
@@ -7266,8 +7395,8 @@ osgViewer.Viewer.prototype = {
                 this.canvas.addEventListener("mousewheel", mousewheel, false);
             }
 
-            var keydown = function(ev) {return viewer.getManipulator().keydown(event); };
-            var keyup = function(ev) {return viewer.getManipulator().keyup(event);};
+            var keydown = function(ev) {return viewer.getManipulator().keydown(ev); };
+            var keyup = function(ev) {return viewer.getManipulator().keyup(ev);};
 
             if (viewer.getManipulator().keydown) {
                 this.eventNode.addEventListener("keydown", keydown, false);
@@ -7288,17 +7417,21 @@ osgGA = {};
  * Authors:
  *  Cedric Pinson <cedric.pinson@plopbyte.com>
  */
-
 osgGA.OrbitManipulatorMode = {
     Rotate: 0,
     Pan: 1,
     Zoom: 2
 };
 
+/** 
+ *  OrbitManipulator
+ *  @class
+ */
 osgGA.OrbitManipulator = function () {
     this.init();
 };
 
+/** @lends osgGA.OrbitManipulator.prototype */
 osgGA.OrbitManipulator.prototype = {
     init: function() {
         this.distance = 25;
@@ -7329,6 +7462,11 @@ osgGA.OrbitManipulator.prototype = {
             this.target = bs.center();
         }
     },
+
+    /**
+       Method called when a keydown event is triggered
+        @type KeyEvent
+     */
     keydown: function(ev) {
         if (ev.keyCode === 32) {
             this.computeHomePosition();
@@ -7340,6 +7478,10 @@ osgGA.OrbitManipulator.prototype = {
             return false;
         }
     },
+    /**
+       Method called when a keyup event is triggered
+       @type KeyEvent
+     */
     keyup: function(ev) {
     },
     mouseup: function(ev) {
@@ -7423,7 +7565,7 @@ osgGA.OrbitManipulator.prototype = {
         // the rotation matrix
         var eye = osg.Matrix.transformVec3(osg.Matrix.inverse(r2), [0, this.distance, 0]);
 
-        var dir = osg.Vec3.neg(eye);
+        var dir = osg.Vec3.neg(eye, []);
         osg.Vec3.normalize(dir, dir);
 
         var p = osg.Vec3.dot(dir, [0,0,1]);
@@ -7568,10 +7710,17 @@ osgGA.OrbitManipulator.prototype = {
             }
         }
         
-        //this.targetMotion
-        var inv;
-        var eye = osg.Matrix.transformVec3(osg.Matrix.inverse(this.rotation), [0, distance, 0]);
-        inv = osg.Matrix.makeLookAt(osg.Vec3.add(target,eye), target, [0,0,1]);
+        var inv = [];
+        var eye = [];
+        osg.Matrix.inverse(this.rotation, inv);
+        osg.Matrix.transformVec3(inv,
+                                 [0, distance, 0],
+                                 eye );
+
+        osg.Matrix.makeLookAt(osg.Vec3.add(target, eye, eye),
+                              target,
+                              [0,0,1], 
+                              inv);
         return inv;
     }
 };

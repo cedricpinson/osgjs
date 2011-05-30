@@ -150,7 +150,7 @@ osgGA.OrbitManipulator.prototype = {
         // the rotation matrix
         var eye = osg.Matrix.transformVec3(osg.Matrix.inverse(r2), [0, this.distance, 0]);
 
-        var dir = osg.Vec3.neg(eye);
+        var dir = osg.Vec3.neg(eye, []);
         osg.Vec3.normalize(dir, dir);
 
         var p = osg.Vec3.dot(dir, [0,0,1]);
@@ -295,10 +295,17 @@ osgGA.OrbitManipulator.prototype = {
             }
         }
         
-        //this.targetMotion
-        var inv;
-        var eye = osg.Matrix.transformVec3(osg.Matrix.inverse(this.rotation), [0, distance, 0]);
-        inv = osg.Matrix.makeLookAt(osg.Vec3.add(target,eye), target, [0,0,1]);
+        var inv = [];
+        var eye = [];
+        osg.Matrix.inverse(this.rotation, inv);
+        osg.Matrix.transformVec3(inv,
+                                 [0, distance, 0],
+                                 eye );
+
+        osg.Matrix.makeLookAt(osg.Vec3.add(target, eye, eye),
+                              target,
+                              [0,0,1], 
+                              inv);
         return inv;
     }
 };

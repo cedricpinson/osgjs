@@ -16,27 +16,33 @@ osg.Transform.prototype = osg.objectInehrit(osg.Node.prototype, {
         var matrix = osg.Matrix.makeIdentity();
         this.computeLocalToWorldMatrix(matrix);
 
-        var xdash = osg.Vec3.copy(bsphere._center);
+        var xdash = osg.Vec3.copy(bsphere._center, []);
         xdash[0] += bsphere._radius;
-        osg.Matrix.transformVec3(matrix,xdash, xdash);
+        osg.Matrix.transformVec3(matrix, xdash, xdash);
 
-        var ydash = osg.Vec3.copy(bsphere._center);
+        var ydash = osg.Vec3.copy(bsphere._center, []);
         ydash[1] += bsphere._radius;
-        osg.Matrix.transformVec3(matrix,ydash, ydash);
+        osg.Matrix.transformVec3(matrix, ydash, ydash);
 
-        var zdash = osg.Vec3.copy(bsphere._center);
+        var zdash = osg.Vec3.copy(bsphere._center, []);
         zdash[2] += bsphere._radius;
-        osg.Matrix.transformVec3(matrix,zdash, zdash);
+        osg.Matrix.transformVec3(matrix, zdash, zdash);
 
         osg.Matrix.transformVec3(matrix, bsphere._center, bsphere._center);
 
-        osg.Vec3.sub(xdash,bsphere._center, xdash);
+        osg.Vec3.sub(xdash,
+                     bsphere._center, 
+                     xdash);
         var len_xdash = osg.Vec3.length(xdash);
 
-        osg.Vec3.sub(ydash, bsphere._center, ydash);
+        osg.Vec3.sub(ydash, 
+                     bsphere._center, 
+                     ydash);
         var len_ydash = osg.Vec3.length(ydash);
 
-        osg.Vec3.sub(zdash, bsphere._center, zdash);
+        osg.Vec3.sub(zdash, 
+                     bsphere._center, 
+                     zdash);
         var len_zdash = osg.Vec3.length(zdash);
 
         bsphere._radius = len_xdash;

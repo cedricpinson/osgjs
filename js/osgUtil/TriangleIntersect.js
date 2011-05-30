@@ -25,7 +25,7 @@ osgUtil.TriangleIntersect.prototype = {
     set: function(start, end) {
         this.start = start;
         this.end = end;
-        this.dir = osg.Vec3.sub(end, start);
+        this.dir = osg.Vec3.sub(end, start, []);
         this.length = osg.Vec3.length(this.dir);
         var l = 1.0/this.length;
         osg.Vec3.mult(this.dir, l, this.dir);
@@ -116,10 +116,10 @@ osgUtil.TriangleIntersect.prototype = {
 
         if (v1==v2 || v2==v3 || v1==v3) { return;}
 
-        var v12 = osg.Vec3.sub(v2,v1);
-        var n12 = osg.Vec3.cross(v12, this.dir);
-        var ds12 = osg.Vec3.dot(osg.Vec3.sub(this.start,v1),n12);
-        var d312 = osg.Vec3.dot(osg.Vec3.sub(v3,v1),n12);
+        var v12 = osg.Vec3.sub(v2,v1, []);
+        var n12 = osg.Vec3.cross(v12, this.dir, []);
+        var ds12 = osg.Vec3.dot(osg.Vec3.sub(this.start,v1,[]),n12);
+        var d312 = osg.Vec3.dot(osg.Vec3.sub(v3,v1,[]),n12);
         if (d312>=0.0)
         {
             if (ds12<0.0) { return;}
@@ -131,10 +131,10 @@ osgUtil.TriangleIntersect.prototype = {
             if (ds12<d312) { return;}
         }
 
-        var v23 = osg.Vec3.sub(v3,v2);
-        var n23 = osg.Vec3.cross(v23,this.dir);
-        var ds23 = osg.Vec3.dot(osg.Vec3.sub(this.start,v2),n23);
-        var d123 = osg.Vec3.dot(osg.Vec3.sub(v1,v2),n23);
+        var v23 = osg.Vec3.sub(v3,v2, []);
+        var n23 = osg.Vec3.cross(v23,this.dir, []);
+        var ds23 = osg.Vec3.dot(osg.Vec3.sub(this.start,v2, []),n23);
+        var d123 = osg.Vec3.dot(osg.Vec3.sub(v1,v2, []),n23);
         if (d123>=0.0)
         {
             if (ds23<0.0) {return;}
@@ -146,10 +146,10 @@ osgUtil.TriangleIntersect.prototype = {
             if (ds23<d123) {return; }
         }
 
-        var v31 = osg.Vec3.sub(v1,v3);
-        var n31 = osg.Vec3.cross(v31,this.dir);
-        var ds31 = osg.Vec3.dot(osg.Vec3.sub(this.start,v3),n31);
-        var d231 = osg.Vec3.dot(osg.Vec3.sub(v2,v3),n31);
+        var v31 = osg.Vec3.sub(v1,v3, []);
+        var n31 = osg.Vec3.cross(v31,this.dir, []);
+        var ds31 = osg.Vec3.dot(osg.Vec3.sub(this.start,v3, []),n31);
+        var d231 = osg.Vec3.dot(osg.Vec3.sub(v2,v3, []),n31);
         if (d231>=0.0)
         {
             if (ds31<0.0) {return;}
@@ -188,8 +188,12 @@ osgUtil.TriangleIntersect.prototype = {
         }
         
         var inside = [];
-        osg.Vec3.add(osg.Vec3.mult(v1,r1),  osg.Vec3.mult(v2,r2), inside);
-        osg.Vec3.add(osg.Vec3.mult(v3,r3), inside, inside);
+        osg.Vec3.add(osg.Vec3.mult(v1,r1, []),  
+                     osg.Vec3.mult(v2,r2, []), 
+                     inside);
+        osg.Vec3.add(osg.Vec3.mult(v3,r3, []), 
+                     inside, 
+                     inside);
         if (!osg.Vec3.valid(inside)) {
             osg.log("Warning: TriangleIntersect ");
             osg.log("hit:     " + inside );
@@ -199,12 +203,14 @@ osgUtil.TriangleIntersect.prototype = {
             return;
         }
 
-        var d = osg.Vec3.dot(osg.Vec3.sub(inside,this.start), this.dir);
+        var d = osg.Vec3.dot(osg.Vec3.sub(inside,
+                                          this.start, 
+                                          []), this.dir);
 
         if (d<0.0) {return;}
         if (d>this.length) {return;}
 
-        var normal = osg.Vec3.cross(v12,v23);
+        var normal = osg.Vec3.cross(v12,v23, []);
         osg.Vec3.normalize(normal, normal);
 
         var r = d/this.length;

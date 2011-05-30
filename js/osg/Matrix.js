@@ -339,13 +339,13 @@ osg.Matrix = {
             result = [];
         }
 
-        var f = osg.Vec3.sub(center, eye);
+        var f = osg.Vec3.sub(center, eye, []);
         osg.Vec3.normalize(f, f);
 
-        var s = osg.Vec3.cross(f, up);
+        var s = osg.Vec3.cross(f, up, []);
         osg.Vec3.normalize(s, s);
 
-        var u = osg.Vec3.cross(s, f);
+        var u = osg.Vec3.cross(s, f, []);
         osg.Vec3.normalize(u, u);
 
         // s[0], u[0], -f[0], 0.0,
@@ -358,7 +358,7 @@ osg.Matrix = {
         result[8]=s[2]; result[9]=u[2]; result[10]=-f[2];result[11]=0.0;
         result[12]=  0; result[13]=  0; result[14]=  0;  result[15]=1.0;
 
-        osg.Matrix.multTranslate(result, osg.Vec3.neg(eye), result);
+        osg.Matrix.multTranslate(result, osg.Vec3.neg(eye, []), result);
         return result;
     },
     makeOrtho: function(left, right,
@@ -385,12 +385,12 @@ osg.Matrix = {
         if (distance === undefined) {
             distance = 1.0;
         }
-        var inv = osg.Matrix.inverse(matrix);
+        var inv = osg.Matrix.inverse(matrix, []);
         osg.Matrix.transformVec3(inv, [0,0,0], eye);
         osg.Matrix.transform3x3(matrix, [0,1,0], up);
         osg.Matrix.transform3x3(matrix, [0,0,-1], center);
         osg.Vec3.normalize(center, center);
-        osg.Vec3.add(osg.Vec3.mult(center, distance), eye, center);
+        osg.Vec3.add(osg.Vec3.mult(center, distance, [] ), eye, center);
     },
 
     //getRotate_David_Spillings_Mk1

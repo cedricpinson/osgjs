@@ -36,7 +36,7 @@ osg.BoundingSphere.prototype = {
                 // this code is not valid c is defined after the loop
                 // FIXME
 		for (var i = 0 ; i < 8; i++) {
-                    var v = osg.Vec3.sub(bb.corner(c),this._center); // get the direction vector from corner
+                    var v = osg.Vec3.sub(bb.corner(c),this._center, []); // get the direction vector from corner
                     osg.Vec3.normalize(v,v); // normalise it.
                     nv[0] *= -this._radius; // move the vector in the opposite direction distance radius.
                     nv[1] *= -this._radius; // move the vector in the opposite direction distance radius.
@@ -72,7 +72,7 @@ osg.BoundingSphere.prototype = {
     expandByVec3: function(v){
 	if ( this.valid())
 	{
-	    var dv = osg.Vec3.sub(v,this.center());
+	    var dv = osg.Vec3.sub(v,this.center(), []);
 	    r = osg.Vec3.length(dv);
 	    if (r>this.radius())
 	    {
@@ -97,13 +97,16 @@ osg.BoundingSphere.prototype = {
             if (this.valid()) {
                 var sub = osg.Vec3.sub;
                 var length = osg.Vec3.length;
-                var r = length(sub(sh._center,this._center))+sh._radius;
+                var r = length( sub(sh._center,
+                                    this._center, 
+                                    [])
+                              ) + sh._radius;
                 if (r>this._radius) {
                     this._radius = r;
                 }
                 // else do nothing as vertex is within sphere.
             } else {
-                this._center = osg.Vec3.copy(sh._center);
+                this._center = osg.Vec3.copy(sh._center, []);
                 this._radius = sh._radius;
             }
         }
@@ -125,7 +128,7 @@ osg.BoundingSphere.prototype = {
 
 
 	// Calculate d == The distance between the sphere centers
-	var tmp= osg.Vec3.sub( this.center() , sh.center() );
+	var tmp= osg.Vec3.sub( this.center() , sh.center(), [] );
 	d = osg.Vec3.length(tmp);
 
 	// New sphere is already inside this one
@@ -162,11 +165,13 @@ osg.BoundingSphere.prototype = {
 
     },
     contains: function(v) {
-	var vc = osg.Vec3.sub(v,this.center());
+	var vc = osg.Vec3.sub(v,this.center(), []);
 	return valid() && (osg.Vec3.length2(vc)<=radius2());
     },
     intersects: function( bs ) {
-	var lc = osg.Vec3.length2(osg.Vec3.sub(this.center() , bs.center()));
+	var lc = osg.Vec3.length2(osg.Vec3.sub(this.center() , 
+                                               bs.center(),
+                                              []));
 	return valid() && bs.valid() &&
 	    (lc <= (this.radius() + bs.radius())*(this.radius() + bs.radius()));
     }

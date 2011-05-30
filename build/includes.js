@@ -1,4 +1,5 @@
 		<script type="text/javascript" src="../../js/osg/osg.js"></script>
+		<script type="text/javascript" src="../../js/osg/Vec2.js"></script>
 		<script type="text/javascript" src="../../js/osg/Vec3.js"></script>
 		<script type="text/javascript" src="../../js/osg/Vec4.js"></script>
 		<script type="text/javascript" src="../../js/osg/Matrix.js"></script>

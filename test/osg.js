@@ -758,8 +758,8 @@ test("osg.CullVisitor", function() {
         mt.addChild(geom);
         camera0.addChild(mt);
 
-        camera0.setViewMatrix(osg.Matrix.makeLookAt([-10,0,10], [0,0,10],[0,1,0]));
-        camera0.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 1.0, 1000.0));
+        camera0.setViewMatrix(osg.Matrix.makeLookAt([-10,0,10], [0,0,10],[0,1,0], []));
+        camera0.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 1.0, 1000.0, []));
 
         var stack = [];
         function setCullSettings(settings) {
@@ -800,7 +800,7 @@ test("osg.CullVisitor", function() {
         mt.addChild(geom);
         camera0.addChild(mt);
 
-        camera0.setViewMatrix(osg.Matrix.makeLookAt([0,0,20], [0,0,10],[0,1,0]));
+        camera0.setViewMatrix(osg.Matrix.makeLookAt([0,0,20], [0,0,10],[0,1,0], []));
         camera0.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 1.0, 1000.0));
 
         var stack = [];
@@ -873,8 +873,8 @@ test("osg.CullVisitor", function() {
 //      var bbCornerFar = 1;
 //      var bbCornerNear = 6;
 
-        camera0.setViewMatrix(osg.Matrix.makeLookAt(osg.Vec3.add(eye, target), target,[0,0,1]));
-        camera0.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/450, 1.0, 1000.0));
+        camera0.setViewMatrix(osg.Matrix.makeLookAt(osg.Vec3.add(eye, target, []), target,[0,0,1], []));
+        camera0.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/450, 1.0, 1000.0, []));
 
         var stack = [];
         function setCullSettings(settings) {

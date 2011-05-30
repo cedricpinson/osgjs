@@ -345,7 +345,7 @@ osg.createTexturedQuad = function(cornerx, cornery, cornerz,
     uvs[6] = r;
     uvs[7] = t;
 
-    var n = osg.Vec3.cross([wx,wy,wz], [hx, hy, hz]);
+    var n = osg.Vec3.cross([wx,wy,wz], [hx, hy, hz], []);
     var normal = [];
     normal[0] = n[0];
     normal[1] = n[1];

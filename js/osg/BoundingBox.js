@@ -45,14 +45,18 @@ osg.BoundingBox.prototype = {
     },
 
     center: function() {
-	return osg.Vec3.mult(osg.Vec3.add(this._min,this._max),0.5);
+	return osg.Vec3.mult(osg.Vec3.add(this._min,
+                                          this._max, 
+                                          []),
+                             0.5,
+                            []);
     },
     radius: function() {
 	return Math.sqrt(this.radius2());
     },
 
     radius2: function() {
-	return 0.25*(osg.Vec3.length2(osg.Vec3.sub(this._max,this._min)));
+	return 0.25*(osg.Vec3.length2(osg.Vec3.sub(this._max,this._min, [])));
     },
     corner: function(pos) {
         ret = [0.0,0.0,0.0];
