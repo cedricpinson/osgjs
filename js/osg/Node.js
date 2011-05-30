@@ -1,3 +1,7 @@
+/** 
+ *  Node that can contains child node
+ *  @class
+ */
 osg.Node = function () {
     this.children = [];
     this.parents = [];
@@ -5,7 +9,13 @@ osg.Node = function () {
     this.boundingSphere = new osg.BoundingSphere();
     this.boundingSphereComputed = false;
 };
+
+/** @lends osg.Node.prototype */
 osg.Node.prototype = {
+    /**
+        Return StateSet and create it if it does not exist yet
+        @type osg.StateSet
+     */
     getOrCreateStateSet: function() {
         if (this.stateset === undefined) {
             this.stateset = new osg.StateSet();
@@ -31,7 +41,33 @@ osg.Node.prototype = {
     setNodeMask: function(mask) { this.nodeMask = mask; },
     getNodeMask: function(mask) { return this.nodeMask; },
     setStateSet: function(s) { this.stateset = s; },
+
+    /**
+       <p>
+        Set update node callback, called during update traversal.
+        The Object must have the following method
+        update(node, nodeVisitor) {}
+        note, callback is responsible for scenegraph traversal so
+        they must call traverse(node,nv) to ensure that the
+        scene graph subtree (and associated callbacks) are traversed.
+        </p>
+        <p>
+        Here a dummy UpdateCallback example
+        </p>
+        <pre>
+        var DummyUpdateCallback = function() {};
+        DummyUpdateCallback.prototype = {
+            update: function(node, nodeVisitor) {
+                node.traverse(nodeVisitor);
+            }
+        };
+        </pre>
+        @param Oject callback
+     */
     setUpdateCallback: function(cb) { this.updateCallback = cb; },
+    /** Get update node callback, called during update traversal.
+        @type Oject
+     */
     getUpdateCallback: function() { return this.updateCallback; },
     setName: function(name) { this.name = name; },
     getName: function() { return this.name; },
