@@ -1,3 +1,5 @@
+
+/** @class Quaternion Operations */
 osg.Quat = {
     makeIdentity: function(element) { return osg.Quat.init(element); },
 

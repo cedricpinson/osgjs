@@ -1,25 +1,13 @@
 
-/** @class Vec3 Operations */
-osg.Vec3 = {
+/** @class Vec2 Operations */
+osg.Vec2 = {
     copy: function(src, res) {
         if (res === undefined) {
             res = [];
         }
         res[0] = src[0];
         res[1] = src[1];
-        res[2] = src[2];
         return res;
-    },
-
-    cross: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
-
-        result[0] = a[1]*b[2]-a[2]*b[1];
-        result[1] = a[2]*b[0]-a[0]*b[2];
-        result[2] = a[0]*b[1]-a[1]*b[0];
-        return result;
     },
 
     valid: function(vec) {
@@ -27,9 +15,6 @@ osg.Vec3 = {
             return false;
         }
         if (isNaN(vec[1])) {
-            return false;
-        }
-        if (isNaN(vec[2])) {
             return false;
         }
         return true;
@@ -41,18 +26,20 @@ osg.Vec3 = {
         }
         result[0] = vec[0] * a;
         result[1] = vec[1] * a;
-        result[2] = vec[2] * a;
         return result;
     },
 
     length2: function(a) {
-        return a[0]*a[0] + a[1]*a[1] + a[2]*a[2];
+        return a[0]*a[0] + a[1]*a[1];
     },
 
     length: function(a) {
-        return Math.sqrt( a[0]*a[0] + a[1]* a[1] + a[2]*a[2] );
+        return Math.sqrt( a[0]*a[0] + a[1]* a[1]);
     },
 
+    /** 
+        normalize an Array of 2 elements and write it in result 
+     */
     normalize: function(a, result) {
         if (result === undefined) {
             result = [];
@@ -63,26 +50,33 @@ osg.Vec3 = {
             var inv = 1.0/Math.sqrt(norm);
             result[0] = a[0] * inv;
             result[1] = a[1] * inv;
-            result[2] = a[2] * inv;
         } else {
             result[0] = a[0];
             result[1] = a[1];
-            result[2] = a[2];
         }
         return result;
     },
 
+    /** 
+        return the dot product 
+    */
     dot: function(a, b) {
-        return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+        return a[0]*b[0]+a[1]*b[1];
     },
 
+    /**
+       Compute a - b and put the result in r
+       @param Array a
+       @param Array b
+       @param Array result
+       @type osg.Vec2
+     */
     sub: function(a, b, r) {
         if (r === undefined) {
             r = [];
         }
         r[0] = a[0]-b[0];
         r[1] = a[1]-b[1];
-        r[2] = a[2]-b[2];
         return r;
     },
 
@@ -92,7 +86,6 @@ osg.Vec3 = {
         }
         r[0] = a[0]+b[0];
         r[1] = a[1]+b[1];
-        r[2] = a[2]+b[2];
         return r;
     },
 
@@ -102,7 +95,6 @@ osg.Vec3 = {
         }
         r[0] = -a[0];
         r[1] = -a[1];
-        r[2] = -a[2];
         return r;
     },
 
@@ -113,10 +105,7 @@ osg.Vec3 = {
         var tmp = 1.0-t;
         r[0] = a[0]*tmp + t*b[0];
         r[1] = a[1]*tmp + t*b[1];
-        r[2] = a[2]*tmp + t*b[2];
         return r;
     }
 
 };
-
-

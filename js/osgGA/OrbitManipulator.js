@@ -2,17 +2,21 @@
  * Authors:
  *  Cedric Pinson <cedric.pinson@plopbyte.com>
  */
-
 osgGA.OrbitManipulatorMode = {
     Rotate: 0,
     Pan: 1,
     Zoom: 2
 };
 
+/** 
+ *  OrbitManipulator
+ *  @class
+ */
 osgGA.OrbitManipulator = function () {
     this.init();
 };
 
+/** @lends osgGA.OrbitManipulator.prototype */
 osgGA.OrbitManipulator.prototype = {
     init: function() {
         this.distance = 25;
@@ -43,6 +47,11 @@ osgGA.OrbitManipulator.prototype = {
             this.target = bs.center();
         }
     },
+
+    /**
+       Method called when a keydown event is triggered
+        @type KeyEvent
+     */
     keydown: function(ev) {
         if (ev.keyCode === 32) {
             this.computeHomePosition();
@@ -54,6 +63,10 @@ osgGA.OrbitManipulator.prototype = {
             return false;
         }
     },
+    /**
+       Method called when a keyup event is triggered
+       @type KeyEvent
+     */
     keyup: function(ev) {
     },
     mouseup: function(ev) {

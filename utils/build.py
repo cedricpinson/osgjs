@@ -16,6 +16,7 @@ import shutil
 
 OSG = [
 "osg/osg.js",
+"osg/Vec2.js",
 "osg/Vec3.js",
 "osg/Vec4.js",
 "osg/Matrix.js",

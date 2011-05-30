@@ -1,3 +1,5 @@
+
+/** @class Vec4 Operations */
 osg.Vec4 = {
 
     dot: function(a, b) {

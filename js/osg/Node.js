@@ -54,14 +54,14 @@ osg.Node.prototype = {
         <p>
         Here a dummy UpdateCallback example
         </p>
-        <pre>
+        @example
         var DummyUpdateCallback = function() {};
         DummyUpdateCallback.prototype = {
             update: function(node, nodeVisitor) {
                 node.traverse(nodeVisitor);
             }
         };
-        </pre>
+
         @param Oject callback
      */
     setUpdateCallback: function(cb) { this.updateCallback = cb; },
