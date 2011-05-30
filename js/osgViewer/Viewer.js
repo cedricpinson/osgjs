@@ -547,8 +547,8 @@ osgViewer.Viewer.prototype = {
                 this.canvas.addEventListener("mousewheel", mousewheel, false);
             }
 
-            var keydown = function(ev) {return viewer.getManipulator().keydown(event); };
-            var keyup = function(ev) {return viewer.getManipulator().keyup(event);};
+            var keydown = function(ev) {return viewer.getManipulator().keydown(ev); };
+            var keyup = function(ev) {return viewer.getManipulator().keyup(ev);};
 
             if (viewer.getManipulator().keydown) {
                 this.eventNode.addEventListener("keydown", keydown, false);
