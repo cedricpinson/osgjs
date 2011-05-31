@@ -100,6 +100,13 @@ osgDB.parseSceneGraph = function (node)
         newnode.setProjectionMatrix(osg.Matrix.copy(node.projection));
         node = newnode;
     }
+    
+    // not working yet
+//    if (node.doftransform){
+//        newnode = new osgSim.DOFTransform(node.doftransform);
+//        jQuery.extend(newnode, node);
+//        node = newnode;
+//    }
 
     // default type
     if (node.objectType === undefined) {
