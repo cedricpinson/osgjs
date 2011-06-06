@@ -1,6 +1,12 @@
+/** 
+ * StateAttribute base class
+ * @class StateAttribute
+ */
 osg.StateAttribute = function() {
     this._dirty = true;
 };
+
+/** @lends osg.StateAttribute.prototype */
 osg.StateAttribute.prototype = {
     isDirty: function() { return this._dirty; },
     dirty: function() { this._dirty = true; }

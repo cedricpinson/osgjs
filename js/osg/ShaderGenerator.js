@@ -304,19 +304,6 @@ osg.ShaderGenerator.prototype = {
         if (validTextureAttributeKeys.length > 0) {
             var result = this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
             shader += result;
-
-            for (i = 0, l = validTextureAttributeKeys.length; i < l; ++i) {
-                if (validTextureAttributeKeys[i] === undefined) {
-                    continue;
-                }
-                if (validTextureAttributeKeys[i].length === 0) {
-                    continue;
-                }
-                var textureUnit = state.textureAttributeMapList[i];
-                if (textureUnit.Texture !== undefined ) {
-                    shader += "fragColor = fragColor * texColor" + i + ";\n";
-                }
-            }
         }
         shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
 

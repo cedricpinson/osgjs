@@ -191,16 +191,6 @@ osgViewer.Viewer.prototype = {
         var height = this.canvasStats.height;
         var ratio = height / maxMS;
         height = height - 2;
-        var getStyle0 = function(el, styleProp) {
-            var mysheet=document.styleSheets[0]
-            var myrules=mysheet.cssRules? mysheet.cssRules: mysheet.rules;
-            for (var i=0; i<myrules.length; i++){
-                if(myrules[i].selectorText.indexOf(el)!=-1) {
-                    return myrules[i].style[styleProp];
-                }
-            }
-            return undefined;
-        };
         var getStyle = function(el,styleProp)
         {
 	    var x = document.getElementById(el);

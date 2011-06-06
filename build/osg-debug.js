@@ -1,4 +1,4 @@
-// osg-debug-0.0.4.js commit 6b23edda6bc0d8cae65b5c90152dfe2ab08a5043 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.4.js commit 03484366b1c512988be641981ab6286d7f1ddd83 - http://github.com/cedricpinson/osgjs
 var osg = {};
 
 osg.version = '0.0.4';
@@ -1404,6 +1404,40 @@ osg.Matrix = {
         }
         return matrix;
     }
+};
+osg.ShaderGeneratorType = {
+    VertexInit: 0,
+    VertexFunction: 1,
+    VertexMain: 2,
+    FragmentInit: 3,
+    FragmentMain: 5
+};
+
+osg.Shader = function() {};
+osg.Shader.prototype = {
+    compile: function() {
+        this.shader = gl.createShader(this.type);
+        gl.shaderSource(this.shader, this.text);
+        gl.compileShader(this.shader);
+        if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS)) {
+            osg.log("can't compile shader:\n" + this.text + "\n");
+            var tmpText = "\n" + this.text;
+            var splittedText = tmpText.split("\n");
+            var newText = "\n";
+            for (var i = 0, l = splittedText.length; i < l; ++i ) {
+                newText += i + " " + splittedText[i] + "\n";
+            }
+            osg.log(newText);
+            osg.log(gl.getShaderInfoLog(this.shader));
+        }
+    }
+};
+osg.Shader.create = function( type, text )
+{
+    var shader = new osg.Shader(type);
+    shader.type = type;
+    shader.text = text;
+    return shader;
 };
 osg.StateAttribute = function() {
     this._dirty = true;
@@ -4092,6 +4126,7 @@ osg.ShaderGenerator.prototype = {
             var result = this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
             shader += result;
 
+            if (false) {
             for (i = 0, l = validTextureAttributeKeys.length; i < l; ++i) {
                 if (validTextureAttributeKeys[i] === undefined) {
                     continue;
@@ -4104,6 +4139,7 @@ osg.ShaderGenerator.prototype = {
                     shader += "fragColor = fragColor * texColor" + i + ";\n";
                 }
             }
+            }
         }
         shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
 
@@ -4115,40 +4151,6 @@ osg.ShaderGenerator.prototype = {
 
         return shader;
     }
-};
-osg.ShaderGeneratorType = {
-    VertexInit: 0,
-    VertexFunction: 1,
-    VertexMain: 2,
-    FragmentInit: 3,
-    FragmentMain: 5
-};
-
-osg.Shader = function() {};
-osg.Shader.prototype = {
-    compile: function() {
-        this.shader = gl.createShader(this.type);
-        gl.shaderSource(this.shader, this.text);
-        gl.compileShader(this.shader);
-        if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS)) {
-            osg.log("can't compile shader:\n" + this.text + "\n");
-            var tmpText = "\n" + this.text;
-            var splittedText = tmpText.split("\n");
-            var newText = "\n";
-            for (var i = 0, l = splittedText.length; i < l; ++i ) {
-                newText += i + " " + splittedText[i] + "\n";
-            }
-            osg.log(newText);
-            osg.log(gl.getShaderInfoLog(this.shader));
-        }
-    }
-};
-osg.Shader.create = function( type, text )
-{
-    var shader = new osg.Shader(type);
-    shader.type = type;
-    shader.text = text;
-    return shader;
 };
 /**
  * Create a Textured Box on the given center with given size
@@ -5342,11 +5344,17 @@ osg.StateSet.prototype = {
     },
     getAttributeMap: function() { return this.attributeMap; }
 };
+/** 
+ * Texture encapsulate webgl texture object
+ * @class Texture
+ * @inherits osg.StateAttribute
+ */
 osg.Texture = function() {
     osg.StateAttribute.call(this);
     this.setDefaultParameters();
 };
 
+/** @lends osg.Texture.prototype */
 osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Texture",
     cloneType: function() { var t = new osg.Texture(); t.default_type = true; return t;},
@@ -5465,8 +5473,25 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         }
     },
 
-    writeToShader: function(unit, type)
-    {
+    /**
+      set the injection code that will be used in the shader generation
+      
+      @example for FragmentMain part
+      var fragmentGenerator = function(unit) {
+          var str = "texColor" + unit + " = texture2D( Texture" + unit + ", FragTexCoord" + unit + ".xy );\n";
+          str += "fragColor = fragColor * texColor" + unit + ";\n";
+      };
+      setShaderGeneratorFunction(fragmentGenerator, osg.ShaderGeneratorType.FragmentMain);
+
+      @param {function:(unit)} injectionFunction
+      @param {osg.ShaderGeneratorType} injectionType
+    */
+    setShaderGeneratorFunction: function(injectionFunction, mode) {
+        this[mode] = injectionFunction;
+    },
+
+     writeToShaderOld: function(unit, type)
+     {
         var str = "";
         switch (type) {
         case osg.ShaderGeneratorType.VertexInit:
@@ -5486,8 +5511,34 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             break;
         }
         return str;
+     }, 
+    writeToShader: function(unit, type)
+    {
+        if (this[type])
+            return this[type].call(this,unit);
+        return "";
     }
+
 });
+osg.Texture.prototype[osg.ShaderGeneratorType.VertexInit] = function(unit) {
+    var str = "attribute vec2 TexCoord"+unit+";\n";
+    str += "varying vec2 FragTexCoord"+unit+";\n";
+    return str;
+};
+osg.Texture.prototype[osg.ShaderGeneratorType.VertexMain] = function(unit) {
+        return "FragTexCoord"+unit+" = TexCoord" + unit + ";\n";
+};
+osg.Texture.prototype[osg.ShaderGeneratorType.FragmentInit] = function(unit) {
+    var str = "varying vec2 FragTexCoord" + unit +";\n";
+    str += "uniform sampler2D Texture" + unit +";\n";
+    str += "vec4 texColor" + unit + ";\n";
+    return str;
+};
+osg.Texture.prototype[osg.ShaderGeneratorType.FragmentMain] = function(unit) {
+    var str = "texColor" + unit + " = texture2D( Texture" + unit + ", FragTexCoord" + unit + ".xy );\n";
+    str += "fragColor = fragColor * texColor" + unit + ";\n";
+    return str;
+};
 
 osg.Texture.create = function(imageSource) {
     var a = new osg.Texture();
@@ -7039,16 +7090,6 @@ osgViewer.Viewer.prototype = {
         var height = this.canvasStats.height;
         var ratio = height / maxMS;
         height = height - 2;
-        var getStyle0 = function(el, styleProp) {
-            var mysheet=document.styleSheets[0]
-            var myrules=mysheet.cssRules? mysheet.cssRules: mysheet.rules;
-            for (var i=0; i<myrules.length; i++){
-                if(myrules[i].selectorText.indexOf(el)!=-1) {
-                    return myrules[i].style[styleProp];
-                }
-            }
-            return undefined;
-        };
         var getStyle = function(el,styleProp)
         {
 	    var x = document.getElementById(el);

@@ -1,8 +1,14 @@
+/** 
+ * Texture encapsulate webgl texture object
+ * @class Texture
+ * @inherits osg.StateAttribute
+ */
 osg.Texture = function() {
     osg.StateAttribute.call(this);
     this.setDefaultParameters();
 };
 
+/** @lends osg.Texture.prototype */
 osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Texture",
     cloneType: function() { var t = new osg.Texture(); t.default_type = true; return t;},
@@ -121,29 +127,49 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         }
     },
 
+    /**
+      set the injection code that will be used in the shader generation
+      for FragmentMain part we would write something like that
+      @example
+      var fragmentGenerator = function(unit) {
+          var str = "texColor" + unit + " = texture2D( Texture" + unit + ", FragTexCoord" + unit + ".xy );\n";
+          str += "fragColor = fragColor * texColor" + unit + ";\n";
+      };
+      setShaderGeneratorFunction(fragmentGenerator, osg.ShaderGeneratorType.FragmentMain);
+
+      @param {function:(unit)} injectionFunction
+      @param {osg.ShaderGeneratorType} injectionType
+    */
+    setShaderGeneratorFunction: function(injectionFunction, mode) {
+        this[mode] = injectionFunction;
+    },
+
     writeToShader: function(unit, type)
     {
-        var str = "";
-        switch (type) {
-        case osg.ShaderGeneratorType.VertexInit:
-            str = "attribute vec2 TexCoord"+unit+";\n";
-            str += "varying vec2 FragTexCoord"+unit+";\n";
-            break;
-        case osg.ShaderGeneratorType.VertexMain:
-            str = "FragTexCoord"+unit+" = TexCoord" + unit + ";\n";
-            break;
-        case osg.ShaderGeneratorType.FragmentInit:
-            str = "varying vec2 FragTexCoord" + unit +";\n";
-            str += "uniform sampler2D Texture" + unit +";\n";
-            str += "vec4 texColor" + unit + ";\n";
-            break;
-        case osg.ShaderGeneratorType.FragmentMain:
-            str = "texColor" + unit + " = texture2D( Texture" + unit + ", FragTexCoord" + unit + ".xy );\n";
-            break;
-        }
-        return str;
+        if (this[type])
+            return this[type].call(this,unit);
+        return "";
     }
 });
+osg.Texture.prototype[osg.ShaderGeneratorType.VertexInit] = function(unit) {
+    var str = "attribute vec2 TexCoord"+unit+";\n";
+    str += "varying vec2 FragTexCoord"+unit+";\n";
+    return str;
+};
+osg.Texture.prototype[osg.ShaderGeneratorType.VertexMain] = function(unit) {
+        return "FragTexCoord"+unit+" = TexCoord" + unit + ";\n";
+};
+osg.Texture.prototype[osg.ShaderGeneratorType.FragmentInit] = function(unit) {
+    var str = "varying vec2 FragTexCoord" + unit +";\n";
+    str += "uniform sampler2D Texture" + unit +";\n";
+    str += "vec4 texColor" + unit + ";\n";
+    return str;
+};
+osg.Texture.prototype[osg.ShaderGeneratorType.FragmentMain] = function(unit) {
+    var str = "texColor" + unit + " = texture2D( Texture" + unit + ", FragTexCoord" + unit + ".xy );\n";
+    str += "fragColor = fragColor * texColor" + unit + ";\n";
+    return str;
+};
 
 osg.Texture.create = function(imageSource) {
     var a = new osg.Texture();

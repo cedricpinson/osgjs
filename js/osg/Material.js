@@ -1,3 +1,7 @@
+/** 
+ * Material
+ * @class Material
+ */
 osg.Material = function () {
     osg.StateAttribute.call(this);
     this.ambient = [ 0.2, 0.2, 0.2, 1.0 ];
@@ -7,9 +11,8 @@ osg.Material = function () {
     this.shininess = [0.0];
     this._dirty = true;
 };
+/** @lends osg.Material.prototype */
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
-    /** @lends Material */
-
     /** setAmbient */
     setAmbient: function(a) { this.ambient = a; this._dirty = true; },
     /** setSpecular */

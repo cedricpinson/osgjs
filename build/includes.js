@@ -3,6 +3,7 @@
 		<script type="text/javascript" src="../../js/osg/Vec3.js"></script>
 		<script type="text/javascript" src="../../js/osg/Vec4.js"></script>
 		<script type="text/javascript" src="../../js/osg/Matrix.js"></script>
+		<script type="text/javascript" src="../../js/osg/Shader.js"></script>
 		<script type="text/javascript" src="../../js/osg/StateAttribute.js"></script>
 		<script type="text/javascript" src="../../js/osg/Uniform.js"></script>
 		<script type="text/javascript" src="../../js/osg/Node.js"></script>
@@ -31,7 +32,6 @@
 		<script type="text/javascript" src="../../js/osg/RenderBin.js"></script>
 		<script type="text/javascript" src="../../js/osg/RenderStage.js"></script>
 		<script type="text/javascript" src="../../js/osg/ShaderGenerator.js"></script>
-		<script type="text/javascript" src="../../js/osg/Shader.js"></script>
 		<script type="text/javascript" src="../../js/osg/Shape.js"></script>
 		<script type="text/javascript" src="../../js/osg/Stack.js"></script>
 		<script type="text/javascript" src="../../js/osg/StateGraph.js"></script>
