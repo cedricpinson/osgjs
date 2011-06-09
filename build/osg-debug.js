@@ -1,4 +1,4 @@
-// osg-debug-0.0.4.js commit 03484366b1c512988be641981ab6286d7f1ddd83 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.4.js commit e3aff89aa5785a9980a5aa074cbc195401f4139b - http://github.com/cedricpinson/osgjs
 var osg = {};
 
 osg.version = '0.0.4';
@@ -774,7 +774,11 @@ osg.Matrix = {
         if (distance === undefined) {
             distance = 1.0;
         }
-        var inv = osg.Matrix.inverse(matrix, []);
+        var inv = [];
+        var result = osg.Matrix.inverse(matrix, inv);
+        if (!result) {
+            osg.Matrix.makeIdentity(inv);
+        }
         osg.Matrix.transformVec3(inv, [0,0,0], eye);
         osg.Matrix.transform3x3(matrix, [0,1,0], up);
         osg.Matrix.transform3x3(matrix, [0,0,-1], center);
@@ -1439,9 +1443,15 @@ osg.Shader.create = function( type, text )
     shader.text = text;
     return shader;
 };
+/** 
+ * StateAttribute base class
+ * @class StateAttribute
+ */
 osg.StateAttribute = function() {
     this._dirty = true;
 };
+
+/** @lends osg.StateAttribute.prototype */
 osg.StateAttribute.prototype = {
     isDirty: function() { return this._dirty; },
     dirty: function() { this._dirty = true; }
@@ -2968,6 +2978,10 @@ osg.LineWidth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     getTypeMember: function() { return this.attributeType;},
     apply: function(state) { gl.lineWidth(this.lineWidth); }
 });
+/** 
+ * Material
+ * @class Material
+ */
 osg.Material = function () {
     osg.StateAttribute.call(this);
     this.ambient = [ 0.2, 0.2, 0.2, 1.0 ];
@@ -2977,9 +2991,8 @@ osg.Material = function () {
     this.shininess = [0.0];
     this._dirty = true;
 };
+/** @lends osg.Material.prototype */
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
-    /** @lends Material */
-
     /** setAmbient */
     setAmbient: function(a) { this.ambient = a; this._dirty = true; },
     /** setSpecular */
@@ -4125,21 +4138,6 @@ osg.ShaderGenerator.prototype = {
         if (validTextureAttributeKeys.length > 0) {
             var result = this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
             shader += result;
-
-            if (false) {
-            for (i = 0, l = validTextureAttributeKeys.length; i < l; ++i) {
-                if (validTextureAttributeKeys[i] === undefined) {
-                    continue;
-                }
-                if (validTextureAttributeKeys[i].length === 0) {
-                    continue;
-                }
-                var textureUnit = state.textureAttributeMapList[i];
-                if (textureUnit.Texture !== undefined ) {
-                    shader += "fragColor = fragColor * texColor" + i + ";\n";
-                }
-            }
-            }
         }
         shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
 
@@ -5475,8 +5473,8 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
     /**
       set the injection code that will be used in the shader generation
-      
-      @example for FragmentMain part
+      for FragmentMain part we would write something like that
+      @example
       var fragmentGenerator = function(unit) {
           var str = "texColor" + unit + " = texture2D( Texture" + unit + ", FragTexCoord" + unit + ".xy );\n";
           str += "fragColor = fragColor * texColor" + unit + ";\n";
@@ -5490,35 +5488,12 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         this[mode] = injectionFunction;
     },
 
-     writeToShaderOld: function(unit, type)
-     {
-        var str = "";
-        switch (type) {
-        case osg.ShaderGeneratorType.VertexInit:
-            str = "attribute vec2 TexCoord"+unit+";\n";
-            str += "varying vec2 FragTexCoord"+unit+";\n";
-            break;
-        case osg.ShaderGeneratorType.VertexMain:
-            str = "FragTexCoord"+unit+" = TexCoord" + unit + ";\n";
-            break;
-        case osg.ShaderGeneratorType.FragmentInit:
-            str = "varying vec2 FragTexCoord" + unit +";\n";
-            str += "uniform sampler2D Texture" + unit +";\n";
-            str += "vec4 texColor" + unit + ";\n";
-            break;
-        case osg.ShaderGeneratorType.FragmentMain:
-            str = "texColor" + unit + " = texture2D( Texture" + unit + ", FragTexCoord" + unit + ".xy );\n";
-            break;
-        }
-        return str;
-     }, 
     writeToShader: function(unit, type)
     {
         if (this[type])
             return this[type].call(this,unit);
         return "";
     }
-
 });
 osg.Texture.prototype[osg.ShaderGeneratorType.VertexInit] = function(unit) {
     var str = "attribute vec2 TexCoord"+unit+";\n";

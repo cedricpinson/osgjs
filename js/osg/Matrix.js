@@ -385,7 +385,11 @@ osg.Matrix = {
         if (distance === undefined) {
             distance = 1.0;
         }
-        var inv = osg.Matrix.inverse(matrix, []);
+        var inv = [];
+        var result = osg.Matrix.inverse(matrix, inv);
+        if (!result) {
+            osg.Matrix.makeIdentity(inv);
+        }
         osg.Matrix.transformVec3(inv, [0,0,0], eye);
         osg.Matrix.transform3x3(matrix, [0,1,0], up);
         osg.Matrix.transform3x3(matrix, [0,0,-1], center);
