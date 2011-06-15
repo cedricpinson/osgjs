@@ -322,6 +322,7 @@ function getMk2(){
                 var parsedScene;
                 parsedScene = osgDB.parseSceneGraph(json);
                 console.log("parsedScene : " + parsedScene);
+                pickupModel = parsedScene;
                 initViewer();
                 return pickupModel;
             }
