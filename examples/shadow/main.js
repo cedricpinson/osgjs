@@ -59,6 +59,7 @@ LightUpdateCallback.prototype = {
     update: function(node, nv) {
         var currentTime = nv.getFrameStamp().getSimulationTime();
 
+        
         var x = 50 * Math.cos(currentTime);
         var y = 50 * Math.sin(currentTime);
         var h = 80;
@@ -864,13 +865,13 @@ function createScene() {
         root.addChild(project);
     }
 
-    if (true) {
+    if (false) {
         var texproject = createTextureProjectedShadowScene();
         texproject.setMatrix(osg.Matrix.makeTranslate(0,0,0,[]));
         root.addChild(texproject);
     }
 
-    if (true) {
+    if (false) {
         var shadowmap = createShadowMapScene();
         shadowmap.setMatrix(osg.Matrix.makeTranslate(10,0,0,[]));
         root.addChild(shadowmap);
