@@ -1,0 +1,49 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Xaros</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link href="css/styles.css" type="text/css" rel="stylesheet" />
+        <script type="text/javascript" src="js/modernizr-2.0.js"></script>
+        <script type="text/javascript" src="js/jquery-1.6.min.js"></script>
+        <script type="text/javascript" src="js/jquery.mousewheel.js"></script>
+        <script type="text/javascript" src="js/stats.js"></script>
+        <script type="text/javascript" src="js/webgl-utils.js"></script>
+        <script type="text/javascript" src="js/osg.js"></script>
+        <script type="text/javascript" src="js/osgUtil.js"></script>
+        <script type="text/javascript" src="js/osgAnimation.js"></script>
+        <script type="text/javascript" src="js/osgGA.js"></script>
+        <script type="text/javascript" src="js/osgCustomTools.js"></script>
+        <script type="text/javascript" src="js/osgViewer.js"></script>
+        <script type="text/javascript" src="js/osgDB.js"></script>
+        <script type="text/javascript" src="js/pickup.js"></script>
+    </head>
+    <body>
+        <div id="menuContainer">
+            <ul id="myMenu" class="contextMenu">
+                <li class="edit">
+                    <a href="#diskInOut">Disk In/out</a>
+                </li>
+                <li class="copy">
+                    <a href="#showPickup">On Pickup</a>
+                </li>
+                <li class="paste">
+                    <a href="#startStop">Start / Stop</a>
+                </li>
+                <li class="delete">
+                    <a href="#changeFace">Change Face</a>
+                </li>
+            </ul>
+        </div>
+        <div id="ViewContainer">
+            <canvas id="3DView" width="800" height="600"></canvas>
+        </div>
+        <div id="audioContainer">
+            <audio id="player" src="audio/01.ogg">Your browser does not support the HTML5 <code>audio</code> element.</audio>
+        </div>
+    </body>
+</html>
