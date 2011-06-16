@@ -1,12 +1,22 @@
-osg.Program = function () { 
+/** 
+ * Program encapsulate an vertex and fragment shader
+ * @class Program
+ */
+osg.Program = function (vShader, fShader) { 
     if (osg.Program.instanceID === undefined) {
         osg.Program.instanceID = 0;
     }
     this.instanceID = osg.Program.instanceID;
     this._dirty = true;
     osg.Program.instanceID+= 1;
+
+    this.program = null;
+    this.vertex = vShader;
+    this.fragment = fShader;
+    this.dirty = true;
 };
 
+/** @lends osg.Program.prototype */
 osg.Program.prototype = {
     isDirty: function() { return this._dirty; },
     attributeType: "Program",
@@ -93,10 +103,7 @@ osg.Program.prototype = {
 };
 
 osg.Program.create = function(vShader, fShader) {
-    var program = new osg.Program();
-    program.program = null;
-    program.vertex = vShader;
-    program.fragment = fShader;
-    program.dirty = true;
+    console.log("osg.Program.create is deprecated use new osg.Program(vertex, fragment) instead");
+    var program = new osg.Program(vShader, fShader);
     return program;
 };
