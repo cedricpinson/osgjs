@@ -8,51 +8,25 @@ jQuery("document").ready(function() {
     console.log("doc ready");
     
     initCanvas();
-    setupNavMenu();
-    pickupModel = getMk2();
     
+   
     
     //setTimeout("initViewer()", 5000);
-    //initViewer();
-    
+    initViewer();
+    startStop();
 });
     
-function setupNavMenu(){
-    var action;
-    jQuery("a").click(function(){
-        action = jQuery(this).attr('href').substr(1);
-        switch(action){
-            case 'diskInOut':
-                moveInOutDisk();
-                break;
-            case 'showPickup':
-                showPickup();
-                break;
-            case 'startStop':
-                startStop();
-                break;
-            case 'changeFace':
-                changeFace();
-                break;     
-        }
-    });
-    
-}
-function showPickup(){
-    
-        createPickup();
-    
-}
+
 
 function startStop(){
-    if(!inside && pickup !== undefined){
+    if(pickup !== undefined){
         if(!playing){
             viewer.setupManipulator(undefined, true);
             viewer.getManipulator().computeHomePosition();
             viewer.getManipulator().update(0, 1);
             setupMouseListener();
             
-            var platineUpdateCallback = new RotatingUpdateCallback(getNodeFromName(camera, "platine"), 33, "yaw");
+            var platineUpdateCallback = new RotatingUpdateCallback(platine, 33, "yaw");
                         
             //                        platineUpdateCallback.setEndFunction(function(){
             //                            if(this.lastX > 100){
@@ -63,22 +37,13 @@ function startStop(){
                         
             pickup.setUpdateCallback(platineUpdateCallback);
                     
-            var diskUpdateCallback;
-                    
-            // si le disque est posé coté A ou B changer le sens de rotation
-            if(sideAup){
-                diskUpdateCallback = new RotatingUpdateCallback(getNodeFromName(disk, "db"), 33, "yaw");
-            } else {
-                diskUpdateCallback = new RotatingUpdateCallback(getNodeFromName(disk, "db"), 33, "yaw", false);
-            }
-                        
-            disk.setUpdateCallback(diskUpdateCallback);
+           
                     
             playing = true;
         } else {
                         
             pickup.setUpdateCallback(undefined);
-            disk.setUpdateCallback(undefined);
+           
             
             viewer.setupManipulator();
             viewer.getManipulator().computeHomePosition();
@@ -92,15 +57,6 @@ function startStop(){
 //            
 //        }
         manipulatorOn = !manipulatorOn;
-    }
-}
-
-function changeFace(){
-    if(!inside && !playing && pickup !== undefined){
-        turn = 0;
-        yDepl = 13;
-        moveUpDisk();
-        sideAup = !sideAup;
     }
 }
 
@@ -121,27 +77,27 @@ function setupMouseListener(){
         clientX = pos[0];
         clientY = pos[1];
         console.log("X : " + clientX + " Y : " + clientY);
-        var x2 = clientX - jQuery("canvas").width()/2;
-        var y2 = clientY - jQuery("canvas").height()/2;
+        
+        var hit = getIntersection();
         
         
-        console.log("X2 : " + x2 + " y2 : " + y2);
+//        var x2 = clientX - jQuery("canvas").width()/2;
+//        var y2 = clientY - jQuery("canvas").height()/2;
+//        console.log("X2 : " + x2 + " y2 : " + y2);
+//        this.dx = this.dy = 0;
+//        var objX = cellule.boundingSphere._center[0];
+//        var objY = cellule.boundingSphere._center[1];
+//        var objR = cellule.boundingSphere._radius;
+//        if ((x2-objX)*(x2-objX)+(y2-objY)*(y2-objY) <= (objR*objR) && playing){
+//            console.log("collision");
+//            onCell = true;
+//            moveArmUp();
+//        } else {
+//            console.log("no collision");
+//        }
         
-        this.dx = this.dy = 0;
-        cellule = getNodeFromName(armNode, "g31");
-        var objX = cellule.boundingSphere._center[0];
-        var objY = cellule.boundingSphere._center[1];
-        var objR = cellule.boundingSphere._radius;
-        if ((x2-objX)*(x2-objX)+(y2-objY)*(y2-objY) <= (objR*objR) && playing){
-            console.log("collision");
-            onCell = true;
-            moveArmUp();
-        } else {
-            console.log("no collision");
-        }
         
-        
-    //var hit = getIntersection();
+    
     //pushHit = hit;
     //        lastX = xDown;
     //        console.log("click");
@@ -274,6 +230,9 @@ function createPickup(){
     var root = new osg.MatrixTransform();
     
     var models = new osg.Node();
+    
+    pickupModel = osgDB.parseSceneGraph(getSl1200());
+    
     console.log("pickupModel : " + pickupModel);
     models.addChild(pickupModel);
     
@@ -292,10 +251,9 @@ function createPickup(){
     
     arm = new osg.MatrixTransform();
     //    node = new osg.Node();
-    armNode = getNodeFromName(model, "bras");
-    
-    armNode.setNodeMask(~0);
-    armNode.itemToIntersect = true;
+    armNode = getNodeFromName(pickupModel, "bras");
+    platine = getNodeFromName(camera, "platine");
+    cellule = getNodeFromName(armNode, "g31");
     
     children = armNode.getChildren();
     for(var i = 0 ; i < children.length ; i++){
@@ -306,28 +264,6 @@ function createPickup(){
 //    arm.addChild(node);
     
 
-}
-
-function getMk2(){
-    jQuery.ajax({
-        url: "model/Technics_sl1200/TECHNICS_SL1200_triangles.osgjs",  
-        dataType: 'json',   
-        async: false,  
-        success: function(json){  
-            if(json == null){
-                console.log("get null trying to load " + file);
-                return undefined;
-            } else {
-                console.log("success");
-                var parsedScene;
-                parsedScene = osgDB.parseSceneGraph(json);
-                console.log("parsedScene : " + parsedScene);
-                pickupModel = parsedScene;
-                initViewer();
-                return pickupModel;
-            }
-        }  
-    });
 }
 
 function initViewer(){
