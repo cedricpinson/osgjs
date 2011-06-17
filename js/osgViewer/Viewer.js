@@ -123,7 +123,7 @@ osgViewer.Viewer.prototype = {
 
         var createDomElements = function (elementToAppend) {
             var dom = [
-                "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150; z-index: 10;'>",
+                "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150px; z-index: 10;'>",
                 "<div id='StatsLegends' style='position: absolute; left: 0px; font-size: " + fontsize +"px;color: #ffffff;'>",
 
                 "<div id='frameRate' style='color: #00ff00;' > frameRate </div>",
