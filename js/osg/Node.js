@@ -1,6 +1,8 @@
+/** -*- compile-command: "jslint-cli Node.js" -*- */
+
 /** 
  *  Node that can contains child node
- *  @class
+ *  @class Node
  */
 osg.Node = function () {
     this.children = [];

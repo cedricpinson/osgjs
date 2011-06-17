@@ -1,3 +1,7 @@
+/** 
+ * Geometry manage array and primitives to draw a geometry.
+ * @class Geometry
+ */
 osg.Geometry = function () {
     osg.Node.call(this);
     this.primitives = [];
@@ -7,6 +11,7 @@ osg.Geometry = function () {
     this.cacheAttributeList = {};
 };
 
+/** @lends osg.Geometry.prototype */
 osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
     dirtyBound: function() {
         if (this.boundingBoxComputed === true) {

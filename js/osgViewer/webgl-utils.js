@@ -97,15 +97,12 @@ var OTHER_PROBLEM = '' +
  * Creates a webgl context. If creation fails it will
  * change the contents of the container of the <canvas>
  * tag to an error message with the correct links for WebGL.
- * @param {Element} canvas. The canvas element to create a
- *     context from.
- * @param {WebGLContextCreationAttirbutes} opt_attribs Any
- *     creation attributes you want to pass in.
- * @param {function:(msg)} opt_onError An function to call
- *     if there is an error during creation.
  * @return {WebGLRenderingContext} The created context.
  */
-var setupWebGL = function(canvas, opt_attribs, opt_onError) {
+var setupWebGL = function(
+    /** Element */ canvas, 
+    /** WebGLContextCreationAttirbutes */ opt_attribs, 
+    /** function:(msg) */ opt_onError) {
   function handleCreationError(msg) {
       var container = document.getElementsByTagName("body")[0];
     //var container = canvas.parentNode;
