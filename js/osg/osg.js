@@ -1,3 +1,4 @@
+/** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
 osg.version = '0.0.5';
@@ -35,6 +36,10 @@ osg.checkError = function(error) {
 
 // from jquery
 osg.extend = function() {
+    // Save a reference to some core methods
+    var toString = Object.prototype.toString,
+    hasOwnProperty = Object.prototype.hasOwnProperty;
+
     var isFunction = function(obj) {
         return toString.call(obj) === "[object Function]";
     };
@@ -50,9 +55,9 @@ osg.extend = function() {
 	}
 	
 	// Not own constructor property must be Object
-	if ( obj.constructor
-	     && !hasOwnProperty.call(obj, "constructor")
-	     && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
+	if ( obj.constructor && 
+             !hasOwnProperty.call(obj, "constructor") && 
+             !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
 	    return false;
 	}
 	
