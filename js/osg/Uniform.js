@@ -1,9 +1,18 @@
+/** -*- compile-command: "jslint-cli Uniform.js" -*- */
+
+/** 
+ * Uniform manage variable used in glsl shader.
+ * @class Uniform
+ */
 osg.Uniform = function () { this.transpose = false; this._dirty = true; };
+
+/** @lends osg.Uniform.prototype */
 osg.Uniform.prototype = {
     set: function(array) {
         this.data = array;
-        this._dirty = true;
+        this.dirty();
     },
+    dirty: function() { this._dirty = true; },
     apply: function(location) {
         if (this._dirty) {
             this.update.call(this.glData, this.data);
@@ -23,25 +32,26 @@ osg.Uniform.prototype = {
             this[i] = array[i];
         }
     },
-    setFloat1: function(f) {
+
+    _updateFloat1: function(f) {
         this[0] = f[0];
     },
-    setFloat2: function(f) {
+    _updateFloat2: function(f) {
         this[0] = f[0];
         this[1] = f[1];
     },
-    setFloat3: function(f) {
+    _updateFloat3: function(f) {
         this[0] = f[0];
         this[1] = f[1];
         this[2] = f[2];
     },
-    setFloat4: function(f) {
+    _updateFloat4: function(f) {
         this[0] = f[0];
         this[1] = f[1];
         this[2] = f[2];
         this[3] = f[3];
     },
-    setFloat9: function(f) {
+    _updateFloat9: function(f) {
         this[0] = f[0];
         this[1] = f[1];
         this[2] = f[2];
@@ -52,7 +62,7 @@ osg.Uniform.prototype = {
         this[7] = f[7];
         this[8] = f[8];
     },
-    setFloat16: function(f) {
+    _updateFloat16: function(f) {
         this[0] = f[0];
         this[1] = f[1];
         this[2] = f[2];
@@ -79,7 +89,7 @@ osg.Uniform.createFloat1 = function(value, name) {
         gl.uniform1fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
-    uniform.update = osg.Uniform.prototype.setFloat1;
+    uniform.update = osg.Uniform.prototype._updateFloat1;
     uniform.name = name;
     return uniform;
 };
@@ -90,7 +100,7 @@ osg.Uniform.createFloat2 = function(vec2, name) {
         gl.uniform2fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
-    uniform.update = osg.Uniform.prototype.setFloat2;
+    uniform.update = osg.Uniform.prototype._updateFloat2;
     uniform.name = name;
     return uniform;
 };
@@ -101,7 +111,7 @@ osg.Uniform.createFloat3 = function(vec3, name) {
         gl.uniform3fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
-    uniform.update = osg.Uniform.prototype.setFloat3;
+    uniform.update = osg.Uniform.prototype._updateFloat3;
     uniform.name = name;
     return uniform;
 };
@@ -112,7 +122,7 @@ osg.Uniform.createFloat4 = function(vec4, name) {
         gl.uniform4fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
-    uniform.update = osg.Uniform.prototype.setFloat4;
+    uniform.update = osg.Uniform.prototype._updateFloat4;
     uniform.name = name;
     return uniform;
 };
@@ -165,7 +175,7 @@ osg.Uniform.createMatrix2 = function(mat2, name) {
     uniform.apply = uniform.applyMatrix;
     uniform.transpose = false;
     uniform.glData = new osg.Float32Array(uniform.data);
-    uniform.update = osg.Uniform.prototype.setFloat4;
+    uniform.update = osg.Uniform.prototype._updateFloat4;
     uniform.name = name;
     return uniform;
 };
@@ -178,7 +188,7 @@ osg.Uniform.createMatrix3 = function(mat3, name) {
     uniform.apply = uniform.applyMatrix;
     uniform.transpose = false;
     uniform.glData = new osg.Float32Array(uniform.data);
-    uniform.update = osg.Uniform.prototype.setFloat9;
+    uniform.update = osg.Uniform.prototype._updateFloat9;
     uniform.name = name;
     return uniform;
 };
@@ -191,7 +201,7 @@ osg.Uniform.createMatrix4 = function(mat4, name) {
     uniform.apply = uniform.applyMatrix;
     uniform.transpose = false;
     uniform.glData = new osg.Float32Array(uniform.data);
-    uniform.update = osg.Uniform.prototype.setFloat16;
+    uniform.update = osg.Uniform.prototype._updateFloat16;
     uniform.name = name;
     return uniform;
 };
