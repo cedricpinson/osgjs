@@ -6,7 +6,16 @@ osg.ShaderGeneratorType = {
     FragmentMain: 5
 };
 
-osg.Shader = function() {};
+/** 
+ * Shader manage shader for vertex and fragment, you need both to create a glsl program.
+ * @class Shader
+ */
+osg.Shader = function(type, text) {
+    this.type = type;
+    this.text = text;
+};
+
+/** @lends osg.Shader.prototype */
 osg.Shader.prototype = {
     compile: function() {
         this.shader = gl.createShader(this.type);
@@ -25,10 +34,9 @@ osg.Shader.prototype = {
         }
     }
 };
+
 osg.Shader.create = function( type, text )
 {
-    var shader = new osg.Shader(type);
-    shader.type = type;
-    shader.text = text;
-    return shader;
+    osg.log("osg.Shader.create is deprecated, use new osg.Shader with the same arguments instead");
+    return new osg.Shader(type, text);
 };

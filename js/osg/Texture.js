@@ -102,6 +102,8 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                 if (this.isImageReady()) {
                     if (!this.textureObject) {
                         this.init();
+                        this.setTextureSize(this.image.naturalWidth, this.image.naturalHeight);
+                        this._dirty = false;
                     }
                     gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
@@ -138,10 +140,10 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
       };
       setShaderGeneratorFunction(fragmentGenerator, osg.ShaderGeneratorType.FragmentMain);
 
-      @param {function:(unit)} injectionFunction
-      @param {osg.ShaderGeneratorType} injectionType
     */
-    setShaderGeneratorFunction: function(injectionFunction, mode) {
+    setShaderGeneratorFunction: function(
+        /**Function*/ injectionFunction, 
+        /**osg.ShaderGeneratorType*/ mode) {
         this[mode] = injectionFunction;
     },
 

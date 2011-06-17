@@ -1,9 +1,18 @@
+/** -*- compile-command: "jslint-cli Transform.js" -*- */
+
+/** 
+ * Transform - base class for Transform type node ( Camera, MatrixTransform )
+ * @class Transform
+ * @inherits osg.Node
+ */
 osg.Transform = function() {
     osg.Node.call(this);
     this.referenceFrame = osg.Transform.RELATIVE_RF;
 };
 osg.Transform.RELATIVE_RF = 0;
 osg.Transform.ABSOLUTE_RF = 1;
+
+/** @lends osg.Transform.prototype */
 osg.Transform.prototype = osg.objectInehrit(osg.Node.prototype, {
     setReferenceFrame: function(value) { this.referenceFrame = value; },
     getReferenceFrame: function() { return this.referenceFrame; },

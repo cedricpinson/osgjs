@@ -1,6 +1,6 @@
 /** 
  *  Manage Blending mode
- *  @class
+ *  @class BlendFunc
  */
 osg.BlendFunc = function (source, destination) {
     osg.StateAttribute.call(this);
@@ -22,10 +22,8 @@ osg.BlendFunc.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "BlendFunc",
     /** 
         Create an instance of this StateAttribute
-        @returns an instance of osg.BlendFunc object
-        @type osg.BlendFunc
     */ 
-    cloneType: function() {return new osg.BlendFunc(); },
+    cloneType: function() /**osg.BlendFunc*/ {return new osg.BlendFunc(); },
     /** 
         @type String
     */ 

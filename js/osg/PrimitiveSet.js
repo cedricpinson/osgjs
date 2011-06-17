@@ -1,10 +1,16 @@
-osg.DrawArray = function (mode, first, count) 
+/** 
+ * DrawArrays manage rendering primitives
+ * @class DrawArrays
+ */
+osg.DrawArrays = function (mode, first, count) 
 {
     this.mode = mode;
     this.first = first;
     this.count = count;
 };
-osg.DrawArray.prototype = {
+
+/** @lends osg.DrawArrays.prototype */
+osg.DrawArrays.prototype = {
     draw: function(state) {
         gl.drawArrays(this.mode, this.first, this.count);
     },
@@ -12,14 +18,17 @@ osg.DrawArray.prototype = {
     getCount: function() { return this.count; },
     getFirst: function() { return this.first; }
 };
-osg.DrawArray.create = function(mode, first, count) {
+osg.DrawArrays.create = function(mode, first, count) {
+    osg.log("osg.DrawArrays.create is deprecated, use new osg.DrawArrays with same arguments");
     var d = new osg.DrawArray(mode, first, count);
     return d;
 };
 
-osg.DrawArrays = osg.DrawArray;
 
-
+/** 
+ * DrawElements manage rendering of indexed primitives
+ * @class DrawElements
+ */
 osg.DrawElements = function (mode, indices) {
     this.mode = gl.POINTS;
     if (mode !== undefined) {
@@ -34,6 +43,7 @@ osg.DrawElements = function (mode, indices) {
     }
 };
 
+/** @lends osg.DrawElements.prototype */
 osg.DrawElements.prototype = {
     getMode: function() { return this.mode; },
     draw: function(state) {
@@ -49,6 +59,6 @@ osg.DrawElements.prototype = {
 };
 
 osg.DrawElements.create = function(mode, indices) {
-    var d = new osg.DrawElements(mode, indices);
-    return d;
+    osg.log("osg.DrawElements.create is deprecated, use new osg.DrawElements with same arguments");
+    return new osg.DrawElements(mode, indices);
 };

@@ -1,11 +1,25 @@
-osg.BufferArray = function () {
+/** 
+ * BufferArray manage vertex / normal / ... array used by webgl.
+ * @class BufferArray
+ */
+osg.BufferArray = function (type, elements, itemSize) {
     if (osg.BufferArray.instanceID === undefined) {
         osg.BufferArray.instanceID = 0;
     }
     this.instanceID = osg.BufferArray.instanceID;
     osg.BufferArray.instanceID += 1;
-    this._dirty = true;
+    this.dirty();
+
+    this.itemSize = itemSize;
+    this.type = type;
+    if (this.type === gl.ELEMENT_ARRAY_BUFFER) {
+        this.elements = new osg.Uint16Array(elements);
+    } else {
+        this.elements = new osg.Float32Array(elements);
+    }
 };
+
+/** @lends osg.BufferArray.prototype */
 osg.BufferArray.prototype = {
     init: function() {
         if (!this.buffer && this.elements.length > 0 ) {
@@ -26,13 +40,6 @@ osg.BufferArray.prototype = {
 };
 
 osg.BufferArray.create = function(type, elements, itemSize) {
-    var a = new osg.BufferArray();
-    a.itemSize = itemSize;
-    a.type = type;
-    if (a.type === gl.ELEMENT_ARRAY_BUFFER) {
-        a.elements = new osg.Uint16Array(elements);
-    } else {
-        a.elements = new osg.Float32Array(elements);
-    }
-    return a;
+    osg.log("osg.BufferArray.create is deprecated, use new osg.BufferArray with same arguments instead");
+    return new osg.BufferArray(type, elements, itemSize);
 };
