@@ -14,7 +14,7 @@ test("osgUtil_TriangleIntersect", function() {
     ok(ti.hits.length === 2, "Hits should be 2 and result is " + ti.hits.length );
     var result = [ 0.5, 0.5, 0];
     var found = osg.Vec3.add(start, 
-                             osg.Vec3.mult(dir, ti.hits[0][0], []), 
+                             osg.Vec3.mult(dir, ti.hits[0].ratio, []), 
                              []);
     near(found, result, 1e-4);
 

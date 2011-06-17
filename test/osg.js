@@ -1,4 +1,3 @@
-
 function check_near(a, b, threshold) {
     if (threshold === undefined) {
         threshold = 1e-5;
@@ -33,7 +32,7 @@ function near(a, b, threshold)
 
     if (jQuery.isArray(a)) {
         for (var i = 0; i < a.length; ++i) {
-            var number = typeof a[i] === "number" && typeof b[i] === "number";
+            var number = typeof a[i] === "number" && typeof b[i] === "number" && !isNaN(a[i]) && !isNaN(b[i]);
             if (Math.abs(a[i]-b[i]) > threshold || number === false) {
                 ok(false, QUnit.jsDump.parse(a) + " expected " + QUnit.jsDump.parse(b));
                 return;
@@ -683,6 +682,16 @@ test("osg.State", function() {
 
 });
 
+test("osg.Camera", function() {
+
+    (function() {
+        var matrix = osg.Matrix.makeOrtho(-1,1,-1,1,-2,2);
+        var camera = new osg.Camera();
+        camera.setProjectionMatrixAsOrtho(-1,1,-1,1,-2,2);
+        ok(check_near(matrix, camera.getProjectionMatrix()), "check osg.Camera.setProjectionMatrixAsOrtho");
+
+    })();
+});
 
 test("osg.CullVisitor", function() {
 
