@@ -36,7 +36,7 @@ function createScene() {
     var rq = osg.createTexturedQuad(0,0,0,
                                   rttSize[0], 0 ,0,
                                   0, rttSize[1],0);
-    rq.getOrCreateStateSet().setTextureAttributeAndMode(0, osg.Texture.create("textures/sol_trauma_periph.png"));
+    rq.getOrCreateStateSet().setTextureAttributeAndMode(0, osg.Texture.createFromURL("textures/sol_trauma_periph.png"));
     var rttTexture = new osg.Texture();
     rttTexture.setTextureSize(rttSize[0],rttSize[1]);
     rttTexture.setMinFilter('LINEAR');
@@ -49,7 +49,7 @@ function createScene() {
     var q = osg.createTexturedQuad(-25,-25,0,
                                   50, 0 ,0,
                                   0, 50 ,0);
-    //rttTexture = osg.Texture.create("textures/sol_trauma_periph.png");
+    //rttTexture = osg.Texture.createFromURL("textures/sol_trauma_periph.png");
     q.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
 
     var mainNode = new osg.Node();

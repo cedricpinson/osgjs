@@ -656,7 +656,7 @@ test("osg.ShaderGenerator", function() {
     stateSet0.setAttributeAndMode(new osg.Material());
 
     var stateSet1 = new osg.StateSet();
-    stateSet1.setTextureAttributeAndMode(0,new osg.Texture.create(undefined));
+    stateSet1.setTextureAttributeAndMode(0,new osg.Texture(undefined));
 
     state.pushStateSet(stateSet0);
     state.pushStateSet(stateSet1);

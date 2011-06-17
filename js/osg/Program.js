@@ -20,7 +20,7 @@ osg.Program = function (vShader, fShader) {
 osg.Program.prototype = {
     isDirty: function() { return this._dirty; },
     attributeType: "Program",
-    cloneType: function() { var p = osg.Program.create(); p.default_program = true; return p; },
+    cloneType: function() { var p = new osg.Program(); p.default_program = true; return p; },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
     setVertexShader: function(vs) { program.vertex = vs; },

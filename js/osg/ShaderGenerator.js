@@ -139,9 +139,9 @@ osg.ShaderGenerator.prototype = {
 
         var vertexshader = this.getOrCreateVertexShader(state, attributeKeys, textureAttributeKeys);
         var fragmentshader = this.getOrCreateFragmentShader(state, attributeKeys, textureAttributeKeys);
-        var program = osg.Program.create(
-            osg.Shader.create(gl.VERTEX_SHADER, vertexshader),
-            osg.Shader.create(gl.FRAGMENT_SHADER, fragmentshader));
+        var program = new osg.Program(
+            new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+            new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
 
         program.flattenKeys = flattenKeys;
         program.activeAttributeKeys = attributeKeys;

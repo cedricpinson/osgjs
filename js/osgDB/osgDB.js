@@ -34,13 +34,13 @@ osgDB.parseSceneGraph = function (node)
             var mode = node.primitives[i].mode;
             if (node.primitives[i].indices) {
                 var array = node.primitives[i].indices;
-                array = osg.BufferArray.create(gl[array.type], array.elements, array.itemSize );
+                array = new osg.BufferArray(gl[array.type], array.elements, array.itemSize );
                 if (!mode) {
                     mode = gl.TRIANGLES;
                 } else {
                     mode = gl[mode];
                 }
-                node.primitives[i] = osg.DrawElements.create(mode, array);
+                node.primitives[i] = new osg.DrawElements(mode, array);
             } else {
                 mode = gl[mode];
                 var first = node.primitives[i].first;
@@ -53,7 +53,7 @@ osgDB.parseSceneGraph = function (node)
         for (var key in node.attributes) {
             if (node.attributes.hasOwnProperty(key)) {
                 var attributeArray = node.attributes[key];
-                node.attributes[key] = osg.BufferArray.create(gl[attributeArray.type], attributeArray.elements, attributeArray.itemSize );
+                node.attributes[key] = new osg.BufferArray(gl[attributeArray.type], attributeArray.elements, attributeArray.itemSize );
             }
         }
         // jQuery.each(node.attributes, function( key, element) {
@@ -78,7 +78,6 @@ osgDB.parseSceneGraph = function (node)
                 img.src = textures[t].file;
                 tex.setImage(img);
                 
-                //var tex = osg.Texture.create(textures[t].file);
                 newstateset.setTextureAttributeAndMode(t, tex);
                 newstateset.addUniform(osg.Uniform.createInt1(t,"Texture" + t));
             }

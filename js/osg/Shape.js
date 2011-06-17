@@ -284,11 +284,11 @@ osg.createTexturedBox = function(centerx, centery, centerz,
     indexes[34] = 22;
     indexes[35] = 23;
 
-    g.getAttributes().Vertex = osg.BufferArray.create(gl.ARRAY_BUFFER, vertexes, 3 );
-    g.getAttributes().Normal = osg.BufferArray.create(gl.ARRAY_BUFFER, normal, 3 );
-    g.getAttributes().TexCoord0 = osg.BufferArray.create(gl.ARRAY_BUFFER, uv, 2 );
+    g.getAttributes().Vertex = new osg.BufferArray(gl.ARRAY_BUFFER, vertexes, 3 );
+    g.getAttributes().Normal = new osg.BufferArray(gl.ARRAY_BUFFER, normal, 3 );
+    g.getAttributes().TexCoord0 = new osg.BufferArray(gl.ARRAY_BUFFER, uv, 2 );
     
-    var primitive = new osg.DrawElements(gl.TRIANGLES, osg.BufferArray.create(gl.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
+    var primitive = new osg.DrawElements(gl.TRIANGLES, new osg.BufferArray(gl.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
     g.getPrimitives().push(primitive);
     return g;
 };
@@ -372,11 +372,11 @@ osg.createTexturedQuad = function(cornerx, cornery, cornerz,
     indexes[4] = 2;
     indexes[5] = 3;
 
-    g.getAttributes().Vertex = osg.BufferArray.create(gl.ARRAY_BUFFER, vertexes, 3 );
-    g.getAttributes().Normal = osg.BufferArray.create(gl.ARRAY_BUFFER, normal, 3 );
-    g.getAttributes().TexCoord0 = osg.BufferArray.create(gl.ARRAY_BUFFER, uvs, 2 );
+    g.getAttributes().Vertex = new osg.BufferArray(gl.ARRAY_BUFFER, vertexes, 3 );
+    g.getAttributes().Normal = new osg.BufferArray(gl.ARRAY_BUFFER, normal, 3 );
+    g.getAttributes().TexCoord0 = new osg.BufferArray(gl.ARRAY_BUFFER, uvs, 2 );
     
-    var primitive = new osg.DrawElements(gl.TRIANGLES, osg.BufferArray.create(gl.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
+    var primitive = new osg.DrawElements(gl.TRIANGLES, new osg.BufferArray(gl.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
     g.getPrimitives().push(primitive);
     return g;
 };
