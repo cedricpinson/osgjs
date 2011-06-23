@@ -13,7 +13,7 @@ jQuery("document").ready(function() {
     
     //setTimeout("initViewer()", 5000);
     initViewer();
-    startStop();
+    //startStop();
 });
     
 
@@ -51,11 +51,6 @@ function startStop(){
             playing = false;
         }
     
-//        if(manipulatorOn){
-//            
-//        } else {
-//            
-//        }
         manipulatorOn = !manipulatorOn;
     }
 }
@@ -78,29 +73,11 @@ function setupMouseListener(){
         clientY = pos[1];
         console.log("X : " + clientX + " Y : " + clientY);
         
-        var hit = getIntersection();
+        if(getIntersection(cellule)){
+            console.log("cell detect");
+        };
         
-        
-//        var x2 = clientX - jQuery("canvas").width()/2;
-//        var y2 = clientY - jQuery("canvas").height()/2;
-//        console.log("X2 : " + x2 + " y2 : " + y2);
-//        this.dx = this.dy = 0;
-//        var objX = cellule.boundingSphere._center[0];
-//        var objY = cellule.boundingSphere._center[1];
-//        var objR = cellule.boundingSphere._radius;
-//        if ((x2-objX)*(x2-objX)+(y2-objY)*(y2-objY) <= (objR*objR) && playing){
-//            console.log("collision");
-//            onCell = true;
-//            moveArmUp();
-//        } else {
-//            console.log("no collision");
-//        }
-        
-        
-    
-    //pushHit = hit;
-    //        lastX = xDown;
-    //        console.log("click");
+
         
     });
     jQuery("canvas").mousemove(function(event){
@@ -120,13 +97,12 @@ function setupMouseListener(){
     
 }
 
-function getIntersection(){
+function getIntersection(itemToIntersect){
     
     var hits = viewer.view.computeIntersections(clientX, clientY, 1);
         
-    console.log("hits " + hits.length);
-        
-    var l = hits.length;
+    console.log("hits " + hits);
+    
     if (l === 0 ) {
         return undefined;
     }
@@ -139,90 +115,57 @@ function getIntersection(){
     var l2 = hit.length;
     var itemSelected;
     var name;
+    console.log(l2);
     while (l2-- >= 0) {
-        if (hit[l2].itemToIntersect !== undefined) {
-            name = hit[l2].name;
-            //itemSelected = hit[l2].children[0].getUpdateCallback();
-            itemSelected = hit[l2];
-            break;
+        if (hit[l2] !== undefined){
+            
+            if(hit[l2].name !== undefined) {
+            
+                name = hit[l2].name;
+                //itemSelected = hit[l2].children[0].getUpdateCallback();
+                itemSelected = hit[l2];
+                console.log("success name " + name + " l2: " + l2);
+                if(name == itemToIntersect.name){
+                    return true;
+                }
+                
+            }
         }
     }
-    return {
-        'itemName': name, 
-        'item': itemSelected
-    };
+    return false;
     
-}
-
-function moveArmUp(){
-    console.log("moveArmUp");
-    var currentPosition = arm.getMatrix();
-    
-    var copy = osg.Matrix.copy(currentPosition, copy);
-    var translation = osg.Matrix.makeTranslate(206.815448,98.028395,22.310888,[]);
-    var rotation = osg.Matrix.makeRotate(0.1, 1, 0, 0);
-    var backtranslation = osg.Matrix.inverse(translation, backtranslation);
-    
-    osg.Matrix.postMult(backtranslation, copy);
-    osg.Matrix.postMult(rotation, copy);
-    osg.Matrix.postMult(translation, copy);
-    
-    arm.setMatrix(copy);
-
-    armNode.removeChildren();
-    armNode.addChild(arm);
-}
-
-function moveArmDown(){
-    console.log("moveArmDown");
-    var currentPosition = arm.getMatrix();
-    
-    var copy = osg.Matrix.copy(currentPosition, copy);
-    var translation = osg.Matrix.makeTranslate(206.815448,98.028395,22.310888,[]);
-    var rotation = osg.Matrix.makeRotate(-0.1, 1, 0, 0);
-    var backtranslation = osg.Matrix.inverse(translation, backtranslation);
-    
-    osg.Matrix.postMult(backtranslation, copy);
-    osg.Matrix.postMult(rotation, copy);
-    osg.Matrix.postMult(translation, copy);
-    
-    arm.setMatrix(copy);
-
-    armNode.removeChildren();
-    armNode.addChild(arm);
-}
-
-
-function moveArm(deltax){
-    
-    console.log("moveArm : " + deltax);
-    
-    var currentPosition = arm.getMatrix();
-    
-    var copy = osg.Matrix.copy(currentPosition, copy);
-    var translation = osg.Matrix.makeTranslate(206.815448,98.028395,22.310888,[]);
-    var rotation = osg.Matrix.makeRotate(deltax/500, 0, 0, 1);
-    var backtranslation = osg.Matrix.inverse(translation, backtranslation);
-    
-    osg.Matrix.postMult(backtranslation, copy);
-    osg.Matrix.postMult(rotation, copy);
-    osg.Matrix.postMult(translation, copy);
-    
-    arm.setMatrix(copy);
-
-    armNode.removeChildren();
-    armNode.addChild(arm);
 }
 
 
 function createScene(){
     var root = new osg.Camera();
+
     root.setComputeNearFar(false);
-    
+    root = new osg.Node();
     
     camera = root;
     createPickup();
+    createDisc();
     return root;
+}
+
+function createDisc(){
+    
+    var root = new osg.MatrixTransform();
+    var model = osgDB.parseSceneGraph(getDisqueRouge());
+    
+    var models = new osg.Node();
+    models.addChild(model);
+    var scene = new osg.Node();
+    scene.addChild(models);
+    
+    root.addChild(scene);
+
+    camera.addChild(root);
+    
+    return root;
+    
+    
 }
 
 function createPickup(){
