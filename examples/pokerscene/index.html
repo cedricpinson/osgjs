@@ -1,0 +1,91 @@
+<html>
+
+<head>
+<style>
+  body {
+  background: black;
+  overflow:hidden;
+  padding:0;
+  margin:0;
+  color: white;
+  }
+
+  a:link {text-decoration: none; color: grey;}
+  a:visited {text-decoration: none; color: grey}
+  a:active {text-decoration: none; color: grey}
+  a:hover {text-decoration: underline;  color: grey}
+
+  #ViewContainer {
+  position: absolute;
+  }
+</style>
+
+<title>PokerScene</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<script type="text/javascript" src="../../build/osg.js"></script>
+<script type="text/javascript" src="pokerscene.js"></script>
+<script type="text/javascript" src="main.js"></script>
+
+<script type="text/javascript">
+
+function getWindowSize() {
+    var myWidth = 0, myHeight = 0;
+    
+    if( typeof( window.innerWidth ) == 'number' ) {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+    } else if( document.documentElement && ( document.documentElement.clientWidth || document.documentElement.clientHeight ) ) {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+    } else if( document.body && ( document.body.clientWidth || document.body.clientHeight ) ) {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+    }
+    return { 'w': myWidth, 'h': myHeight };
+}
+
+window.addEventListener("load",
+function() {
+  
+  var size = getWindowSize();
+
+  var canvas = document.getElementById("3DView");
+
+  canvas.width = size.w;
+  canvas.height = size.h;
+
+
+  var viewer;
+try {
+  viewer = new osgViewer.Viewer(canvas);
+  viewer.init();
+  viewer.setScene(createScene());
+  viewer.setupManipulator();
+  viewer.run();
+} catch (er) {
+  osg.log("exception in osgViewer " + er);
+}
+
+}
+,true);
+
+//);
+
+</script>
+
+</head>
+
+
+
+<body>
+
+  <div id="ViewContainer">
+  <canvas id="3DView" style="border: none;" width="800" height="600"></canvas>
+  </div>
+
+</body>
+
+</html>

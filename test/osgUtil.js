@@ -7,13 +7,15 @@ test("osgUtil_TriangleIntersect", function() {
     var ti = new osgUtil.TriangleIntersect();
     var start = [0.5,0.5, -2.0];
     var end = [0.5,0.5, 0.5];
-    var dir = osg.Vec3.sub(end,start);
+    var dir = osg.Vec3.sub(end,start, []);
     ti.set(start, end);
     
     ti.apply(quad);
     ok(ti.hits.length === 2, "Hits should be 2 and result is " + ti.hits.length );
     var result = [ 0.5, 0.5, 0];
-    var found = osg.Vec3.add(start, osg.Vec3.mult(dir,ti.hits[0][0]));
+    var found = osg.Vec3.add(start, 
+                             osg.Vec3.mult(dir, ti.hits[0][0], []), 
+                             []);
     near(found, result, 1e-4);
 
     var ti2 = new osgUtil.TriangleIntersect();
@@ -47,7 +49,7 @@ test("osgUtil_IntersectVisitorScene", function() {
     view.setViewport(new osg.Viewport());
     view.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]));
     view.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0));
-    var quad = osg.ParseSceneGraph(Scene);
+    var quad = osgDB.parseSceneGraph(Scene);
     view.addChild(quad);
 
     var result = view.computeIntersections(400,300);
