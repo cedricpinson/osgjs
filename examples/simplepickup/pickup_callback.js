@@ -1,6 +1,51 @@
-$.noConflict();
 var canvas, scene, viewer, dof, platine, rotation, multiSwitch, offSwitch, onSwitch;
 
+var PlatineUpdateCallback = function(platine, dof) {
+    this.platine = platine;
+    this.dof = dof;
+    this.lastX = 0;
+    this.lastTime = 0;
+    this.ii = 0;
+};
+PlatineUpdateCallback.prototype = {
+    update: function(node, nv) {
+        
+        this.ii = this.ii + 0.1;
+        // getting the current time
+        var currentTime = nv.getFrameStamp().getSimulationTime();
+
+        // rotation speed in rad per seconds
+        var radPSec = 66 * Math.PI / 60;
+        
+        // delta time
+        var dt = currentTime-this.lastTime;
+        
+        // rotation angle for this update
+        var x = dt*radPSec;
+        
+        // total rotation
+        var newX = this.lastX+x;
+        
+        console.log("Depl : " + x + " dt : " + dt + " newX : " + newX);
+        
+        this.platine.setMatrix(osg.Matrix.makeRotate(newX, 0, 0, 1, []));
+        //this.platine.setMatrix(osg.Matrix.makeRotate(this.ii, 0, 0, 1, []));
+    
+        this.dof.removeChildren();
+//    // set the rotated platine in the dof node
+       this.dof.addChild(this.platine);
+//        this.platine.setMatrix(node.getMatrix());
+        
+        
+        
+
+        
+        this.lastTime = currentTime;
+        this.lastX = newX;
+        
+        node.traverse(nv);
+    }
+};
 
 jQuery("document").ready(function($) {
     console.log("doc ready");
@@ -38,14 +83,10 @@ jQuery("document").ready(function($) {
                 // creating the scene
                 scene = createScene(json);
 
-                // create a new matrix transform
-                platine = new osg.MatrixTransform();
+               
                 
-                // getting the actual platine group from the scene
-                var platineGroup = getNodeFromName(scene, "g5");
                 
-                // add platine geometry in the matrix transform
-                platine.addChild(platineGroup);
+                
                 
                 // getting the DOF node
                 dof = getNodeFromName(scene, "d1");
@@ -78,7 +119,7 @@ jQuery("document").ready(function($) {
     
 
         
-        //set up keyboard listener
+    //set up keyboard listener
     $(document).keydown(function(event){
             
         if(event.keyCode == 65){
@@ -86,6 +127,7 @@ jQuery("document").ready(function($) {
                 //stop animation
                 rotation = false;
                 changeSwitch();
+                scene.setUpdateCallback(undefined);
                 
                 
             } else {
@@ -94,9 +136,10 @@ jQuery("document").ready(function($) {
                 rotation = true;
                 changeSwitch();
                 
+                scene.setUpdateCallback(new PlatineUpdateCallback(platine, dof));
                 
                 // launch rotation animation
-                rotate();
+                //rotate();
             }
             
         //scene.setMatrix(osg.Matrix.makeRotate(3.14, 1, 0, 0, []));
@@ -118,22 +161,24 @@ function changeSwitch(){
     
 }
 
-function rotate(){
-    
-    rot = rot+1;
-    console.log("a detect");
-   
-    // perform rotation on the platine
-    platine.setMatrix(osg.Matrix.makeRotate(rot/5, 0, 0, 1, []));
-    //remove the old platine from the dof node
-    dof.removeChildren();
-    // set the rotated platine in the dof node
-    dof.addChild(platine);
-    if(rotation){
-        window.requestAnimationFrame(rotate, canvas);
-        //var timeout = setTimeout("rotate()",1000/60);
-    }
-}
+//function rotate(){
+//    
+//    rot = rot+1;
+//    console.log("a detect");
+//    
+//    
+//   
+//    // perform rotation on the platine
+//    platine.setMatrix(osg.Matrix.makeRotate(rot/5, 0, 0, 1, []));
+//    //remove the old platine from the dof node
+//    dof.removeChildren();
+//    // set the rotated platine in the dof node
+//    dof.addChild(platine);
+//    if(rotation){
+//        window.requestAnimationFrame(rotate, canvas);
+//    //var timeout = setTimeout("rotate()",1000/60);
+//    }
+//}
 
 
 
@@ -147,6 +192,21 @@ function createScene(json){
     
     // adding the model to the scene
     scene.addChild(model);
+    
+    // create a new matrix transform
+    platine = new osg.MatrixTransform();
+                
+    // getting the actual platine group from the scene
+    var platineGroup = getNodeFromName(scene, "g5");
+                
+    // add platine geometry in the matrix transform
+    platine.addChild(platineGroup);
+                
+    
+    
+    
+    
+    
 
     return scene;
 }

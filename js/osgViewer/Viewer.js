@@ -20,9 +20,18 @@ osgViewer.Viewer = function(canvas, options) {
         this.urlOptions = true;
 
         this.mouseWheelEventNode = canvas;
-        this.eventNode = document;
-        if (options && options.mouseWheelEventNode) {
-            this.mouseWheelEventNode = options.mouseWheelEventNode;
+        this.mouseEventNode = canvas;
+        this.keyboardEventNode = document;
+        if (options) {
+            if(options.mouseWheelEventNode){
+                this.mouseWheelEventNode = options.mouseWheelEventNode;
+            }
+            if(options.mouseEventNode){
+                this.mouseEventNode = options.mouseEventNode;
+            }
+            if(options.mouseWheelEventNode){
+                this.keyboardEventNode = options.keyboardEventNode;
+            }            
         }
 
     } else {
@@ -143,19 +152,10 @@ osgViewer.Viewer.prototype = {
 
                 "</div>"
             ].join("\n");
-            var parent;
             if (elementToAppend === undefined) {
-                parent = document.body;
-                //elementToAppend = "body";
-            } else {
-                parent = document.getElementById(elementToAppend);
+                elementToAppend = "body";
             }
-
-            //jQuery(dom).appendTo(elementToAppend);
-            var mydiv = document.createElement('div');
-            mydiv.innerHTML = dom;
-            parent.appendChild(mydiv);
-
+            jQuery(dom).appendTo(elementToAppend);
             var grid = document.getElementById("StatsCanvasGrid");
             var ctx = grid.getContext("2d");
             ctx.clearRect(0,0,grid.width, grid.height);
@@ -191,39 +191,31 @@ osgViewer.Viewer.prototype = {
         var height = this.canvasStats.height;
         var ratio = height / maxMS;
         height = height - 2;
-        var getStyle = function(el,styleProp)
-        {
-	    var x = document.getElementById(el);
-	    if (x.style) {
-		return x.style.getPropertyValue(styleProp);
-            }
-            return null;
-        };
-        this.stats.addLayer(getStyle("frameRate","color"), function(t) { 
+        this.stats.addLayer(jQuery("#frameRate").css("color"), function(t) { 
             var v = (height)/60.0 * (1000/that.frameRate);
             if (v > height) {
                 return height;
             }
             return v;} );
-        this.stats.addLayer(getStyle("frameTime", "color"), function(t) { 
+        this.stats.addLayer(jQuery("#frameTime").css("color"), function(t) { 
             var v = that.frameTime * ratio;
             if (v > height) {
                 return height;
             }
             return v;} );
-        this.stats.addLayer(getStyle("updateTime","color"), function(t) { 
+        this.stats.addLayer(jQuery("#updateTime").css("color"), function(t) { 
             var v = that.updateTime * ratio;
             if (v > height) {
                 return height;
             }
             return v;} );
-        this.stats.addLayer(getStyle("cullTime","color"), function(t) { 
+        this.stats.addLayer(jQuery("#cullTime").css("color"), function(t) { 
             var v = that.cullTime * ratio;
             if (v > height) {
                 return height;
             }
             return v;} );
-        this.stats.addLayer(getStyle("drawTime","color"), function(t) { 
+        this.stats.addLayer(jQuery("#drawTime").css("color"), function(t) { 
             var v = that.drawTime * ratio;
             if (v > height) {
                 return height;
@@ -347,66 +339,6 @@ osgViewer.Viewer.prototype = {
         this.manipulator = manipulator;
 
         var that = this;
-        var viewer = this;
-	var fixEvent = function( event ) {
-
-	    //if ( event[ expando ] ) {
-		//return event;
-	    //}
-
-	    // store a copy of the original event object
-	    // and "clone" to set read-only properties
-
-            // nop
-	    //var originalEvent = event;
-	    //event = jQuery.Event( originalEvent );
-
-	    for ( var i = this.props.length, prop; i; ) {
-		prop = this.props[ --i ];
-		event[ prop ] = originalEvent[ prop ];
-	    }
-
-	    // Fix target property, if necessary
-	    if ( !event.target ) {
-		event.target = event.srcElement || document; // Fixes #1925 where srcElement might not be defined either
-	    }
-
-	    // check if target is a textnode (safari)
-	    if ( event.target.nodeType === 3 ) {
-		event.target = event.target.parentNode;
-	    }
-
-	    // Add relatedTarget, if necessary
-	    if ( !event.relatedTarget && event.fromElement ) {
-		event.relatedTarget = event.fromElement === event.target ? event.toElement : event.fromElement;
-	    }
-
-	    // Calculate pageX/Y if missing and clientX/Y available
-	    if ( event.pageX == null && event.clientX != null ) {
-		var doc = document.documentElement, body = document.body;
-		event.pageX = event.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
-		event.pageY = event.clientY + (doc && doc.scrollTop  || body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
-	    }
-
-	    // Add which for key events
-	    if ( !event.which && ((event.charCode || event.charCode === 0) ? event.charCode : event.keyCode) ) {
-		event.which = event.charCode || event.keyCode;
-	    }
-
-	    // Add metaKey to non-Mac browsers (use ctrl for PC's and Meta for Macs)
-	    if ( !event.metaKey && event.ctrlKey ) {
-		event.metaKey = event.ctrlKey;
-	    }
-
-	    // Add which for click: 1 === left; 2 === middle; 3 === right
-	    // Note: button is not normalized, so don't use it
-	    if ( !event.which && event.button !== undefined ) {
-		event.which = (event.button & 1 ? 1 : ( event.button & 2 ? 3 : ( event.button & 4 ? 2 : 0 ) ));
-	    }
-
-	    return event;
-	};
-
         this.manipulator.convertEventToCanvas = function(e) {
             var myObject = that.canvas;
             var posx,posy;
@@ -446,105 +378,71 @@ osgViewer.Viewer.prototype = {
             var touchDown = function(ev)
             {
                 disableMouse = true;
-                return viewer.getManipulator().touchDown(ev);
+                return Viewer.getManipulator().touchDown(ev);
             };
             var touchUp = function(ev)
             {
                 disableMouse = true;
-                return viewer.getManipulator().touchUp(ev);
+                return Viewer.getManipulator().touchUp(ev);
             };
             var touchMove = function(ev)
             {
                 disableMouse = true;
-                return viewer.getManipulator().touchMove(ev);
+                return Viewer.getManipulator().touchMove(ev);
             };
 
-            // touch events
             this.canvas.addEventListener("MozTouchDown", touchDown, false);
             this.canvas.addEventListener("MozTouchUp", touchUp, false);
             this.canvas.addEventListener("MozTouchMove", touchMove, false);
 
-            // mouse
-            var mousedown = function (ev) 
-            {
-                if (disableMouse === false) {
-                    return viewer.getManipulator().mousedown(ev);
-                }
-            };
-            var mouseup = function (ev) 
-            {
-                if (disableMouse === false) {
-                    return viewer.getManipulator().mouseup(ev);
-                }
-            };
-            var mousemove = function (ev) 
-            {
-                if (disableMouse === false) {
-                    return viewer.getManipulator().mousemove(ev);
-                }
-            };
-            var dblclick = function (ev) 
-            {
-                if (disableMouse === false) {
-                    return viewer.getManipulator().dblclick(ev);
-                }
-            };
-            var mousewheel = function (event) 
-            {
-                if (disableMouse === false) {
-                    // from jquery
-                    var orgEvent = event || window.event, args = [].slice.call( arguments, 1 ), delta = 0, returnValue = true, deltaX = 0, deltaY = 0;
-                    //event = $.event.fix(orgEvent);
-                    event.type = "mousewheel";
-                    
-                    // Old school scrollwheel delta
-                    if ( event.wheelDelta ) { delta = event.wheelDelta/120; }
-                    if ( event.detail     ) { delta = -event.detail/3; }
-                    
-                    // New school multidimensional scroll (touchpads) deltas
-                    deltaY = delta;
-                    
-                    // Gecko
-                    if ( orgEvent.axis !== undefined && orgEvent.axis === orgEvent.HORIZONTAL_AXIS ) {
-                        deltaY = 0;
-                        deltaX = -1*delta;
+            jQuery(this.mouseEventNode).bind( {
+                mousedown: function(ev) {
+                    if (disableMouse === false) {
+                        return manipulator.mousedown(ev);
                     }
-                    
-                    // Webkit
-                    if ( orgEvent.wheelDeltaY !== undefined ) { deltaY = orgEvent.wheelDeltaY/120; }
-                    if ( orgEvent.wheelDeltaX !== undefined ) { deltaX = -1*orgEvent.wheelDeltaX/120; }
-                    // Add event and delta to the front of the arguments
-                    args.unshift(event, delta, deltaX, deltaY);
-                    var m = viewer.getManipulator();
-                    return m.mousewheel.apply(m, args);
+                },
+                mouseup: function(ev) {
+                    if (disableMouse === false) {
+                        return manipulator.mouseup(ev);
+                    }
+                },
+                mousemove: function(ev) {
+                    if (disableMouse === false) {
+                        return manipulator.mousemove(ev);
+                    }
+                },
+                dblclick: function(ev) {
+                    if (disableMouse === false) {
+                        return manipulator.dblclick(ev);
+                    }
                 }
-            };
+            });
 
-            if (viewer.getManipulator().mousedown) {
-                this.eventNode.addEventListener("mousedown", mousedown, false);
+            if (jQuery(document).mousewheel !== undefined) {
+                jQuery(this.canvas).mousewheel(function(objEvent, intDelta, deltaX, deltaY) {
+	            if (intDelta > 0){
+                        if (manipulator.distanceDecrease) {
+                            manipulator.distanceDecrease();
+                        }
+	            }
+	            else if (intDelta < 0){
+                        if (manipulator.distanceIncrease) {
+                            manipulator.distanceIncrease();
+                        }
+	            }
+                    return false;
+	        });
             }
-            if (viewer.getManipulator().mouseup) {
-                this.eventNode.addEventListener("mouseup", mouseup, false);
+            
+            if (manipulator.keydown !== undefined) {
+                jQuery(this.keyboardEventNode).bind({'keydown': function(event) {
+                    return manipulator.keydown(event);
+                }});
             }
-            if (viewer.getManipulator().mousemove) {
-                this.eventNode.addEventListener("mousemove", mousemove, false);
-            }
-            if (viewer.getManipulator().dblclick) {
-                this.eventNode.addEventListener("dblclick", dblclick, false);
-            }
-            if (viewer.getManipulator().mousewheel) {
-                this.canvas.addEventListener("DOMMouseScroll", mousewheel, false);
-                this.canvas.addEventListener("mousewheel", mousewheel, false);
-            }
-
-            var keydown = function(ev) {return viewer.getManipulator().keydown(ev); };
-            var keyup = function(ev) {return viewer.getManipulator().keyup(ev);};
-
-            if (viewer.getManipulator().keydown) {
-                this.eventNode.addEventListener("keydown", keydown, false);
-            }
-            if (viewer.getManipulator().keyup) {
-                this.eventNode.addEventListener("keyup", keyup, false);
+            if (manipulator.keyup !== undefined) {
+                jQuery(this.keyboardEventNode).bind({'keyup': function(event) {
+                    return manipulator.keyup(event);
+                }});
             }
         }
     }
