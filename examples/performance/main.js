@@ -42,7 +42,7 @@ function getOrCreateItem() {
 }
 
 function getRessource() {
-    Texture = osg.Texture.create("textures/texture.png");
+    Texture = osg.Texture.createFromURL("textures/texture.png");
     
 }
 
@@ -50,7 +50,7 @@ var NbTotalItems = 0;
 var NbTotalNodes = 0;
 
 function createScene() {
-    Texture = osg.Texture.create("textures/texture.png");
+    Texture = osg.Texture.createFromURL("textures/texture.png");
     //var root = new osg.Node();
     var root = createItems(Deep);
     //root.addChild(items);

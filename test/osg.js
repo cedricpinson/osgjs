@@ -33,7 +33,7 @@ function near(a, b, threshold)
 
     if (jQuery.isArray(a)) {
         for (var i = 0; i < a.length; ++i) {
-            var number = typeof a[i] === "number" && typeof b[i] === "number";
+            var number = typeof a[i] === "number" && typeof b[i] === "number" && !isNaN(a[i]) && !isNaN(b[i]);
             if (Math.abs(a[i]-b[i]) > threshold || number === false) {
                 ok(false, QUnit.jsDump.parse(a) + " expected " + QUnit.jsDump.parse(b));
                 return;
@@ -657,7 +657,7 @@ test("osg.ShaderGenerator", function() {
     stateSet0.setAttributeAndMode(new osg.Material());
 
     var stateSet1 = new osg.StateSet();
-    stateSet1.setTextureAttributeAndMode(0,new osg.Texture.create(undefined));
+    stateSet1.setTextureAttributeAndMode(0,new osg.Texture(undefined));
 
     state.pushStateSet(stateSet0);
     state.pushStateSet(stateSet1);
@@ -683,6 +683,16 @@ test("osg.State", function() {
 
 });
 
+test("osg.Camera", function() {
+
+    (function() {
+        var matrix = osg.Matrix.makeOrtho(-1,1,-1,1,-2,2);
+        var camera = new osg.Camera();
+        camera.setProjectionMatrixAsOrtho(-1,1,-1,1,-2,2);
+        ok(check_near(matrix, camera.getProjectionMatrix()), "check osg.Camera.setProjectionMatrixAsOrtho");
+
+    })();
+});
 
 test("osg.CullVisitor", function() {
 
