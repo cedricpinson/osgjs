@@ -1,4 +1,4 @@
-// osg-debug-0.0.5.js commit 2b1b70058077b5aaed1b14014c06fa7634e72073 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.5.js commit dc5899fa89107b23e2e192e2a7215b3d9fdbde1d - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -1467,7 +1467,8 @@ osg.StateAttribute = function() {
 /** @lends osg.StateAttribute.prototype */
 osg.StateAttribute.prototype = {
     isDirty: function() { return this._dirty; },
-    dirty: function() { this._dirty = true; }
+    dirty: function() { this._dirty = true; },
+    setDirty: function(dirty) { this._dirty = dirty; }
 };
 
 osg.StateAttribute.OFF = 0;
@@ -1485,6 +1486,10 @@ osg.Uniform = function () { this.transpose = false; this._dirty = true; };
 
 /** @lends osg.Uniform.prototype */
 osg.Uniform.prototype = {
+
+    get: function() { // call dirty if you update this array outside
+        return this.data;
+    },
     set: function(array) {
         this.data = array;
         this.dirty();
@@ -2477,6 +2482,9 @@ osg.Camera.prototype = osg.objectInehrit(
         },
 
         attachTexture: function(bufferComponent, texture, level) {
+            if (this.frameBufferObject) {
+                this.frameBufferObject.dirty();
+            }
             if (level === undefined) {
                 level = 0;
             }
@@ -2487,6 +2495,9 @@ osg.Camera.prototype = osg.objectInehrit(
         },
 
         attachRenderBuffer: function(bufferComponent, internalFormat) {
+            if (this.frameBufferObject) {
+                this.frameBufferObject.dirty();
+            }
             if (this.attachments === undefined) {
                 this.attachments = {};
             }
@@ -2650,11 +2661,18 @@ osg.EllipsoidModel.prototype = {
         osg.Matrix.set(localToWorld,2,2, up[2]);
     }
 };
+/** 
+ * FrameBufferObject manage fbo / rtt 
+ * @class FrameBufferObject
+ */
 osg.FrameBufferObject = function () {
     osg.StateAttribute.call(this);
     this.fbo = undefined;
     this.attachments = [];
+    this.dirty();
 };
+
+/** @lends osg.FrameBufferObject.prototype */
 osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "FrameBufferObject",
     cloneType: function() {return new osg.FrameBufferObject(); },
@@ -2664,11 +2682,14 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
     apply: function(state) {
         var status;
         if (this.attachments.length > 0) {
-            if (this.fbo === undefined) {
-                this.fbo = gl.createFramebuffer();
+            if (this.isDirty()) {
+
+                if (!this.fbo) {
+                    this.fbo = gl.createFramebuffer();
+                }
 
                 gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
-
+                var hasRenderBuffer = false;
                 for (var i = 0, l = this.attachments.length; i < l; ++i) {
                     
                     if (this.attachments[i].texture === undefined) { // render buffer
@@ -2676,6 +2697,7 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                         gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
                         gl.renderbufferStorage(gl.RENDERBUFFER, this.attachments[i].format, this.attachments[i].width, this.attachments[i].height);
                         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, this.attachments[i].attachment, gl.RENDERBUFFER, rb);
+                        hasRenderBuffer = true;
                     } else {
                         var texture = this.attachments[i].texture;
                         // apply on unit 0 to init it
@@ -2688,8 +2710,11 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                 if (status !== 0x8CD5) {
                     osg.log("framebuffer error check " + status);
                 }
-                gl.bindRenderbuffer(null);
-
+                
+                if (hasRenderBuffer) { // set it to null only if used renderbuffer
+                    gl.bindRenderbuffer(null);
+                }
+                this.setDirty(false);
             } else {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
                 if (osg.reportErrorGL === true) {
@@ -3843,9 +3868,13 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
         }
         var viewport = this.camera.getViewport();
         var fbo = this.camera.frameBufferObject;
-        if (this.camera.frameBufferObject === undefined) {
+
+        if (!fbo) {
             fbo = new osg.FrameBufferObject();
             this.camera.frameBufferObject = fbo;
+        }
+
+        if (fbo.isDirty()) {
             if (this.camera.attachments !== undefined) {
                 for ( var key in this.camera.attachments) {
                     var a = this.camera.attachments[key];
@@ -5741,6 +5770,10 @@ osg.CullStack.prototype = {
         this.projectionMatrixStack.pop();
     }
 };
+/** 
+ * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse 
+ * @class CullVisitor
+ */
 osg.CullVisitor = function () {
     osg.NodeVisitor.call(this);
     osg.CullSettings.call(this);
@@ -5769,6 +5802,7 @@ osg.CullVisitor = function () {
     this.reserveLeafStack.current = 0;
 };
 
+/** @lends osg.CullVisitor.prototype */
 osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objectInehrit(osg.CullSettings.prototype, osg.objectInehrit(osg.NodeVisitor.prototype, {
     distance: function(coord,matrix) {
         return -( coord[0]*matrix[2]+ coord[1]*matrix[6] + coord[2]*matrix[10] + matrix[14]);
