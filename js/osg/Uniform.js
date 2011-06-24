@@ -8,6 +8,10 @@ osg.Uniform = function () { this.transpose = false; this._dirty = true; };
 
 /** @lends osg.Uniform.prototype */
 osg.Uniform.prototype = {
+
+    get: function() { // call dirty if you update this array outside
+        return this.data;
+    },
     set: function(array) {
         this.data = array;
         this.dirty();

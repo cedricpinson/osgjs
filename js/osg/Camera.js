@@ -65,6 +65,9 @@ osg.Camera.prototype = osg.objectInehrit(
         },
 
         attachTexture: function(bufferComponent, texture, level) {
+            if (this.frameBufferObject) {
+                this.frameBufferObject.dirty();
+            }
             if (level === undefined) {
                 level = 0;
             }
@@ -75,6 +78,9 @@ osg.Camera.prototype = osg.objectInehrit(
         },
 
         attachRenderBuffer: function(bufferComponent, internalFormat) {
+            if (this.frameBufferObject) {
+                this.frameBufferObject.dirty();
+            }
             if (this.attachments === undefined) {
                 this.attachments = {};
             }

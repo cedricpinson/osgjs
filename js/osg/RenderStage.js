@@ -95,9 +95,13 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
         }
         var viewport = this.camera.getViewport();
         var fbo = this.camera.frameBufferObject;
-        if (this.camera.frameBufferObject === undefined) {
+
+        if (!fbo) {
             fbo = new osg.FrameBufferObject();
             this.camera.frameBufferObject = fbo;
+        }
+
+        if (fbo.isDirty()) {
             if (this.camera.attachments !== undefined) {
                 for ( var key in this.camera.attachments) {
                     var a = this.camera.attachments[key];
