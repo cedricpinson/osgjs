@@ -6,7 +6,9 @@
 
 osgViewer.Viewer = function(canvas, options) {
     if (options === undefined) {
-        options = {antialias : true};
+        options = {
+            antialias : true
+        };
     }
 
     gl = WebGLUtils.setupWebGL(canvas, options );
@@ -19,10 +21,24 @@ osgViewer.Viewer = function(canvas, options) {
         osgUtil.CullVisitor = osg.CullVisitor;
         this.urlOptions = true;
 
+        //        this.mouseWheelEventNode = canvas;
+        //        this.eventNode = document;
+        //        if (options && options.mouseWheelEventNode) {
+        //            this.mouseWheelEventNode = options.mouseWheelEventNode;
+        //        }
         this.mouseWheelEventNode = canvas;
-        this.eventNode = document;
-        if (options && options.mouseWheelEventNode) {
-            this.mouseWheelEventNode = options.mouseWheelEventNode;
+        this.mouseEventNode = canvas;
+        this.keyboardEventNode = document;
+        if (options) {
+            if(options.mouseWheelEventNode){
+                this.mouseWheelEventNode = options.mouseWheelEventNode;
+            }
+            if(options.mouseEventNode){
+                this.mouseEventNode = options.mouseEventNode;
+            }
+            if(options.mouseWheelEventNode){
+                this.keyboardEventNode = options.keyboardEventNode;
+            }            
         }
 
     } else {
@@ -32,7 +48,9 @@ osgViewer.Viewer = function(canvas, options) {
 
 
 osgViewer.Viewer.prototype = {
-    getScene: function() { return this.scene; },
+    getScene: function() {
+        return this.scene;
+    },
     setScene: function(scene) {
         this.root.removeChildren();
         this.root.addChild( scene );
@@ -123,30 +141,30 @@ osgViewer.Viewer.prototype = {
 
         var createDomElements = function (elementToAppend) {
             var dom = [
-                "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150px; z-index: 10;'>",
-                "<div id='StatsLegends' style='position: absolute; left: 0px; font-size: " + fontsize +"px;color: #ffffff;'>",
+            "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150px; z-index: 10;'>",
+            "<div id='StatsLegends' style='position: absolute; left: 0px; font-size: " + fontsize +"px;color: #ffffff;'>",
 
-                "<div id='frameRate' style='color: #00ff00;' > frameRate </div>",
-                "<div id='frameTime' style='color: #ffff00;' > frameTime </div>",
-                "<div id='updateTime' style='color: #d07b1f;'> updateTime </div>",
-                "<div id='cullTime' style='color: #73e0ff;'> cullTime </div>",
-                "<div id='drawTime' style='color: #ff0000;'> drawTime </div>",
-                "<div id='fps'> </div>",
+            "<div id='frameRate' style='color: #00ff00;' > frameRate </div>",
+            "<div id='frameTime' style='color: #ffff00;' > frameTime </div>",
+            "<div id='updateTime' style='color: #d07b1f;'> updateTime </div>",
+            "<div id='cullTime' style='color: #73e0ff;'> cullTime </div>",
+            "<div id='drawTime' style='color: #ff0000;'> drawTime </div>",
+            "<div id='fps'> </div>",
                 
-                "</div>",
+            "</div>",
 
-                "<div id='StatsCanvasDiv' style='position: relative;'>",
-                "<canvas id='StatsCanvasGrid' width='300' height='150' style='z-index:-1; position: absolute; background: rgba(14,14,14,0.8); ' ></canvas>",
-                "<canvas id='StatsCanvas' width='300' height='150' style='z-index:8; position: absolute;' ></canvas>",
-                "<canvas id='StatsCanvasFps' width='30' height='15' style='z-index:9; position: absolute; top: 130px' ></canvas>",
-                "</div>",
+            "<div id='StatsCanvasDiv' style='position: relative;'>",
+            "<canvas id='StatsCanvasGrid' width='300' height='150' style='z-index:-1; position: absolute; background: rgba(14,14,14,0.8); ' ></canvas>",
+            "<canvas id='StatsCanvas' width='300' height='150' style='z-index:8; position: absolute;' ></canvas>",
+            "<canvas id='StatsCanvasFps' width='30' height='15' style='z-index:9; position: absolute; top: 130px' ></canvas>",
+            "</div>",
 
-                "</div>"
+            "</div>"
             ].join("\n");
             var parent;
             if (elementToAppend === undefined) {
                 parent = document.body;
-                //elementToAppend = "body";
+            //elementToAppend = "body";
             } else {
                 parent = document.getElementById(elementToAppend);
             }
@@ -193,9 +211,9 @@ osgViewer.Viewer.prototype = {
         height = height - 2;
         var getStyle = function(el,styleProp)
         {
-	    var x = document.getElementById(el);
-	    if (x.style) {
-		return x.style.getPropertyValue(styleProp);
+            var x = document.getElementById(el);
+            if (x.style) {
+                return x.style.getPropertyValue(styleProp);
             }
             return null;
         };
@@ -204,31 +222,36 @@ osgViewer.Viewer.prototype = {
             if (v > height) {
                 return height;
             }
-            return v;} );
+            return v;
+        } );
         this.stats.addLayer(getStyle("frameTime", "color"), function(t) { 
             var v = that.frameTime * ratio;
             if (v > height) {
                 return height;
             }
-            return v;} );
+            return v;
+        } );
         this.stats.addLayer(getStyle("updateTime","color"), function(t) { 
             var v = that.updateTime * ratio;
             if (v > height) {
                 return height;
             }
-            return v;} );
+            return v;
+        } );
         this.stats.addLayer(getStyle("cullTime","color"), function(t) { 
             var v = that.cullTime * ratio;
             if (v > height) {
                 return height;
             }
-            return v;} );
+            return v;
+        } );
         this.stats.addLayer(getStyle("drawTime","color"), function(t) { 
             var v = that.drawTime * ratio;
             if (v > height) {
                 return height;
             }
-            return v;} );
+            return v;
+        } );
     },
 
     update: function() {
@@ -254,8 +277,8 @@ osgViewer.Viewer.prototype = {
 
         // noticed that we accumulate lot of stack, maybe because of the stateGraph
         this.state.popAllStateSets();
-        // should not be necessary because of dirty flag now in attrubutes
-        //this.state.applyWithoutProgram();
+    // should not be necessary because of dirty flag now in attrubutes
+    //this.state.applyWithoutProgram();
     },
 
     frame: function() {
@@ -331,7 +354,9 @@ osgViewer.Viewer.prototype = {
         render();
     },
 
-    getManipulator: function() { return this.manipulator; },
+    getManipulator: function() {
+        return this.manipulator;
+    },
     setupManipulator: function(manipulator, dontBindDefaultEvent) {
         if (manipulator === undefined) {
             manipulator = new osgGA.OrbitManipulator();
@@ -348,76 +373,76 @@ osgViewer.Viewer.prototype = {
 
         var that = this;
         var viewer = this;
-	var fixEvent = function( event ) {
+        var fixEvent = function( event ) {
 
-	    //if ( event[ expando ] ) {
-		//return event;
-	    //}
+            //if ( event[ expando ] ) {
+            //return event;
+            //}
 
-	    // store a copy of the original event object
-	    // and "clone" to set read-only properties
+            // store a copy of the original event object
+            // and "clone" to set read-only properties
 
             // nop
-	    //var originalEvent = event;
-	    //event = jQuery.Event( originalEvent );
+            //var originalEvent = event;
+            //event = jQuery.Event( originalEvent );
 
-	    for ( var i = this.props.length, prop; i; ) {
-		prop = this.props[ --i ];
-		event[ prop ] = originalEvent[ prop ];
-	    }
+            for ( var i = this.props.length, prop; i; ) {
+                prop = this.props[ --i ];
+                event[ prop ] = originalEvent[ prop ];
+            }
 
-	    // Fix target property, if necessary
-	    if ( !event.target ) {
-		event.target = event.srcElement || document; // Fixes #1925 where srcElement might not be defined either
-	    }
+            // Fix target property, if necessary
+            if ( !event.target ) {
+                event.target = event.srcElement || document; // Fixes #1925 where srcElement might not be defined either
+            }
 
-	    // check if target is a textnode (safari)
-	    if ( event.target.nodeType === 3 ) {
-		event.target = event.target.parentNode;
-	    }
+            // check if target is a textnode (safari)
+            if ( event.target.nodeType === 3 ) {
+                event.target = event.target.parentNode;
+            }
 
-	    // Add relatedTarget, if necessary
-	    if ( !event.relatedTarget && event.fromElement ) {
-		event.relatedTarget = event.fromElement === event.target ? event.toElement : event.fromElement;
-	    }
+            // Add relatedTarget, if necessary
+            if ( !event.relatedTarget && event.fromElement ) {
+                event.relatedTarget = event.fromElement === event.target ? event.toElement : event.fromElement;
+            }
 
-	    // Calculate pageX/Y if missing and clientX/Y available
-	    if ( event.pageX == null && event.clientX != null ) {
-		var doc = document.documentElement, body = document.body;
-		event.pageX = event.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
-		event.pageY = event.clientY + (doc && doc.scrollTop  || body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
-	    }
+            // Calculate pageX/Y if missing and clientX/Y available
+            if ( event.pageX == null && event.clientX != null ) {
+                var doc = document.documentElement, body = document.body;
+                event.pageX = event.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
+                event.pageY = event.clientY + (doc && doc.scrollTop  || body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
+            }
 
-	    // Add which for key events
-	    if ( !event.which && ((event.charCode || event.charCode === 0) ? event.charCode : event.keyCode) ) {
-		event.which = event.charCode || event.keyCode;
-	    }
+            // Add which for key events
+            if ( !event.which && ((event.charCode || event.charCode === 0) ? event.charCode : event.keyCode) ) {
+                event.which = event.charCode || event.keyCode;
+            }
 
-	    // Add metaKey to non-Mac browsers (use ctrl for PC's and Meta for Macs)
-	    if ( !event.metaKey && event.ctrlKey ) {
-		event.metaKey = event.ctrlKey;
-	    }
+            // Add metaKey to non-Mac browsers (use ctrl for PC's and Meta for Macs)
+            if ( !event.metaKey && event.ctrlKey ) {
+                event.metaKey = event.ctrlKey;
+            }
 
-	    // Add which for click: 1 === left; 2 === middle; 3 === right
-	    // Note: button is not normalized, so don't use it
-	    if ( !event.which && event.button !== undefined ) {
-		event.which = (event.button & 1 ? 1 : ( event.button & 2 ? 3 : ( event.button & 4 ? 2 : 0 ) ));
-	    }
+            // Add which for click: 1 === left; 2 === middle; 3 === right
+            // Note: button is not normalized, so don't use it
+            if ( !event.which && event.button !== undefined ) {
+                event.which = (event.button & 1 ? 1 : ( event.button & 2 ? 3 : ( event.button & 4 ? 2 : 0 ) ));
+            }
 
-	    return event;
-	};
+            return event;
+        };
 
         this.manipulator.convertEventToCanvas = function(e) {
             var myObject = that.canvas;
             var posx,posy;
-	    if (e.pageX || e.pageY) {
-	        posx = e.pageX;
-	        posy = e.pageY;
-	    }
-	    else if (e.clientX || e.clientY) {
-	        posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-	        posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-	    }
+            if (e.pageX || e.pageY) {
+                posx = e.pageX;
+                posy = e.pageY;
+            }
+            else if (e.clientX || e.clientY) {
+                posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+            }
 
             var divGlobalOffset = function(obj) {
                 var x=0, y=0;
@@ -431,8 +456,8 @@ osgViewer.Viewer.prototype = {
                 }
                 return [x,y];
             };
-	    // posx and posy contain the mouse position relative to the document
-	    // Do something with this information
+            // posx and posy contain the mouse position relative to the document
+            // Do something with this information
             var globalOffset = divGlobalOffset(myObject);
             posx = posx - globalOffset[0];
             posy = myObject.height-(posy - globalOffset[1]);
@@ -498,8 +523,12 @@ osgViewer.Viewer.prototype = {
                     event.type = "mousewheel";
                     
                     // Old school scrollwheel delta
-                    if ( event.wheelDelta ) { delta = event.wheelDelta/120; }
-                    if ( event.detail     ) { delta = -event.detail/3; }
+                    if ( event.wheelDelta ) {
+                        delta = event.wheelDelta/120;
+                    }
+                    if ( event.detail     ) {
+                        delta = -event.detail/3;
+                    }
                     
                     // New school multidimensional scroll (touchpads) deltas
                     deltaY = delta;
@@ -511,8 +540,12 @@ osgViewer.Viewer.prototype = {
                     }
                     
                     // Webkit
-                    if ( orgEvent.wheelDeltaY !== undefined ) { deltaY = orgEvent.wheelDeltaY/120; }
-                    if ( orgEvent.wheelDeltaX !== undefined ) { deltaX = -1*orgEvent.wheelDeltaX/120; }
+                    if ( orgEvent.wheelDeltaY !== undefined ) {
+                        deltaY = orgEvent.wheelDeltaY/120;
+                    }
+                    if ( orgEvent.wheelDeltaX !== undefined ) {
+                        deltaX = -1*orgEvent.wheelDeltaX/120;
+                    }
                     // Add event and delta to the front of the arguments
                     args.unshift(event, delta, deltaX, deltaY);
                     var m = viewer.getManipulator();
@@ -521,30 +554,34 @@ osgViewer.Viewer.prototype = {
             };
 
             if (viewer.getManipulator().mousedown) {
-                this.eventNode.addEventListener("mousedown", mousedown, false);
+                this.mouseEventNode.addEventListener("mousedown", mousedown, false);
             }
             if (viewer.getManipulator().mouseup) {
-                this.eventNode.addEventListener("mouseup", mouseup, false);
+                this.mouseEventNode.addEventListener("mouseup", mouseup, false);
             }
             if (viewer.getManipulator().mousemove) {
-                this.eventNode.addEventListener("mousemove", mousemove, false);
+                this.mouseEventNode.addEventListener("mousemove", mousemove, false);
             }
             if (viewer.getManipulator().dblclick) {
-                this.eventNode.addEventListener("dblclick", dblclick, false);
+                this.mouseEventNode.addEventListener("dblclick", dblclick, false);
             }
             if (viewer.getManipulator().mousewheel) {
-                this.canvas.addEventListener("DOMMouseScroll", mousewheel, false);
-                this.canvas.addEventListener("mousewheel", mousewheel, false);
+                this.mouseWheelEventNode.addEventListener("DOMMouseScroll", mousewheel, false);
+                this.mouseWheelEventNode.addEventListener("mousewheel", mousewheel, false);
             }
 
-            var keydown = function(ev) {return viewer.getManipulator().keydown(ev); };
-            var keyup = function(ev) {return viewer.getManipulator().keyup(ev);};
+            var keydown = function(ev) {
+                return viewer.getManipulator().keydown(ev);
+            };
+            var keyup = function(ev) {
+                return viewer.getManipulator().keyup(ev);
+            };
 
             if (viewer.getManipulator().keydown) {
-                this.eventNode.addEventListener("keydown", keydown, false);
+                this.keyboardEventNode.addEventListener("keydown", keydown, false);
             }
             if (viewer.getManipulator().keyup) {
-                this.eventNode.addEventListener("keyup", keyup, false);
+                this.keyboardEventNode.addEventListener("keyup", keyup, false);
             }
         }
     }
