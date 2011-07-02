@@ -4,12 +4,12 @@
  */
 
 
-osgViewer.Viewer = function(canvas, options) {
+osgViewer.Viewer = function(canvas, options, error) {
     if (options === undefined) {
         options = {antialias : true};
     }
 
-    gl = WebGLUtils.setupWebGL(canvas, options );
+    gl = WebGLUtils.setupWebGL(canvas, options, error );
     if (gl) {
         this.gl = gl;
         osg.init();
@@ -40,6 +40,7 @@ osgViewer.Viewer.prototype = {
     },
 
     init: function() {
+        this._done = false;
         this.root = new osg.Node();
         this.state = new osg.State();
         this.view = new osg.View();
@@ -322,11 +323,16 @@ osgViewer.Viewer.prototype = {
         }
     },
 
+    setDone: function() { this._done = true; },
+    done: function() { return this._done; },
+
     run: function() {
         var that = this;
         var render = function() {
-            window.requestAnimationFrame(render, this.canvas);
-            that.frame();
+            if (!that.done()) {
+                window.requestAnimationFrame(render, that.canvas);
+                that.frame();
+            }
         };
         render();
     },

@@ -1,4 +1,4 @@
-// osg-debug-0.0.5.js commit dc5899fa89107b23e2e192e2a7215b3d9fdbde1d - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.5.js commit ba7e80947d5baa1841b1bc62c26c2820e2ac1fba - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -7002,12 +7002,12 @@ Stats.Stats.prototype = {
  */
 
 
-osgViewer.Viewer = function(canvas, options) {
+osgViewer.Viewer = function(canvas, options, error) {
     if (options === undefined) {
         options = {antialias : true};
     }
 
-    gl = WebGLUtils.setupWebGL(canvas, options );
+    gl = WebGLUtils.setupWebGL(canvas, options, error );
     if (gl) {
         this.gl = gl;
         osg.init();
@@ -7038,6 +7038,7 @@ osgViewer.Viewer.prototype = {
     },
 
     init: function() {
+        this._done = false;
         this.root = new osg.Node();
         this.state = new osg.State();
         this.view = new osg.View();
@@ -7320,11 +7321,16 @@ osgViewer.Viewer.prototype = {
         }
     },
 
+    setDone: function() { this._done = true; },
+    done: function() { return this._done; },
+
     run: function() {
         var that = this;
         var render = function() {
-            window.requestAnimationFrame(render, this.canvas);
-            that.frame();
+            if (!that.done()) {
+                window.requestAnimationFrame(render, that.canvas);
+                that.frame();
+            }
         };
         render();
     },
