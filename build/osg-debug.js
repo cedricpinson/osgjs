@@ -1,4 +1,4 @@
-// osg-debug-0.0.5.js commit ba7e80947d5baa1841b1bc62c26c2820e2ac1fba - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.5.js commit 48b63faaa27f5389f78e417e2e6e176db097005b - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -7018,9 +7018,18 @@ osgViewer.Viewer = function(canvas, options, error) {
         this.urlOptions = true;
 
         this.mouseWheelEventNode = canvas;
-        this.eventNode = document;
-        if (options && options.mouseWheelEventNode) {
-            this.mouseWheelEventNode = options.mouseWheelEventNode;
+        this.mouseEventNode = canvas;
+        this.keyboardEventNode = document;
+        if (options) {
+            if(options.mouseWheelEventNode){
+                this.mouseWheelEventNode = options.mouseWheelEventNode;
+            }
+            if(options.mouseEventNode){
+                this.mouseEventNode = options.mouseEventNode;
+            }
+            if(options.mouseWheelEventNode){
+                this.keyboardEventNode = options.keyboardEventNode;
+            }
         }
 
     } else {
@@ -7525,30 +7534,30 @@ osgViewer.Viewer.prototype = {
             };
 
             if (viewer.getManipulator().mousedown) {
-                this.eventNode.addEventListener("mousedown", mousedown, false);
+                this.mouseEventNode.addEventListener("mousedown", mousedown, false);
             }
             if (viewer.getManipulator().mouseup) {
-                this.eventNode.addEventListener("mouseup", mouseup, false);
+                this.mouseEventNode.addEventListener("mouseup", mouseup, false);
             }
             if (viewer.getManipulator().mousemove) {
-                this.eventNode.addEventListener("mousemove", mousemove, false);
+                this.mouseEventNode.addEventListener("mousemove", mousemove, false);
             }
             if (viewer.getManipulator().dblclick) {
-                this.eventNode.addEventListener("dblclick", dblclick, false);
+                this.mouseEventNode.addEventListener("dblclick", dblclick, false);
             }
             if (viewer.getManipulator().mousewheel) {
-                this.canvas.addEventListener("DOMMouseScroll", mousewheel, false);
-                this.canvas.addEventListener("mousewheel", mousewheel, false);
+                this.mouseWheelEventNode.addEventListener("DOMMouseScroll", mousewheel, false);
+                this.mouseWheelEventNode.addEventListener("mousewheel", mousewheel, false);
             }
 
             var keydown = function(ev) {return viewer.getManipulator().keydown(ev); };
             var keyup = function(ev) {return viewer.getManipulator().keyup(ev);};
 
             if (viewer.getManipulator().keydown) {
-                this.eventNode.addEventListener("keydown", keydown, false);
+                this.keyboardEventNode.addEventListener("keydown", keydown, false);
             }
             if (viewer.getManipulator().keyup) {
-                this.eventNode.addEventListener("keyup", keyup, false);
+                this.keyboardEventNode.addEventListener("keyup", keyup, false);
             }
         }
     }
