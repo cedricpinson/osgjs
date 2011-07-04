@@ -1,4 +1,4 @@
-// osg-debug-0.0.5.js commit 48b63faaa27f5389f78e417e2e6e176db097005b - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.5.js commit 36695344b663f60f13d399a0b1b2a341b7d70240 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -7610,11 +7610,14 @@ osgGA.OrbitManipulator.prototype = {
     setNode: function(node) {
         this.node = node;
     },
+    setTarget: function(target) {
+        osg.Vec3.copy(target, this.target);
+    },
     computeHomePosition: function() {
         if (this.node !== undefined) {
             var bs = this.node.getBound();
             this.setDistance(bs.radius()*1.5);
-            this.target = bs.center();
+            this.setTarget(bs.center());
         }
     },
 

@@ -40,11 +40,14 @@ osgGA.OrbitManipulator.prototype = {
     setNode: function(node) {
         this.node = node;
     },
+    setTarget: function(target) {
+        osg.Vec3.copy(target, this.target);
+    },
     computeHomePosition: function() {
         if (this.node !== undefined) {
             var bs = this.node.getBound();
             this.setDistance(bs.radius()*1.5);
-            this.target = bs.center();
+            this.setTarget(bs.center());
         }
     },
 
