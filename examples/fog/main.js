@@ -29,8 +29,9 @@ function changeDensity(value)
 
 var main = function() {
     var canvas = document.getElementById("3DView");
-    var w = document.documentElement.clientWidth;
-    var h = document.documentElement.clientHeight;
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    osg.log("size " + w + " x " + h );
     canvas.style.width = w;
     canvas.style.height = h;
     canvas.width = w;
