@@ -1,4 +1,4 @@
-// osg-debug-0.0.5.js commit 36695344b663f60f13d399a0b1b2a341b7d70240 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.5.js commit 1bd9b75f34f7faf81c6094b7d8d1c3aa59a22856 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -2627,7 +2627,7 @@ osg.EllipsoidModel.prototype = {
     },
     computeLocalToWorldTransformFromLatLongHeight : function(latitude, longitude, height) {
         var pos = this.convertLatLongHeightToXYZ(latitude, longitude, height);
-        var m = osg.Matrix.makeTranslate(pos[0], pos[1], pos[2]);
+        var m = osg.Matrix.makeTranslate(pos[0], pos[1], pos[2], []);
         this.computeCoordinateFrame(latitude, longitude, m);
         return m;
     },
@@ -2645,7 +2645,7 @@ osg.EllipsoidModel.prototype = {
         var east = [-Math.sin(longitude), Math.cos(longitude), 0];
 
         // Compute north vector = outer product up x east
-        var north = osg.Vec3.cross(up,east);
+        var north = osg.Vec3.cross(up,east, []);
 
         // set matrix
         osg.Matrix.set(localToWorld,0,0, east[0]);
