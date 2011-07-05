@@ -72,10 +72,10 @@ osg.Program.prototype = {
         if (r !== null) {
             for (var i = 0, l = r.length; i < l; i++) {
                 var uniform = r[i].match(/uniform\s+\w+\s+(\w+)/)[1];
-                var l = gl.getUniformLocation(this.program, uniform);
-                if (l !== undefined && l !== null) {
+                var location = gl.getUniformLocation(this.program, uniform);
+                if (location !== undefined && location !== null) {
                     if (this.uniformsCache[uniform] === undefined) {
-                        this.uniformsCache[uniform] = l;
+                        this.uniformsCache[uniform] = location;
                         this.uniformsCache.uniformKeys.push(uniform);
                     }
                 }
@@ -88,10 +88,10 @@ osg.Program.prototype = {
         if (r !== null) {
             for (var i = 0, l = r.length; i < l; i++) {
                 var attr = r[i].match(/attribute\s+\w+\s+(\w+)/)[1];
-                var l = gl.getAttribLocation(this.program, attr);
-                if (l !== -1 && l !== undefined) {
+                var location = gl.getAttribLocation(this.program, attr);
+                if (location !== -1 && location !== undefined) {
                     if (this.attributesCache[attr] === undefined) {
-                        this.attributesCache[attr] = l;
+                        this.attributesCache[attr] = location;
                         this.attributesCache.attributeKeys.push(attr);
                     }
                 }

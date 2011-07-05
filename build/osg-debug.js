@@ -1,4 +1,4 @@
-// osg-debug-0.0.5.js commit 31964bc9bb785fbe9e8727b554f72913f3cb118d - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.5.js commit 2247bb104db19fc1bab443bc45b75186e4a53137 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -3302,10 +3302,10 @@ osg.Program.prototype = {
         if (r !== null) {
             for (var i = 0, l = r.length; i < l; i++) {
                 var uniform = r[i].match(/uniform\s+\w+\s+(\w+)/)[1];
-                var l = gl.getUniformLocation(this.program, uniform);
-                if (l !== undefined && l !== null) {
+                var location = gl.getUniformLocation(this.program, uniform);
+                if (location !== undefined && location !== null) {
                     if (this.uniformsCache[uniform] === undefined) {
-                        this.uniformsCache[uniform] = l;
+                        this.uniformsCache[uniform] = location;
                         this.uniformsCache.uniformKeys.push(uniform);
                     }
                 }
@@ -3318,10 +3318,10 @@ osg.Program.prototype = {
         if (r !== null) {
             for (var i = 0, l = r.length; i < l; i++) {
                 var attr = r[i].match(/attribute\s+\w+\s+(\w+)/)[1];
-                var l = gl.getAttribLocation(this.program, attr);
-                if (l !== -1 && l !== undefined) {
+                var location = gl.getAttribLocation(this.program, attr);
+                if (location !== -1 && location !== undefined) {
                     if (this.attributesCache[attr] === undefined) {
-                        this.attributesCache[attr] = l;
+                        this.attributesCache[attr] = location;
                         this.attributesCache.attributeKeys.push(attr);
                     }
                 }
