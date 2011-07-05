@@ -1,4 +1,4 @@
-// osg-debug-0.0.5.js commit 1bd9b75f34f7faf81c6094b7d8d1c3aa59a22856 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.5.js commit 31964bc9bb785fbe9e8727b554f72913f3cb118d - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -3300,7 +3300,7 @@ osg.Program.prototype = {
     cacheUniformList: function(str) {
         var r = str.match(/uniform\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (var i in r) {
+            for (var i = 0, l = r.length; i < l; i++) {
                 var uniform = r[i].match(/uniform\s+\w+\s+(\w+)/)[1];
                 var l = gl.getUniformLocation(this.program, uniform);
                 if (l !== undefined && l !== null) {
@@ -3316,7 +3316,7 @@ osg.Program.prototype = {
     cacheAttributeList: function(str) {
         var r = str.match(/attribute\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (var i in r) {
+            for (var i = 0, l = r.length; i < l; i++) {
                 var attr = r[i].match(/attribute\s+\w+\s+(\w+)/)[1];
                 var l = gl.getAttribLocation(this.program, attr);
                 if (l !== -1 && l !== undefined) {

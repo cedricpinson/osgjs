@@ -70,7 +70,7 @@ osg.Program.prototype = {
     cacheUniformList: function(str) {
         var r = str.match(/uniform\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (var i in r) {
+            for (var i = 0, l = r.length; i < l; i++) {
                 var uniform = r[i].match(/uniform\s+\w+\s+(\w+)/)[1];
                 var l = gl.getUniformLocation(this.program, uniform);
                 if (l !== undefined && l !== null) {
@@ -86,7 +86,7 @@ osg.Program.prototype = {
     cacheAttributeList: function(str) {
         var r = str.match(/attribute\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (var i in r) {
+            for (var i = 0, l = r.length; i < l; i++) {
                 var attr = r[i].match(/attribute\s+\w+\s+(\w+)/)[1];
                 var l = gl.getAttribLocation(this.program, attr);
                 if (l !== -1 && l !== undefined) {
