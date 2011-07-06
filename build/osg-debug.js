@@ -1,4 +1,4 @@
-// osg-debug-0.0.5.js commit 2247bb104db19fc1bab443bc45b75186e4a53137 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.5.js commit aa4baa76d9e1577ec065b533c5b9bd3df32fdeb2 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -7932,10 +7932,7 @@ osgGA.FirstPersonManipulator.prototype = {
     },
     mousemove: function(ev)
     {
-        if (this.buttonup === true)
-        {
-            return;
-        }
+        if (this.buttonup === true) { return; }
 
         var curX;
         var curY;
@@ -7996,19 +7993,19 @@ osgGA.FirstPersonManipulator.prototype = {
     },
     getInverseMatrix: function()
     {
-        var target = osg.Vec3.add(this.eye, this.direction);
-        return osg.Matrix.makeLookAt(this.eye, target, this.up);
+        var target = osg.Vec3.add(this.eye, this.direction, []);
+        return osg.Matrix.makeLookAt(this.eye, target, this.up, []);
     },
     moveForward: function(distance)
     {
-        var d = osg.Vec3.mult(osg.Vec3.normalize(this.direction), distance);
-        this.eye = osg.Vec3.add(this.eye, d);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(this.direction, []), distance, []);
+        this.eye = osg.Vec3.add(this.eye, d, []);
     },
     strafe: function(distance)
     {
-        var cx = osg.Vec3.cross(this.direction, this.up);
-        var d = osg.Vec3.mult(osg.Vec3.normalize(cx), distance);
-        this.eye = osg.Vec3.add(this.eye, d);
+        var cx = osg.Vec3.cross(this.direction, this.up, []);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(cx,cx), distance, []);
+        this.eye = osg.Vec3.add(this.eye, d, []);
     },
     
     keydown: function(event) {
