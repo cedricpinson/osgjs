@@ -666,6 +666,7 @@ test("osg.ShaderGenerator", function() {
 
 test("osg.State", function() {
 
+    (function() {
     var state = new osg.State();
 
     var stateSet0 = new osg.StateSet();
@@ -679,6 +680,7 @@ test("osg.State", function() {
     state.pushStateSet(stateSet1);
     state.pushStateSet(stateSet2);
     ok(state.attributeMap.Material[state.attributeMap.Material.length-1] === state.attributeMap.Material[state.attributeMap.Material.length-2], "check Override in state" );
+    })();
 
 });
 
@@ -719,6 +721,8 @@ test("osg.CullVisitor", function() {
         cull.setRenderStage(rs);
         cull.setStateGraph(sg);
 
+        cull.pushProjectionMatrix(osg.Matrix.makeIdentity([]));
+        cull.pushModelviewMatrix(osg.Matrix.makeIdentity([]));
         camera0.accept(cull);
         
         ok(cull.rootRenderStage === cull.currentRenderBin, "renderStage should stay the render bin and id " ); //+ cull.rootRenderStage === cull.currentRenderBin
@@ -745,6 +749,10 @@ test("osg.CullVisitor", function() {
 
         cull.setRenderStage(rs);
         cull.setStateGraph(sg);
+
+        cull.pushProjectionMatrix(osg.Matrix.makeIdentity([]));
+        cull.pushModelviewMatrix(osg.Matrix.makeIdentity([]));
+        cull.pushStateSet(new osg.StateSet());
 
         camera0.accept(cull);
 
@@ -789,6 +797,10 @@ test("osg.CullVisitor", function() {
         cull.popProjectionMatrix = popProjectionMatrix;
         cull.setRenderStage(rs);
         cull.setStateGraph(sg);
+
+        cull.pushProjectionMatrix(osg.Matrix.makeIdentity([]));
+        cull.pushModelviewMatrix(osg.Matrix.makeIdentity([]));
+
         camera0.accept(cull);
         var supposedProjection = [1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0];
         ok(check_near(stack[1][0], 5), "near should be 5.0 and is " +  stack[1][0]);
@@ -834,6 +846,10 @@ test("osg.CullVisitor", function() {
         cull.popProjectionMatrix = popProjectionMatrix;
         cull.setRenderStage(rs);
         cull.setStateGraph(sg);
+
+        cull.pushProjectionMatrix(osg.Matrix.makeIdentity([]));
+        cull.pushModelviewMatrix(osg.Matrix.makeIdentity([]));
+
         camera0.accept(cull);
         ok(check_near(stack[1][0], 10), "near should be 10 and is " +  stack[1][0]);
         ok(check_near(stack[1][1], 10), "near should be 10 and is " +  stack[1][1]);
@@ -911,6 +927,10 @@ test("osg.CullVisitor", function() {
         cull.popProjectionMatrix = popProjectionMatrix;
         cull.setRenderStage(rs);
         cull.setStateGraph(sg);
+
+        cull.pushProjectionMatrix(osg.Matrix.makeIdentity([]));
+        cull.pushModelviewMatrix(osg.Matrix.makeIdentity([]));
+
         camera0.accept(cull);
         ok(check_near(stack[1][0], d_near,0.8), "near should be "+ d_near+ " and is " +  stack[1][0]);
         ok(check_near(stack[1][1], d_far,0.8), "near should be " + d_far + " and is " +  stack[1][1]);

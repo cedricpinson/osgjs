@@ -70,7 +70,7 @@ try {
   var rotate = new osg.MatrixTransform();
   rotate.setMatrix(osg.Matrix.makeRotate(-Math.PI*0.5, 1,0,0));
   rotate.addChild(osgDB.parseSceneGraph(getModel()));
-  viewer.setScene(rotate);
+  viewer.setSceneData(rotate);
   viewer.run();
 } catch (er) {
   osg.log("exception in osgViewer " + er);

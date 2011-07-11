@@ -62,7 +62,7 @@ function() {
 try {
   viewer = new osgViewer.Viewer(canvas);
   viewer.init();
-  viewer.setScene(createScene());
+  viewer.setSceneData(createScene());
   viewer.setupManipulator();
   viewer.run();
 } catch (er) {

@@ -28,29 +28,27 @@ test("osgUtil_TriangleIntersect", function() {
 
 test("osgUtil_IntersectVisitor", function() {
 
-    var view = new osg.View();
-    view.setViewport(new osg.Viewport());
-    view.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]));
-    view.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0));
-    var quad = osg.createTexturedQuad(-0.5, -0.5,0, 1,0,0, 0,1,0, 1,1);
-    view.addChild(quad);
+    var camera = new osg.Camera();
+    camera.setViewport(new osg.Viewport());
+    camera.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0], []));
+    camera.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0, []));
+    var scene = osg.createTexturedQuad(-0.5, -0.5,0, 1,0,0, 0,1,0, 1,1);
 
     var iv = new osgUtil.IntersectVisitor();
+    iv.pushCamera(camera);
     iv.addLineSegment([400,300,0.0], [400,300,1.0]);
-    view.accept(iv);
+    scene.accept(iv);
     ok(iv.hits.length === 1, "Hits should be 1 and result is " + iv.hits.length );
-
-
 });
 
 test("osgUtil_IntersectVisitorScene", function() {
 
-    var view = new osg.View();
-    view.setViewport(new osg.Viewport());
-    view.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]));
-    view.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0));
+    var view = new osgViewer.View();
+    view.getCamera().setViewport(new osg.Viewport());
+    view.getCamera().setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]), []);
+    view.getCamera().setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0, []));
     var quad = osgDB.parseSceneGraph(Scene);
-    view.addChild(quad);
+    view.setSceneData(quad);
 
     var result = view.computeIntersections(400,300);
     //console.log(result);

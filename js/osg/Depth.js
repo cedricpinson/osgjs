@@ -15,7 +15,7 @@ osg.Depth = function (func, near, far, writeMask) {
         this.far = far;
     }
     if (writeMask !== undefined) {
-        this.writeMask = far;
+        this.writeMask = writeMask;
     }
 };
 osg.Depth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {

@@ -35,73 +35,10 @@
 </style>
 <title>Shadow</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-<script type="text/javascript" src="../../build/osg.js"></script>
+<script type="text/javascript" src="../../build/osg-debug.js"></script>
 <script type="text/javascript" src="main.js"></script>
 <script type="text/javascript" src="ogre.osgjs"></script>
 
-<script type="text/javascript">
-
-
-function getWindowSize() {
-    var myWidth = 0, myHeight = 0;
-    
-    if( typeof( window.innerWidth ) == 'number' ) {
-        //Non-IE
-        myWidth = window.innerWidth;
-        myHeight = window.innerHeight;
-    } else if( document.documentElement && ( document.documentElement.clientWidth || document.documentElement.clientHeight ) ) {
-        //IE 6+ in 'standards compliant mode'
-        myWidth = document.documentElement.clientWidth;
-        myHeight = document.documentElement.clientHeight;
-    } else if( document.body && ( document.body.clientWidth || document.body.clientHeight ) ) {
-        //IE 4 compatible
-        myWidth = document.body.clientWidth;
-        myHeight = document.body.clientHeight;
-    }
-    return { 'w': myWidth, 'h': myHeight };
-//    window.alert( 'Width = ' + myWidth );
-//    window.alert( 'Height = ' + myHeight );
-}
-
-window.addEventListener("load",
-function() {
-
-    var size = getWindowSize();
-    var canvas = document.getElementById("3DView");
-    canvas.style.width = size.w;
-    canvas.style.height = size.h;
-    canvas.width = size.w;
-    canvas.height = size.h;
-
-    var stats = document.getElementById("Stats");
-
-  var viewer;
-try {
-  viewer = new osgViewer.Viewer(canvas, {antialias : true, alpha: false });
-  viewer.init();
-  viewer.setupManipulator();
-  //viewer.setupManipulator(new osgGA.FirstPersonManipulator());
-  var rotate = new osg.MatrixTransform();
-  rotate.addChild(createScene());
-  viewer.view.setClearColor([0.3, 0.3, 0.3, 1.0]);
-  viewer.setScene(rotate);
-  viewer.getManipulator().computeHomePosition();
-  viewer.run();
-
-
-  var mousedown = function(ev) {
-     ev.stopPropagation();
-  };
-  document.getElementById("explanation").addEventListener("mousedown", mousedown, false);
-
-} catch (er) {
-  osg.log("exception in osgViewer " + er);
-}
-
-}
-,true);
-
-</script>
 </head>
 
 <body>

@@ -1,6 +1,6 @@
 osg.CullStack = function() {
-    this.modelviewMatrixStack = [osg.Matrix.makeIdentity()];
-    this.projectionMatrixStack = [osg.Matrix.makeIdentity()];
+    this.modelviewMatrixStack = [];
+    this.projectionMatrixStack = [];
     this.viewportStack = [];
 };
 

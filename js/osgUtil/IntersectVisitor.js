@@ -76,7 +76,7 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
         }
         return false;
     },
-    applyCamera: function(camera) {
+    pushCamera: function(camera) {
         // we should support hierarchy of camera
         // but right now we want just simple picking on main
         // camera
@@ -87,7 +87,12 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
         if (vp !== undefined) {
             this.windowMatrix = vp.computeWindowMatrix();
         }
-
+    },
+    applyCamera: function(camera) {
+        // we should support hierarchy of camera
+        // but right now we want just simple picking on main
+        // camera
+        this.pushCamera(camera);
         this.traverse(camera);
     },
 

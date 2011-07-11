@@ -48,6 +48,13 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         return osg.Light.uniforms[this.getTypeMember()];
     },
 
+    /** setAmbient */
+    setAmbient: function(a) { this.ambient = a; this.dirty(); },
+    /** setSpecular */
+    setSpecular: function(a) { this.specular = a; this.dirty(); },
+    /** setDiffuse */
+    setDiffuse: function(a) { this.diffuse = a; this.dirty(); },
+
     getPrefix: function() {
         return this.getType() + this.light_unit;
     },

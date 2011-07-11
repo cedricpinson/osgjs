@@ -25,6 +25,8 @@ osg.RenderBin.prototype = {
             var matrix = element[0];
             state.setGlobalDefaultValue(stateAttribute);
             stateAttribute.applyPositionedUniform(matrix, state);
+            stateAttribute.apply(state);
+            state.haveAppliedAttribute(stateAttribute);
         }
     },
 
@@ -68,7 +70,7 @@ osg.RenderBin.prototype = {
         if (previousRenderLeaf) {
             osg.StateGraph.prototype.moveToRootStateGraph(state, previousRenderLeaf.parent);
         }
-        if (this.positionedAttribute) {
+        if (false && this.positionedAttribute) {
             this.applyPositionedAttribute(state, this.positionedAttribute);
         }
 

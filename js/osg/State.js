@@ -92,6 +92,13 @@ osg.State.prototype = {
         }
     },
 
+    haveAppliedAttribute: function(attribute) {
+        var key = attribute.getTypeMember();
+        var attributeStack = this.attributeMap[key];
+        attributeStack.lastApplied = attribute;
+        attributeStack.asChanged = true;
+    },
+
     applyAttribute: function(attribute) {
         var key = attribute.getTypeMember();
         var attributeStack = this.attributeMap[key];
@@ -102,7 +109,8 @@ osg.State.prototype = {
             this.attributeMap.attributeKeys.push(key);
         }
 
-        if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
+        if (attributeStack.lastApplied !== attribute) {
+//        if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
             if (attribute.apply) {
                 attribute.apply(this);
             }
@@ -127,7 +135,8 @@ osg.State.prototype = {
             this.textureAttributeMapList[unit].attributeKeys.push(key);
         }
 
-        if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
+        if (attributeStack.lastApplied !== attribute) {
+        //if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
             if (attribute.apply) {
                 attribute.apply(this);
             }
@@ -370,12 +379,13 @@ osg.State.prototype = {
                 attribute = attributeStack.back().object;
             }
 
-            if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
+            if (attributeStack.asChanged) {
+//            if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
                 if (attribute.apply) {
                     attribute.apply(this);
                 }
                 attributeStack.lastApplied = attribute;
-                attributeStack.asChanged = true;
+                attributeStack.asChanged = false;
             }
         }
     },
@@ -437,10 +447,12 @@ osg.State.prototype = {
                 } else {
                     attribute = attributeStack.back().object;
                 }
-                if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
+                if (attributeStack.asChanged) {
+//                if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
                     gl.activeTexture(gl.TEXTURE0 + textureUnit);
                     attribute.apply(this.state);
                     attributeStack.lastApplied = attribute;
+                    attributeStack.asChanged = false;
                 }
             }
         }

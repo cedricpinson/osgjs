@@ -22,7 +22,7 @@
 
 <title>Materials</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-<script type="text/javascript" src="../../build/osg.js"></script>
+<script type="text/javascript" src="../../build/osg-debug.js"></script>
 
 <script type="text/javascript">
 
@@ -396,7 +396,7 @@ function() {
 try {
   viewer = new osgViewer.Viewer(canvas);
   viewer.init();
-  viewer.setScene(createScene());
+  viewer.setSceneData(createScene());
   viewer.setupManipulator();
   viewer.run();
 } catch (er) {

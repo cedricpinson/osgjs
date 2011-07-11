@@ -11,72 +11,52 @@ osgViewer.Viewer = function(canvas, options, error) {
 
     gl = WebGLUtils.setupWebGL(canvas, options, error );
     if (gl) {
-        this.gl = gl;
+        this._gl = gl;
         osg.init();
-        this.canvas = canvas;
-        this.frameRate = 60.0;
+        this._canvas = canvas;
+        this._frameRate = 60.0;
         osgUtil.UpdateVisitor = osg.UpdateVisitor;
         osgUtil.CullVisitor = osg.CullVisitor;
-        this.urlOptions = true;
+        this._urlOptions = true;
 
-        this.mouseWheelEventNode = canvas;
-        this.mouseEventNode = canvas;
-        this.keyboardEventNode = document;
+        this._mouseWheelEventNode = canvas;
+        this._mouseEventNode = canvas;
+        this._keyboardEventNode = document;
         if (options) {
             if(options.mouseWheelEventNode){
-                this.mouseWheelEventNode = options.mouseWheelEventNode;
+                this._mouseWheelEventNode = options.mouseWheelEventNode;
             }
             if(options.mouseEventNode){
-                this.mouseEventNode = options.mouseEventNode;
+                this._mouseEventNode = options.mouseEventNode;
             }
             if(options.mouseWheelEventNode){
-                this.keyboardEventNode = options.keyboardEventNode;
+                this._keyboardEventNode = options.keyboardEventNode;
             }
         }
 
+        osgViewer.View.call(this);
+        this.setUpView(canvas);
     } else {
         throw "No WebGL implementation found";
     }
 };
 
 
-osgViewer.Viewer.prototype = {
-    getScene: function() { return this.scene; },
-    setScene: function(scene) {
-        this.root.removeChildren();
-        this.root.addChild( scene );
-        this.scene = scene;
-    },
+osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
     init: function() {
         this._done = false;
-        this.root = new osg.Node();
-        this.state = new osg.State();
-        this.view = new osg.View();
-        this.view.addChild(this.root);
+        this._state = new osg.State();
 
-        var ratio = this.canvas.width/this.canvas.height;
-        this.view.setViewport(new osg.Viewport(0,0, this.canvas.width, this.canvas.height));
-        this.view.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0]));
-        this.view.setProjectionMatrix(osg.Matrix.makePerspective(60, ratio, 1.0, 1000.0));
-
-        this.view.light = new osg.Light();
-        this.view.getOrCreateStateSet().setAttributeAndMode(new osg.Material());
-
-        gl.enable(gl.DEPTH_TEST);
-        gl.enable(gl.BLEND);
-        gl.enable(gl.CULL_FACE);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
+        this._updateVisitor = new osgUtil.UpdateVisitor();
+        this._cullVisitor = new osgUtil.CullVisitor();
 
-        this.updateVisitor = new osgUtil.UpdateVisitor();
-        this.cullVisitor = new osgUtil.CullVisitor();
+        this._renderStage = new osg.RenderStage();
+        this._stateGraph = new osg.StateGraph();
 
-        this.renderStage = new osg.RenderStage();
-        this.stateGraph = new osg.StateGraph();
-        this.renderStage.setViewport(this.view.getViewport());
-
-        if (this.urlOptions) {
+        if (this._urlOptions) {
             this.parseOptions();
         }
     },
@@ -103,19 +83,17 @@ osgViewer.Viewer.prototype = {
 
         // not the best way to do it
         if (options['DEPTH_TEST'] === "0") {
-            gl.disable(gl.DEPTH_TEST);
+            this._gl.disable(gl.DEPTH_TEST);
         }
         if (options['BLEND'] === "0") {
-            gl.disable(gl.BLEND);
+            this._gl.disable(gl.BLEND);
         }
         if (options['CULL_FACE'] === "0") {
-            gl.disable(gl.CULL_FACE);
+            this._gl.disable(gl.CULL_FACE);
         }
         if (options['LIGHT'] === "0") {
-            delete this.view.light;
+            this.setLightingMode(osgViewer.View.LightingMode.NO_LIGHT);
         }
-
-         
     },
 
     initStats: function(options) {
@@ -188,17 +166,17 @@ osgViewer.Viewer.prototype = {
             return document.getElementById("StatsCanvas");
         };
 
-        if (this.canvasStats === undefined || this.canvasStats === null) {
-            this.canvasStats = createDomElements();
+        if (this._canvasStats === undefined || this._canvasStats === null) {
+            this._canvasStats = createDomElements();
         }
-        this.stats = new Stats.Stats(this.canvasStats);
+        this._stats = new Stats.Stats(this._canvasStats);
         var that = this;
-        this.frameRate = 1;
-        this.frameTime = 0;
-        this.updateTime = 0;
-        this.cullTime = 0;
-        this.drawTime = 0;
-        var height = this.canvasStats.height;
+        this._frameRate = 1;
+        this._frameTime = 0;
+        this._updateTime = 0;
+        this._cullTime = 0;
+        this._drawTime = 0;
+        var height = this._canvasStats.height;
         var ratio = height / maxMS;
         height = height - 2;
         var getStyle = function(el,styleProp)
@@ -209,32 +187,32 @@ osgViewer.Viewer.prototype = {
             }
             return null;
         };
-        this.stats.addLayer(getStyle("frameRate","color"), function(t) { 
-            var v = (height)/60.0 * (1000/that.frameRate);
+        this._stats.addLayer(getStyle("frameRate","color"), function(t) { 
+            var v = (height)/60.0 * (1000/that._frameRate);
             if (v > height) {
                 return height;
             }
             return v;} );
-        this.stats.addLayer(getStyle("frameTime", "color"), function(t) { 
-            var v = that.frameTime * ratio;
+        this._stats.addLayer(getStyle("frameTime", "color"), function(t) { 
+            var v = that._frameTime * ratio;
             if (v > height) {
                 return height;
             }
             return v;} );
-        this.stats.addLayer(getStyle("updateTime","color"), function(t) { 
-            var v = that.updateTime * ratio;
+        this._stats.addLayer(getStyle("updateTime","color"), function(t) { 
+            var v = that._updateTime * ratio;
             if (v > height) {
                 return height;
             }
             return v;} );
-        this.stats.addLayer(getStyle("cullTime","color"), function(t) { 
-            var v = that.cullTime * ratio;
+        this._stats.addLayer(getStyle("cullTime","color"), function(t) { 
+            var v = that._cullTime * ratio;
             if (v > height) {
                 return height;
             }
             return v;} );
-        this.stats.addLayer(getStyle("drawTime","color"), function(t) { 
-            var v = that.drawTime * ratio;
+        this._stats.addLayer(getStyle("drawTime","color"), function(t) { 
+            var v = that._drawTime * ratio;
             if (v > height) {
                 return height;
             }
@@ -242,28 +220,37 @@ osgViewer.Viewer.prototype = {
     },
 
     update: function() {
-        this.view.accept(this.updateVisitor);
+        this.getScene().accept(this._updateVisitor);
     },
     cull: function() {
-        this.stateGraph.clean();
-        this.renderStage.reset();
+        // this part of code should be called for each view
+        // right now, we dont support multi view
+        this._stateGraph.clean();
+        this._renderStage.reset();
 
-        this.cullVisitor.reset();
-        this.cullVisitor.setStateGraph(this.stateGraph);
-        this.cullVisitor.setRenderStage(this.renderStage);
+        this._cullVisitor.reset();
+        this._cullVisitor.setStateGraph(this._stateGraph);
+        this._cullVisitor.setRenderStage(this._renderStage);
+        var camera = this.getCamera();
+        this._cullVisitor.pushStateSet(camera.getStateSet());
+        this._cullVisitor.pushProjectionMatrix(camera.getProjectionMatrix());
+        this._cullVisitor.pushModelviewMatrix(camera.getViewMatrix());
+        this._cullVisitor.pushViewport(camera.getViewport());
+        this._cullVisitor.setCullSettings(camera);
 
-        //this.renderStage.setViewport(this.view.getClearDepth());
-        this.renderStage.setClearDepth(this.view.getClearDepth());
-        this.renderStage.setClearColor(this.view.getClearColor());
-        this.renderStage.setClearMask(this.view.getClearMask());
+        this._renderStage.setClearDepth(camera.getClearDepth());
+        this._renderStage.setClearColor(camera.getClearColor());
+        this._renderStage.setClearMask(camera.getClearMask());
+        this._renderStage.setViewport(camera.getViewport());
 
-        this.view.accept(this.cullVisitor);
+
+        this.getScene().accept(this._cullVisitor);
     },
     draw: function() {
-        this.renderStage.draw(this.state);
+        this._renderStage.draw(this._state);
 
         // noticed that we accumulate lot of stack, maybe because of the stateGraph
-        this.state.popAllStateSets();
+        this._state.popAllStateSets();
         // should not be necessary because of dirty flag now in attrubutes
         //this.state.applyWithoutProgram();
     },
@@ -271,23 +258,30 @@ osgViewer.Viewer.prototype = {
     frame: function() {
         var frameTime, beginFrameTime;
         frameTime = (new Date()).getTime();
-        if (this.lastFrameTime === undefined) {
-            this.lastFrameTime = 0;
+        if (this._lastFrameTime === undefined) {
+            this._lastFrameTime = 0;
         }
-        this.frameRate = frameTime - this.lastFrameTime;
-        this.lastFrameTime = frameTime;
+        this._frameRate = frameTime - this._lastFrameTime;
+        this._lastFrameTime = frameTime;
         beginFrameTime = frameTime;
 
-        if (this.updateVisitor.getFrameStamp().getFrameNumber() === 0) {
-            this.updateVisitor.getFrameStamp().setReferenceTime(frameTime/1000.0);
-            this.numberFrame = 0;
+        var frameStamp = this.getFrameStamp();
+
+        if (frameStamp.getFrameNumber() === 0) {
+            frameStamp.setReferenceTime(frameTime/1000.0);
+            this._numberFrame = 0;
         }
 
-        this.updateVisitor.getFrameStamp().setSimulationTime(frameTime/1000.0 - this.updateVisitor.getFrameStamp().getReferenceTime());
+        frameStamp.setSimulationTime(frameTime/1000.0 - frameStamp.getReferenceTime());
 
-        if (this.manipulator) {
-            this.view.setViewMatrix(this.manipulator.getInverseMatrix());
+        if (this.getManipulator()) {
+            this.getCamera().setViewMatrix(this.getManipulator().getInverseMatrix());
         }
+
+        // setup framestamp
+        this._updateVisitor.setFrameStamp(this.getFrameStamp());
+        //this._cullVisitor.setFrameStamp(this.getFrameStamp());
+
 
         // time the update
         var updateTime = (new Date()).getTime();
@@ -295,33 +289,33 @@ osgViewer.Viewer.prototype = {
 
         var cullTime = (new Date()).getTime();
         updateTime = cullTime - updateTime;
-        this.updateTime = updateTime;
+        this._updateTime = updateTime;
 
         this.cull();
         var drawTime = (new Date()).getTime();
         cullTime = drawTime - cullTime;
-        this.cullTime = cullTime;
+        this._cullTime = cullTime;
 
         this.draw();
         drawTime = (new Date()).getTime() - drawTime;
-        this.drawTime = drawTime;
+        this._drawTime = drawTime;
 
-        var f = this.updateVisitor.getFrameStamp().getFrameNumber()+1;
-        this.updateVisitor.getFrameStamp().setFrameNumber(f);
+        var f = frameStamp.getFrameNumber()+1;
+        frameStamp.setFrameNumber(f);
 
-        this.numberFrame++;
+        this._numberFrame++;
         var endFrameTime = (new Date()).getTime();
 
-        this.frameTime = (new Date()).getTime() - beginFrameTime;
-        if (this.stats !== undefined) {
-            this.stats.update();
+        this._frameTime = (new Date()).getTime() - beginFrameTime;
+        if (this._stats !== undefined) {
+            this._stats.update();
 
-            if (this.numberFrame % 60 === 0.0) {
+            if (this._numberFrame % 60 === 0.0) {
                 var nd = endFrameTime;
-                var diff = nd - this.statsStartTime;
-                var fps = (this.numberFrame*1000/diff).toFixed(1);
-                this.statsStartTime = nd;
-                this.numberFrame = 0;
+                var diff = nd - this._statsStartTime;
+                var fps = (this._numberFrame*1000/diff).toFixed(1);
+                this._statsStartTime = nd;
+                this._numberFrame = 0;
 
                 var cfps = document.getElementById("StatsCanvasFps");
                 var ctx = cfps.getContext("2d");
@@ -346,20 +340,19 @@ osgViewer.Viewer.prototype = {
         render();
     },
 
-    getManipulator: function() { return this.manipulator; },
     setupManipulator: function(manipulator, dontBindDefaultEvent) {
         if (manipulator === undefined) {
             manipulator = new osgGA.OrbitManipulator();
         }
 
         if (manipulator.setNode !== undefined) {
-            manipulator.setNode(this.root);
+            manipulator.setNode(this.getSceneData());
         } else {
             // for backward compatibility
-            manipulator.view = this.view;
+            manipulator.view = this;
         }
 
-        this.manipulator = manipulator;
+        this.setManipulator(manipulator);
 
         var that = this;
         var viewer = this;
@@ -422,8 +415,8 @@ osgViewer.Viewer.prototype = {
 	    return event;
 	};
 
-        this.manipulator.convertEventToCanvas = function(e) {
-            var myObject = that.canvas;
+        manipulator.convertEventToCanvas = function(e) {
+            var myObject = that._canvas;
             var posx,posy;
 	    if (e.pageX || e.pageY) {
 	        posx = e.pageX;
@@ -475,36 +468,36 @@ osgViewer.Viewer.prototype = {
             };
 
             // touch events
-            this.canvas.addEventListener("MozTouchDown", touchDown, false);
-            this.canvas.addEventListener("MozTouchUp", touchUp, false);
-            this.canvas.addEventListener("MozTouchMove", touchMove, false);
+            this._canvas.addEventListener("MozTouchDown", touchDown, false);
+            this._canvas.addEventListener("MozTouchUp", touchUp, false);
+            this._canvas.addEventListener("MozTouchMove", touchMove, false);
 
             // mouse
-            var mousedown = function (ev) 
+            var mousedown = function (ev)
             {
                 if (disableMouse === false) {
                     return viewer.getManipulator().mousedown(ev);
                 }
             };
-            var mouseup = function (ev) 
+            var mouseup = function (ev)
             {
                 if (disableMouse === false) {
                     return viewer.getManipulator().mouseup(ev);
                 }
             };
-            var mousemove = function (ev) 
+            var mousemove = function (ev)
             {
                 if (disableMouse === false) {
                     return viewer.getManipulator().mousemove(ev);
                 }
             };
-            var dblclick = function (ev) 
+            var dblclick = function (ev)
             {
                 if (disableMouse === false) {
                     return viewer.getManipulator().dblclick(ev);
                 }
             };
-            var mousewheel = function (event) 
+            var mousewheel = function (event)
             {
                 if (disableMouse === false) {
                     // from jquery
@@ -536,31 +529,31 @@ osgViewer.Viewer.prototype = {
             };
 
             if (viewer.getManipulator().mousedown) {
-                this.mouseEventNode.addEventListener("mousedown", mousedown, false);
+                this._mouseEventNode.addEventListener("mousedown", mousedown, false);
             }
             if (viewer.getManipulator().mouseup) {
-                this.mouseEventNode.addEventListener("mouseup", mouseup, false);
+                this._mouseEventNode.addEventListener("mouseup", mouseup, false);
             }
             if (viewer.getManipulator().mousemove) {
-                this.mouseEventNode.addEventListener("mousemove", mousemove, false);
+                this._mouseEventNode.addEventListener("mousemove", mousemove, false);
             }
             if (viewer.getManipulator().dblclick) {
-                this.mouseEventNode.addEventListener("dblclick", dblclick, false);
+                this._mouseEventNode.addEventListener("dblclick", dblclick, false);
             }
             if (viewer.getManipulator().mousewheel) {
-                this.mouseWheelEventNode.addEventListener("DOMMouseScroll", mousewheel, false);
-                this.mouseWheelEventNode.addEventListener("mousewheel", mousewheel, false);
+                this._mouseWheelEventNode.addEventListener("DOMMouseScroll", mousewheel, false);
+                this._mouseWheelEventNode.addEventListener("mousewheel", mousewheel, false);
             }
 
             var keydown = function(ev) {return viewer.getManipulator().keydown(ev); };
             var keyup = function(ev) {return viewer.getManipulator().keyup(ev);};
 
             if (viewer.getManipulator().keydown) {
-                this.keyboardEventNode.addEventListener("keydown", keydown, false);
+                this._keyboardEventNode.addEventListener("keydown", keydown, false);
             }
             if (viewer.getManipulator().keyup) {
-                this.keyboardEventNode.addEventListener("keyup", keyup, false);
+                this._keyboardEventNode.addEventListener("keyup", keyup, false);
             }
         }
     }
-};
+});

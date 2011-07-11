@@ -46,8 +46,8 @@ var main = function() {
         viewer.setupManipulator();
         var rotate = new osg.MatrixTransform();
         rotate.addChild(createScene());
-        viewer.view.setClearColor([0.0, 0.0, 0.0, 0.0]);
-        viewer.setScene(rotate);
+        viewer.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
+        viewer.setSceneData(rotate);
         viewer.getManipulator().computeHomePosition();
 
         //viewer.getManipulator().setDistance(100.0);
@@ -117,7 +117,7 @@ function getShader()
 function createScene() {
     var group = new osg.Node();
 
-    var size = 5000;
+    var size = 500;
     var ground = osg.createTexturedQuad(-size*0.5,-size*0.5,-50,
                                         size,0,0,
                                         0,size,0);
@@ -141,5 +141,3 @@ function createScene() {
 
 
 window.addEventListener("load", main ,true);
-
-

@@ -36,7 +36,8 @@ osg.BlendFunc.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         Apply the mode, must be called in the draw traversal
         @param state
     */
-    apply: function(state) { 
+    apply: function(state) {
+        gl.enable(gl.BLEND);
         gl.blendFunc(gl[this.sourceFactor], gl[this.destinationFactor]); 
     }
 });
