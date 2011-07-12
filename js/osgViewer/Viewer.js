@@ -59,6 +59,8 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         if (this._urlOptions) {
             this.parseOptions();
         }
+
+        this.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
     },
 
     parseOptions: function() {
@@ -243,8 +245,14 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._renderStage.setClearMask(camera.getClearMask());
         this._renderStage.setViewport(camera.getViewport());
 
-
         this.getScene().accept(this._cullVisitor);
+
+        // fix projection matrix if camera has near/far auto compute
+        this._cullVisitor.popModelviewMatrix();
+        this._cullVisitor.popProjectionMatrix();
+        this._cullVisitor.popViewport();
+        this._cullVisitor.popStateSet();
+
     },
     draw: function() {
         this._renderStage.draw(this._state);

@@ -161,10 +161,13 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         this.currentRenderBin = rg;
     },
     reset: function () {
-        this.modelviewMatrixStack.length = 1;
-        this.projectionMatrixStack.length = 1;
+        this.modelviewMatrixStack.length = 0;
+        this.projectionMatrixStack.length = 0;
         this.reserveMatrixStack.current = 0;
         this.reserveLeafStack.current = 0;
+
+        this.computedNear = Number.POSITIVE_INFINITY;
+        this.computedFar = Number.NEGATIVE_INFINITY;
     },
     getCurrentRenderBin: function() { return this.currentRenderBin; },
     setCurrentRenderBin: function(rb) { this.currentRenderBin = rb; },

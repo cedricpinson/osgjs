@@ -1,4 +1,4 @@
-// osg-debug-0.0.6.js commit 91ca68d7322d82877a1524221250bea7a10eb12d - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.6.js commit 14df05fe58cb54c7746bf15452c0bec9aa9dddb2 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -5950,10 +5950,13 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         this.currentRenderBin = rg;
     },
     reset: function () {
-        this.modelviewMatrixStack.length = 1;
-        this.projectionMatrixStack.length = 1;
+        this.modelviewMatrixStack.length = 0;
+        this.projectionMatrixStack.length = 0;
         this.reserveMatrixStack.current = 0;
         this.reserveLeafStack.current = 0;
+
+        this.computedNear = Number.POSITIVE_INFINITY;
+        this.computedFar = Number.NEGATIVE_INFINITY;
     },
     getCurrentRenderBin: function() { return this.currentRenderBin; },
     setCurrentRenderBin: function(rb) { this.currentRenderBin = rb; },
@@ -7152,6 +7155,8 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         if (this._urlOptions) {
             this.parseOptions();
         }
+
+        this.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
     },
 
     parseOptions: function() {
@@ -7336,8 +7341,14 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._renderStage.setClearMask(camera.getClearMask());
         this._renderStage.setViewport(camera.getViewport());
 
-
         this.getScene().accept(this._cullVisitor);
+
+        // fix projection matrix if camera has near/far auto compute
+        this._cullVisitor.popModelviewMatrix();
+        this._cullVisitor.popProjectionMatrix();
+        this._cullVisitor.popViewport();
+        this._cullVisitor.popStateSet();
+
     },
     draw: function() {
         this._renderStage.draw(this._state);

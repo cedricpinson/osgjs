@@ -1,3 +1,21 @@
+function createCanvas() {
+    var parent = document.body;
+
+    var t = "" + (new Date()).getTime();
+    var cnv = "<canvas id='" + t + "'></canvas>";
+
+    var mydiv = document.createElement('div');
+    mydiv.setAttribute('id', "div_"+t);
+    mydiv.innerHTML = cnv;
+    parent.appendChild(mydiv);
+    return document.getElementById(t);
+}
+function removeCanvas(canvas) {
+    var id = canvas.getAttribute('id');
+    var parent = document.getElementById("div_"+id);
+    parent.removeChild(canvas);
+}
+
 function check_near(a, b, threshold) {
     if (threshold === undefined) {
         threshold = 1e-5;
