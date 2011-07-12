@@ -1,0 +1,57 @@
+<html>
+
+<head>
+<style>
+  body {
+  background: rgb(76,76,76);
+  overflow:hidden;
+  padding:0;
+  margin:0;
+  color: white;
+  }
+
+  a:link {text-decoration: none; color: black;}
+  a:visited {text-decoration: none; color: black;}
+  a:active {text-decoration: none; color: black;}
+  a:hover {text-decoration: underline;  color: black;}
+
+  #ViewContainer {
+  position: absolute;
+  }
+
+  #explanation {
+  overflow:auto;
+  position: absolute;
+  left: 70%;
+  }
+  
+  #explanation:focus { outline: none; }
+
+  code {
+    font-size: 10px;
+  }
+  
+</style>
+<title>Fog</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<script type="text/javascript" src="../../build/osg.js"></script>
+<script type="text/javascript" src="main.js"></script>
+</head>
+
+<body>
+
+  <div id="ViewContainer">
+  <canvas id="3DView"></canvas>
+  </div>
+  <div id="explanation" tabIndex="0" >
+    <h1>Fog example with <a href="http://osgjs.org">osgjs</a></h1>
+    This sample demonstrate a ver simple how to implement fog with osgjs. It's very simple to be useful for beginners</a>
+
+    <h2>Fog Equation</h2>
+    <p>
+      There is a very good article about fog equation <a href="http://www.ozone3d.net/tutorials/"> here </a> <br>
+      Change value of density [0-10] <input type="range" min="0" max="10" value="0" step="1" onchange="changeDensity(this.value)"/> <span id="density"> 0.0</span>
+    </p>
+  </div>
+</body>
+</html>

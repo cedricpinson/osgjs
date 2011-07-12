@@ -61,7 +61,7 @@ osg.EllipsoidModel.prototype = {
     },
     computeLocalToWorldTransformFromLatLongHeight : function(latitude, longitude, height) {
         var pos = this.convertLatLongHeightToXYZ(latitude, longitude, height);
-        var m = osg.Matrix.makeTranslate(pos[0], pos[1], pos[2]);
+        var m = osg.Matrix.makeTranslate(pos[0], pos[1], pos[2], []);
         this.computeCoordinateFrame(latitude, longitude, m);
         return m;
     },
@@ -79,7 +79,7 @@ osg.EllipsoidModel.prototype = {
         var east = [-Math.sin(longitude), Math.cos(longitude), 0];
 
         // Compute north vector = outer product up x east
-        var north = osg.Vec3.cross(up,east);
+        var north = osg.Vec3.cross(up,east, []);
 
         // set matrix
         osg.Matrix.set(localToWorld,0,0, east[0]);

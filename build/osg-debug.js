@@ -1,4 +1,5 @@
-// osg-debug-0.0.5.js commit 48b63faaa27f5389f78e417e2e6e176db097005b - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.5.js commit aa4baa76d9e1577ec065b533c5b9bd3df32fdeb2 - http://github.com/cedricpinson/osgjs
+
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -2627,7 +2628,7 @@ osg.EllipsoidModel.prototype = {
     },
     computeLocalToWorldTransformFromLatLongHeight : function(latitude, longitude, height) {
         var pos = this.convertLatLongHeightToXYZ(latitude, longitude, height);
-        var m = osg.Matrix.makeTranslate(pos[0], pos[1], pos[2]);
+        var m = osg.Matrix.makeTranslate(pos[0], pos[1], pos[2], []);
         this.computeCoordinateFrame(latitude, longitude, m);
         return m;
     },
@@ -2645,7 +2646,7 @@ osg.EllipsoidModel.prototype = {
         var east = [-Math.sin(longitude), Math.cos(longitude), 0];
 
         // Compute north vector = outer product up x east
-        var north = osg.Vec3.cross(up,east);
+        var north = osg.Vec3.cross(up,east, []);
 
         // set matrix
         osg.Matrix.set(localToWorld,0,0, east[0]);
@@ -3300,12 +3301,12 @@ osg.Program.prototype = {
     cacheUniformList: function(str) {
         var r = str.match(/uniform\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (var i in r) {
+            for (var i = 0, l = r.length; i < l; i++) {
                 var uniform = r[i].match(/uniform\s+\w+\s+(\w+)/)[1];
-                var l = gl.getUniformLocation(this.program, uniform);
-                if (l !== undefined && l !== null) {
+                var location = gl.getUniformLocation(this.program, uniform);
+                if (location !== undefined && location !== null) {
                     if (this.uniformsCache[uniform] === undefined) {
-                        this.uniformsCache[uniform] = l;
+                        this.uniformsCache[uniform] = location;
                         this.uniformsCache.uniformKeys.push(uniform);
                     }
                 }
@@ -3316,12 +3317,12 @@ osg.Program.prototype = {
     cacheAttributeList: function(str) {
         var r = str.match(/attribute\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (var i in r) {
+            for (var i = 0, l = r.length; i < l; i++) {
                 var attr = r[i].match(/attribute\s+\w+\s+(\w+)/)[1];
-                var l = gl.getAttribLocation(this.program, attr);
-                if (l !== -1 && l !== undefined) {
+                var location = gl.getAttribLocation(this.program, attr);
+                if (location !== -1 && location !== undefined) {
                     if (this.attributesCache[attr] === undefined) {
-                        this.attributesCache[attr] = l;
+                        this.attributesCache[attr] = location;
                         this.attributesCache.attributeKeys.push(attr);
                     }
                 }
@@ -7610,11 +7611,14 @@ osgGA.OrbitManipulator.prototype = {
     setNode: function(node) {
         this.node = node;
     },
+    setTarget: function(target) {
+        osg.Vec3.copy(target, this.target);
+    },
     computeHomePosition: function() {
         if (this.node !== undefined) {
             var bs = this.node.getBound();
             this.setDistance(bs.radius()*1.5);
-            this.target = bs.center();
+            this.setTarget(bs.center());
         }
     },
 
@@ -7929,10 +7933,7 @@ osgGA.FirstPersonManipulator.prototype = {
     },
     mousemove: function(ev)
     {
-        if (this.buttonup === true)
-        {
-            return;
-        }
+        if (this.buttonup === true) { return; }
 
         var curX;
         var curY;
@@ -7993,19 +7994,19 @@ osgGA.FirstPersonManipulator.prototype = {
     },
     getInverseMatrix: function()
     {
-        var target = osg.Vec3.add(this.eye, this.direction);
-        return osg.Matrix.makeLookAt(this.eye, target, this.up);
+        var target = osg.Vec3.add(this.eye, this.direction, []);
+        return osg.Matrix.makeLookAt(this.eye, target, this.up, []);
     },
     moveForward: function(distance)
     {
-        var d = osg.Vec3.mult(osg.Vec3.normalize(this.direction), distance);
-        this.eye = osg.Vec3.add(this.eye, d);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(this.direction, []), distance, []);
+        this.eye = osg.Vec3.add(this.eye, d, []);
     },
     strafe: function(distance)
     {
-        var cx = osg.Vec3.cross(this.direction, this.up);
-        var d = osg.Vec3.mult(osg.Vec3.normalize(cx), distance);
-        this.eye = osg.Vec3.add(this.eye, d);
+        var cx = osg.Vec3.cross(this.direction, this.up, []);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(cx,cx), distance, []);
+        this.eye = osg.Vec3.add(this.eye, d, []);
     },
     
     keydown: function(event) {

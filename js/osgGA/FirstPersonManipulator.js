@@ -47,10 +47,7 @@ osgGA.FirstPersonManipulator.prototype = {
     },
     mousemove: function(ev)
     {
-        if (this.buttonup === true)
-        {
-            return;
-        }
+        if (this.buttonup === true) { return; }
 
         var curX;
         var curY;
@@ -111,19 +108,19 @@ osgGA.FirstPersonManipulator.prototype = {
     },
     getInverseMatrix: function()
     {
-        var target = osg.Vec3.add(this.eye, this.direction);
-        return osg.Matrix.makeLookAt(this.eye, target, this.up);
+        var target = osg.Vec3.add(this.eye, this.direction, []);
+        return osg.Matrix.makeLookAt(this.eye, target, this.up, []);
     },
     moveForward: function(distance)
     {
-        var d = osg.Vec3.mult(osg.Vec3.normalize(this.direction), distance);
-        this.eye = osg.Vec3.add(this.eye, d);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(this.direction, []), distance, []);
+        this.eye = osg.Vec3.add(this.eye, d, []);
     },
     strafe: function(distance)
     {
-        var cx = osg.Vec3.cross(this.direction, this.up);
-        var d = osg.Vec3.mult(osg.Vec3.normalize(cx), distance);
-        this.eye = osg.Vec3.add(this.eye, d);
+        var cx = osg.Vec3.cross(this.direction, this.up, []);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(cx,cx), distance, []);
+        this.eye = osg.Vec3.add(this.eye, d, []);
     },
     
     keydown: function(event) {
