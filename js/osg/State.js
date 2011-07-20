@@ -245,20 +245,22 @@ osg.State.prototype = {
             // loop on wanted attributes and texture attribute to track state graph uniforms from those attributes
             if (trackAttributes !== undefined && trackUniforms === undefined) {
                 var attributeKeys = program.trackAttributes.attributeKeys;
-                for ( i = 0, l = attributeKeys.length; i < l; i++) {
-                    key = attributeKeys[i];
-                    attributeStack = this.attributeMap[key];
-                    if (attributeStack === undefined) {
-                        continue;
-                    }
-                    // we just need the uniform list and not the attribute itself
-                    attribute = attributeStack.globalDefault;
-                    if (attribute.getOrCreateUniforms === undefined) {
-                        continue;
-                    }
-                    uniforms = attribute.getOrCreateUniforms();
-                    for (a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
-                        activeUniforms.push(uniforms[uniforms.uniformKeys[a] ]);
+                if (attributeKeys !== undefined) {
+                    for ( i = 0, l = attributeKeys.length; i < l; i++) {
+                        key = attributeKeys[i];
+                        attributeStack = this.attributeMap[key];
+                        if (attributeStack === undefined) {
+                            continue;
+                        }
+                        // we just need the uniform list and not the attribute itself
+                        attribute = attributeStack.globalDefault;
+                        if (attribute.getOrCreateUniforms === undefined) {
+                            continue;
+                        }
+                        uniforms = attribute.getOrCreateUniforms();
+                        for (a = 0, b = uniforms.uniformKeys.length; a < b; a++) {
+                            activeUniforms.push(uniforms[uniforms.uniformKeys[a] ]);
+                        }
                     }
                 }
 
