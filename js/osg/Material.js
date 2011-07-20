@@ -13,6 +13,8 @@ osg.Material = function () {
 };
 /** @lends osg.Material.prototype */
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+    /** setEmission */
+    setEmission: function(a) { this.emission = a; this._dirty = true; },
     /** setAmbient */
     setAmbient: function(a) { this.ambient = a; this._dirty = true; },
     /** setSpecular */

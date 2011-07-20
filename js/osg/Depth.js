@@ -24,7 +24,7 @@ osg.Depth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
     setRange: function(near, far) { this.near = near; this.far = far; },
-    setWriteMask: function(mask) { this.mask = mask; },
+    setWriteMask: function(mask) { this.writeMask = mask; },
     apply: function(state) {
         if (this.func === 'DISABLE') {
             gl.disable(gl.DEPTH_TEST);
