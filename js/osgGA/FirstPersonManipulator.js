@@ -4,11 +4,18 @@
  *  Cedric Pinson <cedric.pinson@plopbyte.com>
  */
 
+
+/** 
+ *  FirstPersonManipulator
+ *  @class
+ */
 osgGA.FirstPersonManipulator = function () {
+    osgGA.Manipulator.call(this);
     this.init();
 };
 
-osgGA.FirstPersonManipulator.prototype = {
+/** @lends osgGA.FirstPersonManipulator.prototype */
+osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype, {
     setNode: function(node) {
         this.node = node;
     },
@@ -40,7 +47,7 @@ osgGA.FirstPersonManipulator.prototype = {
     mousedown: function(ev)
     {
         this.dragging = true;
-        var pos = this.convertEventToCanvas(ev);
+        var pos = this.getPositionRelativeToCanvas(ev);
         this.clientX = pos[0];
         this.clientY = pos[1];
         this.pushButton(ev);
@@ -53,7 +60,7 @@ osgGA.FirstPersonManipulator.prototype = {
         var curY;
         var deltaX;
         var deltaY;
-        var pos = this.convertEventToCanvas(ev);
+        var pos = this.getPositionRelativeToCanvas(ev);
 
         curX = pos[0];
         curY = pos[1];
@@ -64,18 +71,6 @@ osgGA.FirstPersonManipulator.prototype = {
 
         this.update(deltaX, deltaY);
         this.computeRotation(this.dx, this.dy);
-    },
-    dblclick: function(ev)
-    {
-    },
-    touchdown: function(ev)
-    {
-    },
-    touchup: function(ev)
-    {
-    },
-    touchmove: function(ev)
-    {
     },
     pushButton: function(ev)
     {
@@ -143,4 +138,4 @@ osgGA.FirstPersonManipulator.prototype = {
             return false;
         }
     }
-};
+});

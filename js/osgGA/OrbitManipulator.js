@@ -13,11 +13,12 @@ osgGA.OrbitManipulatorMode = {
  *  @class
  */
 osgGA.OrbitManipulator = function () {
+    osgGA.Manipulator.call(this);
     this.init();
 };
 
 /** @lends osgGA.OrbitManipulator.prototype */
-osgGA.OrbitManipulator.prototype = {
+osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype, {
     init: function() {
         this.distance = 25;
         this.target = [ 0,0, 0];
@@ -51,10 +52,6 @@ osgGA.OrbitManipulator.prototype = {
         }
     },
 
-    /**
-       Method called when a keydown event is triggered
-        @type KeyEvent
-     */
     keydown: function(ev) {
         if (ev.keyCode === 32) {
             this.computeHomePosition();
@@ -66,12 +63,6 @@ osgGA.OrbitManipulator.prototype = {
             return false;
         }
     },
-    /**
-       Method called when a keyup event is triggered
-       @type KeyEvent
-     */
-    keyup: function(ev) {
-    },
     mouseup: function(ev) {
         this.dragging = false;
         this.panning = false;
@@ -80,7 +71,7 @@ osgGA.OrbitManipulator.prototype = {
     mousedown: function(ev) {
         this.panning = true;
         this.dragging = true;
-        var pos = this.convertEventToCanvas(ev);
+        var pos = this.getPositionRelativeToCanvas(ev);
         this.clientX = pos[0];
         this.clientY = pos[1];
         this.pushButton(ev);
@@ -95,7 +86,7 @@ osgGA.OrbitManipulator.prototype = {
         var curY;
         var deltaX;
         var deltaY;
-        var pos = this.convertEventToCanvas(ev);
+        var pos = this.getPositionRelativeToCanvas(ev);
         curX = pos[0];
         curY = pos[1];
 
@@ -107,14 +98,6 @@ osgGA.OrbitManipulator.prototype = {
 
         this.update(deltaX, deltaY);
         return false;
-    },
-    dblclick: function(ev) {
-    },
-    touchDown: function(ev) {
-    },
-    touchUp: function(ev) {
-    },
-    touchMove: function(ev) {
     },
     setMaxDistance: function(d) {
         this.maxDistance =  d;
@@ -162,16 +145,6 @@ osgGA.OrbitManipulator.prototype = {
             this.rotation = r;
             return;
         }
-
-        // if (Math.abs(p) > 0.9) {
-        //     var plane = [ dir[0] , dir[1], 0 ];
-        //     osg.Vec3.normalize(plane, plane);
-
-        //     var diff = Math.abs(p) - 0.9;
-        //     r2  = osg.Matrix.mult(r2, osg.Matrix.makeRotate( diff , plane[0], plane[1], 0));
-        //     osg.log("adjust rotation" + diff + " axis " + plane);
-        // }
-
         this.rotation = r2;
     },
 
@@ -311,5 +284,5 @@ osgGA.OrbitManipulator.prototype = {
                               inv);
         return inv;
     }
-};
+});
 

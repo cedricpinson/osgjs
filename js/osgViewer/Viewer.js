@@ -423,38 +423,6 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 	    return event;
 	};
 
-        manipulator.convertEventToCanvas = function(e) {
-            var myObject = that._canvas;
-            var posx,posy;
-	    if (e.pageX || e.pageY) {
-	        posx = e.pageX;
-	        posy = e.pageY;
-	    }
-	    else if (e.clientX || e.clientY) {
-	        posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-	        posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-	    }
-
-            var divGlobalOffset = function(obj) {
-                var x=0, y=0;
-                x = obj.offsetLeft;
-                y = obj.offsetTop;
-                var body = document.getElementsByTagName('body')[0];
-                while (obj.offsetParent && obj!=body){
-                    x += obj.offsetParent.offsetLeft;
-                    y += obj.offsetParent.offsetTop;
-                    obj = obj.offsetParent;
-                }
-                return [x,y];
-            };
-	    // posx and posy contain the mouse position relative to the document
-	    // Do something with this information
-            var globalOffset = divGlobalOffset(myObject);
-            posx = posx - globalOffset[0];
-            posy = myObject.height-(posy - globalOffset[1]);
-            return [posx,posy];
-        };
-
         if (dontBindDefaultEvent === undefined || dontBindDefaultEvent === false) {
 
             var disableMouse = false;
