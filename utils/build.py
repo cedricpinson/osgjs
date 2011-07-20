@@ -73,6 +73,7 @@ OSG_DB = [
 
 OSG_GA = [
         "osgGA/osgGA.js",
+        "osgGA/Manipulator.js",
         "osgGA/OrbitManipulator.js",
         "osgGA/FirstPersonManipulator.js"
 ]
