@@ -49,7 +49,7 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                 }
                 
                 if (hasRenderBuffer) { // set it to null only if used renderbuffer
-                    gl.bindRenderbuffer(null);
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                 }
                 this.setDirty(false);
             } else {
