@@ -17,6 +17,7 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
     getTypeMember: function() { return this.attributeType;},
     setAttachment: function(attachment) { this.attachments.push(attachment); },
     apply: function(state) {
+        var gl = state.getGraphicContext();
         var status;
         if (this.attachments.length > 0) {
             if (this.isDirty()) {
@@ -40,6 +41,7 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                         // apply on unit 0 to init it
                         state.applyTextureAttribute(0, texture);
                         
+                        //gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, texture.getTextureTarget(), texture.getTextureObject(), this.attachments[i].level);
                         gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, texture.getTextureTarget(), texture.getTextureObject(), this.attachments[i].level);
                     }
                 }

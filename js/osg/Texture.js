@@ -123,25 +123,29 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setInternalFormat: function(internalFormat) {
         this._internalFormat = internalFormat;
     },
-    setFromCanvas: function(canvas) {
-        this.setImage(canvas);
+    setFromCanvas: function(canvas, format) {
+        this.setImage(canvas, format);
     },
 
     isImageReady: function() {
         var image = this._image;
-        if (image && image.complete) {
-            if (typeof image.naturalWidth !== "undefined" &&  image.naturalWidth === 0) {
-                return false;
+        if (image) {
+            if (image instanceof Image) {
+                if (image.complete) {
+                    if (image.naturalWidth !== undefined &&  image.naturalWidth === 0) {
+                        return false;
+                    }
+                    return true;
+                }
+            } else if (image instanceof HTMLCanvasElement) {
+                return true;
             }
-            return true;
         }
         return false;
     },
 
     applyFilterParameter: function(graphicContext) {
-        if (graphicContext) { // for backward compatibility
-            var gl = graphicContext;
-        }
+        var gl = graphicContext;
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.mag_filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.min_filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.wrap_s);
@@ -190,40 +194,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             }
         }
     },
-    apply2: function(state) {
-        var gl = state.getGraphicContext();
-        if (this._image !== undefined) {
-            if (!this.textureObject) {
-                if (this.isImageReady()) {
-                    if (!this.textureObject) {
-                        this.init(gl);
-                        this.setTextureSize(this._image.naturalWidth, this._image.naturalHeight);
-                        this._dirty = false;
-                    }
-                    gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-                    gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
-                    this.applyFilterParameter(gl);
-                } else {
-                    gl.bindTexture(gl.TEXTURE_2D, null);
-                }
-            } else {
-                gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-            }
-        } else if (this.textureHeight !== 0 && this.textureWidth !== 0 ) {
-            if (!this.textureObject) {
-                this.init(gl);
-                gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-                gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this.textureWidth, this.textureHeight, 0, this._internalFormat, gl.UNSIGNED_BYTE, null);
-                this.applyFilterParameter();
-            } else {
-                gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-            }
-        } else if (this.textureObject !== undefined) {
-            gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-        } else {
-            gl.bindTexture(gl.TEXTURE_2D, null);
-        }
-    },
+
 
     /**
       set the injection code that will be used in the shader generation

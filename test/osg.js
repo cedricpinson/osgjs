@@ -17,6 +17,12 @@ function removeCanvas(canvas) {
 }
 function createFakeRenderer() {
     return { 'TEXTURE0': 10,
+             'DEPTH_TEST': 1,
+             enable: function() {},
+             disable: function() {},
+             depthFunc: function() {},
+             depthRange: function() {},
+             depthMask: function() {},
              activeTexture: function() {},
              bindTexture: function() {},
              bindBuffer: function() {},
@@ -1047,14 +1053,24 @@ test("osg.Texture", function() {
 
         var state = viewer.getState();
 
+
+        // check is ready api
+        var texture = new osg.Texture();
+        texture.setImage(greyscale._image);
+        ok(texture.isImageReady() === true, "Image is ready");
+
+        texture = new osg.Texture();
+        texture.setImage(cnv);
+        ok(texture.isImageReady() === true, "Image is ready because of canvas");
+
+
         ok( greyscale.isDirty() === true , "dirty is true");
         greyscale.apply(state);
         ok( greyscale._image === undefined, "image should be undefined because of unrefAfterApply");
         ok( greyscale._textureObject !== undefined, "texture object");
         ok( greyscale.isDirty() === false, "dirty is false");
 
-        greyscale.apply(state);
-
+        
         //rgb24.apply(state);
         //rgba32.apply(state);
         //tcanvas.apply(state);
@@ -1062,9 +1078,6 @@ test("osg.Texture", function() {
 
         start();
     };
-
-    
-        
 });
 
 test("osg.MatrixTransform", function() {
@@ -1077,6 +1090,25 @@ test("osg.MatrixTransform", function() {
     near( bs.center(), [100,0,0]);
     near( bs.radius(), 2.414213562373095);
     
+});
+
+
+test("osg.Depth", function() {
+
+    var n = new osg.Depth();
+    ok(n._near === 0.0, "Check near");
+    ok(n._far === 1.0, "Check far");
+    ok(n._func === osg.Depth.LESS, "Check function");
+    ok(n._writeMask === true, "Check write mask");
+
+    var state = new osg.State();
+    state.setGraphicContext(createFakeRenderer());
+    
+    n.apply(state);
+    
+    n = new osg.Depth(osg.Depth.DISABLE);
+    n.apply(state);
+
 });
 
 
