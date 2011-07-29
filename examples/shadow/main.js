@@ -817,7 +817,7 @@ function createShadowMapScene()
 
     var groundUniform = osg.Uniform.createInt1(1,'ground');
     q.getOrCreateStateSet().addUniform(groundUniform);
-    q.getOrCreateStateSet().setAttributeAndMode(new osg.Depth('LESS', 0.0, 1.0, false));
+//    q.getOrCreateStateSet().setAttributeAndMode(new osg.Depth('LESS', 0.0, 1.0, false));
     q.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('ONE','ONE_MINUS_SRC_ALPHA'));
     scene.setStateSet(stateSet);
 
