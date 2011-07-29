@@ -24,7 +24,8 @@ function createFakeRenderer() {
              vertexAttribPointer: function() {},
              createTexture: function() {},
              bindFramebuffer: function() {},
-             clear: function() {}
+             clear: function() {},
+             viewport: function() {}
            };
 }
 
