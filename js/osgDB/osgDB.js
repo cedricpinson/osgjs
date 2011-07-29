@@ -73,7 +73,13 @@ osgDB.parseSceneGraph = function (node)
                     continue;
                 }
                 var tex = new osg.Texture();
-                osg.extend(tex, textures[t]);
+                if (textures[t].mag_filter !== undefined) {
+                    tex.setMagFilter(osg.Texture[textures[t].mag_filter]);
+                }
+                if (textures[t].min_filter !== undefined) {
+                    tex.setMinFilter(osg.Texture[textures[t].min_filter]);
+                }
+                //osg.extend(tex, textures[t]);
                 var img = new Image();
                 img.src = textures[t].file;
                 tex.setImage(img);

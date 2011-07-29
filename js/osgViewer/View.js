@@ -1,5 +1,6 @@
 /** -*- compile-command: "jslint-cli View.js" -*- */
 osgViewer.View = function() {
+    this._graphicContext = undefined;
     this._camera = new osg.Camera();
     this._scene = new osg.Node();
     this._sceneData = undefined;
@@ -23,6 +24,8 @@ osgViewer.View.LightingMode = {
 };
 
 osgViewer.View.prototype = {
+    setGraphicContext: function(gc) { this._graphicContext = gc; },
+    getGraphicContext: function() { return this._graphicContext; },
     setUpView: function (canvas) {
         var ratio = canvas.width/canvas.height;
         this._camera.setViewport(new osg.Viewport(0,0, canvas.width, canvas.height));

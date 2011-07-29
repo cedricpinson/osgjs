@@ -11,6 +11,7 @@ osg.CullFace.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
     apply: function(state) { 
+        var gl = state.getGraphicContext();
         if (this.mode === 'DISABLE') {
             gl.disable(gl.CULL_FACE);
         } else {

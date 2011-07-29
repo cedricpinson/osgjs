@@ -10,5 +10,5 @@ osg.LineWidth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     cloneType: function() {return new osg.LineWidth(); },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
-    apply: function(state) { gl.lineWidth(this.lineWidth); }
+    apply: function(state) { state.getGraphicContext().lineWidth(this.lineWidth); }
 });

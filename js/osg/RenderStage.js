@@ -89,6 +89,7 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
     },
 
     applyCamera: function(state) {
+        var gl = state.getGraphicContext();
         if (this.camera === undefined) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             return;
@@ -131,6 +132,7 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
 
     drawImplementation: function(state, previousRenderLeaf) {
         var error;
+        var gl = state.getGraphicContext();
         if (osg.reportErrorGL === true) {
             error = gl.getError();
             osg.checkError(error);

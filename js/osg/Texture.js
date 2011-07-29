@@ -7,6 +7,28 @@ osg.Texture = function() {
     osg.StateAttribute.call(this);
     this.setDefaultParameters();
 };
+osg.Texture.DEPTH_COMPONENT = 0x1902;
+osg.Texture.ALPHA = 0x1906;
+osg.Texture.RGB = 0x1907;
+osg.Texture.RGBA = 0x1908;
+osg.Texture.LUMINANCE = 0x1909;
+osg.Texture.LUMINANCE_ALPHA = 0x190A;
+
+// filter mode
+osg.Texture.LINEAR = 0x2601;
+osg.Texture.NEAREST = 0x2600;
+osg.Texture.NEAREST_MIPMAP_NEAREST = 0x2700;
+osg.Texture.LINEAR_MIPMAP_NEAREST = 0x2701;
+osg.Texture.NEAREST_MIPMAP_LINEAR = 0x2702;
+osg.Texture.LINEAR_MIPMAP_LINEAR = 0x2703;
+
+// wrap mode
+osg.Texture.CLAMP_TO_EDGE = 0x812F;
+osg.Texture.REPEAT = 0x2901;
+osg.Texture.MIRRORED_REPEAT = 0x8370;
+
+// target
+osg.Texture.TEXTURE_2D = 0x0DE1;
 
 /** @lends osg.Texture.prototype */
 osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
@@ -31,49 +53,82 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         return osg.Texture.uniforms[unit];
     },
     setDefaultParameters: function() {
-        this.mag_filter = 'LINEAR';
-        this.min_filter = 'LINEAR';
-        this.wrap_s = 'CLAMP_TO_EDGE';
-        this.wrap_t = 'CLAMP_TO_EDGE';
+        this.mag_filter = osg.Texture.LINEAR;
+        this.min_filter = osg.Texture.LINEAR;
+        this.wrap_s = osg.Texture.CLAMP_TO_EDGE;
+        this.wrap_t = osg.Texture.CLAMP_TO_EDGE;
         this.textureWidth = 0;
         this.textureHeight = 0;
-        this.target = 'TEXTURE_2D';
+        this._unrefImageDataAfterApply = false;
+        this.setInternalFormat(osg.Texture.RGBA);
+        this._textureTarget = osg.Texture.TEXTURE_2D;
     },
+    getTextureTarget: function() { return this._textureTarget;},
+    getTextureObject: function() { return this._textureObject;},
     setTextureSize: function(w,h) {
         this.textureWidth = w;
         this.textureHeight = h;
     },
-    init: function() {
-        if (!this.textureObject) {
-            this.textureObject = gl.createTexture();
+    init: function(gl) {
+        if (!this._textureObject) {
+            this._textureObject = gl.createTexture();
             this._dirty = true;
         }
     },
     getWidth: function() { return this.textureWidth; },
     getHeight: function() { return this.textureHeight; },
 
-    setWrapS: function(value) { this.wrap_s = value; },
-    setWrapT: function(value) { this.wrap_t = value; },
-
-    setMinFilter: function(value) { this.min_filter = value; },
-    setMagFilter: function(value) { this.mag_filter = value; },
-
-    setImage: function(img) {
-        this.image = img;
-        this._dirty = true;
+    setWrapS: function(value) {
+        if (typeof(value) === "string") {
+            this.wrap_s = osg.Texture[value];
+        } else {
+            this.wrap_s = value; 
+        }
+    },
+    setWrapT: function(value) { 
+        if (typeof(value) === "string") {
+            this.wrap_t = osg.Texture[value];
+        } else {
+            this.wrap_t = value; 
+        }
     },
 
+    setMinFilter: function(value) { 
+        if (typeof(value) === "string") {
+            this.min_filter = osg.Texture[value];
+        } else {
+            this.min_filter = value; 
+        }
+    },
+    setMagFilter: function(value) { 
+        if (typeof(value) === "string") {
+            this.mag_filter = osg.Texture[value];
+        } else {
+            this.mag_filter = value; 
+        }
+    },
+
+    setImage: function(img, imageFormat) {
+        this._imageFormat = imageFormat;
+        if (!this._imageFormat) {
+            this._imageFormat = osg.Texture.RGBA;
+        }
+        this.setInternalFormat(this._imageFormat);
+        this._image = img;
+        this._dirty = true;
+    },
+    setUnrefImageDataAfterApply: function(bool) {
+        this._unrefImageDataAfterApply = bool;
+    },
+    setInternalFormat: function(internalFormat) {
+        this._internalFormat = internalFormat;
+    },
     setFromCanvas: function(canvas) {
-        this.init();
-        gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
-        this.setTextureSize(canvas.width, canvas.height);
-        this.applyFilterParameter();
-        this._dirty = false;
+        this.setImage(canvas);
     },
 
     isImageReady: function() {
-        var image = this.image;
+        var image = this._image;
         if (image && image.complete) {
             if (typeof image.naturalWidth !== "undefined" &&  image.naturalWidth === 0) {
                 return false;
@@ -83,31 +138,71 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         return false;
     },
 
-    applyFilterParameter: function() {
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl[this.mag_filter]);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl[this.min_filter]);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl[this.wrap_s]);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl[this.wrap_t]);
-        if (this.min_filter === 'NEAREST_MIPMAP_NEAREST' ||
-            this.min_filter === 'LINEAR_MIPMAP_NEAREST' ||
-            this.min_filter === 'NEAREST_MIPMAP_LINEAR' ||
-            this.min_filter === 'LINEAR_MIPMAP_LINEAR') {
+    applyFilterParameter: function(graphicContext) {
+        if (graphicContext) { // for backward compatibility
+            var gl = graphicContext;
+        }
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.mag_filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.min_filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.wrap_s);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this.wrap_t);
+        if (this.min_filter === osg.Texture.NEAREST_MIPMAP_NEAREST ||
+            this.min_filter === osg.Texture.LINEAR_MIPMAP_NEAREST ||
+            this.min_filter === osg.Texture.NEAREST_MIPMAP_LINEAR ||
+            this.min_filter === osg.Texture.LINEAR_MIPMAP_LINEAR) {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
     },
 
     apply: function(state) {
-        if (this.image !== undefined) {
+        var gl = state.getGraphicContext();
+        if (this._textureObject !== undefined && !this.isDirty()) {
+            gl.bindTexture(gl.TEXTURE_2D, this._textureObject);
+        } else if (this.default_type) {
+            gl.bindTexture(gl.TEXTURE_2D, null);
+        } else {
+            if (this._image !== undefined) {
+                if (this.isImageReady()) {
+                    if (!this._textureObject) {
+                        this.init(gl);
+                    }
+                    this.setTextureSize(this._image.naturalWidth, this._image.naturalHeight);
+                    this.setDirty(false);
+                    gl.bindTexture(gl.TEXTURE_2D, this._textureObject);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
+                    this.applyFilterParameter(gl);
+
+                    if (this._unrefImageDataAfterApply) {
+                        delete this._image;
+                    }
+                } else {
+                    gl.bindTexture(gl.TEXTURE_2D, null);
+                }
+
+            } else if (this.textureHeight !== 0 && this.textureWidth !== 0 ) {
+                if (!this._textureObject) {
+                    this.init(gl);
+                }
+                gl.bindTexture(gl.TEXTURE_2D, this._textureObject);
+                gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this.textureWidth, this.textureHeight, 0, this._internalFormat, gl.UNSIGNED_BYTE, null);
+                this.applyFilterParameter(gl);
+                this.setDirty(false);
+            }
+        }
+    },
+    apply2: function(state) {
+        var gl = state.getGraphicContext();
+        if (this._image !== undefined) {
             if (!this.textureObject) {
                 if (this.isImageReady()) {
                     if (!this.textureObject) {
-                        this.init();
-                        this.setTextureSize(this.image.naturalWidth, this.image.naturalHeight);
+                        this.init(gl);
+                        this.setTextureSize(this._image.naturalWidth, this._image.naturalHeight);
                         this._dirty = false;
                     }
                     gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
-                    this.applyFilterParameter();
+                    gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
+                    this.applyFilterParameter(gl);
                 } else {
                     gl.bindTexture(gl.TEXTURE_2D, null);
                 }
@@ -116,9 +211,9 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             }
         } else if (this.textureHeight !== 0 && this.textureWidth !== 0 ) {
             if (!this.textureObject) {
-                this.init();
+                this.init(gl);
                 gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.textureWidth, this.textureHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this.textureWidth, this.textureHeight, 0, this._internalFormat, gl.UNSIGNED_BYTE, null);
                 this.applyFilterParameter();
             } else {
                 gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
@@ -175,23 +270,23 @@ osg.Texture.prototype[osg.ShaderGeneratorType.FragmentMain] = function(unit) {
 };
 
 
-osg.Texture.createFromURL = function(imageSource) {
+osg.Texture.createFromURL = function(imageSource, format) {
     var a = new osg.Texture();
     if (imageSource !== undefined) {
         var img = new Image();
         img.src = imageSource;
-        a.setImage(img);
+        a.setImage(img, format);
     }
     return a;
 };
-osg.Texture.createFromImg = function(img) {
+osg.Texture.createFromImg = function(img, format) {
     var a = new osg.Texture();
-    a.setImage(img);
+    a.setImage(img, format);
     return a;
 };
-osg.Texture.createFromCanvas = function(ctx) {
+osg.Texture.createFromCanvas = function(ctx, format) {
     var a = new osg.Texture();
-    a.setFromCanvas(ctx);
+    a.setFromCanvas(ctx, format);
     return a;
 };
 

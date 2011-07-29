@@ -15,6 +15,18 @@ function removeCanvas(canvas) {
     var parent = document.getElementById("div_"+id);
     parent.removeChild(canvas);
 }
+function createFakeRenderer() {
+    return { 'TEXTURE0': 10,
+             activeTexture: function() {},
+             bindTexture: function() {},
+             bindBuffer: function() {},
+             enableVertexAttribArray: function() {},
+             vertexAttribPointer: function() {},
+             createTexture: function() {},
+             bindFramebuffer: function() {},
+             clear: function() {}
+           };
+}
 
 function check_near(a, b, threshold) {
     if (threshold === undefined) {
@@ -667,9 +679,9 @@ test("osg.UpdateVisitor", function() {
 
 
 test("osg.ShaderGenerator", function() {
-
     var state = new osg.State();
-
+    state.setGraphicContext(createFakeRenderer());
+    
     var stateSet0 = new osg.StateSet();
     stateSet0.setAttributeAndMode(new osg.Material());
 
@@ -750,6 +762,7 @@ test("osg.CullVisitor", function() {
     // check render stage and render bin
     (function() {
         var state = new osg.State();
+        state.setGraphicContext(createFakeRenderer());
         var camera0 = new osg.Camera();
         camera0.setViewport(new osg.Viewport());
         camera0.setRenderOrder(osg.Transform.NESTED_RENDER);
@@ -987,6 +1000,72 @@ test("osg.Node", function() {
 
 });
 
+test("osg.Texture", function() {
+    stop();
+    
+    var ready = undefined;
+    var loadingComplete = function() {
+        loadingComplete.nbLoad--;
+        if (loadingComplete.nbLoad === 0) {
+            ready();
+        }
+    };
+    loadingComplete.nbLoad = 0;
+    loadingComplete.addRessource = function() {
+        loadingComplete.nbLoad++;
+    };
+
+    var loadTexture = function(name, format) {
+        loadingComplete.addRessource();
+        var texture = new osg.Texture();
+        var image = new Image();
+        image.onload = function() {
+            texture.setImage(image,format);
+            loadingComplete();
+        };
+        image.src = name;
+        return texture;
+    };
+
+    var greyscale = loadTexture("greyscale.png",osg.Texture.ALPHA);
+    greyscale.setUnrefImageDataAfterApply(true);
+
+    var rgb24 = loadTexture("rgb24.png", osg.Texture.RGB);
+    var rgba32 = loadTexture("rgba32.png", osg.Texture.RGBA);
+
+    ready = function() {
+        var cnv = document.createElement('canvas');
+        cnv.setAttribute('width', 128);
+        cnv.setAttribute('height', 128);
+        var tcanvas = new osg.Texture();
+        tcanvas.setFromCanvas(cnv);
+
+        var canvas = createCanvas();
+        var viewer = new osgViewer.Viewer(canvas);
+        viewer.init();
+
+        var state = viewer.getState();
+
+        ok( greyscale.isDirty() === true , "dirty is true");
+        greyscale.apply(state);
+        ok( greyscale._image === undefined, "image should be undefined because of unrefAfterApply");
+        ok( greyscale._textureObject !== undefined, "texture object");
+        ok( greyscale.isDirty() === false, "dirty is false");
+
+        greyscale.apply(state);
+
+        //rgb24.apply(state);
+        //rgba32.apply(state);
+        //tcanvas.apply(state);
+        removeCanvas(canvas);
+
+        start();
+    };
+
+    
+        
+});
+
 test("osg.MatrixTransform", function() {
 
     var n = new osg.MatrixTransform();
@@ -998,3 +1077,5 @@ test("osg.MatrixTransform", function() {
     near( bs.radius(), 2.414213562373095);
     
 });
+
+

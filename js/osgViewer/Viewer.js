@@ -5,13 +5,15 @@
 
 
 osgViewer.Viewer = function(canvas, options, error) {
+    osgViewer.View.call(this);
+
     if (options === undefined) {
         options = {antialias : true};
     }
 
     gl = WebGLUtils.setupWebGL(canvas, options, error );
     if (gl) {
-        this._gl = gl;
+        this.setGraphicContext(gl);
         osg.init();
         this._canvas = canvas;
         this._frameRate = 60.0;
@@ -34,7 +36,6 @@ osgViewer.Viewer = function(canvas, options, error) {
             }
         }
 
-        osgViewer.View.call(this);
         this.setUpView(canvas);
     } else {
         throw "No WebGL implementation found";
@@ -48,7 +49,10 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._done = false;
         this._state = new osg.State();
 
+        var gl = this.getGraphicContext();
+        this._state.setGraphicContext(gl);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.hint(gl.NICEST, gl.GENERATE_MIPMAP_HINT);
 
         this._updateVisitor = new osgUtil.UpdateVisitor();
         this._cullVisitor = new osgUtil.CullVisitor();
@@ -62,7 +66,12 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         this.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
     },
-
+    getState: function() {
+        // would have more sense to be in view
+        // but I would need to put cull and draw on lower Object
+        // in View or a new Renderer object
+        return this._state;
+    },
     parseOptions: function() {
 
         var optionsURL = function() {
@@ -82,16 +91,17 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         if (options['stats'] === "1" || options['STATS'] === "1" || options['Stats'] === "1" ) {
             this.initStats(options);
         }
-
+        
+        var gl = this.getGraphicContext();
         // not the best way to do it
         if (options['DEPTH_TEST'] === "0") {
-            this._gl.disable(gl.DEPTH_TEST);
+            this.getGraphicContext().disable(gl.DEPTH_TEST);
         }
         if (options['BLEND'] === "0") {
-            this._gl.disable(gl.BLEND);
+            this.getGraphicContext().disable(gl.BLEND);
         }
         if (options['CULL_FACE'] === "0") {
-            this._gl.disable(gl.CULL_FACE);
+            this.getGraphicContext().disable(gl.CULL_FACE);
         }
         if (options['LIGHT'] === "0") {
             this.setLightingMode(osgViewer.View.LightingMode.NO_LIGHT);
@@ -255,10 +265,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
     },
     draw: function() {
-        this._renderStage.draw(this._state);
+        var state = this.getState();
+        this._renderStage.draw(state);
 
         // noticed that we accumulate lot of stack, maybe because of the stateGraph
-        this._state.popAllStateSets();
+        state.popAllStateSets();
         // should not be necessary because of dirty flag now in attrubutes
         //this.state.applyWithoutProgram();
     },

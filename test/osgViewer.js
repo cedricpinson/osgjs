@@ -8,6 +8,8 @@ test("osgViewer_Viewer", function() {
         viewer.init();
         ok(viewer._updateVisitor !== undefined, "Check update visitor");
         ok(viewer._cullVisitor !== undefined, "Check cull visitor");
+        ok(viewer._state !== undefined, "Check state");
+        ok(viewer.getState().getGraphicContext() !== undefined, "Check state graphic context");
         removeCanvas(canvas);
     })();
 
@@ -42,3 +44,19 @@ test("osgViewer_Viewer", function() {
 
 });
 
+
+test("osgViewer_View", function() {
+    (function() {
+        var gc = 2;
+        var view = new osgViewer.View();
+        view.setGraphicContext(gc);
+        ok(view.getGraphicContext() === 2, "Check graphic context");
+
+        ok(view.getFrameStamp() !== undefined, "Check FrameStamp");
+
+        ok(view.getScene() !== undefined, "Check scene");
+        ok(view.getSceneData() === undefined, "Check scene data");
+        ok(view.getScene().getStateSet() !== undefined, "Check scene stateset");
+    })();
+
+});

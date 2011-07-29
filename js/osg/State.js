@@ -1,4 +1,6 @@
 osg.State = function () {
+    this._graphicContext = undefined;
+
     this.currentVBO = null;
     this.vertexAttribList = [];
     this.programs = osg.Stack.create();
@@ -30,6 +32,9 @@ osg.State = function () {
 };
 
 osg.State.prototype = {
+
+    setGraphicContext: function(graphicContext) { this._graphicContext = graphicContext; },
+    getGraphicContext: function() { return this._graphicContext;},
 
     pushStateSet: function(stateset) {
         this.stateSets.push(stateset);
@@ -119,6 +124,7 @@ osg.State.prototype = {
         }
     },
     applyTextureAttribute: function(unit, attribute) {
+        var gl = this.getGraphicContext();
         gl.activeTexture(gl.TEXTURE0 + unit);
         var key = attribute.getTypeMember();
 
@@ -180,6 +186,7 @@ osg.State.prototype = {
     },
 
     apply: function() {
+        var gl = this._graphicContext;
         this.applyAttributeMap(this.attributeMap);
         this.applyTextureAttributeMapList(this.textureAttributeMapList);
 
@@ -427,6 +434,7 @@ osg.State.prototype = {
     },
 
     applyTextureAttributeMapList: function(textureAttributesMapList) {
+        var gl = this._graphicContext;
         var textureAttributeMap;
 
         for (var textureUnit = 0, l = textureAttributesMapList.length; textureUnit < l; textureUnit++) {
@@ -452,7 +460,7 @@ osg.State.prototype = {
                 if (attributeStack.asChanged) {
 //                if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
                     gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                    attribute.apply(this.state);
+                    attribute.apply(this);
                     attributeStack.lastApplied = attribute;
                     attributeStack.asChanged = false;
                 }
@@ -511,7 +519,7 @@ osg.State.prototype = {
             if (!array.buffer) {
                 array.init();
             }
-            gl.bindBuffer(array.type, array.buffer);
+            this._graphicContext.bindBuffer(array.type, array.buffer);
             this.currentIndexVBO = array;
         }
         if (array.isDirty()) {
@@ -534,7 +542,7 @@ osg.State.prototype = {
         for (var i = 0, l = keys.length; i < l; i++) {
             if (this.vertexAttribMap._disable[keys[i] ] === true) {
                 var attr = keys[i];
-                gl.disableVertexAttribArray(attr);
+                this._graphicContext.disableVertexAttribArray(attr);
                 this.vertexAttribMap._disable[attr] = false;
                 this.vertexAttribMap[attr] = false;
             }
@@ -574,6 +582,7 @@ osg.State.prototype = {
         if (!array.buffer) {
             array.init();
         }
+        var gl = this._graphicContext;
         if (array.isDirty()) {
             gl.bindBuffer(array.type, array.buffer);
             array.compile();
@@ -595,10 +604,4 @@ osg.State.prototype = {
         }
     }
 
-};
-
-osg.State.create = function() {
-    var state = new osg.State();
-    gl.hint(gl.NICEST, gl.GENERATE_MIPMAP_HINT);
-    return state;
 };

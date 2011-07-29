@@ -3,6 +3,9 @@
  * @class Camera
  * @inherits osg.Transform osg.CullSettings
  */
+osg.COLOR_BUFFER_BIT = 0x00004000;
+osg.DEPTH_BUFFER_BIT = 0x00000100;
+osg.STENCIL_BUFFER_BIT = 0x00000400;
 osg.Camera = function () {
     osg.Transform.call(this);
     osg.CullSettings.call(this);
@@ -10,7 +13,7 @@ osg.Camera = function () {
     this.viewport = undefined;
     this.setClearColor([0, 0, 0, 1.0]);
     this.setClearDepth(1.0);
-    this.setClearMask(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    this.setClearMask(osg.COLOR_BUFFER_BIT | osg.DEPTH_BUFFER_BIT);
     this.setViewMatrix(osg.Matrix.makeIdentity());
     this.setProjectionMatrix(osg.Matrix.makeIdentity());
     this.renderOrder = osg.Camera.NESTED_RENDER;

@@ -40,7 +40,7 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                         // apply on unit 0 to init it
                         state.applyTextureAttribute(0, texture);
                         
-                        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, gl[texture.target], texture.textureObject, this.attachments[i].level);
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, texture.getTextureTarget(), texture.getTextureObject(), this.attachments[i].level);
                     }
                 }
                 status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
