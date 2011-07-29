@@ -1,4 +1,4 @@
-// osg-debug-0.0.6.js commit 9f913e73255d8ea773df5f825419ddb1e1c47178 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.6.js commit c7cd661aa2e761a4348ce6fae79ea5d3a317e5af - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -2422,9 +2422,6 @@ osg.CullSettings.prototype = {
  * @class Camera
  * @inherits osg.Transform osg.CullSettings
  */
-osg.COLOR_BUFFER_BIT = 0x00004000;
-osg.DEPTH_BUFFER_BIT = 0x00000100;
-osg.STENCIL_BUFFER_BIT = 0x00000400;
 osg.Camera = function () {
     osg.Transform.call(this);
     osg.CullSettings.call(this);
@@ -2432,7 +2429,7 @@ osg.Camera = function () {
     this.viewport = undefined;
     this.setClearColor([0, 0, 0, 1.0]);
     this.setClearDepth(1.0);
-    this.setClearMask(osg.COLOR_BUFFER_BIT | osg.DEPTH_BUFFER_BIT);
+    this.setClearMask(osg.Camera.COLOR_BUFFER_BIT | osg.Camera.DEPTH_BUFFER_BIT);
     this.setViewMatrix(osg.Matrix.makeIdentity());
     this.setProjectionMatrix(osg.Matrix.makeIdentity());
     this.renderOrder = osg.Camera.NESTED_RENDER;
@@ -2441,6 +2438,10 @@ osg.Camera = function () {
 osg.Camera.PRE_RENDER = 0;
 osg.Camera.NESTED_RENDER = 1;
 osg.Camera.POST_RENDER = 2;
+
+osg.Camera.COLOR_BUFFER_BIT = 0x00004000;
+osg.Camera.DEPTH_BUFFER_BIT = 0x00000100;
+osg.Camera.STENCIL_BUFFER_BIT = 0x00000400;
 
 /** @lends osg.Camera.prototype */
 osg.Camera.prototype = osg.objectInehrit(
@@ -2533,39 +2534,56 @@ osg.Camera.prototype.objectType = osg.objectType.generate("Camera");
 
 osg.Depth = function (func, near, far, writeMask) {
     osg.StateAttribute.call(this);
-    this.func = 'LESS';
-    this.near = 0.0;
-    this.far = 1.0;
-    this.writeMask = true;
+    
+    this._func = osg.Depth.LESS;
+    this._near = 0.0;
+    this._far = 1.0;
+    this._writeMask = true;
 
     if (func !== undefined) {
-        this.func = func;
+        if (typeof(func) === "string") {
+            this._func = osg.Depth[func];
+        } else {
+            this._func = func;
+        }
     }
     if (near !== undefined) {
-        this.near = near;
+        this._near = near;
     }
     if (far !== undefined) {
-        this.far = far;
+        this._far = far;
     }
     if (writeMask !== undefined) {
-        this.writeMask = writeMask;
+        this._writeMask = writeMask;
     }
 };
+
+osg.Depth.DISABLE   = 0x0000;
+osg.Depth.NEVER     = 0x0200;
+osg.Depth.LESS      = 0x0201;
+osg.Depth.EQUAL     = 0x0202;
+osg.Depth.LEQUAL    = 0x0203;
+osg.Depth.GREATE    = 0x0204;
+osg.Depth.NOTEQU    = 0x0205;
+osg.Depth.GEQUAL    = 0x0206;
+osg.Depth.ALWAYS    = 0x0207;
+
 osg.Depth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Depth",
     cloneType: function() {return new osg.Depth(); },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
-    setRange: function(near, far) { this.near = near; this.far = far; },
-    setWriteMask: function(mask) { this.writeMask = mask; },
+    setRange: function(near, far) { this._near = near; this._far = far; },
+    setWriteMask: function(mask) { this._writeMask = mask; },
     apply: function(state) {
-        if (this.func === 'DISABLE') {
+        var gl = state.getGraphicContext();
+        if (this._func === 0) {
             gl.disable(gl.DEPTH_TEST);
         } else {
             gl.enable(gl.DEPTH_TEST);
-            gl.depthFunc(gl[this.func]);
-            gl.depthMask(this.writeMask);
-            gl.depthRange(this.near, this.far);
+            gl.depthFunc(this._func);
+            gl.depthMask(this._writeMask);
+            gl.depthRange(this._near, this._far);
         }
     }
 });
@@ -2685,6 +2703,7 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
     getTypeMember: function() { return this.attributeType;},
     setAttachment: function(attachment) { this.attachments.push(attachment); },
     apply: function(state) {
+        var gl = state.getGraphicContext();
         var status;
         if (this.attachments.length > 0) {
             if (this.isDirty()) {
@@ -2708,6 +2727,7 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                         // apply on unit 0 to init it
                         state.applyTextureAttribute(0, texture);
                         
+                        //gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, texture.getTextureTarget(), texture.getTextureObject(), this.attachments[i].level);
                         gl.framebufferTexture2D(gl.FRAMEBUFFER, this.attachments[i].attachment, texture.getTextureTarget(), texture.getTextureObject(), this.attachments[i].level);
                     }
                 }
@@ -3810,7 +3830,7 @@ osg.RenderStage = function () {
     this.positionedAttribute = [];
     this.clearDepth = 1.0;
     this.clearColor = [0,0,0,1];
-    this.clearMask = gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT;
+    this.clearMask = osg.Camera.COLOR_BUFFER_BIT | osg.Camera.DEPTH_BUFFER_BIT;
     this.camera = undefined;
     this.viewport = undefined;
     this.preRenderList = [];
@@ -5617,25 +5637,29 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setInternalFormat: function(internalFormat) {
         this._internalFormat = internalFormat;
     },
-    setFromCanvas: function(canvas) {
-        this.setImage(canvas);
+    setFromCanvas: function(canvas, format) {
+        this.setImage(canvas, format);
     },
 
     isImageReady: function() {
         var image = this._image;
-        if (image && image.complete) {
-            if (typeof image.naturalWidth !== "undefined" &&  image.naturalWidth === 0) {
-                return false;
+        if (image) {
+            if (image instanceof Image) {
+                if (image.complete) {
+                    if (image.naturalWidth !== undefined &&  image.naturalWidth === 0) {
+                        return false;
+                    }
+                    return true;
+                }
+            } else if (image instanceof HTMLCanvasElement) {
+                return true;
             }
-            return true;
         }
         return false;
     },
 
     applyFilterParameter: function(graphicContext) {
-        if (graphicContext) { // for backward compatibility
-            var gl = graphicContext;
-        }
+        var gl = graphicContext;
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.mag_filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.min_filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.wrap_s);
@@ -5684,40 +5708,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             }
         }
     },
-    apply2: function(state) {
-        var gl = state.getGraphicContext();
-        if (this._image !== undefined) {
-            if (!this.textureObject) {
-                if (this.isImageReady()) {
-                    if (!this.textureObject) {
-                        this.init(gl);
-                        this.setTextureSize(this._image.naturalWidth, this._image.naturalHeight);
-                        this._dirty = false;
-                    }
-                    gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-                    gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
-                    this.applyFilterParameter(gl);
-                } else {
-                    gl.bindTexture(gl.TEXTURE_2D, null);
-                }
-            } else {
-                gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-            }
-        } else if (this.textureHeight !== 0 && this.textureWidth !== 0 ) {
-            if (!this.textureObject) {
-                this.init(gl);
-                gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-                gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this.textureWidth, this.textureHeight, 0, this._internalFormat, gl.UNSIGNED_BYTE, null);
-                this.applyFilterParameter();
-            } else {
-                gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-            }
-        } else if (this.textureObject !== undefined) {
-            gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
-        } else {
-            gl.bindTexture(gl.TEXTURE_2D, null);
-        }
-    },
+
 
     /**
       set the injection code that will be used in the shader generation
