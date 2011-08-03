@@ -1,4 +1,4 @@
-// osg-debug-0.0.6.js commit c7cd661aa2e761a4348ce6fae79ea5d3a317e5af - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.6.js commit 41fc4c4a7945237b1a51bbaa437c8b310bc20023 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -391,6 +391,19 @@ osg.Vec4 = {
         r[3] = a[3]*tmp + t*b[3];
         return r;
     }
+};
+/** -*- compile-command: "jslint-cli Object.js" -*- */
+
+/** 
+ *  Object class
+ *  @class Object
+ */
+osg.Object = function () {};
+
+/** @lends osg.Node.prototype */
+osg.Object.prototype = {
+    setName: function(name) { this._name = name; },
+    getName: function() { return this._name; }
 };
 
 
@@ -1461,15 +1474,16 @@ osg.Shader.create = function( type, text )
  * @class StateAttribute
  */
 osg.StateAttribute = function() {
+    osg.Object.call(this);
     this._dirty = true;
 };
 
 /** @lends osg.StateAttribute.prototype */
-osg.StateAttribute.prototype = {
+osg.StateAttribute.prototype = osg.objectInehrit(osg.Object.prototype, {
     isDirty: function() { return this._dirty; },
     dirty: function() { this._dirty = true; },
     setDirty: function(dirty) { this._dirty = dirty; }
-};
+});
 
 osg.StateAttribute.OFF = 0;
 osg.StateAttribute.ON = 1;
@@ -1694,6 +1708,8 @@ osg.Uniform.createMatrix4 = function(mat4, name) {
  *  @class Node
  */
 osg.Node = function () {
+    osg.Object.call(this);
+
     this.children = [];
     this.parents = [];
     this.nodeMask = ~0;
@@ -1702,7 +1718,7 @@ osg.Node = function () {
 };
 
 /** @lends osg.Node.prototype */
-osg.Node.prototype = {
+osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
     /**
         Return StateSet and create it if it does not exist yet
         @type osg.StateSet
@@ -1760,8 +1776,6 @@ osg.Node.prototype = {
         @type Oject
      */
     getUpdateCallback: function() { return this.updateCallback; },
-    setName: function(name) { this.name = name; },
-    getName: function() { return this.name; },
     hasChild: function(child) {
         for (var i = 0, l = this.children.length; i < l; i++) {
             if (this.children[i] === child) {
@@ -1889,7 +1903,7 @@ osg.Node.prototype = {
     }
     
 
-};
+});
 osg.Node.prototype.objectType = osg.objectType.generate("Node");
 osg.NodeVisitor = function (traversalMode) {
     this.traversalMask = ~0x0;
@@ -2033,17 +2047,52 @@ osg.computeLocalToWorld = function (nodePath, ignoreCameras) {
  *  Manage Blending mode
  *  @class BlendFunc
  */
-osg.BlendFunc = function (source, destination) {
+osg.BlendFunc = function (sourceRGB, destinationRGB, sourceAlpha, destinationAlpha) {
     osg.StateAttribute.call(this);
-    this.sourceFactor = 'ONE';
-    this.destinationFactor = 'ZERO';
-    if (source !== undefined) {
-        this.sourceFactor = source;
+    this._sourceFactor = osg.BlendFunc.ONE;
+    this._destinationFactor = osg.BlendFunc.ZERO;
+    this._sourceFactorAlpha = this._sourceFactor;
+    this._destinationFactorAlpha = this._destinationFactor;
+    this._separate = false;
+    if (sourceRGB !== undefined) {
+        this.setSource(sourceRGB);
     }
-    if (destination !== undefined) {
-        this.destinationFactor = destination;
+    if (destinationRGB !== undefined) {
+        this.setDestination(destinationRGB);
+    }
+
+    if (sourceAlpha !== undefined) {
+        this.setSourceAlpha(sourceAlpha);
+    }
+    if (destinationAlpha !== undefined) {
+        this.setDestinationAlpha(destinationAlpha);
     }
 };
+
+osg.BlendFunc.ZERO                           = 0;
+osg.BlendFunc.ONE                            = 1;
+osg.BlendFunc.SRC_COLOR                      = 0x0300;
+osg.BlendFunc.ONE_MINUS_SRC_COLOR            = 0x0301;
+osg.BlendFunc.SRC_ALPHA                      = 0x0302;
+osg.BlendFunc.ONE_MINUS_SRC_ALPHA            = 0x0303;
+osg.BlendFunc.DST_ALPHA                      = 0x0304;
+osg.BlendFunc.ONE_MINUS_DST_ALPHA            = 0x0305;
+osg.BlendFunc.DST_COLOR                      = 0x0306;
+osg.BlendFunc.ONE_MINUS_DST_COLOR            = 0x0307;
+osg.BlendFunc.SRC_ALPHA_SATURATE             = 0x0308;
+
+/* Separate Blend Functions */
+osg.BlendFunc.BLEND_DST_RGB                  = 0x80C8;
+osg.BlendFunc.BLEND_SRC_RGB                  = 0x80C9;
+osg.BlendFunc.BLEND_DST_ALPHA                = 0x80CA;
+osg.BlendFunc.BLEND_SRC_ALPHA                = 0x80CB;
+osg.BlendFunc.CONSTANT_COLOR                 = 0x8001;
+osg.BlendFunc.ONE_MINUS_CONSTANT_COLOR       = 0x8002;
+osg.BlendFunc.CONSTANT_ALPHA                 = 0x8003;
+osg.BlendFunc.ONE_MINUS_CONSTANT_ALPHA       = 0x8004;
+osg.BlendFunc.BLEND_COLOR                    = 0x8005;
+
+
 /** @lends osg.BlendFunc.prototype */
 osg.BlendFunc.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     /** 
@@ -2063,13 +2112,64 @@ osg.BlendFunc.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         @type String
     */ 
     getTypeMember: function() { return this.attributeType;},
+    setSource: function(f) { 
+        this.setSourceRGB(f); 
+        this.setSourceAlpha(f); 
+    },
+    setDestination: function(f) { 
+        this.setDestinationRGB(f); 
+        this.setDestinationAlpha(f);
+    },
+    checkSeparate: function() {
+        return (this._sourceFactor !== this._sourceFactorAlpha ||
+                this._destinationFactor !== this._destinationFactorAlpha);
+    },
+    setSourceRGB: function(f) { 
+        if (typeof f === "string") {
+            this._sourceFactor = osg.BlendFunc[f];
+        } else {
+            this._sourceFactor = f;
+        }
+        this._separate = this.checkSeparate();
+    },
+    setSourceAlpha: function(f) {
+        if (typeof f === "string") {
+            this._sourceFactorAlpha = osg.BlendFunc[f];
+        } else {
+            this._sourceFactorAlpha = f;
+        }
+        this._separate = this.checkSeparate();
+    },
+    setDestinationRGB: function(f) { 
+        if (typeof f === "string") {
+            this._destinationFactor = osg.BlendFunc[f];
+        } else {
+            this._destinationFactor = f;
+        }
+        this._separate = this.checkSeparate();
+    },
+    setDestinationAlpha: function(f) { 
+        if (typeof f === "string") {
+            this._destinationFactorAlpha = osg.BlendFunc[f];
+        } else {
+            this._destinationFactorAlpha = f;
+        }
+        this._separate = this.checkSeparate();
+    },
+
     /** 
         Apply the mode, must be called in the draw traversal
         @param state
     */
     apply: function(state) {
+        var gl = state.getGraphicContext();
         gl.enable(gl.BLEND);
-        gl.blendFunc(gl[this.sourceFactor], gl[this.destinationFactor]); 
+        if (this._separate) {
+            gl.blendFuncSeparate(this._sourceFactor, this._destinationFactor,
+                                 this._sourceFactorAlpha, this._destinationFactorAlpha);
+        } else {
+            gl.blendFunc(this._sourceFactor, this._destinationFactor); 
+        }
     }
 });
 osg.BoundingBox = function() {
@@ -3106,19 +3206,24 @@ osg.Material = function () {
     this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
     this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
     this.emission = [ 0.0, 0.0, 0.0, 1.0 ];
-    this.shininess = [0.0];
+    this.shininess = 0.0;
     this._dirty = true;
 };
 /** @lends osg.Material.prototype */
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
-    /** setEmission */
+
     setEmission: function(a) { this.emission = a; this._dirty = true; },
-    /** setAmbient */
     setAmbient: function(a) { this.ambient = a; this._dirty = true; },
-    /** setSpecular */
     setSpecular: function(a) { this.specular = a; this._dirty = true; },
-    /** setDiffuse */
     setDiffuse: function(a) { this.diffuse = a; this._dirty = true; },
+    setShininess: function(a) { this.shininess = a; this._dirty = true; },
+
+    getEmission: function() { return this.emission;},
+    getAmbient: function() { return this.ambient; },
+    getSpecular: function() { return this.specular;},
+    getDiffuse: function() { return this.diffuse;},
+    getShininess: function() { return this.shininess; },
+
     attributeType: "Material",
     cloneType: function() {return new osg.Material(); },
     getType: function() { return this.attributeType;},
@@ -3147,7 +3252,7 @@ osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         uniforms.diffuse.set(this.diffuse);
         uniforms.specular.set(this.specular);
         uniforms.emission.set(this.emission);
-        uniforms.shininess.set(this.shininess);
+        uniforms.shininess.set([this.shininess]);
         this._dirty = false;
     },
 
@@ -5435,8 +5540,21 @@ osg.State.prototype = {
     }
 
 };
-osg.StateSet = function () { this.id = osg.instance++; };
-osg.StateSet.prototype = {
+/** 
+ * StateSet encapsulate StateAttribute
+ * @class StateSet
+ */
+osg.StateSet = function () {
+    osg.Object.call(this);
+    this.id = osg.instance++;
+    this.attributeMap = {};
+    this.attributeMap.attributeKeys = [];
+
+    this.textureAttributeMapList = [];
+};
+
+/** @lends osg.StateSet.prototype */
+osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
     getObjectPair: function(attribute, value) {
         return {object: attribute, value: value};
     },
@@ -5472,6 +5590,12 @@ osg.StateSet.prototype = {
         }
         return this.textureAttributeMapList[unit][attribute].object;
     },
+    getAttribute: function(attributeType) { 
+        if (this.attributeMap[attributeType] === undefined) {
+            return undefined;
+        }
+        return this.attributeMap[attributeType].object;
+    },
     setAttributeAndMode: function(attribute, mode) { 
         if (mode === undefined) {
             mode = osg.StateAttribute.ON;
@@ -5485,9 +5609,6 @@ osg.StateSet.prototype = {
 
     // for internal use, you should not call it directly
     _setTextureAttribute: function (unit, attributePair) {
-        if (!this.textureAttributeMapList) {
-            this.textureAttributeMapList = [];
-        }
         if (this.textureAttributeMapList[unit] === undefined) {
             this.textureAttributeMapList[unit] = {};
             this.textureAttributeMapList[unit].attributeKeys = [];
@@ -5500,18 +5621,13 @@ osg.StateSet.prototype = {
     },
     // for internal use, you should not call it directly
     _setAttribute: function (attributePair) {
-        if (!this.attributeMap) {
-            this.attributeMap = {};
-            this.attributeMap.attributeKeys = [];
-        }
         var name = attributePair.object.getTypeMember();
         this.attributeMap[name] = attributePair;
         if (this.attributeMap.attributeKeys.indexOf(name) === -1) {
             this.attributeMap.attributeKeys.push(name);
         }
-    },
-    getAttributeMap: function() { return this.attributeMap; }
-};
+    }
+});
 /** 
  * Texture encapsulate webgl texture object
  * @class Texture
@@ -5567,12 +5683,12 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         return osg.Texture.uniforms[unit];
     },
     setDefaultParameters: function() {
-        this.mag_filter = osg.Texture.LINEAR;
-        this.min_filter = osg.Texture.LINEAR;
-        this.wrap_s = osg.Texture.CLAMP_TO_EDGE;
-        this.wrap_t = osg.Texture.CLAMP_TO_EDGE;
-        this.textureWidth = 0;
-        this.textureHeight = 0;
+        this._magFilter = osg.Texture.LINEAR;
+        this._minFilter = osg.Texture.LINEAR;
+        this._wrapS = osg.Texture.CLAMP_TO_EDGE;
+        this._wrapT = osg.Texture.CLAMP_TO_EDGE;
+        this._textureWidth = 0;
+        this._textureHeight = 0;
         this._unrefImageDataAfterApply = false;
         this.setInternalFormat(osg.Texture.RGBA);
         this._textureTarget = osg.Texture.TEXTURE_2D;
@@ -5580,8 +5696,8 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     getTextureTarget: function() { return this._textureTarget;},
     getTextureObject: function() { return this._textureObject;},
     setTextureSize: function(w,h) {
-        this.textureWidth = w;
-        this.textureHeight = h;
+        this._textureWidth = w;
+        this._textureHeight = h;
     },
     init: function(gl) {
         if (!this._textureObject) {
@@ -5589,36 +5705,41 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             this._dirty = true;
         }
     },
-    getWidth: function() { return this.textureWidth; },
-    getHeight: function() { return this.textureHeight; },
+    getWidth: function() { return this._textureWidth; },
+    getHeight: function() { return this._textureHeight; },
 
     setWrapS: function(value) {
         if (typeof(value) === "string") {
-            this.wrap_s = osg.Texture[value];
+            this._wrapS = osg.Texture[value];
         } else {
-            this.wrap_s = value; 
+            this._wrapS = value; 
         }
     },
     setWrapT: function(value) { 
         if (typeof(value) === "string") {
-            this.wrap_t = osg.Texture[value];
+            this._wrapT = osg.Texture[value];
         } else {
-            this.wrap_t = value; 
+            this._wrapT = value; 
         }
     },
 
-    setMinFilter: function(value) { 
+    getWrapT: function() { return this._wrapT; },
+    getWrapS: function() { return this._wrapS; },
+    getMinFilter: function(value) { return this._minFilter; },
+    getMagFilter: function(value) { return this._magFilter; },
+
+    setMinFilter: function(value) {
         if (typeof(value) === "string") {
-            this.min_filter = osg.Texture[value];
+            this._minFilter = osg.Texture[value];
         } else {
-            this.min_filter = value; 
+            this._minFilter = value; 
         }
     },
     setMagFilter: function(value) { 
         if (typeof(value) === "string") {
-            this.mag_filter = osg.Texture[value];
+            this._magFilter = osg.Texture[value];
         } else {
-            this.mag_filter = value; 
+            this._magFilter = value; 
         }
     },
 
@@ -5660,14 +5781,14 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
     applyFilterParameter: function(graphicContext) {
         var gl = graphicContext;
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.mag_filter);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.min_filter);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.wrap_s);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this.wrap_t);
-        if (this.min_filter === osg.Texture.NEAREST_MIPMAP_NEAREST ||
-            this.min_filter === osg.Texture.LINEAR_MIPMAP_NEAREST ||
-            this.min_filter === osg.Texture.NEAREST_MIPMAP_LINEAR ||
-            this.min_filter === osg.Texture.LINEAR_MIPMAP_LINEAR) {
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this._magFilter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this._minFilter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this._wrapS);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this._wrapT);
+        if (this._minFilter === osg.Texture.NEAREST_MIPMAP_NEAREST ||
+            this._minFilter === osg.Texture.LINEAR_MIPMAP_NEAREST ||
+            this._minFilter === osg.Texture.NEAREST_MIPMAP_LINEAR ||
+            this._minFilter === osg.Texture.LINEAR_MIPMAP_LINEAR) {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
     },
@@ -5697,12 +5818,12 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     gl.bindTexture(gl.TEXTURE_2D, null);
                 }
 
-            } else if (this.textureHeight !== 0 && this.textureWidth !== 0 ) {
+            } else if (this._textureHeight !== 0 && this._textureWidth !== 0 ) {
                 if (!this._textureObject) {
                     this.init(gl);
                 }
                 gl.bindTexture(gl.TEXTURE_2D, this._textureObject);
-                gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this.textureWidth, this.textureHeight, 0, this._internalFormat, gl.UNSIGNED_BYTE, null);
+                gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, gl.UNSIGNED_BYTE, null);
                 this.applyFilterParameter(gl);
                 this.setDirty(false);
             }
@@ -6751,102 +6872,169 @@ var osgDB = {};
 
 osgDB.parseSceneGraph = function (node)
 {
+    var getFieldBackwardCompatible = function(field, json) {
+        var value = json[field];
+        if (value === undefined) {
+            value = json[field.toLowerCase()];
+        }
+        return value;
+    };
+    var setName = function(osgjs, json) {
+        var name = getFieldBackwardCompatible("Name", json);
+        if (name && osgjs.setName !== undefined) {
+            osgjs.setName(name);
+        }
+    };
+
+    var setMaterial = function(osgjs, json) {
+        setName(osgjs, json);
+        osgjs.setAmbient(getFieldBackwardCompatible("Ambient", json));
+        osgjs.setDiffuse(getFieldBackwardCompatible("Diffuse", json));
+        osgjs.setEmission(getFieldBackwardCompatible("Emission", json));
+        osgjs.setSpecular(getFieldBackwardCompatible("Specular", json));
+        osgjs.setShininess(getFieldBackwardCompatible("Shininess", json));
+    };
+
+    var setBlendFunc = function(osgjs, json) {
+        setName(osgjs, json);
+        osgjs.setSourceRGB(json.SourceRGB);
+        osgjs.setSourceAlpha(json.SourceAlpha);
+        osgjs.setDestinationRGB(json.DestinationRGB);
+        osgjs.setDestinationAlpha(json.DestinationAlpha);
+    };
+
+    var setTexture = function( osgjs, json) {
+        var magFilter = json.MagFilter || json.mag_filter || undefined;
+        if (magFilter) {
+            osgjs.setMagFilter(magFilter);
+        }
+        var minFilter = json.MinFilter || json.min_filter || undefined;
+        if (minFilter) {
+            osgjs.setMinFilter(minFilter);
+        }
+        var wrapT = json.WrapT || json.wrap_t || undefined;
+        if (wrapT) {
+            osgjs.setWrapT(wrapT);
+        }
+        var wrapS = json.WrapS || json.wrap_s || undefined;
+        if (wrapS) {
+            osgjs.setWrapS(wrapS);
+        }
+        var file = getFieldBackwardCompatible("File", json);
+        var img = new Image();
+        img.src = file;
+        osgjs.setImage(img);
+    };
+
+    var setStateSet = function(osgjs, json) {
+        setName(osgjs, json);
+        var textures = getFieldBackwardCompatible("Textures", json) || getFieldBackwardCompatible("TextureAttributeList", json) || undefined;
+        if (textures) {
+            for (var t = 0, tl = textures.length; t < tl; t++) {
+                if (!textures[t].file) {
+                    osg.log("no texture on unit " + t + " skip it");
+                    continue;
+                }
+                var tex = new osg.Texture();
+                setTexture(tex, textures[t]);
+                
+                osgjs.setTextureAttributeAndMode(t, tex);
+                osgjs.addUniform(osg.Uniform.createInt1(t,"Texture" + t));
+            }
+        }
+        
+        var blendfunc = getFieldBackwardCompatible("BlendFunc",json);
+        if (blendfunc) {
+            var newblendfunc = new osg.BlendFunc();
+            setBlendFunc(newblendfunc, blendfunc);
+            osgjs.setAttributeAndMode(newblendfunc);
+        }
+
+        var material = getFieldBackwardCompatible("Material",json);
+        if (material) {
+            var newmaterial = new osg.Material();
+            setMaterial(newmaterial, material);
+            osgjs.setAttributeAndMode(newmaterial);
+        }
+    };
+
+
     var newnode;
     var children = node.children;
-    if (node.primitives || node.attributes) {
+    var primitives = node.primitives || node.Primitives || undefined;
+    var attributes = node.attributes || node.Attributes || undefined;
+    if (primitives || attributes) {
         newnode = new osg.Geometry();
-        osg.extend(newnode, node);
+
+        setName(newnode, node);
+
+        osg.extend(newnode, node); // we should not do that
         node = newnode;
+        node.primitives = primitives; // we should not do that
+        node.attributes = attributes; // we should not do that
 
         var i;
-        for ( i in node.primitives) {
-            var mode = node.primitives[i].mode;
-            if (node.primitives[i].indices) {
-                var array = node.primitives[i].indices;
+        for ( var p = 0, lp = primitives.length; p < lp; p++) {
+            var mode = primitives[p].mode;
+            if (primitives[p].indices) {
+                var array = primitives[p].indices;
                 array = new osg.BufferArray(gl[array.type], array.elements, array.itemSize );
                 if (!mode) {
                     mode = gl.TRIANGLES;
                 } else {
                     mode = gl[mode];
                 }
-                node.primitives[i] = new osg.DrawElements(mode, array);
+                primitives[p] = new osg.DrawElements(mode, array);
             } else {
                 mode = gl[mode];
-                var first = node.primitives[i].first;
-                var count = node.primitives[i].count;
-                node.primitives[i] = new osg.DrawArrays(mode, first, count);
+                var first = primitives[p].first;
+                var count = primitives[p].count;
+                primitives[p] = new osg.DrawArrays(mode, first, count);
             }
         }
 
-
-        for (var key in node.attributes) {
-            if (node.attributes.hasOwnProperty(key)) {
-                var attributeArray = node.attributes[key];
-                node.attributes[key] = new osg.BufferArray(gl[attributeArray.type], attributeArray.elements, attributeArray.itemSize );
+        for (var key in attributes) {
+            if (attributes.hasOwnProperty(key)) {
+                var attributeArray = attributes[key];
+                attributes[key] = new osg.BufferArray(gl[attributeArray.type], attributeArray.elements, attributeArray.itemSize );
             }
         }
-        // jQuery.each(node.attributes, function( key, element) {
-        //     var attributeArray = node.attributes[key];
-        //     node.attributes[key] = osg.BufferArray.create(gl[attributeArray.type], attributeArray.elements, attributeArray.itemSize );
-        // });
     }
 
-    if (node.stateset) {
+    var stateset = getFieldBackwardCompatible("StateSet", node);
+    if (stateset) {
         var newstateset = new osg.StateSet();
-        if (node.stateset.textures) {
-            var textures = node.stateset.textures;
-            for (var t = 0, tl = textures.length; t < tl; t++) {
-                if (!textures[t].file) {
-                    osg.log("no texture on unit " + t + " skip it")
-                    //osg.log(textures[t]);
-                    continue;
-                }
-                var tex = new osg.Texture();
-                if (textures[t].mag_filter !== undefined) {
-                    tex.setMagFilter(osg.Texture[textures[t].mag_filter]);
-                }
-                if (textures[t].min_filter !== undefined) {
-                    tex.setMinFilter(osg.Texture[textures[t].min_filter]);
-                }
-                //osg.extend(tex, textures[t]);
-                var img = new Image();
-                img.src = textures[t].file;
-                tex.setImage(img);
-                
-                newstateset.setTextureAttributeAndMode(t, tex);
-                newstateset.addUniform(osg.Uniform.createInt1(t,"Texture" + t));
-            }
-        }
-        if (node.stateset.material) {
-            var material = node.stateset.material;
-            var newmaterial = new osg.Material();
-            osg.extend(newmaterial, material);
-            newstateset.setAttributeAndMode(newmaterial);
-        }
+        setStateSet(newstateset, stateset);
         node.stateset = newstateset;
     }
 
-    if (node.matrix) {
+    var matrix = node.matrix || node.Matrix || undefined;
+    if (matrix) {
         newnode = new osg.MatrixTransform();
-        osg.extend(newnode, node);
-        newnode.setMatrix(osg.Matrix.copy(node.matrix));
-        node = newnode;
+        setName(newnode, node);
 
+        osg.extend(newnode, node);
+        newnode.setMatrix(osg.Matrix.copy(matrix));
+        node = newnode;
     }
 
-    if (node.projection) {
+    var projection = node.projection || node.Projection || undefined;
+    if (projection) {
         newnode = new osg.Projection();
+        setName(newnode, node);
         osg.extend(newnode, node);
-        newnode.setProjectionMatrix(osg.Matrix.copy(node.projection));
+        newnode.setProjectionMatrix(osg.Matrix.copy(projection));
         node = newnode;
     }
 
     // default type
     if (node.objectType === undefined) {
         newnode = new osg.Node();
+        setName(newnode, node);
         osg.extend(newnode, node);
         node = newnode;
     }
+
 
     if (children) {
         // disable children, it will be processed in the end

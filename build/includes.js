@@ -2,6 +2,7 @@
 		<script type="text/javascript" src="../../js/osg/Vec2.js"></script>
 		<script type="text/javascript" src="../../js/osg/Vec3.js"></script>
 		<script type="text/javascript" src="../../js/osg/Vec4.js"></script>
+		<script type="text/javascript" src="../../js/osg/Object.js"></script>
 		<script type="text/javascript" src="../../js/osg/Matrix.js"></script>
 		<script type="text/javascript" src="../../js/osg/Shader.js"></script>
 		<script type="text/javascript" src="../../js/osg/StateAttribute.js"></script>
