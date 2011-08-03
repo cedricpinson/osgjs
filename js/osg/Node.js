@@ -5,6 +5,8 @@
  *  @class Node
  */
 osg.Node = function () {
+    osg.Object.call(this);
+
     this.children = [];
     this.parents = [];
     this.nodeMask = ~0;
@@ -13,7 +15,7 @@ osg.Node = function () {
 };
 
 /** @lends osg.Node.prototype */
-osg.Node.prototype = {
+osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
     /**
         Return StateSet and create it if it does not exist yet
         @type osg.StateSet
@@ -71,8 +73,6 @@ osg.Node.prototype = {
         @type Oject
      */
     getUpdateCallback: function() { return this.updateCallback; },
-    setName: function(name) { this.name = name; },
-    getName: function() { return this.name; },
     hasChild: function(child) {
         for (var i = 0, l = this.children.length; i < l; i++) {
             if (this.children[i] === child) {
@@ -200,5 +200,5 @@ osg.Node.prototype = {
     }
     
 
-};
+});
 osg.Node.prototype.objectType = osg.objectType.generate("Node");

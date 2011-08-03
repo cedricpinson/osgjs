@@ -254,10 +254,10 @@ function createTextureProjectedShadowScene()
 
     var matDark = new osg.Material();
     var black = [0,0,0,1];
-    matDark.emission = black;
-    matDark.ambient = black;
-    matDark.diffuse = black;
-    matDark.specular = black;
+    matDark.setEmission(black);
+    matDark.setAmbient(black);
+    matDark.setDiffuse(black);
+    matDark.setSpecular(black);
     shadowNode.getOrCreateStateSet().setAttributeAndMode(matDark, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
 
     var rttTexture = new osg.Texture();
@@ -687,6 +687,7 @@ function getOgreShadowMapShader()
     "fragColor.w = dark;",
         "}",
     "//fragColor = vec4(unpack2(texture2D(Texture1, FragTexCoord0 )));",
+    "//gl_FragColor = vec4(1.0,0.0,1.0,1.0); //fragColor;",
     "gl_FragColor = fragColor;",
     "}",
     ].join('\n');
@@ -699,7 +700,7 @@ function getOgreShadowMapShader()
 }
 
 
-var LightUpdateCallbackShadowMap = function(options) { 
+var LightUpdateCallbackShadowMap = function(options) {
     this.projectionShadow = options.projectionShadow;
     this.modelviewShadow = options.modelViewShadow; 
     this.shadowScene = options.shadowScene;
@@ -830,6 +831,8 @@ function createShadowMapScene()
     }));
 
     models.addChild(q);
+
+    root.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
 
     root.addChild(light);
     root.addChild(scene);

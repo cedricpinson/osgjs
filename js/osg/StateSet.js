@@ -1,5 +1,18 @@
-osg.StateSet = function () { this.id = osg.instance++; };
-osg.StateSet.prototype = {
+/** 
+ * StateSet encapsulate StateAttribute
+ * @class StateSet
+ */
+osg.StateSet = function () {
+    osg.Object.call(this);
+    this.id = osg.instance++;
+    this.attributeMap = {};
+    this.attributeMap.attributeKeys = [];
+
+    this.textureAttributeMapList = [];
+};
+
+/** @lends osg.StateSet.prototype */
+osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
     getObjectPair: function(attribute, value) {
         return {object: attribute, value: value};
     },
@@ -35,6 +48,12 @@ osg.StateSet.prototype = {
         }
         return this.textureAttributeMapList[unit][attribute].object;
     },
+    getAttribute: function(attributeType) { 
+        if (this.attributeMap[attributeType] === undefined) {
+            return undefined;
+        }
+        return this.attributeMap[attributeType].object;
+    },
     setAttributeAndMode: function(attribute, mode) { 
         if (mode === undefined) {
             mode = osg.StateAttribute.ON;
@@ -48,9 +67,6 @@ osg.StateSet.prototype = {
 
     // for internal use, you should not call it directly
     _setTextureAttribute: function (unit, attributePair) {
-        if (!this.textureAttributeMapList) {
-            this.textureAttributeMapList = [];
-        }
         if (this.textureAttributeMapList[unit] === undefined) {
             this.textureAttributeMapList[unit] = {};
             this.textureAttributeMapList[unit].attributeKeys = [];
@@ -63,15 +79,10 @@ osg.StateSet.prototype = {
     },
     // for internal use, you should not call it directly
     _setAttribute: function (attributePair) {
-        if (!this.attributeMap) {
-            this.attributeMap = {};
-            this.attributeMap.attributeKeys = [];
-        }
         var name = attributePair.object.getTypeMember();
         this.attributeMap[name] = attributePair;
         if (this.attributeMap.attributeKeys.indexOf(name) === -1) {
             this.attributeMap.attributeKeys.push(name);
         }
-    },
-    getAttributeMap: function() { return this.attributeMap; }
-};
+    }
+});

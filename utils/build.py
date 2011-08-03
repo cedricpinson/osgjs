@@ -19,6 +19,7 @@ OSG = [
 "osg/Vec2.js",
 "osg/Vec3.js",
 "osg/Vec4.js",
+"osg/Object.js",
 "osg/Matrix.js",
 "osg/Shader.js",
 "osg/StateAttribute.js",

@@ -8,19 +8,24 @@ osg.Material = function () {
     this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
     this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
     this.emission = [ 0.0, 0.0, 0.0, 1.0 ];
-    this.shininess = [0.0];
+    this.shininess = 0.0;
     this._dirty = true;
 };
 /** @lends osg.Material.prototype */
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
-    /** setEmission */
+
     setEmission: function(a) { this.emission = a; this._dirty = true; },
-    /** setAmbient */
     setAmbient: function(a) { this.ambient = a; this._dirty = true; },
-    /** setSpecular */
     setSpecular: function(a) { this.specular = a; this._dirty = true; },
-    /** setDiffuse */
     setDiffuse: function(a) { this.diffuse = a; this._dirty = true; },
+    setShininess: function(a) { this.shininess = a; this._dirty = true; },
+
+    getEmission: function() { return this.emission;},
+    getAmbient: function() { return this.ambient; },
+    getSpecular: function() { return this.specular;},
+    getDiffuse: function() { return this.diffuse;},
+    getShininess: function() { return this.shininess; },
+
     attributeType: "Material",
     cloneType: function() {return new osg.Material(); },
     getType: function() { return this.attributeType;},
@@ -49,7 +54,7 @@ osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         uniforms.diffuse.set(this.diffuse);
         uniforms.specular.set(this.specular);
         uniforms.emission.set(this.emission);
-        uniforms.shininess.set(this.shininess);
+        uniforms.shininess.set([this.shininess]);
         this._dirty = false;
     },
 
