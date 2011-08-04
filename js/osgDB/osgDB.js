@@ -81,7 +81,8 @@ osgDB.parseSceneGraph = function (node)
         var textures = getFieldBackwardCompatible("Textures", json) || getFieldBackwardCompatible("TextureAttributeList", json) || undefined;
         if (textures) {
             for (var t = 0, tl = textures.length; t < tl; t++) {
-                if (!textures[t].file) {
+                var file = getFieldBackwardCompatible("File", textures[t]);
+                if (!file) {
                     osg.log("no texture on unit " + t + " skip it");
                     continue;
                 }
