@@ -1,4 +1,4 @@
-// osg-debug-0.0.6.js commit 41fc4c4a7945237b1a51bbaa437c8b310bc20023 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.6.js commit b97958dff795de3185eb20a5fe54454d79885129 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -2476,25 +2476,43 @@ osg.BufferArray.create = function(type, elements, itemSize) {
     osg.log("osg.BufferArray.create is deprecated, use new osg.BufferArray with same arguments instead");
     return new osg.BufferArray(type, elements, itemSize);
 };
+/** 
+ *  Manage CullFace attribute
+ *  @class CullFace
+ */
 osg.CullFace = function (mode) {
     osg.StateAttribute.call(this);
-    this.mode = 'BACK';
-    if (mode !== undefined) {
-        this.mode = mode;
+    if (mode === undefined) {
+        mode = osg.CullFace.BACK;
     }
+    this.setMode(mode);
 };
+
+osg.CullFace.DISABLE        = 0x0;
+osg.CullFace.FRONT          = 0x0404;
+osg.CullFace.BACK           = 0x0405;
+osg.CullFace.FRONT_AND_BACK = 0x0408;
+
+/** @lends osg.CullFace.prototype */
 osg.CullFace.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "CullFace",
     cloneType: function() {return new osg.CullFace(); },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
-    apply: function(state) { 
+    setMode: function(mode) {
+        if ( typeof mode === 'string') {
+            mode = osg.CullFace[mode];
+        }
+        this._mode = mode;
+    },
+    getMode: function() { return this._mode; },
+    apply: function(state) {
         var gl = state.getGraphicContext();
-        if (this.mode === 'DISABLE') {
+        if (this._mode === osg.CullFace.DISABLE) {
             gl.disable(gl.CULL_FACE);
         } else {
             gl.enable(gl.CULL_FACE);
-            gl.cullFace(gl[this.mode]);
+            gl.cullFace(this._mode);
         }
         this._dirty = false;
     }
