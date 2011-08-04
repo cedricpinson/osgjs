@@ -18,6 +18,7 @@ function removeCanvas(canvas) {
 function createFakeRenderer() {
     return { 'TEXTURE0': 10,
              'DEPTH_TEST': 1,
+             'CULL_FACE': 0,
              enable: function() {},
              disable: function() {},
              depthFunc: function() {},
@@ -31,7 +32,8 @@ function createFakeRenderer() {
              createTexture: function() {},
              bindFramebuffer: function() {},
              clear: function() {},
-             viewport: function() {}
+             viewport: function() {},
+             cullFace: function() {}
            };
 }
 
@@ -1111,4 +1113,21 @@ test("osg.Depth", function() {
 
 });
 
+test("osg.CullFace", function() {
+
+    var n = new osg.CullFace();
+    ok(n.getMode() === osg.CullFace.BACK, "Check default mode");
+
+    var state = new osg.State();
+    state.setGraphicContext(createFakeRenderer());
+    
+    n.apply(state);
+    
+    n = new osg.CullFace(osg.CullFace.DISABLE);
+    n.apply(state);
+
+    var n2 = new osg.CullFace('FRONT');
+    ok(n2.getMode() === osg.CullFace.FRONT, "Check string parameter");
+
+});
 
