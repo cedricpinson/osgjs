@@ -1,4 +1,4 @@
-// osg-debug-0.0.6.js commit b97958dff795de3185eb20a5fe54454d79885129 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.6.js commit 938f8b8a3eca2305f89168d22dd35d9291d541c9 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -6949,7 +6949,8 @@ osgDB.parseSceneGraph = function (node)
         var textures = getFieldBackwardCompatible("Textures", json) || getFieldBackwardCompatible("TextureAttributeList", json) || undefined;
         if (textures) {
             for (var t = 0, tl = textures.length; t < tl; t++) {
-                if (!textures[t].file) {
+                var file = getFieldBackwardCompatible("File", textures[t]);
+                if (!file) {
                     osg.log("no texture on unit " + t + " skip it");
                     continue;
                 }
