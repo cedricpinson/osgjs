@@ -1,4 +1,4 @@
-// osg-debug-0.0.6.js commit 4f36853e3c9bd67463709d644546abb2f8e7a0f9 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.6.js commit 682c5469771ec54e803007a5794f2df9e7b33360 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -5971,6 +5971,13 @@ osg.Viewport.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         gl.viewport(this._x, this._y, this._width, this._height); 
         this._dirty = false;
     },
+    setViewport: function(x, y, width, height) {
+        this._x = x;
+        this._y = y;
+        this._width = width;
+        this._height = height;
+        this.dirty();
+    },
     x: function() { return this._x; },
     y: function() { return this._y; },
     width: function() { return this._width; },
@@ -6487,6 +6494,15 @@ osgAnimation.EaseOutQuart = function(t) { t = t - 1; return - (t*t*t*t -1); };
 osgAnimation.EaseInQuart = function(t) { return (t*t*t*t); };
 osgAnimation.EaseOutElastic = function(t) { return Math.pow(2.0, -10.0 * t) * Math.sin((t - 0.3 / 4.0) * (2.0 * Math.PI) / 0.3) + 1.0; };
 //osgAnimation.EaseInElastic = function(t) { return ; };
+
+osgAnimation.easeOutQuad = osgAnimation.EaseOutQuad;
+osgAnimation.easeInQuad = osgAnimation.EaseInQuad;
+osgAnimation.easeOutCubic = osgAnimation.EaseOutCubic;
+osgAnimation.easeInCubic = osgAnimation.EaseInCubic;
+osgAnimation.easeOutQuart = osgAnimation.EaseOutQuart;
+osgAnimation.easeInQuart = osgAnimation.EaseInQuart;
+osgAnimation.easeOutElastic = osgAnimation.EaseOutElastic;
+
 /** -*- compile-command: "jslint-cli osgUtil.js" -*-
  * Authors:
  *  Cedric Pinson <cedric.pinson@plopbyte.com>
@@ -7961,6 +7977,32 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             if (viewer.getManipulator().keyup) {
                 this._keyboardEventNode.addEventListener("keyup", keyup, false);
             }
+
+            var self = this;
+            var resize = function(ev) {
+                var w = window.innerWidth;
+                var h = window.innerHeight;
+
+                var prevWidth = self._canvas.width;
+                var prevHeight = self._canvas.height;
+                self._canvas.width = w;
+                self._canvas.height = h;
+                self._canvas.style.width = w;
+                self._canvas.style.height = h;
+                osg.log("window resize "  + prevWidth + "x" + prevHeight + " to " + w + "x" + h);
+                var camera = self.getCamera();
+                var vp = camera.getViewport();
+                var widthChangeRatio = w/vp.width();
+                var heightChangeRatio = h/vp.height();
+                var aspectRatioChange = widthChangeRatio / heightChangeRatio; 
+                vp.setViewport(vp.x()*widthChangeRatio, vp.y()*heightChangeRatio, vp.width()*widthChangeRatio, vp.height()*heightChangeRatio);
+                //osg.log("ratio " + aspectRatioChange);
+                if (aspectRatioChange !== 1.0) {
+
+                    osg.Matrix.postMult(osg.Matrix.makeScale(1.0, aspectRatioChange, 1.0 ,[]), camera.getProjectionMatrix());
+                }
+            };
+            window.onresize = resize;
         }
     }
 });
