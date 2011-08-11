@@ -693,7 +693,8 @@ osg.Matrix = {
 
         var d1 = (matrix[0] * t0 + matrix[4] * t1 + matrix[8] * t2 + matrix[12] * t3);
         if (Math.abs(d1) < 1e-5) {
-            osg.log("Warning can't inverse matrix " + matrix);
+            osg.info("Warning can't inverse matrix " + matrix);
+
             if (resultArg !== undefined) {
                 return false;
             } else {

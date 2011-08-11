@@ -10,9 +10,39 @@ osg.log = function(str) {
         window.console.log(str);
     }
 };
+osg.info = function(str) { osg.log(str); };
+osg.debug = function(str) { osg.log(str); };
+
+osg.DEBUG = 0;
+osg.INFO = 1;
+osg.NOTICE = 2;
+osg.setNotifyLevel = function(level) {
+    var log = function(str) {
+        if (window.console !== undefined) {
+            window.console.log(str);
+        }
+    };
+    var dummy = function() {};
+
+    osg.debug = dummy;
+    osg.info = dummy;
+    osg.log = dummy;
+
+    if (level <= osg.DEBUG) {
+        osg.debug = log;
+    }
+    if (level <= osg.INFO) {
+        osg.info = log;
+    }
+    if (level <= osg.NOTICE) {
+        osg.log = log;
+    }
+};
+
 osg.reportErrorGL = false;
 
 osg.init = function() {
+    osg.setNotifyLevel(osg.NOTICE);
 };
 
 osg.checkError = function(error) {
