@@ -1,4 +1,4 @@
-// osg-debug-0.0.6.js commit 938f8b8a3eca2305f89168d22dd35d9291d541c9 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.6.js commit 4f36853e3c9bd67463709d644546abb2f8e7a0f9 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -5762,13 +5762,21 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     },
 
     setImage: function(img, imageFormat) {
-        this._imageFormat = imageFormat;
-        if (!this._imageFormat) {
+        this._image = img;
+        this.setImageFormat(imageFormat);
+        this._dirty = true;
+    },
+    getImage: function() { return this._image; },
+    setImageFormat: function(imageFormat) {
+        if (imageFormat) {
+            if (typeof(imageFormat) === "string") {
+                imageFormat = osg.Texture[imageFormat];
+            }
+            this._imageFormat = imageFormat;
+        } else {
             this._imageFormat = osg.Texture.RGBA;
         }
         this.setInternalFormat(this._imageFormat);
-        this._image = img;
-        this._dirty = true;
     },
     setUnrefImageDataAfterApply: function(bool) {
         this._unrefImageDataAfterApply = bool;
