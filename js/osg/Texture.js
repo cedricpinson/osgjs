@@ -114,13 +114,21 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     },
 
     setImage: function(img, imageFormat) {
-        this._imageFormat = imageFormat;
-        if (!this._imageFormat) {
+        this._image = img;
+        this.setImageFormat(imageFormat);
+        this._dirty = true;
+    },
+    getImage: function() { return this._image; },
+    setImageFormat: function(imageFormat) {
+        if (imageFormat) {
+            if (typeof(imageFormat) === "string") {
+                imageFormat = osg.Texture[imageFormat];
+            }
+            this._imageFormat = imageFormat;
+        } else {
             this._imageFormat = osg.Texture.RGBA;
         }
         this.setInternalFormat(this._imageFormat);
-        this._image = img;
-        this._dirty = true;
     },
     setUnrefImageDataAfterApply: function(bool) {
         this._unrefImageDataAfterApply = bool;
