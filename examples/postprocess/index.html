@@ -1,0 +1,73 @@
+<html>
+
+<head>
+<style>
+  body {
+  background:-moz-radial-gradient(farthest-side, rgba(0,0,0,0) 90%, rgba(0,0,0,0.1) 150%) rgb(76,76,76);
+  background:-webkit-gradient(radial, center center, 500, center center, 1400, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.2))) rgb(76,76,76);
+  overflow:hidden;
+  padding:0;
+  margin:0;
+  color: white;
+  }
+
+  a:link {text-decoration: none; color: black;}
+  a:visited {text-decoration: none; color: black;}
+  a:active {text-decoration: none; color: black;}
+  a:hover {text-decoration: underline;  color: black;}
+
+  #ViewContainer {
+  position: absolute;
+  }
+
+  #explanation {
+  overflow:auto;
+  position: absolute;
+  left: 70%;
+  height: 100%;
+  }
+  
+  #explanation:focus { outline: none; }
+
+  code {
+    font-size: 10px;
+  }
+  
+</style>
+<title>Post Process</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<script type="text/javascript" src="../../build/osg.js"></script>
+<script type="text/javascript" src="main.js"></script>
+</head>
+
+<body>
+
+  <div id="ViewContainer">
+  <canvas id="3DView"></canvas>
+  </div>
+  <div id="explanation" tabIndex="0" >
+
+    <h1>Post Process example with <a href="http://osgjs.org">osgjs</a></h1>
+    This sample demonstrate how to do post process with a pre render of the scene and then use it with a post process shader.</a>
+
+    <h2>Vignetting</h2>
+    <p>
+    Vignetting is add some darker color on corner of the image. You can find more explanation <a href="http://en.wikipedia.org/wiki/Vignetting"> on wikipedia </a>. There is also an implementation on <a href="http://www.geeks3d.com/20091020/shader-library-lens-circle-post-processing-effect-glsl/"> geek3D </a>. Play with the slider to test it.</p>
+    <p>
+  Change value of x [0-1] <input type="range" min="0" max="1.0" value="0.77" step="0.01" onchange="changeVignetteX(this.value)"/> <span id="VignetteX"> 0.77</span><br>
+  Change value of y [0-1] <input type="range" min="0" max="1.0" value="0.42" step="0.01" onchange="changeVignetteY(this.value)"/> <span id="VignetteY"> 0.42</span></p>
+
+    <h2>Pixelation</h2>
+    <p>
+    Pixelate the scene. The shader comes from <a href="http://www.geeks3d.com/20101029/shader-library-pixelation-post-processing-effect-glsl/"> Geek3D</a>.</p>
+    <p>
+  Change value of x [0-300] <input type="range" min="1" max="300" value="0.77" step="1" onchange="changePixelW(this.value)"/> <span id="PixelW"> 0.77</span><br>
+  Change value of y [0-300] <input type="range" min="1" max="300" value="0.77" step="1" onchange="changePixelH(this.value)"/> <span id="PixelH"> 0.77</span></p>
+
+    <h2>Monitor</h2>
+    <p>
+    This is a post process shader <a href="http://www.iquilezles.org/apps/shadertoy/?p=Postpro/"> shadertoy</a> called 'Postpro' by iq (2009).</p>
+
+  </div>
+</body>
+</html>
