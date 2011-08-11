@@ -28,7 +28,7 @@ var UpdateCallback = function() {
 };
 
 
-function createPostSceneScanline(model) 
+function createPostSceneScanline(texture, time) 
 {
     var getShader = function() {
         var vertexshader = [
@@ -91,53 +91,10 @@ function createPostSceneScanline(model)
     };
 
 
-    var TimeUpdate = function(uniform) {
-        this.update = function(node, nv) {
-            var currentTime = nv.getFrameStamp().getSimulationTime();
-            uniform.get()[0] = currentTime;
-            uniform.dirty();
-            node.traverse(nv);
-        };
-    };
-
-    rttSize = [1024, 1024];
-
-    var near = 0.1;
-    var far = 100;
-    var root = new osg.MatrixTransform();
-
     var quadSize = [ 16/9, 1 ]; 
 
     // add a node to animate the scene
-    var rootModel = new osg.MatrixTransform();
-    rootModel.addChild(model);
-    rootModel.setUpdateCallback(new UpdateCallback());
-
-    // create the camera that render the scene
-    var camera = new osg.Camera();
-    camera.setName("scanline");
-    camera.setProjectionMatrix(osg.Matrix.makePerspective(50, quadSize[0], near, far, []));
-    camera.setViewMatrix(osg.Matrix.makeLookAt([ 0, -10, 0], 
-                                               [ 0,   0, 0],
-                                               [ 0,   0, 1],
-                                               []));
-    camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
-    camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    camera.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    camera.setClearColor([0.2, 0.2, 0.2, 1]);
-    
-    // texture attach to the camera to render the scene on
-    var rttTexture = new osg.Texture();
-    rttTexture.setTextureSize(rttSize[0],rttSize[1]);
-    rttTexture.setMinFilter('LINEAR');
-    rttTexture.setMagFilter('LINEAR');
-    camera.attachTexture(gl.COLOR_ATTACHMENT0, rttTexture, 0);
-    camera.attachRenderBuffer(gl.DEPTH_ATTACHMENT, gl.DEPTH_COMPONENT16);
-    // add the scene to the camera
-    camera.addChild(rootModel);
-
-    // attach camera to root
-    root.addChild(camera);
+    var root = new osg.MatrixTransform();
 
     // create a textured quad with the texture that will contain the
     // scene
@@ -146,19 +103,11 @@ function createPostSceneScanline(model)
                                       0, 0 ,quadSize[1]);
     var stateSet = quad.getOrCreateStateSet();
     // attach the texture to the quad
-    stateSet.setTextureAttributeAndMode(0, rttTexture);
+    stateSet.setTextureAttributeAndMode(0, texture);
     stateSet.setAttributeAndMode(getShader());
-
-    var resolution = osg.Uniform.createFloat2(rttSize, "resolution");
-    var time = osg.Uniform.createFloat1(0.0, "time");
-
-    quad.setUpdateCallback(new TimeUpdate(time));
-    //stateSet.addUniform(resolution);
-    stateSet.addUniform(time);
 
     // attach quad to root
     root.addChild(quad);
-
     return root;
 }
 
@@ -167,9 +116,9 @@ function createPostSceneScanline(model)
 var changePixelW = undefined;
 var changePixelH = undefined;
 
-function createPostScenePixel(model) 
+function createPostScenePixel(texture) 
 {
-    var getShaderVignette = function() {
+    var getShader = function() {
         var vertexshader = [
             "",
             "#ifdef GL_ES",
@@ -220,42 +169,8 @@ function createPostScenePixel(model)
 
     rttSize = [1024, 1024];
 
-    var near = 0.1;
-    var far = 100;
     var root = new osg.MatrixTransform();
-
     var quadSize = [ 16/9, 1 ]; 
-
-    // add a node to animate the scene
-    var rootModel = new osg.MatrixTransform();
-    rootModel.addChild(model);
-    rootModel.setUpdateCallback(new UpdateCallback());
-
-    // create the camera that render the scene
-    var camera = new osg.Camera();
-    camera.setName("vignette");
-    camera.setProjectionMatrix(osg.Matrix.makePerspective(50, quadSize[0], near, far, []));
-    camera.setViewMatrix(osg.Matrix.makeLookAt([ 0, -10, 0], 
-                                               [ 0,   0, 0],
-                                               [ 0,   0, 1],
-                                               []));
-    camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
-    camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    camera.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    camera.setClearColor([0.2, 0.2, 0.2, 1]);
-    
-    // texture attach to the camera to render the scene on
-    var rttTexture = new osg.Texture();
-    rttTexture.setTextureSize(rttSize[0],rttSize[1]);
-    rttTexture.setMinFilter('LINEAR');
-    rttTexture.setMagFilter('LINEAR');
-    camera.attachTexture(gl.COLOR_ATTACHMENT0, rttTexture, 0);
-    camera.attachRenderBuffer(gl.DEPTH_ATTACHMENT, gl.DEPTH_COMPONENT16);
-    // add the scene to the camera
-    camera.addChild(rootModel);
-
-    // attach camera to root
-    root.addChild(camera);
 
     // create a textured quad with the texture that will contain the
     // scene
@@ -264,11 +179,8 @@ function createPostScenePixel(model)
                                       0, 0 ,quadSize[1]);
     var stateSet = quad.getOrCreateStateSet();
     // attach the texture to the quad
-    stateSet.setTextureAttributeAndMode(0, rttTexture);
-    stateSet.setAttributeAndMode(getShaderVignette());
-
-    var tex_w = osg.Uniform.createFloat1(rttSize[0], "tex_w");
-    var tex_h = osg.Uniform.createFloat1(rttSize[1], "tex_h");
+    stateSet.setTextureAttributeAndMode(0, texture);
+    stateSet.setAttributeAndMode(getShader());
 
     var pixel_w = osg.Uniform.createFloat1(4, "pixel_w");
     var pixel_h = osg.Uniform.createFloat1(4, "pixel_h");
@@ -286,8 +198,6 @@ function createPostScenePixel(model)
         osg.log("PixelX " + value);
     };
 
-    stateSet.addUniform(tex_h);
-    stateSet.addUniform(tex_w);
     stateSet.addUniform(pixel_w);
     stateSet.addUniform(pixel_h);
 
@@ -302,9 +212,9 @@ function createPostScenePixel(model)
 var changeVignetteX = undefined;
 var changeVignetteY = undefined;
 
-function createPostSceneVignette(model) 
+function createPostSceneVignette(texture) 
 {
-    var getShaderVignette = function() {
+    var getShader = function() {
         var vertexshader = [
             "",
             "#ifdef GL_ES",
@@ -347,45 +257,8 @@ function createPostSceneVignette(model)
     };
 
 
-    rttSize = [1024, 1024];
-
-    var near = 0.1;
-    var far = 100;
     var root = new osg.MatrixTransform();
-
     var quadSize = [ 16/9, 1 ]; 
-
-    // add a node to animate the scene
-    var rootModel = new osg.MatrixTransform();
-    rootModel.addChild(model);
-    rootModel.setUpdateCallback(new UpdateCallback());
-
-    // create the camera that render the scene
-    var camera = new osg.Camera();
-    camera.setName("vignette");
-    camera.setProjectionMatrix(osg.Matrix.makePerspective(50, quadSize[0], near, far, []));
-    camera.setViewMatrix(osg.Matrix.makeLookAt([ 0, -10, 0], 
-                                               [ 0,   0, 0],
-                                               [ 0,   0, 1],
-                                               []));
-    camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
-    camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    camera.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    camera.setClearColor([0.2, 0.2, 0.2, 1]);
-    
-    // texture attach to the camera to render the scene on
-    var rttTexture = new osg.Texture();
-    rttTexture.setTextureSize(rttSize[0],rttSize[1]);
-    rttTexture.setMinFilter('LINEAR');
-    rttTexture.setMagFilter('LINEAR');
-    camera.attachTexture(gl.COLOR_ATTACHMENT0, rttTexture, 0);
-    camera.attachRenderBuffer(gl.DEPTH_ATTACHMENT, gl.DEPTH_COMPONENT16);
-    // add the scene to the camera
-    camera.addChild(rootModel);
-
-    // attach camera to root
-    root.addChild(camera);
-
     // create a textured quad with the texture that will contain the
     // scene
     var quad = osg.createTexturedQuad(-quadSize[0]/2.0, 0 , -quadSize[1]/2.0,
@@ -393,8 +266,8 @@ function createPostSceneVignette(model)
                                       0, 0 ,quadSize[1]);
     var stateSet = quad.getOrCreateStateSet();
     // attach the texture to the quad
-    stateSet.setTextureAttributeAndMode(0, rttTexture);
-    stateSet.setAttributeAndMode(getShaderVignette());
+    stateSet.setTextureAttributeAndMode(0, texture);
+    stateSet.setAttributeAndMode(getShader());
 
     lensRadius = osg.Uniform.createFloat2([0.77, 0.42], "lensRadius");
 
@@ -420,32 +293,223 @@ function createPostSceneVignette(model)
     return root;
 }
 
+
+var changeStitchingSize = undefined;
+var changeInvertStitching = undefined;
+
+function createPostSceneStitching(texture) 
+{
+    var getShader = function() {
+        var vertexshader = [
+            "",
+            "#ifdef GL_ES",
+            "precision highp float;",
+            "#endif",
+            "attribute vec3 Vertex;",
+            "attribute vec2 TexCoord0;",
+            "varying vec2 FragTexCoord0;",
+            "uniform mat4 ModelViewMatrix;",
+            "uniform mat4 ProjectionMatrix;",
+            "void main(void) {",
+            "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
+            "  FragTexCoord0 = TexCoord0;",
+            "}",
+            ""
+        ].join('\n');
+
+        var fragmentshader = [
+            "",
+            "#ifdef GL_ES",
+            "precision highp float;",
+            "#endif",
+            "varying vec2 FragTexCoord0;",
+            "uniform sampler2D Texture0;",
+            "uniform float tex_w; // GeeXLab built-in",
+            "uniform float tex_h; // GeeXLab built-in",
+            "uniform float time;",
+            "uniform float stitching_size;",
+            "uniform int invert;",
+
+            "vec4 PostFX(sampler2D tex, vec2 uv, float time)",
+            "{",
+            "  vec4 c = vec4(0.0);",
+            "  float size = stitching_size;",
+            "  vec2 cPos = uv * vec2(tex_w, tex_h);",
+            "  vec2 tlPos = floor(cPos / vec2(size, size));",
+            "  tlPos *= size;",
+            "  int remX = int(mod(cPos.x, size));",
+            "  int remY = int(mod(cPos.y, size));",
+            "  if (remX == 0 && remY == 0)",
+            "    tlPos = cPos;",
+            "  vec2 blPos = tlPos;",
+            "  blPos.y += (size - 1.0);",
+            "  if ((remX == remY) ||",
+            "     (((int(cPos.x) - int(blPos.x)) == (int(blPos.y) - int(cPos.y)))))",
+            "  {",
+            "    if (invert == 1)",
+            "      c = vec4(0.2, 0.15, 0.05, 1.0);",
+            "    else",
+            "      c = texture2D(tex, tlPos * vec2(1.0/tex_w, 1.0/tex_h)) * 1.4;",
+            "  }",
+            "  else",
+            "  {",
+            "    if (invert == 1)",
+            "      c = texture2D(tex, tlPos * vec2(1.0/tex_w, 1.0/tex_h)) * 1.4;",
+            "    else",
+            "      c = vec4(0.0, 0.0, 0.0, 1.0);",
+            "  }",
+            "  return c;",
+            "}",
+            "",
+            "void main (void)",
+            "{",
+            "  vec2 uv = FragTexCoord0.st;",
+            "  gl_FragColor = PostFX(Texture0, uv, time);",
+            "}",
+            ""
+        ].join('\n');
+
+        var program = new osg.Program(
+            new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+            new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        return program;
+    };
+
+    var root = new osg.MatrixTransform();
+    var quadSize = [ 16/9, 1 ]; 
+
+    // create a textured quad with the texture that will contain the
+    // scene
+    var quad = osg.createTexturedQuad(-quadSize[0]/2.0, 0 , -quadSize[1]/2.0,
+                                      quadSize[0], 0 ,0,
+                                      0, 0 ,quadSize[1]);
+    var stateSet = quad.getOrCreateStateSet();
+    // attach the texture to the quad
+    stateSet.setTextureAttributeAndMode(0, texture);
+    stateSet.setAttributeAndMode(getShader());
+
+    var stitching_size = osg.Uniform.createFloat1(6.0, "stitching_size");
+    var invert = osg.Uniform.createInt1(0, "invert");
+    stateSet.addUniform(invert);
+    stateSet.addUniform(stitching_size);
+
+    changeStitchingSize = function(value) {
+        stitching_size.get()[0] = value;
+        stitching_size.dirty();
+        document.getElementById("StitchingSize").innerHTML = value;
+    };
+
+    changeInvertStitching = function(value) {
+        invert.get()[0] = value;
+        invert.dirty();
+        document.getElementById("StitchingInvert").innerHTML = value;
+    };
+
+    // attach quad to root
+    root.addChild(quad);
+
+    return root;
+}
+
+var commonScene = function(rttSize) {
+
+    var model = createSceneBox();
+
+    var near = 0.1;
+    var far = 100;
+    var root = new osg.MatrixTransform();
+
+    var quadSize = [ 16/9, 1 ]; 
+
+    // add a node to animate the scene
+    var rootModel = new osg.MatrixTransform();
+    rootModel.addChild(model);
+    rootModel.setUpdateCallback(new UpdateCallback());
+
+    // create the camera that render the scene
+    var camera = new osg.Camera();
+    camera.setName("scene");
+    camera.setProjectionMatrix(osg.Matrix.makePerspective(50, quadSize[0], near, far, []));
+    camera.setViewMatrix(osg.Matrix.makeLookAt([ 0, -10, 0], 
+                                               [ 0,   0, 0],
+                                               [ 0,   0, 1],
+                                               []));
+    camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
+    camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+    camera.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
+    camera.setClearColor([0.5, 0.5, 0.5, 1]);
+    
+    // texture attach to the camera to render the scene on
+    var rttTexture = new osg.Texture();
+    rttTexture.setTextureSize(rttSize[0],rttSize[1]);
+    rttTexture.setMinFilter('LINEAR');
+    rttTexture.setMagFilter('LINEAR');
+    camera.attachTexture(gl.COLOR_ATTACHMENT0, rttTexture, 0);
+    camera.attachRenderBuffer(gl.DEPTH_ATTACHMENT, gl.DEPTH_COMPONENT16);
+    // add the scene to the camera
+    camera.addChild(rootModel);
+
+    // attach camera to root
+    root.addChild(camera);
+    return [root, rttTexture];
+};
+
 function createScene() {
-    var model;
-    model = createSceneBox();
-    //var model = osgDB.parseSceneGraph(getOgre());
-//    var root = new osg.Camera();
+
+    rttSize = [1024, 1024];
+
+    result = commonScene(rttSize);
+    var commonNode = result[0];
+    var texture = result[1];
+    
     var root = new osg.Node();
-//    root.setComputeNearFar(false);
+
+    var time = osg.Uniform.createFloat1(0.0, "time");
+    var tex_w = osg.Uniform.createFloat1(rttSize[0], "tex_w");
+    var tex_h = osg.Uniform.createFloat1(rttSize[1], "tex_h");
+
+    var TimeUpdate = function(uniform) {
+        this.update = function(node, nv) {
+            var currentTime = nv.getFrameStamp().getSimulationTime();
+            uniform.get()[0] = currentTime;
+            uniform.dirty();
+            node.traverse(nv);
+        };
+    };
+    root.setUpdateCallback(new TimeUpdate(time));
+    root.getOrCreateStateSet().addUniform(time);
+    root.getOrCreateStateSet().addUniform(tex_w);
+    root.getOrCreateStateSet().addUniform(tex_h);
+
+
+    root.addChild(commonNode);
     var scene;
 
     if (true) {
-        scene = createPostSceneVignette(model);
+        scene = createPostSceneVignette(texture);
         scene.setMatrix(osg.Matrix.makeTranslate(-2,0,0.0,[]));
         root.addChild(scene);
     }
 
     if (true) {
-        scene = createPostScenePixel(model);
+        scene = createPostScenePixel(texture);
         scene.setMatrix(osg.Matrix.makeTranslate(0,0,0.0,[]));
         root.addChild(scene);
     }
 
     if (true) {
-        scene = createPostSceneScanline(model);
+        scene = createPostSceneScanline(texture);
         scene.setMatrix(osg.Matrix.makeTranslate(2,0,0.0,[]));
         root.addChild(scene);
     }
+
+    if (true) {
+        scene = createPostSceneStitching(texture);
+        scene.setMatrix(osg.Matrix.makeTranslate(0,0,-1.0,[]));
+        root.addChild(scene);
+    }
+
+
     return root;
 }
 
@@ -453,6 +517,7 @@ function createSceneBox() {
     return osg.createTexturedBox(0,0,0,
                                  2, 2, 2);
 }
+
 
 
 var start = function() 
