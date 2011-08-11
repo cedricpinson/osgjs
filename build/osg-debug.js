@@ -1,4 +1,4 @@
-// osg-debug-0.0.6.js commit 682c5469771ec54e803007a5794f2df9e7b33360 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.6.js commit 8f0600638c007b9028313ad72b1241c001f23bcf - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -11,9 +11,39 @@ osg.log = function(str) {
         window.console.log(str);
     }
 };
+osg.info = function(str) { osg.log(str); };
+osg.debug = function(str) { osg.log(str); };
+
+osg.DEBUG = 0;
+osg.INFO = 1;
+osg.NOTICE = 2;
+osg.setNotifyLevel = function(level) {
+    var log = function(str) {
+        if (window.console !== undefined) {
+            window.console.log(str);
+        }
+    };
+    var dummy = function() {};
+
+    osg.debug = dummy;
+    osg.info = dummy;
+    osg.log = dummy;
+
+    if (level <= osg.DEBUG) {
+        osg.debug = log;
+    }
+    if (level <= osg.INFO) {
+        osg.info = log;
+    }
+    if (level <= osg.NOTICE) {
+        osg.log = log;
+    }
+};
+
 osg.reportErrorGL = false;
 
 osg.init = function() {
+    osg.setNotifyLevel(osg.NOTICE);
 };
 
 osg.checkError = function(error) {
@@ -1100,7 +1130,8 @@ osg.Matrix = {
 
         var d1 = (matrix[0] * t0 + matrix[4] * t1 + matrix[8] * t2 + matrix[12] * t3);
         if (Math.abs(d1) < 1e-5) {
-            osg.log("Warning can't inverse matrix " + matrix);
+            osg.info("Warning can't inverse matrix " + matrix);
+
             if (resultArg !== undefined) {
                 return false;
             } else {
