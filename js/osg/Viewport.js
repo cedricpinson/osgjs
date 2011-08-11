@@ -23,6 +23,13 @@ osg.Viewport.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         gl.viewport(this._x, this._y, this._width, this._height); 
         this._dirty = false;
     },
+    setViewport: function(x, y, width, height) {
+        this._x = x;
+        this._y = y;
+        this._width = width;
+        this._height = height;
+        this.dirty();
+    },
     x: function() { return this._x; },
     y: function() { return this._y; },
     width: function() { return this._width; },
