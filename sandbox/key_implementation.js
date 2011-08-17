@@ -30,7 +30,9 @@ window.addEventListener("load",
                             var nbSamples = 10000000;
 
                             var keys0 = [];
-                            var keys1 = [];
+                            //var keys1 = [];
+                            var keys1 = new Array(1000*4);
+                            //var keys1 = new Float32Array(1000*4);
 
                             (function() {
                                 for (var i = 0, l = nbKeys; i < l; i++) {
@@ -45,12 +47,10 @@ window.addEventListener("load",
 
                             (function() {
                                 for (var i = 0, l = nbKeys; i < l; i++) {
-                                    var arg = [];
-                                    arg.push(i*1.333333333333333333);
+                                    keys1[i*4] = i*1.333333333333333333;
                                     for (var j = 0, ll = nbValue; j < ll; j++) {
-                                        arg.push(j);
+                                        keys1[i*4+(j+1)] = j;
                                     }
-                                    keys1.push.apply(keys1, arg);
                                 }
                             })();
 
