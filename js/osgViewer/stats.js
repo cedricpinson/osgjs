@@ -50,6 +50,10 @@ Stats.Stats.prototype = {
             return;
         }
 
+        var report = delta - Math.floor(delta);
+        t -= report/(2.0*60.0/1000.0);
+        delta = Math.floor(delta);
+
         var translate = delta;
         var c = this.canvas;
         var width = c.width;
