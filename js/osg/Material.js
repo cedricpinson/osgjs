@@ -14,10 +14,10 @@ osg.Material = function () {
 /** @lends osg.Material.prototype */
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
-    setEmission: function(a) { this.emission = a; this._dirty = true; },
-    setAmbient: function(a) { this.ambient = a; this._dirty = true; },
-    setSpecular: function(a) { this.specular = a; this._dirty = true; },
-    setDiffuse: function(a) { this.diffuse = a; this._dirty = true; },
+    setEmission: function(a) { osg.Vec4.copy(a, this.emission); this._dirty = true; },
+    setAmbient: function(a) { osg.Vec4.copy(a, this.ambient); this._dirty = true; },
+    setSpecular: function(a) { osg.Vec4.copy(a, this.specular); this._dirty = true; },
+    setDiffuse: function(a) { osg.Vec4.copy(a, this.diffuse); this._dirty = true; },
     setShininess: function(a) { this.shininess = a; this._dirty = true; },
 
     getEmission: function() { return this.emission;},

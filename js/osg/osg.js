@@ -1,7 +1,7 @@
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
-osg.version = '0.0.6';
+osg.version = '0.0.7';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 osg.instance = 0;
 osg.version = 0;
@@ -65,6 +65,10 @@ osg.checkError = function(error) {
 };
 
 // from jquery
+osg.isArray = function( obj ) {
+    return toString.call(obj) === "[object Array]";
+};
+
 osg.extend = function() {
     // Save a reference to some core methods
     var toString = Object.prototype.toString,
@@ -73,9 +77,7 @@ osg.extend = function() {
     var isFunction = function(obj) {
         return toString.call(obj) === "[object Function]";
     };
-    var isArray = function( obj ) {
-	return toString.call(obj) === "[object Array]";
-    };
+    var isArray = osg.isArray;
     var isPlainObject = function( obj ) {
 	// Must be an Object.
 	// Because of IE, we also have to check the presence of the constructor property.

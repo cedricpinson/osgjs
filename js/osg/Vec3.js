@@ -84,10 +84,9 @@ osg.Vec3 = {
     },
 
     lerp: function(t, a, b, r) {
-        var tmp = 1.0-t;
-        r[0] = a[0]*tmp + t*b[0];
-        r[1] = a[1]*tmp + t*b[1];
-        r[2] = a[2]*tmp + t*b[2];
+        r[0] = a[0] + (b[0]-a[0])*t;
+        r[1] = a[1] + (b[1]-a[1])*t;
+        r[2] = a[2] + (b[2]-a[2])*t;
         return r;
     }
 

@@ -1,3 +1,12 @@
+osg.PrimitiveSet = function() {};
+osg.PrimitiveSet.POINTS                         = 0x0000;
+osg.PrimitiveSet.LINES                          = 0x0001;
+osg.PrimitiveSet.LINE_LOOP                      = 0x0002;
+osg.PrimitiveSet.LINE_STRIP                     = 0x0003;
+osg.PrimitiveSet.TRIANGLES                      = 0x0004;
+osg.PrimitiveSet.TRIANGLE_STRIP                 = 0x0005;
+osg.PrimitiveSet.TRIANGLE_FAN                   = 0x0006;
+
 /** 
  * DrawArrays manage rendering primitives
  * @class DrawArrays
@@ -12,6 +21,7 @@ osg.DrawArrays = function (mode, first, count)
 /** @lends osg.DrawArrays.prototype */
 osg.DrawArrays.prototype = {
     draw: function(state) {
+        var gl = state.getGraphicContext();
         gl.drawArrays(this.mode, this.first, this.count);
     },
     getMode: function() { return this.mode; },
@@ -30,7 +40,7 @@ osg.DrawArrays.create = function(mode, first, count) {
  * @class DrawElements
  */
 osg.DrawElements = function (mode, indices) {
-    this.mode = gl.POINTS;
+    this.mode = osg.PrimitiveSet.POINTS;
     if (mode !== undefined) {
         this.mode = mode;
     }
@@ -39,7 +49,7 @@ osg.DrawElements = function (mode, indices) {
     this.offset = 0;
     this.indices = indices;
     if (indices !== undefined) {
-        this.count = indices.elements.length;
+        this.count = indices.getElements().length;
     }
 };
 
@@ -48,6 +58,7 @@ osg.DrawElements.prototype = {
     getMode: function() { return this.mode; },
     draw: function(state) {
         state.setIndexArray(this.indices);
+        var gl = state.getGraphicContext();
         gl.drawElements(this.mode, this.count, gl.UNSIGNED_SHORT, this.offset );
     },
     getIndices: function() { return this.indices; },

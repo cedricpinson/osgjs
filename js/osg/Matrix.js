@@ -466,6 +466,33 @@ osg.Matrix = {
         return result;
     },
 
+    // Matrix M = Matrix M * Matrix Translate
+    preMultTranslate: function(mat, translate) {
+        if (translate[0] !== 0.0) {
+            val = translate[0];
+            mat[12] += val * mat[0];
+            mat[13] += val * mat[1];
+            mat[14] += val * mat[2];
+            mat[15] += val * mat[3];
+        }
+
+        if (translate[1] !== 0.0) {
+            val = translate[1];
+            mat[12] += val * mat[4];
+            mat[13] += val * mat[5];
+            mat[14] += val * mat[6];
+            mat[15] += val * mat[7];
+        }
+
+        if (translate[2] !== 0.0) {
+            val = translate[2];
+            mat[12] += val * mat[8];
+            mat[13] += val * mat[9];
+            mat[14] += val * mat[10];
+            mat[15] += val * mat[11];
+        }
+        return mat;
+    },
     // result = Matrix M * Matrix Translate
     multTranslate: function(mat, translate, result) {
         if (result === undefined) {
@@ -939,9 +966,6 @@ osg.Matrix = {
     },
 
     makeRotateFromQuat: function (quat, result) {
-        if (result === undefined) {
-            result = [];
-        }
         this.makeIdentity(result);
         return this.setRotateFromQuat(result, quat);
     },

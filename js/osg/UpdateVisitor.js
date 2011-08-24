@@ -6,15 +6,11 @@ osg.UpdateVisitor = function () {
 };
 osg.UpdateVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     apply: function(node) {
-        if (node.getUpdateCallback !== undefined) {
-            var cb = node.getUpdateCallback();
-            if (cb !== undefined) {
-                cb.update(node, this);
+        var ncs = node.getUpdateCallbackList();
+        for (var i = 0, l = ncs.length; i < l; i++) {
+            if (!ncs[i].update(node, this))
                 return;
-            }
         }
-        if (node.traverse) {
-            this.traverse(node);
-        }
+        this.traverse(node);
     }
 });

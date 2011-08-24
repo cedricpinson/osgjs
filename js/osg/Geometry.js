@@ -25,6 +25,8 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
     },
     getPrimitives: function() { return this.primitives; },
     getAttributes: function() { return this.attributes; },
+    getVertexAttributeList: function() { return this.attributes; },
+    getPrimitiveSetList: function() { return this.primitives; },
 
     drawImplementation: function(state) {
         var program = state.getLastProgramApplied();

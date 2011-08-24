@@ -44,6 +44,17 @@
 		<script type="text/javascript" src="../../js/osg/CullStack.js"></script>
 		<script type="text/javascript" src="../../js/osg/CullVisitor.js"></script>
 		<script type="text/javascript" src="../../js/osgAnimation/osgAnimation.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/Animation.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/BasicAnimationManager.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/Channel.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/Interpolator.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/Keyframe.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/LinkVisitor.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/Sampler.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/StackedTransformElement.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/Target.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/UpdateCallback.js"></script>
+		<script type="text/javascript" src="../../js/osgAnimation/UpdateMatrixTransform.js"></script>
 		<script type="text/javascript" src="../../js/osgUtil/osgUtil.js"></script>
 		<script type="text/javascript" src="../../js/osgUtil/TriangleIntersect.js"></script>
 		<script type="text/javascript" src="../../js/osgUtil/IntersectVisitor.js"></script>
@@ -57,3 +68,5 @@
 		<script type="text/javascript" src="../../js/osgGA/Manipulator.js"></script>
 		<script type="text/javascript" src="../../js/osgGA/OrbitManipulator.js"></script>
 		<script type="text/javascript" src="../../js/osgGA/FirstPersonManipulator.js"></script>
+		<script type="text/javascript" src="../../js/osgWrappers/serializers/osg.js"></script>
+		<script type="text/javascript" src="../../js/osgWrappers/serializers/osgAnimation.js"></script>

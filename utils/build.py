@@ -72,6 +72,11 @@ OSG_DB = [
         "osgDB/osgDB.js"
 ]
 
+OSG_WRAPPER = [
+        "osgWrappers/serializers/osg.js",
+        "osgWrappers/serializers/osgAnimation.js"
+]
+
 OSG_GA = [
         "osgGA/osgGA.js",
         "osgGA/Manipulator.js",
@@ -88,7 +93,18 @@ OSG_VIEWER = [
 ]
 
 OSG_ANIMATION = [
-        "osgAnimation/osgAnimation.js"
+        "osgAnimation/osgAnimation.js",
+        "osgAnimation/Animation.js",
+        "osgAnimation/BasicAnimationManager.js",
+        "osgAnimation/Channel.js",
+        "osgAnimation/Interpolator.js",
+        "osgAnimation/Keyframe.js",
+        "osgAnimation/LinkVisitor.js",
+        "osgAnimation/Sampler.js",
+        "osgAnimation/StackedTransformElement.js",
+        "osgAnimation/Target.js",
+        "osgAnimation/UpdateCallback.js",
+        "osgAnimation/UpdateMatrixTransform.js",
 ]
 
 version = '0.0.0'
@@ -226,7 +242,7 @@ def main(argv=None):
 	unminified = args.unminified
 
 	config = [
-                ['osg', 'includes', OSG + OSG_ANIMATION + OSG_UTIL + OSG_DB + OSG_VIEWER + OSG_GA, args],
+                ['osg', 'includes', OSG + OSG_ANIMATION + OSG_UTIL + OSG_DB + OSG_VIEWER + OSG_GA + OSG_WRAPPER, args],
                 ]
 
         global version

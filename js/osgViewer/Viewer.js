@@ -294,7 +294,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         frameStamp.setSimulationTime(frameTime/1000.0 - frameStamp.getReferenceTime());
 
         if (this.getManipulator()) {
-            this.getCamera().setViewMatrix(this.getManipulator().getInverseMatrix());
+            osg.Matrix.copy(this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix());
         }
 
         // setup framestamp
@@ -560,7 +560,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
                 var heightChangeRatio = h/vp.height();
                 var aspectRatioChange = widthChangeRatio / heightChangeRatio; 
                 vp.setViewport(vp.x()*widthChangeRatio, vp.y()*heightChangeRatio, vp.width()*widthChangeRatio, vp.height()*heightChangeRatio);
-                //osg.log("ratio " + aspectRatioChange);
+
                 if (aspectRatioChange !== 1.0) {
 
                     osg.Matrix.postMult(osg.Matrix.makeScale(1.0, aspectRatioChange, 1.0 ,[]), camera.getProjectionMatrix());

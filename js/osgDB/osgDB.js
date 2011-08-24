@@ -20,7 +20,74 @@
 
 var osgDB = {};
 
-osgDB.parseSceneGraph = function (node)
+osgDB.ObjectWrapper = {};
+osgDB.ObjectWrapper.serializers = {};
+osgDB.ObjectWrapper.global = this;
+osgDB.ObjectWrapper.getObject = function (path) {
+    var scope = osgDB.ObjectWrapper.global;
+    var splittedPath = path.split('.');
+    for (var i = 0, l = splittedPath.length; i < l; i++) {
+        var obj = scope[ splittedPath[i] ];
+        if (obj === undefined) {
+            return undefined;
+        }
+        scope = obj;
+    }
+    // create the new obj
+    return new (scope)();
+};
+osgDB.ObjectWrapper.readObject = function (jsonObj) {
+
+    var prop = Object.keys(jsonObj)[0];
+    if (!prop) {
+        osg.log("can't find property for object " + jsonObj);
+        return undefined;
+    }
+
+    var obj = osgDB.ObjectWrapper.getObject(prop);
+    if (!obj) {
+        osg.log("can't instanciate object " + prop);
+        return undefined;
+    }
+
+    var scope = osgDB.ObjectWrapper.serializers;
+    var splittedPath = prop.split('.');
+    for (var i = 0, l = splittedPath.length; i < l; i++) {
+        var reader = scope[ splittedPath[i] ];
+        if (reader === undefined) {
+            osg.log("can't find function to read object " + prop + " - undefined");
+            return undefined;
+        }
+        scope = reader;
+    }
+    scope(jsonObj[prop], obj);
+    return obj;
+};
+
+osgDB.parseSceneGraph = function (node) {
+    if (node.Version && node.Version > 0) {
+        var getPropertyValue = function(o) {
+            var props = Object.keys(o);
+            for (var i = 0, l = props.length; i < l; i++) {
+                if (props[i] !== "Generator" && props[i] !== "Version") {
+                    return props[i];
+                }
+            }
+            return undefined;
+        };
+        var key = getPropertyValue(node);
+        if (key) {
+            var obj = {};
+            obj[key] = node[key];
+            return osgDB.ObjectWrapper.readObject(obj);
+        } else {
+            osg.log("Can't parse scenegraph " + node);
+        }
+    } else {
+        return osgDB.parseSceneGraph_deprecated(node);
+    }
+};
+osgDB.parseSceneGraph_deprecated = function (node)
 {
     var getFieldBackwardCompatible = function(field, json) {
         var value = json[field];
@@ -192,7 +259,7 @@ osgDB.parseSceneGraph = function (node)
         node.children = [];
 
         for (var child = 0, childLength = children.length; child < childLength; child++) {
-            node.addChild(osgDB.parseSceneGraph(children[child]));
+            node.addChild(osgDB.parseSceneGraph_deprecated(children[child]));
         }
     }
 

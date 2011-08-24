@@ -12,6 +12,7 @@ osg.Node = function () {
     this.nodeMask = ~0;
     this.boundingSphere = new osg.BoundingSphere();
     this.boundingSphereComputed = false;
+    this._updateCallbacks = [];
 };
 
 /** @lends osg.Node.prototype */
@@ -62,17 +63,21 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
         var DummyUpdateCallback = function() {};
         DummyUpdateCallback.prototype = {
             update: function(node, nodeVisitor) {
-                node.traverse(nodeVisitor);
+                return true;
             }
         };
 
         @param Oject callback
      */
-    setUpdateCallback: function(cb) { this.updateCallback = cb; },
+    setUpdateCallback: function(cb) { this._updateCallbacks[0] = cb; },
     /** Get update node callback, called during update traversal.
         @type Oject
      */
-    getUpdateCallback: function() { return this.updateCallback; },
+    getUpdateCallback: function() { return this._updateCallbacks[0]; },
+    
+    addUpdateCallback: function(cb) { this._updateCallbacks.push(cb);},
+    getUpdateCallbackList: function() { return this._updateCallbacks; },
+
     hasChild: function(child) {
         for (var i = 0, l = this.children.length; i < l; i++) {
             if (this.children[i] === child) {

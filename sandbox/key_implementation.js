@@ -18,11 +18,11 @@ window.addEventListener("load",
 
                             var Key = function() {
                                 Array.call(this);
-                                this._time = 0.0;
+                                this.time = 0.0;
                             };
                             Key.prototype = objectInehrit(Array.prototype, {
-                                getTime: function() { return this._time; },
-                                setTime: function(t) { this._time = t; }
+                                getTime: function() { return this.time; },
+                                setTime: function(t) { this.time = t; }
                             });
 
                             var nbKeys = 1000;
@@ -55,14 +55,13 @@ window.addEventListener("load",
                             })();
 
                             var lerp = function(t, a0, a1, a2, b0, b1, b2, r) {
-                                var tmp = 1.0-t;
-                                r[0] = a0*tmp + t*b0;
-                                r[1] = a1*tmp + t*b1;
-                                r[2] = a2*tmp + t*b2;
+                                r[0] = a0 + (b0-a0)*t;
+                                r[1] = a1 + (b1-a1)*t;
+                                r[2] = a2 + (b2-a2)*t;
                                 return r;
                             };
 
-                            var cache0;
+                            var cache0 = 0;
                             var getKeyIndexFromTime0 = function(keys, time, cache) {
                                 // todo use a cache
                                 var key_size = keys.length;
@@ -74,8 +73,8 @@ window.addEventListener("load",
                                     st = cache;
                                 }
                                 for (var i = st, l = key_size-1; i < l; i++) {
-                                    var t0 = keys[i].getTime();
-                                    var t1 = keys[i+1].getTime();
+                                    var t0 = keys[i].time;
+                                    var t1 = keys[i+1].time;
 
                                     if ( time >= t0 && time < t1 )
                                     {
@@ -87,18 +86,16 @@ window.addEventListener("load",
                             };
 
                             var functor0 = function(keys, time, result) {
-                                var keyStart;
-                                var startTime;
                                 var keyEnd = keys[keys.length-1];
-                                var endTime = keyEnd.getTime();
+                                var endTime = keyEnd.time;
                                 if (time >= endTime) {
                                     result[0] = keyEnd[0];
                                     result[1] = keyEnd[1];
                                     result[2] = keyEnd[2];
                                     return result;
                                 } else {
-                                    keyStart = keys[0];
-                                    startTime = keyStart.getTime();
+                                    var keyStart = keys[0];
+                                    var startTime = keyStart.time;
                                     
                                     if (time <= startTime) {
                                         result[0] = keyStart[0];
@@ -108,12 +105,16 @@ window.addEventListener("load",
                                     }
                                 }
 
-                                var i = getKeyIndexFromTime0(keys, time, cache0);
+                                while (keys[cache0+1].time < time) {
+                                    cache0++;
+                                }
+                                var i = cache0;
+                                //var i = getKeyIndexFromTime0(keys, time, cache0);
 
                                 var k0 = keys[i];
                                 var k1 = keys[i+1];
-                                var t0 = k0.getTime();
-                                var t1 = k1.getTime();
+                                var t0 = k0.time;
+                                var t1 = k1.time;
 
                                 var blend = (time - t0) / ( t1 -  t0);
                                 result = lerp(blend, 
@@ -123,7 +124,7 @@ window.addEventListener("load",
                                 return result;
                             };
 
-                            var cache1;
+                            var cache1 = 0;
                             var getKeyIndexFromTime1 = function(keys, time, cache) {
                                 // todo use a cache
                                 var key_size = keys.length;
@@ -147,26 +148,27 @@ window.addEventListener("load",
                                 return -1;
                             };
                             var functor1 = function(keys, time, result) {
-                                var startTime;
+
                                 var keyEnd = keys.length-4;
                                 var endTime = keyEnd[keyEnd];
-                                if (time >= endTime) {
+                                if (time > (endTime-1e-4)) {
                                     result[0] = keys[keyEnd+1];
                                     result[1] = keys[keyEnd+2];
                                     result[2] = keys[keyEnd+3];
                                     return result;
-                                } else {
-                                    startTime = keys[0];
-                                    
-                                    if (time <= startTime) {
-                                        result[0] = keys[1];
-                                        result[1] = keys[2];
-                                        result[2] = keys[3];
-                                        return result;
-                                    }
+                                }
+                                if (time < keys[0]) {
+                                    result[0] = keys[1];
+                                    result[1] = keys[2];
+                                    result[2] = keys[3];
+                                    return result;
                                 }
 
-                                var i = getKeyIndexFromTime1(keys, time, cache1);
+                                //var i = getKeyIndexFromTime1(keys, time, cache1);
+                                while(keys[cache1+4] < time) {
+                                    cache1 += 4;
+                                }
+                                var i = cache1;
 
                                 var k0 = i;
                                 var k1 = i+4;

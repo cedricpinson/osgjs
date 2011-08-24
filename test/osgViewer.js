@@ -1,4 +1,4 @@
-test("osgViewer_Viewer", function() {
+test("osgViewer.Viewer", function() {
     (function() {
         var canvas = createCanvas();
         var viewer = new osgViewer.Viewer(canvas);
@@ -45,7 +45,7 @@ test("osgViewer_Viewer", function() {
 });
 
 
-test("osgViewer_View", function() {
+test("osgViewer.View", function() {
     (function() {
         var gc = 2;
         var view = new osgViewer.View();

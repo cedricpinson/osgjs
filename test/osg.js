@@ -19,6 +19,9 @@ function createFakeRenderer() {
     return { 'TEXTURE0': 10,
              'DEPTH_TEST': 1,
              'CULL_FACE': 0,
+             'UNSIGNED_SHORT': 0,
+             drawElements: function() {},
+
              enable: function() {},
              disable: function() {},
              depthFunc: function() {},
@@ -286,7 +289,8 @@ test("osg.Vec2", function() {
 
 
 test("osg.Matrix.makeRotateFromQuat", function() {
-    var m = osg.Matrix.makeRotateFromQuat([0.653281, 0.270598, -0.653281, 0.270598]);
+    var m = [];
+    osg.Matrix.makeRotateFromQuat([0.653281, 0.270598, -0.653281, 0.270598], m);
     near(m , [1.66533e-16, 1.11022e-16, -1, 0,
               0.707107, -0.707107, 0, 0,
               -0.707107, -0.707107, -1.66533e-16, 0,
@@ -294,7 +298,8 @@ test("osg.Matrix.makeRotateFromQuat", function() {
 });
 
 test("osg.Matrix.getRotate", function() {
-    var m = osg.Matrix.makeRotateFromQuat([0.653281, 0.270598, -0.653281, 0.270598]);
+    var m = [];
+    osg.Matrix.makeRotateFromQuat([0.653281, 0.270598, -0.653281, 0.270598], m);
     var q = osg.Matrix.getRotate(m);
     near(q , [0.653281, 0.270598, -0.653281, 0.270598]);
 

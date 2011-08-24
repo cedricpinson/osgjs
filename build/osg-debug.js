@@ -1,8 +1,8 @@
-// osg-debug-0.0.6.js commit 8f0600638c007b9028313ad72b1241c001f23bcf - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit 272565333a22185dcddc132cb8c7acc3beb41df8 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
-osg.version = '0.0.6';
+osg.version = '0.0.7';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 osg.instance = 0;
 osg.version = 0;
@@ -66,6 +66,10 @@ osg.checkError = function(error) {
 };
 
 // from jquery
+osg.isArray = function( obj ) {
+    return toString.call(obj) === "[object Array]";
+};
+
 osg.extend = function() {
     // Save a reference to some core methods
     var toString = Object.prototype.toString,
@@ -74,9 +78,7 @@ osg.extend = function() {
     var isFunction = function(obj) {
         return toString.call(obj) === "[object Function]";
     };
-    var isArray = function( obj ) {
-	return toString.call(obj) === "[object Array]";
-    };
+    var isArray = osg.isArray;
     var isPlainObject = function( obj ) {
 	// Must be an Object.
 	// Because of IE, we also have to check the presence of the constructor property.
@@ -355,10 +357,9 @@ osg.Vec3 = {
     },
 
     lerp: function(t, a, b, r) {
-        var tmp = 1.0-t;
-        r[0] = a[0]*tmp + t*b[0];
-        r[1] = a[1]*tmp + t*b[1];
-        r[2] = a[2]*tmp + t*b[2];
+        r[0] = a[0] + (b[0]-a[0])*t;
+        r[1] = a[1] + (b[1]-a[1])*t;
+        r[2] = a[2] + (b[2]-a[2])*t;
         return r;
     }
 
@@ -903,6 +904,33 @@ osg.Matrix = {
         return result;
     },
 
+    // Matrix M = Matrix M * Matrix Translate
+    preMultTranslate: function(mat, translate) {
+        if (translate[0] !== 0.0) {
+            val = translate[0];
+            mat[12] += val * mat[0];
+            mat[13] += val * mat[1];
+            mat[14] += val * mat[2];
+            mat[15] += val * mat[3];
+        }
+
+        if (translate[1] !== 0.0) {
+            val = translate[1];
+            mat[12] += val * mat[4];
+            mat[13] += val * mat[5];
+            mat[14] += val * mat[6];
+            mat[15] += val * mat[7];
+        }
+
+        if (translate[2] !== 0.0) {
+            val = translate[2];
+            mat[12] += val * mat[8];
+            mat[13] += val * mat[9];
+            mat[14] += val * mat[10];
+            mat[15] += val * mat[11];
+        }
+        return mat;
+    },
     // result = Matrix M * Matrix Translate
     multTranslate: function(mat, translate, result) {
         if (result === undefined) {
@@ -1376,9 +1404,6 @@ osg.Matrix = {
     },
 
     makeRotateFromQuat: function (quat, result) {
-        if (result === undefined) {
-            result = [];
-        }
         this.makeIdentity(result);
         return this.setRotateFromQuat(result, quat);
     },
@@ -1746,6 +1771,7 @@ osg.Node = function () {
     this.nodeMask = ~0;
     this.boundingSphere = new osg.BoundingSphere();
     this.boundingSphereComputed = false;
+    this._updateCallbacks = [];
 };
 
 /** @lends osg.Node.prototype */
@@ -1796,17 +1822,21 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
         var DummyUpdateCallback = function() {};
         DummyUpdateCallback.prototype = {
             update: function(node, nodeVisitor) {
-                node.traverse(nodeVisitor);
+                return true;
             }
         };
 
         @param Oject callback
      */
-    setUpdateCallback: function(cb) { this.updateCallback = cb; },
+    setUpdateCallback: function(cb) { this._updateCallbacks[0] = cb; },
     /** Get update node callback, called during update traversal.
         @type Oject
      */
-    getUpdateCallback: function() { return this.updateCallback; },
+    getUpdateCallback: function() { return this._updateCallbacks[0]; },
+    
+    addUpdateCallback: function(cb) { this._updateCallbacks.push(cb);},
+    getUpdateCallbackList: function() { return this._updateCallbacks; },
+
     hasChild: function(child) {
         for (var i = 0, l = this.children.length; i < l; i++) {
             if (this.children[i] === child) {
@@ -2483,6 +2513,9 @@ osg.BufferArray = function (type, elements, itemSize) {
     }
 };
 
+osg.BufferArray.ELEMENT_ARRAY_BUFFER = 0x8893;
+osg.BufferArray.ARRAY_BUFFER = 0x8892;
+
 /** @lends osg.BufferArray.prototype */
 osg.BufferArray.prototype = {
     init: function() {
@@ -2942,6 +2975,8 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
     },
     getPrimitives: function() { return this.primitives; },
     getAttributes: function() { return this.attributes; },
+    getVertexAttributeList: function() { return this.attributes; },
+    getPrimitiveSetList: function() { return this.primitives; },
 
     drawImplementation: function(state) {
         var program = state.getLastProgramApplied();
@@ -3261,10 +3296,10 @@ osg.Material = function () {
 /** @lends osg.Material.prototype */
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
-    setEmission: function(a) { this.emission = a; this._dirty = true; },
-    setAmbient: function(a) { this.ambient = a; this._dirty = true; },
-    setSpecular: function(a) { this.specular = a; this._dirty = true; },
-    setDiffuse: function(a) { this.diffuse = a; this._dirty = true; },
+    setEmission: function(a) { osg.Vec4.copy(a, this.emission); this._dirty = true; },
+    setAmbient: function(a) { osg.Vec4.copy(a, this.ambient); this._dirty = true; },
+    setSpecular: function(a) { osg.Vec4.copy(a, this.specular); this._dirty = true; },
+    setDiffuse: function(a) { osg.Vec4.copy(a, this.diffuse); this._dirty = true; },
     setShininess: function(a) { this.shininess = a; this._dirty = true; },
 
     getEmission: function() { return this.emission;},
@@ -3360,6 +3395,15 @@ osg.MatrixTransform.prototype = osg.objectInehrit(osg.Transform.prototype, {
     }
 });
 osg.MatrixTransform.prototype.objectType = osg.objectType.generate("MatrixTransform");
+osg.PrimitiveSet = function() {};
+osg.PrimitiveSet.POINTS                         = 0x0000;
+osg.PrimitiveSet.LINES                          = 0x0001;
+osg.PrimitiveSet.LINE_LOOP                      = 0x0002;
+osg.PrimitiveSet.LINE_STRIP                     = 0x0003;
+osg.PrimitiveSet.TRIANGLES                      = 0x0004;
+osg.PrimitiveSet.TRIANGLE_STRIP                 = 0x0005;
+osg.PrimitiveSet.TRIANGLE_FAN                   = 0x0006;
+
 /** 
  * DrawArrays manage rendering primitives
  * @class DrawArrays
@@ -3374,6 +3418,7 @@ osg.DrawArrays = function (mode, first, count)
 /** @lends osg.DrawArrays.prototype */
 osg.DrawArrays.prototype = {
     draw: function(state) {
+        var gl = state.getGraphicContext();
         gl.drawArrays(this.mode, this.first, this.count);
     },
     getMode: function() { return this.mode; },
@@ -3392,7 +3437,7 @@ osg.DrawArrays.create = function(mode, first, count) {
  * @class DrawElements
  */
 osg.DrawElements = function (mode, indices) {
-    this.mode = gl.POINTS;
+    this.mode = osg.PrimitiveSet.POINTS;
     if (mode !== undefined) {
         this.mode = mode;
     }
@@ -3401,7 +3446,7 @@ osg.DrawElements = function (mode, indices) {
     this.offset = 0;
     this.indices = indices;
     if (indices !== undefined) {
-        this.count = indices.elements.length;
+        this.count = indices.getElements().length;
     }
 };
 
@@ -3410,6 +3455,7 @@ osg.DrawElements.prototype = {
     getMode: function() { return this.mode; },
     draw: function(state) {
         state.setIndexArray(this.indices);
+        var gl = state.getGraphicContext();
         gl.drawElements(this.mode, this.count, gl.UNSIGNED_SHORT, this.offset );
     },
     getIndices: function() { return this.indices; },
@@ -5965,16 +6011,12 @@ osg.UpdateVisitor = function () {
 };
 osg.UpdateVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     apply: function(node) {
-        if (node.getUpdateCallback !== undefined) {
-            var cb = node.getUpdateCallback();
-            if (cb !== undefined) {
-                cb.update(node, this);
+        var ncs = node.getUpdateCallbackList();
+        for (var i = 0, l = ncs.length; i < l; i++) {
+            if (!ncs[i].update(node, this))
                 return;
-            }
         }
-        if (node.traverse) {
-            this.traverse(node);
-        }
+        this.traverse(node);
     }
 });
 osg.Viewport = function (x,y, w, h) {
@@ -6534,7 +6576,888 @@ osgAnimation.easeOutQuart = osgAnimation.EaseOutQuart;
 osgAnimation.easeInQuart = osgAnimation.EaseInQuart;
 osgAnimation.easeOutElastic = osgAnimation.EaseOutElastic;
 
-/** -*- compile-command: "jslint-cli osgUtil.js" -*-
+/** -*- compile-command: "jslint-cli Animation.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  Animation
+ *  @class Animation
+ */
+osgAnimation.Animation = function() {
+    osg.Object.call(this);
+    this._channels = [];
+};
+
+/** @lends osgAnimation.Animation.prototype */
+osgAnimation.Animation.prototype = osg.objectInehrit(osg.Object.prototype, {
+    getChannels: function() { return this._channels; },
+    getDuration: function() {
+        var tmin = 1e5;
+        var tmax = -1e5;
+        for (var i = 0, l = this._channels.length; i < l; i++) {
+            var channel = this._channels[i];
+            tmin = Math.min(tmin, channel.getStartTime());
+            tmax = Math.max(tmax, channel.getEndTime());
+        }
+        return tmax-tmin;
+    }
+
+});
+/** -*- compile-command: "jslint-cli AnimationManager.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  BasicAnimationManager
+ *  @class BasicAnimationManager
+ */
+osgAnimation.BasicAnimationManager = function() {
+    osg.Object.call(this);
+    this._animations = {};
+
+    this._actives = {};
+    this._actives._keys = [];
+
+    this._lastUpdate = undefined;
+    this._targets = [];
+};
+
+/** @lends osgAnimation.BasicAnimationManager.prototype */
+osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prototype, {
+    _updateAnimation: function(animationParameter, t, priority) {
+        var duration = animationParameter.duration;
+        var weight = animationParameter.weight;
+        var animation = animationParameter.anim;
+        var t = Math.min((t-animationParameter.start), duration);
+
+        var channels = animation.getChannels();
+        for ( var i = 0, l = channels.length; i < l; i++) {
+            var channel = channels[i];
+            channel.update(t, weight, priority);
+        }
+    },
+    update: function(node, nv) {
+        var t = nv.getFrameStamp().getSimulationTime();
+        this.updateManager(t);
+        return true;
+    },
+    updateManager: function(t) {
+        
+        var targets = this._targets;
+        for (var i = 0, l = targets.length; i < l; i++) {
+            targets[i].reset();
+        }
+        if (this._actives._keys.length > 0) {
+            var pri = this._actives._keys.length - 1;
+            while (pri >= 0) {
+                var layer = this._actives[pri];
+                var keys = this._actives[pri]._keys;
+                for (var ai = 0, al = keys.length; ai < al; ai++) {
+                    var key = keys[ai];
+                    var anim = layer[key];
+                    if (anim.start === undefined) {
+                        anim.start = t;
+                    }
+                    this._updateAnimation(anim, t, pri);
+                }
+                pri--;
+            }
+        }
+    },
+
+    stopAll: function() {},
+    isPlaying: function(name) {
+        if (this._actives._keys.length > 0) {
+            var pri = this._actives._keys.length - 1;
+            while (pri >=0 ) {
+                if (this._actives[pri][name]) {
+                    return true;
+                }
+                pri--;
+            }
+        }
+        return false;
+    },
+    stopAnimation: function(name) {
+        if (this._actives._keys.length > 0) {
+            var pri = this._actives._keys.length - 1;
+            while (pri >=0 ) {
+                if (this._actives[pri][name]) {
+                    delete this._actives[pri][name];
+                    this._actives[pri]._keys = Object.keys(this._actives[pri]).filter(function(element, index, array) { return element !== "_keys";});
+                    return;
+                }
+                pri--;
+            }
+        }
+    },
+    playAnimation: function(name, priority, weight) {
+        var animName = name;
+        if (typeof name === "object") {
+            animName = name.getName();
+        }
+        if (this._animations[animName] === undefined) {
+            osg.log("no animation " + nameName + " found");
+            return;
+        }
+        
+        if (this.isPlaying(animName)) {
+            return;
+        }
+
+        if (!priority) {
+            priority = 0;
+        }
+        if (!weight) {
+            weight = 1;
+        }
+
+        if (this._actives[priority] === undefined) {
+            this._actives[priority] = {};
+            this._actives[priority]._keys = [];
+            this._actives._keys.push(priority); // = Object.keys(this._actives);
+        }
+        var anim = this._animations[animName];
+        this._actives[priority][animName] = { 'start': undefined, 'weight': weight, 'pri': priority, 'timeFactor': 1.0, 'duration' : anim.getDuration(), 'anim': anim };
+        this._actives[priority]._keys.push(animName);
+    },
+    registerAnimation: function(anim) {
+        this._animations[anim.getName()] = anim;
+        this.buildTargetList();
+    },
+    getAnimationMap: function() { return this._animations; },
+    buildTargetList: function() {
+        this._targets.length = 0;
+        var keys = Object.keys(this._animations);
+        for (var i = 0, l = keys.length; i < l; i++) {
+            var a = this._animations[ keys[i] ];
+            var channels = a.getChannels();
+            for (var c = 0, lc = channels.length; c < lc; c++) {
+                var channel = channels[c];
+                this._targets.push(channel.getTarget());
+            }
+        }
+    },
+
+});
+/** -*- compile-command: "jslint-cli Channel.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  Channel is responsible to interpolate keys
+ *  @class Channel
+ */
+osgAnimation.Channel = function(sampler, target) {
+    osg.Object.call(this);
+    this._sampler = sampler;
+    this._target = target;
+    this._targetName = undefined;
+    this._data = { 'value': undefined, 'key' : 0 };
+};
+
+/** @lends osgAnimation.Channel.prototype */
+osgAnimation.Channel.prototype = osg.objectInehrit(osg.Object.prototype, {
+    getKeyframes: function() { return this._sampler.getKeyframes(); },
+    setKeyframes: function(keys) { this._sampler.setKeyframes(keys); },
+    getStartTime: function() { return this._sampler.getStartTime(); },
+    getEndTime: function() { return this._sampler.getEndTime(); },
+    getSampler: function() { return this._sampler; },
+    setSampler: function(sampler) { this._sampler = sampler; },
+    getTarget: function() { return this._target; },
+    setTarget: function(target) { this._target = target; },
+    setTargetName: function(name) { this._targetName = name; },
+    getTargetName: function() { return this._targetName; },
+    update: function(t, weight, priority) {
+        weight = weight || 1.0;
+        priority = priority || 0.0;
+
+        // skip if weight == 0
+        if (weight < 1e-4)
+            return;
+        var data = this._data;
+        this._sampler.getValueAt(t, data);
+        this._target.update.call(this._target, weight, data.value, priority);
+    },
+    reset: function() { this._target.reset(); }
+});
+
+
+osgAnimation.Vec3LinearChannel = function(keys, target)
+{
+    var sampler = new osgAnimation.Sampler();
+    if (!keys) {
+        keys = [];
+    }
+    if (!target) {
+        target = new osgAnimation.Vec3Target();
+    }
+    osgAnimation.Channel.call(this, sampler, target);
+    sampler.setInterpolator(osgAnimation.Vec3LinearInterpolator);
+    this.setKeyframes(keys);
+    this._data.value = osg.Vec3.copy(target.getValue(), []);
+};
+osgAnimation.Vec3LinearChannel.prototype = osgAnimation.Channel.prototype;
+
+
+
+osgAnimation.FloatLinearChannel = function(keys, target)
+{
+    var sampler = new osgAnimation.Sampler();
+    if (!keys) {
+        keys = [];
+    }
+    if (!target) {
+        target = new osgAnimation.FloatTarget();
+    }
+    osgAnimation.Channel.call(this, sampler, target);
+    sampler.setInterpolator(osgAnimation.FloatLinearInterpolator);
+    this.setKeyframes(keys);
+    this._data.value = target.getValue();
+};
+osgAnimation.FloatLinearChannel.prototype = osgAnimation.Channel.prototype;
+/** -*- compile-command: "jslint-cli Interpolator.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  Interpolator provide interpolation function to sampler
+ *  @class Interpolator
+ */
+osgAnimation.Vec3LinearInterpolator = function(keys, t, result)
+{
+    var keyStart;
+    var startTime;
+    var keyEnd = keys[keys.length-1];
+    var endTime = keyEnd.t;
+    if (t >= endTime) {
+        result.key = 0;
+        result.value[0] = keyEnd[0];
+        result.value[1] = keyEnd[1];
+        result.value[2] = keyEnd[2];
+        return;
+    } else {
+        keyStart = keys[0];
+        startTime = keyStart.t;
+        
+        if (t <= startTime) {
+            result.key = 0;
+            result.value[0] = keyStart[0];
+            result.value[1] = keyStart[1];
+            result.value[2] = keyStart[2];
+            return;
+        }
+    }
+
+    var i1 = result.key;
+    while(keys[i1+1].t < t) {
+        i1++;
+    }
+    var i2 = i1+1;
+
+    var t1=keys[i1].t;
+    var x1=keys[i1][0];
+    var y1=keys[i1][1];
+    var z1=keys[i1][2];
+    
+    var t2=keys[i2].t;
+    var x2=keys[i2][0];
+    var y2=keys[i2][1];
+    var z2=keys[i2][2];
+    
+    var r = (t-t1)/(t2-t1);
+
+    result.value[0] = x1+(x2-x1)*r;
+    result.value[1] = y1+(y2-y1)*r;
+    result.value[2] = z1+(z2-z1)*r;
+    result.key = i1;
+};
+
+
+
+/** 
+ *  Interpolator provide interpolation function to sampler
+ *  @class Interpolator
+ */
+osgAnimation.FloatLinearInterpolator = function(keys, t, result)
+{
+    var keyStart;
+    var startTime;
+    var keyEnd = keys[keys.length-1];
+    var endTime = keyEnd.t;
+    if (t >= endTime) {
+        result.key = 0;
+        result.value = keyEnd[0];
+        return;
+    } else {
+        keyStart = keys[0];
+        startTime = keyStart.t;
+        
+        if (t <= startTime) {
+            result.key = 0;
+            result.value = keyStart[0];
+            return;
+        }
+    }
+
+    var i1 = result.key;
+    while(keys[i1+1].t < t) {
+        i1++;
+    }
+    var i2 = i1+1;
+
+    var t1=keys[i1].t;
+    var x1=keys[i1][0];
+    
+    var t2=keys[i2].t;
+    var x2=keys[i2][0];
+    
+    var r = (t-t1)/(t2-t1);
+
+    result.value = x1+(x2-x1)*r;
+    result.key = i1;
+};
+/** -*- compile-command: "jslint-cli Keyframe.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+osgAnimation.createVec3Keyframe = function(t, array) {
+    var k = array.slice(0);
+    k.t = t;
+    return k;
+};
+
+osgAnimation.createFloatKeyframe = function(t, value) {
+    var k = [value];
+    k.t = t;
+    return k;
+};
+/** -*- compile-command: "jslint-cli LinkVisitor.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  LinkVisitor search for animationUpdateCallback and link animation data
+ *  @class LinkVisitor
+ */
+osgAnimation.LinkVisitor = function() {
+    osg.NodeVisitor.call(this);
+    this._animations = undefined;
+    this._nbLinkTarget = 0;
+};
+
+/** @lends osgAnimation.LinkVisitor.prototype */
+osgAnimation.LinkVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+    setAnimationMap: function(anims) { 
+        this._animations = anims;
+        this._animationKeys = Object.keys(anims);
+    },
+
+    apply: function(node) {
+        var cbs = node.getUpdateCallbackList();
+        for (var i = 0, l = cbs.length; i < l; i++) {
+            var cb = cbs[i];
+            if ( cb instanceof osgAnimation.AnimationUpdateCallback ) {
+                this.link(cb);
+            }
+        }
+        this.traverse(node);
+    },
+
+    link: function(animCallback) {
+        var result = 0;
+        var anims = this._animations;
+        var animKeys = this._animationKeys;
+        for (var i = 0, l = animKeys.length; i < l; i++) {
+            var key = animKeys[i];
+            var anim = anims[key];
+            result += animCallback.linkAnimation(anim);
+        }
+        this._nbLinkedTarget += result;
+        osg.log("linked " + result + " for \"" + animCallback.getName() + '"');
+    }
+
+});/** -*- compile-command: "jslint-cli Sampler.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  Sampler is responsible to interpolate keys
+ *  @class Sampler
+ */
+osgAnimation.Sampler = function(keys, interpolator) {
+    if (!keys) {
+        keys = [];
+    }
+    this._keys = keys;
+    this._interpolator = interpolator;
+};
+
+/** @lends osgAnimation.Sampler.prototype */
+osgAnimation.Sampler.prototype = {
+
+    getKeyframes: function() { return this._keys;},
+    setKeyframes: function(keys) { this._keys = keys; },
+    setInterpolator: function(interpolator) { this._interpolator = interpolator; },
+    getInterpolator: function() { return this._interpolator; },
+    getStartTime: function() {
+        if (this._keys.length === 0) {
+            return undefined;
+        }
+        return this._keys[0].t;
+    },
+    getEndTime: function() {
+        if (this._keys.length === 0) {
+            return undefined;
+        }
+        return this._keys[this._keys.length-1].t;
+    },
+
+    // result contains the keyIndex where to start, this key
+    // will be updated when calling the Interpolator
+    // result.value will contain the interpolation result
+    // { 'value': undefined, 'keyIndex': 0 };
+    getValueAt: function(t, result) {
+        this._interpolator(this._keys, t, result);
+    }
+};
+/** -*- compile-command: "jslint-cli StackedTransformElement.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  StackedTranslate
+ *  @class StackedTranslate
+ */
+osgAnimation.StackedTranslate = function (name, translate) {
+    osg.Object.call(this);
+    if (!translate) {
+        translate = [ 0,0,0 ];
+    }
+    this._translate = translate;
+    this._target = undefined;
+    this.setName(name);
+};
+
+/** @lends osgAnimation.StackedTranslate.prototype */
+osgAnimation.StackedTranslate.prototype = osg.objectInehrit(osg.Object.prototype, {
+    setTranslate: function(translate) { osg.Vec3.copy(translate, this._translate); },
+    setTarget: function(target) { this._target = target; },
+    getTarget: function() { return this._target; },
+    update: function() {
+        if (this._target !== undefined) {
+            osg.Vec3.copy(this._target.getValue(), this._translate);
+        }
+    },
+    getOrCreateTarget: function() {
+        if (!this._target) {
+            this._target = new osgAnimation.Vec3Target(this._translate);
+        }
+        return this._target;
+    },
+    applyToMatrix: function(m) {
+        osg.Matrix.preMultTranslate(this._translate);
+    },
+    getAsMatrix: function() { return osg.Matrix.makeTranslate(this._translate[0],
+                                                              this._translate[1],
+                                                              this._translate[2]);}
+});
+
+
+/** 
+ *  StackedRotateAxis
+ *  @class StackedRotateAxis
+ */
+osgAnimation.StackedRotateAxis = function (name, axis, angle) {
+    osg.Object.call(this);
+    if (!axis) {
+        axis = [ 1,0,0 ];
+    }
+    if (!angle) {
+        angle = 0;
+    }
+    this._axis = axis;
+    this._angle = angle;
+    this._target = undefined;
+    this.setName(name);
+
+    this._matrixTmp = [];
+    this._quatTmp = [];
+};
+
+/** @lends osgAnimation.StackedRotateAxis.prototype */
+osgAnimation.StackedRotateAxis.prototype = osg.objectInehrit(osg.Object.prototype, {
+    setAxis: function(axis) { osg.Vec3.copy(axis, this._axis); },
+    setAngle: function(angle) { this._angle = angle; },
+    setTarget: function(target) { this._target = target; },
+    getTarget: function() { return this._target; },
+    update: function() {
+        if (this._target !== undefined) {
+            this._angle = this._target.getValue();
+        }
+    },
+    getOrCreateTarget: function() {
+        if (!this._target) {
+            this._target = new osgAnimation.FloatTarget(this._translate);
+        }
+        return this._target;
+    },
+    applyToMatrix: function(m) {
+        var axis = this._axis;
+        var qtmp = this._quatTmp;
+        var mtmp = this._matrixTmp;
+
+        osg.Quat.makeRotate(this._angle, axis[0], axis[1], axis[2], qtmp);
+        osg.Matrix.setRotateFromQuat(mtmp, qtmp);
+        osg.Matrix.preMult(qtmp);
+    }
+
+});
+/** -*- compile-command: "jslint-cli Target.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  Target keep internal data of element to animate, and some function to merge them
+ *  @class Target
+ */
+osgAnimation.Target = function() {
+    this._weight = 0;
+    this._priorityWeight = 0;
+    this._count = 0;
+    this._lastPriority = 0;
+    this._target = undefined;
+};
+
+osgAnimation.Target.prototype = {
+    reset: function() { this._weight = 0; this._priorityWeight = 0; },
+    getValue: function() { return this._target; }
+};
+
+osgAnimation.Vec3Target = function() {
+    osgAnimation.Target.call(this);
+    this._target = [0 ,0, 0];
+};
+
+osgAnimation.Vec3Target.prototype = osg.objectInehrit(osgAnimation.Target.prototype, {
+    update: function(weight, val, priority) {
+        if (this._weight || this._priorityWeight) {
+
+            if (this._lastPriority != priority) {
+                // change in priority
+                // add to weight with the same previous priority cumulated weight
+                this._weight += this._priorityWeight * (1.0 - this._weight);
+                this._priorityWeight = 0;
+                this._lastPriority = priority;
+            }
+
+            this._priorityWeight += weight;
+            t = (1.0 - this._weight) * weight / this._priorityWeight;
+            osg.Vec3.lerp(t, this._target, val, this._target);
+        } else {
+
+            this._priorityWeight = weight;
+            this._lastPriority = priority;
+            osg.Vec3.copy(val, this._target);
+        }
+    }
+});
+
+
+
+osgAnimation.FloatTarget = function() {
+    osgAnimation.Target.call(this);
+    this._target = 0;
+};
+
+osgAnimation.FloatTarget.prototype = osg.objectInehrit(osgAnimation.Target.prototype, {
+    update: function(weight, val, priority) {
+        if (this._weight || this._priorityWeight) {
+
+            if (this._lastPriority != priority) {
+                // change in priority
+                // add to weight with the same previous priority cumulated weight
+                this._weight += this._priorityWeight * (1.0 - this._weight);
+                this._priorityWeight = 0;
+                this._lastPriority = priority;
+            }
+
+            this._priorityWeight += weight;
+            t = (1.0 - this._weight) * weight / this._priorityWeight;
+            this._target += (val[0] - this._target)*t;
+        } else {
+
+            this._priorityWeight = weight;
+            this._lastPriority = priority;
+            this._target = val[0];
+        }
+    }
+});/** -*- compile-command: "jslint-cli UpdateCallback.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  AnimationUpdateCallback
+ *  @class AnimationUpdateCallback
+ */
+osgAnimation.AnimationUpdateCallback = function () {};
+
+/** @lends osgAnimation.AnimationUpdateCallback.prototype */
+osgAnimation.AnimationUpdateCallback.prototype = osg.objectInehrit(osg.Object.prototype, {
+    
+    linkChannel: function() {},
+    linkAnimation: function(anim) {
+        var name = this.getName();
+        if (name.length === 0) {
+            osg.log("no name on an update callback, discard");
+            return 0;
+        }
+        var nbLinks = 0;
+        var channels = anim.getChannels();
+        for (var i = 0, l = channels.length; i < l; i++) {
+            var channel = channels[i];
+            if (channel.getTargetName() === name) {
+                this.linkChannel(channel);
+                nbLinks++;
+            }
+        }
+        return nbLinks;
+    }
+});/** -*- compile-command: "jslint-cli UpdateMatrixTransform.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+
+/** 
+ *  UpdateMatrixTransform
+ *  @class UpdateMatrixTransform
+ */
+osgAnimation.UpdateMatrixTransform = function () {
+    osgAnimation.AnimationUpdateCallback.call(this);
+    this._stackedTransforms = [];
+};
+
+/** @lends osgAnimation.AnimationUpdateCallback.prototype */
+osgAnimation.UpdateMatrixTransform.prototype = osg.objectInehrit(osgAnimation.AnimationUpdateCallback.prototype, {
+    getStackedTransforms: function() { return this._stackedTransforms; },
+    update: function(node, nv) {
+
+        // not optimized, we could avoid operation the animation did not change
+        // the content of the transform element
+        var matrix = node.getMatrix();
+        osg.Matrix.makeIdentity(matrix);
+        var transforms = this._stackedTransforms;
+        for (var i = 0, l = transforms.length; i < l; i++) {
+            var transform = transforms[i];
+            transform.applyToMatrix(matrix);
+        }
+        return true;
+    },
+    linkChannel: function(channel) {
+        var channelName = channel.getName();
+        var transforms = this._stackedTransforms;
+        for (var i = 0, l = transforms.length; i < l; i++) {
+            var transform = transforms[i];
+            var elementName = transform.getName();
+            if (channelName.length > 0 && elementName === channelName) {
+                var target = transform.getOrCreateTarget();
+                if (target) {
+                    channel.setTarget(target);
+                    return true;
+                }
+            }
+        }
+        osg.log("can't link channel " + channelName + ", does not contain a symbolic name that can be linked to TransformElements");
+    }
+
+});/** -*- compile-command: "jslint-cli osgUtil.js" -*-
  * Authors:
  *  Cedric Pinson <cedric.pinson@plopbyte.com>
  */
@@ -6943,7 +7866,74 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
 
 var osgDB = {};
 
-osgDB.parseSceneGraph = function (node)
+osgDB.ObjectWrapper = {};
+osgDB.ObjectWrapper.serializers = {};
+osgDB.ObjectWrapper.global = this;
+osgDB.ObjectWrapper.getObject = function (path) {
+    var scope = osgDB.ObjectWrapper.global;
+    var splittedPath = path.split('.');
+    for (var i = 0, l = splittedPath.length; i < l; i++) {
+        var obj = scope[ splittedPath[i] ];
+        if (obj === undefined) {
+            return undefined;
+        }
+        scope = obj;
+    }
+    // create the new obj
+    return new (scope)();
+};
+osgDB.ObjectWrapper.readObject = function (jsonObj) {
+
+    var prop = Object.keys(jsonObj)[0];
+    if (!prop) {
+        osg.log("can't find property for object " + jsonObj);
+        return undefined;
+    }
+
+    var obj = osgDB.ObjectWrapper.getObject(prop);
+    if (!obj) {
+        osg.log("can't instanciate object " + prop);
+        return undefined;
+    }
+
+    var scope = osgDB.ObjectWrapper.serializers;
+    var splittedPath = prop.split('.');
+    for (var i = 0, l = splittedPath.length; i < l; i++) {
+        var reader = scope[ splittedPath[i] ];
+        if (reader === undefined) {
+            osg.log("can't find function to read object " + prop + " - undefined");
+            return undefined;
+        }
+        scope = reader;
+    }
+    scope(jsonObj[prop], obj);
+    return obj;
+};
+
+osgDB.parseSceneGraph = function (node) {
+    if (node.Version && node.Version > 0) {
+        var getPropertyValue = function(o) {
+            var props = Object.keys(o);
+            for (var i = 0, l = props.length; i < l; i++) {
+                if (props[i] !== "Generator" && props[i] !== "Version") {
+                    return props[i];
+                }
+            }
+            return undefined;
+        };
+        var key = getPropertyValue(node);
+        if (key) {
+            var obj = {};
+            obj[key] = node[key];
+            return osgDB.ObjectWrapper.readObject(obj);
+        } else {
+            osg.log("Can't parse scenegraph " + node);
+        }
+    } else {
+        return osgDB.parseSceneGraph_deprecated(node);
+    }
+};
+osgDB.parseSceneGraph_deprecated = function (node)
 {
     var getFieldBackwardCompatible = function(field, json) {
         var value = json[field];
@@ -7115,7 +8105,7 @@ osgDB.parseSceneGraph = function (node)
         node.children = [];
 
         for (var child = 0, childLength = children.length; child < childLength; child++) {
-            node.addChild(osgDB.parseSceneGraph(children[child]));
+            node.addChild(osgDB.parseSceneGraph_deprecated(children[child]));
         }
     }
 
@@ -7358,6 +8348,10 @@ Stats.Stats.prototype = {
         if (delta < 1.0) {
             return;
         }
+
+        var report = delta - Math.floor(delta);
+        t -= report/(2.0*60.0/1000.0);
+        delta = Math.floor(delta);
 
         var translate = delta;
         var c = this.canvas;
@@ -7761,7 +8755,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         frameStamp.setSimulationTime(frameTime/1000.0 - frameStamp.getReferenceTime());
 
         if (this.getManipulator()) {
-            this.getCamera().setViewMatrix(this.getManipulator().getInverseMatrix());
+            osg.Matrix.copy(this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix());
         }
 
         // setup framestamp
@@ -8027,7 +9021,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
                 var heightChangeRatio = h/vp.height();
                 var aspectRatioChange = widthChangeRatio / heightChangeRatio; 
                 vp.setViewport(vp.x()*widthChangeRatio, vp.y()*heightChangeRatio, vp.width()*widthChangeRatio, vp.height()*heightChangeRatio);
-                //osg.log("ratio " + aspectRatioChange);
+
                 if (aspectRatioChange !== 1.0) {
 
                     osg.Matrix.postMult(osg.Matrix.makeScale(1.0, aspectRatioChange, 1.0 ,[]), camera.getProjectionMatrix());
@@ -8536,3 +9530,478 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         }
     }
 });
+/** -*- compile-command: "jslint-cli osg.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+osgDB.ObjectWrapper.serializers.osg = {};
+
+osgDB.ObjectWrapper.serializers.osg.Object = function(jsonObj, obj) {
+    var check = function(o) {
+        return true;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+    
+    if (jsonObj.Name) {
+        obj.setName(jsonObj.Name);
+    }
+    return true;
+};
+
+osgDB.ObjectWrapper.serializers.osg.Node = function(jsonObj, node) {
+    var check = function(o) {
+        return true;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, node);
+
+    if (jsonObj.UpdateCallbacks) {
+        for (var i = 0, l = jsonObj.UpdateCallbacks.length; i < l; i++) {
+            var cb = osgDB.ObjectWrapper.readObject(jsonObj.UpdateCallbacks[i]);
+            if (cb) {
+                node.addUpdateCallback(cb);
+            }
+        }
+    }
+
+    if (jsonObj.StateSet) {
+        node.setStateSet(osgDB.ObjectWrapper.readObject(jsonObj.StateSet));
+    }
+    
+    if (jsonObj.Children) {
+        for (var i = 0, l = jsonObj.Children.length; i < l; i++) {
+            node.addChild(osgDB.ObjectWrapper.readObject(jsonObj.Children[i]));
+        }
+    }
+};
+
+osgDB.ObjectWrapper.serializers.osg.StateSet = function(jsonObj, stateSet) {
+    var check = function(o) {
+        return true;
+    };
+
+    if (!check(jsonObj)) {
+        return;
+    }
+    
+    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, stateSet);
+
+    if (jsonObj.AttributeList) {
+        for (var i = 0, l = jsonObj.AttributeList.length; i < l; i++) {
+            var attr = osgDB.ObjectWrapper.readObject(jsonObj.AttributeList[i]);
+            stateSet.setAttributeAndMode(attr);
+        }
+    }
+
+    if (jsonObj.TextureAttributeList) {
+        var textures = jsonObj.TextureAttributeList;
+        for (var t = 0, lt = textures.length; t < lt; t++) {
+            var textureAttributes = textures[t];
+            for (var a = 0, al = textureAttributes.length; a < al; a++) {
+                var tattr = osgDB.ObjectWrapper.readObject(textureAttributes[a]);
+                if (tattr)
+                    stateSet.setTextureAttributeAndMode(t, tattr);
+            }
+        }
+    }
+
+};
+
+osgDB.ObjectWrapper.serializers.osg.Material = function(jsonObj, material) {
+    var check = function(o) {
+        if (o.Diffuse && o.Emission && o.Specular && o.Shininess) {
+            return true;
+        }
+        return false;
+    };
+
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, material);
+
+    material.setAmbient(jsonObj.Ambient);
+    material.setDiffuse(jsonObj.Diffuse);
+    material.setEmission(jsonObj.Emission);
+    material.setSpecular(jsonObj.Specular);
+    material.setShininess(jsonObj.Shininess);
+};
+
+
+osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
+    var check = function(o) {
+        if (o.SourceRGB && o.SourceAlpha && o.DestinationRGB && o.DestinationAlpha) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, blend);
+
+    blend.setSourceRGB(jsonObj.SourceRGB);
+    blend.setSourceAlpha(jsonObj.SourceAlpha);
+    blend.setDestinationRGB(jsonObj.DestinationRGB);
+    blend.setDestinationAlpha(jsonObj.DestinationAlpha);
+};
+
+
+osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
+    var check = function(o) {
+//        if (o.MagFilter && o.MinFilter && o.WrapT && o.WrapS) {
+            return true;
+//        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, texture);
+
+    if (jsonObj.MinFilter) {
+        texture.setMinFilter(jsonObj.MinFilter);
+    }
+    if (jsonObj.MagFilter) {
+        texture.setMagFilter(jsonObj.MagFilter);
+    }
+
+    if (jsonObj.WrapT) {
+        texture.setWrapT(jsonObj.WrapT);
+    }
+    if (jsonObj.WrapS) {
+        texture.setWrapS(jsonObj.WrapS);
+    }
+
+    if (jsonObj.File) {
+        var img = new Image();
+        img.src = jsonObj.File;
+        texture.setImage(img);
+    }
+};
+
+
+osgDB.ObjectWrapper.serializers.osg.Projection = function(jsonObj, node) {
+    var check = function(o) {
+        if (o.Matrix) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Node(jsonObj, node);
+
+    if (jsonObj.Matrix) {
+        node.setMatrix(jsonObj.Matrix);
+    }
+
+};
+
+
+osgDB.ObjectWrapper.serializers.osg.MatrixTransform = function(jsonObj, node) {
+    var check = function(o) {
+        if (o.Matrix) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Node(jsonObj, node);
+
+    if (jsonObj.Matrix) {
+        node.setMatrix(jsonObj.Matrix);
+    }
+};
+
+
+osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
+    var check = function(o) {
+        if (o.PrimitiveSetList && o.VertexAttributeList) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Node(jsonObj, node);
+    for (var i = 0, l = jsonObj.PrimitiveSetList.length; i < l; i++) {
+        var entry = jsonObj.PrimitiveSetList[i];
+        
+        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || undefined;
+        if ( drawElementPrimitive ) {
+            var jsonArray = drawElementPrimitive.Indices;
+            var mode = drawElementPrimitive.Mode;
+            var array = new osg.BufferArray(osg.BufferArray[jsonArray.Type], 
+                                            jsonArray.Elements, 
+                                            jsonArray.ItemSize );
+            if (!mode) {
+                mode = osg.PrimitiveSet.TRIANGLES;
+            } else {
+                mode = osg.PrimitiveSet[mode];
+            }
+            var drawElements = new osg.DrawElements(mode, array);
+            node.getPrimitiveSetList().push(drawElements);
+        }
+
+        var drawArrayPrimitive = entry.DrawArray || undefined;
+        if (drawArrayPrimitive) {
+            var mode = drawArrayPrimitive.Mode;
+            var first = drawArrayPrimitive.First;
+            var count = drawArrayPrimitive.Count;
+            var drawArray = new osg.DrawArrays(osg.PrimitiveSet[mode], first, count);
+            node.getPrimitives().push(drawArray);
+        }
+    }
+    for (var key in jsonObj.VertexAttributeList) {
+        if (jsonObj.VertexAttributeList.hasOwnProperty(key)) {
+            var attributeArray = jsonObj.VertexAttributeList[key];
+            node.getVertexAttributeList()[key] = new osg.BufferArray(osg.BufferArray[attributeArray.Type], attributeArray.Elements, attributeArray.ItemSize );
+        }
+    }
+};/** -*- compile-command: "jslint-cli osgAnimation.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
+
+osgDB.ObjectWrapper.serializers.osgAnimation = {};
+osgDB.ObjectWrapper.serializers.osgAnimation.Animation = function(jsonObj, animation) {
+    // check
+    // 
+    var check = function(o) {
+        if (o.Name && o.Channels && o.Channels.length > 0) {
+            return true;
+        }
+        if (!o.Name) {
+            osg.log("animation has field Name, error");
+            return false;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, animation)) {
+        return false;
+    }
+
+    // channels
+    for (var i = 0, l = jsonObj.Channels.length; i < l; i++) {
+        var channel = osgDB.ObjectWrapper.readObject(jsonObj.Channels[i]);
+        if (channel) {
+            animation.getChannels().push(channel);
+        }
+    }
+    return true;
+};
+
+osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LinearChannel = function(jsonObj, channel) {
+    // check
+    // 
+    var check = function(o) {
+        if (o.KeyFrames && o.TargetName && o.Name) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+
+    // doit
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, channel)) {
+        return false;
+    }
+
+    channel.setTargetName(jsonObj.TargetName);
+
+    // channels
+    var keys = channel.getSampler().getKeyframes();
+    for (var i = 0, l = jsonObj.KeyFrames.length; i < l; i++) {
+        var nodekey = jsonObj.KeyFrames[i];
+        var mykey = nodekey.slice(1);
+        mykey.t = nodekey[0];
+        keys.push(mykey);
+    }
+    return true;
+};
+
+
+osgDB.ObjectWrapper.serializers.osgAnimation.FloatLinearChannel = function(jsonObj, channel) {
+    // check
+    // 
+    var check = function(o) {
+        if (o.KeyFrames && o.TargetName && o.Name) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+
+    // doit
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, channel)) {
+        return false;
+    }
+
+    channel.setTargetName(jsonObj.TargetName);
+
+    // channels
+    var keys = channel.getSampler().getKeyframes();
+    for (var i = 0, l = jsonObj.KeyFrames.length; i < l; i++) {
+        var nodekey = jsonObj.KeyFrames[i];
+        var mykey = nodekey.slice(1);
+        mykey.t = nodekey[0];
+        keys.push(mykey);
+    }
+    return true;
+};
+
+osgDB.ObjectWrapper.serializers.osgAnimation.BasicAnimationManager = function(jsonObj, manager) {
+    // check
+    // 
+    var check = function(o) {
+        if (o.Animations) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+
+    for (var i = 0, l = jsonObj.Animations.length; i < l; i++) {
+        var entry = jsonObj.Animations[i];
+        var anim = osgDB.ObjectWrapper.readObject(entry);
+        if (anim) {
+            manager.registerAnimation(anim);
+        }
+    }
+    return true;
+};
+
+
+osgDB.ObjectWrapper.serializers.osgAnimation.UpdateMatrixTransform = function(jsonObj, umt) {
+    // check
+    // 
+    var check = function(o) {
+        if (o.Name && o.StackedTransforms) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, umt)) {
+        return false;
+    }
+
+    for (var i = 0, l = jsonObj.StackedTransforms.length; i < l; i++) {
+        var entry = jsonObj.StackedTransforms[i];
+        var ste = osgDB.ObjectWrapper.readObject(entry);
+        if (ste) {
+            umt.getStackedTransforms().push(ste);
+        }
+    }
+    return true;
+};
+
+
+osgDB.ObjectWrapper.serializers.osgAnimation.StackedTranslate = function(jsonObj, st) {
+    // check
+    // 
+    var check = function(o) {
+        if (o.Name) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj,st)) {
+        return false;
+    }
+
+    if (jsonObj.Translate) {
+        st.setTranslate(jsonObj.Translate);
+    }
+    return true;
+};
+
+osgDB.ObjectWrapper.serializers.osgAnimation.StackedRotateAxis = function(jsonObj, st) {
+    // check
+    // 
+    var check = function(o) {
+        if (o.Axis) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj,st)) {
+        return false;
+    }
+
+    if (jsonObj.Angle) {
+        st.setAngle(jsonObj.Angle);
+    }
+
+    st.setAxis(jsonObj.Axis);
+
+    return true;
+};

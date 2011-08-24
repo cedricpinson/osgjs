@@ -19,6 +19,9 @@ osg.BufferArray = function (type, elements, itemSize) {
     }
 };
 
+osg.BufferArray.ELEMENT_ARRAY_BUFFER = 0x8893;
+osg.BufferArray.ARRAY_BUFFER = 0x8892;
+
 /** @lends osg.BufferArray.prototype */
 osg.BufferArray.prototype = {
     init: function() {
