@@ -140,7 +140,7 @@ def compress(text):
 	with os.fdopen(out_tuple[0], 'r') as handle:
 		compressed = handle.read()
 
-	os.unlink(in_tuple[1])
+	#os.unlink(in_tuple[1])
 	os.unlink(out_tuple[1])
 
 	return compressed

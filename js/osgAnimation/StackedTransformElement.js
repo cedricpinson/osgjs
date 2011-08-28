@@ -50,11 +50,8 @@ osgAnimation.StackedTranslate.prototype = osg.objectInehrit(osg.Object.prototype
         return this._target;
     },
     applyToMatrix: function(m) {
-        osg.Matrix.preMultTranslate(this._translate);
-    },
-    getAsMatrix: function() { return osg.Matrix.makeTranslate(this._translate[0],
-                                                              this._translate[1],
-                                                              this._translate[2]);}
+        osg.Matrix.preMultTranslate(m, this._translate);
+    }
 });
 
 
@@ -76,7 +73,9 @@ osgAnimation.StackedRotateAxis = function (name, axis, angle) {
     this.setName(name);
 
     this._matrixTmp = [];
+    osg.Matrix.makeIdentity(this._matrixTmp);
     this._quatTmp = [];
+    osg.Quat.makeIdentity(this._quatTmp);
 };
 
 /** @lends osgAnimation.StackedRotateAxis.prototype */
@@ -92,7 +91,7 @@ osgAnimation.StackedRotateAxis.prototype = osg.objectInehrit(osg.Object.prototyp
     },
     getOrCreateTarget: function() {
         if (!this._target) {
-            this._target = new osgAnimation.FloatTarget(this._translate);
+            this._target = new osgAnimation.FloatTarget(this._angle);
         }
         return this._target;
     },
@@ -103,7 +102,50 @@ osgAnimation.StackedRotateAxis.prototype = osg.objectInehrit(osg.Object.prototyp
 
         osg.Quat.makeRotate(this._angle, axis[0], axis[1], axis[2], qtmp);
         osg.Matrix.setRotateFromQuat(mtmp, qtmp);
-        osg.Matrix.preMult(qtmp);
+        osg.Matrix.preMult(m, mtmp);
     }
 
+});
+
+
+
+
+
+/** 
+ *  StackedQuaternion
+ *  @class StackedQuaternion
+ */
+osgAnimation.StackedQuaternion = function (name, quat) {
+    osg.Object.call(this);
+    if (!quat) {
+        quat = [ 0,0,0,1 ];
+    }
+    this._quaternion = quat;
+    this._target = undefined;
+    this._matrixTmp = [];
+    osg.Matrix.makeIdentity(this._matrixTmp);
+    this.setName(name);
+};
+
+/** @lends osgAnimation.StackedQuaternion.prototype */
+osgAnimation.StackedQuaternion.prototype = osg.objectInehrit(osg.Object.prototype, {
+    setQuaternion: function(q) { osg.Quat.copy(q, this._quaternion); },
+    setTarget: function(target) { this._target = target; },
+    getTarget: function() { return this._target; },
+    update: function() {
+        if (this._target !== undefined) {
+            osg.Quat.copy(this._target.getValue(), this._quaternion);
+        }
+    },
+    getOrCreateTarget: function() {
+        if (!this._target) {
+            this._target = new osgAnimation.QuatTarget(this._quaternion);
+        }
+        return this._target;
+    },
+    applyToMatrix: function(m) {
+        var mtmp = this._matrixTmp;
+        osg.Matrix.setRotateFromQuat(mtmp, this._quaternion);
+        osg.Matrix.preMult(m, mtmp);
+    }
 });

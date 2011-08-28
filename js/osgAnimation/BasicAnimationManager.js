@@ -40,7 +40,7 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
         var duration = animationParameter.duration;
         var weight = animationParameter.weight;
         var animation = animationParameter.anim;
-        var t = Math.min((t-animationParameter.start), duration);
+        var t = (t-animationParameter.start) % duration;
 
         var channels = animation.getChannels();
         for ( var i = 0, l = channels.length; i < l; i++) {
@@ -51,7 +51,6 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
     update: function(node, nv) {
         var t = nv.getFrameStamp().getSimulationTime();
         this.updateManager(t);
-        return true;
     },
     updateManager: function(t) {
         
@@ -149,6 +148,6 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
                 this._targets.push(channel.getTarget());
             }
         }
-    },
+    }
 
 });

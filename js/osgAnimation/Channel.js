@@ -58,7 +58,7 @@ osgAnimation.Channel.prototype = osg.objectInehrit(osg.Object.prototype, {
 });
 
 
-osgAnimation.Vec3LinearChannel = function(keys, target)
+osgAnimation.Vec3LerpChannel = function(keys, target)
 {
     var sampler = new osgAnimation.Sampler();
     if (!keys) {
@@ -68,15 +68,15 @@ osgAnimation.Vec3LinearChannel = function(keys, target)
         target = new osgAnimation.Vec3Target();
     }
     osgAnimation.Channel.call(this, sampler, target);
-    sampler.setInterpolator(osgAnimation.Vec3LinearInterpolator);
+    sampler.setInterpolator(osgAnimation.Vec3LerpInterpolator);
     this.setKeyframes(keys);
     this._data.value = osg.Vec3.copy(target.getValue(), []);
 };
-osgAnimation.Vec3LinearChannel.prototype = osgAnimation.Channel.prototype;
+osgAnimation.Vec3LerpChannel.prototype = osgAnimation.Channel.prototype;
 
 
 
-osgAnimation.FloatLinearChannel = function(keys, target)
+osgAnimation.FloatLerpChannel = function(keys, target)
 {
     var sampler = new osgAnimation.Sampler();
     if (!keys) {
@@ -86,8 +86,33 @@ osgAnimation.FloatLinearChannel = function(keys, target)
         target = new osgAnimation.FloatTarget();
     }
     osgAnimation.Channel.call(this, sampler, target);
-    sampler.setInterpolator(osgAnimation.FloatLinearInterpolator);
+    sampler.setInterpolator(osgAnimation.FloatLerpInterpolator);
     this.setKeyframes(keys);
     this._data.value = target.getValue();
 };
-osgAnimation.FloatLinearChannel.prototype = osgAnimation.Channel.prototype;
+osgAnimation.FloatLerpChannel.prototype = osgAnimation.Channel.prototype;
+
+
+osgAnimation.QuatLerpChannel = function(keys, target)
+{
+    var sampler = new osgAnimation.Sampler();
+    if (!keys) {
+        keys = [];
+    }
+    if (!target) {
+        target = new osgAnimation.QuatTarget();
+    }
+    osgAnimation.Channel.call(this, sampler, target);
+    sampler.setInterpolator(osgAnimation.QuatLerpInterpolator);
+    this.setKeyframes(keys);
+    this._data.value = osg.Quat.copy(target.getValue(), []);
+};
+osgAnimation.QuatLerpChannel.prototype = osgAnimation.Channel.prototype;
+
+
+osgAnimation.QuatSlerpChannel = function(keys, target)
+{
+    osgAnimation.QuatLerpChannel.call(this, keys, target);
+    this.getSampler().setInterpolator(osgAnimation.QuatSlerpInterpolator);
+};
+osgAnimation.QuatSlerpChannel.prototype = osgAnimation.Channel.prototype;

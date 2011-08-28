@@ -50,7 +50,7 @@ osgDB.ObjectWrapper.serializers.osgAnimation.Animation = function(jsonObj, anima
     return true;
 };
 
-osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LinearChannel = function(jsonObj, channel) {
+osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel = function(jsonObj, channel) {
     // check
     // 
     var check = function(o) {
@@ -82,7 +82,17 @@ osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LinearChannel = function(jsonOb
 };
 
 
-osgDB.ObjectWrapper.serializers.osgAnimation.FloatLinearChannel = function(jsonObj, channel) {
+osgDB.ObjectWrapper.serializers.osgAnimation.QuatLerpChannel = function(jsonObj, channel) {
+
+    return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel(jsonObj, channel);
+};
+
+osgDB.ObjectWrapper.serializers.osgAnimation.QuatSlerpChannel = function(jsonObj, channel) {
+    return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel(jsonObj, channel);
+};
+
+
+osgDB.ObjectWrapper.serializers.osgAnimation.FloatLerpChannel = function(jsonObj, channel) {
     // check
     // 
     var check = function(o) {
@@ -112,6 +122,8 @@ osgDB.ObjectWrapper.serializers.osgAnimation.FloatLinearChannel = function(jsonO
     }
     return true;
 };
+
+
 
 osgDB.ObjectWrapper.serializers.osgAnimation.BasicAnimationManager = function(jsonObj, manager) {
     // check
@@ -184,6 +196,30 @@ osgDB.ObjectWrapper.serializers.osgAnimation.StackedTranslate = function(jsonObj
 
     if (jsonObj.Translate) {
         st.setTranslate(jsonObj.Translate);
+    }
+    return true;
+};
+
+
+osgDB.ObjectWrapper.serializers.osgAnimation.StackedQuaternion = function(jsonObj, st) {
+    // check
+    // 
+    var check = function(o) {
+        if (o.Name) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj,st)) {
+        return false;
+    }
+
+    if (jsonObj.Quaternion) {
+        st.setQuaternion(jsonObj.Quaternion);
     }
     return true;
 };

@@ -12,7 +12,7 @@ test("osgAnimation.BasicAnimationManager", function() {
                                     "osgAnimation.Animation": {
                                         "Name": "Cube", 
                                         "Channels": [ {
-                                            "osgAnimation.Vec3LinearChannel": {
+                                            "osgAnimation.Vec3LerpChannel": {
                                                 "Name": "translate", 
                                                 "TargetName": "Cube", 
                                                 "KeyFrames": [
@@ -22,7 +22,7 @@ test("osgAnimation.BasicAnimationManager", function() {
                                             }
                                         },
                                                       {
-                                                          "osgAnimation.FloatLinearChannel": {
+                                                          "osgAnimation.FloatLerpChannel": {
                                                               "Name": "euler_x", 
                                                               "TargetName": "Cube", 
                                                               "KeyFrames": [
@@ -32,7 +32,7 @@ test("osgAnimation.BasicAnimationManager", function() {
                                                           }
                                                       },
                                                       {
-                                                          "osgAnimation.FloatLinearChannel": {
+                                                          "osgAnimation.FloatLerpChannel": {
                                                               "Name": "euler_y", 
                                                               "TargetName": "Cube", 
                                                               "KeyFrames": [
@@ -42,7 +42,7 @@ test("osgAnimation.BasicAnimationManager", function() {
                                                           }
                                                       },
                                                       {
-                                                          "osgAnimation.FloatLinearChannel": {
+                                                          "osgAnimation.FloatLerpChannel": {
                                                               "Name": "euler_z", 
                                                               "TargetName": "Cube", 
                                                               "KeyFrames": [
@@ -199,9 +199,19 @@ test("osgAnimation.Channel", function() {
     keys.push(osgAnimation.createVec3Keyframe(1, [ 0,0,0]));
     keys.push(osgAnimation.createVec3Keyframe(2, [ 3,3,3]));
 
-    var channel = new osgAnimation.Vec3LinearChannel(keys);
+    var channel = new osgAnimation.Vec3LerpChannel(keys);
     channel.update(1.0);
-    ok(check_near(channel.getTarget().getValue(), [ 0.0, 0.0, 0.0]), "Check channel update");
+    ok(check_near(channel.getTarget().getValue(), [ 0.0, 0.0, 0.0]), "Check vec3 channel update");
+
+    keys.length = 0;
+    keys.push(osgAnimation.createFloatKeyframe(0, 1));
+    keys.push(osgAnimation.createFloatKeyframe(1, 0));
+    keys.push(osgAnimation.createFloatKeyframe(2, 3));
+
+    channel = new osgAnimation.FloatLerpChannel(keys);
+    channel.update(1.0);
+    ok(check_near(channel.getTarget().getValue(), 0.0), "Check float channel update");
+
 });
 
 
@@ -211,7 +221,7 @@ test("osgAnimation.Sampler", function() {
     keys.push(osgAnimation.createVec3Keyframe(1, [ 0,0,0]));
     keys.push(osgAnimation.createVec3Keyframe(2.1, [ 3,3,3]));
 
-    var sampler = new osgAnimation.Sampler(keys, osgAnimation.Vec3LinearInterpolator);
+    var sampler = new osgAnimation.Sampler(keys, osgAnimation.Vec3LerpInterpolator);
     ok(sampler.getStartTime() === 0.1, "Check Start Time");
     ok(sampler.getEndTime() === 2.1, "Check End Time");
 
@@ -225,7 +235,7 @@ test("osgAnimation.Sampler", function() {
 });
 
 
-test("osgAnimation.Vec3LinearInterpolator", function() {
+test("osgAnimation.Vec3LerpInterpolator", function() {
     var keys = [];
     keys.push(osgAnimation.createVec3Keyframe(0, [ 1,1,1]));
     keys.push(osgAnimation.createVec3Keyframe(1, [ 0,0,0]));
@@ -233,34 +243,74 @@ test("osgAnimation.Vec3LinearInterpolator", function() {
 
     var result = { 'value':0, 'key': 0 };
 
-    osgAnimation.Vec3LinearInterpolator(keys, -1, result);
+    osgAnimation.Vec3LerpInterpolator(keys, -1, result);
     ok(check_near(result.value, [ 1,1,1]), "Check value when time < first key");
     ok(result.key === 0, "Check key when time < first key");
 
-    osgAnimation.Vec3LinearInterpolator(keys, 3, result);
+    osgAnimation.Vec3LerpInterpolator(keys, 3, result);
     ok(check_near(result.value, [ 3,3,3]), "Check value when time > last key");
     ok(result.key === 0, "Check key when time > last key");
 
-    osgAnimation.Vec3LinearInterpolator(keys, 0.5, result);
+    osgAnimation.Vec3LerpInterpolator(keys, 0.5, result);
     ok(check_near(result.value, [ 0.5, 0.5, 0.5]), "Check value when time == 0.5");
     ok(result.key === 0, "Check key when time == 0.5");
 
-    osgAnimation.Vec3LinearInterpolator(keys, 1.5, result);
+    osgAnimation.Vec3LerpInterpolator(keys, 1.5, result);
     ok(check_near(result.value, [ 1.5, 1.5, 1.5]), "Check value when time == 1.5");
     ok(result.key === 1, "Check key when time == 1.5");
 
     // with 2 keys only
     keys = keys.slice(1);
     result.key = 0;
-    osgAnimation.Vec3LinearInterpolator(keys, 1.5, result);
+    osgAnimation.Vec3LerpInterpolator(keys, 1.5, result);
     ok(check_near(result.value, [ 1.5, 1.5, 1.5]), "Check value when time == 1.5 with 2 keyframes");
     ok(result.key === 0, "Check key when time == 1.5 with 2 keyframes");
 
     // with 1 key only
     keys = keys.slice(1);
     result.key = 0;
-    osgAnimation.Vec3LinearInterpolator(keys, 2.0, result);
+    osgAnimation.Vec3LerpInterpolator(keys, 2.0, result);
     ok(check_near(result.value, [ 3.0, 3.0, 3.0]), "Check value when time == 2.0 with 1 keyframe");
+    ok(result.key === 0, "Check key when time == 2.0 with 1 keyframe");
+    
+});
+
+test("osgAnimation.FloatLerpInterpolator", function() {
+    var keys = [];
+    keys.push(osgAnimation.createFloatKeyframe(0, 1));
+    keys.push(osgAnimation.createFloatKeyframe(1, 0));
+    keys.push(osgAnimation.createFloatKeyframe(2, 3));
+
+    var result = { 'value':0, 'key': 0 };
+
+    osgAnimation.FloatLerpInterpolator(keys, -1, result);
+    ok(check_near(result.value, 1), "Check value when time < first key");
+    ok(result.key === 0, "Check key when time < first key");
+
+    osgAnimation.FloatLerpInterpolator(keys, 3, result);
+    ok(check_near(result.value, 3), "Check value when time > last key");
+    ok(result.key === 0, "Check key when time > last key");
+
+    osgAnimation.FloatLerpInterpolator(keys, 0.5, result);
+    ok(check_near(result.value, 0.5), "Check value when time == 0.5");
+    ok(result.key === 0, "Check key when time == 0.5");
+
+    osgAnimation.FloatLerpInterpolator(keys, 1.5, result);
+    ok(check_near(result.value, 1.5), "Check value when time == 1.5");
+    ok(result.key === 1, "Check key when time == 1.5");
+
+    // with 2 keys only
+    keys = keys.slice(1);
+    result.key = 0;
+    osgAnimation.FloatLerpInterpolator(keys, 1.5, result);
+    ok(check_near(result.value, 1.5), "Check value when time == 1.5 with 2 keyframes");
+    ok(result.key === 0, "Check key when time == 1.5 with 2 keyframes");
+
+    // with 1 key only
+    keys = keys.slice(1);
+    result.key = 0;
+    osgAnimation.FloatLerpInterpolator(keys, 2.0, result);
+    ok(check_near(result.value, 3.0), "Check value when time == 2.0 with 1 keyframe");
     ok(result.key === 0, "Check key when time == 2.0 with 1 keyframe");
     
 });

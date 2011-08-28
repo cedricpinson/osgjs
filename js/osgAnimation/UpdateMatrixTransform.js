@@ -40,9 +40,9 @@ osgAnimation.UpdateMatrixTransform.prototype = osg.objectInehrit(osgAnimation.An
         var transforms = this._stackedTransforms;
         for (var i = 0, l = transforms.length; i < l; i++) {
             var transform = transforms[i];
+            transform.update();
             transform.applyToMatrix(matrix);
         }
-        return true;
     },
     linkChannel: function(channel) {
         var channelName = channel.getName();

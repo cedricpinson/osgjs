@@ -40,7 +40,6 @@ osgAnimation.Vec3Target = function() {
     osgAnimation.Target.call(this);
     this._target = [0 ,0, 0];
 };
-
 osgAnimation.Vec3Target.prototype = osg.objectInehrit(osgAnimation.Target.prototype, {
     update: function(weight, val, priority) {
         if (this._weight || this._priorityWeight) {
@@ -67,9 +66,9 @@ osgAnimation.Vec3Target.prototype = osg.objectInehrit(osgAnimation.Target.protot
 
 
 
-osgAnimation.FloatTarget = function() {
+osgAnimation.FloatTarget = function(value) {
     osgAnimation.Target.call(this);
-    this._target = 0;
+    this._target = [value];
 };
 
 osgAnimation.FloatTarget.prototype = osg.objectInehrit(osgAnimation.Target.prototype, {
@@ -86,12 +85,44 @@ osgAnimation.FloatTarget.prototype = osg.objectInehrit(osgAnimation.Target.proto
 
             this._priorityWeight += weight;
             t = (1.0 - this._weight) * weight / this._priorityWeight;
-            this._target += (val[0] - this._target)*t;
+            this._target += (val - this._target)*t;
         } else {
 
             this._priorityWeight = weight;
             this._lastPriority = priority;
-            this._target = val[0];
+            this._target = val;
+        }
+    }
+});
+
+
+
+
+osgAnimation.QuatTarget = function() {
+    osgAnimation.Target.call(this);
+    this._target = [];
+    osg.Quat.makeIdentity(this._target);
+};
+osgAnimation.QuatTarget.prototype = osg.objectInehrit(osgAnimation.Target.prototype, {
+    update: function(weight, val, priority) {
+        if (this._weight || this._priorityWeight) {
+
+            if (this._lastPriority != priority) {
+                // change in priority
+                // add to weight with the same previous priority cumulated weight
+                this._weight += this._priorityWeight * (1.0 - this._weight);
+                this._priorityWeight = 0;
+                this._lastPriority = priority;
+            }
+
+            this._priorityWeight += weight;
+            t = (1.0 - this._weight) * weight / this._priorityWeight;
+            osg.Quat.lerp(t, this._target, val, this._target);
+        } else {
+
+            this._priorityWeight = weight;
+            this._lastPriority = priority;
+            osg.Quat.copy(val, this._target);
         }
     }
 });

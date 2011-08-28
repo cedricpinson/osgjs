@@ -2,6 +2,14 @@
 
 /** @class Matrix Operations */
 osg.Matrix = {
+    valid: function(matrix) {
+        for (var i = 0; i < 16; i++) {
+            if (isNaN(matrix[i])) {
+                return false;
+            }
+        }
+        return true;
+    },
     setRow: function(matrix, row, v0, v1, v2, v3) {
         var rowIndex = row*4;
         matrix[rowIndex + 0 ] = v0;
@@ -493,6 +501,7 @@ osg.Matrix = {
         }
         return mat;
     },
+
     // result = Matrix M * Matrix Translate
     multTranslate: function(mat, translate, result) {
         if (result === undefined) {

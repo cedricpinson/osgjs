@@ -203,7 +203,7 @@ test("osgDB.parseSceneGraph", function() {
                             "osgAnimation.Animation": {
                                 "Name": "Test",
                                 "Channels": [ {
-                                    "osgAnimation.Vec3LinearChannel": {
+                                    "osgAnimation.Vec3LerpChannel": {
                                         "Name": "translate", 
                                         "KeyFrames": [ [ 0, 
                                                          -15.7923, 
@@ -212,7 +212,7 @@ test("osgDB.parseSceneGraph", function() {
                                         "TargetName": "Zeppelin_2"
                                     }
                                 }, {
-                                    "osgAnimation.Vec3LinearChannel": {
+                                    "osgAnimation.Vec3LerpChannel": {
                                         "Name": "scale", 
                                         "KeyFrames": [ [ 0, 
                                                          1, 
@@ -251,7 +251,7 @@ test("osgDB.parseSceneGraph", function() {
 
     (function() {
         var tree = {
-            "osgAnimation.FloatLinearChannel": {
+            "osgAnimation.FloatLerpChannel": {
                 "Name": "euler_x", 
                 "TargetName": "Cube", 
                 "KeyFrames": [
@@ -261,10 +261,44 @@ test("osgDB.parseSceneGraph", function() {
         };
 
         var result = osgDB.ObjectWrapper.readObject(tree);
-        ok(result.getKeyframes().length === 2, "Check keyframes FloatLinearChannel");
-        ok(result.getTargetName() === "Cube", "Check TargetName FloatLinearChannel");
-        ok(result.getName() === "euler_x", "Check Name FloatLinearChannel");
+        ok(result.getKeyframes().length === 2, "Check keyframes FloatLerpChannel");
+        ok(result.getTargetName() === "Cube", "Check TargetName FloatLerpChannel");
+        ok(result.getName() === "euler_x", "Check Name FloatLerpChannel");
 
+    })();
+
+    (function() {
+        var tree = {
+            "osgAnimation.QuatSlerpChannel": {
+                "Name": "quaternion", 
+                "TargetName": "Cube", 
+                "KeyFrames": [
+                    [ -0.04, 0 , 0, 0, 1],
+                    [ 0.36, -0 , 0, 0, 1] ]
+            }
+        };
+
+        var result = osgDB.ObjectWrapper.readObject(tree);
+        ok(result.getKeyframes().length === 2, "Check keyframes QuatSlerpChannel");
+        ok(result.getTargetName() === "Cube", "Check TargetName QuatSlerpChannel");
+        ok(result.getName() === "quaternion", "Check Name QuatSlerpChannel");
+    })();
+
+    (function() {
+        var tree = {
+            "osgAnimation.QuatLerpChannel": {
+                "Name": "quaternion", 
+                "TargetName": "Cube", 
+                "KeyFrames": [
+                    [ -0.04, 0 , 0, 0, 1],
+                    [ 0.36, -0 , 0, 0, 1] ]
+            }
+        };
+
+        var result = osgDB.ObjectWrapper.readObject(tree);
+        ok(result.getKeyframes().length === 2, "Check keyframes QuatLerpChannel");
+        ok(result.getTargetName() === "Cube", "Check TargetName QuatLerpChannel");
+        ok(result.getName() === "quaternion", "Check Name QuatLerpChannel");
     })();
 
     (function() {
@@ -298,6 +332,11 @@ test("osgDB.parseSceneGraph", function() {
                                 "Angle": 0, 
                                 "Axis": [ 1, 0, 0]
                             }
+                        },  {
+                            "osgAnimation.StackedQuaternion": {
+                                "Name": "quaternion", 
+                                "Quaternion": [0,0,0,1], 
+                            }
                         } ]
                     }
                 } ], 
@@ -306,7 +345,7 @@ test("osgDB.parseSceneGraph", function() {
 
         var result = osgDB.ObjectWrapper.readObject(tree);
         ok(result.getUpdateCallbackList().length === 1, "check osgAnimation.UpdateMatrixTransform callback");
-        ok(result.getUpdateCallback().getStackedTransforms().length === 4, "check osgAnimation.UpdateMatrixTransform stacked transform");
+        ok(result.getUpdateCallback().getStackedTransforms().length === 5, "check osgAnimation.UpdateMatrixTransform stacked transform");
 
     })();
 

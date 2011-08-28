@@ -1,12 +1,16 @@
 
 /** @class Quaternion Operations */
 osg.Quat = {
+    copy: function(s, d) {
+        d[0] = s[0];
+        d[1] = s[1];
+        d[2] = s[2];
+        d[3] = s[3];
+        return d;
+    },
     makeIdentity: function(element) { return osg.Quat.init(element); },
 
     init: function(element) {
-        if (element === undefined) {
-            element = [];
-        }
         element[0] = 0;
         element[1] = 0;
         element[2] = 0;
@@ -15,9 +19,6 @@ osg.Quat = {
     },
 
     sub: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = a[0] - b[0];
         result[1] = a[1] - b[1];
         result[2] = a[2] - b[2];
@@ -26,9 +27,6 @@ osg.Quat = {
     },
 
     add: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = a[0] + b[0];
         result[1] = a[1] + b[1];
         result[2] = a[2] + b[2];
@@ -76,17 +74,12 @@ osg.Quat = {
         return result;
     },
 
-    lerp: function(t, from, to, result){
-        if (result === undefined) {
-            result = [];
-        }
-
-        var t1 = 1.0 - t;
-        result[0] = from[0]*t1 + quatTo[0]*t;
-        result[1] = from[1]*t1 + quatTo[1]*t;
-        result[2] = from[2]*t1 + quatTo[2]*t;
-        result[3] = from[3]*t1 + quatTo[3]*t;
-        return result;
+    lerp: function(t, a, b, r) {
+        r[0] = a[0] + (b[0]-a[0])*t;
+        r[1] = a[1] + (b[1]-a[1])*t;
+        r[2] = a[2] + (b[2]-a[2])*t;
+        r[3] = a[3] + (b[3]-a[3])*t;
+        return r;
     },
 
     slerp: function(t, from, to, result) {
@@ -121,10 +114,6 @@ osg.Quat = {
              -------------------------------------------------- */
             scale_from = 1.0 - t ;
             scale_to = t ;
-        }
-
-        if (result === undefined) {
-            result = [];
         }
 
         result[0] = from[0]*scale_from + quatTo[0]*scale_to;
@@ -236,9 +225,7 @@ osg.Quat = {
     // q2 is qcur+1
     // compute tangent in of q1
     computeTangent: function(q0, qcur, q2, r) {
-        if (r === undefined) {
-            r = [];
-        }
+
         // first step
         var invq = this.inv(qcur);
         var qa,qb;
@@ -253,21 +240,6 @@ osg.Quat = {
         this.div(qa, -4.0, qa);
         this.exp(qa, qb);
         return this.mult(qb, q1, r);
-    },
-
-    createKey: function(q, r) {
-        if (r === undefined) {
-            r = this.init();
-        } else {
-            if (q !== r) {
-                r[0] = q[0];
-                r[1] = q[1];
-                r[2] = q[2];
-                r[3] = q[3];
-            }
-        }
-        r.time = 0;
-        r.tangent = [];
-        return r;
     }
+
 };

@@ -193,12 +193,9 @@ test("osg.BoundingSphere", function() {
 
 
 test("osg.Quat.init", function() {
-    var q = osg.Quat.init();
+    var q = [];
+    osg.Quat.init(q);
     same(q, [0,0,0,1]);
-
-    var q0 = [];
-    osg.Quat.init(q0);
-    same(q0, [0,0,0,1]);
 });
 
 
@@ -232,7 +229,9 @@ test("osg.Quat.mult", function() {
 
 
 test("osg.Quat.slerp", function() {
-    near(osg.Quat.slerp(0.5, [0, 0.707107, 0, 0.707107] , [0, 0, 0.382683, 0.92388]) , [0, 0.388863, 0.210451, 0.896937]);
+    var q = [];
+    osg.Quat.slerp(0.5, [0, 0.707107, 0, 0.707107] , [0, 0, 0.382683, 0.92388], q);
+    near( q , [0, 0.388863, 0.210451, 0.896937]);
 });
 
 
@@ -656,7 +655,7 @@ test("osg.UpdateVisitor", function() {
     froot.prototype = {
         update: function(node, nv) {
             callRoot = 1;
-            node.traverse(nv);
+            //node.traverse(nv);
         }
     };
 
@@ -664,6 +663,7 @@ test("osg.UpdateVisitor", function() {
     fb.prototype = {
         update: function(node, nv) {
         callb = 1;
+            return true;
         }
     };
 
@@ -671,6 +671,7 @@ test("osg.UpdateVisitor", function() {
     fc.prototype = {
         update: function(node, nv) {
         callc = 1;
+            return true;
         }
     };
 

@@ -25,6 +25,12 @@ osgAnimation.createVec3Keyframe = function(t, array) {
     return k;
 };
 
+osgAnimation.createQuatKeyframe = function(t, array) {
+    var k = array.slice(0);
+    k.t = t;
+    return k;
+};
+
 osgAnimation.createFloatKeyframe = function(t, value) {
     var k = [value];
     k.t = t;

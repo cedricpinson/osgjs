@@ -56,6 +56,10 @@ osgAnimation.Sampler.prototype = {
     // result.value will contain the interpolation result
     // { 'value': undefined, 'keyIndex': 0 };
     getValueAt: function(t, result) {
+        // reset the key if invalid
+        if (this._keys[result.key].t > t) {
+            result.key = 0;
+        }
         this._interpolator(this._keys, t, result);
     }
 };

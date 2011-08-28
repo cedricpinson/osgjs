@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit 272565333a22185dcddc132cb8c7acc3beb41df8 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit b503be67acec0775279d833fdea6b90633e85e2b - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -440,6 +440,14 @@ osg.Object.prototype = {
 
 /** @class Matrix Operations */
 osg.Matrix = {
+    valid: function(matrix) {
+        for (var i = 0; i < 16; i++) {
+            if (isNaN(matrix[i])) {
+                return false;
+            }
+        }
+        return true;
+    },
     setRow: function(matrix, row, v0, v1, v2, v3) {
         var rowIndex = row*4;
         matrix[rowIndex + 0 ] = v0;
@@ -3594,9 +3602,6 @@ osg.Quat = {
     makeIdentity: function(element) { return osg.Quat.init(element); },
 
     init: function(element) {
-        if (element === undefined) {
-            element = [];
-        }
         element[0] = 0;
         element[1] = 0;
         element[2] = 0;
@@ -6013,7 +6018,7 @@ osg.UpdateVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     apply: function(node) {
         var ncs = node.getUpdateCallbackList();
         for (var i = 0, l = ncs.length; i < l; i++) {
-            if (!ncs[i].update(node, this))
+            if (ncs[i].update(node, this))
                 return;
         }
         this.traverse(node);
@@ -6663,7 +6668,7 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
         var duration = animationParameter.duration;
         var weight = animationParameter.weight;
         var animation = animationParameter.anim;
-        var t = Math.min((t-animationParameter.start), duration);
+        var t = (t-animationParameter.start) % duration;
 
         var channels = animation.getChannels();
         for ( var i = 0, l = channels.length; i < l; i++) {
@@ -6674,7 +6679,6 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
     update: function(node, nv) {
         var t = nv.getFrameStamp().getSimulationTime();
         this.updateManager(t);
-        return true;
     },
     updateManager: function(t) {
         
@@ -6772,7 +6776,7 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
                 this._targets.push(channel.getTarget());
             }
         }
-    },
+    }
 
 });
 /** -*- compile-command: "jslint-cli Channel.js" -*-
@@ -6982,8 +6986,45 @@ osgAnimation.FloatLinearInterpolator = function(keys, t, result)
     var x2=keys[i2][0];
     
     var r = (t-t1)/(t2-t1);
-
     result.value = x1+(x2-x1)*r;
+    result.key = i1;
+};
+
+
+/** 
+ *  Interpolator provide interpolation function to sampler
+ *  @class Interpolator
+ */
+osgAnimation.FloatStepInterpolator = function(keys, t, result)
+{
+    var keyStart;
+    var startTime;
+    var keyEnd = keys[keys.length-1];
+    var endTime = keyEnd.t;
+    if (t >= endTime) {
+        result.key = 0;
+        result.value = keyEnd[0];
+        return;
+    } else {
+        keyStart = keys[0];
+        startTime = keyStart.t;
+        
+        if (t <= startTime) {
+            result.key = 0;
+            result.value = keyStart[0];
+            return;
+        }
+    }
+
+    var i1 = result.key;
+    while(keys[i1+1].t < t) {
+        i1++;
+    }
+    var i2 = i1+1;
+
+    var t1=keys[i1].t;
+    var x1=keys[i1][0];
+    result.value = x1;
     result.key = i1;
 };
 /** -*- compile-command: "jslint-cli Keyframe.js" -*-
@@ -7138,6 +7179,10 @@ osgAnimation.Sampler.prototype = {
     // result.value will contain the interpolation result
     // { 'value': undefined, 'keyIndex': 0 };
     getValueAt: function(t, result) {
+        // reset the key if invalid
+        if (this._keys[result.key].t > t) {
+            result.key = 0;
+        }
         this._interpolator(this._keys, t, result);
     }
 };
@@ -7193,11 +7238,8 @@ osgAnimation.StackedTranslate.prototype = osg.objectInehrit(osg.Object.prototype
         return this._target;
     },
     applyToMatrix: function(m) {
-        osg.Matrix.preMultTranslate(this._translate);
-    },
-    getAsMatrix: function() { return osg.Matrix.makeTranslate(this._translate[0],
-                                                              this._translate[1],
-                                                              this._translate[2]);}
+        osg.Matrix.preMultTranslate(m, this._translate);
+    }
 });
 
 
@@ -7219,7 +7261,9 @@ osgAnimation.StackedRotateAxis = function (name, axis, angle) {
     this.setName(name);
 
     this._matrixTmp = [];
+    osg.Matrix.makeIdentity(this._matrixTmp);
     this._quatTmp = [];
+    osg.Quat.makeIdentity(this._quatTmp);
 };
 
 /** @lends osgAnimation.StackedRotateAxis.prototype */
@@ -7235,7 +7279,7 @@ osgAnimation.StackedRotateAxis.prototype = osg.objectInehrit(osg.Object.prototyp
     },
     getOrCreateTarget: function() {
         if (!this._target) {
-            this._target = new osgAnimation.FloatTarget(this._translate);
+            this._target = new osgAnimation.FloatTarget(this._angle);
         }
         return this._target;
     },
@@ -7246,7 +7290,7 @@ osgAnimation.StackedRotateAxis.prototype = osg.objectInehrit(osg.Object.prototyp
 
         osg.Quat.makeRotate(this._angle, axis[0], axis[1], axis[2], qtmp);
         osg.Matrix.setRotateFromQuat(mtmp, qtmp);
-        osg.Matrix.preMult(qtmp);
+        osg.Matrix.preMult(m, mtmp);
     }
 
 });
@@ -7319,9 +7363,9 @@ osgAnimation.Vec3Target.prototype = osg.objectInehrit(osgAnimation.Target.protot
 
 
 
-osgAnimation.FloatTarget = function() {
+osgAnimation.FloatTarget = function(value) {
     osgAnimation.Target.call(this);
-    this._target = 0;
+    this._target = [value];
 };
 
 osgAnimation.FloatTarget.prototype = osg.objectInehrit(osgAnimation.Target.prototype, {
@@ -7338,12 +7382,12 @@ osgAnimation.FloatTarget.prototype = osg.objectInehrit(osgAnimation.Target.proto
 
             this._priorityWeight += weight;
             t = (1.0 - this._weight) * weight / this._priorityWeight;
-            this._target += (val[0] - this._target)*t;
+            this._target += (val - this._target)*t;
         } else {
 
             this._priorityWeight = weight;
             this._lastPriority = priority;
-            this._target = val[0];
+            this._target = val;
         }
     }
 });/** -*- compile-command: "jslint-cli UpdateCallback.js" -*-
@@ -7436,9 +7480,9 @@ osgAnimation.UpdateMatrixTransform.prototype = osg.objectInehrit(osgAnimation.An
         var transforms = this._stackedTransforms;
         for (var i = 0, l = transforms.length; i < l; i++) {
             var transform = transforms[i];
+            transform.update();
             transform.applyToMatrix(matrix);
         }
-        return true;
     },
     linkChannel: function(channel) {
         var channelName = channel.getName();
