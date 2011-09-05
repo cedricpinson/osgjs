@@ -227,7 +227,7 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
     for (var i = 0, l = jsonObj.PrimitiveSetList.length; i < l; i++) {
         var entry = jsonObj.PrimitiveSetList[i];
         
-        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || undefined;
+        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || entry.DrawElementUInt || undefined;
         if ( drawElementPrimitive ) {
             var jsonArray = drawElementPrimitive.Indices;
             var mode = drawElementPrimitive.Mode;

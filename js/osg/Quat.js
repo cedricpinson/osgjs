@@ -43,9 +43,6 @@ osg.Quat = {
     },
 
     neg: function(a, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = -a[0];
         result[1] = -a[1];
         result[2] = -a[2];
@@ -90,7 +87,7 @@ osg.Quat = {
         if ( cosomega <0.0 )
         {
             cosomega = -cosomega;
-            quatTo = this.neg(to);
+            this.neg(to, quatTo);
         }
 
         var omega;
@@ -123,11 +120,17 @@ osg.Quat = {
         return result;
     },
 
+    normalize: function(q, qr) {
+        var div = 1.0/this.length2(q);
+        qr[0] = q[0]*div;
+        qr[1] = q[1]*div;
+        qr[2] = q[2]*div;
+        qr[3] = q[3]*div;
+        return qr;
+    },
+
     // we suppose to have unit quaternion
     conj: function(a, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = -a[0];
         result[1] = -a[1];
         result[2] = -a[2];
@@ -136,9 +139,6 @@ osg.Quat = {
     },
 
     inverse: function(a, result) {
-        if (result === undefined) {
-            result = [];
-        }
         var div = 1.0/ this.length2(a);
         this.conj(a, result);
         result[0] *= div;
@@ -151,10 +151,6 @@ osg.Quat = {
     // we suppose to have unit quaternion
     // multiply 2 quaternions
     mult: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
-
         result[0] =  a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0];
         result[1] = -a[0] * b[2] + a[1] * b[3] + a[2] * b[0] + a[3] * b[1];
         result[2] =  a[0] * b[1] - a[1] * b[0] + a[2] * b[3] + a[3] * b[2];
@@ -162,9 +158,6 @@ osg.Quat = {
         return result;
     },
     div: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
         var d = 1.0/b;
         result[0] = a[0] * d;
         result[1] = a[1] * d;

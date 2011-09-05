@@ -218,13 +218,16 @@ test("osg.Quat.makeRotate", function() {
 // });
 
 test("osg.Quat.mult", function() {
-    var q0 = osg.Quat.makeRotate(Math.PI, 1, 0, 0);
-    var q1 = osg.Quat.makeRotate(Math.PI/2, 0, 1, 0);
-    var q2 = osg.Quat.makeRotate(Math.PI/4, 0, 0, 1);
+    var q0 = osg.Quat.makeRotate(Math.PI, 1, 0, 0, []);
+    var q1 = osg.Quat.makeRotate(Math.PI/2, 0, 1, 0, []);
+    var q2 = osg.Quat.makeRotate(Math.PI/4, 0, 0, 1, []);
 
-    near(osg.Quat.mult(q1, q0) , [0.707107, 4.32964e-17, -0.707107, 4.32964e-17]);
+    var qr = [];
+    osg.Quat.mult(q1, q0, qr);
+    near( qr, [0.707107, 4.32964e-17, -0.707107, 4.32964e-17]);
 
-    near(osg.Quat.mult(q2, osg.Quat.mult(q1,q0)) , [0.653281, 0.270598, -0.653281, 0.270598]);
+    
+    near(osg.Quat.mult(q2, osg.Quat.mult(q1,q0, []), []) , [0.653281, 0.270598, -0.653281, 0.270598]);
 });
 
 
@@ -655,22 +658,22 @@ test("osg.UpdateVisitor", function() {
     froot.prototype = {
         update: function(node, nv) {
             callRoot = 1;
-            //node.traverse(nv);
+            node.traverse(nv);
         }
     };
 
     var fb = function() {};
     fb.prototype = {
         update: function(node, nv) {
-        callb = 1;
-            return true;
+            callb = 1;
+            return false;
         }
     };
 
     var fc = function() {};
     fc.prototype = {
         update: function(node, nv) {
-        callc = 1;
+            callc = 1;
             return true;
         }
     };

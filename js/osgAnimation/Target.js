@@ -118,6 +118,8 @@ osgAnimation.QuatTarget.prototype = osg.objectInehrit(osgAnimation.Target.protot
             this._priorityWeight += weight;
             t = (1.0 - this._weight) * weight / this._priorityWeight;
             osg.Quat.lerp(t, this._target, val, this._target);
+            osg.Quat.normalize(this._target, this._target);
+
         } else {
 
             this._priorityWeight = weight;

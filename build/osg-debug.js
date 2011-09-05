@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit b503be67acec0775279d833fdea6b90633e85e2b - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit c30c50b63562f07a880ed82206f5d2ce3b66d5ae - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -844,9 +844,9 @@ osg.Matrix = {
     },
 
     //getRotate_David_Spillings_Mk1
-    getRotate: function (mat, result) {
-        if (result === undefined) {
-            result = [];
+    getRotate: function (mat, quatResult) {
+        if (quatResult === undefined) {
+            quatResult = [];
         }
 
         var s;
@@ -876,40 +876,40 @@ osg.Matrix = {
         if (j===0)
         {
             /* perform instant calculation */
-            result[3] = tq[0];
-            result[0] = mat[1*4+2]-mat[2*4+1];
-            result[1] = mat[2*4+0]-mat[0  +2]; 
-            result[2] = mat[0  +1]-mat[1*4+0]; 
+            quatResult[3] = tq[0];
+            quatResult[0] = mat[1*4+2]-mat[2*4+1];
+            quatResult[1] = mat[2*4+0]-mat[0  +2]; 
+            quatResult[2] = mat[0  +1]-mat[1*4+0]; 
         }
         else if (j==1)
         {
-            result[3] = mat[1*4+2]-mat[2*4+1]; 
-            result[0] = tq[1];
-            result[1] = mat[0  +1]+mat[1*4+0]; 
-            result[2] = mat[2*4+0]+mat[0  +2];
+            quatResult[3] = mat[1*4+2]-mat[2*4+1]; 
+            quatResult[0] = tq[1];
+            quatResult[1] = mat[0  +1]+mat[1*4+0]; 
+            quatResult[2] = mat[2*4+0]+mat[0  +2];
         }
         else if (j==2)
         {
-            result[3] = mat[2*4+0]-mat[0+2]; 
-            result[0] = mat[0  +1]+mat[1*4+0]; 
-            result[1] = tq[2];
-            result[2] = mat[1*4+2]+mat[2*4+1]; 
+            quatResult[3] = mat[2*4+0]-mat[0+2]; 
+            quatResult[0] = mat[0  +1]+mat[1*4+0]; 
+            quatResult[1] = tq[2];
+            quatResult[2] = mat[1*4+2]+mat[2*4+1]; 
         }
         else /* if (j==3) */
         {
-            result[3] = mat[0  +1]-mat[1*4+0]; 
-            result[0] = mat[2*4+0]+mat[0  +2]; 
-            result[1] = mat[1*4+2]+mat[2*4+1];
-            result[2] = tq[3];
+            quatResult[3] = mat[0  +1]-mat[1*4+0]; 
+            quatResult[0] = mat[2*4+0]+mat[0  +2]; 
+            quatResult[1] = mat[1*4+2]+mat[2*4+1];
+            quatResult[2] = tq[3];
         }
 
         s = Math.sqrt(0.25/tq[j]);
-        result[3] *= s;
-        result[0] *= s;
-        result[1] *= s;
-        result[2] *= s;
+        quatResult[3] *= s;
+        quatResult[0] *= s;
+        quatResult[1] *= s;
+        quatResult[2] *= s;
 
-        return result;
+        return quatResult;
     },
 
     // Matrix M = Matrix M * Matrix Translate
@@ -939,6 +939,8 @@ osg.Matrix = {
         }
         return mat;
     },
+
+
     // result = Matrix M * Matrix Translate
     multTranslate: function(mat, translate, result) {
         if (result === undefined) {
@@ -3599,6 +3601,13 @@ osg.Projection.prototype.objectType = osg.objectType.generate("Projection");
 
 /** @class Quaternion Operations */
 osg.Quat = {
+    copy: function(s, d) {
+        d[0] = s[0];
+        d[1] = s[1];
+        d[2] = s[2];
+        d[3] = s[3];
+        return d;
+    },
     makeIdentity: function(element) { return osg.Quat.init(element); },
 
     init: function(element) {
@@ -3610,9 +3619,6 @@ osg.Quat = {
     },
 
     sub: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = a[0] - b[0];
         result[1] = a[1] - b[1];
         result[2] = a[2] - b[2];
@@ -3621,9 +3627,6 @@ osg.Quat = {
     },
 
     add: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = a[0] + b[0];
         result[1] = a[1] + b[1];
         result[2] = a[2] + b[2];
@@ -3640,9 +3643,6 @@ osg.Quat = {
     },
 
     neg: function(a, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = -a[0];
         result[1] = -a[1];
         result[2] = -a[2];
@@ -3671,17 +3671,12 @@ osg.Quat = {
         return result;
     },
 
-    lerp: function(t, from, to, result){
-        if (result === undefined) {
-            result = [];
-        }
-
-        var t1 = 1.0 - t;
-        result[0] = from[0]*t1 + quatTo[0]*t;
-        result[1] = from[1]*t1 + quatTo[1]*t;
-        result[2] = from[2]*t1 + quatTo[2]*t;
-        result[3] = from[3]*t1 + quatTo[3]*t;
-        return result;
+    lerp: function(t, a, b, r) {
+        r[0] = a[0] + (b[0]-a[0])*t;
+        r[1] = a[1] + (b[1]-a[1])*t;
+        r[2] = a[2] + (b[2]-a[2])*t;
+        r[3] = a[3] + (b[3]-a[3])*t;
+        return r;
     },
 
     slerp: function(t, from, to, result) {
@@ -3692,7 +3687,7 @@ osg.Quat = {
         if ( cosomega <0.0 )
         {
             cosomega = -cosomega;
-            quatTo = this.neg(to);
+            this.neg(to, quatTo);
         }
 
         var omega;
@@ -3718,10 +3713,6 @@ osg.Quat = {
             scale_to = t ;
         }
 
-        if (result === undefined) {
-            result = [];
-        }
-
         result[0] = from[0]*scale_from + quatTo[0]*scale_to;
         result[1] = from[1]*scale_from + quatTo[1]*scale_to;
         result[2] = from[2]*scale_from + quatTo[2]*scale_to;
@@ -3729,11 +3720,17 @@ osg.Quat = {
         return result;
     },
 
+    normalize: function(q, qr) {
+        var div = 1.0/this.length2(q);
+        qr[0] = q[0]*div;
+        qr[1] = q[1]*div;
+        qr[2] = q[2]*div;
+        qr[3] = q[3]*div;
+        return qr;
+    },
+
     // we suppose to have unit quaternion
     conj: function(a, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = -a[0];
         result[1] = -a[1];
         result[2] = -a[2];
@@ -3742,9 +3739,6 @@ osg.Quat = {
     },
 
     inverse: function(a, result) {
-        if (result === undefined) {
-            result = [];
-        }
         var div = 1.0/ this.length2(a);
         this.conj(a, result);
         result[0] *= div;
@@ -3757,10 +3751,6 @@ osg.Quat = {
     // we suppose to have unit quaternion
     // multiply 2 quaternions
     mult: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
-
         result[0] =  a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0];
         result[1] = -a[0] * b[2] + a[1] * b[3] + a[2] * b[0] + a[3] * b[1];
         result[2] =  a[0] * b[1] - a[1] * b[0] + a[2] * b[3] + a[3] * b[2];
@@ -3768,9 +3758,6 @@ osg.Quat = {
         return result;
     },
     div: function(a, b, result) {
-        if (result === undefined) {
-            result = [];
-        }
         var d = 1.0/b;
         result[0] = a[0] * d;
         result[1] = a[1] * d;
@@ -3831,9 +3818,7 @@ osg.Quat = {
     // q2 is qcur+1
     // compute tangent in of q1
     computeTangent: function(q0, qcur, q2, r) {
-        if (r === undefined) {
-            r = [];
-        }
+
         // first step
         var invq = this.inv(qcur);
         var qa,qb;
@@ -3848,23 +3833,8 @@ osg.Quat = {
         this.div(qa, -4.0, qa);
         this.exp(qa, qb);
         return this.mult(qb, q1, r);
-    },
-
-    createKey: function(q, r) {
-        if (r === undefined) {
-            r = this.init();
-        } else {
-            if (q !== r) {
-                r[0] = q[0];
-                r[1] = q[1];
-                r[2] = q[2];
-                r[3] = q[3];
-            }
-        }
-        r.time = 0;
-        r.tangent = [];
-        return r;
     }
+
 };
 osg.RenderBin = function (stateGraph) {
     this.leafs = [];
@@ -6018,8 +5988,9 @@ osg.UpdateVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     apply: function(node) {
         var ncs = node.getUpdateCallbackList();
         for (var i = 0, l = ncs.length; i < l; i++) {
-            if (ncs[i].update(node, this))
+            if (!ncs[i].update(node, this)) {
                 return;
+            }
         }
         this.traverse(node);
     }
@@ -6736,7 +6707,7 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
             animName = name.getName();
         }
         if (this._animations[animName] === undefined) {
-            osg.log("no animation " + nameName + " found");
+            osg.log("no animation " + animName + " found");
             return;
         }
         
@@ -6839,7 +6810,7 @@ osgAnimation.Channel.prototype = osg.objectInehrit(osg.Object.prototype, {
 });
 
 
-osgAnimation.Vec3LinearChannel = function(keys, target)
+osgAnimation.Vec3LerpChannel = function(keys, target)
 {
     var sampler = new osgAnimation.Sampler();
     if (!keys) {
@@ -6849,15 +6820,15 @@ osgAnimation.Vec3LinearChannel = function(keys, target)
         target = new osgAnimation.Vec3Target();
     }
     osgAnimation.Channel.call(this, sampler, target);
-    sampler.setInterpolator(osgAnimation.Vec3LinearInterpolator);
+    sampler.setInterpolator(osgAnimation.Vec3LerpInterpolator);
     this.setKeyframes(keys);
     this._data.value = osg.Vec3.copy(target.getValue(), []);
 };
-osgAnimation.Vec3LinearChannel.prototype = osgAnimation.Channel.prototype;
+osgAnimation.Vec3LerpChannel.prototype = osgAnimation.Channel.prototype;
 
 
 
-osgAnimation.FloatLinearChannel = function(keys, target)
+osgAnimation.FloatLerpChannel = function(keys, target)
 {
     var sampler = new osgAnimation.Sampler();
     if (!keys) {
@@ -6867,11 +6838,36 @@ osgAnimation.FloatLinearChannel = function(keys, target)
         target = new osgAnimation.FloatTarget();
     }
     osgAnimation.Channel.call(this, sampler, target);
-    sampler.setInterpolator(osgAnimation.FloatLinearInterpolator);
+    sampler.setInterpolator(osgAnimation.FloatLerpInterpolator);
     this.setKeyframes(keys);
     this._data.value = target.getValue();
 };
-osgAnimation.FloatLinearChannel.prototype = osgAnimation.Channel.prototype;
+osgAnimation.FloatLerpChannel.prototype = osgAnimation.Channel.prototype;
+
+
+osgAnimation.QuatLerpChannel = function(keys, target)
+{
+    var sampler = new osgAnimation.Sampler();
+    if (!keys) {
+        keys = [];
+    }
+    if (!target) {
+        target = new osgAnimation.QuatTarget();
+    }
+    osgAnimation.Channel.call(this, sampler, target);
+    sampler.setInterpolator(osgAnimation.QuatLerpInterpolator);
+    this.setKeyframes(keys);
+    this._data.value = osg.Quat.copy(target.getValue(), []);
+};
+osgAnimation.QuatLerpChannel.prototype = osgAnimation.Channel.prototype;
+
+
+osgAnimation.QuatSlerpChannel = function(keys, target)
+{
+    osgAnimation.QuatLerpChannel.call(this, keys, target);
+    this.getSampler().setInterpolator(osgAnimation.QuatSlerpInterpolator);
+};
+osgAnimation.QuatSlerpChannel.prototype = osgAnimation.Channel.prototype;
 /** -*- compile-command: "jslint-cli Interpolator.js" -*-
  *
  *  Copyright (C) 2010-2011 Cedric Pinson
@@ -6895,9 +6891,8 @@ osgAnimation.FloatLinearChannel.prototype = osgAnimation.Channel.prototype;
 
 /** 
  *  Interpolator provide interpolation function to sampler
- *  @class Interpolator
  */
-osgAnimation.Vec3LinearInterpolator = function(keys, t, result)
+osgAnimation.Vec3LerpInterpolator = function(keys, t, result)
 {
     var keyStart;
     var startTime;
@@ -6947,12 +6942,106 @@ osgAnimation.Vec3LinearInterpolator = function(keys, t, result)
 };
 
 
+osgAnimation.QuatLerpInterpolator = function(keys, t, result)
+{
+    var keyStart;
+    var startTime;
+    var keyEnd = keys[keys.length-1];
+    var endTime = keyEnd.t;
+    if (t >= endTime) {
+        result.key = 0;
+        result.value[0] = keyEnd[0];
+        result.value[1] = keyEnd[1];
+        result.value[2] = keyEnd[2];
+        result.value[3] = keyEnd[3];
+        return;
+    } else {
+        keyStart = keys[0];
+        startTime = keyStart.t;
+        
+        if (t <= startTime) {
+            result.key = 0;
+            result.value[0] = keyStart[0];
+            result.value[1] = keyStart[1];
+            result.value[2] = keyStart[2];
+            result.value[3] = keyStart[3];
+            return;
+        }
+    }
+
+    var i1 = result.key;
+    while(keys[i1+1].t < t) {
+        i1++;
+    }
+    var i2 = i1+1;
+
+    var t1=keys[i1].t;
+    var x1=keys[i1][0];
+    var y1=keys[i1][1];
+    var z1=keys[i1][2];
+    var w1=keys[i1][3];
+    
+    var t2=keys[i2].t;
+    var x2=keys[i2][0];
+    var y2=keys[i2][1];
+    var z2=keys[i2][2];
+    var w2=keys[i2][3];
+    
+    var r = (t-t1)/(t2-t1);
+
+    result.value[0] = x1+(x2-x1)*r;
+    result.value[1] = y1+(y2-y1)*r;
+    result.value[2] = z1+(z2-z1)*r;
+    result.value[3] = w1+(w2-w1)*r;
+    result.key = i1;
+};
+
+osgAnimation.QuatSlerpInterpolator = function(keys, t, result)
+{
+    var keyStart;
+    var startTime;
+    var keyEnd = keys[keys.length-1];
+    var endTime = keyEnd.t;
+    if (t >= endTime) {
+        result.key = 0;
+        result.value[0] = keyEnd[0];
+        result.value[1] = keyEnd[1];
+        result.value[2] = keyEnd[2];
+        result.value[3] = keyEnd[3];
+        return;
+    } else {
+        keyStart = keys[0];
+        startTime = keyStart.t;
+        
+        if (t <= startTime) {
+            result.key = 0;
+            result.value[0] = keyStart[0];
+            result.value[1] = keyStart[1];
+            result.value[2] = keyStart[2];
+            result.value[3] = keyStart[3];
+            return;
+        }
+    }
+
+    var i1 = result.key;
+    while(keys[i1+1].t < t) {
+        i1++;
+    }
+    var i2 = i1+1;
+
+    var t1=keys[i1].t;
+    var t2=keys[i2].t;
+    var r = (t-t1)/(t2-t1);
+
+    osg.Quat.slerp(r, keys[i1], keys[i2], result.value);
+    result.key = i1;
+};
+
 
 /** 
  *  Interpolator provide interpolation function to sampler
- *  @class Interpolator
  */
-osgAnimation.FloatLinearInterpolator = function(keys, t, result)
+osgAnimation.FloatLerpInterpolator = function(keys, t, result)
 {
     var keyStart;
     var startTime;
@@ -6993,7 +7082,6 @@ osgAnimation.FloatLinearInterpolator = function(keys, t, result)
 
 /** 
  *  Interpolator provide interpolation function to sampler
- *  @class Interpolator
  */
 osgAnimation.FloatStepInterpolator = function(keys, t, result)
 {
@@ -7049,6 +7137,12 @@ osgAnimation.FloatStepInterpolator = function(keys, t, result)
 
 
 osgAnimation.createVec3Keyframe = function(t, array) {
+    var k = array.slice(0);
+    k.t = t;
+    return k;
+};
+
+osgAnimation.createQuatKeyframe = function(t, array) {
     var k = array.slice(0);
     k.t = t;
     return k;
@@ -7294,6 +7388,49 @@ osgAnimation.StackedRotateAxis.prototype = osg.objectInehrit(osg.Object.prototyp
     }
 
 });
+
+
+
+
+
+/** 
+ *  StackedQuaternion
+ *  @class StackedQuaternion
+ */
+osgAnimation.StackedQuaternion = function (name, quat) {
+    osg.Object.call(this);
+    if (!quat) {
+        quat = [ 0,0,0,1 ];
+    }
+    this._quaternion = quat;
+    this._target = undefined;
+    this._matrixTmp = [];
+    osg.Matrix.makeIdentity(this._matrixTmp);
+    this.setName(name);
+};
+
+/** @lends osgAnimation.StackedQuaternion.prototype */
+osgAnimation.StackedQuaternion.prototype = osg.objectInehrit(osg.Object.prototype, {
+    setQuaternion: function(q) { osg.Quat.copy(q, this._quaternion); },
+    setTarget: function(target) { this._target = target; },
+    getTarget: function() { return this._target; },
+    update: function() {
+        if (this._target !== undefined) {
+            osg.Quat.copy(this._target.getValue(), this._quaternion);
+        }
+    },
+    getOrCreateTarget: function() {
+        if (!this._target) {
+            this._target = new osgAnimation.QuatTarget(this._quaternion);
+        }
+        return this._target;
+    },
+    applyToMatrix: function(m) {
+        var mtmp = this._matrixTmp;
+        osg.Matrix.setRotateFromQuat(mtmp, this._quaternion);
+        osg.Matrix.preMult(m, mtmp);
+    }
+});
 /** -*- compile-command: "jslint-cli Target.js" -*-
  *
  *  Copyright (C) 2010-2011 Cedric Pinson
@@ -7336,7 +7473,6 @@ osgAnimation.Vec3Target = function() {
     osgAnimation.Target.call(this);
     this._target = [0 ,0, 0];
 };
-
 osgAnimation.Vec3Target.prototype = osg.objectInehrit(osgAnimation.Target.prototype, {
     update: function(weight, val, priority) {
         if (this._weight || this._priorityWeight) {
@@ -7390,7 +7526,42 @@ osgAnimation.FloatTarget.prototype = osg.objectInehrit(osgAnimation.Target.proto
             this._target = val;
         }
     }
-});/** -*- compile-command: "jslint-cli UpdateCallback.js" -*-
+});
+
+
+
+
+osgAnimation.QuatTarget = function() {
+    osgAnimation.Target.call(this);
+    this._target = [];
+    osg.Quat.makeIdentity(this._target);
+};
+osgAnimation.QuatTarget.prototype = osg.objectInehrit(osgAnimation.Target.prototype, {
+    update: function(weight, val, priority) {
+        if (this._weight || this._priorityWeight) {
+
+            if (this._lastPriority != priority) {
+                // change in priority
+                // add to weight with the same previous priority cumulated weight
+                this._weight += this._priorityWeight * (1.0 - this._weight);
+                this._priorityWeight = 0;
+                this._lastPriority = priority;
+            }
+
+            this._priorityWeight += weight;
+            t = (1.0 - this._weight) * weight / this._priorityWeight;
+            osg.Quat.lerp(t, this._target, val, this._target);
+            osg.Quat.normalize(this._target, this._target);
+
+        } else {
+
+            this._priorityWeight = weight;
+            this._lastPriority = priority;
+            osg.Quat.copy(val, this._target);
+        }
+    }
+});
+/** -*- compile-command: "jslint-cli UpdateCallback.js" -*-
  *
  *  Copyright (C) 2010-2011 Cedric Pinson
  *
@@ -9803,7 +9974,7 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
     for (var i = 0, l = jsonObj.PrimitiveSetList.length; i < l; i++) {
         var entry = jsonObj.PrimitiveSetList[i];
         
-        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || undefined;
+        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || entry.DrawElementUInt || undefined;
         if ( drawElementPrimitive ) {
             var jsonArray = drawElementPrimitive.Indices;
             var mode = drawElementPrimitive.Mode;
@@ -9886,7 +10057,7 @@ osgDB.ObjectWrapper.serializers.osgAnimation.Animation = function(jsonObj, anima
     return true;
 };
 
-osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LinearChannel = function(jsonObj, channel) {
+osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel = function(jsonObj, channel) {
     // check
     // 
     var check = function(o) {
@@ -9918,7 +10089,17 @@ osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LinearChannel = function(jsonOb
 };
 
 
-osgDB.ObjectWrapper.serializers.osgAnimation.FloatLinearChannel = function(jsonObj, channel) {
+osgDB.ObjectWrapper.serializers.osgAnimation.QuatLerpChannel = function(jsonObj, channel) {
+
+    return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel(jsonObj, channel);
+};
+
+osgDB.ObjectWrapper.serializers.osgAnimation.QuatSlerpChannel = function(jsonObj, channel) {
+    return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel(jsonObj, channel);
+};
+
+
+osgDB.ObjectWrapper.serializers.osgAnimation.FloatLerpChannel = function(jsonObj, channel) {
     // check
     // 
     var check = function(o) {
@@ -9948,6 +10129,8 @@ osgDB.ObjectWrapper.serializers.osgAnimation.FloatLinearChannel = function(jsonO
     }
     return true;
 };
+
+
 
 osgDB.ObjectWrapper.serializers.osgAnimation.BasicAnimationManager = function(jsonObj, manager) {
     // check
@@ -10020,6 +10203,30 @@ osgDB.ObjectWrapper.serializers.osgAnimation.StackedTranslate = function(jsonObj
 
     if (jsonObj.Translate) {
         st.setTranslate(jsonObj.Translate);
+    }
+    return true;
+};
+
+
+osgDB.ObjectWrapper.serializers.osgAnimation.StackedQuaternion = function(jsonObj, st) {
+    // check
+    // 
+    var check = function(o) {
+        if (o.Name) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return false;
+    }
+
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj,st)) {
+        return false;
+    }
+
+    if (jsonObj.Quaternion) {
+        st.setQuaternion(jsonObj.Quaternion);
     }
     return true;
 };

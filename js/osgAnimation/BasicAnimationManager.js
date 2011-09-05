@@ -108,7 +108,7 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
             animName = name.getName();
         }
         if (this._animations[animName] === undefined) {
-            osg.log("no animation " + nameName + " found");
+            osg.log("no animation " + animName + " found");
             return;
         }
         

@@ -406,9 +406,9 @@ osg.Matrix = {
     },
 
     //getRotate_David_Spillings_Mk1
-    getRotate: function (mat, result) {
-        if (result === undefined) {
-            result = [];
+    getRotate: function (mat, quatResult) {
+        if (quatResult === undefined) {
+            quatResult = [];
         }
 
         var s;
@@ -438,40 +438,40 @@ osg.Matrix = {
         if (j===0)
         {
             /* perform instant calculation */
-            result[3] = tq[0];
-            result[0] = mat[1*4+2]-mat[2*4+1];
-            result[1] = mat[2*4+0]-mat[0  +2]; 
-            result[2] = mat[0  +1]-mat[1*4+0]; 
+            quatResult[3] = tq[0];
+            quatResult[0] = mat[1*4+2]-mat[2*4+1];
+            quatResult[1] = mat[2*4+0]-mat[0  +2]; 
+            quatResult[2] = mat[0  +1]-mat[1*4+0]; 
         }
         else if (j==1)
         {
-            result[3] = mat[1*4+2]-mat[2*4+1]; 
-            result[0] = tq[1];
-            result[1] = mat[0  +1]+mat[1*4+0]; 
-            result[2] = mat[2*4+0]+mat[0  +2];
+            quatResult[3] = mat[1*4+2]-mat[2*4+1]; 
+            quatResult[0] = tq[1];
+            quatResult[1] = mat[0  +1]+mat[1*4+0]; 
+            quatResult[2] = mat[2*4+0]+mat[0  +2];
         }
         else if (j==2)
         {
-            result[3] = mat[2*4+0]-mat[0+2]; 
-            result[0] = mat[0  +1]+mat[1*4+0]; 
-            result[1] = tq[2];
-            result[2] = mat[1*4+2]+mat[2*4+1]; 
+            quatResult[3] = mat[2*4+0]-mat[0+2]; 
+            quatResult[0] = mat[0  +1]+mat[1*4+0]; 
+            quatResult[1] = tq[2];
+            quatResult[2] = mat[1*4+2]+mat[2*4+1]; 
         }
         else /* if (j==3) */
         {
-            result[3] = mat[0  +1]-mat[1*4+0]; 
-            result[0] = mat[2*4+0]+mat[0  +2]; 
-            result[1] = mat[1*4+2]+mat[2*4+1];
-            result[2] = tq[3];
+            quatResult[3] = mat[0  +1]-mat[1*4+0]; 
+            quatResult[0] = mat[2*4+0]+mat[0  +2]; 
+            quatResult[1] = mat[1*4+2]+mat[2*4+1];
+            quatResult[2] = tq[3];
         }
 
         s = Math.sqrt(0.25/tq[j]);
-        result[3] *= s;
-        result[0] *= s;
-        result[1] *= s;
-        result[2] *= s;
+        quatResult[3] *= s;
+        quatResult[0] *= s;
+        quatResult[1] *= s;
+        quatResult[2] *= s;
 
-        return result;
+        return quatResult;
     },
 
     // Matrix M = Matrix M * Matrix Translate
@@ -501,6 +501,7 @@ osg.Matrix = {
         }
         return mat;
     },
+
 
     // result = Matrix M * Matrix Translate
     multTranslate: function(mat, translate, result) {

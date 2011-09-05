@@ -335,7 +335,7 @@ test("osgDB.parseSceneGraph", function() {
                         },  {
                             "osgAnimation.StackedQuaternion": {
                                 "Name": "quaternion", 
-                                "Quaternion": [0,0,0,1], 
+                                "Quaternion": [0,0,0,1]
                             }
                         } ]
                     }
