@@ -116,7 +116,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setImage: function(img, imageFormat) {
         this._image = img;
         this.setImageFormat(imageFormat);
-        this._dirty = true;
+        this.dirty();
     },
     getImage: function() { return this._image; },
     setImageFormat: function(imageFormat) {
@@ -178,12 +178,17 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         } else if (this.default_type) {
             gl.bindTexture(gl.TEXTURE_2D, null);
         } else {
-            if (this._image !== undefined) {
+            var image = this._image;
+            if (image !== undefined) {
                 if (this.isImageReady()) {
                     if (!this._textureObject) {
                         this.init(gl);
                     }
-                    this.setTextureSize(this._image.naturalWidth, this._image.naturalHeight);
+                    if (image instanceof Image) {
+                        this.setTextureSize(image.naturalWidth, image.naturalHeight);
+                    } else if (image instanceof HTMLCanvasElement) {
+                        this.setTextureSize(image.width, image.height);
+                    }
                     this.setDirty(false);
                     gl.bindTexture(gl.TEXTURE_2D, this._textureObject);
                     gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
