@@ -43,6 +43,7 @@ osgAnimation.UpdateMatrixTransform.prototype = osg.objectInehrit(osgAnimation.An
             transform.update();
             transform.applyToMatrix(matrix);
         }
+        return true;
     },
     linkChannel: function(channel) {
         var channelName = channel.getName();
