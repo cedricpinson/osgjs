@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit c30c50b63562f07a880ed82206f5d2ce3b66d5ae - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit 7852b88c793706f8e02995a784d3de77d5e9d5be - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -6650,6 +6650,7 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
     update: function(node, nv) {
         var t = nv.getFrameStamp().getSimulationTime();
         this.updateManager(t);
+        return true;
     },
     updateManager: function(t) {
         
@@ -7654,6 +7655,7 @@ osgAnimation.UpdateMatrixTransform.prototype = osg.objectInehrit(osgAnimation.An
             transform.update();
             transform.applyToMatrix(matrix);
         }
+        return true;
     },
     linkChannel: function(channel) {
         var channelName = channel.getName();
