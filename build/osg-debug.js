@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-// osg-debug-0.0.7.js commit 7d7d65393b64e2034a5164c5b238a93939ff0126 - http://github.com/cedricpinson/osgjs
-=======
-// osg-debug-0.0.7.js commit f5206cdd25e84612e98fc49a08c8b2f2aacea5a4 - http://github.com/cedricpinson/osgjs
->>>>>>> 96542f4d1ac01fe8c78490b4e4c1cc61e4cf80c1
+// osg-debug-0.0.7.js commit 41c692f4ffc29194c35c5a22e4b16a254c17931d - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -5776,7 +5772,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     init: function(gl) {
         if (!this._textureObject) {
             this._textureObject = gl.createTexture();
-            this._dirty = true;
+            this.dirty();
         }
     },
     getWidth: function() { return this._textureWidth; },
@@ -5820,7 +5816,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setImage: function(img, imageFormat) {
         this._image = img;
         this.setImageFormat(imageFormat);
-        this._dirty = true;
+        this.dirty();
     },
     getImage: function() { return this._image; },
     setImageFormat: function(imageFormat) {
