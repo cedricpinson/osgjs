@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit 7852b88c793706f8e02995a784d3de77d5e9d5be - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit 7d7d65393b64e2034a5164c5b238a93939ff0126 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -5878,12 +5878,17 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         } else if (this.default_type) {
             gl.bindTexture(gl.TEXTURE_2D, null);
         } else {
-            if (this._image !== undefined) {
+            var image = this._image;
+            if (image !== undefined) {
                 if (this.isImageReady()) {
                     if (!this._textureObject) {
                         this.init(gl);
                     }
-                    this.setTextureSize(this._image.naturalWidth, this._image.naturalHeight);
+                    if (image instanceof Image) {
+                        this.setTextureSize(image.naturalWidth, image.naturalHeight);
+                    } else if (image instanceof HTMLCanvasElement) {
+                        this.setTextureSize(image.width, image.height);
+                    }
                     this.setDirty(false);
                     gl.bindTexture(gl.TEXTURE_2D, this._textureObject);
                     gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
