@@ -72,7 +72,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     init: function(gl) {
         if (!this._textureObject) {
             this._textureObject = gl.createTexture();
-            this._dirty = true;
+            this.dirty();
         }
     },
     getWidth: function() { return this._textureWidth; },
@@ -116,7 +116,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setImage: function(img, imageFormat) {
         this._image = img;
         this.setImageFormat(imageFormat);
-        this._dirty = true;
+        this.dirty();
     },
     getImage: function() { return this._image; },
     setImageFormat: function(imageFormat) {

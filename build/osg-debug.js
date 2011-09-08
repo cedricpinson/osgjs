@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // osg-debug-0.0.7.js commit 7d7d65393b64e2034a5164c5b238a93939ff0126 - http://github.com/cedricpinson/osgjs
+=======
+// osg-debug-0.0.7.js commit f5206cdd25e84612e98fc49a08c8b2f2aacea5a4 - http://github.com/cedricpinson/osgjs
+>>>>>>> 96542f4d1ac01fe8c78490b4e4c1cc61e4cf80c1
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
