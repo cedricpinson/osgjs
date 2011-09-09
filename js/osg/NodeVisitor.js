@@ -24,8 +24,12 @@ osg.NodeVisitor._popFromNodePath[osg.NodeVisitor.TRAVERSE_PARENTS] = function() 
 osg.NodeVisitor._popFromNodePath[osg.NodeVisitor.TRAVERSE_ALL_CHILDREN] = function() { this.nodePath.pop(); };
 
 osg.NodeVisitor.prototype = {
+    setNodeMaskOverride: function(m) { this.nodeMaskOverride = m; },
+    getNodeMaskOverride: function() { return this.nodeMaskOverride; },
+
     setTraversalMask: function(m) { this.traversalMask = m; },
     getTraversalMask: function() { return this.traversalMask; },
+
     pushOntoNodePath: function(node) {
         osg.NodeVisitor._pushOntoNodePath[this.traversalMode].call(this, node);
     },
