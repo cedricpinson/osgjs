@@ -9,6 +9,10 @@ osg.FrameBufferObject = function () {
     this.dirty();
 };
 
+osg.FrameBufferObject.COLOR_ATTACHMENT0 = 0x8CE0;
+osg.FrameBufferObject.DEPTH_ATTACHMENT = 0x8D00;
+osg.FrameBufferObject.DEPTH_COMPONENT16 = 0x81A5;
+
 /** @lends osg.FrameBufferObject.prototype */
 osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "FrameBufferObject",

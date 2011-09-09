@@ -444,8 +444,8 @@ var commonScene = function(rttSize) {
     rttTexture.setTextureSize(rttSize[0],rttSize[1]);
     rttTexture.setMinFilter('LINEAR');
     rttTexture.setMagFilter('LINEAR');
-    camera.attachTexture(gl.COLOR_ATTACHMENT0, rttTexture, 0);
-    camera.attachRenderBuffer(gl.DEPTH_ATTACHMENT, gl.DEPTH_COMPONENT16);
+    camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTexture, 0);
+    camera.attachRenderBuffer(osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16);
     // add the scene to the camera
     camera.addChild(rootModel);
 
