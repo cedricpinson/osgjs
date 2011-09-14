@@ -349,4 +349,47 @@ test("osgDB.parseSceneGraph", function() {
 
     })();
 
+
+    (function() {
+        var tree = { 
+            "osg.Geometry": {
+                "PrimitiveSetList": [ {
+                    "DrawArray": {
+                        "count": 3540, 
+                        "first": 10, 
+                        "mode": "TRIANGLES"
+                    }
+                } ], 
+                "VertexAttributeList": {
+                }
+            }
+        };
+        var result = osgDB.ObjectWrapper.readObject(tree).getPrimitiveSetList()[0];
+        
+        ok(result.getMode() === osg.PrimitiveSet.TRIANGLES, "check DrawArray triangles");
+        ok(result.getCount() === 3540, "check triangles count");
+        ok(result.getFirst() === 10, "check triangles first");
+
+
+        var tree2 = { 
+            "osg.Geometry": {
+                "PrimitiveSetList": [ {
+                    "DrawArray": {
+                        "Count": 3540, 
+                        "First": 10, 
+                        "Mode": "TRIANGLES"
+                    }
+                } ], 
+                "VertexAttributeList": {
+                }
+            }
+        };
+        result = osgDB.ObjectWrapper.readObject(tree2).getPrimitiveSetList()[0];
+        
+        ok(result.getMode() === osg.PrimitiveSet.TRIANGLES, "check DrawArray triangles");
+        ok(result.getCount() === 3540, "check triangles count");
+        ok(result.getFirst() === 10, "check triangles first");
+
+
+    })();
 });

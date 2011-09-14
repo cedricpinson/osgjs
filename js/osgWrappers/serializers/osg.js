@@ -245,9 +245,9 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
 
         var drawArrayPrimitive = entry.DrawArray || undefined;
         if (drawArrayPrimitive) {
-            var mode = drawArrayPrimitive.Mode;
-            var first = drawArrayPrimitive.First;
-            var count = drawArrayPrimitive.Count;
+            var mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
+            var first = drawArrayPrimitive.First || drawArrayPrimitive.first;
+            var count = drawArrayPrimitive.Count || drawArrayPrimitive.count;
             var drawArray = new osg.DrawArrays(osg.PrimitiveSet[mode], first, count);
             node.getPrimitives().push(drawArray);
         }
