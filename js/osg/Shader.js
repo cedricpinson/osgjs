@@ -12,11 +12,13 @@ osg.ShaderGeneratorType = {
  */
 osg.Shader = function(type, text) {
     this.type = type;
-    this.text = text;
+    this.setText(text);
 };
 
 /** @lends osg.Shader.prototype */
 osg.Shader.prototype = {
+    setText: function(text) { this.text = text; },
+    getText: function() { return this.text; },
     compile: function() {
         this.shader = gl.createShader(this.type);
         gl.shaderSource(this.shader, this.text);

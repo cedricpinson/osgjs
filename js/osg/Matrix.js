@@ -67,9 +67,6 @@ osg.Matrix = {
     },
 
     getTrans: function(matrix, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = matrix[12];
         result[1] = matrix[13];
         result[2] = matrix[14];

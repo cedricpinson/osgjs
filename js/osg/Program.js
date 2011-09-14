@@ -11,8 +11,8 @@ osg.Program = function (vShader, fShader) {
     osg.Program.instanceID+= 1;
 
     this.program = null;
-    this.vertex = vShader;
-    this.fragment = fShader;
+    this.setVertexShader(vShader);
+    this.setFragmentShader(fShader);
     this.dirty = true;
 };
 
@@ -23,8 +23,10 @@ osg.Program.prototype = {
     cloneType: function() { var p = new osg.Program(); p.default_program = true; return p; },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
-    setVertexShader: function(vs) { program.vertex = vs; },
-    setFragmentShader: function(fs) { program.fragment = fs; },
+    setVertexShader: function(vs) { this.vertex = vs; },
+    setFragmentShader: function(fs) { this.fragment = fs; },
+    getVertexShader: function() { return this.vertex; },
+    getFragmentShader: function() { return this.fragment; },
     apply: function(state) {
         if (!this.program || this._dirty) {
 
