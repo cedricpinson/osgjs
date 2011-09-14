@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit dbe5d1cbf7aa74b1bea4b2b58d50d0ee991858c3 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit b232dfa38ff25fb54b39065f3aa832180231b8df - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -505,9 +505,6 @@ osg.Matrix = {
     },
 
     getTrans: function(matrix, result) {
-        if (result === undefined) {
-            result = [];
-        }
         result[0] = matrix[12];
         result[1] = matrix[13];
         result[2] = matrix[14];
@@ -1507,11 +1504,13 @@ osg.ShaderGeneratorType = {
  */
 osg.Shader = function(type, text) {
     this.type = type;
-    this.text = text;
+    this.setText(text);
 };
 
 /** @lends osg.Shader.prototype */
 osg.Shader.prototype = {
+    setText: function(text) { this.text = text; },
+    getText: function() { return this.text; },
     compile: function() {
         this.shader = gl.createShader(this.type);
         gl.shaderSource(this.shader, this.text);
@@ -2891,6 +2890,10 @@ osg.FrameBufferObject = function () {
     this.dirty();
 };
 
+osg.FrameBufferObject.COLOR_ATTACHMENT0 = 0x8CE0;
+osg.FrameBufferObject.DEPTH_ATTACHMENT = 0x8D00;
+osg.FrameBufferObject.DEPTH_COMPONENT16 = 0x81A5;
+
 /** @lends osg.FrameBufferObject.prototype */
 osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "FrameBufferObject",
@@ -3497,8 +3500,8 @@ osg.Program = function (vShader, fShader) {
     osg.Program.instanceID+= 1;
 
     this.program = null;
-    this.vertex = vShader;
-    this.fragment = fShader;
+    this.setVertexShader(vShader);
+    this.setFragmentShader(fShader);
     this.dirty = true;
 };
 
@@ -3509,8 +3512,10 @@ osg.Program.prototype = {
     cloneType: function() { var p = new osg.Program(); p.default_program = true; return p; },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
-    setVertexShader: function(vs) { program.vertex = vs; },
-    setFragmentShader: function(fs) { program.fragment = fs; },
+    setVertexShader: function(vs) { this.vertex = vs; },
+    setFragmentShader: function(fs) { this.fragment = fs; },
+    getVertexShader: function() { return this.vertex; },
+    getFragmentShader: function() { return this.fragment; },
     apply: function(state) {
         if (!this.program || this._dirty) {
 
@@ -10003,9 +10008,9 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
 
         var drawArrayPrimitive = entry.DrawArray || undefined;
         if (drawArrayPrimitive) {
-            var mode = drawArrayPrimitive.Mode;
-            var first = drawArrayPrimitive.First;
-            var count = drawArrayPrimitive.Count;
+            var mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
+            var first = drawArrayPrimitive.First || drawArrayPrimitive.first;
+            var count = drawArrayPrimitive.Count || drawArrayPrimitive.count;
             var drawArray = new osg.DrawArrays(osg.PrimitiveSet[mode], first, count);
             node.getPrimitives().push(drawArray);
         }
