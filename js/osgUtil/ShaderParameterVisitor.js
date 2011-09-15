@@ -32,13 +32,13 @@ osgUtil.ShaderParameterVisitor = function() {
             }
             return this.params.default;
         },
-        readValue: function(name) {
+        getValue: function(name) {
             if (window.localStorage) {
                 return window.localStorage.getItem(name);
             }
             return undefined;
         },
-        saveValue: function(name, value) {
+        setValue: function(name, value) {
             if (window.localStorage) {
                 window.localStorage.setItem(name, value);
             }
@@ -49,12 +49,6 @@ osgUtil.ShaderParameterVisitor = function() {
             this.parent.appendChild(mydiv);
         },
         createSlider: function(min, max, step, value, name, cbname) {
-            // read local storage value if it exist
-            var readValue = this.readValue();
-            if (readValue !== undefined) {
-                value = readValue;
-            }
-
             var input = '<div>NAME [ MIN - MAX ] <input type="range" min="MIN" max="MAX" value="VALUE" step="STEP" onchange="ONCHANGE" /><span id="NAME"></span></div>';
             var onchange = cbname + '(this.value)';
             input = input.replace(/MIN/g, min);
@@ -67,15 +61,18 @@ osgUtil.ShaderParameterVisitor = function() {
         },
 
         createFunction: function(name, index, uniform, cbnameIndex) {
+            self = this;
             return (function() {
                 var cname = name;
                 var cindex = index;
                 var cuniform = uniform;
+                var id = cbnameIndex;
                 var func = function(value) {
                     cuniform.get()[cindex] = value;
                     cuniform.dirty();
                     osg.log(cname + ' value ' + value);
                     document.getElementById(cname).innerHTML = Number(value).toFixed(4);
+                    self.setValue(id, value);
                     // store the value to localstorage
                 };
                 return func;
@@ -85,8 +82,18 @@ osgUtil.ShaderParameterVisitor = function() {
         createEntrySlider: function(uniform, params, name, index, cbname) {
             var istring = index.toString();
             var nameIndex = name + istring;
-            var cbnameIndex = cbname+istring
-            var dom = this.createSlider(params.min, params.max, params.step, params.value[index], nameIndex, cbnameIndex);
+            var cbnameIndex = cbname+istring;
+
+            // read local storage value if it exist
+            var value = params.value[index];
+            var readValue = this.getValue(cbnameIndex);
+            if (readValue !== undefined) {
+                value = readValue;
+            }
+            uniform.get()[index] = value;
+            uniform.dirty();
+
+            var dom = this.createSlider(params.min, params.max, params.step, value, nameIndex, cbnameIndex);
             this.addToDom(dom);
             window[cbnameIndex] = this.createFunction(nameIndex, index, uniform, cbnameIndex);
         },
@@ -218,8 +225,18 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
         var keys = Object.keys(uniformMap);
 
         if (programName === undefined) {
-            var str = keys.join();
-            programName = atob(str);
+            var hashCode = function(str) {
+	        var hash = 0;
+	        if (str.length == 0) return hash;
+	        for (i = 0; i < str.length; i++) {
+		    char = str.charCodeAt(i);
+		    hash = ((hash<<5)-hash)+char;
+		    hash = hash & hash; // Convert to 32bit integer
+	        }
+	        return hash;
+            }
+            var str = keys.join('');
+            programName = hashCode(str).toString();
         }
 
         for (var i = 0; i < keys.length; i++) {
