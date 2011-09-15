@@ -3,11 +3,13 @@
  * @class Program
  */
 osg.Program = function (vShader, fShader) { 
+    osg.StateAttribute.call(this);
+
     if (osg.Program.instanceID === undefined) {
         osg.Program.instanceID = 0;
     }
     this.instanceID = osg.Program.instanceID;
-    this._dirty = true;
+
     osg.Program.instanceID+= 1;
 
     this.program = null;
@@ -17,8 +19,8 @@ osg.Program = function (vShader, fShader) {
 };
 
 /** @lends osg.Program.prototype */
-osg.Program.prototype = {
-    isDirty: function() { return this._dirty; },
+osg.Program.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+
     attributeType: "Program",
     cloneType: function() { var p = new osg.Program(); p.default_program = true; return p; },
     getType: function() { return this.attributeType;},
@@ -28,7 +30,7 @@ osg.Program.prototype = {
     getVertexShader: function() { return this.vertex; },
     getFragmentShader: function() { return this.fragment; },
     apply: function(state) {
-        if (!this.program || this._dirty) {
+        if (!this.program || this.isDirty()) {
 
             if (this.default_program === true) {
                 return;
@@ -63,7 +65,7 @@ osg.Program.prototype = {
 
             this.cacheAttributeList(this.vertex.text);
 
-            this._dirty = false;
+            this.setDirty(false);
         }
 
         gl.useProgram(this.program);
@@ -100,9 +102,7 @@ osg.Program.prototype = {
             }
         }
     }
-
-
-};
+});
 
 osg.Program.create = function(vShader, fShader) {
     console.log("osg.Program.create is deprecated use new osg.Program(vertex, fragment) instead");
