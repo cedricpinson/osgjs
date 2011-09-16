@@ -36,6 +36,8 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
         return undefined;
     },
+    getUniformList: function () { return this.uniforms; },
+
     setTextureAttributeAndMode: function (unit, attribute, mode) {
         if (mode === undefined) {
             mode = osg.StateAttribute.ON;
