@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit 3c7146d0e8da653be1106e4358e0a7d721d4d278 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit b3fc39eacad9ea8823fda6049fbb571edbe1464a - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -5657,6 +5657,8 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
         return undefined;
     },
+    getUniformList: function () { return this.uniforms; },
+
     setTextureAttributeAndMode: function (unit, attribute, mode) {
         if (mode === undefined) {
             mode = osg.StateAttribute.ON;
@@ -8113,9 +8115,10 @@ osgUtil.ShaderParameterVisitor = function() {
         },
         getValue: function(name) {
             if (window.localStorage) {
-                return window.localStorage.getItem(name);
+                var value = window.localStorage.getItem(name);
+                return value;
             }
-            return undefined;
+            return null;
         },
         setValue: function(name, value) {
             if (window.localStorage) {
@@ -8158,36 +8161,42 @@ osgUtil.ShaderParameterVisitor = function() {
             })();
         },
 
-        createEntrySlider: function(uniform, params, name, index, cbname) {
-            var istring = index.toString();
-            var nameIndex = name + istring;
-            var cbnameIndex = cbname+istring;
-
-            // read local storage value if it exist
-            var value = params.value[index];
-            var readValue = this.getValue(cbnameIndex);
-            if (readValue !== undefined) {
-                value = readValue;
-            }
-            //uniform.get()[index] = value;
-            //uniform.dirty();
-
-            var dom = this.createSlider(params.min, params.max, params.step, value, nameIndex, cbnameIndex);
-            this.addToDom(dom);
-            window[cbnameIndex] = this.createFunction(nameIndex, index, uniform, cbnameIndex);
-            window[cbnameIndex](value);
-        },
         getCallbackName: function(name, prgId) {
             return 'change_'+prgId+"_"+name;
         },
 
-        createInternalSlider: function(name, dim, uniformFunc, prgId) {
+        createInternalSlider: function(name, dim, uniformFunc, prgId, originalUniform) {
             var params = this.selectParamFromName(name);
-            var value = params.value();
-            var uniform = uniformFunc(value, name);
+            var uvalue = params.value();
+            var uniform = originalUniform;
+            if (uniform === undefined) {
+                uniform = uniformFunc(uvalue, name);
+            }
+
             var cbname = this.getCallbackName(name, prgId);
             for (var i = 0; i < dim; i++) {
-                this.createEntrySlider(uniform, params, name, i, cbname);
+
+                var istring = i.toString();
+                var nameIndex = name + istring;
+                var cbnameIndex = cbname+istring;
+
+                // default value
+                var value = uvalue[i];
+
+                // read local storage value if it exist
+                var readValue = this.getValue(cbnameIndex);
+                if (readValue !== null) {
+                    value = readValue;
+                } else if (originalUniform && originalUniform.get()[i]) {
+                    // read value from original uniform
+                    value = originalUniform.get()[i];
+                }
+
+                var dom = this.createSlider(params.min, params.max, params.step, value, nameIndex, cbnameIndex);
+                this.addToDom(dom);
+                window[cbnameIndex] = this.createFunction(nameIndex, i, uniform, cbnameIndex);
+                osg.log(nameIndex + " " + value);
+                window[cbnameIndex](value);
             }
             this.uniform = uniform;
             return uniform;
@@ -8206,8 +8215,8 @@ osgUtil.ShaderParameterVisitor = function() {
         
     };
     Vec4Slider.prototype = osg.objectInehrit(ArraySlider.prototype, {
-        create: function(name, prgId) {
-            return this.createInternalSlider(name, 4, osg.Uniform.createFloat4, prgId);
+        create: function(name, prgId, uniform) {
+            return this.createInternalSlider(name, 4, osg.Uniform.createFloat4, prgId, uniform);
         }
     });
 
@@ -8228,8 +8237,8 @@ osgUtil.ShaderParameterVisitor = function() {
         this.params['default'] = this.params['position'];
     };
     Vec3Slider.prototype = osg.objectInehrit(ArraySlider.prototype, {
-        create: function(name, prgId) {
-            return this.createInternalSlider(name, 3, osg.Uniform.createFloat3, prgId);
+        create: function(name, prgId, uniform) {
+            return this.createInternalSlider(name, 3, osg.Uniform.createFloat3, prgId, uniform);
         }
     });
 
@@ -8245,8 +8254,8 @@ osgUtil.ShaderParameterVisitor = function() {
         this.params['default'] = this.params['uv'];
     };
     Vec2Slider.prototype = osg.objectInehrit(ArraySlider.prototype, {
-        create: function(name, prgId) {
-            return this.createInternalSlider(name, 2, osg.Uniform.createFloat2, prgId);
+        create: function(name, prgId, uniform) {
+            return this.createInternalSlider(name, 2, osg.Uniform.createFloat2, prgId, uniform);
         }
     });
 
@@ -8261,8 +8270,8 @@ osgUtil.ShaderParameterVisitor = function() {
                            };
     };
     FloatSlider.prototype = osg.objectInehrit(ArraySlider.prototype, {
-        create: function(name, prgId) {
-            return this.createInternalSlider(name, 1, osg.Uniform.createFloat1, prgId);
+        create: function(name, prgId, uniform) {
+            return this.createInternalSlider(name, 1, osg.Uniform.createFloat1, prgId, uniform);
         }
     });
 
@@ -8272,6 +8281,7 @@ osgUtil.ShaderParameterVisitor = function() {
     this.types.vec2 = new Vec2Slider();
     this.types.float = new FloatSlider();
 
+    this.setTargetHTML(document.body);
 };
 
 osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
@@ -8297,8 +8307,37 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
         }
         return list;
     },
+
+    getUniformFromStateSet: function(stateSet, uniformMap) {
+        var maps = stateSet.getUniformList();
+        var keys = Object.keys(uniformMap);
+        for (var i = 0, l = keys.length; i < l; i++) {
+            var k = keys[i];
+            // get the first one found in the tree
+            if (maps[k] !== undefined && uniformMap[k].uniform === undefined) {
+                uniformMap[k].uniform = maps[k].object;
+            }
+        }
+    },
     
-    applyStateSet: function(stateset) {
+    findExistingUniform: function(node, uniformMap) {
+        var BackVisitor = function() { osg.NodeVisitor.call(this, osg.NodeVisitor.TRAVERSE_PARENTS); };
+        BackVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+            setUniformMap: function(map) { this.uniformMap = map; },
+            apply: function(node) {
+                var stateSet = node.getStateSet();
+                var getUniformFromStateSet = osgUtil.ShaderParameterVisitor.prototype.getUniformFromStateSet;
+                if (stateSet) {
+                    getUniformFromStateSet(stateSet, this.uniformMap);
+                }
+            }
+        });
+        var visitor = new BackVisitor();
+        visitor.setUniformMap(uniformMap);
+        node.accept(visitor);
+    },
+
+    applyStateSet: function(node, stateset) {
         if (stateset.getAttribute('Program') === undefined) {
             return;
         }
@@ -8331,14 +8370,16 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
             programName = hashCode(str).toString();
         }
 
+        this.findExistingUniform(node, uniformMap);
+
         for (var i = 0; i < keys.length; i++) {
             var k = keys[i];
             var entry = uniformMap[k];
             var type = entry.type;
             var name = entry.name;
             if (this.types[type] !== undefined) {
-                var uniform = this.types[type].create(name, programName);
-                if (uniform) {
+                var uniform = this.types[type].create(name, programName, entry.uniform);
+                if (entry.uniform === undefined && uniform) {
                     stateset.addUniform(uniform);
                 }
             }
@@ -8349,7 +8390,7 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
     apply: function(node) {
         var st = node.getStateSet();
         if (st !== undefined) {
-            this.applyStateSet(st);
+            this.applyStateSet(node, st);
         }
 
         this.traverse(node);
