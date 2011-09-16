@@ -18,15 +18,6 @@
  *
  */
 
-var density = undefined;
-function changeDensity(value)
-{
-    var dens = value/10000.0;
-    document.getElementById('density').innerHTML = dens;
-    osg.log("density " + dens);
-    density.set([dens]);
-}
-
 var main = function() {
     var canvas = document.getElementById("3DView");
     var w = window.innerWidth;
@@ -76,7 +67,6 @@ function getShader()
         "attribute vec3 Vertex;",
         "uniform mat4 ModelViewMatrix;",
         "uniform mat4 ProjectionMatrix;",
-        "uniform vec4 fragColor;",
         "varying vec4 position;",
         "void main(void) {",
         "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
@@ -89,7 +79,6 @@ function getShader()
         "#ifdef GL_ES",
         "precision highp float;",
         "#endif",
-        "uniform vec4 fragColor;",
         "varying vec4 position;",
         "uniform vec4 MaterialAmbient;",
         "uniform float density;",
@@ -134,6 +123,16 @@ function createScene() {
     group.addChild(ground);
     group.getOrCreateStateSet().setAttributeAndMode(new osg.CullFace('DISABLE'));
 
+    var parameterVisitor = new osgUtil.ShaderParameterVisitor();
+    parameterVisitor.setTargetHTML(document.getElementById("Parameters"));
+
+    parameterVisitor.types.float.params['density'] = {
+        min: 0,
+        max: 200.0/10000.0,
+        step: 1.0/10000.0,
+        value: function() { return [0.002]; }
+    };
+    group.accept(parameterVisitor);
 
     return group;
 }
