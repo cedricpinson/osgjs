@@ -52,13 +52,14 @@ osgUtil.ShaderParameterVisitor = function() {
             this.parent.appendChild(mydiv);
         },
         createSlider: function(min, max, step, value, name, cbname) {
-            var input = '<div>NAME [ MIN - MAX ] <input type="range" min="MIN" max="MAX" value="VALUE" step="STEP" onchange="ONCHANGE" /><span id="NAME"></span></div>';
+            var input = '<div>NAME [ MIN - MAX ] <input type="range" min="MIN" max="MAX" value="VALUE" step="STEP" onchange="ONCHANGE" /><span id="UPDATE"></span></div>';
             var onchange = cbname + '(this.value)';
             input = input.replace(/MIN/g, min);
             input = input.replace(/MAX/g, max);
             input = input.replace('STEP', step);
             input = input.replace('VALUE', value);
             input = input.replace(/NAME/g, name);
+            input = input.replace(/UPDATE/g, cbname);
             input = input.replace('ONCHANGE', onchange);
             return input;
         },
@@ -74,7 +75,7 @@ osgUtil.ShaderParameterVisitor = function() {
                     cuniform.get()[cindex] = value;
                     cuniform.dirty();
                     osg.log(cname + ' value ' + value);
-                    document.getElementById(cname).innerHTML = Number(value).toFixed(4);
+                    document.getElementById(cbnameIndex).innerHTML = Number(value).toFixed(4);
                     self.setValue(id, value);
                     // store the value to localstorage
                 };
@@ -231,6 +232,9 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
 
     getUniformFromStateSet: function(stateSet, uniformMap) {
         var maps = stateSet.getUniformList();
+        if (!maps) {
+            return;
+        }
         var keys = Object.keys(uniformMap);
         for (var i = 0, l = keys.length; i < l; i++) {
             var k = keys[i];
