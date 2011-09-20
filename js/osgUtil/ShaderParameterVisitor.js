@@ -255,6 +255,7 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
                 if (stateSet) {
                     getUniformFromStateSet(stateSet, this.uniformMap);
                 }
+                this.traverse(node);
             }
         });
         var visitor = new BackVisitor();
@@ -297,6 +298,7 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
 
         this.findExistingUniform(node, uniformMap);
 
+        var addedSlider = false;
         for (var i = 0; i < keys.length; i++) {
             var k = keys[i];
             var entry = uniformMap[k];
@@ -307,8 +309,17 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
                 if (entry.uniform === undefined && uniform) {
                     stateset.addUniform(uniform);
                 }
+                addedSlider = true;
             }
         }
+
+        // add a separator
+        if (addedSlider) {
+            var mydiv = document.createElement('div');
+            mydiv.innerHTML = "<p> </p>";
+            this.targetHTML.appendChild(mydiv);
+        }
+
         osg.log(uniformMap);
     },
 
