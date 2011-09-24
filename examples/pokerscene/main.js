@@ -18,21 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * Authors:
- *  Cedric Pinson <cedric.pinson@plopbyte.net>
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
  *
  */
 
 function createScene() {
 
     // override texture constructor to set the wrap mode repeat for all texture
+    var previousTextureDefault = osg.Texture.prototype.setDefaultParameters;
     osg.Texture.prototype.setDefaultParameters = function() {
-        this.mag_filter = 'LINEAR';
-        this.min_filter = 'LINEAR_MIPMAP_LINEAR';
-        this.wrap_s = 'REPEAT';
-        this.wrap_t = 'REPEAT';
-        this.textureWidth = 0;
-        this.textureHeight = 0;
-        this.target = 'TEXTURE_2D';
+        previousTextureDefault.call(this);
+        this.setWrapS('REPEAT');
+        this.setWrapT('REPEAT');
+        this.setMagFilter('LINEAR');
+        this.setMinFilter('LINEAR_MIPMAP_LINEAR');
     };
 
     o = osgDB.parseSceneGraph(getPokerScene());
