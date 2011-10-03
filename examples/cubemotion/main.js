@@ -98,24 +98,80 @@ TransitionUpdateCallback.prototype = {
     }
 };
 
+var createTexturedBox = function(centerx, centery, centerz,
+                                 sizex, sizey, sizez,
+                                 l, r, b ,t)
+{
+    var model = osg.createTexturedBoxGeometry(centerx,
+                                              centery,
+                                              centerz,
+                                              sizex,
+                                              sizey,
+                                              sizez);
+
+    var uvs = model.getAttributes().TexCoord0;
+    var array = uvs.getElements();
+
+    array[0] = l; array[1] = t;
+    array[2] = l; array[3] = b;
+    array[4] = r; array[5] = b;
+    array[6] = r; array[7] = t;
+
+    array[8] = l; array[9] = t;
+    array[10] = l; array[11] = b;
+    array[12] = r; array[13] = b;
+    array[14] = r; array[15] = t;
+
+
+    array[16] = 0; array[17] = 0;
+    array[18] = 0; array[19] = 0;
+    array[20] = 0; array[21] = 0;
+    array[22] = 0; array[23] = 0;
+
+    array[24] = 0; array[25] = 0;
+    array[26] = 0; array[27] = 0;
+    array[28] = 0; array[29] = 0;
+    array[30] = 0; array[31] = 0;
+
+
+    array[32] = 0; array[33] = 0;
+    array[34] = 0; array[35] = 0;
+    array[36] = 0; array[37] = 0;
+    array[38] = 0; array[39] = 0;
+
+    array[40] = 0; array[41] = 0;
+    array[42] = 0; array[43] = 0;
+    array[44] = 0; array[45] = 0;
+    array[46] = 0; array[47] = 0;
+
+    return model;
+};
+
 
 function createScene() {
     var root = new osg.Node();
     var group = new osg.MatrixTransform();
 
+    var totalSizeX = 20;
+    var maxx = 20;
 
-    var size = [2,2,2];
-    var model = osg.createTexturedBoxGeometry(0,0,0,
-                                              size[0], size[1], size[2]);
+    var sizex = totalSizeX/maxx;
+    var maxy = 3;
+
+    var size = [sizex, sizex, sizex];
+    var texture = osg.Texture.createFromURL('image.png');
 
     var target = new osg.MatrixTransform();
-    target.addChild(model);
+    var targetModel = osg.createTexturedBoxGeometry(0,
+                                                    0,
+                                                    0,
+                                                    2,
+                                                    2,
+                                                    2);
+    target.addChild(targetModel);
     var material = new osg.Material();
     material.setDiffuse([1,0,0,1]);
     target.getOrCreateStateSet().setAttributeAndMode(material);
-
-    var maxx = 10;
-    var maxy = 2;
 
     var cb = new TransitionUpdateCallback([0,0,0]);
     var center = [8,0,40];
@@ -126,10 +182,17 @@ function createScene() {
             var ry = 0 + center[1];
             var rz = y*size[2] - maxy*size[2]*0.5 + center[2];
             mtr.setMatrix(osg.Matrix.makeTranslate(rx,ry,rz,[]));
+
+            var model = createTexturedBox(0,0,0,
+                                          size[0], size[1], size[2],
+                                          x/(maxx+1), (x+1)/(maxx+1),
+                                          y/(maxy+1), (y+1)/(maxy+1));
+            model.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
+
             mtr.addChild(model);
             group.addChild(mtr);
             mtr.addUpdateCallback(cb);
-            var t = (x + y*maxx)*0.1;
+            var t = (x*maxy + y)*0.1;
             mtr._lastUpdate = t;
             mtr._start = t;
             mtr._axis = [ Math.random(), Math.random(), Math.random()];
@@ -137,10 +200,7 @@ function createScene() {
         }
     }
 
-    //group.setMatrix();
     root.addChild(group);
-
-    
     root.addChild(target);
 
     return root;
