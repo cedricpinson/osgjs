@@ -2,8 +2,11 @@ osg.ShaderGeneratorType = {
     VertexInit: 0,
     VertexFunction: 1,
     VertexMain: 2,
-    FragmentInit: 3,
-    FragmentMain: 5
+    VertexEnd: 3,
+    FragmentInit: 5,
+    FragmentFunction: 6,
+    FragmentMain: 7,
+    FragmentEnd: 8
 };
 
 /** 

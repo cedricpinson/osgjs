@@ -68,8 +68,8 @@ osgViewer.View.prototype = {
             this._light = new osg.Light();
             this._light.setAmbient([0.2,0.2,0.2,1.0]);
             this._light.setDiffuse([0.8,0.8,0.8,1.0]);
-            this._light.setSpecular([1.0,1.0,1.0,1.0]);
-            this._scene.light = this._light;
+            this._light.setSpecular([0.5,0.5,0.5,1.0]);
+            //this._scene.light = this._light;
         }
     }
 

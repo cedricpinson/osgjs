@@ -2,7 +2,7 @@
  * Create a Textured Box on the given center with given size
  * @name osg.createTexturedBox
  */
-osg.createTexturedBox = function(centerx, centery, centerz,
+osg.createTexturedBoxGeometry = function(centerx, centery, centerz,
                                  sizex, sizey, sizez) {
 
     var g = new osg.Geometry();
@@ -294,10 +294,10 @@ osg.createTexturedBox = function(centerx, centery, centerz,
 };
 
 
-osg.createTexturedQuad = function(cornerx, cornery, cornerz,
-                                  wx, wy, wz,
-                                  hx, hy, hz,
-                                  l,b,r,t) {
+osg.createTexturedQuadGeometry = function(cornerx, cornery, cornerz,
+                                          wx, wy, wz,
+                                          hx, hy, hz,
+                                          l,b,r,t) {
 
     if (r === undefined && t === undefined) {
         r = l;
@@ -378,5 +378,102 @@ osg.createTexturedQuad = function(cornerx, cornery, cornerz,
     
     var primitive = new osg.DrawElements(osg.PrimitiveSet.TRIANGLES, new osg.BufferArray(osg.BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
     g.getPrimitives().push(primitive);
+    return g;
+};
+
+osg.createTexturedBox = function(centerx, centery, centerz,
+                                 sizex, sizey, sizez) {
+    osg.log("osg.createTexturedBox is deprecated use instead osg.createTexturedBoxGeometry");
+    return osg.createTexturedBoxGeometry(centerx, centery, centerz,
+                                         sizex, sizey, sizez);
+};
+
+osg.createTexturedQuad = function(cornerx, cornery, cornerz,
+                                  wx, wy, wz,
+                                  hx, hy, hz,
+                                  l,b,r,t) {
+    osg.log("osg.createTexturedQuad is deprecated use instead osg.createTexturedQuadGeometry");
+    return osg.createTexturedQuadGeometry(cornerx, cornery, cornerz,
+                                          wx, wy, wz,
+                                          hx, hy, hz,
+                                          l,b,r,t);
+};
+
+osg.createAxisGeometry = function(size) {
+    if (size === undefined) {
+        size = 5.0;
+    }
+    if (osg.createAxisGeometry.getShader === undefined) {
+        osg.createAxisGeometry.getShader = function() {
+            if (osg.createAxisGeometry.getShader.program === undefined) {
+                var vertexshader = [
+                    "#ifdef GL_ES",
+                    "precision highp float;",
+                    "#endif",
+                    "attribute vec3 Vertex;",
+                    "attribute vec4 Color;",
+                    "uniform mat4 ModelViewMatrix;",
+                    "uniform mat4 ProjectionMatrix;",
+                    "",
+                    "varying vec4 FragColor;",
+                    "",
+                    "vec4 ftransform() {",
+                    "return ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);",
+                    "}",
+                    "",
+                    "void main(void) {",
+                    "gl_Position = ftransform();",
+                    "FragColor = Color;",
+                    "}",
+                ].join('\n');
+
+                var fragmentshader = [
+                    "#ifdef GL_ES",
+                    "precision highp float;",
+                    "#endif",
+                    "varying vec4 FragColor;",
+
+                    "void main(void) {",
+                    "gl_FragColor = FragColor;",
+                    "}",
+                ].join('\n');
+
+                var program = new osg.Program(new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+                                              new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+                osg.createAxisGeometry.getShader.program = program;
+            }
+            return osg.createAxisGeometry.getShader.program;
+        };
+    }
+
+    var g = new osg.Geometry();
+
+    var vertexes = [];
+    vertexes.push(0,0,0);
+    vertexes.push(size,0,0);
+
+    vertexes.push(0,0,0);
+    vertexes.push(0,size,0);
+
+    vertexes.push(0,0,0);
+    vertexes.push(0,0,size);
+
+    var colors = [];
+    colors.push(1, 0, 0, 1.0);
+    colors.push(1, 0, 0, 1.0);
+
+    colors.push(0, 1, 0, 1.0);
+    colors.push(0, 1, 0, 1.0);
+
+    colors.push(0, 0, 1, 1.0);
+    colors.push(0, 0, 1, 1.0);
+
+    g.getAttributes().Vertex = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, vertexes, 3 );
+    g.getAttributes().Color = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, colors, 4 );
+
+    var primitive = new osg.DrawArrays(osg.PrimitiveSet.LINES, 0, 6);
+    g.getPrimitives().push(primitive);
+    g.getOrCreateStateSet().setAttributeAndMode(osg.createAxisGeometry.getShader());
+
     return g;
 };

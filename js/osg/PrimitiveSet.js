@@ -30,7 +30,7 @@ osg.DrawArrays.prototype = {
 };
 osg.DrawArrays.create = function(mode, first, count) {
     osg.log("osg.DrawArrays.create is deprecated, use new osg.DrawArrays with same arguments");
-    var d = new osg.DrawArray(mode, first, count);
+    var d = new osg.DrawArrays(mode, first, count);
     return d;
 };
 

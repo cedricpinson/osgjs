@@ -66,7 +66,7 @@ LightUpdateCallback.prototype = {
         createShadowMatrix([0,0,1,5],
                            [x,y,h,1],
                            this.matrix);
-        node.lightShadow.direction = [x,y,h];
+        node.lightShadow.setPosition([x,y,h,0]);
         node.lightShadow.dirty();
         node.traverse(nv);
     }
@@ -88,6 +88,12 @@ function createProjectedShadowScene()
 
     shadowNode.getOrCreateStateSet().setTextureAttributeAndMode(0, new osg.Texture(), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE);
     shadowNode.getOrCreateStateSet().setAttributeAndMode(new osg.CullFace('DISABLE'), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE);
+    var materialDisabled = new osg.Material();
+    materialDisabled.setEmission([0,0,0,1]);
+    materialDisabled.setAmbient([0,0,0,1]);
+    materialDisabled.setDiffuse([0,0,0,1]);
+    materialDisabled.setSpecular([0,0,0,1]);
+    shadowNode.getOrCreateStateSet().setAttributeAndMode(materialDisabled, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
 
     light.addChild(model);
     root.addChild(light);
@@ -225,7 +231,7 @@ LightUpdateCallbackProjectedTexture.prototype = {
 
         this.projectionShadow.set(shadowProj);
         this.modelviewShadow.set(shadowView);
-        node.lightShadow.direction = [x,y,h];
+        node.lightShadow.setPosition([x,y,h,0]);
         node.lightShadow.dirty();
         node.traverse(nv);
     }
@@ -509,7 +515,7 @@ function getOgreShadowMapShader()
         "uniform vec4 Light0_ambient;",
         "uniform vec4 Light0_diffuse;",
         "uniform vec4 Light0_specular;",
-        "uniform vec3 Light0_direction;",
+        "uniform vec4 Light0_position;",
         "uniform float Light0_constantAttenuation;",
         "uniform float Light0_linearAttenuation;",
         "uniform float Light0_quadraticAttenuation;",
@@ -592,7 +598,7 @@ function getOgreShadowMapShader()
         "",
         "//if (Light0_enabled) {",
         "if (true) {",
-        "vec3 Light0_directionNormalized = normalize(Light0_direction);",
+        "vec3 Light0_directionNormalized = normalize(vec3(Light0_position));",
         "float Light0_NdotL = max(dot(Normal, Light0_directionNormalized), 0.0);",
         "flight(Light0_directionNormalized, Light0_constantAttenuation, Light0_linearAttenuation, Light0_quadraticAttenuation, Light0_ambient, Light0_diffuse, Light0_specular, NormalComputed );",
         "}",
@@ -732,7 +738,7 @@ LightUpdateCallbackShadowMap.prototype = {
 
         this.projectionShadow.set(shadowProj);
         this.modelviewShadow.set(shadowView);
-        node.lightShadow.direction = [x,y,h];
+        node.lightShadow.setPosition([x,y,h,0]);
         node.lightShadow.dirty();
         node.traverse(nv);
     }

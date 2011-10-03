@@ -321,12 +321,17 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
 
 
 osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (node) {
-
-    var lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-
     var matrix = this.getReservedMatrix();
-    osg.Matrix.mult(lastMatrixStack, node.getMatrix(), matrix);
+
+    if (node.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
+        var lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+        osg.Matrix.mult(lastMatrixStack, node.getMatrix(), matrix);
+    } else {
+        // absolute
+        osg.Matrix.copy(node.getMatrix(), matrix);
+    }
     this.pushModelviewMatrix(matrix);
+
 
     var stateset = node.getStateSet();
     if (stateset) {

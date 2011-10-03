@@ -16,6 +16,7 @@ osg.Camera = function () {
     this.renderOrder = osg.Camera.NESTED_RENDER;
     this.renderOrderNum = 0;
 };
+
 osg.Camera.PRE_RENDER = 0;
 osg.Camera.NESTED_RENDER = 1;
 osg.Camera.POST_RENDER = 2;

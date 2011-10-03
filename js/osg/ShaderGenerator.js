@@ -205,10 +205,10 @@ osg.ShaderGenerator.prototype = {
         for (var j = 0, m = validAttributeKeys.length; j < m; j++) {
             var key = validAttributeKeys[j];
             var element = attributeMap[key].globalDefault;
-
-            if (element.writeShaderInstance !== undefined && instanciedTypeShader[key] === undefined) {
+            var type = element.getType();
+            if (element.writeShaderInstance !== undefined && instanciedTypeShader[type] === undefined) {
                 shader += element.writeShaderInstance(mode);
-                instanciedTypeShader[key] = true;
+                instanciedTypeShader[type] = true;
             }
 
             if (element.writeToShader) {
@@ -220,7 +220,7 @@ osg.ShaderGenerator.prototype = {
 
     getOrCreateVertexShader: function (state, validAttributeKeys, validTextureAttributeKeys) {
         var i;
-        var mode = osg.ShaderGeneratorType.VertexInit;
+        var modes = osg.ShaderGeneratorType;
         var shader = [
             "",
             "#ifdef GL_ES",
@@ -237,37 +237,32 @@ osg.ShaderGenerator.prototype = {
             ""
         ].join('\n');
 
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.VertexInit);
 
-        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
-        mode = osg.ShaderGeneratorType.VertexFunction;
         var func = [
             "",
             "vec4 ftransform() {",
-            "return ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);",
+            "  return ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);",
             "}"].join('\n');
 
         shader += func;
-        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.VertexFunction);
 
         var body = [
             "",
             "void main(void) {",
-            "gl_Position = ftransform();",
-            "if (ArrayColorEnabled == 1)",
-            "  VertexColor = Color;",
-            "else",
-            "  VertexColor = vec4(1.0,1.0,1.0,1.0);",
+            "  gl_Position = ftransform();",
+            "  if (ArrayColorEnabled == 1)",
+            "    VertexColor = Color;",
+            "  else",
+            "    VertexColor = vec4(1.0,1.0,1.0,1.0);",
             ""
         ].join('\n');
 
         shader += body;
 
-        mode = osg.ShaderGeneratorType.VertexMain;
-
-        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.VertexMain);
 
         shader += [
             "}",
@@ -275,6 +270,13 @@ osg.ShaderGenerator.prototype = {
         ].join('\n');
 
         return shader;
+    },
+
+    _writeShaderFromMode: function(state, validAttributeKeys, validTextureAttributeKeys, mode) {
+        var str = "";
+        str += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
+        str += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+        return str;
     },
 
     getOrCreateFragmentShader: function (state, validAttributeKeys, validTextureAttributeKeys) {
@@ -289,27 +291,26 @@ osg.ShaderGenerator.prototype = {
             "vec4 fragColor;",
             ""
         ].join("\n");
-        var mode = osg.ShaderGeneratorType.FragmentInit;
 
-        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+        var modes = osg.ShaderGeneratorType;
+        
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentInit);
+
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentFunction);
 
         shader += [
             "void main(void) {",
-            "fragColor = VertexColor;",
+            "  fragColor = VertexColor;",
             ""
         ].join('\n');
 
-        mode = osg.ShaderGeneratorType.FragmentMain;
-        if (validTextureAttributeKeys.length > 0) {
-            var result = this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-            shader += result;
-        }
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentMain);
+
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentEnd);
 
         shader += [
             "",
-            "gl_FragColor = fragColor;",
+            "  gl_FragColor = fragColor;",
             "}"
         ].join('\n');
 

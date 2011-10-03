@@ -8,7 +8,7 @@ osg.Material = function () {
     this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
     this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
     this.emission = [ 0.0, 0.0, 0.0, 1.0 ];
-    this.shininess = 0.0;
+    this.shininess = 12.5;
     this._dirty = true;
 };
 /** @lends osg.Material.prototype */
@@ -68,12 +68,15 @@ osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                      "uniform vec4 MaterialSpecular;",
                      "uniform vec4 MaterialEmission;",
                      "uniform float MaterialShininess;",
-                     "vec4 Ambient;",
-                     "vec4 Diffuse;",
-                     "vec4 Specular;",
                      ""].join('\n');
             break;
-        case osg.ShaderGeneratorType.VertexMain:
+        case osg.ShaderGeneratorType.FragmentInit:
+            str =  [ "uniform vec4 MaterialAmbient;",
+                     "uniform vec4 MaterialDiffuse;",
+                     "uniform vec4 MaterialSpecular;",
+                     "uniform vec4 MaterialEmission;",
+                     "uniform float MaterialShininess;",
+                     ""].join('\n');
             break;
         }
         return str;
