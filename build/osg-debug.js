@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit b3fc39eacad9ea8823fda6049fbb571edbe1464a - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit 6c16220b0936e5fd6ae1277cb6dec1a9b0d51fcb - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -1494,8 +1494,11 @@ osg.ShaderGeneratorType = {
     VertexInit: 0,
     VertexFunction: 1,
     VertexMain: 2,
-    FragmentInit: 3,
-    FragmentMain: 5
+    VertexEnd: 3,
+    FragmentInit: 5,
+    FragmentFunction: 6,
+    FragmentMain: 7,
+    FragmentEnd: 8
 };
 
 /** 
@@ -2630,6 +2633,7 @@ osg.Camera = function () {
     this.renderOrder = osg.Camera.NESTED_RENDER;
     this.renderOrderNum = 0;
 };
+
 osg.Camera.PRE_RENDER = 0;
 osg.Camera.NESTED_RENDER = 1;
 osg.Camera.POST_RENDER = 2;
@@ -3076,31 +3080,41 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
     }
 });
 osg.Geometry.prototype.objectType = osg.objectType.generate("Geometry");
-osg.Light = function () {
+/** -*- compile-command: "jslint-cli Node.js" -*- */
+
+/** 
+ *  Light
+ *  @class Light
+ */
+osg.Light = function (lightNumber) {
     osg.StateAttribute.call(this);
 
-    this.ambient = [ 0.2, 0.2, 0.2, 1.0 ];
-    this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
-    this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
-    this.direction = [ 0.0, 0.0, 1.0 ];
-    this.constant_attenuation = 1.0;
-    this.linear_attenuation = 1.0;
-    this.quadratic_attenuation = 1.0;
-    this.light_unit = 0;
-    this.enabled = 0;
+    if (lightNumber === undefined) {
+        lightNumber = 0;
+    }
 
-    this.ambient = [ 1.0, 1.0, 1.0, 1.0 ];
-    this.diffuse = [ 1.0, 1.0, 1.0, 1.0 ];
-    this.specular = [ 1.0, 1.0, 1.0, 1.0 ];
+    this._ambient = [ 0.2, 0.2, 0.2, 1.0 ];
+    this._diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
+    this._specular = [ 0.2, 0.2, 0.2, 1.0 ];
+    this._position = [ 0.0, 0.0, 1.0, 0.0 ];
+    this._direction = [ 0.0, 0.0, -1.0 ];
+    this._spotCutoff = 180.0;
+    this._spotCutoffEnd = 180.0;
+    this._constantAttenuation = 1.0;
+    this._linearAttenuation = 0.0;
+    this._quadraticAttenuation = 0.0;
+    this._lightUnit = lightNumber;
+    this._enabled = 0;
 
-    this._dirty = true;
+    this.dirty();
 };
 
+/** @lends osg.Light.prototype */
 osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Light",
-    cloneType: function() {return new osg.Light(); },
+    cloneType: function() {return new osg.Light(this._lightUnit); },
     getType: function() { return this.attributeType; },
-    getTypeMember: function() { return this.attributeType + this.light_unit;},
+    getTypeMember: function() { return this.attributeType + this._lightUnit;},
     getOrCreateUniforms: function() {
         if (osg.Light.uniforms === undefined) {
             osg.Light.uniforms = {};
@@ -3109,12 +3123,16 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             osg.Light.uniforms[this.getTypeMember()] = { "ambient": osg.Uniform.createFloat4([ 0.2, 0.2, 0.2, 1], this.getParameterName("ambient")) ,
                                                          "diffuse": osg.Uniform.createFloat4([ 0.8, 0.8, 0.8, 1], this.getParameterName('diffuse')) ,
                                                          "specular": osg.Uniform.createFloat4([ 0.2, 0.2, 0.2, 1], this.getParameterName('specular')) ,
+                                                         "position": osg.Uniform.createFloat4([ 0, 0, 1, 0], this.getParameterName('position')),
                                                          "direction": osg.Uniform.createFloat3([ 0, 0, 1], this.getParameterName('direction')),
-                                                         "constant_attenuation": osg.Uniform.createFloat1( 0, this.getParameterName('constant_attenuation')),
-                                                         "linear_attenuation": osg.Uniform.createFloat1( 0, this.getParameterName('linear_attenuation')),
-                                                         "quadratic_attenuation": osg.Uniform.createFloat1( 0, this.getParameterName('quadratic_attenuation')),
+                                                         "spotCutoff": osg.Uniform.createFloat1( 180.0, this.getParameterName('spotCutoff')),
+                                                         "spotCutoffEnd": osg.Uniform.createFloat1( 180.0, this.getParameterName('spotCutoffEnd')),
+                                                         "constantAttenuation": osg.Uniform.createFloat1( 0, this.getParameterName('constantAttenuation')),
+                                                         "linearAttenuation": osg.Uniform.createFloat1( 0, this.getParameterName('linearAttenuation')),
+                                                         "quadraticAttenuation": osg.Uniform.createFloat1( 0, this.getParameterName('quadraticAttenuation')),
                                                          "enable": osg.Uniform.createInt1( 0, this.getParameterName('enable')),
-                                                         "matrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('matrix'))
+                                                         "matrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('matrix')),
+                                                         "invMatrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('invMatrix'))
                                                        };
 
             var uniformKeys = [];
@@ -3126,40 +3144,62 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         return osg.Light.uniforms[this.getTypeMember()];
     },
 
-    /** setAmbient */
-    setAmbient: function(a) { this.ambient = a; this.dirty(); },
-    /** setSpecular */
-    setSpecular: function(a) { this.specular = a; this.dirty(); },
-    /** setDiffuse */
-    setDiffuse: function(a) { this.diffuse = a; this.dirty(); },
+    setPosition: function(pos) { osg.Vec4.copy(pos, this._position); },
+    setAmbient: function(a) { this._ambient = a; this.dirty(); },
+    setSpecular: function(a) { this._specular = a; this.dirty(); },
+    setDiffuse: function(a) { this._diffuse = a; this.dirty(); },
+    setSpotExponent: function(a) { this._spotExponent = a; this.dirty(); },
+    setSpotCutoff: function(a) { this._spotCutoff = a; this.dirty(); },
+    setSpotCutoffEnd: function(a) { this._spotCutoffEnd = a; this.dirty(); },
 
-    getPrefix: function() {
-        return this.getType() + this.light_unit;
-    },
+    setDirection: function(a) { this._direction = a; this.dirty(); },
+    setLightNumber: function(unit) { this._lightUnit = unit; this.dirty(); },
 
-    getParameterName: function (name) {
-        return this.getPrefix()+ "_" + name;
-    },
+    getPrefix: function() { return this.getType() + this._lightUnit; },
+    getParameterName: function (name) { return this.getPrefix()+ "_" + name; },
 
     applyPositionedUniform: function(matrix, state) {
         var uniform = this.getOrCreateUniforms();
-        uniform.matrix.set(matrix);
+        osg.Matrix.copy(matrix, uniform.matrix.get());
+        uniform.matrix.dirty();
+
+        osg.Matrix.copy(matrix, uniform.invMatrix.get());
+        uniform.invMatrix.get()[12] = 0;
+        uniform.invMatrix.get()[13] = 0;
+        uniform.invMatrix.get()[14] = 0;
+        osg.Matrix.inverse(uniform.invMatrix.get(), uniform.invMatrix.get());
+        osg.Matrix.transpose(uniform.invMatrix.get(), uniform.invMatrix.get());
+        uniform.invMatrix.dirty();
     },
 
     apply: function(state)
     {
         var light = this.getOrCreateUniforms();
 
-        light.ambient.set(this.ambient);
-        light.diffuse.set(this.diffuse);
-        light.specular.set(this.specular);
-        light.direction.set(this.direction);
-        light.constant_attenuation.set([this.constant_attenuation]);
-        light.linear_attenuation.set([this.linear_attenuation]);
-        light.quadratic_attenuation.set([this.quadratic_attenuation]);
-        light.enable.set([this.enable]);
+        light.ambient.set(this._ambient);
+        light.diffuse.set(this._diffuse);
+        light.specular.set(this._specular);
+        light.position.set(this._position);
+        light.direction.set(this._direction);
 
-        this._dirty = false;
+        light.spotCutoff.get()[0] = this._spotCutoff;
+        light.spotCutoff.dirty();
+
+        light.spotCutoffEnd.get()[0] = this._spotCutoffEnd;
+        light.spotCutoffEnd.dirty();
+
+        light.constantAttenuation.get()[0] = this._constantAttenuation;
+        light.constantAttenuation.dirty();
+
+        light.linearAttenuation.get()[0] = this._linearAttenuation;
+        light.linearAttenuation.dirty();
+
+        light.quadraticAttenuation.get()[0] = this._quadraticAttenuation;
+        light.quadraticAttenuation.dirty();
+
+        //light._enable.set([this.enable]);
+
+        this.setDirty(false);
     },
 
     writeShaderInstance: function(type) {
@@ -3167,9 +3207,8 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         switch (type) {
         case osg.ShaderGeneratorType.VertexInit:
             str = [ "",
-                    "varying vec4 LightColor;",
-                    "vec3 EyeVector;",
-                    "vec3 NormalComputed;",
+                    "varying vec3 FragNormal;",
+                    "varying vec3 FragEyeVector;",
                     "",
                     "" ].join('\n');
             break;
@@ -3179,70 +3218,90 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     "   return vec3(NormalMatrix * vec4(Normal, 0.0));",
                     "}",
                     "",
-                    "vec3 computeEyeDirection() {",
+                    "vec3 computeEyeVertex() {",
                     "   return vec3(ModelViewMatrix * vec4(Vertex,1.0));",
                     "}",
                     "",
-                    "void directionalLight(in vec3 lightDirection, in vec3 lightHalfVector, in float constantAttenuation, in float linearAttenuation, in float quadraticAttenuation, in vec4 ambient, in vec4 diffuse,in vec4 specular, in vec3 normal)",
-                    "{",
-                    "   float nDotVP;         // normal . light direction",
-                    "   float nDotHV;         // normal . light half vector",
-                    "   float pf;             // power factor",
-                    "",
-                    "   nDotVP = max(0.0, dot(normal, normalize(lightDirection)));",
-                    "   nDotHV = max(0.0, dot(normal, lightHalfVector));",
-                    "",
-                    "   if (nDotHV == 0.0)",
-                    "   {",
-                    "       pf = 0.0;",
-                    "   }",
-                    "   else",
-                    "   {",
-                    "       pf = pow(nDotHV, MaterialShininess);",
-                    "   }",
-                    "   Ambient  += ambient;",
-                    "   Diffuse  += diffuse * nDotVP;",
-                    "   Specular += specular * pf;",
+                    "float getLightAttenuation(vec3 lightDir, float constant, float linear, float quadratic) {",
+                    "    ",
+                    "    float d = length(lightDir);",
+                    "    float att = 1.0 / ( constant + linear*d + quadratic*d*d);",
+                    "    return att;",
                     "}",
-                    "",
-                    "void flight(in vec3 lightDirection, in float constantAttenuation, in float linearAttenuation, in float quadraticAttenuation, in vec4 ambient, in vec4 diffuse, in vec4 specular, in vec3 normal)",
-                    "{",
-                    "    vec4 localColor;",
-                    "    vec3 lightHalfVector = normalize(EyeVector-lightDirection);",
-                    "    // Clear the light intensity accumulators",
-                    "    Ambient  = vec4 (0.0);",
-                    "    Diffuse  = vec4 (0.0);",
-                    "    Specular = vec4 (0.0);",
-                    "",
-                    "    directionalLight(lightDirection, lightHalfVector, constantAttenuation, linearAttenuation, quadraticAttenuation, ambient, diffuse, specular, normal);",
-                    "",
-                    "    vec4 sceneColor = vec4(0,0,0,0);",
-                    "    localColor = sceneColor +",
-                    "      MaterialEmission +",
-                    "      Ambient  * MaterialAmbient +",
-                    "      Diffuse  * MaterialDiffuse;",
-                    "      //Specular * MaterialSpecular;",
-                    "    localColor = clamp( localColor, 0.0, 1.0 );",
-                    "    LightColor += localColor;",
-                    "",
-                    "}" ].join('\n');
+                    ""].join('\n');
             break;
         case osg.ShaderGeneratorType.VertexMain:
             str = [ "",
-                    "EyeVector = computeEyeDirection();",
-                    "NormalComputed = computeNormal();",
-                    "LightColor = vec4(0,0,0,0);",
+                    "  vec3 vertexEye = computeEyeVertex();",
+                    "  FragEyeVector = -vertexEye;",
+                    "  FragNormal = computeNormal();",
                     "" ].join('\n');
             break;
         case osg.ShaderGeneratorType.FragmentInit:
-            str = [ "varying vec4 LightColor;",
-                    ""
-                  ].join('\n');
+            str = [ "varying vec3 FragNormal;",
+                    "varying vec3 FragEyeVector;",
+                    "vec4 LightColor = vec4(0.0);",
+                    "" ].join('\n');
+            break;
+
+        case osg.ShaderGeneratorType.FragmentFunction:
+            str = [ "",
+                    "vec4 computeLightContribution(vec4 materialEmission,",
+                    "                              vec4 materialAmbient,",
+                    "                              vec4 materialDiffuse,",
+                    "                              vec4 materialSpecular,",
+                    "                              float materialShininess,",
+                    "                              vec4 lightAmbient,",
+                    "                              vec4 lightDiffuse,",
+                    "                              vec4 lightSpecular,",
+                    "                              vec3 normal,",
+                    "                              vec3 eye,",
+                    "                              vec3 lightDirection,",
+                    "                              vec3 lightSpotDirection,",
+                    "                              float lightCosSpotCutoff,",
+                    "                              float lightCosSpotCutoffEnd,",
+                    "                              float lightAttenuation)",
+                    "{",
+                    "    vec3 L = lightDirection;",
+                    "    vec3 N = normal;",
+                    "    float NdotL = max(dot(L, N), 0.0);",
+                    "    vec4 ambient = lightAmbient;",
+                    "    vec4 diffuse = vec4(0.0);",
+                    "    vec4 specular = vec4(0.0);",
+                    "    float spot = 0.0;",
+                    "",
+                    "    if (NdotL > 0.0) {",
+                    "        vec3 E = eye;",
+                    "        vec3 R = reflect(-L, N);",
+                    "        float RdotE = pow( max(dot(R, E), 0.0), materialShininess );",
+                    "",
+                    "        vec3 D = lightSpotDirection;",
+                    "        spot = 1.0;",
+                    "        if (lightCosSpotCutoff > 0.0) {",
+                    "          float cosCurAngle = dot(L, D);",
+                    "          float cosInnerMinusOuterAngle = lightCosSpotCutoff - lightCosSpotCutoffEnd;",
+                    "",
+                    "          spot = clamp((cosCurAngle - lightCosSpotCutoffEnd) / cosInnerMinusOuterAngle, 0.0, 1.0);",
+                    "        }",
+
+                    "        diffuse = lightDiffuse * NdotL;",
+                    "        specular = lightSpecular * RdotE;",
+                    "    }",
+                    "",
+                    "    return materialEmission + (materialAmbient*ambient + (materialDiffuse*diffuse + materialSpecular*specular) * spot) * lightAttenuation;",
+                    "}",
+                    "" ].join('\n');
             break;
         case osg.ShaderGeneratorType.FragmentMain:
             str = [ "",
-                    "fragColor *= LightColor;"
-                  ].join('\n');
+                    "  vec3 normal = normalize(FragNormal);",
+                    "  vec3 eyeVector = normalize(FragEyeVector);",
+                    ""].join("\n");
+            break;
+        case osg.ShaderGeneratorType.FragmentEnd:
+            str = [ "",
+                    "  fragColor *= LightColor;",
+                    ""].join('\n');
             break;
         }
         return str;
@@ -3254,30 +3313,110 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         switch (type) {
         case osg.ShaderGeneratorType.VertexInit:
             str = [ "",
-                    "uniform bool " + this.getParameterName('enabled') + ";",
-                    "uniform vec4 " + this.getParameterName('ambient') + ";",
-                    "uniform vec4 " + this.getParameterName('diffuse') + ";",
-                    "uniform vec4 " + this.getParameterName('specular') + ";",
-                    "uniform vec3 " + this.getParameterName('direction') + ";",
-                    "uniform float " + this.getParameterName('constantAttenuation') + ";",
-                    "uniform float " + this.getParameterName('linearAttenuation') + ";",
-                    "uniform float " + this.getParameterName('quadraticAttenuation') + ";",
-                    //                    "uniform mat4 " + this.getParameterName('matrix') + ";",
+                    "varying vec3 FragDirection;",
+                    "varying vec3 FragSpotDirection;",
+                    "varying float FragAttenuation;",
+                    "uniform vec4 LightPosition;",
+                    "uniform vec3 LightDirection;",
+                    "uniform mat4 LightMatrix;",
+                    "uniform mat4 LightInvMatrix;",
+                    "uniform float LightConstantAttenuation;",
+                    "uniform float LightLinearAttenuation;",
+                    "uniform float LightQuadraticAttenuation;",
                     "",
                     "" ].join('\n');
+            str = str.replace(/LightMatrix/g, this.getParameterName('matrix'));
+            str = str.replace(/LightInvMatrix/g, this.getParameterName('invMatrix'));
+            str = str.replace(/FragDirection/g, this.getParameterName('fragDirection'));
+            str = str.replace(/FragSpotDirection/g, this.getParameterName('fragSpotDirection'));
+            str = str.replace(/LightPosition/g, this.getParameterName('position'));
+            str = str.replace(/LightDirection/g, this.getParameterName('direction'));
+            str = str.replace(/FragAttenuation/g, this.getParameterName('fragAttenuation'));
+            str = str.replace(/LightConstantAttenuation/g, this.getParameterName('constantAttenuation'));
+            str = str.replace(/LightLinearAttenuation/g, this.getParameterName('linearAttenuation'));
+            str = str.replace(/LightQuadraticAttenuation/g, this.getParameterName('quadraticAttenuation'));
             break;
         case osg.ShaderGeneratorType.VertexMain:
-            var lightNameDirection = this.getParameterName('direction');
-            var lightNameDirectionTmp = this.getParameterName('directionNormalized');
-            var NdotL = this.getParameterName("NdotL");
             str = [ "",
-                    "//if (" + this.getParameterName('enabled') + ") {",
-                    "if (true) {",
-                    "  vec3 " + lightNameDirectionTmp + " = normalize(" + lightNameDirection + ");",
-                    "  float " + NdotL + " = max(dot(Normal, " + lightNameDirectionTmp + "), 0.0);",
-                    "  flight(" +lightNameDirectionTmp +", "+ this.getParameterName("constantAttenuation") + ", " + this.getParameterName("linearAttenuation") + ", " + this.getParameterName("quadraticAttenuation") + ", " + this.getParameterName("ambient") + ", " + this.getParameterName("diffuse") + ", " + this.getParameterName("specular") + ", NormalComputed );",
-                    "}",
+                    "  vec3 lightEye = vec3(LightMatrix * LightPosition);",
+                    "  vec3 lightDir;",
+                    "  if (LightPosition[3] == 1.0) {",
+                    "    lightDir = lightEye - vertexEye;",
+                    "  } else {",
+                    "    lightDir = lightEye;",
+                    "  }",
+                    "  FragSpotDirection = normalize(mat3(LightInvMatrix)*LightDirection);",
+                    "  FragDirection = lightDir;",
+                    "  FragAttenuation = getLightAttenuation(lightDir, LightAttenuationConstant, LightAttenuationLinear, LightAttenuationQuadratic);",
                     "" ].join('\n');
+            str = str.replace(/LightMatrix/g, this.getParameterName('matrix'));
+            str = str.replace(/LightInvMatrix/g, this.getParameterName('invMatrix'));
+            str = str.replace(/LightPosition/g, this.getParameterName('position'));
+            str = str.replace(/lightEye/g, this.getParameterName('eye'));
+            str = str.replace(/FragDirection/g, this.getParameterName('fragDirection'));
+            str = str.replace(/FragSpotDirection/g, this.getParameterName('fragSpotDirection'));
+            str = str.replace(/LightDirection/g, this.getParameterName('direction'));
+            str = str.replace(/lightDir/g, this.getParameterName('lightDir'));
+            str = str.replace(/FragAttenuation/g, this.getParameterName('fragAttenuation'));
+            str = str.replace(/LightAttenuationConstant/g, this.getParameterName('constantAttenuation'));
+            str = str.replace(/LightAttenuationLinear/g, this.getParameterName('linearAttenuation'));
+            str = str.replace(/LightAttenuationQuadratic/g, this.getParameterName('quadraticAttenuation'));
+            break;
+        case osg.ShaderGeneratorType.FragmentInit:
+            str = [ "",
+                    "varying vec3 FragDirection;",
+                    "varying vec3 FragSpotDirection;",
+                    "varying float FragAttenuation;",
+                    "uniform vec4 LightAmbient;",
+                    "uniform vec4 LightDiffuse;",
+                    "uniform vec4 LightSpecular;",
+                    "uniform float LightSpotCutoff;",
+                    "uniform float LightSpotCutoffEnd;",
+                    "" ].join('\n');
+            str = str.replace(/FragDirection/g, this.getParameterName('fragDirection'));
+            str = str.replace(/FragSpotDirection/g, this.getParameterName('fragSpotDirection'));
+            str = str.replace(/LightAmbient/g, this.getParameterName('ambient'));
+            str = str.replace(/LightDiffuse/g, this.getParameterName('diffuse'));
+            str = str.replace(/LightSpecular/g, this.getParameterName('specular'));
+            str = str.replace(/LightSpotCutoff/g, this.getParameterName('spotCutoff'));
+            str = str.replace(/LightSpotCutoffEnd/g, this.getParameterName('spotCutoffEnd'));
+            str = str.replace(/FragAttenuation/g, this.getParameterName('fragAttenuation'));
+            break;
+        case osg.ShaderGeneratorType.FragmentMain:
+            str = [ "",
+                    "  vec3 lightDirectionNormalized = normalize(FragDirection);",
+                    "  float lightCosSpotCutoff = cos(radians(LightSpotCutoff));",
+                    "  float lightCosSpotCutoffEnd = cos(radians(LightSpotCutoffEnd));",
+                    "  LightColor += computeLightContribution(MaterialEmission,",
+                    "                                         MaterialAmbient,",
+                    "                                         MaterialDiffuse, ",
+                    "                                         MaterialSpecular,",
+                    "                                         MaterialShininess,",
+                    "                                         LightAmbient,",
+                    "                                         LightDiffuse,",
+                    "                                         LightSpecular,",
+                    "                                         normal,",
+                    "                                         eyeVector,",
+                    "                                         lightDirectionNormalized,",
+                    "                                         FragSpotDirection,",
+                    "                                         lightCosSpotCutoff,",
+                    "                                         lightCosSpotCutoffEnd,",
+                    "                                         FragAttenuation);",
+                    "" ].join('\n');
+
+            str = str.replace(/lightDirectionNormalized/g, this.getParameterName('lightDirectionNormalized'));
+            str = str.replace(/FragDirection/g, this.getParameterName('fragDirection'));
+            str = str.replace(/FragSpotDirection/g, this.getParameterName('fragSpotDirection'));
+            str = str.replace(/LightAmbient/g, this.getParameterName('ambient'));
+            str = str.replace(/LightDiffuse/g, this.getParameterName('diffuse'));
+            str = str.replace(/LightSpecular/g, this.getParameterName('specular'));
+            str = str.replace(/LightSpotCutoff/g, this.getParameterName('spotCutoff'));
+            str = str.replace(/LightSpotCutoffEnd/g, this.getParameterName('spotCutoffEnd'));
+            str = str.replace(/lightSpotCutoff/g, this.getParameterName('lightSpotCutoff'));
+            str = str.replace(/lightSpotCutoffEnd/g, this.getParameterName('lightSpotCutoffEnd'));
+            str = str.replace(/lightCosSpotCutoff/g, this.getParameterName('lightCosSpotCutoff'));
+            str = str.replace(/lightCosSpotCutoffEnd/g, this.getParameterName('lightCosSpotCutoffEnd'));
+            str = str.replace(/FragAttenuation/g, this.getParameterName('fragAttenuation'));
             break;
         }
         return str;
@@ -3307,7 +3446,7 @@ osg.Material = function () {
     this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
     this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
     this.emission = [ 0.0, 0.0, 0.0, 1.0 ];
-    this.shininess = 0.0;
+    this.shininess = 12.5;
     this._dirty = true;
 };
 /** @lends osg.Material.prototype */
@@ -3367,12 +3506,15 @@ osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                      "uniform vec4 MaterialSpecular;",
                      "uniform vec4 MaterialEmission;",
                      "uniform float MaterialShininess;",
-                     "vec4 Ambient;",
-                     "vec4 Diffuse;",
-                     "vec4 Specular;",
                      ""].join('\n');
             break;
-        case osg.ShaderGeneratorType.VertexMain:
+        case osg.ShaderGeneratorType.FragmentInit:
+            str =  [ "uniform vec4 MaterialAmbient;",
+                     "uniform vec4 MaterialDiffuse;",
+                     "uniform vec4 MaterialSpecular;",
+                     "uniform vec4 MaterialEmission;",
+                     "uniform float MaterialShininess;",
+                     ""].join('\n');
             break;
         }
         return str;
@@ -3444,7 +3586,7 @@ osg.DrawArrays.prototype = {
 };
 osg.DrawArrays.create = function(mode, first, count) {
     osg.log("osg.DrawArrays.create is deprecated, use new osg.DrawArrays with same arguments");
-    var d = new osg.DrawArray(mode, first, count);
+    var d = new osg.DrawArrays(mode, first, count);
     return d;
 };
 
@@ -4376,10 +4518,10 @@ osg.ShaderGenerator.prototype = {
         for (var j = 0, m = validAttributeKeys.length; j < m; j++) {
             var key = validAttributeKeys[j];
             var element = attributeMap[key].globalDefault;
-
-            if (element.writeShaderInstance !== undefined && instanciedTypeShader[key] === undefined) {
+            var type = element.getType();
+            if (element.writeShaderInstance !== undefined && instanciedTypeShader[type] === undefined) {
                 shader += element.writeShaderInstance(mode);
-                instanciedTypeShader[key] = true;
+                instanciedTypeShader[type] = true;
             }
 
             if (element.writeToShader) {
@@ -4391,7 +4533,7 @@ osg.ShaderGenerator.prototype = {
 
     getOrCreateVertexShader: function (state, validAttributeKeys, validTextureAttributeKeys) {
         var i;
-        var mode = osg.ShaderGeneratorType.VertexInit;
+        var modes = osg.ShaderGeneratorType;
         var shader = [
             "",
             "#ifdef GL_ES",
@@ -4408,37 +4550,32 @@ osg.ShaderGenerator.prototype = {
             ""
         ].join('\n');
 
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.VertexInit);
 
-        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
-        mode = osg.ShaderGeneratorType.VertexFunction;
         var func = [
             "",
             "vec4 ftransform() {",
-            "return ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);",
+            "  return ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);",
             "}"].join('\n');
 
         shader += func;
-        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.VertexFunction);
 
         var body = [
             "",
             "void main(void) {",
-            "gl_Position = ftransform();",
-            "if (ArrayColorEnabled == 1)",
-            "  VertexColor = Color;",
-            "else",
-            "  VertexColor = vec4(1.0,1.0,1.0,1.0);",
+            "  gl_Position = ftransform();",
+            "  if (ArrayColorEnabled == 1)",
+            "    VertexColor = Color;",
+            "  else",
+            "    VertexColor = vec4(1.0,1.0,1.0,1.0);",
             ""
         ].join('\n');
 
         shader += body;
 
-        mode = osg.ShaderGeneratorType.VertexMain;
-
-        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.VertexMain);
 
         shader += [
             "}",
@@ -4446,6 +4583,13 @@ osg.ShaderGenerator.prototype = {
         ].join('\n');
 
         return shader;
+    },
+
+    _writeShaderFromMode: function(state, validAttributeKeys, validTextureAttributeKeys, mode) {
+        var str = "";
+        str += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
+        str += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+        return str;
     },
 
     getOrCreateFragmentShader: function (state, validAttributeKeys, validTextureAttributeKeys) {
@@ -4460,27 +4604,26 @@ osg.ShaderGenerator.prototype = {
             "vec4 fragColor;",
             ""
         ].join("\n");
-        var mode = osg.ShaderGeneratorType.FragmentInit;
 
-        shader += this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+        var modes = osg.ShaderGeneratorType;
+        
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentInit);
+
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentFunction);
 
         shader += [
             "void main(void) {",
-            "fragColor = VertexColor;",
+            "  fragColor = VertexColor;",
             ""
         ].join('\n');
 
-        mode = osg.ShaderGeneratorType.FragmentMain;
-        if (validTextureAttributeKeys.length > 0) {
-            var result = this.fillTextureShader(state.textureAttributeMapList, validTextureAttributeKeys, mode);
-            shader += result;
-        }
-        shader += this.fillShader(state.attributeMap, validAttributeKeys, mode);
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentMain);
+
+        shader += this._writeShaderFromMode(state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentEnd);
 
         shader += [
             "",
-            "gl_FragColor = fragColor;",
+            "  gl_FragColor = fragColor;",
             "}"
         ].join('\n');
 
@@ -4491,7 +4634,7 @@ osg.ShaderGenerator.prototype = {
  * Create a Textured Box on the given center with given size
  * @name osg.createTexturedBox
  */
-osg.createTexturedBox = function(centerx, centery, centerz,
+osg.createTexturedBoxGeometry = function(centerx, centery, centerz,
                                  sizex, sizey, sizez) {
 
     var g = new osg.Geometry();
@@ -4773,20 +4916,20 @@ osg.createTexturedBox = function(centerx, centery, centerz,
     indexes[34] = 22;
     indexes[35] = 23;
 
-    g.getAttributes().Vertex = new osg.BufferArray(gl.ARRAY_BUFFER, vertexes, 3 );
-    g.getAttributes().Normal = new osg.BufferArray(gl.ARRAY_BUFFER, normal, 3 );
-    g.getAttributes().TexCoord0 = new osg.BufferArray(gl.ARRAY_BUFFER, uv, 2 );
+    g.getAttributes().Vertex = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, vertexes, 3 );
+    g.getAttributes().Normal = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, normal, 3 );
+    g.getAttributes().TexCoord0 = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, uv, 2 );
     
-    var primitive = new osg.DrawElements(gl.TRIANGLES, new osg.BufferArray(gl.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
+    var primitive = new osg.DrawElements(osg.PrimitiveSet.TRIANGLES, new osg.BufferArray(osg.BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
     g.getPrimitives().push(primitive);
     return g;
 };
 
 
-osg.createTexturedQuad = function(cornerx, cornery, cornerz,
-                                  wx, wy, wz,
-                                  hx, hy, hz,
-                                  l,b,r,t) {
+osg.createTexturedQuadGeometry = function(cornerx, cornery, cornerz,
+                                          wx, wy, wz,
+                                          hx, hy, hz,
+                                          l,b,r,t) {
 
     if (r === undefined && t === undefined) {
         r = l;
@@ -4861,12 +5004,109 @@ osg.createTexturedQuad = function(cornerx, cornery, cornerz,
     indexes[4] = 2;
     indexes[5] = 3;
 
-    g.getAttributes().Vertex = new osg.BufferArray(gl.ARRAY_BUFFER, vertexes, 3 );
-    g.getAttributes().Normal = new osg.BufferArray(gl.ARRAY_BUFFER, normal, 3 );
-    g.getAttributes().TexCoord0 = new osg.BufferArray(gl.ARRAY_BUFFER, uvs, 2 );
+    g.getAttributes().Vertex = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, vertexes, 3 );
+    g.getAttributes().Normal = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, normal, 3 );
+    g.getAttributes().TexCoord0 = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, uvs, 2 );
     
-    var primitive = new osg.DrawElements(gl.TRIANGLES, new osg.BufferArray(gl.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
+    var primitive = new osg.DrawElements(osg.PrimitiveSet.TRIANGLES, new osg.BufferArray(osg.BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
     g.getPrimitives().push(primitive);
+    return g;
+};
+
+osg.createTexturedBox = function(centerx, centery, centerz,
+                                 sizex, sizey, sizez) {
+    osg.log("osg.createTexturedBox is deprecated use instead osg.createTexturedBoxGeometry");
+    return osg.createTexturedBoxGeometry(centerx, centery, centerz,
+                                         sizex, sizey, sizez);
+};
+
+osg.createTexturedQuad = function(cornerx, cornery, cornerz,
+                                  wx, wy, wz,
+                                  hx, hy, hz,
+                                  l,b,r,t) {
+    osg.log("osg.createTexturedQuad is deprecated use instead osg.createTexturedQuadGeometry");
+    return osg.createTexturedQuadGeometry(cornerx, cornery, cornerz,
+                                          wx, wy, wz,
+                                          hx, hy, hz,
+                                          l,b,r,t);
+};
+
+osg.createAxisGeometry = function(size) {
+    if (size === undefined) {
+        size = 5.0;
+    }
+    if (osg.createAxisGeometry.getShader === undefined) {
+        osg.createAxisGeometry.getShader = function() {
+            if (osg.createAxisGeometry.getShader.program === undefined) {
+                var vertexshader = [
+                    "#ifdef GL_ES",
+                    "precision highp float;",
+                    "#endif",
+                    "attribute vec3 Vertex;",
+                    "attribute vec4 Color;",
+                    "uniform mat4 ModelViewMatrix;",
+                    "uniform mat4 ProjectionMatrix;",
+                    "",
+                    "varying vec4 FragColor;",
+                    "",
+                    "vec4 ftransform() {",
+                    "return ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);",
+                    "}",
+                    "",
+                    "void main(void) {",
+                    "gl_Position = ftransform();",
+                    "FragColor = Color;",
+                    "}",
+                ].join('\n');
+
+                var fragmentshader = [
+                    "#ifdef GL_ES",
+                    "precision highp float;",
+                    "#endif",
+                    "varying vec4 FragColor;",
+
+                    "void main(void) {",
+                    "gl_FragColor = FragColor;",
+                    "}",
+                ].join('\n');
+
+                var program = new osg.Program(new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+                                              new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+                osg.createAxisGeometry.getShader.program = program;
+            }
+            return osg.createAxisGeometry.getShader.program;
+        };
+    }
+
+    var g = new osg.Geometry();
+
+    var vertexes = [];
+    vertexes.push(0,0,0);
+    vertexes.push(size,0,0);
+
+    vertexes.push(0,0,0);
+    vertexes.push(0,size,0);
+
+    vertexes.push(0,0,0);
+    vertexes.push(0,0,size);
+
+    var colors = [];
+    colors.push(1, 0, 0, 1.0);
+    colors.push(1, 0, 0, 1.0);
+
+    colors.push(0, 1, 0, 1.0);
+    colors.push(0, 1, 0, 1.0);
+
+    colors.push(0, 0, 1, 1.0);
+    colors.push(0, 0, 1, 1.0);
+
+    g.getAttributes().Vertex = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, vertexes, 3 );
+    g.getAttributes().Color = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, colors, 4 );
+
+    var primitive = new osg.DrawArrays(osg.PrimitiveSet.LINES, 0, 6);
+    g.getPrimitives().push(primitive);
+    g.getOrCreateStateSet().setAttributeAndMode(osg.createAxisGeometry.getShader());
+
     return g;
 };
 osg.Stack = function() {};
@@ -5740,6 +5980,16 @@ osg.Texture.MIRRORED_REPEAT = 0x8370;
 
 // target
 osg.Texture.TEXTURE_2D = 0x0DE1;
+osg.Texture.TEXTURE_CUBE_MAP = 0x8513;
+osg.Texture.TEXTURE_BINDING_CUBE_MAP       = 0x8514;
+osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X    = 0x8515;
+osg.Texture.TEXTURE_CUBE_MAP_NEGATIVE_X    = 0x8516;
+osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_Y    = 0x8517;
+osg.Texture.TEXTURE_CUBE_MAP_NEGATIVE_Y    = 0x8518;
+osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_Z    = 0x8519;
+osg.Texture.TEXTURE_CUBE_MAP_NEGATIVE_Z    = 0x851A;
+osg.Texture.MAX_CUBE_MAP_TEXTURE_SIZE      = 0x851C;
+
 
 /** @lends osg.Texture.prototype */
 osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
@@ -5851,8 +6101,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         this.setImage(canvas, format);
     },
 
-    isImageReady: function() {
-        var image = this._image;
+    isImageReady: function(image) {
         if (image) {
             if (image instanceof Image) {
                 if (image.complete) {
@@ -5868,30 +6117,32 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         return false;
     },
 
-    applyFilterParameter: function(graphicContext) {
-        var gl = graphicContext;
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this._magFilter);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this._minFilter);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this._wrapS);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this._wrapT);
-        if (this._minFilter === osg.Texture.NEAREST_MIPMAP_NEAREST ||
-            this._minFilter === osg.Texture.LINEAR_MIPMAP_NEAREST ||
-            this._minFilter === osg.Texture.NEAREST_MIPMAP_LINEAR ||
-            this._minFilter === osg.Texture.LINEAR_MIPMAP_LINEAR) {
-            gl.generateMipmap(gl.TEXTURE_2D);
+    applyFilterParameter: function(gl, target) {
+        gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this._magFilter);
+        gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this._minFilter);
+        gl.texParameteri(target, gl.TEXTURE_WRAP_S, this._wrapS);
+        gl.texParameteri(target, gl.TEXTURE_WRAP_T, this._wrapT);
+    },
+
+    generateMipmap: function(gl, target) {
+        if (this._minFilter === gl.NEAREST_MIPMAP_NEAREST ||
+            this._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
+            this._minFilter === gl.NEAREST_MIPMAP_LINEAR ||
+            this._minFilter === gl.LINEAR_MIPMAP_LINEAR) {
+            gl.generateMipmap(target);
         }
     },
 
     apply: function(state) {
         var gl = state.getGraphicContext();
         if (this._textureObject !== undefined && !this.isDirty()) {
-            gl.bindTexture(gl.TEXTURE_2D, this._textureObject);
+            gl.bindTexture(this._textureTarget, this._textureObject);
         } else if (this.default_type) {
-            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindTexture(this._textureTarget, null);
         } else {
             var image = this._image;
             if (image !== undefined) {
-                if (this.isImageReady()) {
+                if (this.isImageReady(image)) {
                     if (!this._textureObject) {
                         this.init(gl);
                     }
@@ -5901,24 +6152,26 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                         this.setTextureSize(image.width, image.height);
                     }
                     this.setDirty(false);
-                    gl.bindTexture(gl.TEXTURE_2D, this._textureObject);
-                    gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
-                    this.applyFilterParameter(gl);
+                    gl.bindTexture(this._textureTarget, this._textureObject);
+                    gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
+                    this.applyFilterParameter(gl, this._textureTarget);
+                    this.generateMipmap(gl, this._textureTarget);
 
                     if (this._unrefImageDataAfterApply) {
                         delete this._image;
                     }
                 } else {
-                    gl.bindTexture(gl.TEXTURE_2D, null);
+                    gl.bindTexture(this._textureTarget, null);
                 }
 
             } else if (this._textureHeight !== 0 && this._textureWidth !== 0 ) {
                 if (!this._textureObject) {
                     this.init(gl);
                 }
-                gl.bindTexture(gl.TEXTURE_2D, this._textureObject);
-                gl.texImage2D(gl.TEXTURE_2D, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, gl.UNSIGNED_BYTE, null);
-                this.applyFilterParameter(gl);
+                gl.bindTexture(this._textureTarget, this._textureObject);
+                gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, gl.UNSIGNED_BYTE, null);
+                this.applyFilterParameter(gl, this._textureTarget);
+                this.generateMipmap(gl, this._textureTarget);
                 this.setDirty(false);
             }
         }
@@ -6429,12 +6682,17 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
 
 
 osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (node) {
-
-    var lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-
     var matrix = this.getReservedMatrix();
-    osg.Matrix.mult(lastMatrixStack, node.getMatrix(), matrix);
+
+    if (node.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
+        var lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+        osg.Matrix.mult(lastMatrixStack, node.getMatrix(), matrix);
+    } else {
+        // absolute
+        osg.Matrix.copy(node.getMatrix(), matrix);
+    }
     this.pushModelviewMatrix(matrix);
+
 
     var stateset = node.getStateSet();
     if (stateset) {
@@ -8082,7 +8340,7 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
  *  Cedric Pinson <cedric.pinson@plopbyte.com>
  */
 
-osgUtil.ShaderParameterVisitor = function() {
+osgUtil.ParameterVisitor = function() {
     osg.NodeVisitor.call(this);
     this.targetHTML = document.body;
 
@@ -8131,18 +8389,19 @@ osgUtil.ShaderParameterVisitor = function() {
             this.parent.appendChild(mydiv);
         },
         createSlider: function(min, max, step, value, name, cbname) {
-            var input = '<div>NAME [ MIN - MAX ] <input type="range" min="MIN" max="MAX" value="VALUE" step="STEP" onchange="ONCHANGE" /><span id="NAME"></span></div>';
+            var input = '<div>NAME [ MIN - MAX ] <input type="range" min="MIN" max="MAX" value="VALUE" step="STEP" onchange="ONCHANGE" /><span id="UPDATE"></span></div>';
             var onchange = cbname + '(this.value)';
             input = input.replace(/MIN/g, min);
-            input = input.replace(/MAX/g, max);
+            input = input.replace(/MAX/g, (max+step));
             input = input.replace('STEP', step);
             input = input.replace('VALUE', value);
             input = input.replace(/NAME/g, name);
+            input = input.replace(/UPDATE/g, cbname);
             input = input.replace('ONCHANGE', onchange);
             return input;
         },
 
-        createFunction: function(name, index, uniform, cbnameIndex) {
+        createUniformFunction: function(name, index, uniform, cbnameIndex) {
             self = this;
             return (function() {
                 var cname = name;
@@ -8153,7 +8412,34 @@ osgUtil.ShaderParameterVisitor = function() {
                     cuniform.get()[cindex] = value;
                     cuniform.dirty();
                     osg.log(cname + ' value ' + value);
-                    document.getElementById(cname).innerHTML = Number(value).toFixed(4);
+                    document.getElementById(cbnameIndex).innerHTML = Number(value).toFixed(4);
+                    self.setValue(id, value);
+                    // store the value to localstorage
+                };
+                return func;
+            })();
+        },
+
+        createFunction: function(name, index, object, field, cbnameIndex) {
+            self = this;
+            return (function() {
+                var cname = name;
+                var cindex = index;
+                var cfield = field;
+                var id = cbnameIndex;
+                var obj = object;
+                var func = function(value) {
+                    if (typeof(value) === 'string') {
+                        value = parseFloat(value);
+                    }
+
+                    if (typeof(object[cfield]) === 'number') {
+                        obj[cfield] = value;
+                    } else {
+                        obj[cfield][index] = value;
+                    }
+                    osg.log(cname + ' value ' + value);
+                    document.getElementById(cbnameIndex).innerHTML = Number(value).toFixed(4);
                     self.setValue(id, value);
                     // store the value to localstorage
                 };
@@ -8165,7 +8451,7 @@ osgUtil.ShaderParameterVisitor = function() {
             return 'change_'+prgId+"_"+name;
         },
 
-        createInternalSlider: function(name, dim, uniformFunc, prgId, originalUniform) {
+        createInternalSliderUniform: function(name, dim, uniformFunc, prgId, originalUniform) {
             var params = this.selectParamFromName(name);
             var uvalue = params.value();
             var uniform = originalUniform;
@@ -8194,12 +8480,46 @@ osgUtil.ShaderParameterVisitor = function() {
 
                 var dom = this.createSlider(params.min, params.max, params.step, value, nameIndex, cbnameIndex);
                 this.addToDom(dom);
-                window[cbnameIndex] = this.createFunction(nameIndex, i, uniform, cbnameIndex);
+                window[cbnameIndex] = this.createUniformFunction(nameIndex, i, uniform, cbnameIndex);
                 osg.log(nameIndex + " " + value);
                 window[cbnameIndex](value);
             }
             this.uniform = uniform;
             return uniform;
+        },
+
+        createInternalSlider: function(name, dim, id, object, field) {
+            var params = this.selectParamFromName(name);
+            var uvalue = params.value();
+
+            var cbname = this.getCallbackName(name, id);
+            for (var i = 0; i < dim; i++) {
+
+                var istring = i.toString();
+                var nameIndex = name + istring;
+                var cbnameIndex = cbname+istring;
+
+                // default value
+                var value = uvalue[i];
+
+                // read local storage value if it exist
+                var readValue = this.getValue(cbnameIndex);
+                if (readValue !== null) {
+                    value = readValue;
+                } else {
+                    if (typeof object[field] === 'number') {
+                        value = object[field];
+                    } else {
+                        value = object[field][i];
+                    }
+                }
+
+                var dom = this.createSlider(params.min, params.max, params.step, value, nameIndex, cbnameIndex);
+                this.addToDom(dom);
+                window[cbnameIndex] = this.createFunction(nameIndex, i, object, field, cbnameIndex);
+                osg.log(nameIndex + " " + value);
+                window[cbnameIndex](value);
+            }
         }
     };
 
@@ -8215,9 +8535,13 @@ osgUtil.ShaderParameterVisitor = function() {
         
     };
     Vec4Slider.prototype = osg.objectInehrit(ArraySlider.prototype, {
-        create: function(name, prgId, uniform) {
-            return this.createInternalSlider(name, 4, osg.Uniform.createFloat4, prgId, uniform);
+        createSliderUniform: function(name, prgId, uniform) {
+            return this.createInternalSliderUniform(name, 4, osg.Uniform.createFloat4, prgId, uniform);
+        },
+        createSliderObject: function(name, id, object, field) {
+            return this.createInternalSlider(name, 4, id, object, field);
         }
+
     });
 
     var Vec3Slider = function() {
@@ -8237,8 +8561,11 @@ osgUtil.ShaderParameterVisitor = function() {
         this.params['default'] = this.params['position'];
     };
     Vec3Slider.prototype = osg.objectInehrit(ArraySlider.prototype, {
-        create: function(name, prgId, uniform) {
-            return this.createInternalSlider(name, 3, osg.Uniform.createFloat3, prgId, uniform);
+        createSliderUniform: function(name, prgId, uniform) {
+            return this.createInternalSliderUniform(name, 3, osg.Uniform.createFloat3, prgId, uniform);
+        },
+        createSliderObject: function(name, id, object, field) {
+            return this.createInternalSlider(name, 3, id, object, field);
         }
     });
 
@@ -8254,8 +8581,11 @@ osgUtil.ShaderParameterVisitor = function() {
         this.params['default'] = this.params['uv'];
     };
     Vec2Slider.prototype = osg.objectInehrit(ArraySlider.prototype, {
-        create: function(name, prgId, uniform) {
-            return this.createInternalSlider(name, 2, osg.Uniform.createFloat2, prgId, uniform);
+        createSliderUniform: function(name, prgId, uniform) {
+            return this.createInternalSliderUniform(name, 2, osg.Uniform.createFloat2, prgId, uniform);
+        },
+        createSliderObject: function(name, id, object, field) {
+            return this.createInternalSlider(name, 2, id, object, field);
         }
     });
 
@@ -8270,9 +8600,13 @@ osgUtil.ShaderParameterVisitor = function() {
                            };
     };
     FloatSlider.prototype = osg.objectInehrit(ArraySlider.prototype, {
-        create: function(name, prgId, uniform) {
-            return this.createInternalSlider(name, 1, osg.Uniform.createFloat1, prgId, uniform);
+        createSliderUniform: function(name, prgId, uniform) {
+            return this.createInternalSliderUniform(name, 1, osg.Uniform.createFloat1, prgId, uniform);
+        },
+        createSliderObject: function(name, id, object, field) {
+            return this.createInternalSlider(name, 1, id, object, field);
         }
+
     });
 
     this.types = {};
@@ -8284,7 +8618,7 @@ osgUtil.ShaderParameterVisitor = function() {
     this.setTargetHTML(document.body);
 };
 
-osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+osgUtil.ParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
 
     setTargetHTML: function(html) {
         this.targetHTML = html;
@@ -8310,6 +8644,9 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
 
     getUniformFromStateSet: function(stateSet, uniformMap) {
         var maps = stateSet.getUniformList();
+        if (!maps) {
+            return;
+        }
         var keys = Object.keys(uniformMap);
         for (var i = 0, l = keys.length; i < l; i++) {
             var k = keys[i];
@@ -8330,6 +8667,7 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
                 if (stateSet) {
                     getUniformFromStateSet(stateSet, this.uniformMap);
                 }
+                this.traverse(node);
             }
         });
         var visitor = new BackVisitor();
@@ -8337,10 +8675,7 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
         node.accept(visitor);
     },
 
-    applyStateSet: function(node, stateset) {
-        if (stateset.getAttribute('Program') === undefined) {
-            return;
-        }
+    applyProgram: function(node, stateset) {
         var program = stateset.getAttribute('Program');
         var programName = program.getName();
         var string = program.getVertexShader().getText();
@@ -8372,19 +8707,59 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
 
         this.findExistingUniform(node, uniformMap);
 
+        var addedSlider = false;
         for (var i = 0; i < keys.length; i++) {
             var k = keys[i];
             var entry = uniformMap[k];
             var type = entry.type;
             var name = entry.name;
             if (this.types[type] !== undefined) {
-                var uniform = this.types[type].create(name, programName, entry.uniform);
+                var uniform = this.types[type].createSliderUniform(name, programName, entry.uniform);
                 if (entry.uniform === undefined && uniform) {
                     stateset.addUniform(uniform);
                 }
+                addedSlider = true;
             }
         }
+
+        // add a separator
+        if (addedSlider) {
+            var mydiv = document.createElement('div');
+            mydiv.innerHTML = "<p> </p>";
+            this.targetHTML.appendChild(mydiv);
+        }
+
         osg.log(uniformMap);
+    },
+
+
+    applyLight: function(node, stateset) {
+        var attribute = stateset.getAttribute('Light0');
+
+        this.types.float.params['spotCutoff'] = { min: 0, max: 180, step: 1, value: function() { return 180;} };
+        this.types.float.params['spotCutoffEnd'] = this.types.float.params['spotCutoff'];
+        this.types.vec4.params['position'] = { min: -50, max: 50, step: 1, value: function() { return [0,0,1,0];} };
+        
+        this.types.vec4.createSliderObject("ambient", attribute.getTypeMember()+"_ambient", attribute, '_ambient');
+        this.types.vec4.createSliderObject("diffuse", attribute.getTypeMember()+"_diffuse", attribute, '_diffuse');
+        this.types.vec4.createSliderObject("specular", attribute.getTypeMember()+"_specular", attribute, '_specular');
+        this.types.vec3.createSliderObject("direction", attribute.getTypeMember()+"_direction", attribute, '_direction');
+        this.types.vec4.createSliderObject("position", attribute.getTypeMember()+"_position", attribute, '_position');
+        this.types.float.createSliderObject("spotCutoff", attribute.getTypeMember()+"_spotCutoff", attribute, '_spotCutoff');
+        this.types.float.createSliderObject("spotCutoffEnd", attribute.getTypeMember()+"_spotCutoffEnd", attribute, '_spotCutoffEnd');
+
+        // add a separator
+        var mydiv = document.createElement('div');
+        mydiv.innerHTML = "<p> </p>";
+        this.targetHTML.appendChild(mydiv);
+    },
+
+    applyStateSet: function(node, stateset) {
+        if (stateset.getAttribute('Program') !== undefined) {
+            this.applyProgram(node, stateset);
+        } else if (stateset.getAttribute('Light0') !== undefined) {
+            this.applyLight(node, stateset);
+        }
     },
 
     apply: function(node) {
@@ -8396,7 +8771,127 @@ osgUtil.ShaderParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.pro
         this.traverse(node);
     }
 });
-/** -*- compile-command: "jslint-cli osgDB.js" -*-
+
+osgUtil.ParameterVisitor.SliderParameter = function() {};
+osgUtil.ParameterVisitor.SliderParameter.prototype = {
+    addToDom: function(parent, content) {
+        var mydiv = document.createElement('div');
+        mydiv.innerHTML = content;
+        parent.appendChild(mydiv);
+    },
+
+    createInternalSlider: function(name, dim, id, params, object, field) {
+
+        var cbname = this.getCallbackName(name, id);
+        for (var i = 0; i < dim; i++) {
+
+            var istring = i.toString();
+            var nameIndex = name + istring;
+            var cbnameIndex = cbname+istring;
+
+            // default value
+            var value;
+            if (typeof(params.value) === 'number') {
+                value = params.value;
+            } else {
+                value = params.value[i];
+            }
+
+            // read local storage value if it exist
+            var readValue = this.getValue(cbnameIndex);
+            if (readValue !== null) {
+                value = readValue;
+            } else {
+                if (typeof object[field] === 'number') {
+                    value = object[field];
+                } else {
+                    value = object[field][i];
+                }
+            }
+
+            var dom = this.createDomSlider(value, params.min, params.max, params.step, nameIndex, cbnameIndex);
+            this.addToDom(params.dom, dom);
+            window[cbnameIndex] = this.createFunction(nameIndex, i, object, field, cbnameIndex);
+            osg.log(nameIndex + " " + value);
+            window[cbnameIndex](value);
+        }
+    },
+
+    createDomSlider: function(value, min, max, step, name, cbname) {
+        var input = '<div>NAME [ MIN - MAX ] <input type="range" min="MIN" max="MAX" value="VALUE" step="STEP" onchange="ONCHANGE" /><span id="UPDATE"></span></div>';
+        var onchange = cbname + '(this.value)';
+        input = input.replace(/MIN/g, min);
+        input = input.replace(/MAX/g, (max+1e-3));
+        input = input.replace('STEP', step);
+        input = input.replace('VALUE', value);
+        input = input.replace(/NAME/g, name);
+        input = input.replace(/UPDATE/g, cbname);
+        input = input.replace('ONCHANGE', onchange);
+        return input;
+    },
+    getCallbackName: function(name, prgId) {
+        return 'change_'+prgId+"_"+name;
+    },
+
+    createFunction: function(name, index, object, field, callbackName) {
+        self = this;
+        return (function() {
+            var cname = name;
+            var cindex = index;
+            var cfield = field;
+            var obj = object;
+            var func = function(value) {
+                if (typeof(value) === 'string') {
+                    value = parseFloat(value);
+                }
+
+                if (typeof(object[cfield]) === 'number') {
+                    obj[cfield] = value;
+                } else {
+                    obj[cfield][index] = value;
+                }
+                osg.log(cname + ' value ' + value);
+                document.getElementById(callbackName).innerHTML = Number(value).toFixed(4);
+                self.setValue(callbackName, value);
+                // store the value to localstorage
+            };
+            return func;
+        })();
+    },
+    getValue: function(name) {
+        if (window.localStorage) {
+            var value = window.localStorage.getItem(name);
+            return value;
+        }
+        return null;
+    },
+    setValue: function(name, value) {
+        if (window.localStorage) {
+            window.localStorage.setItem(name, value);
+        }
+    },
+};
+
+osgUtil.ParameterVisitor.createSlider = function (label, uniqNameId, object, field, value, min, max, step, dom) {
+    var scope = osgUtil.ParameterVisitor;
+    if (scope.sliders === undefined) {
+        scope.sliders = new scope.SliderParameter();
+    }
+
+    var params = { value: value,
+                   min: min,
+                   max: max,
+                   step: step,
+                   dom: dom };
+
+    if (typeof(object[field]) === 'number') {
+        return scope.sliders.createInternalSlider(label, 1, uniqNameId, params, object, field);
+    } else {
+        return scope.sliders.createInternalSlider(label, object[field].length, uniqNameId, params, object, field);
+    }
+};
+
+osgUtil.ShaderParameterVisitor = osgUtil.ParameterVisitor;/** -*- compile-command: "jslint-cli osgDB.js" -*-
  *
  *  Copyright (C) 2010 Cedric Pinson
  *
@@ -9005,8 +9500,8 @@ osgViewer.View.prototype = {
             this._light = new osg.Light();
             this._light.setAmbient([0.2,0.2,0.2,1.0]);
             this._light.setDiffuse([0.8,0.8,0.8,1.0]);
-            this._light.setSpecular([1.0,1.0,1.0,1.0]);
-            this._scene.light = this._light;
+            this._light.setSpecular([0.5,0.5,0.5,1.0]);
+            //this._scene.light = this._light;
         }
     }
 
@@ -9259,6 +9754,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         var camera = this.getCamera();
         this._cullVisitor.pushStateSet(camera.getStateSet());
         this._cullVisitor.pushProjectionMatrix(camera.getProjectionMatrix());
+
+        var identity = osg.Matrix.makeIdentity([]);
+        this._cullVisitor.pushModelviewMatrix(identity);
+        this._cullVisitor.addPositionedAttribute(this._light);
+
         this._cullVisitor.pushModelviewMatrix(camera.getViewMatrix());
         this._cullVisitor.pushViewport(camera.getViewport());
         this._cullVisitor.setCullSettings(camera);
