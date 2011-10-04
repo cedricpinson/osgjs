@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit 6c16220b0936e5fd6ae1277cb6dec1a9b0d51fcb - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit 7ff609173379329a62ff0b9f1746adc8f6c51a6b - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -2300,7 +2300,7 @@ osg.BoundingBox.prototype = {
                                           this._max, 
                                           []),
                              0.5,
-                            []);
+                             []);
     },
     radius: function() {
 	return Math.sqrt(this.radius2());
@@ -2384,18 +2384,14 @@ osg.BoundingSphere.prototype = {
 		this._center[1] = c[1];
 		this._center[2] = c[2];
 		this._radius    = newbb.radius();
-
-
 	    }
 	    else
 	    {
-
 		c = bb.center();
 		this._center[0] = c[0];
 		this._center[1] = c[1];
 		this._center[2] = c[2];
 		this._radius    = bb.radius();
-
 	    }
 	}
 
@@ -2598,8 +2594,8 @@ osg.CullFace.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     }
 });
 osg.CullSettings = function() {
-    this.computeNearFar = true;
-    this.nearFarRatio = 0.0005;
+    this._computeNearFar = true;
+    this._nearFarRatio = 0.0005;
 
     var lookVector =[0.0,0.0,-1.0];
     this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
@@ -2607,13 +2603,13 @@ osg.CullSettings = function() {
 };
 osg.CullSettings.prototype = {
     setCullSettings: function(settings) {
-        this.computeNearFar = settings.computeNearFar;
-        this.nearFarRatio = settings.nearFarRatio;
+        this._computeNearFar = settings._computeNearFar;
+        this._nearFarRatio = settings._nearFarRatio;
     },
-    setNearFarRatio: function( ratio) { this.nearFarRatio = ratio; },
-    getNearFarRatio: function() { return this.nearFarRatio; },
-    setComputeNearFar: function(value) { this.computeNearFar = value; },
-    getComputeNearFar: function() { return this.computeNearFar; }
+    setNearFarRatio: function( ratio) { this._nearFarRatio = ratio; },
+    getNearFarRatio: function() { return this._nearFarRatio; },
+    setComputeNearFar: function(value) { this._computeNearFar = value; },
+    getComputeNearFar: function() { return this._computeNearFar; }
 };
 /** 
  * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
@@ -3062,7 +3058,7 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
     },
     computeBoundingBox: function(boundingBox) {
 	var att = this.getAttributes();
-	if ( att.Vertex.itemSize == 3 ) {
+	if ( att.Vertex.itemSize > 2 ) {
 	    vertexes = att.Vertex.getElements();
 	    for (var idx = 0, l = vertexes.length; idx < l; idx+=3) {
 		var v=[vertexes[idx],vertexes[idx+1],vertexes[idx+2]];
@@ -3148,9 +3144,12 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setAmbient: function(a) { this._ambient = a; this.dirty(); },
     setSpecular: function(a) { this._specular = a; this.dirty(); },
     setDiffuse: function(a) { this._diffuse = a; this.dirty(); },
-    setSpotExponent: function(a) { this._spotExponent = a; this.dirty(); },
     setSpotCutoff: function(a) { this._spotCutoff = a; this.dirty(); },
     setSpotCutoffEnd: function(a) { this._spotCutoffEnd = a; this.dirty(); },
+
+    setConstantAttenuation: function(value) { this._constantAttenuation = value; this.dirty()},
+    setLinearAttenuation: function(value) { this._linearAttenuation = value; this.dirty()},
+    setQuadraticAttenuation: function(value) { this._quadraticAttenuation = value; this.dirty()},
 
     setDirection: function(a) { this._direction = a; this.dirty(); },
     setLightNumber: function(unit) { this._lightUnit = unit; this.dirty(); },
@@ -3987,23 +3986,121 @@ osg.Quat = {
     }
 
 };
-osg.RenderBin = function (stateGraph) {
-    this.leafs = [];
-    this.stateGraph = stateGraph;
+osg.RenderBin = function () {
+    this._leafs = [];
     this.positionedAttribute = [];
-    this.renderStage = undefined;
-    this.renderBin = {};
+    this._renderStage = undefined;
+    this._bins = {};
     this.stateGraphList = [];
+    this._parent = undefined;
+    this._binNum = 0;
+
+    this._sorted = false;
+    this._sortMode = osg.RenderBin.SORT_BY_STATE;
+
 };
+osg.RenderBin.SORT_BY_STATE = 0;
+osg.RenderBin.SORT_BACK_TO_FRONT = 1;
+osg.RenderBin.BinPrototypes = {
+    RenderBin: function() {
+        return new osg.RenderBin();
+    },
+    DepthSortedBin: function() {
+        var rb = new osg.RenderBin();
+        rb._sortMode = osg.RenderBin.SORT_BACK_TO_FRONT;
+        return rb;
+    },
+};
+
 osg.RenderBin.prototype = {
-    getStage: function() { return this.renderStage; },
+    _createRenderBin: function(binName) {
+        if (binName === undefined || osg.RenderBin.BinPrototypes[binName] === undefined) {
+            return osg.RenderBin.BinPrototypes['RenderBin']();
+        }
+        return osg.RenderBin.BinPrototypes[binName]();
+    },
+    getStateGraphList: function() { return this.stateGraphList; },
+    copyLeavesFromStateGraphListToRenderLeafList: function() {
+
+        this._leafs.length = 0;
+        var detectedNaN = false;
+
+        for (var i = 0, l = this.stateGraphList.length; i < l; i++) {
+            var leafs = this.stateGraphList[i].leafs;
+            for (var j = 0, k = leafs.length; j < k; j++) {
+                var leaf = leafs[j];
+                if (isNaN(leaf.depth)) {
+                    detectedNaN = true;
+                } else {
+                    this._leafs.push(leaf);
+                }
+            }
+        }
+
+        if (detectedNaN) {
+            osg.log("warning: RenderBin::copyLeavesFromStateGraphListToRenderLeafList() detected NaN depth values, database may be corrupted.");
+        }        
+        // empty the render graph list to prevent it being drawn along side the render leaf list (see drawImplementation.)
+        this.stateGraphList.length = 0;;
+    },
+    
+    sortBackToFront: function() {
+        this.copyLeavesFromStateGraphListToRenderLeafList();
+        var cmp = function(a, b) {
+            return b.depth - a.depth;
+        };
+        this._leafs.sort(cmp);
+    },
+
+    sortImplementation: function() {
+        var SortMode = osg.RenderBin;
+        switch(this._sortMode) {
+        case SortMode.SORT_BACK_TO_FRONT:
+            this.sortBackToFront();
+            break;
+        case SortMode.SORT_BY_STATE:
+            // do nothing
+            break;
+        }
+    },
+
+    sort: function() {
+        if (this._sorted) {
+            return;
+        }
+
+        var bins = this._bins;
+        var keys = Object.keys(bins);
+        for (var i = 0, l = keys.length; i < l; i++) {
+            bins[keys[i]].sort();
+        }
+        this.sortImplementation();
+
+        _sorted = true;
+    },
+
+    setParent: function(parent) { this._parent = parent; },
+    getParent: function() { return this._parent; },
+    getBinNumber: function() { return this._binNum; },
+    findOrInsert: function(binNum, binName) {
+        var bin = this._bins[binNum];
+        if (bin === undefined) {
+            bin = this._createRenderBin(binName);
+            bin._parent = this;
+            bin._binNum = binNum;
+            bin._renderStage = this._renderStage;
+            this._bins[binNum] = bin;
+        }
+        return bin;
+    },
+    getStage: function() { return this._renderStage; },
     addStateGraph: function(sg) { this.stateGraphList.push(sg); },
     reset: function() {
-        this.stateGraph = undefined;
         this.stateGraphList.length = 0;
-        this.renderBin = {};
+        this._bins = {};
         this.positionedAttribute.length = 0;
-        this.leafs.length = 0;
+        this._leafs.length = 0;
+        this._sorted = false;
     },
     applyPositionedAttribute: function(state, positionedAttibutes) {
         // the idea is to set uniform 'globally' in uniform map.
@@ -4021,30 +4118,45 @@ osg.RenderBin.prototype = {
 
     drawImplementation: function(state, previousRenderLeaf) {
         var previous = previousRenderLeaf;
-        // draw prev bins
-        for (var key in this.renderBin) {
-            if (key < 0 ) {
-                previous = this.renderBin[key].drawImplementation(state, previous);
+        var binsKeys = Object.keys(this._bins);
+        var bins = this._bins;
+        var binsArray = [];
+        for (var i = 0, l = binsKeys.length; i < l; i++) {
+            var k = binsKeys[i];
+            binsArray.push(bins[k]);
+        }
+        var cmp = function(a, b) {
+            return a._binNum - b._binNum;
+        };
+        binsArray.sort(cmp);
+
+        var current = 0;
+        var end = binsArray.length;
+
+        // draw pre bins
+        for (; current < end; current++) {
+            var bin = binsArray[current];
+            if (bin.getBinNumber() > 0) {
+                break;
             }
+            previous = bin.drawImplementation(state, previous);
         }
         
         // draw leafs
         previous = this.drawLeafs(state, previous);
 
         // draw post bins
-        for (key in this.renderBin) {
-            if (key >= 0 ) {
-                previous = this.renderBin[key].drawImplementation(state, previous);
-            }
+        for (; current < end; current++) {
+            var bin = binsArray[current];
+            previous = bin.drawImplementation(state, previous);
         }
         return previous;
     },
 
     drawLeafs: function(state, previousRenderLeaf) {
-        // no sort right now
-        //this.drawImplementation(state, previousRenderLeaf);
+
         var stateList = this.stateGraphList;
-        var leafs = this.leafs;
+        var leafs = this._leafs;
         var normalUniform;
         var modelViewUniform;
         var projectionUniform;
@@ -4056,13 +4168,85 @@ osg.RenderBin.prototype = {
 
         var Matrix = osg.Matrix;
 
-        if (previousRenderLeaf) {
+        if (previousLeaf) {
             osg.StateGraph.prototype.moveToRootStateGraph(state, previousRenderLeaf.parent);
         }
-        if (false && this.positionedAttribute) {
-            this.applyPositionedAttribute(state, this.positionedAttribute);
+
+        // draw fine grained ordering.
+        for (var d = 0, dl = leafs.length; d < dl; d++) {
+            var leaf = leafs[d];
+            var push = false;
+            if (previousLeaf !== undefined) {
+
+                // apply state if required.
+                var prev_rg = previousLeaf.parent;
+                var prev_rg_parent = prev_rg.parent;
+                var rg = leaf.parent;
+                if (prev_rg_parent !== rg.parent)
+                {
+                    rg.moveStateGraph(state, prev_rg_parent, rg.parent);
+
+                    // send state changes and matrix changes to OpenGL.
+                    state.pushStateSet(rg.stateset);
+                    push = true;
+                }
+                else if (rg !== prev_rg)
+                {
+                    // send state changes and matrix changes to OpenGL.
+                    state.pushStateSet(rg.stateset);
+                    push = true;
+                }
+
+            } else {
+                leaf.parent.moveStateGraph(state, undefined, leaf.parent.parent);
+                state.pushStateSet(leaf.parent.stateset);
+                push = true;
+            }
+
+            if (push === true) {
+                //state.pushGeneratedProgram();
+                state.apply();
+                program = state.getLastProgramApplied();
+
+                modelViewUniform = program.uniformsCache[state.modelViewMatrix.name];
+                projectionUniform = program.uniformsCache[state.projectionMatrix.name];
+                normalUniform = program.uniformsCache[state.normalMatrix.name];
+            }
+
+
+            if (modelViewUniform !== undefined) {
+                state.modelViewMatrix.set(leaf.modelview);
+                state.modelViewMatrix.apply(modelViewUniform);
+            }
+            if (projectionUniform !== undefined) {
+                state.projectionMatrix.set(leaf.projection);
+                state.projectionMatrix.apply(projectionUniform);
+            }
+            if (normalUniform !== undefined) {
+                Matrix.copy(leaf.modelview, normal);
+                //Matrix.setTrans(normal, 0, 0, 0);
+                normal[12] = 0;
+                normal[13] = 0;
+                normal[14] = 0;
+
+                Matrix.inverse(normal, normal);
+                Matrix.transpose(normal, normal);
+                state.normalMatrix.set(normal);
+                state.normalMatrix.apply(normalUniform);
+            }
+
+            leaf.geometry.drawImplementation(state);
+
+            if (push === true) {
+                state.popGeneratedProgram();
+                state.popStateSet();
+            }
+
+            previousLeaf = leaf;
         }
 
+        
+        // draw coarse grained ordering.
         for (var i = 0, l = stateList.length; i < l; i++) {
             var sg = stateList[i];
             for (var j = 0, ll = sg.leafs.length; j < ll; j++) {
@@ -4161,7 +4345,7 @@ osg.RenderStage = function () {
     this.viewport = undefined;
     this.preRenderList = [];
     this.postRenderList = [];
-    this.renderStage = this;
+    this._renderStage = this;
 };
 osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
     reset: function() { 
@@ -4220,6 +4404,18 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
 
         previous = this.drawPostRenderStages(state, previous);
         return previous;
+    },
+
+    sort: function() {
+        for (var i = 0, l = this.preRenderList.length; i < l; ++i) {
+            this.preRenderList[i].renderStage.sort();
+        }
+
+        osg.RenderBin.prototype.sort.call(this);
+
+        for (var j = 0, k = this.postRenderList.length; i < l; ++i) {
+            this.postRenderList[i].renderStage.sort();
+        }
     },
 
     drawPostRenderStages: function(state, previousRenderLeaf) {
@@ -5141,6 +5337,7 @@ osg.StateGraph.prototype = {
             this.children[key].clean();
         }
     },
+    getStateSet: function() { return this.stateset; },
     findOrInsert: function (stateset)
     {
         var sg;
@@ -5870,6 +6067,9 @@ osg.StateSet = function () {
     this.attributeMap.attributeKeys = [];
 
     this.textureAttributeMapList = [];
+
+    this._binName = undefined;
+    this._binNumber = 0;
 };
 
 /** @lends osg.StateSet.prototype */
@@ -5923,6 +6123,25 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
         this._setAttribute(this.getObjectPair(attribute, mode)); 
     },
+
+    setRenderingHint: function(hint) {
+        if (hint === 'OPAQUE_BIN') {
+            this.setRenderBinDetails(0,"RenderBin");
+        } else if (hint === 'TRANSPARENT_BIN') {
+            this.setRenderBinDetails(10,"DepthSortedBin");
+        } else {
+            this.setRenderBinDetails(0,"");
+        }
+    },
+
+    setRenderBinDetails: function(num, binName) {
+        this._binNumber = num;
+        this._binName = binName;
+    },
+    getBinNumber: function() { return this._binNumber; },
+    getBinName: function() { return this._binName; },
+    setBinNumber: function(binNum) { this._binNumber = binNum; },
+    setBinName: function(binName) { this._binName = binName; },
 
     _getUniformMap: function () {
         return this.uniforms;
@@ -6310,53 +6529,55 @@ osg.Viewport.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     }
 });
 osg.CullStack = function() {
-    this.modelviewMatrixStack = [];
-    this.projectionMatrixStack = [];
-    this.viewportStack = [];
+    this._modelviewMatrixStack = [];
+    this._projectionMatrixStack = [];
+    this._viewportStack = [];
+    this._bbCornerFar = 0;
+    this._bbCornerNear = 0;
 };
 
 osg.CullStack.prototype = {
     getViewport: function () {
-        if (this.viewportStack.length === 0) {
+        if (this._viewportStack.length === 0) {
             return undefined;
         }
-        return this.viewportStack[this.viewportStack.length-1];
+        return this._viewportStack[this._viewportStack.length-1];
     },
     getLookVectorLocal: function() {
-        var m = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+        var m = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
         return [ -m[2], -m[6], -m[10] ];
     },
     pushViewport: function (vp) {
-        this.viewportStack.push(vp);
+        this._viewportStack.push(vp);
     },
     popViewport: function () {
-        this.viewportStack.pop();
+        this._viewportStack.pop();
     },
     pushModelviewMatrix: function (matrix) {
-        this.modelviewMatrixStack.push(matrix);
+        this._modelviewMatrixStack.push(matrix);
 
         var lookVector = this.getLookVectorLocal();
-        this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);        
-        this.bbCornerNear = (~this.bbCornerFar)&7;
+        this._bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);        
+        this._bbCornerNear = (~this._bbCornerFar)&7;
     },
     popModelviewMatrix: function () {
 
-        this.modelviewMatrixStack.pop();
+        this._modelviewMatrixStack.pop();
         var lookVector;
-        if (this.modelviewMatrixStack.length !== 0) {
+        if (this._modelviewMatrixStack.length !== 0) {
             lookVector = this.getLookVectorLocal();
         } else {
             lookVector = [0,0,-1];
         }
-        this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
-        this.bbCornerNear = (~this.bbCornerFar)&7;
+        this._bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
+        this._bbCornerNear = (~this._bbCornerFar)&7;
 
     },
     pushProjectionMatrix: function (matrix) {
-        this.projectionMatrixStack.push(matrix);
+        this._projectionMatrixStack.push(matrix);
     },
     popProjectionMatrix: function () {
-        this.projectionMatrixStack.pop();
+        this._projectionMatrixStack.pop();
     }
 };
 /** 
@@ -6368,32 +6589,34 @@ osg.CullVisitor = function () {
     osg.CullSettings.call(this);
     osg.CullStack.call(this);
 
-    this.rootStateGraph = undefined;
-    this.currentStateGraph = undefined;
-    this.currentRenderBin = undefined;
-    this.currentRenderStage = undefined;
-    this.rootRenderStage = undefined;
+    this._rootStateGraph = undefined;
+    this._currentStateGraph = undefined;
+    this._currentRenderBin = undefined;
+    this._currentRenderStage = undefined;
+    this._rootRenderStage = undefined;
 
-    this.computeNearFar = true;
-    this.computedNear = Number.POSITIVE_INFINITY;
-    this.computedFar = Number.NEGATIVE_INFINITY;
+    this._computeNearFar = true;
+    this._computedNear = Number.POSITIVE_INFINITY;
+    this._computedFar = Number.NEGATIVE_INFINITY;
 
     var lookVector =[0.0,0.0,-1.0];
-    this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
-    this.bbCornerNear = (~this.bbCornerFar)&7;
+    this._bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
+    this._bbCornerNear = (~this._bbCornerFar)&7;
 
 
     // keep a matrix in memory to avoid to create matrix
-    this.reserveMatrixStack = [[]];
-    this.reserveMatrixStack.current = 0;
+    this._reserveMatrixStack = [[]];
+    this._reserveMatrixStack.current = 0;
 
-    this.reserveLeafStack = [{}];
-    this.reserveLeafStack.current = 0;
+    this._reserveLeafStack = [{}];
+    this._reserveLeafStack.current = 0;
+
+    this._renderBinStack = [];
 };
 
 /** @lends osg.CullVisitor.prototype */
 osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objectInehrit(osg.CullSettings.prototype, osg.objectInehrit(osg.NodeVisitor.prototype, {
-    distance: function(coord,matrix) {
+    distance: function(coord, matrix) {
         return -( coord[0]*matrix[2]+ coord[1]*matrix[6] + coord[2]*matrix[10] + matrix[14]);
     },
     updateCalculatedNearFar: function( matrix, drawable) {
@@ -6403,8 +6626,8 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
 
         // efficient computation of near and far, only taking into account the nearest and furthest
         // corners of the bounding box.
-        d_near = this.distance(bb.corner(this.bbCornerNear),matrix);
-        d_far = this.distance(bb.corner(this.bbCornerFar),matrix);
+        d_near = this.distance(bb.corner(this._bbCornerNear),matrix);
+        d_far = this.distance(bb.corner(this._bbCornerFar),matrix);
         
         if (d_near>d_far) {
             var tmp = d_near;
@@ -6417,12 +6640,12 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
             return false;
         }
 
-        if (d_near<this.computedNear) {
-            this.computedNear = d_near;
+        if (d_near<this._computedNear) {
+            this._computedNear = d_near;
         }
 
-        if (d_far>this.computedFar) {
-            this.computedFar = d_far;
+        if (d_far>this._computedFar) {
+            this._computedFar = d_far;
         }
 
         return true;
@@ -6514,39 +6737,61 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
     },
 
     setStateGraph: function(sg) {
-        this.rootStateGraph = sg;
-        this.currentStateGraph = sg;
+        this._rootStateGraph = sg;
+        this._currentStateGraph = sg;
     },
     setRenderStage: function(rg) {
-        this.rootRenderStage = rg;
-        this.currentRenderBin = rg;
+        this._rootRenderStage = rg;
+        this._currentRenderBin = rg;
     },
     reset: function () {
-        this.modelviewMatrixStack.length = 0;
-        this.projectionMatrixStack.length = 0;
-        this.reserveMatrixStack.current = 0;
-        this.reserveLeafStack.current = 0;
+        this._modelviewMatrixStack.length = 0;
+        this._projectionMatrixStack.length = 0;
+        this._reserveMatrixStack.current = 0;
+        this._reserveLeafStack.current = 0;
 
-        this.computedNear = Number.POSITIVE_INFINITY;
-        this.computedFar = Number.NEGATIVE_INFINITY;
+        this._computedNear = Number.POSITIVE_INFINITY;
+        this._computedFar = Number.NEGATIVE_INFINITY;
     },
-    getCurrentRenderBin: function() { return this.currentRenderBin; },
-    setCurrentRenderBin: function(rb) { this.currentRenderBin = rb; },
+    getCurrentRenderBin: function() { return this._currentRenderBin; },
+    setCurrentRenderBin: function(rb) { this._currentRenderBin = rb; },
     addPositionedAttribute: function (attribute) {
-        var matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length - 1];
-        this.currentRenderBin.getStage().positionedAttribute.push([matrix, attribute]);
+        var matrix = this._modelviewMatrixStack[this._modelviewMatrixStack.length - 1];
+        this._currentRenderBin.getStage().positionedAttribute.push([matrix, attribute]);
     },
+
     pushStateSet: function (stateset) {
-        this.currentStateGraph = this.currentStateGraph.findOrInsert(stateset);
+        this._currentStateGraph = this._currentStateGraph.findOrInsert(stateset);
+        if (stateset.getBinName() !== undefined) {
+            var renderBinStack = this._renderBinStack;
+            var currentRenderBin = this._currentRenderBin;
+            renderBinStack.push(currentRenderBin);
+            this._currentRenderBin = currentRenderBin.getStage().findOrInsert(stateset.getBinNumber(),stateset.getBinName());
+        }
     },
+
+    /** Pop the top state set and hence associated state group.
+     * Move the current state group to the parent of the popped
+     * state group.
+     */
     popStateSet: function () {
-        this.currentStateGraph = this.currentStateGraph.parent;
+        var currentStateGraph = this._currentStateGraph;
+        var stateset = currentStateGraph.getStateSet();
+        this._currentStateGraph = currentStateGraph.parent;
+        if (stateset.getBinName() !== undefined) {
+            var renderBinStack = this._renderBinStack;
+            if (renderBinStack.length === 0) {
+                this._currentRenderBin = this._currentRenderBin.getStage();
+            } else {
+                this._currentRenderBin = renderBinStack.pop();
+            }
+        }
     },
 
     popProjectionMatrix: function () {
-        if (this.computeNearFar === true && this.computedFar >= this.computedNear) {
-            var m = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-            this.clampProjectionMatrix(m, this.computedNear, this.computedFar, this.nearFarRatio);
+        if (this._computeNearFar === true && this._computedFar >= this._computedNear) {
+            var m = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
+            this.clampProjectionMatrix(m, this._computedNear, this._computedFar, this._nearFarRatio);
         }
         osg.CullStack.prototype.popProjectionMatrix.call(this);
     },
@@ -6555,17 +6800,17 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         this[node.objectType].call(this, node);
     },
 
-    getReservedMatrix: function() {
-        var m = this.reserveMatrixStack[this.reserveMatrixStack.current++];
-        if (this.reserveMatrixStack.current === this.reserveMatrixStack.length) {
-            this.reserveMatrixStack.push(osg.Matrix.makeIdentity());
+    _getReservedMatrix: function() {
+        var m = this._reserveMatrixStack[this._reserveMatrixStack.current++];
+        if (this._reserveMatrixStack.current === this._reserveMatrixStack.length) {
+            this._reserveMatrixStack.push(osg.Matrix.makeIdentity());
         }
         return m;
     },
-    getReservedLeaf: function() {
-        var l = this.reserveLeafStack[this.reserveLeafStack.current++];
-        if (this.reserveLeafStack.current === this.reserveLeafStack.length) {
-            this.reserveLeafStack.push({});
+    _getReservedLeaf: function() {
+        var l = this._reserveLeafStack[this._reserveLeafStack.current++];
+        if (this._reserveLeafStack.current === this._reserveLeafStack.length) {
+            this._reserveLeafStack.push({});
         }
         return l;
     }
@@ -6582,15 +6827,15 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
         this.addPositionedAttribute(camera.light);
     }
 
-    var originalModelView = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+    var originalModelView = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
 
-    var modelview = this.getReservedMatrix();
-    var projection = this.getReservedMatrix();
+    var modelview = this._getReservedMatrix();
+    var projection = this._getReservedMatrix();
 
     if (camera.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
-        var lastProjectionMatrix = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+        var lastProjectionMatrix = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
         osg.Matrix.mult(lastProjectionMatrix, camera.getProjectionMatrix(), projection);
-        var lastViewMatrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+        var lastViewMatrix = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
         osg.Matrix.mult(lastViewMatrix, camera.getViewMatrix(), modelview);
     } else {
         // absolute
@@ -6605,13 +6850,13 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
     }
 
     // save current state of the camera
-    var previous_znear = this.computedNear;
-    var previous_zfar = this.computedFar;
+    var previous_znear = this._computedNear;
+    var previous_zfar = this._computedFar;
     var previous_cullsettings = new osg.CullSettings();
     previous_cullsettings.setCullSettings(this);
 
-    this.computedNear = Number.POSITIVE_INFINITY;
-    this.computedFar = Number.NEGATIVE_INFINITY;
+    this._computedNear = Number.POSITIVE_INFINITY;
+    this._computedFar = Number.NEGATIVE_INFINITY;
     this.setCullSettings(camera);
 
     // nested camera
@@ -6671,8 +6916,8 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
 
     // restore previous state of the camera
     this.setCullSettings(previous_cullsettings);
-    this.computedNear = previous_znear;
-    this.computedFar = previous_zfar;
+    this._computedNear = previous_znear;
+    this._computedFar = previous_zfar;
 
     if (stateset) {
         this.popStateSet();
@@ -6682,10 +6927,10 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
 
 
 osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (node) {
-    var matrix = this.getReservedMatrix();
+    var matrix = this._getReservedMatrix();
 
     if (node.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
-        var lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+        var lastMatrixStack = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
         osg.Matrix.mult(lastMatrixStack, node.getMatrix(), matrix);
     } else {
         // absolute
@@ -6716,8 +6961,8 @@ osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (
 };
 
 osg.CullVisitor.prototype[osg.Projection.prototype.objectType] = function (node) {
-    lastMatrixStack = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-    var matrix = this.getReservedMatrix();
+    lastMatrixStack = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
+    var matrix = this._getReservedMatrix();
     osg.Matrix.mult(lastMatrixStack, node.getProjectionMatrix(), matrix);
     this.pushProjectionMatrix(matrix);
 
@@ -6757,10 +7002,10 @@ osg.CullVisitor.prototype[osg.Node.prototype.objectType] = function (node) {
     }
 };
 osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
-    matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+    var modelview = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
     var bb = node.getBoundingBox();
-    if (this.computeNearFar && bb.valid()) {
-        if (!this.updateCalculatedNearFar(matrix,node)) {
+    if (this._computeNearFar && bb.valid()) {
+        if (!this.updateCalculatedNearFar(modelview,node)) {
             return;
         }
     }
@@ -6770,17 +7015,27 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
         this.pushStateSet(stateset);
     }
 
-    var leafs = this.currentStateGraph.leafs;
+    var leafs = this._currentStateGraph.leafs;
     if (leafs.length === 0) {
-        this.currentRenderBin.addStateGraph(this.currentStateGraph);
+        this._currentRenderBin.addStateGraph(this._currentStateGraph);
     }
 
-    var leaf = this.getReservedLeaf();
-    leaf.parent = this.currentStateGraph;
-    leaf.modelview = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-    leaf.projection = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-    leaf.geometry = node;
-    leafs.push(leaf);
+    var leaf = this._getReservedLeaf();
+    var depth = 0;    
+    if (bb.valid()) {
+        depth = this.distance(bb.center(), modelview);
+    }
+    if (isNaN(depth)) {
+        osg.log("warning geometry has a NaN depth, " + modelview + " center " + bb.center());
+    } else {
+        //leaf.id = this._reserveLeafStack.current;
+        leaf.parent = this._currentStateGraph;
+        leaf.projection = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
+        leaf.geometry = node;
+        leaf.modelview = modelview;
+        leaf.depth = depth;
+        leafs.push(leaf);
+    }
 
     if (stateset) {
         this.popStateSet();
@@ -9776,6 +10031,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._cullVisitor.popViewport();
         this._cullVisitor.popStateSet();
 
+        this._renderStage.sort();
     },
     draw: function() {
         var state = this.getState();
