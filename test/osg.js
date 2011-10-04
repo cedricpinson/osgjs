@@ -1001,7 +1001,7 @@ test("osg.CullVisitor", function() {
 
         var node0 = new osg.MatrixTransform();
         node0.setMatrix(osg.Matrix.makeTranslate(0,0,-10, []));
-        node0.getOrCreateStateSet().setRenderBinDetails(0,"DepthSortedBackToFront");
+        node0.getOrCreateStateSet().setRenderBinDetails(0,"DepthSortedBin");
         node0.getOrCreateStateSet().setName("Node0");
         node0.addChild(q);
 
@@ -1012,7 +1012,7 @@ test("osg.CullVisitor", function() {
         
         var node2 = new osg.MatrixTransform();
         node2.setMatrix(osg.Matrix.makeTranslate(0,0,-20, []));
-        node2.getOrCreateStateSet().setRenderBinDetails(0,"Opaque");
+        node2.getOrCreateStateSet().setRenderBinDetails(0,"RenderBin");
         node2.getOrCreateStateSet().setName("Node2");
         node2.addChild(q);
         
@@ -1032,13 +1032,92 @@ test("osg.CullVisitor", function() {
         node3.accept(cull);
         rs.sort();
         
-        ok(rs._bins[0]._leafs[0].depth === -15,"Check depth of leaf 0");
-        ok(rs._bins[0]._leafs[1].depth === -10,"Check depth of leaf 1");
-        ok(rs._bins[0]._leafs[2].depth === 5,"Check depth of leaf 2");
-        ok(rs._bins[0]._sortMode === osg.RenderBin.SORT_BACK_TO_FRONT, "Check RenderBin sort mode");
+        ok(rs._bins['0']._leafs[2].depth === -15,"Check depth of leaf 0");
+        ok(rs._bins['0']._leafs[1].depth === -10,"Check depth of leaf 1");
+        ok(rs._bins['0']._leafs[0].depth === 5,"Check depth of leaf 2");
+        ok(rs._bins['0']._sortMode === osg.RenderBin.SORT_BACK_TO_FRONT, "Check RenderBin sort mode");
 
     })();
 
+
+    (function() {
+
+        var q = osg.createTexturedBoxGeometry(0,0,0, 1,1,1);
+
+        var node0 = new osg.MatrixTransform();
+        node0.setMatrix(osg.Matrix.makeTranslate(0,0,-10, []));
+        node0.getOrCreateStateSet().setRenderingHint("OPAQUE_BIN");
+        node0.getOrCreateStateSet().setName("Node0");
+        node0.addChild(q);
+
+        var node1 = new osg.MatrixTransform();
+        node1.setMatrix(osg.Matrix.makeTranslate(0,0,5, []));
+        node0.getOrCreateStateSet().setRenderingHint("TRANSPARENT_BIN");
+        node1.getOrCreateStateSet().setName("Node1");
+        node1.addChild(q);
+
+        var root = new osg.Node();
+        root.addChild(node1);
+        root.addChild(node0);
+        
+        var cull = new osg.CullVisitor();
+        var rs = new osg.RenderStage();
+        var sg = new osg.StateGraph();
+        cull.pushProjectionMatrix(osg.Matrix.makeIdentity([]));
+        cull.pushModelviewMatrix(osg.Matrix.makeIdentity([]));
+        cull.setRenderStage(rs);
+        cull.setStateGraph(sg);
+        cull.setComputeNearFar(false);
+
+        root.accept(cull);
+        rs.sort();
+        
+        ok(rs._bins['10']._leafs[0].depth === 10,"Check transparent bin");
+        ok(rs._bins['10'].getStateGraphList().length === 0,"Check transparent bin StateGraphList");
+        ok(rs._leafs.length === 0,"Check leafs for normal rendering bin");
+        ok(rs.getStateGraphList().length === 1,"Check StateGraphList for normal rendering bin");
+
+    })();
+
+
+    (function() {
+
+        var q = osg.createTexturedBoxGeometry(0,0,0, 1,1,1);
+
+        var node0 = new osg.MatrixTransform();
+        node0.setMatrix(osg.Matrix.makeTranslate(0,0,-10, []));
+        node0.getOrCreateStateSet().setRenderingHint("OPAQUE_BIN");
+        node0.getOrCreateStateSet().setName("Node0");
+        node0.addChild(q);
+
+        var node1 = new osg.MatrixTransform();
+        node1.setMatrix(osg.Matrix.makeTranslate(0,0,5, []));
+        node0.getOrCreateStateSet().setRenderingHint("TRANSPARENT_BIN");
+        node1.getOrCreateStateSet().setName("Node1");
+        node1.addChild(q);
+
+        var root = new osg.Node();
+        root.addChild(node1);
+        root.addChild(node0);
+        
+        var cull = new osg.CullVisitor();
+        var rs = new osg.RenderStage();
+        var sg = new osg.StateGraph();
+        rs.setViewport(new osg.Viewport());
+        cull.pushProjectionMatrix(osg.Matrix.makeIdentity([]));
+        cull.pushModelviewMatrix(osg.Matrix.makeIdentity([]));
+        cull.setRenderStage(rs);
+        cull.setStateGraph(sg);
+        cull.setComputeNearFar(false);
+
+        root.accept(cull);
+        rs.sort();
+
+        var state = new osg.State();
+        state.setGraphicContext(createFakeRenderer());
+        rs.draw(state);
+
+    })();
 });
 
 
