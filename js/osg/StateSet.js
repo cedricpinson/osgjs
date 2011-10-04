@@ -66,6 +66,15 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         this._setAttribute(this.getObjectPair(attribute, mode)); 
     },
 
+    setRenderingHint: function(hint) {
+        if (hint === 'OPAQUE_BIN') {
+            this.setRenderBinDetails(0,"RenderBin");
+        } else if (hint === 'TRANSPARENT_BIN') {
+            this.setRenderBinDetails(10,"DepthSortedBin");
+        } else {
+            this.setRenderBinDetails(0,"");
+        }
+    },
 
     setRenderBinDetails: function(num, binName) {
         this._binNumber = num;

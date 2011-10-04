@@ -91,7 +91,7 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
     },
     computeBoundingBox: function(boundingBox) {
 	var att = this.getAttributes();
-	if ( att.Vertex.itemSize == 3 ) {
+	if ( att.Vertex.itemSize > 2 ) {
 	    vertexes = att.Vertex.getElements();
 	    for (var idx = 0, l = vertexes.length; idx < l; idx+=3) {
 		var v=[vertexes[idx],vertexes[idx+1],vertexes[idx+2]];

@@ -13,11 +13,11 @@ osg.RenderBin = function () {
 };
 osg.RenderBin.SORT_BY_STATE = 0;
 osg.RenderBin.SORT_BACK_TO_FRONT = 1;
-osg.RenderBin.RenderBinPrototypes = {
-    DefaultRenderBin: function() {
+osg.RenderBin.BinPrototypes = {
+    RenderBin: function() {
         return new osg.RenderBin();
     },
-    DepthSortedBackToFront: function() {
+    DepthSortedBin: function() {
         var rb = new osg.RenderBin();
         rb._sortMode = osg.RenderBin.SORT_BACK_TO_FRONT;
         return rb;
@@ -26,12 +26,12 @@ osg.RenderBin.RenderBinPrototypes = {
 
 osg.RenderBin.prototype = {
     _createRenderBin: function(binName) {
-        if (binName === undefined || osg.RenderBin.RenderBinPrototypes[binName] === undefined) {
-            return osg.RenderBin.RenderBinPrototypes['DefaultRenderBin']();
+        if (binName === undefined || osg.RenderBin.BinPrototypes[binName] === undefined) {
+            return osg.RenderBin.BinPrototypes['RenderBin']();
         }
-        return osg.RenderBin.RenderBinPrototypes[binName]();
+        return osg.RenderBin.BinPrototypes[binName]();
     },
-
+    getStateGraphList: function() { return this.stateGraphList; },
     copyLeavesFromStateGraphListToRenderLeafList: function() {
 
         this._leafs.length = 0;
@@ -59,7 +59,7 @@ osg.RenderBin.prototype = {
     sortBackToFront: function() {
         this.copyLeavesFromStateGraphListToRenderLeafList();
         var cmp = function(a, b) {
-            return a.depth - b.depth;
+            return b.depth - a.depth;
         };
         this._leafs.sort(cmp);
     },
@@ -84,7 +84,7 @@ osg.RenderBin.prototype = {
         var bins = this._bins;
         var keys = Object.keys(bins);
         for (var i = 0, l = keys.length; i < l; i++) {
-            bins[i].sort();
+            bins[keys[i]].sort();
         }
         this.sortImplementation();
 
@@ -134,7 +134,8 @@ osg.RenderBin.prototype = {
         var bins = this._bins;
         var binsArray = [];
         for (var i = 0, l = binsKeys.length; i < l; i++) {
-            binsArray.push(bins[i]);
+            var k = binsKeys[i];
+            binsArray.push(bins[k]);
         }
         var cmp = function(a, b) {
             return a._binNum - b._binNum;
@@ -147,6 +148,9 @@ osg.RenderBin.prototype = {
         // draw pre bins
         for (; current < end; current++) {
             var bin = binsArray[current];
+            if (bin.getBinNumber() > 0) {
+                break;
+            }
             previous = bin.drawImplementation(state, previous);
         }
         
