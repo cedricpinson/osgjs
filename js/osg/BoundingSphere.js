@@ -52,18 +52,14 @@ osg.BoundingSphere.prototype = {
 		this._center[1] = c[1];
 		this._center[2] = c[2];
 		this._radius    = newbb.radius();
-
-
 	    }
 	    else
 	    {
-
 		c = bb.center();
 		this._center[0] = c[0];
 		this._center[1] = c[1];
 		this._center[2] = c[2];
 		this._radius    = bb.radius();
-
 	    }
 	}
 

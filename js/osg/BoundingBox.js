@@ -49,7 +49,7 @@ osg.BoundingBox.prototype = {
                                           this._max, 
                                           []),
                              0.5,
-                            []);
+                             []);
     },
     radius: function() {
 	return Math.sqrt(this.radius2());

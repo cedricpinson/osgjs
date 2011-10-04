@@ -66,9 +66,12 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setAmbient: function(a) { this._ambient = a; this.dirty(); },
     setSpecular: function(a) { this._specular = a; this.dirty(); },
     setDiffuse: function(a) { this._diffuse = a; this.dirty(); },
-    setSpotExponent: function(a) { this._spotExponent = a; this.dirty(); },
     setSpotCutoff: function(a) { this._spotCutoff = a; this.dirty(); },
     setSpotCutoffEnd: function(a) { this._spotCutoffEnd = a; this.dirty(); },
+
+    setConstantAttenuation: function(value) { this._constantAttenuation = value; this.dirty()},
+    setLinearAttenuation: function(value) { this._linearAttenuation = value; this.dirty()},
+    setQuadraticAttenuation: function(value) { this._quadraticAttenuation = value; this.dirty()},
 
     setDirection: function(a) { this._direction = a; this.dirty(); },
     setLightNumber: function(unit) { this._lightUnit = unit; this.dirty(); },
