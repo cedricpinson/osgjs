@@ -19,6 +19,7 @@ osg.StateGraph.prototype = {
             this.children[key].clean();
         }
     },
+    getStateSet: function() { return this.stateset; },
     findOrInsert: function (stateset)
     {
         var sg;

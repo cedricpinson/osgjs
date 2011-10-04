@@ -18,7 +18,7 @@ osg.RenderStage = function () {
     this.viewport = undefined;
     this.preRenderList = [];
     this.postRenderList = [];
-    this.renderStage = this;
+    this._renderStage = this;
 };
 osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
     reset: function() { 
@@ -77,6 +77,18 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
 
         previous = this.drawPostRenderStages(state, previous);
         return previous;
+    },
+
+    sort: function() {
+        for (var i = 0, l = this.preRenderList.length; i < l; ++i) {
+            this.preRenderList[i].renderStage.sort();
+        }
+
+        osg.RenderBin.prototype.sort.call(this);
+
+        for (var j = 0, k = this.postRenderList.length; i < l; ++i) {
+            this.postRenderList[i].renderStage.sort();
+        }
     },
 
     drawPostRenderStages: function(state, previousRenderLeaf) {

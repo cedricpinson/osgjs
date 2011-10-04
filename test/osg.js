@@ -31,7 +31,6 @@ function createFakeRenderer() {
              bindTexture: function() {},
              bindBuffer: function() {},
              blendFunc: function() {},
-             //blendFunc: function() {},
              enableVertexAttribArray: function() {},
              vertexAttribPointer: function() {},
              createTexture: function() {},
@@ -831,14 +830,14 @@ test("osg.CullVisitor", function() {
 
         var stack = [];
         function setCullSettings(settings) {
-            if (this.computedNear !== undefined) {
-                stack.push([this.computedNear, this.computedFar]);
+            if (this._computedNear !== undefined) {
+                stack.push([this._computedNear, this._computedFar]);
             }
             osg.CullSettings.prototype.setCullSettings.call(this, settings);
         }
         var resultProjection;
         function popProjectionMatrix() {
-            resultProjection = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            resultProjection = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
             osg.CullVisitor.prototype.popProjectionMatrix.call(this);
         }
         osg.CullVisitor.prototype.setCullSettings = setCullSettings;
@@ -877,8 +876,8 @@ test("osg.CullVisitor", function() {
 
         var stack = [];
         function setCullSettings(settings) {
-            if (this.computedNear !== undefined) {
-                stack.push([this.computedNear, this.computedFar]);
+            if (this._computedNear !== undefined) {
+                stack.push([this._computedNear, this._computedFar]);
             }
             osg.CullSettings.prototype.setCullSettings.call(this, settings);
         }
@@ -886,7 +885,7 @@ test("osg.CullVisitor", function() {
 
         var resultProjection;
         function popProjectionMatrix() {
-            resultProjection = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            resultProjection = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
             osg.CullVisitor.prototype.popProjectionMatrix.call(this);
         }
 
@@ -954,8 +953,8 @@ test("osg.CullVisitor", function() {
 
         var stack = [];
         function setCullSettings(settings) {
-            if (this.computedNear !== undefined) {
-                stack.push([this.computedNear, this.computedFar]);
+            if (this._computedNear !== undefined) {
+                stack.push([this._computedNear, this._computedFar]);
             }
             osg.CullSettings.prototype.setCullSettings.call(this, settings);
         }
@@ -963,7 +962,7 @@ test("osg.CullVisitor", function() {
 
         var resultProjection;
         function popProjectionMatrix() {
-            resultProjection = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+            resultProjection = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
             osg.CullVisitor.prototype.popProjectionMatrix.call(this);
         }
 
@@ -986,6 +985,57 @@ test("osg.CullVisitor", function() {
         ok(check_near(stack[1][0], d_near,0.8), "near should be "+ d_near+ " and is " +  stack[1][0]);
         ok(check_near(stack[1][1], d_far,0.8), "near should be " + d_far + " and is " +  stack[1][1]);
         ok(check_near(resultProjection, supposedProjection, 0.8), "check projection matrix [" + resultProjection.toString() + "] [" + supposedProjection.toString() +"]");
+
+    })();
+
+
+    (function() {
+
+        var q = osg.createTexturedBoxGeometry(0,0,0, 1,1,1);
+
+        var node3 = new osg.MatrixTransform();
+        node3.setMatrix(osg.Matrix.makeTranslate(0,0,20, []));
+        node3.getOrCreateStateSet().setRenderBinDetails(1,"");
+        node3.getOrCreateStateSet().setName("Node3");
+        node3.addChild(q);
+
+        var node0 = new osg.MatrixTransform();
+        node0.setMatrix(osg.Matrix.makeTranslate(0,0,-10, []));
+        node0.getOrCreateStateSet().setRenderBinDetails(0,"DepthSortedBackToFront");
+        node0.getOrCreateStateSet().setName("Node0");
+        node0.addChild(q);
+
+        var node1 = new osg.MatrixTransform();
+        node1.setMatrix(osg.Matrix.makeTranslate(0,0,5, []));
+        node1.getOrCreateStateSet().setName("Node1");
+        node1.addChild(q);
+        
+        var node2 = new osg.MatrixTransform();
+        node2.setMatrix(osg.Matrix.makeTranslate(0,0,-20, []));
+        node2.getOrCreateStateSet().setRenderBinDetails(0,"Opaque");
+        node2.getOrCreateStateSet().setName("Node2");
+        node2.addChild(q);
+        
+        node3.addChild(node0);
+        node0.addChild(node1);
+        node1.addChild(node2);
+        
+        var cull = new osg.CullVisitor();
+        var rs = new osg.RenderStage();
+        var sg = new osg.StateGraph();
+        cull.pushProjectionMatrix(osg.Matrix.makeIdentity([]));
+        cull.pushModelviewMatrix(osg.Matrix.makeIdentity([]));
+        cull.setRenderStage(rs);
+        cull.setStateGraph(sg);
+        cull.setComputeNearFar(false);
+
+        node3.accept(cull);
+        rs.sort();
+        
+        ok(rs._bins[0]._leafs[0].depth === -15,"Check depth of leaf 0");
+        ok(rs._bins[0]._leafs[1].depth === -10,"Check depth of leaf 1");
+        ok(rs._bins[0]._leafs[2].depth === 5,"Check depth of leaf 2");
+        ok(rs._bins[0]._sortMode === osg.RenderBin.SORT_BACK_TO_FRONT, "Check RenderBin sort mode");
 
     })();
 
@@ -1210,10 +1260,10 @@ test("osg.Light", function() {
         var cull = new osg.CullVisitor();
         var rs = new osg.RenderStage();
         var sg = new osg.StateGraph();
-        cull.setRenderStage(rs);
-        cull.setStateGraph(sg);
         cull.pushProjectionMatrix(osg.Matrix.makeIdentity([]));
         cull.pushModelviewMatrix(osg.Matrix.makeIdentity([]));
+        cull.setRenderStage(rs);
+        cull.setStateGraph(sg);
         
         root.accept(cull);
         

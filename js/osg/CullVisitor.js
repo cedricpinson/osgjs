@@ -7,32 +7,34 @@ osg.CullVisitor = function () {
     osg.CullSettings.call(this);
     osg.CullStack.call(this);
 
-    this.rootStateGraph = undefined;
-    this.currentStateGraph = undefined;
-    this.currentRenderBin = undefined;
-    this.currentRenderStage = undefined;
-    this.rootRenderStage = undefined;
+    this._rootStateGraph = undefined;
+    this._currentStateGraph = undefined;
+    this._currentRenderBin = undefined;
+    this._currentRenderStage = undefined;
+    this._rootRenderStage = undefined;
 
-    this.computeNearFar = true;
-    this.computedNear = Number.POSITIVE_INFINITY;
-    this.computedFar = Number.NEGATIVE_INFINITY;
+    this._computeNearFar = true;
+    this._computedNear = Number.POSITIVE_INFINITY;
+    this._computedFar = Number.NEGATIVE_INFINITY;
 
     var lookVector =[0.0,0.0,-1.0];
-    this.bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
-    this.bbCornerNear = (~this.bbCornerFar)&7;
+    this._bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
+    this._bbCornerNear = (~this._bbCornerFar)&7;
 
 
     // keep a matrix in memory to avoid to create matrix
-    this.reserveMatrixStack = [[]];
-    this.reserveMatrixStack.current = 0;
+    this._reserveMatrixStack = [[]];
+    this._reserveMatrixStack.current = 0;
 
-    this.reserveLeafStack = [{}];
-    this.reserveLeafStack.current = 0;
+    this._reserveLeafStack = [{}];
+    this._reserveLeafStack.current = 0;
+
+    this._renderBinStack = [];
 };
 
 /** @lends osg.CullVisitor.prototype */
 osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objectInehrit(osg.CullSettings.prototype, osg.objectInehrit(osg.NodeVisitor.prototype, {
-    distance: function(coord,matrix) {
+    distance: function(coord, matrix) {
         return -( coord[0]*matrix[2]+ coord[1]*matrix[6] + coord[2]*matrix[10] + matrix[14]);
     },
     updateCalculatedNearFar: function( matrix, drawable) {
@@ -42,8 +44,8 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
 
         // efficient computation of near and far, only taking into account the nearest and furthest
         // corners of the bounding box.
-        d_near = this.distance(bb.corner(this.bbCornerNear),matrix);
-        d_far = this.distance(bb.corner(this.bbCornerFar),matrix);
+        d_near = this.distance(bb.corner(this._bbCornerNear),matrix);
+        d_far = this.distance(bb.corner(this._bbCornerFar),matrix);
         
         if (d_near>d_far) {
             var tmp = d_near;
@@ -56,12 +58,12 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
             return false;
         }
 
-        if (d_near<this.computedNear) {
-            this.computedNear = d_near;
+        if (d_near<this._computedNear) {
+            this._computedNear = d_near;
         }
 
-        if (d_far>this.computedFar) {
-            this.computedFar = d_far;
+        if (d_far>this._computedFar) {
+            this._computedFar = d_far;
         }
 
         return true;
@@ -153,39 +155,61 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
     },
 
     setStateGraph: function(sg) {
-        this.rootStateGraph = sg;
-        this.currentStateGraph = sg;
+        this._rootStateGraph = sg;
+        this._currentStateGraph = sg;
     },
     setRenderStage: function(rg) {
-        this.rootRenderStage = rg;
-        this.currentRenderBin = rg;
+        this._rootRenderStage = rg;
+        this._currentRenderBin = rg;
     },
     reset: function () {
-        this.modelviewMatrixStack.length = 0;
-        this.projectionMatrixStack.length = 0;
-        this.reserveMatrixStack.current = 0;
-        this.reserveLeafStack.current = 0;
+        this._modelviewMatrixStack.length = 0;
+        this._projectionMatrixStack.length = 0;
+        this._reserveMatrixStack.current = 0;
+        this._reserveLeafStack.current = 0;
 
-        this.computedNear = Number.POSITIVE_INFINITY;
-        this.computedFar = Number.NEGATIVE_INFINITY;
+        this._computedNear = Number.POSITIVE_INFINITY;
+        this._computedFar = Number.NEGATIVE_INFINITY;
     },
-    getCurrentRenderBin: function() { return this.currentRenderBin; },
-    setCurrentRenderBin: function(rb) { this.currentRenderBin = rb; },
+    getCurrentRenderBin: function() { return this._currentRenderBin; },
+    setCurrentRenderBin: function(rb) { this._currentRenderBin = rb; },
     addPositionedAttribute: function (attribute) {
-        var matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length - 1];
-        this.currentRenderBin.getStage().positionedAttribute.push([matrix, attribute]);
+        var matrix = this._modelviewMatrixStack[this._modelviewMatrixStack.length - 1];
+        this._currentRenderBin.getStage().positionedAttribute.push([matrix, attribute]);
     },
+
     pushStateSet: function (stateset) {
-        this.currentStateGraph = this.currentStateGraph.findOrInsert(stateset);
+        this._currentStateGraph = this._currentStateGraph.findOrInsert(stateset);
+        if (stateset.getBinName() !== undefined) {
+            var renderBinStack = this._renderBinStack;
+            var currentRenderBin = this._currentRenderBin;
+            renderBinStack.push(currentRenderBin);
+            this._currentRenderBin = currentRenderBin.getStage().findOrInsert(stateset.getBinNumber(),stateset.getBinName());
+        }
     },
+
+    /** Pop the top state set and hence associated state group.
+     * Move the current state group to the parent of the popped
+     * state group.
+     */
     popStateSet: function () {
-        this.currentStateGraph = this.currentStateGraph.parent;
+        var currentStateGraph = this._currentStateGraph;
+        var stateset = currentStateGraph.getStateSet();
+        this._currentStateGraph = currentStateGraph.parent;
+        if (stateset.getBinName() !== undefined) {
+            var renderBinStack = this._renderBinStack;
+            if (renderBinStack.length === 0) {
+                this._currentRenderBin = this._currentRenderBin.getStage();
+            } else {
+                this._currentRenderBin = renderBinStack.pop();
+            }
+        }
     },
 
     popProjectionMatrix: function () {
-        if (this.computeNearFar === true && this.computedFar >= this.computedNear) {
-            var m = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-            this.clampProjectionMatrix(m, this.computedNear, this.computedFar, this.nearFarRatio);
+        if (this._computeNearFar === true && this._computedFar >= this._computedNear) {
+            var m = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
+            this.clampProjectionMatrix(m, this._computedNear, this._computedFar, this._nearFarRatio);
         }
         osg.CullStack.prototype.popProjectionMatrix.call(this);
     },
@@ -194,17 +218,17 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         this[node.objectType].call(this, node);
     },
 
-    getReservedMatrix: function() {
-        var m = this.reserveMatrixStack[this.reserveMatrixStack.current++];
-        if (this.reserveMatrixStack.current === this.reserveMatrixStack.length) {
-            this.reserveMatrixStack.push(osg.Matrix.makeIdentity());
+    _getReservedMatrix: function() {
+        var m = this._reserveMatrixStack[this._reserveMatrixStack.current++];
+        if (this._reserveMatrixStack.current === this._reserveMatrixStack.length) {
+            this._reserveMatrixStack.push(osg.Matrix.makeIdentity());
         }
         return m;
     },
-    getReservedLeaf: function() {
-        var l = this.reserveLeafStack[this.reserveLeafStack.current++];
-        if (this.reserveLeafStack.current === this.reserveLeafStack.length) {
-            this.reserveLeafStack.push({});
+    _getReservedLeaf: function() {
+        var l = this._reserveLeafStack[this._reserveLeafStack.current++];
+        if (this._reserveLeafStack.current === this._reserveLeafStack.length) {
+            this._reserveLeafStack.push({});
         }
         return l;
     }
@@ -221,15 +245,15 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
         this.addPositionedAttribute(camera.light);
     }
 
-    var originalModelView = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+    var originalModelView = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
 
-    var modelview = this.getReservedMatrix();
-    var projection = this.getReservedMatrix();
+    var modelview = this._getReservedMatrix();
+    var projection = this._getReservedMatrix();
 
     if (camera.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
-        var lastProjectionMatrix = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
+        var lastProjectionMatrix = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
         osg.Matrix.mult(lastProjectionMatrix, camera.getProjectionMatrix(), projection);
-        var lastViewMatrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+        var lastViewMatrix = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
         osg.Matrix.mult(lastViewMatrix, camera.getViewMatrix(), modelview);
     } else {
         // absolute
@@ -244,13 +268,13 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
     }
 
     // save current state of the camera
-    var previous_znear = this.computedNear;
-    var previous_zfar = this.computedFar;
+    var previous_znear = this._computedNear;
+    var previous_zfar = this._computedFar;
     var previous_cullsettings = new osg.CullSettings();
     previous_cullsettings.setCullSettings(this);
 
-    this.computedNear = Number.POSITIVE_INFINITY;
-    this.computedFar = Number.NEGATIVE_INFINITY;
+    this._computedNear = Number.POSITIVE_INFINITY;
+    this._computedFar = Number.NEGATIVE_INFINITY;
     this.setCullSettings(camera);
 
     // nested camera
@@ -310,8 +334,8 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
 
     // restore previous state of the camera
     this.setCullSettings(previous_cullsettings);
-    this.computedNear = previous_znear;
-    this.computedFar = previous_zfar;
+    this._computedNear = previous_znear;
+    this._computedFar = previous_zfar;
 
     if (stateset) {
         this.popStateSet();
@@ -321,10 +345,10 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
 
 
 osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (node) {
-    var matrix = this.getReservedMatrix();
+    var matrix = this._getReservedMatrix();
 
     if (node.getReferenceFrame() === osg.Transform.RELATIVE_RF) {
-        var lastMatrixStack = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+        var lastMatrixStack = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
         osg.Matrix.mult(lastMatrixStack, node.getMatrix(), matrix);
     } else {
         // absolute
@@ -355,8 +379,8 @@ osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (
 };
 
 osg.CullVisitor.prototype[osg.Projection.prototype.objectType] = function (node) {
-    lastMatrixStack = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-    var matrix = this.getReservedMatrix();
+    lastMatrixStack = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
+    var matrix = this._getReservedMatrix();
     osg.Matrix.mult(lastMatrixStack, node.getProjectionMatrix(), matrix);
     this.pushProjectionMatrix(matrix);
 
@@ -396,10 +420,10 @@ osg.CullVisitor.prototype[osg.Node.prototype.objectType] = function (node) {
     }
 };
 osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
-    matrix = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
+    var modelview = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
     var bb = node.getBoundingBox();
-    if (this.computeNearFar && bb.valid()) {
-        if (!this.updateCalculatedNearFar(matrix,node)) {
+    if (this._computeNearFar && bb.valid()) {
+        if (!this.updateCalculatedNearFar(modelview,node)) {
             return;
         }
     }
@@ -409,17 +433,27 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
         this.pushStateSet(stateset);
     }
 
-    var leafs = this.currentStateGraph.leafs;
+    var leafs = this._currentStateGraph.leafs;
     if (leafs.length === 0) {
-        this.currentRenderBin.addStateGraph(this.currentStateGraph);
+        this._currentRenderBin.addStateGraph(this._currentStateGraph);
     }
 
-    var leaf = this.getReservedLeaf();
-    leaf.parent = this.currentStateGraph;
-    leaf.modelview = this.modelviewMatrixStack[this.modelviewMatrixStack.length-1];
-    leaf.projection = this.projectionMatrixStack[this.projectionMatrixStack.length-1];
-    leaf.geometry = node;
-    leafs.push(leaf);
+    var leaf = this._getReservedLeaf();
+    var depth = 0;    
+    if (bb.valid()) {
+        depth = this.distance(bb.center(), modelview);
+    }
+    if (isNaN(depth)) {
+        osg.log("warning geometry has a NaN depth, " + modelview + " center " + bb.center());
+    } else {
+        //leaf.id = this._reserveLeafStack.current;
+        leaf.parent = this._currentStateGraph;
+        leaf.projection = this._projectionMatrixStack[this._projectionMatrixStack.length-1];
+        leaf.geometry = node;
+        leaf.modelview = modelview;
+        leaf.depth = depth;
+        leafs.push(leaf);
+    }
 
     if (stateset) {
         this.popStateSet();

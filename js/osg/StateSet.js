@@ -9,6 +9,9 @@ osg.StateSet = function () {
     this.attributeMap.attributeKeys = [];
 
     this.textureAttributeMapList = [];
+
+    this._binName = undefined;
+    this._binNumber = 0;
 };
 
 /** @lends osg.StateSet.prototype */
@@ -62,6 +65,16 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
         this._setAttribute(this.getObjectPair(attribute, mode)); 
     },
+
+
+    setRenderBinDetails: function(num, binName) {
+        this._binNumber = num;
+        this._binName = binName;
+    },
+    getBinNumber: function() { return this._binNumber; },
+    getBinName: function() { return this._binName; },
+    setBinNumber: function(binNum) { this._binNumber = binNum; },
+    setBinName: function(binName) { this._binName = binName; },
 
     _getUniformMap: function () {
         return this.uniforms;

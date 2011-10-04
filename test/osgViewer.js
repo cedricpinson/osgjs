@@ -35,8 +35,8 @@ test("osgViewer.Viewer", function() {
         ok(check_near(viewer.getCamera().getProjectionMatrix(), [0.8660254037844387, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -3.6948013697711914, -1, 0, 0, -86.03523882425281, 0]), "check near / far computation");
 
         viewer._cullVisitor.reset();
-        ok(viewer._cullVisitor.computedNear === Number.POSITIVE_INFINITY, "Check near after reset");
-        ok(viewer._cullVisitor.computedFar === Number.NEGATIVE_INFINITY, "Check far after reset");
+        ok(viewer._cullVisitor._computedNear === Number.POSITIVE_INFINITY, "Check near after reset");
+        ok(viewer._cullVisitor._computedFar === Number.NEGATIVE_INFINITY, "Check far after reset");
 
         removeCanvas(canvas);
 

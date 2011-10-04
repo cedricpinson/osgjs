@@ -268,6 +268,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._cullVisitor.popViewport();
         this._cullVisitor.popStateSet();
 
+        this._renderStage.sort();
     },
     draw: function() {
         var state = this.getState();
