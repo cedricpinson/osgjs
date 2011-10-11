@@ -1350,3 +1350,18 @@ test("osg.Light", function() {
     })();
 });
 
+test("osg.StateSet", function() {
+
+    (function() {
+        var stateset = new osg.StateSet();
+        var uniform;
+        uniform = stateset.getUniform('test');
+        ok(uniform === undefined, "Check getting an non existant uniform");
+
+        stateset.addUniform(osg.Uniform.createFloat1(1.0, 'test'));
+        uniform = stateset.getUniform('test');
+        ok(uniform !== undefined, "Check getting an existant uniform");
+
+    })();
+
+});

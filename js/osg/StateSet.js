@@ -34,7 +34,7 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
     },
     getUniform: function (uniform) {
-        if (this.uniforms[uniform]) {
+        if (this.uniforms && this.uniforms[uniform]) {
             return this.uniforms[uniform].object;
         }
         return undefined;
