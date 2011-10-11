@@ -50,7 +50,7 @@ osg.RenderBin.prototype = {
         }
 
         if (detectedNaN) {
-            osg.log("warning: RenderBin::copyLeavesFromStateGraphListToRenderLeafList() detected NaN depth values, database may be corrupted.");
+            osg.debug("warning: RenderBin::copyLeavesFromStateGraphListToRenderLeafList() detected NaN depth values, database may be corrupted.");
         }        
         // empty the render graph list to prevent it being drawn along side the render leaf list (see drawImplementation.)
         this.stateGraphList.length = 0;;
