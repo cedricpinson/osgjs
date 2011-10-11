@@ -137,6 +137,9 @@ osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
     blend.setDestinationAlpha(jsonObj.DestinationAlpha);
 };
 
+osgDB.ObjectWrapper.serializers.osg.Image = function(jsonObj, image) {
+    image.src = jsonObj.File;
+};
 
 osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
     var check = function(o) {
@@ -167,7 +170,7 @@ osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
 
     if (jsonObj.File) {
         var img = new Image();
-        img.src = jsonObj.File;
+        osgDB.ObjectWrapper.serializers.osg.Image(jsonObj, img);
         texture.setImage(img);
     }
 };
