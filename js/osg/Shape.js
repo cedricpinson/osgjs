@@ -3,7 +3,7 @@
  * @name osg.createTexturedBox
  */
 osg.createTexturedBoxGeometry = function(centerx, centery, centerz,
-                                 sizex, sizey, sizez) {
+                                         sizex, sizey, sizez) {
 
     var g = new osg.Geometry();
     var dx,dy,dz;

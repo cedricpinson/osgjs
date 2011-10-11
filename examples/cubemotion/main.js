@@ -147,34 +147,19 @@ var createTexturedBox = function(centerx, centery, centerz,
     return model;
 };
 
-
-function createScene() {
-    var root = new osg.Node();
-    var group = new osg.MatrixTransform();
+var createEffect = function(texture, target, center) {
 
     var totalSizeX = 20;
     var maxx = 20;
 
     var sizex = totalSizeX/maxx;
-    var maxy = 3;
+    var maxy = maxx/4;
 
     var size = [sizex, sizex, sizex];
-    var texture = osg.Texture.createFromURL('image.png');
 
-    var target = new osg.MatrixTransform();
-    var targetModel = osg.createTexturedBoxGeometry(0,
-                                                    0,
-                                                    0,
-                                                    2,
-                                                    2,
-                                                    2);
-    target.addChild(targetModel);
-    var material = new osg.Material();
-    material.setDiffuse([1,0,0,1]);
-    target.getOrCreateStateSet().setAttributeAndMode(material);
+    var group = new osg.MatrixTransform();
+    var cb = new TransitionUpdateCallback(target);
 
-    var cb = new TransitionUpdateCallback([0,0,0]);
-    var center = [8,0,40];
     for (var y = 0; y < maxy; y++) {
         for (var x = 0; x < maxx; x++) {
             var mtr = new osg.MatrixTransform();
@@ -199,6 +184,30 @@ function createScene() {
             osg.Vec3.normalize(mtr._axis, mtr._axis);
         }
     }
+    return group;
+};
+
+function createScene() {
+    var root = new osg.Node();
+
+
+    var texture = osg.Texture.createFromURL('image.png');
+    var target = new osg.MatrixTransform();
+    var targetModel = osg.createTexturedBoxGeometry(0,
+                                                    0,
+                                                    0,
+                                                    2,
+                                                    2,
+                                                    2);
+    target.addChild(targetModel);
+    var material = new osg.Material();
+    material.setDiffuse([1,0,0,1]);
+    target.getOrCreateStateSet().setAttributeAndMode(material);
+
+    var targetPos = [0,0,0];
+    var centerPos = [0,8,100];
+
+    var group = createEffect(texture, targetPos, centerPos);
 
     root.addChild(group);
     root.addChild(target);
