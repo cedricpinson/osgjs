@@ -64,6 +64,13 @@ osgDB.ObjectWrapper.readObject = function (jsonObj) {
     return obj;
 };
 
+osgDB.readImage = function (url) {
+    var img = new Image();
+    img.src = url;
+    return img;
+};
+
+
 osgDB.parseSceneGraph = function (node) {
     if (node.Version && node.Version > 0) {
         var getPropertyValue = function(o) {
@@ -138,8 +145,7 @@ osgDB.parseSceneGraph_deprecated = function (node)
             osgjs.setWrapS(wrapS);
         }
         var file = getFieldBackwardCompatible("File", json);
-        var img = new Image();
-        img.src = file;
+        var img = osgDB.readImage(file);
         osgjs.setImage(img);
     };
 
