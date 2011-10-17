@@ -162,6 +162,7 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
             gl.clearColor(this.clearColor[0], this.clearColor[1], this.clearColor[2], this.clearColor[3]);
         }
         if (this.clearMask & gl.DEPTH_BUFFER_BIT) {
+            gl.depthMask(true);
             gl.clearDepth(this.clearDepth);
         }
         gl.clear(this.clearMask);

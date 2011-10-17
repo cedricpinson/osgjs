@@ -286,6 +286,7 @@ osg.Texture.createFromImg = function(img, format) {
     a.setImage(img, format);
     return a;
 };
+osg.Texture.createFromImage = osg.Texture.createFromImg;
 osg.Texture.createFromCanvas = function(ctx, format) {
     var a = new osg.Texture();
     a.setFromCanvas(ctx, format);
