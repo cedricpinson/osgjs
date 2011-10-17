@@ -40,13 +40,28 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
         var duration = animationParameter.duration;
         var weight = animationParameter.weight;
         var animation = animationParameter.anim;
-        var t = (t-animationParameter.start) % duration;
+        var start = animationParameter.start;
+        var loop = animationParameter.loop;
+
+        if (loop > 0) {
+            var playedTimes = t-start;
+            if (playedTimes >= loop*duration) {
+                return true;
+            }
+        }
+
+        var t = (t-start) % duration;
+        var callback = animationParameter.callback;
+        if (callback) {
+            callback(t);
+        }
 
         var channels = animation.getChannels();
         for ( var i = 0, l = channels.length; i < l; i++) {
             var channel = channels[i];
             channel.update(t, weight, priority);
         }
+        return false;
     },
     update: function(node, nv) {
         var t = nv.getFrameStamp().getSimulationTime();
@@ -64,14 +79,26 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
             while (pri >= 0) {
                 var layer = this._actives[pri];
                 var keys = this._actives[pri]._keys;
+                var removes = [];
                 for (var ai = 0, al = keys.length; ai < al; ai++) {
                     var key = keys[ai];
                     var anim = layer[key];
                     if (anim.start === undefined) {
                         anim.start = t;
                     }
-                    this._updateAnimation(anim, t, pri);
+                    var remove = this._updateAnimation(anim, t, pri);
+                    if (remove) {
+                        removes.push(ai);
+                    }
                 }
+
+                // remove finished animation
+                for (var j = removes.length-1; j >= 0; j--) {
+                    var k = keys[j];
+                    keys.splice(j,1);
+                    delete layer[k];
+                }
+
                 pri--;
             }
         }
@@ -103,36 +130,66 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
             }
         }
     },
+    playAnimationObject: function(obj) {
+        if (obj.name === undefined) {
+            return;
+        }
+
+        var anim = this._animations[obj.name];
+        if (anim === undefined) {
+            osg.log("no animation " + obj.name + " found");
+            return;
+        }
+
+        if (this.isPlaying(obj.name)) {
+            return;
+        }
+
+        if (obj.priority === undefined) {
+            obj.priority = 0;
+        }
+
+        if (obj.weight === undefined) {
+            obj.weight = 1.0;
+        }
+
+        if (obj.timeFactor === undefined) {
+            obj.timeFactor = 1.0;
+        }
+
+        if (obj.loop === undefined) {
+            obj.loop = 0;
+        }
+        
+        if (this._actives[obj.priority] === undefined) {
+            this._actives[obj.priority] = {};
+            this._actives[obj.priority]._keys = [];
+            this._actives._keys.push(obj.priority); // = Object.keys(this._actives);
+        }
+
+        obj.start = undefined;
+        obj.duration = anim.getDuration();
+        obj.anim = anim;
+        this._actives[obj.priority][obj.name] = obj;
+        this._actives[obj.priority]._keys.push(obj.name);
+    },
+
     playAnimation: function(name, priority, weight) {
         var animName = name;
         if (typeof name === "object") {
-            animName = name.getName();
+            if (name.getName === undefined) {
+                return this.playAnimationObject(name);
+            } else {
+                animName = name.getName();
+            }
         }
-        if (this._animations[animName] === undefined) {
-            osg.log("no animation " + animName + " found");
-            return;
-        }
-        
-        if (this.isPlaying(animName)) {
-            return;
-        }
+        var obj = { 'name': animName,
+                    'priority': priority,
+                    'weight': weight };
 
-        if (!priority) {
-            priority = 0;
-        }
-        if (!weight) {
-            weight = 1;
-        }
-
-        if (this._actives[priority] === undefined) {
-            this._actives[priority] = {};
-            this._actives[priority]._keys = [];
-            this._actives._keys.push(priority); // = Object.keys(this._actives);
-        }
-        var anim = this._animations[animName];
-        this._actives[priority][animName] = { 'start': undefined, 'weight': weight, 'pri': priority, 'timeFactor': 1.0, 'duration' : anim.getDuration(), 'anim': anim };
-        this._actives[priority]._keys.push(animName);
+        return this.playAnimationObject(obj);
     },
+
     registerAnimation: function(anim) {
         this._animations[anim.getName()] = anim;
         this.buildTargetList();
