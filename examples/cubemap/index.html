@@ -1,0 +1,76 @@
+<html>
+
+<head>
+<style>
+  body {
+  background:-moz-radial-gradient(farthest-side, rgba(0,0,0,0) 90%, rgba(0,0,0,0.1) 150%) rgb(76,76,76);
+  background:-webkit-gradient(radial, center center, 500, center center, 1400, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.2))) rgb(76,76,76);
+  overflow:hidden;
+  padding:0;
+  margin:0;
+  color: white;
+  }
+
+  a:link {text-decoration: none; color: black;}
+  a:visited {text-decoration: none; color: black;}
+  a:active {text-decoration: none; color: black;}
+  a:hover {text-decoration: underline;  color: black;}
+
+  #ViewContainer {
+  position: absolute;
+  }
+
+  #explanation {
+  overflow:auto;
+  position: absolute;
+  left: 70%;
+  }
+
+  #explanation:focus { outline: none; }
+
+  code {
+    font-size: 10px;
+  }
+  
+  #loading {
+  position: absolute;
+  left: 10px;
+  height: 10px;
+  }
+
+</style>
+<title>Cubemap</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<script type="text/javascript" src="../../build/osg-debug.js"></script>
+<script type="text/javascript" src="main.js"></script>
+</head>
+
+<body>
+
+  <div id="loading">Loading</div>
+  <div id="ViewContainer">
+    <canvas id="3DView"></canvas>
+  </div>
+  <div id="explanation" tabIndex="0" >
+    <h1>CubeMap <a href="http://osgjs.org">osgjs</a></h1>
+    This sample demonstrate how to use cubemap
+    <h2>Cubemap</h2>
+    <p>
+      <code>
+    var texture = new osg.TextureCubeMap();
+    texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_X', osgDB.readImage('textures/posx.jpg'));
+    texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_X', osgDB.readImage('textures/negx.jpg'));
+
+    texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Y', osgDB.readImage('textures/posy.jpg'));
+    texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Y', osgDB.readImage('textures/negy.jpg'));
+
+    texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Z', osgDB.readImage('textures/posz.jpg'));
+    texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Z', osgDB.readImage('textures/negz.jpg'));
+
+    texture.setMinFilter('LINEAR_MIPMAP_LINEAR');
+</code>
+    <div id="Parameters"></div>
+    </p>
+  </div>
+</body>
+</html>
