@@ -426,6 +426,11 @@ osgUtil.ParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
     },
 
     apply: function(node) {
+        var element = this.targetHTML;
+        if (element === undefined || element === null) {
+            return;
+        }
+
         var st = node.getStateSet();
         if (st !== undefined) {
             this.applyStateSet(node, st);
@@ -474,7 +479,7 @@ osgUtil.ParameterVisitor.SliderParameter.prototype = {
 
             var dom = this.createDomSlider(value, params.min, params.max, params.step, nameIndex, cbnameIndex);
             this.addToDom(params.dom, dom);
-            window[cbnameIndex] = this.createFunction(nameIndex, i, object, field, cbnameIndex);
+            window[cbnameIndex] = this.createFunction(nameIndex, i, object, field, cbnameIndex, params.onchange);
             osg.log(nameIndex + " " + value);
             window[cbnameIndex](value);
         }
@@ -496,7 +501,7 @@ osgUtil.ParameterVisitor.SliderParameter.prototype = {
         return 'change_'+prgId+"_"+name;
     },
 
-    createFunction: function(name, index, object, field, callbackName) {
+    createFunction: function(name, index, object, field, callbackName, userOnChange) {
         self = this;
         return (function() {
             var cname = name;
@@ -516,6 +521,9 @@ osgUtil.ParameterVisitor.SliderParameter.prototype = {
                 osg.log(cname + ' value ' + value);
                 document.getElementById(callbackName).innerHTML = Number(value).toFixed(4);
                 self.setValue(callbackName, value);
+                if (userOnChange) {
+                    userOnChange(obj[cfield]);
+                }
                 // store the value to localstorage
             };
             return func;
@@ -535,7 +543,7 @@ osgUtil.ParameterVisitor.SliderParameter.prototype = {
     },
 };
 
-osgUtil.ParameterVisitor.createSlider = function (label, uniqNameId, object, field, value, min, max, step, dom) {
+osgUtil.ParameterVisitor.createSlider = function (label, uniqNameId, object, field, value, min, max, step, dom, onchange) {
     var scope = osgUtil.ParameterVisitor;
     if (scope.sliders === undefined) {
         scope.sliders = new scope.SliderParameter();
@@ -545,6 +553,7 @@ osgUtil.ParameterVisitor.createSlider = function (label, uniqNameId, object, fie
                    min: min,
                    max: max,
                    step: step,
+                   onchange: onchange,
                    dom: dom };
 
     if (typeof(object[field]) === 'number') {
@@ -553,5 +562,6 @@ osgUtil.ParameterVisitor.createSlider = function (label, uniqNameId, object, fie
         return scope.sliders.createInternalSlider(label, object[field].length, uniqNameId, params, object, field);
     }
 };
+
 
 osgUtil.ShaderParameterVisitor = osgUtil.ParameterVisitor;
