@@ -93,6 +93,9 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
 	return c;
     },
     getChildren: function() { return this.children; },
+    getParents: function() {
+        return this.parents;
+    },
     addParent: function( parent) {
         this.parents.push(parent);
     },
