@@ -205,7 +205,7 @@ function createScene() {
     target.getOrCreateStateSet().setAttributeAndMode(material);
 
     var targetPos = [0,0,0];
-    var centerPos = [0,8,100];
+    var centerPos = [20,8,30];
 
     var group = createEffect(texture, targetPos, centerPos);
 
