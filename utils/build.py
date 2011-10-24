@@ -56,6 +56,7 @@ OSG = [
 "osg/State.js",
 "osg/StateSet.js",
 "osg/Texture.js",
+"osg/TextureCubeMap.js",
 "osg/UpdateVisitor.js",
 "osg/Viewport.js",
 "osg/CullStack.js",
@@ -88,6 +89,7 @@ OSG_GA = [
 OSG_VIEWER = [
         "osgViewer/osgViewer.js",
         "osgViewer/webgl-utils.js",
+        "osgViewer/webgl-debug.js",
         "osgViewer/stats.js",
         "osgViewer/View.js",
         "osgViewer/Viewer.js",

@@ -12,6 +12,9 @@ osgViewer.Viewer = function(canvas, options, error) {
     }
 
     gl = WebGLUtils.setupWebGL(canvas, options, error );
+    if (osg.ReportWebGLError) {
+        gl = WebGLDebugUtils.makeDebugContext(gl);
+    }
     if (gl) {
         this.setGraphicContext(gl);
         osg.init();
@@ -52,7 +55,6 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         var gl = this.getGraphicContext();
         this._state.setGraphicContext(gl);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.hint(gl.NICEST, gl.GENERATE_MIPMAP_HINT);
 
         this._updateVisitor = new osgUtil.UpdateVisitor();
         this._cullVisitor = new osgUtil.CullVisitor();

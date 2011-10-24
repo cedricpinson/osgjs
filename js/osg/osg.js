@@ -40,6 +40,7 @@ osg.setNotifyLevel = function(level) {
 };
 
 osg.reportErrorGL = false;
+osg.ReportWebGLError = false;
 
 osg.init = function() {
     osg.setNotifyLevel(osg.NOTICE);
