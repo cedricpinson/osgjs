@@ -347,7 +347,9 @@ test("osg.Matrix.getLookAt", function() {
 test("osg.Matrix.transformVec3", function() {
     var m = osg.Matrix.makeRotate( Math.PI/2.0, 0, 1, 0);
     var vec = [0, 0, 10];
-    var res = osg.Matrix.transformVec3(osg.Matrix.inverse(m), vec);
+    var inv = [];
+    osg.Matrix.inverse(m, inv);
+    var res = osg.Matrix.transformVec3(inv, vec);
     near(res , [10, 0, 0]);
 
     var res2 = osg.Matrix.transformVec3(m, res);
@@ -483,6 +485,30 @@ test("osg.Matrix.inverse4x3", function() {
                   0  , 1, 0, 0,
                   0  , 0, 1, 0,
                   -10  , -10, -10, 1]);
+
+
+    var m1 = [ 0.0011258089383161401, 0.00131216109033401, -0.0012747534698732, 0,
+               -0.0002278837182292197, 0.0015857257043203033, 0.0014309996929286388, 0,
+               0.0018151705324519383, -0.0006147558241282602, 0.0009702887644753271, 0, 
+               0, 0, 0, 1];
+    var m1result = [];
+    var ok1 = osg.Matrix.inverse4x3(m1, m1result);
+    near(m1result, [ 243.988, -49.3875, 393.386, 0, 
+	             284.374, 343.661, -133.23, 0, 
+	             -276.267, 310.128, 210.282, 0, 
+	             -0, -0, -0, 1 ], 1e-3);
+    
+    var m2 = [0.0011258089383161401, -0.0002278837182292197, 0.0018151705324519383, 0,
+              0.00131216109033401  ,  0.0015857257043203033, -0.0006147558241282602, 0,
+              -0.0012747534698732  ,  0.0014309996929286388, 0.0009702887644753271, 0, 
+              0                    ,  0                    , 0                    , 1 ];
+    var m2result = [];
+    var ok2 = osg.Matrix.inverse4x3(m2, m2result);
+    near( m2result, [ 243.988, 284.374, -276.267, 0, 
+                      -49.3875, 343.661, 310.128, 0, 
+                      393.386, -133.23, 210.282, 0, 
+                      -0, -0, -0, 1 ], 1e-3);
+
 });
 
 test("osg.Matrix.inverse", function() {
