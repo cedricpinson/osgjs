@@ -22,7 +22,8 @@ osg.MatrixTransform.prototype = osg.objectInehrit(osg.Transform.prototype, {
         return true;
     },
     computeWorldToLocalMatrix: function(matrix,nodeVisitor) {
-        var minverse = osg.Matrix.inverse(this.matrix);
+        var minverse = [];
+        osg.Matrix.inverse(this.matrix, minverse);
         if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
             osg.Matrix.postMult(minverse, matrix);
         } else {// absolute

@@ -111,7 +111,8 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
 
     panModel: function(dx, dy) {
-        var inv = osg.Matrix.inverse(this.rotation);
+        var inv = [];
+        osg.Matrix.inverse(this.rotation, inv);
         var x = [ osg.Matrix.get(inv, 0,0), osg.Matrix.get(inv, 0,1), 0 ];
         osg.Vec3.normalize(x, x);
         var y = [ osg.Matrix.get(inv, 1,0), osg.Matrix.get(inv, 1,1), 0 ];
@@ -134,7 +135,9 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
         // test that the eye is not too up and not too down to not kill
         // the rotation matrix
-        var eye = osg.Matrix.transformVec3(osg.Matrix.inverse(r2), [0, this.distance, 0]);
+        var inv = [];
+        osg.Matrix.inverse(r2, inv);
+        var eye = osg.Matrix.transformVec3(inv, [0, this.distance, 0]);
 
         var dir = osg.Vec3.neg(eye, []);
         osg.Vec3.normalize(dir, dir);

@@ -2,6 +2,8 @@
 
 /** @class Matrix Operations */
 osg.Matrix = {
+    _tmp0: [],
+    _tmp1: [],
     valid: function(matrix) {
         for (var i = 0; i < 16; i++) {
             if (isNaN(matrix[i])) {
@@ -604,6 +606,7 @@ osg.Matrix = {
 
     transformVec3: function(matrix, vector, result) {
         var d = 1.0/(matrix[3] * vector[0] + matrix[7] * vector[1] + matrix[11] * vector[2] + matrix[15]); 
+
         if (result === undefined) {
             result = [];
         }
@@ -668,16 +671,17 @@ osg.Matrix = {
         return result;
     },
 
-    inverse: function(matrix, resultArg) {
-        return this.inverse4x4(matrix,resultArg);
-        // it's not working yet, need to debug inverse 4x3
-/*
-        if (matrix[3] === 0.0 && matrix[7] === 0.0 && matrix[11] === 0.0 && matrix[15] === 1.0) {
-            return this.inverse4x3(matrix,resultArg);
-        } else {
-            return this.inverse4x4(matrix,resultArg);
+    inverse: function(matrix, result) {
+        if (result === matrix) {
+            osg.Matrix.copy(matrix, osg.Matrix._tmp1);
+            matrix = osg.Matrix._tmp1;
         }
-*/
+        
+        if (matrix[3] === 0.0 && matrix[7] === 0.0 && matrix[11] === 0.0 && matrix[15] === 1.0) {
+            return this.inverse4x3(matrix,result);
+        } else {
+            return this.inverse4x4(matrix,result);
+        }
     },
 
     /**
@@ -685,12 +689,7 @@ osg.Matrix = {
      *  depending if the matrix can be inverted, else if no result argument is given
      *  the return is identity if the matrix can not be inverted and the matrix overthise
      */
-    inverse4x4: function(matrix, resultArg) {
-        if (resultArg === undefined) {
-            result = [];
-        } else {
-            result = resultArg;
-        }
+    inverse4x4: function(matrix, result) {
         var tmp_0 = matrix[10] * matrix[15];
         var tmp_1 = matrix[14] * matrix[11];
         var tmp_2 = matrix[6] * matrix[15];
@@ -727,13 +726,8 @@ osg.Matrix = {
 
         var d1 = (matrix[0] * t0 + matrix[4] * t1 + matrix[8] * t2 + matrix[12] * t3);
         if (Math.abs(d1) < 1e-5) {
-            osg.info("Warning can't inverse matrix " + matrix);
-
-            if (resultArg !== undefined) {
-                return false;
-            } else {
-                osg.Matrix.makeIdentity(result);
-            }
+            osg.log("Warning can't inverse matrix " + matrix);
+            return false;
         }
         var d = 1.0 / d1;
 
@@ -786,104 +780,134 @@ osg.Matrix = {
         result[14] = out_32;
         result[15] = out_33;
 
-        if (resultArg !== undefined) {
-            return true;
-        }
-        return result;
+        return true;
     },
 
-    inverse4x3: function(matrix, resultArg) {
-        if (resultArg === undefined) {
-            result = [];
-        } else {
-            result = resultArg;
-        }
+    // comes from OpenSceneGraph
+    /*
+      Matrix inversion technique:
+      Given a matrix mat, we want to invert it.
+      mat = [ r00 r01 r02 a
+              r10 r11 r12 b
+              r20 r21 r22 c
+              tx  ty  tz  d ]
+      We note that this matrix can be split into three matrices.
+      mat = rot * trans * corr, where rot is rotation part, trans is translation part, and corr is the correction due to perspective (if any).
+      rot = [ r00 r01 r02 0
+              r10 r11 r12 0
+              r20 r21 r22 0
+              0   0   0   1 ]
+      trans = [ 1  0  0  0
+                0  1  0  0
+                0  0  1  0
+                tx ty tz 1 ]
+      corr = [ 1 0 0 px
+               0 1 0 py
+               0 0 1 pz
+               0 0 0 s ]
 
-        // _mat[0][0] = r11*r22 - r12*r21;
-        result[0] = matrix[5] * matrix[10] - matrix[6] * matrix[9];
+      where the elements of corr are obtained from linear combinations of the elements of rot, trans, and mat.
+      So the inverse is mat' = (trans * corr)' * rot', where rot' must be computed the traditional way, which is easy since it is only a 3x3 matrix.
+      This problem is simplified if [px py pz s] = [0 0 0 1], which will happen if mat was composed only of rotations, scales, and translations (which is common).  In this case, we can ignore corr entirely which saves on a lot of computations.
+    */
 
-        // _mat[0][1] = r02*r21 - r01*r22;
-        result[1] = matrix[2] * matrix[9] - matrix[1] * matrix[10];
+    inverse4x3: function(matrix, result) {
 
-        // _mat[0][2] = r01*r12 - r02*r11;
-        result[2] = matrix[1] * matrix[6] - matrix[2] * matrix[5];
-
+        // Copy rotation components
         var r00 = matrix[0];
+        var r01 = matrix[1];
+        var r02 = matrix[2];
+
         var r10 = matrix[4];
+        var r11 = matrix[5];
+        var r12 = matrix[6];
+
         var r20 = matrix[8];
-        
+        var r21 = matrix[9];
+        var r22 = matrix[10];
+
+        // Partially compute inverse of rot
+        result[0] = r11*r22 - r12*r21;
+        result[1] = r02*r21 - r01*r22;
+        result[2] = r01*r12 - r02*r11;
+
+        // Compute determinant of rot from 3 elements just computed
         var one_over_det = 1.0/(r00*result[0] + r10*result[1] + r20*result[2]);
         r00 *= one_over_det; r10 *= one_over_det; r20 *= one_over_det;  // Saves on later computations
 
+        // Finish computing inverse of rot
         result[0] *= one_over_det;
         result[1] *= one_over_det;
         result[2] *= one_over_det;
         result[3] = 0.0;
-
-        result[4] = matrix[6]*r20 - r10*matrix[10]; // Have already been divided by det
-        result[5] = r00*matrix[10] - matrix[2]*r20; // same
-        result[6] = matrix[2]*r10 - r00*matrix[6]; // same
+        result[4] = r12*r20 - r10*r22; // Have already been divided by det
+        result[5] = r00*r22 - r02*r20; // same
+        result[6] = r02*r10 - r00*r12; // same
         result[7] = 0.0;
+        result[8] = r10*r21 - r11*r20; // Have already been divided by det
+        result[9] = r01*r20 - r00*r21; // same
+        result[10] = r00*r11 - r01*r10; // same
+        result[11] = 0.0;
+        result[15] = 1.0;
 
-        result[8] = r10*matrix[9] - matrix[5]*r20; // Have already been divided by det
-        result[9] = matrix[1]*r20 - r00*matrix[9]; // same
-        result[10]= r00*matrix[5] - matrix[1]*r10; // same
-        result[11]= 0.0;
-        result[15]= 1.0;
+        var tx,ty,tz;
 
         var d  = matrix[15];
-        var d2 = d-1.0;
-        var tx, ty, tz;
-        if( d2*d2 > 1.0e-6 ) { // Involves perspective, so we must
-            // compute the full inverse
-            var TPinv = [];
-            result[12] = result[13] = result[15] = 0.0;
+        var dm = d-1.0;
+        if( dm*dm > 1.0e-6 )  // Involves perspective, so we must
+        {                       // compute the full inverse
+            
+            var inv = osg.Matrix._tmp0;
+            result[12] = result[13] = result[14] = 0.0;
 
-            var a = matrix[3];
-            var b = matrix[7];
-            var c = matrix[11];
-            var px = result[0] * a + result[1] * b + result[2]*c;
-            var py = result[4] * a + result[5] * b + result[6]*c;
-            var pz = result[8] * a + result[9] * b + result[10]*c;
+            var a  = matrix[3]; 
+            var b  = matrix[7]; 
+            var c  = matrix[11];
+            var px = result[0]*a + result[1]*b + result[2] *c;
+            var py = result[4]*a + result[5]*b + result[6] *c;
+            var pz = result[8]*a + result[9]*b + result[10]*c;
 
-            tx = matrix[12];
-            ty = matrix[13];
+            tx = matrix[12]; 
+            ty = matrix[13]; 
             tz = matrix[14];
             var one_over_s  = 1.0/(d - (tx*px + ty*py + tz*pz));
 
-            tx *= one_over_s; ty *= one_over_s; tz *= one_over_s;  // Reduces number of calculations later on
+            tx *= one_over_s; 
+            ty *= one_over_s; 
+            tz *= one_over_s;  // Reduces number of calculations later on
+
             // Compute inverse of trans*corr
-            TPinv[0] = tx*px + 1.0;
-            TPinv[1] = ty*px;
-            TPinv[2] = tz*px;
-            TPinv[3] = -px * one_over_s;
-            TPinv[4] = tx*py;
-            TPinv[5] = ty*py + 1.0;
-            TPinv[6] = tz*py;
-            TPinv[7] = -py * one_over_s;
-            TPinv[8] = tx*pz;
-            TPinv[9] = ty*pz;
-            TPinv[10]= tz*pz + 1.0;
-            TPinv[11]= -pz * one_over_s;
-            TPinv[12]= -tx;
-            TPinv[13]= -ty;
-            TPinv[14]= -tz;
-            TPinv[15]= one_over_s;
-            
-            this.mult(result, TPinv, result); // Finish computing full inverse of mat
+            inv[0] = tx*px + 1.0;
+            inv[1] = ty*px;
+            inv[2] = tz*px;
+            inv[3] = -px * one_over_s;
+            inv[4] = tx*py;
+            inv[5] = ty*py + 1.0;
+            inv[6] = tz*py;
+            inv[7] = -py * one_over_s;
+            inv[8] = tx*pz;
+            inv[9] = ty*pz;
+            inv[10] = tz*pz + 1.0;
+            inv[11] = -pz * one_over_s;
+            inv[12] = -tx;
+            inv[13] = -ty;
+            inv[14] = -tz;
+            inv[15] = one_over_s;
+
+            osg.Matrix.preMult(result, inv); // Finish computing full inverse of mat
         } else {
 
-            tx = matrix[12]; ty = matrix[13]; tz = matrix[14];
+            tx = matrix[12]; 
+            ty = matrix[13]; 
+            tz = matrix[14];
+
             // Compute translation components of mat'
             result[12] = -(tx*result[0] + ty*result[4] + tz*result[8]);
             result[13] = -(tx*result[1] + ty*result[5] + tz*result[9]);
             result[14] = -(tx*result[2] + ty*result[6] + tz*result[10]);
         }
+        return true;
 
-        if (resultArg !== undefined) {
-            return true;
-        }
-        return result;
     },
 
     transpose: function(mat, dest) {

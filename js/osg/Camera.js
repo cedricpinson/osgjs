@@ -102,7 +102,8 @@ osg.Camera.prototype = osg.objectInehrit(
         },
 
         computeWorldToLocalMatrix: function(matrix, nodeVisitor) {
-            var inverse = osg.Matrix.inverse(this.modelviewMatrix);
+            var inverse = [];
+            osg.Matrix.inverse(this.modelviewMatrix, inverse);
             if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
                 osg.Matrix.postMult(inverse, matrix);
             } else {
