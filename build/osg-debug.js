@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit 7ff609173379329a62ff0b9f1746adc8f6c51a6b - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit 275bc1b4d380ddea7a78b272843455b094eb317a - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -41,6 +41,7 @@ osg.setNotifyLevel = function(level) {
 };
 
 osg.reportErrorGL = false;
+osg.ReportWebGLError = false;
 
 osg.init = function() {
     osg.setNotifyLevel(osg.NOTICE);
@@ -440,6 +441,8 @@ osg.Object.prototype = {
 
 /** @class Matrix Operations */
 osg.Matrix = {
+    _tmp0: [],
+    _tmp1: [],
     valid: function(matrix) {
         for (var i = 0; i < 16; i++) {
             if (isNaN(matrix[i])) {
@@ -1042,6 +1045,7 @@ osg.Matrix = {
 
     transformVec3: function(matrix, vector, result) {
         var d = 1.0/(matrix[3] * vector[0] + matrix[7] * vector[1] + matrix[11] * vector[2] + matrix[15]); 
+
         if (result === undefined) {
             result = [];
         }
@@ -1106,16 +1110,17 @@ osg.Matrix = {
         return result;
     },
 
-    inverse: function(matrix, resultArg) {
-        return this.inverse4x4(matrix,resultArg);
-        // it's not working yet, need to debug inverse 4x3
-/*
-        if (matrix[3] === 0.0 && matrix[7] === 0.0 && matrix[11] === 0.0 && matrix[15] === 1.0) {
-            return this.inverse4x3(matrix,resultArg);
-        } else {
-            return this.inverse4x4(matrix,resultArg);
+    inverse: function(matrix, result) {
+        if (result === matrix) {
+            osg.Matrix.copy(matrix, osg.Matrix._tmp1);
+            matrix = osg.Matrix._tmp1;
         }
-*/
+        
+        if (matrix[3] === 0.0 && matrix[7] === 0.0 && matrix[11] === 0.0 && matrix[15] === 1.0) {
+            return this.inverse4x3(matrix,result);
+        } else {
+            return this.inverse4x4(matrix,result);
+        }
     },
 
     /**
@@ -1123,12 +1128,7 @@ osg.Matrix = {
      *  depending if the matrix can be inverted, else if no result argument is given
      *  the return is identity if the matrix can not be inverted and the matrix overthise
      */
-    inverse4x4: function(matrix, resultArg) {
-        if (resultArg === undefined) {
-            result = [];
-        } else {
-            result = resultArg;
-        }
+    inverse4x4: function(matrix, result) {
         var tmp_0 = matrix[10] * matrix[15];
         var tmp_1 = matrix[14] * matrix[11];
         var tmp_2 = matrix[6] * matrix[15];
@@ -1165,13 +1165,8 @@ osg.Matrix = {
 
         var d1 = (matrix[0] * t0 + matrix[4] * t1 + matrix[8] * t2 + matrix[12] * t3);
         if (Math.abs(d1) < 1e-5) {
-            osg.info("Warning can't inverse matrix " + matrix);
-
-            if (resultArg !== undefined) {
-                return false;
-            } else {
-                osg.Matrix.makeIdentity(result);
-            }
+            osg.log("Warning can't inverse matrix " + matrix);
+            return false;
         }
         var d = 1.0 / d1;
 
@@ -1224,104 +1219,134 @@ osg.Matrix = {
         result[14] = out_32;
         result[15] = out_33;
 
-        if (resultArg !== undefined) {
-            return true;
-        }
-        return result;
+        return true;
     },
 
-    inverse4x3: function(matrix, resultArg) {
-        if (resultArg === undefined) {
-            result = [];
-        } else {
-            result = resultArg;
-        }
+    // comes from OpenSceneGraph
+    /*
+      Matrix inversion technique:
+      Given a matrix mat, we want to invert it.
+      mat = [ r00 r01 r02 a
+              r10 r11 r12 b
+              r20 r21 r22 c
+              tx  ty  tz  d ]
+      We note that this matrix can be split into three matrices.
+      mat = rot * trans * corr, where rot is rotation part, trans is translation part, and corr is the correction due to perspective (if any).
+      rot = [ r00 r01 r02 0
+              r10 r11 r12 0
+              r20 r21 r22 0
+              0   0   0   1 ]
+      trans = [ 1  0  0  0
+                0  1  0  0
+                0  0  1  0
+                tx ty tz 1 ]
+      corr = [ 1 0 0 px
+               0 1 0 py
+               0 0 1 pz
+               0 0 0 s ]
 
-        // _mat[0][0] = r11*r22 - r12*r21;
-        result[0] = matrix[5] * matrix[10] - matrix[6] * matrix[9];
+      where the elements of corr are obtained from linear combinations of the elements of rot, trans, and mat.
+      So the inverse is mat' = (trans * corr)' * rot', where rot' must be computed the traditional way, which is easy since it is only a 3x3 matrix.
+      This problem is simplified if [px py pz s] = [0 0 0 1], which will happen if mat was composed only of rotations, scales, and translations (which is common).  In this case, we can ignore corr entirely which saves on a lot of computations.
+    */
 
-        // _mat[0][1] = r02*r21 - r01*r22;
-        result[1] = matrix[2] * matrix[9] - matrix[1] * matrix[10];
+    inverse4x3: function(matrix, result) {
 
-        // _mat[0][2] = r01*r12 - r02*r11;
-        result[2] = matrix[1] * matrix[6] - matrix[2] * matrix[5];
-
+        // Copy rotation components
         var r00 = matrix[0];
+        var r01 = matrix[1];
+        var r02 = matrix[2];
+
         var r10 = matrix[4];
+        var r11 = matrix[5];
+        var r12 = matrix[6];
+
         var r20 = matrix[8];
-        
+        var r21 = matrix[9];
+        var r22 = matrix[10];
+
+        // Partially compute inverse of rot
+        result[0] = r11*r22 - r12*r21;
+        result[1] = r02*r21 - r01*r22;
+        result[2] = r01*r12 - r02*r11;
+
+        // Compute determinant of rot from 3 elements just computed
         var one_over_det = 1.0/(r00*result[0] + r10*result[1] + r20*result[2]);
         r00 *= one_over_det; r10 *= one_over_det; r20 *= one_over_det;  // Saves on later computations
 
+        // Finish computing inverse of rot
         result[0] *= one_over_det;
         result[1] *= one_over_det;
         result[2] *= one_over_det;
         result[3] = 0.0;
-
-        result[4] = matrix[6]*r20 - r10*matrix[10]; // Have already been divided by det
-        result[5] = r00*matrix[10] - matrix[2]*r20; // same
-        result[6] = matrix[2]*r10 - r00*matrix[6]; // same
+        result[4] = r12*r20 - r10*r22; // Have already been divided by det
+        result[5] = r00*r22 - r02*r20; // same
+        result[6] = r02*r10 - r00*r12; // same
         result[7] = 0.0;
+        result[8] = r10*r21 - r11*r20; // Have already been divided by det
+        result[9] = r01*r20 - r00*r21; // same
+        result[10] = r00*r11 - r01*r10; // same
+        result[11] = 0.0;
+        result[15] = 1.0;
 
-        result[8] = r10*matrix[9] - matrix[5]*r20; // Have already been divided by det
-        result[9] = matrix[1]*r20 - r00*matrix[9]; // same
-        result[10]= r00*matrix[5] - matrix[1]*r10; // same
-        result[11]= 0.0;
-        result[15]= 1.0;
+        var tx,ty,tz;
 
         var d  = matrix[15];
-        var d2 = d-1.0;
-        var tx, ty, tz;
-        if( d2*d2 > 1.0e-6 ) { // Involves perspective, so we must
-            // compute the full inverse
-            var TPinv = [];
-            result[12] = result[13] = result[15] = 0.0;
+        var dm = d-1.0;
+        if( dm*dm > 1.0e-6 )  // Involves perspective, so we must
+        {                       // compute the full inverse
+            
+            var inv = osg.Matrix._tmp0;
+            result[12] = result[13] = result[14] = 0.0;
 
-            var a = matrix[3];
-            var b = matrix[7];
-            var c = matrix[11];
-            var px = result[0] * a + result[1] * b + result[2]*c;
-            var py = result[4] * a + result[5] * b + result[6]*c;
-            var pz = result[8] * a + result[9] * b + result[10]*c;
+            var a  = matrix[3]; 
+            var b  = matrix[7]; 
+            var c  = matrix[11];
+            var px = result[0]*a + result[1]*b + result[2] *c;
+            var py = result[4]*a + result[5]*b + result[6] *c;
+            var pz = result[8]*a + result[9]*b + result[10]*c;
 
-            tx = matrix[12];
-            ty = matrix[13];
+            tx = matrix[12]; 
+            ty = matrix[13]; 
             tz = matrix[14];
             var one_over_s  = 1.0/(d - (tx*px + ty*py + tz*pz));
 
-            tx *= one_over_s; ty *= one_over_s; tz *= one_over_s;  // Reduces number of calculations later on
+            tx *= one_over_s; 
+            ty *= one_over_s; 
+            tz *= one_over_s;  // Reduces number of calculations later on
+
             // Compute inverse of trans*corr
-            TPinv[0] = tx*px + 1.0;
-            TPinv[1] = ty*px;
-            TPinv[2] = tz*px;
-            TPinv[3] = -px * one_over_s;
-            TPinv[4] = tx*py;
-            TPinv[5] = ty*py + 1.0;
-            TPinv[6] = tz*py;
-            TPinv[7] = -py * one_over_s;
-            TPinv[8] = tx*pz;
-            TPinv[9] = ty*pz;
-            TPinv[10]= tz*pz + 1.0;
-            TPinv[11]= -pz * one_over_s;
-            TPinv[12]= -tx;
-            TPinv[13]= -ty;
-            TPinv[14]= -tz;
-            TPinv[15]= one_over_s;
-            
-            this.mult(result, TPinv, result); // Finish computing full inverse of mat
+            inv[0] = tx*px + 1.0;
+            inv[1] = ty*px;
+            inv[2] = tz*px;
+            inv[3] = -px * one_over_s;
+            inv[4] = tx*py;
+            inv[5] = ty*py + 1.0;
+            inv[6] = tz*py;
+            inv[7] = -py * one_over_s;
+            inv[8] = tx*pz;
+            inv[9] = ty*pz;
+            inv[10] = tz*pz + 1.0;
+            inv[11] = -pz * one_over_s;
+            inv[12] = -tx;
+            inv[13] = -ty;
+            inv[14] = -tz;
+            inv[15] = one_over_s;
+
+            osg.Matrix.preMult(result, inv); // Finish computing full inverse of mat
         } else {
 
-            tx = matrix[12]; ty = matrix[13]; tz = matrix[14];
+            tx = matrix[12]; 
+            ty = matrix[13]; 
+            tz = matrix[14];
+
             // Compute translation components of mat'
             result[12] = -(tx*result[0] + ty*result[4] + tz*result[8]);
             result[13] = -(tx*result[1] + ty*result[5] + tz*result[9]);
             result[14] = -(tx*result[2] + ty*result[6] + tz*result[10]);
         }
+        return true;
 
-        if (resultArg !== undefined) {
-            return true;
-        }
-        return result;
     },
 
     transpose: function(mat, dest) {
@@ -1864,6 +1889,9 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
 	return c;
     },
     getChildren: function() { return this.children; },
+    getParents: function() {
+        return this.parents;
+    },
     addParent: function( parent) {
         this.parents.push(parent);
     },
@@ -2715,7 +2743,8 @@ osg.Camera.prototype = osg.objectInehrit(
         },
 
         computeWorldToLocalMatrix: function(matrix, nodeVisitor) {
-            var inverse = osg.Matrix.inverse(this.modelviewMatrix);
+            var inverse = [];
+            osg.Matrix.inverse(this.modelviewMatrix, inverse);
             if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
                 osg.Matrix.postMult(inverse, matrix);
             } else {
@@ -3543,7 +3572,8 @@ osg.MatrixTransform.prototype = osg.objectInehrit(osg.Transform.prototype, {
         return true;
     },
     computeWorldToLocalMatrix: function(matrix,nodeVisitor) {
-        var minverse = osg.Matrix.inverse(this.matrix);
+        var minverse = [];
+        osg.Matrix.inverse(this.matrix, minverse);
         if (this.referenceFrame === osg.Transform.RELATIVE_RF) {
             osg.Matrix.postMult(minverse, matrix);
         } else {// absolute
@@ -4038,7 +4068,7 @@ osg.RenderBin.prototype = {
         }
 
         if (detectedNaN) {
-            osg.log("warning: RenderBin::copyLeavesFromStateGraphListToRenderLeafList() detected NaN depth values, database may be corrupted.");
+            osg.debug("warning: RenderBin::copyLeavesFromStateGraphListToRenderLeafList() detected NaN depth values, database may be corrupted.");
         }        
         // empty the render graph list to prevent it being drawn along side the render leaf list (see drawImplementation.)
         this.stateGraphList.length = 0;;
@@ -4489,6 +4519,7 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
             gl.clearColor(this.clearColor[0], this.clearColor[1], this.clearColor[2], this.clearColor[3]);
         }
         if (this.clearMask & gl.DEPTH_BUFFER_BIT) {
+            gl.depthMask(true);
             gl.clearDepth(this.clearDepth);
         }
         gl.clear(this.clearMask);
@@ -4831,7 +4862,7 @@ osg.ShaderGenerator.prototype = {
  * @name osg.createTexturedBox
  */
 osg.createTexturedBoxGeometry = function(centerx, centery, centerz,
-                                 sizex, sizey, sizez) {
+                                         sizex, sizey, sizez) {
 
     var g = new osg.Geometry();
     var dx,dy,dz;
@@ -6092,7 +6123,7 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
     },
     getUniform: function (uniform) {
-        if (this.uniforms[uniform]) {
+        if (this.uniforms && this.uniforms[uniform]) {
             return this.uniforms[uniform].object;
         }
         return undefined;
@@ -6456,6 +6487,7 @@ osg.Texture.createFromImg = function(img, format) {
     a.setImage(img, format);
     return a;
 };
+osg.Texture.createFromImage = osg.Texture.createFromImg;
 osg.Texture.createFromCanvas = function(ctx, format) {
     var a = new osg.Texture();
     a.setFromCanvas(ctx, format);
@@ -6466,6 +6498,126 @@ osg.Texture.create = function(url) {
     osg.log("osg.Texture.create is deprecated, use osg.Texture.createFromURL instead");
     return osg.Texture.createFromURL(url);
 };
+/** 
+ * TextureCubeMap
+ * @class TextureCubeMap
+ * @inherits osg.Texture
+ */
+osg.TextureCubeMap = function() {
+    osg.Texture.call(this);
+    this._images = {};
+};
+
+/** @lends osg.TextureCubeMap.prototype */
+osg.TextureCubeMap.prototype = osg.objectInehrit(osg.Texture.prototype, {
+    attributeType: "TextureCubeMap",
+    setDefaultParameters: function() {
+        osg.Texture.prototype.setDefaultParameters.call(this);
+        this._textureTarget = osg.Texture.TEXTURE_CUBE_MAP;
+    },
+    cloneType: function() { var t = new osg.TextureCubeMap(); t.default_type = true; return t;},
+    setImage: function(face, img, imageFormat) {
+        if ( typeof(face) === "string" ) {
+            face = osg.Texture[face];
+        }
+
+        if (this._images[face] === undefined) {
+            this._images[face] = {};
+        }
+
+        if ( typeof(imageFormat) === "string") {
+            imageFormat = osg.Texture[imageFormat];
+        }
+        if (imageFormat === undefined) {
+            imageFormat = osg.Texture.RGBA;
+        }
+
+        this._images[face].image = img;
+        this._images[face].format = imageFormat;
+        this._images[face].dirty = true;
+        this.dirty();
+    },
+    getImage: function(face) { return this._images[face].image; },
+
+    applyTexImage2D_load: function(gl, target, level, internalFormat, format, type, image) {
+        if (!image) {
+            return false;
+        }
+
+        if (!osg.Texture.prototype.isImageReady(image)) {
+            return false;
+        }
+
+        if (image instanceof Image) {
+            this.setTextureSize(image.naturalWidth, image.naturalHeight);
+        } else if (image instanceof HTMLCanvasElement) {
+            this.setTextureSize(image.width, image.height);
+        }
+
+        gl.texImage2D(target, 0, internalFormat, format, type, image);
+        return true;
+    },
+
+    _applyImageTarget: function(gl, internalFormat, target) {
+        var imgObject = this._images[target];
+        if (!imgObject) {
+            return 0;
+        }
+
+        if (!imgObject.dirty) {
+            return 1;
+        }
+
+        if (this.applyTexImage2D_load(gl,
+                                      target,
+                                      0,
+                                      internalFormat,
+                                      imgObject.format,
+                                      gl.UNSIGNED_BYTE,
+                                      imgObject.image) ) {
+            imgObject.dirty = false;
+            if (this._unrefImageDataAfterApply) {
+                delete this._images[target];
+            }
+            return 1;
+        }
+        return 0;
+    },
+
+    apply: function(state) {
+        var gl = state.getGraphicContext();
+        if (this._textureObject !== undefined && !this.isDirty()) {
+            gl.bindTexture(this._textureTarget, this._textureObject);
+
+        } else if (this.default_type) {
+            gl.bindTexture(this._textureTarget, null);
+        } else {
+            var images = this._images;
+            if (!this._textureObject) {
+                this.init(gl);
+            }
+            gl.bindTexture(this._textureTarget, this._textureObject);
+            var error = gl.getError();
+            osg.checkError(error);
+            var internalFormat = this._internalFormat;
+
+            var valid = 0;
+            valid += this._applyImageTarget(gl, internalFormat, gl.TEXTURE_CUBE_MAP_POSITIVE_X);
+            valid += this._applyImageTarget(gl, internalFormat, gl.TEXTURE_CUBE_MAP_NEGATIVE_X);
+
+            valid += this._applyImageTarget(gl, internalFormat, gl.TEXTURE_CUBE_MAP_POSITIVE_Y);
+            valid += this._applyImageTarget(gl, internalFormat, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y);
+
+            valid += this._applyImageTarget(gl, internalFormat, gl.TEXTURE_CUBE_MAP_POSITIVE_Z);
+            valid += this._applyImageTarget(gl, internalFormat, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z);
+            if (valid === 6) {
+                this.setDirty(false);
+                this.applyFilterParameter(gl, this._textureTarget);
+                this.generateMipmap(gl, this._textureTarget);
+            }
+        } // render to cubemap not yet implemented
+    }
+});
 osg.UpdateVisitor = function () { 
     osg.NodeVisitor.call(this);
     var framestamp = new osg.FrameStamp();
@@ -7168,13 +7320,28 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
         var duration = animationParameter.duration;
         var weight = animationParameter.weight;
         var animation = animationParameter.anim;
-        var t = (t-animationParameter.start) % duration;
+        var start = animationParameter.start;
+        var loop = animationParameter.loop;
+
+        if (loop > 0) {
+            var playedTimes = t-start;
+            if (playedTimes >= loop*duration) {
+                return true;
+            }
+        }
+
+        var t = (t-start) % duration;
+        var callback = animationParameter.callback;
+        if (callback) {
+            callback(t);
+        }
 
         var channels = animation.getChannels();
         for ( var i = 0, l = channels.length; i < l; i++) {
             var channel = channels[i];
             channel.update(t, weight, priority);
         }
+        return false;
     },
     update: function(node, nv) {
         var t = nv.getFrameStamp().getSimulationTime();
@@ -7192,14 +7359,26 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
             while (pri >= 0) {
                 var layer = this._actives[pri];
                 var keys = this._actives[pri]._keys;
+                var removes = [];
                 for (var ai = 0, al = keys.length; ai < al; ai++) {
                     var key = keys[ai];
                     var anim = layer[key];
                     if (anim.start === undefined) {
                         anim.start = t;
                     }
-                    this._updateAnimation(anim, t, pri);
+                    var remove = this._updateAnimation(anim, t, pri);
+                    if (remove) {
+                        removes.push(ai);
+                    }
                 }
+
+                // remove finished animation
+                for (var j = removes.length-1; j >= 0; j--) {
+                    var k = keys[j];
+                    keys.splice(j,1);
+                    delete layer[k];
+                }
+
                 pri--;
             }
         }
@@ -7231,36 +7410,66 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
             }
         }
     },
+    playAnimationObject: function(obj) {
+        if (obj.name === undefined) {
+            return;
+        }
+
+        var anim = this._animations[obj.name];
+        if (anim === undefined) {
+            osg.log("no animation " + obj.name + " found");
+            return;
+        }
+
+        if (this.isPlaying(obj.name)) {
+            return;
+        }
+
+        if (obj.priority === undefined) {
+            obj.priority = 0;
+        }
+
+        if (obj.weight === undefined) {
+            obj.weight = 1.0;
+        }
+
+        if (obj.timeFactor === undefined) {
+            obj.timeFactor = 1.0;
+        }
+
+        if (obj.loop === undefined) {
+            obj.loop = 0;
+        }
+        
+        if (this._actives[obj.priority] === undefined) {
+            this._actives[obj.priority] = {};
+            this._actives[obj.priority]._keys = [];
+            this._actives._keys.push(obj.priority); // = Object.keys(this._actives);
+        }
+
+        obj.start = undefined;
+        obj.duration = anim.getDuration();
+        obj.anim = anim;
+        this._actives[obj.priority][obj.name] = obj;
+        this._actives[obj.priority]._keys.push(obj.name);
+    },
+
     playAnimation: function(name, priority, weight) {
         var animName = name;
         if (typeof name === "object") {
-            animName = name.getName();
+            if (name.getName === undefined) {
+                return this.playAnimationObject(name);
+            } else {
+                animName = name.getName();
+            }
         }
-        if (this._animations[animName] === undefined) {
-            osg.log("no animation " + animName + " found");
-            return;
-        }
-        
-        if (this.isPlaying(animName)) {
-            return;
-        }
+        var obj = { 'name': animName,
+                    'priority': priority,
+                    'weight': weight };
 
-        if (!priority) {
-            priority = 0;
-        }
-        if (!weight) {
-            weight = 1;
-        }
-
-        if (this._actives[priority] === undefined) {
-            this._actives[priority] = {};
-            this._actives[priority]._keys = [];
-            this._actives._keys.push(priority); // = Object.keys(this._actives);
-        }
-        var anim = this._animations[animName];
-        this._actives[priority][animName] = { 'start': undefined, 'weight': weight, 'pri': priority, 'timeFactor': 1.0, 'duration' : anim.getDuration(), 'anim': anim };
-        this._actives[priority]._keys.push(animName);
+        return this.playAnimationObject(obj);
     },
+
     registerAnimation: function(anim) {
         this._animations[anim.getName()] = anim;
         this.buildTargetList();
@@ -9018,6 +9227,11 @@ osgUtil.ParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
     },
 
     apply: function(node) {
+        var element = this.targetHTML;
+        if (element === undefined || element === null) {
+            return;
+        }
+
         var st = node.getStateSet();
         if (st !== undefined) {
             this.applyStateSet(node, st);
@@ -9066,7 +9280,7 @@ osgUtil.ParameterVisitor.SliderParameter.prototype = {
 
             var dom = this.createDomSlider(value, params.min, params.max, params.step, nameIndex, cbnameIndex);
             this.addToDom(params.dom, dom);
-            window[cbnameIndex] = this.createFunction(nameIndex, i, object, field, cbnameIndex);
+            window[cbnameIndex] = this.createFunction(nameIndex, i, object, field, cbnameIndex, params.onchange);
             osg.log(nameIndex + " " + value);
             window[cbnameIndex](value);
         }
@@ -9088,7 +9302,7 @@ osgUtil.ParameterVisitor.SliderParameter.prototype = {
         return 'change_'+prgId+"_"+name;
     },
 
-    createFunction: function(name, index, object, field, callbackName) {
+    createFunction: function(name, index, object, field, callbackName, userOnChange) {
         self = this;
         return (function() {
             var cname = name;
@@ -9108,6 +9322,9 @@ osgUtil.ParameterVisitor.SliderParameter.prototype = {
                 osg.log(cname + ' value ' + value);
                 document.getElementById(callbackName).innerHTML = Number(value).toFixed(4);
                 self.setValue(callbackName, value);
+                if (userOnChange) {
+                    userOnChange(obj[cfield]);
+                }
                 // store the value to localstorage
             };
             return func;
@@ -9127,7 +9344,7 @@ osgUtil.ParameterVisitor.SliderParameter.prototype = {
     },
 };
 
-osgUtil.ParameterVisitor.createSlider = function (label, uniqNameId, object, field, value, min, max, step, dom) {
+osgUtil.ParameterVisitor.createSlider = function (label, uniqNameId, object, field, value, min, max, step, dom, onchange) {
     var scope = osgUtil.ParameterVisitor;
     if (scope.sliders === undefined) {
         scope.sliders = new scope.SliderParameter();
@@ -9137,6 +9354,7 @@ osgUtil.ParameterVisitor.createSlider = function (label, uniqNameId, object, fie
                    min: min,
                    max: max,
                    step: step,
+                   onchange: onchange,
                    dom: dom };
 
     if (typeof(object[field]) === 'number') {
@@ -9145,6 +9363,7 @@ osgUtil.ParameterVisitor.createSlider = function (label, uniqNameId, object, fie
         return scope.sliders.createInternalSlider(label, object[field].length, uniqNameId, params, object, field);
     }
 };
+
 
 osgUtil.ShaderParameterVisitor = osgUtil.ParameterVisitor;/** -*- compile-command: "jslint-cli osgDB.js" -*-
  *
@@ -9211,6 +9430,13 @@ osgDB.ObjectWrapper.readObject = function (jsonObj) {
     scope(jsonObj[prop], obj);
     return obj;
 };
+
+osgDB.readImage = function (url) {
+    var img = new Image();
+    img.src = url;
+    return img;
+};
+
 
 osgDB.parseSceneGraph = function (node) {
     if (node.Version && node.Version > 0) {
@@ -9286,8 +9512,7 @@ osgDB.parseSceneGraph_deprecated = function (node)
             osgjs.setWrapS(wrapS);
         }
         var file = getFieldBackwardCompatible("File", json);
-        var img = new Image();
-        img.src = file;
+        var img = osgDB.readImage(file);
         osgjs.setImage(img);
     };
 
@@ -9480,107 +9705,107 @@ var osgViewer = {};
 
 WebGLUtils = function() {
 
-/**
- * Creates the HTLM for a failure message
- * @param {string} canvasContainerId id of container of th
- *        canvas.
- * @return {string} The html.
- */
-var makeFailHTML = function(msg) {
-  return '' +
-        '<div style="margin: auto; width:500px;z-index:10000;margin-top:20em;text-align:center;">' + msg + '</div>';
-  // return '' +
-  //   '<table style="background-color: #8CE; width: 100%; height: 100%;"><tr>' +
-  //   '<td align="center">' +
-  //   '<div style="display: table-cell; vertical-align: middle;">' +
-  //   '<div style="">' + msg + '</div>' +
-  //   '</div>' +
-  //   '</td></tr></table>';
-};
+    /**
+     * Creates the HTLM for a failure message
+     * @param {string} canvasContainerId id of container of th
+     *        canvas.
+     * @return {string} The html.
+     */
+    var makeFailHTML = function(msg) {
+        return '' +
+            '<div style="margin: auto; width:500px;z-index:10000;margin-top:20em;text-align:center;">' + msg + '</div>';
+        // return '' +
+        //   '<table style="background-color: #8CE; width: 100%; height: 100%;"><tr>' +
+        //   '<td align="center">' +
+        //   '<div style="display: table-cell; vertical-align: middle;">' +
+        //   '<div style="">' + msg + '</div>' +
+        //   '</div>' +
+        //   '</td></tr></table>';
+    };
 
-/**
- * Mesasge for getting a webgl browser
- * @type {string}
- */
-var GET_A_WEBGL_BROWSER = '' +
-  'This page requires a browser that supports WebGL.<br/>' +
-  '<a href="http://get.webgl.org">Click here to upgrade your browser.</a>';
+    /**
+     * Mesasge for getting a webgl browser
+     * @type {string}
+     */
+    var GET_A_WEBGL_BROWSER = '' +
+        'This page requires a browser that supports WebGL.<br/>' +
+        '<a href="http://get.webgl.org">Click here to upgrade your browser.</a>';
 
-/**
- * Mesasge for need better hardware
- * @type {string}
- */
-var OTHER_PROBLEM = '' +
-  "It doesn't appear your computer can support WebGL.<br/>" +
-  '<a href="http://get.webgl.org">Click here for more information.</a>';
+    /**
+     * Mesasge for need better hardware
+     * @type {string}
+     */
+    var OTHER_PROBLEM = '' +
+        "It doesn't appear your computer can support WebGL.<br/>" +
+        '<a href="http://get.webgl.org">Click here for more information.</a>';
 
-/**
- * Creates a webgl context. If creation fails it will
- * change the contents of the container of the <canvas>
- * tag to an error message with the correct links for WebGL.
- * @return {WebGLRenderingContext} The created context.
- */
-var setupWebGL = function(
-    /** Element */ canvas, 
-    /** WebGLContextCreationAttirbutes */ opt_attribs, 
-    /** function:(msg) */ opt_onError) {
-  function handleCreationError(msg) {
-      var container = document.getElementsByTagName("body")[0];
-    //var container = canvas.parentNode;
-    if (container) {
-      var str = window.WebGLRenderingContext ?
-           OTHER_PROBLEM :
-           GET_A_WEBGL_BROWSER;
-      if (msg) {
-        str += "<br/><br/>Status: " + msg;
-      }
-      container.innerHTML = makeFailHTML(str);
+    /**
+     * Creates a webgl context. If creation fails it will
+     * change the contents of the container of the <canvas>
+     * tag to an error message with the correct links for WebGL.
+     * @return {WebGLRenderingContext} The created context.
+     */
+    var setupWebGL = function(
+        /** Element */ canvas, 
+        /** WebGLContextCreationAttirbutes */ opt_attribs, 
+        /** function:(msg) */ opt_onError) {
+        function handleCreationError(msg) {
+            var container = document.getElementsByTagName("body")[0];
+            //var container = canvas.parentNode;
+            if (container) {
+                var str = window.WebGLRenderingContext ?
+                    OTHER_PROBLEM :
+                    GET_A_WEBGL_BROWSER;
+                if (msg) {
+                    str += "<br/><br/>Status: " + msg;
+                }
+                container.innerHTML = makeFailHTML(str);
+            }
+        };
+
+        opt_onError = opt_onError || handleCreationError;
+
+        if (canvas.addEventListener) {
+            canvas.addEventListener("webglcontextcreationerror", function(event) {
+                opt_onError(event.statusMessage);
+            }, false);
+        }
+        var context = create3DContext(canvas, opt_attribs);
+        if (!context) {
+            if (!window.WebGLRenderingContext) {
+                opt_onError("");
+            } else {
+                opt_onError("");
+            }
+        }
+
+        return context;
+    };
+
+    /**
+     * Creates a webgl context.
+     * @param {!Canvas} canvas The canvas tag to get context
+     *     from. If one is not passed in one will be created.
+     * @return {!WebGLContext} The created context.
+     */
+    var create3DContext = function(canvas, opt_attribs) {
+        var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+        var context = null;
+        for (var ii = 0; ii < names.length; ++ii) {
+            try {
+                context = canvas.getContext(names[ii], opt_attribs);
+            } catch(e) {}
+            if (context) {
+                break;
+            }
+        }
+        return context;
     }
-  };
 
-  opt_onError = opt_onError || handleCreationError;
-
-  if (canvas.addEventListener) {
-    canvas.addEventListener("webglcontextcreationerror", function(event) {
-          opt_onError(event.statusMessage);
-        }, false);
-  }
-  var context = create3DContext(canvas, opt_attribs);
-  if (!context) {
-    if (!window.WebGLRenderingContext) {
-      opt_onError("");
-    } else {
-      opt_onError("");
-    }
-  }
-
-  return context;
-};
-
-/**
- * Creates a webgl context.
- * @param {!Canvas} canvas The canvas tag to get context
- *     from. If one is not passed in one will be created.
- * @return {!WebGLContext} The created context.
- */
-var create3DContext = function(canvas, opt_attribs) {
-  var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
-  var context = null;
-  for (var ii = 0; ii < names.length; ++ii) {
-    try {
-      context = canvas.getContext(names[ii], opt_attribs);
-    } catch(e) {}
-    if (context) {
-      break;
-    }
-  }
-  return context;
-}
-
-return {
-  create3DContext: create3DContext,
-  setupWebGL: setupWebGL
-};
+    return {
+        create3DContext: create3DContext,
+        setupWebGL: setupWebGL
+    };
 }();
 
 /**
@@ -9599,6 +9824,804 @@ if (!window.requestAnimationFrame) {
            };
   })();
 }
+//Copyright (c) 2009 The Chromium Authors. All rights reserved.
+//Use of this source code is governed by a BSD-style license that can be
+//found in the LICENSE file.
+
+// Various functions for helping debug WebGL apps.
+
+WebGLDebugUtils = function() {
+
+/**
+ * Wrapped logging function.
+ * @param {string} msg Message to log.
+ */
+var log = function(msg) {
+  if (window.console && window.console.log) {
+    window.console.log(msg);
+  }
+};
+
+/**
+ * Which arguements are enums.
+ * @type {!Object.<number, string>}
+ */
+var glValidEnumContexts = {
+
+  // Generic setters and getters
+
+  'enable': { 0:true },
+  'disable': { 0:true },
+  'getParameter': { 0:true },
+
+  // Rendering
+
+  'drawArrays': { 0:true },
+  'drawElements': { 0:true, 2:true },
+
+  // Shaders
+
+  'createShader': { 0:true },
+  'getShaderParameter': { 1:true },
+  'getProgramParameter': { 1:true },
+
+  // Vertex attributes
+
+  'getVertexAttrib': { 1:true },
+  'vertexAttribPointer': { 2:true },
+
+  // Textures
+
+  'bindTexture': { 0:true },
+  'activeTexture': { 0:true },
+  'getTexParameter': { 0:true, 1:true },
+  'texParameterf': { 0:true, 1:true },
+  'texParameteri': { 0:true, 1:true, 2:true },
+  'texImage2D': { 0:true, 2:true, 6:true, 7:true },
+  'texSubImage2D': { 0:true, 6:true, 7:true },
+  'copyTexImage2D': { 0:true, 2:true },
+  'copyTexSubImage2D': { 0:true },
+  'generateMipmap': { 0:true },
+
+  // Buffer objects
+
+  'bindBuffer': { 0:true },
+  'bufferData': { 0:true, 2:true },
+  'bufferSubData': { 0:true },
+  'getBufferParameter': { 0:true, 1:true },
+
+  // Renderbuffers and framebuffers
+
+  'pixelStorei': { 0:true, 1:true },
+  'readPixels': { 4:true, 5:true },
+  'bindRenderbuffer': { 0:true },
+  'bindFramebuffer': { 0:true },
+  'checkFramebufferStatus': { 0:true },
+  'framebufferRenderbuffer': { 0:true, 1:true, 2:true },
+  'framebufferTexture2D': { 0:true, 1:true, 2:true },
+  'getFramebufferAttachmentParameter': { 0:true, 1:true, 2:true },
+  'getRenderbufferParameter': { 0:true, 1:true },
+  'renderbufferStorage': { 0:true, 1:true },
+
+  // Frame buffer operations (clear, blend, depth test, stencil)
+
+  'clear': { 0:true },
+  'depthFunc': { 0:true },
+  'blendFunc': { 0:true, 1:true },
+  'blendFuncSeparate': { 0:true, 1:true, 2:true, 3:true },
+  'blendEquation': { 0:true },
+  'blendEquationSeparate': { 0:true, 1:true },
+  'stencilFunc': { 0:true },
+  'stencilFuncSeparate': { 0:true, 1:true },
+  'stencilMaskSeparate': { 0:true },
+  'stencilOp': { 0:true, 1:true, 2:true },
+  'stencilOpSeparate': { 0:true, 1:true, 2:true, 3:true },
+
+  // Culling
+
+  'cullFace': { 0:true },
+  'frontFace': { 0:true },
+};
+
+/**
+ * Map of numbers to names.
+ * @type {Object}
+ */
+var glEnums = null;
+
+/**
+ * Initializes this module. Safe to call more than once.
+ * @param {!WebGLRenderingContext} ctx A WebGL context. If
+ *    you have more than one context it doesn't matter which one
+ *    you pass in, it is only used to pull out constants.
+ */
+function init(ctx) {
+  if (glEnums == null) {
+    glEnums = { };
+    for (var propertyName in ctx) {
+      if (typeof ctx[propertyName] == 'number') {
+        glEnums[ctx[propertyName]] = propertyName;
+      }
+    }
+  }
+}
+
+/**
+ * Checks the utils have been initialized.
+ */
+function checkInit() {
+  if (glEnums == null) {
+    throw 'WebGLDebugUtils.init(ctx) not called';
+  }
+}
+
+/**
+ * Returns true or false if value matches any WebGL enum
+ * @param {*} value Value to check if it might be an enum.
+ * @return {boolean} True if value matches one of the WebGL defined enums
+ */
+function mightBeEnum(value) {
+  checkInit();
+  return (glEnums[value] !== undefined);
+}
+
+/**
+ * Gets an string version of an WebGL enum.
+ *
+ * Example:
+ *   var str = WebGLDebugUtil.glEnumToString(ctx.getError());
+ *
+ * @param {number} value Value to return an enum for
+ * @return {string} The string version of the enum.
+ */
+function glEnumToString(value) {
+  checkInit();
+  var name = glEnums[value];
+  return (name !== undefined) ? name :
+      ("*UNKNOWN WebGL ENUM (0x" + value.toString(16) + ")");
+}
+
+/**
+ * Returns the string version of a WebGL argument.
+ * Attempts to convert enum arguments to strings.
+ * @param {string} functionName the name of the WebGL function.
+ * @param {number} argumentIndx the index of the argument.
+ * @param {*} value The value of the argument.
+ * @return {string} The value as a string.
+ */
+function glFunctionArgToString(functionName, argumentIndex, value) {
+  var funcInfo = glValidEnumContexts[functionName];
+  if (funcInfo !== undefined) {
+    if (funcInfo[argumentIndex]) {
+      return glEnumToString(value);
+    }
+  }
+  return value.toString();
+}
+
+function makePropertyWrapper(wrapper, original, propertyName) {
+  //log("wrap prop: " + propertyName);
+  wrapper.__defineGetter__(propertyName, function() {
+    return original[propertyName];
+  });
+  // TODO(gmane): this needs to handle properties that take more than
+  // one value?
+  wrapper.__defineSetter__(propertyName, function(value) {
+    //log("set: " + propertyName);
+    original[propertyName] = value;
+  });
+}
+
+// Makes a function that calls a function on another object.
+function makeFunctionWrapper(original, functionName) {
+  //log("wrap fn: " + functionName);
+  var f = original[functionName];
+  return function() {
+    //log("call: " + functionName);
+    var result = f.apply(original, arguments);
+    return result;
+  };
+}
+
+/**
+ * Given a WebGL context returns a wrapped context that calls
+ * gl.getError after every command and calls a function if the
+ * result is not gl.NO_ERROR.
+ *
+ * @param {!WebGLRenderingContext} ctx The webgl context to
+ *        wrap.
+ * @param {!function(err, funcName, args): void} opt_onErrorFunc
+ *        The function to call when gl.getError returns an
+ *        error. If not specified the default function calls
+ *        console.log with a message.
+ */
+function makeDebugContext(ctx, opt_onErrorFunc) {
+  init(ctx);
+  opt_onErrorFunc = opt_onErrorFunc || function(err, functionName, args) {
+        // apparently we can't do args.join(",");
+        var argStr = "";
+        for (var ii = 0; ii < args.length; ++ii) {
+          argStr += ((ii == 0) ? '' : ', ') +
+              glFunctionArgToString(functionName, ii, args[ii]);
+        }
+        log("WebGL error "+ glEnumToString(err) + " in "+ functionName +
+            "(" + argStr + ")");
+      };
+
+  // Holds booleans for each GL error so after we get the error ourselves
+  // we can still return it to the client app.
+  var glErrorShadow = { };
+
+  // Makes a function that calls a WebGL function and then calls getError.
+  function makeErrorWrapper(ctx, functionName) {
+    return function() {
+      var result = ctx[functionName].apply(ctx, arguments);
+      var err = ctx.getError();
+      if (err != 0) {
+        glErrorShadow[err] = true;
+        opt_onErrorFunc(err, functionName, arguments);
+      }
+      return result;
+    };
+  }
+
+  // Make a an object that has a copy of every property of the WebGL context
+  // but wraps all functions.
+  var wrapper = {};
+  for (var propertyName in ctx) {
+    if (typeof ctx[propertyName] == 'function') {
+       wrapper[propertyName] = makeErrorWrapper(ctx, propertyName);
+     } else {
+       makePropertyWrapper(wrapper, ctx, propertyName);
+     }
+  }
+
+  // Override the getError function with one that returns our saved results.
+  wrapper.getError = function() {
+    for (var err in glErrorShadow) {
+      if (glErrorShadow[err]) {
+        glErrorShadow[err] = false;
+        return err;
+      }
+    }
+    return ctx.NO_ERROR;
+  };
+
+  return wrapper;
+}
+
+function resetToInitialState(ctx) {
+  var numAttribs = ctx.getParameter(ctx.MAX_VERTEX_ATTRIBS);
+  var tmp = ctx.createBuffer();
+  ctx.bindBuffer(ctx.ARRAY_BUFFER, tmp);
+  for (var ii = 0; ii < numAttribs; ++ii) {
+    ctx.disableVertexAttribArray(ii);
+    ctx.vertexAttribPointer(ii, 4, ctx.FLOAT, false, 0, 0);
+    ctx.vertexAttrib1f(ii, 0);
+  }
+  ctx.deleteBuffer(tmp);
+
+  var numTextureUnits = ctx.getParameter(ctx.MAX_TEXTURE_IMAGE_UNITS);
+  for (var ii = 0; ii < numTextureUnits; ++ii) {
+    ctx.activeTexture(ctx.TEXTURE0 + ii);
+    ctx.bindTexture(ctx.TEXTURE_CUBE_MAP, null);
+    ctx.bindTexture(ctx.TEXTURE_2D, null);
+  }
+
+  ctx.activeTexture(ctx.TEXTURE0);
+  ctx.useProgram(null);
+  ctx.bindBuffer(ctx.ARRAY_BUFFER, null);
+  ctx.bindBuffer(ctx.ELEMENT_ARRAY_BUFFER, null);
+  ctx.bindFramebuffer(ctx.FRAMEBUFFER, null);
+  ctx.bindRenderbuffer(ctx.RENDERBUFFER, null);
+  ctx.disable(ctx.BLEND);
+  ctx.disable(ctx.CULL_FACE);
+  ctx.disable(ctx.DEPTH_TEST);
+  ctx.disable(ctx.DITHER);
+  ctx.disable(ctx.SCISSOR_TEST);
+  ctx.blendColor(0, 0, 0, 0);
+  ctx.blendEquation(ctx.FUNC_ADD);
+  ctx.blendFunc(ctx.ONE, ctx.ZERO);
+  ctx.clearColor(0, 0, 0, 0);
+  ctx.clearDepth(1);
+  ctx.clearStencil(-1);
+  ctx.colorMask(true, true, true, true);
+  ctx.cullFace(ctx.BACK);
+  ctx.depthFunc(ctx.LESS);
+  ctx.depthMask(true);
+  ctx.depthRange(0, 1);
+  ctx.frontFace(ctx.CCW);
+  ctx.hint(ctx.GENERATE_MIPMAP_HINT, ctx.DONT_CARE);
+  ctx.lineWidth(1);
+  ctx.pixelStorei(ctx.PACK_ALIGNMENT, 4);
+  ctx.pixelStorei(ctx.UNPACK_ALIGNMENT, 4);
+  ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, false);
+  ctx.pixelStorei(ctx.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  // TODO: Delete this IF.
+  if (ctx.UNPACK_COLORSPACE_CONVERSION_WEBGL) {
+    ctx.pixelStorei(ctx.UNPACK_COLORSPACE_CONVERSION_WEBGL, ctx.BROWSER_DEFAULT_WEBGL);
+  }
+  ctx.polygonOffset(0, 0);
+  ctx.sampleCoverage(1, false);
+  ctx.scissor(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.stencilFunc(ctx.ALWAYS, 0, 0xFFFFFFFF);
+  ctx.stencilMask(0xFFFFFFFF);
+  ctx.stencilOp(ctx.KEEP, ctx.KEEP, ctx.KEEP);
+  ctx.viewport(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT | ctx.STENCIL_BUFFER_BIT);
+
+  // TODO: This should NOT be needed but Firefox fails with 'hint'
+  while(ctx.getError());
+}
+
+function makeLostContextSimulatingCanvas(canvas) {
+  var unwrappedContext_;
+  var wrappedContext_;
+  var onLost_ = [];
+  var onRestored_ = [];
+  var wrappedContext_ = {};
+  var contextId_ = 1;
+  var contextLost_ = false;
+  var resourceId_ = 0;
+  var resourceDb_ = [];
+  var numCallsToLoseContext_ = 0;
+  var numCalls_ = 0;
+  var canRestore_ = false;
+  var restoreTimeout_ = 0;
+
+  // Holds booleans for each GL error so can simulate errors.
+  var glErrorShadow_ = { };
+
+  canvas.getContext = function(f) {
+    return function() {
+      var ctx = f.apply(canvas, arguments);
+      // Did we get a context and is it a WebGL context?
+      if (ctx instanceof WebGLRenderingContext) {
+        if (ctx != unwrappedContext_) {
+          if (unwrappedContext_) {
+            throw "got different context"
+          }
+          unwrappedContext_ = ctx;
+          wrappedContext_ = makeLostContextSimulatingContext(unwrappedContext_);
+        }
+        return wrappedContext_;
+      }
+      return ctx;
+    }
+  }(canvas.getContext);
+
+  function wrapEvent(listener) {
+    if (typeof(listener) == "function") {
+      return listener;
+    } else {
+      return function(info) {
+        listener.handleEvent(info);
+      }
+    }
+  }
+
+  var addOnContextLostListener = function(listener) {
+    onLost_.push(wrapEvent(listener));
+  };
+
+  var addOnContextRestoredListener = function(listener) {
+    onRestored_.push(wrapEvent(listener));
+  };
+
+
+  function wrapAddEventListener(canvas) {
+    var f = canvas.addEventListener;
+    canvas.addEventListener = function(type, listener, bubble) {
+      switch (type) {
+        case 'webglcontextlost':
+          addOnContextLostListener(listener);
+          break;
+        case 'webglcontextrestored':
+          addOnContextRestoredListener(listener);
+          break;
+        default:
+          f.apply(canvas, arguments);
+      }
+    };
+  }
+
+  wrapAddEventListener(canvas);
+
+  canvas.loseContext = function() {
+    if (!contextLost_) {
+      contextLost_ = true;
+      numCallsToLoseContext_ = 0;
+      ++contextId_;
+      while (unwrappedContext_.getError());
+      clearErrors();
+      glErrorShadow_[unwrappedContext_.CONTEXT_LOST_WEBGL] = true;
+      var event = makeWebGLContextEvent("context lost");
+      var callbacks = onLost_.slice();
+      setTimeout(function() {
+          //log("numCallbacks:" + callbacks.length);
+          for (var ii = 0; ii < callbacks.length; ++ii) {
+            //log("calling callback:" + ii);
+            callbacks[ii](event);
+          }
+          if (restoreTimeout_ >= 0) {
+            setTimeout(function() {
+                canvas.restoreContext();
+              }, restoreTimeout_);
+          }
+        }, 0);
+    }
+  };
+
+  canvas.restoreContext = function() {
+    if (contextLost_) {
+      if (onRestored_.length) {
+        setTimeout(function() {
+            if (!canRestore_) {
+              throw "can not restore. webglcontestlost listener did not call event.preventDefault";
+            }
+            freeResources();
+            resetToInitialState(unwrappedContext_);
+            contextLost_ = false;
+            numCalls_ = 0;
+            canRestore_ = false;
+            var callbacks = onRestored_.slice();
+            var event = makeWebGLContextEvent("context restored");
+            for (var ii = 0; ii < callbacks.length; ++ii) {
+              callbacks[ii](event);
+            }
+          }, 0);
+      }
+    }
+  };
+
+  canvas.loseContextInNCalls = function(numCalls) {
+    if (contextLost_) {
+      throw "You can not ask a lost contet to be lost";
+    }
+    numCallsToLoseContext_ = numCalls_ + numCalls;
+  };
+
+  canvas.getNumCalls = function() {
+    return numCalls_;
+  };
+
+  canvas.setRestoreTimeout = function(timeout) {
+    restoreTimeout_ = timeout;
+  };
+
+  function isWebGLObject(obj) {
+    //return false;
+    return (obj instanceof WebGLBuffer ||
+            obj instanceof WebGLFramebuffer ||
+            obj instanceof WebGLProgram ||
+            obj instanceof WebGLRenderbuffer ||
+            obj instanceof WebGLShader ||
+            obj instanceof WebGLTexture);
+  }
+
+  function checkResources(args) {
+    for (var ii = 0; ii < args.length; ++ii) {
+      var arg = args[ii];
+      if (isWebGLObject(arg)) {
+        return arg.__webglDebugContextLostId__ == contextId_;
+      }
+    }
+    return true;
+  }
+
+  function clearErrors() {
+    var k = Object.keys(glErrorShadow_);
+    for (var ii = 0; ii < k.length; ++ii) {
+      delete glErrorShadow_[k];
+    }
+  }
+
+  function loseContextIfTime() {
+    ++numCalls_;
+    if (!contextLost_) {
+      if (numCallsToLoseContext_ == numCalls_) {
+        canvas.loseContext();
+      }
+    }
+  }
+
+  // Makes a function that simulates WebGL when out of context.
+  function makeLostContextFunctionWrapper(ctx, functionName) {
+    var f = ctx[functionName];
+    return function() {
+      // log("calling:" + functionName);
+      // Only call the functions if the context is not lost.
+      loseContextIfTime();
+      if (!contextLost_) {
+        //if (!checkResources(arguments)) {
+        //  glErrorShadow_[wrappedContext_.INVALID_OPERATION] = true;
+        //  return;
+        //}
+        var result = f.apply(ctx, arguments);
+        return result;
+      }
+    };
+  }
+
+  function freeResources() {
+    for (var ii = 0; ii < resourceDb_.length; ++ii) {
+      var resource = resourceDb_[ii];
+      if (resource instanceof WebGLBuffer) {
+        unwrappedContext_.deleteBuffer(resource);
+      } else if (resource instanceof WebGLFramebuffer) {
+        unwrappedContext_.deleteFramebuffer(resource);
+      } else if (resource instanceof WebGLProgram) {
+        unwrappedContext_.deleteProgram(resource);
+      } else if (resource instanceof WebGLRenderbuffer) {
+        unwrappedContext_.deleteRenderbuffer(resource);
+      } else if (resource instanceof WebGLShader) {
+        unwrappedContext_.deleteShader(resource);
+      } else if (resource instanceof WebGLTexture) {
+        unwrappedContext_.deleteTexture(resource);
+      }
+    }
+  }
+
+  function makeWebGLContextEvent(statusMessage) {
+    return {
+      statusMessage: statusMessage,
+      preventDefault: function() {
+          canRestore_ = true;
+        }
+    };
+  }
+
+  return canvas;
+
+  function makeLostContextSimulatingContext(ctx) {
+    // copy all functions and properties to wrapper
+    for (var propertyName in ctx) {
+      if (typeof ctx[propertyName] == 'function') {
+         wrappedContext_[propertyName] = makeLostContextFunctionWrapper(
+             ctx, propertyName);
+       } else {
+         makePropertyWrapper(wrappedContext_, ctx, propertyName);
+       }
+    }
+
+    // Wrap a few functions specially.
+    wrappedContext_.getError = function() {
+      loseContextIfTime();
+      if (!contextLost_) {
+        var err;
+        while (err = unwrappedContext_.getError()) {
+          glErrorShadow_[err] = true;
+        }
+      }
+      for (var err in glErrorShadow_) {
+        if (glErrorShadow_[err]) {
+          delete glErrorShadow_[err];
+          return err;
+        }
+      }
+      return wrappedContext_.NO_ERROR;
+    };
+
+    var creationFunctions = [
+      "createBuffer",
+      "createFramebuffer",
+      "createProgram",
+      "createRenderbuffer",
+      "createShader",
+      "createTexture"
+    ];
+    for (var ii = 0; ii < creationFunctions.length; ++ii) {
+      var functionName = creationFunctions[ii];
+      wrappedContext_[functionName] = function(f) {
+        return function() {
+          loseContextIfTime();
+          if (contextLost_) {
+            return null;
+          }
+          var obj = f.apply(ctx, arguments);
+          obj.__webglDebugContextLostId__ = contextId_;
+          resourceDb_.push(obj);
+          return obj;
+        };
+      }(ctx[functionName]);
+    }
+
+    var functionsThatShouldReturnNull = [
+      "getActiveAttrib",
+      "getActiveUniform",
+      "getBufferParameter",
+      "getContextAttributes",
+      "getAttachedShaders",
+      "getFramebufferAttachmentParameter",
+      "getParameter",
+      "getProgramParameter",
+      "getProgramInfoLog",
+      "getRenderbufferParameter",
+      "getShaderParameter",
+      "getShaderInfoLog",
+      "getShaderSource",
+      "getTexParameter",
+      "getUniform",
+      "getUniformLocation",
+      "getVertexAttrib"
+    ];
+    for (var ii = 0; ii < functionsThatShouldReturnNull.length; ++ii) {
+      var functionName = functionsThatShouldReturnNull[ii];
+      wrappedContext_[functionName] = function(f) {
+        return function() {
+          loseContextIfTime();
+          if (contextLost_) {
+            return null;
+          }
+          return f.apply(ctx, arguments);
+        }
+      }(wrappedContext_[functionName]);
+    }
+
+    var isFunctions = [
+      "isBuffer",
+      "isEnabled",
+      "isFramebuffer",
+      "isProgram",
+      "isRenderbuffer",
+      "isShader",
+      "isTexture"
+    ];
+    for (var ii = 0; ii < isFunctions.length; ++ii) {
+      var functionName = isFunctions[ii];
+      wrappedContext_[functionName] = function(f) {
+        return function() {
+          loseContextIfTime();
+          if (contextLost_) {
+            return false;
+          }
+          return f.apply(ctx, arguments);
+        }
+      }(wrappedContext_[functionName]);
+    }
+
+    wrappedContext_.checkFramebufferStatus = function(f) {
+      return function() {
+        loseContextIfTime();
+        if (contextLost_) {
+          return wrappedContext_.FRAMEBUFFER_UNSUPPORTED;
+        }
+        return f.apply(ctx, arguments);
+      };
+    }(wrappedContext_.checkFramebufferStatus);
+
+    wrappedContext_.getAttribLocation = function(f) {
+      return function() {
+        loseContextIfTime();
+        if (contextLost_) {
+          return -1;
+        }
+        return f.apply(ctx, arguments);
+      };
+    }(wrappedContext_.getAttribLocation);
+
+    wrappedContext_.getVertexAttribOffset = function(f) {
+      return function() {
+        loseContextIfTime();
+        if (contextLost_) {
+          return 0;
+        }
+        return f.apply(ctx, arguments);
+      };
+    }(wrappedContext_.getVertexAttribOffset);
+
+    wrappedContext_.isContextLost = function() {
+      return contextLost_;
+    };
+
+    return wrappedContext_;
+  }
+}
+
+return {
+    /**
+     * Initializes this module. Safe to call more than once.
+     * @param {!WebGLRenderingContext} ctx A WebGL context. If
+    }
+   *    you have more than one context it doesn't matter which one
+   *    you pass in, it is only used to pull out constants.
+   */
+  'init': init,
+
+  /**
+   * Returns true or false if value matches any WebGL enum
+   * @param {*} value Value to check if it might be an enum.
+   * @return {boolean} True if value matches one of the WebGL defined enums
+   */
+  'mightBeEnum': mightBeEnum,
+
+  /**
+   * Gets an string version of an WebGL enum.
+   *
+   * Example:
+   *   WebGLDebugUtil.init(ctx);
+   *   var str = WebGLDebugUtil.glEnumToString(ctx.getError());
+   *
+   * @param {number} value Value to return an enum for
+   * @return {string} The string version of the enum.
+   */
+  'glEnumToString': glEnumToString,
+
+  /**
+   * Converts the argument of a WebGL function to a string.
+   * Attempts to convert enum arguments to strings.
+   *
+   * Example:
+   *   WebGLDebugUtil.init(ctx);
+   *   var str = WebGLDebugUtil.glFunctionArgToString('bindTexture', 0, gl.TEXTURE_2D);
+   *
+   * would return 'TEXTURE_2D'
+   *
+   * @param {string} functionName the name of the WebGL function.
+   * @param {number} argumentIndx the index of the argument.
+   * @param {*} value The value of the argument.
+   * @return {string} The value as a string.
+   */
+  'glFunctionArgToString': glFunctionArgToString,
+
+  /**
+   * Given a WebGL context returns a wrapped context that calls
+   * gl.getError after every command and calls a function if the
+   * result is not NO_ERROR.
+   *
+   * You can supply your own function if you want. For example, if you'd like
+   * an exception thrown on any GL error you could do this
+   *
+   *    function throwOnGLError(err, funcName, args) {
+   *      throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to" +
+   *            funcName;
+   *    };
+   *
+   *    ctx = WebGLDebugUtils.makeDebugContext(
+   *        canvas.getContext("webgl"), throwOnGLError);
+   *
+   * @param {!WebGLRenderingContext} ctx The webgl context to wrap.
+   * @param {!function(err, funcName, args): void} opt_onErrorFunc The function
+   *     to call when gl.getError returns an error. If not specified the default
+   *     function calls console.log with a message.
+   */
+  'makeDebugContext': makeDebugContext,
+
+  /**
+   * Given a canvas element returns a wrapped canvas element that will
+   * simulate lost context. The canvas returned adds the following functions.
+   *
+   * loseContext:
+   *   simulates a lost context event.
+   *
+   * restoreContext:
+   *   simulates the context being restored.
+   *
+   * lostContextInNCalls:
+   *   loses the context after N gl calls.
+   *
+   * getNumCalls:
+   *   tells you how many gl calls there have been so far.
+   *
+   * setRestoreTimeout:
+   *   sets the number of milliseconds until the context is restored
+   *   after it has been lost. Defaults to 0. Pass -1 to prevent
+   *   automatic restoring.
+   *
+   * @param {!Canvas} canvas The canvas element to wrap.
+   */
+  'makeLostContextSimulatingCanvas': makeLostContextSimulatingCanvas,
+
+  /**
+   * Resets a context to the initial state.
+   * @param {!WebGLRenderingContext} ctx The webgl context to
+   *     reset.
+   */
+  'resetToInitialState': resetToInitialState
+};
+
+}();
+
 /** -*- compile-command: "jslint-cli stats.js" -*-
  *
  *  Copyright (C) 2010 Cedric Pinson
@@ -9775,6 +10798,9 @@ osgViewer.Viewer = function(canvas, options, error) {
     }
 
     gl = WebGLUtils.setupWebGL(canvas, options, error );
+    if (osg.ReportWebGLError) {
+        gl = WebGLDebugUtils.makeDebugContext(gl);
+    }
     if (gl) {
         this.setGraphicContext(gl);
         osg.init();
@@ -9815,7 +10841,6 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         var gl = this.getGraphicContext();
         this._state.setGraphicContext(gl);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.hint(gl.NICEST, gl.GENERATE_MIPMAP_HINT);
 
         this._updateVisitor = new osgUtil.UpdateVisitor();
         this._cullVisitor = new osgUtil.CullVisitor();
@@ -10522,7 +11547,8 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
 
     panModel: function(dx, dy) {
-        var inv = osg.Matrix.inverse(this.rotation);
+        var inv = [];
+        osg.Matrix.inverse(this.rotation, inv);
         var x = [ osg.Matrix.get(inv, 0,0), osg.Matrix.get(inv, 0,1), 0 ];
         osg.Vec3.normalize(x, x);
         var y = [ osg.Matrix.get(inv, 1,0), osg.Matrix.get(inv, 1,1), 0 ];
@@ -10545,7 +11571,9 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
         // test that the eye is not too up and not too down to not kill
         // the rotation matrix
-        var eye = osg.Matrix.transformVec3(osg.Matrix.inverse(r2), [0, this.distance, 0]);
+        var inv = [];
+        osg.Matrix.inverse(r2, inv);
+        var eye = osg.Matrix.transformVec3(inv, [0, this.distance, 0]);
 
         var dir = osg.Vec3.neg(eye, []);
         osg.Vec3.normalize(dir, dir);
@@ -10977,7 +12005,6 @@ osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
     blend.setDestinationAlpha(jsonObj.DestinationAlpha);
 };
 
-
 osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
     var check = function(o) {
 //        if (o.MagFilter && o.MinFilter && o.WrapT && o.WrapS) {
@@ -11006,8 +12033,7 @@ osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
     }
 
     if (jsonObj.File) {
-        var img = new Image();
-        img.src = jsonObj.File;
+        var img = osgDB.readImage(jsonObj.File);
         texture.setImage(img);
     }
 };

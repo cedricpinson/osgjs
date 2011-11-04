@@ -39,6 +39,7 @@
 		<script type="text/javascript" src="../../js/osg/State.js"></script>
 		<script type="text/javascript" src="../../js/osg/StateSet.js"></script>
 		<script type="text/javascript" src="../../js/osg/Texture.js"></script>
+		<script type="text/javascript" src="../../js/osg/TextureCubeMap.js"></script>
 		<script type="text/javascript" src="../../js/osg/UpdateVisitor.js"></script>
 		<script type="text/javascript" src="../../js/osg/Viewport.js"></script>
 		<script type="text/javascript" src="../../js/osg/CullStack.js"></script>
@@ -62,6 +63,7 @@
 		<script type="text/javascript" src="../../js/osgDB/osgDB.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/osgViewer.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/webgl-utils.js"></script>
+		<script type="text/javascript" src="../../js/osgViewer/webgl-debug.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/stats.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/View.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/Viewer.js"></script>
