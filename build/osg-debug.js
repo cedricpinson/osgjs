@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit 275bc1b4d380ddea7a78b272843455b094eb317a - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit 43bb9ad7c004ced8eaabf6ece097e7ea0606e38a - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -3086,9 +3086,9 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
         return this.boundingBox;
     },
     computeBoundingBox: function(boundingBox) {
-	var att = this.getAttributes();
-	if ( att.Vertex.itemSize > 2 ) {
-	    vertexes = att.Vertex.getElements();
+	var vertexArray = this.getAttributes().Vertex;
+	if ( vertexArray && vertexArray.itemSize > 2 ) {
+	    vertexes = vertexArray.getElements();
 	    for (var idx = 0, l = vertexes.length; idx < l; idx+=3) {
 		var v=[vertexes[idx],vertexes[idx+1],vertexes[idx+2]];
 		boundingBox.expandByVec3(v);
@@ -3617,6 +3617,45 @@ osg.DrawArrays.create = function(mode, first, count) {
     osg.log("osg.DrawArrays.create is deprecated, use new osg.DrawArrays with same arguments");
     var d = new osg.DrawArrays(mode, first, count);
     return d;
+};
+
+
+/** 
+ * DrawArrayLengths manage rendering primitives
+ * @class DrawArrayLengths
+ */
+osg.DrawArrayLengths = function (mode, first, array)
+{
+    this._mode = mode;
+    this._first = first;
+    this._arrayLengths = array.slice(0);
+};
+
+/** @lends osg.DrawArrayLengths.prototype */
+osg.DrawArrayLengths.prototype = {
+    draw: function(state) {
+        var gl = state.getGraphicContext();
+        var mode = this._mode;
+        var first = this._first;
+        var array = this._arrayLengths;
+        for (var i = 0, l = array.length; i < l; i++) {
+            var count = array[i];
+            gl.drawArrays(mode, first, count);
+            first += count;
+        }
+    },
+    getMode: function() { return this._mode; },
+    getNumIndices: function() {
+        var count = 0;
+        var array = this._arrayLengths;
+        for (var i = 0, l = array.length; i < l; i++) {
+            count += array[i];
+        }
+        return count; 
+    },
+    getArrayLengths: function() { return this._arrayLengths; },
+    getFirst: function() { return this._first; },
+    setFirst: function(first) { this._first = first; }
 };
 
 
@@ -12093,7 +12132,7 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
     for (var i = 0, l = jsonObj.PrimitiveSetList.length; i < l; i++) {
         var entry = jsonObj.PrimitiveSetList[i];
         
-        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || entry.DrawElementUInt || undefined;
+        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || entry.DrawElementUInt || entry.DrawElementsUShort || entry.DrawElementsUByte || entry.DrawElementsUInt || undefined;
         if ( drawElementPrimitive ) {
             var jsonArray = drawElementPrimitive.Indices;
             var mode = drawElementPrimitive.Mode;
@@ -12109,13 +12148,22 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
             node.getPrimitiveSetList().push(drawElements);
         }
 
-        var drawArrayPrimitive = entry.DrawArray || undefined;
+        var drawArrayPrimitive = entry.DrawArray || entry.DrawArrays;
         if (drawArrayPrimitive) {
             var mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
             var first = drawArrayPrimitive.First || drawArrayPrimitive.first;
             var count = drawArrayPrimitive.Count || drawArrayPrimitive.count;
             var drawArray = new osg.DrawArrays(osg.PrimitiveSet[mode], first, count);
             node.getPrimitives().push(drawArray);
+        }
+
+        var drawArrayLengthsPrimitive = entry.DrawArrayLengths || undefined;
+        if (drawArrayLengthsPrimitive) {
+            var mode = drawArrayLengthsPrimitive.Mode;
+            var first = drawArrayLengthsPrimitive.First;
+            var array = drawArrayLengthsPrimitive.ArrayLengths;
+            var drawArrayLengths =  new osg.DrawArrayLengths(osg.PrimitiveSet[mode], first, array);
+            node.getPrimitives().push(drawArrayLengths);
         }
     }
     for (var key in jsonObj.VertexAttributeList) {
