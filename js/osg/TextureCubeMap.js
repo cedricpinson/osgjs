@@ -97,8 +97,7 @@ osg.TextureCubeMap.prototype = osg.objectInehrit(osg.Texture.prototype, {
                 this.init(gl);
             }
             gl.bindTexture(this._textureTarget, this._textureObject);
-            var error = gl.getError();
-            osg.checkError(error);
+
             var internalFormat = this._internalFormat;
 
             var valid = 0;
