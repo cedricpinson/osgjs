@@ -10,12 +10,16 @@ osg.BufferArray = function (type, elements, itemSize) {
     osg.BufferArray.instanceID += 1;
     this.dirty();
 
-    this.itemSize = itemSize;
-    this.type = type;
-    if (this.type === gl.ELEMENT_ARRAY_BUFFER) {
-        this.elements = new osg.Uint16Array(elements);
+    this._itemSize = itemSize;
+    if (typeof(type) === "string") {
+        type = osg.BufferArray[type];
+    }
+    this._type = type;
+
+    if (this._type === gl.ELEMENT_ARRAY_BUFFER) {
+        this._elements = new osg.Uint16Array(elements);
     } else {
-        this.elements = new osg.Float32Array(elements);
+        this._elements = new osg.Float32Array(elements);
     }
 };
 
@@ -24,22 +28,30 @@ osg.BufferArray.ARRAY_BUFFER = 0x8892;
 
 /** @lends osg.BufferArray.prototype */
 osg.BufferArray.prototype = {
-    init: function() {
-        if (!this.buffer && this.elements.length > 0 ) {
-            this.buffer = gl.createBuffer();
-            this.buffer.itemSize = this.itemSize;
-            this.buffer.numItems = this.elements.length / this.itemSize;
+    bind: function(gl) {
+        var type = this._type;
+        var buffer = this._buffer;
+
+        if (buffer) {
+            gl.bindBuffer(type, buffer);
+            return;
+        }
+
+        if (!buffer && this._elements.length > 0 ) {
+            this._buffer = gl.createBuffer();
+            this._numItems = this._elements.length / this._itemSize;
+            gl.bindBuffer(type, this._buffer);
         }
     },
     dirty: function() { this._dirty = true; },
     isDirty: function() { return this._dirty; },
-    compile: function() {
+    compile: function(gl) {
         if (this._dirty) {
-            gl.bufferData(this.type, this.elements, gl.STATIC_DRAW);
+            gl.bufferData(this._type, this._elements, gl.STATIC_DRAW);
             this._dirty = false;
         }
     },
-    getElements: function() { return this.elements;}
+    getElements: function() { return this._elements;}
 };
 
 osg.BufferArray.create = function(type, elements, itemSize) {
