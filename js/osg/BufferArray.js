@@ -43,6 +43,7 @@ osg.BufferArray.prototype = {
             gl.bindBuffer(type, this._buffer);
         }
     },
+    getItemSize: function() { return this._itemSize; },
     dirty: function() { this._dirty = true; },
     isDirty: function() { return this._dirty; },
     compile: function(gl) {

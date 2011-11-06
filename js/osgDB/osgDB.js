@@ -202,11 +202,11 @@ osgDB.parseSceneGraph_deprecated = function (node)
             var mode = primitives[p].mode;
             if (primitives[p].indices) {
                 var array = primitives[p].indices;
-                array = new osg.BufferArray(gl[array.type], array.elements, array.itemSize );
+                array = new osg.BufferArray(osg.BufferArray[array.type], array.elements, array.itemSize );
                 if (!mode) {
                     mode = gl.TRIANGLES;
                 } else {
-                    mode = gl[mode];
+                    mode = osg.PrimitiveSet[mode];
                 }
                 primitives[p] = new osg.DrawElements(mode, array);
             } else {
