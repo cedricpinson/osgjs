@@ -18,6 +18,9 @@ osg.Shader = function(type, text) {
     this.setText(text);
 };
 
+osg.Shader.VERTEX_SHADER = 0x8B31;
+osg.Shader.FRAGMENT_SHADER = 0x8B30;
+
 /** @lends osg.Shader.prototype */
 osg.Shader.prototype = {
     setText: function(text) { this.text = text; },
