@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit 43bb9ad7c004ced8eaabf6ece097e7ea0606e38a - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit f7e0f8f0fa4322989b83f567e1d9dec3f78a2dc7 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -475,6 +475,7 @@ osg.Matrix = {
     makeIdentity: function(matrix) {
         if (matrix === undefined) {
             matrix = [];
+            osg.log("osg.Matrix.makeIdentity without matrix destination is deprecated"); 
         }
         osg.Matrix.setRow(matrix, 0,    1, 0, 0, 0 );
         osg.Matrix.setRow(matrix, 1,    0, 1, 0, 0 );
@@ -979,6 +980,7 @@ osg.Matrix = {
 
     makeRotate: function (angle, x, y, z, result) {
         if (result === undefined) {
+            osg.log("osg.makeRotate without given matrix destination is deprecated");
             result = [];
         }
 
@@ -1028,6 +1030,8 @@ osg.Matrix = {
             result[15] = 1.0;
 
             return result;
+        } else {
+            return osg.Matrix.makeIdentity(result);
         }
 
         return result;
@@ -1534,6 +1538,9 @@ osg.Shader = function(type, text) {
     this.type = type;
     this.setText(text);
 };
+
+osg.Shader.VERTEX_SHADER = 0x8B31;
+osg.Shader.FRAGMENT_SHADER = 0x8B30;
 
 /** @lends osg.Shader.prototype */
 osg.Shader.prototype = {
@@ -6194,6 +6201,14 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         this._setAttribute(this.getObjectPair(attribute, mode)); 
     },
 
+    removeAttribute: function(attributeName) {
+        if (this.attributeMap[attributeName] !== undefined) {
+            delete this.attributeMap[attributeName];
+            var idx = this.attributeMap.attributeKeys.indexOf(attributeName);
+            this.attributeMap.attributeKeys.splice(idx,1);
+        }
+    },
+
     setRenderingHint: function(hint) {
         if (hint === 'OPAQUE_BIN') {
             this.setRenderBinDetails(0,"RenderBin");
@@ -10755,7 +10770,6 @@ osgViewer.View = function() {
     this._sceneData = undefined;
     this._frameStamp = new osg.FrameStamp();
     this._lightingMode = undefined;
-    this._lighting = undefined;
     this._manipulator = undefined;
 
     this.setLightingMode(osgViewer.View.LightingMode.HEADLIGHT);
@@ -10810,15 +10824,29 @@ osgViewer.View.prototype = {
     getManipulator: function() { return this._manipulator; },
     setManipulator: function(manipulator) { this._manipulator = manipulator; },
 
+    getLight: function() { return this._light; },
+    setLight: function(light) { 
+        this._light = light;
+        if (this._lightingMode !== osgViewer.View.LightingMode.NO_LIGHT) {
+            this._scene.getOrCreateStateSet().setAttributeAndMode(this._light);
+        }
+    },
+    getLightingMode: function() { return this._lightingMode; },
     setLightingMode: function(lightingMode) {
-        this._lightingMode = lightingMode;
-        if (this._lightingMode !== osgViewer.View.LightingMode.NO_LIGHT && 
-            !this._light) {
-            this._light = new osg.Light();
-            this._light.setAmbient([0.2,0.2,0.2,1.0]);
-            this._light.setDiffuse([0.8,0.8,0.8,1.0]);
-            this._light.setSpecular([0.5,0.5,0.5,1.0]);
-            //this._scene.light = this._light;
+        if (this._lightingMode !== lightingMode) {
+            this._lightingMode = lightingMode;
+            if (this._lightingMode !== osgViewer.View.LightingMode.NO_LIGHT) {
+                if (! this._light) {
+                    this._light = new osg.Light();
+                    this._light.setAmbient([0.2,0.2,0.2,1.0]);
+                    this._light.setDiffuse([0.8,0.8,0.8,1.0]);
+                    this._light.setSpecular([0.5,0.5,0.5,1.0]);
+                    this._scene.getOrCreateStateSet().setAttributeAndMode(this._light);
+                }
+            } else {
+                this._light = undefined;
+                this._scene.getOrCreateStateSet().removeAttribute("Light0");
+            }
         }
     }
 
@@ -10907,33 +10935,41 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             for(var i = 0; i < hashes.length; i++)
             {
                 hash = hashes[i].split('=');
-                vars.push(hash[0]);
-                vars[hash[0]] = hash[1];
+                var element = hash[0].toLowerCase();
+                vars.push(element);
+                var result = hash[1];
+                if (result === undefined) {
+                    result = "1";
+                }
+                vars[element] = result.toLowerCase();
+
             }
             return vars;
         };
         
         var options = optionsURL();
-
-        if (options['stats'] === "1" || options['STATS'] === "1" || options['Stats'] === "1" ) {
+        
+        if (options.stats === "1") {
             this.initStats(options);
         }
         
         var gl = this.getGraphicContext();
         // not the best way to do it
-        if (options['DEPTH_TEST'] === "0") {
+        if (options.depth_test === "0") {
             this.getGraphicContext().disable(gl.DEPTH_TEST);
         }
-        if (options['BLEND'] === "0") {
+        if (options.blend === "0") {
             this.getGraphicContext().disable(gl.BLEND);
         }
-        if (options['CULL_FACE'] === "0") {
+        if (options.cull_face === "0") {
             this.getGraphicContext().disable(gl.CULL_FACE);
         }
-        if (options['LIGHT'] === "0") {
+        if (options.light === "0") {
             this.setLightingMode(osgViewer.View.LightingMode.NO_LIGHT);
         }
     },
+
+    
 
     initStats: function(options) {
 
@@ -11076,7 +11112,10 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         var identity = osg.Matrix.makeIdentity([]);
         this._cullVisitor.pushModelviewMatrix(identity);
-        this._cullVisitor.addPositionedAttribute(this._light);
+
+        if (this._light) {
+            this._cullVisitor.addPositionedAttribute(this._light);
+        }
 
         this._cullVisitor.pushModelviewMatrix(camera.getViewMatrix());
         this._cullVisitor.pushViewport(camera.getViewport());
