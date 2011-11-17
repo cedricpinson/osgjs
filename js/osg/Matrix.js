@@ -36,6 +36,7 @@ osg.Matrix = {
     makeIdentity: function(matrix) {
         if (matrix === undefined) {
             matrix = [];
+            osg.log("osg.Matrix.makeIdentity without matrix destination is deprecated"); 
         }
         osg.Matrix.setRow(matrix, 0,    1, 0, 0, 0 );
         osg.Matrix.setRow(matrix, 1,    0, 1, 0, 0 );
@@ -540,6 +541,7 @@ osg.Matrix = {
 
     makeRotate: function (angle, x, y, z, result) {
         if (result === undefined) {
+            osg.log("osg.makeRotate without given matrix destination is deprecated");
             result = [];
         }
 
@@ -589,6 +591,8 @@ osg.Matrix = {
             result[15] = 1.0;
 
             return result;
+        } else {
+            return osg.Matrix.makeIdentity(result);
         }
 
         return result;

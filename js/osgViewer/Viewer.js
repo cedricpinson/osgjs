@@ -82,33 +82,41 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             for(var i = 0; i < hashes.length; i++)
             {
                 hash = hashes[i].split('=');
-                vars.push(hash[0]);
-                vars[hash[0]] = hash[1];
+                var element = hash[0].toLowerCase();
+                vars.push(element);
+                var result = hash[1];
+                if (result === undefined) {
+                    result = "1";
+                }
+                vars[element] = result.toLowerCase();
+
             }
             return vars;
         };
         
         var options = optionsURL();
-
-        if (options['stats'] === "1" || options['STATS'] === "1" || options['Stats'] === "1" ) {
+        
+        if (options.stats === "1") {
             this.initStats(options);
         }
         
         var gl = this.getGraphicContext();
         // not the best way to do it
-        if (options['DEPTH_TEST'] === "0") {
+        if (options.depth_test === "0") {
             this.getGraphicContext().disable(gl.DEPTH_TEST);
         }
-        if (options['BLEND'] === "0") {
+        if (options.blend === "0") {
             this.getGraphicContext().disable(gl.BLEND);
         }
-        if (options['CULL_FACE'] === "0") {
+        if (options.cull_face === "0") {
             this.getGraphicContext().disable(gl.CULL_FACE);
         }
-        if (options['LIGHT'] === "0") {
+        if (options.light === "0") {
             this.setLightingMode(osgViewer.View.LightingMode.NO_LIGHT);
         }
     },
+
+    
 
     initStats: function(options) {
 
@@ -251,7 +259,10 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         var identity = osg.Matrix.makeIdentity([]);
         this._cullVisitor.pushModelviewMatrix(identity);
-        this._cullVisitor.addPositionedAttribute(this._light);
+
+        if (this._light) {
+            this._cullVisitor.addPositionedAttribute(this._light);
+        }
 
         this._cullVisitor.pushModelviewMatrix(camera.getViewMatrix());
         this._cullVisitor.pushViewport(camera.getViewport());
