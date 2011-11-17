@@ -21,7 +21,7 @@ function createFakeRenderer() {
              'CULL_FACE': 0,
              'UNSIGNED_SHORT': 0,
              drawElements: function() {},
-
+             createBuffer: function() {},
              enable: function() {},
              disable: function() {},
              depthFunc: function() {},
@@ -29,6 +29,7 @@ function createFakeRenderer() {
              depthMask: function() {},
              activeTexture: function() {},
              bindTexture: function() {},
+             bufferData: function() {},
              bindBuffer: function() {},
              blendFunc: function() {},
              enableVertexAttribArray: function() {},

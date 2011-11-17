@@ -515,15 +515,13 @@ osg.State.prototype = {
     },
 
     setIndexArray: function(array) {
+        var gl = this._graphicContext;
         if (this.currentIndexVBO !== array) {
-            if (!array.buffer) {
-                array.init();
-            }
-            this._graphicContext.bindBuffer(array.type, array.buffer);
+            array.bind(gl);
             this.currentIndexVBO = array;
         }
         if (array.isDirty()) {
-            array.compile();
+            array.compile(gl);
         }
     },
 
@@ -578,29 +576,32 @@ osg.State.prototype = {
         }
     },
     setVertexAttribArray: function(attrib, array, normalize) {
-        this.vertexAttribMap._disable[ attrib ] = false;
-        if (!array.buffer) {
-            array.init();
-        }
+        var vertexAttribMap = this.vertexAttribMap;
+        vertexAttribMap._disable[ attrib ] = false;
         var gl = this._graphicContext;
+        var binded = false;
         if (array.isDirty()) {
-            gl.bindBuffer(array.type, array.buffer);
-            array.compile();
+            array.bind(gl);
+            array.compile(gl);
+            binded = true;
         }
-        if (this.vertexAttribMap[attrib] !== array) {
 
-            gl.bindBuffer(array.type, array.buffer);
+        if (vertexAttribMap[attrib] !== array) {
 
-            if (! this.vertexAttribMap[attrib]) {
+            if (!binded) {
+                array.bind(gl);
+            }
+
+            if (! vertexAttribMap[attrib]) {
                 gl.enableVertexAttribArray(attrib);
                 
-                if ( this.vertexAttribMap[attrib] === undefined) {
-                    this.vertexAttribMap._keys.push(attrib);
+                if ( vertexAttribMap[attrib] === undefined) {
+                    vertexAttribMap._keys.push(attrib);
                 }
             }
 
-            this.vertexAttribMap[attrib] = array;
-            gl.vertexAttribPointer(attrib, array.itemSize, gl.FLOAT, normalize, 0, 0);
+            vertexAttribMap[attrib] = array;
+            gl.vertexAttribPointer(attrib, array._itemSize, gl.FLOAT, normalize, 0, 0);
         }
     }
 

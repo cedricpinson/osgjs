@@ -11,10 +11,28 @@ osgViewer.Viewer = function(canvas, options, error) {
         options = {antialias : true};
     }
 
+    if (osg.SimulateWebGLLostContext) {
+        canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
+        canvas.loseContextInNCalls(osg.SimulateWebGLLostContext);
+    }
+
     gl = WebGLUtils.setupWebGL(canvas, options, error );
+    var self = this;
+    canvas.addEventListener("webglcontextlost", function(event) {
+        self.contextLost();
+        event.preventDefault();
+    }, false);
+
+    canvas.addEventListener("webglcontextrestored", function() {
+        self.contextRestored();
+    }, false);
+
+
     if (osg.ReportWebGLError) {
         gl = WebGLDebugUtils.makeDebugContext(gl);
     }
+
+
     if (gl) {
         this.setGraphicContext(gl);
         osg.init();
@@ -47,6 +65,14 @@ osgViewer.Viewer = function(canvas, options, error) {
 
 
 osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
+
+    contextLost: function() {
+        osg.log("webgl context lost");
+        cancelRequestAnimFrame(this._requestID);
+    },
+    contextRestored: function() {
+        osg.log("webgl context restored, but not supported - reload the page");
+    },
 
     init: function() {
         this._done = false;
@@ -368,11 +394,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
     done: function() { return this._done; },
 
     run: function() {
-        var that = this;
+        var self = this;
         var render = function() {
-            if (!that.done()) {
-                window.requestAnimationFrame(render, that.canvas);
-                that.frame();
+            if (!self.done()) {
+                self._requestID = window.requestAnimationFrame(render, self.canvas);
+                self.frame();
             }
         };
         render();
