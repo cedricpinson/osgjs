@@ -23,7 +23,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this.distance = 25;
         this.target = [ 0,0, 0];
         this.eye = [ 0, this.distance, 0];
-        this.rotation = osg.Matrix.mult(osg.Matrix.makeRotate( Math.PI, 0,0,1), osg.Matrix.makeRotate( -Math.PI/10.0, 1,0,0), []); // osg.Quat.makeIdentity();
+        this.rotation = osg.Matrix.mult(osg.Matrix.makeRotate( Math.PI, 0,0,1, []), osg.Matrix.makeRotate( -Math.PI/10.0, 1,0,0, []), []); // osg.Quat.makeIdentity();
         this.up = [0, 0, 1];
         this.time = 0.0;
         this.dx = 0.0;
@@ -127,10 +127,10 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
 
     computeRotation: function(dx, dy) {
-        var of = osg.Matrix.makeRotate(dx / 10.0, 0,0,1);
+        var of = osg.Matrix.makeRotate(dx / 10.0, 0,0,1, []);
         var r = osg.Matrix.mult(this.rotation, of, []);
 
-        of = osg.Matrix.makeRotate(dy / 10.0, 1,0,0);
+        of = osg.Matrix.makeRotate(dy / 10.0, 1,0,0, []);
         var r2 = osg.Matrix.mult(of, r, []);
 
         // test that the eye is not too up and not too down to not kill

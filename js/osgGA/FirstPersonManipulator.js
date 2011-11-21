@@ -82,9 +82,12 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         this.angleVertical += dy*0.01;
         this.angleHorizontal -= dx*0.01;
 
-        var first = osg.Matrix.makeRotate(this.angleVertical, 1, 0, 0);
-        var second = osg.Matrix.makeRotate(this.angleHorizontal, 0, 0, 1);
-        var rotMat = osg.Matrix.mult(second, first, []);
+        var first = [];
+        var second = [];
+        var rotMat = [];
+        osg.Matrix.makeRotate(this.angleVertical, 1, 0, 0, first);
+        osg.Matrix.makeRotate(this.angleHorizontal, 0, 0, 1, second);
+        osg.Matrix.mult(second, first, rotMat);
 
         this.direction = osg.Matrix.transformVec3(rotMat, [0, 1, 0], []);
         this.up = osg.Matrix.transformVec3(rotMat, [0, 0, 1], [] );
