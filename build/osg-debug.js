@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit f7e0f8f0fa4322989b83f567e1d9dec3f78a2dc7 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit ace1c39b65cbd820079ac1e172f9bc615310a2e0 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -1550,7 +1550,7 @@ osg.Shader.prototype = {
         this.shader = gl.createShader(this.type);
         gl.shaderSource(this.shader, this.text);
         gl.compileShader(this.shader);
-        if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS)) {
+        if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS) && !gl.isContextLost()) {
             osg.log("can't compile shader:\n" + this.text + "\n");
             var tmpText = "\n" + this.text;
             var splittedText = tmpText.split("\n");
@@ -2285,13 +2285,14 @@ osg.BlendFunc.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     }
 });
 osg.BoundingBox = function() {
-    this._min = [1,1,1];
-    this._max = [0,0,0];
+    this.init();
 };
 osg.BoundingBox.prototype = {
+    _cache_radius2_tmp: [0, 0, 0],
+
     init: function() {
-	this._min = [1,1,1];
-	this._max = [0,0,0];
+	this._min = [Infinity, Infinity, Infinity];
+	this._max = [-Infinity, -Infinity, -Infinity];
     },
 
     valid: function() {
@@ -2302,47 +2303,49 @@ osg.BoundingBox.prototype = {
         if (!sh.valid()) {
             return;
         }
-        if(sh._center[0]-sh._radius<this._min[0]) { this._min[0] = sh._center[0]-sh._radius; }
-        if(sh._center[0]+sh._radius>this._max[0]) { this._max[0] = sh._center[0]+sh._radius; }
+        var max = this._max;
+        var min = this._min;
+        min[0] = Math.min(min[0], sh._center[0]-sh._radius);
+        min[1] = Math.min(min[1], sh._center[1]-sh._radius);
+        min[2] = Math.min(min[2], sh._center[2]-sh._radius);
 
-        if(sh._center[1]-sh._radius<this._min[1]) { this._min[1] = sh._center[1]-sh._radius; }
-        if(sh._center[1]+sh._radius>this._max[1]) { this._max[1] = sh._center[1]+sh._radius; }
-
-        if(sh._center[2]-sh._radius<this._min[2]) { this._min[2] = sh._center[2]-sh._radius; }
-        if(sh._center[2]+sh._radius>this._max[2]) { this._max[2] = sh._center[2]+sh._radius; }
+        max[0] = Math.max(max[0], sh._center[0]+sh._radius);
+        max[1] = Math.max(max[1], sh._center[1]+sh._radius);
+        max[2] = Math.max(max[2], sh._center[2]+sh._radius);
     },
-    expandByVec3: function(v){
 
-	if ( this.valid() ) {
-	    if ( this._min[0] > v[0] ) { this._min[0] = v[0]; }
-	    if ( this._min[1] > v[1] ) { this._min[1] = v[1]; }
-	    if ( this._min[2] > v[2] ) { this._min[2] = v[2]; }
-	    if ( this._max[0] < v[0] ) { this._max[0] = v[0]; }
-	    if ( this._max[1] < v[1] ) { this._max[1] = v[1]; }
-	    if ( this._max[2] < v[2] ) { this._max[2] = v[2]; }
-	} else {
-	    this._min[0] = v[0];
-	    this._min[1] = v[1];
-	    this._min[2] = v[2];
-	    this._max[0] = v[0];
-	    this._max[1] = v[1];
-	    this._max[2] = v[2];
-	}
+    expandByVec3: function(v){
+        var min = this._min;
+        var max = this._max;
+	min[0] = Math.min(min[0], v[0]);
+	min[1] = Math.min(min[1], v[1]);
+	min[2] = Math.min(min[2], v[2]);
+
+	max[0] = Math.max(max[0], v[0]);
+	max[1] = Math.max(max[1], v[1]);
+	max[2] = Math.max(max[2], v[2]);
     },
 
     center: function() {
-	return osg.Vec3.mult(osg.Vec3.add(this._min,
-                                          this._max, 
-                                          []),
-                             0.5,
-                             []);
+        var min = this._min;
+        var max = this._max;
+	return [ (min[0] + max[0])*0.5,
+                 (min[1] + max[1])*0.5,
+                 (min[2] + max[2])*0.5 ];
     },
+
     radius: function() {
 	return Math.sqrt(this.radius2());
     },
 
     radius2: function() {
-	return 0.25*(osg.Vec3.length2(osg.Vec3.sub(this._max,this._min, [])));
+        var min = this._min;
+        var max = this._max;
+        var cache = this._cache_radius2_tmp;
+        cache[0] = max[0] - min[0];
+        cache[1] = max[1] - min[1];
+        cache[2] = max[2] - min[2];
+	return 0.25*(cache[0] * cache[0] + cache[1] * cache[1] + cache[2] * cache[2]);
     },
     corner: function(pos) {
         ret = [0.0,0.0,0.0];
@@ -2551,12 +2554,16 @@ osg.BufferArray = function (type, elements, itemSize) {
     osg.BufferArray.instanceID += 1;
     this.dirty();
 
-    this.itemSize = itemSize;
-    this.type = type;
-    if (this.type === gl.ELEMENT_ARRAY_BUFFER) {
-        this.elements = new osg.Uint16Array(elements);
+    this._itemSize = itemSize;
+    if (typeof(type) === "string") {
+        type = osg.BufferArray[type];
+    }
+    this._type = type;
+
+    if (this._type === gl.ELEMENT_ARRAY_BUFFER) {
+        this._elements = new osg.Uint16Array(elements);
     } else {
-        this.elements = new osg.Float32Array(elements);
+        this._elements = new osg.Float32Array(elements);
     }
 };
 
@@ -2565,22 +2572,31 @@ osg.BufferArray.ARRAY_BUFFER = 0x8892;
 
 /** @lends osg.BufferArray.prototype */
 osg.BufferArray.prototype = {
-    init: function() {
-        if (!this.buffer && this.elements.length > 0 ) {
-            this.buffer = gl.createBuffer();
-            this.buffer.itemSize = this.itemSize;
-            this.buffer.numItems = this.elements.length / this.itemSize;
+    bind: function(gl) {
+        var type = this._type;
+        var buffer = this._buffer;
+
+        if (buffer) {
+            gl.bindBuffer(type, buffer);
+            return;
+        }
+
+        if (!buffer && this._elements.length > 0 ) {
+            this._buffer = gl.createBuffer();
+            this._numItems = this._elements.length / this._itemSize;
+            gl.bindBuffer(type, this._buffer);
         }
     },
+    getItemSize: function() { return this._itemSize; },
     dirty: function() { this._dirty = true; },
     isDirty: function() { return this._dirty; },
-    compile: function() {
+    compile: function(gl) {
         if (this._dirty) {
-            gl.bufferData(this.type, this.elements, gl.STATIC_DRAW);
+            gl.bufferData(this._type, this._elements, gl.STATIC_DRAW);
             this._dirty = false;
         }
     },
-    getElements: function() { return this.elements;}
+    getElements: function() { return this._elements;}
 };
 
 osg.BufferArray.create = function(type, elements, itemSize) {
@@ -3092,12 +3108,17 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
         }
         return this.boundingBox;
     },
+
     computeBoundingBox: function(boundingBox) {
 	var vertexArray = this.getAttributes().Vertex;
-	if ( vertexArray && vertexArray.itemSize > 2 ) {
+
+	if ( vertexArray && vertexArray.getItemSize() > 2 ) {
+	    var v = [0,0,0];
 	    vertexes = vertexArray.getElements();
 	    for (var idx = 0, l = vertexes.length; idx < l; idx+=3) {
-		var v=[vertexes[idx],vertexes[idx+1],vertexes[idx+2]];
+		v[0] = vertexes[idx];
+		v[1] = vertexes[idx+1];
+		v[2] = vertexes[idx+2];
 		boundingBox.expandByVec3(v);
 	    }
 	}
@@ -3753,7 +3774,8 @@ osg.Program.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             gl.attachShader(this.program, this.fragment.shader);
             gl.linkProgram(this.program);
             gl.validateProgram(this.program);
-            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS) &&
+                !gl.isContextLost()) {
                 osg.log("can't link program\n" + "vertex shader:\n" + this.vertex.text +  "\n fragment shader:\n" + this.fragment.text);
                 osg.log(gl.getProgramInfoLog(this.program));
                 debugger;
@@ -4548,10 +4570,6 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
     drawImplementation: function(state, previousRenderLeaf) {
         var error;
         var gl = state.getGraphicContext();
-        if (osg.reportErrorGL === true) {
-            error = gl.getError();
-            osg.checkError(error);
-        }
 
         this.applyCamera(state);
 
@@ -4575,11 +4593,6 @@ osg.RenderStage.prototype = osg.objectInehrit(osg.RenderBin.prototype, {
         }
 
         var previous = osg.RenderBin.prototype.drawImplementation.call(this, state, previousRenderLeaf);
-
-        if (osg.reportErrorGL === true) {
-            error = gl.getError();
-            osg.checkError(error);
-        }
 
         return previous;
     }
@@ -6043,15 +6056,13 @@ osg.State.prototype = {
     },
 
     setIndexArray: function(array) {
+        var gl = this._graphicContext;
         if (this.currentIndexVBO !== array) {
-            if (!array.buffer) {
-                array.init();
-            }
-            this._graphicContext.bindBuffer(array.type, array.buffer);
+            array.bind(gl);
             this.currentIndexVBO = array;
         }
         if (array.isDirty()) {
-            array.compile();
+            array.compile(gl);
         }
     },
 
@@ -6106,29 +6117,32 @@ osg.State.prototype = {
         }
     },
     setVertexAttribArray: function(attrib, array, normalize) {
-        this.vertexAttribMap._disable[ attrib ] = false;
-        if (!array.buffer) {
-            array.init();
-        }
+        var vertexAttribMap = this.vertexAttribMap;
+        vertexAttribMap._disable[ attrib ] = false;
         var gl = this._graphicContext;
+        var binded = false;
         if (array.isDirty()) {
-            gl.bindBuffer(array.type, array.buffer);
-            array.compile();
+            array.bind(gl);
+            array.compile(gl);
+            binded = true;
         }
-        if (this.vertexAttribMap[attrib] !== array) {
 
-            gl.bindBuffer(array.type, array.buffer);
+        if (vertexAttribMap[attrib] !== array) {
 
-            if (! this.vertexAttribMap[attrib]) {
+            if (!binded) {
+                array.bind(gl);
+            }
+
+            if (! vertexAttribMap[attrib]) {
                 gl.enableVertexAttribArray(attrib);
                 
-                if ( this.vertexAttribMap[attrib] === undefined) {
-                    this.vertexAttribMap._keys.push(attrib);
+                if ( vertexAttribMap[attrib] === undefined) {
+                    vertexAttribMap._keys.push(attrib);
                 }
             }
 
-            this.vertexAttribMap[attrib] = array;
-            gl.vertexAttribPointer(attrib, array.itemSize, gl.FLOAT, normalize, 0, 0);
+            vertexAttribMap[attrib] = array;
+            gl.vertexAttribPointer(attrib, array._itemSize, gl.FLOAT, normalize, 0, 0);
         }
     }
 
@@ -6651,8 +6665,7 @@ osg.TextureCubeMap.prototype = osg.objectInehrit(osg.Texture.prototype, {
                 this.init(gl);
             }
             gl.bindTexture(this._textureTarget, this._textureObject);
-            var error = gl.getError();
-            osg.checkError(error);
+
             var internalFormat = this._internalFormat;
 
             var valid = 0;
@@ -9623,11 +9636,11 @@ osgDB.parseSceneGraph_deprecated = function (node)
             var mode = primitives[p].mode;
             if (primitives[p].indices) {
                 var array = primitives[p].indices;
-                array = new osg.BufferArray(gl[array.type], array.elements, array.itemSize );
+                array = new osg.BufferArray(osg.BufferArray[array.type], array.elements, array.itemSize );
                 if (!mode) {
                     mode = gl.TRIANGLES;
                 } else {
-                    mode = gl[mode];
+                    mode = osg.PrimitiveSet[mode];
                 }
                 primitives[p] = new osg.DrawElements(mode, array);
             } else {
@@ -9867,18 +9880,28 @@ WebGLUtils = function() {
  * way.
  */
 if (!window.requestAnimationFrame) {
-  window.requestAnimationFrame = (function() {
-    return window.requestAnimationFrame ||
-           window.webkitRequestAnimationFrame ||
-           window.mozRequestAnimationFrame ||
-           window.oRequestAnimationFrame ||
-           window.msRequestAnimationFrame ||
-           function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
-             window.setTimeout(callback, 1000/60);
-           };
-  })();
+    window.requestAnimationFrame = (function() {
+        return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
+                window.setTimeout(callback, 1000/60);
+            };
+    })();
 }
-//Copyright (c) 2009 The Chromium Authors. All rights reserved.
+
+if (!window.cancelRequestAnimFrame) {
+    window.cancelRequestAnimFrame = ( function() {
+        return window.cancelAnimationFrame          ||
+            window.webkitCancelRequestAnimationFrame    ||
+            window.mozCancelRequestAnimationFrame       ||
+            window.oCancelRequestAnimationFrame     ||
+            window.msCancelRequestAnimationFrame        ||
+            clearTimeout
+    } )();
+}//Copyright (c) 2009 The Chromium Authors. All rights reserved.
 //Use of this source code is governed by a BSD-style license that can be
 //found in the LICENSE file.
 
@@ -10864,10 +10887,28 @@ osgViewer.Viewer = function(canvas, options, error) {
         options = {antialias : true};
     }
 
+    if (osg.SimulateWebGLLostContext) {
+        canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
+        canvas.loseContextInNCalls(osg.SimulateWebGLLostContext);
+    }
+
     gl = WebGLUtils.setupWebGL(canvas, options, error );
+    var self = this;
+    canvas.addEventListener("webglcontextlost", function(event) {
+        self.contextLost();
+        event.preventDefault();
+    }, false);
+
+    canvas.addEventListener("webglcontextrestored", function() {
+        self.contextRestored();
+    }, false);
+
+
     if (osg.ReportWebGLError) {
         gl = WebGLDebugUtils.makeDebugContext(gl);
     }
+
+
     if (gl) {
         this.setGraphicContext(gl);
         osg.init();
@@ -10900,6 +10941,14 @@ osgViewer.Viewer = function(canvas, options, error) {
 
 
 osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
+
+    contextLost: function() {
+        osg.log("webgl context lost");
+        cancelRequestAnimFrame(this._requestID);
+    },
+    contextRestored: function() {
+        osg.log("webgl context restored, but not supported - reload the page");
+    },
 
     init: function() {
         this._done = false;
@@ -11110,6 +11159,9 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._cullVisitor.pushStateSet(camera.getStateSet());
         this._cullVisitor.pushProjectionMatrix(camera.getProjectionMatrix());
 
+        // update bound
+        var bs = camera.getBound();
+
         var identity = osg.Matrix.makeIdentity([]);
         this._cullVisitor.pushModelviewMatrix(identity);
 
@@ -11221,11 +11273,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
     done: function() { return this._done; },
 
     run: function() {
-        var that = this;
+        var self = this;
         var render = function() {
-            if (!that.done()) {
-                window.requestAnimationFrame(render, that.canvas);
-                that.frame();
+            if (!self.done()) {
+                self._requestID = window.requestAnimationFrame(render, self.canvas);
+                self.frame();
             }
         };
         render();
