@@ -283,6 +283,9 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._cullVisitor.pushStateSet(camera.getStateSet());
         this._cullVisitor.pushProjectionMatrix(camera.getProjectionMatrix());
 
+        // update bound
+        var bs = camera.getBound();
+
         var identity = osg.Matrix.makeIdentity([]);
         this._cullVisitor.pushModelviewMatrix(identity);
 

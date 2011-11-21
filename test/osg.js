@@ -132,36 +132,6 @@ test("osg.BoundingSphere", function() {
     var center_is_equal_bs_01_1 = check_near(c_bs_01_1,bs_01._center,0.0001) & check_near(r_bs_01_1,bs_01._radius,0.0001)
     ok(center_is_equal_bs_01_1 , "Expanding by BoundingSphere ->  bounding sphere test 2");
 
-    (function() {
-        var bb = new osg.BoundingBox();
-        var bb0 = [-.5,0,-2];
-        var bb1 = [1,0,-1];
-        var bb2 = [0,1,-.5];
-        var bb3 = [1,2,-.8];
-        bb.expandByVec3(bb0);
-        bb.expandByVec3(bb1);
-        bb.expandByVec3(bb2);
-        bb.expandByVec3(bb3);
-
-        var bb_test_ok = ( bb._max[0] == 1 &&  bb._max[1] == 2 &&  bb._max[2] == -0.5 &&  bb._min[0] == -.5 &&  bb._min[1] == 0 && bb._min[2] == -2);
-        ok(bb_test_ok , "Expanding by BoundingBox ->  bounding box test");
-
-
-        var o = osgDB.parseSceneGraph(getBoxScene());
-        o.getBound();
-        var bb_test_scene_graph_test = ( check_near(o.boundingSphere.radius(),2.41421,0.00001) );
-        ok(bb_test_scene_graph_test , "Box.js tested  ->  bounding sphere scene graph test");
-    })();
-
-    (function() {
-        var bb = new osg.BoundingBox();
-        bb._min = [1,2,3];
-        bb._max = [4,5,6];
-
-        ok(check_near(bb.corner(0), [1,2,3]) , "Box corner 0");
-        ok(check_near(bb.corner(7), [4,5,6]) , "Box corner 0");
-    })();
-
 
     // test case with camera and absolute transform
     var main = new osg.Node();
@@ -193,6 +163,37 @@ test("osg.BoundingSphere", function() {
 
 });
 
+test("osg.BoundingBox", function() {
+    (function() {
+        var bb = new osg.BoundingBox();
+        var bb0 = [-.5,0,-2];
+        var bb1 = [1,0,-1];
+        var bb2 = [0,1,-.5];
+        var bb3 = [1,2,-.8];
+        bb.expandByVec3(bb0);
+        bb.expandByVec3(bb1);
+        bb.expandByVec3(bb2);
+        bb.expandByVec3(bb3);
+
+        var bb_test_ok = ( bb._max[0] == 1 &&  bb._max[1] == 2 &&  bb._max[2] == -0.5 &&  bb._min[0] == -.5 &&  bb._min[1] == 0 && bb._min[2] == -2);
+        ok(bb_test_ok , "Expanding by BoundingBox ->  bounding box test");
+
+
+        var o = osgDB.parseSceneGraph(getBoxScene());
+        o.getBound();
+        var bb_test_scene_graph_test = ( check_near(o.boundingSphere.radius(),2.41421,0.00001) );
+        ok(bb_test_scene_graph_test , "Box.js tested  ->  bounding sphere scene graph test");
+    })();
+
+    (function() {
+        var bb = new osg.BoundingBox();
+        bb._min = [1,2,3];
+        bb._max = [4,5,6];
+
+        ok(check_near(bb.corner(0), [1,2,3]) , "Box corner 0");
+        ok(check_near(bb.corner(7), [4,5,6]) , "Box corner 0");
+    })();
+});
 
 test("osg.Quat.init", function() {
     var q = [];
