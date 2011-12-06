@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit ace1c39b65cbd820079ac1e172f9bc615310a2e0 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit baf30ff234f4c60081ec54856f92edd6fc8403f6 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -11589,7 +11589,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this.distance = 25;
         this.target = [ 0,0, 0];
         this.eye = [ 0, this.distance, 0];
-        this.rotation = osg.Matrix.mult(osg.Matrix.makeRotate( Math.PI, 0,0,1), osg.Matrix.makeRotate( -Math.PI/10.0, 1,0,0), []); // osg.Quat.makeIdentity();
+        this.rotation = osg.Matrix.mult(osg.Matrix.makeRotate( Math.PI, 0,0,1, []), osg.Matrix.makeRotate( -Math.PI/10.0, 1,0,0, []), []); // osg.Quat.makeIdentity();
         this.up = [0, 0, 1];
         this.time = 0.0;
         this.dx = 0.0;
@@ -11612,6 +11612,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
     computeHomePosition: function() {
         if (this.node !== undefined) {
+            //this.reset();
             var bs = this.node.getBound();
             this.setDistance(bs.radius()*1.5);
             this.setTarget(bs.center());
@@ -11693,10 +11694,10 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
 
     computeRotation: function(dx, dy) {
-        var of = osg.Matrix.makeRotate(dx / 10.0, 0,0,1);
+        var of = osg.Matrix.makeRotate(dx / 10.0, 0,0,1, []);
         var r = osg.Matrix.mult(this.rotation, of, []);
 
-        of = osg.Matrix.makeRotate(dy / 10.0, 1,0,0);
+        of = osg.Matrix.makeRotate(dy / 10.0, 1,0,0, []);
         var r2 = osg.Matrix.mult(of, r, []);
 
         // test that the eye is not too up and not too down to not kill
@@ -11939,9 +11940,12 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         this.angleVertical += dy*0.01;
         this.angleHorizontal -= dx*0.01;
 
-        var first = osg.Matrix.makeRotate(this.angleVertical, 1, 0, 0);
-        var second = osg.Matrix.makeRotate(this.angleHorizontal, 0, 0, 1);
-        var rotMat = osg.Matrix.mult(second, first, []);
+        var first = [];
+        var second = [];
+        var rotMat = [];
+        osg.Matrix.makeRotate(this.angleVertical, 1, 0, 0, first);
+        osg.Matrix.makeRotate(this.angleHorizontal, 0, 0, 1, second);
+        osg.Matrix.mult(second, first, rotMat);
 
         this.direction = osg.Matrix.transformVec3(rotMat, [0, 1, 0], []);
         this.up = osg.Matrix.transformVec3(rotMat, [0, 0, 1], [] );
@@ -12242,8 +12246,8 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
         var drawArrayPrimitive = entry.DrawArray || entry.DrawArrays;
         if (drawArrayPrimitive) {
             var mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
-            var first = drawArrayPrimitive.First || drawArrayPrimitive.first;
-            var count = drawArrayPrimitive.Count || drawArrayPrimitive.count;
+            var first = drawArrayPrimitive.First !== undefined ? drawArrayPrimitive.First : drawArrayPrimitive.first;
+            var count = drawArrayPrimitive.Count !== undefined ? drawArrayPrimitive.Count : drawArrayPrimitive.count;
             var drawArray = new osg.DrawArrays(osg.PrimitiveSet[mode], first, count);
             node.getPrimitives().push(drawArray);
         }
