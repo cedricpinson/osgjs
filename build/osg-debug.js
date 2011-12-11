@@ -1,4 +1,4 @@
-// osg-debug-0.0.7.js commit baf30ff234f4c60081ec54856f92edd6fc8403f6 - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.7.js commit a85ab499fad67966cf4c7e6a870a68a4be580629 - http://github.com/cedricpinson/osgjs
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
@@ -10928,7 +10928,7 @@ osgViewer.Viewer = function(canvas, options, error) {
             if(options.mouseEventNode){
                 this._mouseEventNode = options.mouseEventNode;
             }
-            if(options.mouseWheelEventNode){
+            if(options.keyboardEventNode){
                 this._keyboardEventNode = options.keyboardEventNode;
             }
         }
