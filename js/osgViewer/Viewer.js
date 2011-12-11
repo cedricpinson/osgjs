@@ -52,7 +52,7 @@ osgViewer.Viewer = function(canvas, options, error) {
             if(options.mouseEventNode){
                 this._mouseEventNode = options.mouseEventNode;
             }
-            if(options.mouseWheelEventNode){
+            if(options.keyboardEventNode){
                 this._keyboardEventNode = options.keyboardEventNode;
             }
         }
