@@ -1,3 +1,5 @@
+/** -*- compile-command: "jslint-cli Geometry.js" -*- */
+
 /** 
  * Geometry manage array and primitives to draw a geometry.
  * @class Geometry
@@ -13,6 +15,20 @@ osg.Geometry = function () {
 
 /** @lends osg.Geometry.prototype */
 osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
+    releaseGLObjects: function(gl) {
+        var i;
+        for (i in this.attributes) {
+            geom.attributes[i].releaseGLObjects(gl);
+        }
+        for (var j = 0, l = this.primitives.length; j < l; j++) {
+            var prim = this.primitives[j];
+            if (prim.getIndices !== undefined) {
+                if (prim.getIndices() !== undefined && prim.getIndices() !== null) {
+                    prim.indicies.releaseGLObjects(gl);
+                }
+            }
+        }
+    },
     dirtyBound: function() {
         if (this.boundingBoxComputed === true) {
             this.boundingBoxComputed = false;

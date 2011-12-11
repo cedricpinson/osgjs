@@ -1,3 +1,5 @@
+/** -*- compile-command: "jslint-cli BufferArray.js" -*- */
+
 /** 
  * BufferArray manage vertex / normal / ... array used by webgl.
  * @class BufferArray
@@ -28,6 +30,12 @@ osg.BufferArray.ARRAY_BUFFER = 0x8892;
 
 /** @lends osg.BufferArray.prototype */
 osg.BufferArray.prototype = {
+    releaseGLObjects: function(gl) {
+        if (this._buffer !== undefined && this._buffer !== null) {
+            gl.deleteBuffer(this._buffer);
+        }
+        this._buffer = undefined;
+    },
     bind: function(gl) {
         var type = this._type;
         var buffer = this._buffer;

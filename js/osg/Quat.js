@@ -9,6 +9,7 @@ osg.Quat = {
         return d;
     },
     makeIdentity: function(element) { return osg.Quat.init(element); },
+    zeroRotation: function(element) { return osg.Quat.init(element); },
 
     init: function(element) {
         element[0] = 0;
