@@ -54,7 +54,7 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
     },
     getModelMatrix: function() {
         if (this.matrix.length ===0 ) {
-            return osg.Matrix.makeIdentity();
+            return osg.Matrix.makeIdentity([]);
         }
         return this.matrix[this.matrix.length-1];
     },

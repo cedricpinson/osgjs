@@ -22,7 +22,7 @@ osg.Transform.prototype = osg.objectInehrit(osg.Node.prototype, {
         if (!bsphere.valid()) {
             return bsphere;
         }
-        var matrix = osg.Matrix.makeIdentity();
+        var matrix = osg.Matrix.makeIdentity([]);
         this.computeLocalToWorldMatrix(matrix);
 
         var xdash = osg.Vec3.copy(bsphere._center, []);
@@ -70,7 +70,7 @@ osg.computeLocalToWorld = function (nodePath, ignoreCameras) {
     if (ignoreCamera === undefined) {
         ignoreCamera = true;
     }
-    var matrix = osg.Matrix.makeIdentity();
+    var matrix = osg.Matrix.makeIdentity([]);
 
     var j = 0;
     if (ignoreCamera) {

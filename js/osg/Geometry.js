@@ -18,13 +18,13 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
     releaseGLObjects: function(gl) {
         var i;
         for (i in this.attributes) {
-            geom.attributes[i].releaseGLObjects(gl);
+            this.attributes[i].releaseGLObjects(gl);
         }
         for (var j = 0, l = this.primitives.length; j < l; j++) {
             var prim = this.primitives[j];
             if (prim.getIndices !== undefined) {
                 if (prim.getIndices() !== undefined && prim.getIndices() !== null) {
-                    prim.indicies.releaseGLObjects(gl);
+                    prim.indices.releaseGLObjects(gl);
                 }
             }
         }

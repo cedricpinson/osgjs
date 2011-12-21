@@ -49,8 +49,8 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                                                          "linearAttenuation": osg.Uniform.createFloat1( 0, this.getParameterName('linearAttenuation')),
                                                          "quadraticAttenuation": osg.Uniform.createFloat1( 0, this.getParameterName('quadraticAttenuation')),
                                                          "enable": osg.Uniform.createInt1( 0, this.getParameterName('enable')),
-                                                         "matrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('matrix')),
-                                                         "invMatrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('invMatrix'))
+                                                         "matrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), this.getParameterName('matrix')),
+                                                         "invMatrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), this.getParameterName('invMatrix'))
                                                        };
 
             var uniformKeys = [];

@@ -199,7 +199,7 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
         for(var i = 0, l = collected.nodePaths.length; i < l; i++) {
             var np = collected.nodePaths[i];
             if (np.length === 0) {
-                matrixList.push(osg.Matrix.makeIdentity());
+                matrixList.push(osg.Matrix.makeIdentity([]));
             } else {
                 matrixList.push(osg.computeLocalToWorld(np));
             }

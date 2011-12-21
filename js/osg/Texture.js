@@ -90,7 +90,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     getWidth: function() { return this._textureWidth; },
     getHeight: function() { return this._textureHeight; },
     releaseGLObjects: function(gl) {
-        if (this._textureObject !== null) {
+        if (this._textureObject !== undefined && this._textureObject !== null) {
             gl.deleteTexture(this._textureObject);
             this._textureObject = null;
             this._image = undefined;

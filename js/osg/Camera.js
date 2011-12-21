@@ -11,8 +11,8 @@ osg.Camera = function () {
     this.setClearColor([0, 0, 0, 1.0]);
     this.setClearDepth(1.0);
     this.setClearMask(osg.Camera.COLOR_BUFFER_BIT | osg.Camera.DEPTH_BUFFER_BIT);
-    this.setViewMatrix(osg.Matrix.makeIdentity());
-    this.setProjectionMatrix(osg.Matrix.makeIdentity());
+    this.setViewMatrix(osg.Matrix.makeIdentity([]));
+    this.setProjectionMatrix(osg.Matrix.makeIdentity([]));
     this.renderOrder = osg.Camera.NESTED_RENDER;
     this.renderOrderNum = 0;
 };

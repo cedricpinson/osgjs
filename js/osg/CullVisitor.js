@@ -221,7 +221,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
     _getReservedMatrix: function() {
         var m = this._reserveMatrixStack[this._reserveMatrixStack.current++];
         if (this._reserveMatrixStack.current === this._reserveMatrixStack.length) {
-            this._reserveMatrixStack.push(osg.Matrix.makeIdentity());
+            this._reserveMatrixStack.push(osg.Matrix.makeIdentity([]));
         }
         return m;
     },
