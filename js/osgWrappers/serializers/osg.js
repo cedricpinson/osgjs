@@ -225,7 +225,7 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
     for (var i = 0, l = jsonObj.PrimitiveSetList.length; i < l; i++) {
         var entry = jsonObj.PrimitiveSetList[i];
         
-        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || entry.DrawElementUInt || undefined;
+        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || entry.DrawElementUInt || entry.DrawElementsUShort || entry.DrawElementsUByte || entry.DrawElementsUInt || undefined;
         if ( drawElementPrimitive ) {
             var jsonArray = drawElementPrimitive.Indices;
             var mode = drawElementPrimitive.Mode;
@@ -241,13 +241,22 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
             node.getPrimitiveSetList().push(drawElements);
         }
 
-        var drawArrayPrimitive = entry.DrawArray || undefined;
+        var drawArrayPrimitive = entry.DrawArray || entry.DrawArrays;
         if (drawArrayPrimitive) {
             var mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
             var first = drawArrayPrimitive.First || drawArrayPrimitive.first;
             var count = drawArrayPrimitive.Count || drawArrayPrimitive.count;
             var drawArray = new osg.DrawArrays(osg.PrimitiveSet[mode], first, count);
             node.getPrimitives().push(drawArray);
+        }
+
+        var drawArrayLengthsPrimitive = entry.DrawArrayLengths || undefined;
+        if (drawArrayLengthsPrimitive) {
+            var mode = drawArrayLengthsPrimitive.Mode;
+            var first = drawArrayLengthsPrimitive.First;
+            var array = drawArrayLengthsPrimitive.ArrayLengths;
+            var drawArrayLengths =  new osg.DrawArrayLengths(osg.PrimitiveSet[mode], first, array);
+            node.getPrimitives().push(drawArrayLengths);
         }
     }
     for (var key in jsonObj.VertexAttributeList) {

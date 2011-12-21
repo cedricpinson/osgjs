@@ -1248,9 +1248,7 @@ test("osg.Texture", function() {
     };
 });
 
-
 test("osg.TextureCubeMap", function() {
-    stop();
     
     var ready = undefined;
     var loadingComplete = function() {
@@ -1294,9 +1292,7 @@ test("osg.TextureCubeMap", function() {
     ok(texture.getImage(osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_Z) !== undefined, "Check positive z");
     ok(texture.getImage(osg.Texture.TEXTURE_CUBE_MAP_NEGATIVE_Z) !== undefined, "Check negative z");
 
-
 });
-
 
 test("osg.MatrixTransform", function() {
 

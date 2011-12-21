@@ -90,9 +90,9 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
         return this.boundingBox;
     },
     computeBoundingBox: function(boundingBox) {
-	var att = this.getAttributes();
-	if ( att.Vertex.itemSize > 2 ) {
-	    vertexes = att.Vertex.getElements();
+	var vertexArray = this.getAttributes().Vertex;
+	if ( vertexArray && vertexArray.itemSize > 2 ) {
+	    vertexes = vertexArray.getElements();
 	    for (var idx = 0, l = vertexes.length; idx < l; idx+=3) {
 		var v=[vertexes[idx],vertexes[idx+1],vertexes[idx+2]];
 		boundingBox.expandByVec3(v);
