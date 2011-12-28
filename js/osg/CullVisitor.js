@@ -163,8 +163,10 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         this._currentRenderBin = rg;
     },
     reset: function () {
-        this._modelviewMatrixStack.length = 0;
-        this._projectionMatrixStack.length = 0;
+        //this._modelviewMatrixStack.length = 0;
+        this._modelviewMatrixStack = [];
+        //this._projectionMatrixStack.length = 0;
+        this._projectionMatrixStack = [];
         this._reserveMatrixStack.current = 0;
         this._reserveLeafStack.current = 0;
 
