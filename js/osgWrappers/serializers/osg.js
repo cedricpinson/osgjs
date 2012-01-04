@@ -45,8 +45,8 @@ osgDB.ObjectWrapper.serializers.osg.Node = function(jsonObj, node) {
     osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, node);
 
     if (jsonObj.UpdateCallbacks) {
-        for (var i = 0, l = jsonObj.UpdateCallbacks.length; i < l; i++) {
-            var cb = osgDB.ObjectWrapper.readObject(jsonObj.UpdateCallbacks[i]);
+        for (var j = 0, l = jsonObj.UpdateCallbacks.length; j < l; j++) {
+            var cb = osgDB.ObjectWrapper.readObject(jsonObj.UpdateCallbacks[j]);
             if (cb) {
                 node.addUpdateCallback(cb);
             }
@@ -58,8 +58,11 @@ osgDB.ObjectWrapper.serializers.osg.Node = function(jsonObj, node) {
     }
     
     if (jsonObj.Children) {
-        for (var i = 0, l = jsonObj.Children.length; i < l; i++) {
-            node.addChild(osgDB.ObjectWrapper.readObject(jsonObj.Children[i]));
+        for (var i = 0, k = jsonObj.Children.length; i < k; i++) {
+            var obj = osgDB.ObjectWrapper.readObject(jsonObj.Children[i]);
+            if (obj) {
+                node.addChild(obj);
+            }
         }
     }
 };
