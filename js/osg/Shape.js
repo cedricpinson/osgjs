@@ -424,7 +424,7 @@ osg.createAxisGeometry = function(size) {
                     "void main(void) {",
                     "gl_Position = ftransform();",
                     "FragColor = Color;",
-                    "}",
+                    "}"
                 ].join('\n');
 
                 var fragmentshader = [
@@ -435,7 +435,7 @@ osg.createAxisGeometry = function(size) {
 
                     "void main(void) {",
                     "gl_FragColor = FragColor;",
-                    "}",
+                    "}"
                 ].join('\n');
 
                 var program = new osg.Program(new osg.Shader(gl.VERTEX_SHADER, vertexshader),

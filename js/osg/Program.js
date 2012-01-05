@@ -51,7 +51,8 @@ osg.Program.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                 !gl.isContextLost()) {
                 osg.log("can't link program\n" + "vertex shader:\n" + this.vertex.text +  "\n fragment shader:\n" + this.fragment.text);
                 osg.log(gl.getProgramInfoLog(this.program));
-                debugger;
+                this.setDirty(false);
+                //debugger;
                 return null;
             }
 

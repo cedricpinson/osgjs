@@ -64,21 +64,20 @@ osg.BoundingBox.prototype = {
     corner: function(pos) {
         ret = [0.0,0.0,0.0];
         if ( pos & 1 ) {
-	    ret[0]=this._max[0];
+            ret[0]=this._max[0];
 	} else {
-	    ret[0]=this._min[0];
+            ret[0]=this._min[0];
 	}
         if ( pos & 2 ) {
-	    ret[1]=this._max[1];
+            ret[1]=this._max[1];
 	} else {
-	    ret[1]=this._min[1];
+            ret[1]=this._min[1];
 	}
         if ( pos & 4 ) {
-	    ret[2]=this._max[2];
+            ret[2]=this._max[2];
 	} else {
-	    ret[2]=this._min[2];
+            ret[2]=this._min[2];
 	}
         return ret;
     }
-
 };

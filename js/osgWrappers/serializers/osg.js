@@ -142,10 +142,7 @@ osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
 
 osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
     var check = function(o) {
-//        if (o.MagFilter && o.MinFilter && o.WrapT && o.WrapS) {
-            return true;
-//        }
-        return false;
+        return true;
     };
     if (!check(jsonObj)) {
         return;

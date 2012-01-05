@@ -20,7 +20,6 @@
 
 var Stats = {};
 
-
 Stats.Stats = function(canvas) {
     this.layers = [];
     this.last_update = undefined;
@@ -69,10 +68,10 @@ Stats.Stats.prototype = {
 
         for (var i = 0, l = this.layers.length; i < l; i++) {
             var layer = this.layers[i];
-            var c = this.canvas;
+            c = this.canvas;
             var value = layer.getValue(t);
-            var width = c.width;
-            var height = c.height;
+            width = c.width;
+            height = c.height;
 
             ctx.lineWidth = 1.0;
             ctx.strokeStyle = layer.color;

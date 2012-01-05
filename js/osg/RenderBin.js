@@ -21,20 +21,20 @@ osg.RenderBin.BinPrototypes = {
         var rb = new osg.RenderBin();
         rb._sortMode = osg.RenderBin.SORT_BACK_TO_FRONT;
         return rb;
-    },
+    }
 };
 
 osg.RenderBin.prototype = {
     _createRenderBin: function(binName) {
         if (binName === undefined || osg.RenderBin.BinPrototypes[binName] === undefined) {
-            return osg.RenderBin.BinPrototypes['RenderBin']();
+            return osg.RenderBin.BinPrototypes.RenderBin();
         }
         return osg.RenderBin.BinPrototypes[binName]();
     },
     getStateGraphList: function() { return this.stateGraphList; },
     copyLeavesFromStateGraphListToRenderLeafList: function() {
 
-        this._leafs.length = 0;
+        this._leafs.splice(0, this._leafs.length);
         var detectedNaN = false;
 
         for (var i = 0, l = this.stateGraphList.length; i < l; i++) {
@@ -53,7 +53,7 @@ osg.RenderBin.prototype = {
             osg.debug("warning: RenderBin::copyLeavesFromStateGraphListToRenderLeafList() detected NaN depth values, database may be corrupted.");
         }        
         // empty the render graph list to prevent it being drawn along side the render leaf list (see drawImplementation.)
-        this.stateGraphList.length = 0;;
+        this.stateGraphList.splice(0, this.stateGraphList.length);
     },
     
     sortBackToFront: function() {
@@ -145,9 +145,10 @@ osg.RenderBin.prototype = {
         var current = 0;
         var end = binsArray.length;
 
+        var bin;
         // draw pre bins
         for (; current < end; current++) {
-            var bin = binsArray[current];
+            bin = binsArray[current];
             if (bin.getBinNumber() > 0) {
                 break;
             }
@@ -159,7 +160,7 @@ osg.RenderBin.prototype = {
 
         // draw post bins
         for (; current < end; current++) {
-            var bin = binsArray[current];
+            bin = binsArray[current];
             previous = bin.drawImplementation(state, previous);
         }
         return previous;
@@ -184,16 +185,19 @@ osg.RenderBin.prototype = {
             osg.StateGraph.prototype.moveToRootStateGraph(state, previousRenderLeaf.parent);
         }
 
+        var leaf, push;
+        var prev_rg, prev_rg_parent, rg;
+
         // draw fine grained ordering.
         for (var d = 0, dl = leafs.length; d < dl; d++) {
-            var leaf = leafs[d];
-            var push = false;
+            leaf = leafs[d];
+            push = false;
             if (previousLeaf !== undefined) {
 
                 // apply state if required.
-                var prev_rg = previousLeaf.parent;
-                var prev_rg_parent = prev_rg.parent;
-                var rg = leaf.parent;
+                prev_rg = previousLeaf.parent;
+                prev_rg_parent = prev_rg.parent;
+                rg = leaf.parent;
                 if (prev_rg_parent !== rg.parent)
                 {
                     rg.moveStateGraph(state, prev_rg_parent, rg.parent);
@@ -263,14 +267,14 @@ osg.RenderBin.prototype = {
             var sg = stateList[i];
             for (var j = 0, ll = sg.leafs.length; j < ll; j++) {
 
-                var leaf = sg.leafs[j];
-                var push = false;
+                leaf = sg.leafs[j];
+                push = false;
                 if (previousLeaf !== undefined) {
 
                     // apply state if required.
-                    var prev_rg = previousLeaf.parent;
-                    var prev_rg_parent = prev_rg.parent;
-                    var rg = leaf.parent;
+                    prev_rg = previousLeaf.parent;
+                    prev_rg_parent = prev_rg.parent;
+                    rg = leaf.parent;
                     if (prev_rg_parent !== rg.parent)
                     {
                         rg.moveStateGraph(state, prev_rg_parent, rg.parent);
