@@ -44,9 +44,9 @@ osgUtil.TriangleIntersect.prototype = {
             if (primitive.getIndices !== undefined) {
                 vertexes = node.getAttributes().Vertex.getElements();
                 var indexes = primitive.indices.getElements();
+                lastIndex = primitive.getCount();
                 switch(primitive.getMode()) {
                 case gl.TRIANGLES:
-                    lastIndex = primitive.getCount();
                     for ( idx = primitive.getFirst(); idx < lastIndex; idx+= 3) {
                         v0 = [];
                         v1 = [];
@@ -64,45 +64,95 @@ osgUtil.TriangleIntersect.prototype = {
                     }
                     break;
                 case gl.TRIANGLE_STRIP:
-                    if (console) {
-                        console.log("TriangleIntersect does not support TRIANGLE_STRIP");
+                    for ( idx = primitive.getFirst(); idx < lastIndex; idx+= 1) {
+                        v0 = [];
+                        v1 = [];
+                        v2 = [];
+                        v0[0] = vertexes[indexes[idx]*3];
+                        v0[1] = vertexes[indexes[idx]*3 +1];
+                        v0[2] = vertexes[indexes[idx]*3 +2];
+                        v1[0] = vertexes[indexes[idx+1]*3];
+                        v1[1] = vertexes[indexes[idx+1]*3 +1];
+                        v1[2] = vertexes[indexes[idx+1]*3 +2];
+                        v2[0] = vertexes[indexes[idx+2]*3];
+                        v2[1] = vertexes[indexes[idx+2]*3 +1];
+                        v2[2] = vertexes[indexes[idx+2]*3 +2];
+                        this.intersect(v0, v1, v2);
                     }
                     break;
                 case gl.TRIANGLE_FAN:
-                    if (console) {
-                        console.log("TriangleIntersect does not support TRIANGLE_FAN");
+                    var id = primitive.getFirst();
+                    v0 = [];
+                    v0[0] = vertexes[indexes[id]*3];
+                    v0[1] = vertexes[indexes[id]*3 +1];
+                    v0[2] = vertexes[indexes[id]*3 +2];
+                    for ( idx = id+1; idx < lastIndex; idx+= 1) {
+                        v1 = [];
+                        v2 = [];
+                        v1[0] = vertexes[indexes[idx+1]*3];
+                        v1[1] = vertexes[indexes[idx+1]*3 +1];
+                        v1[2] = vertexes[indexes[idx+1]*3 +2];
+                        v2[0] = vertexes[indexes[idx+2]*3];
+                        v2[1] = vertexes[indexes[idx+2]*3 +1];
+                        v2[2] = vertexes[indexes[idx+2]*3 +2];
+                        this.intersect(v0, v1, v2);
                     }
                     break;
                 }
             } else { // draw array
                 vertexes = node.getAttributes().Vertex.getElements();
+                lastIndex = primitive.getCount();
                 switch(primitive.getMode()) {
                 case gl.TRIANGLES:
-                    lastIndex = primitive.getCount();
-                    for (idx = primitive.getFirst(); idx < lastIndex; ) {
+                    for (idx = primitive.getFirst(); idx < lastIndex; idx+= 9) {
                         v0 = [];
                         v1 = [];
                         v2 = [];
-                        v0[0] = vertexes[idx++];
-                        v0[1] = vertexes[idx++];
-                        v0[2] = vertexes[idx++];
-                        v1[0] = vertexes[idx++];
-                        v1[1] = vertexes[idx++];
-                        v1[2] = vertexes[idx++];
-                        v2[0] = vertexes[idx++];
-                        v2[1] = vertexes[idx++];
-                        v2[2] = vertexes[idx++];
+                        v0[0] = vertexes[idx];
+                        v0[1] = vertexes[idx+1];
+                        v0[2] = vertexes[idx+2];
+                        v1[0] = vertexes[idx+3];
+                        v1[1] = vertexes[idx+4];
+                        v1[2] = vertexes[idx+5];
+                        v2[0] = vertexes[idx+6];
+                        v2[1] = vertexes[idx+7];
+                        v2[2] = vertexes[idx+8];
                         this.intersect(v0, v1, v2);
                     }
                     break;
                 case gl.TRIANGLE_STRIP:
-                    if (console) {
-                        console.log("TriangleIntersect does not support TRIANGLE_STRIP");
+                    for (idx = primitive.getFirst(); idx < lastIndex; idx+= 3) {
+                        v0 = [];
+                        v1 = [];
+                        v2 = [];
+                        v0[0] = vertexes[idx];
+                        v0[1] = vertexes[idx+1];
+                        v0[2] = vertexes[idx+2];
+                        v1[0] = vertexes[idx+3];
+                        v1[1] = vertexes[idx+4];
+                        v1[2] = vertexes[idx+5];
+                        v2[0] = vertexes[idx+6];
+                        v2[1] = vertexes[idx+7];
+                        v2[2] = vertexes[idx+8];
+                        this.intersect(v0, v1, v2);
                     }
                     break;
                 case gl.TRIANGLE_FAN:
-                    if (console) {
-                        console.log("TriangleIntersect does not support TRIANGLE_FAN");
+                    var id = primitive.getFirst();
+                    v0 = [];
+                    v0[0] = vertexes[id];
+                    v0[1] = vertexes[id+1];
+                    v0[2] = vertexes[id+2];
+                    for (idx = id+3; idx < lastIndex; idx+= 3) {
+                        v1 = [];
+                        v2 = [];                        
+                        v1[0] = vertexes[idx];
+                        v1[1] = vertexes[idx+1];
+                        v1[2] = vertexes[idx+2];
+                        v2[0] = vertexes[idx+3];
+                        v2[1] = vertexes[idx+4];
+                        v2[2] = vertexes[idx+5];
+                        this.intersect(v0, v1, v2);
                     }
                     break;
                 }
