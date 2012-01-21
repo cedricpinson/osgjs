@@ -18,7 +18,7 @@ osg.BufferArray = function (type, elements, itemSize) {
     }
     this._type = type;
 
-    if (this._type === gl.ELEMENT_ARRAY_BUFFER) {
+    if (this._type === osg.BufferArray.ELEMENT_ARRAY_BUFFER) {
         this._elements = new osg.Uint16Array(elements);
     } else {
         this._elements = new osg.Float32Array(elements);
