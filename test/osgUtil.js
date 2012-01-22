@@ -59,6 +59,103 @@ test("osgUtil_TriangleIntersect", function() {
         checkPrimitive(quad, "TriangleFan indexed");
     })();
 
+
+    (function() {
+        var cornerx = 0, cornery = 0, cornerz = 0;
+        var wx = 1, wy = 0, wz = 0;
+        var hx = 0, hy = 1, hz = 0;
+        var quad = new osg.Geometry();
+
+        var vertexes = [];
+        vertexes[0] = cornerx + hx;
+        vertexes[1] = cornery + hy;
+        vertexes[2] = cornerz + hz;
+
+        vertexes[3] = cornerx;
+        vertexes[4] = cornery;
+        vertexes[5] = cornerz;
+
+        vertexes[6] = cornerx + wx;
+        vertexes[7] = cornery + wy;
+        vertexes[8] = cornerz + wz;
+
+        vertexes[9] = cornerx + hx;
+        vertexes[10] = cornery + hy;
+        vertexes[11] = cornerz + hz;
+
+        vertexes[12] = cornerx + wx;
+        vertexes[13] = cornery + wy;
+        vertexes[14] = cornerz + wz;
+
+        vertexes[15] =  cornerx + wx + hx;
+        vertexes[16] = cornery + wy + hy;
+        vertexes[17] = cornerz + wz + hz;
+
+        quad.getAttributes().Vertex = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, vertexes, 3 );
+        var primitive = new osg.DrawArrays(osg.PrimitiveSet.TRIANGLES, 0, 6);
+        quad.getPrimitives().push(primitive);
+        checkPrimitive(quad, "Triangles not indexed");
+    })();
+
+
+    (function() {
+        var cornerx = 0, cornery = 0, cornerz = 0;
+        var wx = 1, wy = 0, wz = 0;
+        var hx = 0, hy = 1, hz = 0;
+        var quad = new osg.Geometry();
+
+        var vertexes = [];
+        vertexes[0] = cornerx + hx;
+        vertexes[1] = cornery + hy;
+        vertexes[2] = cornerz + hz;
+
+        vertexes[3] = cornerx;
+        vertexes[4] = cornery;
+        vertexes[5] = cornerz;
+
+        vertexes[6] =  cornerx + wx + hx;
+        vertexes[7] = cornery + wy + hy;
+        vertexes[8] = cornerz + wz + hz;
+
+        vertexes[9] = cornerx + wx;
+        vertexes[10] = cornery + wy;
+        vertexes[11] = cornerz + wz;
+
+        quad.getAttributes().Vertex = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, vertexes, 3 );
+        var primitive = new osg.DrawArrays(osg.PrimitiveSet.TRIANGLE_STRIP, 0, 4);
+        quad.getPrimitives().push(primitive);
+        checkPrimitive(quad, "TriangleStrip not indexed");
+    })();
+
+    (function() {
+        var cornerx = 0, cornery = 0, cornerz = 0;
+        var wx = 1, wy = 0, wz = 0;
+        var hx = 0, hy = 1, hz = 0;
+        var quad = new osg.Geometry();
+
+        var vertexes = [];
+        vertexes[0] = cornerx + hx;
+        vertexes[1] = cornery + hy;
+        vertexes[2] = cornerz + hz;
+
+        vertexes[3] = cornerx;
+        vertexes[4] = cornery;
+        vertexes[5] = cornerz;
+
+        vertexes[6] = cornerx + wx;
+        vertexes[7] = cornery + wy;
+        vertexes[8] = cornerz + wz;
+
+        vertexes[9] =  cornerx + wx + hx;
+        vertexes[10] = cornery + wy + hy;
+        vertexes[11] = cornerz + wz + hz;
+
+        quad.getAttributes().Vertex = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, vertexes, 3 );
+        var primitive = new osg.DrawArrays(osg.PrimitiveSet.TRIANGLE_FAN, 0, 4);
+        quad.getPrimitives().push(primitive);
+        checkPrimitive(quad, "TriangleFan not indexed");
+    })();
+
 });
 
 

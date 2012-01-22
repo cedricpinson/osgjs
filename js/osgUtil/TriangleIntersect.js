@@ -31,23 +31,24 @@ osgUtil.TriangleIntersect.prototype = {
         osg.Vec3.mult(this.dir, l, this.dir);
     },
 
-    applyDrawElementsTriangles: function(vertexes, count, indexes) {
+    applyDrawElementsTriangles: function(count, vertexes, indexes) {
         var v0 = [];
         var v1 = [];
         var v2 = [];
-
+        
+        var idx0, idx1, idx2;
         for ( var idx = 0; idx < count; idx+= 3) {
-            var idx0 = indexes[idx]*3;
+            idx0 = indexes[idx]*3;
             v0[0] = vertexes[idx0];
             v0[1] = vertexes[idx0+1];
             v0[2] = vertexes[idx0+2];
 
-            var idx1 = indexes[idx+1]*3;
+            idx1 = indexes[idx+1]*3;
             v1[0] = vertexes[idx1];
             v1[1] = vertexes[idx1 +1];
             v1[2] = vertexes[idx1 +2];
 
-            var idx2 = indexes[idx+2]*3;
+            idx2 = indexes[idx+2]*3;
             v2[0] = vertexes[idx2];
             v2[1] = vertexes[idx2 +1];
             v2[2] = vertexes[idx2 +2];
@@ -55,13 +56,13 @@ osgUtil.TriangleIntersect.prototype = {
         }
     },
 
-    applyDrawElementsTriangleStrip: function(vertexes, count, indexes) {
+    applyDrawElementsTriangleStrip: function(count, vertexes, indexes) {
         var v0 = [];
         var v1 = [];
         var v2 = [];
 
+        var idx0, idx1, idx2;
         for ( var i = 2, idx = 0; i < count; i++, idx++) {
-            var idx0, idx1, idx2;
             if (i % 2) {
                 idx0 = indexes[idx]*3;
                 idx1 = indexes[idx+2]*3;
@@ -86,7 +87,7 @@ osgUtil.TriangleIntersect.prototype = {
         }
     },
 
-    applyDrawElementsTriangleFan: function(vertexes, count, indexes) {
+    applyDrawElementsTriangleFan: function(count, vertexes, indexes ) {
         var v0 = [];
         var v1 = [];
         var v2 = [];
@@ -96,8 +97,8 @@ osgUtil.TriangleIntersect.prototype = {
         v0[1] = vertexes[idx0+1];
         v0[2] = vertexes[idx0+2];
 
+        var idx1, idx2;
         for ( var i = 2, idx = 1; i < count; i++, idx++) {
-            var idx1, idx2;
             idx1 = indexes[idx]*3;
             idx2 = indexes[idx+1]*3;
 
@@ -112,86 +113,114 @@ osgUtil.TriangleIntersect.prototype = {
         }
     },
 
+    applyDrawArraysTriangles: function(first, count, vertexes) {
+        var v0 = [];
+        var v1 = [];
+        var v2 = [];
+
+        for (var idx = first; idx < count; idx+= 9) {
+            v0[0] = vertexes[idx];
+            v0[1] = vertexes[idx+1];
+            v0[2] = vertexes[idx+2];
+
+            v1[0] = vertexes[idx+3];
+            v1[1] = vertexes[idx+4];
+            v1[2] = vertexes[idx+5];
+
+            v2[0] = vertexes[idx+6];
+            v2[1] = vertexes[idx+7];
+            v2[2] = vertexes[idx+8];
+            this.intersect(v0, v1, v2);
+        }
+    },
+
+    applyDrawArraysTriangleStrip: function(first, count, vertexes) {
+        var v0 = [];
+        var v1 = [];
+        var v2 = [];
+
+        var idx0, idx1, idx2;
+        for (var i = 2, idx = first; i < count; i++, idx++) {
+            if (i % 2) {
+                idx0 = idx*3;
+                idx1 = (idx+2)*3;
+                idx2 = (idx+1)*3;
+            } else {
+                idx0 = idx*3;
+                idx1 = (idx+1)*3;
+                idx2 = (idx+2)*3;
+            }
+            v0[0] = vertexes[idx0];
+            v0[1] = vertexes[idx0+1];
+            v0[2] = vertexes[idx0+2];
+
+            v1[0] = vertexes[idx1];
+            v1[1] = vertexes[idx1+1];
+            v1[2] = vertexes[idx1+2];
+
+            v2[0] = vertexes[idx2];
+            v2[1] = vertexes[idx2+1];
+            v2[2] = vertexes[idx2+2];
+            this.intersect(v0, v1, v2);
+        }
+    },
+
+    applyDrawArraysTriangleFan: function(first, count, vertexes) {
+        var v0 = [];
+        var v1 = [];
+        var v2 = [];
+
+        var idx0 = first*3;
+        v0[0] = vertexes[idx0];
+        v0[1] = vertexes[idx0+1];
+        v0[2] = vertexes[idx0+2];
+
+        var idx1, idx2;
+        for ( var i = 2, idx = first+1; i < count; i++, idx++) {
+            idx1 = idx*3;
+            idx2 = (idx+1)*3;
+
+            v1[0] = vertexes[idx1];
+            v1[1] = vertexes[idx1 +1];
+            v1[2] = vertexes[idx1 +2];
+
+            v2[0] = vertexes[idx2];
+            v2[1] = vertexes[idx2 +1];
+            v2[2] = vertexes[idx2 +2];
+            this.intersect(v0, v1, v2);
+        }
+    },
+
     apply: function(node) {
         var primitive;
-        var vertexes;
         var lastIndex;
-        var idx;
-        var v0,v1,v2;
-        var i;
+        var vertexes = node.getAttributes().Vertex.getElements();
         this.index = 0;
-        for (i = 0, l = node.primitives.length; i < l; i++) {
+        for (var i = 0, l = node.primitives.length; i < l; i++) {
             primitive = node.primitives[i];
             if (primitive.getIndices !== undefined) {
-                vertexes = node.getAttributes().Vertex.getElements();
                 var indexes = primitive.indices.getElements();
-                lastIndex = primitive.getCount();
                 switch(primitive.getMode()) {
                 case gl.TRIANGLES:
-                    this.applyDrawElementsTriangles(vertexes, indexes.length, indexes);
+                    this.applyDrawElementsTriangles(primitive.getCount(), vertexes, indexes);
                     break;
                 case gl.TRIANGLE_STRIP:
-                    this.applyDrawElementsTriangleStrip(vertexes, indexes.length, indexes);
+                    this.applyDrawElementsTriangleStrip(primitive.getCount(), vertexes, indexes);
                     break;
                 case gl.TRIANGLE_FAN:
-                    this.applyDrawElementsTriangleFan(vertexes, indexes.length, indexes);
+                    this.applyDrawElementsTriangleFan(primitive.getCount(), vertexes, indexes);
                     break;
                 }
             } else { // draw array
-                vertexes = node.getAttributes().Vertex.getElements();
-                lastIndex = primitive.getCount();
                 switch(primitive.getMode()) {
                 case gl.TRIANGLES:
-                    for (idx = primitive.getFirst(); idx < lastIndex; idx+= 9) {
-                        v0 = [];
-                        v1 = [];
-                        v2 = [];
-                        v0[0] = vertexes[idx];
-                        v0[1] = vertexes[idx+1];
-                        v0[2] = vertexes[idx+2];
-                        v1[0] = vertexes[idx+3];
-                        v1[1] = vertexes[idx+4];
-                        v1[2] = vertexes[idx+5];
-                        v2[0] = vertexes[idx+6];
-                        v2[1] = vertexes[idx+7];
-                        v2[2] = vertexes[idx+8];
-                        this.intersect(v0, v1, v2);
-                    }
+                    this.applyDrawArraysTriangles(primitive.getFirst(), primitive.getCount(), vertexes);
                     break;
                 case gl.TRIANGLE_STRIP:
-                    for (idx = primitive.getFirst(); idx < lastIndex; idx+= 3) {
-                        v0 = [];
-                        v1 = [];
-                        v2 = [];
-                        v0[0] = vertexes[idx];
-                        v0[1] = vertexes[idx+1];
-                        v0[2] = vertexes[idx+2];
-                        v1[0] = vertexes[idx+3];
-                        v1[1] = vertexes[idx+4];
-                        v1[2] = vertexes[idx+5];
-                        v2[0] = vertexes[idx+6];
-                        v2[1] = vertexes[idx+7];
-                        v2[2] = vertexes[idx+8];
-                        this.intersect(v0, v1, v2);
-                    }
+                    this.applyDrawArraysTriangleStrip(primitive.getFirst(), primitive.getCount(), vertexes);
                     break;
                 case gl.TRIANGLE_FAN:
-                    var id = primitive.getFirst();
-                    v0 = [];
-                    v0[0] = vertexes[id];
-                    v0[1] = vertexes[id+1];
-                    v0[2] = vertexes[id+2];
-                    for (idx = id+3; idx < lastIndex; idx+= 3) {
-                        v1 = [];
-                        v2 = [];                        
-                        v1[0] = vertexes[idx];
-                        v1[1] = vertexes[idx+1];
-                        v1[2] = vertexes[idx+2];
-                        v2[0] = vertexes[idx+3];
-                        v2[1] = vertexes[idx+4];
-                        v2[2] = vertexes[idx+5];
-                        this.intersect(v0, v1, v2);
-                    }
+                    this.applyDrawArraysTriangleFan(primitive.getFirst(), primitive.getCount(), vertexes);
                     break;
                 }
             }
