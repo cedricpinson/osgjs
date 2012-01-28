@@ -133,15 +133,12 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
         if (this.enterNode(node) === false) {
             return;
         }
-        this.nodePath.push(node);
 
         if (node.getViewMatrix) { // Camera/View
             this.applyCamera(node);
         } else {
             this.applyNode(node);
         }
-
-        this.nodePath.pop();
     },
 
     enterNode: function(node) {

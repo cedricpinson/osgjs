@@ -332,10 +332,16 @@ osgUtil.TriangleIntersect.prototype = {
 
         var r = d/this.length;
 
-        
+        var pnt = [];
+        pnt[0] = this.start[0] * (1.0-r)+  this.end[0]*r;
+        pnt[1] = this.start[1] * (1.0-r)+  this.end[1]*r;
+        pnt[2] = this.start[2] * (1.0-r)+  this.end[2]*r;
+
         this.hits.push({ 'ratio': r,
                          'nodepath': this.nodePath.slice(0),
-                         'triangleHit': new osgUtil.TriangleHit(this.index-1, normal, r1, v1, r2, v2, r3, v3)
+                         'triangleHit': new osgUtil.TriangleHit(this.index-1, normal, r1, v1, r2, v2, r3, v3),
+                         'point': pnt
+                         
                        });
         this.hit = true;
     }
