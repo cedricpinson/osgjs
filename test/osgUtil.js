@@ -172,6 +172,8 @@ test("osgUtil_IntersectVisitor", function() {
     iv.addLineSegment([400,300,0.0], [400,300,1.0]);
     scene.accept(iv);
     ok(iv.hits.length === 1, "Hits should be 1 and result is " + iv.hits.length );
+    ok(iv.hits[0].nodepath.length === 1, "NodePath should be 1 and result is " + iv.hits[0].nodepath.length );
+
 });
 
 test("osgUtil_IntersectVisitorScene", function() {
