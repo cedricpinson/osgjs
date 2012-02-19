@@ -18,6 +18,9 @@ osg.Shader = function(type, text) {
     this.setText(text);
 };
 
+osg.Shader.VERTEX_SHADER = 0x8B31;
+osg.Shader.FRAGMENT_SHADER = 0x8B30;
+
 /** @lends osg.Shader.prototype */
 osg.Shader.prototype = {
     setText: function(text) { this.text = text; },
@@ -26,7 +29,7 @@ osg.Shader.prototype = {
         this.shader = gl.createShader(this.type);
         gl.shaderSource(this.shader, this.text);
         gl.compileShader(this.shader);
-        if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS)) {
+        if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS) && !gl.isContextLost()) {
             osg.log("can't compile shader:\n" + this.text + "\n");
             var tmpText = "\n" + this.text;
             var splittedText = tmpText.split("\n");

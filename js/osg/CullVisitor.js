@@ -93,8 +93,8 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
 
             var delta_span = (zfar-znear)*0.02;
             if (delta_span<1.0) {
-		delta_span = 1.0;
-	    }
+                delta_span = 1.0;
+            }
             desired_znear = znear - delta_span;
             desired_zfar = zfar + delta_span;
 
@@ -123,8 +123,8 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
             // near plane clamping.
             var min_near_plane = zfar*nearFarRatio;
             if (desired_znear<min_near_plane) {
-		desired_znear=min_near_plane;
-	    }
+                desired_znear=min_near_plane;
+            }
 
             // assign the clamped values back to the computed values.
             znear = desired_znear;
@@ -163,8 +163,10 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
         this._currentRenderBin = rg;
     },
     reset: function () {
-        this._modelviewMatrixStack.length = 0;
-        this._projectionMatrixStack.length = 0;
+        //this._modelviewMatrixStack.length = 0;
+        this._modelviewMatrixStack.splice(0, this._modelviewMatrixStack.length);
+        //this._projectionMatrixStack.length = 0;
+        this._projectionMatrixStack.splice(0, this._projectionMatrixStack.length);
         this._reserveMatrixStack.current = 0;
         this._reserveLeafStack.current = 0;
 
@@ -221,7 +223,7 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
     _getReservedMatrix: function() {
         var m = this._reserveMatrixStack[this._reserveMatrixStack.current++];
         if (this._reserveMatrixStack.current === this._reserveMatrixStack.length) {
-            this._reserveMatrixStack.push(osg.Matrix.makeIdentity());
+            this._reserveMatrixStack.push(osg.Matrix.makeIdentity([]));
         }
         return m;
     },

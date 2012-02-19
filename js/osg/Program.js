@@ -47,10 +47,12 @@ osg.Program.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             gl.attachShader(this.program, this.fragment.shader);
             gl.linkProgram(this.program);
             gl.validateProgram(this.program);
-            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS) &&
+                !gl.isContextLost()) {
                 osg.log("can't link program\n" + "vertex shader:\n" + this.vertex.text +  "\n fragment shader:\n" + this.fragment.text);
                 osg.log(gl.getProgramInfoLog(this.program));
-                debugger;
+                this.setDirty(false);
+                //debugger;
                 return null;
             }
 

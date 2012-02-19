@@ -6,7 +6,7 @@
  */
 osg.MatrixTransform = function() {
     osg.Transform.call(this);
-    this.matrix = osg.Matrix.makeIdentity();
+    this.matrix = osg.Matrix.makeIdentity([]);
 };
 
 /** @lends osg.MatrixTransform.prototype */

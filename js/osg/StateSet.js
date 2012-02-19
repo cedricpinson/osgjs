@@ -66,6 +66,14 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         this._setAttribute(this.getObjectPair(attribute, mode)); 
     },
 
+    removeAttribute: function(attributeName) {
+        if (this.attributeMap[attributeName] !== undefined) {
+            delete this.attributeMap[attributeName];
+            var idx = this.attributeMap.attributeKeys.indexOf(attributeName);
+            this.attributeMap.attributeKeys.splice(idx,1);
+        }
+    },
+
     setRenderingHint: function(hint) {
         if (hint === 'OPAQUE_BIN') {
             this.setRenderBinDetails(0,"RenderBin");

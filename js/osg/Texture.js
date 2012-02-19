@@ -1,3 +1,5 @@
+/** -*- compile-command: "jslint-cli Texture.js" -*- */
+
 /** 
  * Texture encapsulate webgl texture object
  * @class Texture
@@ -87,7 +89,13 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     },
     getWidth: function() { return this._textureWidth; },
     getHeight: function() { return this._textureHeight; },
-
+    releaseGLObjects: function(gl) {
+        if (this._textureObject !== undefined && this._textureObject !== null) {
+            gl.deleteTexture(this._textureObject);
+            this._textureObject = null;
+            this._image = undefined;
+        }
+    },
     setWrapS: function(value) {
         if (typeof(value) === "string") {
             this._wrapS = osg.Texture[value];
@@ -246,8 +254,9 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
     writeToShader: function(unit, type)
     {
-        if (this[type])
+        if (this[type]) {
             return this[type].call(this,unit);
+        }
         return "";
     }
 });

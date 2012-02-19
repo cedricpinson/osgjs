@@ -1,3 +1,4 @@
+/** -*- compile-command: "jslint-cli osg.js" -*- */
 function createCanvas() {
     var parent = document.body;
 
@@ -21,7 +22,8 @@ function createFakeRenderer() {
              'CULL_FACE': 0,
              'UNSIGNED_SHORT': 0,
              drawElements: function() {},
-
+             createBuffer: function() {},
+             deleteBuffer: function(arg) {},
              enable: function() {},
              disable: function() {},
              depthFunc: function() {},
@@ -29,6 +31,7 @@ function createFakeRenderer() {
              depthMask: function() {},
              activeTexture: function() {},
              bindTexture: function() {},
+             bufferData: function() {},
              bindBuffer: function() {},
              blendFunc: function() {},
              enableVertexAttribArray: function() {},
@@ -104,7 +107,7 @@ test("osg.BoundingSphere", function() {
 
     c_bs_0 = [2.5,2.5,0];
     r_bs_0 = 2.12132;
-    var center_is_equal_bs_0 = check_near(c_bs_0,bs_0._center,0.0001) & check_near(r_bs_0,bs_0._radius,0.0001)
+    var center_is_equal_bs_0 = check_near(c_bs_0,bs_0._center,0.0001) & check_near(r_bs_0,bs_0._radius,0.0001);
     ok(center_is_equal_bs_0, "Expanding by vec3 -> bounding sphere test 1");
     var bs_1 = new osg.BoundingSphere();
     bs_1.expandByVec3([ -1.0, 0.0, 0.0]);
@@ -114,7 +117,7 @@ test("osg.BoundingSphere", function() {
 
     c_bs_1 = [2.00438,0.862774,0.784302];
     r_bs_1 = 5.16774;
-    var center_is_equal_bs_1 = check_near(c_bs_1,bs_1._center,0.0001) & check_near(r_bs_1,bs_1._radius,0.0001)
+    var center_is_equal_bs_1 = check_near(c_bs_1,bs_1._center,0.0001) & check_near(r_bs_1,bs_1._radius,0.0001);
     ok(center_is_equal_bs_1 , "Expanding by vec3 ->  bounding sphere test 2");
 
     var bs_01 = new osg.BoundingSphere();
@@ -122,44 +125,14 @@ test("osg.BoundingSphere", function() {
 
     c_bs_01_0 = [2.5,2.5,0];
     r_bs_01_0 = 2.12132;
-    var center_is_equal_bs_01_0 = check_near(c_bs_01_0,bs_01._center,0.0001) & check_near(r_bs_01_0,bs_01._radius,0.0001)
+    var center_is_equal_bs_01_0 = check_near(c_bs_01_0,bs_01._center,0.0001) & check_near(r_bs_01_0,bs_01._radius,0.0001);
     ok(center_is_equal_bs_01_0 , "Expanding by BoundingSphere ->  bounding sphere test 1");
 
     bs_01.expandBy(bs_1);
     c_bs_01_1 = [2.00438,0.862774,0.784302];
     r_bs_01_1 = 5.16774;
-    var center_is_equal_bs_01_1 = check_near(c_bs_01_1,bs_01._center,0.0001) & check_near(r_bs_01_1,bs_01._radius,0.0001)
+    var center_is_equal_bs_01_1 = check_near(c_bs_01_1,bs_01._center,0.0001) & check_near(r_bs_01_1,bs_01._radius,0.0001);
     ok(center_is_equal_bs_01_1 , "Expanding by BoundingSphere ->  bounding sphere test 2");
-
-    (function() {
-        var bb = new osg.BoundingBox();
-        var bb0 = [-.5,0,-2];
-        var bb1 = [1,0,-1];
-        var bb2 = [0,1,-.5];
-        var bb3 = [1,2,-.8];
-        bb.expandByVec3(bb0);
-        bb.expandByVec3(bb1);
-        bb.expandByVec3(bb2);
-        bb.expandByVec3(bb3);
-
-        var bb_test_ok = ( bb._max[0] == 1 &&  bb._max[1] == 2 &&  bb._max[2] == -0.5 &&  bb._min[0] == -.5 &&  bb._min[1] == 0 && bb._min[2] == -2);
-        ok(bb_test_ok , "Expanding by BoundingBox ->  bounding box test");
-
-
-        var o = osgDB.parseSceneGraph(getBoxScene());
-        o.getBound();
-        var bb_test_scene_graph_test = ( check_near(o.boundingSphere.radius(),2.41421,0.00001) );
-        ok(bb_test_scene_graph_test , "Box.js tested  ->  bounding sphere scene graph test");
-    })();
-
-    (function() {
-        var bb = new osg.BoundingBox();
-        bb._min = [1,2,3];
-        bb._max = [4,5,6];
-
-        ok(check_near(bb.corner(0), [1,2,3]) , "Box corner 0");
-        ok(check_near(bb.corner(7), [4,5,6]) , "Box corner 0");
-    })();
 
 
     // test case with camera and absolute transform
@@ -192,6 +165,37 @@ test("osg.BoundingSphere", function() {
 
 });
 
+test("osg.BoundingBox", function() {
+    (function() {
+        var bb = new osg.BoundingBox();
+        var bb0 = [-0.5,0,-2];
+        var bb1 = [1,0,-1];
+        var bb2 = [0,1,-0.5];
+        var bb3 = [1,2,-0.8];
+        bb.expandByVec3(bb0);
+        bb.expandByVec3(bb1);
+        bb.expandByVec3(bb2);
+        bb.expandByVec3(bb3);
+
+        var bb_test_ok = ( bb._max[0] === 1 &&  bb._max[1] === 2 &&  bb._max[2] === -0.5 &&  bb._min[0] === -0.5 &&  bb._min[1] === 0 && bb._min[2] === -2);
+        ok(bb_test_ok , "Expanding by BoundingBox ->  bounding box test");
+
+
+        var o = osgDB.parseSceneGraph(getBoxScene());
+        o.getBound();
+        var bb_test_scene_graph_test = ( check_near(o.boundingSphere.radius(),2.41421,0.00001) );
+        ok(bb_test_scene_graph_test , "Box.js tested  ->  bounding sphere scene graph test");
+    })();
+
+    (function() {
+        var bb = new osg.BoundingBox();
+        bb._min = [1,2,3];
+        bb._max = [4,5,6];
+
+        ok(check_near(bb.corner(0), [1,2,3]) , "Box corner 0");
+        ok(check_near(bb.corner(7), [4,5,6]) , "Box corner 0");
+    })();
+});
 
 test("osg.Quat.init", function() {
     var q = [];
@@ -227,7 +231,17 @@ test("osg.Quat.mult", function() {
     osg.Quat.mult(q1, q0, qr);
     near( qr, [0.707107, 4.32964e-17, -0.707107, 4.32964e-17]);
 
+    // check consistency with quaternion and matrix multiplication order
+    var m1 = [], m0 = [], mr =[];
+    osg.Matrix.makeRotateFromQuat(q1, m1);
+    osg.Matrix.makeRotateFromQuat(q0, m0);
+    osg.Matrix.mult(m1, m0, mr);
     
+    var qr2 = [];
+    osg.Matrix.getRotate(mr, qr2);
+    near( qr, qr2);
+    // consistenty
+
     near(osg.Quat.mult(q2, osg.Quat.mult(q1,q0, []), []) , [0.653281, 0.270598, -0.653281, 0.270598]);
 });
 
@@ -356,7 +370,7 @@ test("osg.Matrix.transformVec3", function() {
     near(res2 , [0, 0, 10]);
 
 
-    var m = [-0.00003499092540543186, 0, 0, 0, 0, 0.00003499092540543186, 0, 0, 0, 0, 1.8163636363636322, -9.989999999999977, 0.013996370162172783, -0.010497277621629587, -1.7999999999999958, 9.999999999999977];
+    m = [-0.00003499092540543186, 0, 0, 0, 0, 0.00003499092540543186, 0, 0, 0, 0, 1.8163636363636322, -9.989999999999977, 0.013996370162172783, -0.010497277621629587, -1.7999999999999958, 9.999999999999977];
     var preMultVec3 = function(s, vec, result) {
         if (result === undefined) {
             result = [];
@@ -368,7 +382,7 @@ test("osg.Matrix.transformVec3", function() {
         return result;
     };
     var r0 = preMultVec3(m, [400, 300, 1]);
-    var res = osg.Matrix.transformVec3(m, [400, 300, 1]);
+    osg.Matrix.transformVec3(m, [400, 300, 1], res);
     near(res , r0);
 
 });
@@ -554,7 +568,7 @@ test("osg.NodeVisitor", function() {
 
     var FindItemAnchor = function(search) {
         osg.NodeVisitor.call(this);
-        this.search = search
+        this.search = search;
         this.result = [];
     };
 
@@ -621,6 +635,25 @@ test("osg.NodeVisitor", function() {
     })();
 });
 
+test("osg.BufferArray", function() {
+
+    (function() {
+        var gl = createFakeRenderer();
+        gl.createBuffer = function() { return {}; };
+
+        var content = [];
+        for (var i = 0, l = 3*50; i < l; i++) {
+            content.push(i);
+        }
+        var b = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, content, 3 );
+        b.bind(gl);
+        ok(b._buffer !== undefined, "Check we created gl buffer");
+        b.releaseGLObjects(gl);
+        ok(b._buffer === undefined, "Check we released gl buffer");
+
+    })();
+
+});
 
 test("osg.computeLocalToWorld", function() {
 

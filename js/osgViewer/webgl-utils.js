@@ -115,7 +115,7 @@ WebGLUtils = function() {
                 }
                 container.innerHTML = makeFailHTML(str);
             }
-        };
+        }
 
         opt_onError = opt_onError || handleCreationError;
 
@@ -154,7 +154,7 @@ WebGLUtils = function() {
             }
         }
         return context;
-    }
+    };
 
     return {
         create3DContext: create3DContext,
@@ -167,14 +167,25 @@ WebGLUtils = function() {
  * way.
  */
 if (!window.requestAnimationFrame) {
-  window.requestAnimationFrame = (function() {
-    return window.requestAnimationFrame ||
-           window.webkitRequestAnimationFrame ||
-           window.mozRequestAnimationFrame ||
-           window.oRequestAnimationFrame ||
-           window.msRequestAnimationFrame ||
-           function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
-             window.setTimeout(callback, 1000/60);
-           };
-  })();
+    window.requestAnimationFrame = (function() {
+        return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
+                window.setTimeout(callback, 1000/60);
+            };
+    })();
+}
+
+if (!window.cancelRequestAnimFrame) {
+    window.cancelRequestAnimFrame = ( function() {
+        return window.cancelAnimationFrame          ||
+            window.webkitCancelRequestAnimationFrame    ||
+            window.mozCancelRequestAnimationFrame       ||
+            window.oCancelRequestAnimationFrame     ||
+            window.msCancelRequestAnimationFrame        ||
+            clearTimeout;
+    } )();
 }

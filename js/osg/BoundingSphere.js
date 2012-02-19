@@ -23,8 +23,7 @@ osg.BoundingSphere.prototype = {
 	if ( bb.valid() )
 	{
             var c;
-	    if (this.valid())
-	    {
+            if (this.valid()) {
 		var newbb = new osg.BoundingBox();
 		newbb._min[0]=bb._min[0];
 		newbb._min[1]=bb._min[1];
@@ -52,40 +51,37 @@ osg.BoundingSphere.prototype = {
 		this._center[1] = c[1];
 		this._center[2] = c[2];
 		this._radius    = newbb.radius();
-	    }
-	    else
-	    {
+            } else {
 		c = bb.center();
 		this._center[0] = c[0];
 		this._center[1] = c[1];
 		this._center[2] = c[2];
 		this._radius    = bb.radius();
-	    }
+            }
 	}
 
     },
 
     expandByVec3: function(v){
-	if ( this.valid())
-	{
-	    var dv = osg.Vec3.sub(v,this.center(), []);
-	    r = osg.Vec3.length(dv);
-	    if (r>this.radius())
-	    {
-		dr = (r-this.radius())*0.5;
-		this._center[0] += dv[0] * (dr/r);
-		this._center[1] += dv[1] * (dr/r);
-		this._center[2] += dv[2] * (dr/r);
-		this._radius += dr;
-	    }
-	}
-	else
-	{
-	    this._center[0] = v[0];
-	    this._center[1] = v[1];
-	    this._center[2] = v[2];
-	    this._radius = 0.0;
-	}
+	if ( this.valid()) {
+            var dv = osg.Vec3.sub(v,this.center(), []);
+            r = osg.Vec3.length(dv);
+            if (r>this.radius())
+            {
+                dr = (r-this.radius())*0.5;
+                this._center[0] += dv[0] * (dr/r);
+                this._center[1] += dv[1] * (dr/r);
+                this._center[2] += dv[2] * (dr/r);
+                this._radius += dr;
+            }
+        }
+        else
+        {
+            this._center[0] = v[0];
+            this._center[1] = v[1];
+            this._center[2] = v[2];
+            this._radius = 0.0;
+        }
     },
 
     expandRadiusBySphere: function(sh){
@@ -108,67 +104,67 @@ osg.BoundingSphere.prototype = {
         }
     },
     expandBy: function(sh){
-	// ignore operation if incomming BoundingSphere is invalid.
-	if (!sh.valid()) { return; }
+        // ignore operation if incomming BoundingSphere is invalid.
+        if (!sh.valid()) { return; }
 
-	// This sphere is not set so use the inbound sphere
-	if (!this.valid())
-	{
-	    this._center[0] = sh._center[0];
-	    this._center[1] = sh._center[1];
-	    this._center[2] = sh._center[2];
-	    this._radius = sh.radius();
+        // This sphere is not set so use the inbound sphere
+        if (!this.valid())
+        {
+            this._center[0] = sh._center[0];
+            this._center[1] = sh._center[1];
+            this._center[2] = sh._center[2];
+            this._radius = sh.radius();
 
-	    return;
-	}
-
-
-	// Calculate d == The distance between the sphere centers
-	var tmp= osg.Vec3.sub( this.center() , sh.center(), [] );
-	d = osg.Vec3.length(tmp);
-
-	// New sphere is already inside this one
-	if ( d + sh.radius() <= this.radius() )
-	{
-	    return;
-	}
-
-	//  New sphere completely contains this one
-	if ( d + this.radius() <= sh.radius() )
-	{
-	    this._center[0] = sh._center[0];
-	    this._center[1] = sh._center[1];
-	    this._center[2] = sh._center[2];
-	    this._radius    = sh._radius;
-	    return;
-	}
+            return;
+        }
 
 
-	// Build a new sphere that completely contains the other two:
-	//
-	// The center point lies halfway along the line between the furthest
-	// points on the edges of the two spheres.
-	//
-	// Computing those two points is ugly - so we'll use similar triangles
-	new_radius = (this.radius() + d + sh.radius() ) * 0.5;
-	ratio = ( new_radius - this.radius() ) / d ;
+        // Calculate d == The distance between the sphere centers
+        var tmp= osg.Vec3.sub( this.center() , sh.center(), [] );
+        d = osg.Vec3.length(tmp);
 
-	this._center[0] += ( sh._center[0] - this._center[0] ) * ratio;
-	this._center[1] += ( sh._center[1] - this._center[1] ) * ratio;
-	this._center[2] += ( sh._center[2] - this._center[2] ) * ratio;
+        // New sphere is already inside this one
+        if ( d + sh.radius() <= this.radius() )
+        {
+            return;
+        }
 
-	this._radius = new_radius;
+        //  New sphere completely contains this one
+        if ( d + this.radius() <= sh.radius() )
+        {
+            this._center[0] = sh._center[0];
+            this._center[1] = sh._center[1];
+            this._center[2] = sh._center[2];
+            this._radius    = sh._radius;
+            return;
+        }
+
+
+        // Build a new sphere that completely contains the other two:
+        //
+        // The center point lies halfway along the line between the furthest
+        // points on the edges of the two spheres.
+        //
+        // Computing those two points is ugly - so we'll use similar triangles
+        new_radius = (this.radius() + d + sh.radius() ) * 0.5;
+        ratio = ( new_radius - this.radius() ) / d ;
+
+        this._center[0] += ( sh._center[0] - this._center[0] ) * ratio;
+        this._center[1] += ( sh._center[1] - this._center[1] ) * ratio;
+        this._center[2] += ( sh._center[2] - this._center[2] ) * ratio;
+
+        this._radius = new_radius;
 
     },
     contains: function(v) {
-	var vc = osg.Vec3.sub(v,this.center(), []);
-	return valid() && (osg.Vec3.length2(vc)<=radius2());
+        var vc = osg.Vec3.sub(v,this.center(), []);
+        return valid() && (osg.Vec3.length2(vc)<=radius2());
     },
     intersects: function( bs ) {
-	var lc = osg.Vec3.length2(osg.Vec3.sub(this.center() , 
+        var lc = osg.Vec3.length2(osg.Vec3.sub(this.center() , 
                                                bs.center(),
                                               []));
-	return valid() && bs.valid() &&
-	    (lc <= (this.radius() + bs.radius())*(this.radius() + bs.radius()));
+        return valid() && bs.valid() &&
+            (lc <= (this.radius() + bs.radius())*(this.radius() + bs.radius()));
     }
 };

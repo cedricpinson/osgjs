@@ -113,8 +113,8 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
             for (var i = 0, l = children.length; i < l; i++) {
                 children[i].removeParent(this);
             }
-	    this.children.length = 0;
-	    this.dirtyBound();
+            this.children.splice(0, this.children.length);
+            this.dirtyBound();
         }
     },
 
@@ -124,7 +124,7 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
             if (this.children[i] === child) {
                 child.removeParent(this);
                 this.children.splice(i, 1);
-	        this.dirtyBound();
+                this.dirtyBound();
             }
         }
     },
@@ -156,9 +156,9 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
         bb.init();
         bsphere.init();
 	for (var i = 0, l = this.children.length; i < l; i++) {
-	    var child = this.children[i];
+            var child = this.children[i];
             if (child.referenceFrame === undefined || child.referenceFrame === osg.Transform.RELATIVE_RF) {
-	        bb.expandBySphere(child.getBound());
+                bb.expandBySphere(child.getBound());
             }
 	}
         if (!bb.valid()) {
@@ -167,9 +167,9 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
         bsphere._center = bb.center();
         bsphere._radius = 0.0;
 	for (var j = 0, l2 = this.children.length; j < l2; j++) {
-	    var cc = this.children[j];
+            var cc = this.children[j];
             if (cc.referenceFrame === undefined || cc.referenceFrame === osg.Transform.RELATIVE_RF) {
-	        bsphere.expandRadiusBySphere(cc.getBound());
+                bsphere.expandRadiusBySphere(cc.getBound());
             }
 	}
             
@@ -199,7 +199,7 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
         for(var i = 0, l = collected.nodePaths.length; i < l; i++) {
             var np = collected.nodePaths[i];
             if (np.length === 0) {
-                matrixList.push(osg.Matrix.makeIdentity());
+                matrixList.push(osg.Matrix.makeIdentity([]));
             } else {
                 matrixList.push(osg.computeLocalToWorld(np));
             }

@@ -375,8 +375,8 @@ test("osgDB.parseSceneGraph", function() {
             "osg.Geometry": {
                 "PrimitiveSetList": [ {
                     "DrawArrays": {
-                        "Count": 3540, 
-                        "First": 10, 
+                        "Count": 0, 
+                        "First": 0, 
                         "Mode": "TRIANGLES"
                     }
                 } ], 
@@ -387,8 +387,8 @@ test("osgDB.parseSceneGraph", function() {
         result = osgDB.ObjectWrapper.readObject(tree2).getPrimitiveSetList()[0];
         
         ok(result.getMode() === osg.PrimitiveSet.TRIANGLES, "check DrawArray triangles");
-        ok(result.getCount() === 3540, "check triangles count");
-        ok(result.getFirst() === 10, "check triangles first");
+        ok(result.getCount() === 0, "check triangles count");
+        ok(result.getFirst() === 0, "check triangles first");
 
 
     })();

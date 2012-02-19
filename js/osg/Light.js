@@ -49,8 +49,8 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                                                          "linearAttenuation": osg.Uniform.createFloat1( 0, this.getParameterName('linearAttenuation')),
                                                          "quadraticAttenuation": osg.Uniform.createFloat1( 0, this.getParameterName('quadraticAttenuation')),
                                                          "enable": osg.Uniform.createInt1( 0, this.getParameterName('enable')),
-                                                         "matrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('matrix')),
-                                                         "invMatrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), this.getParameterName('invMatrix'))
+                                                         "matrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), this.getParameterName('matrix')),
+                                                         "invMatrix": osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), this.getParameterName('invMatrix'))
                                                        };
 
             var uniformKeys = [];
@@ -69,9 +69,9 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setSpotCutoff: function(a) { this._spotCutoff = a; this.dirty(); },
     setSpotCutoffEnd: function(a) { this._spotCutoffEnd = a; this.dirty(); },
 
-    setConstantAttenuation: function(value) { this._constantAttenuation = value; this.dirty()},
-    setLinearAttenuation: function(value) { this._linearAttenuation = value; this.dirty()},
-    setQuadraticAttenuation: function(value) { this._quadraticAttenuation = value; this.dirty()},
+    setConstantAttenuation: function(value) { this._constantAttenuation = value; this.dirty();},
+    setLinearAttenuation: function(value) { this._linearAttenuation = value; this.dirty();},
+    setQuadraticAttenuation: function(value) { this._quadraticAttenuation = value; this.dirty();},
 
     setDirection: function(a) { this._direction = a; this.dirty(); },
     setLightNumber: function(unit) { this._lightUnit = unit; this.dirty(); },

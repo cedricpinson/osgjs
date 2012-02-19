@@ -17,9 +17,9 @@ osg.State = function () {
 
     this.shaderGenerator = new osg.ShaderGenerator();
 
-    this.modelViewMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ModelViewMatrix");
-    this.projectionMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ProjectionMatrix");
-    this.normalMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "NormalMatrix");
+    this.modelViewMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), "ModelViewMatrix");
+    this.projectionMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), "ProjectionMatrix");
+    this.normalMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), "NormalMatrix");
 
     this.uniformArrayState = {};
     this.uniformArrayState.uniformKeys = [];
@@ -515,15 +515,13 @@ osg.State.prototype = {
     },
 
     setIndexArray: function(array) {
+        var gl = this._graphicContext;
         if (this.currentIndexVBO !== array) {
-            if (!array.buffer) {
-                array.init();
-            }
-            this._graphicContext.bindBuffer(array.type, array.buffer);
+            array.bind(gl);
             this.currentIndexVBO = array;
         }
         if (array.isDirty()) {
-            array.compile();
+            array.compile(gl);
         }
     },
 
@@ -550,6 +548,7 @@ osg.State.prototype = {
 
         // it takes 4.26% of global cpu
         // there would be a way to cache it and track state if the program has not changed ...
+        var colorAttrib;
         var program = this.programs.lastApplied;
         if (program.generated === true) {
             var updateColorUniform = false;
@@ -557,14 +556,14 @@ osg.State.prototype = {
                 updateColorUniform = true;
                 this.previousAppliedProgram = this.programs.lastApplied;
             } else {
-                var colorAttrib = program.attributesCache.Color;
+                colorAttrib = program.attributesCache.Color;
                 if ( this.vertexAttribMap[colorAttrib] !== this.previousColorAttrib) {
                     updateColorUniform = true;
                 }
             }
 
             if (updateColorUniform) {
-                var colorAttrib = program.attributesCache.Color;
+                colorAttrib = program.attributesCache.Color;
                 if (colorAttrib !== undefined) {
                     if (this.vertexAttribMap[colorAttrib]) {
                         this.uniformArrayState.Color.set([1]);
@@ -578,29 +577,32 @@ osg.State.prototype = {
         }
     },
     setVertexAttribArray: function(attrib, array, normalize) {
-        this.vertexAttribMap._disable[ attrib ] = false;
-        if (!array.buffer) {
-            array.init();
-        }
+        var vertexAttribMap = this.vertexAttribMap;
+        vertexAttribMap._disable[ attrib ] = false;
         var gl = this._graphicContext;
+        var binded = false;
         if (array.isDirty()) {
-            gl.bindBuffer(array.type, array.buffer);
-            array.compile();
+            array.bind(gl);
+            array.compile(gl);
+            binded = true;
         }
-        if (this.vertexAttribMap[attrib] !== array) {
 
-            gl.bindBuffer(array.type, array.buffer);
+        if (vertexAttribMap[attrib] !== array) {
 
-            if (! this.vertexAttribMap[attrib]) {
+            if (!binded) {
+                array.bind(gl);
+            }
+
+            if (! vertexAttribMap[attrib]) {
                 gl.enableVertexAttribArray(attrib);
                 
-                if ( this.vertexAttribMap[attrib] === undefined) {
-                    this.vertexAttribMap._keys.push(attrib);
+                if ( vertexAttribMap[attrib] === undefined) {
+                    vertexAttribMap._keys.push(attrib);
                 }
             }
 
-            this.vertexAttribMap[attrib] = array;
-            gl.vertexAttribPointer(attrib, array.itemSize, gl.FLOAT, normalize, 0, 0);
+            vertexAttribMap[attrib] = array;
+            gl.vertexAttribPointer(attrib, array._itemSize, gl.FLOAT, normalize, 0, 0);
         }
     }
 

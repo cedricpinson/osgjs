@@ -11,10 +11,28 @@ osgViewer.Viewer = function(canvas, options, error) {
         options = {antialias : true};
     }
 
+    if (osg.SimulateWebGLLostContext) {
+        canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
+        canvas.loseContextInNCalls(osg.SimulateWebGLLostContext);
+    }
+
     gl = WebGLUtils.setupWebGL(canvas, options, error );
+    var self = this;
+    canvas.addEventListener("webglcontextlost", function(event) {
+        self.contextLost();
+        event.preventDefault();
+    }, false);
+
+    canvas.addEventListener("webglcontextrestored", function() {
+        self.contextRestored();
+    }, false);
+
+
     if (osg.ReportWebGLError) {
         gl = WebGLDebugUtils.makeDebugContext(gl);
     }
+
+
     if (gl) {
         this.setGraphicContext(gl);
         osg.init();
@@ -34,7 +52,7 @@ osgViewer.Viewer = function(canvas, options, error) {
             if(options.mouseEventNode){
                 this._mouseEventNode = options.mouseEventNode;
             }
-            if(options.mouseWheelEventNode){
+            if(options.keyboardEventNode){
                 this._keyboardEventNode = options.keyboardEventNode;
             }
         }
@@ -47,6 +65,14 @@ osgViewer.Viewer = function(canvas, options, error) {
 
 
 osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
+
+    contextLost: function() {
+        osg.log("webgl context lost");
+        cancelRequestAnimFrame(this._requestID);
+    },
+    contextRestored: function() {
+        osg.log("webgl context restored, but not supported - reload the page");
+    },
 
     init: function() {
         this._done = false;
@@ -82,33 +108,41 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             for(var i = 0; i < hashes.length; i++)
             {
                 hash = hashes[i].split('=');
-                vars.push(hash[0]);
-                vars[hash[0]] = hash[1];
+                var element = hash[0].toLowerCase();
+                vars.push(element);
+                var result = hash[1];
+                if (result === undefined) {
+                    result = "1";
+                }
+                vars[element] = result.toLowerCase();
+
             }
             return vars;
         };
         
         var options = optionsURL();
-
-        if (options['stats'] === "1" || options['STATS'] === "1" || options['Stats'] === "1" ) {
+        
+        if (options.stats === "1") {
             this.initStats(options);
         }
         
         var gl = this.getGraphicContext();
         // not the best way to do it
-        if (options['DEPTH_TEST'] === "0") {
+        if (options.depth_test === "0") {
             this.getGraphicContext().disable(gl.DEPTH_TEST);
         }
-        if (options['BLEND'] === "0") {
+        if (options.blend === "0") {
             this.getGraphicContext().disable(gl.BLEND);
         }
-        if (options['CULL_FACE'] === "0") {
+        if (options.cull_face === "0") {
             this.getGraphicContext().disable(gl.CULL_FACE);
         }
-        if (options['LIGHT'] === "0") {
+        if (options.light === "0") {
             this.setLightingMode(osgViewer.View.LightingMode.NO_LIGHT);
         }
     },
+
+    
 
     initStats: function(options) {
 
@@ -116,11 +150,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         var stepMS = 10;
         var fontsize = 14;
 
-        if (options['statsMaxMS'] !== undefined) {
-            maxMS = parseInt(options['statsMaxMS']);
+        if (options.statsMaxMS !== undefined) {
+            maxMS = parseInt(options.statsMaxMS,10);
         }
-        if (options['statsStepMS'] !== undefined) {
-            stepMS = parseInt(options['statsStepMS']);
+        if (options.statsStepMS !== undefined) {
+            stepMS = parseInt(options.statsStepMS,10);
         }
 
         var createDomElements = function (elementToAppend) {
@@ -174,7 +208,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
             // setup the font for fps
             var cfps = document.getElementById("StatsCanvasFps");
-            var ctx = cfps.getContext("2d");
+            ctx = cfps.getContext("2d");
             ctx.font = "14px Sans";
 
             return document.getElementById("StatsCanvas");
@@ -195,8 +229,8 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         height = height - 2;
         var getStyle = function(el,styleProp)
         {
-	    var x = document.getElementById(el);
-	    if (x.style) {
+            var x = document.getElementById(el);
+            if (x.style) {
 		return x.style.getPropertyValue(styleProp);
             }
             return null;
@@ -249,9 +283,15 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._cullVisitor.pushStateSet(camera.getStateSet());
         this._cullVisitor.pushProjectionMatrix(camera.getProjectionMatrix());
 
+        // update bound
+        var bs = camera.getBound();
+
         var identity = osg.Matrix.makeIdentity([]);
         this._cullVisitor.pushModelviewMatrix(identity);
-        this._cullVisitor.addPositionedAttribute(this._light);
+
+        if (this._light) {
+            this._cullVisitor.addPositionedAttribute(this._light);
+        }
 
         this._cullVisitor.pushModelviewMatrix(camera.getViewMatrix());
         this._cullVisitor.pushViewport(camera.getViewport());
@@ -357,11 +397,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
     done: function() { return this._done; },
 
     run: function() {
-        var that = this;
+        var self = this;
         var render = function() {
-            if (!that.done()) {
-                window.requestAnimationFrame(render, that.canvas);
-                that.frame();
+            if (!self.done()) {
+                self._requestID = window.requestAnimationFrame(render, self.canvas);
+                self.frame();
             }
         };
         render();
@@ -385,62 +425,62 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         var viewer = this;
 	var fixEvent = function( event ) {
 
-	    //if ( event[ expando ] ) {
-		//return event;
-	    //}
+            //if ( event[ expando ] ) {
+                //return event;
+            //}
 
-	    // store a copy of the original event object
-	    // and "clone" to set read-only properties
+            // store a copy of the original event object
+            // and "clone" to set read-only properties
 
             // nop
-	    //var originalEvent = event;
-	    //event = jQuery.Event( originalEvent );
+            //var originalEvent = event;
+            //event = jQuery.Event( originalEvent );
 
-	    for ( var i = this.props.length, prop; i; ) {
-		prop = this.props[ --i ];
-		event[ prop ] = originalEvent[ prop ];
-	    }
+            for ( var i = this.props.length, prop; i; ) {
+                prop = this.props[ --i ];
+                event[ prop ] = originalEvent[ prop ];
+            }
 
-	    // Fix target property, if necessary
-	    if ( !event.target ) {
-		event.target = event.srcElement || document; // Fixes #1925 where srcElement might not be defined either
-	    }
+            // Fix target property, if necessary
+            if ( !event.target ) {
+                event.target = event.srcElement || document; // Fixes #1925 where srcElement might not be defined either
+            }
 
-	    // check if target is a textnode (safari)
-	    if ( event.target.nodeType === 3 ) {
-		event.target = event.target.parentNode;
-	    }
+            // check if target is a textnode (safari)
+            if ( event.target.nodeType === 3 ) {
+                event.target = event.target.parentNode;
+            }
 
-	    // Add relatedTarget, if necessary
-	    if ( !event.relatedTarget && event.fromElement ) {
-		event.relatedTarget = event.fromElement === event.target ? event.toElement : event.fromElement;
-	    }
+            // Add relatedTarget, if necessary
+            if ( !event.relatedTarget && event.fromElement ) {
+                event.relatedTarget = event.fromElement === event.target ? event.toElement : event.fromElement;
+            }
 
-	    // Calculate pageX/Y if missing and clientX/Y available
-	    if ( event.pageX == null && event.clientX != null ) {
-		var doc = document.documentElement, body = document.body;
-		event.pageX = event.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
-		event.pageY = event.clientY + (doc && doc.scrollTop  || body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
-	    }
+            // Calculate pageX/Y if missing and clientX/Y available
+            if ( event.pageX === null && event.clientX !== null ) {
+                var doc = document.documentElement, body = document.body;
+                event.pageX = event.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
+                event.pageY = event.clientY + (doc && doc.scrollTop  || body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
+            }
 
-	    // Add which for key events
-	    if ( !event.which && ((event.charCode || event.charCode === 0) ? event.charCode : event.keyCode) ) {
-		event.which = event.charCode || event.keyCode;
-	    }
+            // Add which for key events
+            if ( !event.which && ((event.charCode || event.charCode === 0) ? event.charCode : event.keyCode) ) {
+                event.which = event.charCode || event.keyCode;
+            }
 
-	    // Add metaKey to non-Mac browsers (use ctrl for PC's and Meta for Macs)
-	    if ( !event.metaKey && event.ctrlKey ) {
-		event.metaKey = event.ctrlKey;
-	    }
+            // Add metaKey to non-Mac browsers (use ctrl for PC's and Meta for Macs)
+            if ( !event.metaKey && event.ctrlKey ) {
+                event.metaKey = event.ctrlKey;
+            }
 
-	    // Add which for click: 1 === left; 2 === middle; 3 === right
-	    // Note: button is not normalized, so don't use it
-	    if ( !event.which && event.button !== undefined ) {
-		event.which = (event.button & 1 ? 1 : ( event.button & 2 ? 3 : ( event.button & 4 ? 2 : 0 ) ));
-	    }
+            // Add which for click: 1 === left; 2 === middle; 3 === right
+            // Note: button is not normalized, so don't use it
+            if ( !event.which && event.button !== undefined ) {
+                event.which = (event.button & 1 ? 1 : ( event.button & 2 ? 3 : ( event.button & 4 ? 2 : 0 ) ));
+            }
 
-	    return event;
-	};
+            return event;
+        };
 
         if (dontBindDefaultEvent === undefined || dontBindDefaultEvent === false) {
 

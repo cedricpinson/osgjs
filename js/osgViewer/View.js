@@ -6,7 +6,6 @@ osgViewer.View = function() {
     this._sceneData = undefined;
     this._frameStamp = new osg.FrameStamp();
     this._lightingMode = undefined;
-    this._lighting = undefined;
     this._manipulator = undefined;
 
     this.setLightingMode(osgViewer.View.LightingMode.HEADLIGHT);
@@ -61,15 +60,29 @@ osgViewer.View.prototype = {
     getManipulator: function() { return this._manipulator; },
     setManipulator: function(manipulator) { this._manipulator = manipulator; },
 
+    getLight: function() { return this._light; },
+    setLight: function(light) { 
+        this._light = light;
+        if (this._lightingMode !== osgViewer.View.LightingMode.NO_LIGHT) {
+            this._scene.getOrCreateStateSet().setAttributeAndMode(this._light);
+        }
+    },
+    getLightingMode: function() { return this._lightingMode; },
     setLightingMode: function(lightingMode) {
-        this._lightingMode = lightingMode;
-        if (this._lightingMode !== osgViewer.View.LightingMode.NO_LIGHT && 
-            !this._light) {
-            this._light = new osg.Light();
-            this._light.setAmbient([0.2,0.2,0.2,1.0]);
-            this._light.setDiffuse([0.8,0.8,0.8,1.0]);
-            this._light.setSpecular([0.5,0.5,0.5,1.0]);
-            //this._scene.light = this._light;
+        if (this._lightingMode !== lightingMode) {
+            this._lightingMode = lightingMode;
+            if (this._lightingMode !== osgViewer.View.LightingMode.NO_LIGHT) {
+                if (! this._light) {
+                    this._light = new osg.Light();
+                    this._light.setAmbient([0.2,0.2,0.2,1.0]);
+                    this._light.setDiffuse([0.8,0.8,0.8,1.0]);
+                    this._light.setSpecular([0.5,0.5,0.5,1.0]);
+                    this._scene.getOrCreateStateSet().setAttributeAndMode(this._light);
+                }
+            } else {
+                this._light = undefined;
+                this._scene.getOrCreateStateSet().removeAttribute("Light0");
+            }
         }
     }
 
