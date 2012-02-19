@@ -45,8 +45,8 @@ osgDB.ObjectWrapper.serializers.osg.Node = function(jsonObj, node) {
     osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, node);
 
     if (jsonObj.UpdateCallbacks) {
-        for (var i = 0, l = jsonObj.UpdateCallbacks.length; i < l; i++) {
-            var cb = osgDB.ObjectWrapper.readObject(jsonObj.UpdateCallbacks[i]);
+        for (var j = 0, l = jsonObj.UpdateCallbacks.length; j < l; j++) {
+            var cb = osgDB.ObjectWrapper.readObject(jsonObj.UpdateCallbacks[j]);
             if (cb) {
                 node.addUpdateCallback(cb);
             }
@@ -58,8 +58,11 @@ osgDB.ObjectWrapper.serializers.osg.Node = function(jsonObj, node) {
     }
     
     if (jsonObj.Children) {
-        for (var i = 0, l = jsonObj.Children.length; i < l; i++) {
-            node.addChild(osgDB.ObjectWrapper.readObject(jsonObj.Children[i]));
+        for (var i = 0, k = jsonObj.Children.length; i < k; i++) {
+            var obj = osgDB.ObjectWrapper.readObject(jsonObj.Children[i]);
+            if (obj) {
+                node.addChild(obj);
+            }
         }
     }
 };
@@ -139,10 +142,7 @@ osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
 
 osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
     var check = function(o) {
-//        if (o.MagFilter && o.MinFilter && o.WrapT && o.WrapS) {
-            return true;
-//        }
-        return false;
+        return true;
     };
     if (!check(jsonObj)) {
         return;
@@ -222,14 +222,16 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
     }
 
     osgDB.ObjectWrapper.serializers.osg.Node(jsonObj, node);
+
+    var mode, first, count, array;
     for (var i = 0, l = jsonObj.PrimitiveSetList.length; i < l; i++) {
         var entry = jsonObj.PrimitiveSetList[i];
         
         var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || entry.DrawElementUInt || entry.DrawElementsUShort || entry.DrawElementsUByte || entry.DrawElementsUInt || undefined;
         if ( drawElementPrimitive ) {
             var jsonArray = drawElementPrimitive.Indices;
-            var mode = drawElementPrimitive.Mode;
-            var array = new osg.BufferArray(osg.BufferArray[jsonArray.Type], 
+            mode = drawElementPrimitive.Mode;
+            array = new osg.BufferArray(osg.BufferArray[jsonArray.Type], 
                                             jsonArray.Elements, 
                                             jsonArray.ItemSize );
             if (!mode) {
@@ -243,18 +245,20 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
 
         var drawArrayPrimitive = entry.DrawArray || entry.DrawArrays;
         if (drawArrayPrimitive) {
-            var mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
-            var first = drawArrayPrimitive.First !== undefined ? drawArrayPrimitive.First : drawArrayPrimitive.first;
-            var count = drawArrayPrimitive.Count !== undefined ? drawArrayPrimitive.Count : drawArrayPrimitive.count;
+
+            mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
+            first = drawArrayPrimitive.First !== undefined ? drawArrayPrimitive.First : drawArrayPrimitive.first;
+            count = drawArrayPrimitive.Count !== undefined ? drawArrayPrimitive.Count : drawArrayPrimitive.count;
             var drawArray = new osg.DrawArrays(osg.PrimitiveSet[mode], first, count);
             node.getPrimitives().push(drawArray);
+
         }
 
         var drawArrayLengthsPrimitive = entry.DrawArrayLengths || undefined;
         if (drawArrayLengthsPrimitive) {
-            var mode = drawArrayLengthsPrimitive.Mode;
-            var first = drawArrayLengthsPrimitive.First;
-            var array = drawArrayLengthsPrimitive.ArrayLengths;
+            mode = drawArrayLengthsPrimitive.Mode;
+            first = drawArrayLengthsPrimitive.First;
+            array = drawArrayLengthsPrimitive.ArrayLengths;
             var drawArrayLengths =  new osg.DrawArrayLengths(osg.PrimitiveSet[mode], first, array);
             node.getPrimitives().push(drawArrayLengths);
         }

@@ -548,6 +548,7 @@ osg.State.prototype = {
 
         // it takes 4.26% of global cpu
         // there would be a way to cache it and track state if the program has not changed ...
+        var colorAttrib;
         var program = this.programs.lastApplied;
         if (program.generated === true) {
             var updateColorUniform = false;
@@ -555,14 +556,14 @@ osg.State.prototype = {
                 updateColorUniform = true;
                 this.previousAppliedProgram = this.programs.lastApplied;
             } else {
-                var colorAttrib = program.attributesCache.Color;
+                colorAttrib = program.attributesCache.Color;
                 if ( this.vertexAttribMap[colorAttrib] !== this.previousColorAttrib) {
                     updateColorUniform = true;
                 }
             }
 
             if (updateColorUniform) {
-                var colorAttrib = program.attributesCache.Color;
+                colorAttrib = program.attributesCache.Color;
                 if (colorAttrib !== undefined) {
                     if (this.vertexAttribMap[colorAttrib]) {
                         this.uniformArrayState.Color.set([1]);

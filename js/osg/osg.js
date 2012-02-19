@@ -1,28 +1,28 @@
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
-osg.version = '0.0.7';
+osg.version = '0.0.8';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 osg.instance = 0;
 osg.version = 0;
-osg.log = function(str) {
+osg.log = function (str) {
     if (window.console !== undefined) {
         window.console.log(str);
     }
 };
-osg.info = function(str) { osg.log(str); };
-osg.debug = function(str) { osg.log(str); };
+osg.info = function (str) { osg.log(str); };
+osg.debug = function (str) { osg.log(str); };
 
 osg.DEBUG = 0;
 osg.INFO = 1;
 osg.NOTICE = 2;
-osg.setNotifyLevel = function(level) {
-    var log = function(str) {
+osg.setNotifyLevel = function (level) {
+    var log = function (str) {
         if (window.console !== undefined) {
             window.console.log(str);
         }
     };
-    var dummy = function() {};
+    var dummy = function () {};
 
     osg.debug = dummy;
     osg.info = dummy;
@@ -42,11 +42,11 @@ osg.setNotifyLevel = function(level) {
 osg.reportErrorGL = false;
 osg.ReportWebGLError = false;
 
-osg.init = function() {
+osg.init = function () {
     osg.setNotifyLevel(osg.NOTICE);
 };
 
-osg.checkError = function(error) {
+osg.checkError = function (error) {
     if (error === 0) {
         return;
     }
@@ -66,32 +66,32 @@ osg.checkError = function(error) {
 };
 
 // from jquery
-osg.isArray = function( obj ) {
+osg.isArray = function ( obj ) {
     return toString.call(obj) === "[object Array]";
 };
 
-osg.extend = function() {
+osg.extend = function () {
     // Save a reference to some core methods
     var toString = Object.prototype.toString,
-    hasOwnProperty = Object.prototype.hasOwnProperty;
+    hasOwnPropertyFunc = Object.prototype.hasOwnProperty;
 
-    var isFunction = function(obj) {
+    var isFunction = function (obj) {
         return toString.call(obj) === "[object Function]";
     };
     var isArray = osg.isArray;
-    var isPlainObject = function( obj ) {
+    var isPlainObject = function ( obj ) {
 	// Must be an Object.
 	// Because of IE, we also have to check the presence of the constructor property.
 	// Make sure that DOM nodes and window objects don't pass through, as well
 	if ( !obj || toString.call(obj) !== "[object Object]" || obj.nodeType || obj.setInterval ) {
-	    return false;
+            return false;
 	}
 	
 	// Not own constructor property must be Object
 	if ( obj.constructor && 
-             !hasOwnProperty.call(obj, "constructor") && 
-             !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
-	    return false;
+             !hasOwnPropertyFunc.call(obj, "constructor") && 
+             !hasOwnPropertyFunc.call(obj.constructor.prototype, "isPrototypeOf") ) {
+            return false;
 	}
 	
 	// Own properties are enumerated firstly, so to speed up,
@@ -100,7 +100,7 @@ osg.extend = function() {
 	var key;
 	for ( key in obj ) {}
 	
-	return key === undefined || hasOwnProperty.call( obj, key );
+	return key === undefined || hasOwnPropertyFunc.call( obj, key );
     };
 
     // copy reference to target object
@@ -115,7 +115,7 @@ osg.extend = function() {
     }
 
     // Handle case when target is a string or something (possible in deep copy)
-    if ( typeof target !== "object" && !isFunction(target) ) {
+    if ( typeof target !== "object" && !isFunction (target) ) {
 	target = {};
     }
 
@@ -127,30 +127,30 @@ osg.extend = function() {
 
     for ( ; i < length; i++ ) {
 	// Only deal with non-null/undefined values
-	if ( (options = arguments[ i ]) != null ) {
-	    // Extend the base object
-	    for ( name in options ) {
+	if ( (options = arguments[ i ]) !== null ) {
+            // Extend the base object
+            for ( name in options ) {
 		src = target[ name ];
 		copy = options[ name ];
 
 		// Prevent never-ending loop
 		if ( target === copy ) {
-		    continue;
+                    continue;
 		}
 
 		// Recurse if we're merging object literal values or arrays
 		if ( deep && copy && ( isPlainObject(copy) || isArray(copy) ) ) {
-		    var clone = src && ( isPlainObject(src) || isArray(src) ) ? src
+                    var clone = src && ( isPlainObject(src) || isArray(src) ) ? src
 			: isArray(copy) ? [] : {};
 
-		    // Never move original objects, clone them
-		    target[ name ] = osg.extend( deep, clone, copy );
+                    // Never move original objects, clone them
+                    target[ name ] = osg.extend( deep, clone, copy );
 
-		    // Don't bring in undefined values
+                    // Don't bring in undefined values
 		} else if ( copy !== undefined ) {
-		    target[ name ] = copy;
+                    target[ name ] = copy;
 		}
-	    }
+            }
 	}
     }
 
@@ -159,14 +159,14 @@ osg.extend = function() {
 };
 
 
-osg.objectInehrit = function(base, extras) {
+osg.objectInehrit = function (base, extras) {
     function F(){}
     F.prototype = base;
     var obj = new F();
     if(extras)  {osg.objectMix(obj, extras, false); }
     return obj;
 };
-osg.objectMix = function(obj, properties, test){
+osg.objectMix = function (obj, properties, test){
     for (var key in properties) {
         if(!(test && obj[key])) { obj[key] = properties[key]; }
     }
@@ -175,7 +175,7 @@ osg.objectMix = function(obj, properties, test){
 
 osg.objectType = {};
 osg.objectType.type = 0;
-osg.objectType.generate = function(arg) {
+osg.objectType.generate = function (arg) {
     var t = osg.objectType.type;
     osg.objectType[t] = arg;
     osg.objectType[arg] = t;

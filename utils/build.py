@@ -40,6 +40,7 @@ OSG = [
 "osg/FrameStamp.js",
 "osg/Geometry.js",
 "osg/Light.js",
+"osg/LightSource.js",
 "osg/LineWidth.js",
 "osg/Material.js",
 "osg/MatrixTransform.js",

@@ -115,7 +115,7 @@ WebGLUtils = function() {
                 }
                 container.innerHTML = makeFailHTML(str);
             }
-        };
+        }
 
         opt_onError = opt_onError || handleCreationError;
 
@@ -154,7 +154,7 @@ WebGLUtils = function() {
             }
         }
         return context;
-    }
+    };
 
     return {
         create3DContext: create3DContext,
@@ -186,6 +186,6 @@ if (!window.cancelRequestAnimFrame) {
             window.mozCancelRequestAnimationFrame       ||
             window.oCancelRequestAnimationFrame     ||
             window.msCancelRequestAnimationFrame        ||
-            clearTimeout
+            clearTimeout;
     } )();
 }

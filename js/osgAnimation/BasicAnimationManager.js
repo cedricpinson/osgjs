@@ -50,7 +50,7 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
             }
         }
 
-        var t = (t-start) % duration;
+        t = (t-start) % duration;
         var callback = animationParameter.callback;
         if (callback) {
             callback(t);
@@ -120,10 +120,11 @@ osgAnimation.BasicAnimationManager.prototype = osg.objectInehrit(osg.Object.prot
     stopAnimation: function(name) {
         if (this._actives._keys.length > 0) {
             var pri = this._actives._keys.length - 1;
+            var filterFunction = function(element, index, array) { return element !== "_keys";};
             while (pri >=0 ) {
                 if (this._actives[pri][name]) {
                     delete this._actives[pri][name];
-                    this._actives[pri]._keys = Object.keys(this._actives[pri]).filter(function(element, index, array) { return element !== "_keys";});
+                    this._actives[pri]._keys = Object.keys(this._actives[pri]).filter(filterFunction);
                     return;
                 }
                 pri--;

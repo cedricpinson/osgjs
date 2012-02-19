@@ -9,15 +9,18 @@ osg.StateGraph = function () {
 
 osg.StateGraph.prototype = {
     clean: function() {
-        this.leafs.length = 0;
-        // keep it
-        //this.stateset = undefined;
-        //this.parent = undefined;
+        this.leafs.splice(0, this.leafs.length);
+        this.stateset = undefined;
+        this.parent = undefined;
         //this.depth = 0;
-        for (var i = 0, l = this.children.keys.length; i < l; i++) {
-            var key = this.children.keys[i];
+        var keys = this.children.keys;
+        for (var i = 0, l = keys.length; i < l; i++) {
+            var key = keys[i];
             this.children[key].clean();
         }
+        this.children = {};
+        keys.splice(0, keys.length);
+        this.children.keys = keys;
     },
     getStateSet: function() { return this.stateset; },
     findOrInsert: function (stateset)
