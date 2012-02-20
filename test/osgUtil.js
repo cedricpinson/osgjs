@@ -31,7 +31,7 @@ test("osgUtil_TriangleIntersect", function() {
     })();
 
     (function() {
-        var quad = osg.createTexturedQuad(0,0,0, 1,0,0, 0,1,0, 1,1);
+        var quad = osg.createTexturedQuadGeometry(0,0,0, 1,0,0, 0,1,0, 1,1);
 
         var indexes = [];
         indexes[0] = 0;
@@ -46,7 +46,7 @@ test("osgUtil_TriangleIntersect", function() {
 
 
     (function() {
-        var quad = osg.createTexturedQuad(0,0,0, 1,0,0, 0,1,0, 1,1);
+        var quad = osg.createTexturedQuadGeometry(0,0,0, 1,0,0, 0,1,0, 1,1);
 
         var indexes = [];
         indexes[0] = 0;
@@ -165,7 +165,7 @@ test("osgUtil_IntersectVisitor", function() {
     camera.setViewport(new osg.Viewport());
     camera.setViewMatrix(osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0], []));
     camera.setProjectionMatrix(osg.Matrix.makePerspective(60, 800/600, 0.1, 100.0, []));
-    var scene = osg.createTexturedQuad(-0.5, -0.5,0, 1,0,0, 0,1,0, 1,1);
+    var scene = osg.createTexturedQuadGeometry(-0.5, -0.5,0, 1,0,0, 0,1,0, 1,1);
 
     var iv = new osgUtil.IntersectVisitor();
     iv.pushCamera(camera);

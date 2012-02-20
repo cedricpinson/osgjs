@@ -421,6 +421,25 @@ osg.CullVisitor.prototype[osg.Node.prototype.objectType] = function (node) {
         this.popStateSet();
     }
 };
+osg.CullVisitor.prototype[osg.LightSource.prototype.objectType] = function (node) {
+
+    var stateset = node.getStateSet();
+    if (stateset) {
+        this.pushStateSet(stateset);
+    }
+
+    var light = node.getLight();
+    if (light) {
+        this.addPositionedAttribute(light);
+    }
+
+    this.traverse(node);
+
+    if (stateset) {
+        this.popStateSet();
+    }
+};
+
 osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
     var modelview = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
     var bb = node.getBoundingBox();
