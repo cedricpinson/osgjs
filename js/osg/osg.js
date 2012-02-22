@@ -3,39 +3,61 @@ var osg = {};
 
 osg.version = '0.0.8';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
-osg.instance = 0;
-osg.version = 0;
-osg.log = function (str) {
-    if (window.console !== undefined) {
-        window.console.log(str);
-    }
-};
-osg.info = function (str) { osg.log(str); };
-osg.debug = function (str) { osg.log(str); };
+
+// log function
+osg.log = undefined;
+osg.info = undefined;
+osg.warn = undefined;
+osg.debug = undefined;
 
 osg.DEBUG = 0;
 osg.INFO = 1;
 osg.NOTICE = 2;
+osg.WARN = 3;
+
 osg.setNotifyLevel = function (level) {
     var log = function (str) {
         if (window.console !== undefined) {
             window.console.log(str);
         }
     };
+
+    var info = function(str) {
+        if (window.console !== undefined) {
+            window.console.info(str);
+        }
+    };
+
+    var warn = function (str) { 
+        if (window.console !== undefined) {
+            window.console.warn(str);
+        }
+    };
+
+    var debug = function (str) { 
+        if (window.console !== undefined) {
+            window.console.debug(str);
+        }
+    };
+
     var dummy = function () {};
 
     osg.debug = dummy;
     osg.info = dummy;
     osg.log = dummy;
+    osg.warn = dummy;
 
     if (level <= osg.DEBUG) {
-        osg.debug = log;
+        osg.debug = debug;
     }
     if (level <= osg.INFO) {
-        osg.info = log;
+        osg.info = info;
     }
     if (level <= osg.NOTICE) {
         osg.log = log;
+    }
+    if (level <= osg.WARN) {
+        osg.warn = warn;
     }
 };
 
