@@ -5,10 +5,29 @@ osg.version = '0.0.8';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 
 // log function
-osg.log = undefined;
-osg.info = undefined;
-osg.warn = undefined;
-osg.debug = undefined;
+osg.log = function (str) {
+    if (window.console !== undefined) {
+        window.console.log(str);
+    }
+};
+
+osg.info = function(str) {
+    if (window.console !== undefined) {
+        window.console.info(str);
+    }
+};
+
+osg.warn = function (str) {
+    if (window.console !== undefined) {
+        window.console.warn(str);
+    }
+};
+
+osg.debug = function (str) {
+    if (window.console !== undefined) {
+        window.console.debug(str);
+    }
+};
 
 osg.DEBUG = 0;
 osg.INFO = 1;
@@ -28,13 +47,13 @@ osg.setNotifyLevel = function (level) {
         }
     };
 
-    var warn = function (str) { 
+    var warn = function (str) {
         if (window.console !== undefined) {
             window.console.warn(str);
         }
     };
 
-    var debug = function (str) { 
+    var debug = function (str) {
         if (window.console !== undefined) {
             window.console.debug(str);
         }
