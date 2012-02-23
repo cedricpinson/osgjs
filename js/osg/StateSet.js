@@ -4,7 +4,7 @@
  */
 osg.StateSet = function () {
     osg.Object.call(this);
-    this.id = osg.instance++;
+    this.id = osg.StateSet.instance++;
     this.attributeMap = {};
     this.attributeMap.attributeKeys = [];
 
@@ -13,6 +13,7 @@ osg.StateSet = function () {
     this._binName = undefined;
     this._binNumber = 0;
 };
+osg.StateSet.instance = 0;
 
 /** @lends osg.StateSet.prototype */
 osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {

@@ -12,8 +12,8 @@ test("osgDB.parseSceneGraph", function() {
             "stateset": {
                 "material": {
                     "ambient": [ 0.5, 0.5, 0.5, 1], 
-                    "diffuse": [ .1, .1, .1, .1], 
-                    "emission": [ 0, 0, 0, .5], 
+                    "diffuse": [ 0.1, 0.1, 0.1, 0.1], 
+                    "emission": [ 0, 0, 0, 0.5], 
                     "name": "FloorBorder1", 
                     "shininess": 2.5, 
                     "specular": [ 0.5, 0.7, 0.5, 1]
@@ -40,8 +40,8 @@ test("osgDB.parseSceneGraph", function() {
         var material = result.getStateSet().getAttribute('Material');
         var materialCheck = ( material !== undefined &&
                               check_near(material.getAmbient(), [0.5, 0.5, 0.5, 1]) && 
-                              check_near(material.getDiffuse(), [0.1, 0.1, 0.1, .1]) && 
-                              check_near(material.getEmission(), [0.0, 0.0, 0.0, .5]) && 
+                              check_near(material.getDiffuse(), [0.1, 0.1, 0.1, 0.1]) && 
+                              check_near(material.getEmission(), [0.0, 0.0, 0.0, 0.5]) && 
                               check_near(material.getSpecular(), [0.5, 0.7, 0.5, 1]) &&
                               check_near(material.getShininess(), 2.5) && 
                               material.getName() === "FloorBorder1");
@@ -75,7 +75,7 @@ test("osgDB.parseSceneGraph", function() {
                                          "osg.Material": {
                                              "Name": "FloorBorder1", 
                                              "Ambient": [ 0.5, 0.5, 0.5, 1], 
-                                             "Diffuse": [ .1, .1, .1, .1], 
+                                             "Diffuse": [ 0.1, 0.1, 0.1, 0.1], 
                                              "Emission": [ 0, 0, 0, .5], 
                                              "Shininess": 2.5, 
                                              "Specular": [ 0.5, 0.7, 0.5, 1]
@@ -101,14 +101,14 @@ test("osgDB.parseSceneGraph", function() {
         var material = result.getStateSet().getAttribute('Material');
         var materialCheck = ( material !== undefined &&
                               check_near(material.getAmbient(), [0.5, 0.5, 0.5, 1]) && 
-                              check_near(material.getDiffuse(), [0.1, 0.1, 0.1, .1]) && 
-                              check_near(material.getEmission(), [0.0, 0.0, 0.0, .5]) && 
+                              check_near(material.getDiffuse(), [0.1, 0.1, 0.1, 0.1]) && 
+                              check_near(material.getEmission(), [0.0, 0.0, 0.0, 0.5]) && 
                               check_near(material.getSpecular(), [0.5, 0.7, 0.5, 1]) &&
                               check_near(material.getShininess(), 2.5) && 
                               material.getName() === "FloorBorder1");
 
         ok(materialCheck, "check Material");
-        var texture = result.getStateSet().getTextureAttribute(0,"Texture")
+        var texture = result.getStateSet().getTextureAttribute(0,"Texture");
         ok( texture !== undefined, "Check texture");
         ok( texture.getWrapS() === osg.Texture.REPEAT, "Check wraps texture");
         ok( texture.getWrapT() === osg.Texture.CLAMP_TO_EDGE, "Check wrapt texture");
@@ -228,7 +228,7 @@ test("osgDB.parseSceneGraph", function() {
                             }
                         } ]
                     }
-                } ], 
+                } ]
             }
         };
 
@@ -236,8 +236,8 @@ test("osgDB.parseSceneGraph", function() {
         var result = osgDB.ObjectWrapper.readObject(tree);
         ok(result.getUpdateCallbackList().length === 1, "check update callback");
 
-        ok(result.getUpdateCallback().getAnimationMap()['Test'] !== undefined, "check animation list");
-        var animation =  result.getUpdateCallback().getAnimationMap()['Test'];
+        ok(result.getUpdateCallback().getAnimationMap().Test !== undefined, "check animation list");
+        var animation =  result.getUpdateCallback().getAnimationMap().Test;
         ok(animation !== undefined, "check animation");        
         ok(animation.getChannels().length === 2, "check channels");
         ok(animation.getChannels()[1].getName() === "scale", "check channel 1");
@@ -339,7 +339,7 @@ test("osgDB.parseSceneGraph", function() {
                             }
                         } ]
                     }
-                } ], 
+                } ]
             }
         };
 
@@ -414,6 +414,36 @@ test("osgDB.parseSceneGraph", function() {
         ok(result.getMode() === osg.PrimitiveSet.TRIANGLES, "check DrawArrayLengths triangles");
         ok(result.getArrayLengths()[0] === 3 , "check array lenght");
         ok(result.getFirst() === 10, "check triangles first");
+
+    })();
+
+
+    (function() {
+
+        var tree = {
+            "osg.LightSource": {
+                "Name": "Lamp.005", 
+                "Light": {
+                    "osg.Light": {
+                        "Ambient": [ 0, 0, 0, 1], 
+                        "ConstantAttenuation": 1, 
+                        "Diffuse": [ 0.88, 0.70901, 0.48297, 1], 
+                        "Direction": [ 0, 0, -1], 
+                        "LightNum": 1, 
+                        "LinearAttenuation": 0, 
+                        "Position": [ 0, 0, 1, 0], 
+                        "QuadraticAttenuation": 0, 
+                        "Specular": [ 0.88, 0.88, 0.88, 1], 
+                        "SpotCutoff": 180, 
+                        "SpotExponent": 0
+                    }
+                }
+            }
+        };
+
+        var result = osgDB.ObjectWrapper.readObject(tree);
+        //osg.log(result);
+        ok(result.getLight() !== undefined, "check if LightSource has a light");
 
     })();
 

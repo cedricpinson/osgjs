@@ -140,6 +140,48 @@ osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
     blend.setDestinationAlpha(jsonObj.DestinationAlpha);
 };
 
+
+osgDB.ObjectWrapper.serializers.osg.Light = function(jsonObj, light) {
+    var check = function(o) {
+        if (o.LightNum !== undefined &&
+            o.Ambient !== undefined &&
+            o.Diffuse !== undefined &&
+            o.Direction !== undefined &&
+            o.Position !== undefined &&
+            o.Specular !== undefined &&
+            o.SpotCutoff !== undefined &&
+            o.LinearAttenuation !== undefined &&
+            o.ConstantAttenuation !== undefined &&
+            o.QuadraticAttenuation !== undefined ) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, light);
+    light.setAmbient(jsonObj.Ambient);
+    light.setConstantAttenuation(jsonObj.ConstantAttenuation);
+    light.setDiffuse(jsonObj.Diffuse);
+    light.setDirection(jsonObj.Direction);
+    light.setLightNumber(jsonObj.LightNum);
+    light.setLinearAttenuation(jsonObj.LinearAttenuation);
+    light.setPosition(jsonObj.Position);
+    light.setQuadraticAttenuation(jsonObj.QuadraticAttenuation);
+    light.setSpecular(jsonObj.Specular);
+    light.setSpotCutoff(jsonObj.SpotCutoff);
+    light.setSpotCutoffEnd(180.0);
+    if (jsonObj.SpotExponent !== undefined) {
+        light.setSpotCutoffEnd(90.0*(1.0-jsonObj.SpotExponent/128.0));
+    }
+    if (jsonObj.SpotCutoffEnd !== undefined) {
+        light.setSpotCutoffEnd(SpotCutoffEnd);
+    }
+
+};
+
 osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
     var check = function(o) {
         return true;
@@ -207,6 +249,23 @@ osgDB.ObjectWrapper.serializers.osg.MatrixTransform = function(jsonObj, node) {
     if (jsonObj.Matrix) {
         node.setMatrix(jsonObj.Matrix);
     }
+};
+
+
+osgDB.ObjectWrapper.serializers.osg.LightSource = function(jsonObj, node) {
+    var check = function(o) {
+        if (o.Light) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Node(jsonObj, node);
+    var light = osgDB.ObjectWrapper.readObject(jsonObj.Light);
+    node.setLight(light);
 };
 
 

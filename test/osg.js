@@ -139,11 +139,11 @@ test("osg.BoundingSphere", function() {
     var main = new osg.Node();
     var cam = new osg.Camera();
     cam.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    var q = osg.createTexturedQuad(-25,-25,0,
+    var q = osg.createTexturedQuadGeometry(-25,-25,0,
                                   50, 0 ,0,
                                   0, 50 ,0);
     main.addChild(q);
-    var q2 = osg.createTexturedQuad(-250,0,0,
+    var q2 = osg.createTexturedQuadGeometry(-250,0,0,
                                   50, 0 ,0,
                                   0, 50 ,0);
     cam.addChild(q2);
@@ -154,7 +154,7 @@ test("osg.BoundingSphere", function() {
 
     // test case with invalid bounding sphere
     var main2 = new osg.Node();
-    var q3 = osg.createTexturedQuad(-25,-25,0,
+    var q3 = osg.createTexturedQuadGeometry(-25,-25,0,
                                   50, 0 ,0,
                                   0, 50 ,0);
     var mt3 = new osg.MatrixTransform();
@@ -205,13 +205,13 @@ test("osg.Quat.init", function() {
 
 
 test("osg.Quat.makeRotate", function() {
-    var q0 = osg.Quat.makeRotate(Math.PI, 1, 0, 0);
+    var q0 = osg.Quat.makeRotate(Math.PI, 1, 0, 0, []);
     near(q0, [1, 0, 0, 6.12303e-17], 1e-5);
 
-    var q1 = osg.Quat.makeRotate(Math.PI/2, 0, 1, 0);
+    var q1 = osg.Quat.makeRotate(Math.PI/2, 0, 1, 0, []);
     near(q1, [0, 0.707107, 0, 0.707107]);
 
-    var q2 = osg.Quat.makeRotate(Math.PI/4, 0, 0, 1);
+    var q2 = osg.Quat.makeRotate(Math.PI/4, 0, 0, 1, []);
     near(q2, [0, 0, 0.382683, 0.92388]);
 });
 
@@ -359,7 +359,7 @@ test("osg.Matrix.getLookAt", function() {
 });
 
 test("osg.Matrix.transformVec3", function() {
-    var m = osg.Matrix.makeRotate( Math.PI/2.0, 0, 1, 0);
+    var m = osg.Matrix.makeRotate( Math.PI/2.0, 0, 1, 0, []);
     var vec = [0, 0, 10];
     var inv = [];
     osg.Matrix.inverse(m, inv);
@@ -412,7 +412,7 @@ test("osg.Matrix.transpose", function() {
 });
 
 test("osg.Matrix.makeRotate", function() {
-    var res = osg.Matrix.makeRotate(0, 0,0,1);
+    var res = osg.Matrix.makeRotate(0, 0,0,1, []);
     near(res , [1, 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
@@ -844,7 +844,7 @@ test("osg.CullVisitor", function() {
         var camera0 = new osg.Camera();
         camera0.setViewport(new osg.Viewport());
         camera0.setRenderOrder(osg.Transform.NESTED_RENDER);
-        var geom = osg.createTexturedQuad(-10/2.0, 0, -10/2.0,
+        var geom = osg.createTexturedQuadGeometry(-10/2.0, 0, -10/2.0,
                                           20, 0, 0,
                                           0, 0 , 20,
                                           1,1);
@@ -877,7 +877,7 @@ test("osg.CullVisitor", function() {
         
         var mt = new osg.MatrixTransform();
         mt.setMatrix(osg.Matrix.makeTranslate(0,0, 10));
-        var geom = osg.createTexturedQuad(-5.0, -5, 0,
+        var geom = osg.createTexturedQuadGeometry(-5.0, -5, 0,
                                           10, 0, 0,
                                           0, 10 , 0,
                                           1,1);
@@ -923,7 +923,7 @@ test("osg.CullVisitor", function() {
         
         var mt = new osg.MatrixTransform();
         mt.setMatrix(osg.Matrix.makeTranslate(0,0, 10));
-        var geom = osg.createTexturedQuad(-5.0, -5, 0,
+        var geom = osg.createTexturedQuadGeometry(-5.0, -5, 0,
                                           10, 0, 0,
                                           0, 10 , 0,
                                           1,1);
@@ -970,7 +970,7 @@ test("osg.CullVisitor", function() {
     (function() {
         var camera0 = new osg.Camera();
         
-        var geom = osg.createTexturedQuad(-5.0, -5, 0,
+        var geom = osg.createTexturedQuadGeometry(-5.0, -5, 0,
                                           10, 0, 0,
                                           0, 10 , 0,
                                           1,1);
@@ -1389,7 +1389,7 @@ test("osg.Light", function() {
         var l1 = new osg.Light();
         l1.setLightNumber(1);
 
-        var q = osg.createTexturedQuad(-25,-25,0,
+        var q = osg.createTexturedQuadGeometry(-25,-25,0,
                                        50, 0 ,0,
                                        0, 50 ,0);
 
@@ -1423,7 +1423,7 @@ test("osg.Light", function() {
         l1.setName("enableLight1");
 
         node1.getOrCreateStateSet().setAttributeAndMode(l1);
-        var q = osg.createTexturedQuad(-25,-25,0,
+        var q = osg.createTexturedQuadGeometry(-25,-25,0,
                                        50, 0 ,0,
                                        0, 50 ,0);
 

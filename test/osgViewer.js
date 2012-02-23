@@ -18,8 +18,8 @@ test("osgViewer.Viewer", function() {
         var canvas = createCanvas();
         var viewer = new osgViewer.Viewer(canvas);
         var createScene = function() {
-            return osg.createTexturedBox(0,0,0,
-                                         10, 10, 10);
+            return osg.createTexturedBoxGeometry(0,0,0,
+                                                 10, 10, 10);
         };
         viewer.init();
         viewer.setupManipulator();
