@@ -143,18 +143,11 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     "   return vec3(ModelViewMatrix * vec4(Vertex,1.0));",
                     "}",
                     "",
-                    "float getLightAttenuation(vec3 lightDir, float constant, float linear, float quadratic) {",
-                    "    ",
-                    "    float d = length(lightDir);",
-                    "    float att = 1.0 / ( constant + linear*d + quadratic*d*d);",
-                    "    return att;",
-                    "}",
                     ""].join('\n');
             break;
         case osg.ShaderGeneratorType.VertexMain:
             str = [ "",
-                    "  vec3 vertexEye = computeEyeVertex();",
-                    "  FragEyeVector = -vertexEye;",
+                    "  FragEyeVector = computeEyeVertex();",
                     "  FragNormal = computeNormal();",
                     "" ].join('\n');
             break;
@@ -167,6 +160,12 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
         case osg.ShaderGeneratorType.FragmentFunction:
             str = [ "",
+                    "float getLightAttenuation(vec3 lightDir, float constant, float linear, float quadratic) {",
+                    "    ",
+                    "    float d = length(lightDir);",
+                    "    float att = 1.0 / ( constant + linear*d + quadratic*d*d);",
+                    "    return att;",
+                    "}",
                     "vec4 computeLightContribution(vec4 materialEmission,",
                     "                              vec4 materialAmbient,",
                     "                              vec4 materialDiffuse,",
@@ -186,6 +185,8 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     "    vec3 L = lightDirection;",
                     "    vec3 N = normal;",
                     "    float NdotL = max(dot(L, N), 0.0);",
+                    "    float halfTerm = NdotL;",
+                    "    //halfTerm *= halfTerm;",
                     "    vec4 ambient = lightAmbient;",
                     "    vec4 diffuse = vec4(0.0);",
                     "    vec4 specular = vec4(0.0);",
@@ -205,18 +206,40 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     "          spot = clamp((cosCurAngle - lightCosSpotCutoffEnd) / cosInnerMinusOuterAngle, 0.0, 1.0);",
                     "        }",
 
-                    "        diffuse = lightDiffuse * NdotL;",
+                    "        diffuse = lightDiffuse * ((halfTerm));",
                     "        specular = lightSpecular * RdotE;",
                     "    }",
                     "",
                     "    return materialEmission + (materialAmbient*ambient + (materialDiffuse*diffuse + materialSpecular*specular) * spot) * lightAttenuation;",
                     "}",
+                    "float linearrgb_to_srgb1(float c)",
+                    "{",
+                    "  float v = 0.0;",
+                    "  if(c < 0.0031308) {",
+                    "    if ( c > 0.0)",
+                    "      v = c * 12.92;",
+                    "  } else {",
+                    "    v = 1.055 * pow(c, 1.0/2.4) - 0.055;",
+                    "  }",
+                    "  return v;",
+                    "}",
+
+                    "vec4 linearrgb_to_srgb(vec4 col_from)",
+                    "{",
+                    "  vec4 col_to;",
+                    "  col_to.r = linearrgb_to_srgb1(col_from.r);",
+                    "  col_to.g = linearrgb_to_srgb1(col_from.g);",
+                    "  col_to.b = linearrgb_to_srgb1(col_from.b);",
+                    "  col_to.a = col_from.a;",
+                    "  return col_to;",
+                    "}",
+
                     "" ].join('\n');
             break;
         case osg.ShaderGeneratorType.FragmentMain:
             str = [ "",
                     "  vec3 normal = normalize(FragNormal);",
-                    "  vec3 eyeVector = normalize(FragEyeVector);",
+                    "  vec3 eyeVector = normalize(-FragEyeVector);",
                     ""].join("\n");
             break;
         case osg.ShaderGeneratorType.FragmentEnd:
@@ -233,10 +256,13 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         var str = "";
         switch (type) {
         case osg.ShaderGeneratorType.VertexInit:
+            str = "";
+            break;
+        case osg.ShaderGeneratorType.VertexMain:
+            str = "";
+            break;
+        case osg.ShaderGeneratorType.FragmentInit:
             str = [ "",
-                    "varying vec3 FragDirection;",
-                    "varying vec3 FragSpotDirection;",
-                    "varying float FragAttenuation;",
                     "uniform vec4 LightPosition;",
                     "uniform vec3 LightDirection;",
                     "uniform mat4 LightMatrix;",
@@ -244,68 +270,41 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     "uniform float LightConstantAttenuation;",
                     "uniform float LightLinearAttenuation;",
                     "uniform float LightQuadraticAttenuation;",
-                    "",
-                    "" ].join('\n');
-            str = str.replace(/LightMatrix/g, this.getParameterName('matrix'));
-            str = str.replace(/LightInvMatrix/g, this.getParameterName('invMatrix'));
-            str = str.replace(/FragDirection/g, this.getParameterName('fragDirection'));
-            str = str.replace(/FragSpotDirection/g, this.getParameterName('fragSpotDirection'));
-            str = str.replace(/LightPosition/g, this.getParameterName('position'));
-            str = str.replace(/LightDirection/g, this.getParameterName('direction'));
-            str = str.replace(/FragAttenuation/g, this.getParameterName('fragAttenuation'));
-            str = str.replace(/LightConstantAttenuation/g, this.getParameterName('constantAttenuation'));
-            str = str.replace(/LightLinearAttenuation/g, this.getParameterName('linearAttenuation'));
-            str = str.replace(/LightQuadraticAttenuation/g, this.getParameterName('quadraticAttenuation'));
-            break;
-        case osg.ShaderGeneratorType.VertexMain:
-            str = [ "",
-                    "  vec3 lightEye = vec3(LightMatrix * LightPosition);",
-                    "  vec3 lightDir;",
-                    "  if (LightPosition[3] == 1.0) {",
-                    "    lightDir = lightEye - vertexEye;",
-                    "  } else {",
-                    "    lightDir = lightEye;",
-                    "  }",
-                    "  FragSpotDirection = normalize(mat3(LightInvMatrix)*LightDirection);",
-                    "  FragDirection = lightDir;",
-                    "  FragAttenuation = getLightAttenuation(lightDir, LightAttenuationConstant, LightAttenuationLinear, LightAttenuationQuadratic);",
-                    "" ].join('\n');
-            str = str.replace(/LightMatrix/g, this.getParameterName('matrix'));
-            str = str.replace(/LightInvMatrix/g, this.getParameterName('invMatrix'));
-            str = str.replace(/LightPosition/g, this.getParameterName('position'));
-            str = str.replace(/lightEye/g, this.getParameterName('eye'));
-            str = str.replace(/FragDirection/g, this.getParameterName('fragDirection'));
-            str = str.replace(/FragSpotDirection/g, this.getParameterName('fragSpotDirection'));
-            str = str.replace(/LightDirection/g, this.getParameterName('direction'));
-            str = str.replace(/lightDir/g, this.getParameterName('lightDir'));
-            str = str.replace(/FragAttenuation/g, this.getParameterName('fragAttenuation'));
-            str = str.replace(/LightAttenuationConstant/g, this.getParameterName('constantAttenuation'));
-            str = str.replace(/LightAttenuationLinear/g, this.getParameterName('linearAttenuation'));
-            str = str.replace(/LightAttenuationQuadratic/g, this.getParameterName('quadraticAttenuation'));
-            break;
-        case osg.ShaderGeneratorType.FragmentInit:
-            str = [ "",
-                    "varying vec3 FragDirection;",
-                    "varying vec3 FragSpotDirection;",
-                    "varying float FragAttenuation;",
                     "uniform vec4 LightAmbient;",
                     "uniform vec4 LightDiffuse;",
                     "uniform vec4 LightSpecular;",
                     "uniform float LightSpotCutoff;",
                     "uniform float LightSpotCutoffEnd;",
                     "" ].join('\n');
-            str = str.replace(/FragDirection/g, this.getParameterName('fragDirection'));
-            str = str.replace(/FragSpotDirection/g, this.getParameterName('fragSpotDirection'));
+
+            str = str.replace(/LightPosition/g, this.getParameterName('position'));
+            str = str.replace(/LightDirection/g, this.getParameterName('direction'));
+            str = str.replace(/LightMatrix/g, this.getParameterName('matrix'));
+            str = str.replace(/LightInvMatrix/g, this.getParameterName('invMatrix'));
+            str = str.replace(/LightConstantAttenuation/g, this.getParameterName('constantAttenuation'));
+            str = str.replace(/LightLinearAttenuation/g, this.getParameterName('linearAttenuation'));
+            str = str.replace(/LightQuadraticAttenuation/g, this.getParameterName('quadraticAttenuation'));
+
             str = str.replace(/LightAmbient/g, this.getParameterName('ambient'));
             str = str.replace(/LightDiffuse/g, this.getParameterName('diffuse'));
             str = str.replace(/LightSpecular/g, this.getParameterName('specular'));
             str = str.replace(/LightSpotCutoff/g, this.getParameterName('spotCutoff'));
             str = str.replace(/LightSpotCutoffEnd/g, this.getParameterName('spotCutoffEnd'));
-            str = str.replace(/FragAttenuation/g, this.getParameterName('fragAttenuation'));
+
             break;
         case osg.ShaderGeneratorType.FragmentMain:
             str = [ "",
-                    "  vec3 lightDirectionNormalized = normalize(FragDirection);",
+                    "  vec3 lightEye = vec3(LightMatrix * LightPosition);",
+                    "  vec3 lightDir;",
+                    "  if (LightPosition[3] == 1.0) {",
+                    "    lightDir = lightEye - FragEyeVector;",
+                    "  } else {",
+                    "    lightDir = lightEye;",
+                    "  }",
+                    "  vec3 fragSpotDirection = normalize(mat3(LightInvMatrix)*LightDirection);",
+                    "  vec3 fragDirection = lightDir;",
+                    "  float fragAttenuation = getLightAttenuation(lightDir, LightConstantAttenuation, LightLinearAttenuation, LightQuadraticAttenuation);",
+                    "  vec3 lightDirectionNormalized = normalize(fragDirection);",
                     "  float lightCosSpotCutoff = cos(radians(LightSpotCutoff));",
                     "  float lightCosSpotCutoffEnd = cos(radians(LightSpotCutoffEnd));",
                     "  LightColor += computeLightContribution(MaterialEmission,",
@@ -319,15 +318,26 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     "                                         normal,",
                     "                                         eyeVector,",
                     "                                         lightDirectionNormalized,",
-                    "                                         FragSpotDirection,",
+                    "                                         fragSpotDirection,",
                     "                                         lightCosSpotCutoff,",
                     "                                         lightCosSpotCutoffEnd,",
-                    "                                         FragAttenuation);",
+                    "                                         fragAttenuation);",
                     "" ].join('\n');
 
+            str = str.replace(/lightEye/g, this.getParameterName('lightEye'));
+            str = str.replace(/lightDir/g, this.getParameterName('lightDir'));
             str = str.replace(/lightDirectionNormalized/g, this.getParameterName('lightDirectionNormalized'));
-            str = str.replace(/FragDirection/g, this.getParameterName('fragDirection'));
-            str = str.replace(/FragSpotDirection/g, this.getParameterName('fragSpotDirection'));
+            str = str.replace(/fragDirection/g, this.getParameterName('fragDirection'));
+            str = str.replace(/fragSpotDirection/g, this.getParameterName('fragSpotDirection'));
+
+            str = str.replace(/LightPosition/g, this.getParameterName('position'));
+            str = str.replace(/LightDirection/g, this.getParameterName('direction'));
+            str = str.replace(/LightMatrix/g, this.getParameterName('matrix'));
+            str = str.replace(/LightInvMatrix/g, this.getParameterName('invMatrix'));
+            str = str.replace(/LightConstantAttenuation/g, this.getParameterName('constantAttenuation'));
+            str = str.replace(/LightLinearAttenuation/g, this.getParameterName('linearAttenuation'));
+            str = str.replace(/LightQuadraticAttenuation/g, this.getParameterName('quadraticAttenuation'));
+
             str = str.replace(/LightAmbient/g, this.getParameterName('ambient'));
             str = str.replace(/LightDiffuse/g, this.getParameterName('diffuse'));
             str = str.replace(/LightSpecular/g, this.getParameterName('specular'));
@@ -337,7 +347,7 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             str = str.replace(/lightSpotCutoffEnd/g, this.getParameterName('lightSpotCutoffEnd'));
             str = str.replace(/lightCosSpotCutoff/g, this.getParameterName('lightCosSpotCutoff'));
             str = str.replace(/lightCosSpotCutoffEnd/g, this.getParameterName('lightCosSpotCutoffEnd'));
-            str = str.replace(/FragAttenuation/g, this.getParameterName('fragAttenuation'));
+            str = str.replace(/fragAttenuation/g, this.getParameterName('fragAttenuation'));
             break;
         }
         return str;
