@@ -172,7 +172,7 @@ osg.ShaderGenerator.prototype = {
 
     fillTextureShader: function (attributeMapList, validTextureAttributeKeys, mode) {
         var shader = "";
-        var instanciedTypeShader = {};
+        var commonTypeShader = {};
 
         for (var i = 0, l = validTextureAttributeKeys.length; i < l; i++) {
             var attributeKeys = validTextureAttributeKeys[i];
@@ -185,13 +185,13 @@ osg.ShaderGenerator.prototype = {
 
                 var element = attributes[key].globalDefault;
 
-                if (element.writeShaderInstance !== undefined && instanciedTypeShader[key] === undefined) {
-                    shader += element.writeShaderInstance(i, mode);
-                    instanciedTypeShader[key] = true;
+                if (element.generateShaderCommon !== undefined && commonTypeShader[key] === undefined) {
+                    shader += element.generateShaderCommon(i, mode);
+                    commonTypeShader[key] = true;
                 }
 
-                if (element.writeToShader) {
-                    shader += element.writeToShader(i, mode);
+                if (element.generateShader) {
+                    shader += element.generateShader(i, mode);
                 }
             }
         }
@@ -200,19 +200,19 @@ osg.ShaderGenerator.prototype = {
 
     fillShader: function (attributeMap, validAttributeKeys, mode) {
         var shader = "";
-        var instanciedTypeShader = {};
+        var commonTypeShader = {};
 
         for (var j = 0, m = validAttributeKeys.length; j < m; j++) {
             var key = validAttributeKeys[j];
             var element = attributeMap[key].globalDefault;
             var type = element.getType();
-            if (element.writeShaderInstance !== undefined && instanciedTypeShader[type] === undefined) {
-                shader += element.writeShaderInstance(mode);
-                instanciedTypeShader[type] = true;
+            if (element.generateShaderCommon !== undefined && commonTypeShader[type] === undefined) {
+                shader += element.generateShaderCommon(mode);
+                commonTypeShader[type] = true;
             }
 
-            if (element.writeToShader) {
-                shader += element.writeToShader(mode);
+            if (element.generateShader) {
+                shader += element.generateShader(mode);
             }
         }
         return shader;

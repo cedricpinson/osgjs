@@ -252,7 +252,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         this[mode] = injectionFunction;
     },
 
-    writeToShader: function(unit, type)
+    generateShader: function(unit, type)
     {
         if (this[type]) {
             return this[type].call(this,unit);

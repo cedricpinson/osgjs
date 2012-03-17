@@ -58,27 +58,39 @@ osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         this._dirty = false;
     },
 
-    writeToShader: function(type)
-    {
-        var str = "";
-        switch (type) {
-        case osg.ShaderGeneratorType.VertexInit:
-            str =  [ "uniform vec4 MaterialAmbient;",
-                     "uniform vec4 MaterialDiffuse;",
-                     "uniform vec4 MaterialSpecular;",
-                     "uniform vec4 MaterialEmission;",
-                     "uniform float MaterialShininess;",
-                     ""].join('\n');
-            break;
-        case osg.ShaderGeneratorType.FragmentInit:
-            str =  [ "uniform vec4 MaterialAmbient;",
-                     "uniform vec4 MaterialDiffuse;",
-                     "uniform vec4 MaterialSpecular;",
-                     "uniform vec4 MaterialEmission;",
-                     "uniform float MaterialShininess;",
-                     ""].join('\n');
-            break;
+
+    // will contain functions to generate shader
+    _shader: {},
+    _shaderCommon: {},
+
+    generateShader: function(type) {
+        if (this._shader[type]) {
+            return this._shader[type].call(this);
         }
-        return str;
+        return "";
     }
+
 });
+
+
+osg.Material.prototype._shader[osg.ShaderGeneratorType.VertexInit] = function()
+{
+    var str =  [ "uniform vec4 MaterialAmbient;",
+                 "uniform vec4 MaterialDiffuse;",
+                 "uniform vec4 MaterialSpecular;",
+                 "uniform vec4 MaterialEmission;",
+                 "uniform float MaterialShininess;",
+                 ""].join('\n');
+    return str;
+};
+
+osg.Material.prototype._shader[osg.ShaderGeneratorType.FragmentInit] = function()
+{
+    var str =  [ "uniform vec4 MaterialAmbient;",
+                 "uniform vec4 MaterialDiffuse;",
+                 "uniform vec4 MaterialSpecular;",
+                 "uniform vec4 MaterialEmission;",
+                 "uniform float MaterialShininess;",
+                 ""].join('\n');
+    return str;
+};

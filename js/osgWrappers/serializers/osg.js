@@ -172,14 +172,10 @@ osgDB.ObjectWrapper.serializers.osg.Light = function(jsonObj, light) {
     light.setQuadraticAttenuation(jsonObj.QuadraticAttenuation);
     light.setSpecular(jsonObj.Specular);
     light.setSpotCutoff(jsonObj.SpotCutoff);
-    light.setSpotCutoffEnd(180.0);
+    light.setSpotBlend(0.01);
     if (jsonObj.SpotExponent !== undefined) {
-        light.setSpotCutoffEnd(90.0*(1.0-jsonObj.SpotExponent/128.0));
+        light.setSpotBlend(jsonObj.SpotExponent/128.0);
     }
-    if (jsonObj.SpotCutoffEnd !== undefined) {
-        light.setSpotCutoffEnd(SpotCutoffEnd);
-    }
-
 };
 
 osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
