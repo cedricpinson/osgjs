@@ -284,7 +284,6 @@ osg.Light.prototype._shaderCommon[osg.ShaderGeneratorType.FragmentMain] = functi
 osg.Light.prototype._shaderCommon[osg.ShaderGeneratorType.FragmentEnd] = function() {
     return [ "",
              "  fragColor *= LightColor;",
-             "  //fragColor = linearrgb_to_srgb(fragColor * LightColor);",
              ""].join('\n');
 };
 
@@ -323,7 +322,7 @@ osg.Light.prototype._shader[osg.ShaderGeneratorType.FragmentMain] = function()
                 "  } else {",
                 "    lightDir = lightEye;",
                 "  }",
-                "  vec3 spotDirection = normalize(mat3(Light_invMatrix)*Light_direction);",
+                "  vec3 spotDirection = normalize(mat3(vec3(Light_invMatrix[0]), vec3(Light_invMatrix[1]), vec3(Light_invMatrix[2]))*Light_direction);",
                 "  float attenuation = getLightAttenuation(lightDir, Light_constantAttenuation, Light_linearAttenuation, Light_quadraticAttenuation);",
                 "  lightDir = normalize(lightDir);",
                 "  LightColor += computeLightContribution(MaterialEmission,",
