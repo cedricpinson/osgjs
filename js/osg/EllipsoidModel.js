@@ -73,11 +73,15 @@ osg.EllipsoidModel.prototype = {
         var flattening = (this._radiusEquator-this._radiusPolar)/this._radiusEquator;
         this._eccentricitySquared = 2*flattening - flattening*flattening;
     },
-    computeLocalToWorldTransformFromLatLongHeight : function(latitude, longitude, height) {
-        var pos = this.convertLatLongHeightToXYZ(latitude, longitude, height);
-        var m = osg.Matrix.makeTranslate(pos[0], pos[1], pos[2], []);
-        this.computeCoordinateFrame(latitude, longitude, m);
-        return m;
+    computeLocalToWorldTransformFromLatLongHeight : function(latitude, longitude, height, result) {
+        if (result === undefined) {
+            osg.warn("deprecated, use this signature computeLocalToWorldTransformFromLatLongHeight(latitude, longitude, height, result)");
+            result = new Array(16);
+        }
+        var pos = this.convertLatLongHeightToXYZ(latitude, longitude, height, result);
+        var m = osg.Matrix.makeTranslate(pos[0], pos[1], pos[2], result);
+        this.computeCoordinateFrame(latitude, longitude, result);
+        return result;
     },
     computeLocalToWorldTransformFromXYZ : function(X, Y, Z) {
         var lla = this.convertXYZToLatLongHeight(X, Y, Z);
