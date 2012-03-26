@@ -12,16 +12,27 @@ osg.EllipsoidModel.prototype = {
     setRadiusPolar: function(radius) { this._radiusPolar = radius; 
                                               this.computeCoefficients(); },
     getRadiusPolar: function() { return this._radiusPolar; },
-    convertLatLongHeightToXYZ: function ( latitude, longitude, height ) {
+    convertLatLongHeightToXYZ: function ( latitude, longitude, height, result ) {
+        if (result === undefined) {
+            osg.warn("deprecated, use this signature convertLatLongHeightToXYZ( latitude, longitude, height, result )");
+            result = [];
+        }
         var sin_latitude = Math.sin(latitude);
         var cos_latitude = Math.cos(latitude);
         var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared*sin_latitude*sin_latitude);
         var X = (N+height)*cos_latitude*Math.cos(longitude);
         var Y = (N+height)*cos_latitude*Math.sin(longitude);
         var Z = (N*(1-this._eccentricitySquared)+height)*sin_latitude;
-        return [X, Y, Z];
+        result[0] = X;
+        result[1] = Y;
+        result[2] = Z;
+        return result;
     },
-    convertXYZToLatLongHeight: function ( X,  Y,  Z ) {
+    convertXYZToLatLongHeight: function ( X,  Y,  Z , result) {
+        if (result === undefined) {
+            osg.warn("deprecated, use this signature convertXYZToLatLongHeight( X,  Y,  Z , result)");
+            result = [];
+        }
         // http://www.colorado.edu/geography/gcraft/notes/datum/gif/xyzllh.gif
         var p = Math.sqrt(X*X + Y*Y);
         var theta = Math.atan2(Z*this._radiusEquator , (p*this._radiusPolar));
@@ -38,7 +49,10 @@ osg.EllipsoidModel.prototype = {
         var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared*sin_latitude*sin_latitude);
 
         height = p/Math.cos(latitude) - N;
-        return [latitude, longitude, height];
+        result[0] = latitude;
+        result[1] = longitude;
+        result[2] = height;
+        return result;
     },
     computeLocalUpVector: function(X, Y, Z) {
         // Note latitude is angle between normal to ellipsoid surface and XY-plane

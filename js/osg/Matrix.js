@@ -612,6 +612,7 @@ osg.Matrix = {
         var d = 1.0/(matrix[3] * vector[0] + matrix[7] * vector[1] + matrix[11] * vector[2] + matrix[15]); 
 
         if (result === undefined) {
+            osg.warn("deprecated, osg.Matrix.transformVec3 needs a third parameter as result");
             result = [];
         }
 
