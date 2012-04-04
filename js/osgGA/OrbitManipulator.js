@@ -138,7 +138,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         // the rotation matrix
         var inv = [];
         osg.Matrix.inverse(r2, inv);
-        var eye = osg.Matrix.transformVec3(inv, [0, this.distance, 0]);
+        var eye = osg.Matrix.transformVec3(inv, [0, this.distance, 0], new Array(3));
 
         var dir = osg.Vec3.neg(eye, []);
         osg.Vec3.normalize(dir, dir);
@@ -203,6 +203,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this.timeMotion = (new Date()).getTime();
     },
     mousewheel: function(ev, intDelta, deltaX, deltaY) {
+        //ev.preventDefault();
 	if (intDelta > 0){
             if (this.distanceDecrease) {
                 this.distanceDecrease();
