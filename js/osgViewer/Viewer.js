@@ -488,30 +488,44 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
             var touchstart = function(ev)
             {
-                disableMouse = true;
+                //disableMouse = true;
                 return viewer.getManipulator().touchstart(ev);
             };
             var touchend = function(ev)
             {
-                disableMouse = true;
+                //disableMouse = true;
                 return viewer.getManipulator().touchend(ev);
             };
             var touchmove = function(ev)
             {
-                disableMouse = true;
+                //disableMouse = true;
                 return viewer.getManipulator().touchmove(ev);
             };
 
             var touchcancel = function(ev)
             {
-                disableMouse = true;
+                //disableMouse = true;
                 return viewer.getManipulator().touchcancel(ev);
             };
 
             var touchleave = function(ev)
             {
-                disableMouse = true;
+                //disableMouse = true;
                 return viewer.getManipulator().touchleave(ev);
+            };
+
+            // iphone/ipad
+            var gesturestart = function(ev)
+            {
+                return viewer.getManipulator().gesturestart(ev);
+            };
+            var gesturechange = function(ev)
+            {
+                return viewer.getManipulator().gesturechange(ev);
+            };
+            var gestureend = function(ev)
+            {
+                return viewer.getManipulator().gestureend(ev);
             };
 
             // touch events
@@ -520,6 +534,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             this._canvas.addEventListener("touchmove", touchmove, false);
             this._canvas.addEventListener("touchcancel", touchcancel, false);
             this._canvas.addEventListener("touchleave", touchleave, false);
+
+            // iphone/ipad 
+            this._canvas.addEventListener("gesturestart", gesturestart, false);
+            this._canvas.addEventListener("gesturechange", gesturechange, false);
+            this._canvas.addEventListener("gestureend", gestureend, false);
 
             // mouse
             var mousedown = function (ev)

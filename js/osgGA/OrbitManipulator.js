@@ -79,19 +79,20 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
             this.computeHomePosition();
         } else if (ev.keyCode === 33) { // pageup
             this.distanceIncrease();
-            return false;
         } else if (ev.keyCode === 34) { //pagedown
             this.distanceDecrease();
-            return false;
-        } else if (ev.keyCode === 16) { //control
+        } else if (ev.keyCode === 16) { //shift
             this.currentMode = osgGA.OrbitManipulatorMode.Pan;
-            return false;
+        } else if ( ev.keyCode === 91) { // leftwindow
+            this.currentMode = osgGA.OrbitManipulatorMode.Zoom;
         }
     },
+
     keyup: function(ev) {
-        if (ev.keyCode === 16) { //control
+        if (ev.keyCode === 16) { //shift
             this.currentMode = osgGA.OrbitManipulatorMode.Rotate;
-            return false;
+        } else if ( ev.keyCode === 91) { // leftwindow
+            this.currentMode = osgGA.OrbitManipulatorMode.Rotate;
         }
     },
 
@@ -101,25 +102,20 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         var touches = event.changedTouches;
         if (this._moveTouch === undefined) {
             this._moveTouch = new osgGA.OrbitManipulator.TouchEvent();
+        }
+        if (this._moveTouch._id === undefined) {
             var touch = touches[0];
             var id = touch.identifier;
             // relative to element position
             var rte = this.getPositionRelativeToCanvas(touch);
             this._moveTouch.init(id, rte[0], rte[1]);
-            
             this.pushButton(touch);
-            osg.log("touch " + id + " started at " + rte[0] + " " + rte[1] );
-
-            this.panning = true;
-            this.dragging = true;
         }
     },
     touchend: function(event) {
         event.preventDefault();
 
         this._moveTouch = undefined;
-        this.dragging = false;
-        this.panning = false;
         this.releaseButton(event);
     },
     touchmove: function(event) {
@@ -135,8 +131,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
                 var deltax = (rteCurrent[0] - this._moveTouch._x) * this._scaleMouseMotion;
                 var deltay = (rteCurrent[1] - this._moveTouch._y) * this._scaleMouseMotion;
                 this._moveTouch.init(id, rteCurrent[0], rteCurrent[1]);
-                osg.log("touch " + id + " moved " + rteCurrent[0] + " " + rteCurrent[1]);
-                osg.log("touch " + id + " moved " + deltax + " " + deltay);
                 this.update(-deltax, -deltay);
             }
         }
@@ -148,14 +142,33 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this.touchend(event);
     },
 
+    gesturestart: function(event) {
+        event.preventDefault();
+        if (this._moveTouch) { // disable id for gesture
+            this._moveTouch._id = undefined;
+        }
+        this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
+    },
+    gestureend: function(event) {
+        event.preventDefault();
+        var scale = event.scale - this._moveTouch._scale;
+        this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
+        var z = 1.0+(-scale);
+        this.zoom(z);
+
+    },
+    gesturechange: function(event) {
+        event.preventDefault();
+        var scale = event.scale - this._moveTouch._scale;
+        this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
+        var z = 1.0+(-scale);
+        this.zoom(z);
+    },
+
     mouseup: function(ev) {
-        this.dragging = false;
-        this.panning = false;
         this.releaseButton(ev);
     },
     mousedown: function(ev) {
-        this.panning = true;
-        this.dragging = true;
         var pos = this.getPositionRelativeToCanvas(ev);
         this.clientX = pos[0];
         this.clientY = pos[1];
@@ -273,6 +286,8 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
                 this.panModel(dx/this.scale, dy/this.scale);
             } else if ( this.currentMode === osgGA.OrbitManipulatorMode.Rotate) {
                 this.computeRotation(dx, dy);
+            } else if ( this.currentMode === osgGA.OrbitManipulatorMode.Zoom) {
+                this.zoom(1.0 + dy/10.0);
             }
         }
     },
@@ -282,43 +297,24 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
     mousewheel: function(ev, intDelta, deltaX, deltaY) {
         ev.preventDefault();
-	if (intDelta > 0){
-            if (this.distanceDecrease) {
-                this.distanceDecrease();
-            }
-	}
-	else if (intDelta < 0){
-            if (this.distanceIncrease) {
-                this.distanceIncrease();
-            }
-	}
+        this.zoom(1.0 + intDelta/10.0);
     },
-    distanceIncrease: function() {
-        var h = this.distance;
-        var currentTarget = this.targetDistance;
-        var newTarget = currentTarget + h/10.0;
-        if (this.maxDistance > 0) {
-            if (newTarget > this.maxDistance) {
-                newTarget = this.maxDistance;
-            }
-        }
-        this.distance = currentTarget;
-        this.targetDistance = newTarget;
-        this.timeMotion = (new Date()).getTime();
-    },
-    distanceDecrease: function() {
-        var h = this.distance;
-        var currentTarget = this.targetDistance;
-        var newTarget = currentTarget - h/10.0;
+
+    zoom: function(ratio) {
+        var newValue = this.distance*ratio;
         if (this.minDistance > 0) {
-            if (newTarget < this.minDistance) {
-                newTarget = this.minDistance;
+            if (newValue < this.minDistance) {
+                newValue = this.minDistance;
             }
         }
-        this.distance = currentTarget;
-        this.targetDistance = newTarget;
-        this.timeMotion = (new Date()).getTime();
+        if (this.maxDistance > 0) {
+            if (newValue > this.maxDistance) {
+                newValue = this.maxDistance;
+            }
+        }
+        this.distance = newValue;
     },
+
 
     pushButton: function() {
         this.dx = this.dy = 0;

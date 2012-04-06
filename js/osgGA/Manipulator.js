@@ -58,6 +58,7 @@ osgGA.Manipulator.prototype = {
     mousedown: function(event) {},
     mousemove: function(event) {},
     dblclick: function(event) {},
+
     touchstart: function(event) {
         event.preventDefault();
         var touches = event.changedTouches;
@@ -111,7 +112,24 @@ osgGA.Manipulator.prototype = {
             osg.log("touch " + id + " cancelled at " + rte[0] + " " + rte[1] );
         }
     },
-    mousewheel: function(event, intDelta, deltaX, deltaY) {},
+    gesturestart: function(event) {
+        event.preventDefault();
+        osg.log("gesturestart  scale " + event.scale + " rotation " + event.rotation);
+    },
+    gestureend: function(event) {
+        event.preventDefault();
+        osg.log("gestureend  scale " + event.scale + " rotation " + event.rotation);
+    },
+    gesturechange: function(event) {
+        event.preventDefault();
+        osg.log("gesturechange scale " + event.scale + " rotation " + event.rotation);
+    },
+
+
+    mousewheel: function(event, intDelta, deltaX, deltaY) {
+        event.preventDefault();
+        osg.log("mousewheel " + intDelta + " " + " " + deltaX + " " + deltaY );
+    },
     getInverseMatrix: function () { return osg.Matrix.makeIdentity(this._inverseMatrix);}
 
 };
