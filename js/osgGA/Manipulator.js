@@ -7,7 +7,9 @@
  *  Manipulator
  *  @class
  */
-osgGA.Manipulator = function() {};
+osgGA.Manipulator = function() {
+    this._touches = [];
+};
 
 /** @lends osgGA.Manipulator.prototype */
 osgGA.Manipulator.prototype = {
@@ -55,10 +57,83 @@ osgGA.Manipulator.prototype = {
     mousedown: function(event) {},
     mousemove: function(event) {},
     dblclick: function(event) {},
-    touchDown: function(event) {},
-    touchUp: function(event) {},
-    touchMove: function(event) {},
-    mousewheel: function(event, intDelta, deltaX, deltaY) {},
-    getInverseMatrix: function () { return osg.Matrix.makeIdentity([]);}
+
+    touchstart: function(event) {
+        event.preventDefault();
+        var touches = event.changedTouches;
+        for (var i = 0, l = touches.length; i < l; i++) {
+            var touch = touches[i];
+            var id = touch.identifier;
+            this._touches[id] = touch;
+            // relative to element position
+            var rte = this.getPositionRelativeToCanvas(touch);
+            osg.debug("touch " + id + " started at " + rte[0] + " " + rte[1] );
+        }
+    },
+    touchend: function(event) {
+        event.preventDefault();
+        var touches = event.changedTouches;
+        for (var i = 0, l = touches.length; i < l; i++) {
+            var touch = touches[i];
+            var id = touch.identifier;
+            this._touches[id] = undefined;
+            // relative to element position
+            var rte = this.getPositionRelativeToCanvas(touch);
+            osg.debug("touch " + id + " stoped at " + rte[0] + " " + rte[1] );
+        }
+    },
+    touchmove: function(event) {
+        event.preventDefault();
+        var touches = event.changedTouches;
+        for (var i = 0, l = touches.length; i < l; i++) {
+            var touch = touches[i];
+            var id = touch.identifier;
+            // relative to element position
+            var rteCurrent = this.getPositionRelativeToCanvas(touch);
+            var rtePrevious = this.getPositionRelativeToCanvas(this._touches[id]);
+            var deltax = rteCurrent[0] - rtePrevious[0];
+            var deltay = rteCurrent[1] - rtePrevious[1];
+            this._touches[id] = touch;
+            osg.debug("touch " + id + " moved " + deltax + " " + deltay);
+        }
+    },
+    touchleave: function(event) {
+        return this.touchend(event);
+    },
+    touchcancel: function(event) {
+        event.preventDefault();
+        var touches = event.changedTouches;
+        for (var i = 0, l = touches.length; i < l; i++) {
+            var touch = touches[i];
+            var id = touch.identifier;
+            this._touches[id] = undefined;
+            var rte = this.getPositionRelativeToCanvas(touch);
+            osg.debug("touch " + id + " cancelled at " + rte[0] + " " + rte[1] );
+        }
+    },
+    gesturestart: function(event) {
+        event.preventDefault();
+        osg.debug("gesturestart  scale " + event.scale + " rotation " + event.rotation);
+    },
+    gestureend: function(event) {
+        event.preventDefault();
+        osg.debug("gestureend  scale " + event.scale + " rotation " + event.rotation);
+    },
+    gesturechange: function(event) {
+        event.preventDefault();
+        osg.debug("gesturechange scale " + event.scale + " rotation " + event.rotation);
+    },
+
+
+    mousewheel: function(event, intDelta, deltaX, deltaY) {
+        event.preventDefault();
+        osg.debug("mousewheel " + intDelta + " " + " " + deltaX + " " + deltaY );
+    },
+    getInverseMatrix: function () { 
+        if (this._inverseMatrix === undefined) {
+            this._inverseMatrix = new Array(16);
+        }
+        return osg.Matrix.makeIdentity(this._inverseMatrix);
+    }
 
 };

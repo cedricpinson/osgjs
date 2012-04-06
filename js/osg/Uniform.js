@@ -37,6 +37,12 @@ osg.Uniform.prototype = {
         }
     },
 
+    _updateArray: function(array) {
+        for (var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
+            this[i] = array[i];
+        }
+    },
+
     _updateFloat1: function(f) {
         this[0] = f[0];
     },
@@ -97,6 +103,13 @@ osg.Uniform.createFloat1 = function(value, name) {
     uniform.name = name;
     return uniform;
 };
+osg.Uniform.createFloat = osg.Uniform.createFloat1;
+osg.Uniform.createFloatArray = function(array , name) {
+    var u = osg.Uniform.createFloat.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
 osg.Uniform.createFloat2 = function(vec2, name) {
     var uniform = new osg.Uniform();
     uniform.data = vec2;
@@ -108,6 +121,12 @@ osg.Uniform.createFloat2 = function(vec2, name) {
     uniform.name = name;
     return uniform;
 };
+osg.Uniform.createFloat2Array = function(array , name) {
+    var u = osg.Uniform.createFloat2.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
 osg.Uniform.createFloat3 = function(vec3, name) {
     var uniform = new osg.Uniform();
     uniform.data = vec3;
@@ -119,6 +138,12 @@ osg.Uniform.createFloat3 = function(vec3, name) {
     uniform.name = name;
     return uniform;
 };
+osg.Uniform.createFloat3Array = function(array , name) {
+    var u = osg.Uniform.createFloat3.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
 osg.Uniform.createFloat4 = function(vec4, name) {
     var uniform = new osg.Uniform();
     uniform.data = vec4;
@@ -130,6 +155,12 @@ osg.Uniform.createFloat4 = function(vec4, name) {
     uniform.name = name;
     return uniform;
 };
+osg.Uniform.createFloat4Array = function(array , name) {
+    var u = osg.Uniform.createFloat4.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
 osg.Uniform.createInt1 = function(value, name) {
     var uniform = new osg.Uniform();
     uniform.data = [value];
@@ -140,6 +171,14 @@ osg.Uniform.createInt1 = function(value, name) {
     uniform.name = name;
     return uniform;
 };
+osg.Uniform.createInt = osg.Uniform.createInt1;
+osg.Uniform.createIntArray = function(array , name) {
+    var u = osg.Uniform.createInt.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
+
 osg.Uniform.createInt2 = function(vec2, name) {
     var uniform = new osg.Uniform();
     uniform.data = vec2;
@@ -150,6 +189,12 @@ osg.Uniform.createInt2 = function(vec2, name) {
     uniform.name = name;
     return uniform;
 };
+osg.Uniform.createInt2Array = function(array , name) {
+    var u = osg.Uniform.createInt2.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
 osg.Uniform.createInt3 = function(vec3, name) {
     var uniform = new osg.Uniform();
     uniform.data = vec3;
@@ -160,6 +205,12 @@ osg.Uniform.createInt3 = function(vec3, name) {
     uniform.name = name;
     return uniform;
 };
+osg.Uniform.createInt3Array = function(array , name) {
+    var u = osg.Uniform.createInt3.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
 osg.Uniform.createInt4 = function(vec4, name) {
     var uniform = new osg.Uniform();
     uniform.data = vec4;
@@ -170,6 +221,12 @@ osg.Uniform.createInt4 = function(vec4, name) {
     uniform.name = name;
     return uniform;
 };
+osg.Uniform.createInt4Array = function(array , name) {
+    var u = osg.Uniform.createInt4.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
 osg.Uniform.createMatrix2 = function(mat2, name) {
     var uniform = new osg.Uniform();
     uniform.data = mat2;

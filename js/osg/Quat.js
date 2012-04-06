@@ -121,6 +121,19 @@ osg.Quat = {
         return result;
     },
 
+    // transformVec3: function (q, vec, result) {
+    //     // nVidia SDK implementation
+    //     var uv = new Array(3);
+    //     var uuv = new Array(3);
+    //     osg.Vec3.cross(q, vec, uv);
+    //     osg.Vec3.cross(q, uv, result);
+    //     osg.Vec3.mult(uv, 2.0 * q[3], uv);
+    //     osg.Vec3.mult(result, 2.0, result);
+    //     osg.Vec3.add(result, uv, result);
+    //     osg.Vec3.add(result, vec, result);
+    //     return result;
+    // },
+
     normalize: function(q, qr) {
         var div = 1.0/this.length2(q);
         qr[0] = q[0]*div;

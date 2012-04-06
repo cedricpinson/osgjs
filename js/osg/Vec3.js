@@ -1,6 +1,11 @@
 
 /** @class Vec3 Operations */
 osg.Vec3 = {
+    init: function(a) {
+        a[0] = 0; a[1] = 0; a[2] = 0;
+        return a;
+    },
+
     copy: function(a, r) {
         r[0] = a[0];
         r[1] = a[1];
@@ -9,9 +14,12 @@ osg.Vec3 = {
     },
 
     cross: function(a, b, r) {
-        r[0] = a[1]*b[2]-a[2]*b[1];
-        r[1] = a[2]*b[0]-a[0]*b[2];
-        r[2] = a[0]*b[1]-a[1]*b[0];
+        var x = a[1]*b[2]-a[2]*b[1]; 
+        var y = a[2]*b[0]-a[0]*b[2];
+        var z = a[0]*b[1]-a[1]*b[0];
+        r[0] = x;
+        r[1] = y;
+        r[2] = z;
         return r;
     },
 
