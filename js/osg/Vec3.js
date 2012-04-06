@@ -1,6 +1,11 @@
 
 /** @class Vec3 Operations */
 osg.Vec3 = {
+    init: function(a) {
+        a[0] = 0; a[1] = 0; a[2] = 0;
+        return a;
+    },
+
     copy: function(a, r) {
         r[0] = a[0];
         r[1] = a[1];
