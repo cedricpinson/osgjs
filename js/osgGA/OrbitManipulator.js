@@ -38,6 +38,8 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
         this._moveTouch = undefined;
         this._mousePosition = new Array(2);
+
+        this._inverseMatrix = new Array(16);
     },
     reset: function() {
         this.init();
@@ -86,7 +88,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         if (this._moveTouch === undefined) {
             this._moveTouch = new osgGA.OrbitManipulator.TouchEvent();
         }
-        if (this._moveTouch._id === undefined) {
+        if (this._moveTouch.id === undefined) {
             var touch = touches[0];
             var id = touch.identifier;
             // relative to element position
@@ -108,11 +110,11 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         for (var i = 0, l = touches.length; i < l; i++) {
             var touch = touches[i];
             var id = touch.identifier;
-            if (id === this._moveTouch._id) {
+            if (id === this._moveTouch.id) {
                 var rteCurrent = this.getPositionRelativeToCanvas(touch);
                 // relative to element position
-                var deltax = (rteCurrent[0] - this._moveTouch._x) * this._scaleMouseMotion;
-                var deltay = (rteCurrent[1] - this._moveTouch._y) * this._scaleMouseMotion;
+                var deltax = (rteCurrent[0] - this._moveTouch.x) * this._scaleMouseMotion;
+                var deltay = (rteCurrent[1] - this._moveTouch.y) * this._scaleMouseMotion;
                 this._moveTouch.init(id, rteCurrent[0], rteCurrent[1]);
                 this.update(-deltax, -deltay);
             }
@@ -128,13 +130,13 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     gesturestart: function(event) {
         event.preventDefault();
         if (this._moveTouch) { // disable id for gesture
-            this._moveTouch._id = undefined;
+            this._moveTouch.id = undefined;
         }
         this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
     },
     gestureend: function(event) {
         event.preventDefault();
-        var scale = event.scale - this._moveTouch._scale;
+        var scale = event.scale - this._moveTouch.scale;
         this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
         var z = 1.0+(-scale);
         this.zoom(z);
@@ -142,7 +144,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
     gesturechange: function(event) {
         event.preventDefault();
-        var scale = event.scale - this._moveTouch._scale;
+        var scale = event.scale - this._moveTouch.scale;
         this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
         var z = 1.0+(-scale);
         this.zoom(z);
@@ -333,37 +335,36 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
             }
         }
         
-        var inv = [];
-        var eye = [];
-        osg.Matrix.inverse(this._rotation, inv);
-        osg.Matrix.transformVec3(inv,
+        var eye = new Array(3);
+        osg.Matrix.inverse(this._rotation, this._inverseMatrix);
+        osg.Matrix.transformVec3(this._inverseMatrix,
                                  [0, distance, 0],
                                  eye );
 
         osg.Matrix.makeLookAt(osg.Vec3.add(target, eye, eye),
                               target,
                               [0,0,1], 
-                              inv);
-        return inv;
+                              this._inverseMatrix);
+        return this._inverseMatrix;
     }
 });
 
 osgGA.OrbitManipulator.TouchEvent = function() {
-    this._x = 0;
-    this._y = 0;
-    this._scale = 1.0;
-    this._rotation = 0.0;
+    this.x = 0;
+    this.y = 0;
+    this.scale = 1.0;
+    this.rotation = 0.0;
 };
 osgGA.OrbitManipulator.TouchEvent.prototype = {
     init: function(id, x, y, scale, rotation) {
-        this._id = id;
-        this._x = x;
-        this._y = y;
+        this.id = id;
+        this.x = x;
+        this.y = y;
         if (scale !== undefined) {
-            this._scale = scale;
+            this.scale = scale;
         }
         if (rotation !== undefined) {
-            this._rotation = rotation;
+            this.rotation = rotation;
         }
     }
 };
