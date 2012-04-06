@@ -17,11 +17,31 @@ osgGA.OrbitManipulator = function () {
     this.init();
 };
 
+osgGA.OrbitManipulator.TouchEvent = function() {
+    this._x = 0;
+    this._y = 0;
+    this._scale = 1.0;
+    this._rotation = 0.0;
+};
+osgGA.OrbitManipulator.TouchEvent.prototype = {
+    init: function(id, x, y, scale, rotation) {
+        this._id = id;
+        this._x = x;
+        this._y = y;
+        if (scale !== undefined) {
+            this._scale = scale;
+        }
+        if (rotation !== undefined) {
+            this._rotation = rotation;
+        }
+    }
+};
+
 /** @lends osgGA.OrbitManipulator.prototype */
 osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype, {
     init: function() {
         this.distance = 25;
-        this.target = [ 0,0, 0];
+        this.target = new Array(3);
         this.eye = [ 0, this.distance, 0];
         this.rotation = osg.Matrix.mult(osg.Matrix.makeRotate( Math.PI, 0,0,1, []), osg.Matrix.makeRotate( -Math.PI/10.0, 1,0,0, []), []); // osg.Quat.makeIdentity();
         this.up = [0, 0, 1];
@@ -29,11 +49,12 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this.dx = 0.0;
         this.dy = 0.0;
         this.buttonup = true;
-        this.scale = 1.0;
+        this.scale = 10.0;
         this.targetDistance = this.distance;
         this.currentMode = osgGA.OrbitManipulatorMode.Rotate;
         this.maxDistance = 0;
         this.minDistance = 0;
+        this._scaleMouseMotion = 1.0/10;
     },
     reset: function() {
         this.init();
@@ -62,8 +83,71 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         } else if (ev.keyCode === 34) { //pagedown
             this.distanceDecrease();
             return false;
+        } else if (ev.keyCode === 16) { //control
+            this.currentMode = osgGA.OrbitManipulatorMode.Pan;
+            return false;
         }
     },
+    keyup: function(ev) {
+        if (ev.keyCode === 16) { //control
+            this.currentMode = osgGA.OrbitManipulatorMode.Rotate;
+            return false;
+        }
+    },
+
+    touchstart: function(ev) {
+        event.preventDefault();
+
+        var touches = event.changedTouches;
+        if (this._moveTouch === undefined) {
+            this._moveTouch = new osgGA.OrbitManipulator.TouchEvent();
+            var touch = touches[0];
+            var id = touch.identifier;
+            // relative to element position
+            var rte = this.getPositionRelativeToCanvas(touch);
+            this._moveTouch.init(id, rte[0], rte[1]);
+            
+            this.pushButton(touch);
+            osg.log("touch " + id + " started at " + rte[0] + " " + rte[1] );
+
+            this.panning = true;
+            this.dragging = true;
+        }
+    },
+    touchend: function(event) {
+        event.preventDefault();
+
+        this._moveTouch = undefined;
+        this.dragging = false;
+        this.panning = false;
+        this.releaseButton(event);
+    },
+    touchmove: function(event) {
+        event.preventDefault();
+
+        var touches = event.changedTouches;
+        for (var i = 0, l = touches.length; i < l; i++) {
+            var touch = touches[i];
+            var id = touch.identifier;
+            if (id === this._moveTouch._id) {
+                var rteCurrent = this.getPositionRelativeToCanvas(touch);
+                // relative to element position
+                var deltax = (rteCurrent[0] - this._moveTouch._x) * this._scaleMouseMotion;
+                var deltay = (rteCurrent[1] - this._moveTouch._y) * this._scaleMouseMotion;
+                this._moveTouch.init(id, rteCurrent[0], rteCurrent[1]);
+                osg.log("touch " + id + " moved " + rteCurrent[0] + " " + rteCurrent[1]);
+                osg.log("touch " + id + " moved " + deltax + " " + deltay);
+                this.update(-deltax, -deltay);
+            }
+        }
+    },
+    touchleave: function(event) {
+        return this.touchend(event);
+    },
+    touchcancel: function(event) {
+        this.touchend(event);
+    },
+
     mouseup: function(ev) {
         this.dragging = false;
         this.panning = false;
@@ -82,7 +166,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         if (this.buttonup === true) {
             return;
         }
-        var scaleFactor;
         var curX;
         var curY;
         var deltaX;
@@ -91,13 +174,13 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         curX = pos[0];
         curY = pos[1];
 
-        scaleFactor = 10.0;
-        deltaX = (this.clientX - curX) / scaleFactor;
-        deltaY = (this.clientY - curY) / scaleFactor;
+        deltaX = (curX - this.clientX) * this._scaleMouseMotion;
+        deltaY = (curY - this.clientY) * this._scaleMouseMotion;
+
         this.clientX = curX;
         this.clientY = curY;
 
-        this.update(deltaX, deltaY);
+        this.update(-deltaX, -deltaY);
         return false;
     },
     setMaxDistance: function(d) {
@@ -112,19 +195,24 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
 
     panModel: function(dx, dy) {
-        var inv = [];
+        var inv = new Array(16);
+        var x = new Array(3);
+        var y = new Array(3);
         osg.Matrix.inverse(this.rotation, inv);
-        var x = [ osg.Matrix.get(inv, 0,0), osg.Matrix.get(inv, 0,1), 0 ];
+        x[0] = osg.Matrix.get(inv, 0,0);
+        x[1] = osg.Matrix.get(inv, 0,1);
+        x[2] = osg.Matrix.get(inv, 0,2);
         osg.Vec3.normalize(x, x);
-        var y = [ osg.Matrix.get(inv, 1,0), osg.Matrix.get(inv, 1,1), 0 ];
+
+        y[0] = osg.Matrix.get(inv, 2,0);
+        y[1] = osg.Matrix.get(inv, 2,1);
+        y[2] = osg.Matrix.get(inv, 2,2);
         osg.Vec3.normalize(y, y);
 
-        osg.Vec3.add(this.target, osg.Vec3.mult(x, -dx), this.target);
-        osg.Vec3.add(this.target, osg.Vec3.mult(y, -dy), this.target);
-    },
-
-    zoomModel: function(dx, dy) {
-        this.distance += dy;
+        osg.Vec3.mult(x, -dx, x);
+        osg.Vec3.mult(y, dy, y);
+        osg.Vec3.add(this.target, x, this.target);
+        osg.Vec3.add(this.target, y, this.target);
     },
 
     computeRotation: function(dx, dy) {
@@ -185,8 +273,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
                 this.panModel(dx/this.scale, dy/this.scale);
             } else if ( this.currentMode === osgGA.OrbitManipulatorMode.Rotate) {
                 this.computeRotation(dx, dy);
-            } else if ( this.currentMode === osgGA.OrbitManipulatorMode.Zoom) {
-                this.zoomModel(dx, dy);
             }
         }
     },
@@ -194,16 +280,8 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this.buttonup = true;
     },
 
-    changeScale: function(d) {
-        var curd = this.distance;
-        var scaleChange = this.scale/d;
-        this.scale = d;
-        this.distance = this.targetDistance;
-        this.targetDistance = this.distance * scaleChange;
-        this.timeMotion = (new Date()).getTime();
-    },
     mousewheel: function(ev, intDelta, deltaX, deltaY) {
-        //ev.preventDefault();
+        ev.preventDefault();
 	if (intDelta > 0){
             if (this.distanceDecrease) {
                 this.distanceDecrease();
