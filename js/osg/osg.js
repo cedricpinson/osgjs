@@ -80,30 +80,10 @@ osg.setNotifyLevel = function (level) {
     }
 };
 
-osg.reportErrorGL = false;
-osg.ReportWebGLError = false;
+osg.reportWebGLError = false;
 
 osg.init = function () {
     osg.setNotifyLevel(osg.NOTICE);
-};
-
-osg.checkError = function (error) {
-    if (error === 0) {
-        return;
-    }
-    if (error === 0x0500) {
-        osg.log("detected error INVALID_ENUM");
-    } else if (error === 0x0501) {
-        osg.log("detected error INVALID_VALUE");
-    } else if (error === 0x0502) {
-        osg.log("detected error INVALID_OPERATION");
-    } else if (error === 0x0505) {
-        osg.log("detected error OUT_OF_MEMORY");
-    } else if (error === 0x0506) {
-        osg.log("detected error INVALID_FRAMEBUFFER_OPERATION");
-    } else {
-        osg.log("detected error UNKNOWN");
-    }
 };
 
 // from jquery

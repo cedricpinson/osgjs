@@ -28,7 +28,7 @@ osgViewer.Viewer = function(canvas, options, error) {
     }, false);
 
 
-    if (osg.ReportWebGLError) {
+    if (osg.reportWebGLError) {
         gl = WebGLDebugUtils.makeDebugContext(gl);
     }
 
