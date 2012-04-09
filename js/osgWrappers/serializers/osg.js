@@ -78,6 +78,10 @@ osgDB.ObjectWrapper.serializers.osg.StateSet = function(jsonObj, stateSet) {
     
     osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, stateSet);
 
+    if (jsonObj.RenderingHint !== undefined) {
+        stateSet.setRenderingHint(jsonObj.RenderingHint);
+    }
+
     if (jsonObj.AttributeList) {
         for (var i = 0, l = jsonObj.AttributeList.length; i < l; i++) {
             var attr = osgDB.ObjectWrapper.readObject(jsonObj.AttributeList[i]);
@@ -101,7 +105,10 @@ osgDB.ObjectWrapper.serializers.osg.StateSet = function(jsonObj, stateSet) {
 
 osgDB.ObjectWrapper.serializers.osg.Material = function(jsonObj, material) {
     var check = function(o) {
-        if (o.Diffuse && o.Emission && o.Specular && o.Shininess) {
+        if (o.Diffuse !== undefined && 
+            o.Emission !== undefined && 
+            o.Specular !== undefined && 
+            o.Shininess !== undefined) {
             return true;
         }
         return false;
