@@ -40,6 +40,9 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._mousePosition = new Array(2);
 
         this._inverseMatrix = new Array(16);
+        this._zoomKey = 69; // e
+        this._panKey = 84; // t
+        this._rotateKey = 82; // r
     },
     reset: function() {
         this.init();
@@ -94,18 +97,32 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
             this.distanceIncrease();
         } else if (ev.keyCode === 34) { //pagedown
             this.distanceDecrease();
-        } else if (ev.keyCode === 16) { //shift
+
+        } else if (ev.keyCode === this._panKey && 
+                   this._currentMode !== osgGA.OrbitManipulatorMode.Pan) {
             this._currentMode = osgGA.OrbitManipulatorMode.Pan;
-        } else if ( ev.keyCode === 91) { // leftwindow
+            this.mousedown(ev);
+        } else if ( ev.keyCode === this._zoomKey &&
+                  this._currentMode !== osgGA.OrbitManipulatorMode.Zoom) {
             this._currentMode = osgGA.OrbitManipulatorMode.Zoom;
+            this.mousedown(ev);
+        } else if ( ev.keyCode === this._rotateKey &&
+                  this._currentMode !== osgGA.OrbitManipulatorMode.Rotate) {
+            this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
+            this.mousedown(ev);
         }
     },
 
     keyup: function(ev) {
-        if (ev.keyCode === 16) { //shift
+        if (ev.keyCode === this._panKey) {
             this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
-        } else if ( ev.keyCode === 91) { // leftwindow
+            this.mouseup(ev);
+        } else if ( ev.keyCode === this._rotateKey) {
             this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
+            this.mouseup(ev);
+        } else if ( ev.keyCode === this._rotateKey) {
+            this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
+            this.mouseup(ev);
         }
     },
 
@@ -200,6 +217,12 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         curX = pos[0];
         curY = pos[1];
 
+        if (isNaN(this._mousePosition[0]) || this._mousePosition[0] === undefined) {
+            this._mousePosition[0] = curX;
+        }
+        if (isNaN(this._mousePosition[1]) || this._mousePosition[1] === undefined) {
+            this._mousePosition[1] = curY;
+        }
         deltaX = (curX - this._mousePosition[0]) * this._scaleMouseMotion;
         deltaY = (curY - this._mousePosition[1]) * this._scaleMouseMotion;
 
@@ -207,7 +230,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._mousePosition[1] = curY;
 
         this.update(-deltaX, -deltaY);
-        return false;
+        ev.preventDefault();
     },
     setMaxDistance: function(d) {
         this._maxDistance =  d;
