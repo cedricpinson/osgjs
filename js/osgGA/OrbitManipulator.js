@@ -221,6 +221,9 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
 
     panModel: function(dx, dy) {
+        dy *= this._distance;
+        dx *= this._distance;
+
         var inv = new Array(16);
         var x = new Array(3);
         var y = new Array(3);
@@ -296,7 +299,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
         if (Math.abs(dx) + Math.abs(dy) > 0.0) {
             if (this._currentMode === osgGA.OrbitManipulatorMode.Pan) {
-                this.panModel(dx/this._scale, dy/this._scale);
+                this.panModel(dx/30.0, dy/30.0);
             } else if ( this._currentMode === osgGA.OrbitManipulatorMode.Rotate) {
                 this.computeRotation(dx, dy);
             } else if ( this._currentMode === osgGA.OrbitManipulatorMode.Zoom) {
