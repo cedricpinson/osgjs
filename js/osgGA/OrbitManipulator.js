@@ -30,7 +30,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._buttonup = true;
         this._scale = 10.0;
         this._targetDistance = this._distance;
-        this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
+        this._currentMode = undefined;
         this._maxDistance = 0;
         this._minDistance = 0;
         this._scaleMouseMotion = 1.0/10;
@@ -115,19 +115,20 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
     keyup: function(ev) {
         if (ev.keyCode === this._panKey) {
-            this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
             this.mouseup(ev);
         } else if ( ev.keyCode === this._rotateKey) {
-            this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
             this.mouseup(ev);
         } else if ( ev.keyCode === this._rotateKey) {
-            this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
             this.mouseup(ev);
         }
+        this._currentMode = undefined;
     },
 
     touchstart: function(ev) {
         event.preventDefault();
+        if ( this._currentMode === undefined) {
+            this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
+        }
 
         var touches = event.changedTouches;
         if (this._moveTouch === undefined) {
@@ -144,7 +145,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
     touchend: function(event) {
         event.preventDefault();
-
+        this._currentMode = undefined;
         this._moveTouch = undefined;
         this.releaseButton(event);
     },
@@ -185,7 +186,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
         var z = 1.0+(-scale);
         this.zoom(z);
-
+        this._currentMode = undefined;
     },
     gesturechange: function(event) {
         event.preventDefault();
@@ -197,8 +198,12 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
     mouseup: function(ev) {
         this.releaseButton(ev);
+        this._currentMode = undefined;
     },
     mousedown: function(ev) {
+        if (this._currentMode === undefined) {
+            this._currentMode = osgGA.OrbitManipulatorMode.Rotate;
+        }
         var pos = this.getPositionRelativeToCanvas(ev);
         this._mousePosition[0] = pos[0];
         this._mousePosition[1] = pos[1];

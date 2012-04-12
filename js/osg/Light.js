@@ -189,7 +189,6 @@ osg.Light.prototype._shaderCommon[osg.ShaderGeneratorType.VertexMain] = function
 osg.Light.prototype._shaderCommon[osg.ShaderGeneratorType.FragmentInit] = function() {
             return [ "varying vec3 FragNormal;",
                      "varying vec3 FragEyeVector;",
-                     "vec4 LightColor = vec4(0.0);",
                      "" ].join('\n');
 };
 
@@ -201,8 +200,7 @@ osg.Light.prototype._shaderCommon[osg.ShaderGeneratorType.FragmentFunction] = fu
                      "    float att = 1.0 / ( constant + linear*d + quadratic*d*d);",
                      "    return att;",
                      "}",
-                     "vec4 computeLightContribution(vec4 materialEmission,",
-                     "                              vec4 materialAmbient,",
+                     "vec4 computeLightContribution(vec4 materialAmbient,",
                      "                              vec4 materialDiffuse,",
                      "                              vec4 materialSpecular,",
                      "                              float materialShininess,",
@@ -247,7 +245,7 @@ osg.Light.prototype._shaderCommon[osg.ShaderGeneratorType.FragmentFunction] = fu
                      "        specular = lightSpecular * RdotE;",
                      "    }",
                      "",
-                     "    return materialEmission + (materialAmbient*ambient + (materialDiffuse*diffuse + materialSpecular*specular) * spot) * lightAttenuation;",
+                     "    return (materialAmbient*ambient + (materialDiffuse*diffuse + materialSpecular*specular) * spot) * lightAttenuation;",
                      "}",
                      "float linearrgb_to_srgb1(float c)",
                      "{",
@@ -278,12 +276,13 @@ osg.Light.prototype._shaderCommon[osg.ShaderGeneratorType.FragmentMain] = functi
             return [ "",
                      "  vec3 normal = normalize(FragNormal);",
                      "  vec3 eyeVector = normalize(-FragEyeVector);",
+                     "  vec4 lightColor = MaterialEmission;",
                      ""].join("\n");
 };
 
 osg.Light.prototype._shaderCommon[osg.ShaderGeneratorType.FragmentEnd] = function() {
     return [ "",
-             "  fragColor *= LightColor;",
+             "  fragColor *= lightColor;",
              ""].join('\n');
 };
 
@@ -325,8 +324,7 @@ osg.Light.prototype._shader[osg.ShaderGeneratorType.FragmentMain] = function()
                 "  vec3 spotDirection = normalize(mat3(vec3(Light_invMatrix[0]), vec3(Light_invMatrix[1]), vec3(Light_invMatrix[2]))*Light_direction);",
                 "  float attenuation = getLightAttenuation(lightDir, Light_constantAttenuation, Light_linearAttenuation, Light_quadraticAttenuation);",
                 "  lightDir = normalize(lightDir);",
-                "  LightColor += computeLightContribution(MaterialEmission,",
-                "                                         MaterialAmbient,",
+                "  lightColor += computeLightContribution(MaterialAmbient,",
                 "                                         MaterialDiffuse, ",
                 "                                         MaterialSpecular,",
                 "                                         MaterialShininess,",
