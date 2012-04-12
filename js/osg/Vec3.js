@@ -51,6 +51,13 @@ osg.Vec3 = {
         return Math.sqrt( a[0]*a[0] + a[1]* a[1] + a[2]*a[2] );
     },
 
+    distance: function(a, b) {
+        var x = a[0]-b[0];
+        var y = a[1]-b[1];
+        var z = a[2]-b[2];
+        return Math.sqrt( x*x + y*y + z*z );
+    },
+
     normalize: function(a, r) {
         var norm = this.length2(a);
         if (norm > 0.0) {

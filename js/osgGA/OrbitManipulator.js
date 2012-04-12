@@ -49,6 +49,34 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
     setTarget: function(target) {
         osg.Vec3.copy(target, this._target);
+        var eyePos = new Array(3);
+        this.getEyePosition(eyePos);
+        this._distance = osg.Vec3.distance(eyePos, target);
+    },
+    setEyePosition: function(eye) {
+        var result = this._rotation;
+        var center = this._target;
+        var up = [ 0, 0, 1];
+
+        var f = osg.Vec3.sub(eye, center, []);
+        osg.Vec3.normalize(f, f);
+
+        var s = osg.Vec3.cross(f, up, []);
+        osg.Vec3.normalize(s, s);
+
+        var u = osg.Vec3.cross(s, f, []);
+        osg.Vec3.normalize(u, u);
+
+        // s[0], f[0], u[0], 0.0,
+        // s[1], f[1], u[1], 0.0,
+        // s[2], f[2], u[2], 0.0,
+        // 0,    0,    0,     1.0
+        result[0]=s[0]; result[1]=f[0]; result[2]=u[0]; result[3]=0.0;
+        result[4]=s[1]; result[5]=f[1]; result[6]=u[1]; result[7]=0.0;
+        result[8]=s[2]; result[9]=f[2]; result[10]=u[2];result[11]=0.0;
+        result[12]=  0; result[13]=  0; result[14]=  0;  result[15]=1.0;
+
+        this._distance = osg.Vec3.distance(eye, center);
     },
     computeHomePosition: function() {
         if (this._node !== undefined) {
@@ -305,6 +333,20 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._dx = this._dy = 0;
         this._buttonup = false;
     },
+
+    getTarget: function(target) {
+        osg.Vec3.copy(this._target, target);
+    },
+
+    getEyePosition: function(eye) {
+        var inv = new Array(16);
+        osg.Matrix.inverse(this._rotation, inv);
+        osg.Matrix.transformVec3(inv,
+                                 [0, this._distance, 0],
+                                 eye );
+        osg.Vec3.add(this._target, eye, eye);
+    },
+
     getInverseMatrix: function () {
         this.updateWithDelay();
 
