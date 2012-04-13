@@ -17,7 +17,7 @@ osg.Light = function (lightNumber) {
     this._position = [ 0.0, 0.0, 1.0, 0.0 ];
     this._direction = [ 0.0, 0.0, -1.0 ];
     this._spotCutoff = 180.0;
-    this._spotCutoffEnd = 180.0;
+    this._spotBlend = 0.01;
     this._constantAttenuation = 1.0;
     this._linearAttenuation = 0.0;
     this._quadraticAttenuation = 0.0;
@@ -73,6 +73,7 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
     setDirection: function(a) { this._direction = a; this.dirty(); },
     setLightNumber: function(unit) { this._lightUnit = unit; this.dirty(); },
+    getLightNumber: function() { return this._lightUnit; },
 
     getPrefix: function() { return this.getType() + this._lightUnit; },
     getParameterName: function (name) { return this.getPrefix()+ "_" + name; },
