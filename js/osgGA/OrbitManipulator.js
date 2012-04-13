@@ -208,7 +208,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._mousePosition[0] = pos[0];
         this._mousePosition[1] = pos[1];
         this.pushButton(ev);
-        ev.preventDefault();
     },
     mousemove: function(ev) {
         if (this._buttonup === true) {
