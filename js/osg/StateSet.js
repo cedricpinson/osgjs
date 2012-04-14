@@ -48,6 +48,9 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
         this._setTextureAttribute(unit, this.getObjectPair(attribute, mode) );
     },
+    getNumTextureAttributeLists: function() {
+        return this.textureAttributeMapList.length;
+    },
     getTextureAttribute: function(unit, attribute) {
         if (this.textureAttributeMapList[unit] === undefined || this.textureAttributeMapList[unit][attribute] === undefined) {
             return undefined;
@@ -93,7 +96,16 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
     getBinName: function() { return this._binName; },
     setBinNumber: function(binNum) { this._binNumber = binNum; },
     setBinName: function(binName) { this._binName = binName; },
-
+    getAttributeList: function() {
+        var attributes = this.attributeMap;
+        var keys = attributes.attributeKeys;
+        var l = keys.length;
+        var list = new Array(l);
+        for (var i = 0; i < l; i++) {
+            list[i] = attributes[ keys[i] ] ;
+        }
+        return list;
+    },
     _getUniformMap: function () {
         return this.uniforms;
     },
