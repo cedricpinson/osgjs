@@ -31,6 +31,12 @@ osg.Vec2 = {
         return Math.sqrt( a[0]*a[0] + a[1]* a[1]);
     },
 
+    distance: function(a, b) {
+        var x = a[0]-b[0];
+        var y = a[1]-b[1];
+        return Math.sqrt( x*x + y*y );
+    },
+
     /** 
         normalize an Array of 2 elements and write it in r
      */
