@@ -82,10 +82,12 @@ osgDB.ObjectWrapper.serializers.osg.StateSet = function(jsonObj, stateSet) {
         stateSet.setRenderingHint(jsonObj.RenderingHint);
     }
 
-    if (jsonObj.AttributeList) {
+    if (jsonObj.AttributeList !== undefined) {
         for (var i = 0, l = jsonObj.AttributeList.length; i < l; i++) {
             var attr = osgDB.ObjectWrapper.readObject(jsonObj.AttributeList[i]);
-            stateSet.setAttributeAndMode(attr);
+            if (attr !== undefined) {
+                stateSet.setAttributeAndMode(attr);
+            }
         }
     }
 
@@ -147,6 +149,37 @@ osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
     blend.setDestinationAlpha(jsonObj.DestinationAlpha);
 };
 
+osgDB.ObjectWrapper.serializers.osg.CullFace = function(jsonObj, attr) {
+    var check = function(o) {
+        if (o.Mode !== undefined) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, attr);
+
+    attr.setMode(jsonObj.Mode);
+};
+
+osgDB.ObjectWrapper.serializers.osg.BlendColor = function(jsonObj, attr) {
+    var check = function(o) {
+        if (o.ConstantColor !== undefined) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, attr);
+
+    attr.setConstantColor(jsonObj.ConstantColor);
+};
 
 osgDB.ObjectWrapper.serializers.osg.Light = function(jsonObj, light) {
     var check = function(o) {

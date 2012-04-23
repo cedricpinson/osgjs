@@ -28,6 +28,7 @@ OSG = [
 "osg/NodeVisitor.js",
 "osg/Transform.js",
 "osg/BlendFunc.js",
+"osg/BlendColor.js",
 "osg/BoundingBox.js",
 "osg/BoundingSphere.js",
 "osg/BufferArray.js",
