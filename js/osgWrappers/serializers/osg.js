@@ -20,7 +20,8 @@
 
 osgDB.ObjectWrapper.serializers.osg = {};
 
-osgDB.ObjectWrapper.serializers.osg.Object = function(jsonObj, obj) {
+osgDB.ObjectWrapper.serializers.osg.Object = function(input, obj) {
+    var jsonObj = input.getJSON();
     var check = function(o) {
         return true;
     };
@@ -34,7 +35,9 @@ osgDB.ObjectWrapper.serializers.osg.Object = function(jsonObj, obj) {
     return true;
 };
 
-osgDB.ObjectWrapper.serializers.osg.Node = function(jsonObj, node) {
+osgDB.ObjectWrapper.serializers.osg.Node = function(input, node) {
+    var jsonObj = input.getJSON();
+
     var check = function(o) {
         return true;
     };
@@ -42,11 +45,11 @@ osgDB.ObjectWrapper.serializers.osg.Node = function(jsonObj, node) {
         return;
     }
 
-    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, node);
+    osgDB.ObjectWrapper.serializers.osg.Object(input, node);
 
     if (jsonObj.UpdateCallbacks) {
         for (var j = 0, l = jsonObj.UpdateCallbacks.length; j < l; j++) {
-            var cb = osgDB.ObjectWrapper.readObject(jsonObj.UpdateCallbacks[j]);
+            var cb = input.setJSON(jsonObj.UpdateCallbacks[j]).readObject();
             if (cb) {
                 node.addUpdateCallback(cb);
             }
@@ -54,12 +57,12 @@ osgDB.ObjectWrapper.serializers.osg.Node = function(jsonObj, node) {
     }
 
     if (jsonObj.StateSet) {
-        node.setStateSet(osgDB.ObjectWrapper.readObject(jsonObj.StateSet));
+        node.setStateSet(input.setJSON(jsonObj.StateSet).readObject());
     }
     
     if (jsonObj.Children) {
         for (var i = 0, k = jsonObj.Children.length; i < k; i++) {
-            var obj = osgDB.ObjectWrapper.readObject(jsonObj.Children[i]);
+            var obj = input.setJSON(jsonObj.Children[i]).readObject();
             if (obj) {
                 node.addChild(obj);
             }
@@ -67,7 +70,8 @@ osgDB.ObjectWrapper.serializers.osg.Node = function(jsonObj, node) {
     }
 };
 
-osgDB.ObjectWrapper.serializers.osg.StateSet = function(jsonObj, stateSet) {
+osgDB.ObjectWrapper.serializers.osg.StateSet = function(input, stateSet) {
+    var jsonObj = input.getJSON();
     var check = function(o) {
         return true;
     };
@@ -76,7 +80,7 @@ osgDB.ObjectWrapper.serializers.osg.StateSet = function(jsonObj, stateSet) {
         return;
     }
     
-    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, stateSet);
+    osgDB.ObjectWrapper.serializers.osg.Object(input, stateSet);
 
     if (jsonObj.RenderingHint !== undefined) {
         stateSet.setRenderingHint(jsonObj.RenderingHint);
@@ -84,7 +88,7 @@ osgDB.ObjectWrapper.serializers.osg.StateSet = function(jsonObj, stateSet) {
 
     if (jsonObj.AttributeList) {
         for (var i = 0, l = jsonObj.AttributeList.length; i < l; i++) {
-            var attr = osgDB.ObjectWrapper.readObject(jsonObj.AttributeList[i]);
+            var attr = input.setJSON(jsonObj.AttributeList[i]).readObject();
             stateSet.setAttributeAndMode(attr);
         }
     }
@@ -94,7 +98,7 @@ osgDB.ObjectWrapper.serializers.osg.StateSet = function(jsonObj, stateSet) {
         for (var t = 0, lt = textures.length; t < lt; t++) {
             var textureAttributes = textures[t];
             for (var a = 0, al = textureAttributes.length; a < al; a++) {
-                var tattr = osgDB.ObjectWrapper.readObject(textureAttributes[a]);
+                var tattr = input.setJSON(textureAttributes[a]).readObject();
                 if (tattr)
                     stateSet.setTextureAttributeAndMode(t, tattr);
             }
@@ -103,7 +107,9 @@ osgDB.ObjectWrapper.serializers.osg.StateSet = function(jsonObj, stateSet) {
 
 };
 
-osgDB.ObjectWrapper.serializers.osg.Material = function(jsonObj, material) {
+osgDB.ObjectWrapper.serializers.osg.Material = function(input, material) {
+    var jsonObj = input.getJSON();
+
     var check = function(o) {
         if (o.Diffuse !== undefined && 
             o.Emission !== undefined && 
@@ -118,7 +124,7 @@ osgDB.ObjectWrapper.serializers.osg.Material = function(jsonObj, material) {
         return;
     }
 
-    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, material);
+    osgDB.ObjectWrapper.serializers.osg.Object(input, material);
 
     material.setAmbient(jsonObj.Ambient);
     material.setDiffuse(jsonObj.Diffuse);
@@ -128,7 +134,8 @@ osgDB.ObjectWrapper.serializers.osg.Material = function(jsonObj, material) {
 };
 
 
-osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
+osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(input, blend) {
+    var jsonObj = input.getJSON();
     var check = function(o) {
         if (o.SourceRGB && o.SourceAlpha && o.DestinationRGB && o.DestinationAlpha) {
             return true;
@@ -139,7 +146,7 @@ osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
         return;
     }
 
-    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, blend);
+    osgDB.ObjectWrapper.serializers.osg.Object(input, blend);
 
     blend.setSourceRGB(jsonObj.SourceRGB);
     blend.setSourceAlpha(jsonObj.SourceAlpha);
@@ -148,7 +155,8 @@ osgDB.ObjectWrapper.serializers.osg.BlendFunc = function(jsonObj, blend) {
 };
 
 
-osgDB.ObjectWrapper.serializers.osg.Light = function(jsonObj, light) {
+osgDB.ObjectWrapper.serializers.osg.Light = function(input, light) {
+    var jsonObj = input.getJSON();
     var check = function(o) {
         if (o.LightNum !== undefined &&
             o.Ambient !== undefined &&
@@ -168,7 +176,7 @@ osgDB.ObjectWrapper.serializers.osg.Light = function(jsonObj, light) {
         return;
     }
 
-    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, light);
+    osgDB.ObjectWrapper.serializers.osg.Object(input, light);
     light.setAmbient(jsonObj.Ambient);
     light.setConstantAttenuation(jsonObj.ConstantAttenuation);
     light.setDiffuse(jsonObj.Diffuse);
@@ -185,7 +193,8 @@ osgDB.ObjectWrapper.serializers.osg.Light = function(jsonObj, light) {
     }
 };
 
-osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
+osgDB.ObjectWrapper.serializers.osg.Texture = function(input, texture) {
+    var jsonObj = input.getJSON();
     var check = function(o) {
         return true;
     };
@@ -193,30 +202,52 @@ osgDB.ObjectWrapper.serializers.osg.Texture = function(jsonObj, texture) {
         return;
     }
 
-    osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, texture);
+    osgDB.ObjectWrapper.serializers.osg.Object(input, texture);
 
-    if (jsonObj.MinFilter) {
+    if (jsonObj.MinFilter !== undefined) {
         texture.setMinFilter(jsonObj.MinFilter);
     }
-    if (jsonObj.MagFilter) {
+    if (jsonObj.MagFilter !== undefined) {
         texture.setMagFilter(jsonObj.MagFilter);
     }
 
-    if (jsonObj.WrapT) {
+    if (jsonObj.WrapT !== undefined) {
         texture.setWrapT(jsonObj.WrapT);
     }
-    if (jsonObj.WrapS) {
+    if (jsonObj.WrapS !== undefined) {
         texture.setWrapS(jsonObj.WrapS);
     }
 
-    if (jsonObj.File) {
-        var img = osgDB.readImage(jsonObj.File);
+    if (jsonObj.File !== undefined) {
+        var img = input.readImageURL(jsonObj.File);
         texture.setImage(img);
     }
 };
 
 
-osgDB.ObjectWrapper.serializers.osg.Projection = function(jsonObj, node) {
+osgDB.ObjectWrapper.serializers.osg.Projection = function(input, node) {
+    var jsonObj = input.getJSON();
+    var check = function(o) {
+        if (o.Matrix !== undefined) {
+            return true;
+        }
+        return false;
+    };
+    if (!check(jsonObj)) {
+        return;
+    }
+
+    osgDB.ObjectWrapper.serializers.osg.Node(input, node);
+
+    if (jsonObj.Matrix !== undefined) {
+        node.setMatrix(jsonObj.Matrix);
+    }
+
+};
+
+
+osgDB.ObjectWrapper.serializers.osg.MatrixTransform = function(input, node) {
+    var jsonObj = input.getJSON();
     var check = function(o) {
         if (o.Matrix) {
             return true;
@@ -227,18 +258,18 @@ osgDB.ObjectWrapper.serializers.osg.Projection = function(jsonObj, node) {
         return;
     }
 
-    osgDB.ObjectWrapper.serializers.osg.Node(jsonObj, node);
+    osgDB.ObjectWrapper.serializers.osg.Node(input, node);
 
-    if (jsonObj.Matrix) {
+    if (jsonObj.Matrix !== undefined) {
         node.setMatrix(jsonObj.Matrix);
     }
-
 };
 
 
-osgDB.ObjectWrapper.serializers.osg.MatrixTransform = function(jsonObj, node) {
+osgDB.ObjectWrapper.serializers.osg.LightSource = function(input, node) {
+    var jsonObj = input.getJSON();
     var check = function(o) {
-        if (o.Matrix) {
+        if (o.Light !== undefined) {
             return true;
         }
         return false;
@@ -247,34 +278,16 @@ osgDB.ObjectWrapper.serializers.osg.MatrixTransform = function(jsonObj, node) {
         return;
     }
 
-    osgDB.ObjectWrapper.serializers.osg.Node(jsonObj, node);
-
-    if (jsonObj.Matrix) {
-        node.setMatrix(jsonObj.Matrix);
-    }
-};
-
-
-osgDB.ObjectWrapper.serializers.osg.LightSource = function(jsonObj, node) {
-    var check = function(o) {
-        if (o.Light) {
-            return true;
-        }
-        return false;
-    };
-    if (!check(jsonObj)) {
-        return;
-    }
-
-    osgDB.ObjectWrapper.serializers.osg.Node(jsonObj, node);
-    var light = osgDB.ObjectWrapper.readObject(jsonObj.Light);
+    osgDB.ObjectWrapper.serializers.osg.Node(input, node);
+    var light = input.setJSON(jsonObj.Light).readObject();
     node.setLight(light);
 };
 
 
-osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
+osgDB.ObjectWrapper.serializers.osg.Geometry = function(input, node) {
+    var jsonObj = input.getJSON();
     var check = function(o) {
-        if (o.PrimitiveSetList && o.VertexAttributeList) {
+        if (o.PrimitiveSetList !== undefined && o.VertexAttributeList !== undefined) {
             return true;
         }
         return false;
@@ -283,52 +296,22 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(jsonObj, node) {
         return;
     }
 
-    osgDB.ObjectWrapper.serializers.osg.Node(jsonObj, node);
+    osgDB.ObjectWrapper.serializers.osg.Node(input, node);
 
-    var mode, first, count, array;
     for (var i = 0, l = jsonObj.PrimitiveSetList.length; i < l; i++) {
         var entry = jsonObj.PrimitiveSetList[i];
-        
-        var drawElementPrimitive = entry.DrawElementUShort || entry.DrawElementUByte || entry.DrawElementUInt || entry.DrawElementsUShort || entry.DrawElementsUByte || entry.DrawElementsUInt || undefined;
-        if ( drawElementPrimitive ) {
-            var jsonArray = drawElementPrimitive.Indices;
-            mode = drawElementPrimitive.Mode;
-            array = new osg.BufferArray(osg.BufferArray[jsonArray.Type], 
-                                            jsonArray.Elements, 
-                                            jsonArray.ItemSize );
-            if (!mode) {
-                mode = osg.PrimitiveSet.TRIANGLES;
-            } else {
-                mode = osg.PrimitiveSet[mode];
-            }
-            var drawElements = new osg.DrawElements(mode, array);
-            node.getPrimitiveSetList().push(drawElements);
-        }
-
-        var drawArrayPrimitive = entry.DrawArray || entry.DrawArrays;
-        if (drawArrayPrimitive) {
-
-            mode = drawArrayPrimitive.Mode || drawArrayPrimitive.mode;
-            first = drawArrayPrimitive.First !== undefined ? drawArrayPrimitive.First : drawArrayPrimitive.first;
-            count = drawArrayPrimitive.Count !== undefined ? drawArrayPrimitive.Count : drawArrayPrimitive.count;
-            var drawArray = new osg.DrawArrays(osg.PrimitiveSet[mode], first, count);
-            node.getPrimitives().push(drawArray);
-
-        }
-
-        var drawArrayLengthsPrimitive = entry.DrawArrayLengths || undefined;
-        if (drawArrayLengthsPrimitive) {
-            mode = drawArrayLengthsPrimitive.Mode;
-            first = drawArrayLengthsPrimitive.First;
-            array = drawArrayLengthsPrimitive.ArrayLengths;
-            var drawArrayLengths =  new osg.DrawArrayLengths(osg.PrimitiveSet[mode], first, array);
-            node.getPrimitives().push(drawArrayLengths);
+        var primitiveSet = input.setJSON(entry).readPrimitiveSet();
+        if (primitiveSet) {
+            node.getPrimitives().push(primitiveSet);
         }
     }
     for (var key in jsonObj.VertexAttributeList) {
         if (jsonObj.VertexAttributeList.hasOwnProperty(key)) {
             var attributeArray = jsonObj.VertexAttributeList[key];
-            node.getVertexAttributeList()[key] = new osg.BufferArray(osg.BufferArray[attributeArray.Type], attributeArray.Elements, attributeArray.ItemSize );
+            var ba = input.setJSON(attributeArray).readBufferArray();
+            if (ba !== undefined) {
+                node.getVertexAttributeList()[key] = ba;
+            }
         }
     }
 };

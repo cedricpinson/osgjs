@@ -22,47 +22,6 @@ var osgDB = {};
 
 osgDB.ObjectWrapper = {};
 osgDB.ObjectWrapper.serializers = {};
-osgDB.ObjectWrapper.global = this;
-osgDB.ObjectWrapper.getObject = function (path) {
-    var scope = osgDB.ObjectWrapper.global;
-    var splittedPath = path.split('.');
-    for (var i = 0, l = splittedPath.length; i < l; i++) {
-        var obj = scope[ splittedPath[i] ];
-        if (obj === undefined) {
-            return undefined;
-        }
-        scope = obj;
-    }
-    // create the new obj
-    return new (scope)();
-};
-osgDB.ObjectWrapper.readObject = function (jsonObj) {
-
-    var prop = Object.keys(jsonObj)[0];
-    if (!prop) {
-        osg.log("can't find property for object " + jsonObj);
-        return undefined;
-    }
-
-    var obj = osgDB.ObjectWrapper.getObject(prop);
-    if (!obj) {
-        osg.log("can't instanciate object " + prop);
-        return undefined;
-    }
-
-    var scope = osgDB.ObjectWrapper.serializers;
-    var splittedPath = prop.split('.');
-    for (var i = 0, l = splittedPath.length; i < l; i++) {
-        var reader = scope[ splittedPath[i] ];
-        if (reader === undefined) {
-            osg.log("can't find function to read object " + prop + " - undefined");
-            return undefined;
-        }
-        scope = reader;
-    }
-    scope(jsonObj[prop], obj);
-    return obj;
-};
 
 osgDB.readImage = function (url) {
     var img = new Image();
@@ -76,7 +35,8 @@ osgDB.readImage = function (url) {
 
 
 osgDB.parseSceneGraph = function (node) {
-    if (node.Version && node.Version > 0) {
+    if (node.Version !== undefined && node.Version > 0) {
+
         var getPropertyValue = function(o) {
             var props = Object.keys(o);
             for (var i = 0, l = props.length; i < l; i++) {
@@ -86,13 +46,16 @@ osgDB.parseSceneGraph = function (node) {
             }
             return undefined;
         };
+
         var key = getPropertyValue(node);
         if (key) {
             var obj = {};
             obj[key] = node[key];
-            return osgDB.ObjectWrapper.readObject(obj);
+            var input = new osgDB.Input(obj);
+            return input.readObject();
+            //return osgDB.ObjectWrapper.readObject(obj);
         } else {
-            osg.log("Can't parse scenegraph " + node);
+            osg.log("can't parse scenegraph " + node);
         }
     } else {
         return osgDB.parseSceneGraph_deprecated(node);
