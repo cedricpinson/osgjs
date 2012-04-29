@@ -1,7 +1,66 @@
-test("osgDB.ObjectWrapper.getObject", function() {
-    var obj = osgDB.ObjectWrapper.getObject("osg.Node");
-    ok(obj.getName() !== "", "check osg.Node.getName");
-    ok(obj.addChild !== undefined, "check osg.addChild");
+test("osgDB.Input", function() {
+
+    (function() {
+        var obj = osgDB.Input.prototype.getObjectWrapper("osg.Node");
+        ok(obj.getName() !== "", "getObjectWrapper check osg.Node.getName");
+        ok(obj.addChild !== undefined, "getObjectWrapper check osg.addChild");
+    })();
+
+    (function() {
+        var obj = { "osg.Material": {
+            "UniqueID" : 10,
+            "Name": "FloorBorder1", 
+            "Ambient": [ 0.5, 0.5, 0.5, 1], 
+            "Diffuse": [ 0.1, 0.1, 0.1, 0.1], 
+            "Emission": [ 0, 0, 0, 0.5], 
+            "Shininess": 2.5, 
+            "Specular": [ 0.5, 0.7, 0.5, 1]
+        } };
+        var input = new osgDB.Input(obj);
+        var o = input.readObject();
+        var o2 = input.setJSON( { "osg.Material" : { "UniqueID": 10 } }).readObject();
+        ok(o2.getName() === "FloorBorder1", "readObject check same unique id");
+    })();
+
+    (function() {
+        var fakeImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=";
+        var input = new osgDB.Input({ "Url" : fakeImage,
+                                      "UniqueID" : 10
+                                    });
+        var o = input.readImage();
+        var o2 = input.setJSON({ "UniqueID": 10 }).readImage();
+        ok(o2.src === fakeImage, "readImage check same unique id");
+    })();
+
+    (function() {
+        var ba = {
+            "Elements": [ 0.01727, -0.00262, 3.0], 
+            "ItemSize": 3, 
+            "Type": "ARRAY_BUFFER",
+            "UniqueID" : 10
+        };
+        var input = new osgDB.Input(ba);
+        var o = input.readBufferArray();
+        var o2 = input.setJSON({ 
+            "UniqueID" : 10
+        }).readBufferArray();
+        ok(o2.getElements()[2] === 3.0, "readBufferArray check same unique id");
+    })();
+
+    (function() {
+                    
+        var input = new osgDB.Input({ "DrawArrays" : {
+            "UniqueID" : 10,
+            "count": 3540, 
+            "first": 10, 
+            "mode": "TRIANGLES"
+        }});
+        var o = input.readPrimitiveSet();
+        var o2 = input.setJSON({ "DrawArrays" : { 
+            "UniqueID" : 10
+        }}).readPrimitiveSet();
+        ok(o2.getCount() === 3540, "readPrimitiveSet check same unique id");
+    })();
 });
 
 test("osgDB.parseSceneGraph", function() {
@@ -76,7 +135,7 @@ test("osgDB.parseSceneGraph", function() {
                                              "Name": "FloorBorder1", 
                                              "Ambient": [ 0.5, 0.5, 0.5, 1], 
                                              "Diffuse": [ 0.1, 0.1, 0.1, 0.1], 
-                                             "Emission": [ 0, 0, 0, .5], 
+                                             "Emission": [ 0, 0, 0, 0.5], 
                                              "Shininess": 2.5, 
                                              "Specular": [ 0.5, 0.7, 0.5, 1]
                                          }
@@ -95,7 +154,7 @@ test("osgDB.parseSceneGraph", function() {
                      }
                    };
 
-        var result = osgDB.ObjectWrapper.readObject(tree);
+        var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getStateSet() !== undefined, "check last StateSet");
         ok(result.getStateSet().getAttribute('BlendFunc') !== undefined, "check BlendFunc");
         var material = result.getStateSet().getAttribute('Material');
@@ -161,7 +220,7 @@ test("osgDB.parseSceneGraph", function() {
                   }
                 };
 
-        var result = osgDB.ObjectWrapper.readObject(tree);
+        var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getStateSet() !== undefined, "check geometry StateSet");
         ok(result.getPrimitiveSetList().length == 1, "check primitives");
         ok(result.getPrimitiveSetList()[0].getMode() === osg.PrimitiveSet.TRIANGLES, "check triangles primitive");
@@ -186,7 +245,7 @@ test("osgDB.parseSceneGraph", function() {
           }
         };
 
-        var result = osgDB.ObjectWrapper.readObject(tree);
+        var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getName() === "Lamp", "check matrix transform");
         ok(result.getMatrix()[0] === -0.2909, "check matrix transform content");
 
@@ -233,7 +292,7 @@ test("osgDB.parseSceneGraph", function() {
         };
 
 
-        var result = osgDB.ObjectWrapper.readObject(tree);
+        var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getUpdateCallbackList().length === 1, "check update callback");
 
         ok(result.getUpdateCallback().getAnimationMap().Test !== undefined, "check animation list");
@@ -260,7 +319,7 @@ test("osgDB.parseSceneGraph", function() {
             }
         };
 
-        var result = osgDB.ObjectWrapper.readObject(tree);
+        var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getKeyframes().length === 2, "Check keyframes FloatLerpChannel");
         ok(result.getTargetName() === "Cube", "Check TargetName FloatLerpChannel");
         ok(result.getName() === "euler_x", "Check Name FloatLerpChannel");
@@ -278,7 +337,7 @@ test("osgDB.parseSceneGraph", function() {
             }
         };
 
-        var result = osgDB.ObjectWrapper.readObject(tree);
+        var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getKeyframes().length === 2, "Check keyframes QuatSlerpChannel");
         ok(result.getTargetName() === "Cube", "Check TargetName QuatSlerpChannel");
         ok(result.getName() === "quaternion", "Check Name QuatSlerpChannel");
@@ -295,7 +354,7 @@ test("osgDB.parseSceneGraph", function() {
             }
         };
 
-        var result = osgDB.ObjectWrapper.readObject(tree);
+        var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getKeyframes().length === 2, "Check keyframes QuatLerpChannel");
         ok(result.getTargetName() === "Cube", "Check TargetName QuatLerpChannel");
         ok(result.getName() === "quaternion", "Check Name QuatLerpChannel");
@@ -343,7 +402,7 @@ test("osgDB.parseSceneGraph", function() {
             }
         };
 
-        var result = osgDB.ObjectWrapper.readObject(tree);
+        var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getUpdateCallbackList().length === 1, "check osgAnimation.UpdateMatrixTransform callback");
         ok(result.getUpdateCallback().getStackedTransforms().length === 5, "check osgAnimation.UpdateMatrixTransform stacked transform");
 
@@ -364,7 +423,7 @@ test("osgDB.parseSceneGraph", function() {
                 }
             }
         };
-        var result = osgDB.ObjectWrapper.readObject(tree).getPrimitiveSetList()[0];
+        var result = (new osgDB.Input()).setJSON(tree).readObject().getPrimitiveSetList()[0];
         
         ok(result.getMode() === osg.PrimitiveSet.TRIANGLES, "check DrawArray triangles");
         ok(result.getCount() === 3540, "check triangles count");
@@ -384,7 +443,7 @@ test("osgDB.parseSceneGraph", function() {
                 }
             }
         };
-        result = osgDB.ObjectWrapper.readObject(tree2).getPrimitiveSetList()[0];
+        result = (new osgDB.Input()).setJSON(tree2).readObject().getPrimitiveSetList()[0];
         
         ok(result.getMode() === osg.PrimitiveSet.TRIANGLES, "check DrawArray triangles");
         ok(result.getCount() === 0, "check triangles count");
@@ -409,7 +468,7 @@ test("osgDB.parseSceneGraph", function() {
                 }
             }
         };
-        var result = osgDB.ObjectWrapper.readObject(tree).getPrimitiveSetList()[0];
+        var result = (new osgDB.Input()).setJSON(tree).readObject().getPrimitiveSetList()[0];
         
         ok(result.getMode() === osg.PrimitiveSet.TRIANGLES, "check DrawArrayLengths triangles");
         ok(result.getArrayLengths()[0] === 3 , "check array lenght");
@@ -441,11 +500,8 @@ test("osgDB.parseSceneGraph", function() {
             }
         };
 
-        var result = osgDB.ObjectWrapper.readObject(tree);
-        //osg.log(result);
+        var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getLight() !== undefined, "check if LightSource has a light");
-
     })();
-
 
 });

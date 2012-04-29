@@ -72,7 +72,8 @@ OSG_UTIL = [
 ]
 
 OSG_DB = [
-        "osgDB/osgDB.js"
+        "osgDB/osgDB.js",
+        "osgDB/Input.js"
 ]
 
 OSG_WRAPPER = [
