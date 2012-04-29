@@ -25,7 +25,7 @@ osgDB.ObjectWrapper.serializers = {};
 
 osgDB.readImage = function (url) {
     if (osgDB.readImage.input === undefined) {
-        osgDB.readImage.input = new Input();
+        osgDB.readImage.input = new osgDB.Input();
     }
     return osgDB.readImage.input.readImageURL(url);
 };
