@@ -92,6 +92,21 @@ osgDB.Input.prototype = {
         return obj;
     },
 
+    readUserDataContainer: function() {
+        var jsonObj = this.getJSON();
+        var osgjsObject;
+        var uniqueID = jsonObj.UniqueID;
+        if (uniqueID !== undefined) {
+            osgjsObject = this._identifierMap[uniqueID];
+            if (osgjsObject !== undefined) {
+                return osgjsObject;
+            }
+        }
+
+        this._identifierMap[uniqueID] = jsonObj;
+        return jsonObj;
+    },
+
     readPrimitiveSet: function() {
         var jsonObj = this.getJSON();
         var uniqueID;

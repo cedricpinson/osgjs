@@ -192,7 +192,16 @@ test("osgDB.parseSceneGraph", function() {
                             "Shininess": 12.5, 
                             "Specular": [ 0.5, 0.5, 0.5, 1]
                           }
-                        } ]
+                        } ],
+                        "UserDataContainer": {
+                          "UniqueID": 23, 
+                          "color_diffuse": "0", 
+                          "color_diffuse_factor": "1.0", 
+                          "normal": "2", 
+                          "normal_factor": "1.0", 
+                          "specular": "1", 
+                          "specular_factor": "1.0"
+                        }                          
                       }
                     }, 
                     "VertexAttributeList": {
@@ -222,6 +231,7 @@ test("osgDB.parseSceneGraph", function() {
 
         var result = (new osgDB.Input()).setJSON(tree).readObject();
         ok(result.getStateSet() !== undefined, "check geometry StateSet");
+        ok(result.getStateSet().getUserData() !== undefined, "check StateSet userdata");
         ok(result.getPrimitiveSetList().length == 1, "check primitives");
         ok(result.getPrimitiveSetList()[0].getMode() === osg.PrimitiveSet.TRIANGLES, "check triangles primitive");
         ok(result.getPrimitiveSetList()[0].getFirst() === 0, "check triangles first index");

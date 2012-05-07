@@ -4,10 +4,15 @@
  *  Object class
  *  @class Object
  */
-osg.Object = function () {};
+osg.Object = function () {
+    this._name = undefined;
+    this._userdata = undefined;
+};
 
-/** @lends osg.Node.prototype */
+/** @lends osg.Object.prototype */
 osg.Object.prototype = {
     setName: function(name) { this._name = name; },
-    getName: function() { return this._name; }
+    getName: function() { return this._name; },
+    setUserData: function(data) { this._userdata = data; },
+    getUserData: function() { return this._userdata; }
 };
