@@ -12,6 +12,8 @@ osg.StateSet = function () {
 
     this._binName = undefined;
     this._binNumber = 0;
+
+    this._shaderGenerator = undefined;
 };
 osg.StateSet.instance = 0;
 
@@ -105,6 +107,12 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
             list[i] = attributes[ keys[i] ] ;
         }
         return list;
+    },
+    setShaderGenerator: function(generator) {
+        this._shaderGenerator = generator;
+    },
+    getShaderGenerator: function() {
+        return this._shaderGenerator;
     },
     _getUniformMap: function () {
         return this.uniforms;

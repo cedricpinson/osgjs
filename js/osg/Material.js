@@ -9,7 +9,6 @@ osg.Material = function () {
     this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
     this.emission = [ 0.0, 0.0, 0.0, 1.0 ];
     this.shininess = 12.5;
-    this._dirty = true;
 };
 /** @lends osg.Material.prototype */
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {

@@ -171,7 +171,11 @@ osg.State.prototype = {
             'attributeMap': this.attributeMap
         };
 
-        program = this.shaderGenerator.getOrCreateProgram(attributes);
+        var generator = this.stateSets.back().shaderGenerator;
+        if (generator === undefined) {
+            generator = this.shaderGenerator;
+        }
+        program = generator.getOrCreateProgram(attributes);
         this.programs.push(this.getObjectPair(program, osg.StateAttribute.ON));
         return program;
     },
@@ -187,6 +191,9 @@ osg.State.prototype = {
 
     apply: function() {
         var gl = this._graphicContext;
+
+
+
         this.applyAttributeMap(this.attributeMap);
         this.applyTextureAttributeMapList(this.textureAttributeMapList);
 

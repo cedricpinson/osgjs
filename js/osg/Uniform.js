@@ -93,6 +93,10 @@ osg.Uniform.prototype = {
 };
 
 osg.Uniform.createFloat1 = function(value, name) {
+    if (name === undefined) {
+        name = value;
+        value = [0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = [value];
     uniform.glCall = function (location, glData) {
@@ -111,6 +115,10 @@ osg.Uniform.createFloatArray = function(array , name) {
 };
 
 osg.Uniform.createFloat2 = function(vec2, name) {
+    if (name === undefined) {
+        name = value;
+        value = [0,0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = vec2;
     uniform.glCall = function (location, glData) {
@@ -128,6 +136,10 @@ osg.Uniform.createFloat2Array = function(array , name) {
 };
 
 osg.Uniform.createFloat3 = function(vec3, name) {
+    if (name === undefined) {
+        name = value;
+        value = [0,0,0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = vec3;
     uniform.glCall = function (location, glData) {
@@ -145,6 +157,10 @@ osg.Uniform.createFloat3Array = function(array , name) {
 };
 
 osg.Uniform.createFloat4 = function(vec4, name) {
+    if (name === undefined) {
+        name = value;
+        value = [0,0,0,0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = vec4;
     uniform.glCall = function (location, glData) {
@@ -162,6 +178,10 @@ osg.Uniform.createFloat4Array = function(array , name) {
 };
 
 osg.Uniform.createInt1 = function(value, name) {
+    if (name === undefined) {
+        name = value;
+        value = [0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = [value];
     uniform.glCall = function (location, glData) {
@@ -180,6 +200,10 @@ osg.Uniform.createIntArray = function(array , name) {
 
 
 osg.Uniform.createInt2 = function(vec2, name) {
+    if (name === undefined) {
+        name = value;
+        value = [0,0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = vec2;
     uniform.glCall = function (location, glData) {
@@ -196,6 +220,10 @@ osg.Uniform.createInt2Array = function(array , name) {
 };
 
 osg.Uniform.createInt3 = function(vec3, name) {
+    if (name === undefined) {
+        name = value;
+        value = [0,0,0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = vec3;
     uniform.glCall = function (location, glData) {
@@ -212,6 +240,10 @@ osg.Uniform.createInt3Array = function(array , name) {
 };
 
 osg.Uniform.createInt4 = function(vec4, name) {
+    if (name === undefined) {
+        name = value;
+        value = [0,0,0,0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = vec4;
     uniform.glCall = function (location, glData) {
@@ -228,6 +260,10 @@ osg.Uniform.createInt4Array = function(array , name) {
 };
 
 osg.Uniform.createMatrix2 = function(mat2, name) {
+    if (name === undefined) {
+        name = value;
+        value = [1,0,0,1];
+    }
     var uniform = new osg.Uniform();
     uniform.data = mat2;
     uniform.glCall = function (location, transpose, glData) {
@@ -241,6 +277,10 @@ osg.Uniform.createMatrix2 = function(mat2, name) {
     return uniform;
 };
 osg.Uniform.createMatrix3 = function(mat3, name) {
+    if (name === undefined) {
+        name = value;
+        value = [1,0,0, 0,1,0, 0,0,1];
+    }
     var uniform = new osg.Uniform();
     uniform.data = mat3;
     uniform.glCall = function (location, transpose, glData) {
@@ -254,6 +294,10 @@ osg.Uniform.createMatrix3 = function(mat3, name) {
     return uniform;
 };
 osg.Uniform.createMatrix4 = function(mat4, name) {
+    if (name === undefined) {
+        name = value;
+        value = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
+    }
     var uniform = new osg.Uniform();
     uniform.data = mat4;
     uniform.glCall = function (location, transpose, glData) {
