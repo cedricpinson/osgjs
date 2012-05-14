@@ -3,6 +3,9 @@ var ShaderNode = {};
 ShaderNode.Node = function() {
     this._inputs = [];
     this._output = undefined;
+    for (var i = 0, l = arguments.length; i < l; i++) {
+        this._inputs.push(arguments[i]);
+    }
 };    
 
 ShaderNode.Node.prototype = {
@@ -38,6 +41,7 @@ ShaderNode.Variable = function(type, prefix) {
     ShaderNode.Node.call(this);
     this._prefix = prefix;
     this._type = type;
+    this._value = undefined;
 };
 ShaderNode.Variable.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     computeFragment: function() {
@@ -46,8 +50,16 @@ ShaderNode.Variable.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     getVariable: function() {
         return this._prefix;
     },
+    
+    setValue: function( value ) {
+        this._value = value;
+    },
     declare: function() {
-        return this._type + " " + this.getVariable() + ";";
+        if (this._value !== undefined) {
+            return this._type + " " + this.getVariable() + " = " + this._value +";";
+        } else {
+            return this._type + " " + this.getVariable() + ";";
+        }
     }
 });
 
@@ -66,7 +78,7 @@ ShaderNode.Uniform.prototype = osg.objectInehrit(ShaderNode.Variable.prototype, 
 
 
 ShaderNode.BlendNode = function(mode, t) {
-    ShaderNode.Node.call(this);
+    ShaderNode.Node.apply(this);
     this._t = t;
     this._mode = mode;
 };
@@ -80,7 +92,7 @@ ShaderNode.BlendNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
 });
 
 ShaderNode.AddVector = function() {
-    ShaderNode.Node.call(this);
+    ShaderNode.Node.apply(this, arguments);
 };
 ShaderNode.AddVector.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     type: "AddVector",
@@ -94,9 +106,20 @@ ShaderNode.AddVector.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     }
 });
 
+ShaderNode.SetAlpha = function() {
+    ShaderNode.Node.apply(this,arguments);
+};
+ShaderNode.SetAlpha.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
+    type: "SetAlpha",
+    computeFragment: function() {
+        str = this._output.getVariable() + " = vec4(" + this._inputs[0].getVariable() + ".rgb, "+ this._inputs[1].getVariable() + ");";
+        return str;
+    }
+});
+
 
 ShaderNode.PassValue = function() {
-    ShaderNode.Node.call(this);
+    ShaderNode.Node.apply(this, arguments);
 };
 ShaderNode.PassValue.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     computeFragment: function() {
@@ -105,7 +128,7 @@ ShaderNode.PassValue.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
 });
 
 ShaderNode.DotVector = function() {
-    ShaderNode.Node.call(this);
+    ShaderNode.Node.apply(this, arguments);
 };
 ShaderNode.DotVector.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     computeFragment: function() {
@@ -114,7 +137,7 @@ ShaderNode.DotVector.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
 });
 
 ShaderNode.MultVector = function() {
-    ShaderNode.Node.call(this);
+    ShaderNode.Node.apply(this, arguments);
 };
 ShaderNode.MultVector.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     type: "MultVector",
@@ -135,6 +158,8 @@ ShaderNode.FragColor.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
         return this._prefix;
     }
 });
+
+
 
 ShaderNode.ComputeDotClamped = function() {
     ShaderNode.Node.call(this);
@@ -228,7 +253,6 @@ ShaderNode.LightNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
             "                              vec3 materialDiffuse,",
             "                              vec3 materialSpecular,",
             "                              float materialShininess,",
-            "                              vec3 lightAmbient,",
             "                              vec3 lightDiffuse,",
             "                              vec3 lightSpecular,",
             "                              vec3 normal,",
@@ -295,7 +319,7 @@ ShaderNode.LightNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
             "  return col_to;",
             "}",
 
-            "vec3 function computeLight(",
+            "vec3 computeLight(",
             "                       float materialAmbient,",
             "                       float materialDiffuseIntensity,",
             "                       float materialSpecularIntensity,",
@@ -321,18 +345,20 @@ ShaderNode.LightNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
             "  vec3 spotDirection = normalize(mat3(vec3(lightInvMatrix[0]), vec3(lightInvMatrix[1]), vec3(lightInvMatrix[2]))*lightDirection);",
             "  float attenuation = 1.0; //getLightAttenuation(lightDir, lightConstantAttenuation, lightLinearAttenuation, lightQuadraticAttenuation);",
             "  lightDir = normalize(lightDir);",
+            "  vec3 lightDiffuse = lightColor;",
+            "  vec3 lightSpecular = lightColor;",
             "  return computeLightContribution(materialAmbient, ",
-            "                                  materialDiffuseColor * materialDiffuseIntensity",
-            "                                  materialSpecularColor * materialSpecularIntensity",
-            "                                  materialHardness",
-            "                                  lightDiffuse",
-            "                                  lightSpecular",
-            "                                  normal",
-            "                                  eyeVector",
-            "                                  lightDir",
-            "                                  spotDirection",
-            "                                  lightSpotCutoff",
-            "                                  lightSpotBlend",
+            "                                  materialDiffuseColor * materialDiffuseIntensity,",
+            "                                  materialSpecularColor * materialSpecularIntensity,",
+            "                                  materialHardness,",
+            "                                  lightDiffuse,",
+            "                                  lightSpecular,",
+            "                                  normal,",
+            "                                  lightEye,",
+            "                                  lightDir,",
+            "                                  spotDirection,",
+            "                                  lightCosSpotCutoff,",
+            "                                  lightSpotBlend,",
             "                                  attenuation);",
 
             "}"
@@ -397,8 +423,8 @@ ShaderNode.ShaderContext = function(state, attributes, textureAttributes) {
     this._lights = lights;
     this._material = material;
     this._textures = textures;
-
 };
+
 ShaderNode.ShaderContext.prototype = {
     getVariable: function(name) {
         return this._variables[name];
@@ -442,11 +468,13 @@ ShaderNode.ShaderContext.prototype = {
             var kkey = uniforms[kk];
             var varUniform = this.Uniform(kkey.type, kkey.name);
         }
+        var materialAmbient = this.getVariable(uniforms.ambientFactor.name);
         var materialDiffuseColor = this.getVariable(uniforms.diffuseColor.name);
         var materialSpecularColor = this.getVariable(uniforms.specularColor.name);
         var materialDiffuseIntensity = this.getVariable(uniforms.diffuseIntensity.name);
         var materialSpecularIntensity = this.getVariable(uniforms.specularIntensity.name);
         var materialHardness = this.getVariable(uniforms.hardness.name);
+        var materialTranslucency = this.getVariable(uniforms.translucency.name);
 
         var normal = this.Variable("vec3");
         var eyeVector = this.Variable("vec3");
@@ -459,9 +487,12 @@ ShaderNode.ShaderContext.prototype = {
             
         }
 
-        var addLightContribution = new ShaderNode.AddVector();
-        addLightContribution.connectOutput(lightColorAccumulator);
-        lightColorAccumulator.connectInput(addLightContribution);
+        var addLightContribution;
+        if (lights.length > 0) {
+            addLightContribution = new ShaderNode.AddVector();
+            addLightContribution.connectOutput(lightColorAccumulator);
+            lightColorAccumulator.connectInput(addLightContribution);
+        }
 
         for (var i = 0, l = lights.length; i < l; i++) {
             var light = lights[i];
@@ -499,7 +530,7 @@ ShaderNode.ShaderContext.prototype = {
             var lightVector = this.Variable("vec3");
 
             var lightContribution = new ShaderNode.LightNode();
-            //lightContribution.connectMaterialAmbient(materialAmbient);
+            lightContribution.connectMaterialAmbient(materialAmbient);
             lightContribution.connectMaterialDiffuseIntensity(materialDiffuseIntensity);
             lightContribution.connectMaterialSpecularIntensity(materialSpecularIntensity);
             lightContribution.connectMaterialSpecularColor(materialSpecularColor);
@@ -525,12 +556,24 @@ ShaderNode.ShaderContext.prototype = {
         }
 
         var fragColor = new ShaderNode.FragColor();
+        //var 
+        //setTransluency
+        var translucencyOperator = new ShaderNode.SetAlpha(lightColorAccumulator, materialTranslucency);
+        var colorTranslucency = this.Variable("vec4");
+        translucencyOperator.connectOutput(colorTranslucency);
+        colorTranslucency.connectInput(translucencyOperator);
 
         var operatorAssign = new ShaderNode.PassValue();
-        operatorAssign.connectInput(lightColorAccumulator);
         operatorAssign.connectOutput(fragColor);
-
         fragColor.connectInput(operatorAssign);
+
+        if (lights.length > 0) {
+            operatorAssign.connectInput(colorTranslucency);
+        } else {
+            var debugColor = this.Variable("vec4");
+            debugColor.setValue("vec4(1.0, 0.0, 1.0, 1.0)");
+            operatorAssign.connectInput(debugColor);
+        }
 
         return fragColor;
     },
@@ -580,10 +623,10 @@ ShaderNode.ShaderContext.prototype = {
             }
         }
 
-        this._vertexShader.push("main() {");
+        this._vertexShader.push("void main() {");
         this._vertexShader.push("  FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));");
         this._vertexShader.push("  FragEyeVector = vec3(ModelViewMatrix * vec4(Vertex,1.0));");
-        this._vertexShader.push("  gl_position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);");
+        this._vertexShader.push("  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);");
         this._vertexShader.push([ "",
                           "  if (ArrayColorEnabled == 1)",
                           "    VertexColor = Color;",
@@ -600,7 +643,9 @@ ShaderNode.ShaderContext.prototype = {
     createVertexShader: function() {
         var root = this.createVertexShaderGraph();
         osg.log("Vertex Shader");
-        osg.log(this._vertexShader.join('\n'));
+        var shader = this._vertexShader.join('\n');
+        osg.log(shader);
+        return shader;
     },
 
     createFragmentShader: function() {
@@ -610,6 +655,9 @@ ShaderNode.ShaderContext.prototype = {
         var root = this.createFragmentShaderGraph();
 
         this._fragmentShader.push( [ "",
+                                     "#ifdef GL_ES",
+                                     "precision highp float;",
+                                     "#endif",
                                      "varying vec4 VertexColor;",
                                      "varying vec3 FragNormal;",
                                      "varying vec3 FragEyeVector;",
@@ -635,8 +683,8 @@ ShaderNode.ShaderContext.prototype = {
         if (lights.length > 0) {
             this._fragmentShader.push(ShaderNode.LightNode.prototype.functions());
         }
-        
-        this._fragmentShader.push("main() {");
+
+        this._fragmentShader.push("void main() {");
         for (var j = 0, jl = vars.length; j < jl; j++) {
             var d = this._variables[vars[j]].declare();
             if (d !== undefined) {
@@ -644,9 +692,12 @@ ShaderNode.ShaderContext.prototype = {
             }
         }
         this.evaluate(root);
+
         this._fragmentShader.push("}");
         osg.log("Fragment Shader");
-        osg.log(this._fragmentShader.join('\n'));
+        var shader = this._fragmentShader.join('\n');
+        osg.log(shader);
+        return shader;
     }
 };
 
@@ -749,8 +800,7 @@ osg.BlenderLight.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     {
         var light = this.getOrCreateUniforms();
 
-        light.diffuse.set(this._diffuse);
-        light.specular.set(this._specular);
+        light.color.set(this._color);
         light.position.set(this._position);
         light.direction.set(this._direction);
 
@@ -760,9 +810,6 @@ osg.BlenderLight.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
         light.spotBlend.get()[0] = (1.0 - spotsize)*this._spotBlend;
         light.spotBlend.dirty();
-
-        light.attenuation.get()[0] = this._attenuation;
-        light.attenuation.dirty();
 
         light.distance.get()[0] = this._distance;
         light.distance.dirty();
@@ -806,6 +853,7 @@ osg.BlenderMaterial.prototype = osg.objectInehrit(osg.StateAttribute.prototype, 
     setAmbient: function(i) { this._ambient = i; },
     setTranslucency: function(i) { this._translucency = i; },
     setShadeless: function(i) { this._shadeless = i; },
+    getTranslucency: function(i) { return this._translucency; },
 
     cloneType: function() {return new osg.BlenderMaterial(); },
     getType: function() { return this.attributeType;},
@@ -866,6 +914,7 @@ osg.BlenderTextureMaterial = function(texture) {
     }
     this._blendMode = "Mix";
 };
+osg.BlenderTextureMaterial.uniforms = [];
 osg.BlenderTextureMaterial.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "BlenderTextureMaterial",
     cloneType: function() { var t = new osg.BlenderTextureMaterial(); return t;},
@@ -873,6 +922,17 @@ osg.BlenderTextureMaterial.prototype = osg.objectInehrit(osg.StateAttribute.prot
     getTypeMember: function() { return this.attributeType; },
     getChannels: function() { return this._channels; },
     setChannels: function(channels) { this._channels = channels; },
+
+    getOrCreateUniforms: function(unit) {
+        var obj = osg.BlenderTextureMaterial.uniforms;
+        if (obj[unit] === undefined) {
+            var textureUniform = this._texture.getOrCreateUniforms(unit);
+            var uniforms = textureUniform;
+            obj[unit] = uniforms;
+        }
+        return obj[unit];
+    },
+
     apply: function(state) {
         if (this._texture !== undefined) {
             this._texture.apply(state);
@@ -899,27 +959,25 @@ osg.BlenderShaderGenerator = function() {
 };
 osg.BlenderShaderGenerator.prototype = {
 
-    getActiveAttributeList: function(state, hash) {
-        var list = [];
+    getActiveAttributeList: function(state, list) {
+        var hash = "";
         var attributeMap = state.attributeMap;
         for (var j = 0, k = attributeMap.attributeKeys.length; j < k; j++) {
             var keya = attributeMap.attributeKeys[j];
-            if (this._attributeSupported[keya] === undefined) {
-                continue;
-            }
             var attributeStack = attributeMap[keya];
-            if (attributeStack.length === 0 && attributeStack.globalDefault.applyPositionedUniform === undefined) {
+            var attr = attributeStack.lastApplied;
+            var type = attr.getType();
+            if (this._attributeSupported[type] === undefined) {
                 continue;
             }
-            var attr = attributeStack.lastApplied();
             hash += attr.getHash();
             list.push(attr);
         }
-        return list;
+        return hash;
     },
 
-    getActiveTextureAttributeList: function(state, hash) {
-        var list = [];
+    getActiveTextureAttributeList: function(state, list) {
+        var hash = "";
         var attributeMap = state.textureAttributeMapList;
         for (var i = 0, l = attributeMap.length; i < l; i++) {
             var attributesForUnit = attributeMap[i];
@@ -937,12 +995,12 @@ osg.BlenderShaderGenerator.prototype = {
                 if (attributeStack.length === 0) {
                     continue;
                 }
-                var attr = attributeStack.lastApplied();
+                var attr = attributeStack.lastApplied;
                 hash += attr.getHash();
                 list[i].push(attr);
             }
         }
-        return list;
+        return hash;
     },
 
     getActiveUniforms: function(state, attributeList, textureAttributeList) {
@@ -980,8 +1038,10 @@ osg.BlenderShaderGenerator.prototype = {
 
         // extract valid attributes
         var hash = "";
-        var attributes = this.getActiveAttributeList(state, hash);
-        var textureAttributes = this.getActiveTextureAttributeList(state, hash);
+        var attributes = [];
+        var textureAttributes = [];
+        hash += this.getActiveAttributeList(state, attributes);
+        hash += this.getActiveTextureAttributeList(state, textureAttributes);
 
         if (this._cache[hash] !== undefined) {
             return this._cache[hash];
@@ -1041,17 +1101,73 @@ if (false) {
 
 test("osg.ShaderNode", function() {
 
-    var state = {};
-    var attributes = [];
-    var textures = [[], []];
-    attributes.push(new osg.BlenderLight(0));
-    attributes.push(new osg.BlenderLight(1));
-    attributes.push(new osg.BlenderMaterial());
-    textures[0].push(new osg.BlenderTextureMaterial());
-    textures[1].push(new osg.BlenderTextureMaterial());
-    
-    var shaderContext = new ShaderNode.ShaderContext(state, attributes, textures);
-    shaderContext.createVertexShader();
-    shaderContext.createFragmentShader();
+    (function() {
+        var state = {};
+        var attributes = [];
+        var textures = [[], []];
+        attributes.push(new osg.BlenderLight(0));
+        attributes.push(new osg.BlenderLight(1));
+        attributes.push(new osg.BlenderMaterial());
+        textures[0].push(new osg.BlenderTextureMaterial());
+        textures[1].push(new osg.BlenderTextureMaterial());
+        
+        var shaderContext = new ShaderNode.ShaderContext(state, attributes, textures);
+        shaderContext.createVertexShader();
+        shaderContext.createFragmentShader();
+    })();
+
+    (function() {
+        var canvas = createCanvas();
+        var viewer = new osgViewer.Viewer(canvas);
+        viewer.init();
+
+        var state = viewer.getState();
+        state.setGraphicContext(createFakeRenderer());
+
+        var l0 = new osg.BlenderLight(0);
+        var l1 = new osg.BlenderLight(1);
+
+        var node0 = new osg.LightSource();
+        node0.setLight(l0);
+        var node1 = new osg.LightSource();
+        node1.setLight(l1);
+        var root = new osg.Node();
+
+        var geom = osg.createTexturedBoxGeometry(0,0,0, 2, 2, 2);
+
+        root.addChild(node0);
+        root.addChild(node1);
+        root.addChild(geom);
+        
+
+        var material = new osg.BlenderMaterial();
+        material.setDiffuseColor([1,0,1]);
+        material.setDiffuseIntensity(0.5);
+        material.setSpecularColor([0.4,0.4,0.4]);
+        material.setDiffuseIntensity(0.68);
+
+        var texture0 = new osg.BlenderTextureMaterial(new osg.Texture(), 'DiffuseColor', 'DiffuseIntensity');
+        var texture1 = new osg.BlenderTextureMaterial(new osg.Texture(),'DiffuseColor');
+        var texture2 = new osg.BlenderTextureMaterial(new osg.Texture(),'SpecularColor');
+        var texture3 = new osg.BlenderTextureMaterial(new osg.Texture(),'DiffuseColor');
+
+        var stateSet = new osg.StateSet();
+        stateSet.setTextureAttributeAndModes(0, texture0);
+        stateSet.setTextureAttributeAndModes(1, texture1);
+        stateSet.setTextureAttributeAndModes(2, texture2);
+        stateSet.setTextureAttributeAndModes(3, texture3);
+        stateSet.setAttributeAndModes(material);
+
+        stateSet.setShaderGenerator(new osg.BlenderShaderGenerator());
+        geom.setStateSet(stateSet);
+
+        viewer.setSceneData(root);
+        viewer.frame();
+        
+//        var shaderContext = new ShaderNode.ShaderContext(state, attributes, textures);
+//        shaderContext.createVertexShader();
+//        shaderContext.createFragmentShader();
+    })();
     
 });
+

@@ -171,7 +171,7 @@ osg.State.prototype = {
             'attributeMap': this.attributeMap
         };
 
-        var generator = this.stateSets.back().shaderGenerator;
+        var generator = this.stateSets.back().getShaderGenerator();
         if (generator === undefined) {
             generator = this.shaderGenerator;
         }

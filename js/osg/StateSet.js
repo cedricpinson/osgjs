@@ -138,4 +138,7 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
             this.attributeMap.attributeKeys.push(name);
         }
     }
+
 });
+osg.StateSet.prototype.setTextureAttributeAndModes = osg.StateSet.prototype.setTextureAttributeAndMode;
+osg.StateSet.prototype.setAttributeAndModes = osg.StateSet.prototype.setAttributeAndMode;
