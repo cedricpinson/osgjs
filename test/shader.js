@@ -17,21 +17,15 @@ ShaderNode.Node.prototype = {
     connectInput: function(input) {
         this._inputs.push(input);
     },
-    connectOutput: function(i) { this._output = i; },
+    connectOutput: function(i) { this._output = i;
+                                 this.autoLink(i);
+                               },
     getInputs: function() { return this._inputs; },
-    autoLink: function() {
-        if (this._output === undefined) {
+    autoLink: function(output) {
+        if (output === undefined) {
             return;
         }
-        if (this._output.getInputs().length === 0) {
-            this._output.connectInput(0, this);
-        }
-
-        for (var i = 0, l = this._inputs.length; i < l; i++) {
-            if (this._inputs[i] !== undefined && this._inputs[i]._output === undefined) {
-                this._inputs[i].connectOutput(this);
-            }
-        }
+        output.connectInput(this);
     },
     computeFragment: function() { return undefined;},
     computeVertex: function() { return undefined;}
@@ -75,6 +69,17 @@ ShaderNode.Uniform.prototype = osg.objectInehrit(ShaderNode.Variable.prototype, 
     }
 });
 
+ShaderNode.Varying = function(type, prefix) {
+    ShaderNode.Variable.call(this, type, prefix);
+};
+ShaderNode.Varying.prototype = osg.objectInehrit(ShaderNode.Variable.prototype, {
+    declare: function() {
+        return undefined;
+    },
+    globalDeclaration: function() {
+        return "varying " + this._type + " " + this.getVariable() + ";";
+    }
+});
 
 
 ShaderNode.BlendNode = function(mode, t) {
@@ -88,6 +93,29 @@ ShaderNode.BlendNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     },
     Mix: function() {
         this._output.set();
+    }
+});
+
+
+ShaderNode.NormalizeNormalAndEyeVector = function() {
+    ShaderNode.Node.apply(this, arguments);
+};
+ShaderNode.NormalizeNormalAndEyeVector.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
+    type: "NormalizeNormalAndEyeVector",
+    connectOutputNormal: function(n) {
+        this._outputNormal = n;
+        this.autoLink(this._outputNormal);
+    },
+    connectOutputEyeVector: function(n) {
+        this._outputEyeVector = n;
+        this.autoLink(this._outputEyeVector);
+    },
+    computeFragment: function() {
+        var str = [ "",
+                    this._outputNormal.getVariable() + " = normalize(FragNormal);",
+                    this._outputEyeVector.getVariable() + " = normalize(-FragEyeVector);"
+                  ].join('\n');
+        return str;
     }
 });
 
@@ -229,6 +257,9 @@ ShaderNode.LightNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     connectLightDirection: function( i ) { this._inputs[16] = i; },
     getLightDirection: function( i ) { return this._inputs[16]; },
 
+    connectEyeVector: function( i ) { this._inputs[17] = i; },
+    getEyeVector: function( i ) { return this._inputs[17]; },
+
     functions: function() {
         var str = [
             "float getLightAttenuation(vec3 lightDir, float constant, float linear, float quadratic) {",
@@ -328,6 +359,7 @@ ShaderNode.LightNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
             "                       float materialHardness,",
             "                       vec3 lightColor,",
             "                       vec3 normal,",
+            "                       vec3 eyeVector,",
             "                       float lightCosSpotCutoff,",
             "                       float lightSpotBlend,",
             "                       mat4 lightMatrix,",
@@ -354,7 +386,7 @@ ShaderNode.LightNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
             "                                  lightDiffuse,",
             "                                  lightSpecular,",
             "                                  normal,",
-            "                                  lightEye,",
+            "                                  eyeVector,",
             "                                  lightDir,",
             "                                  spotDirection,",
             "                                  lightCosSpotCutoff,",
@@ -378,6 +410,7 @@ ShaderNode.LightNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
         str += "   " + this.getMaterialHardness().getVariable() + ",\n";
         str += "   " + this.getLightColor().getVariable() + ",\n";
         str += "   " + this.getNormal().getVariable() + ",\n";
+        str += "   " + this.getEyeVector().getVariable() + ",\n";
         str += "   " + this.getLightSpotCutoff().getVariable() + ",\n";
         str += "   " + this.getLightSpotBlend().getVariable() + ",\n";
         str += "   " + this.getLightMatrix().getVariable() + ",\n";
@@ -451,6 +484,17 @@ ShaderNode.ShaderContext.prototype = {
         return v;
     },
 
+    Varying: function(type, varname) {
+        var name = varname;
+        if (name === undefined) {
+            var len = Object.keys(this._variables).length;
+            name = "tmp_"+ len;
+        }
+        var v = new ShaderNode.Varying(type, name);
+        this._variables[name] = v;
+        return v;
+    },
+
     createFragmentShaderGraph: function()
     {
         var lights = this._lights;
@@ -476,9 +520,15 @@ ShaderNode.ShaderContext.prototype = {
         var materialHardness = this.getVariable(uniforms.hardness.name);
         var materialTranslucency = this.getVariable(uniforms.translucency.name);
 
-        var normal = this.Variable("vec3");
-        var eyeVector = this.Variable("vec3");
+        var inputNormal = this.Varying("vec3", "FragNormal");
+        var normal = this.Variable("vec3", "normal");
+        var eyeVector = this.Variable("vec3", "eyeVector");
 
+        var normalizeNormalAndVector = new ShaderNode.NormalizeNormalAndEyeVector();
+        normalizeNormalAndVector.connectOutputNormal(normal);
+        normalizeNormalAndVector.connectOutputEyeVector(eyeVector);
+        //normal.connectInput(normalizeNormalAndVector);
+        //eyeVector.connectInput(normalizeNormalAndVector);
 
         var lightColorAccumulator = this.Variable("vec3","light_accumulator");
 
@@ -491,7 +541,8 @@ ShaderNode.ShaderContext.prototype = {
         if (lights.length > 0) {
             addLightContribution = new ShaderNode.AddVector();
             addLightContribution.connectOutput(lightColorAccumulator);
-            lightColorAccumulator.connectInput(addLightContribution);
+
+            //lightColorAccumulator.connectInput(addLightContribution);
         }
 
         for (var i = 0, l = lights.length; i < l; i++) {
@@ -539,6 +590,7 @@ ShaderNode.ShaderContext.prototype = {
 
             lightContribution.connectLightColor(lightColor);
             lightContribution.connectNormal(normal);
+            lightContribution.connectEyeVector(eyeVector);
             lightContribution.connectLightSpotCutoff(lightSpotCuffoff);
             lightContribution.connectLightSpotBlend(lightSpotBlend);
             lightContribution.connectLightMatrix(lightMatrix);
@@ -550,7 +602,7 @@ ShaderNode.ShaderContext.prototype = {
             lightContribution.connectLightDistance(lightDistance);
 
             lightContribution.connectOutput(lightResult);
-            lightResult.connectInput(lightContribution);
+            //lightResult.connectInput(lightContribution);
 
             addLightContribution.connectInput(lightResult);
         }
@@ -561,11 +613,11 @@ ShaderNode.ShaderContext.prototype = {
         var translucencyOperator = new ShaderNode.SetAlpha(lightColorAccumulator, materialTranslucency);
         var colorTranslucency = this.Variable("vec4");
         translucencyOperator.connectOutput(colorTranslucency);
-        colorTranslucency.connectInput(translucencyOperator);
+        //colorTranslucency.connectInput(translucencyOperator);
 
         var operatorAssign = new ShaderNode.PassValue();
         operatorAssign.connectOutput(fragColor);
-        fragColor.connectInput(operatorAssign);
+        //fragColor.connectInput(operatorAssign);
 
         if (lights.length > 0) {
             operatorAssign.connectInput(colorTranslucency);
@@ -659,9 +711,9 @@ ShaderNode.ShaderContext.prototype = {
                                      "precision highp float;",
                                      "#endif",
                                      "varying vec4 VertexColor;",
-                                     "varying vec3 FragNormal;",
                                      "varying vec3 FragEyeVector;",
                                      ""].join('\n'));
+
         for ( var t = 0, tl = textures.length; t < tl; t++) {
             var texture = textures[t];
             if (texture !== undefined) {
@@ -685,6 +737,7 @@ ShaderNode.ShaderContext.prototype = {
         }
 
         this._fragmentShader.push("void main() {");
+
         for (var j = 0, jl = vars.length; j < jl; j++) {
             var d = this._variables[vars[j]].declare();
             if (d !== undefined) {
@@ -836,7 +889,7 @@ osg.BlenderMaterial = function() {
 
     this._shadeless = 0;
 
-    this._ambient = 1.0;
+    this._ambient = 0.0;
 };
 
 osg.BlenderMaterial.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
@@ -844,8 +897,8 @@ osg.BlenderMaterial.prototype = osg.objectInehrit(osg.StateAttribute.prototype, 
     getHash: function() {
         return this.attributeType;
     },
-    setDiffuseColor: function(color) { osg.Vec3.copy(this._diffuseColor, color); },
-    setSpecularColor: function(color) { osg.Vec3.copy(this._specularColor, color); },
+    setDiffuseColor: function(color) { osg.Vec3.copy(color, this._diffuseColor); },
+    setSpecularColor: function(color) { osg.Vec3.copy(color, this._specularColor); },
     setDiffuseIntensity: function(i) { this._diffuseIntensity = i ;},
     setSpecularIntensity: function(i) { this._specularIntensity = i ;},
     setEmission: function(i) { this._emission = i; },
@@ -897,7 +950,7 @@ osg.BlenderMaterial.prototype = osg.objectInehrit(osg.StateAttribute.prototype, 
         uniforms.emission.set(this._emission);
         uniforms.diffuseIntensity.set(this._diffuseIntensity);
         uniforms.specularIntensity.set(this._specularIntensity);
-        uniforms.translucency.set(this._translucency);
+        uniforms.translucency.set(1.0-this._translucency);
         uniforms.hardness.set(this._hardness);
         uniforms.shadeless.set(this._shadeless);
         this.setDirty(false);

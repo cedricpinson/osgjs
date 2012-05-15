@@ -106,6 +106,15 @@ osg.Uniform.createFloat1 = function(data, uniformName) {
     };
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype._updateFloat1;
+    uniform.set = function(value) {
+        if (typeof value === "number") {
+            this.data[0] = value;
+        } else {
+            this.data = value;
+        }
+        this.dirty();
+    };
+
     uniform.name = name;
     uniform.type = "float";
     return uniform;
@@ -201,6 +210,15 @@ osg.Uniform.createInt1 = function(data, uniformName) {
     uniform.glCall = function (location, glData) {
         gl.uniform1iv(location, glData);
     };
+    uniform.set = function(value) {
+        if (typeof value === "number") {
+            this.data[0] = value;
+        } else {
+            this.data = value;
+        }
+        this.dirty();
+    };
+
     uniform.glData = new osg.Int32Array(uniform.data);
     uniform.name = name;
     uniform.type = "int";
