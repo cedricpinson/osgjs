@@ -61,17 +61,25 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     },
 
     setPosition: function(pos) { osg.Vec4.copy(pos, this._position); },
+    getPosition: function() { return this._position; },
+
     setAmbient: function(a) { this._ambient = a; this.dirty(); },
     setSpecular: function(a) { this._specular = a; this.dirty(); },
     setDiffuse: function(a) { this._diffuse = a; this.dirty(); },
+
     setSpotCutoff: function(a) { this._spotCutoff = a; this.dirty(); },
+    getSpotCutoff: function() { return this._spotCutoff; },
+
     setSpotBlend: function(a) { this._spotBlend = a; this.dirty(); },
+    getSpotBlend: function() { return this._spotBlend; },
 
     setConstantAttenuation: function(value) { this._constantAttenuation = value; this.dirty();},
     setLinearAttenuation: function(value) { this._linearAttenuation = value; this.dirty();},
     setQuadraticAttenuation: function(value) { this._quadraticAttenuation = value; this.dirty();},
 
     setDirection: function(a) { this._direction = a; this.dirty(); },
+    getDirection: function() { return this._direction; },
+
     setLightNumber: function(unit) { this._lightUnit = unit; this.dirty(); },
     getLightNumber: function() { return this._lightUnit; },
 
