@@ -208,7 +208,7 @@ osg.State.prototype = {
 	var activeUniforms;
         var i;
         var key;
-        if (program.generated !== undefined && program.generated === true) {
+        if (program.generated === true) {
             // note that about TextureAttribute that need uniform on unit we would need to improve
             // the current uniformList ...
 
@@ -467,7 +467,7 @@ osg.State.prototype = {
                 if (attributeStack.asChanged) {
 //                if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
                     gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                    attribute.apply(this);
+                    attribute.apply(this, textureUnit);
                     attributeStack.lastApplied = attribute;
                     attributeStack.asChanged = false;
                 }
