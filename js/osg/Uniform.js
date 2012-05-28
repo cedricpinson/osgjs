@@ -4,10 +4,17 @@
  * Uniform manage variable used in glsl shader.
  * @class Uniform
  */
-osg.Uniform = function () { this.transpose = false; this._dirty = true; };
+osg.Uniform = function () { 
+    this.transpose = false; 
+    this._dirty = true; 
+    this.name = "";
+    this.type = undefined;
+};
 
 /** @lends osg.Uniform.prototype */
 osg.Uniform.prototype = {
+    getName: function() { return this.name;},
+    getType: function() { return this.type;},
 
     get: function() { // call dirty if you update this array outside
         return this.data;
