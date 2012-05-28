@@ -4,9 +4,14 @@ ShaderNode.Node = function() {
     this._inputs = [];
     this._output = undefined;
     for (var i = 0, l = arguments.length; i < l; i++) {
+        if (arguments[i] === undefined) {
+            break;
+        }
         this._inputs.push(arguments[i]);
     }
+    this._id = ShaderNode.Node.instance++;
 };    
+ShaderNode.Node.instance = 0;
 
 ShaderNode.Node.prototype = {
     autoConnectOutput: function(i) {
@@ -38,9 +43,7 @@ ShaderNode.Variable = function(type, prefix) {
     this._value = undefined;
 };
 ShaderNode.Variable.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
-    computeFragment: function() {
-        return undefined;
-    },
+    getType: function() { return this._type; },
     getVariable: function() {
         return this._prefix;
     },
@@ -81,24 +84,157 @@ ShaderNode.Varying.prototype = osg.objectInehrit(ShaderNode.Variable.prototype, 
     }
 });
 
-
-ShaderNode.BlendNode = function(mode, t) {
-    ShaderNode.Node.apply(this);
-    this._t = t;
-    this._mode = mode;
+ShaderNode.Sampler = function(type, prefix) {
+    ShaderNode.Variable.call(this, type, prefix);
 };
-ShaderNode.BlendNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
-    computeFragment: function() {
-        this[this._mode]();
+ShaderNode.Sampler.prototype = osg.objectInehrit(ShaderNode.Variable.prototype, {
+    declare: function() {
+        return undefined;
     },
-    Mix: function() {
-        this._output.set();
+    globalDeclaration: function() {
+        return "uniform " + this._type + " " + this.getVariable() + ";";
     }
 });
 
 
-ShaderNode.NormalizeNormalAndEyeVector = function() {
+ShaderNode.BlendNode = function(mode, val0, val1, t) {
+    ShaderNode.Node.call(this, val0, val1, t);
+    this._mode = mode;
+};
+ShaderNode.BlendNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
+    computeFragment: function() {
+        return this[this._mode]();
+    },
+    MIX: function() {
+        // result = val0*(1.0-t) + t*val1
+        return this._output.getVariable() + " = mix(" + this._inputs[0].getVariable() + ", " + this._inputs[1].getVariable() + ", " + this._inputs[2].getVariable() + ");";
+
+    },
+
+    MULTIPLY: function() {
+        return this._output.getVariable() + " = " + this._inputs[0].getVariable() + " * mix( " + this._inputs[0].getType() + "(1.0), " + this._inputs[1].getVariable() + ", " + this._inputs[2].getVariable() + ");";
+    }
+
+});
+
+
+ShaderNode.TextureRGB = function(sampler, uv, output) {
+    ShaderNode.Node.call(this);
+    this._sampler = sampler;
+    this.connectInput(sampler);
+    this.connectInput(uv);
+    if (output !== undefined) {
+        this.connectOutput(output);
+    }
+    this._uv = uv;
+};
+ShaderNode.TextureRGB.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
+    type: "TextureRGB",
+    computeFragment: function() {
+        var str = [ "",
+                    this._output.getVariable() + " = TextureRGB( " + this._sampler.getVariable() + " , " +this._uv.getVariable() + ".xy);"
+                  ].join('\n');
+        return str;
+    },
+
+    globalFunctionDeclaration: function() {
+        var str = [ "",
+                    "vec3 TextureRGB(in sampler2D texture, in vec2 uv) {",
+                    "  return texture2D(texture, uv).rgb;",
+                    "}"
+                  ].join('\n');
+        return str;
+    }
+});
+
+
+ShaderNode.TextureAlpha = function(sampler, uv, output) {
+    ShaderNode.TextureRGB.call(this, sampler, uv, output);
+};
+ShaderNode.TextureAlpha.prototype = osg.objectInehrit(ShaderNode.TextureRGB.prototype, {
+    type: "TextureAlpha",
+    computeFragment: function() {
+        var str = [ "",
+                    this._output.getVariable() + " = TextureAlpha( " + this._sampler.getVariable() + " , " +this._uv.getVariable() + ".xy);"
+                  ].join('\n');
+        return str;
+    },
+
+    globalFunctionDeclaration: function() {
+        var str = [ "",
+                    "vec3 TextureAlpha(in sampler2D texture, in vec2 uv) {",
+                    "  return texture2D(texture, uv).a;",
+                    "}"
+                  ].join('\n');
+        return str;
+    }
+});
+
+ShaderNode.TextureTranslucency = function(sampler, uv) {
+    ShaderNode.TextureAlpha.call(this, sampler, uv);
+};
+ShaderNode.TextureTranslucency.prototype = osg.objectInehrit(ShaderNode.TextureAlpha.prototype, {
+    computeFragment: function() {
+        var str = [ "",
+                    this._output.getVariable() + " = 1.0 - TextureAlpha( " + this._sampler.getVariable() + " , " +this._uv.getVariable() + ".xy);"
+                  ].join('\n');
+        return str;
+    }
+});
+
+ShaderNode.TextureIntensity = function(sampler, uv, output) {
+    ShaderNode.TextureRGB.call(this, sampler, uv, output);
+};
+ShaderNode.TextureIntensity.prototype = osg.objectInehrit(ShaderNode.TextureRGB.prototype, {
+    type: "TextureIntensity",
+    computeFragment: function() {
+        var str = [ "",
+                    this._output.getVariable() + " = textureIntensity( " + this._sampler.getVariable() + " , " +this._uv.getVariable() + ".xy);"
+                  ].join('\n');
+        return str;
+    },
+
+    globalFunctionDeclaration: function() {
+        var str = [ "",
+                    "float textureIntensity(in sampler2D texture, in vec2 uv) {",
+                    "  vec3 rgb = texture2D(texture, uv).rgb;",
+                    "  return dot(rgb,vec3(1.0/3.0));",
+                    "}"
+                  ].join('\n');
+        return str;
+    }
+});
+
+
+ShaderNode.TextureNormal = function(sampler, uv, output) {
+    ShaderNode.TextureRGB.call(this, sampler, uv, output);
+};
+ShaderNode.TextureNormal.prototype = osg.objectInehrit(ShaderNode.TextureRGB.prototype, {
+    type: "TextureNormal",
+    computeFragment: function() {
+        var str = [ "",
+                    this._output.getVariable() + " = textureNormal( " + this._sampler.getVariable() + " , " +this._uv.getVariable() + ".xy);"
+                  ].join('\n');
+        return str;
+    },
+
+    globalFunctionDeclaration: function() {
+        var str = [ "",
+                    "vec3 textureNormal(in sampler2D texture, in vec2 uv) {",
+                    "  vec3 rgb = texture2D(texture, uv).rgb;",
+                    "  return normalize((2.0*rgb-vec3(1.0)));",
+                    "}"
+                  ].join('\n');
+        return str;
+    }
+});
+
+ShaderNode.NormalizeNormalAndEyeVector = function(fnormal, fpos) {
     ShaderNode.Node.apply(this, arguments);
+    this._normal = fnormal;
+    this._position = fpos;
+    this.connectInput(fnormal);
+    this.connectInput(fpos);
 };
 ShaderNode.NormalizeNormalAndEyeVector.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     type: "NormalizeNormalAndEyeVector",
@@ -112,8 +248,8 @@ ShaderNode.NormalizeNormalAndEyeVector.prototype = osg.objectInehrit(ShaderNode.
     },
     computeFragment: function() {
         var str = [ "",
-                    this._outputNormal.getVariable() + " = normalize(FragNormal);",
-                    this._outputEyeVector.getVariable() + " = normalize(-FragEyeVector);"
+                    this._outputNormal.getVariable() + " = normalize("+this._normal.getVariable() +");",
+                    this._outputEyeVector.getVariable() + " = -normalize("+this._position.getVariable() + ");"
                   ].join('\n');
         return str;
     }
@@ -146,12 +282,94 @@ ShaderNode.SetAlpha.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
 });
 
 
-ShaderNode.PassValue = function() {
-    ShaderNode.Node.apply(this, arguments);
+ShaderNode.PassValue = function(input, output) {
+    ShaderNode.Node.call(this, input);
+    if (output !== undefined) {
+        this.connectOutput(output);
+    }
 };
 ShaderNode.PassValue.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     computeFragment: function() {
         return this._output.getVariable() + " = " + this._inputs[0].getVariable() +";";
+    }
+});
+
+ShaderNode.Srgb2Linear = function(input, output) {
+    ShaderNode.Node.call(this, input);
+    this.connectOutput(output);
+};
+ShaderNode.Srgb2Linear.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
+    type: 'Srgb2Linear',
+    computeFragment: function() {
+        var inputType = this._inputs[0].getType();
+        return this._output.getVariable() + " = srgb2linearrgb_"+ inputType +"(" + this._inputs[0].getVariable() +");";
+    },
+    globalFunctionDeclaration: function() {
+        var str = [
+            "float srgb_to_linearrgb1(float c)",
+            "{",
+            "  if(c < 0.04045)",
+            "    return (c < 0.0)? 0.0: c * (1.0/12.92);",
+            "  else",
+            "    return pow((c + 0.055)*(1.0/1.055), 2.4);",
+            "}",
+            "vec4 srgb2linearrgb_vec4(vec4 col_from)",
+            "{",
+            "  vec4 col_to;",
+            "  col_to.r = srgb_to_linearrgb1(col_from.r);",
+            "  col_to.g = srgb_to_linearrgb1(col_from.g);",
+            "  col_to.b = srgb_to_linearrgb1(col_from.b);",
+            "  col_to.a = col_from.a;",
+            "  return col_to;",
+            "}",
+            "vec3 srgb2linearrgb_vec3(vec3 col_from)",
+            "{",
+            "  vec3 col_to;",
+            "  col_to.r = srgb_to_linearrgb1(col_from.r);",
+            "  col_to.g = srgb_to_linearrgb1(col_from.g);",
+            "  col_to.b = srgb_to_linearrgb1(col_from.b);",
+            "  return col_to;",
+            "}",
+            "" ].join('\n');
+        return str;
+    }
+});
+
+ShaderNode.Linear2Srgb = function(input, output) {
+    ShaderNode.Node.call(this, input);
+    this.connectOutput(output);
+};
+ShaderNode.Linear2Srgb.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
+    type: 'Linear2Srgb',
+    computeFragment: function() {
+        return this._output.getVariable() + " = linearrgb2srgb(" + this._inputs[0].getVariable() +");";
+    },
+    globalFunctionDeclaration: function() {
+        var str = [
+            "float linearrgb_to_srgb1(float c)",
+            "{",
+            "  float v = 0.0;",
+            "  if(c < 0.0031308) {",
+            "    if ( c > 0.0)",
+            "      v = c * 12.92;",
+            "  } else {",
+            "    v = 1.055 * pow(c, 1.0/2.4) - 0.055;",
+            "  }",
+            "  return v;",
+            "}",
+
+            "vec4 linearrgb2srgb(vec4 col_from)",
+            "{",
+            "  vec4 col_to;",
+            "  col_to.r = linearrgb_to_srgb1(col_from.r);",
+            "  col_to.g = linearrgb_to_srgb1(col_from.g);",
+            "  col_to.b = linearrgb_to_srgb1(col_from.b);",
+            "  col_to.a = col_from.a;",
+            "  return col_to;",
+            "}",
+            "",
+        ""].join('\n');
+        return str;
     }
 });
 
@@ -176,7 +394,6 @@ ShaderNode.MultVector.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
 
 ShaderNode.FragColor = function() {
     ShaderNode.Node.call(this);
-    this.resolved = true;
     this._prefix = "gl_FragColor";
 };
 ShaderNode.FragColor.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
@@ -194,11 +411,34 @@ ShaderNode.ComputeDotClamped = function() {
 };
 ShaderNode.ComputeDotClamped.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     computeFragment: function() {
-        //" float = max(dot(input0, input1), 0.0);"
         return this._output.getVariable() + " = max( dot(" + this._inputs[0].getVariable() + ", " + this._inputs[1].getVariable() + "), 0.0);";
     }
 });
 
+ShaderNode.NormalTangentSpace = function(tangent, normal, texNormal, output) {
+    ShaderNode.Node.call(this, tangent, normal, texNormal);
+    if (output !== undefined) {
+        this.connectOutput(output);
+    }
+};
+ShaderNode.NormalTangentSpace.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
+    type: "NormalTangentSpace",
+    globalFunctionDeclaration: function() {
+        var str = [
+            "",
+            "void mtex_nspace_tangent(vec4 tangent, vec3 normal, vec3 texnormal, out vec3 outnormal) {",
+            "  vec3 tang = normalize(tangent.xyz);",
+            "  vec3 B = tangent.w * cross(normal, tang);",
+            "  outnormal = texnormal.x*tang + texnormal.y*B + texnormal.z*normal;",
+            "  outnormal = normalize(outnormal);",
+            "}"
+        ].join('\n');
+        return str;
+    },
+    computeFragment: function() {
+        return "mtex_nspace_tangent(" + this._inputs[0].getVariable() + ", " + this._inputs[1].getVariable() + ", " + this._inputs[2].getVariable() + ", " + this._output.getVariable() + ");";
+    }
+});
 
 ShaderNode.LightNode = function() {
     ShaderNode.Node.call(this);
@@ -239,12 +479,6 @@ ShaderNode.LightNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     connectLightSpotBlend: function( i ) { this._inputs[13] = i; },
     getLightSpotBlend: function( i ) { return this._inputs[13]; },
 
-    connectLightMatrix: function( i ) { this._inputs[8] = i; },
-    getLightMatrix: function( i ) { return this._inputs[8]; },
-
-    connectLightInvMatrix: function( i ) { this._inputs[9] = i; },
-    getLightInvMatrix: function( i ) { return this._inputs[9]; },
-
     connectLightSpotDirection: function( i ) { this._inputs[10] = i; },
     getLightSpotDirection: function( i ) { return this._inputs[10]; },
 
@@ -260,167 +494,137 @@ ShaderNode.LightNode.prototype = osg.objectInehrit(ShaderNode.Node.prototype, {
     connectEyeVector: function( i ) { this._inputs[17] = i; },
     getEyeVector: function( i ) { return this._inputs[17]; },
 
-    functions: function() {
+    connectLight: function( i ) { this._light = i; },
+    getLight: function() { return this._light; },
+
+    globalFunctionDeclaration: function() {
         var str = [
-            "float getLightAttenuation(vec3 lightDir, float constant, float linear, float quadratic) {",
-            "    ",
-            "    float d = length(lightDir);",
-            "    float att = 1.0 / ( constant + linear*d + quadratic*d*d);",
-            "    return att;",
-            "}",
-            "float getInvSquareAttenuation(vec3 lightDir, float distance) {",
-            "    ",
-            "    float d = length(lightDir);",
-            "    float att = distance / ( d*d);",
-            "    return att;",
-            "}",
-            "float getInvLinearreAttenuation(vec3 lightDir, float distance) {",
-            "    ",
-            "    float d = length(lightDir);",
-            "    float att = distance / ( d*d);",
-            "    return att;",
-            "}",
-            "vec3 computeLightContribution(float materialAmbient,",
-            "                              vec3 materialDiffuse,",
-            "                              vec3 materialSpecular,",
-            "                              float materialShininess,",
-            "                              vec3 lightDiffuse,",
-            "                              vec3 lightSpecular,",
-            "                              vec3 normal,",
-            "                              vec3 eye,",
-            "                              vec3 lightDirection,",
-            "                              vec3 lightSpotDirection,",
-            "                              float lightCosSpotCutoff,",
-            "                              float lightSpotBlend,",
-            "                              float lightAttenuation)",
+            "void lamp_falloff_invsquare(float lampdist, float dist, out float visifac)",
             "{",
-            "    vec3 L = lightDirection;",
-            "    vec3 N = normal;",
-            "    float NdotL = max(dot(L, N), 0.0);",
-            "    float halfTerm = NdotL;",
-            "    vec3 ambient = vec3(0.0, 0.0, 0.0);",
-            "    vec3 diffuse = vec3(0.0);",
-            "    vec3 specular = vec3(0.0);",
-            "    float spot = 0.0;",
+            "  visifac = lampdist/(lampdist + dist*dist);",
+            "}",
+            "void lamp_falloff_invlinear(float lampdist, float dist, out float visifac)",
+            "{",
+            "  visifac = lampdist/(lampdist + dist);",
+            "}",
+
+            "void lamp_visibility_sun_hemi(vec3 lampvec, out vec3 lv, out float dist, out float visifac)",
+            "{",
+            "  lv = lampvec;",
+            "  dist = 1.0;",
+            "  visifac = 1.0;",
+            "}",
             "",
-            "    if (NdotL > 0.0) {",
-            "        vec3 E = eye;",
-            "        vec3 R = reflect(-L, N);",
-            "        float RdotE = max(dot(R, E), 0.0);",
-            "        if ( RdotE > 0.0) {", 
-            "           RdotE = pow( RdotE, materialShininess );",
-            "        }",
-            "        vec3 D = lightSpotDirection;",
-            "        spot = 1.0;",
-            "        if (lightCosSpotCutoff > 0.0) {",
-            "          float cosCurAngle = dot(-L, D);",
-            "          if (cosCurAngle < lightCosSpotCutoff) {",
-            "             spot = 0.0;",
-            "          } else {",
-            "             if (lightSpotBlend > 0.0)",
-            "               spot = cosCurAngle * smoothstep(0.0, 1.0, (cosCurAngle-lightCosSpotCutoff)/(lightSpotBlend));",
-            "          }",
-            "        }",
+            "void lamp_visibility_other(vec3 co, vec3 lampco, out vec3 lv, out float dist, out float visifac)",
+            "{",
+            "  lv = lampco-co;",
+            "  dist = length(lv);",
+            "  lv = normalize(lv);",
+            "  visifac = 1.0;",
+            "}",
 
-            "        diffuse = lightDiffuse * ((halfTerm));",
-            "        specular = lightSpecular * RdotE;",
-            "    }",
+            "void lamp_visibility_spot_circle(vec3 lampvec, vec3 lv, out float inpr)",
+            "{",
+            "  inpr = dot(lv, lampvec);",
+            "}",
             "",
-            "    return (materialAmbient*ambient + (materialDiffuse*diffuse + materialSpecular*specular) * spot) * lightAttenuation;",
-            "}",
-            "float linearrgb_to_srgb1(float c)",
+            "void lamp_visibility_spot(float spotsi, float spotbl, float inpr, float visifac, out float outvisifac)",
             "{",
-            "  float v = 0.0;",
-            "  if(c < 0.0031308) {",
-            "    if ( c > 0.0)",
-            "      v = c * 12.92;",
-            "  } else {",
-            "    v = 1.055 * pow(c, 1.0/2.4) - 0.055;",
+            "  float t = spotsi;",
+            "",
+            "  if(inpr <= t) {",
+            "    outvisifac = 0.0;",
             "  }",
-            "  return v;",
+            "  else {",
+            "    t = inpr - t;",
+            "",
+            "    /* soft area */",
+            "    if(spotbl != 0.0)",
+            "      inpr *= smoothstep(0.0, 1.0, t/spotbl);",
+            "",
+            "    outvisifac = visifac*inpr;",
+            "  }",
             "}",
-
-            "vec4 linearrgb_to_srgb(vec4 col_from)",
+            "",
+            "void lamp_visibility_clamp(float visifac, out float outvisifac)",
             "{",
-            "  vec4 col_to;",
-            "  col_to.r = linearrgb_to_srgb1(col_from.r);",
-            "  col_to.g = linearrgb_to_srgb1(col_from.g);",
-            "  col_to.b = linearrgb_to_srgb1(col_from.b);",
-            "  col_to.a = col_from.a;",
-            "  return col_to;",
+            "  outvisifac = (visifac < 0.001)? 0.0: visifac;",
             "}",
 
-            "vec3 computeLight(",
-            "                       float materialAmbient,",
-            "                       float materialDiffuseIntensity,",
-            "                       float materialSpecularIntensity,",
-            "                       vec3 materialDiffuseColor,",
-            "                       vec3 materialSpecularColor,",
-            "                       float materialHardness,",
-            "                       vec3 lightColor,",
-            "                       vec3 normal,",
-            "                       vec3 eyeVector,",
-            "                       float lightCosSpotCutoff,",
-            "                       float lightSpotBlend,",
-            "                       mat4 lightMatrix,",
-            "                       vec4 lightPosition,",
-            "                       mat4 lightInvMatrix,",
-            "                       vec3 lightDirection,",
-            "                       float lightDistance) {",
-            "  vec3 lightEye = vec3(lightMatrix * lightPosition);",
-            "  vec3 lightDir;",
-            "  if (lightPosition[3] == 1.0) {",
-            "    lightDir = lightEye - FragEyeVector;",
-            "  } else {",
-            "    lightDir = lightEye;",
-            "  }",
-            "  vec3 spotDirection = normalize(mat3(vec3(lightInvMatrix[0]), vec3(lightInvMatrix[1]), vec3(lightInvMatrix[2]))*lightDirection);",
-            "  float attenuation = 1.0; //getLightAttenuation(lightDir, lightConstantAttenuation, lightLinearAttenuation, lightQuadraticAttenuation);",
-            "  lightDir = normalize(lightDir);",
-            "  vec3 lightDiffuse = lightColor;",
-            "  vec3 lightSpecular = lightColor;",
-            "  return computeLightContribution(materialAmbient, ",
-            "                                  materialDiffuseColor * materialDiffuseIntensity,",
-            "                                  materialSpecularColor * materialSpecularIntensity,",
-            "                                  materialHardness,",
-            "                                  lightDiffuse,",
-            "                                  lightSpecular,",
-            "                                  normal,",
-            "                                  eyeVector,",
-            "                                  lightDir,",
-            "                                  spotDirection,",
-            "                                  lightCosSpotCutoff,",
-            "                                  lightSpotBlend,",
-            "                                  attenuation);",
+            "void shade_visifac(float i, float visifac, float refl, out float outi)",
+            "{",
+            "  /*if(i > 0.0)*/",
+            "    outi = max(i*visifac*refl, 0.0);",
+            "  /*else",
+            "    outi = i;*/",
+            "}",
 
-            "}"
+            "void shade_cooktorr_spec(vec3 n, vec3 l, vec3 v, float hard, out float specfac)",
+            "{",
+            "  vec3 h = normalize(v + l);",
+            "  float nh = dot(n, h);",
+            "",
+            "  if(nh < 0.0) {",
+            "    specfac = 0.0;",
+            "  }",
+            "  else {",
+            "    float nv = max(dot(n, v), 0.0);",
+            "    float i = pow(nh, hard);",
+            "",
+            "    i = i/(0.1+nv);",
+            "    specfac = i;",
+            "  }",
+            "}",
+            "void shade_spec_t(float shadfac, float spec, float visifac, float specfac, out float t)",
+            "{",
+            "  t = shadfac*spec*visifac*specfac;",
+            "}",
+
+            "void shade_inp(vec3 vn, vec3 lv, out float inp)",
+            "{",
+            "  inp = dot(vn, lv);",
+            "}",
+            "",
+            "// lights global variables",
+            "vec3 lightvector;",
+            "float dist;",
+            "float visifac;",
+            "float falloff;",
+            "float lightInput;",
+            "float lightOutput;",
+            "vec3 diffuseOutCol;",
+            "float specfac;",
+            "float specularTerm;",
+            "vec3 specularOutCol;",
+            ""
         ].join('\n');
         return str;
     },
-    
+
     computeFragment: function() {
-        var str = "";
+        var str = [ "",
 
-        var lightColor = this._output.getVariable();
-        str += lightColor + " = computeLight(" + this.getMaterialAmbient().getVariable() +",\n";
-        str += "   " + this.getMaterialDiffuseIntensity().getVariable() + ",\n";
-        str += "   " + this.getMaterialSpecularIntensity().getVariable() +",\n";
-        str += "   " + this.getMaterialDiffuseColor().getVariable() + ",\n";
-        str += "   " + this.getMaterialSpecularColor().getVariable() + ",\n";
-        str += "   " + this.getMaterialHardness().getVariable() + ",\n";
-        str += "   " + this.getLightColor().getVariable() + ",\n";
-        str += "   " + this.getNormal().getVariable() + ",\n";
-        str += "   " + this.getEyeVector().getVariable() + ",\n";
-        str += "   " + this.getLightSpotCutoff().getVariable() + ",\n";
-        str += "   " + this.getLightSpotBlend().getVariable() + ",\n";
-        str += "   " + this.getLightMatrix().getVariable() + ",\n";
-        str += "   " + this.getLightPosition().getVariable() + ",\n";
-        str += "   " + this.getLightInvMatrix().getVariable() + ",\n";
-        str += "   " + this.getLightDirection().getVariable() + ",\n";
-        str += "   " + this.getLightDistance().getVariable() + ");\n";
+                    "specularOutCol = vec3(0.0);",
+                    "diffuseOutCol = vec3(0.0);",
 
+                    "lamp_visibility_other(FragEyeVector, vec3(" + this._light.getOrCreateUniforms().position.getName() + "), lightvector, dist, visifac);",
+                    "lamp_falloff_invsquare(" + this._light.getOrCreateUniforms().distance.getName() + ", dist, falloff);",
+                    "lamp_visibility_clamp(falloff, visifac);",
+                    "shade_inp(" + this.getNormal().getVariable() + ", lightvector, lightInput);",
+                    "shade_visifac(lightInput, visifac, "+ this.getMaterialDiffuseIntensity().getVariable() + ", lightOutput);",
+                    "diffuseOutCol = " + this._light.getOrCreateUniforms().color.getName() + " * lightOutput;",
+                    "diffuseOutCol = max(diffuseOutCol * " + this.getMaterialDiffuseColor().getVariable() + ", vec3(0.0,0.0,0.0));",
+
+                    "shade_cooktorr_spec(" + this.getNormal().getVariable() + ", lightvector, " + this.getEyeVector().getVariable() + ", " + this.getMaterialHardness().getVariable() + ", specfac);",
+                    "shade_spec_t(1.0, " + this.getMaterialSpecularIntensity().getVariable() + ", visifac, specfac, specularTerm);",
+                    "specularOutCol = specularTerm * " + this.getMaterialSpecularColor().getVariable() + " * " + this._light.getOrCreateUniforms().color.getName() + ";",
+                    "specularOutCol = max(specularOutCol, vec3(0.0));",
+                    this._output.getVariable() + " = specularOutCol + diffuseOutCol;",
+                  ""].join('\n');
         return str;
     }
+
+
 });
 
 ShaderNode.ShaderContext = function(state, attributes, textureAttributes) {
@@ -429,12 +633,16 @@ ShaderNode.ShaderContext = function(state, attributes, textureAttributes) {
     this._vertexShader = [];
     this._fragmentShader = [];
 
+    // separate BlenderMaterial / BlenderLight / BlenderTextureMaterial
+    // because this shader generator is specific for this
+
     var lights = [];
     var material;
     var textures = [];
     for (var i = 0, l = attributes.length; i < l; i++) {
         var type = attributes[i].getType();
-        if (type === "BlenderLight") {
+        // Test one light at a time
+        if (type === "BlenderLight") { // && lights.length === 0) {
             lights.push(attributes[i]);
         } else if (type === "BlenderMaterial") {
             material = attributes[i];
@@ -495,6 +703,18 @@ ShaderNode.ShaderContext.prototype = {
         return v;
     },
 
+    Sampler: function(type, varname) {
+        var name = varname;
+        if (name === undefined) {
+            var len = Object.keys(this._variables).length;
+            name = "sampler_"+ len;
+        }
+        var v = new ShaderNode.Sampler(type, name);
+        this._variables[name] = v;
+        return v;
+    },
+
+
     createFragmentShaderGraph: function()
     {
         var lights = this._lights;
@@ -512,7 +732,8 @@ ShaderNode.ShaderContext.prototype = {
             var kkey = uniforms[kk];
             var varUniform = this.Uniform(kkey.type, kkey.name);
         }
-        var materialAmbient = this.getVariable(uniforms.ambientFactor.name);
+        var materialShadingAmbient = this.getVariable(uniforms.ambientFactor.name);
+        var materialShadingEmission = this.getVariable(uniforms.emission.name);
         var materialDiffuseColor = this.getVariable(uniforms.diffuseColor.name);
         var materialSpecularColor = this.getVariable(uniforms.specularColor.name);
         var materialDiffuseIntensity = this.getVariable(uniforms.diffuseIntensity.name);
@@ -521,21 +742,215 @@ ShaderNode.ShaderContext.prototype = {
         var materialTranslucency = this.getVariable(uniforms.translucency.name);
 
         var inputNormal = this.Varying("vec3", "FragNormal");
+        var inputTangent = this.Varying("vec4", "FragTangent");
+
+        var inputPosition = this.Varying("vec3", "FragEyeVector");
         var normal = this.Variable("vec3", "normal");
         var eyeVector = this.Variable("vec3", "eyeVector");
 
-        var normalizeNormalAndVector = new ShaderNode.NormalizeNormalAndEyeVector();
+        var normalizeNormalAndVector = new ShaderNode.NormalizeNormalAndEyeVector(inputNormal, inputPosition);
         normalizeNormalAndVector.connectOutputNormal(normal);
         normalizeNormalAndVector.connectOutputEyeVector(eyeVector);
-        //normal.connectInput(normalizeNormalAndVector);
-        //eyeVector.connectInput(normalizeNormalAndVector);
+
+        var channelsType = osg.BlenderTextureMaterial.prototype.channelType;
+        var texturesChannels = {};
+
+        var getOrCreateChannelsEntry = function(name) {
+            if (texturesChannels[name] === undefined) {
+                texturesChannels[name] = [];
+                texturesChannels[name].pushEntry = function(v, texture) {
+                    this.push({ 'variable' : v,
+                                'texture': texture});
+                };
+            }
+            return texturesChannels[name];
+        };
+
+        // manage textures
+        for ( var t = 0, tl = textures.length; t < tl; t++) {
+            var texture = textures[t];
+            if (texture !== undefined) {
+                var lc = channelsType.length;
+                for (var c = 0; c < lc; c++) {
+                    var channel = texture.getChannels()[channelsType[c]];
+                    if (channel === undefined) {
+                        continue;
+                    }
+                    
+                    var textureSampler = this.getVariable("Texture" + t);
+                    if (textureSampler === undefined) {
+                        textureSampler = this.Sampler("sampler2D", "Texture" + t);
+                    }
+                    var texCoord = this.getVariable("FragTexCoord" + t);
+                    if (texCoord === undefined) {
+                        texCoord = this.Varying("vec2", "FragTexCoord" + t);
+                    }
+
+                    var channelEntry;
+                    var channelName = channel.getName();
+                    var node;
+                    var output;
+                    if ( channelName === "DiffuseColor") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        output = this.Variable("vec3");
+                        var srgb2linearTmp = this.Variable("vec3");
+                        
+                        node = new ShaderNode.TextureRGB(textureSampler, texCoord,output);
+                        node = new ShaderNode.Srgb2Linear(output, srgb2linearTmp);
+                        output = srgb2linearTmp;
+                        channelEntry.pushEntry(output, t);
+
+                    } else if (channelName === "DiffuseIntensity") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureIntensity(textureSampler, texCoord);
+                        output = this.Variable("float");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+
+                    } else if (channelName === "Alpha") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureAlpha(textureSampler, texCoord);
+                        output = this.Variable("float");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+
+                    } else if (channelName === "Translucency") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureTranslucency(textureSampler, texCoord);
+                        output = this.Variable("float");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+
+                    } else if (channelName === "SpecularColor") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureRGB(textureSampler, texCoord);
+                        output = this.Variable("vec3");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+
+                    } else if (channelName === "SpecularIntensity") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureIntensity(textureSampler, texCoord);
+                        output = this.Variable("float");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+
+                    } else if (channelName === "SpecularHardness") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureIntensity(textureSampler, texCoord);
+                        output = this.Variable("float");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+
+                    } else if ( channelName === "Ambient") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureRGB(textureSampler, texCoord);
+                        output = this.Variable("vec3");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+
+                    } else if ( channelName === "Emit") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureRGB(textureSampler, texCoord);
+                        output = this.Variable("vec3");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+
+                    } else if ( channelName === "Mirror") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureRGB(textureSampler, texCoord);
+                        output = this.Variable("vec3");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+                    } else if ( channelName === "Normal") {
+                        channelEntry = getOrCreateChannelsEntry(channelName);
+                        node = new ShaderNode.TextureNormal(textureSampler, texCoord);
+                        output = this.Variable("vec3");
+                        node.connectOutput(output);
+                        channelEntry.pushEntry(output, t);
+                    }
+                }
+            }
+        }
+
+        var self = this;
+        var blendChannel = function(input, array, channelName) {
+            var output = input;
+            var blendMode;
+            for (var i = 0, l = array.length; i < l; i++) {
+                var texChannel = array[i];
+                var texUnit = texChannel.texture;
+                var texture = textures[texUnit];
+                blendMode = texture.getBlendMode();
+                output = self.Variable(input.getType());
+                
+                var texFactorUniform = texture.getOrCreateUniforms(texUnit)[channelName];
+                var factorUniform = self.getVariable(texFactorUniform.getName());
+                if (factorUniform === undefined) {
+                    factorUniform = self.Uniform(texFactorUniform.getType(), texFactorUniform.getName());
+                }
+
+                var blendNode = new ShaderNode.BlendNode(blendMode, input, texChannel.variable, factorUniform);
+                blendNode.connectOutput(output);
+                input = output;
+            }
+            return output;
+        };
+
+        var applyBlendChannel = function(output, channelName, input) {
+            var operatorPass = new ShaderNode.PassValue();
+
+            if (texturesChannels[channelName] !== undefined && texturesChannels[channelName].length > 0) {
+                input = blendChannel(input, texturesChannels[channelName], channelName);
+            }
+            operatorPass.connectOutput(output);
+            operatorPass.connectInput(input);
+        };
+
+        var diffuseColor = this.Variable("vec3","diffuseColor");
+        applyBlendChannel(diffuseColor, "DiffuseColor", materialDiffuseColor);
+
+        var diffuseIntensity = this.Variable("float","diffuseIntensity");
+        applyBlendChannel(diffuseIntensity, "DiffuseIntensity", materialDiffuseIntensity);
+
+        var translucency = this.Variable("float","translucency");
+        applyBlendChannel(translucency, "Translucency", materialTranslucency);
+
+        var specularColor = this.Variable("vec3","specularColor");
+        applyBlendChannel(specularColor, "SpecularColor", materialSpecularColor);
+
+        var specularIntensity = this.Variable("float","specularIntensity");
+        applyBlendChannel(specularIntensity, "SpecularIntensity", materialSpecularIntensity);
+
+        var specularHardness = this.Variable("float","specularHardness");
+        applyBlendChannel(specularHardness, "SpecularHardness", materialHardness);
+
+
+        var shadingAmbient = this.Variable("float","ambient");
+        applyBlendChannel(shadingAmbient, "Ambient", materialShadingAmbient);
+
+        var shadingEmission = this.Variable("float","emission");
+        applyBlendChannel(shadingEmission, "Emit", materialShadingEmission);
+
+//        var shadingMirror = this.Variable("float","shadingMirror");
+//        applyBlendChannel(shadingMirror, "ShadingMirror", materialShadingMirror);
+
+
+        var currentNormal = this.Variable("vec3");
+        applyBlendChannel(currentNormal, "Normal", normal);
+
+        var geometryNormal = this.Variable("vec3", "final_normal");
+        
+
+        if (texturesChannels.Normal !== undefined && texturesChannels.Normal.length > 0 ) {
+            var normalMap = new ShaderNode.NormalTangentSpace(inputTangent, normal, currentNormal, geometryNormal);
+        } else {
+            var normalPass = new ShaderNode.PassValue(currentNormal, geometryNormal);
+        }
+
 
         var lightColorAccumulator = this.Variable("vec3","light_accumulator");
 
-        for (var t = 0, tl = textures.length; t < tl; t++) {
-            var texture = textures[t];
-            
-        }
 
         var addLightContribution;
         if (lights.length > 0) {
@@ -560,10 +975,7 @@ ShaderNode.ShaderContext.prototype = {
             }
 
             var lightPosition = this.getVariable(uniforms.position.name);
-            var lightMatrix = this.getVariable(uniforms.matrix.name);
             var lightDirection = this.getVariable(uniforms.direction.name);
-            var lightInvMatrix = this.getVariable(uniforms.invMatrix.name);
-
 
             //var lightAttenuation = this.getVariable(uniforms.attenuation.name);
 
@@ -581,24 +993,23 @@ ShaderNode.ShaderContext.prototype = {
             var lightVector = this.Variable("vec3");
 
             var lightContribution = new ShaderNode.LightNode();
-            lightContribution.connectMaterialAmbient(materialAmbient);
-            lightContribution.connectMaterialDiffuseIntensity(materialDiffuseIntensity);
-            lightContribution.connectMaterialSpecularIntensity(materialSpecularIntensity);
-            lightContribution.connectMaterialSpecularColor(materialSpecularColor);
-            lightContribution.connectMaterialDiffuseColor(materialDiffuseColor);
-            lightContribution.connectMaterialHardness(materialHardness);
+            lightContribution.connectLight(light);
+
+            lightContribution.connectMaterialAmbient(shadingAmbient);
+            lightContribution.connectMaterialDiffuseIntensity(diffuseIntensity);
+            lightContribution.connectMaterialSpecularIntensity(specularIntensity);
+            lightContribution.connectMaterialSpecularColor(specularColor);
+            lightContribution.connectMaterialHardness(specularHardness);
+
+            lightContribution.connectMaterialDiffuseColor(diffuseColor);
 
             lightContribution.connectLightColor(lightColor);
-            lightContribution.connectNormal(normal);
+            lightContribution.connectNormal(geometryNormal);
             lightContribution.connectEyeVector(eyeVector);
             lightContribution.connectLightSpotCutoff(lightSpotCuffoff);
             lightContribution.connectLightSpotBlend(lightSpotBlend);
-            lightContribution.connectLightMatrix(lightMatrix);
             lightContribution.connectLightPosition(lightPosition);
-            lightContribution.connectLightMatrix(lightMatrix);
-            lightContribution.connectLightInvMatrix(lightInvMatrix);
             lightContribution.connectLightDirection(lightDirection);
-            //lightContribution.connectLightAttenuation(lightAttenuation);
             lightContribution.connectLightDistance(lightDistance);
 
             lightContribution.connectOutput(lightResult);
@@ -610,14 +1021,15 @@ ShaderNode.ShaderContext.prototype = {
         var fragColor = new ShaderNode.FragColor();
         //var 
         //setTransluency
+        //var translucencyOperator = new ShaderNode.SetAlpha(diffuseColor, materialTranslucency);
         var translucencyOperator = new ShaderNode.SetAlpha(lightColorAccumulator, materialTranslucency);
         var colorTranslucency = this.Variable("vec4");
         translucencyOperator.connectOutput(colorTranslucency);
-        //colorTranslucency.connectInput(translucencyOperator);
 
         var operatorAssign = new ShaderNode.PassValue();
-        operatorAssign.connectOutput(fragColor);
-        //fragColor.connectInput(operatorAssign);
+        var finalColor = this.Variable("vec4");
+        operatorAssign.connectOutput(finalColor);
+
 
         if (lights.length > 0) {
             operatorAssign.connectInput(colorTranslucency);
@@ -627,22 +1039,69 @@ ShaderNode.ShaderContext.prototype = {
             operatorAssign.connectInput(debugColor);
         }
 
+        var operatorLinearToSrgb = new ShaderNode.Linear2Srgb(finalColor, fragColor);
+
         return fragColor;
     },
 
-    evaluate: function(node) {
+    traverse: function(functor, node ) {
         for (var i = 0, l = node.getInputs().length; i < l; i++) {
             var child = node.getInputs()[i];
-            if (child !== undefined && child.resolved === undefined &&
+            if (child !== undefined &&
                child !== node) {
-                child.resolved = true;
-                this.evaluate(child);
+                this.traverse(functor, child);
             }
         }
-        var c = node.computeFragment();
-        if (c !== undefined) {
-            this._fragmentShader.push(c);
-        }
+        functor.call(functor, node);
+    },
+    evaluateGlobalFunctionDeclaration: function(node) {
+        var func = function(node) {
+            if (node.globalFunctionDeclaration &&
+                this._map[node.type] === undefined) {
+                this._map[node.type] = true;
+                var c = node.globalFunctionDeclaration();
+                this._text.push(c);
+            }
+        };
+        func._map = {};
+        func._text = [];
+        this.traverse(func, node);
+        return func._text.join('\n');
+    },
+
+    evaluateGlobalVariableDeclaration: function(node) {
+        var func = function(node) {
+            if (this._map[node._id] === undefined) {
+                this._map[node._id] = true;
+                if (node.globalDeclaration !== undefined) {
+                    var c = node.globalDeclaration();
+                    if (c !== undefined) {
+                        this._text.push(c);
+                    }
+                }
+            }
+        };
+        func._map = {};
+        func._text = [];
+        this.traverse(func, node);
+        return func._text.join('\n');
+    },
+
+    evaluate: function(node) {
+        var func = function(node) {
+            if (this._mapTraverse[node._id] !== undefined) {
+                return;
+            }
+            var c = node.computeFragment();
+            if (c !== undefined) {
+                this._text.push(c);
+            }
+            this._mapTraverse[node._id] = true;
+        };
+        func._text = [];
+        func._mapTraverse = [];
+        this.traverse(func, node);
+        this._fragmentShader.push(func._text.join('\n'));
     },
 
     createVertexShaderGraph: function() {
@@ -657,12 +1116,14 @@ ShaderNode.ShaderContext.prototype = {
                           "attribute vec3 Vertex;",
                           "attribute vec4 Color;",
                           "attribute vec3 Normal;",
+                          "attribute vec4 Tangent;",
                           "uniform int ArrayColorEnabled;",
                           "uniform mat4 ModelViewMatrix;",
                           "uniform mat4 ProjectionMatrix;",
                           "uniform mat4 NormalMatrix;",
                           "varying vec4 VertexColor;",
                           "varying vec3 FragNormal;",
+                          "varying vec4 FragTangent;",
                           "varying vec3 FragEyeVector;",
                           "",
                           "" ].join('\n'));
@@ -677,6 +1138,7 @@ ShaderNode.ShaderContext.prototype = {
 
         this._vertexShader.push("void main() {");
         this._vertexShader.push("  FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));");
+        this._vertexShader.push("  FragTangent = NormalMatrix * Tangent;");
         this._vertexShader.push("  FragEyeVector = vec3(ModelViewMatrix * vec4(Vertex,1.0));");
         this._vertexShader.push("  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);");
         this._vertexShader.push([ "",
@@ -686,17 +1148,17 @@ ShaderNode.ShaderContext.prototype = {
                           "    VertexColor = vec4(1.0,1.0,1.0,1.0);",
                           ""
                         ].join('\n'));
-        for ( var t = 0, tl = textures.length; t < tl; t++) {
-            this._vertexShader.push("FragTexCoord" + t +" = TexCoord" + t + ";");
+        for ( var tt = 0, ttl = textures.length; tt < ttl; tt++) {
+            this._vertexShader.push("FragTexCoord" + tt +" = TexCoord" + tt + ";");
         }
         this._vertexShader.push("}");
     },
 
     createVertexShader: function() {
         var root = this.createVertexShaderGraph();
-        osg.log("Vertex Shader");
         var shader = this._vertexShader.join('\n');
-        osg.log(shader);
+        //osg.log("Vertex Shader");
+        //osg.log(shader);
         return shader;
     },
 
@@ -711,30 +1173,29 @@ ShaderNode.ShaderContext.prototype = {
                                      "precision highp float;",
                                      "#endif",
                                      "varying vec4 VertexColor;",
-                                     "varying vec3 FragEyeVector;",
                                      ""].join('\n'));
 
-        for ( var t = 0, tl = textures.length; t < tl; t++) {
-            var texture = textures[t];
-            if (texture !== undefined) {
-                this._fragmentShader.push("varying vec2 FragTexCoord" + t +";");
-                this._fragmentShader.push("uniform sampler2D Texture" + t +";");
-            }
-        }
 
         var vars = Object.keys(this._variables);
-        for (var i = 0, l = vars.length; i < l; i++) {
-            if (this._variables[vars[i]].globalDeclaration !== undefined) {
-                var v = this._variables[vars[i]].globalDeclaration();
-                if (v !== undefined) {
-                    this._fragmentShader.push(v);
+
+        if (false) {
+            for (var i = 0, l = vars.length; i < l; i++) {
+                if (this._variables[vars[i]].globalDeclaration !== undefined) {
+                    var v = this._variables[vars[i]].globalDeclaration();
+                    if (v !== undefined) {
+                        this._fragmentShader.push(v);
+                    }
                 }
             }
         }
 
-        if (lights.length > 0) {
-            this._fragmentShader.push(ShaderNode.LightNode.prototype.functions());
-        }
+        this._fragmentShader.push(this.evaluateGlobalVariableDeclaration(root));
+
+        this._fragmentShader.push([
+            ""].join('\n'));
+
+        this._fragmentShader.push(this.evaluateGlobalFunctionDeclaration(root));
+
 
         this._fragmentShader.push("void main() {");
 
@@ -745,11 +1206,13 @@ ShaderNode.ShaderContext.prototype = {
             }
         }
         this.evaluate(root);
-
+        //this._fragmentShader.push("gl_FragColor = vec4(final_normal.rgb*0.5 + vec3(0.5),1.0);");
+        //this._fragmentShader.push("gl_FragColor = vec4(normal.rgb*0.5 + vec3(0.5),1.0);");
+        //this._fragmentShader.push("gl_FragColor = vec4(normalize(FragTangent.rgb)*0.5 + vec3(0.5),1.0);");
         this._fragmentShader.push("}");
-        osg.log("Fragment Shader");
         var shader = this._fragmentShader.join('\n');
-        osg.log(shader);
+        //osg.log("Fragment Shader");
+        //osg.log(shader);
         return shader;
     }
 };
@@ -763,16 +1226,18 @@ osg.BlenderLight = function(lightNumber) {
         lightNumber = 0;
     }
 
-    this._color = [ 0.8, 0.8, 0.8 ];
+    this._color = [ 1.0, 1.0, 1.0 ];
     this._affectSpecular = true;
     this._affectDiffuse = true;
     this._position = [ 0.0, 0.0, 1.0, 0.0 ];
     this._direction = [ 0.0, 0.0, -1.0 ];
     this._spotCutoff = 180.0;
     this._spotBlend = 0.01;
-    this._attenuationType = "InvSquare";
-    this._distance = 10;
+    this._falloffType = "INVERSE_SQUARE";
+    this._distance = 25;
+    this._energy = 1.0;
     this._lightUnit = lightNumber;
+    this._type = "POINT";
     this._enabled = 0;
     this.dirty();
 };
@@ -787,7 +1252,7 @@ osg.BlenderLight.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     getTypeMember: function() { return this.attributeType + this._lightUnit;},
     getUniformName: function (name) { return this.getPrefix()+ "_uniform_" + name; },
     getHash: function() {
-        return "BlenderLight"+this._lightUnit + this._attenuationType;
+        return "BlenderLight"+this._lightUnit + this._type + this._attenuationType;
     },
     getOrCreateUniforms: function() {
 
@@ -797,12 +1262,11 @@ osg.BlenderLight.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         if (obj.uniforms[typeMember] === undefined) {
             uniformList = {
                 "color": 'createFloat3',
-                "position": 'createFloat4',
+                "energy": 'createFloat1',
+                "position": 'createFloat3',
                 "direction":'createFloat3',
                 "spotCutoff":'createFloat1',
                 "spotBlend":'createFloat1',
-                "matrix": 'createMat4',
-                "invMatrix": 'createMat4',
                 "distance": 'createFloat1' };
             var keys = Object.keys(uniformList);
             var uniforms = {};
@@ -818,17 +1282,30 @@ osg.BlenderLight.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         return obj.uniforms[typeMember];
     },
 
-    setPosition: function(pos) { osg.Vec4.copy(pos, this._position); },
     setColor: function(a) { this._color = a; this.dirty(); },
+    getColor: function() { return this._color; },
+
+    setEnergy: function(a) { this._energy = a; this.dirty(); },
+    getEnergy: function() { return this._energy; },
+
     setSpotCutoff: function(a) { this._spotCutoff = a; this.dirty(); },
     setSpotBlend: function(a) { this._spotBlend = a; this.dirty(); },
 
-    setAttenuationType: function(value) { this._attenuation = value;
-                                          this.dirty();},
-    getAttenuationType: function() { return this._attenuation; },
-    setDistance: function(value) { this._distance = value; this.dirty();},
+    setUseDiffuse: function(a) { this._useDiffuse = a; this.dirty(); },
+    getUseDiffuse: function() { return this._useDiffuse; },
 
-    setDirection: function(a) { this._direction = a; this.dirty(); },
+    setUseSpecular: function(a) { this._useSpecular = a; this.dirty(); },
+    getUseSpecular: function() { return this._useSpecular; },
+
+    setLightType: function(a) { this._type = a; this.dirty(); },
+    getLightType: function() { return this._type; },
+
+    setFalloffType: function(value) { this._falloffType = value; this.dirty();},
+    getFalloffType: function() { return this._falloffType; },
+
+    setDistance: function(value) { this._distance = value; this.dirty();},
+    getDistance: function() { return this._distance; },
+
     setLightNumber: function(unit) { this._lightUnit = unit; this.dirty(); },
     getLightNumber: function() { return this._lightUnit; },
 
@@ -837,16 +1314,21 @@ osg.BlenderLight.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
     applyPositionedUniform: function(matrix, state) {
         var uniform = this.getOrCreateUniforms();
-        osg.Matrix.copy(matrix, uniform.matrix.get());
-        uniform.matrix.dirty();
+        if (this._type === "SUN") {
+            var invMatrix = new Array(16);
+            osg.Matrix.copy(matrix, invMatrix);
+            invMatrix[12] = 0;
+            invMatrix[13] = 0;
+            invMatrix[14] = 0;
+            osg.Matrix.inverse(invMatrix, invMatrix);
+            osg.Matrix.transpose(invMatrix, invMatrix);
+            osg.Matrix.transformVec3(invMatrix, [0,0,-1], uniform.direction.get());
+        }
+        if (this._type !== "SUN") {
+            osg.Matrix.transformVec3(matrix, [0,0,0], uniform.position.get());
+        }
 
-        osg.Matrix.copy(matrix, uniform.invMatrix.get());
-        uniform.invMatrix.get()[12] = 0;
-        uniform.invMatrix.get()[13] = 0;
-        uniform.invMatrix.get()[14] = 0;
-        osg.Matrix.inverse(uniform.invMatrix.get(), uniform.invMatrix.get());
-        osg.Matrix.transpose(uniform.invMatrix.get(), uniform.invMatrix.get());
-        uniform.invMatrix.dirty();
+        uniform.position.dirty();
     },
 
     apply: function(state)
@@ -866,6 +1348,9 @@ osg.BlenderLight.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
         light.distance.get()[0] = this._distance;
         light.distance.dirty();
+
+        light.energy.get()[0] = this._energy;
+        light.energy.dirty();
 
         //light._enable.set([this.enable]);
 
@@ -926,7 +1411,7 @@ osg.BlenderMaterial.prototype = osg.objectInehrit(osg.StateAttribute.prototype, 
                 "specularIntensity": 'createFloat1',
                 "translucency": 'createFloat1',
                 "hardness": 'createFloat1',
-                "shadeless": 'createFloat1' };
+                "shadeless": 'createInt1' };
             var keys = Object.keys(uniformList);
             var uniforms = {};
             for ( var i = 0; i < keys.length; i++) {
@@ -963,32 +1448,63 @@ osg.BlenderTextureMaterial = function(texture) {
     this._channels = {};
     for (var i = 1; i < arguments.length; i++) {
         var channel = arguments[i];
-        this._channels[channel] = channel;
+        this._channels[channel] = new osg.BlenderTextureMaterial.Channel(channel);
     }
-    this._blendMode = "Mix";
+    this._blendMode = "MIX";
 };
 osg.BlenderTextureMaterial.uniforms = [];
 osg.BlenderTextureMaterial.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "BlenderTextureMaterial",
-    cloneType: function() { var t = new osg.BlenderTextureMaterial(); return t;},
+    channelType: [ "DiffuseColor",
+                   "DiffuseIntensity",
+                   "Alpha",
+                   "Translucency",
+                   "SpecularColor",
+                   "SpecularIntensity",
+                   "SpecularHardness",
+                   "Ambient",
+                   "Emit",
+                   "Mirror",
+                   "Normal"
+                 ],
+    cloneType: function() { var t = new osg.BlenderTextureMaterial(new osg.Texture()); return t;},
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType; },
+    getBlendMode: function() { return this._blendMode;},
+    setBlendMode: function(mode) { this._blendMode = mode;},
     getChannels: function() { return this._channels; },
     setChannels: function(channels) { this._channels = channels; },
-
+    getChannelType: function() { return this.channelType; },
     getOrCreateUniforms: function(unit) {
         var obj = osg.BlenderTextureMaterial.uniforms;
         if (obj[unit] === undefined) {
+            var uniforms = {};
+            var name = this._texture.getType() + unit;
             var textureUniform = this._texture.getOrCreateUniforms(unit);
-            var uniforms = textureUniform;
+            uniforms.texture = textureUniform.texture;
+
+            var channels = this.channelType;
+            for (var i = 0, l = channels.length; i < l; i++) {
+                var c = channels[i];
+                uniforms[c] = osg.Uniform.createFloat1(this.getType() + unit + "_uniform_" + c);
+            }
+            uniforms.uniformKeys = Object.keys(uniforms);
             obj[unit] = uniforms;
         }
         return obj[unit];
     },
 
-    apply: function(state) {
+    apply: function(state, unit) {
         if (this._texture !== undefined) {
             this._texture.apply(state);
+        }
+        var uniforms = this.getOrCreateUniforms(unit);
+        var keys = Object.keys(this._channels);
+        for (var i = 0, l = keys.length; i < l; i++) {
+            var k = keys[i];
+            var uniform = uniforms[k];
+            uniform.get()[0] = this._channels[k].getFactor();
+            uniform.dirty();
         }
     },
 
@@ -1001,7 +1517,20 @@ osg.BlenderTextureMaterial.prototype = osg.objectInehrit(osg.StateAttribute.prot
         return hash;
     }
 });
-
+osg.BlenderTextureMaterial.Channel = function(name, amount) {
+    this._name = name;
+    var f = amount;
+    if (f === undefined) {
+        f = 1.0;
+    }
+    this._factor = f;
+};
+osg.BlenderTextureMaterial.Channel.prototype = {
+    setName: function(n) { this._name = n;},
+    getName: function() { return this._name;},
+    setFactor: function(n) { this._factor = n;},
+    getFactor: function() { return this._factor;}
+};
 
 osg.BlenderShaderGenerator = function() {
     this._cache = {};
@@ -1118,35 +1647,166 @@ osg.BlenderShaderGenerator.prototype = {
         this._cache[hash] = program;
         return program;
     }
-
-
 };
 
 
-if (false) {
-    var geom = osg.createTexturedBoxGeometry(0,0,0, 2, 2, 2);
+osg.BlenderNodeVisitor = function() {
+    osg.NodeVisitor.call(this);
+    this._shaderGenerator = new osg.BlenderShaderGenerator();
+};
+osg.BlenderNodeVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+    getObject: function(userdata) {
+        var obj = {};
+        userdata.forEach(function(entry, i , a) {
+            var name = entry.Name;
+            var value = entry.Value;
+            obj[name] = value;
+        });
+        return obj;
+    },
 
-    var material = new osg.BlenderMaterial([1,0,1],
-                                           0.5,
-                                           [0.4,0.4,0.4],
-                                           0.68);
-    var texture0 = new osg.BlenderMaterialTexture(new osg.Texture(), 'DiffuseColor', 'DiffuseIntensity');
-    var texture1 = new osg.BlenderMaterialTexture(new osg.Texture(),'DiffuseColor');
-    var texture2 = new osg.BlenderMaterialTexture(new osg.Texture(),'SpecularColor');
-    var texture3 = new osg.BlenderMaterialTexture(new osg.Texture(),'DiffuseColor');
-    var texture3 = new osg.BlenderMaterialTexture(new osg.TextureBlend());
-    var stateSet = new osg.StateSet();
-    stateSet.setTextureAttributeAndModes(0, texture0);
-    stateSet.setTextureAttributeAndModes(1, texture1);
-    stateSet.setTextureAttributeAndModes(2, texture2);
-    stateSet.setTextureAttributeAndModes(3, texture3);
-    stateSet.setAttributeAndModes(material);
+    createLight: function(sa) {
+        var map = this.getObject(sa.getUserData());
+        if (map.source !== "blender")
+            return;
+        
+        var l = new osg.BlenderLight();
+        l.setLightNumber(sa.getLightNumber());
+        if (sa.SpotCutoff !== undefined) {
+            l.setSpotCutoff(JSON.parse(sa.SpotCutoff));
+        }
+        if (sa.SpotBlend !== undefined) {
+            l.setSpotBlend(JSON.parse(sa.SpotBlend));
+        }
+        l.setEnergy(JSON.parse(map.Energy));
+        l.setLightType(map.Type);
+        l.setColor(JSON.parse(map.Color));
+        l.setDistance(JSON.parse(map.Distance));
+        l.setFalloffType(map.FalloffType);
 
+        if (map.UseDiffuse !== undefined) {
+            l.setUseDiffuse(JSON.parse(map.UseDiffuse));
+        }
+        if (map.UseSpecular !== undefined) {
+            l.setUseSpecular(JSON.parse(map.UseSpecular));
+        }
 
+        return l;
+    },
 
+    createMaterial: function(sa) {
+        var map = this.getObject(sa.getUserData());
+        if (map.source !== "blender")
+            return;
+        
+        var a = new osg.BlenderMaterial();
+        a.setDiffuseColor(JSON.parse(map.DiffuseColor));
+        a.setDiffuseIntensity(JSON.parse(map.DiffuseIntensity));
 
-    stateSet.setShaderProfile(osg.Shader.Profile.Blender);
-}
+        a.setSpecularColor(JSON.parse(map.SpecularColor));
+        a.setSpecularIntensity(JSON.parse(map.SpecularIntensity));
+        a.setHardness(JSON.parse(map.SpecularHardness));
+
+        a.setEmission(JSON.parse(map.Emit));
+        a.setTranslucency(JSON.parse(map.Translucency));
+        a.setAmbient(JSON.parse(map.Ambient));
+
+        if (map.Shadeless) {
+            a.setShadeless(true);
+        }
+        return a;
+    },
+
+    apply: function(node) {
+        if (node.objectType === osg.LightSource.prototype.objectType) {
+            if (node.getLight() !== undefined && node.getLight().getType() !== "BlenderLight") {
+                var blenderLight = this.createLight(node.getLight());
+                if (blenderLight !== undefined) {
+                    node.setLight(blenderLight);
+                }
+                
+            }
+            
+        } else if (node.getStateSet() !== undefined) {
+            var ss = node.getStateSet();
+            if (ss.getUserData() !== undefined) {
+                
+                var obj = this.getObject(ss.getUserData());
+
+                var attrMap = ss.getAttributeMap();
+                if (attrMap !== undefined) {
+
+                    // check light and material attribute to create blender one
+                    var self = this;
+                    Object.keys(attrMap).forEach(function(element, index, array) {
+                        if (attrMap[element].getAttribute === undefined) {
+                            return;
+                        }
+                        var attr = attrMap[element].getAttribute();
+                        var o = attr;
+                        var n = o.getType();
+                        if (n === "Light") {
+                            var blenderLight = self.createLight(o);
+                            if (blenderLight !== undefined) {
+                                ss.setAttributeAndModes(blenderLight);
+                            }
+                        } else if (n === "Material") {
+                            var blenderMaterial = self.createMaterial(o);
+                            if (blenderMaterial !== undefined) {
+                                ss.setAttributeAndModes(blenderMaterial);
+                            }
+
+                        }
+                    });
+                }
+
+                var unitTexture = {};
+                // check texture unit
+                if (obj.source === "blender") {
+                    ss.setShaderGenerator(this._shaderGenerator);
+                    Object.keys(obj).forEach(function(element, i, keys) {
+                        var k = element;
+                        var unit = k.substr(0,2);
+                        var unitNumber = parseInt(unit,10);
+                        if (isNaN(unitNumber)) {
+                            return;
+                        }
+                        var texture = unitTexture[unitNumber];
+                        if ( texture === undefined) {
+                            var textureAttr = ss.getTextureAttribute(unitNumber, "Texture");
+                            unitTexture[unitNumber] = new osg.BlenderTextureMaterial(textureAttr);
+                            texture = unitTexture[unitNumber];
+                        }
+                        var paramName = k.substr(3);
+                        for (var c = 0, cl = texture.getChannelType().length; c < cl; c++) {
+                            // check if it matches
+                            if (texture.getChannelType()[c] === paramName) {
+                                if (paramName === "NormalMap") {
+                                    texture._texture.setMinFilter('LINEAR');
+                                    texture._texture.setMagFilter('LINEAR');
+                                }
+                                texture.getChannels()[paramName] = new osg.BlenderTextureMaterial.Channel(paramName, parseFloat(obj[k]));
+                                break;
+                            }
+                        }
+                        if (paramName === "BlendType") {
+                            texture.setBlendMode(obj[k]);
+                        }
+                    });
+
+                    // assign texture to stateset
+                    Object.keys(unitTexture).forEach(function(element, i, keys) {
+                        var kk = element;
+                        var uni = parseInt(kk, 10);
+                        ss.setTextureAttributeAndModes(uni, unitTexture[kk]);
+                    });
+                }
+            }
+        }
+
+        this.traverse(node);
+    }
+});
 
 
 // profile must describe how to get the tree
@@ -1202,7 +1862,7 @@ test("osg.ShaderNode", function() {
         var texture0 = new osg.BlenderTextureMaterial(new osg.Texture(), 'DiffuseColor', 'DiffuseIntensity');
         var texture1 = new osg.BlenderTextureMaterial(new osg.Texture(),'DiffuseColor');
         var texture2 = new osg.BlenderTextureMaterial(new osg.Texture(),'SpecularColor');
-        var texture3 = new osg.BlenderTextureMaterial(new osg.Texture(),'DiffuseColor');
+        var texture3 = new osg.BlenderTextureMaterial(new osg.Texture(),'DiffuseIntensity');
 
         var stateSet = new osg.StateSet();
         stateSet.setTextureAttributeAndModes(0, texture0);
