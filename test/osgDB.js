@@ -195,13 +195,44 @@ test("osgDB.parseSceneGraph", function() {
                         } ],
                         "UserDataContainer": {
                           "UniqueID": 23, 
-                          "color_diffuse": "0", 
-                          "color_diffuse_factor": "1.0", 
-                          "normal": "2", 
-                          "normal_factor": "1.0", 
-                          "specular": "1", 
-                          "specular_factor": "1.0"
-                        }                          
+                            "Values": [ 
+                                {
+                                    "Name": "source", 
+                                    "Value": "blender"
+                                },
+                                {
+                                    "Name": "DiffuseIntensity", 
+                                    "Value": "1.0"
+                                },
+                                {
+                                    "Name": "DiffuseColor", 
+                                    "Value": "[ 0, 0, 0 ]"
+                                },
+                                {
+                                    "Name": "SpecularIntensity", 
+                                    "Value": "0.0"
+                                },
+                                {
+                                    "Name": "SpecularColor", 
+                                    "Value": "[ 1, 1, 1 ]"
+                                },
+                                {
+                                    "Name": "SpecularHardness", 
+                                    "Value": "50"
+                                },
+                                {
+                                    "Name": "Emit", 
+                                    "Value": "0.0"
+                                },
+                                {
+                                    "Name": "Ambient", 
+                                    "Value": "1.0"
+                                },
+                                {
+                                    "Name": "Translucency", 
+                                    "Value": "0.0"
+                                } ]
+                        }
                       }
                     }, 
                     "VertexAttributeList": {
