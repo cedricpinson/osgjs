@@ -99,12 +99,12 @@ osgDB.Input.prototype = {
         if (uniqueID !== undefined) {
             osgjsObject = this._identifierMap[uniqueID];
             if (osgjsObject !== undefined) {
-                return osgjsObject;
+                return osgjsObject.Values;
             }
         }
 
         this._identifierMap[uniqueID] = jsonObj;
-        return jsonObj;
+        return jsonObj.Values;
     },
 
     readPrimitiveSet: function() {
