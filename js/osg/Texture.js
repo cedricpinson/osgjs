@@ -55,10 +55,8 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         if (osg.Texture.uniforms[unit] === undefined) {
             var name = this.getType() + unit;
             var uniforms = {};
-            uniforms[name] = osg.Uniform.createInt1(unit, name);
-            var uniformKeys = [name];
-            uniforms.uniformKeys = uniformKeys;
-
+            uniforms.texture = osg.Uniform.createInt1(unit, name);
+            uniforms.uniformKeys = Object.keys(uniforms);
             osg.Texture.uniforms[unit] = uniforms;
         }
         // uniform for an texture attribute should directly in osg.Texture.uniforms[unit] and not in osg.Texture.uniforms[unit][Texture0]
