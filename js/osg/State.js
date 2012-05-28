@@ -415,20 +415,21 @@ osg.State.prototype = {
         for ( var i = 0, l = uniformList.uniformKeys.length; i < l; i++) {
             var key = uniformList.uniformKeys[i];
             uniformPair = uniformList[key];
-            uniform = uniformPair.object;
+            uniform = uniformPair.getUniform();
             name = uniform.name;
             if (uniformMap[name] === undefined) {
                 uniformMap[name] = osg.Stack.create();
                 uniformMap[name].globalDefault = uniform;
                 uniformMap.uniformKeys.push(name);
             }
+            var value = uniformPair.getValue();
             var stack = uniformMap[name];
             if (stack.length === 0) {
-                stack.push(this.getObjectPair(uniform, uniformPair.value));
-            } else if ((stack[stack.length-1].value & osg.StateAttribute.OVERRIDE) && !(uniformPair.value & osg.StateAttribute.PROTECTED) ) {
+                stack.push(this.getObjectPair(uniform, value));
+            } else if ((stack[stack.length-1].value & osg.StateAttribute.OVERRIDE) && !(value & osg.StateAttribute.PROTECTED) ) {
                 stack.push(stack[stack.length-1]);
             } else {
-                stack.push(this.getObjectPair(uniform, uniformPair.value));
+                stack.push(this.getObjectPair(uniform, value));
             }
         }
     },
@@ -491,7 +492,7 @@ osg.State.prototype = {
         for (var i = 0, l = attributeList.attributeKeys.length; i < l; i++ ) {
             var type = attributeList.attributeKeys[i];
             var attributePair = attributeList[type];
-            var attribute = attributePair.object;
+            var attribute = attributePair.getAttribute();
             if (attributeMap[type] === undefined) {
                 attributeMap[type] = osg.Stack.create();
                 attributeMap[type].globalDefault = attribute.cloneType();
@@ -499,13 +500,14 @@ osg.State.prototype = {
                 attributeMap.attributeKeys.push(type);
             }
 
+            var value = attributePair.getValue();
             attributeStack = attributeMap[type];
             if (attributeStack.length === 0) {
-                attributeStack.push(this.getObjectPair(attribute, attributePair.value));
-            } else if ( (attributeStack[attributeStack.length-1].value & osg.StateAttribute.OVERRIDE) && !(attributePair.value & osg.StateAttribute.PROTECTED)) {
+                attributeStack.push(this.getObjectPair(attribute, value));
+            } else if ( (attributeStack[attributeStack.length-1].value & osg.StateAttribute.OVERRIDE) && !(value & osg.StateAttribute.PROTECTED)) {
                 attributeStack.push(attributeStack[attributeStack.length-1]);
             } else {
-                attributeStack.push(this.getObjectPair(attribute, attributePair.value));
+                attributeStack.push(this.getObjectPair(attribute, value));
             }
 
             attributeStack.asChanged = true;
