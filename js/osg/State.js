@@ -397,10 +397,12 @@ osg.State.prototype = {
 
             if (attributeStack.asChanged) {
 //            if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
-                if (attribute.apply) {
-                    attribute.apply(this);
+                if (attributeStack.lastApplied !== attribute) {
+                    if (attribute.apply) {
+                        attribute.apply(this);
+                    }
+                    attributeStack.lastApplied = attribute;
                 }
-                attributeStack.lastApplied = attribute;
                 attributeStack.asChanged = false;
             }
         }

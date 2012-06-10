@@ -122,8 +122,8 @@ osg.RenderBin.prototype = {
             var stateAttribute = element[1];
             var matrix = element[0];
             state.setGlobalDefaultValue(stateAttribute);
-            stateAttribute.applyPositionedUniform(matrix, state);
             stateAttribute.apply(state);
+            stateAttribute.applyPositionedUniform(matrix, state);
             state.haveAppliedAttribute(stateAttribute);
         }
     },
