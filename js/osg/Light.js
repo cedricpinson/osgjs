@@ -61,17 +61,25 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     },
 
     setPosition: function(pos) { osg.Vec4.copy(pos, this._position); },
+    getPosition: function() { return this._position; },
+
     setAmbient: function(a) { this._ambient = a; this.dirty(); },
     setSpecular: function(a) { this._specular = a; this.dirty(); },
     setDiffuse: function(a) { this._diffuse = a; this.dirty(); },
+
     setSpotCutoff: function(a) { this._spotCutoff = a; this.dirty(); },
+    getSpotCutoff: function() { return this._spotCutoff; },
+
     setSpotBlend: function(a) { this._spotBlend = a; this.dirty(); },
+    getSpotBlend: function() { return this._spotBlend; },
 
     setConstantAttenuation: function(value) { this._constantAttenuation = value; this.dirty();},
     setLinearAttenuation: function(value) { this._linearAttenuation = value; this.dirty();},
     setQuadraticAttenuation: function(value) { this._quadraticAttenuation = value; this.dirty();},
 
     setDirection: function(a) { this._direction = a; this.dirty(); },
+    getDirection: function() { return this._direction; },
+
     setLightNumber: function(unit) { this._lightUnit = unit; this.dirty(); },
     getLightNumber: function() { return this._lightUnit; },
 
@@ -268,6 +276,26 @@ osg.Light.prototype._shaderCommon[osg.ShaderGeneratorType.FragmentFunction] = fu
                      "  col_to.r = linearrgb_to_srgb1(col_from.r);",
                      "  col_to.g = linearrgb_to_srgb1(col_from.g);",
                      "  col_to.b = linearrgb_to_srgb1(col_from.b);",
+                     "  col_to.a = col_from.a;",
+                     "  return col_to;",
+                     "}",
+                     "float srgb_to_linearrgb1(float c)",
+                     "{",
+                     "  float v = 0.0;",
+                     "  if(c < 0.04045) {",
+                     "    if (c >= 0.0)",
+                     "      v = c * (1.0/12.92);",
+                     "  } else {",
+                     "    v = pow((c + 0.055)*(1.0/1.055), 2.4);",
+                     "  }",
+                     " return v;",
+                     "}",
+                     "vec4 srgb2linear(vec4 col_from)",
+                     "{",
+                     "  vec4 col_to;",
+                     "  col_to.r = srgb_to_linearrgb1(col_from.r);",
+                     "  col_to.g = srgb_to_linearrgb1(col_from.g);",
+                     "  col_to.b = srgb_to_linearrgb1(col_from.b);",
                      "  col_to.a = col_from.a;",
                      "  return col_to;",
                      "}",

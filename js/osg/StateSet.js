@@ -12,13 +12,25 @@ osg.StateSet = function () {
 
     this._binName = undefined;
     this._binNumber = 0;
+
+    this._shaderGenerator = undefined;
 };
 osg.StateSet.instance = 0;
 
+osg.StateSet.AttributePair = function(attr, value) {
+    this._object = attr;
+    this._value = value;
+};
+osg.StateSet.AttributePair.prototype = {
+    getAttribute: function() { return this._object; },
+    getUniform: function() { return this._object; },
+    getValue: function() { return this._value; }
+};
+
 /** @lends osg.StateSet.prototype */
 osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
-    getObjectPair: function(attribute, value) {
-        return {object: attribute, value: value};
+    getAttributePair: function(attribute, value) {
+        return new osg.StateSet.AttributePair(attribute, value);
     },
     addUniform: function (uniform, mode) {
         if (mode === undefined) {
@@ -29,14 +41,14 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
             this.uniforms.uniformKeys = [];
         }
         var name = uniform.name;
-        this.uniforms[name] = this.getObjectPair(uniform, mode);
+        this.uniforms[name] = this.getAttributePair(uniform, mode);
         if (this.uniforms.uniformKeys.indexOf(name) === -1) {
             this.uniforms.uniformKeys.push(name);
         }
     },
     getUniform: function (uniform) {
         if (this.uniforms && this.uniforms[uniform]) {
-            return this.uniforms[uniform].object;
+            return this.uniforms[uniform].getAttribute();
         }
         return undefined;
     },
@@ -46,7 +58,7 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         if (mode === undefined) {
             mode = osg.StateAttribute.ON;
         }
-        this._setTextureAttribute(unit, this.getObjectPair(attribute, mode) );
+        this._setTextureAttribute(unit, this.getAttributePair(attribute, mode) );
     },
     getNumTextureAttributeLists: function() {
         return this.textureAttributeMapList.length;
@@ -55,19 +67,19 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         if (this.textureAttributeMapList[unit] === undefined || this.textureAttributeMapList[unit][attribute] === undefined) {
             return undefined;
         }
-        return this.textureAttributeMapList[unit][attribute].object;
+        return this.textureAttributeMapList[unit][attribute].getAttribute();
     },
     getAttribute: function(attributeType) { 
         if (this.attributeMap[attributeType] === undefined) {
             return undefined;
         }
-        return this.attributeMap[attributeType].object;
+        return this.attributeMap[attributeType].getAttribute();
     },
     setAttributeAndMode: function(attribute, mode) { 
         if (mode === undefined) {
             mode = osg.StateAttribute.ON;
         }
-        this._setAttribute(this.getObjectPair(attribute, mode)); 
+        this._setAttribute(this.getAttributePair(attribute, mode)); 
     },
 
     removeAttribute: function(attributeName) {
@@ -92,6 +104,7 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         this._binNumber = num;
         this._binName = binName;
     },
+    getAttributeMap: function() { return this.attributeMap; },
     getBinNumber: function() { return this._binNumber; },
     getBinName: function() { return this._binName; },
     setBinNumber: function(binNum) { this._binNumber = binNum; },
@@ -106,6 +119,12 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
         return list;
     },
+    setShaderGenerator: function(generator) {
+        this._shaderGenerator = generator;
+    },
+    getShaderGenerator: function() {
+        return this._shaderGenerator;
+    },
     _getUniformMap: function () {
         return this.uniforms;
     },
@@ -116,7 +135,7 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
             this.textureAttributeMapList[unit] = {};
             this.textureAttributeMapList[unit].attributeKeys = [];
         }
-        var name = attributePair.object.getTypeMember();
+        var name = attributePair.getAttribute().getTypeMember();
         this.textureAttributeMapList[unit][name] = attributePair;
         if (this.textureAttributeMapList[unit].attributeKeys.indexOf(name) === -1) {
             this.textureAttributeMapList[unit].attributeKeys.push(name);
@@ -124,10 +143,13 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
     },
     // for internal use, you should not call it directly
     _setAttribute: function (attributePair) {
-        var name = attributePair.object.getTypeMember();
+        var name = attributePair.getAttribute().getTypeMember();
         this.attributeMap[name] = attributePair;
         if (this.attributeMap.attributeKeys.indexOf(name) === -1) {
             this.attributeMap.attributeKeys.push(name);
         }
     }
+
 });
+osg.StateSet.prototype.setTextureAttributeAndModes = osg.StateSet.prototype.setTextureAttributeAndMode;
+osg.StateSet.prototype.setAttributeAndModes = osg.StateSet.prototype.setAttributeAndMode;

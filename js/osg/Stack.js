@@ -1,4 +1,5 @@
-osg.Stack = function() {};
+osg.Stack = function() {
+};
 osg.Stack.create = function()
 {
     var a = [];
