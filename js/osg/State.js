@@ -561,7 +561,7 @@ osg.State.prototype = {
         // there would be a way to cache it and track state if the program has not changed ...
         var colorAttrib;
         var program = this.programs.lastApplied;
-        if (program.generated === true) {
+        if (program !== undefined && program.generated === true) {
             var updateColorUniform = false;
             if (this.previousAppliedProgram !== this.programs.lastApplied) {
                 updateColorUniform = true;
