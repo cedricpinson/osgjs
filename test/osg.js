@@ -1491,4 +1491,15 @@ test("osg.StateSet", function() {
 
     })();
 
+    (function() {
+        var ss = new osg.StateSet();
+        var t = new osg.Texture();
+        ss.setTextureAttributeAndMode(1, t);
+
+        ok(ss.getTextureAttribute(1, 'Texture') === t, "Check texture attribute accessors");
+
+        ss.removeTextureAttribute(1,'Texture');
+        ok(ss.getTextureAttribute(1, 'Texture') === undefined, "Check texture attribute has been removed");
+    })();
+
 });

@@ -69,6 +69,17 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
         return this.textureAttributeMapList[unit][attribute].getAttribute();
     },
+
+    removeTextureAttribute: function(unit, attributeName) {
+        if (this.textureAttributeMapList[unit] === undefined || this.textureAttributeMapList[unit][attributeName] === undefined) {
+            return;
+        }
+
+        delete this.textureAttributeMapList[unit][attributeName];
+        var idx = this.textureAttributeMapList[unit].attributeKeys.indexOf(attributeName);
+        this.textureAttributeMapList[unit].attributeKeys.splice(idx,1);
+    },
+
     getAttribute: function(attributeType) { 
         if (this.attributeMap[attributeType] === undefined) {
             return undefined;
