@@ -258,20 +258,34 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
     mousedown: function(ev) {
         if (this._currentMode === undefined) {
-            this._currentMode = osgGA.OrbitManipulator.Rotate;
+            if (ev.button === 0) {
+                if (ev.shiftKey) {
+                    this._currentMode = osgGA.OrbitManipulator.Pan;
+                } else if (ev.ctrlKey) {
+                    this._currentMode = osgGA.OrbitManipulator.Zoom;
+                } else {
+                    this._currentMode = osgGA.OrbitManipulator.Rotate;
+                }
+            } else {
+                this._currentMode = osgGA.OrbitManipulator.Pan;
+            }
         }
+
         this.pushButton(ev);
 
         var pos = this.getPositionRelativeToCanvas(ev);
 
         if (this._currentMode === osgGA.OrbitManipulator.Rotate) {
+            this._rotate.reset(pos[0], pos[1]);
             this._rotate.set(pos[0], pos[1]);
         } else if (this._currentMode === osgGA.OrbitManipulator.Pan) {
+            this._pan.reset(pos[0], pos[1]);
             this._pan.set(pos[0], pos[1]);
         } else if (this._currentMode === osgGA.OrbitManipulator.Zoom) {
             this._zoom._start = pos[1];
             this._zoom.set(0.0);
         }
+        ev.preventDefault();
     },
     mousemove: function(ev) {
         if (this._buttonup === true) {
@@ -297,6 +311,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
             }
         }
 
+        ev.preventDefault();
         ev.preventDefault();
     },
     setMaxDistance: function(d) {
