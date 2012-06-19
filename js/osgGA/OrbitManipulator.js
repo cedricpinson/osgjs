@@ -238,6 +238,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
             this._moveTouch.id = undefined;
         }
         this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
+        this._zoom.reset();
     },
     gestureend: function(event) {
         event.preventDefault();
@@ -246,9 +247,9 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
     gesturechange: function(event) {
         event.preventDefault();
-        var scale = event.scale - this._moveTouch.scale;
+        var scale = (event.scale - this._moveTouch.scale)*5.0;
         this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
-        this._zoom.setTarget(this.getTarget()[0]-scale);
+        this._zoom.setTarget(this._zoom.getTarget()[0]-scale);
     },
 
     mouseup: function(ev) {
