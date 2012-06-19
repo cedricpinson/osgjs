@@ -186,12 +186,11 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
 
     touchstart: function(ev) {
-        event.preventDefault();
         if ( this._currentMode === undefined) {
             this._currentMode = osgGA.OrbitManipulator.Rotate;
         }
 
-        var touches = event.changedTouches;
+        var touches = ev.changedTouches;
         if (this._moveTouch === undefined) {
             this._moveTouch = new osgGA.OrbitManipulator.TouchEvent();
         }
@@ -204,6 +203,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
             this._moveTouch.init(id, rte[0], rte[1]);
             this.pushButton(touch);
         }
+        ev.preventDefault();
     },
     touchend: function(event) {
         event.preventDefault();
@@ -473,6 +473,7 @@ osgGA.OrbitManipulator.TouchEvent = function() {
     this.y = 0;
     this.scale = 1.0;
     this.rotation = 0.0;
+    this.id = undefined;
 };
 osgGA.OrbitManipulator.TouchEvent.prototype = {
     init: function(id, x, y, scale, rotation) {
