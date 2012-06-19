@@ -17,48 +17,46 @@ osgGA.FirstPersonManipulator = function () {
 /** @lends osgGA.FirstPersonManipulator.prototype */
 osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype, {
     setNode: function(node) {
-        this.node = node;
+        this._node = node;
         this.computeHomePosition();
     },
     computeHomePosition: function() {
-        if (this.node !== undefined) {
-            var bs = this.node.getBound();
+        if (this._node !== undefined) {
+            var bs = this._node.getBound();
             this._radius = bs.radius();
-            this.eye = [ 0, -bs.radius()*1.5, 0 ];
+            this._eye = [ 0, -bs.radius()*1.5, 0 ];
         }
     },
     init: function()
     {
-        this.direction = [0.0, 1.0, 0.0];
-        this.angleVertical = 0.0;
-        this.angleHorizontal = 0.0;
-        this.eye = [0, 25.0, 10.0];
-        this.up = [0, 0, 1];
-        this.buttonup = true;
+        this._direction = [0.0, 1.0, 0.0];
+        this._angleVertical = 0.0;
+        this._angleHorizontal = 0.0;
+        this._eye = [0, 25.0, 10.0];
+        this._up = [0, 0, 1];
+        this._buttonup = true;
         this._radius = 1;
-        this._forward = 0;
-        this._side = 0;
+        this._forward = new osgGA.OrbitManipulator.Interpolator(1);
+        this._side = new osgGA.OrbitManipulator.Interpolator(1);
+        this._lookPosition = new osgGA.OrbitManipulator.Interpolator(2);
     },
     reset: function()
     {
         this.init();
     },
-    mouseup: function(ev)
-    {
-        this.dragging = false;
-        this.releaseButton(ev);
-    },
+
     mousedown: function(ev)
     {
-        this.dragging = true;
         var pos = this.getPositionRelativeToCanvas(ev);
-        this.clientX = pos[0];
-        this.clientY = pos[1];
-        this.pushButton(ev);
+        this._lookPosition.set(pos[0], pos[1]);
+        this._buttonup = false;
+    },
+    mouseup: function(ev) {
+        this._buttonup = true;
     },
     mousemove: function(ev)
     {
-        if (this.buttonup === true) { return; }
+        if (this._buttonup === true) { return; }
 
         var curX;
         var curY;
@@ -66,50 +64,39 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         var deltaY;
         var pos = this.getPositionRelativeToCanvas(ev);
 
-        curX = pos[0];
-        curY = pos[1];
-        deltaX = this.clientX - curX;
-        deltaY = this.clientY - curY;
-        this.clientX = curX;
-        this.clientY = curY;
+        this._lookPosition.setTarget(pos[0], pos[1]);
+    },
 
-        this.update(deltaX, deltaY);
-        this.computeRotation(this.dx*0.5, this.dy*0.5);
-    },
-    pushButton: function(ev)
-    {
-        this.dx = this.dy = 0;
-        this.buttonup = false;
-    },
     computeRotation: function(dx, dy)
     {
-        this.angleVertical += dy*0.01;
-        this.angleHorizontal -= dx*0.01;
+        this._angleVertical += dy*0.01;
+        this._angleHorizontal -= dx*0.01;
 
         var first = [];
         var second = [];
         var rotMat = [];
-        osg.Matrix.makeRotate(this.angleVertical, 1, 0, 0, first);
-        osg.Matrix.makeRotate(this.angleHorizontal, 0, 0, 1, second);
+        osg.Matrix.makeRotate(this._angleVertical, 1, 0, 0, first);
+        osg.Matrix.makeRotate(this._angleHorizontal, 0, 0, 1, second);
         osg.Matrix.mult(second, first, rotMat);
 
-        this.direction = osg.Matrix.transformVec3(rotMat, [0, 1, 0], []);
-        this.up = osg.Matrix.transformVec3(rotMat, [0, 0, 1], [] );
-    },
-    update: function(dx, dy)
-    {
-        this.dx = dx;
-        this.dy = dy;
-    },
-    releaseButton: function()
-    {
-        this.buttonup = true;
+        this._direction = osg.Matrix.transformVec3(rotMat, [0, 1, 0], []);
+        this._up = osg.Matrix.transformVec3(rotMat, [0, 0, 1], [] );
     },
 
     getInverseMatrix: function()
     {
+        this._forward.update();
+        this._side.update();
+        var delta = this._lookPosition.update();
+
+        this.computeRotation(-delta[0]*0.5, -delta[1]*0.5);
+
         var vec = new Array(2);
-        osg.Vec2.normalize([this._forward, this._side ], vec);
+        vec[0] = this._forward.getCurrent()[0];
+        vec[1] = this._side.getCurrent()[0];
+        if (osg.Vec2.length(vec) >= 1.0) {
+            osg.Vec2.normalize(vec, vec);
+        }
         var factor = this._radius;
         if (this._radius < 1e-3) {
             factor = 1.0;
@@ -117,59 +104,59 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         this.moveForward(vec[0] * factor/30.0);
         this.strafe(vec[1] * factor/30.0);
 
-        var target = osg.Vec3.add(this.eye, this.direction, []);
-        return osg.Matrix.makeLookAt(this.eye, target, this.up, []);
+        var target = osg.Vec3.add(this._eye, this._direction, []);
+        return osg.Matrix.makeLookAt(this._eye, target, this._up, []);
     },
 
     moveForward: function(distance)
     {
-        var d = osg.Vec3.mult(osg.Vec3.normalize(this.direction, []), distance, []);
-        this.eye = osg.Vec3.add(this.eye, d, []);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(this._direction, []), distance, []);
+        this._eye = osg.Vec3.add(this._eye, d, []);
     },
 
     strafe: function(distance)
     {
-        var cx = osg.Vec3.cross(this.direction, this.up, []);
+        var cx = osg.Vec3.cross(this._direction, this._up, []);
         var d = osg.Vec3.mult(osg.Vec3.normalize(cx,cx), distance, []);
-        this.eye = osg.Vec3.add(this.eye, d, []);
+        this._eye = osg.Vec3.add(this._eye, d, []);
     },
     
     keydown: function(event) {
         if (event.keyCode === 32) {
             this.computeHomePosition();
         } else if (event.keyCode == 87){ // W
-            this._forward = 1;
+            this._forward.setTarget(1);
             return false;
         }
         else if (event.keyCode == 83){ // S
-            this._forward = -1;
+            this._forward.setTarget(-1);
             return false;
         }
         else if (event.keyCode == 68){ // D
-            this._side = 1;
+            this._side.setTarget(1);
             return false;
         }
         else if (event.keyCode == 65){ // A
-            this._side = -1;
+            this._side.setTarget(-1);
             return false;
         }
     },
 
     keyup: function(event) {
         if (event.keyCode == 87){ // W
-            this._forward = 0;
+            this._forward.setTarget(0);
             return false;
         }
         else if (event.keyCode == 83){ // S
-            this._forward = 0;
+            this._forward.setTarget(0);
             return false;
         }
         else if (event.keyCode == 68){ // D
-            this._side = 0;
+            this._side.setTarget(0);
             return false;
         }
         else if (event.keyCode == 65){ // A
-            this._side = 0;
+            this._side.setTarget(0);
             return false;
         }
     }
