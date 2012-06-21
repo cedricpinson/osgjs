@@ -25,6 +25,9 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
             var bs = this._node.getBound();
             this._radius = bs.radius();
             this._eye = [ 0, -bs.radius()*1.5, 0 ];
+
+            this._angleVertical = 0.0;
+            this._angleHorizontal = 0.0;
         }
     },
     init: function()
@@ -39,10 +42,52 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         this._forward = new osgGA.OrbitManipulator.Interpolator(1);
         this._side = new osgGA.OrbitManipulator.Interpolator(1);
         this._lookPosition = new osgGA.OrbitManipulator.Interpolator(2);
+        this._stepFactor = 1.0/40.0; // meaning radius*stepFactor to move
+        this._target = new Array(3); osg.Vec3.init(this._target);
     },
     reset: function()
     {
         this.init();
+    },
+
+    getEyePosition: function(eye) {
+        eye[0] = this._eye[0];
+        eye[1] = this._eye[1];
+        eye[2] = this._eye[2];
+        return eye;
+    },
+
+    setEyePosition: function(eye) {
+        this._eye[0] = eye[0];
+        this._eye[1] = eye[1];
+        this._eye[2] = eye[2];
+    },
+
+    getTarget: function(pos, distance) {
+        if (distance === undefined) {
+            distance = 25;
+        }
+        var dir = osg.Vec3.mult(this._direction, distance, new Array(3));
+        osg.Vec3.add(this._eye, dir, pos);
+    },
+
+    setTarget: function(pos) {
+        this._target[0] = pos[0];
+        this._target[1] = pos[1];
+        this._target[2] = pos[2];
+        var dir = new Array(3);
+        osg.Vec3.sub(pos, this._eye, dir);
+        dir[2] = 0;
+        osg.Vec3.normalize(dir, dir);
+        this._angleHorizontal = Math.acos(dir[1]);
+        if (dir[0] < 0) {
+            this._angleHorizontal = -this._angleHorizontal;
+        }
+        osg.Vec3.sub(pos, this._eye, dir);
+        osg.Vec3.normalize(dir, dir);
+
+        this._angleVertical = -Math.asin(dir[2]);
+        osg.Vec3.copy(dir, this._direction);
     },
 
     mousedown: function(ev)
@@ -78,8 +123,11 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         osg.Matrix.makeRotate(this._angleVertical, 1, 0, 0, first);
         osg.Matrix.makeRotate(this._angleHorizontal, 0, 0, 1, second);
         osg.Matrix.mult(second, first, rotMat);
+        //rotMat = second;
 
         this._direction = osg.Matrix.transformVec3(rotMat, [0, 1, 0], []);
+        osg.Vec3.normalize(this._direction, this._direction);
+
         this._up = osg.Matrix.transformVec3(rotMat, [0, 0, 1], [] );
     },
 
@@ -94,17 +142,19 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         var vec = new Array(2);
         vec[0] = this._forward.getCurrent()[0];
         vec[1] = this._side.getCurrent()[0];
-        if (osg.Vec2.length(vec) >= 1.0) {
+        if (osg.Vec2.length(vec) > 1.0) {
             osg.Vec2.normalize(vec, vec);
         }
         var factor = this._radius;
         if (this._radius < 1e-3) {
             factor = 1.0;
         }
-        this.moveForward(vec[0] * factor/30.0);
-        this.strafe(vec[1] * factor/30.0);
+        this.moveForward(vec[0] * factor*this._stepFactor);
+        this.strafe(vec[1] * factor*this._stepFactor);
 
         var target = osg.Vec3.add(this._eye, this._direction, []);
+        this._target = target;
+
         return osg.Matrix.makeLookAt(this._eye, target, this._up, []);
     },
 

@@ -323,9 +323,10 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     },
     setDistance: function(d) {
         this._distance = d;
-        this._targetDistance = d;
     },
-
+    getDistance: function() {
+        return this._distance;
+    },
     computePan: function(dx, dy) {
         dy *= this._distance;
         dx *= this._distance;

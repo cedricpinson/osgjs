@@ -86,7 +86,8 @@ OSG_GA = [
         "osgGA/osgGA.js",
         "osgGA/Manipulator.js",
         "osgGA/OrbitManipulator.js",
-        "osgGA/FirstPersonManipulator.js"
+        "osgGA/FirstPersonManipulator.js",
+        "osgGA/SwitchManipulator.js",
 ]
 
 OSG_VIEWER = [

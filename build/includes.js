@@ -74,5 +74,6 @@
 		<script type="text/javascript" src="../../js/osgGA/Manipulator.js"></script>
 		<script type="text/javascript" src="../../js/osgGA/OrbitManipulator.js"></script>
 		<script type="text/javascript" src="../../js/osgGA/FirstPersonManipulator.js"></script>
+		<script type="text/javascript" src="../../js/osgGA/SwitchManipulator.js"></script>
 		<script type="text/javascript" src="../../js/osgWrappers/serializers/osg.js"></script>
 		<script type="text/javascript" src="../../js/osgWrappers/serializers/osgAnimation.js"></script>
