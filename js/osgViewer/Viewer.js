@@ -318,8 +318,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         // noticed that we accumulate lot of stack, maybe because of the stateGraph
         state.popAllStateSets();
-        // should not be necessary because of dirty flag now in attrubutes
-        //this.state.applyWithoutProgram();
+        state.applyWithoutProgram();  //state.apply(); // apply default state (global)
     },
 
     frame: function() {
@@ -341,14 +340,14 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         frameStamp.setSimulationTime(frameTime/1000.0 - frameStamp.getReferenceTime());
 
-        if (this.getManipulator()) {
-            osg.Matrix.copy(this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix());
-        }
-
         // setup framestamp
         this._updateVisitor.setFrameStamp(this.getFrameStamp());
         //this._cullVisitor.setFrameStamp(this.getFrameStamp());
 
+        if (this.getManipulator()) {
+            this.getManipulator().update(this._updateVisitor);
+            osg.Matrix.copy(this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix());
+        }
 
         // time the update
         var updateTime = (new Date()).getTime();

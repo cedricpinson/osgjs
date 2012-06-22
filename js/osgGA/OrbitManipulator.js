@@ -376,22 +376,12 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._rotation = r2;
     },
 
-    updateOld: function(dx, dy) {
-        this._dx = dx;
-        this._dy = dy;
-
-        if (Math.abs(dx) + Math.abs(dy) > 0.0) {
-            this._time = (new Date()).getTime();
-        }
-    },
-
     releaseButton: function() {
         this._buttonup = true;
     },
 
     mousewheel: function(ev, intDelta, deltaX, deltaY) {
         ev.preventDefault();
-        console.log(intDelta);
         this._zoom.setTarget(this._zoom.getTarget()[0] - intDelta);
     },
 
@@ -432,7 +422,14 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         osg.Vec3.add(this._target, eye, eye);
     },
 
-    update: function() {
+    update: function(nv) {
+        var t = nv.getFrameStamp().getSimulationTime();
+        if (this._lastUpdate === undefined) {
+            this._lastUpdate = t;
+        }
+        var dt = t - this._lastUpdate;
+        this._lastUpdate = t;
+
         var delta;
         var mouseFactor = 0.1;
         delta = this._rotate.update();
@@ -447,12 +444,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         delta = this._zoom.update();
         this.computeZoom(1.0 + delta[0]/10.0);
 
-    },
-
-    getInverseMatrix: function () {
-
-        this.update();
-
         var target = this._target;
         var distance = this._distance;
 
@@ -466,6 +457,9 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
                               target,
                               [0,0,1], 
                               this._inverseMatrix);
+    },
+
+    getInverseMatrix: function () {
         return this._inverseMatrix;
     }
 });

@@ -15,6 +15,12 @@ osgGA.SwitchManipulator = function () {
 
 /** @lends osgGA.OrbitManipulator.prototype */
 osgGA.SwitchManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype, {
+    update: function(nv) {
+        var manipulator = this.getCurrentManipulator();
+        if (manipulator !== undefined) {
+            return manipulator.update(nv);
+        }
+    },
     setNode: function (node) {
         var manipulator = this.getCurrentManipulator();
         if (manipulator.setNode === undefined) {

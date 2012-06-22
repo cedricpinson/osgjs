@@ -9,6 +9,9 @@
  */
 osgGA.Manipulator = function() {
     this._touches = [];
+
+    this._inverseMatrix = new Array(16);
+    osg.Matrix.makeIdentity(this._inverseMatrix);
 };
 
 /** @lends osgGA.Manipulator.prototype */
@@ -129,11 +132,12 @@ osgGA.Manipulator.prototype = {
         event.preventDefault();
         osg.debug("mousewheel " + intDelta + " " + " " + deltaX + " " + deltaY );
     },
+
+    update: function(nv) {
+    },
+
     getInverseMatrix: function () { 
-        if (this._inverseMatrix === undefined) {
-            this._inverseMatrix = new Array(16);
-        }
-        return osg.Matrix.makeIdentity(this._inverseMatrix);
+        return this._inverseMatrix;
     }
 
 };

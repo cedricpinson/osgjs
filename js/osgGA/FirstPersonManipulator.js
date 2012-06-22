@@ -42,7 +42,7 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         this._forward = new osgGA.OrbitManipulator.Interpolator(1);
         this._side = new osgGA.OrbitManipulator.Interpolator(1);
         this._lookPosition = new osgGA.OrbitManipulator.Interpolator(2);
-        this._stepFactor = 1.0/40.0; // meaning radius*stepFactor to move
+        this._stepFactor = 1.0; // meaning radius*stepFactor to move
         this._target = new Array(3); osg.Vec3.init(this._target);
     },
     reset: function()
@@ -131,8 +131,14 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         this._up = osg.Matrix.transformVec3(rotMat, [0, 0, 1], [] );
     },
 
-    getInverseMatrix: function()
-    {
+    update: function(nv) {
+        var t = nv.getFrameStamp().getSimulationTime();
+        if (this._lastUpdate === undefined) {
+            this._lastUpdate = t;
+        }
+        var dt = t - this._lastUpdate;
+        this._lastUpdate = t;
+
         this._forward.update();
         this._side.update();
         var delta = this._lookPosition.update();
@@ -149,13 +155,18 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         if (this._radius < 1e-3) {
             factor = 1.0;
         }
-        this.moveForward(vec[0] * factor*this._stepFactor);
-        this.strafe(vec[1] * factor*this._stepFactor);
+        this.moveForward(vec[0] * factor*this._stepFactor*dt);
+        this.strafe(vec[1] * factor*this._stepFactor*dt);
 
         var target = osg.Vec3.add(this._eye, this._direction, []);
         this._target = target;
 
-        return osg.Matrix.makeLookAt(this._eye, target, this._up, []);
+        osg.Matrix.makeLookAt(this._eye, target, this._up, this._inverseMatrix);
+    },
+
+    getInverseMatrix: function()
+    {
+        return this._inverseMatrix;
     },
 
     moveForward: function(distance)
