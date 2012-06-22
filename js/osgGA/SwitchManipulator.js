@@ -55,9 +55,6 @@ osgGA.SwitchManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototyp
         this.getCurrentManipulator().reset();
     },
     computeHomePosition: function() {
-        if (!this._currentManipulator) {
-            return;
-        }
         var manipulator = this.getCurrentManipulator();
         if (manipulator !== undefined) {
             manipulator.computeHomePosition();
