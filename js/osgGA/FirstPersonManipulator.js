@@ -185,26 +185,26 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
     keydown: function(event) {
         if (event.keyCode === 32) {
             this.computeHomePosition();
-        } else if (event.keyCode == 87){ // W
+        } else if (event.keyCode === 87 || event.keyCode === 90 ){ // w/z
             this._forward.setTarget(1);
             return false;
         }
-        else if (event.keyCode == 83){ // S
+        else if (event.keyCode === 83){ // S
             this._forward.setTarget(-1);
             return false;
         }
-        else if (event.keyCode == 68){ // D
+        else if (event.keyCode === 68){ // D
             this._side.setTarget(1);
             return false;
         }
-        else if (event.keyCode == 65){ // A
+        else if (event.keyCode === 65 || event.keyCode === 81){ // a/q
             this._side.setTarget(-1);
             return false;
         }
     },
 
     keyup: function(event) {
-        if (event.keyCode == 87){ // W
+        if (event.keyCode === 87 || event.keyCode === 90) { // w/z
             this._forward.setTarget(0);
             return false;
         }
@@ -216,7 +216,7 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
             this._side.setTarget(0);
             return false;
         }
-        else if (event.keyCode == 65){ // A
+        else if (event.keyCode === 65 || event.keyCode === 81){ // a/q
             this._side.setTarget(0);
             return false;
         }
