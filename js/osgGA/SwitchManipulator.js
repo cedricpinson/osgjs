@@ -104,24 +104,57 @@ osgGA.SwitchManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototyp
             return manipulator.dblclick(ev);
         }
     },
-    touchDown: function(ev) {
+    touchstart: function(ev) {
         var manipulator = this.getCurrentManipulator();
         if (manipulator !== undefined) {
-            return manipulator.touchDown(ev);
+            return manipulator.touchstart(ev);
         }
     },
-    touchUp: function(ev) {
+    touchend: function(ev) {
         var manipulator = this.getCurrentManipulator();
         if (manipulator !== undefined) {
-            return manipulator.touchUp(ev);
+            return manipulator.touchend(ev);
         }
     },
-    touchMove: function(ev) {
+    touchmove: function(ev) {
         var manipulator = this.getCurrentManipulator();
         if (manipulator !== undefined) {
-            return manipulator.touchMove(ev);
+            return manipulator.touchmove(ev);
         }
     },
+
+    touchleave: function(event) {
+        var manipulator = this.getCurrentManipulator();
+        if (manipulator !== undefined) {
+            return manipulator.touchleave(event);
+        }
+    },
+    touchcancel: function(event) {
+        var manipulator = this.getCurrentManipulator();
+        if (manipulator !== undefined) {
+            return manipulator.touchcancel(event);
+        }
+    },
+
+    gesturestart: function(event) {
+        var manipulator = this.getCurrentManipulator();
+        if (manipulator !== undefined) {
+            return manipulator.gesturestart(event);
+        }
+    },
+    gestureend: function(event) {
+        var manipulator = this.getCurrentManipulator();
+        if (manipulator !== undefined) {
+            return manipulator.gestureend(event);
+        }
+    },
+    gesturechange: function(event) {
+        var manipulator = this.getCurrentManipulator();
+        if (manipulator !== undefined) {
+            return manipulator.gesturechange(event);
+        }
+    },
+
     mousewheel: function(ev, intDelta, deltaX, deltaY) {
         var manipulator = this.getCurrentManipulator();
         if (manipulator !== undefined) {
