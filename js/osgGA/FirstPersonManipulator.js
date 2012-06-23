@@ -131,6 +131,11 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         this._up = osg.Matrix.transformVec3(rotMat, [0, 0, 1], [] );
     },
 
+    mousewheel: function(ev, intDelta, deltaX, deltaY) {
+        ev.preventDefault();
+        this._stepFactor = Math.min(Math.max(0.001,this._stepFactor+intDelta*0.01), 4.0);
+    },
+
     update: function(nv) {
         var t = nv.getFrameStamp().getSimulationTime();
         if (this._lastUpdate === undefined) {
