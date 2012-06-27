@@ -77,6 +77,13 @@ osgDB.Input.prototype = {
         oReq.send(null);
     },
 
+    readBufferArrayCallback: function(type, buffer) {
+        return function(array) {
+            var a = new osg[type](array);
+            buffer.setElements(a);
+        };
+    },
+
     readBufferArray: function() {
         var jsonObj = this.getJSON();
 
@@ -90,7 +97,7 @@ osgDB.Input.prototype = {
         }
 
         var check = function(o) {
-            if (o.Elements !== undefined && 
+            if ((o.Elements !== undefined || o.Array !== undefined) && 
                 o.ItemSize !== undefined &&
                 o.Type) {
                 return true;
@@ -103,36 +110,34 @@ osgDB.Input.prototype = {
 
         var obj;
         // inline array
-        if (Array.isArray(o.Elements)) {
+        if (jsonObj.Elements !== undefined) {
             obj = new osg.BufferArray(osg.BufferArray[jsonObj.Type], jsonObj.Elements, jsonObj.ItemSize );
-        } else {
+        } else if (jsonObj.Array !== undefined) {
 
             var buf = new osg.BufferArray(osg.BufferArray[jsonObj.Type]);
             buf.setItemSize(jsonObj.ItemSize);
             
             var vb, type;
-            if (o.Elements.Float32Array !== undefined) {
-                vb = o.Elements.Float32Array;
+            if (jsonObj.Array.Float32Array !== undefined) {
+                vb = jsonObj.Array.Float32Array;
                 type = 'Float32Array';
-            } else if (o.Elements.Uint16Array !== undefined) {
-                vb = o.Elements.Uint16Array;
+            } else if (jsonObj.Array.Uint16Array !== undefined) {
+                vb = jsonObj.Array.Uint16Array;
                 type = 'Uint16Array';
             } else {
-                osg.warn("Typed Array " + Object.keys(o.Elements)[0]);
+                osg.warn("Typed Array " + Object.keys(o.Array)[0]);
                 type = 'Float32Array';
             }
 
             if (vb !== undefined) {
                 if (vb.File !== undefined) {
                     var url = vb.File;
-                    this.readBinaryArrayURL(url, function(array) {
-                        buf.setElements(new osg[type](array));
-                    });
-
+                    this.readBinaryArrayURL(url, this.readBufferArrayCallback(type, buf));
                 } else if (vb.Elements !== undefined) {
                     buf.setElements(vb.Elements);
                 }
             }
+            obj = buf;
         }
         
         if (uniqueID !== undefined) {
