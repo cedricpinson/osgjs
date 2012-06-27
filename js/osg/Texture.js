@@ -41,6 +41,9 @@ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_Z    = 0x8519;
 osg.Texture.TEXTURE_CUBE_MAP_NEGATIVE_Z    = 0x851A;
 osg.Texture.MAX_CUBE_MAP_TEXTURE_SIZE      = 0x851C;
 
+osg.Texture.UNSIGNED_BYTE = 0x1401;
+osg.Texture.FLOAT = 0x1406;
+
 
 /** @lends osg.Texture.prototype */
 osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
@@ -72,6 +75,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         this._unrefImageDataAfterApply = false;
         this.setInternalFormat(osg.Texture.RGBA);
         this._textureTarget = osg.Texture.TEXTURE_2D;
+        this._type = osg.Texture.UNSIGNED_BYTE;
     },
     getTextureTarget: function() { return this._textureTarget;},
     getTextureObject: function() { return this._textureObject;},
@@ -146,6 +150,13 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         }
         this.setInternalFormat(this._imageFormat);
     },
+    setType: function(value) {
+        if (typeof(value) === "string") {
+            this._type = osg.Texture[value];
+        } else {
+            this._type = value; 
+        }
+    },
     setUnrefImageDataAfterApply: function(bool) {
         this._unrefImageDataAfterApply = bool;
     },
@@ -208,7 +219,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     }
                     this.setDirty(false);
                     gl.bindTexture(this._textureTarget, this._textureObject);
-                    gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
+                    gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, this._type, this._image);
                     this.applyFilterParameter(gl, this._textureTarget);
                     this.generateMipmap(gl, this._textureTarget);
 

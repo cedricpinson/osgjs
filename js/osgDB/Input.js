@@ -60,6 +60,23 @@ osgDB.Input.prototype = {
         return img;
     },
 
+    readBinaryArrayURL: function(url, callback) {
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", url, true);
+        oReq.responseType = "arraybuffer";
+
+        oReq.onload = function (oEvent) {
+            var arrayBuffer = oReq.response; // Note: not oReq.responseText
+            if (arrayBuffer) {
+                // var byteArray = new Uint8Array(arrayBuffer);
+                if (callback !== undefined) {
+                    callback(arrayBuffer);
+                }
+            }
+        };
+        oReq.send(null);
+    },
+
     readBufferArray: function() {
         var jsonObj = this.getJSON();
 
@@ -83,9 +100,41 @@ osgDB.Input.prototype = {
         if (!check(jsonObj)) {
             return;
         }
-        
-        var obj = new osg.BufferArray(osg.BufferArray[jsonObj.Type], jsonObj.Elements, jsonObj.ItemSize );
 
+        var obj;
+        // inline array
+        if (Array.isArray(o.Elements)) {
+            obj = new osg.BufferArray(osg.BufferArray[jsonObj.Type], jsonObj.Elements, jsonObj.ItemSize );
+        } else {
+
+            var buf = new osg.BufferArray(osg.BufferArray[jsonObj.Type]);
+            buf.setItemSize(jsonObj.ItemSize);
+            
+            var vb, type;
+            if (o.Elements.Float32Array !== undefined) {
+                vb = o.Elements.Float32Array;
+                type = 'Float32Array';
+            } else if (o.Elements.Uint16Array !== undefined) {
+                vb = o.Elements.Uint16Array;
+                type = 'Uint16Array';
+            } else {
+                osg.warn("Typed Array " + Object.keys(o.Elements)[0]);
+                type = 'Float32Array';
+            }
+
+            if (vb !== undefined) {
+                if (vb.File !== undefined) {
+                    var url = vb.File;
+                    this.readBinaryArrayURL(url, function(array) {
+                        buf.setElements(new osg[type](array));
+                    });
+
+                } else if (vb.Elements !== undefined) {
+                    buf.setElements(vb.Elements);
+                }
+            }
+        }
+        
         if (uniqueID !== undefined) {
             this._identifierMap[uniqueID] = obj;
         }

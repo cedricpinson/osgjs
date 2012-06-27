@@ -63,7 +63,10 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
                     continue;
                 }
                 attributeList.push(attribute);
+                // dont display the geometry if missing data
+                generated += "if (!attribute.isValid()) { return;}";
                 generated += "state.setVertexAttribArray(" + attribute + ", this.attributes[\""+key+ "\"], false);\n";
+
             }
             generated += "state.applyDisablingOfVertexAttributes();\n";
             var primitives = this.primitives;
