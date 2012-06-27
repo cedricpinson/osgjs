@@ -94,9 +94,9 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
         this._moveTouch = undefined;
         this._inverseMatrix = new Array(16);
-        this._zoomKey = 69; // e
-        this._panKey = 84; // t
-        this._rotateKey = 82; // r
+        this._rotateKey = 65; // a
+        this._zoomKey = 83; // s
+        this._panKey = 68; // d
     },
     reset: function() {
         this.init();
