@@ -1,5 +1,4 @@
-var Scene =
-{
+var getScene = function() { return {
   "children": [ {
       "children": [ {
           "children": [ {
@@ -75,4 +74,4 @@ var Scene =
       "name": "Root"
     }
   ]
-};
+}; };

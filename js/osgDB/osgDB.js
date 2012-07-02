@@ -109,8 +109,10 @@ osgDB.parseSceneGraph_deprecated = function (node)
             osgjs.setWrapS(wrapS);
         }
         var file = getFieldBackwardCompatible("File", json);
-        var img = osgDB.readImage(file);
-        osgjs.setImage(img);
+        osgDB.Promise.when(osgDB.readImage(file)).then(
+            function(img) {
+                osgjs.setImage(img);
+            });
     };
 
     var setStateSet = function(osgjs, json) {

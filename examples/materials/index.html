@@ -355,14 +355,16 @@
   };
 
 function createScene() {
-    var o = ReadJSON.create();
-    o = osgDB.parseSceneGraph(o);
     var mainNode = new osg.Node();
+    var o = ReadJSON.create();
+    osgDB.Promise.when(osgDB.parseSceneGraph(o)).then(function(o) {
+
     mainNode.light = new osg.Light();
     mainNode.addChild(o);
     var stateset = new osg.StateSet();
     stateset.setAttributeAndMode(new osg.Material());
     mainNode.stateset = stateset;
+    });
     return mainNode;
 }
 function getWindowSize() {

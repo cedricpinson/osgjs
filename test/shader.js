@@ -1,3 +1,6 @@
+if (window.module !== undefined) {
+    module("osgShader");
+}
 var ShaderNode = {};
 
 ShaderNode.Node = function() {
@@ -1881,6 +1884,8 @@ test("osg.ShaderNode", function() {
 //        shaderContext.createVertexShader();
 //        shaderContext.createFragmentShader();
     })();
-    
+
+    ok("check not exception", true);
+   
 });
 

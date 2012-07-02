@@ -291,7 +291,13 @@ osg.Texture.prototype[osg.ShaderGeneratorType.FragmentMain] = function(unit) {
 
 
 osg.Texture.createFromURL = function(imageSource, format) {
-    return osg.Texture.createFromImg(osgDB.readImage(imageSource), format);
+    var texture = new osg.Texture();
+    osgDB.Promise.when(osgDB.readImage(imageSource)).then(
+        function(img) {
+            texture.setImage(img, format);
+        }
+    );
+    return texture;
 };
 osg.Texture.createFromImg = function(img, format) {
     var a = new osg.Texture();

@@ -64,6 +64,7 @@
 		<script type="text/javascript" src="../../js/osgUtil/ShaderParameterVisitor.js"></script>
 		<script type="text/javascript" src="../../js/osgDB/osgDB.js"></script>
 		<script type="text/javascript" src="../../js/osgDB/Input.js"></script>
+		<script type="text/javascript" src="../../js/osgDB/Promise.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/osgViewer.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/webgl-utils.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/webgl-debug.js"></script>

@@ -1,102 +1,7 @@
 /** -*- compile-command: "jslint-cli osg.js" -*- */
-function createCanvas() {
-    var parent = document.body;
+module("osg");
 
-    var t = "" + (new Date()).getTime();
-    var cnv = "<canvas id='" + t + "'></canvas>";
-
-    var mydiv = document.createElement('div');
-    mydiv.setAttribute('id', "div_"+t);
-    mydiv.innerHTML = cnv;
-    parent.appendChild(mydiv);
-    return document.getElementById(t);
-}
-function removeCanvas(canvas) {
-    var id = canvas.getAttribute('id');
-    var parent = document.getElementById("div_"+id);
-    parent.removeChild(canvas);
-}
-function createFakeRenderer() {
-    return { 'TEXTURE0': 10,
-             'DEPTH_TEST': 1,
-             'CULL_FACE': 0,
-             'UNSIGNED_SHORT': 0,
-             drawElements: function() {},
-             createBuffer: function() {},
-             deleteBuffer: function(arg) {},
-             blendColor: function() {},
-             enable: function() {},
-             disable: function() {},
-             depthFunc: function() {},
-             depthRange: function() {},
-             depthMask: function() {},
-             activeTexture: function() {},
-             bindTexture: function() {},
-             bufferData: function() {},
-             bindBuffer: function() {},
-             blendFunc: function() {},
-             enableVertexAttribArray: function() {},
-             vertexAttribPointer: function() {},
-             createTexture: function() {},
-             bindFramebuffer: function() {},
-             clear: function() {},
-             viewport: function() {},
-             cullFace: function() {}
-           };
-}
-
-function check_near(a, b, threshold) {
-    if (threshold === undefined) {
-        threshold = 1e-5;
-    }
-
-    if (jQuery.isArray(a)) {
-        for (var i = 0; i < a.length; ++i) {
-            var number = typeof a[i] === "number" && typeof b[i] === "number";
-            if (Math.abs(a[i]-b[i]) > threshold || number === false) {
-                QUnit.log(false, QUnit.jsDump.parse(a) + " expected " + QUnit.jsDump.parse(b));
-                return false;
-            }
-        }
-    } else {
-        if (a === undefined || b === undefined) {
-            QUnit.log(false, "undefined value : " + a + ", " + b);
-            return false;
-        }
-        if (Math.abs(a-b) > threshold) {
-            QUnit.log(false, a + " != " + b);
-            return false;
-        }
-    }
-    return true;
-}
-
-function near(a, b, threshold)
-{
-    if (threshold === undefined) {
-        threshold = 1e-5;
-    }
-
-    if (jQuery.isArray(a)) {
-        for (var i = 0; i < a.length; ++i) {
-            var number = typeof a[i] === "number" && typeof b[i] === "number" && !isNaN(a[i]) && !isNaN(b[i]);
-            if (Math.abs(a[i]-b[i]) > threshold || number === false) {
-                ok(false, QUnit.jsDump.parse(a) + " expected " + QUnit.jsDump.parse(b));
-                return;
-            }
-        }
-    } else {
-        if (Math.abs(a-b) > threshold) {
-            ok(false, a + " != " + b);
-            return;
-        }
-    }
-    ok(true, "okay: " + QUnit.jsDump.parse(a));
-}
-
-
-
-test("osg.BoundingSphere", function() {
+test("BoundingSphere", function() {
     var simpleBoundingSphere = new osg.BoundingSphere();
     ok(simpleBoundingSphere.valid() !== 1, "BoundingSphere is invalid");
 
@@ -166,7 +71,7 @@ test("osg.BoundingSphere", function() {
 
 });
 
-test("osg.BoundingBox", function() {
+test("BoundingBox", function() {
     (function() {
         var bb = new osg.BoundingBox();
         var bb0 = [-0.5,0,-2];
@@ -198,14 +103,14 @@ test("osg.BoundingBox", function() {
     })();
 });
 
-test("osg.Quat.init", function() {
+test("Quat.init", function() {
     var q = [];
     osg.Quat.init(q);
-    same(q, [0,0,0,1]);
+    deepEqual(q, [0,0,0,1]);
 });
 
 
-test("osg.Quat.makeRotate", function() {
+test("Quat.makeRotate", function() {
     var q0 = osg.Quat.makeRotate(Math.PI, 1, 0, 0, []);
     near(q0, [1, 0, 0, 6.12303e-17], 1e-5);
 
@@ -217,13 +122,13 @@ test("osg.Quat.makeRotate", function() {
 });
 
 
-// test("osg.Quat.rotateVec3", function() {
+// test("Quat.rotateVec3", function() {
 //     var q0 = osg.Quat.makeRotate(Math.PI, 1, 0, 0);
 //     var result = osg.Quat.rotateVec3(q0, [10, 0,0], []);
 //     near(result , [-10.0, 0, 0]);
 // });
 
-test("osg.Quat.mult", function() {
+test("Quat.mult", function() {
     var q0 = osg.Quat.makeRotate(Math.PI, 1, 0, 0, []);
     var q1 = osg.Quat.makeRotate(Math.PI/2, 0, 1, 0, []);
     var q2 = osg.Quat.makeRotate(Math.PI/4, 0, 0, 1, []);
@@ -247,19 +152,19 @@ test("osg.Quat.mult", function() {
 });
 
 
-test("osg.Quat.slerp", function() {
+test("Quat.slerp", function() {
     var q = [];
     osg.Quat.slerp(0.5, [0, 0.707107, 0, 0.707107] , [0, 0, 0.382683, 0.92388], q);
     near( q , [0, 0.388863, 0.210451, 0.896937]);
 });
 
 
-test("osg.Vec2", function() {
+test("Vec2", function() {
 
     (function() {
         var a = [2,3];
         var b = [];
-        same(osg.Vec2.copy(a, b), a, "test copy operation");
+        deepEqual(osg.Vec2.copy(a, b), a, "test copy operation");
     })();
 
     (function() {
@@ -269,36 +174,36 @@ test("osg.Vec2", function() {
     })();
 
     (function() {
-        same(osg.Vec2.mult([2,4], 2.0, []), [4,8], "test mult");
+        deepEqual(osg.Vec2.mult([2,4], 2.0, []), [4,8], "test mult");
     })();
 
     (function() {
-        same(osg.Vec2.length2([2,4]), 20, "test length2");
+        deepEqual(osg.Vec2.length2([2,4]), 20, "test length2");
     })();
 
     (function() {
-        same(osg.Vec2.length([2,4]), Math.sqrt(20), "test length");
+        deepEqual(osg.Vec2.length([2,4]), Math.sqrt(20), "test length");
     })();
 
     (function() {
-        same(osg.Vec2.normalize([2,4],[]), [ 0.4472135954999579, 0.8944271909999159 ], "test normalize");
-        same(osg.Vec2.normalize([0,0],[]), [ 0.0, 0.0 ], "test normalize");
+        deepEqual(osg.Vec2.normalize([2,4],[]), [ 0.4472135954999579, 0.8944271909999159 ], "test normalize");
+        deepEqual(osg.Vec2.normalize([0,0],[]), [ 0.0, 0.0 ], "test normalize");
     })();
 
     (function() {
-        same(osg.Vec2.dot([2,4],[2,4]), 20, "test dot product");
+        deepEqual(osg.Vec2.dot([2,4],[2,4]), 20, "test dot product");
     })();
 
     (function() {
-        same(osg.Vec2.sub([2,4],[2,4],[]), [0,0], "test sub");
+        deepEqual(osg.Vec2.sub([2,4],[2,4],[]), [0,0], "test sub");
     })();
 
     (function() {
-        same(osg.Vec2.add([-2,-4],[2,4],[]), [0,0], "test add");
+        deepEqual(osg.Vec2.add([-2,-4],[2,4],[]), [0,0], "test add");
     })();
 
     (function() {
-        same(osg.Vec2.neg([-2,-4],[]), [2,4], "test neg");
+        deepEqual(osg.Vec2.neg([-2,-4],[]), [2,4], "test neg");
     })();
 
 
@@ -306,7 +211,7 @@ test("osg.Vec2", function() {
 
 
 
-test("osg.Matrix.makeRotateFromQuat", function() {
+test("Matrix.makeRotateFromQuat", function() {
     var m = [];
     osg.Matrix.makeRotateFromQuat([0.653281, 0.270598, -0.653281, 0.270598], m);
     near(m , [1.66533e-16, 1.11022e-16, -1, 0,
@@ -315,7 +220,7 @@ test("osg.Matrix.makeRotateFromQuat", function() {
               0, 0, 0, 1]);
 });
 
-test("osg.Matrix.getRotate", function() {
+test("Matrix.getRotate", function() {
     var m = [];
     osg.Matrix.makeRotateFromQuat([0.653281, 0.270598, -0.653281, 0.270598], m);
     var q = osg.Matrix.getRotate(m);
@@ -323,7 +228,7 @@ test("osg.Matrix.getRotate", function() {
 
 });
 
-test("osg.Matrix.makeLookAt", function() {
+test("Matrix.makeLookAt", function() {
     var m = osg.Matrix.makeLookAt([0, -10, 0],
                               [0.0, 0.0, 0.0],
                               [0.0, 0.0, 1.0]);
@@ -343,7 +248,7 @@ test("osg.Matrix.makeLookAt", function() {
 
 });
 
-test("osg.Matrix.getLookAt", function() {
+test("Matrix.getLookAt", function() {
     var m = osg.Matrix.makeLookAt([0, -10, 0],
                               [0.0, 5.0, 0.0],
                               [0.0, 0.0, 1.0]);
@@ -359,7 +264,7 @@ test("osg.Matrix.getLookAt", function() {
     near(up , [0, 0, 1]);
 });
 
-test("osg.Matrix.transformVec3", function() {
+test("Matrix.transformVec3", function() {
     var m = osg.Matrix.makeRotate( Math.PI/2.0, 0, 1, 0, []);
     var vec = [0, 0, 10];
     var inv = [];
@@ -388,7 +293,7 @@ test("osg.Matrix.transformVec3", function() {
 
 });
 
-test("osg.Matrix.transpose", function() {
+test("Matrix.transpose", function() {
     var m = [ 0,1,2,3,
               4,5,6,7,
               8,9,10,11,
@@ -412,7 +317,7 @@ test("osg.Matrix.transpose", function() {
               3, 7, 11,15]);
 });
 
-test("osg.Matrix.makeRotate", function() {
+test("Matrix.makeRotate", function() {
     var res = osg.Matrix.makeRotate(0, 0,0,1, []);
     near(res , [1, 0, 0, 0,
                 0, 1, 0, 0,
@@ -420,7 +325,7 @@ test("osg.Matrix.makeRotate", function() {
                 0, 0, 0, 1]);
 });
 
-test("osg.Matrix.mult", function() {
+test("Matrix.mult", function() {
     var width = 800;
     var height = 600;
     var translate;
@@ -474,7 +379,7 @@ test("osg.Matrix.mult", function() {
 
 
 
-test("osg.Matrix.inverse4x3", function() {
+test("Matrix.inverse4x3", function() {
 
     var m = [ 1,
 	      0,
@@ -526,7 +431,7 @@ test("osg.Matrix.inverse4x3", function() {
 
 });
 
-test("osg.Matrix.inverse", function() {
+test("Matrix.inverse", function() {
     var result = [];
     var m = [ -1144.3119511948212,
 	      23.865014474735936,
@@ -558,14 +463,14 @@ test("osg.Matrix.inverse", function() {
 });
 
 
-test("osg.Matrix.makePerspective", function() {
+test("Matrix.makePerspective", function() {
     var result = [];
     var m = [1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.0020020020020022, 0];
     var res = osg.Matrix.makePerspective(60, 800/600,1.0, 1000);
     ok(check_near(res, m), "makePerspective should be " + m + " and is " + res );
 });
 
-test("osg.NodeVisitor", function() {
+test("NodeVisitor", function() {
 
     var FindItemAnchor = function(search) {
         osg.NodeVisitor.call(this);
@@ -636,7 +541,7 @@ test("osg.NodeVisitor", function() {
     })();
 });
 
-test("osg.BufferArray", function() {
+test("BufferArray", function() {
 
     (function() {
         var gl = createFakeRenderer();
@@ -656,7 +561,7 @@ test("osg.BufferArray", function() {
 
 });
 
-test("osg.computeLocalToWorld", function() {
+test("computeLocalToWorld", function() {
 
     (function() { 
         // test visit parents
@@ -698,7 +603,7 @@ test("osg.computeLocalToWorld", function() {
 });
 
 
-test("osg.UpdateVisitor", function() {
+test("UpdateVisitor", function() {
 
     var uv = new osg.UpdateVisitor();
 
@@ -757,7 +662,7 @@ test("osg.UpdateVisitor", function() {
 
 
 
-test("osg.ShaderGenerator", function() {
+test("ShaderGenerator", function() {
     var state = new osg.State();
     state.setGraphicContext(createFakeRenderer());
     
@@ -770,10 +675,11 @@ test("osg.ShaderGenerator", function() {
     state.pushStateSet(stateSet0);
     state.pushStateSet(stateSet1);
     state.apply();
+    ok(true, "check not exception");
 });
 
 
-test("osg.State", function() {
+test("State", function() {
 
     (function() {
     var state = new osg.State();
@@ -793,7 +699,7 @@ test("osg.State", function() {
 
 });
 
-test("osg.Camera", function() {
+test("Camera", function() {
 
     (function() {
         var matrix = osg.Matrix.makeOrtho(-1,1,-1,1,-2,2);
@@ -804,7 +710,7 @@ test("osg.Camera", function() {
     })();
 });
 
-test("osg.CullVisitor", function() {
+test("CullVisitor", function() {
 
     // check render stage and render bin
     (function() {
@@ -1181,7 +1087,7 @@ test("osg.CullVisitor", function() {
 });
 
 
-test("osg.Node", function() {
+test("Node", function() {
 
     var n = new osg.Node();
     ok( n.children.length === 0, "number of children must be 0");
@@ -1209,7 +1115,7 @@ test("osg.Node", function() {
 
 });
 
-test("osg.Texture", function() {
+test("Texture", function() {
     stop();
     
     var ready = undefined;
@@ -1282,7 +1188,7 @@ test("osg.Texture", function() {
     };
 });
 
-test("osg.TextureCubeMap", function() {
+test("TextureCubeMap", function() {
     
     var ready = undefined;
     var loadingComplete = function() {
@@ -1328,7 +1234,7 @@ test("osg.TextureCubeMap", function() {
 
 });
 
-test("osg.MatrixTransform", function() {
+test("MatrixTransform", function() {
 
     var n = new osg.MatrixTransform();
     var scene = osgDB.parseSceneGraph(getBoxScene());
@@ -1341,7 +1247,7 @@ test("osg.MatrixTransform", function() {
 });
 
 
-test("osg.Depth", function() {
+test("Depth", function() {
 
     var n = new osg.Depth();
     ok(n._near === 0.0, "Check near");
@@ -1359,7 +1265,7 @@ test("osg.Depth", function() {
 
 });
 
-test("osg.CullFace", function() {
+test("CullFace", function() {
 
     var n = new osg.CullFace();
     ok(n.getMode() === osg.CullFace.BACK, "Check default mode");
@@ -1377,7 +1283,7 @@ test("osg.CullFace", function() {
 
 });
 
-test("osg.BlendColor", function() {
+test("BlendColor", function() {
 
     var n = new osg.BlendColor();
     ok(n.getConstantColor()[0] === 1.0 && 
@@ -1399,7 +1305,7 @@ test("osg.BlendColor", function() {
     n.apply(state);
 });
 
-test("osg.Light", function() {
+test("Light", function() {
 
     (function() {
         var canvas = createCanvas();
@@ -1472,12 +1378,12 @@ test("osg.Light", function() {
         cull.setStateGraph(sg);
         
         root.accept(cull);
-        
-        
     })();
+
+    ok(true, "check no exception");
 });
 
-test("osg.StateSet", function() {
+test("StateSet", function() {
 
     (function() {
         var stateset = new osg.StateSet();

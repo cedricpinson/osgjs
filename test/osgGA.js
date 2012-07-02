@@ -1,3 +1,4 @@
+module("osgGA");
 test("osgGA.OrbitManipulator", function() {
     var manipulator = new osgGA.OrbitManipulator();
     var matrix = manipulator.getInverseMatrix();

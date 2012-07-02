@@ -74,7 +74,8 @@ OSG_UTIL = [
 
 OSG_DB = [
         "osgDB/osgDB.js",
-        "osgDB/Input.js"
+        "osgDB/Input.js",
+        "osgDB/Promise.js",
 ]
 
 OSG_WRAPPER = [

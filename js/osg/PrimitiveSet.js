@@ -88,7 +88,7 @@ osg.DrawElements = function (mode, indices) {
     this.offset = 0;
     this.indices = indices;
     if (indices !== undefined) {
-        this.count = indices.getElements().length;
+        this.setIndices(indices);
     }
 };
 
@@ -99,6 +99,10 @@ osg.DrawElements.prototype = {
         state.setIndexArray(this.indices);
         var gl = state.getGraphicContext();
         gl.drawElements(this.mode, this.count, gl.UNSIGNED_SHORT, this.offset );
+    },
+    setIndices: function(indices) { 
+        this.indices = indices;
+        this.count = indices.getElements().length;
     },
     getIndices: function() { return this.indices; },
     setFirst: function(val) { this.offset = val; },
