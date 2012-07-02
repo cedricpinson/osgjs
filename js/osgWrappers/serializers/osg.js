@@ -390,7 +390,9 @@ osgDB.ObjectWrapper.serializers.osg.LightSource = function(input, node) {
 
     var defer = osgDB.Promise.defer();
     var promise = osgDB.ObjectWrapper.serializers.osg.Node(input, node);
-    osgDB.Promise.all([input.setJSON(jsonObj.Light).readObject(), promise]).then( function (light) {
+    osgDB.Promise.all([input.setJSON(jsonObj.Light).readObject(), promise]).then( function (args) {
+        var light = args[0];
+        var lightsource = args[1];
         node.setLight(light);
         defer.resolve(node);
     });
