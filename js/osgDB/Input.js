@@ -143,9 +143,36 @@ osgDB.Input.prototype = {
                     var url = vb.File;
                     defer = osgDB.Promise.defer();
                     osgDB.Promise.when(this.readBinaryArrayURL(url)).then(function(array) {
-                        var a = new osg[type](array);
-                        buf.setElements(a);
 
+                        var typedArray;
+                        // manage endianness
+                        var a = new Uint8Array([0x12, 0x34]);
+                        var b = new Uint16Array(a.buffer);
+                        var big_endian = ( (b[0]).toString(16) === "1234");
+                        if (big_endian) {
+                            osg.log("big endian detected");
+                            var bytes_per_element = osg[type].BYTES_PER_ELEMENT;
+                            var typed_array = osg[type];
+                            var tmpArray = new typed_array(array.length/bytes_per_element);
+                            var data = new DataView(array);
+                            var i = 0, l = tmpArray.length;
+                            if (type === 'Uint16Array') {
+                                for (; i < l; i++) {
+                                    tempArray[i] = data.getUint16(i * bytes_per_element, true);
+                                }
+                            } else if (type === 'Float32Array') {
+                                for (; i < l; i++) {
+                                    tempArray[i] = data.getFloat32(i * bytes_per_element, true);
+                                }
+                            }
+                            typedArray = tempArray;
+                            data = null;
+                        } else {
+                            typedArray = new osg[type](array);
+                        }
+                        a = b = null;
+
+                        buf.setElements(typedArray);
                         defer.resolve(buf);
                     });
                 } else if (vb.Elements !== undefined) {
