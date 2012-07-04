@@ -6,17 +6,35 @@ osgDB.Input = function(json, identifier)
         map = {};
     }
     this._identifierMap = map;
+    this._objectRegistry = {};
+    this._progressXHRCallback = undefined;
 };
 
 osgDB.Input.prototype = {
+    setProgressXHRCallback: function(func) {
+        this._progressXHRCallback = func;
+    },
+
+    // used to override the type from pathname
+    // typically if you want to create proxy object
+    registerObject: function(fullyqualified_objectname, constructor) {
+        this._objectRegistry[fullyqualified_objectname] = constructor;
+    },
+
     getJSON: function() {
         return this._json;
     },
+
     setJSON: function(json) {
         this._json = json;
         return this;
     },
+
     getObjectWrapper: function (path) {
+        if (this._objectRegistry[path] !== undefined) {
+            return new (this._objectRegistry[path])();
+        }
+
         var scope = window;
         var splittedPath = path.split('.');
         for (var i = 0, l = splittedPath.length; i < l; i++) {
@@ -68,26 +86,28 @@ osgDB.Input.prototype = {
 
     readBinaryArrayURL: function(url) {
         var defer = osgDB.Promise.defer();
-        var oReq = new XMLHttpRequest();
-        oReq.open("GET", url, true);
-        oReq.responseType = "arraybuffer";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.responseType = "arraybuffer";
 
-        oReq.onload = function (oEvent) {
-            var arrayBuffer = oReq.response; // Note: not oReq.responseText
+        if (this._progressXHRCallback) {
+            xhr.addEventListener("progress", this._progressXHRCallback, false);
+        }
+
+        xhr.addEventListener("error", function() {
+            defer.reject();
+        }, false);
+
+        xhr.addEventListener("load", function (oEvent) {
+            var arrayBuffer = xhr.response; // Note: not oReq.responseText
             if (arrayBuffer) {
                 // var byteArray = new Uint8Array(arrayBuffer);
                 defer.resolve(arrayBuffer);
             }
-        };
-        oReq.send(null);
-        return defer.promise;
-    },
+        }, false);
 
-    readBufferArrayCallback: function(type, buffer) {
-        return function(array) {
-            var a = new osg[type](array);
-            buffer.setElements(a);
-        };
+        xhr.send(null);
+        return defer.promise;
     },
 
     readBufferArray: function() {

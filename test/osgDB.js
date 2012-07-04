@@ -24,9 +24,22 @@ asyncTest("Input.readArrayBuffer-old", function() {
 });
 
 test("Input.getObjectWrapper", function() {
-    var obj = osgDB.Input.prototype.getObjectWrapper("osg.Node");
-    ok(obj.getName() !== "", "getObjectWrapper check osg.Node.getName");
-    ok(obj.addChild !== undefined, "getObjectWrapper check osg.addChild");
+    (function() {
+        var input = new osgDB.Input();
+        var obj = input.getObjectWrapper("osg.Node");
+        ok(obj.getName() !== "", "getObjectWrapper check osg.Node.getName");
+        ok(obj.addChild !== undefined, "getObjectWrapper check osg.addChild");
+    })();
+
+    (function() {
+        var ProxyNode = function() {
+            this._proxy = true;
+        };
+        var input = new osgDB.Input();
+        input.registerObject("osg.Node", ProxyNode);
+        var obj = input.getObjectWrapper("osg.Node");
+        ok(obj._proxy === true, "getObjectWrapper with overridden");
+    })();
 });
 
 asyncTest("Input.readObject - Material", function() {
@@ -119,11 +132,27 @@ asyncTest("Input.readBufferArray - external", function() {
         "Type": "ARRAY_BUFFER",
         "UniqueID" : 10
     };
-    var input = new osgDB.Input(ba);
-    osgDB.Promise.when(input.readBufferArray()).then(function(buffer) {
-        ok(buffer.getElements()[2] === 10, "readBufferArray with new array typed external file");
-        start();
-    });
+    (function() {
+        var input = new osgDB.Input(ba);
+        osgDB.Promise.when(input.readBufferArray()).then(function(buffer) {
+            ok(buffer.getElements()[2] === 10, "readBufferArray with new array typed external file");
+            start();
+        });
+    })();
+
+    (function() {
+        var calledProgress = false;
+        var progress = function() {
+            calledProgress = true;
+        };
+        var input = new osgDB.Input(ba);
+        input.setProgressXHRCallback(progress);
+        osgDB.Promise.when(input.readBufferArray()).then(function(buffer) {
+            
+            ok(calledProgress === true, "readBufferArray check progress callback");
+            start();
+        });
+    })();
 });
 
 

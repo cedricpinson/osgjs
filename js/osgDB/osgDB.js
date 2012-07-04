@@ -24,14 +24,13 @@ osgDB.ObjectWrapper = {};
 osgDB.ObjectWrapper.serializers = {};
 
 osgDB.readImage = function (url) {
-    if (osgDB.readImage.input === undefined) {
-        osgDB.readImage.input = new osgDB.Input();
+    if (osgDB._input === undefined) {
+        osgDB._input = new osgDB.Input();
     }
-    return osgDB.readImage.input.readImageURL(url);
+    return osgDB._input.readImageURL(url);
 };
 
-
-osgDB.parseSceneGraph = function (node) {
+osgDB.parseSceneGraph = function (node, options) {
     if (node.Version !== undefined && node.Version > 0) {
 
         var getPropertyValue = function(o) {
@@ -49,6 +48,10 @@ osgDB.parseSceneGraph = function (node) {
             var obj = {};
             obj[key] = node[key];
             var input = new osgDB.Input(obj);
+            if (options !== undefined && 
+                options.progressXHRCallback !== undefined) {
+                input.setProgressXHRCallback(options.progressXHRCallback);
+            }
             return input.readObject();
             //return osgDB.ObjectWrapper.readObject(obj);
         } else {

@@ -420,7 +420,6 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(input, node) {
         arraysPromise.push(defer.promise);
         var promise = input.setJSON(jsonPrimitive).readPrimitiveSet();
         osgDB.Promise.when(promise).then(function(primitiveSet) {
-            console.log("call primitive");
             if (primitiveSet !== undefined) {
                 node.getPrimitives().push(primitiveSet);
             }
@@ -438,7 +437,6 @@ osgDB.ObjectWrapper.serializers.osg.Geometry = function(input, node) {
         arraysPromise.push(defer.promise);
         var promise = input.setJSON(jsonAttribute).readBufferArray();
         osgDB.Promise.when(promise).then(function(buffer) {
-            console.log("call vertex " + name);
             if (buffer !== undefined) {
                 node.getVertexAttributeList()[name] = buffer;
             }
