@@ -18,25 +18,39 @@ osg.BufferArray = function (type, elements, itemSize) {
     }
     this._type = type;
 
-    if (this._type === osg.BufferArray.ELEMENT_ARRAY_BUFFER) {
-        this._elements = new osg.Uint16Array(elements);
-    } else {
-        this._elements = new osg.Float32Array(elements);
+    if (elements !== undefined) {
+        if (this._type === osg.BufferArray.ELEMENT_ARRAY_BUFFER) {
+            this._elements = new osg.Uint16Array(elements);
+        } else {
+            this._elements = new osg.Float32Array(elements);
+        }
     }
 };
 
 osg.BufferArray.ELEMENT_ARRAY_BUFFER = 0x8893;
 osg.BufferArray.ARRAY_BUFFER = 0x8892;
 
+
 /** @lends osg.BufferArray.prototype */
 osg.BufferArray.prototype = {
+    setItemSize: function(size) { this._itemSize = size; },
+    isValid: function() {
+        if (this._buffer !== undefined || 
+            this._elements !== undefined) {
+            return true;
+        }
+        return false;
+    },
+
     releaseGLObjects: function(gl) {
         if (this._buffer !== undefined && this._buffer !== null) {
             gl.deleteBuffer(this._buffer);
         }
         this._buffer = undefined;
     },
+
     bind: function(gl) {
+
         var type = this._type;
         var buffer = this._buffer;
 
@@ -60,7 +74,11 @@ osg.BufferArray.prototype = {
             this._dirty = false;
         }
     },
-    getElements: function() { return this._elements;}
+    getElements: function() { return this._elements;},
+    setElements: function(elements) { 
+        this._elements = elements;
+        this._dirty = true;
+    }
 };
 
 osg.BufferArray.create = function(type, elements, itemSize) {

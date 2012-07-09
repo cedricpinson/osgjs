@@ -134,13 +134,14 @@ var getModel = function(func) {
         req.onreadystatechange = function (aEvt) {
             if (req.readyState == 4) {
                 if(req.status == 200) {
-                    var child = osgDB.parseSceneGraph(JSON.parse(req.responseText));
-                    if (cbfunc) {
-                        cbfunc(child);
-                    }
-                    node.addChild(child);
-                    removeLoading(node, child);
-                    osg.log("success " + url);
+                    osgDB.Promise.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
+                            if (cbfunc) {
+                                cbfunc(child);
+                            }
+                        node.addChild(child);
+                        removeLoading(node, child);
+                        osg.log("success " + url);
+                    });
                 } else{
                     removeLoading(node, child);
                     osg.log("error " + url);
@@ -165,22 +166,34 @@ function createScene()
     ground = getModel();
 
     ground.getOrCreateStateSet().setAttributeAndMode(getShader());
-    //ground.getOrCreateStateSet().setAttributeAndMode(new osg.CullFace('DISABLE'));
 
-    var texture = new osg.TextureCubeMap();
-    texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_X', osgDB.readImage('textures/posx.jpg'));
-    texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_X', osgDB.readImage('textures/negx.jpg'));
+    osgDB.Promise.all([
+        osgDB.readImage('textures/posx.jpg'),
+        osgDB.readImage('textures/negx.jpg'),
 
-    texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Y', osgDB.readImage('textures/posy.jpg'));
-    texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Y', osgDB.readImage('textures/negy.jpg'));
+        osgDB.readImage('textures/posy.jpg'),
+        osgDB.readImage('textures/negy.jpg'),
 
-    texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Z', osgDB.readImage('textures/posz.jpg'));
-    texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Z', osgDB.readImage('textures/negz.jpg'));
+        osgDB.readImage('textures/posz.jpg'),
+        osgDB.readImage('textures/negz.jpg')]).then(function ( images) {
 
-    texture.setMinFilter('LINEAR_MIPMAP_LINEAR');
-    ground.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
-    ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
-    
+            var texture = new osg.TextureCubeMap();
+
+            texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_X', images[0]);
+            texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_X', images[1]);
+
+            texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Y', images[2]);
+            texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Y', images[3]);
+
+            texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Z', images[4]);
+            texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Z', images[5]);
+
+            texture.setMinFilter('LINEAR_MIPMAP_LINEAR');
+
+            ground.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
+            ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
+        });
+
     group.addChild(ground);
     return group;
 }

@@ -13,7 +13,6 @@ osg.CullVisitor = function () {
     this._currentRenderStage = undefined;
     this._rootRenderStage = undefined;
 
-    this._computeNearFar = true;
     this._computedNear = Number.POSITIVE_INFINITY;
     this._computedFar = Number.NEGATIVE_INFINITY;
 
@@ -465,7 +464,7 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
         depth = this.distance(bb.center(), modelview);
     }
     if (isNaN(depth)) {
-        osg.log("warning geometry has a NaN depth, " + modelview + " center " + bb.center());
+        osg.warning("warning geometry has a NaN depth, " + modelview + " center " + bb.center());
     } else {
         //leaf.id = this._reserveLeafStack.current;
         leaf.parent = this._currentStateGraph;

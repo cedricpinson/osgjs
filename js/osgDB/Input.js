@@ -6,17 +6,35 @@ osgDB.Input = function(json, identifier)
         map = {};
     }
     this._identifierMap = map;
+    this._objectRegistry = {};
+    this._progressXHRCallback = undefined;
 };
 
 osgDB.Input.prototype = {
+    setProgressXHRCallback: function(func) {
+        this._progressXHRCallback = func;
+    },
+
+    // used to override the type from pathname
+    // typically if you want to create proxy object
+    registerObject: function(fullyqualified_objectname, constructor) {
+        this._objectRegistry[fullyqualified_objectname] = constructor;
+    },
+
     getJSON: function() {
         return this._json;
     },
+
     setJSON: function(json) {
         this._json = json;
         return this;
     },
+
     getObjectWrapper: function (path) {
+        if (this._objectRegistry[path] !== undefined) {
+            return new (this._objectRegistry[path])();
+        }
+
         var scope = window;
         var splittedPath = path.split('.');
         for (var i = 0, l = splittedPath.length; i < l; i++) {
@@ -31,33 +49,65 @@ osgDB.Input.prototype = {
     },
 
     readImageURL: function(url) {
+        var defer = osgDB.Promise.defer();
         var img = new Image();
         img.onerror = function() {
             osg.warn("warning use white texture as fallback instead of " + url);
             img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=";
         };
+        img.onload = function() {
+            defer.resolve(img);
+        };
         img.src = url;
-        return img;
+        return defer.promise;
     },
 
     readImage: function() {
         var jsonObj = this.getJSON();
         var uniqueID = jsonObj.UniqueID;
-        var img;
         if (uniqueID !== undefined) {
             img = this._identifierMap[uniqueID];
             if (img !== undefined) {
                 return img;
             }
         }
-
+        var self = this;
+        var defer = osgDB.Promise.defer();
         var url = jsonObj.Url;
-        img = this.readImageURL(url);
+        osgDB.Promise.when(this.readImageURL(url)).then( function ( img ) {
+            if (uniqueID !== undefined) {
+                self._identifierMap[uniqueID] = img;
+            }
+            defer.resolve(img);
+        });
 
-        if (uniqueID !== undefined) {
-            this._identifierMap[uniqueID] = img;
+        return defer.promise;
+    },
+
+    readBinaryArrayURL: function(url) {
+        var defer = osgDB.Promise.defer();
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.responseType = "arraybuffer";
+
+        if (this._progressXHRCallback) {
+            xhr.addEventListener("progress", this._progressXHRCallback, false);
         }
-        return img;
+
+        xhr.addEventListener("error", function() {
+            defer.reject();
+        }, false);
+
+        xhr.addEventListener("load", function (oEvent) {
+            var arrayBuffer = xhr.response; // Note: not oReq.responseText
+            if (arrayBuffer) {
+                // var byteArray = new Uint8Array(arrayBuffer);
+                defer.resolve(arrayBuffer);
+            }
+        }, false);
+
+        xhr.send(null);
+        return defer.promise;
     },
 
     readBufferArray: function() {
@@ -73,21 +123,92 @@ osgDB.Input.prototype = {
         }
 
         var check = function(o) {
-            if (o.Elements !== undefined && 
+            if ((o.Elements !== undefined || o.Array !== undefined) && 
                 o.ItemSize !== undefined &&
                 o.Type) {
                 return true;
             }
             return false;
         };
+
         if (!check(jsonObj)) {
             return;
         }
-        
-        var obj = new osg.BufferArray(osg.BufferArray[jsonObj.Type], jsonObj.Elements, jsonObj.ItemSize );
 
+        var obj, defer;
+
+        // inline array
+        if (jsonObj.Elements !== undefined) {
+            obj = new osg.BufferArray(osg.BufferArray[jsonObj.Type], jsonObj.Elements, jsonObj.ItemSize );
+
+        } else if (jsonObj.Array !== undefined) {
+
+            var buf = new osg.BufferArray(osg.BufferArray[jsonObj.Type]);
+            buf.setItemSize(jsonObj.ItemSize);
+            
+            var vb, type;
+            if (jsonObj.Array.Float32Array !== undefined) {
+                vb = jsonObj.Array.Float32Array;
+                type = 'Float32Array';
+            } else if (jsonObj.Array.Uint16Array !== undefined) {
+                vb = jsonObj.Array.Uint16Array;
+                type = 'Uint16Array';
+            } else {
+                osg.warn("Typed Array " + Object.keys(o.Array)[0]);
+                type = 'Float32Array';
+            }
+
+            if (vb !== undefined) {
+                if (vb.File !== undefined) {
+                    var url = vb.File;
+                    defer = osgDB.Promise.defer();
+                    osgDB.Promise.when(this.readBinaryArrayURL(url)).then(function(array) {
+
+                        var typedArray;
+                        // manage endianness
+                        var a = new Uint8Array([0x12, 0x34]);
+                        var b = new Uint16Array(a.buffer);
+                        var big_endian = ( (b[0]).toString(16) === "1234");
+                        if (big_endian) {
+                            osg.log("big endian detected");
+                            var bytes_per_element = osg[type].BYTES_PER_ELEMENT;
+                            var typed_array = osg[type];
+                            var tmpArray = new typed_array(array.length/bytes_per_element);
+                            var data = new DataView(array);
+                            var i = 0, l = tmpArray.length;
+                            if (type === 'Uint16Array') {
+                                for (; i < l; i++) {
+                                    tempArray[i] = data.getUint16(i * bytes_per_element, true);
+                                }
+                            } else if (type === 'Float32Array') {
+                                for (; i < l; i++) {
+                                    tempArray[i] = data.getFloat32(i * bytes_per_element, true);
+                                }
+                            }
+                            typedArray = tempArray;
+                            data = null;
+                        } else {
+                            typedArray = new osg[type](array);
+                        }
+                        a = b = null;
+
+                        buf.setElements(typedArray);
+                        defer.resolve(buf);
+                    });
+                } else if (vb.Elements !== undefined) {
+                    var a = new osg[type](vb.Elements);
+                    buf.setElements(a);
+                }
+            }
+            obj = buf;
+        }
+        
         if (uniqueID !== undefined) {
             this._identifierMap[uniqueID] = obj;
+        }
+
+        if (defer !== undefined) {
+            return defer.promise;
         }
         return obj;
     },
@@ -113,6 +234,7 @@ osgDB.Input.prototype = {
         var osgjsObject;
 
         var obj;
+        var defer;
         var drawElementPrimitive = jsonObj.DrawElementUShort || jsonObj.DrawElementUByte || jsonObj.DrawElementUInt || jsonObj.DrawElementsUShort || jsonObj.DrawElementsUByte || jsonObj.DrawElementsUInt || undefined;
         if ( drawElementPrimitive ) {
 
@@ -124,17 +246,25 @@ osgDB.Input.prototype = {
                 }
             }
 
+            defer = osgDB.Promise.defer();
             var jsonArray = drawElementPrimitive.Indices;
+            var prevJson = jsonObj;
+
             mode = drawElementPrimitive.Mode;
-            array = new osg.BufferArray(osg.BufferArray[jsonArray.Type], 
-                                        jsonArray.Elements, 
-                                        jsonArray.ItemSize );
             if (!mode) {
                 mode = osg.PrimitiveSet.TRIANGLES;
             } else {
                 mode = osg.PrimitiveSet[mode];
             }
-            obj = new osg.DrawElements(mode, array);
+            obj = new osg.DrawElements(mode);
+
+            this.setJSON(jsonArray);
+            osgDB.Promise.when(this.readBufferArray()).then(
+                function(array) {
+                    obj.setIndices(array);
+                    defer.resolve(obj);
+                });
+            this.setJSON(prevJson);
         }
 
         var drawArrayPrimitive = jsonObj.DrawArray || jsonObj.DrawArrays;
@@ -168,7 +298,7 @@ osgDB.Input.prototype = {
 
             mode = drawArrayLengthsPrimitive.Mode;
             first = drawArrayLengthsPrimitive.First;
-            array = drawArrayLengthsPrimitive.ArrayLengths;
+            var array = drawArrayLengthsPrimitive.ArrayLengths;
             var drawArrayLengths =  new osg.DrawArrayLengths(osg.PrimitiveSet[mode], first, array);
             obj = drawArrayLengths;
         }
@@ -176,40 +306,13 @@ osgDB.Input.prototype = {
         if (uniqueID !== undefined) {
             this._identifierMap[uniqueID] = obj;
         }
-        return obj;
-    },
 
-    readDrawable: function() {
-        var jsonObj = this.getJSON();
-
-        var uniqueID = jsonObj.UniqueID;
-        var osgjsObject;
-        if (uniqueID !== undefined) {
-            osgjsObject = this._identifierMap[uniqueID];
-            if (osgjsObject !== undefined) {
-                return osgjsObject;
-            }
-        }
-
-        var check = function(o) {
-            if (o.Elements !== undefined && 
-                o.ItemSize !== undefined &&
-                o.Type) {
-                return true;
-            }
-            return false;
-        };
-        if (!check(jsonObj)) {
-            return;
-        }
-        
-        var obj = new osg.BufferArray(osg.BufferArray[jsonObj.Type], jsonObj.Elements, jsonObj.ItemSize );
-
-        if (uniqueID !== undefined) {
-            this._identifierMap[uniqueID] = obj;
+        if (defer) {
+            return defer.promise;
         }
         return obj;
     },
+
 
     readObject: function () {
 
@@ -246,12 +349,11 @@ osgDB.Input.prototype = {
             scope = reader;
         }
         
-        scope(this.setJSON(jsonObj[prop]), obj);
+        var promise = scope(this.setJSON(jsonObj[prop]), obj);
 
         if (uniqueID !== undefined) {
             this._identifierMap[uniqueID] = obj;
         }
-        return obj;
+        return promise;
     }
-    
 };
