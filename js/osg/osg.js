@@ -1,7 +1,7 @@
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
-osg.version = '0.0.8';
+osg.version = '0.1.0';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 
 // log function
