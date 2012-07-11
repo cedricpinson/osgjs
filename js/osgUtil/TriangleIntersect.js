@@ -192,6 +192,9 @@ osgUtil.TriangleIntersect.prototype = {
     },
 
     apply: function(node) {
+        if (!node.getAttributes().Vertex) {
+            return;
+        }
         var primitive;
         var lastIndex;
         var vertexes = node.getAttributes().Vertex.getElements();

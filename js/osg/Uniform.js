@@ -4,10 +4,17 @@
  * Uniform manage variable used in glsl shader.
  * @class Uniform
  */
-osg.Uniform = function () { this.transpose = false; this._dirty = true; };
+osg.Uniform = function () { 
+    this.transpose = false; 
+    this._dirty = true; 
+    this.name = "";
+    this.type = undefined;
+};
 
 /** @lends osg.Uniform.prototype */
 osg.Uniform.prototype = {
+    getName: function() { return this.name;},
+    getType: function() { return this.type;},
 
     get: function() { // call dirty if you update this array outside
         return this.data;
@@ -32,6 +39,12 @@ osg.Uniform.prototype = {
         this.glCall(location, this.transpose, this.glData);
     },
     update: function(array) {
+        for (var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
+            this[i] = array[i];
+        }
+    },
+
+    _updateArray: function(array) {
         for (var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
             this[i] = array[i];
         }
@@ -86,7 +99,13 @@ osg.Uniform.prototype = {
     }
 };
 
-osg.Uniform.createFloat1 = function(value, name) {
+osg.Uniform.createFloat1 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = [value];
     uniform.glCall = function (location, glData) {
@@ -94,85 +113,210 @@ osg.Uniform.createFloat1 = function(value, name) {
     };
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype._updateFloat1;
+    uniform.set = function(value) {
+        if (typeof value === "number") {
+            this.data[0] = value;
+        } else {
+            this.data = value;
+        }
+        this.dirty();
+    };
+
     uniform.name = name;
+    uniform.type = "float";
     return uniform;
 };
-osg.Uniform.createFloat2 = function(vec2, name) {
+osg.Uniform.createFloat = osg.Uniform.createFloat1;
+osg.Uniform.createFloatArray = function(array , name) {
+    var u = osg.Uniform.createFloat.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
+osg.Uniform.createFloat2 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [0,0];
+    }
     var uniform = new osg.Uniform();
-    uniform.data = vec2;
+    uniform.data = value;
     uniform.glCall = function (location, glData) {
         gl.uniform2fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype._updateFloat2;
     uniform.name = name;
+    uniform.type = "vec2";
     return uniform;
 };
-osg.Uniform.createFloat3 = function(vec3, name) {
+osg.Uniform.createFloat2Array = function(array , name) {
+    var u = osg.Uniform.createFloat2.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
+osg.Uniform.createFloat3 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [0,0,0];
+    }
     var uniform = new osg.Uniform();
-    uniform.data = vec3;
+    uniform.data = value;
     uniform.glCall = function (location, glData) {
         gl.uniform3fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype._updateFloat3;
     uniform.name = name;
+    uniform.type = "vec3";
     return uniform;
 };
-osg.Uniform.createFloat4 = function(vec4, name) {
+osg.Uniform.createFloat3Array = function(array , name) {
+    var u = osg.Uniform.createFloat3.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
+osg.Uniform.createFloat4 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [0,0,0,0];
+    }
     var uniform = new osg.Uniform();
-    uniform.data = vec4;
+    uniform.data = value;
     uniform.glCall = function (location, glData) {
         gl.uniform4fv(location, glData);
     };
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype._updateFloat4;
     uniform.name = name;
+    uniform.type = "vec4";
     return uniform;
 };
-osg.Uniform.createInt1 = function(value, name) {
+osg.Uniform.createFloat4Array = function(array , name) {
+    var u = osg.Uniform.createFloat4.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
+osg.Uniform.createInt1 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [0];
+    }
     var uniform = new osg.Uniform();
     uniform.data = [value];
     uniform.glCall = function (location, glData) {
         gl.uniform1iv(location, glData);
     };
+    uniform.set = function(value) {
+        if (typeof value === "number") {
+            this.data[0] = value;
+        } else {
+            this.data = value;
+        }
+        this.dirty();
+    };
+
     uniform.glData = new osg.Int32Array(uniform.data);
     uniform.name = name;
+    uniform.type = "int";
     return uniform;
 };
-osg.Uniform.createInt2 = function(vec2, name) {
+osg.Uniform.createInt = osg.Uniform.createInt1;
+osg.Uniform.createIntArray = function(array , name) {
+    var u = osg.Uniform.createInt.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
+
+osg.Uniform.createInt2 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [0,0];
+    }
     var uniform = new osg.Uniform();
-    uniform.data = vec2;
+    uniform.data = value;
     uniform.glCall = function (location, glData) {
         gl.uniform2iv(location, glData);
     };
     uniform.glData = new osg.Int32Array(uniform.data);
     uniform.name = name;
+    uniform.type = "vec2i";
     return uniform;
 };
-osg.Uniform.createInt3 = function(vec3, name) {
+osg.Uniform.createInt2Array = function(array , name) {
+    var u = osg.Uniform.createInt2.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
+osg.Uniform.createInt3 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [0,0,0];
+    }
     var uniform = new osg.Uniform();
-    uniform.data = vec3;
+    uniform.data = value;
     uniform.glCall = function (location, glData) {
         gl.uniform3iv(location, glData);
     };
     uniform.glData = new osg.Int32Array(uniform.data);
     uniform.name = name;
+    uniform.type = "vec3i";
     return uniform;
 };
-osg.Uniform.createInt4 = function(vec4, name) {
+osg.Uniform.createInt3Array = function(array , name) {
+    var u = osg.Uniform.createInt3.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
+osg.Uniform.createInt4 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [0,0,0,0];
+    }
     var uniform = new osg.Uniform();
-    uniform.data = vec4;
+    uniform.data = value;
     uniform.glCall = function (location, glData) {
         gl.uniform4iv(location, glData);
     };
     uniform.glData = new osg.Int32Array(uniform.data);
     uniform.name = name;
+    uniform.type = "vec4i";
     return uniform;
 };
-osg.Uniform.createMatrix2 = function(mat2, name) {
+osg.Uniform.createInt4Array = function(array , name) {
+    var u = osg.Uniform.createInt4.call(this, array, name);
+    u.update = osg.Uniform.prototype._updateArray;
+    return u;
+};
+
+osg.Uniform.createMatrix2 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [1,0,0,1];
+    }
     var uniform = new osg.Uniform();
-    uniform.data = mat2;
+    uniform.data = value;
     uniform.glCall = function (location, transpose, glData) {
         gl.uniformMatrix2fv(location, transpose, glData);
     };
@@ -181,11 +325,20 @@ osg.Uniform.createMatrix2 = function(mat2, name) {
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype._updateFloat4;
     uniform.name = name;
+    uniform.type = "mat2";
     return uniform;
 };
-osg.Uniform.createMatrix3 = function(mat3, name) {
+osg.Uniform.createMat2 = osg.Uniform.createMatrix2;
+
+osg.Uniform.createMatrix3 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [1,0,0, 0,1,0, 0,0,1];
+    }
     var uniform = new osg.Uniform();
-    uniform.data = mat3;
+    uniform.data = value;
     uniform.glCall = function (location, transpose, glData) {
         gl.uniformMatrix3fv(location, transpose, glData);
     };
@@ -194,11 +347,20 @@ osg.Uniform.createMatrix3 = function(mat3, name) {
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype._updateFloat9;
     uniform.name = name;
+    uniform.type = "mat3";
     return uniform;
 };
-osg.Uniform.createMatrix4 = function(mat4, name) {
+osg.Uniform.createMat3 = osg.Uniform.createMatrix3;
+
+osg.Uniform.createMatrix4 = function(data, uniformName) {
+    var value = data;
+    var name = uniformName;
+    if (name === undefined) {
+        name = value;
+        value = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
+    }
     var uniform = new osg.Uniform();
-    uniform.data = mat4;
+    uniform.data = value;
     uniform.glCall = function (location, transpose, glData) {
         gl.uniformMatrix4fv(location, transpose, glData);
     };
@@ -207,5 +369,7 @@ osg.Uniform.createMatrix4 = function(mat4, name) {
     uniform.glData = new osg.Float32Array(uniform.data);
     uniform.update = osg.Uniform.prototype._updateFloat16;
     uniform.name = name;
+    uniform.type = "mat4";
     return uniform;
 };
+osg.Uniform.createMat4 = osg.Uniform.createMatrix4;

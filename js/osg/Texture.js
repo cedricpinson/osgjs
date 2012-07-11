@@ -41,6 +41,9 @@ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_Z    = 0x8519;
 osg.Texture.TEXTURE_CUBE_MAP_NEGATIVE_Z    = 0x851A;
 osg.Texture.MAX_CUBE_MAP_TEXTURE_SIZE      = 0x851C;
 
+osg.Texture.UNSIGNED_BYTE = 0x1401;
+osg.Texture.FLOAT = 0x1406;
+
 
 /** @lends osg.Texture.prototype */
 osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
@@ -55,10 +58,8 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         if (osg.Texture.uniforms[unit] === undefined) {
             var name = this.getType() + unit;
             var uniforms = {};
-            uniforms[name] = osg.Uniform.createInt1(unit, name);
-            var uniformKeys = [name];
-            uniforms.uniformKeys = uniformKeys;
-
+            uniforms.texture = osg.Uniform.createInt1(unit, name);
+            uniforms.uniformKeys = Object.keys(uniforms);
             osg.Texture.uniforms[unit] = uniforms;
         }
         // uniform for an texture attribute should directly in osg.Texture.uniforms[unit] and not in osg.Texture.uniforms[unit][Texture0]
@@ -74,6 +75,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         this._unrefImageDataAfterApply = false;
         this.setInternalFormat(osg.Texture.RGBA);
         this._textureTarget = osg.Texture.TEXTURE_2D;
+        this._type = osg.Texture.UNSIGNED_BYTE;
     },
     getTextureTarget: function() { return this._textureTarget;},
     getTextureObject: function() { return this._textureObject;},
@@ -148,6 +150,13 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         }
         this.setInternalFormat(this._imageFormat);
     },
+    setType: function(value) {
+        if (typeof(value) === "string") {
+            this._type = osg.Texture[value];
+        } else {
+            this._type = value; 
+        }
+    },
     setUnrefImageDataAfterApply: function(bool) {
         this._unrefImageDataAfterApply = bool;
     },
@@ -210,7 +219,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     }
                     this.setDirty(false);
                     gl.bindTexture(this._textureTarget, this._textureObject);
-                    gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, gl.UNSIGNED_BYTE, this._image);
+                    gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, this._type, this._image);
                     this.applyFilterParameter(gl, this._textureTarget);
                     this.generateMipmap(gl, this._textureTarget);
 
@@ -252,7 +261,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         this[mode] = injectionFunction;
     },
 
-    writeToShader: function(unit, type)
+    generateShader: function(unit, type)
     {
         if (this[type]) {
             return this[type].call(this,unit);
@@ -282,13 +291,13 @@ osg.Texture.prototype[osg.ShaderGeneratorType.FragmentMain] = function(unit) {
 
 
 osg.Texture.createFromURL = function(imageSource, format) {
-    var a = new osg.Texture();
-    if (imageSource !== undefined) {
-        var img = new Image();
-        img.src = imageSource;
-        a.setImage(img, format);
-    }
-    return a;
+    var texture = new osg.Texture();
+    osgDB.Promise.when(osgDB.readImage(imageSource)).then(
+        function(img) {
+            texture.setImage(img, format);
+        }
+    );
+    return texture;
 };
 osg.Texture.createFromImg = function(img, format) {
     var a = new osg.Texture();

@@ -28,6 +28,7 @@ OSG = [
 "osg/NodeVisitor.js",
 "osg/Transform.js",
 "osg/BlendFunc.js",
+"osg/BlendColor.js",
 "osg/BoundingBox.js",
 "osg/BoundingSphere.js",
 "osg/BufferArray.js",
@@ -72,7 +73,9 @@ OSG_UTIL = [
 ]
 
 OSG_DB = [
-        "osgDB/osgDB.js"
+        "osgDB/osgDB.js",
+        "osgDB/Input.js",
+        "osgDB/Promise.js",
 ]
 
 OSG_WRAPPER = [
@@ -84,7 +87,8 @@ OSG_GA = [
         "osgGA/osgGA.js",
         "osgGA/Manipulator.js",
         "osgGA/OrbitManipulator.js",
-        "osgGA/FirstPersonManipulator.js"
+        "osgGA/FirstPersonManipulator.js",
+        "osgGA/SwitchManipulator.js",
 ]
 
 OSG_VIEWER = [

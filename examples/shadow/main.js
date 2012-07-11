@@ -73,9 +73,8 @@ LightUpdateCallback.prototype = {
 };
 
 
-function createProjectedShadowScene()
+function createProjectedShadowScene(model)
 {
-    var model = osgDB.parseSceneGraph(getOgre());
     var root = new osg.MatrixTransform();
     var shadowNode = new osg.MatrixTransform();
     shadowNode.addChild(model);
@@ -237,9 +236,8 @@ LightUpdateCallbackProjectedTexture.prototype = {
     }
 };
 
-function createTextureProjectedShadowScene()
+function createTextureProjectedShadowScene(model)
 {
-    var model = osgDB.parseSceneGraph(getOgre());
     var root = new osg.MatrixTransform();
     var shadowNode = new osg.MatrixTransform();
     shadowNode.addChild(model);
@@ -512,13 +510,13 @@ function getOgreShadowMapShader()
         "",
         "",
         "uniform bool Light0_enabled;",
-        "uniform vec4 Light0_ambient;",
-        "uniform vec4 Light0_diffuse;",
-        "uniform vec4 Light0_specular;",
-        "uniform vec4 Light0_position;",
-        "uniform float Light0_constantAttenuation;",
-        "uniform float Light0_linearAttenuation;",
-        "uniform float Light0_quadraticAttenuation;",
+        "uniform vec4 Light0_uniform_ambient;",
+        "uniform vec4 Light0_uniform_diffuse;",
+        "uniform vec4 Light0_uniform_specular;",
+        "uniform vec4 Light0_uniform_position;",
+        "uniform float Light0_uniform_constantAttenuation;",
+        "uniform float Light0_uniform_linearAttenuation;",
+        "uniform float Light0_uniform_quadraticAttenuation;",
         "",
         "",
         "// shadow stuff",
@@ -598,9 +596,9 @@ function getOgreShadowMapShader()
         "",
         "//if (Light0_enabled) {",
         "if (true) {",
-        "vec3 Light0_directionNormalized = normalize(vec3(Light0_position));",
+        "vec3 Light0_directionNormalized = normalize(vec3(Light0_uniform_position));",
         "float Light0_NdotL = max(dot(Normal, Light0_directionNormalized), 0.0);",
-        "flight(Light0_directionNormalized, Light0_constantAttenuation, Light0_linearAttenuation, Light0_quadraticAttenuation, Light0_ambient, Light0_diffuse, Light0_specular, NormalComputed );",
+        "flight(Light0_directionNormalized, Light0_uniform_constantAttenuation, Light0_uniform_linearAttenuation, Light0_uniform_quadraticAttenuation, Light0_uniform_ambient, Light0_uniform_diffuse, Light0_uniform_specular, NormalComputed );",
         "}",
         "",
         "FragTexCoord0 = TexCoord0;",
@@ -744,9 +742,8 @@ LightUpdateCallbackShadowMap.prototype = {
     }
 };
 
-function createShadowMapScene() 
+function createShadowMapScene(model) 
 {
-    var model = osgDB.parseSceneGraph(getOgre());
     var root = new osg.MatrixTransform();
 
     var models = new osg.Node();
@@ -851,23 +848,34 @@ function createScene() {
     root.setComputeNearFar(false);
 
     if (true) {
-        var project = createProjectedShadowScene();
-        project.setMatrix(osg.Matrix.makeTranslate(-10,0,0.0,[]));
-        root.addChild(project);
+        (function() {
+            osgDB.Promise.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
+                var project = createProjectedShadowScene(model);
+                project.setMatrix(osg.Matrix.makeTranslate(-10,0,0.0,[]));
+                root.addChild(project);
+            });
+        })();
     }
 
     if (true) {
-        var texproject = createTextureProjectedShadowScene();
-        texproject.setMatrix(osg.Matrix.makeTranslate(0,0,0.0,[]));
-        root.addChild(texproject);
+        (function() {
+            osgDB.Promise.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
+                var texproject = createTextureProjectedShadowScene(model);
+                texproject.setMatrix(osg.Matrix.makeTranslate(0,0,0.0,[]));
+                root.addChild(texproject);
+            });
+        })();
     }
 
     if (true) {
-        var shadowmap = createShadowMapScene();
-        shadowmap.setMatrix(osg.Matrix.makeTranslate(10,0,0.0,[]));
-        root.addChild(shadowmap);
+        (function() {
+            osgDB.Promise.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
+                var shadowmap = createShadowMapScene(model);
+                shadowmap.setMatrix(osg.Matrix.makeTranslate(10,0,0.0,[]));
+                root.addChild(shadowmap);
+            });
+        })();
     }
-
 
     return root;
 }
@@ -895,12 +903,10 @@ var start = function() {
         viewer.setupManipulator();
         var rotate = new osg.MatrixTransform();
         rotate.addChild(createScene());
-        //viewer.getCamera().setClearColor([0.3, 0.3, 0.3, 0.0]);
         viewer.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
         viewer.setSceneData(rotate);
         viewer.getManipulator().computeHomePosition();
         viewer.run();
-
 
         var mousedown = function(ev) {
             ev.stopPropagation();

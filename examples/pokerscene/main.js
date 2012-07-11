@@ -23,7 +23,7 @@
  */
 
 function createScene() {
-
+    var root = new osg.Node();
     // override texture constructor to set the wrap mode repeat for all texture
     var previousTextureDefault = osg.Texture.prototype.setDefaultParameters;
     osg.Texture.prototype.setDefaultParameters = function() {
@@ -34,6 +34,8 @@ function createScene() {
         this.setMinFilter('LINEAR_MIPMAP_LINEAR');
     };
 
-    o = osgDB.parseSceneGraph(getPokerScene());
-    return o;
+    osgDB.Promise.when(osgDB.parseSceneGraph(getPokerScene())).then(function (child) {
+        root.addChild(child);
+    });
+    return root;
 }

@@ -1,68 +1,89 @@
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
-osg.version = '0.0.7';
+osg.version = '0.1.0';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
-osg.instance = 0;
-osg.version = 0;
+
+// log function
 osg.log = function (str) {
     if (window.console !== undefined) {
         window.console.log(str);
     }
 };
-osg.info = function (str) { osg.log(str); };
-osg.debug = function (str) { osg.log(str); };
+
+osg.info = function(str) {
+    if (window.console !== undefined) {
+        window.console.info(str);
+    }
+};
+
+osg.warn = function (str) {
+    if (window.console !== undefined) {
+        window.console.warn(str);
+    }
+};
+
+osg.debug = function (str) {
+    if (window.console !== undefined) {
+        window.console.debug(str);
+    }
+};
 
 osg.DEBUG = 0;
 osg.INFO = 1;
 osg.NOTICE = 2;
+osg.WARN = 3;
+
 osg.setNotifyLevel = function (level) {
     var log = function (str) {
         if (window.console !== undefined) {
             window.console.log(str);
         }
     };
+
+    var info = function(str) {
+        if (window.console !== undefined) {
+            window.console.info(str);
+        }
+    };
+
+    var warn = function (str) {
+        if (window.console !== undefined) {
+            window.console.warn(str);
+        }
+    };
+
+    var debug = function (str) {
+        if (window.console !== undefined) {
+            window.console.debug(str);
+        }
+    };
+
     var dummy = function () {};
 
     osg.debug = dummy;
     osg.info = dummy;
     osg.log = dummy;
+    osg.warn = dummy;
 
     if (level <= osg.DEBUG) {
-        osg.debug = log;
+        osg.debug = debug;
     }
     if (level <= osg.INFO) {
-        osg.info = log;
+        osg.info = info;
     }
     if (level <= osg.NOTICE) {
         osg.log = log;
     }
+    if (level <= osg.WARN) {
+        osg.warn = warn;
+    }
 };
 
-osg.reportErrorGL = false;
-osg.ReportWebGLError = false;
+osg.reportWebGLError = false;
 
 osg.init = function () {
     osg.setNotifyLevel(osg.NOTICE);
-};
-
-osg.checkError = function (error) {
-    if (error === 0) {
-        return;
-    }
-    if (error === 0x0500) {
-        osg.log("detected error INVALID_ENUM");
-    } else if (error === 0x0501) {
-        osg.log("detected error INVALID_VALUE");
-    } else if (error === 0x0502) {
-        osg.log("detected error INVALID_OPERATION");
-    } else if (error === 0x0505) {
-        osg.log("detected error OUT_OF_MEMORY");
-    } else if (error === 0x0506) {
-        osg.log("detected error INVALID_FRAMEBUFFER_OPERATION");
-    } else {
-        osg.log("detected error UNKNOWN");
-    }
 };
 
 // from jquery

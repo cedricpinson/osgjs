@@ -171,7 +171,11 @@ osg.State.prototype = {
             'attributeMap': this.attributeMap
         };
 
-        program = this.shaderGenerator.getOrCreateProgram(attributes);
+        var generator = this.stateSets.back().getShaderGenerator();
+        if (generator === undefined) {
+            generator = this.shaderGenerator;
+        }
+        program = generator.getOrCreateProgram(attributes);
         this.programs.push(this.getObjectPair(program, osg.StateAttribute.ON));
         return program;
     },
@@ -187,6 +191,9 @@ osg.State.prototype = {
 
     apply: function() {
         var gl = this._graphicContext;
+
+
+
         this.applyAttributeMap(this.attributeMap);
         this.applyTextureAttributeMapList(this.textureAttributeMapList);
 
@@ -201,7 +208,7 @@ osg.State.prototype = {
 	var activeUniforms;
         var i;
         var key;
-        if (program.generated !== undefined && program.generated === true) {
+        if (program.generated === true) {
             // note that about TextureAttribute that need uniform on unit we would need to improve
             // the current uniformList ...
 
@@ -390,10 +397,12 @@ osg.State.prototype = {
 
             if (attributeStack.asChanged) {
 //            if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
-                if (attribute.apply) {
-                    attribute.apply(this);
+                if (attributeStack.lastApplied !== attribute) {
+                    if (attribute.apply) {
+                        attribute.apply(this);
+                    }
+                    attributeStack.lastApplied = attribute;
                 }
-                attributeStack.lastApplied = attribute;
                 attributeStack.asChanged = false;
             }
         }
@@ -408,20 +417,21 @@ osg.State.prototype = {
         for ( var i = 0, l = uniformList.uniformKeys.length; i < l; i++) {
             var key = uniformList.uniformKeys[i];
             uniformPair = uniformList[key];
-            uniform = uniformPair.object;
+            uniform = uniformPair.getUniform();
             name = uniform.name;
             if (uniformMap[name] === undefined) {
                 uniformMap[name] = osg.Stack.create();
                 uniformMap[name].globalDefault = uniform;
                 uniformMap.uniformKeys.push(name);
             }
+            var value = uniformPair.getValue();
             var stack = uniformMap[name];
             if (stack.length === 0) {
-                stack.push(this.getObjectPair(uniform, uniformPair.value));
-            } else if ((stack[stack.length-1].value & osg.StateAttribute.OVERRIDE) && !(uniformPair.value & osg.StateAttribute.PROTECTED) ) {
+                stack.push(this.getObjectPair(uniform, value));
+            } else if ((stack[stack.length-1].value & osg.StateAttribute.OVERRIDE) && !(value & osg.StateAttribute.PROTECTED) ) {
                 stack.push(stack[stack.length-1]);
             } else {
-                stack.push(this.getObjectPair(uniform, uniformPair.value));
+                stack.push(this.getObjectPair(uniform, value));
             }
         }
     },
@@ -460,7 +470,7 @@ osg.State.prototype = {
                 if (attributeStack.asChanged) {
 //                if (attributeStack.lastApplied !== attribute || attribute.isDirty()) {
                     gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                    attribute.apply(this);
+                    attribute.apply(this, textureUnit);
                     attributeStack.lastApplied = attribute;
                     attributeStack.asChanged = false;
                 }
@@ -484,7 +494,7 @@ osg.State.prototype = {
         for (var i = 0, l = attributeList.attributeKeys.length; i < l; i++ ) {
             var type = attributeList.attributeKeys[i];
             var attributePair = attributeList[type];
-            var attribute = attributePair.object;
+            var attribute = attributePair.getAttribute();
             if (attributeMap[type] === undefined) {
                 attributeMap[type] = osg.Stack.create();
                 attributeMap[type].globalDefault = attribute.cloneType();
@@ -492,13 +502,14 @@ osg.State.prototype = {
                 attributeMap.attributeKeys.push(type);
             }
 
+            var value = attributePair.getValue();
             attributeStack = attributeMap[type];
             if (attributeStack.length === 0) {
-                attributeStack.push(this.getObjectPair(attribute, attributePair.value));
-            } else if ( (attributeStack[attributeStack.length-1].value & osg.StateAttribute.OVERRIDE) && !(attributePair.value & osg.StateAttribute.PROTECTED)) {
+                attributeStack.push(this.getObjectPair(attribute, value));
+            } else if ( (attributeStack[attributeStack.length-1].value & osg.StateAttribute.OVERRIDE) && !(value & osg.StateAttribute.PROTECTED)) {
                 attributeStack.push(attributeStack[attributeStack.length-1]);
             } else {
-                attributeStack.push(this.getObjectPair(attribute, attributePair.value));
+                attributeStack.push(this.getObjectPair(attribute, value));
             }
 
             attributeStack.asChanged = true;
@@ -550,7 +561,7 @@ osg.State.prototype = {
         // there would be a way to cache it and track state if the program has not changed ...
         var colorAttrib;
         var program = this.programs.lastApplied;
-        if (program.generated === true) {
+        if (program !== undefined && program.generated === true) {
             var updateColorUniform = false;
             if (this.previousAppliedProgram !== this.programs.lastApplied) {
                 updateColorUniform = true;

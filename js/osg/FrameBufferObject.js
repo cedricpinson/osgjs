@@ -20,6 +20,24 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
     setAttachment: function(attachment) { this.attachments.push(attachment); },
+    _reportFrameBufferError : function(code) {
+        switch (code) {
+        case 0x8CD6:
+            osg.debug("FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+            break;
+        case 0x8CD7:
+            osg.debug("FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+            break;
+        case 0x8CD9:
+            osg.debug("FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+            break;
+        case 0x8CDD:
+            osg.debug("FRAMEBUFFER_UNSUPPORTED");
+            break;
+        default:
+            osg.debug("FRAMEBUFFER unknown error " + code.toString(16));
+        }
+    },
     apply: function(state) {
         var gl = state.getGraphicContext();
         var status;
@@ -51,7 +69,7 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                 }
                 status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
                 if (status !== 0x8CD5) {
-                    osg.log("framebuffer error check " + status);
+                    this._reportFrameBufferError(status);
                 }
                 
                 if (hasRenderBuffer) { // set it to null only if used renderbuffer
@@ -60,10 +78,10 @@ osg.FrameBufferObject.prototype = osg.objectInehrit(osg.StateAttribute.prototype
                 this.setDirty(false);
             } else {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
-                if (osg.reportErrorGL === true) {
+                if (osg.reportWebGLError === true) {
                     status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
                     if (status !== 0x8CD5) {
-                        osg.log("framebuffer error check " + status);
+                        this._reportFrameBufferError(status);
                     }
                 }
             }

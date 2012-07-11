@@ -115,8 +115,8 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
                 return;
             }
 
-            var ns = osg.Matrix.transformVec3(inv, this.start);
-            var ne = osg.Matrix.transformVec3(inv, this.end);
+            var ns = osg.Matrix.transformVec3(inv, this.start, new Array(3));
+            var ne = osg.Matrix.transformVec3(inv, this.end, new Array(3));
             this.intersectSegmentWithGeometry(ns, ne, node);
         }
 

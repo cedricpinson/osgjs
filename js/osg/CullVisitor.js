@@ -13,7 +13,6 @@ osg.CullVisitor = function () {
     this._currentRenderStage = undefined;
     this._rootRenderStage = undefined;
 
-    this._computeNearFar = true;
     this._computedNear = Number.POSITIVE_INFINITY;
     this._computedFar = Number.NEGATIVE_INFINITY;
 
@@ -421,6 +420,25 @@ osg.CullVisitor.prototype[osg.Node.prototype.objectType] = function (node) {
         this.popStateSet();
     }
 };
+osg.CullVisitor.prototype[osg.LightSource.prototype.objectType] = function (node) {
+
+    var stateset = node.getStateSet();
+    if (stateset) {
+        this.pushStateSet(stateset);
+    }
+
+    var light = node.getLight();
+    if (light) {
+        this.addPositionedAttribute(light);
+    }
+
+    this.traverse(node);
+
+    if (stateset) {
+        this.popStateSet();
+    }
+};
+
 osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
     var modelview = this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
     var bb = node.getBoundingBox();
@@ -446,7 +464,7 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
         depth = this.distance(bb.center(), modelview);
     }
     if (isNaN(depth)) {
-        osg.log("warning geometry has a NaN depth, " + modelview + " center " + bb.center());
+        osg.warning("warning geometry has a NaN depth, " + modelview + " center " + bb.center());
     } else {
         //leaf.id = this._reserveLeafStack.current;
         leaf.parent = this._currentStateGraph;

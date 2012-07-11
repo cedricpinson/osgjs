@@ -11,6 +11,7 @@
 		<script type="text/javascript" src="../../js/osg/NodeVisitor.js"></script>
 		<script type="text/javascript" src="../../js/osg/Transform.js"></script>
 		<script type="text/javascript" src="../../js/osg/BlendFunc.js"></script>
+		<script type="text/javascript" src="../../js/osg/BlendColor.js"></script>
 		<script type="text/javascript" src="../../js/osg/BoundingBox.js"></script>
 		<script type="text/javascript" src="../../js/osg/BoundingSphere.js"></script>
 		<script type="text/javascript" src="../../js/osg/BufferArray.js"></script>
@@ -62,6 +63,8 @@
 		<script type="text/javascript" src="../../js/osgUtil/IntersectVisitor.js"></script>
 		<script type="text/javascript" src="../../js/osgUtil/ShaderParameterVisitor.js"></script>
 		<script type="text/javascript" src="../../js/osgDB/osgDB.js"></script>
+		<script type="text/javascript" src="../../js/osgDB/Input.js"></script>
+		<script type="text/javascript" src="../../js/osgDB/Promise.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/osgViewer.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/webgl-utils.js"></script>
 		<script type="text/javascript" src="../../js/osgViewer/webgl-debug.js"></script>
@@ -72,5 +75,6 @@
 		<script type="text/javascript" src="../../js/osgGA/Manipulator.js"></script>
 		<script type="text/javascript" src="../../js/osgGA/OrbitManipulator.js"></script>
 		<script type="text/javascript" src="../../js/osgGA/FirstPersonManipulator.js"></script>
+		<script type="text/javascript" src="../../js/osgGA/SwitchManipulator.js"></script>
 		<script type="text/javascript" src="../../js/osgWrappers/serializers/osg.js"></script>
 		<script type="text/javascript" src="../../js/osgWrappers/serializers/osgAnimation.js"></script>

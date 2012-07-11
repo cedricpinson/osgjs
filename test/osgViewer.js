@@ -1,4 +1,6 @@
-test("osgViewer.Viewer", function() {
+module("osgViewer");
+
+test("Viewer", function() {
     (function() {
         var canvas = createCanvas();
         var viewer = new osgViewer.Viewer(canvas);
@@ -18,8 +20,8 @@ test("osgViewer.Viewer", function() {
         var canvas = createCanvas();
         var viewer = new osgViewer.Viewer(canvas);
         var createScene = function() {
-            return osg.createTexturedBox(0,0,0,
-                                         10, 10, 10);
+            return osg.createTexturedBoxGeometry(0,0,0,
+                                                 10, 10, 10);
         };
         viewer.init();
         viewer.setupManipulator();
@@ -45,18 +47,16 @@ test("osgViewer.Viewer", function() {
 });
 
 
-test("osgViewer.View", function() {
-    (function() {
-        var gc = 2;
-        var view = new osgViewer.View();
-        view.setGraphicContext(gc);
-        ok(view.getGraphicContext() === 2, "Check graphic context");
+test("View", function() {
+    var gc = 2;
+    var view = new osgViewer.View();
+    view.setGraphicContext(gc);
+    ok(view.getGraphicContext() === 2, "Check graphic context");
 
-        ok(view.getFrameStamp() !== undefined, "Check FrameStamp");
+    ok(view.getFrameStamp() !== undefined, "Check FrameStamp");
 
-        ok(view.getScene() !== undefined, "Check scene");
-        ok(view.getSceneData() === undefined, "Check scene data");
-        ok(view.getScene().getStateSet() !== undefined, "Check scene stateset");
-    })();
+    ok(view.getScene() !== undefined, "Check scene");
+    ok(view.getSceneData() === undefined, "Check scene data");
+    ok(view.getScene().getStateSet() !== undefined, "Check scene stateset");
 
 });

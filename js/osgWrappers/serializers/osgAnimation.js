@@ -19,7 +19,8 @@
  */
 
 osgDB.ObjectWrapper.serializers.osgAnimation = {};
-osgDB.ObjectWrapper.serializers.osgAnimation.Animation = function(jsonObj, animation) {
+osgDB.ObjectWrapper.serializers.osgAnimation.Animation = function(input, animation) {
+    var jsonObj = input.getJSON();
     // check
     // 
     var check = function(o) {
@@ -33,24 +34,26 @@ osgDB.ObjectWrapper.serializers.osgAnimation.Animation = function(jsonObj, anima
         return false;
     };
     if (!check(jsonObj)) {
-        return false;
+        return;
     }
 
-    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, animation)) {
-        return false;
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(input, animation)) {
+        return;
     }
 
     // channels
     for (var i = 0, l = jsonObj.Channels.length; i < l; i++) {
-        var channel = osgDB.ObjectWrapper.readObject(jsonObj.Channels[i]);
-        if (channel) {
-            animation.getChannels().push(channel);
-        }
+        osgDB.Promise.when(input.setJSON(jsonObj.Channels[i]).readObject()).then(function(channel) {
+            if (channel) {
+                animation.getChannels().push(channel);
+            }
+        });
     }
-    return true;
+    return animation;
 };
 
-osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel = function(jsonObj, channel) {
+osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel = function(input, channel) {
+    var jsonObj = input.getJSON();
     // check
     // 
     var check = function(o) {
@@ -60,12 +63,12 @@ osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel = function(jsonObj,
         return false;
     };
     if (!check(jsonObj)) {
-        return false;
+        return;
     }
 
     // doit
-    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, channel)) {
-        return false;
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(input, channel)) {
+        return;
     }
 
     channel.setTargetName(jsonObj.TargetName);
@@ -78,21 +81,21 @@ osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel = function(jsonObj,
         mykey.t = nodekey[0];
         keys.push(mykey);
     }
-    return true;
+    return channel;
 };
 
 
-osgDB.ObjectWrapper.serializers.osgAnimation.QuatLerpChannel = function(jsonObj, channel) {
-
-    return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel(jsonObj, channel);
+osgDB.ObjectWrapper.serializers.osgAnimation.QuatLerpChannel = function(input, channel) {
+    return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel(input, channel);
 };
 
-osgDB.ObjectWrapper.serializers.osgAnimation.QuatSlerpChannel = function(jsonObj, channel) {
-    return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel(jsonObj, channel);
+osgDB.ObjectWrapper.serializers.osgAnimation.QuatSlerpChannel = function(input, channel) {
+    return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel(input, channel);
 };
 
 
-osgDB.ObjectWrapper.serializers.osgAnimation.FloatLerpChannel = function(jsonObj, channel) {
+osgDB.ObjectWrapper.serializers.osgAnimation.FloatLerpChannel = function(input, channel) {
+    var jsonObj = input.getJSON();
     // check
     // 
     var check = function(o) {
@@ -102,12 +105,12 @@ osgDB.ObjectWrapper.serializers.osgAnimation.FloatLerpChannel = function(jsonObj
         return false;
     };
     if (!check(jsonObj)) {
-        return false;
+        return;
     }
 
     // doit
-    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, channel)) {
-        return false;
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(input, channel)) {
+        return;
     }
 
     channel.setTargetName(jsonObj.TargetName);
@@ -120,12 +123,13 @@ osgDB.ObjectWrapper.serializers.osgAnimation.FloatLerpChannel = function(jsonObj
         mykey.t = nodekey[0];
         keys.push(mykey);
     }
-    return true;
+    return channel;
 };
 
 
 
-osgDB.ObjectWrapper.serializers.osgAnimation.BasicAnimationManager = function(jsonObj, manager) {
+osgDB.ObjectWrapper.serializers.osgAnimation.BasicAnimationManager = function(input, manager) {
+    var jsonObj = input.getJSON();
     // check
     // 
     var check = function(o) {
@@ -135,23 +139,23 @@ osgDB.ObjectWrapper.serializers.osgAnimation.BasicAnimationManager = function(js
         return false;
     };
     if (!check(jsonObj)) {
-        return false;
+        return;
     }
 
     for (var i = 0, l = jsonObj.Animations.length; i < l; i++) {
         var entry = jsonObj.Animations[i];
-        var anim = osgDB.ObjectWrapper.readObject(entry);
+        var anim = input.setJSON(entry).readObject();
         if (anim) {
             manager.registerAnimation(anim);
         }
     }
-    return true;
+    return manager;
 };
 
 
-osgDB.ObjectWrapper.serializers.osgAnimation.UpdateMatrixTransform = function(jsonObj, umt) {
+osgDB.ObjectWrapper.serializers.osgAnimation.UpdateMatrixTransform = function(input, umt) {
+    var jsonObj = input.getJSON();
     // check
-    // 
     var check = function(o) {
         if (o.Name && o.StackedTransforms) {
             return true;
@@ -159,27 +163,28 @@ osgDB.ObjectWrapper.serializers.osgAnimation.UpdateMatrixTransform = function(js
         return false;
     };
     if (!check(jsonObj)) {
-        return false;
+        return;
     }
 
-    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj, umt)) {
-        return false;
+    if (osgDB.ObjectWrapper.serializers.osg.Object(input, umt) === undefined) {
+        return;
     }
 
     for (var i = 0, l = jsonObj.StackedTransforms.length; i < l; i++) {
         var entry = jsonObj.StackedTransforms[i];
-        var ste = osgDB.ObjectWrapper.readObject(entry);
+        var ste = input.setJSON(entry).readObject();
         if (ste) {
             umt.getStackedTransforms().push(ste);
         }
     }
-    return true;
+    return umt;
 };
 
 
-osgDB.ObjectWrapper.serializers.osgAnimation.StackedTranslate = function(jsonObj, st) {
+osgDB.ObjectWrapper.serializers.osgAnimation.StackedTranslate = function(input, st) {
+    var jsonObj = input.getJSON();
+
     // check
-    // 
     var check = function(o) {
         if (o.Name) {
             return true;
@@ -187,23 +192,23 @@ osgDB.ObjectWrapper.serializers.osgAnimation.StackedTranslate = function(jsonObj
         return false;
     };
     if (!check(jsonObj)) {
-        return false;
+        return;
     }
 
-    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj,st)) {
-        return false;
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(input,st)) {
+        return;
     }
 
     if (jsonObj.Translate) {
         st.setTranslate(jsonObj.Translate);
     }
-    return true;
+    return st;
 };
 
 
-osgDB.ObjectWrapper.serializers.osgAnimation.StackedQuaternion = function(jsonObj, st) {
+osgDB.ObjectWrapper.serializers.osgAnimation.StackedQuaternion = function(input, st) {
+    var jsonObj = input.getJSON();
     // check
-    // 
     var check = function(o) {
         if (o.Name) {
             return true;
@@ -211,22 +216,22 @@ osgDB.ObjectWrapper.serializers.osgAnimation.StackedQuaternion = function(jsonOb
         return false;
     };
     if (!check(jsonObj)) {
-        return false;
+        return;
     }
 
-    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj,st)) {
-        return false;
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(input,st)) {
+        return;
     }
 
     if (jsonObj.Quaternion) {
         st.setQuaternion(jsonObj.Quaternion);
     }
-    return true;
+    return st;
 };
 
-osgDB.ObjectWrapper.serializers.osgAnimation.StackedRotateAxis = function(jsonObj, st) {
+osgDB.ObjectWrapper.serializers.osgAnimation.StackedRotateAxis = function(input, st) {
+    var jsonObj = input.getJSON();
     // check
-    // 
     var check = function(o) {
         if (o.Axis) {
             return true;
@@ -234,11 +239,11 @@ osgDB.ObjectWrapper.serializers.osgAnimation.StackedRotateAxis = function(jsonOb
         return false;
     };
     if (!check(jsonObj)) {
-        return false;
+        return;
     }
 
-    if (!osgDB.ObjectWrapper.serializers.osg.Object(jsonObj,st)) {
-        return false;
+    if (!osgDB.ObjectWrapper.serializers.osg.Object(input,st)) {
+        return;
     }
 
     if (jsonObj.Angle) {
@@ -247,5 +252,5 @@ osgDB.ObjectWrapper.serializers.osgAnimation.StackedRotateAxis = function(jsonOb
 
     st.setAxis(jsonObj.Axis);
 
-    return true;
+    return st;
 };
