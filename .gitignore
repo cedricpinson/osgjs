@@ -1,0 +1,16 @@
+.gitignore
+qunit
+sandbox
+*~
+bugs
+data
+doc
+test/quat
+test/pick
+test/matrix
+test/lighting
+*.cpp
+*.osg
+*.log
+*.c
+*.orig
