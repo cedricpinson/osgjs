@@ -190,41 +190,40 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
     keydown: function(event) {
         if (event.keyCode === 32) {
             this.computeHomePosition();
-        } else if (event.keyCode === 87 || event.keyCode === 90 ){ // w/z
+        } else if (event.keyCode === 87 || event.keyCode === 90 || event.keyCode === 38){ // w/z/up
             this._forward.setTarget(1);
             return false;
         }
-        else if (event.keyCode === 83){ // S
+        else if (event.keyCode === 83 || event.keyCode === 40){ // S/down
             this._forward.setTarget(-1);
             return false;
         }
-        else if (event.keyCode === 68){ // D
+        else if (event.keyCode === 68 || event.keyCode === 39){ // D/right
             this._side.setTarget(1);
             return false;
         }
-        else if (event.keyCode === 65 || event.keyCode === 81){ // a/q
+        else if (event.keyCode === 65 || event.keyCode === 81 || event.keyCode === 37){ // a/q/left
             this._side.setTarget(-1);
             return false;
         }
     },
 
     keyup: function(event) {
-        if (event.keyCode === 87 || event.keyCode === 90) { // w/z
+        if (event.keyCode === 87 || event.keyCode === 90 || event.keyCode === 38) { // w/z/up
             this._forward.setTarget(0);
             return false;
         }
-        else if (event.keyCode == 83){ // S
+        else if (event.keyCode == 83 || event.keyCode === 40){ // S/down
             this._forward.setTarget(0);
             return false;
         }
-        else if (event.keyCode == 68){ // D
+        else if (event.keyCode == 68 || event.keyCode === 39){ // D/right
             this._side.setTarget(0);
             return false;
         }
-        else if (event.keyCode === 65 || event.keyCode === 81){ // a/q
+        else if (event.keyCode === 65 || event.keyCode === 81 || event.keyCode === 37){ // a/q/left
             this._side.setTarget(0);
             return false;
         }
     }
-
 });
