@@ -166,6 +166,9 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setFromCanvas: function(canvas, format) {
         this.setImage(canvas, format);
     },
+    setFromTypedArray: function(rawData, format) {
+        this.setImage(rawData, format);
+    },
 
     isImageReady: function(image) {
         if (image) {
@@ -177,6 +180,8 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     return true;
                 }
             } else if (image instanceof HTMLCanvasElement) {
+                return true;
+            } else if (image instanceof Uint8Array) {
                 return true;
             }
         }
@@ -212,19 +217,27 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     if (!this._textureObject) {
                         this.init(gl);
                     }
-                    if (image instanceof Image) {
-                        this.setTextureSize(image.naturalWidth, image.naturalHeight);
-                    } else if (image instanceof HTMLCanvasElement) {
-                        this.setTextureSize(image.width, image.height);
-                    }
+
                     this.setDirty(false);
                     gl.bindTexture(this._textureTarget, this._textureObject);
-                    gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, this._type, this._image);
+
+                    if (image instanceof Image) {
+                        this.setTextureSize(image.naturalWidth, image.naturalHeight);
+                        gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, this._type, this._image);
+
+                    } else if (image instanceof HTMLCanvasElement) {
+                        this.setTextureSize(image.width, image.height);
+                        gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, this._type, this._image);
+
+                    } else if (image instanceof Uint8Array) {
+                        gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, this._type, this._image);
+                    }
+
                     this.applyFilterParameter(gl, this._textureTarget);
                     this.generateMipmap(gl, this._textureTarget);
 
                     if (this._unrefImageDataAfterApply) {
-                        delete this._image;
+                        this._image = undefined;
                     }
                 } else {
                     gl.bindTexture(this._textureTarget, null);

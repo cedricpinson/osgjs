@@ -263,21 +263,27 @@ var getSSAOShader = function(stateSet) {
         }
     })(kernel);
 
-    var sizeNoise = nbSamples;
-    var noise = new Array(sizeNoise*2);
+    var sizeNoise = 32;
+    var noise = new Array(sizeNoise*3);
     (function(array) {
-        for (var i = 0; i < sizeNoise; i++) {
+        for (var i = 0; i < sizeNoise*sizeNoise; i++) {
             var x,y,z;
             x = 2.0*(Math.random()-0.5);
             y = 2.0*(Math.random()-0.5);
             z = 0.0;
 
             var n = osg.Vec3.normalize([x,y,z],[]);
-            array[i*3+0] = n[0];
-            array[i*3+1] = n[1];
-            array[i*3+2] = n[2];
+            array[i*3+0] = 255*(n[0]*0.5+0.5);
+            array[i*3+1] = 255*(n[1]*0.5+0.5);
+            array[i*3+2] = 255*(n[2]*0.5+0.5);
         }
     })(noise);
+
+    var noiseTexture = new osg.Texture();
+    noiseTexture.setWrapS('REPEAT');
+    noiseTexture.setWrapT('REPEAT');
+    noiseTexture.setTextureSize(sizeNoise,sizeNoise);
+    noiseTexture.setImage(new Uint8Array(noise),'RGB');
 
     var vertexshader = [
         "",
@@ -310,7 +316,9 @@ var getSSAOShader = function(stateSet) {
         "varying vec2 FragTexCoord0;",
         "uniform sampler2D Texture0;",
         "uniform sampler2D Texture1;",
+        "uniform sampler2D Texture2;",
         "uniform mat4 projection;",
+        "uniform vec2 noiseSampling;",
 
         "#define NB_SAMPLES " + nbSamples,
         "#define Radius " + radius,
@@ -320,7 +328,7 @@ var getSSAOShader = function(stateSet) {
         "vec4 kernel["+nbSamples+"];",
         "mat3 computeBasis()",
         "{",
-        "  vec3 rvec = vec3(0.0,1.0,0.0);",
+        "  vec3 rvec = texture2D(Texture2, FragTexCoord0*noiseSampling).xyz*2.0-vec3(1.0);",
         "  vec3 tangent = normalize(rvec - normal * dot(rvec, normal));",
 	"  vec3 bitangent = cross(normal, tangent);",
         "  mat3 tbn = mat3(tangent, bitangent, normal);",
@@ -372,7 +380,12 @@ var getSSAOShader = function(stateSet) {
     var ratio = window.innerWidth/window.innerHeight;
     osg.Matrix.makePerspective(60, ratio, 1.0, 100.0, array);
     stateSet.addUniform(osg.Uniform.createMatrix4(array,'projection'));
+    stateSet.addUniform(osg.Uniform.createInt1(2,'Texture2'));
+    var sizex = stateSet.getTextureAttribute(0,'Texture').getWidth();
+    var sizey = stateSet.getTextureAttribute(0,'Texture').getHeight();
+    stateSet.addUniform(osg.Uniform.createFloat2([sizex/sizeNoise, sizey/sizeNoise],'noiseSampling'));
     stateSet.setAttributeAndModes(program);
+    stateSet.setTextureAttributeAndModes(2,noiseTexture);
     return program;
 };
 
@@ -396,8 +409,6 @@ var createFinalCamera = function(w,h, scene) {
     camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     camera.setViewport(new osg.Viewport(0,0,w,h));
     camera.setProjectionMatrix(osg.Matrix.makeOrtho(0,w,0,h,-5,5));
-//    camera.setClearColor([0.0, 0.0, 0.0, 0.0]);
-//    camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     camera.addChild(scene);
     return camera;
 };
