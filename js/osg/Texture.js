@@ -235,7 +235,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                     this.init(gl);
                 }
                 gl.bindTexture(this._textureTarget, this._textureObject);
-                gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, gl.UNSIGNED_BYTE, null);
+                gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, this._type, null);
                 this.applyFilterParameter(gl, this._textureTarget);
                 this.generateMipmap(gl, this._textureTarget);
                 this.setDirty(false);
