@@ -36,6 +36,17 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
     distance: function(coord, matrix) {
         return -( coord[0]*matrix[2]+ coord[1]*matrix[6] + coord[2]*matrix[10] + matrix[14]);
     },
+
+    handleCullCallbacksAndTraverse: function(node) {
+        var ccb = node.getCullCallback();
+        if (ccb) {
+            if (!ccb.cull(node, this)) {
+                return;
+            }
+        }
+        this.traverse(node);
+    },
+
     updateCalculatedNearFar: function( matrix, drawable) {
 
         var bb = drawable.getBoundingBox();
@@ -281,9 +292,7 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
     // nested camera
     if (camera.getRenderOrder() === osg.Camera.NESTED_RENDER) {
         
-        if (camera.traverse) {
-            this.traverse(camera);
-        }
+        this.handleCullCallbacksAndTraverse(camera);
         
     } else {
         // not tested
@@ -313,9 +322,7 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
 
         this.setCurrentRenderBin(rtts);
 
-        if (camera.traverse) {
-            camera.traverse(this);
-        }
+        this.handleCullCallbacksAndTraverse(camera);
 
         this.setCurrentRenderBin(previousRenderBin);
 
@@ -367,9 +374,7 @@ osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (
         this.addPositionedAttribute(node.light);
     }
 
-    if (node.traverse) {
-        this.traverse(node);
-    }
+    this.handleCullCallbacksAndTraverse(node);
 
     if (stateset) {
         this.popStateSet();
@@ -391,9 +396,7 @@ osg.CullVisitor.prototype[osg.Projection.prototype.objectType] = function (node)
         this.pushStateSet(stateset);
     }
 
-    if (node.traverse) {
-        this.traverse(node);
-    }
+    this.handleCullCallbacksAndTraverse(node);
 
     if (stateset) {
         this.popStateSet();
@@ -412,9 +415,7 @@ osg.CullVisitor.prototype[osg.Node.prototype.objectType] = function (node) {
         this.addPositionedAttribute(node.light);
     }
 
-    if (node.traverse) {
-        this.traverse(node);
-    }
+    this.handleCullCallbacksAndTraverse(node);
 
     if (stateset) {
         this.popStateSet();
@@ -432,7 +433,7 @@ osg.CullVisitor.prototype[osg.LightSource.prototype.objectType] = function (node
         this.addPositionedAttribute(light);
     }
 
-    this.traverse(node);
+    this.handleCullCallbacksAndTraverse(node);
 
     if (stateset) {
         this.popStateSet();

@@ -233,18 +233,18 @@ test("Matrix.makeLookAt", function() {
                               [0.0, 0.0, 0.0],
                               [0.0, 0.0, 1.0]);
     near(m , [1, 0, -0, 0,
-	      0, 0, -1, 0,
-	      0, 1, -0, 0,
-	      0, 0, -10, 1]);
+              0, 0, -1, 0,
+              0, 1, -0, 0,
+              0, 0, -10, 1]);
 
 
     var m2 = osg.Matrix.makeLookAt([0, 0, -10],
                                [0.0, 0.0, 0.0],
                                [0.0, 1.0, 0.0]);
     near(m2 , [-1, 0, -0, 0,
-	       0, 1, -0, 0,
-	       0, -0, -1, 0,
-	       0, 0, -10, 1]);
+               0, 1, -0, 0,
+               0, -0, -1, 0,
+               0, 0, -10, 1]);
 
 });
 
@@ -660,6 +660,51 @@ test("UpdateVisitor", function() {
     ok(callc === 0, "Did not Call c update callback as expected");
 });
 
+
+test("CullVisitor", function() {
+
+    var uv = new osg.CullVisitor();
+
+    var root = new osg.Node();
+    root.setName("a");
+    var b = new osg.Node();
+    b.setName("b");
+    var c = new osg.Node();
+    c.setName("c");
+    root.addChild(b);
+    b.addChild(c);
+
+    var callb = 0;
+    var callc = 0;
+
+    var fb = function() {};
+    fb.prototype = {
+        cull: function(node, nv) {
+            callb = 1;
+            return false;
+        }
+    };
+
+    var fc = function() {};
+    fc.prototype = {
+        cull: function(node, nv) {
+            callc = 1;
+            return true;
+        }
+    };
+
+    b.setCullCallback(new fb());
+    c.setCullCallback(new fc());
+
+    uv.apply(root);
+
+    ok(callb === 1, "Called b cull callback");
+    ok(callc === 0, "Did not Call c cull callback as expected");
+
+    root.setNodeMask(~0);
+    ok(callb === 1, "Called b cull callback");
+    ok(callc === 0, "Did not Call c cull callback as expected");
+});
 
 
 test("ShaderGenerator", function() {
@@ -1409,3 +1454,4 @@ test("StateSet", function() {
     })();
 
 });
+

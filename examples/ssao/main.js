@@ -263,7 +263,7 @@ var getSSAOShader = function(stateSet) {
         }
     })(kernel);
 
-    var sizeNoise = 32;
+    var sizeNoise = 16;
     var noise = new Array(sizeNoise*3);
     (function(array) {
         for (var i = 0; i < sizeNoise*sizeNoise; i++) {
@@ -378,7 +378,9 @@ var getSSAOShader = function(stateSet) {
         
     var array = [];
     var ratio = window.innerWidth/window.innerHeight;
+
     osg.Matrix.makePerspective(60, ratio, 1.0, 100.0, array);
+
     stateSet.addUniform(osg.Uniform.createMatrix4(array,'projection'));
     stateSet.addUniform(osg.Uniform.createInt1(2,'Texture2'));
     var sizex = stateSet.getTextureAttribute(0,'Texture').getWidth();
@@ -389,16 +391,35 @@ var getSSAOShader = function(stateSet) {
     return program;
 };
 
+
+var CullCallback = function(uniform) {
+    this._uniform = uniform;
+};
+CullCallback.prototype = {
+    cull: function(node, nv) {
+        var matrix = nv.getCurrentProjectionMatrix();
+        osg.Matrix.copy(matrix, this._uniform.get());
+//        osg.log(matrix);
+        var array = [];
+        osg.Matrix.makePerspective(60, window.innerWidth/window.innerHeight, 1.0, 100.0, array);
+//        osg.log(array);
+
+        this._uniform.dirty();
+        return true;
+    }
+};
+
 var createCameraRtt = function(resultTexture, scene) {
     var w,h;
     w = resultTexture.getWidth();
     h = resultTexture.getHeight();
     var camera = new osg.Camera();
+    camera.setName("rtt camera");
     camera.setViewport(new osg.Viewport(0,0,w,h));
     camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, resultTexture, 0);
     camera.attachRenderBuffer(osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16);
-    camera.setComputeNearFar(false);
+    //camera.setComputeNearFar(false);
 
     camera.addChild(scene);
     return camera;
@@ -413,6 +434,7 @@ var createFinalCamera = function(w,h, scene) {
     return camera;
 };
 
+
 function createScene() 
 {
     var root = new osg.Node();
@@ -422,16 +444,16 @@ function createScene()
     var ground = osg.createTexturedQuadGeometry(0-size/2,0-size/2.0, -2,
                                                 size,0,0,
                                                 0,size,0);
+    ground.setName("plane geometry");
     group.addChild(ground);
     group.addChild(getModel());
-
 
     var w,h;
     w = window.innerWidth;
     h = window.innerHeight;
 
     var textureSize = [ w, h ];
-    Viewer.getCamera().setComputeNearFar(false);
+    //Viewer.getCamera().setComputeNearFar(false);
     var extension = Viewer.getState().getGraphicContext().getExtension('OES_texture_float');
     var texture = new osg.Texture();
     if (extension) {
@@ -452,14 +474,25 @@ function createScene()
     positionTexture.setTextureSize(textureSize[0], textureSize[1]);
     positionTexture.setMinFilter('LINEAR');
     positionTexture.setMagFilter('LINEAR');
+
     var positionRttCamera = createCameraRtt(positionTexture, group);
     positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getPositionShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
 
-    root.addChild(positionRttCamera);
-    root.addChild(sceneRtt);
 
-    var UpdateCallback = function() {
-    };
+    var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+    var ucb = new CullCallback(projection);
+    positionRttCamera.setCullCallback(ucb);
+
+
+    var textureColor = new osg.Texture();
+    textureColor.setTextureSize(textureSize[0], textureSize[1]);
+    var sceneRttColor = createCameraRtt(textureColor, group);
+    //sceneRtt.getOrCreateStateSet().setAttributeAndModes(getDepthShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+//    root.addChild(group);
+    root.addChild(sceneRtt);
+    root.addChild(positionRttCamera);
+    root.addChild(sceneRttColor);
 
 
     var quadSize = [ w, h ];
@@ -482,8 +515,27 @@ function createScene()
     //stateSet.setAttributeAndModes(getTextureShader());
 
     var finalCamera = createFinalCamera(w,h, quad);
-    root.addChild(finalCamera);
-    //root.addChild(quad);
+    //root.addChild(finalCamera);
+
+    var composer = new osgUtil.Composer();
+    root.addChild(composer);
+
+    if (true) {
+    composer.addPass(osgUtil.Composer.Filter.createSSAO( { normal: texture,
+                                                           position: positionTexture,
+                                                           radius: 0.1
+                                                         }));
+    var blurSize = 5;
+    composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    composer.addPass(osgUtil.Composer.Filter.createVBlur(blurSize));
+    composer.addPass(osgUtil.Composer.Filter.createHBlur(blurSize));
+    composer.addPass(osgUtil.Composer.Filter.createBlendMultiply(textureColor));
+    }
+
+//    composer.addPass(osgUtil.Composer.Filter.createInputTexture(texture));
+
+    composer.renderToScreen(w,h);
+    composer.build();
 
     return root;
 }

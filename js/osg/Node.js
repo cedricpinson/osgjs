@@ -13,6 +13,7 @@ osg.Node = function () {
     this.boundingSphere = new osg.BoundingSphere();
     this.boundingSphereComputed = false;
     this._updateCallbacks = [];
+    this._cullCallback = undefined;
 };
 
 /** @lends osg.Node.prototype */
@@ -77,6 +78,31 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
     
     addUpdateCallback: function(cb) { this._updateCallbacks.push(cb);},
     getUpdateCallbackList: function() { return this._updateCallbacks; },
+
+
+    /**
+       <p>
+        Set cull node callback, called during cull traversal.
+        The Object must have the following method
+        cull(node, nodeVisitor) {}
+        note, callback is responsible for scenegraph traversal so
+        they must return true to traverse.
+        </p>
+        <p>
+        Here a dummy CullCallback example
+        </p>
+        @example
+        var DummyCullCallback = function() {};
+        DummyCullCallback.prototype = {
+            cull: function(node, nodeVisitor) {
+                return true;
+            }
+        };
+
+        @param Oject callback
+     */
+    setCullCallback: function(cb) { this._cullCallback = cb; },
+    getCullCallback: function() { return this._cullCallback; },
 
     hasChild: function(child) {
         for (var i = 0, l = this.children.length; i < l; i++) {
