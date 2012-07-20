@@ -520,17 +520,18 @@ function createScene()
     var composer = new osgUtil.Composer();
     root.addChild(composer);
 
-    if (true) {
-    composer.addPass(osgUtil.Composer.Filter.createSSAO( { normal: texture,
-                                                           position: positionTexture,
-                                                           radius: 0.1
-                                                         }));
+
+    composer.addPass(new osgUtil.Composer.Filter.SSAO( { normal: texture,
+                                                         position: positionTexture,
+                                                         radius: 0.1
+                                                       }));
     var blurSize = 5;
     composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
-    composer.addPass(osgUtil.Composer.Filter.createVBlur(blurSize));
-    composer.addPass(osgUtil.Composer.Filter.createHBlur(blurSize));
-    composer.addPass(osgUtil.Composer.Filter.createBlendMultiply(textureColor));
-    }
+
+
+    composer.addPass(new osgUtil.Composer.Filter.VBlur(blurSize));
+    composer.addPass(new osgUtil.Composer.Filter.HBlur(blurSize));
+    composer.addPass(new osgUtil.Composer.Filter.BlendMultiply(textureColor));
 
 //    composer.addPass(osgUtil.Composer.Filter.createInputTexture(texture));
 
