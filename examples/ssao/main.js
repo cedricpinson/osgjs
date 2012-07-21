@@ -521,23 +521,83 @@ function createScene()
     root.addChild(composer);
 
 
-    composer.addPass(new osgUtil.Composer.Filter.SSAO( { normal: texture,
+    var ssao = new osgUtil.Composer.Filter.SSAO( { normal: texture,
                                                          position: positionTexture,
                                                          radius: 0.1
-                                                       }));
+                                                 });
+
     var blurSize = 5;
+    var blurV = new osgUtil.Composer.Filter.VBlur(blurSize);
+    var blurH = new osgUtil.Composer.Filter.HBlur(blurSize);
+
+
+    osgUtil.ParameterVisitor.createSlider({ min: 4, 
+                                            max: 64, 
+                                            step: 2,
+                                            value: 16,
+                                            name: "ssaoSamples",
+                                            object: ssao,
+                                            field: '_nbSamples',
+                                            onchange: function() { ssao.dirty(); },
+                                            html: document.getElementById('parameters')
+                                          });
+
+    osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                            max: 10, 
+                                            step: 1,
+                                            value: 2,
+                                            name: "ssaoNoise",
+                                            object: ssao,
+                                            field: '_noiseTextureSize',
+                                            onchange: function(value) {
+                                                // fix to a power of two
+                                                ssao._noiseTextureSize = Math.pow(2,value);
+                                                ssao.dirty(); 
+                                            },
+                                            html: document.getElementById('parameters')
+                                          });
+
+
+    osgUtil.ParameterVisitor.createSlider({ min: 0.0, 
+                                            max: 1.0, 
+                                            step: 0.01,
+                                            value: 0.0,
+                                            name: "ssaoAngleLimit",
+                                            object: ssao,
+                                            field: '_angleLimit',
+                                            onchange: function() { ssao.dirty(); },
+                                            html: document.getElementById('parameters')
+                                          });
+
+    osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                            max: 15, 
+                                            step: 1,
+                                            value: 3,
+                                            name: "blurSize",
+                                            object: blurH,
+                                            field: '_nbSamples',
+                                            onchange: function(value) { 
+                                                blurV.setBlurSize(value);
+                                                blurH.setBlurSize(value);
+                                            },
+                                            html: document.getElementById('parameters')
+                                          });
+
+    composer.addPass(ssao);
     composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
 
 
-    composer.addPass(new osgUtil.Composer.Filter.VBlur(blurSize));
-    composer.addPass(new osgUtil.Composer.Filter.HBlur(blurSize));
+    composer.addPass(blurV);
+    composer.addPass(blurH);
     composer.addPass(new osgUtil.Composer.Filter.BlendMultiply(textureColor));
 
 //    composer.addPass(osgUtil.Composer.Filter.createInputTexture(texture));
 
     composer.renderToScreen(w,h);
     composer.build();
-
+    var params = new osgUtil.ParameterVisitor();
+    params.setTargetHTML(document.getElementById('parameters'));
+    composer.accept(params);
     return root;
 }
 
