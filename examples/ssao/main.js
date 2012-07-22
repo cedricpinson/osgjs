@@ -61,7 +61,6 @@ var removeLoading = function(node, child) {
     loaded.push(child);
     if (nbLoading === 0) {
         document.getElementById("loading").style.display = 'None';
-        Viewer.getManipulator().computeHomePosition();
     }
 };
 var addLoading = function() {
@@ -97,8 +96,8 @@ var getModel = function(func) {
         addLoading();
     };
     
-    //loadModel('monkey.osgjs');
-    loadModel('sponza.osgjs');
+    loadModel('monkey.osgjs');
+    //loadModel('sponza.osgjs');
     return defer.promise;
 };
 
@@ -531,7 +530,7 @@ function createScene()
                                                        radius: 0.1
                                                      });
 
-        ssao.setSceneRadius(model.getBound().radius()*0.01);
+        ssao.setSceneRadius(model.getBound().radius()*0.1);
         var blurSize = 5;
         var blurV = new osgUtil.Composer.Filter.VBlur(blurSize);
         var blurH = new osgUtil.Composer.Filter.HBlur(blurSize);
@@ -605,6 +604,9 @@ function createScene()
         params.setTargetHTML(document.getElementById('parameters'));
         composer.accept(params);
 
+
+        model.dirtyBound();
+        Viewer.getManipulator().computeHomePosition();
 
     });
     return root;
