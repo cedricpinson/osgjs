@@ -208,9 +208,8 @@
                 return cache;
             }
 
-            cache = (function() {
+            cache = (function(kernelSize) {
                 var pascalTriangle = [ [1] ];
-                var kernelSize = 12;
                 for (var j = 0; j < (kernelSize-1); j++) {
                     var sum = Math.pow(2,j);
                     var currentRow = pascalTriangle[j];
@@ -245,7 +244,7 @@
                 })();
 
                 return pascalTriangle;
-            })(15);
+            })(20);
             osgUtil.Composer.Filter.Helper.getOrCreatePascalCoefficients.cache = cache;
             return cache;
         }
@@ -310,6 +309,90 @@
             this._dirty = false;
         }
     });
+
+
+
+    osgUtil.Composer.Filter.AverageHBlur = function(nbSamplesOpt) {
+        osgUtil.Composer.Filter.call(this);
+        if (nbSamplesOpt === undefined) {
+            this.setBlurSize(5);
+        } else {
+            this.setBlurSize(nbSamplesOpt);
+        }
+    };
+    
+    osgUtil.Composer.Filter.AverageHBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+        setBlurSize: function(nbSamples) {
+            if (nbSamples%2 !== 1) {
+                nbSamples+=1;
+            }
+            this._nbSamples = nbSamples;
+            this.dirty();
+        },
+        getShaderBlurKernel: function() {
+            var nbSamples = this._nbSamples;
+            var kernel = [];
+            kernel.push(" pixel = texture2D(Texture0, FragTexCoord0 );");
+            kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");
+            kernel.push(" vec2 offset;");
+            for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
+                kernel.push(" offset = vec2("+i+".0/RenderSize[0],0.0);");
+                kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 + offset);");
+                kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 - offset);");
+            }
+            kernel.push(" pixel /= float(" + nbSamples + ");");
+            return kernel;
+        },
+        build: function() {
+            var nbSamples = this._nbSamples;
+            var vtx = osgUtil.Composer.Filter.defaultVertexShader;
+            var fgt = [
+                osgUtil.Composer.Filter.defaultFragmentShaderHeader,
+                "uniform float width;",
+
+                "void main (void)",
+                "{",
+                "  vec4 pixel;",
+                this.getShaderBlurKernel().join('\n'),
+                "  gl_FragColor = vec4(pixel);",
+                "}",
+                ""
+            ].join('\n');
+
+            var program = new osg.Program(
+                new osg.Shader(gl.VERTEX_SHADER, vtx),
+                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+
+            if (this._stateSet.getUniform('Texture0') === undefined) {
+                this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
+            }
+            this._stateSet.setAttributeAndModes(program);
+            this._dirty = false;
+        }
+    });
+
+
+    osgUtil.Composer.Filter.AverageVBlur = function(nbSamplesOpt) {
+        osgUtil.Composer.Filter.AverageHBlur.call(this);
+    };
+    
+    osgUtil.Composer.Filter.AverageVBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.AverageHBlur.prototype, {
+        getShaderBlurKernel: function() {
+            var nbSamples = this._nbSamples;
+            var kernel = [];
+            kernel.push(" pixel = texture2D(Texture0, FragTexCoord0 );");
+            kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");            kernel.push(" vec2 offset;");
+            for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
+                kernel.push(" offset = vec2(0.0,"+i+".0/RenderSize[1]);");
+                kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 + offset);");
+                kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 - offset);");
+            }
+            kernel.push(" pixel /= float(" + nbSamples + ");");
+            return kernel;
+        }
+    });
+
+
 
     osgUtil.Composer.Filter.InputTexture = function(texture) {
         osgUtil.Composer.Filter.call(this);
@@ -531,8 +614,8 @@
                     z = Math.max(angleLimit,Math.random());
 
                     var v = osg.Vec3.normalize([x,y,z],[]);
-                    var scale = Math.random();
-                    
+                    var scale = Math.max(i/nbSamples,0.1);
+                    //scale = 0.1+(1.0-0.1)*(scale*scale);
                     array[i*3+0] = v[0];
                     array[i*3+1] = v[1];
                     array[i*3+2] = v[2];
@@ -556,7 +639,14 @@
                 }
             })(noise);
 
-            
+
+            var noiseShader = [];
+            noiseShader.push("vec2 rand(in vec2 coord) { //generating random noise");
+            noiseShader.push("float noiseX = (fract(sin(dot(coord ,vec2(12.9898,78.233))) * 43758.5453));");
+            noiseShader.push("float noiseY = (fract(sin(dot(coord ,vec2(12.9898,78.233)*2.0)) * 43758.5453));");
+            noiseShader.push("return vec2(noiseX,noiseY)*0.002;");
+            noiseShader.push("}");
+
             var noiseTexture = new osg.Texture();
             noiseTexture.setWrapS('REPEAT');
             noiseTexture.setWrapT('REPEAT');
@@ -597,8 +687,8 @@
             }
             kernelglsl = kernelglsl.join('\n');
 
-            var ssaoRadiusMin = this._sceneRadius*0.1;
-            var ssaoRadiusMax = this._sceneRadius;
+            var ssaoRadiusMin = this._sceneRadius*0.005;
+            var ssaoRadiusMax = this._sceneRadius*0.05;
             var ssaoRadiusStep = (ssaoRadiusMax-ssaoRadiusMin)/200.0;
 
             var fragmentshader = [
@@ -614,11 +704,15 @@
                 "#define NB_SAMPLES " + this._nbSamples,
                 "float depth;",
                 "vec3 normal;",
-                "vec3 position;",
+                "vec4 position;",
                 "vec4 kernel["+nbSamples+"];",
+                noiseShader.join('\n'),
                 "mat3 computeBasis()",
                 "{",
-                "  vec3 rvec = texture2D(Texture2, FragTexCoord0*noiseSampling).xyz*2.0-vec3(1.0);",
+                "  vec2 uvrand = FragTexCoord0*noiseSampling;",
+                "  //uvrand = rand(gl_FragCoord.xy);",
+                "  vec3 rvec = texture2D(Texture2, uvrand*2.0).xyz*2.0-vec3(1.0);",
+                "  //vec3 rvec = normalize(vec3(uvrand,0.0));",
                 "  vec3 tangent = normalize(rvec - normal * dot(rvec, normal));",
                 "  vec3 bitangent = cross(normal, tangent);",
                 "  mat3 tbn = mat3(tangent, bitangent, normal);",
@@ -628,14 +722,14 @@
                 "void main (void)",
                 "{",
                 kernelglsl,
+                "  position = texture2D(Texture1, FragTexCoord0);",
                 "  vec4 p = texture2D(Texture0, FragTexCoord0);",
                 "  depth = p.w;",
                 "  normal = vec3(p);",
-                "  if ( length(normal) == 0.0) {",
-                "     gl_FragColor = vec4(1.0);",
+                "  if ( position.w == 0.0) {",
+                "     gl_FragColor = vec4(1.0,1.0,1.0,0.0);",
                 "     return;",
                 "  }",
-                "  position = texture2D(Texture1, FragTexCoord0).xyz;",
                 "",
                 " mat3 tbn = computeBasis();",
                 " float occlusion = 0.0;",
@@ -645,7 +739,7 @@
                 "    float w = dot(dir, normal);",
                 "    float dist = 1.0-kernel[i].w;",
                 "    w *= dist*dist*Power;",
-                "    sample = dir * float(Radius) + position;",
+                "    sample = dir * float(Radius) + position.xyz;",
                 
                 "    vec4 offset = projection * vec4(sample,1.0);",
                 "    offset.xy /= offset.w;",

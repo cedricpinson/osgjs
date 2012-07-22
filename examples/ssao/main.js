@@ -418,6 +418,7 @@ var createCameraRtt = function(resultTexture, scene) {
     var camera = new osg.Camera();
     camera.setName("rtt camera");
     camera.setViewport(new osg.Viewport(0,0,w,h));
+    camera.setClearColor([0.0, 0.0, 0.0, 0.0]);
     camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, resultTexture, 0);
     camera.attachRenderBuffer(osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16);
@@ -530,10 +531,10 @@ function createScene()
                                                        radius: 0.1
                                                      });
 
-        ssao.setSceneRadius(model.getBound().radius()*0.1);
+        ssao.setSceneRadius(model.getBound().radius());
         var blurSize = 5;
-        var blurV = new osgUtil.Composer.Filter.VBlur(blurSize);
-        var blurH = new osgUtil.Composer.Filter.HBlur(blurSize);
+        var blurV = new osgUtil.Composer.Filter.AverageVBlur(blurSize);
+        var blurH = new osgUtil.Composer.Filter.AverageHBlur(blurSize);
 
 
         osgUtil.ParameterVisitor.createSlider({ min: 4, 
