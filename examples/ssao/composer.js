@@ -495,7 +495,7 @@
         var texturePosition = options.position;
         this._radius = radius;
         this._nbSamples = nbSamples;
-        this._noiseTextureSize = 512;
+        this._noiseTextureSize = 16;
         stateSet.addUniform(osg.Uniform.createFloat1(1.0,'Power'));
         stateSet.addUniform(osg.Uniform.createFloat1(radius,'Radius'));
         stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
@@ -510,9 +510,14 @@
         stateSet.setTextureAttributeAndModes(1,texturePosition);
 
         this._angleLimit = 0.3;
+        this._sceneRadius = 2.0;
     };
 
     osgUtil.Composer.Filter.SSAO.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+        setSceneRadius: function(value) {
+            this._sceneRadius = value;
+            this.dirty();
+        },
         build: function() {
             var stateSet = this._stateSet;
             var nbSamples = this._nbSamples;
@@ -592,6 +597,10 @@
             }
             kernelglsl = kernelglsl.join('\n');
 
+            var ssaoRadiusMin = this._sceneRadius*0.1;
+            var ssaoRadiusMax = this._sceneRadius;
+            var ssaoRadiusStep = (ssaoRadiusMax-ssaoRadiusMin)/200.0;
+
             var fragmentshader = [
                 "",
                 osgUtil.Composer.Filter.defaultFragmentShaderHeader,
@@ -599,8 +608,8 @@
                 "uniform sampler2D Texture2;",
                 "uniform mat4 projection;",
                 "uniform vec2 noiseSampling;",
-                "uniform float Power; //"+ '{ "min": 0.1, "max": 5.0, "step": 0.1, "value": [1.0] }',
-                "uniform float Radius; //"+ '{ "min": 0.005, "max": 0.1, "step": 0.005, "value": [0.01] }',
+                "uniform float Power; //"+ '{ "min": 0.1, "max": 8.0, "step": 0.1, "value": [1.0] }',
+                "uniform float Radius; //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": [0.01] }',
 
                 "#define NB_SAMPLES " + this._nbSamples,
                 "float depth;",
