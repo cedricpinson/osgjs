@@ -71,7 +71,7 @@ var addLoading = function() {
 var getModel = function(func) {
     var defer = osgDB.Promise.defer();
     var node = new osg.MatrixTransform();
-    node.setMatrix(osg.Matrix.makeRotate(-Math.PI/2, 1,0,0, []));
+    //node.setMatrix(osg.Matrix.makeRotate(-Math.PI/2, 1,0,0, []));
     var loadModel = function(url) {
         osg.log("loading " + url);
         var req = new XMLHttpRequest();
@@ -97,7 +97,8 @@ var getModel = function(func) {
     };
     
     //loadModel('monkey.osgjs');
-    loadModel('sponza.osgjs');
+    //loadModel('sponza.osgjs');
+    loadModel('raceship.osgjs');
     return defer.promise;
 };
 
@@ -560,6 +561,20 @@ function createScene()
                                                 onchange: function(value) { 
                                                     blurV.setBlurSize(value);
                                                     blurH.setBlurSize(value);
+                                                },
+                                                html: document.getElementById('parameters')
+                                              });
+
+        osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                                max: 8, 
+                                                step: 0.5,
+                                                value: 1,
+                                                name: "blurSizeDist",
+                                                object: blurH,
+                                                field: '_pixelSize',
+                                                onchange: function(value) { 
+                                                    blurV.setPixelSize(value);
+                                                    blurH.setPixelSize(value);
                                                 },
                                                 html: document.getElementById('parameters')
                                               });

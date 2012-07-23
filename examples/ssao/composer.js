@@ -343,7 +343,7 @@
             kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");
             kernel.push(" vec2 offset;");
             for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
-                kernel.push(" offset = vec2("+i*this._pixelSize+".0/RenderSize[0],0.0);");
+                kernel.push(" offset = vec2(float("+i*this._pixelSize+")/RenderSize[0],0.0);");
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 + offset);");
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 - offset);");
             }
@@ -390,7 +390,7 @@
             kernel.push(" pixel = texture2D(Texture0, FragTexCoord0 );");
             kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");            kernel.push(" vec2 offset;");
             for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
-                kernel.push(" offset = vec2(0.0,"+i*this._pixelSize+".0/RenderSize[1]);");
+                kernel.push(" offset = vec2(0.0,float("+i*this._pixelSize+")/RenderSize[1]);");
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 + offset);");
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 - offset);");
             }
@@ -705,7 +705,7 @@
                 "uniform sampler2D Texture2;",
                 "uniform mat4 projection;",
                 "uniform vec2 noiseSampling;",
-                "uniform float Power; //"+ '{ "min": 0.1, "max": 8.0, "step": 0.1, "value": 1.0 }',
+                "uniform float Power; //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
                 "uniform float Radius; //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
 
                 "#define NB_SAMPLES " + this._nbSamples,
