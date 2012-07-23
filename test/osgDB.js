@@ -128,7 +128,7 @@ asyncTest("Input.readBufferArray - external", function() {
                 "Size": 3
             }
         }, 
-        "ItemSize": 3, 
+        "ItemSize": 1, 
         "Type": "ARRAY_BUFFER",
         "UniqueID" : 10
     };
@@ -164,7 +164,7 @@ asyncTest("Input.readBufferArray - external offset", function() {
                 "Float32Array": { 
                     "File": "multistream.bin",
                     "Offset": 0,
-                    "Size": 2
+                    "Size": 3
                 }
             }, 
             "ItemSize": 2, 
@@ -176,10 +176,10 @@ asyncTest("Input.readBufferArray - external offset", function() {
                 "Float32Array": { 
                     "File": "multistream.bin",
                     "Offset": 24,
-                    "Size": 6
+                    "Size": 3
                 }
             }, 
-            "ItemSize": 3, 
+            "ItemSize": 3,
             "Type": "ARRAY_BUFFER"
         }
     };
@@ -209,7 +209,7 @@ asyncTest("Input.readBufferArray - external offset", function() {
             ok((tc[2] === 10) && (tc[1] === 5) && (tcl === 6), "readBufferArray with new array typed external file with offset");
             var tg = buffers.Tangent.getElements();
             var tgl = tg.length;
-            ok((tg === 1.0) && (tg[1] === 6.0) && (tgl === 9), "readBufferArray with new array typed external file with offset");
+            ok((tg[2] === 11) && (tg[1] === 6.0) && (tgl === 9), "readBufferArray with new array typed external file with offset");
             start();
         });
     })();

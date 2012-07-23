@@ -180,26 +180,36 @@ osgDB.Input.prototype = {
                             var b = new Uint16Array(a.buffer);
                             big_endian = ( (b[0]).toString(16) === "1234");
                         })();
+
+                        var offset = 0;
+                        if (vb.Offset !== undefined) {
+                            offset = vb.Offset;
+                        }
+
+                        var bytesPerElement = osg[type].BYTES_PER_ELEMENT;
+                        var nbItems = vb.Size;
+                        var nbCoords = buf.getItemSize();
+                        var totalSizeInBytes = nbItems*bytesPerElement*nbCoords;
+
                         if (big_endian) {
                             osg.log("big endian detected");
-                            var bytes_per_element = osg[type].BYTES_PER_ELEMENT;
                             var typed_array = osg[type];
-                            var tmpArray = new typed_array(array.length/bytes_per_element);
-                            var data = new DataView(array);
+                            var tmpArray = new typed_array(nbItems*nbCoords);
+                            var data = new DataView(array, offset, totalSizeInBytes);
                             var i = 0, l = tmpArray.length;
                             if (type === 'Uint16Array') {
                                 for (; i < l; i++) {
-                                    tempArray[i] = data.getUint16(i * bytes_per_element, true);
+                                    tempArray[i] = data.getUint16(i * bytesPerElement, true);
                                 }
                             } else if (type === 'Float32Array') {
                                 for (; i < l; i++) {
-                                    tempArray[i] = data.getFloat32(i * bytes_per_element, true);
+                                    tempArray[i] = data.getFloat32(i * bytesPerElement, true);
                                 }
                             }
                             typedArray = tempArray;
                             data = null;
                         } else {
-                            typedArray = new osg[type](array);
+                            typedArray = new osg[type](array, offset, nbCoords*nbItems);
                         }
                         a = b = null;
 
