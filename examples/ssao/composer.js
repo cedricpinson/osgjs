@@ -26,8 +26,8 @@
                 this._stack.push({ filter: filter, texture: arg0} );
             } else if ( arg0 !== undefined && arg1 !== undefined) {
                 this._stack.push({ filter: filter, 
-                                   width: arg0,
-                                   height: arg1
+                                   width: Math.floor(arg0),
+                                   height: Math.floor(arg1)
                                  } );
             } else {
                 this._stack.push({ filter: filter });
@@ -73,15 +73,16 @@
                     w = inputTexture.getWidth();
                     h = inputTexture.getHeight();
                 }
+                var camera = new osg.Camera();
+                camera.setStateSet(element.filter.getStateSet());
 
                 var vp = new osg.Viewport(0,0,w,h);
-                var projection = osg.Matrix.makeOrtho(0,w,0,h,-5,5, []);
+                var projection = osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, []);
 
-                var quad = osg.createTexturedQuadGeometry(0, 0, 0,
+                var quad = osg.createTexturedQuadGeometry(-w/2, -h/2, 0,
                                                           w, 0, 0,
                                                           0, h, 0);
                 quad.setName("composer layer");
-                var camera = new osg.Camera();
                 camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
                 camera.setViewport(vp);
                 camera.setProjectionMatrix(projection);
@@ -102,7 +103,6 @@
                 }
 
                 camera.addChild(quad);
-                camera.setStateSet(element.filter.getStateSet());
                 element.filter.getStateSet().addUniform(osg.Uniform.createFloat2([w,h],'RenderSize'));
                 camera.setName("Composer Pass" + i);
                 root.addChild(camera);
@@ -114,8 +114,9 @@
                 w = this._renderToScreenWidth;
                 h = this._renderToScreenHeight;
                 var vp = new osg.Viewport(0,0, w, h);
-                var projection = osg.Matrix.makeOrtho(0,w,0,h,-5,5, []);
-                var quad = osg.createTexturedQuadGeometry(0, 0, 0,
+                vp.setName("RenderToScreen");
+                var projection = osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, []);
+                var quad = osg.createTexturedQuadGeometry(-w/2, -h/2, 0,
                                                           w, 0, 0,
                                                           0, h, 0);
                 quad.getOrCreateStateSet().setTextureAttributeAndModes(0, this._resultTexture);
@@ -154,6 +155,7 @@
                 quad.getOrCreateStateSet().setAttributeAndModes(program);
 
                 var camera = new osg.Camera();
+                camera.setName("RenderToScreen");
                 camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
                 camera.setViewport(vp);
                 camera.setProjectionMatrix(projection);
@@ -319,6 +321,7 @@
         } else {
             this.setBlurSize(nbSamplesOpt);
         }
+        this._pixelSize = 1.0;
     };
     
     osgUtil.Composer.Filter.AverageHBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
@@ -329,6 +332,10 @@
             this._nbSamples = nbSamples;
             this.dirty();
         },
+        setPixelSize: function(value) {
+            this._pixelSize = value;
+            this.dirty();
+        },
         getShaderBlurKernel: function() {
             var nbSamples = this._nbSamples;
             var kernel = [];
@@ -336,7 +343,7 @@
             kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");
             kernel.push(" vec2 offset;");
             for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
-                kernel.push(" offset = vec2("+i+".0/RenderSize[0],0.0);");
+                kernel.push(" offset = vec2("+i*this._pixelSize+".0/RenderSize[0],0.0);");
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 + offset);");
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 - offset);");
             }
@@ -383,7 +390,7 @@
             kernel.push(" pixel = texture2D(Texture0, FragTexCoord0 );");
             kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");            kernel.push(" vec2 offset;");
             for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
-                kernel.push(" offset = vec2(0.0,"+i+".0/RenderSize[1]);");
+                kernel.push(" offset = vec2(0.0,"+i*this._pixelSize+".0/RenderSize[1]);");
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 + offset);");
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 - offset);");
             }
@@ -615,7 +622,7 @@
 
                     var v = osg.Vec3.normalize([x,y,z],[]);
                     var scale = Math.max(i/nbSamples,0.1);
-                    //scale = 0.1+(1.0-0.1)*(scale*scale);
+                    scale = 0.1+(1.0-0.1)*(scale*scale);
                     array[i*3+0] = v[0];
                     array[i*3+1] = v[1];
                     array[i*3+2] = v[2];
@@ -698,8 +705,8 @@
                 "uniform sampler2D Texture2;",
                 "uniform mat4 projection;",
                 "uniform vec2 noiseSampling;",
-                "uniform float Power; //"+ '{ "min": 0.1, "max": 8.0, "step": 0.1, "value": [1.0] }',
-                "uniform float Radius; //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": [0.01] }',
+                "uniform float Power; //"+ '{ "min": 0.1, "max": 8.0, "step": 0.1, "value": 1.0 }',
+                "uniform float Radius; //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
 
                 "#define NB_SAMPLES " + this._nbSamples,
                 "float depth;",

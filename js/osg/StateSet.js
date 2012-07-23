@@ -92,6 +92,12 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
         this._setAttribute(this.getAttributePair(attribute, mode)); 
     },
+    setAttribute: function(attribute, mode) { 
+        if (mode === undefined) {
+            mode = osg.StateAttribute.ON;
+        }
+        this._setAttribute(this.getAttributePair(attribute, mode)); 
+    },
 
     removeAttribute: function(attributeName) {
         if (this.attributeMap[attributeName] !== undefined) {

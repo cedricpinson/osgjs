@@ -428,15 +428,6 @@ var createCameraRtt = function(resultTexture, scene) {
     return camera;
 };
 
-var createFinalCamera = function(w,h, scene) {
-    var camera = new osg.Camera();
-    camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    camera.setViewport(new osg.Viewport(0,0,w,h));
-    camera.setProjectionMatrix(osg.Matrix.makeOrtho(0,w,0,h,-5,5));
-    camera.addChild(scene);
-    return camera;
-};
-
 
 function createScene() 
 {
@@ -457,7 +448,7 @@ function createScene()
         w = window.innerWidth;
         h = window.innerHeight;
 
-        var textureSize = [ w, h ];
+        var textureSize = [ w/2, h/2 ];
         //Viewer.getCamera().setComputeNearFar(false);
         var extension = Viewer.getState().getGraphicContext().getExtension('OES_texture_float');
         var texture = new osg.Texture();
@@ -490,7 +481,7 @@ function createScene()
 
 
         var textureColor = new osg.Texture();
-        textureColor.setTextureSize(textureSize[0], textureSize[1]);
+        textureColor.setTextureSize(w, h);
         var sceneRttColor = createCameraRtt(textureColor, group);
         //sceneRtt.getOrCreateStateSet().setAttributeAndModes(getDepthShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
 
@@ -500,32 +491,15 @@ function createScene()
         root.addChild(sceneRttColor);
 
 
-        var quadSize = [ w, h ];
-
-        // create a textured quad with the texture that will contain the
-        // scene
-        var quad = osg.createTexturedQuadGeometry(0, 0,0,
-                                                  quadSize[0], 0 ,0,
-                                                  0, quadSize[1],0);
-        var stateSet = quad.getOrCreateStateSet();
-        var noblend = new osg.BlendFunc('ONE', 'ZERO');
-        stateSet.setAttributeAndModes(noblend, osg.StateAttribute.OVERRIDE);
-
-        stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
-        stateSet.addUniform(osg.Uniform.createInt1(1,'Texture1'));
-        stateSet.setTextureAttributeAndModes(0, texture);
-        stateSet.setTextureAttributeAndModes(1, positionTexture);
-        getSSAOShader(stateSet);
-
-        //stateSet.setAttributeAndModes(getTextureShader());
-
-        var finalCamera = createFinalCamera(w,h, quad);
-        //root.addChild(finalCamera);
-
         var composer = new osgUtil.Composer();
         root.addChild(composer);
 
 
+        var w2,h2;
+        w2 = textureSize[0];
+        h2 = textureSize[1];
+//        w2 = w;
+//        h2 = h;
         var ssao = new osgUtil.Composer.Filter.SSAO( { normal: texture,
                                                        position: positionTexture,
                                                        radius: 0.1
@@ -590,13 +564,13 @@ function createScene()
                                                 html: document.getElementById('parameters')
                                               });
 
-        composer.addPass(ssao);
+        composer.addPass(ssao, w2, h2);
         composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
 
 
-        composer.addPass(blurV);
-        composer.addPass(blurH);
-        composer.addPass(new osgUtil.Composer.Filter.BlendMultiply(textureColor));
+        composer.addPass(blurV, w2, h2);
+        composer.addPass(blurH, w2, h2);
+        composer.addPass(new osgUtil.Composer.Filter.BlendMultiply(textureColor),w,h);
 
         //    composer.addPass(osgUtil.Composer.Filter.createInputTexture(texture));
 
