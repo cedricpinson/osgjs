@@ -96,8 +96,8 @@ var getModel = function(func) {
         addLoading();
     };
     
-    loadModel('monkey.osgjs');
-    //loadModel('sponza.osgjs');
+    //loadModel('monkey.osgjs');
+    loadModel('sponza.osgjs');
     return defer.promise;
 };
 

@@ -694,7 +694,7 @@
             }
             kernelglsl = kernelglsl.join('\n');
 
-            var ssaoRadiusMin = this._sceneRadius*0.005;
+            var ssaoRadiusMin = this._sceneRadius*0.002;
             var ssaoRadiusMax = this._sceneRadius*0.05;
             var ssaoRadiusStep = (ssaoRadiusMax-ssaoRadiusMin)/200.0;
 
