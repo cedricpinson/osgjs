@@ -85,6 +85,9 @@ osgDB.Input.prototype = {
     },
 
     readBinaryArrayURL: function(url) {
+        if (this._identifierMap[url] !== undefined) {
+            return this._identifierMap[url];
+        }
         var defer = osgDB.Promise.defer();
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
@@ -98,15 +101,20 @@ osgDB.Input.prototype = {
             defer.reject();
         }, false);
 
+        var self = this;
         xhr.addEventListener("load", function (oEvent) {
             var arrayBuffer = xhr.response; // Note: not oReq.responseText
             if (arrayBuffer) {
                 // var byteArray = new Uint8Array(arrayBuffer);
+                self._identifierMap[url] = arrayBuffer;
                 defer.resolve(arrayBuffer);
+            } else {
+                defer.reject();
             }
         }, false);
 
         xhr.send(null);
+        this._identifierMap[url] = defer.promise;
         return defer.promise;
     },
 
@@ -166,9 +174,12 @@ osgDB.Input.prototype = {
 
                         var typedArray;
                         // manage endianness
-                        var a = new Uint8Array([0x12, 0x34]);
-                        var b = new Uint16Array(a.buffer);
-                        var big_endian = ( (b[0]).toString(16) === "1234");
+                        var big_endian;
+                        (function() {
+                            var a = new Uint8Array([0x12, 0x34]);
+                            var b = new Uint16Array(a.buffer);
+                            big_endian = ( (b[0]).toString(16) === "1234");
+                        })();
                         if (big_endian) {
                             osg.log("big endian detected");
                             var bytes_per_element = osg[type].BYTES_PER_ELEMENT;
