@@ -128,7 +128,7 @@ asyncTest("Input.readBufferArray - external", function() {
                 "Size": 3
             }
         }, 
-        "ItemSize": 3, 
+        "ItemSize": 1, 
         "Type": "ARRAY_BUFFER",
         "UniqueID" : 10
     };
@@ -150,6 +150,66 @@ asyncTest("Input.readBufferArray - external", function() {
         osgDB.Promise.when(input.readBufferArray()).then(function(buffer) {
             
             ok(calledProgress === true, "readBufferArray check progress callback");
+            start();
+        });
+    })();
+});
+
+
+asyncTest("Input.readBufferArray - external offset", function() {
+    var ba = { 
+        "TexCoord0": {
+            "UniqueID": 202, 
+            "Array": { 
+                "Float32Array": { 
+                    "File": "multistream.bin",
+                    "Offset": 0,
+                    "Size": 3
+                }
+            }, 
+            "ItemSize": 2, 
+            "Type": "ARRAY_BUFFER"
+        }, 
+        "Tangent": {
+            "UniqueID": 204, 
+            "Array": { 
+                "Float32Array": { 
+                    "File": "multistream.bin",
+                    "Offset": 24,
+                    "Size": 3
+                }
+            }, 
+            "ItemSize": 3,
+            "Type": "ARRAY_BUFFER"
+        }
+    };
+    (function() {
+        var input = new osgDB.Input(ba);
+        var arraysPromise = [];
+        var buffers = {};
+
+        var createVertexAttribute = function(name, jsonAttribute) {
+            var defer = osgDB.Promise.defer();
+            arraysPromise.push(defer.promise);
+            var promise = input.setJSON(jsonAttribute).readBufferArray();
+            osgDB.Promise.when(promise).then(function(buffer) {
+                if (buffer !== undefined) {
+                    buffers[name] = buffer;
+                }
+                defer.resolve(buffer);
+            });
+        };
+
+        createVertexAttribute("Tangent", ba.Tangent);
+        createVertexAttribute("TexCoord0", ba.TexCoord0);
+
+        osgDB.Promise.when(osgDB.Promise.all(arraysPromise)).then(function() {
+            var tc = buffers.TexCoord0.getElements();
+            var tcl = tc.length;
+            ok((tc[2] === 10) && (tc[1] === 5) && (tcl === 6), "readBufferArray with new array typed external file with offset");
+            var tg = buffers.Tangent.getElements();
+            var tgl = tg.length;
+            ok((tg[2] === 11) && (tg[1] === 6.0) && (tgl === 9), "readBufferArray with new array typed external file with offset");
             start();
         });
     })();

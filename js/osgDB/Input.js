@@ -85,6 +85,9 @@ osgDB.Input.prototype = {
     },
 
     readBinaryArrayURL: function(url) {
+        if (this._identifierMap[url] !== undefined) {
+            return this._identifierMap[url];
+        }
         var defer = osgDB.Promise.defer();
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
@@ -98,15 +101,20 @@ osgDB.Input.prototype = {
             defer.reject();
         }, false);
 
+        var self = this;
         xhr.addEventListener("load", function (oEvent) {
             var arrayBuffer = xhr.response; // Note: not oReq.responseText
             if (arrayBuffer) {
                 // var byteArray = new Uint8Array(arrayBuffer);
+                self._identifierMap[url] = arrayBuffer;
                 defer.resolve(arrayBuffer);
+            } else {
+                defer.reject();
             }
         }, false);
 
         xhr.send(null);
+        this._identifierMap[url] = defer.promise;
         return defer.promise;
     },
 
@@ -166,29 +174,42 @@ osgDB.Input.prototype = {
 
                         var typedArray;
                         // manage endianness
-                        var a = new Uint8Array([0x12, 0x34]);
-                        var b = new Uint16Array(a.buffer);
-                        var big_endian = ( (b[0]).toString(16) === "1234");
+                        var big_endian;
+                        (function() {
+                            var a = new Uint8Array([0x12, 0x34]);
+                            var b = new Uint16Array(a.buffer);
+                            big_endian = ( (b[0]).toString(16) === "1234");
+                        })();
+
+                        var offset = 0;
+                        if (vb.Offset !== undefined) {
+                            offset = vb.Offset;
+                        }
+
+                        var bytesPerElement = osg[type].BYTES_PER_ELEMENT;
+                        var nbItems = vb.Size;
+                        var nbCoords = buf.getItemSize();
+                        var totalSizeInBytes = nbItems*bytesPerElement*nbCoords;
+
                         if (big_endian) {
                             osg.log("big endian detected");
-                            var bytes_per_element = osg[type].BYTES_PER_ELEMENT;
                             var typed_array = osg[type];
-                            var tmpArray = new typed_array(array.length/bytes_per_element);
-                            var data = new DataView(array);
+                            var tmpArray = new typed_array(nbItems*nbCoords);
+                            var data = new DataView(array, offset, totalSizeInBytes);
                             var i = 0, l = tmpArray.length;
                             if (type === 'Uint16Array') {
                                 for (; i < l; i++) {
-                                    tempArray[i] = data.getUint16(i * bytes_per_element, true);
+                                    tempArray[i] = data.getUint16(i * bytesPerElement, true);
                                 }
                             } else if (type === 'Float32Array') {
                                 for (; i < l; i++) {
-                                    tempArray[i] = data.getFloat32(i * bytes_per_element, true);
+                                    tempArray[i] = data.getFloat32(i * bytesPerElement, true);
                                 }
                             }
                             typedArray = tempArray;
                             data = null;
                         } else {
-                            typedArray = new osg[type](array);
+                            typedArray = new osg[type](array, offset, nbCoords*nbItems);
                         }
                         a = b = null;
 
