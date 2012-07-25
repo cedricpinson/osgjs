@@ -160,9 +160,8 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     setUnrefImageDataAfterApply: function(bool) {
         this._unrefImageDataAfterApply = bool;
     },
-    setInternalFormat: function(internalFormat) {
-        this._internalFormat = internalFormat;
-    },
+    setInternalFormat: function(internalFormat) { this._internalFormat = internalFormat; },
+    getInternalFormat: function() { return this._internalFormat; },
     setFromCanvas: function(canvas, format) {
         this.setImage(canvas, format);
     },
