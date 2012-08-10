@@ -449,7 +449,7 @@ function createScene()
         w = window.innerWidth;
         h = window.innerHeight;
 
-        var textureSize = [ w/2, h/2 ];
+        var textureSize = [ w, h ];
         //Viewer.getCamera().setComputeNearFar(false);
         var extension = Viewer.getState().getGraphicContext().getExtension('OES_texture_float');
         var texture = new osg.Texture();
