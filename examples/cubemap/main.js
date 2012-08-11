@@ -108,6 +108,60 @@ function getShader()
     return program;
 }
 
+
+function getShaderBackground()
+{
+    var vertexshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "attribute vec3 Vertex;",
+        "attribute vec3 Normal;",
+        "attribute vec2 TexCoord0;",
+        "uniform mat4 ModelViewMatrix;",
+        "uniform mat4 ProjectionMatrix;",
+        "uniform mat4 NormalMatrix;",
+
+        "varying vec3 osg_FragNormal;",
+        "varying vec3 osg_FragEye;",
+        "varying vec3 osg_FragVertex;",
+        "varying vec2 osg_TexCoord0;",
+        
+        "void main(void) {",
+        "  osg_FragVertex = Vertex;",
+        "  osg_TexCoord0 = TexCoord0;",
+        "  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));",
+        "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));",
+        "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
+        "}"
+    ].join('\n');
+
+    var fragmentshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "uniform samplerCube Texture0;",
+        "varying vec3 osg_FragNormal;",
+        "varying vec3 osg_FragEye;",
+        "varying vec3 osg_FragVertex;",
+        "varying vec2 osg_TexCoord0;",
+
+        "void main(void) {",
+        "  vec3 eye = normalize(-osg_FragVertex);",
+        "  gl_FragColor = textureCube(Texture0, eye);",
+        "}",
+        ""
+    ].join('\n');
+
+    var program = new osg.Program(
+        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+
+    return program;
+}
+
 var nbLoading = 0;
 var loaded = [];
 var removeLoading = function(node, child) {
@@ -161,9 +215,12 @@ function createScene()
     var group = new osg.Node();
 
     var size = 250;
-    var ground = osg.createTexturedBoxGeometry(0,0,0,
-                                               size,size,size);
-    ground = getModel();
+    var background = osg.createTexturedBoxGeometry(0,0,0,
+                                                   size,size,size);
+    background.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
+    background.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
+
+    var ground = getModel();
 
     ground.getOrCreateStateSet().setAttributeAndMode(getShader());
 
@@ -182,8 +239,8 @@ function createScene()
             texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_X', images[0]);
             texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_X', images[1]);
 
-            texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Y', images[2]);
-            texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Y', images[3]);
+            texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Y', images[3]);
+            texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Y', images[2]);
 
             texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Z', images[4]);
             texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Z', images[5]);
@@ -192,8 +249,12 @@ function createScene()
 
             ground.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
             ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
+
+            background.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
+            background.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
         });
 
+    ground.addChild(background);
     group.addChild(ground);
     return group;
 }
