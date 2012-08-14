@@ -248,6 +248,45 @@ test("Matrix.makeLookAt", function() {
 
 });
 
+test("Matrix.computeFrustrumCornersVectors", function() {
+    var m = [];
+    var ratio = 16.0/9.0;
+    osg.Matrix.makePerspective(45, ratio, 1.0, 100.0, m);
+
+    var ymax = 1.0 * Math.tan(45 * Math.PI / 360.0);
+    var ymin = -ymax;
+    var xmin = ymin * ratio;
+    var xmax = ymax * ratio;
+    
+    var corners = [];
+    corners.push( osg.Vec3.normalize([xmin, ymax, 1.0],[]));
+    corners.push( osg.Vec3.normalize([xmax, ymax, 1.0],[]));
+    corners.push( osg.Vec3.normalize([xmax, ymin, 1.0],[]));
+    corners.push( osg.Vec3.normalize([xmin, ymin, 1.0],[]));
+
+    var f = function (matrix, vectors) {
+        var znear = matrix[12 + 2] / (matrix[8 + 2]-1.0);
+        var zfar = matrix[12 + 2] / (matrix[8 + 2]+1.0);
+        var x = 1.0/(matrix[0]/znear);
+        var y = 1.0/(matrix[1*4+1]/znear);
+        
+        vectors.push( osg.Vec3.normalize([-x, y, znear],[]));
+        vectors.push( osg.Vec3.normalize([x, y, znear],[]));
+        vectors.push( osg.Vec3.normalize([x, -y, znear],[]));
+        vectors.push( osg.Vec3.normalize([-x, -y, znear],[]));
+        return vectors;
+    };
+    var vectors = [];
+    osg.Matrix.computeFrustrumCornersVectors(m,vectors);
+    osg.log(corners);
+    osg.log(vectors);
+    near(vectors[0], corners[0]);
+    near(vectors[1], corners[1]);
+    near(vectors[2], corners[2]);
+    near(vectors[3], corners[3]);
+    ok( true, "check computeFrustrumVectors");
+});
+
 test("Matrix.getLookAt", function() {
     var m = osg.Matrix.makeLookAt([0, -10, 0],
                               [0.0, 5.0, 0.0],

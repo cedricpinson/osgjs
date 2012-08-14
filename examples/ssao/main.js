@@ -103,6 +103,53 @@ var getModel = function(func) {
 };
 
 
+var pack = [
+    "vec4 packFloatTo4x8(in float val) {",
+    " const vec4 bitSh = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);",
+    " const vec4 bitMsk = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);",
+    " vec4 result = fract(val * bitSh);",
+    " result -= result.xxyz * bitMsk;",
+    " return result;",
+    "}",
+    " ",
+    "vec4 pack2FloatTo4x8(in vec2 val) {",
+    " const vec2 bitSh = vec2(256.0, 1.0);",
+    " const vec2 bitMsk = vec2(0.0, 1.0/256.0);",
+    " vec2 res1 = fract(val.x * bitSh);",
+    " res1 -= res1.xx * bitMsk;",
+    " vec2 res2 = fract(val.y * bitSh);",
+    " res2 -= res2.xx * bitMsk;",
+    " return vec4(res1.x,res1.y,res2.x,res2.y);",
+    "}",
+    " ",
+    "float unpack4x8ToFloat(in vec4 val) {",
+    " const vec4 unshift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);",
+    " return dot(val, unshift);",
+    "}",
+    " ",
+    "vec2 unpack4x8To2Float(in vec4 val) {",
+    " const vec2 unshift = vec2(1.0/256.0, 1.0);",
+    " return vec2(dot(val.xy, unshift), dot(val.zw, unshift));",
+    "}"].join('\n');
+
+
+var normalEncoding = [
+    "vec2 encodeNormal (vec3 n)",
+    "{",
+    "    float f = sqrt(8.0*n.z+8.0);",
+    "    return n.xy / f + 0.5;",
+    "}",
+    "vec3 decodeNormal (vec2 enc)",
+    "{",
+    "    vec2 fenc = enc*4.0-2.0;",
+    "    float f = dot(fenc,fenc);",
+    "    float g = sqrt(1.0-f/4.0);",
+    "    vec3 n;",
+    "    n.xy = fenc*g;",
+    "    n.z = 1.0-f/2.0;",
+    "    return n;",
+    "}"].join('\n');
+
 var getDepthShader = function() {
 
     var vertexshader = [
@@ -157,6 +204,57 @@ var getDepthShader = function() {
 };
 
 
+var getDepthShader8 = function() {
+
+    var vertexshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "attribute vec3 Vertex;",
+        "attribute vec3 Normal;",
+        "uniform mat4 ModelViewMatrix;",
+        "uniform mat4 ProjectionMatrix;",
+        "uniform mat4 NormalMatrix;",
+        "varying vec3 FragNormal;",
+        "varying float FragDepth;",
+
+
+        "void main(void) {",
+        "  vec4 pos = ModelViewMatrix * vec4(Vertex,1.0);",
+        "  gl_Position = ProjectionMatrix * pos;",
+        "  FragDepth = pos.z;",
+        "}",
+        ""
+    ].join('\n');
+
+    var fragmentshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "uniform mat4 ProjectionMatrix;",
+        "varying float FragDepth;",
+
+        pack,
+
+        "void main(void) {",
+        "  float znear = ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]-1.0);",
+        "  float zfar = ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]+1.0);",
+        "  float depth;",
+        "  depth = (-FragDepth - znear)/(zfar-znear);",
+        "  gl_FragColor = packFloatTo4x8(depth);",
+        "}",
+        ""
+    ].join('\n');
+
+    var program = new osg.Program(
+        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+    return program;
+};
+
+
 var getPositionShader = function() {
 
     var vertexshader = [
@@ -188,6 +286,54 @@ var getPositionShader = function() {
 
         "void main(void) {",
         "  gl_FragColor = vec4(FragPosition, 1.0);",
+        "}",
+        ""
+    ].join('\n');
+
+    var program = new osg.Program(
+        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+    return program;
+};
+
+
+var getNormalShaderSphereMapTransform = function() {
+
+    var vertexshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "attribute vec3 Vertex;",
+        "attribute vec3 Normal;",
+        "uniform mat4 ModelViewMatrix;",
+        "uniform mat4 ProjectionMatrix;",
+        "uniform mat4 NormalMatrix;",
+        "varying vec3 FragPosition;",
+        "varying vec3 FragNormal;",
+        "void main(void) {",
+        "  vec4 pos = ModelViewMatrix * vec4(Vertex,1.0);",
+        "  gl_Position = ProjectionMatrix * pos;",
+        "  FragNormal = vec3(ModelViewMatrix * vec4(Normal,0.0));",
+        "  FragPosition = vec3(pos);",
+        "}",
+        ""
+    ].join('\n');
+
+    var fragmentshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "varying vec3 FragPosition;",
+        "varying vec3 FragNormal;",
+
+        pack,
+        normalEncoding,
+
+        "void main(void) {",
+        "  vec2 normal = encodeNormal(normalize(FragNormal));",
+        "  gl_FragColor = pack2FloatTo4x8(normal);",
         "}",
         ""
     ].join('\n');
@@ -429,8 +575,7 @@ var createCameraRtt = function(resultTexture, scene) {
     return camera;
 };
 
-
-function createScene() 
+function createSceneReal() 
 {
     var root = new osg.Node();
 
@@ -605,4 +750,331 @@ function createScene()
 
 
 
+function createScene2() 
+{
+    var root = new osg.Node();
+
+    osgDB.Promise.when(getModel()).then(function(model) {
+
+        var group = new osg.Node();
+
+        var size = 10;
+        var ground = osg.createTexturedQuadGeometry(0-size/2,0-size/2.0, -2,
+                                                    size,0,0,
+                                                    0,size,0);
+        ground.setName("plane geometry");
+        group.addChild(model);
+
+        var w,h;
+        w = window.innerWidth;
+        h = window.innerHeight;
+
+        var textureSize = [ w, h ];
+        var texture = new osg.Texture();
+        texture.setTextureSize(textureSize[0], textureSize[1]);
+        texture.setMinFilter('LINEAR');
+        texture.setMagFilter('LINEAR');
+
+        var sceneRtt = createCameraRtt(texture, group);
+        sceneRtt.getOrCreateStateSet().setAttributeAndModes(getNormalShaderSphereMapTransform(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+        var depthTexture = new osg.Texture();
+        depthTexture.setTextureSize(textureSize[0], textureSize[1]);
+        depthTexture.setMinFilter('LINEAR');
+        depthTexture.setMagFilter('LINEAR');
+
+        var positionRttCamera = createCameraRtt(depthTexture, group);
+        positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getDepthShader8(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+
+        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+        var ucb = new CullCallback(projection);
+        positionRttCamera.setCullCallback(ucb);
+
+
+        var textureColor = new osg.Texture();
+        textureColor.setTextureSize(w, h);
+        var sceneRttColor = createCameraRtt(textureColor, group);
+        //sceneRtt.getOrCreateStateSet().setAttributeAndModes(getDepthShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+        //    root.addChild(group);
+        root.addChild(sceneRtt);
+        root.addChild(positionRttCamera);
+        root.addChild(sceneRttColor);
+
+
+        var composer = new osgUtil.Composer();
+        root.addChild(composer);
+
+
+        var w2,h2;
+        w2 = textureSize[0];
+        h2 = textureSize[1];
+//        w2 = w;
+//        h2 = h;
+        var ssao = new osgUtil.Composer.Filter.SSAO( { normal: texture,
+                                                       position: positionTexture,
+                                                       radius: 0.1
+                                                     });
+
+        ssao.setSceneRadius(model.getBound().radius());
+        var blurSize = 5;
+        var blurV = new osgUtil.Composer.Filter.AverageVBlur(blurSize);
+        var blurH = new osgUtil.Composer.Filter.AverageHBlur(blurSize);
+
+
+        osgUtil.ParameterVisitor.createSlider({ min: 4, 
+                                                max: 64, 
+                                                step: 2,
+                                                value: 16,
+                                                name: "ssaoSamples",
+                                                object: ssao,
+                                                field: '_nbSamples',
+                                                onchange: function() { ssao.dirty(); },
+                                                html: document.getElementById('parameters')
+                                              });
+
+        osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                                max: 10, 
+                                                step: 1,
+                                                value: 2,
+                                                name: "ssaoNoise",
+                                                object: ssao,
+                                                field: '_noiseTextureSize',
+                                                onchange: function(value) {
+                                                    // fix to a power of two
+                                                    ssao._noiseTextureSize = Math.pow(2,value);
+                                                    ssao._noiseTextureSize = Math.min(ssao._noiseTextureSize, 512);
+                                                    ssao.dirty();
+                                                },
+                                                html: document.getElementById('parameters')
+                                              });
+
+
+        osgUtil.ParameterVisitor.createSlider({ min: 0.0, 
+                                                max: 1.0, 
+                                                step: 0.01,
+                                                value: 0.0,
+                                                name: "ssaoAngleLimit",
+                                                object: ssao,
+                                                field: '_angleLimit',
+                                                onchange: function() { ssao.dirty(); },
+                                                html: document.getElementById('parameters')
+                                              });
+
+        osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                                max: 15, 
+                                                step: 1,
+                                                value: 3,
+                                                name: "blurSize",
+                                                object: blurH,
+                                                field: '_nbSamples',
+                                                onchange: function(value) { 
+                                                    blurV.setBlurSize(value);
+                                                    blurH.setBlurSize(value);
+                                                },
+                                                html: document.getElementById('parameters')
+                                              });
+
+        osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                                max: 8, 
+                                                step: 0.5,
+                                                value: 1,
+                                                name: "blurSizeDist",
+                                                object: blurH,
+                                                field: '_pixelSize',
+                                                onchange: function(value) { 
+                                                    blurV.setPixelSize(value);
+                                                    blurH.setPixelSize(value);
+                                                },
+                                                html: document.getElementById('parameters')
+                                              });
+
+        composer.addPass(ssao, w2, h2);
+        composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+
+
+        composer.addPass(blurV, w2, h2);
+        composer.addPass(blurH, w2, h2);
+        composer.addPass(new osgUtil.Composer.Filter.BlendMultiply(textureColor),w,h);
+
+        //    composer.addPass(osgUtil.Composer.Filter.createInputTexture(texture));
+
+        composer.renderToScreen(w,h);
+        composer.build();
+        var params = new osgUtil.ParameterVisitor();
+        params.setTargetHTML(document.getElementById('parameters'));
+        composer.accept(params);
+
+
+        model.dirtyBound();
+        Viewer.getManipulator().computeHomePosition();
+
+    });
+    return root;
+}
+
+function createSceneTestDepth() 
+{
+    var root = new osg.Node();
+
+    osgDB.Promise.when(getModel()).then(function(model) {
+
+        var group = new osg.Node();
+
+        var size = 10;
+        var ground = osg.createTexturedQuadGeometry(0-size/2,0-size/2.0, -2,
+                                                    size,0,0,
+                                                    0,size,0);
+        ground.setName("plane geometry");
+        group.addChild(model);
+
+        var w,h;
+        w = window.innerWidth;
+        h = window.innerHeight;
+        var textureSize = [ w, h ];
+
+        var depthTexture = new osg.Texture();
+        depthTexture.setTextureSize(textureSize[0], textureSize[1]);
+        depthTexture.setMinFilter('NEAREST');
+        depthTexture.setMagFilter('NEAREST');
+
+        var positionRttCamera = createCameraRtt(depthTexture, group);
+        positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getDepthShader8(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+
+        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+        var ucb = new CullCallback(projection);
+        positionRttCamera.setCullCallback(ucb);
+
+
+        root.addChild(positionRttCamera);
+
+        var composer = new osgUtil.Composer();
+        root.addChild(composer);
+
+
+        var w2,h2;
+        w2 = textureSize[0];
+        h2 = textureSize[1];
+//        w2 = w;
+//        h2 = h;
+
+        var checkDepth = new osgUtil.Composer.Filter.Custom([
+            "#ifdef GL_ES",
+            "precision highp float;",
+            "#endif",
+            "uniform sampler2D depthTexture;",
+            "uniform float depthFactor;",
+            "uniform vec4 depthColor;",
+            "varying vec2 FragTexCoord0;",
+            pack,
+            "void main() {",
+            "  float decode = unpack4x8ToFloat(texture2D(depthTexture, FragTexCoord0));",
+            "  gl_FragColor = vec4(vec3(decode),1.0)*depthColor;",
+            "}",
+            ""].join('\n'), {
+                'depthTexture': depthTexture,
+                'depthFactor': 0.01,
+                'depthColor': [1,1,1,1],
+                'projection': projection
+            });
+
+        composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+
+        composer.addPass(checkDepth);
+        composer.renderToScreen(w,h);
+        composer.build();
+
+        model.dirtyBound();
+        Viewer.getManipulator().computeHomePosition();
+
+    },function(reject) {
+        osg.log("Fails");
+    });
+    return root;
+}
+
+
+function createSceneTestNormal() 
+{
+    var root = new osg.Node();
+
+    osgDB.Promise.when(getModel()).then(function(model) {
+
+        var group = new osg.Node();
+
+        var size = 10;
+        var ground = osg.createTexturedQuadGeometry(0-size/2,0-size/2.0, -2,
+                                                    size,0,0,
+                                                    0,size,0);
+        ground.setName("plane geometry");
+        group.addChild(model);
+
+        var w,h;
+        w = window.innerWidth;
+        h = window.innerHeight;
+        var textureSize = [ w, h ];
+
+        var normalTexture = new osg.Texture();
+        normalTexture.setTextureSize(textureSize[0], textureSize[1]);
+        normalTexture.setMinFilter('NEAREST');
+        normalTexture.setMagFilter('NEAREST');
+
+        var positionRttCamera = createCameraRtt(normalTexture, group);
+        positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getNormalShaderSphereMapTransform(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+
+        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+        var ucb = new CullCallback(projection);
+        positionRttCamera.setCullCallback(ucb);
+
+
+        root.addChild(positionRttCamera);
+
+        var composer = new osgUtil.Composer();
+        root.addChild(composer);
+
+
+        var w2,h2;
+        w2 = textureSize[0];
+        h2 = textureSize[1];
+//        w2 = w;
+//        h2 = h;
+
+        var checkDepth = new osgUtil.Composer.Filter.Custom([
+            "#ifdef GL_ES",
+            "precision highp float;",
+            "#endif",
+            "uniform sampler2D normalTexture;",
+            "varying vec2 FragTexCoord0;",
+            pack,
+            normalEncoding,
+            "void main() {",
+            "  vec3 normal = decodeNormal(unpack4x8To2Float(texture2D(normalTexture, FragTexCoord0)));",
+            "  gl_FragColor = vec4(vec3(normal),1.0);",
+            "}",
+            ""].join('\n'), {
+                'normalTexture': normalTexture,
+                'projection': projection
+            });
+
+        composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+
+        composer.addPass(checkDepth);
+        composer.renderToScreen(w,h);
+        composer.build();
+
+        model.dirtyBound();
+        Viewer.getManipulator().computeHomePosition();
+
+    },function(reject) {
+        osg.log("Fails");
+    });
+    return root;
+}
+
+
+var createScene = createSceneTestNormal; //createSceneTestDepth;
 window.addEventListener("load", main ,true);
+

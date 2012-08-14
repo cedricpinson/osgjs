@@ -11,6 +11,12 @@ osg.Uniform = function () {
     this.type = undefined;
 };
 
+osg.Uniform.isUniform = function(obj)  {
+    if (obj.prototype === osg.Uniform.prototype) {
+        return true;
+    }
+    return false;
+};
 /** @lends osg.Uniform.prototype */
 osg.Uniform.prototype = {
     getName: function() { return this.name;},
@@ -127,6 +133,7 @@ osg.Uniform.createFloat1 = function(data, uniformName) {
     return uniform;
 };
 osg.Uniform.createFloat = osg.Uniform.createFloat1;
+osg.Uniform.float = osg.Uniform.createFloat1;
 osg.Uniform.createFloatArray = function(array , name) {
     var u = osg.Uniform.createFloat.call(this, array, name);
     u.update = osg.Uniform.prototype._updateArray;
@@ -151,6 +158,7 @@ osg.Uniform.createFloat2 = function(data, uniformName) {
     uniform.type = "vec2";
     return uniform;
 };
+osg.Uniform.vec2 = osg.Uniform.createFloat2;
 osg.Uniform.createFloat2Array = function(array , name) {
     var u = osg.Uniform.createFloat2.call(this, array, name);
     u.update = osg.Uniform.prototype._updateArray;
@@ -175,6 +183,7 @@ osg.Uniform.createFloat3 = function(data, uniformName) {
     uniform.type = "vec3";
     return uniform;
 };
+osg.Uniform.vec3 = osg.Uniform.createFloat3;
 osg.Uniform.createFloat3Array = function(array , name) {
     var u = osg.Uniform.createFloat3.call(this, array, name);
     u.update = osg.Uniform.prototype._updateArray;
@@ -199,6 +208,7 @@ osg.Uniform.createFloat4 = function(data, uniformName) {
     uniform.type = "vec4";
     return uniform;
 };
+osg.Uniform.vec4 = osg.Uniform.createFloat4;
 osg.Uniform.createFloat4Array = function(array , name) {
     var u = osg.Uniform.createFloat4.call(this, array, name);
     u.update = osg.Uniform.prototype._updateArray;
@@ -231,6 +241,7 @@ osg.Uniform.createInt1 = function(data, uniformName) {
     uniform.type = "int";
     return uniform;
 };
+osg.Uniform.int = osg.Uniform.createInt1;
 osg.Uniform.createInt = osg.Uniform.createInt1;
 osg.Uniform.createIntArray = function(array , name) {
     var u = osg.Uniform.createInt.call(this, array, name);
@@ -256,6 +267,7 @@ osg.Uniform.createInt2 = function(data, uniformName) {
     uniform.type = "vec2i";
     return uniform;
 };
+osg.Uniform.vec2i = osg.Uniform.createInt2;
 osg.Uniform.createInt2Array = function(array , name) {
     var u = osg.Uniform.createInt2.call(this, array, name);
     u.update = osg.Uniform.prototype._updateArray;
@@ -279,6 +291,7 @@ osg.Uniform.createInt3 = function(data, uniformName) {
     uniform.type = "vec3i";
     return uniform;
 };
+osg.Uniform.vec3i = osg.Uniform.createInt3;
 osg.Uniform.createInt3Array = function(array , name) {
     var u = osg.Uniform.createInt3.call(this, array, name);
     u.update = osg.Uniform.prototype._updateArray;
@@ -302,6 +315,8 @@ osg.Uniform.createInt4 = function(data, uniformName) {
     uniform.type = "vec4i";
     return uniform;
 };
+osg.Uniform.vec4i = osg.Uniform.createInt4;
+
 osg.Uniform.createInt4Array = function(array , name) {
     var u = osg.Uniform.createInt4.call(this, array, name);
     u.update = osg.Uniform.prototype._updateArray;
@@ -329,6 +344,7 @@ osg.Uniform.createMatrix2 = function(data, uniformName) {
     return uniform;
 };
 osg.Uniform.createMat2 = osg.Uniform.createMatrix2;
+osg.Uniform.mat2 = osg.Uniform.createMat2;
 
 osg.Uniform.createMatrix3 = function(data, uniformName) {
     var value = data;
@@ -351,6 +367,7 @@ osg.Uniform.createMatrix3 = function(data, uniformName) {
     return uniform;
 };
 osg.Uniform.createMat3 = osg.Uniform.createMatrix3;
+osg.Uniform.mat3 = osg.Uniform.createMatrix3;
 
 osg.Uniform.createMatrix4 = function(data, uniformName) {
     var value = data;
@@ -373,3 +390,4 @@ osg.Uniform.createMatrix4 = function(data, uniformName) {
     return uniform;
 };
 osg.Uniform.createMat4 = osg.Uniform.createMatrix4;
+osg.Uniform.mat4 = osg.Uniform.createMatrix4;

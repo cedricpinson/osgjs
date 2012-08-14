@@ -252,6 +252,58 @@
         }
     };
 
+
+
+    osgUtil.Composer.Filter.Custom = function(fragmentShader, uniforms) {
+        osgUtil.Composer.Filter.call(this);
+        this._fragmentShader = fragmentShader;
+        this._uniforms = uniforms;
+        this._vertexShader = osgUtil.Composer.Filter.defaultVertexShader;
+    };
+    
+    osgUtil.Composer.Filter.Custom.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+        build: function() {
+            
+            var program = new osg.Program(
+                new osg.Shader(gl.VERTEX_SHADER, this._vertexShader),
+                new osg.Shader(gl.FRAGMENT_SHADER, this._fragmentShader));
+
+            var self = this;
+            if (this._uniforms) {
+                var unitIndex = 0;
+
+                var r = this._fragmentShader.match(/uniform\s+\w+\s+\w+/g);
+                if (r !== null) {
+                    for (var i = 0, l = r.length; i < l; i++) {
+                        var match = r[i].match(/uniform\s+(\w+)\s+(\w+)/);
+                        var uniform_type = match[1];
+                        var uniform_name = match[2];
+                        var uniform;
+
+                        if (this._uniforms[uniform_name] !== undefined) {
+                            uniform_value = this._uniforms[uniform_name];
+                            if (uniform_type.search("sampler") !== -1) {
+                                this._stateSet.setTextureAttributeAndModes(unitIndex, uniform_value);
+                                uniform = osg.Uniform.createInt1(unitIndex, uniform_name);
+                                this._stateSet.addUniform(uniform);
+                            } else {
+                                if (osg.Uniform.isUniform(uniform_value) ) {
+                                    uniform = uniform_value;
+                                } else {
+                                    uniform = osg.Uniform[uniform_type](this._uniforms[uniform_name],uniform_name);
+                                }
+                                this._stateSet.addUniform(uniform);
+                            }
+                        }
+                    }
+                }
+            }
+            this._stateSet.setAttributeAndModes(program);
+            this._dirty = false;
+        }
+    });
+
+
     osgUtil.Composer.Filter.HBlur = function(nbSamplesOpt) {
         osgUtil.Composer.Filter.call(this);
         if (nbSamplesOpt === undefined) {
@@ -753,6 +805,200 @@
                 "    offset.xy = offset.xy * 0.5 + 0.5;",
 
                 "    float sample_depth = texture2D(Texture1, offset.xy).z;",
+                "    float range_check = abs(sample.z - sample_depth) < float(Radius) ? 1.0 : 0.0;",
+                "    occlusion += (sample_depth > sample.z ? 1.0 : 0.0) * range_check*w;",
+
+                " }",
+                " occlusion = 1.0 - (occlusion / float(NB_SAMPLES));",
+                " gl_FragColor = vec4(vec3(occlusion),1.0);",
+                "}",
+                ""
+            ].join('\n');
+
+            var program = new osg.Program(
+                new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+                new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+
+            stateSet.setAttributeAndModes(program);
+            this._dirty = false;
+        }
+    });
+
+
+
+
+    osgUtil.Composer.Filter.SSAO8 = function(options) {
+        osgUtil.Composer.Filter.SSAO.call(this);
+    };
+
+    osgUtil.Composer.Filter.SSAO8.prototype = osg.objectInehrit(osgUtil.Composer.Filter.SSAO8.prototype, {
+        build: function() {
+            var stateSet = this._stateSet;
+            var nbSamples = this._nbSamples;
+            var kernel = new Array(nbSamples*4);
+            var angleLimit = this._angleLimit;
+            (function(array) {
+                for (var i = 0; i < nbSamples; i++) {
+                    var x,y,z;
+                    x = 2.0*(Math.random()-0.5);
+                    y = 2.0*(Math.random()-0.5);
+                    z = Math.max(angleLimit,Math.random());
+
+                    var v = osg.Vec3.normalize([x,y,z],[]);
+                    var scale = Math.max(i/nbSamples,0.1);
+                    scale = 0.1+(1.0-0.1)*(scale*scale);
+                    array[i*3+0] = v[0];
+                    array[i*3+1] = v[1];
+                    array[i*3+2] = v[2];
+                    array[i*3+3] = scale;
+                }
+            })(kernel);
+
+            var sizeNoise = this._noiseTextureSize;
+            var noise = new Array(sizeNoise*sizeNoise*3);
+            (function(array) {
+                for (var i = 0; i < sizeNoise*sizeNoise; i++) {
+                    var x,y,z;
+                    x = 2.0*(Math.random()-0.5);
+                    y = 2.0*(Math.random()-0.5);
+                    z = 0.0;
+
+                    var n = osg.Vec3.normalize([x,y,z],[]);
+                    array[i*3+0] = 255*(n[0]*0.5+0.5);
+                    array[i*3+1] = 255*(n[1]*0.5+0.5);
+                    array[i*3+2] = 255*(n[2]*0.5+0.5);
+                }
+            })(noise);
+
+
+            var noiseShader = [];
+            noiseShader.push("vec2 rand(in vec2 coord) { //generating random noise");
+            noiseShader.push("float noiseX = (fract(sin(dot(coord ,vec2(12.9898,78.233))) * 43758.5453));");
+            noiseShader.push("float noiseY = (fract(sin(dot(coord ,vec2(12.9898,78.233)*2.0)) * 43758.5453));");
+            noiseShader.push("return vec2(noiseX,noiseY)*0.002;");
+            noiseShader.push("}");
+
+            var noiseTexture = new osg.Texture();
+            noiseTexture.setWrapS('REPEAT');
+            noiseTexture.setWrapT('REPEAT');
+            noiseTexture.setMinFilter('NEAREST');
+            noiseTexture.setMagFilter('NEAREST');
+            
+            noiseTexture.setTextureSize(sizeNoise,sizeNoise);
+            noiseTexture.setImage(new Uint8Array(noise),'RGB');
+            stateSet.setTextureAttributeAndModes(2,noiseTexture);
+            var uniform = stateSet.getUniform('noiseSampling');
+            if (uniform === undefined) {
+                uniform = osg.Uniform.createFloat2([this._size[0]/this._noiseTextureSize, this._size[1]/this._noiseTextureSize],'noiseSampling');
+                stateSet.addUniform(uniform);
+            } else {
+                uniform.set([this._size[0]/this._noiseTextureSize, this._size[1]/this._noiseTextureSize]);
+                uniform.dirty();
+            }
+            var vertexshader = [
+                "",
+                "#ifdef GL_ES",
+                "precision highp float;",
+                "#endif",
+                "attribute vec3 Vertex;",
+                "attribute vec2 TexCoord0;",
+                "varying vec2 FragTexCoord0;",
+                "uniform mat4 ModelViewMatrix;",
+                "uniform mat4 ProjectionMatrix;",
+                "uniform mat4 projection;",
+                "void main(void) {",
+                "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
+                "  FragTexCoord0 = TexCoord0;",
+                "}",
+                ""
+            ].join('\n');
+
+            var kernelglsl = [];
+            for (var i = 0; i < nbSamples; i++) {
+                kernelglsl.push("kernel["+i+"] = vec4("+kernel[i*3]+"," + kernel[i*3+1] + ", " + kernel[i*3+2] +", " + kernel[i*3+3] + ");");
+            }
+            kernelglsl = kernelglsl.join('\n');
+
+            var ssaoRadiusMin = this._sceneRadius*0.002;
+            var ssaoRadiusMax = this._sceneRadius*0.05;
+            var ssaoRadiusStep = (ssaoRadiusMax-ssaoRadiusMin)/200.0;
+
+            var fragmentshader = [
+                "",
+                osgUtil.Composer.Filter.defaultFragmentShaderHeader,
+                "uniform sampler2D Texture1;",
+                "uniform sampler2D Texture2;",
+                "uniform mat4 projection;",
+                "uniform vec2 noiseSampling;",
+                "uniform float Power; //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
+                "uniform float Radius; //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
+
+                "#define NB_SAMPLES " + this._nbSamples,
+                "float depth;",
+                "float znear, zfar;",
+                "vec3 normal;",
+                "vec4 position;",
+                "vec4 kernel["+nbSamples+"];",
+                noiseShader.join('\n'),
+
+                pack,
+                normalEncoding,
+
+                "mat3 computeBasis()",
+                "{",
+                "  vec2 uvrand = FragTexCoord0*noiseSampling;",
+                "  //uvrand = rand(gl_FragCoord.xy);",
+                "  vec3 rvec = texture2D(Texture2, uvrand*2.0).xyz*2.0-vec3(1.0);",
+                "  //vec3 rvec = normalize(vec3(uvrand,0.0));",
+                "  vec3 tangent = normalize(rvec - normal * dot(rvec, normal));",
+                "  vec3 bitangent = cross(normal, tangent);",
+                "  mat3 tbn = mat3(tangent, bitangent, normal);",
+                "  return tbn;",
+                "}",
+
+                "float getDepthValue(vec4 v) {",
+                "  float depth = unpack4x8ToFloat(p);",
+                "  depth = depth*(zfar-znear)+znear;",
+                "  return depth;",
+                "}",
+
+                "void main (void)",
+                "{",
+                kernelglsl,
+                "  position = texture2D(Texture1, FragTexCoord0);",
+                "  vec4 p = texture2D(Texture0, FragTexCoord0);",
+                "  znear = ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]-1.0);",
+                "  zfar = ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]+1.0);",
+                "  depth = getDepthValue(p);",
+                //B = (A - znear)/(zfar-znear);",
+                //B = A/(zfar-znear) - znear/(zfar-znear);",
+                //B+ znear/(zfar-znear) = A/(zfar-znear) ;",
+                //(zfar-znear)*(B+ znear/(zfar-znear)) = A ;",
+                //(zfar-znear)*B+ znear = A ;",
+                "  normal = decodeNormal(unpack4x8To2Float(p));",
+
+                "  if ( depth <= znear) {",
+                "     gl_FragColor = vec4(1.0,1.0,1.0,0.0);",
+                "     return;",
+                "  }",
+	        "//out_vFrustumCornerVS = g_vFrustumCornersVS[in_vTexCoordAndCornerIndex.z];",
+
+                "",
+                " mat3 tbn = computeBasis();",
+                " float occlusion = 0.0;",
+                " for (int i = 0; i < NB_SAMPLES; i++) {",
+                "    vec3 sample = tbn * vec3(kernel[i]);",
+                "    vec3 dir = sample;",
+                "    float w = dot(dir, normal);",
+                "    float dist = 1.0-kernel[i].w;",
+                "    w *= dist*dist*Power;",
+                "    sample = dir * float(Radius) + position.xyz;",
+                
+                "    vec4 offset = projection * vec4(sample,1.0);",
+                "    offset.xy /= offset.w;",
+                "    offset.xy = offset.xy * 0.5 + 0.5;",
+
+                "    float sample_depth = getDepthValue(texture2D(Texture1, offset.xy));",
                 "    float range_check = abs(sample.z - sample_depth) < float(Radius) ? 1.0 : 0.0;",
                 "    occlusion += (sample_depth > sample.z ? 1.0 : 0.0) * range_check*w;",
 

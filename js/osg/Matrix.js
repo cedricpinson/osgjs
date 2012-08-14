@@ -982,6 +982,20 @@ osg.Matrix = {
         return result;
     },
 
+    // compute the 4 corners vector of the frustrum
+    computeFrustrumCornersVectors: function(projectionMatrix, vectorsArray) {
+        var znear = projectionMatrix[12 + 2] / (projectionMatrix[8 + 2]-1.0);
+        var zfar = projectionMatrix[12 + 2] / (projectionMatrix[8 + 2]+1.0);
+        var x = 1.0/(projectionMatrix[0]/znear);
+        var y = 1.0/(projectionMatrix[1*4+1]/znear);
+        
+        vectorsArray.push( osg.Vec3.normalize([-x, y, znear],[]));
+        vectorsArray.push( osg.Vec3.normalize([x, y, znear],[]));
+        vectorsArray.push( osg.Vec3.normalize([x, -y, znear],[]));
+        vectorsArray.push( osg.Vec3.normalize([-x, -y, znear],[]));
+        return vectorsArray;
+    },
+
     makeFrustum: function(left, right,
                           bottom, top,
                           znear, zfar, result) {
