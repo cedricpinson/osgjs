@@ -302,6 +302,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._renderStage.setClearMask(camera.getClearMask());
         this._renderStage.setViewport(camera.getViewport());
 
+        //osg.CullVisitor.prototype.handleCullCallbacksAndTraverse.call(this._cullVisitor,camera);
         this.getScene().accept(this._cullVisitor);
 
         // fix projection matrix if camera has near/far auto compute

@@ -454,6 +454,8 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
         this.pushStateSet(stateset);
     }
 
+    this.handleCullCallbacksAndTraverse(node);
+
     var leafs = this._currentStateGraph.leafs;
     if (leafs.length === 0) {
         this._currentRenderBin.addStateGraph(this._currentStateGraph);

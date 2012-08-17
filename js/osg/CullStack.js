@@ -10,6 +10,9 @@ osg.CullStack.prototype = {
     getCurrentProjectionMatrix: function() {
         return this._projectionMatrixStack[this._projectionMatrixStack.length-1];
     },
+    getCurrentModelviewMatrix: function() {
+        return this._modelviewMatrixStack[this._modelviewMatrixStack.length-1];
+    },
     getViewport: function () {
         if (this._viewportStack.length === 0) {
             return undefined;

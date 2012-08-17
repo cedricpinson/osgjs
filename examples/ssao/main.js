@@ -132,6 +132,28 @@ var pack = [
     " return vec2(dot(val.xy, unshift), dot(val.zw, unshift));",
     "}"].join('\n');
 
+var packdebug = [
+    "vec4 packFloatTo4x8(in float val) {",
+    " const vec4 bitSh = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);",
+    " const vec4 bitMsk = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);",
+    " vec4 result = fract(val * bitSh);",
+    " result -= result.xxyz * bitMsk;",
+    " return result;",
+    "}",
+    " ",
+    "vec4 pack2FloatTo4x8(in vec2 val) {",
+    " return vec4(val[0],val[1],0.0,0.0);",
+    "}",
+    " ",
+    "float unpack4x8ToFloat(in vec4 val) {",
+    " const vec4 unshift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);",
+    " return dot(val, unshift);",
+    "}",
+    " ",
+    "vec2 unpack4x8To2Float(in vec4 val) {",
+    " return vec2(val[0],val[1]);",
+    "}"].join('\n');
+
 
 var normalEncoding = [
     "vec2 encodeNormal (vec3 n)",
@@ -150,7 +172,30 @@ var normalEncoding = [
     "    return n;",
     "}"].join('\n');
 
-var getDepthShader = function() {
+var normalEncodingTest = [
+    "vec2 encodeNormal (vec3 n)",
+    "{",
+    "    return vec2(n.xy*0.5+0.5);",
+    "}",
+    "vec3 decodeNormal (vec2 enc)",
+    "{",
+    "    vec3 n = vec3(enc*2.0-1.0,0.0);",
+    "    n.z = sqrt(1.0-dot(n.xy, n.xy));",
+    "    return n;",
+    "}"].join('\n');
+
+var normalEncodingdebug = [
+    "vec2 encodeNormal (vec3 n)",
+    "{",
+    "    return vec2(n.xy);",
+    "}",
+    "vec3 decodeNormal (vec2 enc)",
+    "{",
+    "    vec3 n = vec3(enc.xy,0.0);",
+    "    return n;",
+    "}"].join('\n');
+
+var getNormalShader = function() {
 
     var vertexshader = [
         "",
@@ -314,7 +359,7 @@ var getNormalShaderSphereMapTransform = function() {
         "void main(void) {",
         "  vec4 pos = ModelViewMatrix * vec4(Vertex,1.0);",
         "  gl_Position = ProjectionMatrix * pos;",
-        "  FragNormal = vec3(ModelViewMatrix * vec4(Normal,0.0));",
+        "  FragNormal = vec3(NormalMatrix * vec4(Normal,0.0));",
         "  FragPosition = vec3(pos);",
         "}",
         ""
@@ -333,6 +378,7 @@ var getNormalShaderSphereMapTransform = function() {
 
         "void main(void) {",
         "  vec2 normal = encodeNormal(normalize(FragNormal));",
+        "  //vec2 normal = encodeNormal(vec3(0.5));",
         "  gl_FragColor = pack2FloatTo4x8(normal);",
         "}",
         ""
@@ -541,19 +587,18 @@ var getSSAOShader = function(stateSet) {
 };
 
 
-var CullCallback = function(uniform) {
-    this._uniform = uniform;
+var CullCallback = function() {
+    this._projection = undefined;
+    this._modelview = undefined;
 };
 CullCallback.prototype = {
     cull: function(node, nv) {
+        //osg.log("cull");
         var matrix = nv.getCurrentProjectionMatrix();
-        osg.Matrix.copy(matrix, this._uniform.get());
-//        osg.log(matrix);
-        var array = [];
-        osg.Matrix.makePerspective(60, window.innerWidth/window.innerHeight, 1.0, 100.0, array);
-//        osg.log(array);
-
-        this._uniform.dirty();
+        this._projection = matrix;
+        matrix._projection = "me";
+        matrix = nv.getCurrentModelviewMatrix();
+        this._modelview = matrix;
         return true;
     }
 };
@@ -607,7 +652,7 @@ function createSceneReal()
         texture.setMagFilter('LINEAR');
 
         var sceneRtt = createCameraRtt(texture, group);
-        sceneRtt.getOrCreateStateSet().setAttributeAndModes(getDepthShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+        sceneRtt.getOrCreateStateSet().setAttributeAndModes(getNormalShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
 
         var positionTexture = new osg.Texture();
         if (extension) {
@@ -619,7 +664,6 @@ function createSceneReal()
 
         var positionRttCamera = createCameraRtt(positionTexture, group);
         positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getPositionShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
-
 
         var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
         var ucb = new CullCallback(projection);
@@ -1025,9 +1069,29 @@ function createSceneTestNormal()
         positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getNormalShaderSphereMapTransform(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
 
 
+        var normalTextureFloat = undefined;
+        (function() {
+            var extension = Viewer.getState().getGraphicContext().getExtension('OES_texture_float');
+            var texture = new osg.Texture();
+            if (extension) {
+                osg.log(extension);
+                texture.setType('FLOAT');
+            }
+            texture.setTextureSize(textureSize[0], textureSize[1]);
+            texture.setMinFilter('NEAREST');
+            texture.setMagFilter('NEAREST');
+
+            var sceneRtt = createCameraRtt(texture, group);
+            sceneRtt.getOrCreateStateSet().setAttributeAndModes(getNormalShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+            normalTextureFloat = texture;
+            root.addChild(sceneRtt);
+        })();
+
+
         var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
         var ucb = new CullCallback(projection);
-        positionRttCamera.setCullCallback(ucb);
+        //positionRttCamera.setCullCallback(ucb);
 
 
         root.addChild(positionRttCamera);
@@ -1047,15 +1111,25 @@ function createSceneTestNormal()
             "precision highp float;",
             "#endif",
             "uniform sampler2D normalTexture;",
+            "uniform sampler2D normalTextureFloat;",
             "varying vec2 FragTexCoord0;",
             pack,
             normalEncoding,
             "void main() {",
-            "  vec3 normal = decodeNormal(unpack4x8To2Float(texture2D(normalTexture, FragTexCoord0)));",
-            "  gl_FragColor = vec4(vec3(normal),1.0);",
+            "  vec2 texel = unpack4x8To2Float(texture2D(normalTexture, FragTexCoord0));",
+            "  vec3 normal = decodeNormal(texel);",
+            "  //vec3 normal = vec3(texel[0], 0.0,texel[1]);",
+            "  //normal = normalize(normal);",
+            "  vec3 normalFloat = texture2D(normalTextureFloat, FragTexCoord0).rgb;",
+            "  normalFloat = normalize(normalFloat);",
+            "  vec3 error = abs(normalFloat-normal);",
+            "  gl_FragColor = vec4(normalFloat,1.0);",
+            "  //gl_FragColor = vec4(normal,1.0);",
+            "  //gl_FragColor = vec4(error,1.0);",
             "}",
             ""].join('\n'), {
                 'normalTexture': normalTexture,
+                'normalTextureFloat': normalTextureFloat,
                 'projection': projection
             });
 
@@ -1074,7 +1148,500 @@ function createSceneTestNormal()
     return root;
 }
 
+function createSceneTestReconstructPosition() 
+{
+    var root = new osg.Node();
 
-var createScene = createSceneTestNormal; //createSceneTestDepth;
+    osgDB.Promise.when(getModel()).then(function(model) {
+
+        var group = new osg.Node();
+
+        var size = 10;
+        var ground = osg.createTexturedQuadGeometry(0-size/2,0-size/2.0, -2,
+                                                    size,0,0,
+                                                    0,size,0);
+        ground.setName("plane geometry");
+        group.addChild(model);
+
+        var w,h;
+        w = window.innerWidth;
+        h = window.innerHeight;
+        var textureSize = [ w, h ];
+
+        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+        var modelview = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'camera');
+
+        
+        var ucb = new CullCallback();
+        var positionTextureFloat;
+        (function() {
+            var positionTexture = new osg.Texture();
+            if (extension) {
+                positionTexture.setType('FLOAT');
+            }
+            positionTexture.setTextureSize(textureSize[0], textureSize[1]);
+            positionTexture.setMinFilter('NEAREST');
+            positionTexture.setMagFilter('NEAREST');
+
+            var positionRttCamera = createCameraRtt(positionTexture, group);
+            positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getPositionShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+            var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+            positionRttCamera.setCullCallback(ucb);
+            root.addChild(positionRttCamera);
+            positionTextureFloat = positionTexture;
+        })();
+
+
+        var depthTexture = new osg.Texture();
+        (function() { 
+            depthTexture.setTextureSize(textureSize[0], textureSize[1]);
+            depthTexture.setMinFilter('NEAREST');
+            depthTexture.setMagFilter('NEAREST');
+
+            var positionRttCamera = createCameraRtt(depthTexture, group);
+            positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getDepthShader8(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+            positionRttCamera.setName("MyCameraRTT");
+
+            root.addChild(positionRttCamera);
+        })();
+
+
+        var textureResult = undefined;
+        // reconstruction texture
+        (function() {
+
+            var vtx = [
+                "#ifdef GL_ES",
+                "precision highp float;",
+                "#endif",
+                "attribute vec3 Vertex;",
+                "attribute vec2 TexCoord0;",
+                "attribute vec3 TexCoord1;",
+                "varying vec2 FragTexCoord0;",
+                "varying vec3 FragTexCoord1;",
+                "uniform mat4 ModelViewMatrix;",
+                "uniform mat4 ProjectionMatrix;",
+                "uniform mat4 projection;",
+                "uniform mat4 camera;",
+                "void main(void) {",
+                "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
+                "  FragTexCoord0 = TexCoord0;",
+                "  FragTexCoord1 = TexCoord1;",
+                "}",
+                ""
+            ].join('\n');
+
+            var frg = [
+                "#ifdef GL_ES",
+                "precision highp float;",
+                "#endif",
+                "varying vec2 FragTexCoord0;",
+                "varying vec3 FragTexCoord1;",
+                "uniform vec2 RenderSize;",
+                "uniform sampler2D Texture0;",
+                "uniform sampler2D Texture1;",
+                "uniform mat4 projection;",
+                "uniform mat4 camera;",
+                
+                pack,
+                "void main() {",
+                "  vec3 realPosition = texture2D(Texture1, FragTexCoord0).rgb;",
+
+                "  float znear = projection[3][2] / (projection[2][2]-1.0);",
+                "  float zfar = projection[3][2] / (projection[2][2]+1.0);",
+                "  //float znear = projection[2][3] / (projection[2][2]-1.0);",
+                "  //float zfar = projection[2][3] / (projection[2][2]+1.0);",
+
+                "  vec3 cameraPosition = vec3(camera[3][0], camera[3][1], camera[3][2]);",
+
+                "  float decode = unpack4x8ToFloat(texture2D(Texture0, FragTexCoord0));",
+                "  float dist = znear + decode*(zfar-znear);",
+                "  float realDist = dist(cameraPosition, realPosition);",
+
+                "  gl_FragColor = vec4(vec3(abs-realDist), 1.0);",
+
+                "  //vec3 dir = normalize(FragTexCoord1);",
+                "  //dir[0] = 0.0;",
+                "  //dir[1] = 20.0;",
+                "  //dir[2] = 0.0;",
+                "  //dir = normalize(dir);",
+                "  //gl_FragColor = vec4(dir,1.0);",
+                "  //gl_FragColor = packFloatTo4x8(realz/zfar);",
+                "  //gl_FragColor = texture2D(Texture0, FragTexCoord0);",
+                "  //gl_FragColor = vec4(0.0,0.0,0.0,1.0);",
+                "}",
+                ""
+            ].join('\n');
+
+            
+            var program = new osg.Program(
+                new osg.Shader(gl.VERTEX_SHADER, vtx),
+                new osg.Shader(gl.FRAGMENT_SHADER, frg));
+
+            var EndCullCallback = function(ucb,
+                                           projection, 
+                                           modelview, 
+                                           geom) {
+                this._ucb = ucb;
+                this._projection = projection;
+                this._geom = geom;
+                this._matrix = modelview;
+            };
+            EndCullCallback.prototype = {
+                cull: function(node, nv) {
+
+                    var matrix = this._ucb._projection;
+                    var znear = matrix[12 + 2] / (matrix[8 + 2]-1.0);
+                    var zfar = matrix[12 + 2] / (matrix[8 + 2]+1.0);
+                    //osg.log("znear " + znear + " zfar " + zfar);
+
+
+                    osg.Matrix.copy(this._ucb._projection, this._projection.get());
+                    osg.Matrix.copy(this._ucb._modelview, this._matrix.get());
+                    this._projection.dirty();
+                    this._matrix.dirty();
+                    
+                    var coord = this._geom.getAttributes().TexCoord1.getElements();
+                    var vectorsTmp = [];
+                    osg.Matrix.computeFrustrumCornersVectors(this._projection.get(), vectorsTmp);
+                    var vectors = [];
+                    vectors[0] = vectorsTmp[0];
+                    vectors[1] = vectorsTmp[1];
+                    vectors[2] = vectorsTmp[2];
+                    vectors[3] = vectorsTmp[3];
+                    
+                    for ( var i = 0; i < 4; i++) {
+                        var vec = osg.Matrix.transform3x3(this._matrix.get(),vectors[i] , []);
+                        coord[i*3 + 0] = vec[0];
+                        coord[i*3 + 1] = vec[1];
+                        coord[i*3 + 2] = vec[2];
+                    }
+                    //this._geom.dirty();
+                    return true;
+                }
+            };
+
+            var w,h;
+            w = textureSize[0];
+            h = textureSize[1];
+            var quad = osg.createTexturedQuadGeometry(-w/2, -h/2, 0,
+                                                      w, 0, 0,
+                                                      0, h, 0);
+            quad.getAttributes().TexCoord1 = new osg.BufferArray('ARRAY_BUFFER', [0,0,0,
+                                                                                  0,0,0,
+                                                                                  0,0,0,
+                                                                                  0,0,0], 3);
+            //quad.setCullCallback(new cullCallback(projection,ucb._modelview, quad));
+            quad.getOrCreateStateSet().setAttributeAndModes(program);
+            quad.getOrCreateStateSet().addUniform(modelview);
+            quad.getOrCreateStateSet().addUniform(projection);
+            quad.getOrCreateStateSet().setTextureAttributeAndModes(0, depthTexture);
+            quad.getOrCreateStateSet().setTextureAttributeAndModes(1, positionTextureFloat);
+            var camera = new osg.Camera();
+            //camera.setStateSet(element.filter.getStateSet());
+
+            var vp = new osg.Viewport(0,0,w,h);
+            var proj = osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, []);
+
+            camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+            camera.setViewport(vp);
+            camera.setProjectionMatrix(proj);
+            
+            var texture = new osg.Texture();
+            texture.setTextureSize(textureSize[0], textureSize[1]);
+            texture.setMinFilter('NEAREST');
+            texture.setMagFilter('NEAREST');
+
+            camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
+            camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture, 0);
+            camera.addChild(quad);
+
+            root.addChild(camera);
+
+            textureResult = texture;
+
+
+            var cb = new EndCullCallback(ucb, projection, modelview, quad);
+
+            var draw = Viewer.draw;
+            var newdraw = function() {
+                cb.cull();
+                draw.call(this);
+            };
+            Viewer.draw = newdraw;
+            
+
+        })();
+        var composer = new osgUtil.Composer();
+        root.addChild(composer);
+
+
+        var w2,h2;
+        w2 = textureSize[0];
+        h2 = textureSize[1];
+//        w2 = w;
+//        h2 = h;
+
+        var checkDepth = new osgUtil.Composer.Filter.Custom([
+            "#ifdef GL_ES",
+            "precision highp float;",
+            "#endif",
+            "uniform sampler2D depthTexture;",
+            "uniform float depthFactor;",
+            "uniform vec4 depthColor;",
+            "varying vec2 FragTexCoord0;",
+            pack,
+            "void main() {",
+            "  float decode = unpack4x8ToFloat(texture2D(depthTexture, FragTexCoord0));",
+            "  vec3 value = texture2D(depthTexture, FragTexCoord0).rgb;",
+            "  gl_FragColor = vec4(vec3(decode),1.0);",
+            "}",
+            ""].join('\n'), {
+                'depthTexture': textureResult,
+                'depthFactor': 0.01,
+                'depthColor': [1,1,1,1],
+                'projection': projection
+            });
+
+        composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+
+        composer.addPass(checkDepth);
+        composer.renderToScreen(w,h);
+        composer.build();
+
+        model.dirtyBound();
+        Viewer.getManipulator().computeHomePosition();
+
+
+    },function(reject) {
+        osg.log("Fails");
+    });
+    return root;
+}
+
+
+function createSceneOptimized() 
+{
+    var root = new osg.Node();
+
+    osgDB.Promise.when(getModel()).then(function(model) {
+
+        var group = new osg.Node();
+
+        var size = 10;
+        var ground = osg.createTexturedQuadGeometry(0-size/2,0-size/2.0, -2,
+                                                    size,0,0,
+                                                    0,size,0);
+        ground.setName("plane geometry");
+        group.addChild(model);
+
+        var w,h;
+        w = window.innerWidth;
+        h = window.innerHeight;
+        var textureSize = [ w, h ];
+
+
+        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+        var modelview = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'camera');
+        var ucb = new CullCallback(projection, modelview);
+
+        // generate depth
+        var textureDepth;
+        (function() {
+
+            var texture = new osg.Texture();
+            texture.setTextureSize(textureSize[0], textureSize[1]);
+            texture.setMinFilter('NEAREST');
+            texture.setMagFilter('NEAREST');
+
+            var rtt = createCameraRtt(texture, group);
+            rtt.getOrCreateStateSet().setAttributeAndModes(getDepthShader8(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+            rtt.setName("generateDepth");
+            rtt.setCullCallback(ucb); // get camera information
+
+            root.addChild(rtt);
+            textureDepth = texture;
+        })();
+
+
+        // generate normals
+        var textureNormal;
+        (function() {
+
+            var texture = new osg.Texture();
+            texture.setTextureSize(textureSize[0], textureSize[1]);
+            texture.setMinFilter('NEAREST');
+            texture.setMagFilter('NEAREST');
+
+            var rtt = createCameraRtt(texture, group);
+            rtt.getOrCreateStateSet().setAttributeAndModes(getNormalShaderSphereMapTransform(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+            rtt.setName("generateNormal");
+            root.addChild(rtt);
+            
+            textureNormal = texture;
+        })();
+
+
+
+        var composer = new osgUtil.Composer();
+        root.addChild(composer);
+
+        var ssao = new osgUtil.Composer.Filter.SSAO8( { normal: textureNormal,
+                                                        position: textureDepth,
+                                                        radius: 0.1
+                                                      } );
+        composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+        composer.getOrCreateStateSet().addUniform(modelview, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+        ssao._texCoord1 = new osg.BufferArray('ARRAY_BUFFER', [0,0,0,
+                                                               0,0,0,
+                                                               0,0,0,
+                                                               0,0,0], 3);
+
+        composer.addPass(ssao);
+        composer.renderToScreen(w,h);
+        composer.build();
+
+
+        osgUtil.ParameterVisitor.createSlider({ min: 4, 
+                                                max: 64, 
+                                                step: 2,
+                                                value: 16,
+                                                name: "ssaoSamples",
+                                                object: ssao,
+                                                field: '_nbSamples',
+                                                onchange: function() { ssao.dirty(); },
+                                                html: document.getElementById('parameters')
+                                              });
+
+        osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                                max: 10, 
+                                                step: 1,
+                                                value: 2,
+                                                name: "ssaoNoise",
+                                                object: ssao,
+                                                field: '_noiseTextureSize',
+                                                onchange: function(value) {
+                                                    // fix to a power of two
+                                                    ssao._noiseTextureSize = Math.pow(2,value);
+                                                    ssao._noiseTextureSize = Math.min(ssao._noiseTextureSize, 512);
+                                                    ssao.dirty();
+                                                },
+                                                html: document.getElementById('parameters')
+                                              });
+
+
+        osgUtil.ParameterVisitor.createSlider({ min: 0.0, 
+                                                max: 1.0, 
+                                                step: 0.01,
+                                                value: 0.0,
+                                                name: "ssaoAngleLimit",
+                                                object: ssao,
+                                                field: '_angleLimit',
+                                                onchange: function() { ssao.dirty(); },
+                                                html: document.getElementById('parameters')
+                                              });
+
+        if (false) {
+        osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                                max: 15, 
+                                                step: 1,
+                                                value: 3,
+                                                name: "blurSize",
+                                                object: blurH,
+                                                field: '_nbSamples',
+                                                onchange: function(value) { 
+                                                    blurV.setBlurSize(value);
+                                                    blurH.setBlurSize(value);
+                                                },
+                                                html: document.getElementById('parameters')
+                                              });
+
+        osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                                max: 8, 
+                                                step: 0.5,
+                                                value: 1,
+                                                name: "blurSizeDist",
+                                                object: blurH,
+                                                field: '_pixelSize',
+                                                onchange: function(value) { 
+                                                    blurV.setPixelSize(value);
+                                                    blurH.setPixelSize(value);
+                                                },
+                                                html: document.getElementById('parameters')
+                                              });
+        }
+
+
+        var params = new osgUtil.ParameterVisitor();
+        params.setTargetHTML(document.getElementById('parameters'));
+        composer.accept(params);
+        
+        var EndCullCallback = function(ucb,
+                                       projection, 
+                                       modelview, 
+                                       array) {
+            this._ucb = ucb;
+            this._projection = projection;
+            this._array = array;
+            this._matrix = modelview;
+        };
+        EndCullCallback.prototype = {
+            cull: function(node, nv) {
+
+                var matrix = this._ucb._projection;
+                var znear = matrix[12 + 2] / (matrix[8 + 2]-1.0);
+                var zfar = matrix[12 + 2] / (matrix[8 + 2]+1.0);
+                //osg.log("znear " + znear + " zfar " + zfar);
+
+                osg.Matrix.copy(this._ucb._projection, this._projection.get());
+                osg.Matrix.copy(this._ucb._modelview, this._matrix.get());
+                this._projection.dirty();
+                this._matrix.dirty();
+                
+                var coord = this._array.getElements();
+                var vectorsTmp = [];
+                osg.Matrix.computeFrustrumCornersVectors(this._projection.get(), vectorsTmp);
+                var vectors = [];
+                vectors[0] = vectorsTmp[0];
+                vectors[1] = vectorsTmp[1];
+                vectors[2] = vectorsTmp[2];
+                vectors[3] = vectorsTmp[3];
+                
+                for ( var i = 0; i < 4; i++) {
+                    var vec = osg.Matrix.transform3x3(this._matrix.get(),vectors[i] , []);
+                    coord[i*3 + 0] = vec[0];
+                    coord[i*3 + 1] = vec[1];
+                    coord[i*3 + 2] = vec[2];
+                }
+                //this._geom.dirty();
+                return true;
+            }
+        };
+
+        var cb = new EndCullCallback(ucb, projection, modelview, ssao._texCoord1);
+
+        var draw = Viewer.draw;
+        var newdraw = function() {
+            cb.cull();
+            draw.call(this);
+        };
+        Viewer.draw = newdraw;
+
+
+        model.dirtyBound();
+        Viewer.getManipulator().computeHomePosition();
+
+
+    },function(reject) {
+        osg.log("Fails");
+    });
+    return root;
+}
+
+var createScene = createSceneTestReconstructPosition; //createSceneTestDepth;
 window.addEventListener("load", main ,true);
 

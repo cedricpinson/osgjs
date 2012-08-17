@@ -989,10 +989,10 @@ osg.Matrix = {
         var x = 1.0/(projectionMatrix[0]/znear);
         var y = 1.0/(projectionMatrix[1*4+1]/znear);
         
-        vectorsArray.push( osg.Vec3.normalize([-x, y, znear],[]));
-        vectorsArray.push( osg.Vec3.normalize([x, y, znear],[]));
-        vectorsArray.push( osg.Vec3.normalize([x, -y, znear],[]));
-        vectorsArray.push( osg.Vec3.normalize([-x, -y, znear],[]));
+        vectorsArray[0] = osg.Vec3.normalize([-x, y, znear],[]);
+        vectorsArray[1] = osg.Vec3.normalize([-x, -y, znear],[]);
+        vectorsArray[2] = osg.Vec3.normalize([x, -y, znear],[]);
+        vectorsArray[3] = osg.Vec3.normalize([x, y, znear],[]);
         return vectorsArray;
     },
 

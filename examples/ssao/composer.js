@@ -82,6 +82,10 @@
                 var quad = osg.createTexturedQuadGeometry(-w/2, -h/2, 0,
                                                           w, 0, 0,
                                                           0, h, 0);
+
+                if (element.filter.buildGeometry !== undefined)
+                    quad = element.filter.buildGeometry(quad);
+
                 quad.setName("composer layer");
                 camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
                 camera.setViewport(vp);
@@ -93,7 +97,7 @@
                 }
                 camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
                 camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture, 0);
-                camera.setComputeNearFar(false);
+                //camera.setComputeNearFar(false);
 
                 lastTextureResult = texture;
 
@@ -285,6 +289,7 @@
                             if (uniform_type.search("sampler") !== -1) {
                                 this._stateSet.setTextureAttributeAndModes(unitIndex, uniform_value);
                                 uniform = osg.Uniform.createInt1(unitIndex, uniform_name);
+                                unitIndex++;
                                 this._stateSet.addUniform(uniform);
                             } else {
                                 if (osg.Uniform.isUniform(uniform_value) ) {
@@ -828,10 +833,14 @@
 
 
     osgUtil.Composer.Filter.SSAO8 = function(options) {
-        osgUtil.Composer.Filter.SSAO.call(this);
+        osgUtil.Composer.Filter.SSAO.call(this, options);
     };
 
-    osgUtil.Composer.Filter.SSAO8.prototype = osg.objectInehrit(osgUtil.Composer.Filter.SSAO8.prototype, {
+    osgUtil.Composer.Filter.SSAO8.prototype = osg.objectInehrit(osgUtil.Composer.Filter.SSAO.prototype, {
+        buildGeometry: function(quad) {
+            quad.getAttributes().TexCoord1 = this._texCoord1;
+            return quad;
+        },
         build: function() {
             var stateSet = this._stateSet;
             var nbSamples = this._nbSamples;
@@ -902,13 +911,15 @@
                 "#endif",
                 "attribute vec3 Vertex;",
                 "attribute vec2 TexCoord0;",
+                "attribute vec3 TexCoord1;",
                 "varying vec2 FragTexCoord0;",
+                "varying vec3 FragTexCoord1;",
                 "uniform mat4 ModelViewMatrix;",
                 "uniform mat4 ProjectionMatrix;",
-                "uniform mat4 projection;",
                 "void main(void) {",
                 "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
                 "  FragTexCoord0 = TexCoord0;",
+                "  FragTexCoord1 = TexCoord1;",
                 "}",
                 ""
             ].join('\n');
@@ -926,9 +937,11 @@
             var fragmentshader = [
                 "",
                 osgUtil.Composer.Filter.defaultFragmentShaderHeader,
+                "varying vec3 FragTexCoord1;",
                 "uniform sampler2D Texture1;",
                 "uniform sampler2D Texture2;",
                 "uniform mat4 projection;",
+                "uniform mat4 camera;",
                 "uniform vec2 noiseSampling;",
                 "uniform float Power; //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
                 "uniform float Radius; //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
@@ -957,7 +970,7 @@
                 "}",
 
                 "float getDepthValue(vec4 v) {",
-                "  float depth = unpack4x8ToFloat(p);",
+                "  float depth = unpack4x8ToFloat(v);",
                 "  depth = depth*(zfar-znear)+znear;",
                 "  return depth;",
                 "}",
@@ -967,9 +980,9 @@
                 kernelglsl,
                 "  position = texture2D(Texture1, FragTexCoord0);",
                 "  vec4 p = texture2D(Texture0, FragTexCoord0);",
-                "  znear = ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]-1.0);",
-                "  zfar = ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]+1.0);",
-                "  depth = getDepthValue(p);",
+                "  znear = projection[3][2] / (projection[2][2]-1.0);",
+                "  zfar = projection[3][2] / (projection[2][2]+1.0);",
+                "  depth = getDepthValue(position);",
                 //B = (A - znear)/(zfar-znear);",
                 //B = A/(zfar-znear) - znear/(zfar-znear);",
                 //B+ znear/(zfar-znear) = A/(zfar-znear) ;",
@@ -981,7 +994,10 @@
                 "     gl_FragColor = vec4(1.0,1.0,1.0,0.0);",
                 "     return;",
                 "  }",
-	        "//out_vFrustumCornerVS = g_vFrustumCornersVS[in_vTexCoordAndCornerIndex.z];",
+
+
+                "  vec3 cameraPosition = vec3(camera[0][3], camera[1][3], camera[2][3]);",
+                "  vec3 position = cameraPosition + normalize(FragTexCoord1)*depth;",
 
                 "",
                 " mat3 tbn = computeBasis();",
