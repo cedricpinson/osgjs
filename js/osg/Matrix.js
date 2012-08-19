@@ -986,13 +986,13 @@ osg.Matrix = {
     computeFrustrumCornersVectors: function(projectionMatrix, vectorsArray) {
         var znear = projectionMatrix[12 + 2] / (projectionMatrix[8 + 2]-1.0);
         var zfar = projectionMatrix[12 + 2] / (projectionMatrix[8 + 2]+1.0);
-        var x = 1.0/(projectionMatrix[0]/znear);
-        var y = 1.0/(projectionMatrix[1*4+1]/znear);
-        
-        vectorsArray[0] = osg.Vec3.normalize([-x, y, znear],[]);
-        vectorsArray[1] = osg.Vec3.normalize([-x, -y, znear],[]);
-        vectorsArray[2] = osg.Vec3.normalize([x, -y, znear],[]);
-        vectorsArray[3] = osg.Vec3.normalize([x, y, znear],[]);
+        var x = 1.0/projectionMatrix[0];
+        var y = 1.0/projectionMatrix[1*4+1];
+
+        vectorsArray[0] = [-x, y, 1.0];
+        vectorsArray[1] = [-x, -y, 1.0];
+        vectorsArray[2] = [x, -y, 1.0];
+        vectorsArray[3] = [x, y, 1.0];
         return vectorsArray;
     },
 

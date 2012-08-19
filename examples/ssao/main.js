@@ -104,13 +104,21 @@ var getModel = function(func) {
 
 
 var pack = [
-    "vec4 packFloatTo4x8(in float val) {",
+    "vec4 OldpackFloatTo4x8(in float val) {",
     " const vec4 bitSh = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);",
     " const vec4 bitMsk = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);",
     " vec4 result = fract(val * bitSh);",
     " result -= result.xxyz * bitMsk;",
     " return result;",
     "}",
+
+    "vec4 packFloatTo4x8(in float v) {",
+    "vec4 enc = vec4(1.0, 255.0, 65025.0, 160581375.0) * v;",
+    "enc = fract(enc);",
+    "enc -= enc.yzww * vec4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);",
+    "return enc;",
+    "}",
+
     " ",
     "vec4 pack2FloatTo4x8(in vec2 val) {",
     " const vec2 bitSh = vec2(256.0, 1.0);",
@@ -122,9 +130,13 @@ var pack = [
     " return vec4(res1.x,res1.y,res2.x,res2.y);",
     "}",
     " ",
-    "float unpack4x8ToFloat(in vec4 val) {",
+    "float Oldunpack4x8ToFloat(in vec4 val) {",
     " const vec4 unshift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);",
     " return dot(val, unshift);",
+    "}",
+
+    "float unpack4x8ToFloat( vec4 rgba ) {",
+    " return dot( rgba, vec4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/160581375.0) );",
     "}",
     " ",
     "vec2 unpack4x8To2Float(in vec4 val) {",
@@ -288,6 +300,8 @@ var getDepthShader8 = function() {
         "  float zfar = ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]+1.0);",
         "  float depth;",
         "  depth = (-FragDepth - znear)/(zfar-znear);",
+        "  //gl_FragColor = packFloatTo4x8(-FragDepth/zfar);",
+        "  //if (depth > 0.49 &&  depth < 0.51) depth = 0.0;",
         "  gl_FragColor = packFloatTo4x8(depth);",
         "}",
         ""
@@ -1161,7 +1175,7 @@ function createSceneTestReconstructPosition()
                                                     size,0,0,
                                                     0,size,0);
         ground.setName("plane geometry");
-        group.addChild(model);
+        group.addChild(ground);
 
         var w,h;
         w = window.innerWidth;
@@ -1176,6 +1190,7 @@ function createSceneTestReconstructPosition()
         var positionTextureFloat;
         (function() {
             var positionTexture = new osg.Texture();
+            var extension = Viewer.getState().getGraphicContext().getExtension('OES_texture_float');
             if (extension) {
                 positionTexture.setType('FLOAT');
             }
@@ -1194,7 +1209,7 @@ function createSceneTestReconstructPosition()
 
 
         var depthTexture = new osg.Texture();
-        (function() { 
+        (function() {
             depthTexture.setTextureSize(textureSize[0], textureSize[1]);
             depthTexture.setMinFilter('NEAREST');
             depthTexture.setMagFilter('NEAREST');
@@ -1251,16 +1266,26 @@ function createSceneTestReconstructPosition()
 
                 "  float znear = projection[3][2] / (projection[2][2]-1.0);",
                 "  float zfar = projection[3][2] / (projection[2][2]+1.0);",
-                "  //float znear = projection[2][3] / (projection[2][2]-1.0);",
-                "  //float zfar = projection[2][3] / (projection[2][2]+1.0);",
+                "  float zrange = zfar-znear;",
 
                 "  vec3 cameraPosition = vec3(camera[3][0], camera[3][1], camera[3][2]);",
+                "  //cameraPosition = vec3(camera[0][3], camera[1][3], camera[2][3]);",
 
                 "  float decode = unpack4x8ToFloat(texture2D(Texture0, FragTexCoord0));",
-                "  float dist = znear + decode*(zfar-znear);",
-                "  float realDist = dist(cameraPosition, realPosition);",
+                "  vec3 computedPos = FragTexCoord1*(decode*zrange+znear);//*zfar; //(decode*zrange + znear);",
+                "  computedPos.z = -computedPos.z;",
 
-                "  gl_FragColor = vec4(vec3(abs-realDist), 1.0);",
+                "  float zpos = ((-realPosition.z)-znear)/zrange;",
+
+                "  //gl_FragColor = vec4(vec3(computedPos.z), 1.0);",
+                "  //gl_FragColor = vec4(vec3(computedPos.z), 1.0);",
+                "  //return;",
+
+                "  //gl_FragColor = vec4(vec3(abs(decode - (-realPosition.z/zfar)))*100.0, 1.0);",
+                "  gl_FragColor = vec4(vec3(abs(length(realPosition-(computedPos)))*100.0), 1.0);",
+                "  //gl_FragColor = vec4(vec3(zpos), 1.0);",
+                "  //gl_FragColor = vec4(vec3(abs(computedDist-realDist)*10.0/zrange), 1.0);",
+                "  //gl_FragColor = vec4(vec3(decode), 1.0);",
 
                 "  //vec3 dir = normalize(FragTexCoord1);",
                 "  //dir[0] = 0.0;",
@@ -1311,9 +1336,11 @@ function createSceneTestReconstructPosition()
                     vectors[1] = vectorsTmp[1];
                     vectors[2] = vectorsTmp[2];
                     vectors[3] = vectorsTmp[3];
-                    
+
                     for ( var i = 0; i < 4; i++) {
                         var vec = osg.Matrix.transform3x3(this._matrix.get(),vectors[i] , []);
+                        // disable the rotation
+                        vec = vectors[i];
                         coord[i*3 + 0] = vec[0];
                         coord[i*3 + 1] = vec[1];
                         coord[i*3 + 2] = vec[2];
@@ -1362,6 +1389,8 @@ function createSceneTestReconstructPosition()
 
             textureResult = texture;
 
+            quad.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
+            quad.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(1,'Texture1'));
 
             var cb = new EndCullCallback(ucb, projection, modelview, quad);
 
@@ -1389,20 +1418,13 @@ function createSceneTestReconstructPosition()
             "precision highp float;",
             "#endif",
             "uniform sampler2D depthTexture;",
-            "uniform float depthFactor;",
-            "uniform vec4 depthColor;",
             "varying vec2 FragTexCoord0;",
             pack,
             "void main() {",
-            "  float decode = unpack4x8ToFloat(texture2D(depthTexture, FragTexCoord0));",
-            "  vec3 value = texture2D(depthTexture, FragTexCoord0).rgb;",
-            "  gl_FragColor = vec4(vec3(decode),1.0);",
+            "  gl_FragColor = texture2D(depthTexture, FragTexCoord0);",
             "}",
             ""].join('\n'), {
                 'depthTexture': textureResult,
-                'depthFactor': 0.01,
-                'depthColor': [1,1,1,1],
-                'projection': projection
             });
 
         composer.getOrCreateStateSet().addUniform(projection, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
@@ -1447,6 +1469,9 @@ function createSceneOptimized()
         var modelview = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'camera');
         var ucb = new CullCallback(projection, modelview);
 
+        group.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
+        group.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(1,'Texture1'));
+
         // generate depth
         var textureDepth;
         (function() {
@@ -1485,7 +1510,13 @@ function createSceneOptimized()
             textureNormal = texture;
         })();
 
-
+        
+        var textureColor = new osg.Texture();
+        (function() {
+            textureColor.setTextureSize(w, h);
+            var sceneRttColor = createCameraRtt(textureColor, group);
+            root.addChild(sceneRttColor);
+        })();
 
         var composer = new osgUtil.Composer();
         root.addChild(composer);
@@ -1502,6 +1533,7 @@ function createSceneOptimized()
                                                                0,0,0], 3);
 
         composer.addPass(ssao);
+        composer.addPass(new osgUtil.Composer.Filter.BlendMultiply(textureColor),w,h);
         composer.renderToScreen(w,h);
         composer.build();
 
@@ -1613,6 +1645,7 @@ function createSceneOptimized()
                 
                 for ( var i = 0; i < 4; i++) {
                     var vec = osg.Matrix.transform3x3(this._matrix.get(),vectors[i] , []);
+                    vec = vectors[i];
                     coord[i*3 + 0] = vec[0];
                     coord[i*3 + 1] = vec[1];
                     coord[i*3 + 2] = vec[2];
@@ -1642,6 +1675,6 @@ function createSceneOptimized()
     return root;
 }
 
-var createScene = createSceneTestReconstructPosition; //createSceneTestDepth;
+var createScene = createSceneOptimized; //createSceneTestReconstructPosition; //createSceneTestDepth;
 window.addEventListener("load", main ,true);
 
