@@ -205,10 +205,14 @@
                 param.id = param.name;
             }
             param.value = this.copyDefaultValue(param);
-            if (param.object !== undefined && param.field !== undefined) {
-                return this.createInternalSlider(param);
-            } else if (param.type !== undefined) {
+            if (param.type !== undefined) {
                 return this.createInternalSliderUniform(param);
+            } else {
+                if (param.object === undefined) {
+                    param.object = {'data': param.value };
+                    param.field = 'data';
+                }
+                return this.createInternalSlider(param);
             }
         }
     };
@@ -234,7 +238,7 @@ osgUtil.ParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
 
     getUniformList: function(str, map) {
 
-      var txt='uniform float Power; // { min: 0.1, max: 2.0, step: 0.1, value: [0,0,0]  }';
+      //var txt='uniform float Power; // { min: 0.1, max: 2.0, step: 0.1, value: [0,0,0]  }';
 
       var re1='(uniform)';	// Word 1
       var re2='.*?';	// Non-greedy match on filler

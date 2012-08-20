@@ -885,7 +885,7 @@ function createScene2()
                                                 max: 64, 
                                                 step: 2,
                                                 value: 16,
-                                                name: "ssaoSamples",
+                                                name: "nbSamples",
                                                 object: ssao,
                                                 field: '_nbSamples',
                                                 onchange: function() { ssao.dirty(); },
@@ -895,7 +895,7 @@ function createScene2()
         osgUtil.ParameterVisitor.createSlider({ min: 1, 
                                                 max: 10, 
                                                 step: 1,
-                                                value: 2,
+                                                value: 3,
                                                 name: "ssaoNoise",
                                                 object: ssao,
                                                 field: '_noiseTextureSize',
@@ -1563,35 +1563,36 @@ function createSceneOptimized()
                                                 max: 64, 
                                                 step: 2,
                                                 value: 16,
-                                                name: "ssaoSamples",
+                                                name: "nbSamples",
                                                 object: ssao,
                                                 field: '_nbSamples',
                                                 onchange: function() { ssao.dirty(); },
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                max: 10, 
-                                                step: 1,
-                                                value: 2,
-                                                name: "ssaoNoise",
-                                                object: ssao,
-                                                field: '_noiseTextureSize',
-                                                onchange: function(value) {
-                                                    // fix to a power of two
-                                                    ssao._noiseTextureSize = Math.pow(2,value);
-                                                    ssao._noiseTextureSize = Math.min(ssao._noiseTextureSize, 512);
-                                                    ssao.dirty();
-                                                },
-                                                html: document.getElementById('parameters')
-                                              });
-
+        if (false) {
+            osgUtil.ParameterVisitor.createSlider({ min: 1, 
+                                                    max: 10, 
+                                                    step: 1,
+                                                    value: 2,
+                                                    name: "ssaoNoise",
+                                                    object: ssao,
+                                                    field: '_noiseTextureSize',
+                                                    onchange: function(value) {
+                                                        // fix to a power of two
+                                                        ssao._noiseTextureSize = Math.pow(2,value);
+                                                        ssao._noiseTextureSize = Math.min(ssao._noiseTextureSize, 512);
+                                                        ssao.dirty();
+                                                    },
+                                                    html: document.getElementById('parameters')
+                                                  });
+        }
 
         osgUtil.ParameterVisitor.createSlider({ min: 0.0, 
                                                 max: 1.0, 
                                                 step: 0.01,
                                                 value: 0.0,
-                                                name: "ssaoAngleLimit",
+                                                name: "angleThreshold",
                                                 object: ssao,
                                                 field: '_angleLimit',
                                                 onchange: function() { ssao.dirty(); },
@@ -1602,7 +1603,7 @@ function createSceneOptimized()
                                                 max: 15, 
                                                 step: 1,
                                                 value: 3,
-                                                name: "blurSize",
+                                                name: "blurNbSamples",
                                                 object: blurH,
                                                 field: '_nbSamples',
                                                 onchange: function(value) { 
@@ -1616,7 +1617,7 @@ function createSceneOptimized()
                                                 max: 8, 
                                                 step: 0.5,
                                                 value: 1,
-                                                name: "blurSizeDist",
+                                                name: "blurPixelDistance",
                                                 object: blurH,
                                                 field: '_pixelSize',
                                                 onchange: function(value) { 
@@ -1627,10 +1628,12 @@ function createSceneOptimized()
                                               });
 
         var radiusDepth = { radius: 0.1 };
-        osgUtil.ParameterVisitor.createSlider({ min: model.getBound().radius()*0.001, 
-                                                max: model.getBound().radius()*0.05, 
+        var minRadius = parseFloat((model.getBound().radius()*0.005).toFixed(5));
+        var maxRadius = parseFloat((model.getBound().radius()*0.05).toFixed(5));
+        osgUtil.ParameterVisitor.createSlider({ min: minRadius,
+                                                max: maxRadius,
                                                 step: 0.002,
-                                                value: model.getBound().radius()*0.001,
+                                                value: minRadius,
                                                 object: radiusDepth,
                                                 field: 'radius',
                                                 name: "radius",
@@ -1640,6 +1643,17 @@ function createSceneOptimized()
 
                                                     blurV.setRadius(value);
                                                     blurH.setRadius(value);
+                                                },
+                                                html: document.getElementById('parameters')
+                                              });
+
+        osgUtil.ParameterVisitor.createSlider({ min: 0.1, 
+                                                max: 16.0, 
+                                                step: 0.1,
+                                                value: 1.0,
+                                                name: "power",
+                                                onchange: function(value) {
+                                                    ssao.setPower(value);
                                                 },
                                                 html: document.getElementById('parameters')
                                               });

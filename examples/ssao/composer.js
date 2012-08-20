@@ -803,6 +803,11 @@
             uniform.get()[0] = value;
             uniform.dirty();
         },
+        setPower: function(value) {
+            var uniform = this._stateSet.getUniform('Power');
+            uniform.get()[0] = value;
+            uniform.dirty();
+        },
         build: function() {
             var stateSet = this._stateSet;
             var nbSamples = this._nbSamples;
@@ -900,8 +905,8 @@
                 "uniform sampler2D Texture2;",
                 "uniform mat4 projection;",
                 "uniform vec2 noiseSampling;",
-                "uniform float Power; //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
-                "uniform float Radius; //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
+                "uniform float Power;", //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
+                "uniform float Radius;",  //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
 
                 "#define NB_SAMPLES " + this._nbSamples,
                 "float depth;",
@@ -1081,8 +1086,8 @@
                 "uniform mat4 projection;",
                 "uniform mat4 camera;",
                 "uniform vec2 noiseSampling;",
-                "uniform float Power; //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
-                "uniform float Radius; //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
+                "uniform float Power;", //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
+                "uniform float Radius;", //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
 
                 "#define NB_SAMPLES " + this._nbSamples,
                 "float depth;",
