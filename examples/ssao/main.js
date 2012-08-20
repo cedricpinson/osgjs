@@ -1514,6 +1514,9 @@ function createSceneOptimized()
         var textureColor = new osg.Texture();
         (function() {
             textureColor.setTextureSize(w, h);
+            textureColor.setMinFilter('LINEAR');
+            textureColor.setMagFilter('LINEAR');
+
             var sceneRttColor = createCameraRtt(textureColor, group);
             root.addChild(sceneRttColor);
         })();
@@ -1532,7 +1535,25 @@ function createSceneOptimized()
                                                                0,0,0,
                                                                0,0,0], 3);
 
+
+        var w2,h2;
+        w2 = textureSize[0];
+        h2 = textureSize[1];
+
+        var blurSize = 5;
+        var blurV = new osgUtil.Composer.Filter.BilateralVBlur({ 'nbSamples' : blurSize,
+                                                                 'depthTexture' : textureDepth,
+                                                                 'radius' : 0.1});
+        
+        var blurH = new osgUtil.Composer.Filter.BilateralHBlur({ 'nbSamples' : blurSize,
+                                                                 'depthTexture' : textureDepth,
+                                                                 'radius' : 0.1});
+
         composer.addPass(ssao);
+
+        composer.addPass(blurV, w2, h2);
+        composer.addPass(blurH, w2, h2);
+
         composer.addPass(new osgUtil.Composer.Filter.BlendMultiply(textureColor),w,h);
         composer.renderToScreen(w,h);
         composer.build();
@@ -1577,7 +1598,6 @@ function createSceneOptimized()
                                                 html: document.getElementById('parameters')
                                               });
 
-        if (false) {
         osgUtil.ParameterVisitor.createSlider({ min: 1, 
                                                 max: 15, 
                                                 step: 1,
@@ -1605,7 +1625,24 @@ function createSceneOptimized()
                                                 },
                                                 html: document.getElementById('parameters')
                                               });
-        }
+
+        var radiusDepth = { radius: 0.1 };
+        osgUtil.ParameterVisitor.createSlider({ min: model.getBound().radius()*0.001, 
+                                                max: model.getBound().radius()*0.05, 
+                                                step: 0.002,
+                                                value: model.getBound().radius()*0.001,
+                                                object: radiusDepth,
+                                                field: 'radius',
+                                                name: "radius",
+                                                onchange: function(value) {
+                                                    ssao.setRadius(value);
+                                                    ssao.dirty(); 
+
+                                                    blurV.setRadius(value);
+                                                    blurH.setRadius(value);
+                                                },
+                                                html: document.getElementById('parameters')
+                                              });
 
 
         var params = new osgUtil.ParameterVisitor();

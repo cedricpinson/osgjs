@@ -437,7 +437,7 @@
 
 
     osgUtil.Composer.Filter.AverageVBlur = function(nbSamplesOpt) {
-        osgUtil.Composer.Filter.AverageHBlur.call(this);
+        osgUtil.Composer.Filter.AverageHBlur.call(this, nbSamplesOpt);
     };
     
     osgUtil.Composer.Filter.AverageVBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.AverageHBlur.prototype, {
@@ -456,6 +456,139 @@
         }
     });
 
+
+
+
+    osgUtil.Composer.Filter.BilateralHBlur = function(options) {
+        osgUtil.Composer.Filter.call(this);
+
+        if (options === undefined) {
+            options = {};
+        }
+
+        var nbSamplesOpt = options.nbSamples;
+        var depthTexture = options.depthTexture;
+        var radius = options.radius;
+
+        if (nbSamplesOpt === undefined) {
+            this.setBlurSize(5);
+        } else {
+            this.setBlurSize(nbSamplesOpt);
+        }
+        this._depthTexture = depthTexture;
+        this._pixelSize = 1.0;
+        this._radius = osg.Uniform.createFloat(1.0,'radius');
+        this.setRadius(radius);
+    };
+    
+    osgUtil.Composer.Filter.BilateralHBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+        setBlurSize: function(nbSamples) {
+            if (nbSamples%2 !== 1) {
+                nbSamples+=1;
+            }
+            this._nbSamples = nbSamples;
+            this.dirty();
+        },
+        setPixelSize: function(value) {
+            this._pixelSize = value;
+            this.dirty();
+        },
+        setRadius: function(radius) {
+            this._radius.get()[0] = radius *2.0;
+            this._radius.dirty();
+        },
+        getUVOffset: function(value) {
+            return "vec2(0.0, float("+value+"))/RenderSize[1];";
+        },
+        getShaderBlurKernel: function() {
+            var nbSamples = this._nbSamples;
+            var kernel = [];
+            kernel.push(" pixel = texture2D(Texture0, FragTexCoord0 );");
+            kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");            
+            kernel.push(" vec2 offset, tmpUV;");
+            kernel.push(" depth = getDepthValue(texture2D(Texture1, FragTexCoord0 ));");
+            for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
+                kernel.push(" offset = " + this.getUVOffset(i*this._pixelSize) );
+
+                kernel.push(" tmpUV =  FragTexCoord0 + offset;");
+                kernel.push(" tmpDepth = getDepthValue(texture2D(Texture1, tmpUV ));");
+                kernel.push(" if ( abs(depth-tmpDepth) < radius) {");
+                kernel.push("   pixel += texture2D(Texture0, tmpUV);");
+                kernel.push("   nbHits += 1.0;");
+                kernel.push(" }");
+
+                kernel.push(" tmpUV =  FragTexCoord0 - offset;");
+                kernel.push(" tmpDepth = getDepthValue(texture2D(Texture1, tmpUV ));");
+                kernel.push(" if ( abs(depth-tmpDepth) < radius) {");
+                kernel.push("   pixel += texture2D(Texture0, tmpUV);");
+                kernel.push("   nbHits += 1.0;");
+                kernel.push(" }");
+            }
+            kernel.push(" pixel /= nbHits;");
+            return kernel;
+        },
+        build: function() {
+            var nbSamples = this._nbSamples;
+            var vtx = osgUtil.Composer.Filter.defaultVertexShader;
+            var fgt = [
+                osgUtil.Composer.Filter.defaultFragmentShaderHeader,
+                "uniform sampler2D Texture1;",
+                "uniform float width;",
+                "uniform mat4 projection;",
+                "uniform float radius;",
+
+                "float znear,zfar,zrange;",
+                "",
+                pack,
+                "",
+                "float getDepthValue(vec4 v) {",
+                "  float depth = unpack4x8ToFloat(v);",
+                "  depth = depth*zrange+znear;",
+                "  return -depth;",
+                "}",
+
+                "void main (void)",
+                "{",
+                "  vec4 pixel;",
+                "  float depth, tmpDepth;",
+                "  znear = projection[3][2] / (projection[2][2]-1.0);",
+                "  zfar = projection[3][2] / (projection[2][2]+1.0);",
+                "  zrange = zfar-znear;",
+                "  float nbHits = 1.0;",
+
+                this.getShaderBlurKernel().join('\n'),
+                "  gl_FragColor = vec4(pixel);",
+                "}",
+                ""
+            ].join('\n');
+
+            var program = new osg.Program(
+                new osg.Shader(gl.VERTEX_SHADER, vtx),
+                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+
+            if (this._stateSet.getUniform('Texture0') === undefined) {
+                this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
+            }
+            if (this._stateSet.getUniform('Texture1') === undefined) {
+                this._stateSet.addUniform(osg.Uniform.createInt1(1,'Texture1'));
+            }
+            this._stateSet.addUniform(this._radius);
+            this._stateSet.setTextureAttributeAndModes(1, this._depthTexture);
+            this._stateSet.setAttributeAndModes(program);
+            this._dirty = false;
+        }
+    });
+
+
+    osgUtil.Composer.Filter.BilateralVBlur = function(options) {
+        osgUtil.Composer.Filter.BilateralHBlur.call(this, options);
+    };
+    
+    osgUtil.Composer.Filter.BilateralVBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.BilateralHBlur.prototype, {
+        getUVOffset: function(value) {
+            return "vec2(float("+value+"),0.0)/RenderSize[0];";
+        }
+    });
 
 
     osgUtil.Composer.Filter.InputTexture = function(texture) {
@@ -664,6 +797,11 @@
         setSceneRadius: function(value) {
             this._sceneRadius = value;
             this.dirty();
+        },
+        setRadius: function(value) {
+            var uniform = this._stateSet.getUniform('Radius');
+            uniform.get()[0] = value;
+            uniform.dirty();
         },
         build: function() {
             var stateSet = this._stateSet;

@@ -207,8 +207,9 @@
             param.value = this.copyDefaultValue(param);
             if (param.object !== undefined && param.field !== undefined) {
                 return this.createInternalSlider(param);
+            } else if (param.type !== undefined) {
+                return this.createInternalSliderUniform(param);
             }
-            return this.createInternalSliderUniform(param);
         }
     };
 
@@ -219,9 +220,10 @@ osgUtil.ParameterVisitor = function() {
     this.arraySlider = new ArraySlider();
     this.setTargetHTML(document.body);
 };
-    osgUtil.ParameterVisitor.createSlider = function(param) {
-        (new ArraySlider()).createSlider(param);
-    };
+
+osgUtil.ParameterVisitor.createSlider = function(param) {
+    (new ArraySlider()).createSlider(param);
+};
 
 osgUtil.ParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
 
