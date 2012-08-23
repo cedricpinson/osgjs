@@ -69,7 +69,8 @@ OSG_UTIL = [
         "osgUtil/osgUtil.js",
         "osgUtil/TriangleIntersect.js",
         "osgUtil/IntersectVisitor.js",
-        "osgUtil/ShaderParameterVisitor.js"
+        "osgUtil/ShaderParameterVisitor.js",
+        "osgUtil/Composer.js"
 ]
 
 OSG_DB = [

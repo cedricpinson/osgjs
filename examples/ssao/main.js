@@ -104,13 +104,6 @@ var getModel = function(func) {
 
 
 var pack = [
-    "vec4 OldpackFloatTo4x8(in float val) {",
-    " const vec4 bitSh = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);",
-    " const vec4 bitMsk = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);",
-    " vec4 result = fract(val * bitSh);",
-    " result -= result.xxyz * bitMsk;",
-    " return result;",
-    "}",
 
     "vec4 packFloatTo4x8(in float v) {",
     "vec4 enc = vec4(1.0, 255.0, 65025.0, 160581375.0) * v;",
@@ -130,11 +123,6 @@ var pack = [
     " return vec4(res1.x,res1.y,res2.x,res2.y);",
     "}",
     " ",
-    "float Oldunpack4x8ToFloat(in vec4 val) {",
-    " const vec4 unshift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);",
-    " return dot(val, unshift);",
-    "}",
-
     "float unpack4x8ToFloat( vec4 rgba ) {",
     " return dot( rgba, vec4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/160581375.0) );",
     "}",
@@ -144,27 +132,6 @@ var pack = [
     " return vec2(dot(val.xy, unshift), dot(val.zw, unshift));",
     "}"].join('\n');
 
-var packdebug = [
-    "vec4 packFloatTo4x8(in float val) {",
-    " const vec4 bitSh = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);",
-    " const vec4 bitMsk = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);",
-    " vec4 result = fract(val * bitSh);",
-    " result -= result.xxyz * bitMsk;",
-    " return result;",
-    "}",
-    " ",
-    "vec4 pack2FloatTo4x8(in vec2 val) {",
-    " return vec4(val[0],val[1],0.0,0.0);",
-    "}",
-    " ",
-    "float unpack4x8ToFloat(in vec4 val) {",
-    " const vec4 unshift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);",
-    " return dot(val, unshift);",
-    "}",
-    " ",
-    "vec2 unpack4x8To2Float(in vec4 val) {",
-    " return vec2(val[0],val[1]);",
-    "}"].join('\n');
 
 
 var normalEncoding = [
@@ -184,28 +151,6 @@ var normalEncoding = [
     "    return n;",
     "}"].join('\n');
 
-var normalEncodingTest = [
-    "vec2 encodeNormal (vec3 n)",
-    "{",
-    "    return vec2(n.xy*0.5+0.5);",
-    "}",
-    "vec3 decodeNormal (vec2 enc)",
-    "{",
-    "    vec3 n = vec3(enc*2.0-1.0,0.0);",
-    "    n.z = sqrt(1.0-dot(n.xy, n.xy));",
-    "    return n;",
-    "}"].join('\n');
-
-var normalEncodingdebug = [
-    "vec2 encodeNormal (vec3 n)",
-    "{",
-    "    return vec2(n.xy);",
-    "}",
-    "vec3 decodeNormal (vec2 enc)",
-    "{",
-    "    vec3 n = vec3(enc.xy,0.0);",
-    "    return n;",
-    "}"].join('\n');
 
 var getNormalShader = function() {
 
@@ -628,7 +573,6 @@ var createCameraRtt = function(resultTexture, scene) {
     camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, resultTexture, 0);
     camera.attachRenderBuffer(osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16);
-    //camera.setComputeNearFar(false);
 
     camera.addChild(scene);
     return camera;
@@ -1550,7 +1494,6 @@ function createSceneOptimized()
                                                                  'radius' : 0.1});
 
         composer.addPass(ssao);
-
         composer.addPass(blurV, w2, h2);
         composer.addPass(blurH, w2, h2);
 
@@ -1714,7 +1657,6 @@ function createSceneOptimized()
             draw.call(this);
         };
         Viewer.draw = newdraw;
-
 
         model.dirtyBound();
         Viewer.getManipulator().computeHomePosition();

@@ -235,6 +235,51 @@
         ""
     ].join('\n');
 
+    osgUtil.Composer.Filter.shaderUtils = [
+        "vec4 packFloatTo4x8(in float v) {",
+        "vec4 enc = vec4(1.0, 255.0, 65025.0, 160581375.0) * v;",
+        "enc = fract(enc);",
+        "enc -= enc.yzww * vec4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);",
+        "return enc;",
+        "}",
+
+        " ",
+        "vec4 pack2FloatTo4x8(in vec2 val) {",
+        " const vec2 bitSh = vec2(256.0, 1.0);",
+        " const vec2 bitMsk = vec2(0.0, 1.0/256.0);",
+        " vec2 res1 = fract(val.x * bitSh);",
+        " res1 -= res1.xx * bitMsk;",
+        " vec2 res2 = fract(val.y * bitSh);",
+        " res2 -= res2.xx * bitMsk;",
+        " return vec4(res1.x,res1.y,res2.x,res2.y);",
+        "}",
+        " ",
+        "float unpack4x8ToFloat( vec4 rgba ) {",
+        " return dot( rgba, vec4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/160581375.0) );",
+        "}",
+        " ",
+        "vec2 unpack4x8To2Float(in vec4 val) {",
+        " const vec2 unshift = vec2(1.0/256.0, 1.0);",
+        " return vec2(dot(val.xy, unshift), dot(val.zw, unshift));",
+        "}",
+
+        "vec2 encodeNormal (vec3 n)",
+        "{",
+        "    float f = sqrt(8.0*n.z+8.0);",
+        "    return n.xy / f + 0.5;",
+        "}",
+        "vec3 decodeNormal (vec2 enc)",
+        "{",
+        "    vec2 fenc = enc*4.0-2.0;",
+        "    float f = dot(fenc,fenc);",
+        "    float g = sqrt(1.0-f/4.0);",
+        "    vec3 n;",
+        "    n.xy = fenc*g;",
+        "    n.z = 1.0-f/2.0;",
+        "    return n;",
+        "}",
+        ""].join('\n');
+
     osgUtil.Composer.Filter.Helper = {
         getOrCreatePascalCoefficients: function() {
             var cache = osgUtil.Composer.Filter.Helper.getOrCreatePascalCoefficients.cache;
@@ -337,67 +382,6 @@
     });
 
 
-    osgUtil.Composer.Filter.HBlur = function(nbSamplesOpt) {
-        osgUtil.Composer.Filter.call(this);
-        if (nbSamplesOpt === undefined) {
-            this.setBlurSize(5);
-        } else {
-            this.setBlurSize(nbSamplesOpt);
-        }
-    };
-    
-    osgUtil.Composer.Filter.HBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
-        setBlurSize: function(nbSamples) {
-            if (nbSamples%2 !== 1) {
-                nbSamples+=1;
-            }
-            this._nbSamples = nbSamples;
-            this.dirty();
-        },
-        build: function() {
-            var nbSamples = this._nbSamples;
-            var vtx = osgUtil.Composer.Filter.defaultVertexShader;
-            var pascal = osgUtil.Composer.Filter.Helper.getOrCreatePascalCoefficients();
-            var weights = pascal[nbSamples-1];
-            var start = Math.floor(nbSamples/2.0);
-            var kernel = [];
-            kernel.push(" pixel += float("+weights[start]+")*texture2D(Texture0, FragTexCoord0 ).rgb;");
-            var offset = 1;
-            kernel.push(" vec2 offset;");
-            for (var i = start+1; i < nbSamples; i++) {
-                var weight = weights[i];
-                kernel.push(" offset = vec2("+offset+".0/RenderSize[0],0.0);");
-                offset++;
-                kernel.push(" pixel += "+weight+"*texture2D(Texture0, FragTexCoord0 + offset).rgb;");
-                kernel.push(" pixel += "+weight+"*texture2D(Texture0, FragTexCoord0 - offset).rgb;");
-            }
-
-            var fgt = [
-                osgUtil.Composer.Filter.defaultFragmentShaderHeader,
-                "uniform float width;",
-
-                "void main (void)",
-                "{",
-                "  vec3 pixel;",
-                kernel.join('\n'),
-                "  gl_FragColor = vec4(pixel,1.0);",
-                "}",
-                ""
-            ].join('\n');
-
-            var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
-
-            if (this._stateSet.getUniform('Texture0') === undefined) {
-                this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
-            }
-            this._stateSet.setAttributeAndModes(program);
-            this._dirty = false;
-        }
-    });
-
-
 
     osgUtil.Composer.Filter.AverageHBlur = function(nbSamplesOpt) {
         osgUtil.Composer.Filter.call(this);
@@ -421,6 +405,9 @@
             this._pixelSize = value;
             this.dirty();
         },
+        getUVOffset: function(value) {
+            return "vec2(float("+value+"), 0.0)/RenderSize[0];";
+        },
         getShaderBlurKernel: function() {
             var nbSamples = this._nbSamples;
             var kernel = [];
@@ -428,7 +415,7 @@
             kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");
             kernel.push(" vec2 offset;");
             for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
-                kernel.push(" offset = vec2(float("+i*this._pixelSize+")/RenderSize[0],0.0);");
+                kernel.push(" offset = " + this.getUVOffset(i*this._pixelSize));
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 + offset);");
                 kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 - offset);");
             }
@@ -467,24 +454,11 @@
     osgUtil.Composer.Filter.AverageVBlur = function(nbSamplesOpt) {
         osgUtil.Composer.Filter.AverageHBlur.call(this, nbSamplesOpt);
     };
-    
     osgUtil.Composer.Filter.AverageVBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.AverageHBlur.prototype, {
-        getShaderBlurKernel: function() {
-            var nbSamples = this._nbSamples;
-            var kernel = [];
-            kernel.push(" pixel = texture2D(Texture0, FragTexCoord0 );");
-            kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");            kernel.push(" vec2 offset;");
-            for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
-                kernel.push(" offset = vec2(0.0,float("+i*this._pixelSize+")/RenderSize[1]);");
-                kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 + offset);");
-                kernel.push(" pixel += texture2D(Texture0, FragTexCoord0 - offset);");
-            }
-            kernel.push(" pixel /= float(" + nbSamples + ");");
-            return kernel;
+        getUVOffset: function(value) {
+            return "vec2(0.0, float("+value+"))/RenderSize[1];";
         }
     });
-
-
 
 
     osgUtil.Composer.Filter.BilateralHBlur = function(options) {
@@ -567,7 +541,7 @@
 
                 "float znear,zfar,zrange;",
                 "",
-                pack,
+                osgUtil.Composer.Filter.shaderUtils,
                 "",
                 "float getDepthValue(vec4 v) {",
                 "  float depth = unpack4x8ToFloat(v);",
@@ -619,24 +593,39 @@
     });
 
 
+    // InputTexture is a fake filter to setup the first texture
+    // in the composer pipeline
     osgUtil.Composer.Filter.InputTexture = function(texture) {
         osgUtil.Composer.Filter.call(this);
         this._stateSet.setTextureAttributeAndModes(0, texture);
     };
-
     osgUtil.Composer.Filter.InputTexture.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
-        build: function() {
-            this._dirty = false;
-        }
+        build: function() { this._dirty = false; }
     });
 
 
-    osgUtil.Composer.Filter.VBlur = function(nbSamplesOpt) {
-        osgUtil.Composer.Filter.HBlur.call(this);
+
+    // Operate a Gaussian horizontal blur
+    osgUtil.Composer.Filter.HBlur = function(nbSamplesOpt) {
+        osgUtil.Composer.Filter.call(this);
+        if (nbSamplesOpt === undefined) {
+            this.setBlurSize(5);
+        } else {
+            this.setBlurSize(nbSamplesOpt);
+        }
     };
-
-    osgUtil.Composer.Filter.VBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.HBlur.prototype, {
-
+    
+    osgUtil.Composer.Filter.HBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+        setBlurSize: function(nbSamples) {
+            if (nbSamples%2 !== 1) {
+                nbSamples+=1;
+            }
+            this._nbSamples = nbSamples;
+            this.dirty();
+        },
+        getUVOffset: function(value) {
+            return "vec2(float("+value+"), 0.0)/RenderSize[0];";
+        },
         build: function() {
             var nbSamples = this._nbSamples;
             var vtx = osgUtil.Composer.Filter.defaultVertexShader;
@@ -644,21 +633,20 @@
             var weights = pascal[nbSamples-1];
             var start = Math.floor(nbSamples/2.0);
             var kernel = [];
-            kernel.push(" pixel += float("+ weights[start]+")*texture2D(Texture0, FragTexCoord0 ).rgb;");
+            kernel.push(" pixel += float("+weights[start]+")*texture2D(Texture0, FragTexCoord0 ).rgb;");
             var offset = 1;
             kernel.push(" vec2 offset;");
             for (var i = start+1; i < nbSamples; i++) {
                 var weight = weights[i];
-                kernel.push(" offset = vec2(0.0, "+offset+".0/RenderSize[1]);");
+                kernel.push(" offset = " + this.getUVOffset(i) );
                 offset++;
                 kernel.push(" pixel += "+weight+"*texture2D(Texture0, FragTexCoord0 + offset).rgb;");
                 kernel.push(" pixel += "+weight+"*texture2D(Texture0, FragTexCoord0 - offset).rgb;");
             }
 
             var fgt = [
-                "",
                 osgUtil.Composer.Filter.defaultFragmentShaderHeader,
-                "uniform float height;",
+                "uniform float width;",
 
                 "void main (void)",
                 "{",
@@ -678,6 +666,18 @@
             }
             this._stateSet.setAttributeAndModes(program);
             this._dirty = false;
+        }
+    });
+
+
+    // Operate a Gaussian vertical blur
+    osgUtil.Composer.Filter.VBlur = function(nbSamplesOpt) {
+        osgUtil.Composer.Filter.HBlur.call(this);
+    };
+
+    osgUtil.Composer.Filter.VBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.HBlur.prototype, {
+        getUVOffset: function(value) {
+            return "vec2(0.0, float("+value+"))/RenderSize[1];";
         }
     });
 
@@ -1112,7 +1112,6 @@
                 "uniform sampler2D Texture1;",
                 "uniform sampler2D Texture2;",
                 "uniform mat4 projection;",
-                "uniform mat4 camera;",
                 "uniform vec2 noiseSampling;",
                 "uniform float Power;", //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
                 "uniform float Radius;", //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
@@ -1125,8 +1124,8 @@
                 "vec4 kernel["+nbSamples+"];",
                 noiseShader.join('\n'),
 
-                pack,
-                normalEncoding,
+
+                osgUtil.Composer.Filter.shaderUtils,
 
                 "mat3 computeBasis()",
                 "{",
