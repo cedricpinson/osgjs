@@ -826,6 +826,20 @@
             this._sceneRadius = value;
             this.dirty();
         },
+        setAngleLimit: function(value) {
+            if (value === this._angleLimit) {
+                return;
+            }
+            this._angleLimit = value;
+            this.dirty();
+        },
+        setNbSamples: function(value) {
+            if (value === this._nbSamples) {
+                return;
+            }
+            this._nbSamples = value;
+            this.dirty();
+        },
         setRadius: function(value) {
             var uniform = this._stateSet.getUniform('Radius');
             uniform.get()[0] = value;
