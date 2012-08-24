@@ -837,7 +837,7 @@
             if (value === this._nbSamples) {
                 return;
             }
-            this._nbSamples = value;
+            this._nbSamples = Math.floor(value);
             this.dirty();
         },
         setRadius: function(value) {
