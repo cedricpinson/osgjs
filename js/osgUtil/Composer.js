@@ -32,7 +32,7 @@
         osg.Node.call(this);
         this._stack = [];
         this._renderToScreen = false;
-
+        this._dirty = false;
         var UpdateCallback = function() {
 
         };
@@ -47,7 +47,11 @@
     };
 
     osgUtil.Composer.prototype = osg.objectInehrit(osg.Node.prototype, {
-
+        dirty: function() { 
+            for (var i = 0, l = this._stack.length; i < l; i++) {
+                this._stack[i].filter.dirty();
+            }
+        },
         // arg0 can be a texture
         addPass: function(filter, arg0, arg1) {
             if (arg0 instanceof osg.Texture) {
@@ -488,6 +492,7 @@
             if (nbSamples%2 !== 1) {
                 nbSamples+=1;
             }
+            osg.log("BlurSize " + nbSamples);
             this._nbSamples = nbSamples;
             this.dirty();
         },
@@ -804,11 +809,14 @@
         this._radius = radius;
         this._nbSamples = nbSamples;
         this._noiseTextureSize = 16;
+        this._sceneRadius = 2.0;
+
         stateSet.addUniform(osg.Uniform.createFloat1(1.0,'Power'));
         stateSet.addUniform(osg.Uniform.createFloat1(radius,'Radius'));
         stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
         stateSet.addUniform(osg.Uniform.createInt1(1,'Texture1'));
         stateSet.addUniform(osg.Uniform.createInt1(2,'Texture2'));
+        stateSet.addUniform(osg.Uniform.createFloat1(0.1,'AngleLimit'));
 
         var w = textureNormal.getWidth();
         var h = textureNormal.getHeight();
@@ -817,21 +825,47 @@
         stateSet.setTextureAttributeAndModes(0,textureNormal);
         stateSet.setTextureAttributeAndModes(1,texturePosition);
 
-        this._angleLimit = 0.3;
-        this._sceneRadius = 2.0;
+        this.initNoise();
+        
     };
 
     osgUtil.Composer.Filter.SSAO.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+
+        initNoise: function() {
+            var sizeNoise = this._noiseTextureSize;
+            var noise = new Array(sizeNoise*sizeNoise*3);
+            (function(array) {
+                for (var i = 0; i < sizeNoise*sizeNoise; i++) {
+                    var x,y,z;
+                    x = 2.0*(Math.random()-0.5);
+                    y = 2.0*(Math.random()-0.5);
+                    z = 0.0;
+
+                    var n = osg.Vec3.normalize([x,y,z],[]);
+                    array[i*3+0] = 255*(n[0]*0.5+0.5);
+                    array[i*3+1] = 255*(n[1]*0.5+0.5);
+                    array[i*3+2] = 255*(n[2]*0.5+0.5);
+                }
+            })(noise);
+
+            var noiseTexture = new osg.Texture();
+            noiseTexture.setWrapS('REPEAT');
+            noiseTexture.setWrapT('REPEAT');
+            noiseTexture.setMinFilter('NEAREST');
+            noiseTexture.setMagFilter('NEAREST');
+            
+            noiseTexture.setTextureSize(sizeNoise,sizeNoise);
+            noiseTexture.setImage(new Uint8Array(noise),'RGB');
+            this._noiseTexture = noiseTexture;
+        },
         setSceneRadius: function(value) {
             this._sceneRadius = value;
             this.dirty();
         },
         setAngleLimit: function(value) {
-            if (value === this._angleLimit) {
-                return;
-            }
-            this._angleLimit = value;
-            this.dirty();
+            var uniform = this._stateSet.getUniform('AngleLimit');
+            uniform.get()[0] = value;
+            uniform.dirty();
         },
         setNbSamples: function(value) {
             if (value === this._nbSamples) {
@@ -854,13 +888,12 @@
             var stateSet = this._stateSet;
             var nbSamples = this._nbSamples;
             var kernel = new Array(nbSamples*4);
-            var angleLimit = this._angleLimit;
             (function(array) {
                 for (var i = 0; i < nbSamples; i++) {
                     var x,y,z;
                     x = 2.0*(Math.random()-0.5);
                     y = 2.0*(Math.random()-0.5);
-                    z = Math.max(angleLimit,Math.random());
+                    z = Math.random();
 
                     var v = osg.Vec3.normalize([x,y,z],[]);
                     var scale = Math.max(i/nbSamples,0.1);
@@ -872,39 +905,8 @@
                 }
             })(kernel);
 
-            var sizeNoise = this._noiseTextureSize;
-            var noise = new Array(sizeNoise*sizeNoise*3);
-            (function(array) {
-                for (var i = 0; i < sizeNoise*sizeNoise; i++) {
-                    var x,y,z;
-                    x = 2.0*(Math.random()-0.5);
-                    y = 2.0*(Math.random()-0.5);
-                    z = 0.0;
 
-                    var n = osg.Vec3.normalize([x,y,z],[]);
-                    array[i*3+0] = 255*(n[0]*0.5+0.5);
-                    array[i*3+1] = 255*(n[1]*0.5+0.5);
-                    array[i*3+2] = 255*(n[2]*0.5+0.5);
-                }
-            })(noise);
-
-
-            var noiseShader = [];
-            noiseShader.push("vec2 rand(in vec2 coord) { //generating random noise");
-            noiseShader.push("float noiseX = (fract(sin(dot(coord ,vec2(12.9898,78.233))) * 43758.5453));");
-            noiseShader.push("float noiseY = (fract(sin(dot(coord ,vec2(12.9898,78.233)*2.0)) * 43758.5453));");
-            noiseShader.push("return vec2(noiseX,noiseY)*0.002;");
-            noiseShader.push("}");
-
-            var noiseTexture = new osg.Texture();
-            noiseTexture.setWrapS('REPEAT');
-            noiseTexture.setWrapT('REPEAT');
-            noiseTexture.setMinFilter('NEAREST');
-            noiseTexture.setMagFilter('NEAREST');
-            
-            noiseTexture.setTextureSize(sizeNoise,sizeNoise);
-            noiseTexture.setImage(new Uint8Array(noise),'RGB');
-            stateSet.setTextureAttributeAndModes(2,noiseTexture);
+            stateSet.setTextureAttributeAndModes(2, this._noiseTexture);
             var uniform = stateSet.getUniform('noiseSampling');
             if (uniform === undefined) {
                 uniform = osg.Uniform.createFloat2([this._size[0]/this._noiseTextureSize, this._size[1]/this._noiseTextureSize],'noiseSampling');
@@ -949,19 +951,18 @@
                 "uniform vec2 noiseSampling;",
                 "uniform float Power;", //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
                 "uniform float Radius;",  //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
-
+                "uniform float AngleLimit;",
                 "#define NB_SAMPLES " + this._nbSamples,
                 "float depth;",
                 "vec3 normal;",
                 "vec4 position;",
                 "vec4 kernel["+nbSamples+"];",
-                noiseShader.join('\n'),
+
+
                 "mat3 computeBasis()",
                 "{",
                 "  vec2 uvrand = FragTexCoord0*noiseSampling;",
-                "  //uvrand = rand(gl_FragCoord.xy);",
                 "  vec3 rvec = texture2D(Texture2, uvrand*2.0).xyz*2.0-vec3(1.0);",
-                "  //vec3 rvec = normalize(vec3(uvrand,0.0));",
                 "  vec3 tangent = normalize(rvec - normal * dot(rvec, normal));",
                 "  vec3 bitangent = cross(normal, tangent);",
                 "  mat3 tbn = mat3(tangent, bitangent, normal);",
@@ -983,7 +984,9 @@
                 " mat3 tbn = computeBasis();",
                 " float occlusion = 0.0;",
                 " for (int i = 0; i < NB_SAMPLES; i++) {",
-                "    vec3 sample = tbn * vec3(kernel[i]);",
+                "    vec3 vecKernel = vec3(kernel[i]);",
+                "    vecKernel[2] = max(AngleLimit,vecKernel[2]);",
+                "    vec3 sample = tbn * vecKernel;",
                 "    vec3 dir = sample;",
                 "    float w = dot(dir, normal);",
                 "    float dist = 1.0-kernel[i].w;",
@@ -1036,7 +1039,7 @@
                     var x,y,z;
                     x = 2.0*(Math.random()-0.5);
                     y = 2.0*(Math.random()-0.5);
-                    z = Math.max(angleLimit,Math.random());
+                    z = Math.random();
 
                     var v = osg.Vec3.normalize([x,y,z],[]);
                     var scale = Math.max(i/nbSamples,0.1);
@@ -1049,38 +1052,7 @@
             })(kernel);
 
             var sizeNoise = this._noiseTextureSize;
-            var noise = new Array(sizeNoise*sizeNoise*3);
-            (function(array) {
-                for (var i = 0; i < sizeNoise*sizeNoise; i++) {
-                    var x,y,z;
-                    x = 2.0*(Math.random()-0.5);
-                    y = 2.0*(Math.random()-0.5);
-                    z = 0.0;
-
-                    var n = osg.Vec3.normalize([x,y,z],[]);
-                    array[i*3+0] = 255*(n[0]*0.5+0.5);
-                    array[i*3+1] = 255*(n[1]*0.5+0.5);
-                    array[i*3+2] = 255*(n[2]*0.5+0.5);
-                }
-            })(noise);
-
-
-            var noiseShader = [];
-            noiseShader.push("vec2 rand(in vec2 coord) { //generating random noise");
-            noiseShader.push("float noiseX = (fract(sin(dot(coord ,vec2(12.9898,78.233))) * 43758.5453));");
-            noiseShader.push("float noiseY = (fract(sin(dot(coord ,vec2(12.9898,78.233)*2.0)) * 43758.5453));");
-            noiseShader.push("return vec2(noiseX,noiseY)*0.002;");
-            noiseShader.push("}");
-
-            var noiseTexture = new osg.Texture();
-            noiseTexture.setWrapS('REPEAT');
-            noiseTexture.setWrapT('REPEAT');
-            noiseTexture.setMinFilter('NEAREST');
-            noiseTexture.setMagFilter('NEAREST');
-            
-            noiseTexture.setTextureSize(sizeNoise,sizeNoise);
-            noiseTexture.setImage(new Uint8Array(noise),'RGB');
-            stateSet.setTextureAttributeAndModes(2,noiseTexture);
+            stateSet.setTextureAttributeAndModes(2,this._noiseTexture);
             var uniform = stateSet.getUniform('noiseSampling');
             if (uniform === undefined) {
                 uniform = osg.Uniform.createFloat2([this._size[0]/this._noiseTextureSize, this._size[1]/this._noiseTextureSize],'noiseSampling');
@@ -1129,14 +1101,13 @@
                 "uniform vec2 noiseSampling;",
                 "uniform float Power;", //"+ '{ "min": 0.1, "max": 16.0, "step": 0.1, "value": 1.0 }',
                 "uniform float Radius;", //"+ '{ "min": ' + ssaoRadiusMin +', "max": ' + ssaoRadiusMax + ', "step": '+ ssaoRadiusStep + ', "value": 0.01 }',
-
+                "uniform float AngleLimit;",
                 "#define NB_SAMPLES " + this._nbSamples,
                 "float depth;",
                 "float znear, zfar, zrange;",
                 "vec3 normal;",
                 "vec3 position;",
                 "vec4 kernel["+nbSamples+"];",
-                noiseShader.join('\n'),
 
 
                 osgUtil.Composer.Filter.shaderUtils,
@@ -1189,7 +1160,9 @@
                 " mat3 tbn = computeBasis();",
                 " float occlusion = 0.0;",
                 " for (int i = 0; i < NB_SAMPLES; i++) {",
-                "    vec3 sample = tbn * vec3(kernel[i]);",
+                "    vec3 vecKernel = vec3(kernel[i]);",
+                "    vecKernel[2] = max(AngleLimit,vecKernel[2]);",
+                "    vec3 sample = tbn * vec3(vecKernel);",
                 "    vec3 dir = sample;",
                 "    float w = dot(dir, normal);",
                 "    float dist = 1.0-kernel[i].w;",
