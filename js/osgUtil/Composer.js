@@ -44,6 +44,7 @@
             }
         };
         this.setUpdateCallback(new UpdateCallback());
+        this.getOrCreateStateSet().setAttributeAndModes(new osg.Depth('DISABLE'));
     };
 
     osgUtil.Composer.prototype = osg.objectInehrit(osg.Node.prototype, {
@@ -52,7 +53,11 @@
                 this._stack[i].filter.dirty();
             }
         },
-        // arg0 can be a texture
+
+        // addPass support different signature
+        // addPass(filter) -> the filter will be done on a texture of the same size than the previous pass
+        // addPass(filter, textureWidth, textureHeight) -> the filter will be done on a texture width and height
+        // addPass(filter, texture) -> the filter will be done on the giver texture using its width and height
         addPass: function(filter, arg0, arg1) {
             if (arg0 instanceof osg.Texture) {
                 this._stack.push({ filter: filter, texture: arg0} );
@@ -84,6 +89,7 @@
             var root = this;
             this.removeChildren();
             var lastTextureResult;
+            var self = this;
             this._stack.forEach(function(element, i, array) {
                 if (element.filter.isDirty()) {
                     element.filter.build();
@@ -105,30 +111,44 @@
                     w = inputTexture.getWidth();
                     h = inputTexture.getHeight();
                 }
+                
+                // check if we want to render on screen
                 var camera = new osg.Camera();
-                camera.setStateSet(element.filter.getStateSet());
+                //camera.setClearMask(osg.Camera.COLOR_BUFFER_BIT);
+                camera.setClearMask(0);
+
+                var texture;
+                var quad;
+                if (true &&
+                    i === array.length-1 &&
+                    self._renderToScreen === true) {
+                    w = self._renderToScreenWidth;
+                    h = self._renderToScreenHeight;
+                } else {
+                    camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
+                    texture = element.texture;
+                    if (texture === undefined) {
+                        texture = new osg.Texture();
+                        texture.setTextureSize(w,h);
+                    }
+                    camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture, 0);
+                }
 
                 var vp = new osg.Viewport(0,0,w,h);
                 var projection = osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, []);
+                camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+                camera.setViewport(vp);
+                camera.setProjectionMatrix(projection);
+                camera.setStateSet(element.filter.getStateSet());
 
-                var quad = osg.createTexturedQuadGeometry(-w/2, -h/2, 0,
-                                                          w, 0, 0,
-                                                          0, h, 0);
+                quad = osg.createTexturedQuadGeometry(-w/2, -h/2, 0,
+                                                      w, 0, 0,
+                                                      0, h, 0);
 
                 if (element.filter.buildGeometry !== undefined)
                     quad = element.filter.buildGeometry(quad);
 
                 quad.setName("composer layer");
-                camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-                camera.setViewport(vp);
-                camera.setProjectionMatrix(projection);
-                var texture = element.texture;
-                if (texture === undefined) {
-                    texture = new osg.Texture();
-                    texture.setTextureSize(w,h);
-                }
-                camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
-                camera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, texture, 0);
                 //camera.setComputeNearFar(false);
 
                 lastTextureResult = texture;
@@ -144,60 +164,6 @@
                 root.addChild(camera);
             });
             this._resultTexture = lastTextureResult;
-
-            if (this._renderToScreen) {
-                var w,h;
-                w = this._renderToScreenWidth;
-                h = this._renderToScreenHeight;
-                var vp = new osg.Viewport(0,0, w, h);
-                vp.setName("RenderToScreen");
-                var projection = osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, []);
-                var quad = osg.createTexturedQuadGeometry(-w/2, -h/2, 0,
-                                                          w, 0, 0,
-                                                          0, h, 0);
-                quad.getOrCreateStateSet().setTextureAttributeAndModes(0, this._resultTexture);
-
-                var vertexshader = [
-                    "#ifdef GL_ES",
-                    "precision highp float;",
-                    "#endif",
-                    "attribute vec3 Vertex;",
-                    "attribute vec2 TexCoord0;",
-                    "varying vec2 FragTexCoord0;",
-                    "uniform mat4 ModelViewMatrix;",
-                    "uniform mat4 ProjectionMatrix;",
-                    "vec4 ftransform() {",
-                    "  return ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);",
-                    "}",
-                    "",
-                    "void main(void) {",
-                    "  gl_Position = ftransform();",
-                    "  FragTexCoord0 = TexCoord0;",
-                    "}"
-                ].join('\n');
-                var fragmentshader = [
-                    "#ifdef GL_ES",
-                    "precision highp float;",
-                    "#endif",
-                    "uniform sampler2D Texture0;",
-                    "varying vec2 FragTexCoord0;",
-                    "void main(void) {",
-                    "gl_FragColor = texture2D(Texture0, FragTexCoord0);",
-                    "}"
-                ].join('\n');
-
-                var program = new osg.Program(new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-                                              new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
-                quad.getOrCreateStateSet().setAttributeAndModes(program);
-
-                var camera = new osg.Camera();
-                camera.setName("RenderToScreen");
-                camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-                camera.setViewport(vp);
-                camera.setProjectionMatrix(projection);
-                camera.addChild(quad);
-                root.addChild(camera);
-            }
         }
     });
 
@@ -272,6 +238,7 @@
         "    float f = sqrt(8.0*n.z+8.0);",
         "    return n.xy / f + 0.5;",
         "}",
+
         "vec3 decodeNormal (vec2 enc)",
         "{",
         "    vec2 fenc = enc*4.0-2.0;",
@@ -511,7 +478,7 @@
             var nbSamples = this._nbSamples;
             var kernel = [];
             kernel.push(" pixel = texture2D(Texture0, FragTexCoord0 );");
-            kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");            
+            kernel.push(" if (pixel.w <= 0.0001) { gl_FragColor = vec4(1.0); return; }");
             kernel.push(" vec2 offset, tmpUV;");
             kernel.push(" depth = getDepthValue(texture2D(Texture1, FragTexCoord0 ));");
             for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
@@ -1134,8 +1101,11 @@
                 "void main (void)",
                 "{",
                 kernelglsl,
-                "  //position = texture2D(Texture1, FragTexCoord0);",
                 "  vec4 p = texture2D(Texture0, FragTexCoord0);",
+                "  if (dot(p,p) < 0.001) { ",
+                "     gl_FragColor = vec4(1.0,1.0,1.0,0.0);",
+                "     return;",
+                "  }",
                 "  znear = projection[3][2] / (projection[2][2]-1.0);",
                 "  zfar = projection[3][2] / (projection[2][2]+1.0);",
                 "  zrange = zfar-znear;",
