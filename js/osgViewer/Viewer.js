@@ -393,7 +393,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         }
     },
 
-    setDone: function() { this._done = true; },
+    setDone: function(bool) { this._done = bool; },
     done: function() { return this._done; },
 
     run: function() {
