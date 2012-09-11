@@ -11,6 +11,7 @@ osg.Object = function () {
 
 /** @lends osg.Object.prototype */
 osg.Object.prototype = {
+    getClassType: function() { return this._className; },
     setName: function(name) { this._name = name; },
     getName: function() { return this._name; },
     setUserData: function(data) { this._userdata = data; },
