@@ -467,7 +467,7 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
         depth = this.distance(bb.center(), modelview);
     }
     if (isNaN(depth)) {
-        osg.warning("warning geometry has a NaN depth, " + modelview + " center " + bb.center());
+        osg.warn("warning geometry has a NaN depth, " + modelview + " center " + bb.center());
     } else {
         //leaf.id = this._reserveLeafStack.current;
         leaf.parent = this._currentStateGraph;
