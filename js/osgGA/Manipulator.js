@@ -133,6 +133,17 @@ osgGA.Manipulator.prototype = {
         osg.debug("mousewheel " + intDelta + " " + " " + deltaX + " " + deltaY );
     },
 
+    // The node visitor let you get information during the traverse time.
+    // it contains a FrameStamp object
+
+    // setReferenceTime = function(s) { startSimulation = s; };
+    // setSimulationTime = function(s) { currentSimulation = s; };
+    // getReferenceTime = function() { return startSimulation; };
+    // getSimulationTime = function() { return currentSimulation; };
+    // setFrameNumber = function(n) { frame = n; };
+    // getFrameNumber = function() { return frame; };
+
+    // eg: var currentTime = nv.getFrameStamp().getSimulationTime();
     update: function(nv) {
     },
 

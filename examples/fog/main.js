@@ -81,7 +81,7 @@ function getShader()
         "#endif",
         "varying vec4 position;",
         "uniform vec4 MaterialAmbient;",
-        "uniform float density;",
+        "uniform float density; //  { \"min\": 0.0,  \"max\": 0.006, \"step\": 0.001, \"value\": 0.00001 } ", 
         "void main(void) {",
         "  float d = density; //0.001;",
         "  float f = gl_FragCoord.z/gl_FragCoord.w;",
@@ -123,16 +123,9 @@ function createScene() {
     group.addChild(ground);
     group.getOrCreateStateSet().setAttributeAndMode(new osg.CullFace('DISABLE'));
 
-    var parameterVisitor = new osgUtil.ShaderParameterVisitor();
-    parameterVisitor.setTargetHTML(document.getElementById("Parameters"));
-
-    parameterVisitor.types.float.params['density'] = {
-        min: 0,
-        max: 200.0/10000.0,
-        step: 1.0/10000.0,
-        value: function() { return [0.002]; }
-    };
-    group.accept(parameterVisitor);
+    var params = new osgUtil.ParameterVisitor();
+    params.setTargetHTML(document.getElementById('Parameters'));
+    group.accept(params);
 
     return group;
 }

@@ -58,16 +58,13 @@
   The example demonstrates also the new osgUtil.ShaderParameterVisitor.js . This visitor extract uniform and insert sliders in you page to customize value. It's useful to fine tune shader effect. It also saves the result into the localStorage for conveniance.
   The visitor let you redefine parameters for example if you want to change the range.
 <pre>
-    var parameterVisitor = new osgUtil.ShaderParameterVisitor();
-    parameterVisitor.setTargetHTML(document.getElementById("Parameters"));
+    // add a comment like the following line into your shader to configure the slider
+    // "uniform float density; //  { "min": 0.0,  "max": 0.006, "step": 0.001, "value": 0.00001 } ", 
 
-    parameterVisitor.types.float.params['density'] = {
-        min: 0,
-        max: 200.0/10000.0,
-        step: 1.0/10000.0,
-        value: function() { return [0.002]; }
-    };
-    group.accept(parameterVisitor);
+    var params = new osgUtil.ParameterVisitor();
+    params.setTargetHTML(document.getElementById('Parameters'));
+    group.accept(params);
+
 </pre>  
 </p>
 </div>
