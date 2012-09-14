@@ -10,7 +10,7 @@ osg.TextureCubeMap = function() {
 
 /** @lends osg.TextureCubeMap.prototype */
 osg.TextureCubeMap.prototype = osg.objectInehrit(osg.Texture.prototype, {
-    attributeType: "TextureCubeMap",
+    _className: "TextureCubeMap",
     setDefaultParameters: function() {
         osg.Texture.prototype.setDefaultParameters.call(this);
         this._textureTarget = osg.Texture.TEXTURE_CUBE_MAP;
