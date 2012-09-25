@@ -12,6 +12,7 @@ osg.Material = function () {
 };
 /** @lends osg.Material.prototype */
 osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+    _className: 'Material',
 
     setEmission: function(a) { osg.Vec4.copy(a, this.emission); this._dirty = true; },
     setAmbient: function(a) { osg.Vec4.copy(a, this.ambient); this._dirty = true; },
