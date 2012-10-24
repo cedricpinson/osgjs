@@ -1,1 +1,1 @@
-osg-0.1.0.js
+../build/osg-0.1.0.js

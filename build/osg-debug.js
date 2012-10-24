@@ -1,1 +1,1 @@
-osg-debug-0.1.0.js
+../build/osg-debug-0.1.0.js

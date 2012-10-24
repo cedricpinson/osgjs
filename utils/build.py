@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import platform
 try:
 	import argparse
 	ap = 1
@@ -193,7 +193,14 @@ def buildLib(files, debug, unminified, filename):
 	
 	output(addHeader(text, versionned), folder + versionned)
         # copy folder + versionned to last
-        shutil.copyfile("../build/"+folder + versionned, "../build/"+folder + lastversion)
+        source_file = "../build/"+folder + versionned
+        target_file = "../build/"+folder + lastversion
+        if os.path.exists(target_file):
+                os.remove(target_file)
+        if platform.system().lower() == "windows":
+                shutil.copyfile(source_file, target_file)
+        else:
+                os.symlink(source_file, target_file)
 
 
 
@@ -241,9 +248,15 @@ def getVersion():
                                 return version
 
 def getCommit():
-	output = commands.getoutput("git log -n 1")
-        res = re.compile('commit (\S*)')
-        return res.search(output).group(1)
+        commit = "nocommit"
+        try:
+                output = commands.getoutput("git log -n 1")
+                res = re.compile('commit (\S*)')
+                commit = res.search(output).group(1)
+        except:
+                pass
+        return commit
+                
 
 def main(argv=None):
 	args = parse_args()
