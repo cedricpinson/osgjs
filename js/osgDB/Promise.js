@@ -11,7 +11,8 @@ osgDB.Promise = {};
   undef: true */
 /*global define: false, Q: true, msSetImmediate: false, setImmediate: false,
   ReturnValue: false, cajaVM: false, ses: false */
-/*!
+
+/*
  *
  * Copyright 2009-2012 Kris Kowal under the terms of the MIT
  * license found at http://github.com/kriskowal/q/raw/master/LICENSE
