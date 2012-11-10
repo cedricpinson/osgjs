@@ -73,6 +73,9 @@ osg.ShaderGenerator.prototype = {
         return textureAttributeKeys;
     },
 
+    // getActiveUniforms
+    // return the list of uniforms enabled from the State
+    // The idea behind this is to generate a shader depending on attributes/uniforms enabled by the user
     getActiveUniforms: function(state, attributeKeys, textureAttributeKeys) {
         var uniforms = {};
 
