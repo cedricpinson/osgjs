@@ -328,19 +328,21 @@ osgUtil.ParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
 
         if (programName === undefined) {
             var hashCode = function(str) {
-	        var hash = 0;
-                var char = 0;
-	        if (str.length == 0) return hash;
-	        for (i = 0; i < str.length; i++) {
-		    char = str.charCodeAt(i);
-		    hash = ((hash<<5)-hash)+char;
-		    hash = hash & hash; // Convert to 32bit integer
-	        }
+                var hash = 0;
+                var chara = 0;
+                if (str.length === 0) {
+                    return hash;
+                }
+                for (i = 0; i < str.length; i++) {
+                    chara = str.charCodeAt(i);
+                    hash = ((hash<<5)-hash)+chara;
+                    hash = hash & hash; // Convert to 32bit integer
+                }
                 if (hash < 0) {
                     hash = -hash;
                 }
-	        return hash;
-            }
+                return hash;
+            };
             var str = keys.join('');
             programName = hashCode(str).toString();
         }
