@@ -179,8 +179,7 @@ osg.extend = function () {
     return target;
 };
 
-
-osg.objectInehrit = function (base, extras) {
+osg.objectInehrit = osg.objectInherit = function (base, extras) {
     function F(){}
     F.prototype = base;
     var obj = new F();
