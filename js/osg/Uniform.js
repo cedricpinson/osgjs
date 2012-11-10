@@ -133,7 +133,7 @@ osg.Uniform.createFloat1 = function(data, uniformName) {
     return uniform;
 };
 osg.Uniform.createFloat = osg.Uniform.createFloat1;
-osg.Uniform.float = osg.Uniform.createFloat1;
+osg.Uniform['float'] = osg.Uniform.createFloat1;
 osg.Uniform.createFloatArray = function(array , name) {
     var u = osg.Uniform.createFloat.call(this, array, name);
     u.update = osg.Uniform.prototype._updateArray;
@@ -241,7 +241,7 @@ osg.Uniform.createInt1 = function(data, uniformName) {
     uniform.type = "int";
     return uniform;
 };
-osg.Uniform.int = osg.Uniform.createInt1;
+osg.Uniform['int'] = osg.Uniform.createInt1;
 osg.Uniform.createInt = osg.Uniform.createInt1;
 osg.Uniform.createIntArray = function(array , name) {
     var u = osg.Uniform.createInt.call(this, array, name);
