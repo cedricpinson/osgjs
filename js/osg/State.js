@@ -212,27 +212,38 @@ osg.State.prototype = {
             // note that about TextureAttribute that need uniform on unit we would need to improve
             // the current uniformList ...
 
-            programUniforms = program.uniformsCache;
-            activeUniforms = program.activeUniforms;
-            var regenrateKeys = false;
-            for (i = 0 , l = activeUniforms.uniformKeys.length; i < l; i++) {
-                var name = activeUniforms.uniformKeys[i];
-                var location = programUniforms[name];
-                if (location !== undefined) {
-                    activeUniforms[name].apply(location);
-                } else {
-                    regenrateKeys = true;
-                    delete activeUniforms[name];
-                }
-            }
-            if (regenrateKeys) {
-                var keys = [];
-                for (key in activeUniforms) {
-                    if (key !== "uniformKeys") {
-                        keys.push(key);
+
+            // Currently we iterate on active uniform cached when the program has been created. The idea behind this is that the program is generated depending on active attributes.
+            // So iterate on activated attribute makes sense. But what happens when the program use uniform not contains in attributes ?
+            // it result this uniform will not be applied because not contained in the program.activeUniforms
+
+
+            if (false ) {
+                programUniforms = program.uniformsCache;
+                activeUniforms = program.activeUniforms;
+                var regenrateKeys = false;
+                for (i = 0 , l = activeUniforms.uniformKeys.length; i < l; i++) {
+                    var name = activeUniforms.uniformKeys[i];
+                    var location = programUniforms[name];
+                    if (location !== undefined) {
+                        activeUniforms[name].apply(location);
+                    } else {
+                        regenrateKeys = true;
+                        delete activeUniforms[name];
                     }
                 }
-                activeUniforms.uniformKeys = keys;
+                if (regenrateKeys) {
+                    var keys = [];
+                    for (key in activeUniforms) {
+                        if (key !== "uniformKeys") {
+                            keys.push(key);
+                        }
+                    }
+                    activeUniforms.uniformKeys = keys;
+                }
+            } else {
+                
+                // new version
             }
         } else {
             
