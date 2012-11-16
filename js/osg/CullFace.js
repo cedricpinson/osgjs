@@ -16,7 +16,7 @@ osg.CullFace.BACK           = 0x0405;
 osg.CullFace.FRONT_AND_BACK = 0x0408;
 
 /** @lends osg.CullFace.prototype */
-osg.CullFace.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+osg.CullFace.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "CullFace",
     cloneType: function() {return new osg.CullFace(); },
     getType: function() { return this.attributeType;},
@@ -38,4 +38,4 @@ osg.CullFace.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         }
         this._dirty = false;
     }
-});
+}), "osg", "CullFace");

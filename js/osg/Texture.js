@@ -46,9 +46,8 @@ osg.Texture.FLOAT = 0x1406;
 
 
 /** @lends osg.Texture.prototype */
-osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Texture",
-    _className: "Texture",
     cloneType: function() { var t = new osg.Texture(); t.default_type = true; return t;},
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType; },
@@ -281,7 +280,8 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         }
         return "";
     }
-});
+}), "osg", "Texture");
+
 osg.Texture.prototype[osg.ShaderGeneratorType.VertexInit] = function(unit) {
     var str = "attribute vec2 TexCoord"+unit+";\n";
     str += "varying vec2 FragTexCoord"+unit+";\n";

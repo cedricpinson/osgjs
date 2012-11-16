@@ -17,7 +17,7 @@ osg.Node = function () {
 };
 
 /** @lends osg.Node.prototype */
-osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
+osg.Node.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Object.prototype, {
     /**
         Return StateSet and create it if it does not exist yet
         @type osg.StateSet
@@ -234,5 +234,5 @@ osg.Node.prototype = osg.objectInehrit(osg.Object.prototype, {
     }
     
 
-});
+}), "osg","Node");
 osg.Node.prototype.objectType = osg.objectType.generate("Node");

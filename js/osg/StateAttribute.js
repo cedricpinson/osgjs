@@ -8,11 +8,11 @@ osg.StateAttribute = function() {
 };
 
 /** @lends osg.StateAttribute.prototype */
-osg.StateAttribute.prototype = osg.objectInehrit(osg.Object.prototype, {
+osg.StateAttribute.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Object.prototype, {
     isDirty: function() { return this._dirty; },
     dirty: function() { this._dirty = true; },
     setDirty: function(dirty) { this._dirty = dirty; }
-});
+}), "osg", "StateAttribute");
 
 osg.StateAttribute.OFF = 0;
 osg.StateAttribute.ON = 1;

@@ -19,7 +19,7 @@ osg.Program = function (vShader, fShader) {
 };
 
 /** @lends osg.Program.prototype */
-osg.Program.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+osg.Program.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
 
     attributeType: "Program",
     cloneType: function() { var p = new osg.Program(); p.default_program = true; return p; },
@@ -104,7 +104,7 @@ osg.Program.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             }
         }
     }
-});
+}), "osg", "Program");
 
 osg.Program.create = function(vShader, fShader) {
     console.log("osg.Program.create is deprecated use new osg.Program(vertex, fragment) instead");

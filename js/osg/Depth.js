@@ -34,7 +34,7 @@ osg.Depth.NOTEQU    = 0x0205;
 osg.Depth.GEQUAL    = 0x0206;
 osg.Depth.ALWAYS    = 0x0207;
 
-osg.Depth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+osg.Depth.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Depth",
     cloneType: function() {return new osg.Depth(); },
     getType: function() { return this.attributeType;},
@@ -52,4 +52,4 @@ osg.Depth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             gl.depthRange(this._near, this._far);
         }
     }
-});
+}), "osg", "Depth");

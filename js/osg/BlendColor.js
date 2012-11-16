@@ -12,7 +12,7 @@ osg.BlendColor = function (color) {
 };
 
 /** @lends osg.BlendColor.prototype */
-osg.BlendColor.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+osg.BlendColor.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "BlendColor",
     cloneType: function() {return new osg.BlendColor(); },
     getType: function() { return this.attributeType;},
@@ -29,4 +29,4 @@ osg.BlendColor.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                       this._constantColor[3]);
         this._dirty = false;
     }
-});
+}), "osg", "BlendColor");

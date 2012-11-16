@@ -9,8 +9,7 @@ osg.TextureCubeMap = function() {
 };
 
 /** @lends osg.TextureCubeMap.prototype */
-osg.TextureCubeMap.prototype = osg.objectInehrit(osg.Texture.prototype, {
-    _className: "TextureCubeMap",
+osg.TextureCubeMap.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Texture.prototype, {
     setDefaultParameters: function() {
         osg.Texture.prototype.setDefaultParameters.call(this);
         this._textureTarget = osg.Texture.TEXTURE_CUBE_MAP;
@@ -116,4 +115,4 @@ osg.TextureCubeMap.prototype = osg.objectInehrit(osg.Texture.prototype, {
             }
         } // render to cubemap not yet implemented
     }
-});
+}),"osg","TextureCubeMap");

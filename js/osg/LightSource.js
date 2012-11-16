@@ -10,8 +10,8 @@ osg.LightSource = function() {
 };
 
 /** @lends osg.LightSource.prototype */
-osg.LightSource.prototype = osg.objectInehrit(osg.Node.prototype, {
+osg.LightSource.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Node.prototype, {
     getLight: function() { return this._light; },
     setLight: function(light) { this._light = light; }
-});
+}), "osg","LightSource");
 osg.LightSource.prototype.objectType = osg.objectType.generate("LightSource");

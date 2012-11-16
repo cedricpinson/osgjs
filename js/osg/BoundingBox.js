@@ -1,7 +1,7 @@
 osg.BoundingBox = function() {
     this.init();
 };
-osg.BoundingBox.prototype = {
+osg.BoundingBox.prototype = osg.objectLibraryClass( {
     _cache_radius2_tmp: [0, 0, 0],
 
     init: function() {
@@ -80,4 +80,4 @@ osg.BoundingBox.prototype = {
 	}
         return ret;
     }
-};
+}, "osg", "BoundingBox");

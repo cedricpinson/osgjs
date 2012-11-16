@@ -29,7 +29,7 @@ osg.Light = function (lightNumber) {
 
 /** @lends osg.Light.prototype */
 osg.Light.uniforms = {};
-osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+osg.Light.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Light",
     cloneType: function() {return new osg.Light(this._lightUnit); },
     getType: function() { return this.attributeType; },
@@ -160,7 +160,7 @@ osg.Light.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
     }
 
 
-});
+}),"osg","Light");
 
 
 // common shader generation functions

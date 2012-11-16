@@ -26,7 +26,7 @@ osg.Camera.DEPTH_BUFFER_BIT = 0x00000100;
 osg.Camera.STENCIL_BUFFER_BIT = 0x00000400;
 
 /** @lends osg.Camera.prototype */
-osg.Camera.prototype = osg.objectInehrit(
+osg.Camera.prototype = osg.objectLibraryClass( osg.objectInehrit(
     osg.CullSettings.prototype, 
     osg.objectInehrit(osg.Transform.prototype, {
 
@@ -112,6 +112,6 @@ osg.Camera.prototype = osg.objectInehrit(
             return true;
         }
 
-    }));
+    })), "osg", "Camera");
 osg.Camera.prototype.objectType = osg.objectType.generate("Camera");
 

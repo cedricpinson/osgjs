@@ -28,7 +28,7 @@ osg.StateSet.AttributePair.prototype = {
 };
 
 /** @lends osg.StateSet.prototype */
-osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
+osg.StateSet.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Object.prototype, {
     getAttributePair: function(attribute, value) {
         return new osg.StateSet.AttributePair(attribute, value);
     },
@@ -167,6 +167,6 @@ osg.StateSet.prototype = osg.objectInehrit(osg.Object.prototype, {
         }
     }
 
-});
+}), "osg", "StateSet");
 osg.StateSet.prototype.setTextureAttributeAndModes = osg.StateSet.prototype.setTextureAttributeAndMode;
 osg.StateSet.prototype.setAttributeAndModes = osg.StateSet.prototype.setAttributeAndMode;

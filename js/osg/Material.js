@@ -11,9 +11,7 @@ osg.Material = function () {
     this.shininess = 12.5;
 };
 /** @lends osg.Material.prototype */
-osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
-    _className: 'Material',
-
+osg.Material.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
     setEmission: function(a) { osg.Vec4.copy(a, this.emission); this._dirty = true; },
     setAmbient: function(a) { osg.Vec4.copy(a, this.ambient); this._dirty = true; },
     setSpecular: function(a) { osg.Vec4.copy(a, this.specular); this._dirty = true; },
@@ -70,7 +68,7 @@ osg.Material.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         return "";
     }
 
-});
+}),"osg","Material");
 
 
 osg.Material.prototype._shader[osg.ShaderGeneratorType.VertexInit] = function()

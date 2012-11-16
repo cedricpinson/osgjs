@@ -194,6 +194,14 @@ osg.objectMix = function (obj, properties, test){
     return obj;
 };
 
+osg.objectLibraryClass = function(object, libName, className) {
+    object.className = function() { return className; };
+    object.libraryName = function() { return libName; };
+    var libraryClassName = libName+"::"+className;
+    object.libraryClassName = function() { return libraryClassName; };
+    return object;
+};
+
 osg.objectType = {};
 osg.objectType.type = 0;
 osg.objectType.generate = function (arg) {

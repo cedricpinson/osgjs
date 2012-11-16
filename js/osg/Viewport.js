@@ -13,7 +13,7 @@ osg.Viewport = function (x,y, w, h) {
     this._dirty = true;
 };
 
-osg.Viewport.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+osg.Viewport.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "Viewport",
     cloneType: function() {return new osg.Viewport(); },
     getType: function() { return this.attributeType;},
@@ -42,4 +42,4 @@ osg.Viewport.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
         //return osg.Matrix.mult(osg.Matrix.mult(translate, scale, translate), offset, offset);
         return osg.Matrix.preMult(offset, osg.Matrix.preMult(scale, translate));
     }
-});
+}), "osg", "Viewport");

@@ -49,7 +49,7 @@ osg.BlendFunc.BLEND_COLOR                    = 0x8005;
 
 
 /** @lends osg.BlendFunc.prototype */
-osg.BlendFunc.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+osg.BlendFunc.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
     /** 
         StateAttribute type of BlendFunc
         @type String
@@ -126,4 +126,4 @@ osg.BlendFunc.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
             gl.blendFunc(this._sourceFactor, this._destinationFactor); 
         }
     }
-});
+}), "osg", "BlendFunc");

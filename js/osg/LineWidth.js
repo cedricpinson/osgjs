@@ -5,10 +5,10 @@ osg.LineWidth = function (lineWidth) {
         this.lineWidth = lineWidth;
     }
 };
-osg.LineWidth.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
+osg.LineWidth.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
     attributeType: "LineWidth",
     cloneType: function() {return new osg.LineWidth(); },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
     apply: function(state) { state.getGraphicContext().lineWidth(this.lineWidth); }
-});
+}),"osg","LineWidth");

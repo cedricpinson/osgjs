@@ -14,7 +14,7 @@ osg.Geometry = function () {
 };
 
 /** @lends osg.Geometry.prototype */
-osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
+osg.Geometry.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Node.prototype, {
     releaseGLObjects: function(gl) {
         var i;
         for (i in this.attributes) {
@@ -128,5 +128,5 @@ osg.Geometry.prototype = osg.objectInehrit(osg.Node.prototype, {
         boundingSphere.expandByBox(bb);
         return boundingSphere;
     }
-});
+}), "osg", "Geometry");
 osg.Geometry.prototype.objectType = osg.objectType.generate("Geometry");
