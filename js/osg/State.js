@@ -208,19 +208,14 @@ osg.State.prototype = {
 	var activeUniforms;
         var i;
         var key;
+        var self = this;
         if (program.generated === true) {
             // note that about TextureAttribute that need uniform on unit we would need to improve
             // the current uniformList ...
 
-
-            // Currently we iterate on active uniform cached when the program has been created. The idea behind this is that the program is generated depending on active attributes.
-            // So iterate on activated attribute makes sense. But what happens when the program use uniform not contains in attributes ?
-            // it result this uniform will not be applied because not contained in the program.activeUniforms
-
-
-            if (false ) {
-                programUniforms = program.uniformsCache;
-                activeUniforms = program.activeUniforms;
+            programUniforms = program.uniformsCache;
+            activeUniforms = program.activeUniforms;
+            if (false) {
                 var regenrateKeys = false;
                 for (i = 0 , l = activeUniforms.uniformKeys.length; i < l; i++) {
                     var name = activeUniforms.uniformKeys[i];
@@ -242,8 +237,91 @@ osg.State.prototype = {
                     activeUniforms.uniformKeys = keys;
                 }
             } else {
-                
-                // new version
+                var uniformMap = this.uniforms;
+                (function() {
+                    
+                    var programUniforms = program.uniformsCache;
+                    var activeUniforms = program.activeUniforms;
+                    var foreignUniforms = program.foreignUniforms;
+
+                    // when we apply the shader for the first time, we want to compute the active uniforms for this shader and the list of uniforms not extracted from attributes called foreignUniforms
+
+                    // typically the following code will be executed once on the first execution of generated program
+                    if (!foreignUniforms) {
+
+                        (function() {
+
+                            foreignUniforms = [];
+                            for (var i = 0 , l = programUniforms.uniformKeys.length; i < l; i++) {
+                                var name = programUniforms.uniformKeys[i];
+                                var location = programUniforms[name];
+                                if (location !== undefined && activeUniforms[name] === undefined) {
+                                    // filter 'standard' uniform matrix that will be applied for all shader
+                                    if (name !== self.modelViewMatrix.name &&
+                                        name !== self.projectionMatrix.name &&
+                                        name !== self.normalMatrix.name) {
+                                        foreignUniforms.push(name);
+                                    }
+                                }
+                            }
+                            program.foreignUniforms = foreignUniforms;
+
+                        })();
+
+
+                        // remove uniforms listed by attributes (getActiveUniforms) but not required by the program
+                        (function() {
+                            var regenrateKeys = false;
+                            for (var i = 0 , l = activeUniforms.uniformKeys.length; i < l; i++) {
+                                var name = activeUniforms.uniformKeys[i];
+                                var location = programUniforms[name];
+                                if (location === undefined || location === null) {
+                                    delete activeUniforms[name];
+                                }
+                            }
+                            // regenerate uniforms keys
+                            var keys = Object.keys(activeUniforms);
+                            for (var j = 0, m = keys.length; j < m; j++) {
+                                if ( keys[j] === "uniformKeys") {
+                                    keys.splice(j, 1);
+                                    break;
+                                }
+                            }
+                            activeUniforms.uniformKeys = keys;
+                        })();
+                    }
+
+                    
+                    // apply active uniforms
+                    // caching uniforms from attribtues make it impossible to overwrite uniform with a custom uniform instance not used in the attributes
+                    (function() {
+                        for (var i = 0 , l = activeUniforms.uniformKeys.length; i < l; i++) {
+                            var name = activeUniforms.uniformKeys[i];
+                            var location = programUniforms[name];
+                            activeUniforms[name].apply(location);
+                        }
+                    })();
+
+
+                    // apply now foreign uniforms, it's uniforms needed by the program but not contains in attributes used to generate this program
+                    (function() {
+                        for (var i = 0 , l = foreignUniforms.length; i < l; i++) {
+                            var name = foreignUniforms[i];
+                            var uniformStack = uniformMap[name];
+                            var location = programUniforms[name];
+                            var uniform;
+                            if (uniformStack !== undefined) {
+                                if (uniformStack.length === 0) {
+                                    uniform = uniformStack.globalDefault;
+                                } else {
+                                    uniform = uniformStack.back().object;
+                                }
+                                uniform.apply(location);
+                            }
+                        }
+                    })();
+
+                })();
             }
         } else {
             
