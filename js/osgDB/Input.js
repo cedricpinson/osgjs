@@ -374,6 +374,7 @@ osgDB.Input.prototype = {
 
         if (uniqueID !== undefined) {
             this._identifierMap[uniqueID] = obj;
+            obj._uniqueID = uniqueID;
         }
         return promise;
     }
