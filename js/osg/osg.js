@@ -1,31 +1,31 @@
 /** -*- compile-command: "jslint-cli osg.js" -*- */
 var osg = {};
 
-osg.version = '0.1.0';
+osg.version = '0.8.0';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 
 // log function
 osg.log = function (str) {
     if (window.console !== undefined) {
-        window.console.log(str);
+        window.console.log(str, getStackTrace());
     }
 };
 
 osg.info = function(str) {
     if (window.console !== undefined) {
-        window.console.info(str);
+        window.console.info(str, getStackTrace());
     }
 };
 
 osg.warn = function (str) {
     if (window.console !== undefined) {
-        window.console.warn(str);
+        window.console.warn(str, getStackTrace());
     }
 };
 
 osg.debug = function (str) {
     if (window.console !== undefined) {
-        window.console.debug(str);
+        window.console.debug(str, getStackTrace());
     }
 };
 
@@ -37,25 +37,25 @@ osg.WARN = 3;
 osg.setNotifyLevel = function (level) {
     var log = function (str) {
         if (window.console !== undefined) {
-            window.console.log(str);
+            window.console.log(str, getStackTrace());
         }
     };
 
     var info = function(str) {
         if (window.console !== undefined) {
-            window.console.info(str);
+            window.console.info(str, getStackTrace());
         }
     };
 
     var warn = function (str) {
         if (window.console !== undefined) {
-            window.console.warn(str);
+            window.console.warn(str, getStackTrace());
         }
     };
 
     var debug = function (str) {
         if (window.console !== undefined) {
-            window.console.debug(str);
+            window.console.debug(str, getStackTrace());
         }
     };
 

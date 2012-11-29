@@ -159,22 +159,12 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         var createDomElements = function (elementToAppend) {
             var dom = [
-                "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150px; z-index: 10;'>",
-                "<div id='StatsLegends' style='position: absolute; left: 0px; font-size: " + fontsize +"px;color: #ffffff;'>",
-
-                "<div id='frameRate' style='color: #00ff00;' > frameRate </div>",
-                "<div id='frameTime' style='color: #ffff00;' > frameTime </div>",
-                "<div id='updateTime' style='color: #d07b1f;'> updateTime </div>",
-                "<div id='cullTime' style='color: #73e0ff;'> cullTime </div>",
-                "<div id='drawTime' style='color: #ff0000;'> drawTime </div>",
-                "<div id='fps'> </div>",
-                
-                "</div>",
+                "<div id='StatsDiv' style='top: 0; position: absolute; width: 300px; height: 150px; z-index: 10;'>",
 
                 "<div id='StatsCanvasDiv' style='position: relative;'>",
                 "<canvas id='StatsCanvasGrid' width='300' height='150' style='z-index:-1; position: absolute; background: rgba(14,14,14,0.8); ' ></canvas>",
                 "<canvas id='StatsCanvas' width='300' height='150' style='z-index:8; position: absolute;' ></canvas>",
-                "<canvas id='StatsCanvasFps' width='30' height='15' style='z-index:9; position: absolute; top: 130px' ></canvas>",
+                "<canvas id='StatsCanvasText' width='300' height='150' style='z-index:9; position: absolute;' ></canvas>",
                 "</div>",
 
                 "</div>"
@@ -206,65 +196,47 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
                 ctx.stroke();
             }
 
-            // setup the font for fps
-            var cfps = document.getElementById("StatsCanvasFps");
-            ctx = cfps.getContext("2d");
-            ctx.font = "14px Sans";
 
-            return document.getElementById("StatsCanvas");
+            return {graph: document.getElementById("StatsCanvas"), text: document.getElementById("StatsCanvasText")};
         };
 
         if (this._canvasStats === undefined || this._canvasStats === null) {
-            this._canvasStats = createDomElements();
+            var  domStats = createDomElements();
+            this._canvasStats = domStats.graph;
+            this._canvasStatsText = domStats.text;
         }
-        this._stats = new Stats.Stats(this._canvasStats);
+        this._stats = new Stats.Stats(this._canvasStats, this._canvasStatsText);
         var that = this;
         this._frameRate = 1;
         this._frameTime = 0;
         this._updateTime = 0;
         this._cullTime = 0;
         this._drawTime = 0;
-        var height = this._canvasStats.height;
-        var ratio = height / maxMS;
-        height = height - 2;
-        var getStyle = function(el,styleProp)
-        {
-            var x = document.getElementById(el);
-            if (x.style) {
-		return x.style.getPropertyValue(styleProp);
-            }
-            return null;
-        };
-        this._stats.addLayer(getStyle("frameRate","color"), function(t) { 
-            var v = (height)/60.0 * (1000/that._frameRate);
-            if (v > height) {
-                return height;
-            }
-            return v;} );
-        this._stats.addLayer(getStyle("frameTime", "color"), function(t) { 
-            var v = that._frameTime * ratio;
-            if (v > height) {
-                return height;
-            }
-            return v;} );
-        this._stats.addLayer(getStyle("updateTime","color"), function(t) { 
-            var v = that._updateTime * ratio;
-            if (v > height) {
-                return height;
-            }
-            return v;} );
-        this._stats.addLayer(getStyle("cullTime","color"), function(t) { 
-            var v = that._cullTime * ratio;
-            if (v > height) {
-                return height;
-            }
-            return v;} );
-        this._stats.addLayer(getStyle("drawTime","color"), function(t) { 
-            var v = that._drawTime * ratio;
-            if (v > height) {
-                return height;
-            }
-            return v;} );
+        this._stats.addLayer("#ff0fff", 2000,
+            function(t) { return (1000 / that._frameTime) ;},
+            function(a) { return "FrameRate: " + (a).toFixed(0) + " fps";}  );
+
+        this._stats.addLayer("#ffff00", maxMS,
+            function(t) { return that._frameTime ;},
+            function(a) { return "FrameTime: " + a.toFixed(2) + " ms";} );
+
+        this._stats.addLayer("#d07b1f", maxMS,
+            function(t) { return that._updateTime;},
+            function(a) { return "UpdateTime: " + a.toFixed(2) + " ms";} );
+
+        this._stats.addLayer("#73e0ff", maxMS,
+            function(t) { return that._cullTime;},
+            function(a) { return "CullTime: " + a.toFixed(2)+ " ms";} );
+
+        this._stats.addLayer("#ff0000", maxMS,
+            function(t) { return that._drawTime;},
+            function(a) { return "DrawTime: " + a.toFixed(2) + " ms";} );
+
+        var maxMem = ( window.performance && window.performance.memory && window.performance.memory.totalJSHeapSize) ? window.performance.memory.totalJSHeapSize : 0;
+        this._stats.addLayer("#00ff00", maxMem,
+            function(t) { return  that._memSize;},
+            function(a) { return "Memory : " + a.toFixed(0) + " b";} );
+
     },
 
     update: function() {
@@ -324,7 +296,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
     frame: function() {
         var frameTime, beginFrameTime;
-        frameTime = (new Date()).getTime();
+        frameTime = performance.now();
         if (this._lastFrameTime === undefined) {
             this._lastFrameTime = 0;
         }
@@ -351,45 +323,34 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         }
 
         // time the update
-        var updateTime = (new Date()).getTime();
+        var updateTime = performance.now();
         this.update();
 
-        var cullTime = (new Date()).getTime();
+        var cullTime = performance.now();
         updateTime = cullTime - updateTime;
         this._updateTime = updateTime;
 
         this.cull();
-        var drawTime = (new Date()).getTime();
+        var drawTime = performance.now();
         cullTime = drawTime - cullTime;
         this._cullTime = cullTime;
 
         this.draw();
-        drawTime = (new Date()).getTime() - drawTime;
+        drawTime = performance.now() - drawTime;
         this._drawTime = drawTime;
 
         var f = frameStamp.getFrameNumber()+1;
         frameStamp.setFrameNumber(f);
 
         this._numberFrame++;
-        var endFrameTime = (new Date()).getTime();
+        var endFrameTime = performance.now();
 
-        this._frameTime = (new Date()).getTime() - beginFrameTime;
-        if (this._stats !== undefined) {
+        this._frameTime = performance.now() - beginFrameTime;
+        if ( window.performance && window.performance.memory && window.performance.memory.usedJSHeapSize)
+            this._memSize = window.performance.memory.usedJSHeapSize;
+
+        if(this._stats !== undefined) {
             this._stats.update();
-
-            if (this._numberFrame % 60 === 0.0) {
-                var nd = endFrameTime;
-                var diff = nd - this._statsStartTime;
-                var fps = (this._numberFrame*1000/diff).toFixed(1);
-                this._statsStartTime = nd;
-                this._numberFrame = 0;
-
-                var cfps = document.getElementById("StatsCanvasFps");
-                var ctx = cfps.getContext("2d");
-                ctx.clearRect(0,0,cfps.width, cfps.height);
-                ctx.fillStyle = "rgb(255,255,255)";
-                ctx.fillText(fps, 0, cfps.height);
-            }
         }
     },
 

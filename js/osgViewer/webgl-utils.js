@@ -189,3 +189,52 @@ if (!window.cancelRequestAnimFrame) {
             clearTimeout;
     } )();
 }
+
+
+if(!Date.now) {
+    Date.now = function now() {
+        return new Date().getTime();
+    };
+}
+
+
+window.performance = window.performance || {};
+performance.now = (function() {
+    return performance.now || performance.mozNow || performance.msNow || performance.oNow || performance.webkitNow ||
+    function() {
+        return Date.now();
+    };
+})();
+
+/** Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
+*/
+function getStackTrace(e) {
+    var callstack = [];
+    var originalArgs = arguments;
+    try {
+        if(arguments.length == 1) {
+            throw e;
+        } else {
+            throw new Error();
+        }
+    } catch(e) {
+        if(e.stack) { //Firefox and Chrome
+            callstack = (e.stack + '\n').replace(/^\S[^\(]+?[\n$]/gm, '').
+            replace(/^\s+(at eval )?at\s+/gm, '').
+            replace(/^([^\(]+?)([\n$])/gm, '{anonymous}()@$1$2').
+            replace(/^Object.<anonymous>\s*\(([^\)]+)\)/gm, '{anonymous}()@$1').split('\n');
+            // Remove call to this function
+            callstack.shift();
+
+        }
+    }
+    // Remove empty entries
+    for(var i = 0; i < callstack.length; ++i) {
+        if(callstack[i] === '') {
+            callstack.splice(i, 1);
+            --i;
+        }
+    }
+
+    return callstack;
+}
