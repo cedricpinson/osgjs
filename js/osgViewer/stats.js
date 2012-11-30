@@ -20,37 +20,42 @@
 
 var Stats = {};
 
-Stats.Stats = function(canvas) {
+Stats.Stats = function(canvas, textCanvas) {
     this.layers = [];
     this.last_update = undefined;
     this.canvas = canvas;
+    this.text_canvas = textCanvas;
+    this.numberUpdate = 0;
 };
 
 Stats.Stats.prototype = {
-    addLayer: function(color, getter) {
-        if (color === undefined) {
+    addLayer: function(color, maxVal, getter, texter) {
+        if(color === undefined) {
             color = "rgb(255,255,255)";
         }
-        this.layers.push({ 
-            previous: 0, 
+        this.layers.push({
+            previous: 0,
             color: color,
-            getValue: getter
+            getValue: getter,
+            getText: texter,
+            average : 0,
+            max : maxVal
         });
     },
 
     update: function() {
-        
-        var t = (new Date()).getTime();
-        if (this.last_update === undefined) {
+
+        var t = performance.now();
+        if(this.last_update === undefined) {
             this.last_update = t;
         }
-        var delta = (t - this.last_update)* 2.0*60.0/1000.0;
-        if (delta < 1.0) {
+        var delta = (t - this.last_update) * 2.0 * 60.0 / 1000.0;
+        if(delta < 1.0) {
             return;
         }
 
         var report = delta - Math.floor(delta);
-        t -= report/(2.0*60.0/1000.0);
+        t -= report / (2.0 * 60.0 / 1000.0);
         delta = Math.floor(delta);
 
         var translate = delta;
@@ -58,21 +63,21 @@ Stats.Stats.prototype = {
         var width = c.width;
         var height = c.height;
         var ctx = c.getContext("2d");
-        ctx.save();
-        ctx.globalCompositeOperation="copy";
-        ctx.mozImageSmoothingEnabled = false;
-        ctx.translate(-delta,0);
-        ctx.drawImage(c, 0, 0, width, height);
-        ctx.restore();
-        ctx.clearRect(width - delta, 0, delta, height);
 
-        for (var i = 0, l = this.layers.length; i < l; i++) {
-            var layer = this.layers[i];
-            c = this.canvas;
-            var value = layer.getValue(t);
+        var myImageData = ctx.getImageData(delta, 0, width - delta, height);
+        ctx.putImageData(myImageData, 0, 0);
+        ctx.clearRect(width - delta, 0, delta, height);
+ 
+        var i, layer, value;
+        for(i = 0, l = this.layers.length; i < l; i++) {
+            layer = this.layers[i];
+            value = layer.getValue(t);
+            layer.average += value;
+            value *= c.height / layer.max;
+            if (value > c.height )
+                value = c.height;
             width = c.width;
             height = c.height;
-
             ctx.lineWidth = 1.0;
             ctx.strokeStyle = layer.color;
             ctx.beginPath();
@@ -80,6 +85,25 @@ Stats.Stats.prototype = {
             ctx.lineTo(width, height - value);
             ctx.stroke();
             layer.previous = value;
+        }
+
+        c = this.text_canvas;
+        ctx = c.getContext("2d");
+        ctx.font = "14px Sans";
+        height = 17;
+        translate = height;
+        this.numberUpdate++;
+        if(this.numberUpdate % 60.0){
+            ctx.clearRect(0, 0, c.width, c.height);
+            for(i = 0, l = this.layers.length; i < l; i++) {
+                layer = this.layers[i];
+                value = layer.getText(layer.average / this.numberUpdate);
+                layer.average = 0;
+                ctx.fillStyle = layer.color;
+                ctx.fillText(value, 0, translate);
+                translate += height;
+            }
+            this.numberUpdate = 0;
         }
         this.last_update = t;
     }
