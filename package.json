@@ -1,0 +1,23 @@
+{
+  "name": "osg",
+  "version": "0.0.8",
+  "homepage": "http://osgjs.org",
+  "author": {
+    "name": "Cedric Pinson - cedric.pinson@plopbyte.com"
+  },
+  "licenses": [
+    {
+      "type": "gpl3"
+    }
+  ],
+  "dependencies": {
+    "grunt": "0.3.x",
+    "grunt-contrib": "~0.2.0",
+  	"grunt-contrib-compress": "0.3.2",
+  	"grunt-contrib-uglify": "~0.1.0",
+  	"grunt-linter": "~0.0.1",
+    "grunt-jsvalidate": "~0.0.1",
+    "grunt-strip": "~0.0.1",
+    "'grunt-qunit-cov": "~0.0.1"
+  }
+}
