@@ -81,9 +81,11 @@ osg.setNotifyLevel = function (level) {
 };
 
 osg.reportWebGLError = false;
+osg.memoryPools = {};
 
 osg.init = function () {
     osg.setNotifyLevel(osg.NOTICE);
+    osg.memoryPools.stateGraph = new OsgObjectMemoryPool(osg.StateGraph).grow(50);
 };
 
 // from jquery

@@ -1,3 +1,4 @@
+
 osg.StateGraph = function () {
     this.depth = 0;
     this.children = {};
@@ -5,18 +6,21 @@ osg.StateGraph = function () {
     this.leafs = [];
     this.stateset = undefined;
     this.parent = undefined;
+
 };
+
 
 osg.StateGraph.prototype = {
     clean: function() {
         this.leafs.splice(0, this.leafs.length);
         this.stateset = undefined;
         this.parent = undefined;
-        //this.depth = 0;
-        var keys = this.children.keys;
+        this.depth = 0;
+        var key, keys = this.children.keys;
         for (var i = 0, l = keys.length; i < l; i++) {
-            var key = keys[i];
+            key = keys[i];
             this.children[key].clean();
+            osg.memoryPools.stateGraph.put(this.children[key]);
         }
         this.children = {};
         keys.splice(0, keys.length);
@@ -27,7 +31,10 @@ osg.StateGraph.prototype = {
     {
         var sg;
         if (!this.children[stateset.id]) {
-            sg = new osg.StateGraph();
+
+            //sg = new osg.StateGraph();
+            sg = osg.memoryPools.stateGraph.get();
+
             sg.parent = this;
             sg.depth = this.depth + 1;
             sg.stateset = stateset;

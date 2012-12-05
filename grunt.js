@@ -15,25 +15,52 @@
 		},
 		lint: {
 			beforeconcat: project.scripts,
-			afterconcat: 'build/<%= pkg.name %>-debug.js',
-			jshint: {
-				options: {
-					curly: true,
-					eqeqeq: true,
-					immed: true,
-					latedef: true,
-					newcap: true,
-					noarg: true,
-					sub: true,
-					undef: true,
-					eqnull: true,
-					browser: true,
-					unused: true
-				}
-				//,
-				//globals: {
-				//	chrome: true
-				//}
+			afterconcat: 'build/<%= pkg.name %>-debug.js'
+		},
+		jshint: {
+			options: {
+				// http://www.jshint.com/docs/
+				// Enforcing Options:
+				curly: false,
+				eqeqeq: false,//eqeqeq: true,<= TODO: lots of cleaning
+				immed: false,//immed: true,<= TODO: lots of cleaning
+				latedef: true,
+				noarg: true,
+				sub: true,
+				undef: false,//undef: true, <= TODO: lots of cleaning
+				eqnull: true,
+				browser: true,
+				unused: false,//unused: true, <= TODO: lots of cleaning
+				forin: true,
+				camelcase: false,
+				newcap: false,
+				// Relaxing Options:
+				loopfunc: true,
+				evil: true
+			},
+			globals: {
+				gl: true,
+
+				osg: true,
+				osgDB: true,
+				osgGA: true,
+				osgUtil: true,
+				osgViewer: true,
+				osgAnimation: true,
+
+				WebGLDebugUtils: true,
+				WebGLUtils: true,
+
+				Stats: true,
+				performance: true,
+
+				WebGLRenderingContext: true,
+				WebGLBuffer: true,
+				WebGLRenderbuffer: true,
+				WebGLFramebuffer: true,
+				WebGLProgram: true,
+				WebGLTexture: true,
+				WebGLShader: true
 			}
 		},
 		jsvalidate: {
@@ -44,7 +71,7 @@
 		},
 		concat: {
 			build: {
-				src:  ['<banner:meta.banner>', project.scripts],
+				src: ['<banner:meta.banner>', project.scripts],
 				dest: 'build/<%= pkg.name %>-debug.js'
 			}
 		},

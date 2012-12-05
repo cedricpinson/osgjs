@@ -200,7 +200,7 @@ if(!Date.now) {
 
 window.performance = window.performance || {};
 performance.now = (function() {
-    return performance.now || performance.mozNow || performance.msNow || performance.oNow || performance.webkitNow ||
+    return window.performance.now || window.performance.mozNow || window.performance.msNow || window.performance.oNow || window.performance.webkitNow ||
     function() {
         return Date.now();
     };
@@ -208,18 +208,18 @@ performance.now = (function() {
 
 /** Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
 */
-function getStackTrace(e) {
+function getStackTrace(err) {
     var callstack = [];
     var originalArgs = arguments;
     try {
         if(arguments.length == 1) {
-            throw e;
+            throw err;
         } else {
             throw new Error();
         }
-    } catch(e) {
-        if(e.stack) { //Firefox and Chrome
-            callstack = (e.stack + '\n').replace(/^\S[^\(]+?[\n$]/gm, '').
+    } catch(err) {
+        if(err.stack) { //Firefox and Chrome
+            callstack = (err.stack + '\n').replace(/^\S[^\(]+?[\n$]/gm, '').
             replace(/^\s+(at eval )?at\s+/gm, '').
             replace(/^([^\(]+?)([\n$])/gm, '{anonymous}()@$1$2').
             replace(/^Object.<anonymous>\s*\(([^\)]+)\)/gm, '{anonymous}()@$1').split('\n');
