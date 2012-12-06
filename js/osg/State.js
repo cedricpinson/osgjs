@@ -209,6 +209,7 @@ osg.State.prototype = {
         var i;
         var key;
         var self = this;
+        var uniformMap;
         if (program.generated === true) {
             // note that about TextureAttribute that need uniform on unit we would need to improve
             // the current uniformList ...
@@ -237,7 +238,7 @@ osg.State.prototype = {
                     activeUniforms.uniformKeys = keys;
                 }
             } else {
-                var uniformMap = this.uniforms;
+                uniformMap = this.uniforms;
                 (function() {
                     
                     var programUniforms = program.uniformsCache;
@@ -336,7 +337,7 @@ osg.State.prototype = {
             var uniform;
 
             programUniforms = program.uniformsCache;
-            var uniformMap = this.uniforms;
+            uniformMap = this.uniforms;
 
             // first time we see attributes key, so we will keep a list of uniforms from attributes
             activeUniforms = [];

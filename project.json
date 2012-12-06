@@ -67,6 +67,7 @@
 		"js/osgUtil/IntersectVisitor.js",
 		"js/osgUtil/ShaderParameterVisitor.js",
 		"js/osgUtil/Composer.js",
+		"js/osgUtil/osgPool.js",
 
 		"js/osgDB/osgDB.js",
 		"js/osgDB/Input.js",

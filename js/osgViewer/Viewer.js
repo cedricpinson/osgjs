@@ -28,7 +28,7 @@ osgViewer.Viewer = function(canvas, options, error) {
     }, false);
 
 
-    if (osg.reportWebGLError) {
+    if (osg.reportWebGLError  || options.reportWebGLError) {
         gl = WebGLDebugUtils.makeDebugContext(gl);
     }
 
@@ -68,7 +68,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
     contextLost: function() {
         osg.log("webgl context lost");
-        cancelRequestAnimFrame(this._requestID);
+        window.cancelRequestAnimFrame(this._requestID);
     },
     contextRestored: function() {
         osg.log("webgl context restored, but not supported - reload the page");
@@ -119,13 +119,13 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             }
             return vars;
         };
-        
+
         var options = optionsURL();
-        
+
         if (options.stats === "1") {
             this.initStats(options);
         }
-        
+
         var gl = this.getGraphicContext();
         // not the best way to do it
         if (options.depth_test === "0") {
@@ -142,12 +142,12 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         }
     },
 
-    
+
 
     initStats: function(options) {
 
-        var maxMS = 50;
-        var stepMS = 10;
+        var maxMS = 35;
+        var stepMS = 5;
         var fontsize = 14;
 
         if (options.statsMaxMS !== undefined) {
@@ -212,8 +212,8 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._updateTime = 0;
         this._cullTime = 0;
         this._drawTime = 0;
-        this._stats.addLayer("#ff0fff", 2000,
-            function(t) { return (1000 / that._frameTime) ;},
+        this._stats.addLayer("#ff0fff", 120,
+            function(t) { return (1000.0 / that._frameRate) ;},
             function(a) { return "FrameRate: " + (a).toFixed(0) + " fps";}  );
 
         this._stats.addLayer("#ffff00", maxMS,
@@ -232,10 +232,10 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             function(t) { return that._drawTime;},
             function(a) { return "DrawTime: " + a.toFixed(2) + " ms";} );
 
-        var maxMem = ( window.performance && window.performance.memory && window.performance.memory.totalJSHeapSize) ? window.performance.memory.totalJSHeapSize : 0;
-        this._stats.addLayer("#00ff00", maxMem,
-            function(t) { return  that._memSize;},
-            function(a) { return "Memory : " + a.toFixed(0) + " b";} );
+        if (window.performance && window.performance.memory && window.performance.memory.totalJSHeapSize)
+            this._stats.addLayer("#00ff00", window.performance.memory.totalJSHeapSize*2,
+                function(t) { return  that._memSize;},
+                function(a) { return "Memory : " + a.toFixed(0) + " b";} );
 
     },
 
@@ -322,34 +322,37 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             osg.Matrix.copy(this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix());
         }
 
-        // time the update
-        var updateTime = performance.now();
-        this.update();
 
-        var cullTime = performance.now();
-        updateTime = cullTime - updateTime;
-        this._updateTime = updateTime;
+        if(this._stats === undefined) {
+            // time the update
+            this.update();
+            this.cull();
+            this.draw();
+            frameStamp.setFrameNumber(frameStamp.getFrameNumber()+1);
+            this._numberFrame++;
+            this._frameTime = performance.now() - beginFrameTime;
+        }
+        else{
+            this._updateTime = performance.now();
+            this.update();
+            this._updateTime =  performance.now() - this._updateTime;
 
-        this.cull();
-        var drawTime = performance.now();
-        cullTime = drawTime - cullTime;
-        this._cullTime = cullTime;
 
-        this.draw();
-        drawTime = performance.now() - drawTime;
-        this._drawTime = drawTime;
+            this._cullTime =  performance.now();
+            this.cull();
+            this._cullTime = performance.now() - this._cullTime;
 
-        var f = frameStamp.getFrameNumber()+1;
-        frameStamp.setFrameNumber(f);
+            this._drawTime =  performance.now();
+            this.draw();
+            this._drawTime = performance.now() - this._drawTime;
 
-        this._numberFrame++;
-        var endFrameTime = performance.now();
+            frameStamp.setFrameNumber(frameStamp.getFrameNumber()+1);
 
-        this._frameTime = performance.now() - beginFrameTime;
-        if ( window.performance && window.performance.memory && window.performance.memory.usedJSHeapSize)
-            this._memSize = window.performance.memory.usedJSHeapSize;
+            this._numberFrame++;
+            this._frameTime = performance.now() - beginFrameTime;
 
-        if(this._stats !== undefined) {
+            if ( window.performance && window.performance.memory && window.performance.memory.usedJSHeapSize)
+                this._memSize = window.performance.memory.usedJSHeapSize;
             this._stats.update();
         }
     },
@@ -384,7 +387,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         var that = this;
         var viewer = this;
-	var fixEvent = function( event ) {
+    var fixEvent = function( event ) {
 
             //if ( event[ expando ] ) {
                 //return event;
@@ -397,10 +400,10 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             //var originalEvent = event;
             //event = jQuery.Event( originalEvent );
 
-            for ( var i = this.props.length, prop; i; ) {
-                prop = this.props[ --i ];
-                event[ prop ] = originalEvent[ prop ];
-            }
+            //for ( var i = this.props.length, prop; i; ) {
+            //    prop = this.props[ --i ];
+            //    event[ prop ] = originalEvent[ prop ];
+            //}
 
             // Fix target property, if necessary
             if ( !event.target ) {
@@ -496,7 +499,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             this._canvas.addEventListener("touchcancel", touchcancel, false);
             this._canvas.addEventListener("touchleave", touchleave, false);
 
-            // iphone/ipad 
+            // iphone/ipad
             this._canvas.addEventListener("gesturestart", gesturestart, false);
             this._canvas.addEventListener("gesturechange", gesturechange, false);
             this._canvas.addEventListener("gestureend", gestureend, false);
@@ -533,20 +536,20 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
                     var orgEvent = event || window.event, args = [].slice.call( arguments, 1 ), delta = 0, returnValue = true, deltaX = 0, deltaY = 0;
                     //event = $.event.fix(orgEvent);
                     event.type = "mousewheel";
-                    
+
                     // Old school scrollwheel delta
                     if ( event.wheelDelta ) { delta = event.wheelDelta/120; }
                     if ( event.detail     ) { delta = -event.detail/3; }
-                    
+
                     // New school multidimensional scroll (touchpads) deltas
                     deltaY = delta;
-                    
+
                     // Gecko
                     if ( orgEvent.axis !== undefined && orgEvent.axis === orgEvent.HORIZONTAL_AXIS ) {
                         deltaY = 0;
                         deltaX = -1*delta;
                     }
-                    
+
                     // Webkit
                     if ( orgEvent.wheelDeltaY !== undefined ) { deltaY = orgEvent.wheelDeltaY/120; }
                     if ( orgEvent.wheelDeltaX !== undefined ) { deltaX = -1*orgEvent.wheelDeltaX/120; }
@@ -600,7 +603,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
                 var vp = camera.getViewport();
                 var widthChangeRatio = w/vp.width();
                 var heightChangeRatio = h/vp.height();
-                var aspectRatioChange = widthChangeRatio / heightChangeRatio; 
+                var aspectRatioChange = widthChangeRatio / heightChangeRatio;
                 vp.setViewport(vp.x()*widthChangeRatio, vp.y()*heightChangeRatio, vp.width()*widthChangeRatio, vp.height()*heightChangeRatio);
 
                 if (aspectRatioChange !== 1.0) {

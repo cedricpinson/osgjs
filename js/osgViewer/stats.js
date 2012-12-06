@@ -38,70 +38,67 @@ Stats.Stats.prototype = {
             color: color,
             getValue: getter,
             getText: texter,
-            average : 0,
-            max : maxVal
+            average: 0,
+            max: maxVal
         });
     },
 
     update: function() {
 
-        var t = performance.now();
+        var delta, i, l, layer, value, c, ctx, height, myImageData, t = performance.now();
         if(this.last_update === undefined) {
             this.last_update = t;
         }
-        var delta = (t - this.last_update) * 2.0 * 60.0 / 1000.0;
-        if(delta < 1.0) {
-            return;
-        }
-
-        var report = delta - Math.floor(delta);
-        t -= report / (2.0 * 60.0 / 1000.0);
-        delta = Math.floor(delta);
-
-        var translate = delta;
-        var c = this.canvas;
-        var width = c.width;
-        var height = c.height;
-        var ctx = c.getContext("2d");
-
-        var myImageData = ctx.getImageData(delta, 0, width - delta, height);
-        ctx.putImageData(myImageData, 0, 0);
-        ctx.clearRect(width - delta, 0, delta, height);
- 
-        var i, layer, value;
+        this.numberUpdate++;
         for(i = 0, l = this.layers.length; i < l; i++) {
             layer = this.layers[i];
             value = layer.getValue(t);
             layer.average += value;
-            value *= c.height / layer.max;
-            if (value > c.height )
-                value = c.height;
-            width = c.width;
-            height = c.height;
-            ctx.lineWidth = 1.0;
-            ctx.strokeStyle = layer.color;
-            ctx.beginPath();
-            ctx.moveTo(width - delta, height - layer.previous);
-            ctx.lineTo(width, height - value);
-            ctx.stroke();
-            layer.previous = value;
+        }
+        //i = 2.0 * 60.0 / 1000.0;
+        i = 0.12; //4.0 * 60.0 / 1000.0;
+        delta = (t - this.last_update) * i;
+        if(delta >= 1.0) {
+
+            t -= (delta - Math.floor(delta)) / i;
+            delta = Math.floor(delta);
+
+            c = this.canvas;
+            ctx = c.getContext("2d");
+
+            myImageData = ctx.getImageData(delta, 0, c.width - delta, c.height);
+            ctx.putImageData(myImageData, 0, 0);
+            ctx.clearRect(c.width - delta, 0, delta, c.height);
+
+            for(i = 0, l = this.layers.length; i < l; i++) {
+                layer = this.layers[i];
+                value = layer.getValue(t);
+                value *= c.height / layer.max;
+                if(value > c.height) value = c.height;
+                ctx.lineWidth = 1.0;
+                ctx.strokeStyle = layer.color;
+                ctx.beginPath();
+                ctx.moveTo(c.width - delta, c.height - layer.previous);
+                ctx.lineTo(c.width, c.height - value);
+                ctx.stroke();
+                layer.previous = value;
+            }
         }
 
-        c = this.text_canvas;
-        ctx = c.getContext("2d");
-        ctx.font = "14px Sans";
-        height = 17;
-        translate = height;
-        this.numberUpdate++;
-        if(this.numberUpdate % 60.0){
+        if(this.numberUpdate % 60 === 0) {
+            c = this.text_canvas;
+            ctx = c.getContext("2d");
+            ctx.font = "14px Sans";
+            height = 17;
+            delta = height;
             ctx.clearRect(0, 0, c.width, c.height);
             for(i = 0, l = this.layers.length; i < l; i++) {
                 layer = this.layers[i];
                 value = layer.getText(layer.average / this.numberUpdate);
                 layer.average = 0;
                 ctx.fillStyle = layer.color;
-                ctx.fillText(value, 0, translate);
-                translate += height;
+                ctx.fillText(value, 0, delta);
+                delta += height;
             }
             this.numberUpdate = 0;
         }

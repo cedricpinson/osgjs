@@ -371,7 +371,7 @@ function makeDebugContext(ctx, opt_onErrorFunc) {
             } else {
                 return function(info) {
                     listener.handleEvent(info);
-                }
+                };
             }
         }
 
@@ -546,7 +546,6 @@ function makeDebugContext(ctx, opt_onErrorFunc) {
             };
         }
 
-        return canvas;
 
         function makeLostContextSimulatingContext (ctx) {
             // copy all functions and properties to wrapper
@@ -585,8 +584,9 @@ function makeDebugContext(ctx, opt_onErrorFunc) {
                 "createShader",
                 "createTexture"
             ];
-            for (var ii = 0; ii < creationFunctions.length; ++ii) {
-                var functionName = creationFunctions[ii];
+            var functionName, ii;
+            for ( ii = 0; ii < creationFunctions.length; ++ii) {
+                functionName = creationFunctions[ii];
                 wrappedContext_[functionName] = function(f) {
                     return function() {
                         loseContextIfTime();
@@ -621,7 +621,7 @@ function makeDebugContext(ctx, opt_onErrorFunc) {
                 "getVertexAttrib"
             ];
             for (ii = 0; ii < functionsThatShouldReturnNull.length; ++ii) {
-                var functionName = functionsThatShouldReturnNull[ii];
+                functionName = functionsThatShouldReturnNull[ii];
                 wrappedContext_[functionName] = function(f) {
                     return function() {
                         loseContextIfTime();
@@ -629,7 +629,7 @@ function makeDebugContext(ctx, opt_onErrorFunc) {
                             return null;
                         }
                         return f.apply(ctx, arguments);
-                    }
+                    };
                 }(wrappedContext_[functionName]);
             }
 
@@ -642,8 +642,8 @@ function makeDebugContext(ctx, opt_onErrorFunc) {
                 "isShader",
                 "isTexture"
             ];
-            for (var ii = 0; ii < isFunctions.length; ++ii) {
-                var functionName = isFunctions[ii];
+            for (ii = 0; ii < isFunctions.length; ++ii) {
+                functionName = isFunctions[ii];
                 wrappedContext_[functionName] = function(f) {
                     return function() {
                         loseContextIfTime();
@@ -651,7 +651,7 @@ function makeDebugContext(ctx, opt_onErrorFunc) {
                             return false;
                         }
                         return f.apply(ctx, arguments);
-                    }
+                    };
                 }(wrappedContext_[functionName]);
             }
 
@@ -691,6 +691,9 @@ function makeDebugContext(ctx, opt_onErrorFunc) {
 
             return wrappedContext_;
         }
+
+       // TODO: find why this is there ?
+       return canvas;
     }
 
 return {
