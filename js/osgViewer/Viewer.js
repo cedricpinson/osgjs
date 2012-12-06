@@ -146,8 +146,8 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
     initStats: function(options) {
 
-        var maxMS = 50;
-        var stepMS = 10;
+        var maxMS = 35;
+        var stepMS = 5;
         var fontsize = 14;
 
         if (options.statsMaxMS !== undefined) {

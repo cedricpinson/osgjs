@@ -73,7 +73,6 @@ Stats.Stats.prototype = {
             for(i = 0, l = this.layers.length; i < l; i++) {
                 layer = this.layers[i];
                 value = layer.getValue(t);
-                layer.average += value;
                 value *= c.height / layer.max;
                 if(value > c.height) value = c.height;
                 ctx.lineWidth = 1.0;
@@ -95,7 +94,7 @@ Stats.Stats.prototype = {
             ctx.clearRect(0, 0, c.width, c.height);
             for(i = 0, l = this.layers.length; i < l; i++) {
                 layer = this.layers[i];
-                value = layer.getText(layer.average / (this.numberUpdate*2));
+                value = layer.getText(layer.average / this.numberUpdate);
                 layer.average = 0;
                 ctx.fillStyle = layer.color;
                 ctx.fillText(value, 0, delta);

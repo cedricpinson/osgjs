@@ -22,15 +22,19 @@
 				// http://www.jshint.com/docs/
 				// Enforcing Options:
 				curly: false,
-				eqeqeq: false,//eqeqeq: true,<= TODO: lots of cleaning
-				immed: false,//immed: true,<= TODO: lots of cleaning
+				eqeqeq: false,
+				//eqeqeq: true,<= TODO: lots of cleaning
+				immed: false,
+				//immed: true,<= TODO: lots of cleaning
 				latedef: true,
 				noarg: true,
 				sub: true,
-				undef: false,//undef: true, <= TODO: lots of cleaning
+				undef: false,
+				//undef: true, <= TODO: lots of cleaning
 				eqnull: true,
 				browser: true,
-				unused: false,//unused: true, <= TODO: lots of cleaning
+				unused: false,
+				//unused: true, <= TODO: lots of cleaning
 				forin: true,
 				camelcase: false,
 				newcap: false,
@@ -78,7 +82,8 @@
 		strip: {
 			main: {
 				src: 'build/<%= pkg.name %>-debug.js',
-				dest: 'build/<%= pkg.name %>.js'
+				dest: 'build/<%= pkg.name %>.js',
+				nodes: ['console', 'debug']
 			}
 		},
 		min: {
@@ -146,7 +151,7 @@
 	grunt.loadNpmTasks('grunt-strip'); // remove console.log, etc
 	grunt.loadNpmTasks('grunt-qunit-cov'); // jscoverage
 	grunt.loadTasks('tasks'); // jsdoc
-	grunt.registerTask('release', 'lint:beforeconcat concat lint:afterconcat copy strip min compress');
+	grunt.registerTask('release', 'lint:beforeconcat concat lint:afterconcat strip min compress copy');
 	grunt.registerTask('default', 'jsvalidate release');
 
 
