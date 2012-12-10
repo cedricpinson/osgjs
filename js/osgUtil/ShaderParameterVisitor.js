@@ -358,7 +358,7 @@ osgUtil.ParameterVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
             entry.id = programName;
             var uniform = this.arraySlider.createSlider(entry);
             if (false) {
-                var uniform = this.arraySlider.createSlider(
+                uniform = this.arraySlider.createSlider(
                     { name: name,
                       type: type,
                       id: programName,
