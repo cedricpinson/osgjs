@@ -7,7 +7,7 @@ osg.UpdateVisitor = function () {
 osg.UpdateVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
     apply: function(node) {
         var ncs = node.getUpdateCallbackList();
-        for (var i = 0, l = ncs.length; i < l; i++) {
+        for (var i = 0; i < ncs.length; i++) {
             if (!ncs[i].update(node, this)) {
                 return;
             }
