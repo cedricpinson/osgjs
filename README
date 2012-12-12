@@ -1,0 +1,56 @@
+OSG.JS WebGL framework
+----------------------------
+(http://osgjs.org/)
+
+OSGJS is a WebGL framework based on OpenSceneGraph concepts. It allows an individual to use an “OpenSceneGraph-like” toolbox to interact with WebGL via JavaScript, and provides facilities for exporting various assets to the osgjs format. The API is kept as similar to OpenSceneGraph as possible, providing a familiar environment to veterans of the library and introducing newcomers to a popular and heavily-scrutinzed set of interfaces
+
+
+The mailing list is available here: http://groups.google.com/group/osgjs
+
+If you are interested in contributing, contact us on the IRC channels #webgl on Freenode, or by e-mail at contact@osgjs.org. Follow @trigrou on twitter to get news and update
+
+
+How to build your own Osgjs
+----------------------------
+
+
+First, clone a copy of the main jQuery git repo by running:
+
+```bash
+git clone git://github.com/cedricpinson/osgjs.git
+```
+
+Enter the directory and install the Node  (install nodeJS if you don't already have it http://nodejs.org/ ) dependencies:
+
+```bash
+cd osgjs && npm install
+```
+
+
+Make sure you have `grunt` installed by testing:
+
+```bash
+grunt -version
+```
+
+
+
+Then, to get a complete, minified (w/ Uglify.js), linted (w/ JSHint) version of osgjs, type the following:
+
+```bash
+grunt --force
+```
+
+
+The built version of jQuery will be put in the `build/` subdirectory.
+
+OpenSceneGraph osgjs plugin
+----------------------------
+
+There is a plugin on my openscengraph branch https://github.com/cedricpinson/osg. This plugin will help you to export data from osg to osgjs. osgconv
+See:
+
+* `man sh`
+* `man bash`
+* `man 3 fnmatch`
+* `man 5 gitignore`
