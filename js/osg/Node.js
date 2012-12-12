@@ -1,6 +1,6 @@
 /** -*- compile-command: "jslint-cli Node.js" -*- */
 
-/** 
+/**
  *  Node that can contains child node
  *  @class Node
  */
@@ -29,7 +29,7 @@ osg.Node.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Object.protot
         return this.stateset;
     },
     getStateSet: function() { return this.stateset; },
-    accept: function(nv) { 
+    accept: function(nv) {
         if (nv.validNodeMask(this)) {
             nv.pushOntoNodePath(this);
             nv.apply(this);
@@ -75,8 +75,13 @@ osg.Node.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Object.protot
         @type Oject
      */
     getUpdateCallback: function() { return this._updateCallbacks[0]; },
-    
+
     addUpdateCallback: function(cb) { this._updateCallbacks.push(cb);},
+    removeUpdateCallback: function(cb) {
+        var arrayIdx = this._updateCallbacks.indexOf(cb);
+        if (arrayIdx !== -1)
+            this._updateCallbacks.splice(arrayIdx, 1);
+    },
     getUpdateCallbackList: function() { return this._updateCallbacks; },
 
 
@@ -198,7 +203,7 @@ osg.Node.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Object.protot
                 bsphere.expandRadiusBySphere(cc.getBound());
             }
 	}
-            
+
 	return bsphere;
     },
 
@@ -232,7 +237,7 @@ osg.Node.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Object.protot
         }
         return matrixList;
     }
-    
+
 
 }), "osg","Node");
 osg.Node.prototype.objectType = osg.objectType.generate("Node");

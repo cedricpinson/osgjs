@@ -29,7 +29,17 @@ osgAnimation.EaseOutQuart = function(t) { t = t - 1; return - (t*t*t*t -1); };
 osgAnimation.EaseInQuart = function(t) { return (t*t*t*t); };
 osgAnimation.EaseOutElastic = function(t) { return Math.pow(2.0, -10.0 * t) * Math.sin((t - 0.3 / 4.0) * (2.0 * Math.PI) / 0.3) + 1.0; };
 //osgAnimation.EaseInElastic = function(t) { return ; };
-
+osgAnimation.easeOutBounce = function (t) {
+		if (t < (1/2.75)) {
+			return (7.5625*t*t);
+		} else if (t < (2/2.75)) {
+			return (7.5625*(t-=(1.5/2.75))*t + 0.75) ;
+		} else if (t < (2.5/2.75)) {
+			return (7.5625*(t-=(2.25/2.75))*t + 0.9375) ;
+		} else {
+			return (7.5625*(t-=(2.625/2.75))*t + 0.984375) ;
+		}
+	};
 osgAnimation.easeOutQuad = osgAnimation.EaseOutQuad;
 osgAnimation.easeInQuad = osgAnimation.EaseInQuad;
 osgAnimation.easeOutCubic = osgAnimation.EaseOutCubic;
