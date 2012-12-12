@@ -42,7 +42,9 @@ grunt --force
 ```
 
 
-The built version of jQuery will be put in the `build/` subdirectory.
+The built version of osgjs will be put in the `build/` subdirectory.
+
+(more grunt command are available, just check them with --help, "grunt watch" is a must. A nicer and more complete workflow of grunt usage here: http://merrickchristensen.com/articles/gruntjs-workflow.html )
 
 OpenSceneGraph osgjs plugin
 ----------------------------
