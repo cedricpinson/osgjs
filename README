@@ -23,6 +23,7 @@ git clone git://github.com/cedricpinson/osgjs.git
 Enter the directory and install the Node  (install nodeJS if you don't already have it http://nodejs.org/ ) dependencies:
 
 ```bash
+npm install -g grunt
 cd osgjs && npm install
 ```
 
