@@ -657,6 +657,53 @@
     });
 
 
+    // Sobel filter
+    // http://en.wikipedia.org/wiki/Sobel_operator
+    osgUtil.Composer.Filter.SobelFilter = function() {
+        osgUtil.Composer.Filter.call(this);
+    };
+
+    osgUtil.Composer.Filter.SobelFilter.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+        build: function() {
+            var stateSet = this._stateSet;
+            var vtx = osgUtil.Composer.Filter.defaultVertexShader;
+            var fgt = [
+                "",
+                osgUtil.Composer.Filter.defaultFragmentShaderHeader,
+
+                "void main (void)",
+                "{",
+                "  float fac0 = 2.0;",
+                "  float fac1 = 1.0;",
+                "  float offsetx = 1.0/RenderSize[0];",
+                "  float offsety = 1.0/RenderSize[1];",
+                "  vec4 texel0 = texture2D(Texture0, FragTexCoord0 + vec2(offsetx, offsety));",
+                "  vec4 texel1 = texture2D(Texture0, FragTexCoord0 + vec2(offsetx, 0.0));",
+                "  vec4 texel2 = texture2D(Texture0, FragTexCoord0 + vec2(offsetx, -offsety));",
+                "  vec4 texel3 = texture2D(Texture0, FragTexCoord0 + vec2(0.0, -offsety));",
+                "  vec4 texel4 = texture2D(Texture0, FragTexCoord0 + vec2(-offsetx, -offsety));",
+                "  vec4 texel5 = texture2D(Texture0, FragTexCoord0 + vec2(-offsetx, 0.0));",
+                "  vec4 texel6 = texture2D(Texture0, FragTexCoord0 + vec2(-offsetx, offsety));",
+                "  vec4 texel7 = texture2D(Texture0, FragTexCoord0 + vec2(0.0, offsety));",
+                "  vec4 rowx = -fac0*texel5 + fac0*texel1 +  -fac1*texel6 + fac1*texel0 + -fac1*texel4 + fac1*texel2;",
+                "  vec4 rowy = -fac0*texel3 + fac0*texel7 +  -fac1*texel4 + fac1*texel6 + -fac1*texel2 + fac1*texel0;",
+                "  float mag = sqrt(dot(rowy,rowy)+dot(rowx,rowx));",
+                "  gl_FragColor = vec4(vec3(mag),1.0);",
+                "}",
+                ""
+            ].join('\n');
+
+            var program = new osg.Program(
+                new osg.Shader(gl.VERTEX_SHADER, vtx),
+                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+
+            stateSet.setAttributeAndModes(program);
+            this._dirty = false;
+        }
+    });
+
+
+
     osgUtil.Composer.Filter.BlendMix = function() {
         osgUtil.Composer.Filter.call(this);
         var texture0,texture1,mixValue;
