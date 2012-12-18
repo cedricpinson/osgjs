@@ -9,8 +9,6 @@ osg.ShaderGeneratorType = {
     FragmentEnd: 8
 };
 
-osg.Shader.VERTEX_SHADER = 0x8B31;
-osg.Shader.FRAGMENT_SHADER = 0x8B30;
 
 /** 
  * Shader manage shader for vertex and fragment, you need both to create a glsl program.
@@ -25,6 +23,9 @@ osg.Shader = function(type, text) {
     this.type = t;
     this.setText(text);
 };
+
+osg.Shader.VERTEX_SHADER = 0x8B31;
+osg.Shader.FRAGMENT_SHADER = 0x8B30;
 
 
 /** @lends osg.Shader.prototype */
