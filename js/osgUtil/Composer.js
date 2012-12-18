@@ -112,19 +112,29 @@
                     h = inputTexture.getHeight();
                 }
                 
+                // is it the last filter and we want to render to screen ?
+                var lastFilterRenderToScreen = (i === array.length-1 &&
+                    self._renderToScreen === true);
+
+                // check if we have something to do
+                // else we will just translate stateset to the next filter
+                // this part exist to manage the osgUtil.Composer.Filter.InputTexture that setup the first texture unit
+                if (!lastFilterRenderToScreen) {
+                    if (stateSet.getAttribute('Program') === undefined) {
+                        array[i+1].filter.getStateSet().setTextureAttributeAndModes(0, stateSet.getTextureAttribute(0, 'Texture'));
+                        return;
+                    }
+                }
+
                 // check if we want to render on screen
                 var camera = new osg.Camera();
-                //camera.setClearMask(osg.Camera.COLOR_BUFFER_BIT);
                 camera.setClearMask(0);
 
                 var texture;
                 var quad;
-                if (true &&
-                    i === array.length-1 &&
-                    self._renderToScreen === true) {
+                if (lastFilterRenderToScreen === true) {
                     w = self._renderToScreenWidth;
                     h = self._renderToScreenHeight;
-                    //camera.setRenderOrder(osg.Camera.POST_RENDER, 0);
                 } else {
                     camera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
                     texture = element.texture;
@@ -150,7 +160,6 @@
                     quad = element.filter.buildGeometry(quad);
 
                 quad.setName("composer layer");
-                //camera.setComputeNearFar(false);
 
                 lastTextureResult = texture;
 
@@ -717,6 +726,7 @@
             stateSet.setAttributeAndModes(program);
             stateSet.addUniform(this._color);
             stateSet.addUniform(this._factor);
+            stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
             this._dirty = false;
         }
     });
