@@ -175,6 +175,7 @@
 
     osgUtil.Composer.Filter.prototype = {
         getStateSet: function() { return this._stateSet;},
+        getOrCreateStateSet: function() { return this._stateSet;},
         dirty: function() { this._dirty = true;},
         isDirty: function() { return this._dirty;}
     };
@@ -314,8 +315,8 @@
         build: function() {
             
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, this._vertexShader),
-                new osg.Shader(gl.FRAGMENT_SHADER, this._fragmentShader));
+                new osg.Shader('VERTEX_SHADER', this._vertexShader),
+                new osg.Shader('FRAGMENT_SHADER', this._fragmentShader));
 
             var self = this;
             if (this._uniforms) {
@@ -411,8 +412,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             if (this._stateSet.getUniform('Texture0') === undefined) {
                 this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
@@ -539,8 +540,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             if (this._stateSet.getUniform('Texture0') === undefined) {
                 this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
@@ -633,8 +634,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             if (this._stateSet.getUniform('Texture0') === undefined) {
                 this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
@@ -661,16 +662,29 @@
     // http://en.wikipedia.org/wiki/Sobel_operator
     osgUtil.Composer.Filter.SobelFilter = function() {
         osgUtil.Composer.Filter.call(this);
+        this._color = osg.Uniform.createFloat3([1.0,1.0,1.0],'color');
+        this._factor = osg.Uniform.createFloat(1.0,'factor');
     };
 
     osgUtil.Composer.Filter.SobelFilter.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+        setColor: function(color) {
+            this._color.get()[0] = color[0];
+            this._color.get()[1] = color[1];
+            this._color.get()[2] = color[2];
+            this._color.dirty();
+        },
+        setFactor: function(f) {
+            this._factor.get()[0] = f;
+            this._factor.dirty();
+        },
         build: function() {
             var stateSet = this._stateSet;
             var vtx = osgUtil.Composer.Filter.defaultVertexShader;
             var fgt = [
                 "",
                 osgUtil.Composer.Filter.defaultFragmentShaderHeader,
-
+                "uniform vec3 color;",
+                "uniform float factor;",
                 "void main (void)",
                 "{",
                 "  float fac0 = 2.0;",
@@ -688,16 +702,21 @@
                 "  vec4 rowx = -fac0*texel5 + fac0*texel1 +  -fac1*texel6 + fac1*texel0 + -fac1*texel4 + fac1*texel2;",
                 "  vec4 rowy = -fac0*texel3 + fac0*texel7 +  -fac1*texel4 + fac1*texel6 + -fac1*texel2 + fac1*texel0;",
                 "  float mag = sqrt(dot(rowy,rowy)+dot(rowx,rowx));",
-                "  gl_FragColor = vec4(vec3(mag),1.0);",
+                "  if (mag < 1.0/255.0) { discard; return; }",
+                "  mag *= factor;",
+                "  mag = min(1.0, mag);",
+                "  gl_FragColor = vec4(color*mag,mag);",
                 "}",
                 ""
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             stateSet.setAttributeAndModes(program);
+            stateSet.addUniform(this._color);
+            stateSet.addUniform(this._factor);
             this._dirty = false;
         }
     });
@@ -753,8 +772,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             stateSet.setAttributeAndModes(program);
             this._dirty = false;
@@ -799,8 +818,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             this._stateSet.setAttributeAndModes(program);
             this._dirty = false;
@@ -1026,8 +1045,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-                new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+                new osg.Shader('VERTEX_SHADER', vertexshader),
+                new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
             stateSet.setAttributeAndModes(program);
             this._dirty = false;
@@ -1205,8 +1224,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-                new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+                new osg.Shader('VERTEX_SHADER', vertexshader),
+                new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
             stateSet.setAttributeAndModes(program);
             this._dirty = false;
