@@ -48,17 +48,23 @@ osgDB.Input.prototype = {
         return new (scope)();
     },
 
-    readImageURL: function(url) {
-        var defer = osgDB.Promise.defer();
+    readImageURL: function(url, returnImage) {
+
         var img = new Image();
         img.onerror = function() {
             osg.warn("warning use white texture as fallback instead of " + url);
             img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=";
         };
+
+        if (returnImage) {
+            img.src = url;
+            return img;
+        }
+
+        var defer = osgDB.Promise.defer();
         img.onload = function() {
             defer.resolve(img);
         };
-        img.src = url;
         return defer.promise;
     },
 

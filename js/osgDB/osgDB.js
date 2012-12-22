@@ -23,12 +23,13 @@ var osgDB = {};
 osgDB.ObjectWrapper = {};
 osgDB.ObjectWrapper.serializers = {};
 
-osgDB.readImage = function (url) {
+osgDB.readImage = function (url, returnImage) {
     if (osgDB._input === undefined) {
         osgDB._input = new osgDB.Input();
     }
-    return osgDB._input.readImageURL(url);
+    return osgDB._input.readImageURL(url, returnImage);
 };
+osgDB.readImageURL = osgDB.readImage; // alias
 
 osgDB.parseSceneGraph = function (node, options) {
     if (node.Version !== undefined && node.Version > 0) {
