@@ -23,13 +23,21 @@ var osgDB = {};
 osgDB.ObjectWrapper = {};
 osgDB.ObjectWrapper.serializers = {};
 
-osgDB.readImage = function (url, returnImage) {
-    if (osgDB._input === undefined) {
-        osgDB._input = new osgDB.Input();
-    }
-    return osgDB._input.readImageURL(url, returnImage);
+osgDB.readImage = function (url, options) {
+    return osgDB.registry().readImageURL(url, options);
 };
 osgDB.readImageURL = osgDB.readImage; // alias
+
+osgDB.registry = function() {
+    if (osgDB.registry._input === undefined) {
+        osgDB.registry._input = new osgDB.Input();
+    }
+    return osgDB.registry._input;
+};
+
+// stop on input with options
+// how we transfer options from registry to serializer
+
 
 osgDB.parseSceneGraph = function (node, options) {
     if (node.Version !== undefined && node.Version > 0) {
@@ -49,6 +57,7 @@ osgDB.parseSceneGraph = function (node, options) {
             var obj = {};
             obj[key] = node[key];
             var input = new osgDB.Input(obj);
+            input.setImageLoadingOptions(osgDB.registry().getImageLoadingOptions());
             if (options !== undefined && 
                 options.progressXHRCallback !== undefined) {
                 input.setProgressXHRCallback(options.progressXHRCallback);
