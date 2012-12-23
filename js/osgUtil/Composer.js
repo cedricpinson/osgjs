@@ -470,7 +470,7 @@
             if (nbSamples%2 !== 1) {
                 nbSamples+=1;
             }
-            osg.log("BlurSize " + nbSamples);
+            //osg.log("BlurSize " + nbSamples);
             this._nbSamples = nbSamples;
             this.dirty();
         },
