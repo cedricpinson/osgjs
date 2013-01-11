@@ -324,14 +324,18 @@ osgDB.ObjectWrapper.serializers.osg.Texture = function(input, texture) {
         texture.setWrapS(jsonObj.WrapS);
     }
 
-    var defer = osgDB.Promise.defer();
-    if (jsonObj.File !== undefined) {
-        osgDB.Promise.when(input.readImageURL(jsonObj.File)).then(
-            function(img) {
-                texture.setImage(img);
-                defer.resolve(texture);
-            });
+    // no file return dummy texture
+    var file = jsonObj.File;
+    if (file === undefined) {
+        file = "no-image-provided";
     }
+
+    var defer = osgDB.Promise.defer();
+    osgDB.Promise.when(input.readImageURL(file)).then(
+        function(img) {
+            texture.setImage(img);
+            defer.resolve(texture);
+        });
     return defer.promise;
 };
 
