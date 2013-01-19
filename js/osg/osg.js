@@ -4,37 +4,14 @@ var osg = {};
 osg.version = '0.8.0';
 osg.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 
-// log function
-osg.log = function (str) {
-    if (window.console !== undefined) {
-        window.console.log(str, getStackTrace());
-    }
-};
-
-osg.info = function(str) {
-    if (window.console !== undefined) {
-        window.console.info(str, getStackTrace());
-    }
-};
-
-osg.warn = function (str) {
-    if (window.console !== undefined) {
-        window.console.warn(str, getStackTrace());
-    }
-};
-
-osg.debug = function (str) {
-    if (window.console !== undefined) {
-        window.console.debug(str, getStackTrace());
-    }
-};
-
 osg.DEBUG = 0;
 osg.INFO = 1;
 osg.NOTICE = 2;
 osg.WARN = 3;
+osg.ERROR = 4;
 
 osg.setNotifyLevel = function (level) {
+
     var log = function (str) {
         if (window.console !== undefined) {
             window.console.log(str, getStackTrace());
@@ -53,6 +30,12 @@ osg.setNotifyLevel = function (level) {
         }
     };
 
+    var error = function (str) {
+        if (window.console !== undefined) {
+            window.console.error(str, getStackTrace());
+        }
+    };
+
     var debug = function (str) {
         if (window.console !== undefined) {
             window.console.debug(str, getStackTrace());
@@ -65,6 +48,7 @@ osg.setNotifyLevel = function (level) {
     osg.info = dummy;
     osg.log = dummy;
     osg.warn = dummy;
+    osg.error = dummy;
 
     if (level <= osg.DEBUG) {
         osg.debug = debug;
@@ -78,13 +62,17 @@ osg.setNotifyLevel = function (level) {
     if (level <= osg.WARN) {
         osg.warn = warn;
     }
+    if (level <= osg.ERROR) {
+        osg.error = error;
+    }
 };
+
+osg.setNotifyLevel(osg.NOTICE);
 
 osg.reportWebGLError = false;
 osg.memoryPools = {};
 
 osg.init = function () {
-    osg.setNotifyLevel(osg.NOTICE);
     osg.memoryPools.stateGraph = new OsgObjectMemoryPool(osg.StateGraph).grow(50);
 };
 

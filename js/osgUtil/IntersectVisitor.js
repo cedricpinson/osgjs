@@ -107,7 +107,7 @@ osgUtil.IntersectVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype
             osg.Matrix.preMult(matrix, this.getProjectionMatrix());
             osg.Matrix.preMult(matrix, this.getViewMatrix());
             osg.Matrix.preMult(matrix, this.getModelMatrix());
-            
+
             var inv = [];
             var valid = osg.Matrix.inverse(matrix, inv);
             // if matrix is invalid do nothing on this node

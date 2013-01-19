@@ -188,6 +188,21 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
     },
 
     applyFilterParameter: function(gl, target) {
+        var isPowerOf2 = function(x) {
+            return ((x !== 0) && ((x & (~x + 1)) === x));
+        };
+
+        var powerOfTwo = isPowerOf2(this._textureWidth) && isPowerOf2(this._textureHeight);
+        if (!powerOfTwo) {
+            this.setWrapT(osg.Texture.CLAMP_TO_EDGE);
+            this.setWrapS(osg.Texture.CLAMP_TO_EDGE);
+
+            if (this._minFilter === osg.Texture.LINEAR_MIPMAP_LINEAR ||
+                this._minFilter === osg.Texture.LINEAR_MIPMAP_NEAREST) {
+                this.setMinFilter(osg.Texture.LINEAR);
+            }
+        }
+
         gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this._magFilter);
         gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this._minFilter);
         gl.texParameteri(target, gl.TEXTURE_WRAP_S, this._wrapS);

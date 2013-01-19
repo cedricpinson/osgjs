@@ -33,7 +33,7 @@ osg.Geometry.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Node.prot
         if (this.boundingBoxComputed === true) {
             this.boundingBoxComputed = false;
         }
-        osg.Node.dirtyBound.call(this);
+        osg.Node.prototype.dirtyBound.call(this);
     },
 
     dirty: function() {

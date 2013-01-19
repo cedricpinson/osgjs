@@ -228,6 +228,18 @@ test("Matrix.getRotate", function() {
 
 });
 
+test("Matrix.getPerspective", function() {
+    var m = [];
+    osg.Matrix.makePerspective(60, 800/200,2.0,500.0, m);
+    var r = {};
+    osg.Matrix.getPerspective(m, r);
+    near(r.zNear , 2.0);
+    near(r.zFar , 500.0);
+    near(r.fovy , 60.0);
+    near(r.aspectRatio , 4.0);
+});
+
+
 test("Matrix.makeLookAt", function() {
     var m = osg.Matrix.makeLookAt([0, -10, 0],
                               [0.0, 0.0, 0.0],

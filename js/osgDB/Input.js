@@ -8,9 +8,16 @@ osgDB.Input = function(json, identifier)
     this._identifierMap = map;
     this._objectRegistry = {};
     this._progressXHRCallback = undefined;
+    
+    this.setImageLoadingOptions({ promise: true,
+                                  onload: undefined
+                                });
 };
 
 osgDB.Input.prototype = {
+
+    setImageLoadingOptions: function(options) { this._defaultImageOptions = options; },
+    getImageLoadingOptions: function() { return this._defaultImageOptions; },
     setProgressXHRCallback: function(func) {
         this._progressXHRCallback = func;
     },
@@ -48,17 +55,36 @@ osgDB.Input.prototype = {
         return new (scope)();
     },
 
-    readImageURL: function(url) {
-        var defer = osgDB.Promise.defer();
+    readImageURL: function(url, options) {
+        if (options === undefined) {
+            options = this._defaultImageOptions;
+        }
+        
         var img = new Image();
         img.onerror = function() {
             osg.warn("warning use white texture as fallback instead of " + url);
             img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=";
         };
+
+        if (options.promise !== true) {
+
+            if (options.onload !== undefined) {
+                img.onload = options.onload;
+            }
+
+            img.src = url;
+            return img;
+        }
+
+        var defer = osgDB.Promise.defer();
         img.onload = function() {
+            if (options.onload !== undefined) {
+                options.onload.call(this);
+            }
             defer.resolve(img);
         };
         img.src = url;
+
         return defer.promise;
     },
 
