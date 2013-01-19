@@ -45,6 +45,7 @@ osgViewer.Viewer = function(canvas, options, error) {
         this._mouseWheelEventNode = canvas;
         this._mouseEventNode = canvas;
         this._keyboardEventNode = document;
+        this._gamepadEventNode = window;
         if (options) {
             if(options.mouseWheelEventNode){
                 this._mouseWheelEventNode = options.mouseWheelEventNode;
@@ -54,6 +55,9 @@ osgViewer.Viewer = function(canvas, options, error) {
             }
             if(options.keyboardEventNode){
                 this._keyboardEventNode = options.keyboardEventNode;
+            }
+            if(options.gamepadEventNode){
+                this._gamepadEventNode = options.gamepadEventNode;
             }
         }
 
@@ -87,6 +91,9 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         this._renderStage = new osg.RenderStage();
         this._stateGraph = new osg.StateGraph();
+
+        this._gamepad = false;
+        this._gamepadPolling = false;
 
         if (this._urlOptions) {
             this.parseOptions();
@@ -126,6 +133,10 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             this.initStats(options);
         }
 
+        if (options.gamepad !== "0") {
+            this.initGamepad();
+        }
+
         var gl = this.getGraphicContext();
         // not the best way to do it
         if (options.depth_test === "0") {
@@ -142,6 +153,91 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         }
     },
 
+    initGamepad: function() {
+
+        
+        var gamepadSupportAvailable = !!navigator.webkitGetGamepads || !!navigator.webkitGamepads;
+        
+        // || (navigator.userAgent.indexOf('Firefox/') != -1); // impossible to detect Gamepad API support in FF
+
+        if (!gamepadSupportAvailable) return;
+
+        // Use events available in FF when available at least in Nightlies:
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=604039
+        //
+        // this._gamepadEventNode.addEventListener('MozGamepadConnected', function() { self.onGamepadConnect(); }, false);
+        // this._gamepadEventNode.addEventListener('MozGamepadDisconnected', function() { self.onGamepadDisconnect(); }, false);
+
+        // Chrome fallbacks to polling
+        if (!!navigator.webkitGamepads || !!navigator.webkitGetGamepads) {
+            this.webkitStartGamepadPolling();
+        }
+    },
+
+    webkitStartGamepadPolling:function() {
+        var self = this;
+        this._gamepadPolling = setInterval(function() { self.webkitGamepadPoll(); }, 500);
+    },
+
+    webkitGamepadPoll:function() {
+        var self = this;
+
+        var rawGamepads = (navigator.webkitGetGamepads && navigator.webkitGetGamepads()) || navigator.webkitGamepads;
+
+        if (rawGamepads[0]) {
+            if (!this._gamepad) {
+                this.onGamepadConnect({gamepad:rawGamepads[0]});
+            }
+            this._gamepad = rawGamepads[0];
+        } else if (this._gamepad) {
+            this.onGamepadDisconnect({gamepad:this._gamepad});
+        }
+    },
+
+    onGamepadConnect:function(evt) {
+        this._gamepad=evt.gamepad;
+
+        osg.log("Detected new gamepad!", this._gamepad);
+    },
+
+    onGamepadDisconnect:function(evt) {
+        this._gamepad=false;
+
+        osg.log("Gamepad disconnected", this._gamepad);
+    },
+
+    // Called in each frame
+    updateGamepad:function() {
+
+        var m = this.getManipulator();
+
+        if (!m.gamepadaxes) return;
+
+        if (this._gamepadPolling && this._gamepad) {
+            this.webkitGamepadPoll();
+        }
+        
+        // if (Math.random()>0.99) osg.warn(this._gamepad);
+
+        if (this._gamepad) {
+            m.gamepadaxes(this._gamepad.axes);
+
+            // Dummy event wrapper
+            var emptyFunc = function() {};
+            for (var i=0;i<this._gamepad.buttons.length;i++) {
+                if (this._gamepad.buttons[i]) {
+                    m.gamepadbuttondown({
+                        preventDefault:emptyFunc,
+                        gamepad:this._gamepad,
+                        button:i
+                    },!!this._gamepad.buttons[i]);
+                }
+            }
+
+        }
+        
+
+    },
 
 
     initStats: function(options) {
@@ -322,6 +418,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             osg.Matrix.copy(this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix());
         }
 
+        //TODO: does this belong here?
+        if (this._gamepad) {
+            this.updateGamepad();
+        }
+
 
         if(this._stats === undefined) {
             // time the update
@@ -387,7 +488,8 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         var that = this;
         var viewer = this;
-    var fixEvent = function( event ) {
+    
+        var fixEvent = function( event ) {
 
             //if ( event[ expando ] ) {
                 //return event;
