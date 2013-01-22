@@ -12,11 +12,27 @@ osgGA.Manipulator = function() {
 
     this._inverseMatrix = new Array(16);
     osg.Matrix.makeIdentity(this._inverseMatrix);
+
+    this._mousePosition = [ 0,0];
 };
 
 /** @lends osgGA.Manipulator.prototype */
 osgGA.Manipulator.prototype = {
-    getPositionRelativeToCanvas: function(e) {
+    divGlobalOffset: function(obj) {
+        var x=0, y=0;
+        x = obj.offsetLeft;
+        y = obj.offsetTop;
+        var body = document.getElementsByTagName('body')[0];
+        while (obj.offsetParent && obj!=body){
+            x += obj.offsetParent.offsetLeft;
+            y += obj.offsetParent.offsetTop;
+            obj = obj.offsetParent;
+        }
+        this._mousePosition[0] = x;
+        this._mousePosition[1] = y;
+        return this._mousePosition;
+    },
+    getPositionRelativeToCanvas: function(e, result) {
         var myObject = e.target;
         var posx,posy;
 	if (e.pageX || e.pageY) {
@@ -26,24 +42,22 @@ osgGA.Manipulator.prototype = {
             posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
             posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
 	}
-        var divGlobalOffset = function(obj) {
-            var x=0, y=0;
-            x = obj.offsetLeft;
-            y = obj.offsetTop;
-            var body = document.getElementsByTagName('body')[0];
-            while (obj.offsetParent && obj!=body){
-                x += obj.offsetParent.offsetLeft;
-                y += obj.offsetParent.offsetTop;
-                obj = obj.offsetParent;
-            }
-            return [x,y];
-        };
+
 	// posx and posy contain the mouse position relative to the document
 	// Do something with this information
-        var globalOffset = divGlobalOffset(myObject);
+        var globalOffset = this.divGlobalOffset(myObject);
         posx = posx - globalOffset[0];
         posy = myObject.height-(posy - globalOffset[1]);
-        return [posx,posy];
+
+        // copy data to result if need to keep result
+        // else we use a tmp variable inside manipulator
+        // that we override at each call
+        if (result === undefined) {
+            result = this._mousePosition;
+        }
+        result[0] = posx;
+        result[1] = posy;
+        return result;
     },
 
     /**
@@ -92,8 +106,8 @@ osgGA.Manipulator.prototype = {
             var touch = touches[i];
             var id = touch.identifier;
             // relative to element position
-            var rteCurrent = this.getPositionRelativeToCanvas(touch);
-            var rtePrevious = this.getPositionRelativeToCanvas(this._touches[id]);
+            var rteCurrent = this.getPositionRelativeToCanvas(touch,[]);
+            var rtePrevious = this.getPositionRelativeToCanvas(this._touches[id], []);
             var deltax = rteCurrent[0] - rtePrevious[0];
             var deltay = rteCurrent[1] - rtePrevious[1];
             this._touches[id] = touch;

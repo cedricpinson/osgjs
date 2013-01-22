@@ -313,7 +313,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         }
 
         ev.preventDefault();
-        ev.preventDefault();
     },
     setMaxDistance: function(d) {
         this._maxDistance =  d;
