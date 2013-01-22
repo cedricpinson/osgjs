@@ -970,6 +970,61 @@ osg.Matrix = {
         return osg.Matrix.makeFrustum(xmin, xmax, ymin, ymax, znear, zfar, result);
     },
 
+    getFrustum: function(matrix, result) {
+        var right  =  0.0;
+        var left   =  0.0;
+        var top    =  0.0;
+        var bottom =  0.0;
+
+        if (matrix[0*4 + 3] !== 0.0 || matrix[1 * 4 + 3] !== 0.0 || matrix[2 * 4 + 3] !== -1.0 || matrix[3 * 4 + 3] !== 0.0) {
+            return false;
+        }
+
+        // note: near and far must be used inside this method instead of zNear and zFar
+        // because zNear and zFar are references and they may point to the same variable.
+        var temp_near = matrix[ 3*4 + 2] / (matrix[2 * 4 + 2]-1.0);
+        var temp_far = matrix[ 3*4 + 2] / (1.0+matrix[2 * 4 + 2]);
+
+        left = temp_near * (matrix[2 *4]-1.0) / matrix[0];
+        right = temp_near * (1.0+matrix[2*4]) / matrix[0];
+
+        top = temp_near * (1.0+matrix[2*4 +1]) / matrix[1 *4 + 1];
+        bottom = temp_near * (matrix[2*4 +1]-1.0) / matrix[1 * 4 +1];
+
+        zNear = temp_near;
+        zFar = temp_far;
+
+        result.left = left;
+        result.right = right;
+        result.top = top;
+        result.bottom = bottom;
+        result.zNear = zNear;
+        result.zFar = zFar;
+
+        return true;
+    },
+
+    getPerspective: function(matrix, result) {
+        var c = { 
+            'right' : 0,
+            'left' : 0,
+            'top' : 0,
+            'bottom' : 0,
+            'zNear': 0,
+            'zFar': 0
+        };
+        // get frustum and compute results
+        var r = this.getFrustum(matrix, c);
+        if (r)
+        {
+            result.fovy = 180/Math.PI* ( Math.atan(c.top/c.zNear)-Math.atan(c.bottom/c.zNear));
+            result.aspectRatio = (c.right-c.left)/(c.top-c.bottom);
+        }
+        result.zNear = c.zNear;
+        result.zFar = c.zFar;
+        return result;
+    },
+
     makeScale: function(x, y, z, result)
     {
         if (result === undefined) {
