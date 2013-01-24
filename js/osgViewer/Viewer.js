@@ -706,7 +706,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
                 self._canvas.height = h;
                 self._canvas.style.width = w;
                 self._canvas.style.height = h;
-                osg.log("window resize "  + prevWidth + "x" + prevHeight + " to " + w + "x" + h);
+                osg.debug("window resize "  + prevWidth + "x" + prevHeight + " to " + w + "x" + h);
                 var camera = self.getCamera();
                 var vp = camera.getViewport();
                 var widthChangeRatio = w/vp.width();
