@@ -10,8 +10,8 @@
 			banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' + '<%= grunt.template.today("yyyy-mm-dd") %>\n' + '<%= pkg.homepage ? "* " + pkg.homepage + "\n" : "" %>' + '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' + ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */'
 		},
 		watch: {
-			files: '<config:linter.files>',
-			tasks: 'linter'
+			files: project.scripts,
+			tasks: 'lint:beforeconcat'			
 		},
 		lint: {
 			beforeconcat: project.scripts,
@@ -146,7 +146,6 @@
 	grunt.loadNpmTasks('grunt-contrib-compress'); // gz
 	grunt.loadNpmTasks('grunt-contrib-copy'); // copy
 	grunt.loadNpmTasks('grunt-contrib-uglify'); // minify
-	grunt.loadNpmTasks('grunt-linter'); // linter
 	grunt.loadNpmTasks('grunt-jsvalidate'); // syntax error
 	grunt.loadNpmTasks('grunt-strip'); // remove console.log, etc
 	grunt.loadNpmTasks('grunt-qunit-cov'); // jscoverage
