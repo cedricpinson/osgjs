@@ -161,6 +161,18 @@ osgGA.SwitchManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototyp
             return manipulator.mousewheel(ev, intDelta, deltaX, deltaY);
         }
     },
+    gamepadaxes: function(axes) {
+        var manipulator = this.getCurrentManipulator();
+        if (manipulator !== undefined) {
+            return manipulator.gamepadaxes(axes);
+        }
+    },
+    gamepadbuttondown: function(event, pressed) {
+        var manipulator = this.getCurrentManipulator();
+        if (manipulator !== undefined) {
+            return manipulator.gamepadbuttondown(event, pressed);
+        }
+    },
     getInverseMatrix: function () {
         var manipulator = this.getCurrentManipulator();
         if (manipulator !== undefined) {
