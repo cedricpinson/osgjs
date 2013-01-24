@@ -413,12 +413,18 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._updateVisitor.setFrameStamp(this.getFrameStamp());
         //this._cullVisitor.setFrameStamp(this.getFrameStamp());
 
+
+        // Update Manipulator/Event
+        // should be merged with the update of game pad below
         if (this.getManipulator()) {
             this.getManipulator().update(this._updateVisitor);
             osg.Matrix.copy(this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix());
         }
 
         //TODO: does this belong here?
+        // Not really, Input Device should be updated together.
+        // I would merge this update with the update of the manipulator
+        // just above
         if (this._gamepad) {
             this.updateGamepad();
         }
