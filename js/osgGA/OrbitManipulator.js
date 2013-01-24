@@ -252,6 +252,59 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._zoom.setTarget(this._zoom.getTarget()[0]-scale);
     },
 
+    gamepadaxes: function(axes) {
+
+        // Block badly balanced controllers
+        var AXIS_THRESHOLD = 0.005;
+
+        var rotateTarget,panTarget;
+
+        // Regular gamepads
+        if (axes.length==4) {
+            
+            if (Math.abs(axes[0])>AXIS_THRESHOLD || Math.abs(axes[1])>AXIS_THRESHOLD) {
+                rotateTarget = this._rotate.getTarget();
+                this._rotate.setTarget(rotateTarget[0]-axes[0]*5, rotateTarget[1]+axes[1]*5);
+            }
+            if (Math.abs(axes[3])>AXIS_THRESHOLD) {
+                this._zoom.setTarget(this._zoom.getTarget()[0] - axes[3]);
+            }
+
+        //SpaceNavigator & 6-axis controllers
+        } else if (axes.length>=5) {
+
+            if (Math.abs(axes[0])>AXIS_THRESHOLD || Math.abs(axes[1])>AXIS_THRESHOLD) {
+                panTarget = this._pan.getTarget();
+                this._pan.setTarget(panTarget[0]-axes[0]*20, panTarget[1]+axes[1]*20);
+            }
+
+            if (Math.abs(axes[2])>AXIS_THRESHOLD) {
+                this._zoom.setTarget(this._zoom.getTarget()[0] - axes[2]);
+            }
+            if (Math.abs(axes[3])>AXIS_THRESHOLD || Math.abs(axes[4])>AXIS_THRESHOLD) {
+                rotateTarget = this._rotate.getTarget();
+                this._rotate.setTarget(rotateTarget[0]+axes[4]*10, rotateTarget[1]+axes[3]*10);
+            }
+        }
+
+    },
+
+    gamepadbuttondown: function(event, pressed) {
+
+        // Buttons 12 to 15 are the d-pad.
+        if (event.button>=12 && event.button<=15) {
+            var panTarget = this._pan.getTarget();
+            var delta = {
+                12: [0 , -1],
+                13: [0 ,  1],
+                14: [-1,  0],
+                15: [1 ,  0]
+            }[event.button];
+            this._pan.setTarget(panTarget[0]-delta[0]*10, panTarget[1]+delta[1]*10);
+        }
+
+    },
+
     mouseup: function(ev) {
         this.releaseButton(ev);
         this._currentMode = undefined;
@@ -454,7 +507,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
         osg.Matrix.makeLookAt(osg.Vec3.add(target, eye, eye),
                               target,
-                              [0,0,1], 
+                              [0,0,1],
                               this._inverseMatrix);
     },
 

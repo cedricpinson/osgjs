@@ -35,7 +35,7 @@ osgGA.Manipulator.prototype = {
     getPositionRelativeToCanvas: function(e, result) {
         var myObject = e.target;
         var posx,posy;
-	if (e.pageX || e.pageY) {
+        if (e.pageX || e.pageY) {
             posx = e.pageX;
             posy = e.pageY;
         } else if (e.clientX || e.clientY) {
@@ -141,6 +141,11 @@ osgGA.Manipulator.prototype = {
         osg.debug("gesturechange scale " + event.scale + " rotation " + event.rotation);
     },
 
+    
+    // No gamepad support by default
+    gamepadaxes:false, // function(axes) {}
+    gamepadbuttondown:false, // function(event, pressed) {}
+    
 
     mousewheel: function(event, intDelta, deltaX, deltaY) {
         event.preventDefault();
