@@ -2,7 +2,57 @@
  * Authors:
  *  Cedric Pinson <cedric.pinson@plopbyte.com>
  */
+(function() {
 
+
+    // install an html console logger for mobile
+    var optionsURL = function() {
+        var vars = [], hash;
+        var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+        for(var i = 0; i < hashes.length; i++)
+        {
+            hash = hashes[i].split('=');
+            var element = hash[0].toLowerCase();
+            vars.push(element);
+            var result = hash[1];
+            if (result === undefined) {
+                result = "1";
+            }
+            vars[element] = result.toLowerCase();
+
+        }
+        return vars;
+    };
+
+    var options = optionsURL();
+
+    if (options.log === "html") {
+        var logContent = [];
+        var divLogger = document.createElement('div');
+        var codeElement = document.createElement('pre');
+        document.addEventListener("DOMContentLoaded", function() {
+            document.body.appendChild(divLogger);
+            divLogger.appendChild(codeElement);
+        });
+        var logFunc = function(str) {
+            logContent.unshift(str);
+            codeElement.innerHTML = logContent.join('\n');
+        };
+        divLogger.style.overflow="hidden";
+        divLogger.style.position="absolute";
+        divLogger.style.height="100%";
+        divLogger.style.maxWidth="600px";
+        codeElement.style.overflow="scroll";
+        codeElement.style.width="105%";
+        codeElement.style.height="100%";
+        codeElement.style.fontSize="10px";
+
+        ["log", "error", "warn", "info", "debug"].forEach(function(value) {
+            window.console[value] = logFunc;
+        });
+    }
+    
+})();
 
 osgViewer.Viewer = function(canvas, options, error) {
     osgViewer.View.call(this);
@@ -151,11 +201,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         if (options.light === "0") {
             this.setLightingMode(osgViewer.View.LightingMode.NO_LIGHT);
         }
+
     },
 
     initGamepad: function() {
 
-        
         var gamepadSupportAvailable = !!navigator.webkitGetGamepads || !!navigator.webkitGamepads;
         
         // || (navigator.userAgent.indexOf('Firefox/') != -1); // impossible to detect Gamepad API support in FF
