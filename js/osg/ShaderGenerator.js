@@ -232,7 +232,7 @@ osg.ShaderGenerator.prototype = {
             "attribute vec3 Vertex;",
             "attribute vec4 Color;",
             "attribute vec3 Normal;",
-            "uniform int ArrayColorEnabled;",
+            "uniform float ArrayColorEnabled;",
             "uniform mat4 ModelViewMatrix;",
             "uniform mat4 ProjectionMatrix;",
             "uniform mat4 NormalMatrix;",
@@ -256,10 +256,11 @@ osg.ShaderGenerator.prototype = {
             "",
             "void main(void) {",
             "  gl_Position = ftransform();",
-            "  if (ArrayColorEnabled == 1)",
+            "  if (ArrayColorEnabled == 1.0)",
             "    VertexColor = Color;",
             "  else",
             "    VertexColor = vec4(1.0,1.0,1.0,1.0);",
+            "  gl_PointSize = 1.0;",
             ""
         ].join('\n');
 
@@ -290,7 +291,7 @@ osg.ShaderGenerator.prototype = {
             "precision highp float;",
             "#endif",
             "varying vec4 VertexColor;",
-            "uniform int ArrayColorEnabled;",
+            "uniform float ArrayColorEnabled;",
             "vec4 fragColor;",
             ""
         ].join("\n");

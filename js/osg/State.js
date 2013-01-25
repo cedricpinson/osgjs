@@ -21,10 +21,12 @@ osg.State = function () {
     this.projectionMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), "ProjectionMatrix");
     this.normalMatrix = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), "NormalMatrix");
 
-    this.uniformArrayState = {};
-    this.uniformArrayState.uniformKeys = [];
-    this.uniformArrayState.Color = osg.Uniform.createInt1(0, "ArrayColorEnabled");
-    this.uniformArrayState.uniformKeys.push("Color");
+    // track uniform for color array enabled
+    this.uniforms.ArrayColorEnabled = osg.Stack.create();
+    this.uniforms.ArrayColorEnabled.globalDefault = osg.Uniform.createFloat1(0.0, "ArrayColorEnabled");
+    this.uniforms.ArrayColorEnabled.uniformKeys = [];
+    this.uniforms.ArrayColorEnabled.uniformKeys.push('ArrayColorEnabled');
+
 
     this.vertexAttribMap = {};
     this.vertexAttribMap._disable = [];
@@ -260,7 +262,8 @@ osg.State.prototype = {
                                     // filter 'standard' uniform matrix that will be applied for all shader
                                     if (name !== self.modelViewMatrix.name &&
                                         name !== self.projectionMatrix.name &&
-                                        name !== self.normalMatrix.name) {
+                                        name !== self.normalMatrix.name &&
+                                        name !== 'ArrayColorEnabled') {
                                         foreignUniforms.push(name);
                                     }
                                 }
@@ -649,32 +652,31 @@ osg.State.prototype = {
 
         // it takes 4.26% of global cpu
         // there would be a way to cache it and track state if the program has not changed ...
-        var colorAttrib;
         var program = this.programs.lastApplied;
-        if (program !== undefined && program.generated === true) {
+
+        if (program !== undefined) {
             var updateColorUniform = false;
-            if (this.previousAppliedProgram !== this.programs.lastApplied) {
+            var hasColorAttrib = false;
+            if (program.attributesCache.Color !== undefined) {
+                hasColorAttrib = this.vertexAttribMap[program.attributesCache.Color];
+            }
+            var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
+            if (this.previousHasColorAttrib !== hasColorAttrib) {
                 updateColorUniform = true;
-                this.previousAppliedProgram = this.programs.lastApplied;
-            } else {
-                colorAttrib = program.attributesCache.Color;
-                if ( this.vertexAttribMap[colorAttrib] !== this.previousColorAttrib) {
-                    updateColorUniform = true;
-                }
             }
 
+            this.previousHasColorAttrib = hasColorAttrib;
+
             if (updateColorUniform) {
-                colorAttrib = program.attributesCache.Color;
-                if (colorAttrib !== undefined) {
-                    if (this.vertexAttribMap[colorAttrib]) {
-                        this.uniformArrayState.Color.set([1]);
-                    } else {
-                        this.uniformArrayState.Color.set([0]);
-                    }
-                    this.previousColorAttrib = this.vertexAttribMap[colorAttrib];
-                    this.uniformArrayState.Color.apply(program.uniformsCache.ArrayColorEnabled);
+                if (hasColorAttrib) {
+                    uniform.get()[0] = 1.0;
+                } else {
+                    uniform.get()[0] = 0.0;
                 }
+                uniform.dirty();
             }
+            //osg.log(uniform.get()[0]);
+            uniform.apply(program.uniformsCache.ArrayColorEnabled);
         }
     },
     setVertexAttribArray: function(attrib, array, normalize) {

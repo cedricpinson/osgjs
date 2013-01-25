@@ -40,6 +40,7 @@
         };
         divLogger.style.overflow="hidden";
         divLogger.style.position="absolute";
+        divLogger.style.zIndex="10000";
         divLogger.style.height="100%";
         divLogger.style.maxWidth="600px";
         codeElement.style.overflow="scroll";
