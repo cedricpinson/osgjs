@@ -1,0 +1,80 @@
+
+
+<html>
+
+<head>
+<style>
+  body {
+  background:-moz-radial-gradient(farthest-side, rgba(0,0,0,0) 90%, rgba(0,0,0,0.1) 150%) rgb(76,76,76);
+  background:-webkit-gradient(radial, center center, 500, center center, 1400, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.2))) rgb(76,76,76);
+  overflow:hidden;
+  padding:0;
+  margin:0;
+  color: white;
+  }
+
+  a:link {text-decoration: none; color: black;}
+  a:visited {text-decoration: none; color: black;}
+  a:active {text-decoration: none; color: black;}
+  a:hover {text-decoration: underline;  color: black;}
+
+  #ViewContainer {
+  position: absolute;
+  }
+
+  #explanation {
+  overflow:auto;
+  position: absolute;
+  left: 70%;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 0.5em;
+  margin-top: 0.5em;
+  margin-right: 0.5em;
+  padding: 0.3em;
+  }
+
+  #explanation:focus { outline: none; }
+
+  code {
+    font-size: 10px;
+  }
+  
+  #loading {
+  position: absolute;
+  left: 10px;
+  height: 10px;
+  }
+
+</style>
+<title>Cubemap</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<script type="text/javascript" src="../../build/osg.js"></script>
+<script type="text/javascript" src="main.js"></script>
+</head>
+
+<body>
+
+  <div id="loading">Loading</div>
+  <div id="ViewContainer">
+    <canvas id="3DView"></canvas>
+  </div>
+  <div id="explanation" tabIndex="0" >
+    <h1>HDR Spheremap <a href="http://osgjs.org">osgjs</a></h1>
+    This sample demonstrate how to load an HDR image and use it as spheremap. Textures come from <a href="http://www.hdrlabs.co/sibl/archive.html"> sIBL Archive</a>
+    <h2>Spheremap</h2>
+    <p>
+      <code>
+          Texture: <select id="texture">
+		<option value="Alexs_Apartment">Alexs Apartment</option>
+		<option value="Arches_E_PineTree">Arches PineTree</option>
+		<option value="GrandCanyon_C_YumaPoint">Grand Canyon C</option>
+		<option value="Walk_Of_Fame">Walk Of Fame</option>
+	</select><br />
+          Exposure: <input id="rangeExposure" type="range" min="0" max="5" value="1" step="0.01" /><br />
+          Width: <input id="rangeWidth" type="range" min="0" max="2" value="0.5" step="0.01" /><br />
+</code>
+    <div id="Parameters"></div>
+    </p>
+  </div>
+</body>
+</html>

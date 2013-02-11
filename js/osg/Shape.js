@@ -293,7 +293,6 @@ osg.createTexturedBoxGeometry = function(centerx, centery, centerz,
     return g;
 };
 
-
 osg.createTexturedQuadGeometry = function(cornerx, cornery, cornerz,
                                           wx, wy, wz,
                                           hx, hy, hz,
@@ -477,3 +476,150 @@ osg.createAxisGeometry = function(size) {
 
     return g;
 };
+
+/**
+ * Create a Textured Sphere on the given center with given radius
+ * @name osg.createTexturedSphere
+ * @author Darrell Esau
+ */
+osg.createTexturedSphere = function(radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength)
+{
+    radius = radius || 50;
+
+    phiStart = phiStart !== undefined ? phiStart : 0;
+    phiLength = phiLength !== undefined ? phiLength : Math.PI * 2;
+
+    thetaStart = thetaStart !== undefined ? thetaStart : 0;
+    thetaLength = thetaLength !== undefined ? thetaLength : Math.PI;
+
+    var segmentsX = Math.max(3, Math.floor(widthSegments) || 8);
+    var segmentsY = Math.max(2, Math.floor(heightSegments) || 6);
+
+    var x, y, vertices = [], uvs = [], allVertices = [], indexes = [];
+
+    for (y = 0; y <= segmentsY; y++) 
+    {
+        var verticesRow = [];
+        var uvsRow = [];
+
+        for (x = 0; x <= segmentsX; x++) 
+        {
+            var u = x / segmentsX;
+            var v = y / segmentsY;
+
+            var vertex = {};
+            vertex.x = - radius * Math.cos(phiStart + u * phiLength) * Math.sin(thetaStart + v * thetaLength);
+            vertex.y = radius * Math.cos(thetaStart + v * thetaLength);
+            vertex.z = radius * Math.sin(phiStart + u * phiLength) * Math.sin(thetaStart + v * thetaLength);
+
+            allVertices.push(vertex);
+
+            verticesRow.push(allVertices.length - 1);
+            uvsRow.push({u:u, v:1 - v});
+
+        }
+
+        vertices.push(verticesRow);
+        uvs.push(uvsRow);
+    }
+
+    var fullVerticesList = [];
+    var fullNormalsList = [];
+    var fullUVList = [];
+    var vtxCount = 0;
+
+    for ( y = 0; y < segmentsY; y ++ ) 
+    {
+        for ( x = 0; x < segmentsX; x ++ ) 
+        {
+            var v1 = {}, v2 = {}, v3 = {}, v4 = {}; //zz here
+            var vtxStartOffset = (y * segmentsX * 3) + (x * 3);
+
+            var v1 = vertices[ y ][ x + 1 ];
+            var v2 = vertices[ y ][ x ];
+            var v3 = vertices[ y + 1 ][ x ];
+            var v4 = vertices[ y + 1 ][ x + 1 ];
+
+            var vtx1 = allVertices[v1];
+            var vtx2 = allVertices[v2];
+            var vtx3 = allVertices[v3];
+            var vtx4 = allVertices[v4];
+
+            fullVerticesList.push(vtx1.x);
+            fullVerticesList.push(vtx1.y);
+            fullVerticesList.push(vtx1.z);
+
+            fullVerticesList.push(vtx2.x);
+            fullVerticesList.push(vtx2.y);
+            fullVerticesList.push(vtx2.z);
+
+            fullVerticesList.push(vtx3.x);
+            fullVerticesList.push(vtx3.y);
+            fullVerticesList.push(vtx3.z);
+
+            fullVerticesList.push(vtx4.x);
+            fullVerticesList.push(vtx4.y);
+            fullVerticesList.push(vtx4.z);
+            vtxCount += 4;
+
+            var tristart = vtxCount - 4;
+            indexes.push(tristart);
+            indexes.push(tristart + 1);
+            indexes.push(tristart + 2);
+            indexes.push(tristart);
+            indexes.push(tristart + 2);
+            indexes.push(tristart + 3);
+
+            var n1 = osg.Vec3.normalize([vtx1.x,vtx1.y,vtx1.z], []);
+            var n2 = osg.Vec3.normalize([vtx2.x,vtx2.y,vtx2.z], []);
+            var n3 = osg.Vec3.normalize([vtx3.x,vtx3.y,vtx3.z], []);
+            var n4 = osg.Vec3.normalize([vtx4.x,vtx4.y,vtx4.z], []);
+
+            fullNormalsList.push(n1[0]);
+            fullNormalsList.push(n1[1]);
+            fullNormalsList.push(n1[2]);
+
+            fullNormalsList.push(n2[0]);
+            fullNormalsList.push(n2[1]);
+            fullNormalsList.push(n2[2]);
+
+            fullNormalsList.push(n3[0]);
+            fullNormalsList.push(n3[1]);
+            fullNormalsList.push(n3[2]);
+
+            fullNormalsList.push(n4[0]);
+            fullNormalsList.push(n4[1]);
+            fullNormalsList.push(n4[2]);
+
+            var uv1 = uvs[ y ][ x + 1 ];
+            var uv2 = uvs[ y ][ x ];
+            var uv3 = uvs[ y + 1 ][ x ];
+            var uv4 = uvs[ y + 1 ][ x + 1 ];
+
+            fullUVList.push(uv1.u);
+            fullUVList.push(uv1.v);
+
+            fullUVList.push(uv2.u);
+            fullUVList.push(uv2.v);
+
+            fullUVList.push(uv3.u);
+            fullUVList.push(uv3.v);
+
+            fullUVList.push(uv4.u);
+            fullUVList.push(uv4.v);
+
+        }
+
+    }
+
+    var g = new osg.Geometry();
+    g.getAttributes().Vertex = new osg.BufferArray(gl.ARRAY_BUFFER, fullVerticesList, 3);
+    g.getAttributes().Normal = new osg.BufferArray(gl.ARRAY_BUFFER, fullNormalsList, 3);
+    g.getAttributes().TexCoord0 = new osg.BufferArray(gl.ARRAY_BUFFER, fullUVList, 2);
+
+    var primitive = new osg.DrawElements(gl.TRIANGLES, new osg.BufferArray(gl.ELEMENT_ARRAY_BUFFER, indexes, 1));
+    g.getPrimitives().push(primitive);
+    return g;
+};
+
+
