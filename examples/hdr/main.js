@@ -168,6 +168,7 @@ osg.readHDRImage = function(url, options) {
                 num_scanlines--;
             }
 
+            // send deferred info
             img.data = data;
             img.width = header.width;
             img.height = header.height;
@@ -175,9 +176,66 @@ osg.readHDRImage = function(url, options) {
         }
     }
 
+    // async/defer
     xhr.send(null);
-
     return defer.promise;
+}
+
+var SphereEnvMap = function(viewer) {
+    this._viewer = viewer;
+}
+
+function getEnvSphere(size, scene)
+{
+    // create the environment sphere
+    var geom = osg.createTexturedSphere(size, 32, 32);
+    geom.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
+    geom.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
+
+    var mt = new osg.MatrixTransform();
+    mt.setMatrix(osg.Matrix.makeRotate(-Math.PI/2.0, 1,0,0,[]));
+    mt.addChild(geom);
+
+    var CullCallback = function() {
+        this.cull = function(node, nv) {
+            // overwrite matrix, remove translate so environment is always at camera origin
+            osg.Matrix.setTrans(nv.getCurrentModelviewMatrix(), 0,0,0);
+            var m = nv.getCurrentModelviewMatrix();
+            osg.Matrix.copy(m, osg.Matrix.makeIdentity([]));
+            return true;
+        }
+    }
+
+    mt.setCullCallback(new CullCallback());
+
+    var cam = new osg.Camera();
+
+    cam.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+    cam.addChild(mt);
+
+    var self = this;
+    // the update callback get exactly the same view of the camera
+    // but configure the projection matrix to always be in a short znear/zfar range to not vary depend on the scene size
+    var UpdateCallback = function() {
+        this.update = function(node, nv) {
+            var rootCam = Viewer.getCamera();
+
+            //rootCam.
+            var info = {};
+            osg.Matrix.getPerspective(rootCam.getProjectionMatrix(), info);
+            var proj = [];
+            osg.Matrix.makePerspective(info.fovy, info.aspectRatio, 1.0, 100.0, proj);
+            cam.setProjectionMatrix(proj);
+            cam.setViewMatrix(rootCam.getViewMatrix());
+
+            return true;
+        };
+    };
+    cam.setUpdateCallback(new UpdateCallback());
+
+    scene.addChild(cam);
+
+    return geom;
 }
 
 var Viewer;
@@ -408,17 +466,17 @@ function setEnvironment(name, background, ground) {
     osgDB.Promise.all([
             osg.readHDRImage('textures/' + name + '/' + urls[0]),
             osg.readHDRImage('textures/' + name + '/' + urls[1])]).then(function(images) {
-            var texture = new osg.Texture();
-            texture.setTextureSize(images[0].width, images[0].height);
-            texture.setImage(images[0].data, osg.Texture.RGBA);
-            background.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
-            background.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
+                var texture = new osg.Texture();
+                texture.setTextureSize(images[0].width, images[0].height);
+                texture.setImage(images[0].data, osg.Texture.RGBA);
+                background.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
+                background.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
 
-            var texture = new osg.Texture();
-            texture.setTextureSize(images[1].width, images[1].height);
-            texture.setImage(images[1].data, osg.Texture.RGBA);
-            ground.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
-            ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
+                var texture = new osg.Texture();
+                texture.setTextureSize(images[1].width, images[1].height);
+                texture.setImage(images[1].data, osg.Texture.RGBA);
+                ground.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
+                ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
             });
 }
 
@@ -426,12 +484,12 @@ function createScene()
 {
     var group = new osg.Node();
 
+    // HDR parameters uniform
     var uniformCenter = osg.Uniform.createFloat1(1, 'hdrExposure');
     var uniformWidth = osg.Uniform.createFloat1(0.5, 'hdrWidth');
 
-    var background = osg.createTexturedSphere(500, 32, 32);
-    background.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
-    background.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
+    var size = 500;
+    var background = getEnvSphere(size, group);
     background.getOrCreateStateSet().addUniform(uniformCenter);
     background.getOrCreateStateSet().addUniform(uniformWidth);
 
@@ -450,11 +508,8 @@ function createScene()
     document.getElementById('texture').onchange = function() {
 	    setEnvironment(this.value, background, ground);
     }
-
-
     setEnvironment('Alexs_Apartment', background, ground);
 
-    ground.addChild(background);
     group.addChild(ground);
     return group;
 }
