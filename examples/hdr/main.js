@@ -96,7 +96,7 @@ osg.readHDRImage = function(url, options) {
                 return;
 
             // initialize output buffer
-            var data = new Uint8Array(header.width * header.height * 4);
+            var data = new Float32Array(header.width * header.height * 4);
             var img_offset = 0;
 
             if ((header.scanline_width < 8)||(header.scanline_width > 0x7fff)) {
@@ -159,13 +159,38 @@ osg.readHDRImage = function(url, options) {
 
                 // fill the image array
                 for (var i = 0; i < header.scanline_width; i++) {
+                    /*
                     data[img_offset++] = scanline_buffer[i];
                     data[img_offset++] = scanline_buffer[i + header.scanline_width];
                     data[img_offset++] = scanline_buffer[i + 2 * header.scanline_width];
                     data[img_offset++] = scanline_buffer[i + 3 * header.scanline_width];
+                    */
+                    rgbe[0] = scanline_buffer[i];
+                    rgbe[1] = scanline_buffer[i + header.scanline_width];
+                    rgbe[2] = scanline_buffer[i + 2 * header.scanline_width];
+                    rgbe[3] = scanline_buffer[i + 3 * header.scanline_width];
+
+                    if (rgbe[3] > 0) {
+                        var exp = rgbe[3] - (128 + 8);
+                        var f = Math.pow(2.0, exp);
+
+                        data[img_offset++] = rgbe[0] * f;
+                        data[img_offset++] = rgbe[1] * f;
+                        data[img_offset++] = rgbe[2] * f;
+                        data[img_offset++] = 1.0;
+                    } else {
+                        data[img_offset++] = data[img_offset++] = data[img_offset++]= 0.0;
+                        data[img_offset++] = 1.0;
+                    }
                 }
 
                 num_scanlines--;
+            }
+
+            for(var i = 0; i < header.width * header.height * 3; i++)
+            {
+                    if(i >= 137120 && i < 137120 + 3)
+                    console.error(i + ": " +data[i]);
             }
 
             // send deferred info
