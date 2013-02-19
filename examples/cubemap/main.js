@@ -73,12 +73,14 @@ function getShader()
         "uniform mat4 ProjectionMatrix;",
         "uniform mat4 NormalMatrix;",
 
+        "varying vec3 osg_FragWorldNormal;",
         "varying vec3 osg_FragNormal;",
         "varying vec3 osg_FragEye;",
-        
+
         "void main(void) {",
+        "  osg_FragWorldNormal = Normal;",
         "  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));",
-        "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));",
+        "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));",
         "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
         "}"
     ].join('\n');
@@ -89,14 +91,28 @@ function getShader()
         "precision highp float;",
         "#endif",
         "uniform samplerCube Texture0;",
+        "uniform mat4 CubemapTransform;",
+
         "varying vec3 osg_FragNormal;",
         "varying vec3 osg_FragEye;",
+        "varying vec3 osg_FragWorldNormal;",
+
+        "vec3 cubemapReflectionVector(const in mat4 transform, const in vec3 view, const in vec3 normal)",
+        "{",
+        "  vec3 lv = reflect(view, normal);",
+        "  lv = normalize(lv);",
+        "  vec3 x = vec3(transform[0][0], transform[1][0], transform[2][0]);",
+        "  vec3 y = vec3(transform[0][1], transform[1][1], transform[2][1]);",
+        "  vec3 z = vec3(transform[0][2], transform[1][2], transform[2][2]);",
+        "  mat3 m = mat3(x,y,z);",
+        "  return m*lv;",
+        "}",
 
         "void main(void) {",
         "  vec3 normal = normalize(osg_FragNormal);",
-        "  vec3 eye = normalize(osg_FragEye);",
-        "  vec3 ray = reflect(eye, normal);",
-        "  gl_FragColor = textureCube(Texture0, ray);",
+        "  vec3 eye = -normalize(osg_FragEye);",
+        "  vec3 ray = cubemapReflectionVector(CubemapTransform, eye, normal);",
+        "  gl_FragColor = textureCube(Texture0, normalize(ray));",
         "}",
         ""
     ].join('\n');
@@ -149,7 +165,7 @@ function getShaderBackground()
         "varying vec2 osg_TexCoord0;",
 
         "void main(void) {",
-        "  vec3 eye = normalize(-osg_FragVertex);",
+        "  vec3 eye = -normalize(osg_FragVertex);",
         "  gl_FragColor = textureCube(Texture0, eye);",
         "}",
         ""
@@ -177,7 +193,7 @@ var addLoading = function() {
     document.getElementById("loading").style.display = 'Block';
 };
 
-var getModel = function(func) {
+var getModel = function(scene) {
     var node = new osg.MatrixTransform();
     node.setMatrix(osg.Matrix.makeRotate(-Math.PI/2, 1,0,0, []));
 
@@ -205,7 +221,7 @@ var getModel = function(func) {
         req.send(null);
         addLoading();
     };
-    
+
     loadModel('monkey.osgjs');
     return node;
 };
@@ -218,6 +234,8 @@ function getCubeMap(size, scene)
     geom.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
     geom.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
 
+    var cubemapTransform = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), "CubemapTransform");
+
     var mt = new osg.MatrixTransform();
     mt.setMatrix(osg.Matrix.makeRotate(-Math.PI/2.0, 1,0,0,[]));
     mt.addChild(geom);
@@ -227,12 +245,14 @@ function getCubeMap(size, scene)
             // overwrite matrix, remove translate so environment is always at camera origin
             osg.Matrix.setTrans(nv.getCurrentModelviewMatrix(), 0,0,0);
             var m = nv.getCurrentModelviewMatrix();
-            osg.Matrix.copy(m, osg.Matrix.makeIdentity([]));
+            osg.Matrix.copy(m, cubemapTransform.get());
+            cubemapTransform.dirty();
             return true;
         }
     }
-
     mt.setCullCallback(new CullCallback());
+    scene.getOrCreateStateSet().addUniform(cubemapTransform);
+    
 
     var cam = new osg.Camera();
 
@@ -245,8 +265,6 @@ function getCubeMap(size, scene)
     var UpdateCallback = function() {
         this.update = function(node, nv) {
             var rootCam = Viewer.getCamera();
-
-            //rootCam.
             var info = {};
             osg.Matrix.getPerspective(rootCam.getProjectionMatrix(), info);
             var proj = [];
@@ -274,7 +292,7 @@ function createScene()
     background.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
     background.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
 
-    var ground = getModel();
+    var ground = getModel(group);
 
     ground.getOrCreateStateSet().setAttributeAndMode(getShader());
 
@@ -308,23 +326,6 @@ function createScene()
             background.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
         });
 
-    var mt = new osg.MatrixTransform();
-    mt.setMatrix(osg.Matrix.makeRotate(-Math.PI/2.0, 1,0,0,[]));
-    mt.addChild(background);
-
-    var CullCallback = function() {
-        this.cull = function(node, nv) {
-            // overwrite matrix, remove translate
-            osg.Matrix.setTrans(nv.getCurrentModelviewMatrix(), 0,0,0);
-            var m = nv.getCurrentModelviewMatrix();
-            osg.Matrix.copy(m, osg.Matrix.makeIdentity([]));
-            return true;
-        }
-    }
-
-    mt.setCullCallback(new CullCallback());
-
-    group.addChild(mt);
     group.addChild(ground);
     return group;
 }

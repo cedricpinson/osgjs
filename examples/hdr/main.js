@@ -70,6 +70,8 @@ function decodeHDRHeader(buf) {
     return info;
 }
 
+// Read a radiance .hdr file (http://radsite.lbl.gov/radiance/refer/filefmts.pdf)
+// Ported from http://www.graphics.cornell.edu/~bjw/rgbe.html
 osg.readHDRImage = function(url, options) {
     if (options === undefined) {
         options = {};
@@ -188,30 +190,33 @@ var SphereEnvMap = function(viewer) {
 function getEnvSphere(size, scene)
 {
     // create the environment sphere
-    var geom = osg.createTexturedSphere(size, 32, 32);
+    //var geom = osg.createTexturedSphere(size, 32, 32);
+    var geom = osg.createTexturedBoxGeometry(0,0,0, size,size,size);
     geom.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
     geom.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
 
+    var cubemapTransform = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), "CubemapTransform");
     var mt = new osg.MatrixTransform();
-    mt.setMatrix(osg.Matrix.makeRotate(-Math.PI/2.0, 1,0,0,[]));
+    mt.setMatrix(osg.Matrix.makeRotate(Math.PI/2.0, 1,0,0,[]));
     mt.addChild(geom);
-
     var CullCallback = function() {
         this.cull = function(node, nv) {
             // overwrite matrix, remove translate so environment is always at camera origin
             osg.Matrix.setTrans(nv.getCurrentModelviewMatrix(), 0,0,0);
             var m = nv.getCurrentModelviewMatrix();
-            osg.Matrix.copy(m, osg.Matrix.makeIdentity([]));
+            osg.Matrix.copy(m, cubemapTransform.get());
+            cubemapTransform.dirty();
             return true;
         }
     }
-
     mt.setCullCallback(new CullCallback());
+    scene.getOrCreateStateSet().addUniform(cubemapTransform);
 
     var cam = new osg.Camera();
 
     cam.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     cam.addChild(mt);
+
 
     var self = this;
     // the update callback get exactly the same view of the camera
@@ -288,18 +293,24 @@ function getShader()
         "#ifdef GL_ES",
         "precision highp float;",
         "#endif",
+
         "attribute vec3 Vertex;",
         "attribute vec3 Normal;",
+
         "uniform mat4 ModelViewMatrix;",
         "uniform mat4 ProjectionMatrix;",
         "uniform mat4 NormalMatrix;",
 
-        "varying vec3 osg_FragNormal;",
         "varying vec3 osg_FragEye;",
+        "varying vec3 osg_FragNormal;",
+        "varying vec3 osg_FragNormalWorld;",
+        "varying vec3 osg_FragLightDirection;",
         
         "void main(void) {",
-        "  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));",
-        "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));",
+        "  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex, 1.0));",
+        "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));",
+        "  osg_FragNormalWorld = Normal;",
+        "  osg_FragLightDirection = vec3(NormalMatrix * vec4(0.0, -1.0, 0.0, 1.0));",
         "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
         "}"
     ].join('\n');
@@ -310,26 +321,58 @@ function getShader()
         "precision highp float;",
         "#endif",
         "#define PI 3.14159",
+        
         "uniform sampler2D Texture0;",
+        "uniform sampler2D Texture1;",
         "uniform float hdrExposure;",
-        "uniform float hdrWidth;",
-        "varying vec3 osg_FragNormal;",
-        "varying vec3 osg_FragEye;",
+        "uniform float hdrGamma;",
+        "uniform mat4 CubemapTransform;",
 
+        "varying vec3 osg_FragEye;",
+        "varying vec3 osg_FragNormal;",
+        "varying vec3 osg_FragNormalWorld;",
+        "varying vec3 osg_FragLightDirection;",
+
+        "vec3 cubemapReflectionVector(const in mat4 transform, const in vec3 view, const in vec3 normal)",
+        "{",
+        "  vec3 lv = reflect(view, normal);",
+        "  lv = normalize(lv);",
+        "  vec3 x = vec3(transform[0][0], transform[1][0], transform[2][0]);",
+        "  vec3 y = vec3(transform[0][1], transform[1][1], transform[2][1]);",
+        "  vec3 z = vec3(transform[0][2], transform[1][2], transform[2][2]);",
+        "  mat3 m = mat3(x,y,z);",
+        "  return m*lv;",
+        "}",
+
+        // convert 8-bit RGB channels into floats using the common E exponent
         "vec3 decodeRGBE(vec4 rgbe) {",
         "  float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));",
         "  return rgbe.rgb * 255.0 * f;",
         "}",
 
+        // apply some gamma correction (http://www.geeks3d.com/20101001/tutorial-gamma-correction-a-story-of-linearity/)
+        "vec3 toneMapHDR(vec3 rgb) {",
+        "  return pow(rgb * hdrExposure, 1.0 / vec3(hdrGamma));",
+        "}",
+
+        // fetch from environment sphere texture
+        "vec4 textureSphere(sampler2D tex, vec3 n) {",
+        "  float yaw = acos(n.y) / PI;",
+        "  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);",
+        "  return texture2D(tex, vec2(pitch, yaw));",
+        "}",
+
         "void main(void) {",
-        "  vec3 normal = normalize(osg_FragNormal);",
-        "  vec3 eye = normalize(osg_FragEye);",
-        "  vec3 r = reflect(eye, normal);",
-        "  float m = 2.0 * sqrt(r.x * r.x + r.y * r.y + (r.z + 1.0) * (r.z + 1.0));",
-        "  vec2 texCoord = vec2(r.x / m + 0.5, r.y / m + 0.5);",
-        "  vec3 c = decodeRGBE(texture2D(Texture0, texCoord));",
-        "  float fact = hdrExposure * (hdrExposure / hdrWidth + 1.0) / (hdrExposure + 1.0);",
-        "  gl_FragColor = vec4(c * fact, 1.0);",
+        "  vec3 normalWorld = normalize(osg_FragNormalWorld);",
+        "  vec3 N = normalize(osg_FragNormal);",
+        "  vec3 L = normalize(osg_FragLightDirection);",
+        "  vec3 E = normalize(osg_FragEye);",
+        "  vec3 R = cubemapReflectionVector(CubemapTransform, E, N);",
+
+        "  float NdotL = dot(-N, L);",
+        "  vec3 diffuse = toneMapHDR(decodeRGBE(textureSphere(Texture1, normalWorld)));",
+        "  vec3 specular = toneMapHDR(decodeRGBE(textureSphere(Texture0, R)));",
+        "  gl_FragColor = vec4(mix(diffuse, specular, 1.0), 1.0);",
         "}",
         ""
     ].join('\n');
@@ -340,7 +383,6 @@ function getShader()
 
     return program;
 }
-
 
 function getShaderBackground()
 {
@@ -375,24 +417,39 @@ function getShaderBackground()
         "#ifdef GL_ES",
         "precision highp float;",
         "#endif",
+        "#define PI 3.14159",
+
         "uniform sampler2D Texture0;",
         "uniform float hdrExposure;",
-        "uniform float hdrWidth;",
+        "uniform float hdrGamma;",
+
         "varying vec3 osg_FragNormal;",
         "varying vec3 osg_FragEye;",
         "varying vec3 osg_FragVertex;",
         "varying vec2 osg_TexCoord0;",
-        "varying vec2 vSphereCoord;",
 
+        // convert 8-bit RGB channels into floats using the common E exponent
         "vec3 decodeRGBE(vec4 rgbe) {",
         "  float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));",
         "  return rgbe.rgb * 255.0 * f;",
         "}",
 
+        // apply some gamma correction (http://www.geeks3d.com/20101001/tutorial-gamma-correction-a-story-of-linearity/)
+        "vec3 toneMapHDR(vec3 rgb) {",
+        "  return pow(rgb * hdrExposure, 1.0 / vec3(hdrGamma));",
+        "}",
+
+        // fetch from environment sphere texture
+        "vec4 textureSphere(sampler2D tex, vec3 n) {",
+        "  float yaw = acos(n.y) / PI;",
+        "  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);",
+        "  return texture2D(tex, vec2(pitch, yaw));",
+        "}",
+
         "void main(void) {",
-        "  vec3 c = decodeRGBE(texture2D(Texture0, osg_TexCoord0));",
-        "  float fact = hdrExposure * (hdrExposure / hdrWidth + 1.0) / (hdrExposure + 1.0);",
-        "  gl_FragColor = vec4(c * fact, 1.0);",
+        "  vec3 normal = normalize(osg_FragVertex.xyz);",
+        "  vec3 c = toneMapHDR(decodeRGBE(textureSphere(Texture0, normal)));",
+        "  gl_FragColor = vec4(c, 1.0);",
         "}",
         ""
     ].join('\n');
@@ -452,31 +509,49 @@ var getModel = function(func) {
     return node;
 };
 
+function readImageURL(url) {
+    var ext = url.split('.').pop();
+    if(ext == "hdr")
+        return osg.readHDRImage(url);
+
+    return osgDB.readImageURL(url);
+}
 
 // change the environment maps (reflective included)
+// Images are 8-bit RGBE encoded based on the radiance file format
+// The example supports radiance .hdr files, but uses .png which contains the exact same information for better size and speed.
 function setEnvironment(name, background, ground) {
     var textures = {
-        'Alexs_Apartment': ['Alexs_Apt_2k.hdr', 'Alexs_Apt_Env.hdr'],
-        'Arches_E_PineTree': ['Arches_E_PineTree_3k.hdr', 'Arches_E_PineTree_Env.hdr'],
-        'GrandCanyon_C_YumaPoint': ['GCanyon_C_YumaPoint_3k.hdr', 'GCanyon_C_YumaPoint_Env.hdr'],
-        'Walk_Of_Fame': ['Mans_Outside_2k.hdr', 'Mans_Outside_Env.hdr']
+        'Alexs_Apartment': ['Alexs_Apt_2k.png', 'Alexs_Apt_Env.png'],
+        'Arches_E_PineTree': ['Arches_E_PineTree_3k.png', 'Arches_E_PineTree_Env.png'],
+        'GrandCanyon_C_YumaPoint': ['GCanyon_C_YumaPoint_3k.png', 'GCanyon_C_YumaPoint_Env.png'],
+        'Milkyway': ['Milkyway_small.png', 'Milkyway_Light.png'],
+        'Walk_Of_Fame': ['Mans_Outside_2k.png', 'Mans_Outside_Env.png']
     };
     var urls = textures[name];
 
     osgDB.Promise.all([
-            osg.readHDRImage('textures/' + name + '/' + urls[0]),
-            osg.readHDRImage('textures/' + name + '/' + urls[1])]).then(function(images) {
-                var texture = new osg.Texture();
-                texture.setTextureSize(images[0].width, images[0].height);
-                texture.setImage(images[0].data, osg.Texture.RGBA);
-                background.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
+            readImageURL('textures/' + name + '/' + urls[0]),
+            readImageURL('textures/' + name + '/' + urls[1])]).then(function(images) {
+                var textureHigh = new osg.Texture();
+                textureHigh.setImage(images[0]);
+                if(images[0].data) {
+                    textureHigh.setTextureSize(images[0].width, images[0].height);
+                    textureHigh.setImage(images[0].data, osg.Texture.RGBA);
+                }
+                background.getOrCreateStateSet().setTextureAttributeAndMode(0, textureHigh);
                 background.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
 
-                var texture = new osg.Texture();
-                texture.setTextureSize(images[1].width, images[1].height);
-                texture.setImage(images[1].data, osg.Texture.RGBA);
-                ground.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
+                var textureEnv = new osg.Texture();
+                textureEnv.setImage(images[1]);
+                if(images[0].data) {
+                    textureEnv.setTextureSize(images[0].width, images[0].height);
+                    textureEnv.setImage(images[0].data, osg.Texture.RGBA);
+                }
+                ground.getOrCreateStateSet().setTextureAttributeAndMode(0, textureHigh);
                 ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
+                ground.getOrCreateStateSet().setTextureAttributeAndMode(1, textureEnv);
+                ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(1,'Texture1'));
             });
 }
 
@@ -486,24 +561,24 @@ function createScene()
 
     // HDR parameters uniform
     var uniformCenter = osg.Uniform.createFloat1(1, 'hdrExposure');
-    var uniformWidth = osg.Uniform.createFloat1(0.5, 'hdrWidth');
+    var uniformGamma = osg.Uniform.createFloat1(2.2, 'hdrGamma');
 
     var size = 500;
     var background = getEnvSphere(size, group);
     background.getOrCreateStateSet().addUniform(uniformCenter);
-    background.getOrCreateStateSet().addUniform(uniformWidth);
+    background.getOrCreateStateSet().addUniform(uniformGamma);
 
     var ground = getModel();
     ground.getOrCreateStateSet().setAttributeAndMode(getShader());
     ground.getOrCreateStateSet().addUniform(uniformCenter);
-    ground.getOrCreateStateSet().addUniform(uniformWidth);
+    ground.getOrCreateStateSet().addUniform(uniformGamma);
 
     // gui
     document.getElementById('rangeExposure').onchange = function() {
 	    uniformCenter.set(parseFloat(this.value));
     }
-    document.getElementById('rangeWidth').onchange = function() {
-	    uniformWidth.set(parseFloat(this.value));
+    document.getElementById('rangeGamma').onchange = function() {
+	    uniformGamma.set(parseFloat(this.value));
     }
     document.getElementById('texture').onchange = function() {
 	    setEnvironment(this.value, background, ground);
