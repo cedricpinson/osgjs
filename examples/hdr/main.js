@@ -70,6 +70,8 @@ function decodeHDRHeader(buf) {
     return info;
 }
 
+// Read a radiance .hdr file (http://radsite.lbl.gov/radiance/refer/filefmts.pdf)
+// Ported from http://www.graphics.cornell.edu/~bjw/rgbe.html
 osg.readHDRImage = function(url, options) {
     if (options === undefined) {
         options = {};
@@ -342,15 +344,18 @@ function getShader()
         "  return m*lv;",
         "}",
 
+        // convert 8-bit RGB channels into floats using the common E exponent
         "vec3 decodeRGBE(vec4 rgbe) {",
         "  float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));",
         "  return rgbe.rgb * 255.0 * f;",
         "}",
 
+        // apply some gamma correction (http://www.geeks3d.com/20101001/tutorial-gamma-correction-a-story-of-linearity/)
         "vec3 toneMapHDR(vec3 rgb) {",
         "  return pow(rgb * hdrExposure, 1.0 / vec3(hdrGamma));",
         "}",
 
+        // fetch from environment sphere texture
         "vec4 textureSphere(sampler2D tex, vec3 n) {",
         "  float yaw = acos(n.y) / PI;",
         "  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);",
@@ -423,15 +428,18 @@ function getShaderBackground()
         "varying vec3 osg_FragVertex;",
         "varying vec2 osg_TexCoord0;",
 
+        // convert 8-bit RGB channels into floats using the common E exponent
         "vec3 decodeRGBE(vec4 rgbe) {",
         "  float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));",
         "  return rgbe.rgb * 255.0 * f;",
         "}",
 
+        // apply some gamma correction (http://www.geeks3d.com/20101001/tutorial-gamma-correction-a-story-of-linearity/)
         "vec3 toneMapHDR(vec3 rgb) {",
         "  return pow(rgb * hdrExposure, 1.0 / vec3(hdrGamma));",
         "}",
 
+        // fetch from environment sphere texture
         "vec4 textureSphere(sampler2D tex, vec3 n) {",
         "  float yaw = acos(n.y) / PI;",
         "  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);",
@@ -510,7 +518,7 @@ function readImageURL(url) {
 }
 
 // change the environment maps (reflective included)
-// Images are 8-bit RGBE encoded based on the radiance file format (http://radsite.lbl.gov/radiance/refer/filefmts.pdf)
+// Images are 8-bit RGBE encoded based on the radiance file format
 // The example supports radiance .hdr files, but uses .png which contains the exact same information for better size and speed.
 function setEnvironment(name, background, ground) {
     var textures = {
