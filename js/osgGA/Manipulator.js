@@ -49,6 +49,11 @@ osgGA.Manipulator.prototype = {
         posx = posx - globalOffset[0];
         posy = myObject.height-(posy - globalOffset[1]);
 
+        // NaN in camera check here
+        if (isNaN(posx) || isNaN(posy) ){
+            //debugger;
+        }
+
         // copy data to result if need to keep result
         // else we use a tmp variable inside manipulator
         // that we override at each call

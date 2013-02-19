@@ -28,6 +28,10 @@ osgDB.readImage = function (url, options) {
 };
 osgDB.readImageURL = osgDB.readImage; // alias
 
+osgDB.readNodeURL = function (url, options) {
+    return osgDB.registry().readNodeURL(url, options);
+};
+
 osgDB.registry = function() {
     if (osgDB.registry._input === undefined) {
         osgDB.registry._input = new osgDB.Input();
@@ -58,9 +62,9 @@ osgDB.parseSceneGraph = function (node, options) {
             obj[key] = node[key];
             var input = new osgDB.Input(obj);
             input.setImageLoadingOptions(osgDB.registry().getImageLoadingOptions());
-            if (options !== undefined && 
-                options.progressXHRCallback !== undefined) {
+            if (options !== undefined) {
                 input.setProgressXHRCallback(options.progressXHRCallback);
+                input.setPrefixURL(options.prefixURL);
             }
             return input.readObject();
             //return osgDB.ObjectWrapper.readObject(obj);

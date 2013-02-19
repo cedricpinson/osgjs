@@ -8,7 +8,7 @@ osgDB.Input = function(json, identifier)
     this._identifierMap = map;
     this._objectRegistry = {};
     this._progressXHRCallback = undefined;
-    
+    this._prefixURL = "";
     this.setImageLoadingOptions({ promise: true,
                                   onload: undefined
                                 });
@@ -37,6 +37,16 @@ osgDB.Input.prototype = {
         return this;
     },
 
+    setPrefixURL: function(prefix) {
+        this._prefixURL = prefix;
+    },
+    getPrefixURL: function() { return this._prefixURL; },
+    computeURL: function(url) { 
+        if (this._prefixURL === undefined) {
+            return url;
+        }
+        return this._prefixURL + url; 
+    },
     getObjectWrapper: function (path) {
         if (this._objectRegistry[path] !== undefined) {
             return new (this._objectRegistry[path])();
@@ -56,6 +66,11 @@ osgDB.Input.prototype = {
     },
 
     readImageURL: function(url, options) {
+        // if image is on inline image skip url computation
+        if (url.substr(0, 10) !== "data:image") {
+            url = this.computeURL(url);
+        }
+
         if (options === undefined) {
             options = this._defaultImageOptions;
         }
@@ -88,29 +103,57 @@ osgDB.Input.prototype = {
         return defer.promise;
     },
 
-    readImage: function() {
-        var jsonObj = this.getJSON();
-        var uniqueID = jsonObj.UniqueID;
-        if (uniqueID !== undefined) {
-            img = this._identifierMap[uniqueID];
-            if (img !== undefined) {
-                return img;
-            }
-        }
-        var self = this;
-        var defer = osgDB.Promise.defer();
-        var url = jsonObj.Url;
-        osgDB.Promise.when(this.readImageURL(url)).then( function ( img ) {
-            if (uniqueID !== undefined) {
-                self._identifierMap[uniqueID] = img;
-            }
-            defer.resolve(img);
-        });
 
+    readNodeURL: function(url, options) {
+        url = this.computeURL(url);
+        
+        var Q = osgDB.Promise;
+        var defer = Q.defer();
+
+        options = options || {};
+        var opt = {
+            progressXHRCallback: options.progressXHRCallback,
+            prefixURL: options.prefixURL,
+            defaultImageOptions: options.defaultImageOptions
+        };
+
+        // automatic prefix if non specfied
+        if (opt.prefixURL === undefined) {
+            var prefix = this.getPrefixURL();
+            var index = url.lastIndexOf('/');
+            if (index !== -1) {
+                prefix = url.substring(0, index+1);
+            }
+            opt.prefixURL = prefix;
+        }
+
+        var req = new XMLHttpRequest();
+        req.open('GET', url, true);
+        req.onreadystatechange = function (aEvt) {
+            if (req.readyState == 4) {
+                var child;
+                if(req.status == 200) {
+                    Q.when(osgDB.parseSceneGraph(JSON.parse(req.responseText),
+                                                 opt),
+                           function(child) {
+                               defer.resolve(child);
+                               osg.log("loaded " + url);
+
+                           }).fail(function(error) {
+                               defer.reject(error);
+                           });
+                } else {
+                    defer.reject(req.status);
+                }
+            }
+        };
+        req.send(null);
         return defer.promise;
     },
 
     readBinaryArrayURL: function(url) {
+        url = this.computeURL(url);
+
         if (this._identifierMap[url] !== undefined) {
             return this._identifierMap[url];
         }
@@ -195,6 +238,7 @@ osgDB.Input.prototype = {
             if (vb !== undefined) {
                 if (vb.File !== undefined) {
                     var url = vb.File;
+
                     defer = osgDB.Promise.defer();
                     osgDB.Promise.when(this.readBinaryArrayURL(url)).then(function(array) {
 

@@ -89,7 +89,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._currentMode = undefined;
         this._maxDistance = 0;
         this._minDistance = 0;
-        this._scaleMouseMotion = 1.0/10;
+        this._scaleMouseMotion = 1.0;
         this._node = undefined;
 
         this._moveTouch = undefined;
@@ -252,6 +252,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._zoom.setTarget(this._zoom.getTarget()[0]-scale);
     },
 
+
     gamepadaxes: function(axes) {
 
         // Block badly balanced controllers
@@ -348,7 +349,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         var pos = this.getPositionRelativeToCanvas(ev);
 
         if (isNaN(pos[0]) === false && isNaN(pos[1]) === false) {
-            
+            var x,y;
             if (this._currentMode === osgGA.OrbitManipulator.Rotate) {
                 this._rotate.setTarget(pos[0], pos[1]);
             } else if (this._currentMode === osgGA.OrbitManipulator.Pan) {
@@ -485,7 +486,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         var delta;
         var mouseFactor = 0.1;
         delta = this._rotate.update();
-        this.computeRotation(-delta[0]*mouseFactor, -delta[1]*mouseFactor);
+        this.computeRotation(-delta[0]*mouseFactor*this._scaleMouseMotion, -delta[1]*mouseFactor*this._scaleMouseMotion);
 
 
         var panFactor = 0.002;
