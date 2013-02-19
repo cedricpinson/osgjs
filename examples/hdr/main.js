@@ -501,8 +501,17 @@ var getModel = function(func) {
     return node;
 };
 
+function readImageURL(url) {
+    var ext = url.split('.').pop();
+    if(ext == "hdr")
+        return osg.readHDRImage(url);
+
+    return osgDB.readImageURL(url);
+}
 
 // change the environment maps (reflective included)
+// Images are 8-bit RGBE encoded based on the radiance file format (http://radsite.lbl.gov/radiance/refer/filefmts.pdf)
+// The example supports radiance .hdr files, but uses .png which contains the exact same information for better size and speed.
 function setEnvironment(name, background, ground) {
     var textures = {
         'Alexs_Apartment': ['Alexs_Apt_2k.png', 'Alexs_Apt_Env.png'],
@@ -514,15 +523,23 @@ function setEnvironment(name, background, ground) {
     var urls = textures[name];
 
     osgDB.Promise.all([
-            osgDB.readImageURL('textures/' + name + '/' + urls[0]),
-            osgDB.readImageURL('textures/' + name + '/' + urls[1])]).then(function(images) {
+            readImageURL('textures/' + name + '/' + urls[0]),
+            readImageURL('textures/' + name + '/' + urls[1])]).then(function(images) {
                 var textureHigh = new osg.Texture();
                 textureHigh.setImage(images[0]);
+                if(images[0].data) {
+                    textureHigh.setTextureSize(images[0].width, images[0].height);
+                    textureHigh.setImage(images[0].data, osg.Texture.RGBA);
+                }
                 background.getOrCreateStateSet().setTextureAttributeAndMode(0, textureHigh);
                 background.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
 
                 var textureEnv = new osg.Texture();
                 textureEnv.setImage(images[1]);
+                if(images[0].data) {
+                    textureEnv.setTextureSize(images[0].width, images[0].height);
+                    textureEnv.setImage(images[0].data, osg.Texture.RGBA);
+                }
                 ground.getOrCreateStateSet().setTextureAttributeAndMode(0, textureHigh);
                 ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
                 ground.getOrCreateStateSet().setTextureAttributeAndMode(1, textureEnv);
