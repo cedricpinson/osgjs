@@ -109,7 +109,9 @@ function getShader()
         "}",
 
         "void main(void) {",
-        "  vec3 ray = cubemapReflectionVector(CubemapTransform, osg_FragEye, osg_FragNormal) * vec3(1.0, -1.0, -1.0);",
+        "  vec3 normal = normalize(osg_FragNormal);",
+        "  vec3 eye = -normalize(osg_FragEye);",
+        "  vec3 ray = cubemapReflectionVector(CubemapTransform, eye, normal);",
         "  gl_FragColor = textureCube(Texture0, normalize(ray));",
         "}",
         ""
@@ -163,7 +165,7 @@ function getShaderBackground()
         "varying vec2 osg_TexCoord0;",
 
         "void main(void) {",
-        "  vec3 eye = normalize(-osg_FragVertex);",
+        "  vec3 eye = -normalize(osg_FragVertex);",
         "  gl_FragColor = textureCube(Texture0, eye);",
         "}",
         ""

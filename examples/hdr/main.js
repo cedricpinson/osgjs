@@ -96,7 +96,7 @@ osg.readHDRImage = function(url, options) {
                 return;
 
             // initialize output buffer
-            var data = new Float32Array(header.width * header.height * 4);
+            var data = new Uint8Array(header.width * header.height * 4);
             var img_offset = 0;
 
             if ((header.scanline_width < 8)||(header.scanline_width > 0x7fff)) {
@@ -159,38 +159,13 @@ osg.readHDRImage = function(url, options) {
 
                 // fill the image array
                 for (var i = 0; i < header.scanline_width; i++) {
-                    /*
                     data[img_offset++] = scanline_buffer[i];
                     data[img_offset++] = scanline_buffer[i + header.scanline_width];
                     data[img_offset++] = scanline_buffer[i + 2 * header.scanline_width];
                     data[img_offset++] = scanline_buffer[i + 3 * header.scanline_width];
-                    */
-                    rgbe[0] = scanline_buffer[i];
-                    rgbe[1] = scanline_buffer[i + header.scanline_width];
-                    rgbe[2] = scanline_buffer[i + 2 * header.scanline_width];
-                    rgbe[3] = scanline_buffer[i + 3 * header.scanline_width];
-
-                    if (rgbe[3] > 0) {
-                        var exp = rgbe[3] - (128 + 8);
-                        var f = Math.pow(2.0, exp);
-
-                        data[img_offset++] = rgbe[0] * f;
-                        data[img_offset++] = rgbe[1] * f;
-                        data[img_offset++] = rgbe[2] * f;
-                        data[img_offset++] = 1.0;
-                    } else {
-                        data[img_offset++] = data[img_offset++] = data[img_offset++]= 0.0;
-                        data[img_offset++] = 1.0;
-                    }
                 }
 
                 num_scanlines--;
-            }
-
-            for(var i = 0; i < header.width * header.height * 3; i++)
-            {
-                    if(i >= 137120 && i < 137120 + 3)
-                    console.error(i + ": " +data[i]);
             }
 
             // send deferred info
@@ -377,9 +352,9 @@ function getShader()
         "}",
 
         "vec4 textureSphere(sampler2D tex, vec3 n) {",
-        "  float yaw = .5 - atan( -n.x, -n.z ) / ( 2.0 * PI );",
-        "  float pitch = .5 - asin( -n.y ) / PI;",
-        "  return texture2D(tex, vec2(yaw, pitch));",
+        "  float yaw = acos(n.y) / PI;",
+        "  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);",
+        "  return texture2D(tex, vec2(pitch, yaw));",
         "}",
 
         "void main(void) {",
@@ -387,7 +362,7 @@ function getShader()
         "  vec3 N = normalize(osg_FragNormal);",
         "  vec3 L = normalize(osg_FragLightDirection);",
         "  vec3 E = normalize(osg_FragEye);",
-        "  vec3 R = cubemapReflectionVector(CubemapTransform, -E, N) * vec3(-1.0, 1.0, 1.0);",
+        "  vec3 R = cubemapReflectionVector(CubemapTransform, E, N);",
 
         "  float NdotL = dot(-N, L);",
         "  vec3 diffuse = toneMapHDR(decodeRGBE(textureSphere(Texture1, normalWorld)));",
@@ -403,7 +378,6 @@ function getShader()
 
     return program;
 }
-
 
 function getShaderBackground()
 {
@@ -458,12 +432,15 @@ function getShaderBackground()
         "  return pow(rgb * hdrExposure, 1.0 / vec3(hdrGamma));",
         "}",
 
+        "vec4 textureSphere(sampler2D tex, vec3 n) {",
+        "  float yaw = acos(n.y) / PI;",
+        "  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);",
+        "  return texture2D(tex, vec2(pitch, yaw));",
+        "}",
+
         "void main(void) {",
-        "  vec3 n = normalize(osg_FragVertex.xyz);",
-        "  float theta = acos(n.y)/ PI;",
-        "  float phi = (atan(n.x, n.z) + PI)/(2.0 * PI);",
-        "  vec2 texCoord = vec2(phi, theta);",
-        "  vec3 c = toneMapHDR(decodeRGBE(texture2D(Texture0, texCoord)));",
+        "  vec3 normal = normalize(osg_FragVertex.xyz);",
+        "  vec3 c = toneMapHDR(decodeRGBE(textureSphere(Texture0, normal)));",
         "  gl_FragColor = vec4(c, 1.0);",
         "}",
         ""
@@ -520,10 +497,7 @@ var getModel = function(func) {
         addLoading();
     };
     
-    //var geom = osg.createTexturedBoxGeometry(0,0,0, 1,1,1);
-    var geom = osg.createTexturedSphere(1, 32, 32);
-    node.addChild(geom);
-    //loadModel('monkey.osgjs');
+    loadModel('monkey.osgjs');
     return node;
 };
 
