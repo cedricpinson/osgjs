@@ -268,8 +268,6 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             this.webkitGamepadPoll();
         }
         
-        // if (Math.random()>0.99) osg.warn(this._gamepad);
-
         if (this._gamepad) {
             m.gamepadaxes(this._gamepad.axes);
 
@@ -286,8 +284,6 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             }
 
         }
-        
-
     },
 
 
