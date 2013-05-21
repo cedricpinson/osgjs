@@ -44,6 +44,19 @@ test("Viewer", function() {
 
     })();
 
+
+    // test device
+    (function() {
+        var canvas = createCanvas();
+        var viewer = new osgViewer.Viewer(canvas);
+
+        var devicesList = viewer.initInputDevices();
+        ok(devicesList.LeapMotion !== undefined, "detected leapmotion");
+
+        removeCanvas(canvas);
+
+    })();
+
 });
 
 

@@ -768,5 +768,33 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             };
             window.onresize = resize;
         }
+    },
+
+    // intialize all input devices
+    initInputDevices: function(argsObject) {
+        var args = argsObject || {};
+        var deviceEnabled = {};
+
+        var supportedDevices = osgViewer.inputDevices;
+        // loop on each devices and try to initialize it
+        var keys = Object.keys(supportedDevices);
+        for (var i = 0, l = keys.length; i<l; i++) {
+            var device = keys[i];
+
+            // check if the config has a require
+            var initialize = true;
+            var argDevice = {};
+            if (args.devices && (args.devices[device] !== undefined) ) {
+                initialize = args.devices[device].enable || true;
+                argDevice = args.devices[device];
+            }
+
+            if (initialize) {
+                var inputDevice = new supportedDevices[device]();
+                inputDevice.init(argDevice);
+                deviceEnabled[device] = inputDevice;
+            }
+        }
+        return deviceEnabled;
     }
 });
