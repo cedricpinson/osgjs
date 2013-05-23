@@ -61,6 +61,7 @@ osgViewer.Viewer = function(canvas, options, error) {
     if (options === undefined) {
         options = {antialias : true};
     }
+    this._options = options;
 
     if (osg.SimulateWebGLLostContext) {
         canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas(canvas);
@@ -93,12 +94,18 @@ osgViewer.Viewer = function(canvas, options, error) {
         osgUtil.CullVisitor = osg.CullVisitor;
         this._urlOptions = true;
 
+        // default argument for mouse binding
+        this._options.device = this._options.device || {};
+        this._options.device.Mouse = this._options.device.Mouse || {};
+        this._options.device.Mouse.eventNode = this._options.device.Mouse.eventNode || options.mouseEventNode || canvas;
+
+
         this._mouseWheelEventNode = canvas;
         this._mouseEventNode = canvas;
         this._keyboardEventNode = document;
         this._gamepadEventNode = window;
         if (options) {
-            if(options.mouseWheelEventNode){
+            if(options.mouseWheelEventNode) {
                 this._mouseWheelEventNode = options.mouseWheelEventNode;
             }
             if(options.mouseEventNode){
@@ -151,6 +158,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         }
 
         this.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
+        this._inputDevices = this.initInputDevices(this._options);
     },
     getState: function() {
         // would have more sense to be in view
@@ -457,9 +465,11 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         frameStamp.setSimulationTime(frameTime/1000.0 - frameStamp.getReferenceTime());
 
         // setup framestamp
-        this._updateVisitor.setFrameStamp(this.getFrameStamp());
+        this._updateVisitor.setFrameStamp(frameStamp);
         //this._cullVisitor.setFrameStamp(this.getFrameStamp());
 
+        // update inputs devices
+        this.updateInputDevices(this._inputDevices, frameStamp);
 
         // Update Manipulator/Event
         // should be merged with the update of game pad below
@@ -541,66 +551,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         var that = this;
         var viewer = this;
-    
-        var fixEvent = function( event ) {
-
-            //if ( event[ expando ] ) {
-                //return event;
-            //}
-
-            // store a copy of the original event object
-            // and "clone" to set read-only properties
-
-            // nop
-            //var originalEvent = event;
-            //event = jQuery.Event( originalEvent );
-
-            //for ( var i = this.props.length, prop; i; ) {
-            //    prop = this.props[ --i ];
-            //    event[ prop ] = originalEvent[ prop ];
-            //}
-
-            // Fix target property, if necessary
-            if ( !event.target ) {
-                event.target = event.srcElement || document; // Fixes #1925 where srcElement might not be defined either
-            }
-
-            // check if target is a textnode (safari)
-            if ( event.target.nodeType === 3 ) {
-                event.target = event.target.parentNode;
-            }
-
-            // Add relatedTarget, if necessary
-            if ( !event.relatedTarget && event.fromElement ) {
-                event.relatedTarget = event.fromElement === event.target ? event.toElement : event.fromElement;
-            }
-
-            // Calculate pageX/Y if missing and clientX/Y available
-            if ( event.pageX === null && event.clientX !== null ) {
-                var doc = document.documentElement, body = document.body;
-                event.pageX = event.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
-                event.pageY = event.clientY + (doc && doc.scrollTop  || body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
-            }
-
-            // Add which for key events
-            if ( !event.which && ((event.charCode || event.charCode === 0) ? event.charCode : event.keyCode) ) {
-                event.which = event.charCode || event.keyCode;
-            }
-
-            // Add metaKey to non-Mac browsers (use ctrl for PC's and Meta for Macs)
-            if ( !event.metaKey && event.ctrlKey ) {
-                event.metaKey = event.ctrlKey;
-            }
-
-            // Add which for click: 1 === left; 2 === middle; 3 === right
-            // Note: button is not normalized, so don't use it
-            if ( !event.which && event.button !== undefined ) {
-                event.which = (event.button & 1 ? 1 : ( event.button & 2 ? 3 : ( event.button & 4 ? 2 : 0 ) ));
-            }
-
-            return event;
-        };
-
+        return;
         if (dontBindDefaultEvent === undefined || dontBindDefaultEvent === false) {
 
             var disableMouse = false;
@@ -790,11 +741,20 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             }
 
             if (initialize) {
-                var inputDevice = new supportedDevices[device]();
+                var inputDevice = new supportedDevices[device](this);
                 inputDevice.init(argDevice);
                 deviceEnabled[device] = inputDevice;
             }
         }
         return deviceEnabled;
+    },
+    updateInputDevices: function(deviceList, frameStamp) {
+        var keys = Object.keys(deviceList);
+        keys.forEach(function(key) {
+            var device = deviceList[key];
+            if (device.update)
+                device.update(frameStamp);
+        });
     }
+
 });

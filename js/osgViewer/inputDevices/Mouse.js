@@ -29,13 +29,13 @@ osgViewer.inputDevices.Mouse.prototype = {
             for (var i = 0, l = this._eventList.length; i < l; i++) {
                 var ev = this._eventList[i];
                 if (this[ev]) {
-                    node.addEventListeners(ev, this[ev], false);
+                    node.addEventListener(ev, this[ev].bind(this), false);
                 }
             }
         }
         if (mousewheelNode) {
-            mousewheelNode.addEventListener("DOMMouseScroll", this.mousewheel, false);
-            mousewheelNode.addEventListener("mousewheel", this.mousewheel, false);
+            mousewheelNode.addEventListener("DOMMouseScroll", this.mousewheel.bind(this), false);
+            mousewheelNode.addEventListener("mousewheel", this.mousewheel.bind(this), false);
         }
     },
 
@@ -55,39 +55,47 @@ osgViewer.inputDevices.Mouse.prototype = {
     },
 
     isValid: function() {
-        if (this._enable && this._viewer.getManipulator() && this._viewer.getManipulator().getSupportedInputDevices[this._type])
+        if (this._enable && this._viewer.getManipulator() && this._viewer.getManipulator().getInputDeviceSupported()[this._type])
             return true;
         return false;
     },
     getManipulatorDevice: function() {
-        return this._viewer.getManipulator().getSupportedInputDevices[this._type];
+        return this._viewer.getManipulator().getInputDeviceSupported()[this._type];
     },
     mousedown: function(ev) {
         if (!this.isValid())
             return;
-        return this.getManipulatorDevice().mousedown(ev);
+        if (this.getManipulatorDevice().mousedown)
+            return this.getManipulatorDevice().mousedown(ev);
     },
 
     mouseup: function(ev) {
         if (!this.isValid())
             return;
-        return this.getManipulatorDevice().mouseup(ev);
+        if (this.getManipulatorDevice().mouseup)
+            return this.getManipulatorDevice().mouseup(ev);
     },
 
-    mousemove: function() {
+    mousemove: function(ev) {
         if (!this.isValid())
             return;
-        return this.getManipulatorDevice().mousemove(ev);
+        if (this.getManipulatorDevice().mousemove)
+            return this.getManipulatorDevice().mousemove(ev);
     },
 
-    dblclick: function() {
+    dblclick: function(ev) {
         if (!this.isValid())
             return;
-        return this.getManipulatorDevice().dblclick(ev);
+        if (this.getManipulatorDevice().dblclick)
+            return this.getManipulatorDevice().dblclick(ev);
     },
 
     mousewheel: function (event) {
         if (!this.isValid())
+            return;
+
+        var manipulatorAdapter = this.getManipulatorDevice();
+        if (!manipulatorAdapter.mousewheel)
             return;
 
         // from jquery
@@ -114,7 +122,7 @@ osgViewer.inputDevices.Mouse.prototype = {
         // Add event and delta to the front of the arguments
         args.unshift(event, delta, deltaX, deltaY);
 
-        return this.getManipulatorDevice().mousewheel.apply(m, args);
+        return this.getManipulatorDevice().mousewheel.apply(manipulatorAdapter, args);
     },
 
     divGlobalOffset: function(obj) {
@@ -163,6 +171,15 @@ osgViewer.inputDevices.Mouse.prototype = {
         result[0] = posx;
         result[1] = posy;
         return result;
+    },
+
+    // use the update to set the input device to mouse controller
+    // it's needed to compute size
+    update: function() {
+        if (!this.isValid())
+            return;
+
+        this.getManipulatorDevice().setInputDevice(this);        
     }
     
 };

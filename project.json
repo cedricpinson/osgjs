@@ -81,6 +81,7 @@
 		"js/osgViewer/Viewer.js",
 		"js/osgViewer/inputDevices/vendors/leap.min.js",
 		"js/osgViewer/inputDevices/LeapMotion.js",
+		"js/osgViewer/inputDevices/Mouse.js",
 
 		"js/osgGA/osgGA.js",
 		"js/osgGA/Manipulator.js",

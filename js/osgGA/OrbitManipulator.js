@@ -97,6 +97,13 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._rotateKey = 65; // a
         this._zoomKey = 83; // s
         this._panKey = 68; // d
+
+        // instance of controller
+        var self = this;
+        this._inputDeviceAdapterList = {
+            'Mouse' : new osgGA.OrbitManipulator.Mouse(self),
+            'LeapMotion': new osgGA.OrbitManipulator.LeapMotion(self)
+        };
     },
     reset: function() {
         this.init();
@@ -462,9 +469,22 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._buttonup = false;
     },
 
+    getRotateInterpolator: function() {
+        return this._rotate;
+    },
+
+    getPanInterpolator: function() {
+        return this._pan;
+    },
+    getZoomInterpolator: function() {
+        return this._zoom;
+    },
     getTarget: function(target) {
         osg.Vec3.copy(this._target, target);
+        return target;
     },
+    getMode: function() { return this._currentMode; },
+    setMode: function(mode) { this._currentMode = mode; return this; },
 
     getEyePosition: function(eye) {
         var inv = new Array(16);
@@ -512,6 +532,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
                               this._inverseMatrix);
     },
 
+    getInputDeviceSupported: function() { return this._inputDeviceAdapterList; },
     getInverseMatrix: function () {
         return this._inverseMatrix;
     }
@@ -538,8 +559,10 @@ osgGA.OrbitManipulator.TouchEvent.prototype = {
     }
 };
 
-(function() {
-    var LeapMotionController = function() {
+(function(module) {
+
+    var LeapMotionController = function(manipulator) {
+        this._manipulator = manipulator;
         this.init();
     };
 
@@ -577,10 +600,103 @@ osgGA.OrbitManipulator.TouchEvent.prototype = {
         }
     };
 
+    module.LeapMotion = LeapMotionController;
+})(osgGA.OrbitManipulator);
 
-    osgGA.OrbitManipulator.InputConnector = {
 
-        LeapMotion: new LeapMotionController()
+(function(module) {
+    var MouseController = function(manipulator) {
+        this._manipulator = manipulator;
     };
 
-})();
+    MouseController.prototype = {
+        init: function() {
+            this._buttonup = false;
+        },
+        setInputDevice: function(device) {
+            this._inputDevice = device;
+        },
+        setManipulator: function(manipulator) {
+            this._manipulator = manipulator;
+        },
+        mousemove: function(ev) {
+            if (this._buttonup === true) {
+                return;
+            }
+            var pos = this._inputDevice.getPositionRelativeToCanvas(ev);
+            var manipulator = this._manipulator;
+            if (isNaN(pos[0]) === false && isNaN(pos[1]) === false) {
+                var x,y;
+                var mode = manipulator.getMode();
+
+                if (mode === osgGA.OrbitManipulator.Rotate) {
+                    manipulator.getRotateInterpolator().setTarget(pos[0], pos[1]);
+
+                } else if (mode === osgGA.OrbitManipulator.Pan) {
+                    manipulator.getPanInterpolator().setTarget(pos[0], pos[1]);
+
+                } else if (mode === osgGA.OrbitManipulator.Zoom) {
+                    var zoom = manipulator.getZoomInterpolator();
+                    if (zoom.isReset()) {
+                        zoom._start = pos[1];
+                        zoom.set(0.0);
+                    }
+                    var dy = pos[1]-zoom._start;
+                    zoom._start = pos[1];
+                    var v = zoom.getTarget()[0];
+                    zoom.setTarget(v-dy/20.0);
+                }
+            }
+
+            ev.preventDefault();
+        },
+        mousedown: function(ev) {
+            var manipulator = this._manipulator;
+            var mode = manipulator.getMode();
+            if (mode === undefined) {
+                if (ev.button === 0) {
+                    if (ev.shiftKey) {
+                        manipulator.setMode(osgGA.OrbitManipulator.Pan);
+                    } else if (ev.ctrlKey) {
+                        manipulator.setMode(osgGA.OrbitManipulator.Zoom);
+                    } else {
+                        manipulator.setMode(osgGA.OrbitManipulator.Rotate);
+                    }
+                } else {
+                    manipulator.setMode(osgGA.OrbitManipulator.Pan);
+                }
+            }
+
+            this._buttonup = false;
+
+            var pos = this._inputDevice.getPositionRelativeToCanvas(ev);
+
+            if (mode === osgGA.OrbitManipulator.Rotate) {
+                manipulator.getRotateInterpolator().reset(pos[0], pos[1]);
+                manipulator.getRotateInterpolator().set(pos[0], pos[1]);
+            } else if (mode === osgGA.OrbitManipulator.Pan) {
+                manipulator.getPanInterpolator().reset(pos[0], pos[1]);
+                manipulator.getPanInterpolator().set(pos[0], pos[1]);
+            } else if (mode === osgGA.OrbitManipulator.Zoom) {
+                manipulator.getZoomInterpolator()._start = pos[1];
+                manipulator.getZoomInterpolator().set(0.0);
+            }
+            ev.preventDefault();
+        },
+        mouseup: function(ev) {
+            this._buttonup = false;
+            var manipulator = this._manipulator;
+            manipulator.setMode(undefined);
+        },
+        mousewheel: function(ev, intDelta, deltaX, deltaY) {
+            var manipulator = this._manipulator;
+            ev.preventDefault();
+            var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0]- intDelta;
+            manipulator.getZoomInterpolator().setTarget(zoomTarget);
+        }
+
+    };
+
+    module.Mouse = MouseController;
+
+})(osgGA.OrbitManipulator);

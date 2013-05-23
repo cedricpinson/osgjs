@@ -49,9 +49,19 @@ test("Viewer", function() {
     (function() {
         var canvas = createCanvas();
         var viewer = new osgViewer.Viewer(canvas);
-
-        var devicesList = viewer.initInputDevices();
+        var args = {
+            'devices': {
+                'Mouse': {
+                    'eventNode': canvas
+                }
+            }
+        };
+        var devicesList = viewer.initInputDevices(args);
         ok(devicesList.LeapMotion !== undefined, "detected leapmotion");
+        ok(devicesList.Mouse !== undefined, "detected mouse");
+
+        viewer.updateInputDevices(devicesList, undefined);
+        //ok(true, "detected mouse");
 
         removeCanvas(canvas);
 
