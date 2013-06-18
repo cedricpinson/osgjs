@@ -198,11 +198,14 @@ if(!Date.now) {
 }
 
 
-window.performance = window.performance || {};
-performance.now = (function() {
-    return window.performance.now || window.performance.mozNow || window.performance.msNow || window.performance.oNow || window.performance.webkitNow ||
+osg.performance = {};
+osg.performance.now = (function() {
+    var fn = window.performance.now || window.performance.mozNow || window.performance.msNow || window.performance.oNow || window.performance.webkitNow ||
     function() {
         return Date.now();
+    };
+    return function() {
+        return fn.apply(window.performance, arguments);
     };
 })();
 
