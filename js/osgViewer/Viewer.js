@@ -443,7 +443,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
     frame: function() {
         var frameTime, beginFrameTime;
-        frameTime = performance.now();
+        frameTime = osg.performance.now();
         if (this._lastFrameTime === undefined) {
             this._lastFrameTime = 0;
         }
@@ -488,26 +488,26 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             this.draw();
             frameStamp.setFrameNumber(frameStamp.getFrameNumber()+1);
             this._numberFrame++;
-            this._frameTime = performance.now() - beginFrameTime;
+            this._frameTime = osg.performance.now() - beginFrameTime;
         }
         else{
-            this._updateTime = performance.now();
+            this._updateTime = osg.performance.now();
             this.update();
-            this._updateTime =  performance.now() - this._updateTime;
+            this._updateTime =  osg.performance.now() - this._updateTime;
 
 
-            this._cullTime =  performance.now();
+            this._cullTime =  osg.performance.now();
             this.cull();
-            this._cullTime = performance.now() - this._cullTime;
+            this._cullTime = osg.performance.now() - this._cullTime;
 
-            this._drawTime =  performance.now();
+            this._drawTime =  osg.performance.now();
             this.draw();
-            this._drawTime = performance.now() - this._drawTime;
+            this._drawTime = osg.performance.now() - this._drawTime;
 
             frameStamp.setFrameNumber(frameStamp.getFrameNumber()+1);
 
             this._numberFrame++;
-            this._frameTime = performance.now() - beginFrameTime;
+            this._frameTime = osg.performance.now() - beginFrameTime;
 
             if ( window.performance && window.performance.memory && window.performance.memory.usedJSHeapSize)
                 this._memSize = window.performance.memory.usedJSHeapSize;
