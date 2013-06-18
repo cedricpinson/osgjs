@@ -95,9 +95,9 @@ osgViewer.Viewer = function(canvas, options, error) {
         this._urlOptions = true;
 
         // default argument for mouse binding
-        this._options.device = this._options.device || {};
-        this._options.device.Mouse = this._options.device.Mouse || {};
-        this._options.device.Mouse.eventNode = this._options.device.Mouse.eventNode || options.mouseEventNode || canvas;
+        this._options.devices = this._options.devices || {};
+        this._options.devices.Mouse = this._options.devices.Mouse || {};
+        this._options.devices.Mouse.eventNode = this._options.devices.Mouse.eventNode || options.mouseEventNode || canvas;
 
 
         this._mouseWheelEventNode = canvas;
@@ -551,6 +551,33 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
         var that = this;
         var viewer = this;
+        
+        var self = this;
+        var resize = function(ev) {
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+
+            var prevWidth = self._canvas.width;
+            var prevHeight = self._canvas.height;
+            self._canvas.width = w;
+            self._canvas.height = h;
+            self._canvas.style.width = w;
+            self._canvas.style.height = h;
+            osg.debug("window resize "  + prevWidth + "x" + prevHeight + " to " + w + "x" + h);
+            var camera = self.getCamera();
+            var vp = camera.getViewport();
+            var widthChangeRatio = w/vp.width();
+            var heightChangeRatio = h/vp.height();
+            var aspectRatioChange = widthChangeRatio / heightChangeRatio;
+            vp.setViewport(vp.x()*widthChangeRatio, vp.y()*heightChangeRatio, vp.width()*widthChangeRatio, vp.height()*heightChangeRatio);
+
+            if (aspectRatioChange !== 1.0) {
+
+                osg.Matrix.postMult(osg.Matrix.makeScale(1.0, aspectRatioChange, 1.0 ,[]), camera.getProjectionMatrix());
+            }
+        };
+        window.onresize = resize;
+
         return;
         if (dontBindDefaultEvent === undefined || dontBindDefaultEvent === false) {
 
@@ -692,32 +719,6 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             if (viewer.getManipulator().keyup) {
                 this._keyboardEventNode.addEventListener("keyup", keyup, false);
             }
-
-            var self = this;
-            var resize = function(ev) {
-                var w = window.innerWidth;
-                var h = window.innerHeight;
-
-                var prevWidth = self._canvas.width;
-                var prevHeight = self._canvas.height;
-                self._canvas.width = w;
-                self._canvas.height = h;
-                self._canvas.style.width = w;
-                self._canvas.style.height = h;
-                osg.debug("window resize "  + prevWidth + "x" + prevHeight + " to " + w + "x" + h);
-                var camera = self.getCamera();
-                var vp = camera.getViewport();
-                var widthChangeRatio = w/vp.width();
-                var heightChangeRatio = h/vp.height();
-                var aspectRatioChange = widthChangeRatio / heightChangeRatio;
-                vp.setViewport(vp.x()*widthChangeRatio, vp.y()*heightChangeRatio, vp.width()*widthChangeRatio, vp.height()*heightChangeRatio);
-
-                if (aspectRatioChange !== 1.0) {
-
-                    osg.Matrix.postMult(osg.Matrix.makeScale(1.0, aspectRatioChange, 1.0 ,[]), camera.getProjectionMatrix());
-                }
-            };
-            window.onresize = resize;
         }
     },
 
