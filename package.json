@@ -18,16 +18,14 @@
     "grunt-contrib-watch": "~0.3.1",
     "grunt-contrib-qunit": "~0.2.0",
     "grunt-contrib-compress": "~0.4.1",
+    "grunt-contrib-uglify": "~0.2.0",
     "grunt-strip": "~0.2.0",
-    "grunt-qunit-cov": "~0.3.2",
     "grunt-plato": "~0.1.5",
     "grunt-docco": "~0.2.0",
     "grunt-cli": "~0.1.6",
+    "grunt": "~0.4",
     "unzip": "~0.1.5",
-    "grunt-contrib-uglify": "~0.2.0",
     "esprima": "~1.0.2",
-    "grunt-concurrent": "~0.1.1",
-    "grunt-testem": "~0.3.5",
-    "grunt-jsvalidate": "~0.3.5"
+    "grunt-jsvalidate": "~0.2.1"
   }
 }

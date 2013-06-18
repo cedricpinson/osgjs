@@ -19,6 +19,7 @@
 	/********* using patched version from tasks folder
 		// convert to amd (requirejs like) module
 		//grunt.loadNpmTasks('grunt-wrap');
+		//grunt.loadNpmTasks('grunt-jsvalidate');
 	*/
 
 	// non patched
@@ -40,28 +41,6 @@
 	// project files
 	var projectJson = grunt.file.read("project.json");
 	var project = JSON.parse(projectJson);
-	grunt.file.write("project.jsonp", "var dataScripts=" + projectJson);
-	project.core = project.scripts.filter(function(item) {
-		return /js\/osg\//i.test(item);
-	});
-	project.animation = project.scripts.filter(function(item) {
-		return /js\/osgAnimation\//i.test(item);
-	});
-	project.ga = project.scripts.filter(function(item) {
-		return /js\/osgGA\//i.test(item);
-	});
-	project.db = project.scripts.filter(function(item) {
-		return /js\/osgDB\//i.test(item);
-	});
-	project.util = project.scripts.filter(function(item) {
-		return /js\/osgUtil\//i.test(item);
-	});
-	project.viewer = project.scripts.filter(function(item) {
-		return /js\/osgViewer\//i.test(item);
-	});
-	project.wrappers = project.scripts.filter(function(item) {
-		return /js\/osgWrappers\//i.test(item);
-	});
 
 	// Project configuration
 	grunt.initConfig({
