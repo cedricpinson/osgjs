@@ -43,7 +43,7 @@ grunt -version
 Then, to get a complete, minified (w/ Uglify.js), linted (w/ JSHint) version of osgjs, type the following:
 
 ```bash
-grunt --force
+grunt release --force
 ```
 
 
