@@ -45,7 +45,7 @@ Stats.Stats.prototype = {
 
     update: function() {
 
-        var delta, i, l, layer, value, c, ctx, height, myImageData, t = performance.now();
+        var delta, i, l, layer, value, c, ctx, height, myImageData, t = osg.performance.now();
         if(this.last_update === undefined) {
             this.last_update = t;
         }
