@@ -80,11 +80,17 @@
 		"js/osgViewer/View.js",
 		"js/osgViewer/Viewer.js",
 		"js/osgViewer/inputDevices/vendors/leap.min.js",
+		"js/osgViewer/inputDevices/vendors/hammer.js",
 		"js/osgViewer/inputDevices/LeapMotion.js",
 		"js/osgViewer/inputDevices/Mouse.js",
+		"js/osgViewer/inputDevices/Hammer.js",
 
 		"js/osgGA/osgGA.js",
 		"js/osgGA/Manipulator.js",
+
+		"js/osgGA/OrbitManipulatorHammerController.js",
+		"js/osgGA/OrbitManipulatorMouseController.js",
+		"js/osgGA/OrbitManipulatorLeapMotionController.js",
 		"js/osgGA/OrbitManipulator.js",
 		"js/osgGA/FirstPersonManipulator.js",
 		"js/osgGA/SwitchManipulator.js",

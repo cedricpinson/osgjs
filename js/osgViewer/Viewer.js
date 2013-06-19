@@ -99,6 +99,9 @@ osgViewer.Viewer = function(canvas, options, error) {
         this._options.devices.Mouse = this._options.devices.Mouse || {};
         this._options.devices.Mouse.eventNode = this._options.devices.Mouse.eventNode || options.mouseEventNode || canvas;
 
+        // hammer
+        this._options.devices.Hammer = this._options.devices.Hammer || {};
+        this._options.devices.Hammer.eventNode = this._options.devices.Hammer.eventNode || options.mouseEventNode || canvas;
 
         this._mouseWheelEventNode = canvas;
         this._mouseEventNode = canvas;

@@ -179,7 +179,7 @@ osgViewer.inputDevices.Mouse.prototype = {
         if (!this.isValid())
             return;
 
-        this.getManipulatorDevice().setInputDevice(this);        
+        this.getManipulatorDevice().setInputDevice(this);
     }
     
 };

@@ -17,4 +17,5 @@ test("osgGA.OrbitManipulator check devices", function() {
     var devices = manipulator.getInputDeviceSupported();
     ok(devices.Mouse !== undefined, "check mouse support");
     ok(devices.LeapMotion !== undefined, "check leapmotion support");
+    ok(devices.Hammer !== undefined, "check hammer support");
 });

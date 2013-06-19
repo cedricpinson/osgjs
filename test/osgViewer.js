@@ -57,6 +57,7 @@ test("Viewer", function() {
             }
         };
         var devicesList = viewer.initInputDevices(args);
+        console.log(devicesList);
         ok(devicesList.LeapMotion !== undefined, "detected leapmotion");
         ok(devicesList.Mouse !== undefined, "detected mouse");
 
