@@ -103,7 +103,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._inputDeviceAdapterList = {
             'Mouse' : new osgGA.OrbitManipulator.Mouse(self),
             'LeapMotion': new osgGA.OrbitManipulator.LeapMotion(self),
-            'Hammer': new osgGA.OrbitManipulator.Hammer(self)
+//            'Hammer': new osgGA.OrbitManipulator.Hammer(self)
         };
     },
     reset: function() {

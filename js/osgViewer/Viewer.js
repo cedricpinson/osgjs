@@ -97,16 +97,20 @@ osgViewer.Viewer = function(canvas, options, error) {
         // default argument for mouse binding
         this._options.devices = this._options.devices || {};
         this._options.devices.Mouse = this._options.devices.Mouse || {};
-        this._options.devices.Mouse.eventNode = this._options.devices.Mouse.eventNode || options.mouseEventNode || canvas;
+        var mouseEventNode = this._options.devices.Mouse.mouseEventNode || options.mouseEventNode || canvas;
+        this._options.devices.Mouse.mouseEventNode = mouseEventNode;
+        this._options.devices.Mouse.keyboardEventNode = this._options.devices.Mouse.keyboardEventNode || document;
 
         // hammer
         this._options.devices.Hammer = this._options.devices.Hammer || {};
         this._options.devices.Hammer.eventNode = this._options.devices.Hammer.eventNode || options.mouseEventNode || canvas;
 
+        // old way
         this._mouseWheelEventNode = canvas;
         this._mouseEventNode = canvas;
         this._keyboardEventNode = document;
         this._gamepadEventNode = window;
+
         if (options) {
             if(options.mouseWheelEventNode) {
                 this._mouseWheelEventNode = options.mouseWheelEventNode;

@@ -1,5 +1,11 @@
 osgGA.getOrbitMouseControllerClass = function() {
 
+    var Mode = {
+        Rotate: 0,
+        Pan: 1,
+        Zoom: 2
+    };
+
     var Controller = function(manipulator) {
         this._manipulator = manipulator;
         this.init();
@@ -7,8 +13,16 @@ osgGA.getOrbitMouseControllerClass = function() {
 
     Controller.prototype = {
         init: function() {
-            this._buttonup = false;
+            this.releaseButton();
+            this._rotateKey = 65; // a
+            this._zoomKey = 83; // s
+            this._panKey = 68; // d
+
+            this._mode = undefined;
+
         },
+        getMode: function() { return this._mode; },
+        setMode: function(mode) { this._mode = mode; },
         setInputDevice: function(device) {
             this._inputDevice = device;
         },
@@ -23,15 +37,15 @@ osgGA.getOrbitMouseControllerClass = function() {
             var manipulator = this._manipulator;
             if (isNaN(pos[0]) === false && isNaN(pos[1]) === false) {
                 var x,y;
-                var mode = manipulator.getMode();
 
-                if (mode === osgGA.OrbitManipulator.Rotate) {
+                var mode = this.getMode();
+                if (mode === Mode.Rotate) {
                     manipulator.getRotateInterpolator().setTarget(pos[0], pos[1]);
 
-                } else if (mode === osgGA.OrbitManipulator.Pan) {
+                } else if (mode === Mode.Pan) {
                     manipulator.getPanInterpolator().setTarget(pos[0], pos[1]);
 
-                } else if (mode === osgGA.OrbitManipulator.Zoom) {
+                } else if (mode === Mode.Zoom) {
                     var zoom = manipulator.getZoomInterpolator();
                     if (zoom.isReset()) {
                         zoom._start = pos[1];
@@ -48,25 +62,25 @@ osgGA.getOrbitMouseControllerClass = function() {
         },
         mousedown: function(ev) {
             var manipulator = this._manipulator;
-            var mode = manipulator.getMode();
+            var mode = this.getMode();
             if (mode === undefined) {
                 if (ev.button === 0) {
                     if (ev.shiftKey) {
-                        manipulator.setMode(osgGA.OrbitManipulator.Pan);
+                        this.setMode(Mode.Pan);
                     } else if (ev.ctrlKey) {
-                        manipulator.setMode(osgGA.OrbitManipulator.Zoom);
+                        this.setMode(Mode.Zoom);
                     } else {
-                        manipulator.setMode(osgGA.OrbitManipulator.Rotate);
+                        this.setMode(Mode.Rotate);
                     }
                 } else {
-                    manipulator.setMode(osgGA.OrbitManipulator.Pan);
+                    this.setMode(Mode.Pan);
                 }
             }
 
-            this._buttonup = false;
+            this.pushButton();
 
             var pos = this._inputDevice.getPositionRelativeToCanvas(ev);
-            mode = manipulator.getMode();
+            mode = this.getMode();
             if (mode === osgGA.OrbitManipulator.Rotate) {
                 manipulator.getRotateInterpolator().reset();
                 manipulator.getRotateInterpolator().set(pos[0], pos[1]);
@@ -80,16 +94,60 @@ osgGA.getOrbitMouseControllerClass = function() {
             ev.preventDefault();
         },
         mouseup: function(ev) {
-            this._buttonup = false;
-            var manipulator = this._manipulator;
-            manipulator.setMode(undefined);
+            this.releaseButton();
+            this.setMode(undefined);
         },
         mousewheel: function(ev, intDelta, deltaX, deltaY) {
             var manipulator = this._manipulator;
             ev.preventDefault();
             var zoomTarget = manipulator.getZoomInterpolator().getTarget()[0]- intDelta;
             manipulator.getZoomInterpolator().setTarget(zoomTarget);
+        },
+
+        pushButton: function() {
+            this._buttonup = false;
+        },
+        releaseButton: function() {
+            this._buttonup = true;
+        },
+
+        keydown: function(ev) {
+            if (ev.keyCode === 32) {
+                this._manipulator.computeHomePosition();
+
+            } else if (ev.keyCode === this._panKey && 
+                       this.getMode() !== Mode.Pan) {
+                this.setMode(Mode.Pan);
+                this._manipulator.getPanInterpolator().reset();
+                this.pushButton();
+                ev.preventDefault();
+            } else if ( ev.keyCode === this._zoomKey &&
+                        this.getMode() !== Mode.Zoom) {
+                this.setMode(Mode.Zoom);
+                this._manipulator.getZoomInterpolator().reset();
+                this.pushButton();
+                ev.preventDefault();
+            } else if ( ev.keyCode === this._rotateKey &&
+                        this.getMode() !== Mode.Rotate) {
+                this.setMode(Mode.Rotate);
+                this._manipulator.getRotateInterpolator().reset();
+                this.pushButton();
+                ev.preventDefault();
+            }
+            
+        },
+
+        keyup: function(ev) {
+            if (ev.keyCode === this._panKey) {
+                this.mouseup(ev);
+            } else if ( ev.keyCode === this._rotateKey) {
+                this.mouseup(ev);
+            } else if ( ev.keyCode === this._rotateKey) {
+                this.mouseup(ev);
+            }
+            this.setMode(undefined);
         }
+
     };
     return Controller;
 };
