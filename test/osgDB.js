@@ -12,6 +12,19 @@ asyncTest("Input.readImageURL", function() {
     }).fail(function (error) {
         osg.error(error);
     });
+
+    (function() {
+        var img = new Image();
+        input.fetchImage(img, url, { 'crossOrigin' : 'anonymous'});
+        ok(img.crossOrigin !== "anonymous", "skip crossOrigin for inline image");
+    })();
+
+    (function() {
+        var img = new Image();
+        input.fetchImage(img, 'http://osgjs.org/image.png', { 'crossOrigin' : 'anonymous'});
+        ok(img.crossOrigin === "anonymous", "check crossOrigin");
+    })();
+    
 });
 
 

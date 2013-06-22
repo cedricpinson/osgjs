@@ -65,6 +65,17 @@ osgDB.Input.prototype = {
         return new (scope)();
     },
 
+    fetchImage: function(img, url, options) {
+        var checkInlineImage = "data:image/";
+
+        // crossOrigin does not work for inline data image
+        if (url.substring(0,checkInlineImage.length) !== checkInlineImage) {
+            img.crossOrigin = options.crossOrigin || "";
+        }
+        img.src = url;
+        return img;
+    },
+
     readImageURL: function(url, options) {
         // if image is on inline image skip url computation
         if (url.substr(0, 10) !== "data:image") {
@@ -87,8 +98,7 @@ osgDB.Input.prototype = {
                 img.onload = options.onload;
             }
 
-            img.src = url;
-            return img;
+            return this.fetchImage(img, url, options);
         }
 
         var defer = osgDB.Promise.defer();
@@ -98,8 +108,8 @@ osgDB.Input.prototype = {
             }
             defer.resolve(img);
         };
-        img.src = url;
-
+        
+        this.fetchImage(img, url, options);
         return defer.promise;
     },
 
