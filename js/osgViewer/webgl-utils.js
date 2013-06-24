@@ -200,6 +200,13 @@ if(!Date.now) {
 
 osg.performance = {};
 osg.performance.now = (function() {
+    // if no window.performance
+    if (window.performance === undefined) {
+        return function() {
+            return Date.now();
+        };
+    }
+
     var fn = window.performance.now || window.performance.mozNow || window.performance.msNow || window.performance.oNow || window.performance.webkitNow ||
     function() {
         return Date.now();
