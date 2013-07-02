@@ -95,15 +95,17 @@ osgViewer.Viewer = function(canvas, options, error) {
         this._urlOptions = true;
 
         // default argument for mouse binding
-        this._options.devices = this._options.devices || {};
-        this._options.devices.Mouse = this._options.devices.Mouse || {};
-        var mouseEventNode = this._options.devices.Mouse.mouseEventNode || options.mouseEventNode || canvas;
-        this._options.devices.Mouse.mouseEventNode = mouseEventNode;
-        this._options.devices.Mouse.keyboardEventNode = this._options.devices.Mouse.keyboardEventNode || document;
+        var eventsBackend = this._options.EventBackend || {};
+        this._options.EventBackend = eventsBackend;
+
+        eventsBackend.StandardMouseKeyboard = this._options.EventBackend.StandardMouseKeyboard || {};
+        var mouseEventNode = eventsBackend.StandardMouseKeyboard.mouseEventNode || options.mouseEventNode || canvas;
+        eventsBackend.StandardMouseKeyboard.mouseEventNode = mouseEventNode;
+        eventsBackend.StandardMouseKeyboard.keyboardEventNode = eventsBackend.StandardMouseKeyboard.keyboardEventNode || document;
 
         // hammer
-        this._options.devices.Hammer = this._options.devices.Hammer || {};
-        this._options.devices.Hammer.eventNode = this._options.devices.Hammer.eventNode || options.mouseEventNode || canvas;
+        eventsBackend.Hammer = eventsBackend.Hammer || {};
+        eventsBackend.Hammer.eventNode = eventsBackend.Hammer.eventNode || options.mouseEventNode || canvas;
 
         // old way
         this._mouseWheelEventNode = canvas;
@@ -746,7 +748,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             var argDevice = {};
             if (argumentEventBackend && (argumentEventBackend[device] !== undefined) ) {
                 initialize = argumentEventBackend[device].enable || true;
-                argDevice = argumentEventBackend.devices[device];
+                argDevice = argumentEventBackend[device];
             }
 
             if (initialize) {

@@ -1,11 +1,11 @@
 osgViewer.EventProxy = osgViewer.EventProxy || {};
 
-osgViewer.EventProxy.Mouse = (function() {
+osgViewer.EventProxy.StandardMouseKeyboard = (function() {
 
     var EventConsumer = function(viewer) {
         this._enable = true;
         this._viewer = viewer;
-        this._type = 'Mouse';
+        this._type = 'StandardMouseKeyboard';
 
         this._mouseEventNode = undefined;
         this._wheelEventNode = undefined;
@@ -176,10 +176,10 @@ osgViewer.EventProxy.Mouse = (function() {
             } else if (e.clientX || e.clientY) {
                 posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
                 posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-	    }
+            }
 
-	    // posx and posy contain the mouse position relative to the document
-	    // Do something with this information
+            // posx and posy contain the mouse position relative to the document
+            // Do something with this information
             var globalOffset = this.divGlobalOffset(myObject);
             posx = posx - globalOffset[0];
             posy = myObject.height-(posy - globalOffset[1]);

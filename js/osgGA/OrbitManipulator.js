@@ -66,11 +66,11 @@ osgGA.OrbitManipulator.Interpolator.prototype = {
     }
 };
 
-osgGA.OrbitManipulator.AvailableControllerList = [ 'Mouse',
+osgGA.OrbitManipulator.AvailableControllerList = [ 'StandardMouseKeyboard',
                                                    'LeapMotion',
                                                    'Hammer' ];
 
-osgGA.OrbitManipulator.ControllerList = [ 'Mouse',
+osgGA.OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
                                           'Hammer'];
 
 /** @lends osgGA.OrbitManipulator.prototype */
@@ -575,7 +575,7 @@ osgGA.OrbitManipulator.TouchEvent.prototype = {
 
 
 (function(module) {
-    module.Mouse = osgGA.getOrbitMouseControllerClass();
+    module.StandardMouseKeyboard = osgGA.getOrbitStandardMouseKeyboardControllerClass();
 })(osgGA.OrbitManipulator);
 
 

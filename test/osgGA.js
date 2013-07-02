@@ -15,6 +15,6 @@ test("osgGA.FirstPersonManipulator", function() {
 test("osgGA.OrbitManipulator check controllers", function() {
     var manipulator = new osgGA.OrbitManipulator();
     var list = manipulator.getControllerList();
-    ok(list.Mouse !== undefined, "check mouse support");
+    ok(list.StandardMouseKeyboard !== undefined, "check mouse support");
     ok(list.Hammer !== undefined, "check hammer support");
 });

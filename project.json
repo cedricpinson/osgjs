@@ -82,14 +82,14 @@
 		"js/osgViewer/eventProxy/vendors/leap.min.js",
 		"js/osgViewer/eventProxy/vendors/hammer.js",
 		"js/osgViewer/eventProxy/LeapMotion.js",
-		"js/osgViewer/eventProxy/Mouse.js",
+		"js/osgViewer/eventProxy/StandardMouseKeyboard.js",
 		"js/osgViewer/eventProxy/Hammer.js",
 
 		"js/osgGA/osgGA.js",
 		"js/osgGA/Manipulator.js",
 
 		"js/osgGA/OrbitManipulatorHammerController.js",
-		"js/osgGA/OrbitManipulatorMouseController.js",
+		"js/osgGA/OrbitManipulatorMouseKeyboardController.js",
 		"js/osgGA/OrbitManipulatorLeapMotionController.js",
 		"js/osgGA/OrbitManipulator.js",
 		"js/osgGA/FirstPersonManipulator.js",

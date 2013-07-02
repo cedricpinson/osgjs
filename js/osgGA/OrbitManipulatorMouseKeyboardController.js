@@ -1,4 +1,4 @@
-osgGA.getOrbitMouseControllerClass = function() {
+osgGA.getOrbitStandardMouseKeyboardControllerClass = function() {
 
     var Mode = {
         Rotate: 0,
