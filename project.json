@@ -12,6 +12,7 @@
 		"js/osg/Node.js",
 		"js/osg/NodeVisitor.js",
 		"js/osg/Transform.js",
+		"js/osg/MatrixTransform.js",
 		"js/osg/BlendFunc.js",
 		"js/osg/BlendColor.js",
 		"js/osg/BoundingBox.js",
@@ -19,6 +20,7 @@
 		"js/osg/BufferArray.js",
 		"js/osg/CullFace.js",
 		"js/osg/CullSettings.js",
+		"js/osg/CullStack.js",
 		"js/osg/Camera.js",
 		"js/osg/Depth.js",
 		"js/osg/EllipsoidModel.js",
@@ -29,7 +31,6 @@
 		"js/osg/LightSource.js",
 		"js/osg/LineWidth.js",
 		"js/osg/Material.js",
-		"js/osg/MatrixTransform.js",
 		"js/osg/PrimitiveSet.js",
 		"js/osg/Program.js",
 		"js/osg/Projection.js",
@@ -46,7 +47,6 @@
 		"js/osg/TextureCubeMap.js",
 		"js/osg/UpdateVisitor.js",
 		"js/osg/Viewport.js",
-		"js/osg/CullStack.js",
 		"js/osg/CullVisitor.js",
 
 		"js/osgAnimation/osgAnimation.js",
@@ -97,5 +97,6 @@
 
 		"js/osgWrappers/serializers/osg.js",
 		"js/osgWrappers/serializers/osgAnimation.js"
-    ]
+
+	]
 }

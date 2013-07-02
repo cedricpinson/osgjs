@@ -454,7 +454,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
 
     frame: function() {
         var frameTime, beginFrameTime;
-        frameTime = performance.now();
+        frameTime = osg.performance.now();
         if (this._lastFrameTime === undefined) {
             this._lastFrameTime = 0;
         }
@@ -501,26 +501,26 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             this.draw();
             frameStamp.setFrameNumber(frameStamp.getFrameNumber()+1);
             this._numberFrame++;
-            this._frameTime = performance.now() - beginFrameTime;
+            this._frameTime = osg.performance.now() - beginFrameTime;
         }
         else{
-            this._updateTime = performance.now();
+            this._updateTime = osg.performance.now();
             this.update();
-            this._updateTime =  performance.now() - this._updateTime;
+            this._updateTime =  osg.performance.now() - this._updateTime;
 
 
-            this._cullTime =  performance.now();
+            this._cullTime =  osg.performance.now();
             this.cull();
-            this._cullTime = performance.now() - this._cullTime;
+            this._cullTime = osg.performance.now() - this._cullTime;
 
-            this._drawTime =  performance.now();
+            this._drawTime =  osg.performance.now();
             this.draw();
-            this._drawTime = performance.now() - this._drawTime;
+            this._drawTime = osg.performance.now() - this._drawTime;
 
             frameStamp.setFrameNumber(frameStamp.getFrameNumber()+1);
 
             this._numberFrame++;
-            this._frameTime = performance.now() - beginFrameTime;
+            this._frameTime = osg.performance.now() - beginFrameTime;
 
             if ( window.performance && window.performance.memory && window.performance.memory.usedJSHeapSize)
                 this._memSize = window.performance.memory.usedJSHeapSize;
@@ -564,23 +564,23 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
             var w = window.innerWidth;
             var h = window.innerHeight;
 
-            var prevWidth = self._canvas.width;
-            var prevHeight = self._canvas.height;
+            var camera = self.getCamera();
+            var vp = camera.getViewport();
+
+            var prevWidth = vp.width();
+            var prevHeight = vp.height();
             self._canvas.width = w;
             self._canvas.height = h;
             self._canvas.style.width = w;
             self._canvas.style.height = h;
             osg.debug("window resize "  + prevWidth + "x" + prevHeight + " to " + w + "x" + h);
-            var camera = self.getCamera();
-            var vp = camera.getViewport();
-            var widthChangeRatio = w/vp.width();
-            var heightChangeRatio = h/vp.height();
+            var widthChangeRatio = w/prevWidth;
+            var heightChangeRatio = h/prevHeight;
             var aspectRatioChange = widthChangeRatio / heightChangeRatio;
             vp.setViewport(vp.x()*widthChangeRatio, vp.y()*heightChangeRatio, vp.width()*widthChangeRatio, vp.height()*heightChangeRatio);
 
             if (aspectRatioChange !== 1.0) {
-
-                osg.Matrix.postMult(osg.Matrix.makeScale(1.0, aspectRatioChange, 1.0 ,[]), camera.getProjectionMatrix());
+                osg.Matrix.preMult(camera.getProjectionMatrix(), osg.Matrix.makeScale(1.0/aspectRatioChange, 1.0, 1.0 ,[]));
             }
         };
         window.onresize = resize;

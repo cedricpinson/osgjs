@@ -23,7 +23,11 @@ git clone git://github.com/cedricpinson/osgjs.git
 Enter the directory and install the Node  (install nodeJS if you don't already have it http://nodejs.org/ ) dependencies:
 
 ```bash
-npm install -g grunt
+
+npm cache clean
+npm uninstall -g grunt
+npm install -g grunt-cli
+
 cd osgjs && npm install
 ```
 
@@ -39,7 +43,7 @@ grunt -version
 Then, to get a complete, minified (w/ Uglify.js), linted (w/ JSHint) version of osgjs, type the following:
 
 ```bash
-grunt --force
+grunt release --force
 ```
 
 
