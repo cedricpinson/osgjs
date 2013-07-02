@@ -1,10 +1,10 @@
-osgViewer.inputDevices = osgViewer.inputDevices || {};
-osgViewer.inputDevices.LeapMotion = function(viewer) {
+osgViewer.EventProxy = osgViewer.EventProxy || {};
+osgViewer.EventProxy.LeapMotion = function(viewer) {
     this._viewer = viewer;
     this._type = 'LeapMotion';
 };
 
-osgViewer.inputDevices.LeapMotion.prototype = {
+osgViewer.EventProxy.LeapMotion.prototype = {
     init: function(args) {
         var element = document.getElementById(args.id);
 
@@ -21,18 +21,18 @@ osgViewer.inputDevices.LeapMotion.prototype = {
     },
 
     isValid: function() {
-        if (this._enable && this._viewer.getManipulator() && this._viewer.getManipulator().getSupportedInputDevices[this._type])
+        if (this._enable && this._viewer.getManipulator() && this._viewer.getManipulator().getControllerList[this._type])
             return true;
         return false;
     },
-    getManipulatorDevice: function() {
-        return this._viewer.getManipulator().getSupportedInputDevices[this._type];
+    getManipulatorController: function() {
+        return this._viewer.getManipulator().getControllerList[this._type];
     },
     _update: function(frame) {
         if (!frame.valid || !this.isValid()) {
             return;
         }
-        var manipulatorAdapter = this.getManipulatorDevice();
+        var manipulatorAdapter = this.getManipulatorController();
         if (manipulatorAdapter.update) {
             manipulatorAdapter.update(frame);
         }

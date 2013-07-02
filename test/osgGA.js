@@ -12,10 +12,9 @@ test("osgGA.FirstPersonManipulator", function() {
 });
 
 
-test("osgGA.OrbitManipulator check devices", function() {
+test("osgGA.OrbitManipulator check controllers", function() {
     var manipulator = new osgGA.OrbitManipulator();
-    var devices = manipulator.getInputDeviceSupported();
-    ok(devices.Mouse !== undefined, "check mouse support");
-    ok(devices.LeapMotion !== undefined, "check leapmotion support");
-    ok(devices.Hammer !== undefined, "check hammer support");
+    var list = manipulator.getControllerList();
+    ok(list.Mouse !== undefined, "check mouse support");
+    ok(list.Hammer !== undefined, "check hammer support");
 });

@@ -66,6 +66,13 @@ osgGA.OrbitManipulator.Interpolator.prototype = {
     }
 };
 
+osgGA.OrbitManipulator.AvailableControllerList = [ 'Mouse',
+                                                   'LeapMotion',
+                                                   'Hammer' ];
+
+osgGA.OrbitManipulator.ControllerList = [ 'Mouse',
+                                          'Hammer'];
+
 /** @lends osgGA.OrbitManipulator.prototype */
 osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype, {
     init: function() {
@@ -100,11 +107,13 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
         // instance of controller
         var self = this;
-        this._inputDeviceAdapterList = {
-            'Mouse' : new osgGA.OrbitManipulator.Mouse(self),
-            'LeapMotion': new osgGA.OrbitManipulator.LeapMotion(self),
-//            'Hammer': new osgGA.OrbitManipulator.Hammer(self)
-        };
+
+        this._controllerList = {};
+        osgGA.OrbitManipulator.ControllerList.forEach(function(value) {
+            if (osgGA.OrbitManipulator[value] !== undefined) {
+                self._controllerList[value] = new osgGA.OrbitManipulator[value](self);
+            }
+        });
     },
     reset: function() {
         this.init();
@@ -533,7 +542,7 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
                               this._inverseMatrix);
     },
 
-    getInputDeviceSupported: function() { return this._inputDeviceAdapterList; },
+    getControllerList: function() { return this._controllerList; },
     getInverseMatrix: function () {
         return this._inverseMatrix;
     }

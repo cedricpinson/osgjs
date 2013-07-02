@@ -165,7 +165,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         }
 
         this.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
-        this._inputDevices = this.initInputDevices(this._options);
+        this._eventProxy = this.initEventProxy(this._options);
     },
     getState: function() {
         // would have more sense to be in view
@@ -476,7 +476,7 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         //this._cullVisitor.setFrameStamp(this.getFrameStamp());
 
         // update inputs devices
-        this.updateInputDevices(this._inputDevices, frameStamp);
+        this.updateEventProxy(this._eventProxy, frameStamp);
 
         // Update Manipulator/Event
         // should be merged with the update of game pad below
@@ -730,36 +730,37 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
     },
 
     // intialize all input devices
-    initInputDevices: function(argsObject) {
+    initEventProxy: function(argsObject) {
         var args = argsObject || {};
         var deviceEnabled = {};
 
-        var supportedDevices = osgViewer.inputDevices;
+        var lists = osgViewer.EventProxy;
+        var argumentEventBackend = args.EventBackend;
         // loop on each devices and try to initialize it
-        var keys = Object.keys(supportedDevices);
+        var keys = Object.keys(lists);
         for (var i = 0, l = keys.length; i<l; i++) {
             var device = keys[i];
 
             // check if the config has a require
             var initialize = true;
             var argDevice = {};
-            if (args.devices && (args.devices[device] !== undefined) ) {
-                initialize = args.devices[device].enable || true;
-                argDevice = args.devices[device];
+            if (argumentEventBackend && (argumentEventBackend[device] !== undefined) ) {
+                initialize = argumentEventBackend[device].enable || true;
+                argDevice = argumentEventBackend.devices[device];
             }
 
             if (initialize) {
-                var inputDevice = new supportedDevices[device](this);
+                var inputDevice = new lists[device](this);
                 inputDevice.init(argDevice);
                 deviceEnabled[device] = inputDevice;
             }
         }
         return deviceEnabled;
     },
-    updateInputDevices: function(deviceList, frameStamp) {
-        var keys = Object.keys(deviceList);
+    updateEventProxy: function(list, frameStamp) {
+        var keys = Object.keys(list);
         keys.forEach(function(key) {
-            var device = deviceList[key];
+            var device = list[key];
             if (device.update)
                 device.update(frameStamp);
         });

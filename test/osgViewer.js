@@ -56,12 +56,12 @@ test("Viewer", function() {
                 }
             }
         };
-        var devicesList = viewer.initInputDevices(args);
-        console.log(devicesList);
-        ok(devicesList.LeapMotion !== undefined, "detected leapmotion");
-        ok(devicesList.Mouse !== undefined, "detected mouse");
+        var list = viewer.initEventProxy(args);
+        console.log(list);
+        ok(list.LeapMotion !== undefined, "detected leapmotion");
+        ok(list.Mouse !== undefined, "detected mouse");
 
-        viewer.updateInputDevices(devicesList, undefined);
+        viewer.updateEventProxy(list, undefined);
         //ok(true, "detected mouse");
 
         removeCanvas(canvas);

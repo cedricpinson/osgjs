@@ -16,10 +16,10 @@ osgGA.getOrbitHammerControllerClass = function() {
 
             this._pan = false;
         },
-        setInputDevice: function(device) {
-            this._inputDevice = device;
+        setEventProxy: function(proxy) {
+            this._eventProxy = proxy;
             var self = this;
-            var hammer = device;
+            var hammer = proxy;
 
             var computeTouches = function(ev) {
                 if (ev.originalEvent.changedTouches !== undefined)

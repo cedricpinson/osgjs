@@ -23,8 +23,8 @@ osgGA.getOrbitMouseControllerClass = function() {
         },
         getMode: function() { return this._mode; },
         setMode: function(mode) { this._mode = mode; },
-        setInputDevice: function(device) {
-            this._inputDevice = device;
+        setEventProxy: function(proxy) {
+            this._eventProxy = proxy;
         },
         setManipulator: function(manipulator) {
             this._manipulator = manipulator;
@@ -33,7 +33,7 @@ osgGA.getOrbitMouseControllerClass = function() {
             if (this._buttonup === true) {
                 return;
             }
-            var pos = this._inputDevice.getPositionRelativeToCanvas(ev);
+            var pos = this._eventProxy.getPositionRelativeToCanvas(ev);
             var manipulator = this._manipulator;
             if (isNaN(pos[0]) === false && isNaN(pos[1]) === false) {
                 var x,y;
@@ -79,7 +79,7 @@ osgGA.getOrbitMouseControllerClass = function() {
 
             this.pushButton();
 
-            var pos = this._inputDevice.getPositionRelativeToCanvas(ev);
+            var pos = this._eventProxy.getPositionRelativeToCanvas(ev);
             mode = this.getMode();
             if (mode === osgGA.OrbitManipulator.Rotate) {
                 manipulator.getRotateInterpolator().reset();

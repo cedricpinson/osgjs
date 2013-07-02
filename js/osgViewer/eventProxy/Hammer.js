@@ -1,6 +1,6 @@
-osgViewer.inputDevices = osgViewer.inputDevices || {};
+osgViewer.EventProxy = osgViewer.EventProxy || {};
 
-osgViewer.inputDevices.Hammer = function(viewer) {
+osgViewer.EventProxy.Hammer = function(viewer) {
     this._enable = true;
     this._viewer = viewer;
     this._type = 'Hammer';
@@ -9,7 +9,7 @@ osgViewer.inputDevices.Hammer = function(viewer) {
 
 };
 
-osgViewer.inputDevices.Hammer.prototype = {
+osgViewer.EventProxy.Hammer.prototype = {
     init: function(args) {
 
         var options = {
@@ -25,12 +25,12 @@ osgViewer.inputDevices.Hammer.prototype = {
     },
 
     isValid: function() {
-        if (this._enable && this._viewer.getManipulator() && this._viewer.getManipulator().getInputDeviceSupported()[this._type])
+        if (this._enable && this._viewer.getManipulator() && this._viewer.getManipulator().getControllerList()[this._type])
             return true;
         return false;
     },
-    getManipulatorDevice: function() {
-        return this._viewer.getManipulator().getInputDeviceSupported()[this._type];
+    getManipulatorController: function() {
+        return this._viewer.getManipulator().getControllerList()[this._type];
     },
 
     // use the update to set the input device to mouse controller
@@ -40,7 +40,7 @@ osgViewer.inputDevices.Hammer.prototype = {
             return;
 
         // we pass directly hammer object
-        this.getManipulatorDevice().setInputDevice(this._hammer);
+        this.getManipulatorController().setEventProxy(this._hammer);
     }
     
 };

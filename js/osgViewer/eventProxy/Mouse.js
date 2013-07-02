@@ -1,6 +1,6 @@
-osgViewer.inputDevices = osgViewer.inputDevices || {};
+osgViewer.EventProxy = osgViewer.EventProxy || {};
 
-osgViewer.inputDevices.Mouse = (function() {
+osgViewer.EventProxy.Mouse = (function() {
 
     var EventConsumer = function(viewer) {
         this._enable = true;
@@ -69,59 +69,59 @@ osgViewer.inputDevices.Mouse = (function() {
         },
 
         isValid: function() {
-            if (this._enable && this._viewer.getManipulator() && this._viewer.getManipulator().getInputDeviceSupported()[this._type])
+            if (this._enable && this._viewer.getManipulator() && this._viewer.getManipulator().getControllerList()[this._type])
                 return true;
             return false;
         },
-        getManipulatorDevice: function() {
-            return this._viewer.getManipulator().getInputDeviceSupported()[this._type];
+        getManipulatorController: function() {
+            return this._viewer.getManipulator().getControllerList()[this._type];
         },
         keyup: function(ev) {
             if (!this.isValid())
                 return;
-            if (this.getManipulatorDevice().keyup)
-                return this.getManipulatorDevice().keyup(ev);
+            if (this.getManipulatorController().keyup)
+                return this.getManipulatorController().keyup(ev);
         },
         keydown: function(ev) {
             if (!this.isValid())
                 return;
-            if (this.getManipulatorDevice().keydown)
-                return this.getManipulatorDevice().keydown(ev);
+            if (this.getManipulatorController().keydown)
+                return this.getManipulatorController().keydown(ev);
         },
 
         mousedown: function(ev) {
             if (!this.isValid())
                 return;
-            if (this.getManipulatorDevice().mousedown)
-                return this.getManipulatorDevice().mousedown(ev);
+            if (this.getManipulatorController().mousedown)
+                return this.getManipulatorController().mousedown(ev);
         },
 
         mouseup: function(ev) {
             if (!this.isValid())
                 return;
-            if (this.getManipulatorDevice().mouseup)
-                return this.getManipulatorDevice().mouseup(ev);
+            if (this.getManipulatorController().mouseup)
+                return this.getManipulatorController().mouseup(ev);
         },
 
         mousemove: function(ev) {
             if (!this.isValid())
                 return;
-            if (this.getManipulatorDevice().mousemove)
-                return this.getManipulatorDevice().mousemove(ev);
+            if (this.getManipulatorController().mousemove)
+                return this.getManipulatorController().mousemove(ev);
         },
 
         dblclick: function(ev) {
             if (!this.isValid())
                 return;
-            if (this.getManipulatorDevice().dblclick)
-                return this.getManipulatorDevice().dblclick(ev);
+            if (this.getManipulatorController().dblclick)
+                return this.getManipulatorController().dblclick(ev);
         },
 
         mousewheel: function (event) {
             if (!this.isValid())
                 return;
 
-            var manipulatorAdapter = this.getManipulatorDevice();
+            var manipulatorAdapter = this.getManipulatorController();
             if (!manipulatorAdapter.mousewheel)
                 return;
 
@@ -149,7 +149,7 @@ osgViewer.inputDevices.Mouse = (function() {
             // Add event and delta to the front of the arguments
             args.unshift(event, delta, deltaX, deltaY);
 
-            return this.getManipulatorDevice().mousewheel.apply(manipulatorAdapter, args);
+            return this.getManipulatorController().mousewheel.apply(manipulatorAdapter, args);
         },
 
         divGlobalOffset: function(obj) {
@@ -206,7 +206,7 @@ osgViewer.inputDevices.Mouse = (function() {
             if (!this.isValid())
                 return;
 
-            this.getManipulatorDevice().setInputDevice(this);
+            this.getManipulatorController().setEventProxy(this);
         }
         
     };
