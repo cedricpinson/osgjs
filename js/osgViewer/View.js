@@ -26,10 +26,12 @@ osgViewer.View.prototype = {
     setGraphicContext: function(gc) { this._graphicContext = gc; },
     getGraphicContext: function() { return this._graphicContext; },
     setUpView: function (canvas) {
-        var ratio = canvas.width/canvas.height;
-        this._camera.setViewport(new osg.Viewport(0,0, canvas.width, canvas.height));
+        var width = canvas.width !== 0 ? canvas.width : 800;
+        var height = canvas.height !== 0 ? canvas.height : 600;
+        var ratio = width/height;
+        this._camera.setViewport(new osg.Viewport(0,0, width, height));
         osg.Matrix.makeLookAt([0,0,-10], [0,0,0], [0,1,0], this._camera.getViewMatrix());
-        osg.Matrix.makePerspective(60, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix());
+        osg.Matrix.makePerspective(55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix());
     },
     computeIntersections: function (x, y, traversalMask) {
         if (traversalMask === undefined) {
