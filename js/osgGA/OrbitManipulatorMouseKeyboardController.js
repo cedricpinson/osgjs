@@ -19,7 +19,7 @@ osgGA.getOrbitStandardMouseKeyboardControllerClass = function() {
             this._panKey = 68; // d
 
             this._mode = undefined;
-
+            this._delay = 0.15;
         },
         getMode: function() { return this._mode; },
         setMode: function(mode) { this._mode = mode; },
@@ -40,6 +40,7 @@ osgGA.getOrbitStandardMouseKeyboardControllerClass = function() {
 
                 var mode = this.getMode();
                 if (mode === Mode.Rotate) {
+                    manipulator.getRotateInterpolator().setDelay(this._delay);
                     manipulator.getRotateInterpolator().setTarget(pos[0], pos[1]);
 
                 } else if (mode === Mode.Pan) {

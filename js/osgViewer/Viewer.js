@@ -26,31 +26,54 @@
 
     var options = optionsURL();
 
-    if (options.log === "html") {
-        var logContent = [];
-        var divLogger = document.createElement('div');
-        var codeElement = document.createElement('pre');
-        document.addEventListener("DOMContentLoaded", function() {
-            document.body.appendChild(divLogger);
-            divLogger.appendChild(codeElement);
-        });
-        var logFunc = function(str) {
-            logContent.unshift(str);
-            codeElement.innerHTML = logContent.join('\n');
-        };
-        divLogger.style.overflow="hidden";
-        divLogger.style.position="absolute";
-        divLogger.style.zIndex="10000";
-        divLogger.style.height="100%";
-        divLogger.style.maxWidth="600px";
-        codeElement.style.overflow="scroll";
-        codeElement.style.width="105%";
-        codeElement.style.height="100%";
-        codeElement.style.fontSize="10px";
+    if (options.log !== undefined) {
+        var level = options.log.toLowerCase();
 
-        ["log", "error", "warn", "info", "debug"].forEach(function(value) {
-            window.console[value] = logFunc;
-        });
+        switch (level) {
+        case 'debug':
+            osg.setNotifyLevel(osg.DEBUG);
+            break;
+        case 'info':
+            osg.setNotifyLevel(osg.INFO);
+            break;
+        case 'notice':
+            osg.setNotifyLevel(osg.NOTICE);
+            break;
+        case 'warn':
+            osg.setNotifyLevel(osg.WARN);
+            break;
+        case 'error':
+            osg.setNotifyLevel(osg.ERROR);
+            break;
+        case 'html':
+            (function() {
+                var logContent = [];
+                var divLogger = document.createElement('div');
+                var codeElement = document.createElement('pre');
+                document.addEventListener("DOMContentLoaded", function() {
+                    document.body.appendChild(divLogger);
+                    divLogger.appendChild(codeElement);
+                });
+                var logFunc = function(str) {
+                    logContent.unshift(str);
+                    codeElement.innerHTML = logContent.join('\n');
+                };
+                divLogger.style.overflow="hidden";
+                divLogger.style.position="absolute";
+                divLogger.style.zIndex="10000";
+                divLogger.style.height="100%";
+                divLogger.style.maxWidth="600px";
+                codeElement.style.overflow="scroll";
+                codeElement.style.width="105%";
+                codeElement.style.height="100%";
+                codeElement.style.fontSize="10px";
+
+                ["log", "error", "warn", "info", "debug"].forEach(function(value) {
+                    window.console[value] = logFunc;
+                });
+            })();
+            break;
+        }
     }
     
 })();

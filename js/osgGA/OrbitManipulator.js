@@ -28,6 +28,9 @@ osgGA.OrbitManipulator.Interpolator = function(size, delay) {
     this.reset();
 };
 osgGA.OrbitManipulator.Interpolator.prototype = {
+    setDelay: function(delay) {
+        this._delay = delay;
+    },
     reset: function() {
             for (var i = 0, l = this._current.length; i < l; i++) {
                 this._current[i] = this._target[i] = 0;
@@ -60,6 +63,11 @@ osgGA.OrbitManipulator.Interpolator.prototype = {
         }
         this._reset = false;
     },
+    addTarget: function() {
+        for (var i = 0; i < arguments.length; i++) {
+            this._target[i] += arguments[i];
+        }
+    },
     getTarget: function() { return this._target; },
     getDelta: function() {
         return this._delta;
@@ -71,7 +79,8 @@ osgGA.OrbitManipulator.AvailableControllerList = [ 'StandardMouseKeyboard',
                                                    'Hammer' ];
 
 osgGA.OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
-                                          'Hammer'];
+                                          'LeapMotion' ];
+//                                          'Hammer'];
 
 /** @lends osgGA.OrbitManipulator.prototype */
 osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype, {

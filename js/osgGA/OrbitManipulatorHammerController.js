@@ -15,6 +15,7 @@ osgGA.getOrbitHammerControllerClass = function() {
             this._zoomFactor = 5.0;
 
             this._pan = false;
+            this._delay = 0.15;
         },
         setEventProxy: function(proxy) {
             this._eventProxy = proxy;
@@ -60,6 +61,7 @@ osgGA.getOrbitHammerControllerClass = function() {
                     manipulator.getPanInterpolator().setTarget(ev.position.x*self._panFactorX, ev.position.y*self._panFactorY);
                     osg.debug("pad, " + dragCB(ev));
                 } else {
+                    manipulator.getRotateInterpolator().setDelay(self._delay);
                     manipulator.getRotateInterpolator().setTarget(ev.position.x*self._rotateFactorX, ev.position.y*self._rotateFactorY);
                     osg.debug("rotate, " + dragCB(ev));
                 }
