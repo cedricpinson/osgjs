@@ -100,7 +100,8 @@ osgDB.Input.prototype = {
         img.onerror = function() {
             osg.warn("warning use white texture as fallback instead of " + url);
             self.fetchImage(this, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=", options);
-            defer.resolve(img);
+            if (options.promise === true)
+                defer.resolve(img);
         };
 
         if (options.promise !== true) {
