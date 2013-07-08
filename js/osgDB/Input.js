@@ -65,7 +65,28 @@ osgDB.Input.prototype = {
         return new (scope)();
     },
 
+    fetchImage: function(img, url, options) {
+        var checkInlineImage = "data:image/";
+        // crossOrigin does not work for inline data image
+        var isInlineImage = (url.substring(0,checkInlineImage.length) === checkInlineImage);
+        if (!isInlineImage && options.crossOrigin) {
+            img.crossOrigin = options.crossOrigin;
+        }
+
+        if (isInlineImage && img.crossOrigin !== "") {
+            // if data url and cross origin
+            // dont try to fetch because it will not work
+            // it's a work around, the option is to create
+            // an osg::Image that will be a proxy image.
+            return img;
+        }
+
+        img.src = url;
+        return img;
+    },
+
     readImageURL: function(url, options) {
+        var self = this;
         // if image is on inline image skip url computation
         if (url.substr(0, 10) !== "data:image") {
             url = this.computeURL(url);
@@ -78,7 +99,7 @@ osgDB.Input.prototype = {
         var img = new Image();
         img.onerror = function() {
             osg.warn("warning use white texture as fallback instead of " + url);
-            img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=";
+            self.fetchImage(this, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=", options);
             defer.resolve(img);
         };
 
@@ -88,8 +109,7 @@ osgDB.Input.prototype = {
                 img.onload = options.onload;
             }
 
-            img.src = url;
-            return img;
+            return this.fetchImage(img, url, options);
         }
 
         var defer = osgDB.Promise.defer();
@@ -99,8 +119,8 @@ osgDB.Input.prototype = {
             }
             defer.resolve(img);
         };
-        img.src = url;
-
+        
+        this.fetchImage(img, url, options);
         return defer.promise;
     },
 
