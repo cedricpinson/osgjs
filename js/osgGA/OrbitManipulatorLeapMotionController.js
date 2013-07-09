@@ -73,23 +73,14 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
                 frame.hands[1].fingers.length > 1) {
                 mode = 2;
                 dist = osg.Vec3.distance(frame.hands[0].palmPosition,frame.hands[1].palmPosition);
-                osg.log('dist ' + dist.toString());
+
+                // we want one finger from hand and hand that will move to drag the model
             } else if (frame.hands.length >= 2 && ( 
                 ( frame.hands[0].fingers.length === 1 && frame.hands[1].fingers.length > 1) || ( frame.hands[0].fingers.length > 1 && frame.hands[1].fingers.length === 1) ) ) {
                 mode = 1;
             } else {
+                // by default onw hand moving means rotation
                 mode = 0;
-            }
-
-            if (false && frame.gestures.length > 0) {
-                for ( var i = 0; i < frame.gestures.length; i++) {
-                    var gesture = frame.gestures[i];
-                    var type = gesture.type;
-                    if (type === "keyTap" || type === "screenTap") {
-                        mode = (this._mode + 1) % EnumMode.length-1;
-                        break;
-                    }
-                }
             }
 
             var zoom  = this._manipulator.getZoomInterpolator();
