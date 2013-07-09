@@ -96,10 +96,16 @@ osgDB.Input.prototype = {
             options = this._defaultImageOptions;
         }
         
+        var defer;
+        if (options.promise === true)
+            defer = osgDB.Promise.defer();
+
         var img = new Image();
         img.onerror = function() {
             osg.warn("warning use white texture as fallback instead of " + url);
             self.fetchImage(this, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=", options);
+            if (options.promise === true)
+                defer.resolve(img);
         };
 
         if (options.promise !== true) {
@@ -111,7 +117,6 @@ osgDB.Input.prototype = {
             return this.fetchImage(img, url, options);
         }
 
-        var defer = osgDB.Promise.defer();
         img.onload = function() {
             if (options.onload !== undefined) {
                 options.onload.call(this);
