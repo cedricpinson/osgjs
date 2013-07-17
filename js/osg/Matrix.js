@@ -38,10 +38,10 @@ osg.Matrix = {
             matrix = [];
             osg.log("osg.Matrix.makeIdentity without matrix destination is deprecated"); 
         }
-        osg.Matrix.setRow(matrix, 0,    1, 0, 0, 0 );
-        osg.Matrix.setRow(matrix, 1,    0, 1, 0, 0 );
-        osg.Matrix.setRow(matrix, 2,    0, 0, 1, 0 );
-        osg.Matrix.setRow(matrix, 3,    0, 0, 0, 1 );
+        osg.Matrix.setRow(matrix, 0,    1.0, 0.0, 0.0, 0.0 );
+        osg.Matrix.setRow(matrix, 1,    0.0, 1.0, 0.0, 0.0 );
+        osg.Matrix.setRow(matrix, 2,    0.0, 0.0, 1.0, 0.0 );
+        osg.Matrix.setRow(matrix, 3,    0.0, 0.0, 0.0, 1.0 );
         return matrix;
     },
 
@@ -55,10 +55,10 @@ osg.Matrix = {
         if (matrix === undefined) {
             matrix = [];
         }
-        osg.Matrix.setRow(matrix, 0,    1, 0, 0, 0 );
-        osg.Matrix.setRow(matrix, 1,    0, 1, 0, 0 );
-        osg.Matrix.setRow(matrix, 2,    0, 0, 1, 0 );
-        osg.Matrix.setRow(matrix, 3,    x, y, z, 1 );
+        osg.Matrix.setRow(matrix, 0,    1.0, 0.0, 0.0, 0.0 );
+        osg.Matrix.setRow(matrix, 1,    0.0, 1.0, 0.0, 0.0 );
+        osg.Matrix.setRow(matrix, 2,    0.0, 0.0, 1.0, 0.0 );
+        osg.Matrix.setRow(matrix, 3,    x, y, z, 1.0 );
         return matrix;
     },
 

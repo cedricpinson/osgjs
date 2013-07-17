@@ -68,18 +68,28 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
             var scaleFactor = 1.0;
 
             // scale is when there two hands with but with two hand with more than 1 fingers
-            if ( frame.hands.length === 1 &&
-                frame.hands[0].fingers.length >= 3) {
-                mode = 2;
-                dist = frame.hands[0].palmPosition[1]/10.0;
-                dist -= Math.max(dist-4,0.01);
+            if (frame.gestures.length > 0) {
+                for (var i = 0; i < frame.gestures.length; i++) {
+                    var gesture = frame.gestures[i];
+                    if (gesture.type === 'circle') {
+                        this._manipulator.computeHomePosition();
+                        return;
+                    }
+                }
+            }
 
-            } else if (frame.hands.length === 1 &&  
-                       frame.hands[0].fingers.length === 2) {
-                mode = 1;
-            } else {
-                // by default onw hand moving means rotation
-                mode = 0;
+            if (frame.hands.length === 1) {
+                if ( frame.hands[0].fingers.length >= 3) {
+                    mode = 2;
+                    dist = frame.hands[0].palmPosition[1]/10.0;
+                    dist = Math.max(dist-4,0.01);
+
+                } else if ( frame.hands[0].fingers.length > 1) {
+                    mode = 1;
+                } else {
+                    // by default onw hand moving means rotation
+                    mode = 0;
+                }
             }
 
             var zoom  = this._manipulator.getZoomInterpolator();
