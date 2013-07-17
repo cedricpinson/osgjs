@@ -38,26 +38,7 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
             this._threshold = 0.08;
             this._mode = 0;
         },
-        handHasMoved: function(hand) {
-            var self = this;
-            if (self._hand === undefined || 
-               (self._hand.id !== hand.id) ) {
-                return true;
-            }
 
-            var dist = osg.Vec3.distance(hand.palmPosition, self._hand.palmPosition);
-            if ( dist > 1.5 ) {
-                return true;
-            }
-
-            var distRadius = Math.abs(hand.sphereRadius-self._hand.sphereRadius);
-            //osg.log("distance radius " + distRadius.toString());
-            if (distRadius > 1) {
-                return false;
-            }
-            //osg.log('dist ' + dist.toString());
-            return true;
-        },
         update: function(frame) {
             if (!this._previousFrame) {
                 this._previousFrame = frame;
@@ -67,7 +48,6 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
             if (frame.fingers.length === 0 ) {
                 return;
             }
-            //osg.debug("hands " + frame.hands.length.toString() + " fingers " + frame.fingers.length.toString());
 
             var deltaFrame = this._previousFrame.translation(frame);
 
@@ -88,15 +68,12 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
             var scaleFactor = 1.0;
 
             // scale is when there two hands with but with two hand with more than 1 fingers
-            if (frame.hands.length >= 2 && 
-                frame.hands[0].fingers.length > 1 &&
-                frame.hands[1].fingers.length > 1) {
+            if ( frame.hands.length === 1 &&
+                frame.hands[0].fingers.length >= 3) {
                 mode = 2;
-                dist = osg.Vec3.distance(frame.hands[0].palmPosition,frame.hands[1].palmPosition);
+                dist = frame.hands[0].palmPosition[1]/10.0;
+                dist -= Math.max(dist-4,0.01);
 
-                // we want one finger from hand and hand that will move to drag the model
-            // } else if (frame.hands.length >= 2 && ( 
-            //     ( frame.hands[0].fingers.length === 1 && frame.hands[1].fingers.length > 1) || ( frame.hands[0].fingers.length > 1 && frame.hands[1].fingers.length === 1) ) ) {
             } else if (frame.hands.length === 1 &&  
                        frame.hands[0].fingers.length === 2) {
                 mode = 1;
@@ -106,29 +83,6 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
             }
 
             var zoom  = this._manipulator.getZoomInterpolator();
-
-            if (frame.hands.length === 1 &&
-                frame.hands[0].fingers.length >= 5) {
-                // if ( !this.handHasMoved(frame.hands[0])) {
-                //     //mode = 2;
-                //     dist = frame.hands[0].sphereRadius;
-                //     osg.log('radius ' + frame.hands[0].sphereRadius.toString());
-                // }
-                var distR;
-                if ( false ) {
-                    distR = frame.hands[0].sphereRadius / 2.0;
-                    //osg.log(distR);
-                } else {
-                    mode = 2;
-                    distR = frame.hands[0].palmPosition[1]/10.0;
-                }
-                osg.log(distR);
-                dist = distR;
-                zoom.setTarget(distR);
-
-                this._hand = frame.hands[0];
-            }
-
 
             // change mode reset counter and skip this frame
             var enumMode = EnumMode[mode];
@@ -141,7 +95,7 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
 
                 if (enumMode === 'getZoomInterpolator') {
                     if (zoom.isReset()) {
-                        zoom._start = 1.0; //dist;
+                        zoom._start = 1.0;
                         zoom.set(0.0);
                     }
                 }
@@ -161,10 +115,7 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
             this._manipulator[enumMode]().setDelay(delay);
 
             if (enumMode === 'getZoomInterpolator') {
-                var dy = dist-zoom._start;
-                //zoom._start = dist;
-                var v = zoom.getTarget()[0];
-                zoom.setTarget(dist/5.0);
+                osg.log(dist);
                 zoom.setTarget(dist);
             } else {
                 this._manipulator[enumMode]().addTarget(this._motion[0], this._motion[1]);
