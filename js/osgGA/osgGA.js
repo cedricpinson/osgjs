@@ -4,3 +4,4 @@
  */
 
 osgGA = {};
+Hammer.NO_MOUSEEVENTS = true;// disable hammer js mouse events

@@ -18,91 +18,100 @@ osgGA.getOrbitHammerControllerClass = function() {
             this._delay = 0.15;
         },
         setEventProxy: function(proxy) {
+            if (proxy && proxy === this._eventProxy) {
+                return;
+            }
             this._eventProxy = proxy;
             var self = this;
             var hammer = proxy;
 
-            var computeTouches = function(ev) {
-                if (ev.originalEvent.changedTouches !== undefined)
-                    return ev.originalEvent.changedTouches.length;
+            var computeTouches = function(gesture) {
+                if (gesture.touches !== undefined)
+                    return gesture.touches.length;
                 return 1; // mouse
             };
 
             var dragCB = function(ev) {
-                return "touches " + computeTouches(ev) + " distance " + ev.distance + " x " + ev.distanceX + " y " + ev.distanceY;
+                return "touches " + computeTouches(ev) + " distance " + ev.distance + " x " + ev.deltaX + " y " + ev.deltaY;
             };
 
-            hammer.ondragstart = function(ev) {
+            hammer.on('dragstart', function(event) {
                 var manipulator = self._manipulator;
                 if (!manipulator) {
                     return;
                 }
-                if (computeTouches(ev) === 2) {
+                var gesture = event.gesture;
+                if (computeTouches(gesture) === 2) {
                     self._pan = true;
                 }
 
                 if (self._pan) {
                     manipulator.getPanInterpolator().reset();
-                    manipulator.getPanInterpolator().set(ev.position.x*self._panFactorX, ev.position.y*self._panFactorY);
+                    manipulator.getPanInterpolator().set(gesture.center.pageX*self._panFactorX, gesture.center.pageY*self._panFactorY);
                 } else {
                     manipulator.getRotateInterpolator().reset();
-                    manipulator.getRotateInterpolator().set(ev.position.x*self._rotateFactorX, ev.position.y*self._rotateFactorY);
+                    manipulator.getRotateInterpolator().set(gesture.center.pageX*self._rotateFactorX, gesture.center.pageY*self._rotateFactorY);
                 }
-                osg.debug("drag start, " + dragCB(ev));
-            };
+                osg.debug("drag start, " + dragCB(gesture));
+            });
 
-            hammer.ondrag = function(ev) {
+            hammer.on('drag', function(event) {
                 var manipulator = self._manipulator;
                 if (!manipulator) {
                     return;
                 }
                 
+                var gesture = event.gesture;
                 if (self._pan) {
-                    manipulator.getPanInterpolator().setTarget(ev.position.x*self._panFactorX, ev.position.y*self._panFactorY);
-                    osg.debug("pad, " + dragCB(ev));
+                    manipulator.getPanInterpolator().setTarget(gesture.center.pageX*self._panFactorX, gesture.center.pageY*self._panFactorY);
+                    osg.debug("pad, " + dragCB(gesture));
                 } else {
                     manipulator.getRotateInterpolator().setDelay(self._delay);
-                    manipulator.getRotateInterpolator().setTarget(ev.position.x*self._rotateFactorX, ev.position.y*self._rotateFactorY);
-                    osg.debug("rotate, " + dragCB(ev));
+                    manipulator.getRotateInterpolator().setTarget(gesture.center.pageX*self._rotateFactorX, gesture.center.pageY*self._rotateFactorY);
+                    osg.debug("rotate, " + dragCB(gesture));
                 }
-            };
-            hammer.ondragend = function(ev) {
+            });
+            hammer.on('dragend', function(event) {
                 var manipulator = self._manipulator;
                 if (!manipulator) {
                     return;
                 }
+                var gesture = event.gesture;
                 self._pan = false;
-                osg.debug("drag end, " + dragCB(ev));
-            };
+                osg.debug("drag end, " + dragCB(gesture));
+            });
 
             var toucheScale;
-            hammer.ontransformstart = function(ev) {
+            hammer.on('transformstart', function(event) {
                 var manipulator = self._manipulator;
                 if (!manipulator) {
                     return;
                 }
+                var gesture = event.gesture;
 
-                toucheScale = ev.scale;
-                var scale = ev.scale;
+                toucheScale = gesture.scale;
+                var scale = gesture.scale;
                 manipulator.getZoomInterpolator().reset();
-                manipulator.getZoomInterpolator().set(ev.scale);
-                osg.debug("transform start " + ev.scale + " " +scale );
-            };
-            hammer.ontransformend = function(ev) {
-                osg.debug("transform end " + ev.scale );
-            };
-            hammer.ontransform = function(ev) {
+                manipulator.getZoomInterpolator().set(gesture.scale);
+                osg.debug("transform start " + gesture.scale + " " +scale );
+            });
+            hammer.on('transformend', function(event) {
+                osg.debug("transform end " + event.gesture.scale );
+            });
+            hammer.on('transform', function(event) {
                 var manipulator = self._manipulator;
                 if (!manipulator) {
                     return;
                 }
 
-                var scale = (ev.scale - toucheScale)*self._zoomFactor;
-                toucheScale = ev.scale;
+                var gesture = event.gesture;
+
+                var scale = (gesture.scale - toucheScale)*self._zoomFactor;
+                toucheScale = gesture.scale;
                 var target = manipulator.getZoomInterpolator().getTarget()[0];
                 manipulator.getZoomInterpolator().setTarget(target-scale);
-                osg.debug("transform " + ev.scale + " " + (target-scale) );
-            };
+                osg.debug("transform " + gesture.scale + " " + (target-scale) );
+            });
 
         },
         setManipulator: function(manipulator) {

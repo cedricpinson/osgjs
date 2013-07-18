@@ -70,6 +70,7 @@ window.addEventListener("load",
                             var viewer = new osgViewer.Viewer(document.getElementById("3DView"));
                             viewer.init();
                             viewer.setSceneData(createScene());
+                            //var m = new osgGA.FirstPersonManipulator();
                             viewer.setupManipulator();
                             viewer.run();
                         }
