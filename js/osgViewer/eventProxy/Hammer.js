@@ -14,8 +14,14 @@ osgViewer.EventProxy.Hammer.prototype = {
 
         var options = {
             prevent_default: true,
-            rotation_treshold: 180,
-            scale_treshold: 0.2
+            drag_max_touches: 2,
+            transform_min_scale: 0.08,
+            transform_min_rotation: 180,
+            transform_always_block: true,
+            hold: false,
+            release: false,
+            swipe: false,
+            tap: false
         };
         
         this._eventNode = args.eventNode;

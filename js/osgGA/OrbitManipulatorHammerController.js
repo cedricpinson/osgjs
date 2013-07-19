@@ -37,7 +37,7 @@ osgGA.getOrbitHammerControllerClass = function() {
 
             hammer.on('dragstart', function(event) {
                 var manipulator = self._manipulator;
-                if (!manipulator) {
+                if (!manipulator || self._transformStarted) {
                     return;
                 }
                 var gesture = event.gesture;
@@ -45,6 +45,7 @@ osgGA.getOrbitHammerControllerClass = function() {
                     self._pan = true;
                 }
 
+                self._dragStarted = true;
                 if (self._pan) {
                     manipulator.getPanInterpolator().reset();
                     manipulator.getPanInterpolator().set(gesture.center.pageX*self._panFactorX, gesture.center.pageY*self._panFactorY);
@@ -60,9 +61,22 @@ osgGA.getOrbitHammerControllerClass = function() {
                 if (!manipulator) {
                     return;
                 }
-                
+                if (!self._dragStarted) {
+                    return;
+                }
+                if (self._transformStarted) {
+                    self._dragStarted = false;
+                    return;
+                }
+
                 var gesture = event.gesture;
                 if (self._pan) {
+
+                    // if a pan started and we release one finger,
+                    // we dont take care of the those event
+                    if (computeTouches(gesture) !== 2)
+                        return;
+
                     manipulator.getPanInterpolator().setTarget(gesture.center.pageX*self._panFactorX, gesture.center.pageY*self._panFactorY);
                     osg.debug("pad, " + dragCB(gesture));
                 } else {
@@ -73,9 +87,10 @@ osgGA.getOrbitHammerControllerClass = function() {
             });
             hammer.on('dragend', function(event) {
                 var manipulator = self._manipulator;
-                if (!manipulator) {
+                if (!manipulator || !self._dragStarted) {
                     return;
                 }
+                self._dragStarted = false;
                 var gesture = event.gesture;
                 self._pan = false;
                 osg.debug("drag end, " + dragCB(gesture));
@@ -87,20 +102,27 @@ osgGA.getOrbitHammerControllerClass = function() {
                 if (!manipulator) {
                     return;
                 }
+                self._transformStarted = true;
                 var gesture = event.gesture;
-
+                
                 toucheScale = gesture.scale;
                 var scale = gesture.scale;
                 manipulator.getZoomInterpolator().reset();
                 manipulator.getZoomInterpolator().set(gesture.scale);
+
                 osg.debug("transform start " + gesture.scale + " " +scale );
+                event.preventDefault();
+                hammer.options.drag=false;
             });
             hammer.on('transformend', function(event) {
+                self._transformStarted = false;
                 osg.debug("transform end " + event.gesture.scale );
+                hammer.options.drag=true;
+
             });
             hammer.on('transform', function(event) {
                 var manipulator = self._manipulator;
-                if (!manipulator) {
+                if (!manipulator || !self._transformStarted) {
                     return;
                 }
 
