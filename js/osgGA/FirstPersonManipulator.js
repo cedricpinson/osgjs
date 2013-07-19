@@ -48,6 +48,7 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
         this._tmpComputeRotation1 = osg.Matrix.makeIdentity([]);
         this._tmpComputeRotation2 = osg.Matrix.makeIdentity([]);
         this._tmpComputeRotation3 = osg.Matrix.makeIdentity([]);
+        this._tmpGetTargetDir = osg.Vec3.init([]);
 
         var self = this;
 
@@ -58,6 +59,47 @@ osgGA.FirstPersonManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.pro
             }
         });
 
+    },
+
+    getEyePosition: function(eye) {
+        eye[0] = this._eye[0];
+        eye[1] = this._eye[1];
+        eye[2] = this._eye[2];
+        return eye;
+    },
+
+    setEyePosition: function(eye) {
+        this._eye[0] = eye[0];
+        this._eye[1] = eye[1];
+        this._eye[2] = eye[2];
+        return this;
+    },
+
+    getTarget: function(pos, distance) {
+        if (distance === undefined) {
+            distance = 25;
+        }
+        var dir = osg.Vec3.mult(this._direction, distance, this._tmpGetTargetDir);
+        osg.Vec3.add(this._eye, dir, pos);
+    },
+
+    setTarget: function(pos) {
+        this._target[0] = pos[0];
+        this._target[1] = pos[1];
+        this._target[2] = pos[2];
+        var dir = this._tmpGetTargetDir;
+        osg.Vec3.sub(pos, this._eye, dir);
+        dir[2] = 0;
+        osg.Vec3.normalize(dir, dir);
+        this._angleHorizontal = Math.acos(dir[1]);
+        if (dir[0] < 0) {
+            this._angleHorizontal = -this._angleHorizontal;
+        }
+        osg.Vec3.sub(pos, this._eye, dir);
+        osg.Vec3.normalize(dir, dir);
+
+        this._angleVertical = -Math.asin(dir[2]);
+        osg.Vec3.copy(dir, this._direction);
     },
 
     getLookPositionInterpolator: function() { return this._lookPosition; },
