@@ -18,10 +18,7 @@ osgGA.OrbitManipulator.Interpolator = function(size, delay) {
     this._current = new Array(size);
     this._target = new Array(size);
     this._delta = new Array(size);
-    this._delay = delay;
-    if (this._delay === undefined) {
-        this._delay = 0.15;        
-    }
+    this._delay = (delay !== undefined) ? delay : 0.15;
     this._reset = false;
     this.reset();
 };
@@ -72,12 +69,18 @@ osgGA.OrbitManipulator.Interpolator.prototype = {
     }
 };
 
+osgGA.OrbitManipulator.Rotate = 0;
+osgGA.OrbitManipulator.Pan = 1;
+osgGA.OrbitManipulator.Zoom = 2;
+
 osgGA.OrbitManipulator.AvailableControllerList = [ 'StandardMouseKeyboard',
                                                    'LeapMotion',
+                                                   'GamePad',
                                                    'Hammer' ];
 
 osgGA.OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
                                           'LeapMotion',
+                                          'GamePad',
                                           'Hammer'];
 
 /** @lends osgGA.OrbitManipulator.prototype */
@@ -100,12 +103,10 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._buttonup = true;
 
         this._scale = 10.0;
-        this._currentMode = undefined;
         this._maxDistance = 0;
         this._minDistance = 0;
         this._scaleMouseMotion = 1.0;
 
-        this._moveTouch = undefined;
         this._inverseMatrix = new Array(16);
         this._rotateKey = 65; // a
         this._zoomKey = 83; // s
@@ -180,61 +181,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         return eyePos;
     },
 
-
-
-
-    gamepadaxes: function(axes) {
-
-        // Block badly balanced controllers
-        var AXIS_THRESHOLD = 0.005;
-
-        var rotateTarget,panTarget;
-
-        // Regular gamepads
-        if (axes.length==4) {
-            
-            if (Math.abs(axes[0])>AXIS_THRESHOLD || Math.abs(axes[1])>AXIS_THRESHOLD) {
-                rotateTarget = this._rotate.getTarget();
-                this._rotate.setTarget(rotateTarget[0]-axes[0]*5, rotateTarget[1]+axes[1]*5);
-            }
-            if (Math.abs(axes[3])>AXIS_THRESHOLD) {
-                this._zoom.setTarget(this._zoom.getTarget()[0] - axes[3]);
-            }
-
-        //SpaceNavigator & 6-axis controllers
-        } else if (axes.length>=5) {
-
-            if (Math.abs(axes[0])>AXIS_THRESHOLD || Math.abs(axes[1])>AXIS_THRESHOLD) {
-                panTarget = this._pan.getTarget();
-                this._pan.setTarget(panTarget[0]-axes[0]*20, panTarget[1]+axes[1]*20);
-            }
-
-            if (Math.abs(axes[2])>AXIS_THRESHOLD) {
-                this._zoom.setTarget(this._zoom.getTarget()[0] - axes[2]);
-            }
-            if (Math.abs(axes[3])>AXIS_THRESHOLD || Math.abs(axes[4])>AXIS_THRESHOLD) {
-                rotateTarget = this._rotate.getTarget();
-                this._rotate.setTarget(rotateTarget[0]+axes[4]*10, rotateTarget[1]+axes[3]*10);
-            }
-        }
-
-    },
-
-    gamepadbuttondown: function(event, pressed) {
-
-        // Buttons 12 to 15 are the d-pad.
-        if (event.button>=12 && event.button<=15) {
-            var panTarget = this._pan.getTarget();
-            var delta = {
-                12: [0 , -1],
-                13: [0 ,  1],
-                14: [-1,  0],
-                15: [1 ,  0]
-            }[event.button];
-            this._pan.setTarget(panTarget[0]-delta[0]*10, panTarget[1]+delta[1]*10);
-        }
-
-    },
     setMaxDistance: function(d) {
         this._maxDistance =  d;
     },
@@ -296,15 +242,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._rotation = r2;
     },
 
-    releaseButton: function() {
-        this._buttonup = true;
-    },
-
-    mousewheel: function(ev, intDelta, deltaX, deltaY) {
-        ev.preventDefault();
-        this._zoom.setTarget(this._zoom.getTarget()[0] - intDelta);
-    },
-
     computeZoom: function(dz) {
         this.zoom(dz);
     },
@@ -324,15 +261,9 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._distance = newValue;
     },
 
-
-    pushButton: function() {
-        this._buttonup = false;
-    },
-
     getRotateInterpolator: function() {
         return this._rotate;
     },
-
     getPanInterpolator: function() {
         return this._pan;
     },
@@ -343,9 +274,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         osg.Vec3.copy(this._target, target);
         return target;
     },
-    getMode: function() { return this._currentMode; },
-    setMode: function(mode) { this._currentMode = mode; return this; },
-
     getEyePosition: function(eye) {
         this.computeEyePosition(this._target, this._distance, eye);
     },
@@ -414,4 +342,8 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
 
 (function(module) {
     module.Hammer = osgGA.getOrbitHammerControllerClass();
+})(osgGA.OrbitManipulator);
+
+(function(module) {
+    module.GamePad = osgGA.getOrbitGamePadControllerClass();
 })(osgGA.OrbitManipulator);

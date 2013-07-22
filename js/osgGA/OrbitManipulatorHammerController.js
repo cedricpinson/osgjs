@@ -18,7 +18,7 @@ osgGA.getOrbitHammerControllerClass = function() {
             this._delay = 0.15;
         },
         setEventProxy: function(proxy) {
-            if (proxy && proxy === this._eventProxy) {
+            if (proxy === undefined || (proxy !== undefined && proxy === this._eventProxy) ) {
                 return;
             }
             this._eventProxy = proxy;

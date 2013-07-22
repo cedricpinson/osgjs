@@ -16,10 +16,6 @@ osgGA.Manipulator = function() {
 /** @lends osgGA.Manipulator.prototype */
 osgGA.Manipulator.prototype = {
     
-    // No gamepad support by default
-    gamepadaxes:false, // function(axes) {}
-    gamepadbuttondown:false, // function(event, pressed) {}
-    
     // eg: var currentTime = nv.getFrameStamp().getSimulationTime();
     update: function(nv) {
     },
