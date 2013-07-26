@@ -7,17 +7,17 @@ function check_near(a, b, threshold) {
         for (var i = 0; i < a.length; ++i) {
             var number = typeof a[i] === "number" && typeof b[i] === "number";
             if (Math.abs(a[i]-b[i]) > threshold || number === false) {
-                QUnit.log(false, QUnit.jsDump.parse(a) + " expected " + QUnit.jsDump.parse(b));
+                QUnit.log( function() { return QUnit.jsDump.parse(a) + " expected " + QUnit.jsDump.parse(b); });
                 return false;
             }
         }
     } else {
         if (a === undefined || b === undefined) {
-            QUnit.log(false, "undefined value : " + a + ", " + b);
+            QUnit.log(function() { return "undefined value : " + a + ", " + b;});
             return false;
         }
         if (Math.abs(a-b) > threshold) {
-            QUnit.log(false, a + " != " + b);
+            QUnit.log(function() { return a + " != " + b;});
             return false;
         }
     }
