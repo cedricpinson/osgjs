@@ -164,9 +164,6 @@ osgViewer.Viewer.prototype = osg.objectInehrit(osgViewer.View.prototype, {
         this._renderStage = new osg.RenderStage();
         this._stateGraph = new osg.StateGraph();
 
-        this._gamepad = false;
-        this._gamepadPolling = false;
-
         if (this._urlOptions) {
             this.parseOptions();
         }

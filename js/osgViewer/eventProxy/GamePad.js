@@ -1,6 +1,7 @@
+osgViewer.EventProxy = osgViewer.EventProxy || {};
+osgViewer.EventProxy.GamePad = (function() {
 
-(function(module) {
-    var EventProxy = function() {
+    var EventProxy = function(viewer) {
         this._viewer = viewer;
         this._type = 'GamePad';
         this._enable = true;
@@ -15,16 +16,6 @@
 
             if (!gamepadSupportAvailable) return;
 
-            // Use events available in FF when available at least in Nightlies:
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=604039
-            //
-            // this._gamepadEventNode.addEventListener('MozGamepadConnected', function() { self.onGamepadConnect(); }, false);
-            // this._gamepadEventNode.addEventListener('MozGamepadDisconnected', function() { self.onGamepadDisconnect(); }, false);
-
-            // Chrome fallbacks to polling
-            if (!!navigator.webkitGamepads || !!navigator.webkitGetGamepads) {
-                this.webkitStartGamepadPolling();
-            }
         },
 
         isValid: function() {
@@ -44,11 +35,6 @@
 
         getManipulatorController: function() {
             return this._viewer.getManipulator().getControllerList()[this._type];
-        },
-
-        webkitStartGamepadPolling:function() {
-            var self = this;
-            this._gamepadPolling = setInterval(function() { self.webkitGamepadPoll(); }, 500);
         },
 
         webkitGamepadPoll:function() {
@@ -77,24 +63,21 @@
         },
         getGamePad: function() { return this._gamepad;},
 
-
         // Called in each frame
-        updateGamepad:function() {
+        update:function() {
 
-            if ( this._gamepad) {
+            // necessary
+            this.webkitGamepadPoll();
+
+            if ( !this._gamepad)
                 return;
-            }
 
-            if (this._gamepadPolling && this._gamepad) {
-                this.webkitGamepadPoll();
-            }
-            
             var manipulatorAdapter = this.getManipulatorController();
+            //manipulatorAdapter.setEventProxy(this);
             if (manipulatorAdapter.update) {
                 manipulatorAdapter.update(this);
             }
         }
     };
-
-    module = EventProxy;
-})(osgViewer.EventProxy.GamePad);
+    return EventProxy;
+})();

@@ -10,6 +10,26 @@ osgGA.getOrbitGamePadControllerClass = function(module) {
             this._delay = 0.15;
             this._threshold = 0.08;
             this._mode = 0;
+            this._padFactor = 10.0;
+            this._zoomFactor = 0.5;
+            this._rotateFactor = 5.0;
+        },
+
+
+        addPan: function(pan, x, y) {
+            pan.setDelay(this._delay);
+            pan.addTarget(x * this._padFactor, y * this._padFactor);
+        },
+
+        addZoom: function(zoom, z) {
+            zoom.setDelay(this._delay);
+            zoom.addTarget(z * this._zoomFactor);
+        },
+
+        addRotate: function(rotate, x, y) {
+            rotate.setDelay(this._delay);
+            rotateTarget = rotate.getTarget();
+            rotate.addTarget(x * this._rotateFactor, y * this._rotateFactor);
         },
 
         gamepadaxes: function(axes) {
@@ -25,32 +45,25 @@ osgGA.getOrbitGamePadControllerClass = function(module) {
             if (axes.length==4) {
                 
                 if (Math.abs(axes[0])>AXIS_THRESHOLD || Math.abs(axes[1])>AXIS_THRESHOLD) {
-                    rotate.setDelay(this._delay);
-                    rotateTarget = rotate.getTarget();
-                    rotate.setTarget(rotateTarget[0]-axes[0]*5, rotateTarget[1]+axes[1]*5);
+                    this.addRotate(rotate, -axes[0], axes[1]);
                 }
                 if (Math.abs(axes[3])>AXIS_THRESHOLD) {
-                    zoom.setDelay(this._delay);
-                    zoom.setTarget(zoom.getTarget()[0] - axes[3]);
+                    this.addZoom(zoom, - axes[3]);
                 }
 
                 //SpaceNavigator & 6-axis controllers
             } else if (axes.length>=5) {
-
+                //console.log(axes);
                 if (Math.abs(axes[0])>AXIS_THRESHOLD || Math.abs(axes[1])>AXIS_THRESHOLD) {
-                    panTarget = pan.getTarget();
-                    pan.setDelay(this._delay);
-                    pan.setTarget(panTarget[0]-axes[0]*20, panTarget[1]+axes[1]*20);
+                    this.addPan(pan, -axes[0], axes[1]);
                 }
 
                 if (Math.abs(axes[2])>AXIS_THRESHOLD) {
-                    zoom.setDelay(this._delay);
-                    zoom.setTarget(zoom.getTarget()[0] - axes[2]);
+                    this.addZoom(zoom, - axes[2]);
                 }
+
                 if (Math.abs(axes[3])>AXIS_THRESHOLD || Math.abs(axes[4])>AXIS_THRESHOLD) {
-                    rotate.setDelay(this._delay);
-                    rotateTarget = rotate.getTarget();
-                    rotate.setTarget(rotateTarget[0]+axes[4]*10, rotateTarget[1]+axes[3]*10);
+                    this.addRotate(rotate, axes[4], axes[3]);
                 }
             }
 
@@ -73,7 +86,7 @@ osgGA.getOrbitGamePadControllerClass = function(module) {
         },
 
         update: function(gamepadProxyEvent) {
-            if (!gamepad) {
+            if (!gamepadProxyEvent) {
                 return;
             }
             
