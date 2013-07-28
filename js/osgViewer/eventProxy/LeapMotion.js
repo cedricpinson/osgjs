@@ -9,7 +9,8 @@ osgViewer.EventProxy.LeapMotion.prototype = {
     init: function(args) {
         var element = document.getElementById(args.id);
         var self = this;
-        this._controller = new Leap.Controller({enableGestures: args.gestures || true});
+        this._controller = new Leap.Controller({enableGestures: args.gestures || true,
+                                                tryReconnectOnDisconnect: false});
         this._controller.on('ready', function() {
             if (args.readyCallback)
                 args.readyCallback(self._controller);
