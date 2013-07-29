@@ -9,25 +9,23 @@
  */
 osgGA.OrbitManipulator = function () {
     osgGA.Manipulator.call(this);
+    this._tmpInverse = osg.Matrix.makeIdentity([]);
+    this._tmpHomePosition = osg.Vec3.init([]);
     this.init();
 };
-
-osgGA.OrbitManipulator.Rotate = 0;
-osgGA.OrbitManipulator.Pan = 1;
-osgGA.OrbitManipulator.Zoom = 2;
 
 osgGA.OrbitManipulator.Interpolator = function(size, delay) {
     this._current = new Array(size);
     this._target = new Array(size);
     this._delta = new Array(size);
-    this._delay = delay;
-    if (this._delay === undefined) {
-        this._delay = 0.15;        
-    }
+    this._delay = (delay !== undefined) ? delay : 0.15;
     this._reset = false;
     this.reset();
 };
 osgGA.OrbitManipulator.Interpolator.prototype = {
+    setDelay: function(delay) {
+        this._delay = delay;
+    },
     reset: function() {
             for (var i = 0, l = this._current.length; i < l; i++) {
                 this._current[i] = this._target[i] = 0;
@@ -60,11 +58,30 @@ osgGA.OrbitManipulator.Interpolator.prototype = {
         }
         this._reset = false;
     },
+    addTarget: function() {
+        for (var i = 0; i < arguments.length; i++) {
+            this._target[i] += arguments[i];
+        }
+    },
     getTarget: function() { return this._target; },
     getDelta: function() {
         return this._delta;
     }
 };
+
+osgGA.OrbitManipulator.Rotate = 0;
+osgGA.OrbitManipulator.Pan = 1;
+osgGA.OrbitManipulator.Zoom = 2;
+
+osgGA.OrbitManipulator.AvailableControllerList = [ 'StandardMouseKeyboard',
+                                                   'LeapMotion',
+                                                   'GamePad',
+                                                   'Hammer' ];
+
+osgGA.OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
+                                          'LeapMotion',
+                                          'GamePad',
+                                          'Hammer'];
 
 /** @lends osgGA.OrbitManipulator.prototype */
 osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype, {
@@ -86,17 +103,23 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._buttonup = true;
 
         this._scale = 10.0;
-        this._currentMode = undefined;
         this._maxDistance = 0;
         this._minDistance = 0;
         this._scaleMouseMotion = 1.0;
-        this._node = undefined;
 
-        this._moveTouch = undefined;
         this._inverseMatrix = new Array(16);
         this._rotateKey = 65; // a
         this._zoomKey = 83; // s
         this._panKey = 68; // d
+
+        // instance of controller
+        var self = this;
+
+        osgGA.OrbitManipulator.ControllerList.forEach(function(value) {
+            if (osgGA.OrbitManipulator[value] !== undefined) {
+                self._controllerList[value] = new osgGA.OrbitManipulator[value](self);
+            }
+        });
     },
     reset: function() {
         this.init();
@@ -144,230 +167,20 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         }
     },
 
-    keydown: function(ev) {
-        if (ev.keyCode === 32) {
-            this.computeHomePosition();
-        } else if (ev.keyCode === 33) { // pageup
-            this.distanceIncrease();
-        } else if (ev.keyCode === 34) { //pagedown
-            this.distanceDecrease();
+    getHomePosition: function() {
+        var eyePos = this._tmpHomePosition;
+        if (this._node !== undefined) {
 
-        } else if (ev.keyCode === this._panKey && 
-                   this._currentMode !== osgGA.OrbitManipulator.Pan) {
-            this._currentMode = osgGA.OrbitManipulator.Pan;
-            this._pan.reset();
-            this.pushButton();
-            ev.preventDefault();
-        } else if ( ev.keyCode === this._zoomKey &&
-                  this._currentMode !== osgGA.OrbitManipulator.Zoom) {
-            this._currentMode = osgGA.OrbitManipulator.Zoom;
-            this._zoom.reset();
-            this.pushButton();
-            ev.preventDefault();
-        } else if ( ev.keyCode === this._rotateKey &&
-                  this._currentMode !== osgGA.OrbitManipulator.Rotate) {
-            this._currentMode = osgGA.OrbitManipulator.Rotate;
-            this._rotate.reset();
-            this.pushButton();
-            ev.preventDefault();
+            var bs = this._node.getBound();
+            var distance = bs.radius()*1.5;
+
+            var target = bs.center();
+
+            this.computeEyePosition(target, distance, eyePos);
         }
-        
+        return eyePos;
     },
 
-    keyup: function(ev) {
-        if (ev.keyCode === this._panKey) {
-            this.mouseup(ev);
-        } else if ( ev.keyCode === this._rotateKey) {
-            this.mouseup(ev);
-        } else if ( ev.keyCode === this._rotateKey) {
-            this.mouseup(ev);
-        }
-        this._currentMode = undefined;
-    },
-
-    touchstart: function(ev) {
-        if ( this._currentMode === undefined) {
-            this._currentMode = osgGA.OrbitManipulator.Rotate;
-        }
-
-        var touches = ev.changedTouches;
-        if (this._moveTouch === undefined) {
-            this._moveTouch = new osgGA.OrbitManipulator.TouchEvent();
-        }
-        if (this._moveTouch.id === undefined) {
-            var touch = touches[0];
-            var id = touch.identifier;
-            // relative to element position
-            var rte = this.getPositionRelativeToCanvas(touch);
-            this._rotate.set(rte[0], rte[1]);
-            this._moveTouch.init(id, rte[0], rte[1]);
-            this.pushButton(touch);
-        }
-        ev.preventDefault();
-    },
-    touchend: function(event) {
-        event.preventDefault();
-        this._currentMode = undefined;
-        this._moveTouch = undefined;
-        this.releaseButton(event);
-    },
-    touchmove: function(event) {
-        event.preventDefault();
-
-        var touches = event.changedTouches;
-        for (var i = 0, l = touches.length; i < l; i++) {
-            var touch = touches[i];
-            var id = touch.identifier;
-            if (id === this._moveTouch.id) {
-                var rteCurrent = this.getPositionRelativeToCanvas(touch);
-                this._rotate.setTarget(rteCurrent[0], rteCurrent[1]);
-                this._moveTouch.init(id, rteCurrent[0], rteCurrent[1]);
-            }
-        }
-    },
-    touchleave: function(event) {
-        return this.touchend(event);
-    },
-    touchcancel: function(event) {
-        this.touchend(event);
-    },
-
-    gesturestart: function(event) {
-        event.preventDefault();
-        if (this._moveTouch) { // disable id for gesture
-            this._moveTouch.id = undefined;
-        }
-        this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
-        this._zoom.reset();
-    },
-    gestureend: function(event) {
-        event.preventDefault();
-        this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
-        this._currentMode = undefined;
-    },
-    gesturechange: function(event) {
-        event.preventDefault();
-        var scale = (event.scale - this._moveTouch.scale)*5.0;
-        this._moveTouch.init(undefined, 0, 0, event.scale, event.rotation);
-        this._zoom.setTarget(this._zoom.getTarget()[0]-scale);
-    },
-
-
-    gamepadaxes: function(axes) {
-
-        // Block badly balanced controllers
-        var AXIS_THRESHOLD = 0.005;
-
-        var rotateTarget,panTarget;
-
-        // Regular gamepads
-        if (axes.length==4) {
-            
-            if (Math.abs(axes[0])>AXIS_THRESHOLD || Math.abs(axes[1])>AXIS_THRESHOLD) {
-                rotateTarget = this._rotate.getTarget();
-                this._rotate.setTarget(rotateTarget[0]-axes[0]*5, rotateTarget[1]+axes[1]*5);
-            }
-            if (Math.abs(axes[3])>AXIS_THRESHOLD) {
-                this._zoom.setTarget(this._zoom.getTarget()[0] - axes[3]);
-            }
-
-        //SpaceNavigator & 6-axis controllers
-        } else if (axes.length>=5) {
-
-            if (Math.abs(axes[0])>AXIS_THRESHOLD || Math.abs(axes[1])>AXIS_THRESHOLD) {
-                panTarget = this._pan.getTarget();
-                this._pan.setTarget(panTarget[0]-axes[0]*20, panTarget[1]+axes[1]*20);
-            }
-
-            if (Math.abs(axes[2])>AXIS_THRESHOLD) {
-                this._zoom.setTarget(this._zoom.getTarget()[0] - axes[2]);
-            }
-            if (Math.abs(axes[3])>AXIS_THRESHOLD || Math.abs(axes[4])>AXIS_THRESHOLD) {
-                rotateTarget = this._rotate.getTarget();
-                this._rotate.setTarget(rotateTarget[0]+axes[4]*10, rotateTarget[1]+axes[3]*10);
-            }
-        }
-
-    },
-
-    gamepadbuttondown: function(event, pressed) {
-
-        // Buttons 12 to 15 are the d-pad.
-        if (event.button>=12 && event.button<=15) {
-            var panTarget = this._pan.getTarget();
-            var delta = {
-                12: [0 , -1],
-                13: [0 ,  1],
-                14: [-1,  0],
-                15: [1 ,  0]
-            }[event.button];
-            this._pan.setTarget(panTarget[0]-delta[0]*10, panTarget[1]+delta[1]*10);
-        }
-
-    },
-
-    mouseup: function(ev) {
-        this.releaseButton(ev);
-        this._currentMode = undefined;
-    },
-
-    mousedown: function(ev) {
-        if (this._currentMode === undefined) {
-            if (ev.button === 0) {
-                if (ev.shiftKey) {
-                    this._currentMode = osgGA.OrbitManipulator.Pan;
-                } else if (ev.ctrlKey) {
-                    this._currentMode = osgGA.OrbitManipulator.Zoom;
-                } else {
-                    this._currentMode = osgGA.OrbitManipulator.Rotate;
-                }
-            } else {
-                this._currentMode = osgGA.OrbitManipulator.Pan;
-            }
-        }
-
-        this.pushButton(ev);
-
-        var pos = this.getPositionRelativeToCanvas(ev);
-
-        if (this._currentMode === osgGA.OrbitManipulator.Rotate) {
-            this._rotate.reset(pos[0], pos[1]);
-            this._rotate.set(pos[0], pos[1]);
-        } else if (this._currentMode === osgGA.OrbitManipulator.Pan) {
-            this._pan.reset(pos[0], pos[1]);
-            this._pan.set(pos[0], pos[1]);
-        } else if (this._currentMode === osgGA.OrbitManipulator.Zoom) {
-            this._zoom._start = pos[1];
-            this._zoom.set(0.0);
-        }
-        ev.preventDefault();
-    },
-    mousemove: function(ev) {
-        if (this._buttonup === true) {
-            return;
-        }
-        var pos = this.getPositionRelativeToCanvas(ev);
-
-        if (isNaN(pos[0]) === false && isNaN(pos[1]) === false) {
-            var x,y;
-            if (this._currentMode === osgGA.OrbitManipulator.Rotate) {
-                this._rotate.setTarget(pos[0], pos[1]);
-            } else if (this._currentMode === osgGA.OrbitManipulator.Pan) {
-                this._pan.setTarget(pos[0], pos[1]);
-            } else if (this._currentMode === osgGA.OrbitManipulator.Zoom) {
-                if (this._zoom.isReset()) {
-                    this._zoom._start = pos[1];
-                    this._zoom.set(0.0);
-                }
-                var dy = pos[1]-this._zoom._start;
-                this._zoom._start = pos[1];
-                var v = this._zoom.getTarget()[0];
-                this._zoom.setTarget(v-dy/20.0);
-            }
-        }
-
-        ev.preventDefault();
-    },
     setMaxDistance: function(d) {
         this._maxDistance =  d;
     },
@@ -429,15 +242,6 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._rotation = r2;
     },
 
-    releaseButton: function() {
-        this._buttonup = true;
-    },
-
-    mousewheel: function(ev, intDelta, deltaX, deltaY) {
-        ev.preventDefault();
-        this._zoom.setTarget(this._zoom.getTarget()[0] - intDelta);
-    },
-
     computeZoom: function(dz) {
         this.zoom(dz);
     },
@@ -457,22 +261,30 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
         this._distance = newValue;
     },
 
-
-    pushButton: function() {
-        this._buttonup = false;
+    getRotateInterpolator: function() {
+        return this._rotate;
     },
-
+    getPanInterpolator: function() {
+        return this._pan;
+    },
+    getZoomInterpolator: function() {
+        return this._zoom;
+    },
     getTarget: function(target) {
         osg.Vec3.copy(this._target, target);
+        return target;
+    },
+    getEyePosition: function(eye) {
+        this.computeEyePosition(this._target, this._distance, eye);
     },
 
-    getEyePosition: function(eye) {
-        var inv = new Array(16);
-        osg.Matrix.inverse(this._rotation, inv);
+    computeEyePosition: function(target, distance, eye) {
+        var inv = this._tmpInverse;
+        osg.Matrix.inverse(this._rotation, this._tmpInverse);
         osg.Matrix.transformVec3(inv,
-                                 [0, this._distance, 0],
+                                 [0, distance, 0],
                                  eye );
-        osg.Vec3.add(this._target, eye, eye);
+        osg.Vec3.add(target, eye, eye);
     },
 
     update: function(nv) {
@@ -517,23 +329,21 @@ osgGA.OrbitManipulator.prototype = osg.objectInehrit(osgGA.Manipulator.prototype
     }
 });
 
-osgGA.OrbitManipulator.TouchEvent = function() {
-    this.x = 0;
-    this.y = 0;
-    this.scale = 1.0;
-    this.rotation = 0.0;
-    this.id = undefined;
-};
-osgGA.OrbitManipulator.TouchEvent.prototype = {
-    init: function(id, x, y, scale, rotation) {
-        this.id = id;
-        this.x = x;
-        this.y = y;
-        if (scale !== undefined) {
-            this.scale = scale;
-        }
-        if (rotation !== undefined) {
-            this.rotation = rotation;
-        }
-    }
-};
+
+(function(module) {
+    module.LeapMotion = osgGA.getOrbitLeapMotionControllerClass();
+})(osgGA.OrbitManipulator);
+
+
+(function(module) {
+    module.StandardMouseKeyboard = osgGA.getOrbitStandardMouseKeyboardControllerClass();
+})(osgGA.OrbitManipulator);
+
+
+(function(module) {
+    module.Hammer = osgGA.getOrbitHammerControllerClass();
+})(osgGA.OrbitManipulator);
+
+(function(module) {
+    module.GamePad = osgGA.getOrbitGamePadControllerClass();
+})(osgGA.OrbitManipulator);

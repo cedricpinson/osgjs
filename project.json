@@ -79,11 +79,25 @@
 		"js/osgViewer/stats.js",
 		"js/osgViewer/View.js",
 		"js/osgViewer/Viewer.js",
+		"js/osgViewer/eventProxy/vendors/leap.min.js",
+		"js/osgViewer/eventProxy/vendors/hammer-1.0.5.js",
+		"js/osgViewer/eventProxy/LeapMotion.js",
+		"js/osgViewer/eventProxy/GamePad.js",
+		"js/osgViewer/eventProxy/StandardMouseKeyboard.js",
+		"js/osgViewer/eventProxy/Hammer.js",
 
 		"js/osgGA/osgGA.js",
 		"js/osgGA/Manipulator.js",
+
+		"js/osgGA/OrbitManipulatorHammerController.js",
+		"js/osgGA/OrbitManipulatorGamePadController.js",
+		"js/osgGA/OrbitManipulatorMouseKeyboardController.js",
+		"js/osgGA/OrbitManipulatorLeapMotionController.js",
 		"js/osgGA/OrbitManipulator.js",
+
+		"js/osgGA/FirstPersonManipulatorMouseKeyboardController.js",
 		"js/osgGA/FirstPersonManipulator.js",
+
 		"js/osgGA/SwitchManipulator.js",
 
 		"js/osgWrappers/serializers/osg.js",

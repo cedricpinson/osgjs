@@ -2,7 +2,7 @@
 /** @class Vec3 Operations */
 osg.Vec3 = {
     init: function(a) {
-        a[0] = 0; a[1] = 0; a[2] = 0;
+        a[0] = 0.0; a[1] = 0.0; a[2] = 0.0;
         return a;
     },
 
