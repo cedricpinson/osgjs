@@ -7,11 +7,11 @@ osgGA.getOrbitHammerControllerClass = function() {
 
     Controller.prototype = {
         init: function() {
-            this._panFactorX = 1.0;
-            this._panFactorY = -1.0;
+            this._panFactorX = 0.5;
+            this._panFactorY = -this._panFactorX;
 
-            this._rotateFactorX = 1.0;
-            this._rotateFactorY = -1.0;
+            this._rotateFactorX = 0.3;
+            this._rotateFactorY = -this._rotateFactorX;
             this._zoomFactor = 5.0;
 
             this._pan = false;

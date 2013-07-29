@@ -41,6 +41,9 @@ osgViewer.EventProxy.GamePad = (function() {
             var self = this;
 
             var rawGamepads = (navigator.webkitGetGamepads && navigator.webkitGetGamepads()) || navigator.webkitGamepads;
+            if (!rawGamepads) {
+                return;
+            }
 
             if (rawGamepads[0]) {
                 if (!this._gamepad) {
