@@ -104,7 +104,7 @@ osgGA.getOrbitGamePadControllerClass = function(module) {
                         preventDefault:emptyFunc,
                         gamepad: gm,
                         button:i
-                    },!!button[i]);
+                    },!!buttons[i]);
                 }
             }
         }
