@@ -17,6 +17,18 @@ asyncTest("Input.readImageURL", function() {
 });
 
 
+asyncTest("Input.readImageURL-inline-dataimage-crossOrigin", function() {
+
+    var input = new osgDB.Input();
+    osgDB.Promise.when(input.readImageURL('error-404', {crossOrigin: "Anonymous", promise: true}), function(image) {
+        ok(true, "used fallback image");
+        start();
+    }).fail(function (error) {
+        osg.error(error);
+    });
+});
+
+
 test("Input.fetchImage", function() {
     var input = new osgDB.Input();
     input.setPrefixURL("testXtest");
