@@ -65,7 +65,7 @@ osgDB.Input.prototype = {
         return new (scope)();
     },
 
-    fetchImage: function(img, url, options) {
+    fetchImage: function(img, url, options, promise) {
         var checkInlineImage = "data:image/";
         // crossOrigin does not work for inline data image
         var isInlineImage = (url.substring(0,checkInlineImage.length) === checkInlineImage);
@@ -74,18 +74,14 @@ osgDB.Input.prototype = {
         }
 
         if (isInlineImage && img.crossOrigin !== "") {
-            // if data url and cross origin
-            // dont try to fetch because it will not work
-            // it's a work around, the option is to create
-            // an osg::Image that will be a proxy image.
-            return img;
+            return this.readImageURL(url, options, promise);
         }
 
         img.src = url;
         return img;
     },
 
-    readImageURL: function(url, options) {
+    readImageURL: function(url, options, promise) {
         var self = this;
         // if image is on inline image skip url computation
         if (url.substr(0, 10) !== "data:image") {
@@ -95,17 +91,15 @@ osgDB.Input.prototype = {
         if (options === undefined) {
             options = this._defaultImageOptions;
         }
-        
-        var defer;
-        if (options.promise === true)
+
+        var defer = promise;
+        if (options.promise === true && promise === undefined)
             defer = osgDB.Promise.defer();
 
         var img = new Image();
         img.onerror = function() {
             osg.warn("warning use white texture as fallback instead of " + url);
-            self.fetchImage(this, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=", options);
-            if (options.promise === true)
-                defer.resolve(img);
+            self.fetchImage(this, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=", options, defer);
         };
 
         if (options.promise !== true) {
@@ -124,7 +118,7 @@ osgDB.Input.prototype = {
             defer.resolve(img);
         };
         
-        this.fetchImage(img, url, options);
+        this.fetchImage(img, url, options, defer);
         return defer.promise;
     },
 
