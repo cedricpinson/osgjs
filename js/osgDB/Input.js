@@ -70,6 +70,10 @@ osgDB.Input.prototype = {
         // crossOrigin does not work for inline data image
         var isInlineImage = (url.substring(0,checkInlineImage.length) === checkInlineImage);
         if (!isInlineImage && options.crossOrigin) {
+            // if data url and cross origin
+            // dont try to fetch because it will not work
+            // it's a work around, the option is to create
+            // an osg::Image that will be a proxy image.
             img.crossOrigin = options.crossOrigin;
         }
 

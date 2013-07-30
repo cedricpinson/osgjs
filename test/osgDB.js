@@ -18,10 +18,17 @@ asyncTest("Input.readImageURL", function() {
 
 
 asyncTest("Input.readImageURL-inline-dataimage-crossOrigin", function() {
-
     var input = new osgDB.Input();
+    var url = 'error-404';
+
+    var image = input.readImageURL(url, {crossOrigin: "Anonymous"});
+    ok(image instanceof Image, "no promise : returned an Image");
+    // ok(image.src.substr(-9) !== url, "no promise : used fallback image");  // FIXME: make readImageURL return a proxy osgImage
+
     osgDB.Promise.when(input.readImageURL('error-404', {crossOrigin: "Anonymous", promise: true}), function(image) {
-        ok(true, "used fallback image");
+        ok(image instanceof Image, "with promise : returned image");
+        ok(image.src.substr(-9) !== url, "with promise : used fallback image");
+
         start();
     }).fail(function (error) {
         osg.error(error);
