@@ -37,7 +37,7 @@ osgGA.SwitchManipulator.prototype = {
     addManipulator: function (manipulator) {
         this._manipulatorList.push(manipulator);
         if (this._currentManipulator === undefined) {
-            this._currentManipulator = 0;
+            this.setManipulatorIndex(0);
         }
     },
     getManipulatorList: function () {
