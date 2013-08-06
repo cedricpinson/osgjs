@@ -205,7 +205,7 @@ osg.objectType.generate = function (arg) {
     return t;
 };
 
-osg.Float32Array = Float32Array;
-osg.Int32Array = Int32Array;
-osg.Uint16Array = Uint16Array;
+osg.Float32Array = typeof Float32Array !== 'undefined' ? Float32Array : null;
+osg.Int32Array = typeof Int32Array !== 'undefined' ? Int32Array : null;
+osg.Uint16Array = typeof Uint16Array !== 'undefined' ? Uint16Array : null;
 
