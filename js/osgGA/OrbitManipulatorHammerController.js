@@ -10,7 +10,7 @@ osgGA.getOrbitHammerControllerClass = function() {
             this._panFactorX = 0.5;
             this._panFactorY = -this._panFactorX;
 
-            this._rotateFactorX = 0.3;
+            this._rotateFactorX = 0.6;
             this._rotateFactorY = -this._rotateFactorX;
             this._zoomFactor = 5.0;
 
