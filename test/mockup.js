@@ -69,6 +69,13 @@ function createFakeRenderer() {
              'DEPTH_TEST': 1,
              'CULL_FACE': 0,
              'UNSIGNED_SHORT': 0,
+             'TEXTURE_CUBE_MAP_POSITIVE_X': 0x8515,
+             'TEXTURE_CUBE_MAP_NEGATIVE_X': 0x8516,
+             'TEXTURE_CUBE_MAP_POSITIVE_Y': 0x8517,
+             'TEXTURE_CUBE_MAP_NEGATIVE_Y': 0x8518,
+             'TEXTURE_CUBE_MAP_POSITIVE_Z': 0x8519,
+             'TEXTURE_CUBE_MAP_NEGATIVE_Z': 0x851A,
+             'MAX_CUBE_MAP_TEXTURE_SIZE': 0x851C,
              drawElements: function() {},
              createBuffer: function() {},
              deleteBuffer: function(arg) {},
@@ -89,7 +96,8 @@ function createFakeRenderer() {
              bindFramebuffer: function() {},
              clear: function() {},
              viewport: function() {},
-             cullFace: function() {}
+             cullFace: function() {},
+             texImage2D: function() {}
            };
 }
 

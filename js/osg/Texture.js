@@ -134,7 +134,15 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
     },
 
     setImage: function(img, imageFormat) {
-        this._image = img;
+
+        var image = img;
+        if ( img instanceof Image || 
+             img instanceof HTMLCanvasElement ||
+             img instanceof Uint8Array ) {
+            image = new osg.Image(img);
+        }
+
+        this._image = image;
         this.setImageFormat(imageFormat);
         this.dirty();
     },
@@ -162,30 +170,6 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
     },
     setInternalFormat: function(internalFormat) { this._internalFormat = internalFormat; },
     getInternalFormat: function() { return this._internalFormat; },
-    setFromCanvas: function(canvas, format) {
-        this.setImage(canvas, format);
-    },
-    setFromTypedArray: function(rawData, format) {
-        this.setImage(rawData, format);
-    },
-
-    isImageReady: function(image) {
-        if (image) {
-            if (image instanceof Image) {
-                if (image.complete) {
-                    if (image.naturalWidth !== undefined &&  image.naturalWidth === 0) {
-                        return false;
-                    }
-                    return true;
-                }
-            } else if (image instanceof HTMLCanvasElement) {
-                return true;
-            } else if (image instanceof Uint8Array) {
-                return true;
-            }
-        }
-        return false;
-    },
 
     applyFilterParameter: function(gl, target) {
         var isPowerOf2 = function(x) {
@@ -227,7 +211,8 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
         } else {
             var image = this._image;
             if (image !== undefined) {
-                if (this.isImageReady(image)) {
+                if (image.isReady()) {
+
                     if (!this._textureObject) {
                         this.init(gl);
                     }
@@ -235,16 +220,27 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
                     this.setDirty(false);
                     gl.bindTexture(this._textureTarget, this._textureObject);
 
-                    if (image instanceof Image) {
-                        this.setTextureSize(image.naturalWidth, image.naturalHeight);
-                        gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, this._type, this._image);
-
-                    } else if (image instanceof HTMLCanvasElement) {
-                        this.setTextureSize(image.width, image.height);
-                        gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._imageFormat, this._type, this._image);
-
-                    } else if (image instanceof Uint8Array) {
-                        gl.texImage2D(this._textureTarget, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, this._type, this._image);
+                    var imgWidth = image.getWidth() || this._textureWidth;
+                    var imgHeight = image.getHeight() || this._textureHeight;
+                    
+                    this.setTextureSize(imgWidth, imgHeight);
+                    if ( image.isTypedArray() ) {
+                        gl.texImage2D(this._textureTarget, 
+                                      0, 
+                                      this._internalFormat, 
+                                      this._textureWidth, 
+                                      this._textureHeight, 
+                                      0, 
+                                      this._internalFormat, 
+                                      this._type, 
+                                      this._image.getImage());
+                    } else {
+                        gl.texImage2D(this._textureTarget, 
+                                      0, 
+                                      this._internalFormat, 
+                                      this._imageFormat, 
+                                      this._type, 
+                                      image.getImage());
                     }
 
                     this.applyFilterParameter(gl, this._textureTarget);
@@ -327,16 +323,15 @@ osg.Texture.createFromURL = function(imageSource, format) {
     );
     return texture;
 };
-osg.Texture.createFromImg = function(img, format) {
+
+osg.Texture.createFromImage = function(image, format) {
     var a = new osg.Texture();
-    a.setImage(img, format);
+    a.setImage(image, format);
     return a;
 };
-osg.Texture.createFromImage = osg.Texture.createFromImg;
-osg.Texture.createFromCanvas = function(ctx, format) {
-    var a = new osg.Texture();
-    a.setFromCanvas(ctx, format);
-    return a;
+
+osg.Texture.createFromCanvas = function(canvas, format) {
+    return osg.Texture.createFromImage(canvas, format);
 };
 
 osg.Texture.create = function(url) {

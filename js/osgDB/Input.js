@@ -14,6 +14,16 @@ osgDB.Input = function(json, identifier)
                                 });
 };
 
+
+// keep one instance of image fallback
+if ( !osgDB.Input.imageFallback ) {
+    osgDB.Input.imageFallback = (function() {
+        var fallback = new Image();
+        fallback.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=";
+        return fallback;
+    })();
+}
+
 osgDB.Input.prototype = {
 
     setImageLoadingOptions: function(options) { this._defaultImageOptions = options; },
@@ -65,27 +75,41 @@ osgDB.Input.prototype = {
         return new (scope)();
     },
 
-    fetchImage: function(img, url, options, promise) {
+    fetchImage: function(image, url, options, defer) {
         var checkInlineImage = "data:image/";
         // crossOrigin does not work for inline data image
         var isInlineImage = (url.substring(0,checkInlineImage.length) === checkInlineImage);
-        if (!isInlineImage && options.crossOrigin) {
-            // if data url and cross origin
-            // dont try to fetch because it will not work
-            // it's a work around, the option is to create
-            // an osg::Image that will be a proxy image.
+        var img = new Image();
+        img.onerror = function() {
+            osg.warn("warning use white texture as fallback instead of " + url);
+            image.setImage( osgDB.Input.imageFallback );
+            if ( defer ) {
+                defer.resolve( image );
+            }
+        };
+        
+        if ( !isInlineImage && options.crossOrigin ) {
             img.crossOrigin = options.crossOrigin;
         }
 
-        if (isInlineImage && img.crossOrigin !== "") {
-            return this.readImageURL(url, options, promise);
-        }
+        img.onload = function() {
+
+            if ( defer ) {
+                if ( options.onload ) options.onload.call( image );
+                defer.resolve( image );
+            } else if ( options.onload )
+                options.onload.call( image );
+
+        };
+        
+        image.setURL( url );
+        image.setImage( img );
 
         img.src = url;
-        return img;
+        return image;
     },
 
-    readImageURL: function(url, options, promise) {
+    readImageURL: function(url, options) {
         var self = this;
         // if image is on inline image skip url computation
         if (url.substr(0, 10) !== "data:image") {
@@ -96,33 +120,14 @@ osgDB.Input.prototype = {
             options = this._defaultImageOptions;
         }
 
-        var defer = promise;
-        if (options.promise === true && promise === undefined)
-            defer = osgDB.Promise.defer();
-
-        var img = new Image();
-        img.onerror = function() {
-            osg.warn("warning use white texture as fallback instead of " + url);
-            self.fetchImage(this, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=", options, defer);
-        };
-
+        var image = new osg.Image();
         if (options.promise !== true) {
-
-            if (options.onload !== undefined) {
-                img.onload = options.onload;
-            }
-
-            return this.fetchImage(img, url, options);
+            return this.fetchImage(image, url, options);
         }
 
-        img.onload = function() {
-            if (options.onload !== undefined) {
-                options.onload.call(this);
-            }
-            defer.resolve(img);
-        };
-        
-        this.fetchImage(img, url, options, defer);
+        defer = osgDB.Promise.defer();
+        this.fetchImage(image, url, options, defer);
+
         return defer.promise;
     },
 

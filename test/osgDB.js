@@ -9,7 +9,7 @@ asyncTest("Input.readImageURL", function() {
     var input = new osgDB.Input();
     input.setPrefixURL("testXtest");
     osgDB.Promise.when(input.readImageURL(ImageTest), function(image) {
-        ok(image.src === ImageTest, "check image src");
+        ok(image.getURL() === ImageTest, "check image src");
         start();
     }).fail(function (error) {
         osg.error(error);
@@ -22,12 +22,12 @@ asyncTest("Input.readImageURL-inline-dataimage-crossOrigin", function() {
     var url = 'error-404';
 
     var image = input.readImageURL(url, {crossOrigin: "Anonymous"});
-    ok(image instanceof Image, "no promise : returned an Image");
+    ok(image instanceof osg.Image, "no promise : returned an Image");
     // ok(image.src.substr(-9) !== url, "no promise : used fallback image");  // FIXME: make readImageURL return a proxy osgImage
 
     osgDB.Promise.when(input.readImageURL('error-404', {crossOrigin: "Anonymous", promise: true}), function(image) {
-        ok(image instanceof Image, "with promise : returned image");
-        ok(image.src.substr(-9) !== url, "with promise : used fallback image");
+        ok(image instanceof osg.Image, "with promise : returned image");
+        ok(image.getImage().src.substr(-9) !== url, "with promise : used fallback image");
 
         start();
     }).fail(function (error) {
@@ -41,15 +41,15 @@ test("Input.fetchImage", function() {
     input.setPrefixURL("testXtest");
 
     (function() {
-        var img = new Image();
+        var img = new osg.Image();
         input.fetchImage(img, ImageTest, { 'crossOrigin' : 'anonymous'});
-        ok(img.crossOrigin !== "anonymous", "skip crossOrigin for inline image");
+        ok(img.getImage().crossOrigin !== "anonymous", "skip crossOrigin for inline image");
     })();
 
     (function() {
-        var img = new Image();
+        var img = new osg.Image();
         input.fetchImage(img, 'http://osgjs.org/image.png', { 'crossOrigin' : 'anonymous'});
-        ok(img.crossOrigin === "anonymous", "check crossOrigin");
+        ok(img.getImage().crossOrigin === "anonymous", "check crossOrigin");
     })();
 });
 

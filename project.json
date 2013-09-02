@@ -43,6 +43,7 @@
 		"js/osg/StateGraph.js",
 		"js/osg/State.js",
 		"js/osg/StateSet.js",
+		"js/osg/Image.js",
 		"js/osg/Texture.js",
 		"js/osg/TextureCubeMap.js",
 		"js/osg/UpdateVisitor.js",

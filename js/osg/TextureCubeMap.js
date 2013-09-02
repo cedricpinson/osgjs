@@ -16,6 +16,7 @@ osg.TextureCubeMap.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Tex
     },
     cloneType: function() { var t = new osg.TextureCubeMap(); t.default_type = true; return t;},
     setImage: function(face, img, imageFormat) {
+
         if ( typeof(face) === "string" ) {
             face = osg.Texture[face];
         }
@@ -24,14 +25,19 @@ osg.TextureCubeMap.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Tex
             this._images[face] = {};
         }
 
-        if ( typeof(imageFormat) === "string") {
+        if ( typeof( imageFormat ) === "string") {
             imageFormat = osg.Texture[imageFormat];
         }
         if (imageFormat === undefined) {
             imageFormat = osg.Texture.RGBA;
         }
 
-        this._images[face].image = img;
+        var image = img;
+        if ( image instanceof ( osg.Image ) === false ) {
+            image = new osg.Image(img);
+        }
+
+        this._images[face].image = image;
         this._images[face].format = imageFormat;
         this._images[face].dirty = true;
         this.dirty();
@@ -43,23 +49,20 @@ osg.TextureCubeMap.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Tex
             return false;
         }
 
-        if (!osg.Texture.prototype.isImageReady(image)) {
+        if ( !image.isReady() ) {
             return false;
         }
 
-        if (image instanceof Image) {
-            this.setTextureSize(image.naturalWidth, image.naturalHeight);
-        } else if (image instanceof HTMLCanvasElement) {
-            this.setTextureSize(image.width, image.height);
-        }
 
-        gl.texImage2D(target, 0, internalFormat, format, type, image);
+        this.setTextureSize(image.getWidth(), image.getHeight());
+
+        gl.texImage2D(target, 0, internalFormat, format, type, image.getImage() );
         return true;
     },
 
     _applyImageTarget: function(gl, internalFormat, target) {
         var imgObject = this._images[target];
-        if (!imgObject) {
+        if ( !imgObject ) {
             return 0;
         }
 
@@ -73,7 +76,7 @@ osg.TextureCubeMap.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Tex
                                       internalFormat,
                                       imgObject.format,
                                       gl.UNSIGNED_BYTE,
-                                      imgObject.image) ) {
+                                      imgObject.image ) ) {
             imgObject.dirty = false;
             if (this._unrefImageDataAfterApply) {
                 delete this._images[target];
@@ -85,14 +88,17 @@ osg.TextureCubeMap.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Tex
 
     apply: function(state) {
         var gl = state.getGraphicContext();
-        if (this._textureObject !== undefined && !this.isDirty()) {
-            gl.bindTexture(this._textureTarget, this._textureObject);
+
+        if ( this._textureObject !== undefined && 
+             !this.isDirty() ) {
+            gl.bindTexture( this._textureTarget, this._textureObject );
 
         } else if (this.default_type) {
             gl.bindTexture(this._textureTarget, null);
+
         } else {
             var images = this._images;
-            if (!this._textureObject) {
+            if ( !this._textureObject ) {
                 this.init(gl);
             }
             gl.bindTexture(this._textureTarget, this._textureObject);

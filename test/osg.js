@@ -1201,6 +1201,10 @@ test("Node", function() {
 
 test("Texture", function() {
     stop();
+
+
+    var textureFromURL = osg.Texture.createFromURL('"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII="');
+    ok ( textureFromURL !== undefined, "Check textureFromURL");
     
     var ready = undefined;
     var loadingComplete = function() {
@@ -1237,7 +1241,7 @@ test("Texture", function() {
         cnv.setAttribute('width', 128);
         cnv.setAttribute('height', 128);
         var tcanvas = new osg.Texture();
-        tcanvas.setFromCanvas(cnv);
+        tcanvas.setImage(cnv);
 
         var canvas = createCanvas();
         var viewer = new osgViewer.Viewer(canvas);
@@ -1249,11 +1253,11 @@ test("Texture", function() {
         // check is ready api
         var texture = new osg.Texture();
         texture.setImage(greyscale._image);
-        ok(texture.isImageReady(texture._image) === true, "Image is ready");
+        ok(texture.getImage().isReady() === true, "Image is ready");
 
         texture = new osg.Texture();
         texture.setImage(cnv);
-        ok(texture.isImageReady(texture._image) === true, "Image is ready because of canvas");
+        ok(texture.getImage().isReady() === true, "Image is ready because of canvas");
 
 
         ok( greyscale.isDirty() === true , "dirty is true");
@@ -1297,7 +1301,10 @@ test("TextureCubeMap", function() {
         return texture;
     };
 
-    var greyscale = osgDB.readImage("greyscale.png");
+    var greyscale = osgDB.readImage("greyscale.png", { promise: false });
+
+    var state = new osg.State();
+    state.setGraphicContext(createFakeRenderer());
 
     var texture = new osg.TextureCubeMap();
     texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_X', greyscale, osg.Texture.ALPHA);
@@ -1306,6 +1313,8 @@ test("TextureCubeMap", function() {
     texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Y', greyscale, osg.Texture.ALPHA);
     texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Z', greyscale, osg.Texture.ALPHA);
     texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Z', greyscale, osg.Texture.ALPHA);
+
+    texture.apply(state);
 
     ok( texture.getImage(osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X) !== undefined, "Check positive x");
     ok( texture.getImage(osg.Texture.TEXTURE_CUBE_MAP_NEGATIVE_X) !== undefined, "Check negative x");
