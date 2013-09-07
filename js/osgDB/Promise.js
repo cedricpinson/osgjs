@@ -3,8 +3,6 @@ osgDB.Promise = {};
 
 (function() {
 
-    var exports = osgDB.Promise;
-
 // vim:ts=4:sts=4:sw=4:
 /*jshint browser: true, node: true,
   curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true,
@@ -67,37 +65,8 @@ osgDB.Promise = {};
  */
 
 (function (definition) {
-    // Turn off strict mode for this function so we can assign to global.Q
-    /*jshint strict: false*/
 
-    // This file will function properly as a <script> tag, or a module
-    // using CommonJS and NodeJS or RequireJS module formats.  In
-    // Common/Node/RequireJS, the module exports the Q API and when
-    // executed as a simple <script>, it creates a Q global instead.
-
-    // RequireJS
-    if (typeof define === "function") {
-        define(definition);
-
-    // CommonJS
-    } else if (typeof exports === "object") {
-        definition(void 0, exports);
-
-    // SES (Secure EcmaScript)
-    } else if (typeof ses !== "undefined") {
-        if (!ses.ok()) {
-            return;
-        } else {
-            ses.makeQ = function () {
-                var Q = {};
-                return definition(void 0, Q);
-            };
-        }
-
-    // <script>
-    } else {
-        definition(void 0, Q = {});
-    }
+    definition(void 0, osgDB.Promise);
 
 })(function (require, exports) {
 "use strict";

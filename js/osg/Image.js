@@ -5,16 +5,21 @@ osg.Image = function(image, format) {
     this._url = undefined;
     this._width = undefined;
     this._height = undefined;
+    
+    this._isGreyscale = undefined;
 };
 
 osg.Image.prototype = osg.objectLibraryClass( 
     osg.objectInehrit( 
         osg.Object.prototype, {
-
+            dirty: function() { this._isGreyscale = undefined; },
             getImage: function() { return this._imageObject; },
             getURL: function() { return this._url; },
             setURL: function( url ) { this._url = url; },
-            setImage: function( img ) { this._imageObject = img; },
+            setImage: function( img ) { 
+                this._imageObject = img; 
+                this.dirty();
+            },
             isCanvas: function() { return this._imageObject instanceof HTMLCanvasElement; },
             isImage: function() { return this._imageObject instanceof Image; },
             isTypedArray: function() { return this._imageObject instanceof Uint8Array; },
@@ -36,6 +41,32 @@ osg.Image.prototype = osg.objectLibraryClass(
                 }
                 return this._height;
             },
+
+            isGreyscale: function() {
+                if ( this._isGreyscale !== undefined )
+                    return this._isGreyscale;
+
+                if ( this._imageObject !== undefined &&
+                     this.isReady() &&
+                     this._isGreyscale === undefined ) {
+
+                    var canvas = this._imageObject;
+                    if ( !this.isCanvas() ) {
+
+                        canvas = document.createElement( 'canvas' );
+                    }
+                    var ctx = canvas.getContext( '2d' );
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage( img, 0, 0 );
+
+                    var data = ctx.getImageData( 0, 0, 1, 1 ).data;
+                    var isGreyscale = ( data[ 0 ] == data[ 1 ] ) && ( data[ 1 ] == data[ 2 ] );
+                    this._isGreyscale = isGreyscale;
+                }
+                return this._isGreyscale;
+            },
+
             isReady: function() {
 
                 // image are ready for static data
