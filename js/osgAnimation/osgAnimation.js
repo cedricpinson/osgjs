@@ -47,4 +47,3 @@ osgAnimation.easeInCubic = osgAnimation.EaseInCubic;
 osgAnimation.easeOutQuart = osgAnimation.EaseOutQuart;
 osgAnimation.easeInQuart = osgAnimation.EaseInQuart;
 osgAnimation.easeOutElastic = osgAnimation.EaseOutElastic;
-

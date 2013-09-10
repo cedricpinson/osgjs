@@ -97,20 +97,20 @@ osg.extend = function () {
 	if ( !obj || toString.call(obj) !== "[object Object]" || obj.nodeType || obj.setInterval ) {
             return false;
 	}
-	
+
 	// Not own constructor property must be Object
-	if ( obj.constructor && 
-             !hasOwnPropertyFunc.call(obj, "constructor") && 
+	if ( obj.constructor &&
+             !hasOwnPropertyFunc.call(obj, "constructor") &&
              !hasOwnPropertyFunc.call(obj.constructor.prototype, "isPrototypeOf") ) {
             return false;
 	}
-	
+
 	// Own properties are enumerated firstly, so to speed up,
 	// if last one is own, then all properties are own.
-	
+
 	var key;
 	for ( key in obj ) {}
-	
+
 	return key === undefined || hasOwnPropertyFunc.call( obj, key );
     };
 
@@ -176,7 +176,7 @@ osg.objectInehrit = osg.objectInherit = function (base, extras) {
 
     // let augment object with multiple arguement
     for (var i = 1; i < arguments.length; i++) {
-        osg.objectMix(obj, arguments[i], false); 
+        osg.objectMix(obj, arguments[i], false);
     }
     return obj;
 };
@@ -208,4 +208,3 @@ osg.objectType.generate = function (arg) {
 osg.Float32Array = typeof Float32Array !== 'undefined' ? Float32Array : null;
 osg.Int32Array = typeof Int32Array !== 'undefined' ? Int32Array : null;
 osg.Uint16Array = typeof Uint16Array !== 'undefined' ? Uint16Array : null;
-

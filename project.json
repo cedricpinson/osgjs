@@ -49,6 +49,7 @@
 		"js/osg/UpdateVisitor.js",
 		"js/osg/Viewport.js",
 		"js/osg/CullVisitor.js",
+		"js/osg/Math.js",
 
 		"js/osgAnimation/osgAnimation.js",
 		"js/osgAnimation/Animation.js",
