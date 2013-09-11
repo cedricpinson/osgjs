@@ -260,7 +260,7 @@
                         "   }",
                         "   // Require Q, if we're on the server, and it's not already present.",
                         "   var Q = rootScope.Q;",
-                        "   if (!Q && (typeof require !== 'undefined')) Q = require('Q');",
+                        "   // if (!Q && (typeof require !== 'undefined')) Q = require('Q');",
 
                         "   OSG.noConflict = function() {",
                         "      rootScope.OSG = previousOSG;",
