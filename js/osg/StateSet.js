@@ -1,4 +1,4 @@
-/** 
+/**
  * StateSet encapsulate StateAttribute
  * @class StateSet
  */
@@ -80,23 +80,23 @@ osg.StateSet.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Object.pr
         this.textureAttributeMapList[unit].attributeKeys.splice(idx,1);
     },
 
-    getAttribute: function(attributeType) { 
+    getAttribute: function(attributeType) {
         if (this.attributeMap[attributeType] === undefined) {
             return undefined;
         }
         return this.attributeMap[attributeType].getAttribute();
     },
-    setAttributeAndMode: function(attribute, mode) { 
+    setAttributeAndMode: function(attribute, mode) {
         if (mode === undefined) {
             mode = osg.StateAttribute.ON;
         }
-        this._setAttribute(this.getAttributePair(attribute, mode)); 
+        this._setAttribute(this.getAttributePair(attribute, mode));
     },
-    setAttribute: function(attribute, mode) { 
+    setAttribute: function(attribute, mode) {
         if (mode === undefined) {
             mode = osg.StateAttribute.ON;
         }
-        this._setAttribute(this.getAttributePair(attribute, mode)); 
+        this._setAttribute(this.getAttributePair(attribute, mode));
     },
 
     removeAttribute: function(attributeName) {

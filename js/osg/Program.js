@@ -1,16 +1,9 @@
-/** 
+/**
  * Program encapsulate an vertex and fragment shader
  * @class Program
  */
-osg.Program = function (vShader, fShader) { 
+osg.Program = function (vShader, fShader) {
     osg.StateAttribute.call(this);
-
-    if (osg.Program.instanceID === undefined) {
-        osg.Program.instanceID = 0;
-    }
-    this.instanceID = osg.Program.instanceID;
-
-    osg.Program.instanceID+= 1;
 
     this.program = null;
     this.setVertexShader(vShader);

@@ -1,15 +1,14 @@
 /** -*- compile-command: "jslint-cli BufferArray.js" -*- */
 
-/** 
+/**
  * BufferArray manage vertex / normal / ... array used by webgl.
  * @class BufferArray
  */
 osg.BufferArray = function (type, elements, itemSize) {
-    if (osg.BufferArray.instanceID === undefined) {
-        osg.BufferArray.instanceID = 0;
-    }
-    this.instanceID = osg.BufferArray.instanceID;
-    osg.BufferArray.instanceID += 1;
+
+    // maybe could inherit from Object
+    this._instanceID = osg.Object.getInstanceID();
+
     this.dirty();
 
     this._itemSize = itemSize;
@@ -35,7 +34,7 @@ osg.BufferArray.ARRAY_BUFFER = 0x8892;
 osg.BufferArray.prototype = {
     setItemSize: function(size) { this._itemSize = size; },
     isValid: function() {
-        if (this._buffer !== undefined || 
+        if (this._buffer !== undefined ||
             this._elements !== undefined) {
             return true;
         }
@@ -75,7 +74,7 @@ osg.BufferArray.prototype = {
         }
     },
     getElements: function() { return this._elements;},
-    setElements: function(elements) { 
+    setElements: function(elements) {
         this._elements = elements;
         this._dirty = true;
     }

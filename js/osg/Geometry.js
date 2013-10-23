@@ -1,6 +1,6 @@
 /** -*- compile-command: "jslint-cli Geometry.js" -*- */
 
-/** 
+/**
  * Geometry manage array and primitives to draw a geometry.
  * @class Geometry
  */
@@ -46,7 +46,7 @@ osg.Geometry.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Node.prot
 
     drawImplementation: function(state) {
         var program = state.getLastProgramApplied();
-        var prgID = program.instanceID;
+        var prgID = program.getInstanceID();
         if (this.cacheAttributeList[prgID] === undefined) {
             var attribute;
             var attributesCache = program.attributesCache;
@@ -106,8 +106,8 @@ osg.Geometry.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Node.prot
 
     computeBoundingBox: function(boundingBox) {
         var vertexArray = this.getAttributes().Vertex;
-        
-        if ( vertexArray !== undefined && 
+
+        if ( vertexArray !== undefined &&
              vertexArray.getElements() !== undefined &&
              vertexArray.getItemSize() > 2 ) {
             var v = [0,0,0];

@@ -57,8 +57,8 @@ test("Input.fetchImage", function() {
 asyncTest("Input.readArrayBuffer-old", function() {
 
     var ba = {
-        "Elements": [ 0.01727, -0.00262, 3.0], 
-        "ItemSize": 3, 
+        "Elements": [ 0.01727, -0.00262, 3.0],
+        "ItemSize": 3,
         "Type": "ARRAY_BUFFER",
         "UniqueID" : 10
     };
@@ -97,11 +97,11 @@ test("Input.getObjectWrapper", function() {
 asyncTest("Input.readObject - Material", function() {
     var obj = { "osg.Material": {
         "UniqueID" : 10,
-        "Name": "FloorBorder1", 
-        "Ambient": [ 0.5, 0.5, 0.5, 1], 
-        "Diffuse": [ 0.1, 0.1, 0.1, 0.1], 
-        "Emission": [ 0, 0, 0, 0.5], 
-        "Shininess": 2.5, 
+        "Name": "FloorBorder1",
+        "Ambient": [ 0.5, 0.5, 0.5, 1],
+        "Diffuse": [ 0.1, 0.1, 0.1, 0.1],
+        "Emission": [ 0, 0, 0, 0.5],
+        "Shininess": 2.5,
         "Specular": [ 0.5, 0.7, 0.5, 1]
     } };
 
@@ -125,22 +125,22 @@ asyncTest("Input.computeURL", function() {
 });
 
 asyncTest("Input.readPrimitiveSet", function() {
-    
+
     var input = new osgDB.Input({ "DrawArrays" : {
         "UniqueID" : 10,
-        "count": 3540, 
-        "first": 10, 
+        "count": 3540,
+        "first": 10,
         "mode": "TRIANGLES"
     }});
      osgDB.Promise.when(input.readPrimitiveSet()).then(function(value) {
-        return input.setJSON({ "DrawArrays" : { 
+        return input.setJSON({ "DrawArrays" : {
             "UniqueID" : 10
         }}).readPrimitiveSet();
     }).then(function(o2) {
         ok(o2.getCount() === 3540, "readPrimitiveSet check same unique id");
         start();
     });
-});        
+});
 
 
 asyncTest("Input.readBufferArray - inline", function() {
@@ -150,14 +150,14 @@ asyncTest("Input.readBufferArray - inline", function() {
                 "Elements" : [ 0.01727, -0.00262, 3.0],
                 "Size": 3
             }
-        }, 
-        "ItemSize": 3, 
+        },
+        "ItemSize": 3,
         "Type": "ARRAY_BUFFER",
         "UniqueID" : 10
     };
     var input = new osgDB.Input(ba);
     osgDB.Promise.when(input.readBufferArray()).then(function() {
-        return input.setJSON({ 
+        return input.setJSON({
             "UniqueID" : 10
         }).readBufferArray();
     }).then(function(o2) {
@@ -173,8 +173,8 @@ asyncTest("Input.readBufferArray - external", function() {
                 "File": "stream.bin",
                 "Size": 3
             }
-        }, 
-        "ItemSize": 1, 
+        },
+        "ItemSize": 1,
         "Type": "ARRAY_BUFFER",
         "UniqueID" : 10
     };
@@ -194,7 +194,7 @@ asyncTest("Input.readBufferArray - external", function() {
         var input = new osgDB.Input(ba);
         input.setProgressXHRCallback(progress);
         osgDB.Promise.when(input.readBufferArray()).then(function(buffer) {
-            
+
             ok(calledProgress === true, "readBufferArray check progress callback");
             start();
         });
@@ -203,28 +203,28 @@ asyncTest("Input.readBufferArray - external", function() {
 
 
 asyncTest("Input.readBufferArray - external offset", function() {
-    var ba = { 
+    var ba = {
         "TexCoord0": {
-            "UniqueID": 202, 
-            "Array": { 
-                "Float32Array": { 
+            "UniqueID": 202,
+            "Array": {
+                "Float32Array": {
                     "File": "multistream.bin",
                     "Offset": 0,
                     "Size": 3
                 }
-            }, 
-            "ItemSize": 2, 
+            },
+            "ItemSize": 2,
             "Type": "ARRAY_BUFFER"
-        }, 
+        },
         "Tangent": {
-            "UniqueID": 204, 
-            "Array": { 
-                "Float32Array": { 
+            "UniqueID": 204,
+            "Array": {
+                "Float32Array": {
                     "File": "multistream.bin",
                     "Offset": 24,
                     "Size": 3
                 }
-            }, 
+            },
             "ItemSize": 3,
             "Type": "ARRAY_BUFFER"
         }
@@ -252,10 +252,10 @@ asyncTest("Input.readBufferArray - external offset", function() {
         osgDB.Promise.when(osgDB.Promise.all(arraysPromise)).then(function() {
             var tc = buffers.TexCoord0.getElements();
             var tcl = tc.length;
-            ok((tc[2] === 10) && (tc[1] === 5) && (tcl === 6), "readBufferArray with new array typed external file with offset");
+            ok((tc[2] === 3438139408384 ) && (tc[1] === 14584712192) && (tcl === 6), "readBufferArray with new array typed external file with offset");
             var tg = buffers.Tangent.getElements();
             var tgl = tg.length;
-            ok((tg[2] === 11) && (tg[1] === 6.0) && (tgl === 9), "readBufferArray with new array typed external file with offset");
+            ok((tg[2] === 1.6629726922706152e-19) && (tg[1] === 1.5941142850195433e-10) && (tgl === 9), "readBufferArray with new array typed external file with offset");
             start();
         });
     })();
@@ -265,26 +265,26 @@ asyncTest("Input.readBufferArray - external offset", function() {
 module("osgDB.parseSceneGraph");
 
 asyncTest("StateSet - MultiTextures", function() {
-    var tree =  { 
+    var tree =  {
 
         "stateset": {
             "material": {
-                "ambient": [ 0.5, 0.5, 0.5, 1], 
-                "diffuse": [ 0.1, 0.1, 0.1, 0.1], 
-                "emission": [ 0, 0, 0, 0.5], 
-                "name": "FloorBorder1", 
-                "shininess": 2.5, 
+                "ambient": [ 0.5, 0.5, 0.5, 1],
+                "diffuse": [ 0.1, 0.1, 0.1, 0.1],
+                "emission": [ 0, 0, 0, 0.5],
+                "name": "FloorBorder1",
+                "shininess": 2.5,
                 "specular": [ 0.5, 0.7, 0.5, 1]
-            }, 
-            "textures": 
+            },
+            "textures":
             [ {
-                "file": "textures/sol_2.png", 
-                "mag_filter": "LINEAR", 
+                "file": "textures/sol_2.png",
+                "mag_filter": "LINEAR",
                 "min_filter": "LINEAR_MIPMAP_LINEAR"
-            }, 
+            },
               {
-                  "file": "textures/floor_shadow.png", 
-                  "mag_filter": "NEAREST", 
+                  "file": "textures/floor_shadow.png",
+                  "mag_filter": "NEAREST",
                   "min_filter": "NEAREST",
                   "wrap_s": "REPEAT",
                   "wrap_t": "MIRRORED_REPEAT"
@@ -298,19 +298,19 @@ asyncTest("StateSet - MultiTextures", function() {
         ok(result.getStateSet() !== undefined, "check old stateset");
         var material = result.getStateSet().getAttribute('Material');
         var materialCheck = ( material !== undefined &&
-                              check_near(material.getAmbient(), [0.5, 0.5, 0.5, 1]) && 
-                              check_near(material.getDiffuse(), [0.1, 0.1, 0.1, 0.1]) && 
-                              check_near(material.getEmission(), [0.0, 0.0, 0.0, 0.5]) && 
+                              check_near(material.getAmbient(), [0.5, 0.5, 0.5, 1]) &&
+                              check_near(material.getDiffuse(), [0.1, 0.1, 0.1, 0.1]) &&
+                              check_near(material.getEmission(), [0.0, 0.0, 0.0, 0.5]) &&
                               check_near(material.getSpecular(), [0.5, 0.7, 0.5, 1]) &&
-                              check_near(material.getShininess(), 2.5) && 
+                              check_near(material.getShininess(), 2.5) &&
                               material.getName() === "FloorBorder1");
 
         ok(materialCheck, "check old material");
         var texture = result.getStateSet().getTextureAttribute(1, 'Texture');
-        var textureCheck = (texture !== undefined && 
-                            texture.getWrapS() === osg.Texture.REPEAT && 
+        var textureCheck = (texture !== undefined &&
+                            texture.getWrapS() === osg.Texture.REPEAT &&
                             texture.getWrapT() === osg.Texture.MIRRORED_REPEAT &&
-                            texture.getMinFilter() === osg.Texture.NEAREST && 
+                            texture.getMinFilter() === osg.Texture.NEAREST &&
                             texture.getMagFilter() === osg.Texture.NEAREST);
         ok(textureCheck, "check old texture");
         start();
@@ -319,9 +319,9 @@ asyncTest("StateSet - MultiTextures", function() {
 
 asyncTest("StateSet - BlendFunc, Material", function() {
     var tree = {
-        'osg.Node': 
+        'osg.Node':
         {
-            'StateSet': { 
+            'StateSet': {
                 'osg.StateSet': {
                     'AttributeList': [
                         { 'osg.BlendFunc': {
@@ -329,24 +329,24 @@ asyncTest("StateSet - BlendFunc, Material", function() {
                             'DestinationRGB': 'ONE_MINUS_SRC_ALPHA',
                             'SourceAlpha': 'SRC_ALPHA',
                             'DestinationAlpha': 'ONE_MINUS_SRC_ALPHA'
-                        } 
+                        }
                         } ,
                         {
                             "osg.Material": {
-                                "Name": "FloorBorder1", 
-                                "Ambient": [ 0.5, 0.5, 0.5, 1], 
-                                "Diffuse": [ 0.1, 0.1, 0.1, 0.1], 
-                                "Emission": [ 0, 0, 0, 0.5], 
-                                "Shininess": 2.5, 
+                                "Name": "FloorBorder1",
+                                "Ambient": [ 0.5, 0.5, 0.5, 1],
+                                "Diffuse": [ 0.1, 0.1, 0.1, 0.1],
+                                "Emission": [ 0, 0, 0, 0.5],
+                                "Shininess": 2.5,
                                 "Specular": [ 0.5, 0.7, 0.5, 1]
                             }
                         }],
                     "TextureAttributeList": [ [ {
                         "osg.Texture": {
-                            "File": "/unknown.png", 
-                            "MagFilter": "LINEAR", 
-                            "MinFilter": "LINEAR_MIPMAP_LINEAR", 
-                            "WrapS": "REPEAT", 
+                            "File": "/unknown.png",
+                            "MagFilter": "LINEAR",
+                            "MinFilter": "LINEAR_MIPMAP_LINEAR",
+                            "WrapS": "REPEAT",
                             "WrapT": "CLAMP_TO_EDGE"
                         }
                     } ] ]
@@ -362,11 +362,11 @@ asyncTest("StateSet - BlendFunc, Material", function() {
         ok(result.getStateSet().getAttribute('BlendFunc') !== undefined, "check BlendFunc");
         var material = result.getStateSet().getAttribute('Material');
         var materialCheck = ( material !== undefined &&
-                              check_near(material.getAmbient(), [0.5, 0.5, 0.5, 1]) && 
-                              check_near(material.getDiffuse(), [0.1, 0.1, 0.1, 0.1]) && 
-                              check_near(material.getEmission(), [0.0, 0.0, 0.0, 0.5]) && 
+                              check_near(material.getAmbient(), [0.5, 0.5, 0.5, 1]) &&
+                              check_near(material.getDiffuse(), [0.1, 0.1, 0.1, 0.1]) &&
+                              check_near(material.getEmission(), [0.0, 0.0, 0.0, 0.5]) &&
                               check_near(material.getSpecular(), [0.5, 0.7, 0.5, 1]) &&
-                              check_near(material.getShininess(), 2.5) && 
+                              check_near(material.getShininess(), 2.5) &&
                               material.getName() === "FloorBorder1");
 
         ok(materialCheck, "check Material");
@@ -384,81 +384,81 @@ asyncTest("StateSet - BlendFunc, Material", function() {
 asyncTest("Geometry Cube UserData", function() {
     var tree = {
         "osg.Geometry": {
-            "Name": "Cube", 
+            "Name": "Cube",
             "StateSet": {
                 "osg.StateSet": {
-                    "Name": "Material", 
+                    "Name": "Material",
                     "AttributeList": [ {
                         "osg.Material": {
-                            "Name": "Material", 
-                            "Ambient": [ 0.8, 0.8, 0.8, 1], 
-                            "Diffuse": [ 0.64, 0.64, 0.64, 1], 
-                            "Emission": [ 0, 0, 0, 1], 
-                            "Shininess": 12.5, 
+                            "Name": "Material",
+                            "Ambient": [ 0.8, 0.8, 0.8, 1],
+                            "Diffuse": [ 0.64, 0.64, 0.64, 1],
+                            "Emission": [ 0, 0, 0, 1],
+                            "Shininess": 12.5,
                             "Specular": [ 0.5, 0.5, 0.5, 1]
                         }
                     } ],
                     "UserDataContainer": {
-                        "UniqueID": 23, 
-                        "Values": [ 
+                        "UniqueID": 23,
+                        "Values": [
                             {
-                                "Name": "source", 
+                                "Name": "source",
                                 "Value": "blender"
                             },
                             {
-                                "Name": "DiffuseIntensity", 
+                                "Name": "DiffuseIntensity",
                                 "Value": "1.0"
                             },
                             {
-                                "Name": "DiffuseColor", 
+                                "Name": "DiffuseColor",
                                 "Value": "[ 0, 0, 0 ]"
                             },
                             {
-                                "Name": "SpecularIntensity", 
+                                "Name": "SpecularIntensity",
                                 "Value": "0.0"
                             },
                             {
-                                "Name": "SpecularColor", 
+                                "Name": "SpecularColor",
                                 "Value": "[ 1, 1, 1 ]"
                             },
                             {
-                                "Name": "SpecularHardness", 
+                                "Name": "SpecularHardness",
                                 "Value": "50"
                             },
                             {
-                                "Name": "Emit", 
+                                "Name": "Emit",
                                 "Value": "0.0"
                             },
                             {
-                                "Name": "Ambient", 
+                                "Name": "Ambient",
                                 "Value": "1.0"
                             },
                             {
-                                "Name": "Translucency", 
+                                "Name": "Translucency",
                                 "Value": "0.0"
                             } ]
                     }
                 }
-            }, 
+            },
             "VertexAttributeList": {
                 "Normal": {
-                    "Elements": [ 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, -0, 1, 0, -0, 1, 0, -0, 1, 0, -0, 1, 1, -0, 0, 1, -0, 0, 1, -0, 0, 1, -0, 0, -0, -1, -0, -0, -1, -0, -0, -1, -0, -0, -1, -0, -1, 0, -0, -1, 0, -0, -1, 0, -0, -1, 0, -0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0 ], 
-                    "ItemSize": 3, 
+                    "Elements": [ 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, -0, 1, 0, -0, 1, 0, -0, 1, 0, -0, 1, 1, -0, 0, 1, -0, 0, 1, -0, 0, 1, -0, 0, -0, -1, -0, -0, -1, -0, -0, -1, -0, -0, -1, -0, -1, 0, -0, -1, 0, -0, -1, 0, -0, -1, 0, -0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0 ],
+                    "ItemSize": 3,
                     "Type": "ARRAY_BUFFER"
-                }, 
+                },
                 "Vertex": {
-                    "Elements": [ 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, 1, 1 ], 
-                    "ItemSize": 3, 
+                    "Elements": [ 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, 1, 1 ],
+                    "ItemSize": 3,
                     "Type": "ARRAY_BUFFER"
                 }
-            }, 
+            },
             "PrimitiveSetList": [ {
                 "DrawElementUShort": {
                     "Indices": {
-                        "Elements": [ 0, 1, 3, 1, 2, 3, 4, 5, 7, 5, 6, 7, 8, 9, 11, 9, 10, 11, 12, 13, 15, 13, 14, 15, 16, 17, 19, 17, 18, 19, 20, 21, 23, 21, 22, 23 ], 
-                        "ItemSize": 1, 
+                        "Elements": [ 0, 1, 3, 1, 2, 3, 4, 5, 7, 5, 6, 7, 8, 9, 11, 9, 10, 11, 12, 13, 15, 13, 14, 15, 16, 17, 19, 17, 18, 19, 20, 21, 23, 21, 22, 23 ],
+                        "ItemSize": 1,
                         "Type": "ELEMENT_ARRAY_BUFFER"
-                    }, 
+                    },
                     "Mode": "TRIANGLES"
                 }
             } ]
@@ -482,8 +482,8 @@ asyncTest("Geometry Cube UserData", function() {
 asyncTest("MatrixTransform", function() {
     var tree = {
         "osg.MatrixTransform": {
-            "Name": "Lamp", 
-            "Matrix": [ -0.2909, 0.9552, -0.0552, 0, -0.7711, -0.1999, 0.6045, 0, 0.5664, 0.2184, 0.7947, 0, 4.0762, 1.0055, 5.9039, 1 ], 
+            "Name": "Lamp",
+            "Matrix": [ -0.2909, 0.9552, -0.0552, 0, -0.7711, -0.1999, 0.6045, 0, 0.5664, 0.2184, 0.7947, 0, 4.0762, 1.0055, 5.9039, 1 ],
             "Children": [ {
                 "osg.Node": {
                     "Name": "Lamp"
@@ -503,7 +503,7 @@ asyncTest("MatrixTransform", function() {
 asyncTest("BasicAnimationManager", function() {
     var tree = {
         "osg.Node": {
-            "Name": "Root", 
+            "Name": "Root",
             "UpdateCallbacks": [ {
                 "osgAnimation.BasicAnimationManager": {
                     "Animations": [ {
@@ -511,24 +511,24 @@ asyncTest("BasicAnimationManager", function() {
                             "Name": "Test",
                             "Channels": [ {
                                 "osgAnimation.Vec3LerpChannel": {
-                                    "Name": "translate", 
-                                    "KeyFrames": [ [ 0, 
-                                                     -15.7923, 
-                                                     781.26, 
-                                                     136.075 ] ], 
+                                    "Name": "translate",
+                                    "KeyFrames": [ [ 0,
+                                                     -15.7923,
+                                                     781.26,
+                                                     136.075 ] ],
                                     "TargetName": "Zeppelin_2"
                                 }
                             }, {
                                 "osgAnimation.Vec3LerpChannel": {
-                                    "Name": "scale", 
-                                    "KeyFrames": [ [ 0, 
-                                                     1, 
-                                                     1, 
-                                                     1 ], 
-                                                   [ 39.96, 
-                                                     1, 
-                                                     1, 
-                                                     1 ] ], 
+                                    "Name": "scale",
+                                    "KeyFrames": [ [ 0,
+                                                     1,
+                                                     1,
+                                                     1 ],
+                                                   [ 39.96,
+                                                     1,
+                                                     1,
+                                                     1 ] ],
                                     "TargetName": "Zeppelin_2"
                                 }
                             } ]
@@ -543,7 +543,7 @@ asyncTest("BasicAnimationManager", function() {
 
         ok(result.getUpdateCallback().getAnimationMap().Test !== undefined, "check animation list");
         var animation =  result.getUpdateCallback().getAnimationMap().Test;
-        ok(animation !== undefined, "check animation");        
+        ok(animation !== undefined, "check animation");
         ok(animation.getChannels().length === 2, "check channels");
         ok(animation.getChannels()[1].getName() === "scale", "check channel 1");
         ok(animation.getChannels()[1].getTargetName() === "Zeppelin_2", "check taget channel 1");
@@ -557,8 +557,8 @@ asyncTest("BasicAnimationManager", function() {
 asyncTest("FloatLerpChannel", function() {
     var tree = {
         "osgAnimation.FloatLerpChannel": {
-            "Name": "euler_x", 
-            "TargetName": "Cube", 
+            "Name": "euler_x",
+            "TargetName": "Cube",
             "KeyFrames": [
                 [ -0.04, 0],
                 [ 0.36, -0] ]
@@ -577,8 +577,8 @@ asyncTest("FloatLerpChannel", function() {
 asyncTest("QuatSlerpChannel", function() {
     var tree = {
         "osgAnimation.QuatSlerpChannel": {
-            "Name": "quaternion", 
-            "TargetName": "Cube", 
+            "Name": "quaternion",
+            "TargetName": "Cube",
             "KeyFrames": [
                 [ -0.04, 0 , 0, 0, 1],
                 [ 0.36, -0 , 0, 0, 1] ]
@@ -596,8 +596,8 @@ asyncTest("QuatSlerpChannel", function() {
 asyncTest("QuatLerpChannel", function() {
     var tree = {
         "osgAnimation.QuatLerpChannel": {
-            "Name": "quaternion", 
-            "TargetName": "Cube", 
+            "Name": "quaternion",
+            "TargetName": "Cube",
             "KeyFrames": [
                 [ -0.04, 0 , 0, 0, 1],
                 [ 0.36, -0 , 0, 0, 1] ]
@@ -610,7 +610,7 @@ asyncTest("QuatLerpChannel", function() {
         ok(result.getName() === "quaternion", "Check Name QuatLerpChannel");
         start();
     });
-    
+
 });
 
 
@@ -618,37 +618,37 @@ asyncTest("StackedTransform", function() {
 
     var tree = {
         "osg.MatrixTransform": {
-            "Name": "Cube", 
-            "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
+            "Name": "Cube",
+            "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
             "UpdateCallbacks": [ {
                 "osgAnimation.UpdateMatrixTransform": {
-                    "Name": "Cube", 
+                    "Name": "Cube",
                     "StackedTransforms": [ {
                         "osgAnimation.StackedTranslate": {
-                            "Name": "translate", 
+                            "Name": "translate",
                             "Translate": [ 0, 0, 0]
                         }
                     }, {
                         "osgAnimation.StackedRotateAxis": {
-                            "Name": "euler_z", 
-                            "Angle": 0, 
+                            "Name": "euler_z",
+                            "Angle": 0,
                             "Axis": [ 0, 0, 1]
                         }
                     }, {
                         "osgAnimation.StackedRotateAxis": {
-                            "Name": "euler_y", 
-                            "Angle": 0, 
+                            "Name": "euler_y",
+                            "Angle": 0,
                             "Axis": [ 0, 1, 0]
                         }
                     }, {
                         "osgAnimation.StackedRotateAxis": {
-                            "Name": "euler_x", 
-                            "Angle": 0, 
+                            "Name": "euler_x",
+                            "Angle": 0,
                             "Axis": [ 1, 0, 0]
                         }
                     },  {
                         "osgAnimation.StackedQuaternion": {
-                            "Name": "quaternion", 
+                            "Name": "quaternion",
                             "Quaternion": [0,0,0,1]
                         }
                     } ]
@@ -667,15 +667,15 @@ asyncTest("StackedTransform", function() {
 
 
 asyncTest("DrawArray", function() {
-    var tree = { 
+    var tree = {
         "osg.Geometry": {
             "PrimitiveSetList": [ {
                 "DrawArray": {
-                    "count": 3540, 
-                    "first": 10, 
+                    "count": 3540,
+                    "first": 10,
                     "mode": "TRIANGLES"
                 }
-            } ], 
+            } ],
             "VertexAttributeList": {
             }
         }
@@ -690,18 +690,18 @@ asyncTest("DrawArray", function() {
         ok(result.getFirst() === 10, "check triangles first");
         start();
     });
-});    
+});
 
 asyncTest("DrawArrays", function() {
-    var tree2 = { 
+    var tree2 = {
         "osg.Geometry": {
             "PrimitiveSetList": [ {
                 "DrawArrays": {
-                    "Count": 0, 
-                    "First": 0, 
+                    "Count": 0,
+                    "First": 0,
                     "Mode": "TRIANGLES"
                 }
-            } ], 
+            } ],
             "VertexAttributeList": {
             }
         }
@@ -720,15 +720,15 @@ asyncTest("DrawArrays", function() {
 
 
 asyncTest("DrawArrayLengths", function() {
-    var tree = { 
+    var tree = {
         "osg.Geometry": {
             "PrimitiveSetList": [ {
                 "DrawArrayLengths": {
-                    "First": 10, 
+                    "First": 10,
                     "Mode": "TRIANGLES",
                     "ArrayLengths": [ 3, 3, 3 ]
                 }
-            } ], 
+            } ],
             "VertexAttributeList": {
             }
         }
@@ -749,19 +749,19 @@ asyncTest("DrawArrayLengths", function() {
 asyncTest("LightSource", function() {
     var tree = {
         "osg.LightSource": {
-            "Name": "Lamp.005", 
+            "Name": "Lamp.005",
             "Light": {
                 "osg.Light": {
-                    "Ambient": [ 0, 0, 0, 1], 
-                    "ConstantAttenuation": 1, 
-                    "Diffuse": [ 0.88, 0.70901, 0.48297, 1], 
-                    "Direction": [ 0, 0, -1], 
-                    "LightNum": 1, 
-                    "LinearAttenuation": 0, 
-                    "Position": [ 0, 0, 1, 0], 
-                    "QuadraticAttenuation": 0, 
-                    "Specular": [ 0.88, 0.88, 0.88, 1], 
-                    "SpotCutoff": 180, 
+                    "Ambient": [ 0, 0, 0, 1],
+                    "ConstantAttenuation": 1,
+                    "Diffuse": [ 0.88, 0.70901, 0.48297, 1],
+                    "Direction": [ 0, 0, -1],
+                    "LightNum": 1,
+                    "LinearAttenuation": 0,
+                    "Position": [ 0, 0, 1, 0],
+                    "QuadraticAttenuation": 0,
+                    "Specular": [ 0.88, 0.88, 0.88, 1],
+                    "SpotCutoff": 180,
                     "SpotExponent": 0
                 }
             }
@@ -773,5 +773,3 @@ asyncTest("LightSource", function() {
         start();
     });
 });
-
-

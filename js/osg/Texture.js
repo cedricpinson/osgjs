@@ -1,6 +1,6 @@
 /** -*- compile-command: "jslint-cli Texture.js" -*- */
 
-/** 
+/**
  * Texture encapsulate webgl texture object
  * @class Texture
  * @inherits osg.StateAttribute
@@ -102,14 +102,14 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
         if (typeof(value) === "string") {
             this._wrapS = osg.Texture[value];
         } else {
-            this._wrapS = value; 
+            this._wrapS = value;
         }
     },
-    setWrapT: function(value) { 
+    setWrapT: function(value) {
         if (typeof(value) === "string") {
             this._wrapT = osg.Texture[value];
         } else {
-            this._wrapT = value; 
+            this._wrapT = value;
         }
     },
 
@@ -122,21 +122,21 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
         if (typeof(value) === "string") {
             this._minFilter = osg.Texture[value];
         } else {
-            this._minFilter = value; 
+            this._minFilter = value;
         }
     },
-    setMagFilter: function(value) { 
+    setMagFilter: function(value) {
         if (typeof(value) === "string") {
             this._magFilter = osg.Texture[value];
         } else {
-            this._magFilter = value; 
+            this._magFilter = value;
         }
     },
 
     setImage: function(img, imageFormat) {
 
         var image = img;
-        if ( img instanceof Image || 
+        if ( img instanceof Image ||
              img instanceof HTMLCanvasElement ||
              img instanceof Uint8Array ) {
             image = new osg.Image(img);
@@ -162,7 +162,7 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
         if (typeof(value) === "string") {
             this._type = osg.Texture[value];
         } else {
-            this._type = value; 
+            this._type = value;
         }
     },
     setUnrefImageDataAfterApply: function(bool) {
@@ -222,24 +222,24 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
 
                     var imgWidth = image.getWidth() || this._textureWidth;
                     var imgHeight = image.getHeight() || this._textureHeight;
-                    
+
                     this.setTextureSize(imgWidth, imgHeight);
                     if ( image.isTypedArray() ) {
-                        gl.texImage2D(this._textureTarget, 
-                                      0, 
-                                      this._internalFormat, 
-                                      this._textureWidth, 
-                                      this._textureHeight, 
-                                      0, 
-                                      this._internalFormat, 
-                                      this._type, 
+                        gl.texImage2D(this._textureTarget,
+                                      0,
+                                      this._internalFormat,
+                                      this._textureWidth,
+                                      this._textureHeight,
+                                      0,
+                                      this._internalFormat,
+                                      this._type,
                                       this._image.getImage());
                     } else {
-                        gl.texImage2D(this._textureTarget, 
-                                      0, 
-                                      this._internalFormat, 
-                                      this._imageFormat, 
-                                      this._type, 
+                        gl.texImage2D(this._textureTarget,
+                                      0,
+                                      this._internalFormat,
+                                      this._imageFormat,
+                                      this._type,
                                       image.getImage());
                     }
 
@@ -279,7 +279,7 @@ osg.Texture.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttri
 
     */
     setShaderGeneratorFunction: function(
-        /**Function*/ injectionFunction, 
+        /**Function*/ injectionFunction,
         /**osg.ShaderGeneratorType*/ mode) {
         this[mode] = injectionFunction;
     },

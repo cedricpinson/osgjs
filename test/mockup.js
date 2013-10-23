@@ -97,9 +97,7 @@ function createFakeRenderer() {
              clear: function() {},
              viewport: function() {},
              cullFace: function() {},
-             texImage2D: function() {}
+             texImage2D: function() {},
+             texParameteri: function() {}
            };
 }
-
-
-

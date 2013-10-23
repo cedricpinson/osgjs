@@ -1,4 +1,4 @@
-/** 
+/**
  * StateAttribute base class
  * @class StateAttribute
  */
@@ -8,7 +8,7 @@ osg.StateAttribute = function() {
 };
 
 /** @lends osg.StateAttribute.prototype */
-osg.StateAttribute.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Object.prototype, {
+osg.StateAttribute.prototype = osg.objectLibraryClass( osg.objectInherit(osg.Object.prototype, {
     isDirty: function() { return this._dirty; },
     dirty: function() { this._dirty = true; },
     setDirty: function(dirty) { this._dirty = dirty; }
