@@ -9,6 +9,7 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
         'rotate': {
             dtx: -1.2*1.2,
             dty: -0.9*1.2,
+            dtz: -0.1,
             delay: 0.05,
             method: 'getRotateInterpolator'
         },
@@ -131,9 +132,10 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
                 return;
             }
 
-            var dtx,dty;
+            var dtx,dty,dtz;
             dtx = ModeConfig[mode].dtx;
             dty = ModeConfig[mode].dty;
+            dtz = ModeConfig[mode].dtz;
 
             this._motion[0] += deltaFrame[0]*dtx;
             this._motion[1] += deltaFrame[1]*dty;
@@ -160,6 +162,12 @@ osgGA.getOrbitLeapMotionControllerClass = function(module) {
                 }
                 this.hands_distance_old = hands_distance;
             } else {
+                if (mode === "rotate") {
+                    dist = zoom._target[0];
+                    dist += deltaFrame[2]*dtz;
+                    dist = Math.max(dist,0.01);
+                    zoom.setTarget(dist);
+                }
                 this._manipulator[method]().addTarget(this._motion[0], this._motion[1]);
             }
             
