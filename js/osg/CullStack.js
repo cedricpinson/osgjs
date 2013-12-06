@@ -7,6 +7,8 @@ osg.CullStack = function() {
 };
 
 osg.CullStack.prototype = {
+    getProjectionMatrixStack: function() { return this._projectionMatrixStack; },
+    getModelviewMatrixStack: function() { return this._modelviewMatrixStack; },
     getCurrentProjectionMatrix: function() {
         return this._projectionMatrixStack[this._projectionMatrixStack.length-1];
     },
@@ -33,7 +35,7 @@ osg.CullStack.prototype = {
         this._modelviewMatrixStack.push(matrix);
 
         var lookVector = this.getLookVectorLocal();
-        this._bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);        
+        this._bbCornerFar = (lookVector[0]>=0?1:0) | (lookVector[1]>=0?2:0) | (lookVector[2]>=0?4:0);
         this._bbCornerNear = (~this._bbCornerFar)&7;
     },
     popModelviewMatrix: function () {
