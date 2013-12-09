@@ -8,7 +8,7 @@ define( [
      * DrawArrayLengths manage rendering primitives
      * @class DrawArrayLengths
      */
-    DrawArrayLengths = function ( mode, first, array ) {
+    var DrawArrayLengths = function ( mode, first, array ) {
         this._mode = mode;
         this._first = first;
         this._arrayLengths = array.slice( 0 );

@@ -47,7 +47,7 @@ define( [
    
  */
 
-    Composer = function () {
+    var Composer = function () {
         Node.call( this );
         this._stack = [];
         this._renderToScreen = false;

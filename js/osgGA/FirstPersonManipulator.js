@@ -19,7 +19,7 @@ define( [
      *  FirstPersonManipulator
      *  @class
      */
-    FirstPersonManipulator = function () {
+    var FirstPersonManipulator = function () {
         Manipulator.call( this );
         this.init();
     };

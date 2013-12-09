@@ -28,7 +28,7 @@ define( [
      *
      */
 
-    FloatLerpChannel = function ( keys, target ) {
+    var FloatLerpChannel = function ( keys, target ) {
         var sampler = new Sampler();
         if ( !keys ) {
             keys = [];

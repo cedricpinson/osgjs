@@ -15,7 +15,7 @@ define( [
      *  Light
      *  @class Light
      */
-    Light = function ( lightNumber ) {
+    var Light = function ( lightNumber ) {
         StateAttribute.call( this );
 
         if ( lightNumber === undefined ) {

@@ -13,7 +13,7 @@ define( [
      *  Cedric Pinson <cedric.pinson@plopbyte.com>
      */
 
-    IntersectVisitor = function () {
+    var IntersectVisitor = function () {
         NodeVisitor.call( this );
         this.matrix = [];
         this.hits = [];

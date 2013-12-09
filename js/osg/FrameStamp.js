@@ -1,34 +1,34 @@
 /*global define */
 
 define( [
-	'osg/osg'
+    'osg/osg'
 ], function ( osg ) {
 
-	// #FIXME use obj.objectLibraryClass ? or prototype?
-	FrameStamp = function () {
-		var frame = 0;
-		var startSimulation = 0.0;
-		var currentSimulation = 0.0;
+    // #FIXME use obj.objectLibraryClass ? or prototype?
+    var FrameStamp = function () {
+        var frame = 0;
+        var startSimulation = 0.0;
+        var currentSimulation = 0.0;
 
-		this.setReferenceTime = function ( s ) {
-			startSimulation = s;
-		};
-		this.setSimulationTime = function ( s ) {
-			currentSimulation = s;
-		};
-		this.getReferenceTime = function () {
-			return startSimulation;
-		};
-		this.getSimulationTime = function () {
-			return currentSimulation;
-		};
-		this.setFrameNumber = function ( n ) {
-			frame = n;
-		};
-		this.getFrameNumber = function () {
-			return frame;
-		};
-	};
+        this.setReferenceTime = function ( s ) {
+            startSimulation = s;
+        };
+        this.setSimulationTime = function ( s ) {
+            currentSimulation = s;
+        };
+        this.getReferenceTime = function () {
+            return startSimulation;
+        };
+        this.getSimulationTime = function () {
+            return currentSimulation;
+        };
+        this.setFrameNumber = function ( n ) {
+            frame = n;
+        };
+        this.getFrameNumber = function () {
+            return frame;
+        };
+    };
 
-	return FrameStamp;
+    return FrameStamp;
 } );

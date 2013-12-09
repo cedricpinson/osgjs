@@ -12,7 +12,7 @@ define( [
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
      * @class CullVisitor
      */
-    CullVisitor = function () {
+    var CullVisitor = function () {
         NodeVisitor.call( this );
         CullSettings.call( this );
         CullStack.call( this );

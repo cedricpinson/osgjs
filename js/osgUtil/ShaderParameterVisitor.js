@@ -226,7 +226,7 @@ define( [
     };
 
 
-    ParameterVisitor = function () {
+    var ParameterVisitor = function () {
         NodeVisitor.call( this );
 
         this.arraySlider = new ArraySlider();

@@ -9,7 +9,7 @@ define( [
      * FrameBufferObject manage fbo / rtt
      * @class FrameBufferObject
      */
-    FrameBufferObject = function () {
+    var FrameBufferObject = function () {
         StateAttribute.call( this );
         this.fbo = undefined;
         this.attachments = [];

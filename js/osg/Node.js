@@ -15,7 +15,7 @@ define( [
      *  Node that can contains child node
      *  @class Node
      */
-    Node = function () {
+    var Node = function () {
         Object.call( this );
 
         this.children = [];

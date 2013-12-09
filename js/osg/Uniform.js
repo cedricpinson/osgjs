@@ -9,7 +9,7 @@ define( [
      * Uniform manage variable used in glsl shader.
      * @class Uniform
      */
-    Uniform = function () {
+    var Uniform = function () {
         this.transpose = false;
         this._dirty = true;
         this.name = '';

@@ -11,7 +11,7 @@ define( [
      * @class Camera
      * @inherits Transform CullSettings
      */
-    Camera = function () {
+    var Camera = function () {
         Transform.call( this );
         CullSettings.call( this );
 

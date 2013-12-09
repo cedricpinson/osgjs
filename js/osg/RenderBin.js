@@ -6,7 +6,7 @@ define( [
     'osg/Matrix'
 ], function ( osg, StateGraph, Matrix ) {
 
-    RenderBin = function () {
+    var RenderBin = function () {
         this._leafs = [];
         this.positionedAttribute = [];
         this._renderStage = undefined;

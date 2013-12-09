@@ -26,12 +26,12 @@ define( [
      */
 
 
-     // #FIXME use osgAnimation name?
+    // #FIXME use osgAnimation name?
     /** 
      *  Animation
      *  @class Animation
      */
-    Animation = function () {
+    var Animation = function () {
         Object.call( this );
         this._channels = [];
     };

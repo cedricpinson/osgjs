@@ -25,7 +25,7 @@ define( [
      *
      */
 
-    FloatTarget = function ( value ) {
+    var FloatTarget = function ( value ) {
         Target.call( this );
         this._target = [ value ];
     };

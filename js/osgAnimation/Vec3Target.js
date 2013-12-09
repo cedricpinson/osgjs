@@ -26,7 +26,7 @@ define( [
      *
      */
 
-    Vec3Target = function () {
+    var Vec3Target = function () {
         Target.call( this );
         this._target = [ 0, 0, 0 ];
     };

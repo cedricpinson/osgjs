@@ -9,7 +9,7 @@ define( [
      *  Manage BlendColor attribute
      *  @class BlendColor
      */
-    BlendColor = function ( color ) {
+    var BlendColor = function ( color ) {
         StateAttribute.call( this );
         this._constantColor = new Array( 4 );
         this._constantColor[ 0 ] = this._constantColor[ 1 ] = this._constantColor[ 2 ] = this._constantColor[ 3 ] = 1.0;

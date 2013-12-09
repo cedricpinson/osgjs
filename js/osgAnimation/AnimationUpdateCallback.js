@@ -29,7 +29,7 @@ define( [
      *  AnimationUpdateCallback
      *  @class AnimationUpdateCallback
      */
-    AnimationUpdateCallback = function () {};
+    var AnimationUpdateCallback = function () {};
 
     /** @lends AnimationUpdateCallback.prototype */
     AnimationUpdateCallback.prototype = osg.objectInehrit( Object.prototype, {

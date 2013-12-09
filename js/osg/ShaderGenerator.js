@@ -7,7 +7,7 @@ define( [
     'osg/ShaderGeneratorType'
 ], function ( osg, Program, Shader, ShaderGeneratorType ) {
 
-    ShaderGenerator = function () {
+    var ShaderGenerator = function () {
         this.cache = [];
     };
     ShaderGenerator.prototype = {

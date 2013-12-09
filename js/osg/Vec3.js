@@ -3,7 +3,7 @@
 define( [], function () {
 
     /** @class Vec3 Operations */
-    Vec3 = {
+    var Vec3 = {
         init: function ( a ) {
             a[ 0 ] = 0.0;
             a[ 1 ] = 0.0;

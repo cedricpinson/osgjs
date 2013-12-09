@@ -25,7 +25,7 @@ define( [], function () {
     /** 
      *  Interpolator provide interpolation function to sampler
      */
-    Vec3LerpInterpolator = function ( keys, t, result ) {
+    var Vec3LerpInterpolator = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];

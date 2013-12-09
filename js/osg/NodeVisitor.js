@@ -4,7 +4,7 @@ define( [
     'osg/osg'
 ], function ( osg ) {
 
-    NodeVisitor = function ( traversalMode ) {
+    var NodeVisitor = function ( traversalMode ) {
         this.traversalMask = ~0x0;
         this.nodeMaskOverride = 0;
         this.traversalMode = traversalMode;

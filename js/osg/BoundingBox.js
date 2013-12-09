@@ -4,7 +4,7 @@ define( [
     'osg/osg'
 ], function ( osg ) {
 
-    BoundingBox = function () {
+    var BoundingBox = function () {
         this.init();
     };
     BoundingBox.prototype = osg.objectLibraryClass( {

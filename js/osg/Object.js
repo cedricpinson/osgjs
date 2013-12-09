@@ -11,7 +11,7 @@ define( [
      *  Object class
      *  @class Object
      */
-    Object = function () {
+    var Object = function () {
         this._name = undefined;
         this._userdata = undefined;
         this._instanceID = Object.getInstanceID();

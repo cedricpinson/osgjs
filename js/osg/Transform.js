@@ -15,7 +15,7 @@ define( [
      * @class Transform
      * @inherits Node
      */
-    Transform = function () {
+    var Transform = function () {
         Node.call( this );
         this.referenceFrame = Transform.RELATIVE_RF;
     };

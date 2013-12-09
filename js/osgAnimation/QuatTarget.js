@@ -26,7 +26,7 @@ define( [
      *
      */
 
-    QuatTarget = function () {
+    var QuatTarget = function () {
         Target.call( this );
         this._target = [];
         Quat.makeIdentity( this._target );

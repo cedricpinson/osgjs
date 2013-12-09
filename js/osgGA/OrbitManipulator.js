@@ -16,7 +16,7 @@ define( [
      *  OrbitManipulator
      *  @class
      */
-    OrbitManipulator = function () {
+    var OrbitManipulator = function () {
         Manipulator.call( this );
         this._tmpInverse = Matrix.makeIdentity( [] );
         this._tmpHomePosition = Vec3.init( [] );

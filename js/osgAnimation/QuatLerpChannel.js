@@ -29,7 +29,7 @@ define( [
      *
      */
 
-    QuatLerpChannel = function ( keys, target ) {
+    var QuatLerpChannel = function ( keys, target ) {
         var sampler = new Sampler();
         if ( !keys ) {
             keys = [];

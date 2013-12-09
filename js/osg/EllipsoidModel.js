@@ -6,7 +6,7 @@ define( [
     'osg/Vec3'
 ], function ( osg, Matrix, Vec3 ) {
 
-    EllipsoidModel = function () {
+    var EllipsoidModel = function () {
         this._radiusEquator = EllipsoidModel.WGS_84_RADIUS_EQUATOR;
         this._radiusPolar = EllipsoidModel.WGS_84_RADIUS_POLAR;
         this.computeCoefficients();

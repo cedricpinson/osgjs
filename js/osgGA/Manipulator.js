@@ -13,7 +13,7 @@ define( [
      *  Manipulator
      *  @class
      */
-    Manipulator = function () {
+    var Manipulator = function () {
         this._controllerList = {};
         this._inverseMatrix = new Array( 16 );
         Matrix.makeIdentity( this._inverseMatrix );

@@ -9,7 +9,7 @@ define( [
     'osg/ShaderGenerator'
 ], function ( osg, StateAttribute, Stack, Uniform, Matrix, ShaderGenerator ) {
 
-    State = function () {
+    var State = function () {
         this._graphicContext = undefined;
 
         this.currentVBO = null;
@@ -46,7 +46,7 @@ define( [
 
     State.prototype = {
 
-    // #FIXME use obj.objectLibraryClass ?
+        // #FIXME use obj.objectLibraryClass ?
         setGraphicContext: function ( graphicContext ) {
             this._graphicContext = graphicContext;
         },

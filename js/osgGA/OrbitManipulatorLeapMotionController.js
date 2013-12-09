@@ -1,3 +1,5 @@
+// #FIXME fix it with define
+
 osgGA.getOrbitLeapMotionControllerClass = function(module) {
 
     var LeapMotionController = function(manipulator) {

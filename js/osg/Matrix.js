@@ -8,7 +8,7 @@ define( [
 ], function ( osg, Vec3, Vec4, Quat ) {
 
     /** @class Matrix Operations */
-    Matrix = {
+    var Matrix = {
         _tmp0: [],
         _tmp1: [],
         valid: function ( matrix ) {

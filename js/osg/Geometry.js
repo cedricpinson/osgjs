@@ -12,7 +12,7 @@ define( [
      * Geometry manage array and primitives to draw a geometry.
      * @class Geometry
      */
-    Geometry = function () {
+    var Geometry = function () {
         Node.call( this );
         this.primitives = [];
         this.attributes = {};

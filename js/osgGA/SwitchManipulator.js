@@ -13,7 +13,7 @@ define( [
      *  OrbitManipulator
      *  @class
      */
-    SwitchManipulator = function () {
+    var SwitchManipulator = function () {
         this._manipulatorList = [];
         this._currentManipulator = undefined;
     };

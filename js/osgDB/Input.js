@@ -10,7 +10,7 @@ define( [
     'osg/DrawElements'
 ], function ( osg, Q, osgDB, Image, BufferArray, PrimitiveSet, DrawElements ) {
 
-    Input = function ( json, identifier ) {
+    var Input = function ( json, identifier ) {
         this._json = json;
         var map = identifier;
         if ( map === undefined ) {

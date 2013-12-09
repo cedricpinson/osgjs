@@ -32,7 +32,7 @@ define( [
      *  StackedQuaternion
      *  @class StackedQuaternion
      */
-    StackedQuaternion = function ( name, quat ) {
+    var StackedQuaternion = function ( name, quat ) {
         Object.call( this );
         if ( !quat ) {
             quat = [ 0, 0, 0, 1 ];

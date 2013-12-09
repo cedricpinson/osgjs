@@ -8,7 +8,7 @@ define( [
      * Shader manage shader for vertex and fragment, you need both to create a glsl program.
      * @class Shader
      */
-    Shader = function ( type, text ) {
+    var Shader = function ( type, text ) {
 
         var t = type;
         if ( typeof ( type ) === 'string' ) {

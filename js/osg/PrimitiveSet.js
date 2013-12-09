@@ -2,7 +2,7 @@
 
 define( [], function () {
 
-    PrimitiveSet = {};
+    var PrimitiveSet = {};
     PrimitiveSet.POINTS = 0x0000;
     PrimitiveSet.LINES = 0x0001;
     PrimitiveSet.LINE_LOOP = 0x0002;

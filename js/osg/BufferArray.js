@@ -10,7 +10,7 @@ define( [
      * BufferArray manage vertex / normal / ... array used by webgl.
      * @class BufferArray
      */
-    BufferArray = function ( type, elements, itemSize ) {
+    var BufferArray = function ( type, elements, itemSize ) {
 
         // maybe could inherit from Object
         this._instanceID = Object.getInstanceID();

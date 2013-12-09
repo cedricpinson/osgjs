@@ -8,7 +8,7 @@ define( [
      * DrawArrays manage rendering primitives
      * @class DrawArrays
      */
-    DrawArrays = function ( mode, first, count ) {
+    var DrawArrays = function ( mode, first, count ) {
         this.mode = mode;
         this.first = first;
         this.count = count;

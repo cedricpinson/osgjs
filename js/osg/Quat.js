@@ -3,7 +3,7 @@
 define( [], function () {
 
     /** @class Quaternion Operations */
-    Quat = {
+    var Quat = {
         copy: function ( s, d ) {
             d[ 0 ] = s[ 0 ];
             d[ 1 ] = s[ 1 ];

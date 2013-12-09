@@ -14,7 +14,7 @@ define( [
 ], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light ) {
 
     /** -*- compile-command: "jslint-cli View.js" -*- */
-    View = function () {
+    var View = function () {
         this._graphicContext = undefined;
         this._camera = new Camera();
         this._scene = new Node();

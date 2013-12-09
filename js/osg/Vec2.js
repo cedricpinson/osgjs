@@ -3,7 +3,7 @@
 define( [], function () {
 
     /** @class Vec2 Operations */
-    Vec2 = {
+    var Vec2 = {
         copy: function ( a, r ) {
             r[ 0 ] = a[ 0 ];
             r[ 1 ] = a[ 1 ];

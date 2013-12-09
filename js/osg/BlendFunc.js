@@ -9,7 +9,7 @@ define( [
      *  Manage Blending mode
      *  @class BlendFunc
      */
-    BlendFunc = function ( sourceRGB, destinationRGB, sourceAlpha, destinationAlpha ) {
+    var BlendFunc = function ( sourceRGB, destinationRGB, sourceAlpha, destinationAlpha ) {
         StateAttribute.call( this );
         this._sourceFactor = BlendFunc.ONE;
         this._destinationFactor = BlendFunc.ZERO;

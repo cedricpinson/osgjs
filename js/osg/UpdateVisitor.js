@@ -6,7 +6,7 @@ define( [
     'osg/FrameStamp'
 ], function ( osg, NodeVisitor, FrameStamp ) {
 
-    UpdateVisitor = function () {
+    var UpdateVisitor = function () {
         NodeVisitor.call( this );
         var framestamp = new FrameStamp();
         this.getFrameStamp = function () {

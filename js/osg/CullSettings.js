@@ -4,7 +4,7 @@ define( [
     'osg/osg'
 ], function ( osg ) {
 
-    CullSettings = function () {
+    var CullSettings = function () {
         this._computeNearFar = true;
         this._nearFarRatio = 0.005;
 

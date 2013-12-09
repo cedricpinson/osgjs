@@ -26,7 +26,7 @@ define( [], function ( osg ) {
      *  Target keep internal data of element to animate, and some function to merge them
      *  @class Target
      */
-    Target = function () {
+    var Target = function () {
         this._weight = 0;
         this._priorityWeight = 0;
         this._count = 0;
@@ -34,7 +34,7 @@ define( [], function ( osg ) {
         this._target = undefined;
     };
 
-// #FIXME blalba osg library class ?
+    // #FIXME blalba osg library class ?
 
     Target.prototype = {
         reset: function () {

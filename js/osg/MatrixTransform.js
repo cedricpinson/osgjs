@@ -12,7 +12,7 @@ define( [
      *  MatrixTransform is a Transform Node that can be customized with user matrix
      *  @class MatrixTransform
      */
-    MatrixTransform = function () {
+    var MatrixTransform = function () {
         Transform.call( this );
         this.matrix = Matrix.makeIdentity( [] );
     };

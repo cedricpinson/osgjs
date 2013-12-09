@@ -10,7 +10,7 @@ define( [
      * StateSet encapsulate StateAttribute
      * @class StateSet
      */
-    StateSet = function () {
+    var StateSet = function () {
         Object.call( this );
         this.id = StateSet.instance++;
         this.attributeMap = {};

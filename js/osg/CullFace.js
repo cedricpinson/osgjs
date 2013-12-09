@@ -9,7 +9,7 @@ define( [
      *  Manage CullFace attribute
      *  @class CullFace
      */
-    CullFace = function ( mode ) {
+    var CullFace = function ( mode ) {
         StateAttribute.call( this );
         if ( mode === undefined ) {
             mode = CullFace.BACK;

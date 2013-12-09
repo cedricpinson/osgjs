@@ -7,7 +7,7 @@ define( [
     'osg/Viewport'
 ], function ( osg, StateAttribute, Matrix, Viewport ) {
 
-    Viewport = function ( x, y, w, h ) {
+    var Viewport = function ( x, y, w, h ) {
         StateAttribute.call( this );
 
         if ( x === undefined ) {

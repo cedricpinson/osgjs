@@ -30,7 +30,7 @@ define( [
      *  BasicAnimationManager
      *  @class BasicAnimationManager
      */
-    BasicAnimationManager = function () {
+    var BasicAnimationManager = function () {
         Object.call( this );
         this._animations = {};
 

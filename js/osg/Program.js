@@ -9,7 +9,7 @@ define( [
      * Program encapsulate an vertex and fragment shader
      * @class Program
      */
-    Program = function ( vShader, fShader ) {
+    var Program = function ( vShader, fShader ) {
         StateAttribute.call( this );
 
         this.program = null;

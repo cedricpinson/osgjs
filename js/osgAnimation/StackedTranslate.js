@@ -33,7 +33,7 @@ define( [
      *  StackedTranslate
      *  @class StackedTranslate
      */
-    StackedTranslate = function ( name, translate ) {
+    var StackedTranslate = function ( name, translate ) {
         Object.call( this );
         if ( !translate ) {
             translate = [ 0, 0, 0 ];

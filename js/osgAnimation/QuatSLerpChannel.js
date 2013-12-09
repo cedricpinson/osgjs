@@ -27,7 +27,7 @@ define( [
      *
      */
 
-    QuatSlerpChannel = function ( keys, target ) {
+    var QuatSlerpChannel = function ( keys, target ) {
         QuatLerpChannel.call( this, keys, target );
         this.getSampler().setInterpolator( QuatSlerpInterpolator );
     };

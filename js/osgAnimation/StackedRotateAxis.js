@@ -34,7 +34,7 @@ define( [
      *  StackedRotateAxis
      *  @class StackedRotateAxis
      */
-    StackedRotateAxis = function ( name, axis, angle ) {
+    var StackedRotateAxis = function ( name, axis, angle ) {
         Object.call( this );
         if ( !axis ) {
             axis = [ 1, 0, 0 ];

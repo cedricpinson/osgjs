@@ -29,7 +29,7 @@ define( [
      *
      */
 
-    Vec3LerpChannel = function ( keys, target ) {
+    var Vec3LerpChannel = function ( keys, target ) {
         var sampler = new Sampler();
         if ( !keys ) {
             keys = [];

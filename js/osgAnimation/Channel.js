@@ -29,7 +29,7 @@ define( [
      *  Channel is responsible to interpolate keys
      *  @class Channel
      */
-    Channel = function ( sampler, target ) {
+    var Channel = function ( sampler, target ) {
         Object.call( this );
         this._sampler = sampler;
         this._target = target;

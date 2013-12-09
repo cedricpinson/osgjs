@@ -29,7 +29,7 @@ define( [
      *  Sampler is responsible to interpolate keys
      *  @class Sampler
      */
-    Sampler = function ( keys, interpolator ) {
+    var Sampler = function ( keys, interpolator ) {
         if ( !keys ) {
             keys = [];
         }

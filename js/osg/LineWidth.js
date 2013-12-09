@@ -5,7 +5,7 @@ define( [
     'osg/StateAttribute',
 ], function ( osg, StateAttribute ) {
 
-    LineWidth = function ( lineWidth ) {
+    var LineWidth = function ( lineWidth ) {
         StateAttribute.call( this );
         this.lineWidth = 1.0;
         if ( lineWidth !== undefined ) {

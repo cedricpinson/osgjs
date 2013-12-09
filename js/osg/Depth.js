@@ -2,9 +2,10 @@
 
 define( [
     'osg/osg',
-    'osg/StateAttribute'], function ( osg, StateAttribute, Depth) {
+    'osg/StateAttribute'
+], function ( osg, StateAttribute, Depth ) {
 
-    Depth = function ( func, near, far, writeMask ) {
+    var Depth = function ( func, near, far, writeMask ) {
         StateAttribute.call( this );
 
         this._func = Depth.LESS;

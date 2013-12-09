@@ -5,7 +5,7 @@ define( [
 ], function ( osg ) {
 
 
-    StateGraph = function () {
+    var StateGraph = function () {
         this.depth = 0;
         this.children = {};
         this.children.keys = [];

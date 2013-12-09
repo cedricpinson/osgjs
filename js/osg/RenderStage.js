@@ -17,7 +17,7 @@ define( [
      * 'pre' rendering stages are used for advanced rendering techniques
      * like multistage pixel shading or impostors.
      */
-    RenderStage = function () {
+    var RenderStage = function () {
         RenderBin.call( this );
         this.positionedAttribute = [];
         this.clearDepth = 1.0;

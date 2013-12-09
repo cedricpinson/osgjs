@@ -30,7 +30,7 @@ define( [
      *  UpdateMatrixTransform
      *  @class UpdateMatrixTransform
      */
-    UpdateMatrixTransform = function () {
+    var UpdateMatrixTransform = function () {
         AnimationUpdateCallback.call( this );
         this._stackedTransforms = [];
     };

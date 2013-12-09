@@ -9,7 +9,7 @@ define( [
      * DrawElements manage rendering of indexed primitives
      * @class DrawElements
      */
-    DrawElements = function ( mode, indices ) {
+    var DrawElements = function ( mode, indices ) {
         this.mode = PrimitiveSet.POINTS;
         if ( mode !== undefined ) {
             this.mode = mode;
