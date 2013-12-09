@@ -1,3 +1,5 @@
+// #FIXME fix it with define
+
 osgGA.getOrbitGamePadControllerClass = function(module) {
 
     var Controller = function(manipulator) {

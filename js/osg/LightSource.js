@@ -1,17 +1,31 @@
-/** -*- compile-command: "jslint-cli Node.js" -*- */
+/*global define */
 
-/** 
- *  LightSource is a positioned node to use with StateAttribute Light
- *  @class LightSource
- */
-osg.LightSource = function() {
-    osg.Node.call(this);
-    this._light = undefined;
-};
+define( [
+	'osg/osg',
+	'osg/Node',
+], function ( osg, Node ) {
 
-/** @lends osg.LightSource.prototype */
-osg.LightSource.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.Node.prototype, {
-    getLight: function() { return this._light; },
-    setLight: function(light) { this._light = light; }
-}), "osg","LightSource");
-osg.LightSource.prototype.objectType = osg.objectType.generate("LightSource");
+	/** -*- compile-command: 'jslint-cli Node.js' -*- */
+
+	/** 
+	 *  LightSource is a positioned node to use with StateAttribute Light
+	 *  @class LightSource
+	 */
+	LightSource = function () {
+		Node.call( this );
+		this._light = undefined;
+	};
+
+	/** @lends LightSource.prototype */
+	LightSource.prototype = osg.objectLibraryClass( osg.objectInehrit( Node.prototype, {
+		getLight: function () {
+			return this._light;
+		},
+		setLight: function ( light ) {
+			this._light = light;
+		}
+	} ), 'osg', 'LightSource' );
+	LightSource.prototype.objectType = osg.objectType.generate( 'LightSource' );
+
+	return LightSource;
+} );

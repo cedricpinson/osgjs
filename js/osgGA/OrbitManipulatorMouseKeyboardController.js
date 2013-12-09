@@ -1,3 +1,5 @@
+// #FIXME fix it with define
+
 osgGA.getOrbitStandardMouseKeyboardControllerClass = function() {
 
     var Mode = {

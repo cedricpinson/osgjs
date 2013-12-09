@@ -1,3 +1,5 @@
+// #FIXME fix it with define
+
 osgGA.getOrbitHammerControllerClass = function() {
 
     var Controller = function(manipulator) {

@@ -1,32 +1,51 @@
-/** -*- compile-command: "jslint-cli Object.js" -*- */
+/*global define */
 
-/**
- *  Object class
- *  @class Object
- */
-osg.Object = function () {
-    this._name = undefined;
-    this._userdata = undefined;
-    this._instanceID = osg.Object.getInstanceID();
-};
+define( [
+    'osg/osg',
+    'osg/Object'
+], function ( osg, Object ) {
 
-/** @lends osg.Object.prototype */
-osg.Object.prototype = osg.objectLibraryClass(
-    {
-        getInstanceID: function() { return this._instanceID; },
-        setName: function(name) { this._name = name; },
-        getName: function() { return this._name; },
-        setUserData: function(data) { this._userdata = data; },
-        getUserData: function() { return this._userdata; }
-    },
-    "osg","Object");
+    /** -*- compile-command: 'jslint-cli Object.js' -*- */
 
-
-// get an instanceID for each object
-(function() {
-    var instanceID = 0;
-    osg.Object.getInstanceID = function() {
-        instanceID += 1;
-        return instanceID;
+    /**
+     *  Object class
+     *  @class Object
+     */
+    Object = function () {
+        this._name = undefined;
+        this._userdata = undefined;
+        this._instanceID = Object.getInstanceID();
     };
-})();
+
+    /** @lends Object.prototype */
+    Object.prototype = osg.objectLibraryClass( {
+            getInstanceID: function () {
+                return this._instanceID;
+            },
+            setName: function ( name ) {
+                this._name = name;
+            },
+            getName: function () {
+                return this._name;
+            },
+            setUserData: function ( data ) {
+                this._userdata = data;
+            },
+            getUserData: function () {
+                return this._userdata;
+            }
+        },
+        'osg', 'Object' );
+
+
+    // get an instanceID for each object
+    ( function () {
+        var instanceID = 0;
+        Object.getInstanceID = function () {
+            instanceID += 1;
+            return instanceID;
+        };
+    } )();
+
+    return Object;
+} );

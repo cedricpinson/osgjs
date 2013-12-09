@@ -1,3 +1,11 @@
+/*global define */
+
+define( [
+    'osg/osg',
+    'vendors/Q',
+    'osgWrappers/serializers/osg'
+], function ( osg, Q , osgSerializer) {
+
 /** -*- compile-command: "jslint-cli osgAnimation.js" -*-
  *
  *  Copyright (C) 2010-2011 Cedric Pinson
@@ -18,8 +26,7 @@
  *
  */
 
-osgDB.ObjectWrapper.serializers.osgAnimation = {};
-osgDB.ObjectWrapper.serializers.osgAnimation.Animation = function(input, animation) {
+var Animation = function(input, animation) {
     var jsonObj = input.getJSON();
     // check
     // 
@@ -37,7 +44,7 @@ osgDB.ObjectWrapper.serializers.osgAnimation.Animation = function(input, animati
         return;
     }
 
-    if (!osgDB.ObjectWrapper.serializers.osg.Object(input, animation)) {
+    if (!osgSerializer.Object(input, animation)) {
         return;
     }
 
@@ -254,3 +261,20 @@ osgDB.ObjectWrapper.serializers.osgAnimation.StackedRotateAxis = function(input,
 
     return st;
 };
+
+    return {
+        Object: Object,
+        Node: Node,
+        StateSet: StateSet,
+        Material: Material,
+        BlendFunc: BlendFunc,
+        CullFace: CullFace,
+        BlendColor: BlendColor,
+        Light: Light,
+        Texture: Texture,
+        Projection: Projection,
+        MatrixTransform: MatrixTransform,
+        LightSource: LightSource,
+        Geometry: Geometry
+    };
+} );

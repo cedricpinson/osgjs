@@ -1,9 +1,24 @@
-osg.Projection = function () {
-    osg.Node.call(this);
-    this.projection = osg.Matrix.makeIdentity([]);
-};
-osg.Projection.prototype = osg.objectInehrit(osg.Node.prototype, {
-    getProjectionMatrix: function() { return this.projection; },
-    setProjectionMatrix: function(m) { this.projection = m; }
-});
-osg.Projection.prototype.objectType = osg.objectType.generate("Projection");
+/*global define */
+
+define( [
+	'osg/osg',
+	'osg/Node',
+	'osg/Matrix'
+], function ( osg, Node, Matrix ) {
+
+	Projection = function () {
+		Node.call( this );
+		this.projection = Matrix.makeIdentity( [] );
+	};
+	Projection.prototype = osg.objectInehrit( Node.prototype, {
+		getProjectionMatrix: function () {
+			return this.projection;
+		},
+		setProjectionMatrix: function ( m ) {
+			this.projection = m;
+		}
+	} );
+	Projection.prototype.objectType = osg.objectType.generate( 'Projection' );
+
+	return Projection;
+} );

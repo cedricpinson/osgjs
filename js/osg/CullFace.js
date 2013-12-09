@@ -1,41 +1,59 @@
-/** 
- *  Manage CullFace attribute
- *  @class CullFace
- */
-osg.CullFace = function (mode) {
-    osg.StateAttribute.call(this);
-    if (mode === undefined) {
-        mode = osg.CullFace.BACK;
-    }
-    this.setMode(mode);
-};
+/*global define */
 
-osg.CullFace.DISABLE        = 0x0;
-osg.CullFace.FRONT          = 0x0404;
-osg.CullFace.BACK           = 0x0405;
-osg.CullFace.FRONT_AND_BACK = 0x0408;
+define( [
+    'osg/osg',
+    'osg/StateAttribute'
+], function ( osg, StateAttribute ) {
 
-/** @lends osg.CullFace.prototype */
-osg.CullFace.prototype = osg.objectLibraryClass( osg.objectInehrit(osg.StateAttribute.prototype, {
-    attributeType: "CullFace",
-    cloneType: function() {return new osg.CullFace(); },
-    getType: function() { return this.attributeType;},
-    getTypeMember: function() { return this.attributeType;},
-    setMode: function(mode) {
-        if ( typeof mode === 'string') {
-            mode = osg.CullFace[mode];
+    /** 
+     *  Manage CullFace attribute
+     *  @class CullFace
+     */
+    CullFace = function ( mode ) {
+        StateAttribute.call( this );
+        if ( mode === undefined ) {
+            mode = CullFace.BACK;
         }
-        this._mode = mode;
-    },
-    getMode: function() { return this._mode; },
-    apply: function(state) {
-        var gl = state.getGraphicContext();
-        if (this._mode === osg.CullFace.DISABLE) {
-            gl.disable(gl.CULL_FACE);
-        } else {
-            gl.enable(gl.CULL_FACE);
-            gl.cullFace(this._mode);
+        this.setMode( mode );
+    };
+
+    CullFace.DISABLE = 0x0;
+    CullFace.FRONT = 0x0404;
+    CullFace.BACK = 0x0405;
+    CullFace.FRONT_AND_BACK = 0x0408;
+
+    /** @lends CullFace.prototype */
+    CullFace.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+        attributeType: 'CullFace',
+        cloneType: function () {
+            return new CullFace();
+        },
+        getType: function () {
+            return this.attributeType;
+        },
+        getTypeMember: function () {
+            return this.attributeType;
+        },
+        setMode: function ( mode ) {
+            if ( typeof mode === 'string' ) {
+                mode = CullFace[ mode ];
+            }
+            this._mode = mode;
+        },
+        getMode: function () {
+            return this._mode;
+        },
+        apply: function ( state ) {
+            var gl = state.getGraphicContext();
+            if ( this._mode === CullFace.DISABLE ) {
+                gl.disable( gl.CULL_FACE );
+            } else {
+                gl.enable( gl.CULL_FACE );
+                gl.cullFace( this._mode );
+            }
+            this._dirty = false;
         }
-        this._dirty = false;
-    }
-}), "osg", "CullFace");
+    } ), 'osg', 'CullFace' );
+
+    return CullFace;
+} );

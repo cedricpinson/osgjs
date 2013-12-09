@@ -1,30 +1,38 @@
-/** -*- compile-command: "jslint-cli Manipulator.js" -*-
- * Authors:
- *  Cedric Pinson <cedric.pinson@plopbyte.com>
- */
+/*global define */
 
-/** 
- *  Manipulator
- *  @class
- */
-osgGA.Manipulator = function() {
-    this._controllerList = {};
-    this._inverseMatrix = new Array(16);
-    osg.Matrix.makeIdentity(this._inverseMatrix);
-};
+define( [
+    'osg/Matrix'
+], function ( Matrix ) {
 
-/** @lends osgGA.Manipulator.prototype */
-osgGA.Manipulator.prototype = {
-    
-    // eg: var currentTime = nv.getFrameStamp().getSimulationTime();
-    update: function(nv) {
-    },
+    /** -*- compile-command: "jslint-cli Manipulator.js" -*-
+     * Authors:
+     *  Cedric Pinson <cedric.pinson@plopbyte.com>
+     */
 
-    getInverseMatrix: function () { 
-        return this._inverseMatrix;
-    },
+    /** 
+     *  Manipulator
+     *  @class
+     */
+    Manipulator = function () {
+        this._controllerList = {};
+        this._inverseMatrix = new Array( 16 );
+        Matrix.makeIdentity( this._inverseMatrix );
+    };
 
-    getControllerList: function() { return this._controllerList; }
+    /** @lends Manipulator.prototype */
+    Manipulator.prototype = {
 
+        // eg: var currentTime = nv.getFrameStamp().getSimulationTime();
+        update: function ( nv ) {},
 
-};
+        getInverseMatrix: function () {
+            return this._inverseMatrix;
+        },
+
+        getControllerList: function () {
+            return this._controllerList;
+        }
+    };
+
+    return Manipulator;
+} );
