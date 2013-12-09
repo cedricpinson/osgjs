@@ -89,7 +89,7 @@ osg.createTexturedBoxGeometry = function(centerx, centery, centerz,
     normal[23] = 0;
     uv[14] = 1;
     uv[15] = 1;
-    
+
 
     // +ve x plane
     vertexes[24] = centerx + dx;
@@ -287,7 +287,7 @@ osg.createTexturedBoxGeometry = function(centerx, centery, centerz,
     g.getAttributes().Vertex = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, vertexes, 3 );
     g.getAttributes().Normal = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, normal, 3 );
     g.getAttributes().TexCoord0 = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, uv, 2 );
-    
+
     var primitive = new osg.DrawElements(osg.PrimitiveSet.TRIANGLES, new osg.BufferArray(osg.BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
     g.getPrimitives().push(primitive);
     return g;
@@ -374,7 +374,7 @@ osg.createTexturedQuadGeometry = function(cornerx, cornery, cornerz,
     g.getAttributes().Vertex = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, vertexes, 3 );
     g.getAttributes().Normal = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, normal, 3 );
     g.getAttributes().TexCoord0 = new osg.BufferArray(osg.BufferArray.ARRAY_BUFFER, uvs, 2 );
-    
+
     var primitive = new osg.DrawElements(osg.PrimitiveSet.TRIANGLES, new osg.BufferArray(osg.BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ));
     g.getPrimitives().push(primitive);
     return g;
@@ -437,8 +437,8 @@ osg.createAxisGeometry = function(size) {
                     "}"
                 ].join('\n');
 
-                var program = new osg.Program(new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-                                              new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+                var program = new osg.Program(new osg.Shader('VERTEX_SHADER', vertexshader),
+                                              new osg.Shader('FRAGMENT_SHADER', fragmentshader));
                 osg.createAxisGeometry.getShader.program = program;
             }
             return osg.createAxisGeometry.getShader.program;
@@ -497,12 +497,12 @@ osg.createTexturedSphere = function(radius, widthSegments, heightSegments, phiSt
 
     var x, y, vertices = [], uvs = [], allVertices = [], indexes = [];
 
-    for (y = 0; y <= segmentsY; y++) 
+    for (y = 0; y <= segmentsY; y++)
     {
         var verticesRow = [];
         var uvsRow = [];
 
-        for (x = 0; x <= segmentsX; x++) 
+        for (x = 0; x <= segmentsX; x++)
         {
             var u = x / segmentsX;
             var v = y / segmentsY;
@@ -528,9 +528,9 @@ osg.createTexturedSphere = function(radius, widthSegments, heightSegments, phiSt
     var fullUVList = [];
     var vtxCount = 0;
 
-    for ( y = 0; y < segmentsY; y ++ ) 
+    for ( y = 0; y < segmentsY; y ++ )
     {
-        for ( x = 0; x < segmentsX; x ++ ) 
+        for ( x = 0; x < segmentsX; x ++ )
         {
             var v1 = {}, v2 = {}, v3 = {}, v4 = {}; //zz here
             var vtxStartOffset = (y * segmentsX * 3) + (x * 3);
@@ -613,13 +613,11 @@ osg.createTexturedSphere = function(radius, widthSegments, heightSegments, phiSt
     }
 
     var g = new osg.Geometry();
-    g.getAttributes().Vertex = new osg.BufferArray(gl.ARRAY_BUFFER, fullVerticesList, 3);
-    g.getAttributes().Normal = new osg.BufferArray(gl.ARRAY_BUFFER, fullNormalsList, 3);
-    g.getAttributes().TexCoord0 = new osg.BufferArray(gl.ARRAY_BUFFER, fullUVList, 2);
+    g.getAttributes().Vertex = new osg.BufferArray( 'ARRAY_BUFFER', fullVerticesList, 3);
+    g.getAttributes().Normal = new osg.BufferArray( 'ARRAY_BUFFER', fullNormalsList, 3);
+    g.getAttributes().TexCoord0 = new osg.BufferArray( 'ARRAY_BUFFER', fullUVList, 2);
 
-    var primitive = new osg.DrawElements(gl.TRIANGLES, new osg.BufferArray(gl.ELEMENT_ARRAY_BUFFER, indexes, 1));
+    var primitive = new osg.DrawElements( 'TRIANGLES', new osg.BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1));
     g.getPrimitives().push(primitive);
     return g;
 };
-
-
