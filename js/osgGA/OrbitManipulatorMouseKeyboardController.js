@@ -90,6 +90,7 @@ define( [
 
             var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
             mode = this.getMode();
+            //#FIXME enum degueu !!
             if ( mode === OrbitManipulator.Rotate ) {
                 manipulator.getRotateInterpolator().reset();
                 manipulator.getRotateInterpolator().set( pos[ 0 ], pos[ 1 ] );

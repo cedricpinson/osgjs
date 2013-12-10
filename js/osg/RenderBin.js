@@ -199,8 +199,6 @@ define( [
             var normal = [];
             var normalTranspose = [];
 
-            var Matrix = Matrix;
-
             if ( previousLeaf ) {
                 StateGraph.prototype.moveToRootStateGraph( state, previousRenderLeaf.parent );
             }

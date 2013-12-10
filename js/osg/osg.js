@@ -76,10 +76,10 @@ define( [
     osg.setNotifyLevel( osg.NOTICE );
 
     osg.reportWebGLError = false;
-    osg.memoryPools = {};
+    // osg.memoryPools = {};
 
     osg.init = function () {
-        osg.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool( StateGraph ).grow( 50 );
+        osgPool.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool( StateGraph ).grow( 50 );
     };
 
     // from jquery

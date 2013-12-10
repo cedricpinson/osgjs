@@ -8,6 +8,7 @@ define( [], function () {
      */
 
     var osgPool = {};
+    osgPool.memoryPools = {};
 
     /*
      *  TODO: Add stats & reports for developper per application  finer calibration (max, min, average)

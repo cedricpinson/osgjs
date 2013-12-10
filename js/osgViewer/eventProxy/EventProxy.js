@@ -3,8 +3,7 @@ define( [
     'osgViewer/eventProxy/Hammer',
     'osgViewer/eventProxy/LeapMotion',
     'osgViewer/eventProxy/StandardMouseKeyboard'
-] ),
-function ( GamePad, HammerOsg, LeapMotion, StandardMouseKeyboard ) {
+], function ( GamePad, HammerOsg, LeapMotion, StandardMouseKeyboard ) {
 
     return {
         GamePad: GamePad,

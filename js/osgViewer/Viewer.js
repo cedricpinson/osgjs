@@ -10,33 +10,33 @@ define( [
     'osg/StateGraph',
     'osg/Matrix',
     'osg/State',
-    'osgGA/OrbitManipulator'
-    //  ',osgViewer/osgViewer' // #FIXME hu?
-], function ( osg, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator /* ,osgViewer */ ) {
+    'osgGA/OrbitManipulator',
+    'osgViewer/eventProxy/EventProxy'
+], function ( osg, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy ) {
 
     /** -*- compile-command: 'jslint-cli Viewer.js' -*-
      * Authors:
      *  Cedric Pinson <cedric.pinson@plopbyte.com>
      */
 
-     //#FIXME delete this part !!
-osg.performance = {};
-osg.performance.now = (function() {
-    // if no window.performance
-    if (window.performance === undefined) {
-        return function() {
-            return Date.now();
-        };
-    }
+    //#FIXME delete this part !!
+    osg.performance = {};
+    osg.performance.now = ( function () {
+        // if no window.performance
+        if ( window.performance === undefined ) {
+            return function () {
+                return Date.now();
+            };
+        }
 
-    var fn = window.performance.now || window.performance.mozNow || window.performance.msNow || window.performance.oNow || window.performance.webkitNow ||
-    function() {
-        return Date.now();
-    };
-    return function() {
-        return fn.apply(window.performance, arguments);
-    };
-})();
+        var fn = window.performance.now || window.performance.mozNow || window.performance.msNow || window.performance.oNow || window.performance.webkitNow ||
+                function () {
+                    return Date.now();
+            };
+        return function () {
+            return fn.apply( window.performance, arguments );
+        };
+    } )();
     ( function () {
 
 
@@ -567,7 +567,7 @@ osg.performance.now = (function() {
             var args = argsObject || {};
             var deviceEnabled = {};
 
-            var lists = osgViewer.EventProxy;
+            var lists = EventProxy;
             var argumentEventBackend = args.EventBackend;
             // loop on each devices and try to initialize it
             var keys = Object.keys( lists );

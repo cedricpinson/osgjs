@@ -3,8 +3,15 @@ requirejs.config( {
 } );
 
 require( [
-    'osg/Node'
-], function ( Shape ) {
+    'osg/Shape',
+    'osg/Node',
+    'osg/Camera',
+    'osg/Matrix',
+    'osg/Transform',
+    'osg/Viewport',
+    'osg/Texture',
+    'osgViewer/Viewer'
+], function ( Shape, Node, Camera, Matrix, Transform, Viewport, Texture, Viewer ) {
 
     function createScene() {
         var canvas = document.getElementById( '3DView' );

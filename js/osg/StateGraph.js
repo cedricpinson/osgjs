@@ -1,9 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
-
+    'osgUtil/osgPool'
+], function ( osgPool ) {
 
     var StateGraph = function () {
         this.depth = 0;
@@ -25,7 +24,7 @@ define( [
             for ( var i = 0, l = keys.length; i < l; i++ ) {
                 key = keys[ i ];
                 this.children[ key ].clean();
-                osg.memoryPools.stateGraph.put( this.children[ key ] );
+                osgPool.memoryPools.stateGraph.put( this.children[ key ] );
             }
             this.children = {};
             keys.splice( 0, keys.length );
@@ -39,7 +38,7 @@ define( [
             if ( !this.children[ stateset.id ] ) {
 
                 //sg = new StateGraph();
-                sg = osg.memoryPools.stateGraph.get();
+                sg = osgPool.memoryPools.stateGraph.get();
 
                 sg.parent = this;
                 sg.depth = this.depth + 1;
