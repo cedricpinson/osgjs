@@ -5,8 +5,8 @@ define( [
     'osg/StateAttribute',
     'osg/Vec4',
     'osg/Uniform',
-    'osg/ShaderGeneratorType'
-], function ( osg, StateAttribute, Vec4, Uniform, ShaderGeneratorType ) {
+    'osg/ShaderGenerator'
+], function ( osg, StateAttribute, Vec4, Uniform, ShaderGenerator ) {
 
     /** 
      * Material
@@ -112,7 +112,7 @@ define( [
     } ), 'osg', 'Material' );
 
 
-    Material.prototype._shader[ ShaderGeneratorType.VertexInit ] = function () {
+    Material.prototype._shader[ ShaderGenerator.Type.VertexInit ] = function () {
         var str = [ 'uniform vec4 MaterialAmbient;',
             'uniform vec4 MaterialDiffuse;',
             'uniform vec4 MaterialSpecular;',
@@ -123,7 +123,7 @@ define( [
         return str;
     };
 
-    Material.prototype._shader[ ShaderGeneratorType.FragmentInit ] = function () {
+    Material.prototype._shader[ ShaderGenerator.Type.FragmentInit ] = function () {
         var str = [ 'uniform vec4 MaterialAmbient;',
             'uniform vec4 MaterialDiffuse;',
             'uniform vec4 MaterialSpecular;',

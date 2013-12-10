@@ -3,10 +3,15 @@
 define( [
     'osg/osg',
     'osg/NodeVisitor',
-    'osg/CullSetings',
+    'osg/CullSettings',
     'osg/CullStack',
-    'osg/Matrix'
-], function ( osg, NodeVisitor, CullSettings, CukllStack, Matrix ) {
+    'osg/Matrix',
+    'osg/MatrixTransform',
+    'osg/Projection',
+    'osg/LightSource',
+    'osg/Geometry',
+    'osg/Camera'
+], function ( osg, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, Camera ) {
 
     /** 
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
@@ -94,7 +99,7 @@ define( [
         clampProjectionMatrix: function ( projection, znear, zfar, nearFarRatio, resultNearFar ) {
             var epsilon = 1e-6;
             if ( zfar < znear - epsilon ) {
-                osg.log( "clampProjectionMatrix not applied, invalid depth range, znear = " + znear + "  zfar = " + zfar );
+                osg.log( 'clampProjectionMatrix not applied, invalid depth range, znear = ' + znear + '  zfar = ' + zfar );
                 return false;
             }
 
@@ -105,13 +110,13 @@ define( [
                 var average = ( znear + zfar ) * 0.5;
                 znear = average - epsilon;
                 zfar = average + epsilon;
-                // OSG_INFO << "_clampProjectionMatrix widening znear and zfar to "<<znear<<" "<<zfar<<std::endl;
+                // OSG_INFO << '_clampProjectionMatrix widening znear and zfar to '<<znear<<' '<<zfar<<std::endl;
             }
 
             if ( Math.abs( Matrix.get( projection, 0, 3 ) ) < epsilon &&
                 Math.abs( Matrix.get( projection, 1, 3 ) ) < epsilon &&
                 Math.abs( Matrix.get( projection, 2, 3 ) ) < epsilon ) {
-                // OSG_INFO << "Orthographic matrix before clamping"<<projection<<std::endl;
+                // OSG_INFO << 'Orthographic matrix before clamping'<<projection<<std::endl;
 
                 var delta_span = ( zfar - znear ) * 0.02;
                 if ( delta_span < 1.0 ) {
@@ -127,12 +132,12 @@ define( [
                 Matrix.set( projection, 2, 2, -2.0 / ( desired_zfar - desired_znear ) );
                 Matrix.set( projection, 3, 2, -( desired_zfar + desired_znear ) / ( desired_zfar - desired_znear ) );
 
-                // OSG_INFO << "Orthographic matrix after clamping "<<projection<<std::endl;
+                // OSG_INFO << 'Orthographic matrix after clamping '<<projection<<std::endl;
             } else {
 
-                // OSG_INFO << "Persepective matrix before clamping"<<projection<<std::endl;
-                //std::cout << "_computed_znear"<<_computed_znear<<std::endl;
-                //std::cout << "_computed_zfar"<<_computed_zfar<<std::endl;
+                // OSG_INFO << 'Persepective matrix before clamping'<<projection<<std::endl;
+                //std::cout << '_computed_znear'<<_computed_znear<<std::endl;
+                //std::cout << '_computed_zfar'<<_computed_zfar<<std::endl;
 
                 var zfarPushRatio = 1.02;
                 var znearPullRatio = 0.98;
@@ -168,7 +173,7 @@ define( [
                     0.0, 0.0, center * ratio, 1.0
                 ];
                 Matrix.postMult( matrix, projection );
-                // OSG_INFO << "Persepective matrix after clamping"<<projection<<std::endl;
+                // OSG_INFO << 'Persepective matrix after clamping'<<projection<<std::endl;
             }
             if ( resultNearFar !== undefined ) {
                 resultNearFar[ 0 ] = znear;
@@ -484,7 +489,7 @@ define( [
             depth = this.distance( bb.center(), modelview );
         }
         if ( isNaN( depth ) ) {
-            osg.warn( "warning geometry has a NaN depth, " + modelview + " center " + bb.center() );
+            osg.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + bb.center() );
         } else {
             //leaf.id = this._reserveLeafStack.current;
             leaf.parent = this._currentStateGraph;

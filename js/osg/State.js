@@ -46,7 +46,6 @@ define( [
 
     State.prototype = {
 
-        // #FIXME use obj.objectLibraryClass ?
         setGraphicContext: function ( graphicContext ) {
             this._graphicContext = graphicContext;
         },

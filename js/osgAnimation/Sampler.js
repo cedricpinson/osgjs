@@ -37,8 +37,6 @@ define( [
         this._interpolator = interpolator;
     };
 
-
-    // #FIXME Use blabla object library class
     /** @lends Sampler.prototype */
     Sampler.prototype = {
 

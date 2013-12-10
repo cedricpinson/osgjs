@@ -22,8 +22,6 @@ define( [], function () {
      *
      */
 
-    // #FIXME Separate stuffs
-
     var createVec3Keyframe = function ( t, array ) {
         var k = array.slice( 0 );
         k.t = t;
@@ -45,7 +43,6 @@ define( [], function () {
     return {
         createVec3Keyframe: createVec3Keyframe,
         createQuatKeyframe: createQuatKeyframe,
-        createFloatKeyframe,
-        createFloatKeyframe
+        createFloatKeyframe: createFloatKeyframe
     };
 } );

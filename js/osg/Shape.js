@@ -7,13 +7,12 @@ define( [
     'osg/Uniform',
     'osg/BufferArray',
     'osg/Geometry',
-    'osg/ShaderGeneratorType',
     'osg/PrimitiveSet',
     'osg/DrawArrays',
     'osg/DrawElements',
     'osg/Program',
     'osg/Shader'
-], function ( osg, StateAttribute, Vec3, Uniform, BufferArray, Geometry, ShaderGeneratorType, PrimitiveSet, DrawArrays, DrawElements, Program, Shader ) {
+], function ( osg, StateAttribute, Vec3, Uniform, BufferArray, Geometry, PrimitiveSet, DrawArrays, DrawElements, Program, Shader ) {
 
     /**
      * Create a Textured Box on the given center with given size
@@ -400,7 +399,7 @@ define( [
     var createTexturedBox = function ( centerx, centery, centerz,
         sizex, sizey, sizez ) {
         osg.log( 'createTexturedBox is deprecated use instead createTexturedBoxGeometry' );
-        return Shape.createTexturedBoxGeometry( centerx, centery, centerz,
+        return createTexturedBoxGeometry( centerx, centery, centerz,
             sizex, sizey, sizez );
     };
 
@@ -409,7 +408,7 @@ define( [
         hx, hy, hz,
         l, b, r, t ) {
         osg.log( 'createTexturedQuad is deprecated use instead createTexturedQuadGeometry' );
-        return Shape.createTexturedQuadGeometry( cornerx, cornery, cornerz,
+        return createTexturedQuadGeometry( cornerx, cornery, cornerz,
             wx, wy, wz,
             hx, hy, hz,
             l, b, r, t );
@@ -419,9 +418,9 @@ define( [
         if ( size === undefined ) {
             size = 5.0;
         }
-        if ( Shape.createAxisGeometry.getShader === undefined ) {
-            Shape.createAxisGeometry.getShader = function () {
-                if ( Shape.createAxisGeometry.getShader.program === undefined ) {
+        if ( createAxisGeometry.getShader === undefined ) {
+            createAxisGeometry.getShader = function () {
+                if ( createAxisGeometry.getShader.program === undefined ) {
                     var vertexshader = [
                         '#ifdef GL_ES',
                         'precision highp float;',
@@ -456,9 +455,9 @@ define( [
 
                     var program = new Program( new Shader( gl.VERTEX_SHADER, vertexshader ),
                         new Shader( gl.FRAGMENT_SHADER, fragmentshader ) );
-                    Shape.createAxisGeometry.getShader.program = program;
+                    createAxisGeometry.getShader.program = program;
                 }
-                return Shape.createAxisGeometry.getShader.program;
+                return createAxisGeometry.getShader.program;
             };
         }
 
@@ -489,7 +488,7 @@ define( [
 
         var primitive = new DrawArrays( PrimitiveSet.LINES, 0, 6 );
         g.getPrimitives().push( primitive );
-        g.getOrCreateStateSet().setAttributeAndMode( Shape.createAxisGeometry.getShader() );
+        g.getOrCreateStateSet().setAttributeAndMode( createAxisGeometry.getShader() );
 
         return g;
     };

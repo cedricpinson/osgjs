@@ -3,11 +3,9 @@
 define( [
     'osg/osg',
     'osg/Node',
-    'osg/Transform',
     'osg/Matrix',
-    'osg/Camera',
     'osg/Vec3'
-], function ( osg, Node, Transform, Matrix, Camera, Vec3 ) {
+], function ( osg, Node, Matrix, Vec3 ) {
     /** -*- compile-command: "jslint-cli Transform.js" -*- */
 
     /** 
@@ -78,34 +76,6 @@ define( [
             return bsphere;
         }
     } );
-
-    // #FIXME which namespace ?
-    Transform.computeLocalToWorld = function ( nodePath, ignoreCameras ) {
-        var ignoreCamera = ignoreCameras;
-        if ( ignoreCamera === undefined ) {
-            ignoreCamera = true;
-        }
-        var matrix = Matrix.makeIdentity( [] );
-
-        var j = 0;
-        if ( ignoreCamera ) {
-            for ( j = nodePath.length - 1; j > 0; j-- ) {
-                var camera = nodePath[ j ];
-                if ( camera.objectType === Camera.prototype.objectType &&
-                    ( camera.getReferenceFrame !== Transform.RELATIVE_RF || camera.getParents().length === 0 ) ) {
-                    break;
-                }
-            }
-        }
-
-        for ( var i = j, l = nodePath.length; i < l; i++ ) {
-            var node = nodePath[ i ];
-            if ( node.computeLocalToWorldMatrix ) {
-                node.computeLocalToWorldMatrix( matrix );
-            }
-        }
-        return matrix;
-    };
 
     return Transform;
 } );

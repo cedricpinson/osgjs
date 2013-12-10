@@ -4,7 +4,6 @@ define( [
     'osg/osg'
 ], function ( osg ) {
 
-    // #FIXME use obj.objectLibraryClass ?
     var Stack = function () {};
     Stack.create = function () {
         var a = [];

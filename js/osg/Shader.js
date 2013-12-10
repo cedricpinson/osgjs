@@ -21,19 +21,6 @@ define( [
     Shader.VERTEX_SHADER = 0x8B31;
     Shader.FRAGMENT_SHADER = 0x8B30;
 
-    // #FIXME which namespace
-    Shader.ShaderGeneratorType = {
-        VertexInit: 0,
-        VertexFunction: 1,
-        VertexMain: 2,
-        VertexEnd: 3,
-        FragmentInit: 5,
-        FragmentFunction: 6,
-        FragmentMain: 7,
-        FragmentEnd: 8
-    };
-
-    // #FIXME blabla library class??
     /** @lends Shader.prototype */
     Shader.prototype = {
         setText: function ( text ) {

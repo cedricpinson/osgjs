@@ -1,8 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/osg',
+    'osg/Object'
+], function ( osg, Object ) {
 
     /** -*- compile-command: 'jslint-cli BufferArray.js' -*- */
 

@@ -3,13 +3,24 @@
 define( [
     'osg/osg',
     'osg/Program',
-    'osg/Shader',
-    'osg/ShaderGeneratorType'
-], function ( osg, Program, Shader, ShaderGeneratorType ) {
+    'osg/Shader'
+], function ( osg, Program, Shader ) {
 
     var ShaderGenerator = function () {
         this.cache = [];
     };
+
+    ShaderGenerator.Type = {
+        VertexInit: 0,
+        VertexFunction: 1,
+        VertexMain: 2,
+        VertexEnd: 3,
+        FragmentInit: 5,
+        FragmentFunction: 6,
+        FragmentMain: 7,
+        FragmentEnd: 8
+    };
+
     ShaderGenerator.prototype = {
 
         getActiveTypeMember: function ( state ) {
@@ -232,7 +243,7 @@ define( [
 
         getOrCreateVertexShader: function ( state, validAttributeKeys, validTextureAttributeKeys ) {
             var i;
-            var modes = ShaderGeneratorType;
+            var modes = ShaderGenerator.Type;
             var shader = [
                 '',
                 '#ifdef GL_ES',
@@ -306,7 +317,7 @@ define( [
                 ''
             ].join( '\n' );
 
-            var modes = ShaderGeneratorType;
+            var modes = ShaderGenerator.Type;
 
             shader += this._writeShaderFromMode( state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentInit );
 

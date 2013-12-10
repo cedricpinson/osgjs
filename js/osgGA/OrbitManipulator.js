@@ -4,8 +4,12 @@ define( [
     'osg/osg',
     'osg/Vec3',
     'osg/Matrix',
-    'osgGA/Manipulator'
-], function ( osg, Vec3, Matrix, Manipulator ) {
+    'osgGA/Manipulator',
+    'osgGA/OrbitManipulatorLeapMotionController',
+    'osgGA/OrbitManipulatorMouseKeyboardController',
+    'osgGA/OrbitManipulatorHammerController',
+    'osgGA/OrbitManipulatorGamePadController'
+], function ( osg, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController ) {
 
     /** -*- compile-command: "jslint-cli OrbitManipulator.js" -*-
      * Authors:
@@ -356,23 +360,22 @@ define( [
         }
     } );
 
-    // #FIXME fix stuffs
     ( function ( module ) {
-        module.LeapMotion = osgGA.getOrbitLeapMotionControllerClass();
+        module.LeapMotion = OrbitManipulatorLeapMotionController;
     } )( OrbitManipulator );
 
 
     ( function ( module ) {
-        module.StandardMouseKeyboard = osgGA.getOrbitStandardMouseKeyboardControllerClass();
+        module.StandardMouseKeyboard = OrbitManipulatorMouseKeyboardController;
     } )( OrbitManipulator );
 
 
     ( function ( module ) {
-        module.Hammer = osgGA.getOrbitHammerControllerClass();
+        module.Hammer = OrbitManipulatorHammerController;
     } )( OrbitManipulator );
 
     ( function ( module ) {
-        module.GamePad = osgGA.getOrbitGamePadControllerClass();
+        module.GamePad = OrbitManipulatorGamePadController;
     } )( OrbitManipulator );
 
     return OrbitManipulator;

@@ -3,11 +3,14 @@
 define( [
     'osg/osg',
     'osg/Object',
+    'osg/BoundingBox',
     'osg/BoundingSphere',
     'osg/StateSet',
     'osg/NodeVisitor',
-    'osg/Matrix'
-], function ( osg, Object, BoundingSphere, StateSet, NodeVisitor, Matrix ) {
+    'osg/Matrix',
+    'osg/Transform',
+    'osg/ComputeMatrixFromNodePath'
+], function ( osg, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, Transform, ComputeMatrixFromNodePath ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -265,7 +268,7 @@ define( [
                 if ( np.length === 0 ) {
                     matrixList.push( Matrix.makeIdentity( [] ) );
                 } else {
-                    matrixList.push( osg.computeLocalToWorld( np ) );
+                    matrixList.push( ComputeMatrixFromNodePath.computeLocalToWorld( np ) );
                 }
             }
             return matrixList;

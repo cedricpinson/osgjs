@@ -4,7 +4,6 @@ define( [
     'osg/osg'
 ], function ( osg ) {
 
-    // #FIXME use obj.objectLibraryClass ? or prototype?
     var FrameStamp = function () {
         var frame = 0;
         var startSimulation = 0.0;

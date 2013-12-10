@@ -6,8 +6,8 @@ define( [
     'osg/Uniform',
     'osg/Matrix',
     'osg/Vec4',
-    'osg/ShaderGeneratorType'
-], function ( osg, StateAttribute, Uniform, Matrix, Vec4, ShaderGeneratorType ) {
+    'osg/ShaderGenerator'
+], function ( osg, StateAttribute, Uniform, Matrix, Vec4, ShaderGenerator ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -228,7 +228,7 @@ define( [
 
 
     // common shader generation functions
-    Light.prototype._shaderCommon[ ShaderGeneratorType.VertexInit ] = function () {
+    Light.prototype._shaderCommon[ ShaderGenerator.Type.VertexInit ] = function () {
         return [ '',
             'varying vec3 FragNormal;',
             'varying vec3 FragEyeVector;',
@@ -236,7 +236,7 @@ define( [
             '' ].join( '\n' );
     };
 
-    Light.prototype._shaderCommon[ ShaderGeneratorType.VertexFunction ] = function () {
+    Light.prototype._shaderCommon[ ShaderGenerator.Type.VertexFunction ] = function () {
         return [ '',
             'vec3 computeNormal() {',
             '   return vec3(NormalMatrix * vec4(Normal, 0.0));',
@@ -249,20 +249,20 @@ define( [
             '' ].join( '\n' );
     };
 
-    Light.prototype._shaderCommon[ ShaderGeneratorType.VertexMain ] = function () {
+    Light.prototype._shaderCommon[ ShaderGenerator.Type.VertexMain ] = function () {
         return [ '',
             '  FragEyeVector = computeEyeVertex();',
             '  FragNormal = computeNormal();',
             '' ].join( '\n' );
     };
 
-    Light.prototype._shaderCommon[ ShaderGeneratorType.FragmentInit ] = function () {
+    Light.prototype._shaderCommon[ ShaderGenerator.Type.FragmentInit ] = function () {
         return [ 'varying vec3 FragNormal;',
             'varying vec3 FragEyeVector;',
             '' ].join( '\n' );
     };
 
-    Light.prototype._shaderCommon[ ShaderGeneratorType.FragmentFunction ] = function () {
+    Light.prototype._shaderCommon[ ShaderGenerator.Type.FragmentFunction ] = function () {
         return [ '',
             'float getLightAttenuation(vec3 lightDir, float constant, float linear, float quadratic) {',
             '    ',
@@ -364,7 +364,7 @@ define( [
             '' ].join( '\n' );
     };
 
-    Light.prototype._shaderCommon[ ShaderGeneratorType.FragmentMain ] = function () {
+    Light.prototype._shaderCommon[ ShaderGenerator.Type.FragmentMain ] = function () {
         return [ '',
             '  vec3 normal = normalize(FragNormal);',
             '  vec3 eyeVector = normalize(-FragEyeVector);',
@@ -372,7 +372,7 @@ define( [
             '' ].join( '\n' );
     };
 
-    Light.prototype._shaderCommon[ ShaderGeneratorType.FragmentEnd ] = function () {
+    Light.prototype._shaderCommon[ ShaderGenerator.Type.FragmentEnd ] = function () {
         return [ '',
             '  fragColor *= lightColor;',
             '' ].join( '\n' );
@@ -380,7 +380,7 @@ define( [
 
 
     // shader generation per instance of attribute
-    Light.prototype._shader[ ShaderGeneratorType.FragmentInit ] = function () {
+    Light.prototype._shader[ ShaderGenerator.Type.FragmentInit ] = function () {
         var str = [ '',
             'uniform vec4 Light_position;',
             'uniform vec3 Light_direction;',
@@ -403,7 +403,7 @@ define( [
         return str;
     };
 
-    Light.prototype._shader[ ShaderGeneratorType.FragmentMain ] = function () {
+    Light.prototype._shader[ ShaderGenerator.Type.FragmentMain ] = function () {
         var str = [ '',
             '  vec3 lightEye = vec3(Light_matrix * Light_position);',
             '  vec3 lightDir;',

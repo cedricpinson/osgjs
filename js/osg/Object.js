@@ -1,9 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg',
-    'osg/Object'
-], function ( osg, Object ) {
+    'osg/osg'
+], function ( osg ) {
 
     /** -*- compile-command: 'jslint-cli Object.js' -*- */
 

@@ -31,7 +31,7 @@ define( [
             return rb;
         }
     };
-    // #FIXME use obj.objectLibraryClass ?
+
     RenderBin.prototype = {
         _createRenderBin: function ( binName ) {
             if ( binName === undefined || RenderBin.BinPrototypes[ binName ] === undefined ) {

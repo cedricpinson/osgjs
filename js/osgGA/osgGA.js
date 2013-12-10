@@ -1,5 +1,6 @@
 /*global define */
 
+// #FIXME load hammer
 define( [], function () {
 
     /** -*- compile-command: "jslint-cli osgGA.js" -*-

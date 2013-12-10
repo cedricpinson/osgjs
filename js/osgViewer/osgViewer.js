@@ -1,6 +1,13 @@
-/** -*- compile-command: "jslint-cli osgViewer.js" -*-
- * Authors:
- *  Cedric Pinson <cedric.pinson@plopbyte.com>
- */
+/*global define */
 
-var osgViewer = {};
+define( [], function () {
+
+    /** -*- compile-command: "jslint-cli osgViewer.js" -*-
+     * Authors:
+     *  Cedric Pinson <cedric.pinson@plopbyte.com>
+     */
+
+    var osgViewer = {};
+
+    return osgViewer;
+} );

@@ -40,7 +40,7 @@ define( [
     NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function () {
         this.nodePath.pop();
     };
-    // #FIXME use obj.objectLibraryClass ?
+
     NodeVisitor.prototype = {
         setNodeMaskOverride: function ( m ) {
             this.nodeMaskOverride = m;

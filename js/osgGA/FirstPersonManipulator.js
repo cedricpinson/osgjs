@@ -6,8 +6,9 @@ define( [
     'osgGA/OrbitManipulator',
     'osg/Matrix',
     'osg/Vec2',
-    'osg/Vec3'
-], function ( osg, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3 ) {
+    'osg/Vec3',
+    'osgGA/FirstPersonManipulatorMouseKeyboardController'
+], function ( osg, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController ) {
 
     /** -*- compile-command: "jslint-cli FirstPersonManipulator.js" -*-
      * Authors:
@@ -197,10 +198,8 @@ define( [
 
     } );
 
-
-    // #FIXME fix stuffs
     ( function ( module ) {
-        module.StandardMouseKeyboard = osgGA.getFirstPersonStandardMouseKeyboardControllerClass();
+        module.StandardMouseKeyboard = FirstPersonManipulatorMouseKeyboardController;
     } )( FirstPersonManipulator );
 
     return FirstPersonManipulator.

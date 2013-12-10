@@ -34,8 +34,6 @@ define( [], function ( osg ) {
         this._target = undefined;
     };
 
-    // #FIXME blalba osg library class ?
-
     Target.prototype = {
         reset: function () {
             this._weight = 0;

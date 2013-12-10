@@ -22,7 +22,7 @@ define( [
         }
         return false;
     };
-    // #FIXME use obj.objectLibraryClass ?
+
     /** @lends Uniform.prototype */
     Uniform.prototype = {
         getName: function () {

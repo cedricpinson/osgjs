@@ -1,13 +1,13 @@
-// #FIXME fix it with define
+/*global define */
 
-osgGA.getFirstPersonStandardMouseKeyboardControllerClass = function () {
+define( [], function () {
 
-    var Controller = function ( manipulator ) {
+    var FirstPersonManipulatorMouseKeyboardController = function ( manipulator ) {
         this._manipulator = manipulator;
         this.init();
     };
 
-    Controller.prototype = {
+    FirstPersonManipulatorMouseKeyboardController.prototype = {
         init: function () {
             this.releaseButton();
             this._delay = 0.15;
@@ -97,5 +97,6 @@ osgGA.getFirstPersonStandardMouseKeyboardControllerClass = function () {
         }
 
     };
-    return Controller;
-};
+
+    return FirstPersonManipulatorMouseKeyboardController;
+} );

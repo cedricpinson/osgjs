@@ -25,8 +25,6 @@ define( [
      *
      */
 
-
-    // #FIXME use osgAnimation name?
     /** 
      *  Animation
      *  @class Animation
@@ -36,7 +34,7 @@ define( [
         this._channels = [];
     };
 
-    /** @lends osgAnimation.Animation.prototype */
+    /** @lends Animation.prototype */
     Animation.prototype = osg.objectInehrit( Object.prototype, {
         getChannels: function () {
             return this._channels;

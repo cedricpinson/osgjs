@@ -1,8 +1,6 @@
 /*global define */
 
-define( [
-    'osg/osg'
-], function ( osg ) {
+define( [], function () {
 
     var CullSettings = function () {
         this._computeNearFar = true;
@@ -12,7 +10,7 @@ define( [
         this.bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
         this.bbCornerNear = ( ~this.bbCornerFar ) & 7;
     };
-    // #FIXME use obj.objectLibraryClass?
+
     CullSettings.prototype = {
         setCullSettings: function ( settings ) {
             this._computeNearFar = settings._computeNearFar;

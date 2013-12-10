@@ -5,10 +5,10 @@ define( [
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Image',
-    'osg/ShaderGeneratorType',
-    'osgDB',
+    'osg/ShaderGenerator',
+    'osgDB/osgDB',
     'vendors/Q'
-], function ( osg, StateAttribute, Uniform, Image, ShaderGeneratorType, Q ) {
+], function ( osg, StateAttribute, Uniform, Image, ShaderGenerator, osgDB, Q ) {
 
     /** -*- compile-command: 'jslint-cli Texture.js' -*- */
 
@@ -350,13 +350,13 @@ define( [
           var str = 'texColor' + unit + ' = texture2D( Texture' + unit + ', FragTexCoord' + unit + '.xy );\n';
           str += 'fragColor = fragColor * texColor' + unit + ';\n';
       };
-      setShaderGeneratorFunction(fragmentGenerator, ShaderGeneratorType.FragmentMain);
+      setShaderGeneratorFunction(fragmentGenerator, ShaderGenerator.Type.FragmentMain);
 
     */
         setShaderGeneratorFunction: function (
             /**Function*/
             injectionFunction,
-            /**ShaderGeneratorType*/
+            /**ShaderGenerator.Type*/
             mode ) {
             this[ mode ] = injectionFunction;
         },
@@ -369,21 +369,21 @@ define( [
         }
     } ), 'osg', 'Texture' );
 
-    Texture.prototype[ ShaderGeneratorType.VertexInit ] = function ( unit ) {
+    Texture.prototype[ ShaderGenerator.Type.VertexInit ] = function ( unit ) {
         var str = 'attribute vec2 TexCoord' + unit + ';\n';
         str += 'varying vec2 FragTexCoord' + unit + ';\n';
         return str;
     };
-    Texture.prototype[ ShaderGeneratorType.VertexMain ] = function ( unit ) {
+    Texture.prototype[ ShaderGenerator.Type.VertexMain ] = function ( unit ) {
         return 'FragTexCoord' + unit + ' = TexCoord' + unit + ';\n';
     };
-    Texture.prototype[ ShaderGeneratorType.FragmentInit ] = function ( unit ) {
+    Texture.prototype[ ShaderGenerator.Type.FragmentInit ] = function ( unit ) {
         var str = 'varying vec2 FragTexCoord' + unit + ';\n';
         str += 'uniform sampler2D Texture' + unit + ';\n';
         str += 'vec4 texColor' + unit + ';\n';
         return str;
     };
-    Texture.prototype[ ShaderGeneratorType.FragmentMain ] = function ( unit ) {
+    Texture.prototype[ ShaderGenerator.Type.FragmentMain ] = function ( unit ) {
         var str = 'texColor' + unit + ' = texture2D( Texture' + unit + ', FragTexCoord' + unit + '.xy );\n';
         str += 'fragColor = fragColor * texColor' + unit + ';\n';
         return str;

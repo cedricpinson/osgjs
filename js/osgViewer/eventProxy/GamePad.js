@@ -1,86 +1,95 @@
-osgViewer.EventProxy = osgViewer.EventProxy || {};
-osgViewer.EventProxy.GamePad = (function() {
+/*global define */
 
-    var EventProxy = function(viewer) {
+define( [
+    'osg/osg'
+], function ( osg ) {
+
+    var GamePad = function ( viewer ) {
         this._viewer = viewer;
         this._type = 'GamePad';
         this._enable = true;
     };
 
-    EventProxy.prototype = {
-        init: function(args) {
+    GamePad.prototype = {
+        init: function ( args ) {
 
-            var gamepadSupportAvailable = !!navigator.webkitGetGamepads || !!navigator.webkitGamepads;
-            
+            var gamepadSupportAvailable = !! navigator.webkitGetGamepads || !! navigator.webkitGamepads;
+
             // || (navigator.userAgent.indexOf('Firefox/') != -1); // impossible to detect Gamepad API support in FF
 
-            if (!gamepadSupportAvailable) return;
+            if ( !gamepadSupportAvailable ) return;
 
         },
 
-        isValid: function() {
-            if (!this._enable)
+        isValid: function () {
+            if ( !this._enable )
                 return false;
 
             var manipulator = this._viewer.getManipulator();
-            if (!manipulator)
+            if ( !manipulator )
                 return false;
 
             var constrollerList = manipulator.getControllerList();
-            if (!constrollerList[this._type])
+            if ( !constrollerList[ this._type ] )
                 return false;
 
             return true;
         },
 
-        getManipulatorController: function() {
-            return this._viewer.getManipulator().getControllerList()[this._type];
+        getManipulatorController: function () {
+            return this._viewer.getManipulator().getControllerList()[ this._type ];
         },
 
-        webkitGamepadPoll:function() {
+        webkitGamepadPoll: function () {
             var self = this;
 
-            var rawGamepads = (navigator.webkitGetGamepads && navigator.webkitGetGamepads()) || navigator.webkitGamepads;
-            if (!rawGamepads) {
+            var rawGamepads = ( navigator.webkitGetGamepads && navigator.webkitGetGamepads() ) || navigator.webkitGamepads;
+            if ( !rawGamepads ) {
                 return;
             }
 
-            if (rawGamepads[0]) {
-                if (!this._gamepad) {
-                    this.onGamepadConnect({gamepad:rawGamepads[0]});
+            if ( rawGamepads[ 0 ] ) {
+                if ( !this._gamepad ) {
+                    this.onGamepadConnect( {
+                        gamepad: rawGamepads[ 0 ]
+                    } );
                 }
-                this._gamepad = rawGamepads[0];
-            } else if (this._gamepad) {
-                this.onGamepadDisconnect({gamepad:this._gamepad});
+                this._gamepad = rawGamepads[ 0 ];
+            } else if ( this._gamepad ) {
+                this.onGamepadDisconnect( {
+                    gamepad: this._gamepad
+                } );
             }
         },
 
-        onGamepadConnect: function(evt) {
+        onGamepadConnect: function ( evt ) {
             this._gamepad = evt.gamepad;
-            osg.log("Detected new gamepad!", this._gamepad);
+            osg.log( "Detected new gamepad!", this._gamepad );
         },
 
-        onGamepadDisconnect:function(evt) {
+        onGamepadDisconnect: function ( evt ) {
             this._gamepad = false;
-            osg.log("Gamepad disconnected", this._gamepad);
+            osg.log( "Gamepad disconnected", this._gamepad );
         },
-        getGamePad: function() { return this._gamepad;},
+        getGamePad: function () {
+            return this._gamepad;
+        },
 
         // Called in each frame
-        update:function() {
+        update: function () {
 
             // necessary
             this.webkitGamepadPoll();
 
-            if ( !this._gamepad)
+            if ( !this._gamepad )
                 return;
 
             var manipulatorAdapter = this.getManipulatorController();
             //manipulatorAdapter.setEventProxy(this);
-            if (manipulatorAdapter.update) {
-                manipulatorAdapter.update(this);
+            if ( manipulatorAdapter.update ) {
+                manipulatorAdapter.update( this );
             }
         }
     };
-    return EventProxy;
-})();
+    return GamePad;
+} );

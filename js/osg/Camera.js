@@ -3,8 +3,9 @@
 define( [
     'osg/osg',
     'osg/Transform',
+    'osg/CullSettings',
     'osg/Matrix'
-], function ( osg, Transform, Matrix ) {
+], function ( osg, Transform, CullSettings, Matrix ) {
 
     /** 
      * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
@@ -146,7 +147,7 @@ define( [
             }
 
         } ) ), 'osg', 'Camera' );
-    Camera.prototype.objectType = objectType.generate( 'Camera' );
+    Camera.prototype.objectType = osg.objectType.generate( 'Camera' );
 
 
     return Camera;

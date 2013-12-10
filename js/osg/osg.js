@@ -1,8 +1,9 @@
-/** -*- compile-command: "jslint-cli osg.js" -*- */
+/** -*- compile-command: 'jslint-cli osg.js' -*- */
 
 define( [
-    'osgUtil/osgPool'
-], function ( osgPool ) {
+    'osgUtil/osgPool',
+    'osg/StateGraph'
+], function ( osgPool, StateGraph ) {
 
     var osg = {};
 
@@ -78,12 +79,12 @@ define( [
     osg.memoryPools = {};
 
     osg.init = function () {
-        osg.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool( osg.StateGraph ).grow( 50 );
+        osg.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool( StateGraph ).grow( 50 );
     };
 
     // from jquery
     osg.isArray = function ( obj ) {
-        return toString.call( obj ) === "[object Array]";
+        return toString.call( obj ) === '[object Array]';
     };
 
     osg.extend = function () {
@@ -92,19 +93,19 @@ define( [
             hasOwnPropertyFunc = Object.prototype.hasOwnProperty;
 
         var isFunction = function ( obj ) {
-            return toString.call( obj ) === "[object Function]";
+            return toString.call( obj ) === '[object Function]';
         };
         var isArray = osg.isArray;
         var isPlainObject = function ( obj ) {
             // Must be an Object.
             // Because of IE, we also have to check the presence of the constructor property.
             // Make sure that DOM nodes and window objects don't pass through, as well
-            if ( !obj || toString.call( obj ) !== "[object Object]" || obj.nodeType || obj.setInterval ) {
+            if ( !obj || toString.call( obj ) !== '[object Object]' || obj.nodeType || obj.setInterval ) {
                 return false;
             }
 
             // Not own constructor property must be Object
-            if ( obj.constructor && !hasOwnPropertyFunc.call( obj, "constructor" ) && !hasOwnPropertyFunc.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
+            if ( obj.constructor && !hasOwnPropertyFunc.call( obj, 'constructor' ) && !hasOwnPropertyFunc.call( obj.constructor.prototype, 'isPrototypeOf' ) ) {
                 return false;
             }
 
@@ -124,7 +125,7 @@ define( [
             options, name, src, copy;
 
         // Handle a deep copy situation
-        if ( typeof target === "boolean" ) {
+        if ( typeof target === 'boolean' ) {
             deep = target;
             target = arguments[ 1 ] || {};
             // skip the boolean and the target
@@ -132,7 +133,7 @@ define( [
         }
 
         // Handle case when target is a string or something (possible in deep copy)
-        if ( typeof target !== "object" && !isFunction( target ) ) {
+        if ( typeof target !== 'object' && !isFunction( target ) ) {
             target = {};
         }
 
@@ -201,7 +202,7 @@ define( [
         object.libraryName = function () {
             return libName;
         };
-        var libraryClassName = libName + "::" + className;
+        var libraryClassName = libName + '::' + className;
         object.libraryClassName = function () {
             return libraryClassName;
         };
