@@ -186,7 +186,7 @@ define( [
         setImage: function ( img, imageFormat ) {
 
             var image = img;
-            if ( img instanceof Image ||
+            if ( img instanceof window.Image ||
                 img instanceof HTMLCanvasElement ||
                 img instanceof Uint8Array ) {
                 image = new Image( img );

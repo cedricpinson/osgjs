@@ -30,7 +30,7 @@ define( [
     // keep one instance of image fallback
     if ( !Input.imageFallback ) {
         Input.imageFallback = ( function () {
-            var fallback = new Image();
+            var fallback = new window.Image();
             fallback.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII=';
             return fallback;
         } )();
@@ -98,7 +98,7 @@ define( [
             var checkInlineImage = 'data:image/';
             // crossOrigin does not work for inline data image
             var isInlineImage = ( url.substring( 0, checkInlineImage.length ) === checkInlineImage );
-            var img = new Image();
+            var img = new window.Image();
             img.onerror = function () {
                 osg.warn( 'warning use white texture as fallback instead of ' + url );
                 image.setImage( Input.imageFallback );
