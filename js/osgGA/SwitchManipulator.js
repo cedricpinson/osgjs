@@ -1,8 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/Notify'
+], function ( Notify ) {
 
     /** -*- compile-command: "jslint-cli SwitchManipulator.js" -*-
      * Authors:
@@ -29,7 +29,7 @@ define( [
         setNode: function ( node ) {
             var manipulator = this.getCurrentManipulator();
             if ( manipulator.setNode === undefined ) {
-                osg.log( "manipulator has not setNode method" );
+                Notify.log( "manipulator has not setNode method" );
                 return;
             }
             manipulator.setNode( node );

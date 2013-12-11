@@ -1,13 +1,12 @@
 /*global define */
 
 define( [
-    'osg/osg',
     'osgAnimation/Channel',
     'osgAnimation/Sampler',
     'osgAnimation/Vec3LerpInterpolator',
     'osgAnimation/Vec3Target',
     'osg/Vec3'
-], function ( osg, Channel, Sampler, Vec3LerpInterpolator, Vec3Target, Vec3 ) {
+], function ( Channel, Sampler, Vec3LerpInterpolator, Vec3Target, Vec3 ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *

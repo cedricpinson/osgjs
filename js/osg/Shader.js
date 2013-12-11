@@ -1,8 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/Notify'
+], function ( Notify ) {
 
     /** 
      * Shader manage shader for vertex and fragment, you need both to create a glsl program.
@@ -34,21 +34,21 @@ define( [
             gl.shaderSource( this.shader, this.text );
             gl.compileShader( this.shader );
             if ( !gl.getShaderParameter( this.shader, gl.COMPILE_STATUS ) && !gl.isContextLost() ) {
-                osg.log( 'can\'t compile shader:\n' + this.text + '\n' );
+                Notify.log( 'can\'t compile shader:\n' + this.text + '\n' );
                 var tmpText = '\n' + this.text;
                 var splittedText = tmpText.split( '\n' );
                 var newText = '\n';
                 for ( var i = 0, l = splittedText.length; i < l; ++i ) {
                     newText += i + ' ' + splittedText[ i ] + '\n';
                 }
-                osg.log( newText );
-                osg.log( gl.getShaderInfoLog( this.shader ) );
+                Notify.log( newText );
+                Notify.log( gl.getShaderInfoLog( this.shader ) );
             }
         }
     };
 
     Shader.create = function ( type, text ) {
-        osg.log( 'Shader.create is deprecated, use new Shader with the same arguments instead' );
+        Notify.log( 'Shader.create is deprecated, use new Shader with the same arguments instead' );
         return new Shader( type, text );
     };
 

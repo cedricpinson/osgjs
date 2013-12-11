@@ -1,11 +1,11 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Node',
     'osg/Matrix',
     'osg/Vec3'
-], function ( osg, Node, Matrix, Vec3 ) {
+], function ( MACROUTILS, Node, Matrix, Vec3 ) {
     /** -*- compile-command: "jslint-cli Transform.js" -*- */
 
     /** 
@@ -21,7 +21,7 @@ define( [
     Transform.ABSOLUTE_RF = 1;
 
     /** @lends Transform.prototype */
-    Transform.prototype = osg.objectInehrit( Node.prototype, {
+    Transform.prototype = MACROUTILS.objectInehrit( Node.prototype, {
         setReferenceFrame: function ( value ) {
             this.referenceFrame = value;
         },

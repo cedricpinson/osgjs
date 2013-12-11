@@ -1,9 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/Object'
-], function ( osg, Object ) {
+], function ( Notify, Utils, Object ) {
 
     /** -*- compile-command: "jslint-cli AnimationManager.js" -*-
      *
@@ -42,7 +43,7 @@ define( [
     };
 
     /** @lends BasicAnimationManager.prototype */
-    BasicAnimationManager.prototype = osg.objectInehrit( Object.prototype, {
+    BasicAnimationManager.prototype = MACROUTILS.objectInehrit( Object.prototype, {
         _updateAnimation: function ( animationParameter, t, priority ) {
             var duration = animationParameter.duration;
             var weight = animationParameter.weight;
@@ -147,7 +148,7 @@ define( [
 
             var anim = this._animations[ obj.name ];
             if ( anim === undefined ) {
-                osg.log( "no animation " + obj.name + " found" );
+                Notify.log( "no animation " + obj.name + " found" );
                 return;
             }
 

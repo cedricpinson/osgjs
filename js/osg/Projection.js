@@ -1,16 +1,16 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Node',
     'osg/Matrix'
-], function ( osg, Node, Matrix ) {
+], function ( MACROUTILS, Node, Matrix ) {
 
     var Projection = function () {
         Node.call( this );
         this.projection = Matrix.makeIdentity( [] );
     };
-    Projection.prototype = osg.objectInehrit( Node.prototype, {
+    Projection.prototype = MACROUTILS.objectInehrit( Node.prototype, {
         getProjectionMatrix: function () {
             return this.projection;
         },
@@ -18,7 +18,7 @@ define( [
             this.projection = m;
         }
     } );
-    Projection.prototype.objectType = osg.objectType.generate( 'Projection' );
+    Projection.prototype.objectType = MACROUTILS.objectType.generate( 'Projection' );
 
     return Projection;
 } );

@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Texture',
     'osg/Image'
-], function ( osg, Texture, Image ) {
+], function ( MACROUTILS, Texture, Image ) {
     /** 
      * TextureCubeMap
      * @class TextureCubeMap
@@ -16,7 +16,7 @@ define( [
     };
 
     /** @lends TextureCubeMap.prototype */
-    TextureCubeMap.prototype = osg.objectLibraryClass( osg.objectInehrit( Texture.prototype, {
+    TextureCubeMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Texture.prototype, {
         setDefaultParameters: function () {
             Texture.prototype.setDefaultParameters.call( this );
             this._textureTarget = Texture.TEXTURE_CUBE_MAP;

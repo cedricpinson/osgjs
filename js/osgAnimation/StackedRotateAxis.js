@@ -1,14 +1,14 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Object',
     'osg/Matrix',
     'osgAnimation/Vec3Target',
     'osgAnimation/FloatTarget',
     'osg/Vec3',
     'osg/Quat'
-], function ( osg, Object, Matrix, Vec3Target, FloatTarget, Vec3, Quat ) {
+], function ( MACROUTILS, Object, Matrix, Vec3Target, FloatTarget, Vec3, Quat ) {
 
     /** -*- compile-command: "jslint-cli StackedTransformElement.js" -*-
      *
@@ -54,7 +54,7 @@ define( [
     };
 
     /** @lends StackedRotateAxis.prototype */
-    StackedRotateAxis.prototype = osg.objectInehrit( Object.prototype, {
+    StackedRotateAxis.prototype = MACROUTILS.objectInehrit( Object.prototype, {
         setAxis: function ( axis ) {
             Vec3.copy( axis, this._axis );
         },

@@ -1,11 +1,11 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Transform',
     'osg/CullSettings',
     'osg/Matrix'
-], function ( osg, Transform, CullSettings, Matrix ) {
+], function ( MACROUTILS, Transform, CullSettings, Matrix ) {
 
     /** 
      * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
@@ -35,9 +35,9 @@ define( [
     Camera.STENCIL_BUFFER_BIT = 0x00000400;
 
     /** @lends Camera.prototype */
-    Camera.prototype = osg.objectLibraryClass( osg.objectInehrit(
+    Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit(
         CullSettings.prototype,
-        osg.objectInehrit( Transform.prototype, {
+        MACROUTILS.objectInehrit( Transform.prototype, {
 
             setClearDepth: function ( depth ) {
                 this.clearDepth = depth;
@@ -147,7 +147,7 @@ define( [
             }
 
         } ) ), 'osg', 'Camera' );
-    Camera.prototype.objectType = osg.objectType.generate( 'Camera' );
+    Camera.prototype.objectType = MACROUTILS.objectType.generate( 'Camera' );
 
 
     return Camera;

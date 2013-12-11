@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Node',
     'osg/BoundingBox'
-], function ( osg, Node, BoundingBox ) {
+], function ( MACROUTILS, Node, BoundingBox ) {
 
     /** -*- compile-command: 'jslint-cli Geometry.js' -*- */
 
@@ -22,7 +22,7 @@ define( [
     };
 
     /** @lends Geometry.prototype */
-    Geometry.prototype = osg.objectLibraryClass( osg.objectInehrit( Node.prototype, {
+    Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
         releaseGLObjects: function ( gl ) {
             var i;
             for ( i in this.attributes ) {
@@ -145,7 +145,7 @@ define( [
             return boundingSphere;
         }
     } ), 'osg', 'Geometry' );
-    Geometry.prototype.objectType = osg.objectType.generate( 'Geometry' );
+    Geometry.prototype.objectType = MACROUTILS.objectType.generate( 'Geometry' );
 
     return Geometry;
 } );

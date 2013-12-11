@@ -1,12 +1,12 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/StateAttribute',
     'osg/Vec4',
     'osg/Uniform',
     'osg/ShaderGenerator'
-], function ( osg, StateAttribute, Vec4, Uniform, ShaderGenerator ) {
+], function ( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator ) {
 
     /** 
      * Material
@@ -21,7 +21,7 @@ define( [
         this.shininess = 12.5;
     };
     /** @lends Material.prototype */
-    Material.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         setEmission: function ( a ) {
             Vec4.copy( a, this.emission );
             this._dirty = true;

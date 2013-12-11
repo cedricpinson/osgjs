@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
     'osg/Program',
     'osg/Shader'
-], function ( osg, Program, Shader ) {
+], function ( Notify, Program, Shader ) {
 
     var ShaderGenerator = function () {
         this.cache = [];
@@ -172,8 +172,8 @@ define( [
             program.activeUniforms = this.getActiveUniforms( state, attributeKeys, textureAttributeKeys );
             program.generated = true;
 
-            osg.log( program.vertex.text );
-            osg.log( program.fragment.text );
+            Notify.log( program.vertex.text );
+            Notify.log( program.fragment.text );
 
             this.cache.push( program );
             return program;

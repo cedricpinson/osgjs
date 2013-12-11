@@ -1,8 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/Notify'
+], function ( Notify ) {
 
     var OrbitManipulatorHammerController = function ( manipulator ) {
         this._manipulator = manipulator;
@@ -57,7 +57,7 @@ define( [
                     manipulator.getRotateInterpolator().reset();
                     manipulator.getRotateInterpolator().set( gesture.center.pageX * self._rotateFactorX, gesture.center.pageY * self._rotateFactorY );
                 }
-                osg.debug( 'drag start, ' + dragCB( gesture ) );
+                Notify.debug( 'drag start, ' + dragCB( gesture ) );
             } );
 
             hammer.on( 'drag', function ( event ) {
@@ -82,11 +82,11 @@ define( [
                         return;
 
                     manipulator.getPanInterpolator().setTarget( gesture.center.pageX * self._panFactorX, gesture.center.pageY * self._panFactorY );
-                    osg.debug( 'pad, ' + dragCB( gesture ) );
+                    Notify.debug( 'pad, ' + dragCB( gesture ) );
                 } else {
                     manipulator.getRotateInterpolator().setDelay( self._delay );
                     manipulator.getRotateInterpolator().setTarget( gesture.center.pageX * self._rotateFactorX, gesture.center.pageY * self._rotateFactorY );
-                    osg.debug( 'rotate, ' + dragCB( gesture ) );
+                    Notify.debug( 'rotate, ' + dragCB( gesture ) );
                 }
             } );
             hammer.on( 'dragend', function ( event ) {
@@ -97,7 +97,7 @@ define( [
                 self._dragStarted = false;
                 var gesture = event.gesture;
                 self._pan = false;
-                osg.debug( 'drag end, ' + dragCB( gesture ) );
+                Notify.debug( 'drag end, ' + dragCB( gesture ) );
             } );
 
             var toucheScale;
@@ -114,13 +114,13 @@ define( [
                 manipulator.getZoomInterpolator().reset();
                 manipulator.getZoomInterpolator().set( gesture.scale );
 
-                osg.debug( 'transform start ' + gesture.scale + ' ' + scale );
+                Notify.debug( 'transform start ' + gesture.scale + ' ' + scale );
                 event.preventDefault();
                 hammer.options.drag = false;
             } );
             hammer.on( 'transformend', function ( event ) {
                 self._transformStarted = false;
-                osg.debug( 'transform end ' + event.gesture.scale );
+                Notify.debug( 'transform end ' + event.gesture.scale );
                 hammer.options.drag = true;
 
             } );
@@ -136,7 +136,7 @@ define( [
                 toucheScale = gesture.scale;
                 var target = manipulator.getZoomInterpolator().getTarget()[ 0 ];
                 manipulator.getZoomInterpolator().setTarget( target - scale );
-                osg.debug( 'transform ' + gesture.scale + ' ' + ( target - scale ) );
+                Notify.debug( 'transform ' + gesture.scale + ' ' + ( target - scale ) );
             } );
 
         },

@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/StateAttribute'
-], function ( osg, StateAttribute ) {
+], function ( MACROUTILS, StateAttribute ) {
 
     /** 
      *  Manage Blending mode
@@ -56,7 +56,7 @@ define( [
 
 
     /** @lends BlendFunc.prototype */
-    BlendFunc.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    BlendFunc.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         /** 
     StateAttribute type of BlendFunc
     @type String

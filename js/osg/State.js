@@ -1,13 +1,12 @@
 /*global define */
 
 define( [
-    'osg/osg',
     'osg/StateAttribute',
     'osg/Stack',
     'osg/Uniform',
     'osg/Matrix',
     'osg/ShaderGenerator'
-], function ( osg, StateAttribute, Stack, Uniform, Matrix, ShaderGenerator ) {
+], function ( StateAttribute, Stack, Uniform, Matrix, ShaderGenerator ) {
 
     var State = function () {
         this._graphicContext = undefined;
@@ -691,7 +690,7 @@ define( [
                     }
                     uniform.dirty();
                 }
-                //osg.log(uniform.get()[0]);
+                //Notify.log(uniform.get()[0]);
                 uniform.apply( program.uniformsCache.ArrayColorEnabled );
             }
         },

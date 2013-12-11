@@ -1,14 +1,14 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osgGA/Manipulator',
     'osgGA/OrbitManipulator',
     'osg/Matrix',
     'osg/Vec2',
     'osg/Vec3',
     'osgGA/FirstPersonManipulatorMouseKeyboardController'
-], function ( osg, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController ) {
+], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController ) {
 
     /** -*- compile-command: "jslint-cli FirstPersonManipulator.js" -*-
      * Authors:
@@ -29,7 +29,7 @@ define( [
     FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard' ];
 
     /** @lends FirstPersonManipulator.prototype */
-    FirstPersonManipulator.prototype = osg.objectInehrit( Manipulator.prototype, {
+    FirstPersonManipulator.prototype = MACROUTILS.objectInehrit( Manipulator.prototype, {
         setNode: function ( node ) {
             this._node = node;
             this.computeHomePosition();

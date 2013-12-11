@@ -1,9 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/Object'
-], function ( osg, Object ) {
+], function ( Notify, MACROUTILS, Object ) {
 
     /** -*- compile-command: 'jslint-cli UpdateCallback.js' -*-
      *
@@ -32,13 +33,13 @@ define( [
     var AnimationUpdateCallback = function () {};
 
     /** @lends AnimationUpdateCallback.prototype */
-    AnimationUpdateCallback.prototype = osg.objectInehrit( Object.prototype, {
+    AnimationUpdateCallback.prototype = MACROUTILS.objectInehrit( Object.prototype, {
 
         linkChannel: function () {},
         linkAnimation: function ( anim ) {
             var name = this.getName();
             if ( name.length === 0 ) {
-                osg.log( 'no name on an update callback, discard' );
+                Notify.log( 'no name on an update callback, discard' );
                 return 0;
             }
             var nbLinks = 0;

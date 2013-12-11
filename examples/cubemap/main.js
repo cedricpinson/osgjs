@@ -1,355 +1,335 @@
-requirejs.config( {
-    baseUrl: '../../js'
-} );
+/** -*- compile-command: "jslint-cli main.js" -*-
+ *
+ *  Copyright (C) 2010-2011 Cedric Pinson
+ *
+ *                  GNU LESSER GENERAL PUBLIC LICENSE
+ *                      Version 3, 29 June 2007
+ *
+ * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ *
+ * This version of the GNU Lesser General Public License incorporates
+ * the terms and conditions of version 3 of the GNU General Public
+ * License
+ *
+ * Authors:
+ *  Cedric Pinson <cedric.pinson@plopbyte.com>
+ *
+ */
 
-require( [
-    'osg/osg',
-    'osg/MatrixTransform',
-    'osg/Program',
-    'osg/Shader',
-    'osg/Matrix',
-    'vendors/Q',
-    'osgDB/osgDB',
-    'osg/Shape',
-    'osg/CullFace',
-    'osg/Uniform',
-    'osg/Camera',
-    'osg/Transform',
-    'osg/Node',
-    'osg/TextureCubeMap',
-    'osgViewer/Viewer'
-], function ( osg, MatrixTransform, Program, Shader, Matrix, Q, osgDB, Shape, CullFace, Uniform, Camera, Transform, Node, TextureCubeMap, Viewer ) {
+var Viewer;
+var main = function() {
+    //osg.ReportWebGLError = true;
 
-    /** -*- compile-command: 'jslint-cli main.js' -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
+    var canvas = document.getElementById("3DView");
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    osg.log("size " + w + " x " + h );
+    canvas.style.width = w;
+    canvas.style.height = h;
+    canvas.width = w;
+    canvas.height = h;
 
-    var Viewer;
-    var main = function () {
-        //osg.ReportWebGLError = true;
+    var stats = document.getElementById("Stats");
 
-        var canvas = document.getElementById( '3DView' );
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-        osg.log( 'size ' + w + ' x ' + h );
-        canvas.style.width = w;
-        canvas.style.height = h;
-        canvas.width = w;
-        canvas.height = h;
+    var viewer;
+    try {
+        viewer = new osgViewer.Viewer(canvas, {antialias : true });
+        Viewer = viewer;
+        viewer.init();
+        var rotate = new osg.MatrixTransform();
+        rotate.addChild(createScene());
+        viewer.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
+        viewer.setSceneData(rotate);
+        viewer.setupManipulator();
+        viewer.getManipulator().computeHomePosition();
 
-        var stats = document.getElementById( 'Stats' );
+        //viewer.getManipulator().setDistance(100.0);
+        //viewer.getManipulator().setTarget([0,0,0]);
+            
+        viewer.run();
 
-        var viewer;
-        try {
-            viewer = new Viewer( canvas, {
-                antialias: true
-            } );
-            Viewer = viewer;
-            viewer.init();
-            var rotate = new MatrixTransform();
-            rotate.addChild( createScene() );
-            viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
-            viewer.setSceneData( rotate );
-            viewer.setupManipulator();
-            viewer.getManipulator().computeHomePosition();
+        var mousedown = function(ev) {
+            ev.stopPropagation();
+        };
+        document.getElementById("explanation").addEventListener("mousedown", mousedown, false);
 
-            //viewer.getManipulator().setDistance(100.0);
-            //viewer.getManipulator().setTarget([0,0,0]);
-
-            viewer.run();
-
-            var mousedown = function ( ev ) {
-                ev.stopPropagation();
-            };
-            document.getElementById( 'explanation' ).addEventListener( 'mousedown', mousedown, false );
-
-        } catch ( er ) {
-            osg.log( 'exception in osgViewer ' + er );
-        }
-    };
-
-    function getShader() {
-        var vertexshader = [
-            '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'attribute vec3 Vertex;',
-            'attribute vec3 Normal;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
-            'uniform mat4 NormalMatrix;',
-
-            'varying vec3 osg_FragWorldNormal;',
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
-
-            'void main(void) {',
-            '  osg_FragWorldNormal = Normal;',
-            '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
-            '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-            '}'
-        ].join( '\n' );
-
-        var fragmentshader = [
-            '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'uniform samplerCube Texture0;',
-            'uniform mat4 CubemapTransform;',
-
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragWorldNormal;',
-
-            'vec3 cubemapReflectionVector(const in mat4 transform, const in vec3 view, const in vec3 normal)',
-            '{',
-            '  vec3 lv = reflect(view, normal);',
-            '  lv = normalize(lv);',
-            '  vec3 x = vec3(transform[0][0], transform[1][0], transform[2][0]);',
-            '  vec3 y = vec3(transform[0][1], transform[1][1], transform[2][1]);',
-            '  vec3 z = vec3(transform[0][2], transform[1][2], transform[2][2]);',
-            '  mat3 m = mat3(x,y,z);',
-            '  return m*lv;',
-            '}',
-
-            'void main(void) {',
-            '  vec3 normal = normalize(osg_FragNormal);',
-            '  vec3 eye = -normalize(osg_FragEye);',
-            '  vec3 ray = cubemapReflectionVector(CubemapTransform, eye, normal);',
-            '  gl_FragColor = textureCube(Texture0, normalize(ray));',
-            '}',
-            ''
-        ].join( '\n' );
-
-        var program = new Program(
-            new Shader( gl.VERTEX_SHADER, vertexshader ),
-            new Shader( gl.FRAGMENT_SHADER, fragmentshader ) );
-
-        return program;
+    } catch (er) {
+        osg.log("exception in osgViewer " + er);
     }
+};
+
+function getShader()
+{
+    var vertexshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "attribute vec3 Vertex;",
+        "attribute vec3 Normal;",
+        "uniform mat4 ModelViewMatrix;",
+        "uniform mat4 ProjectionMatrix;",
+        "uniform mat4 NormalMatrix;",
+
+        "varying vec3 osg_FragWorldNormal;",
+        "varying vec3 osg_FragNormal;",
+        "varying vec3 osg_FragEye;",
+
+        "void main(void) {",
+        "  osg_FragWorldNormal = Normal;",
+        "  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));",
+        "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));",
+        "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
+        "}"
+    ].join('\n');
+
+    var fragmentshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "uniform samplerCube Texture0;",
+        "uniform mat4 CubemapTransform;",
+
+        "varying vec3 osg_FragNormal;",
+        "varying vec3 osg_FragEye;",
+        "varying vec3 osg_FragWorldNormal;",
+
+        "vec3 cubemapReflectionVector(const in mat4 transform, const in vec3 view, const in vec3 normal)",
+        "{",
+        "  vec3 lv = reflect(view, normal);",
+        "  lv = normalize(lv);",
+        "  vec3 x = vec3(transform[0][0], transform[1][0], transform[2][0]);",
+        "  vec3 y = vec3(transform[0][1], transform[1][1], transform[2][1]);",
+        "  vec3 z = vec3(transform[0][2], transform[1][2], transform[2][2]);",
+        "  mat3 m = mat3(x,y,z);",
+        "  return m*lv;",
+        "}",
+
+        "void main(void) {",
+        "  vec3 normal = normalize(osg_FragNormal);",
+        "  vec3 eye = -normalize(osg_FragEye);",
+        "  vec3 ray = cubemapReflectionVector(CubemapTransform, eye, normal);",
+        "  gl_FragColor = textureCube(Texture0, normalize(ray));",
+        "}",
+        ""
+    ].join('\n');
+
+    var program = new osg.Program(
+        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+
+    return program;
+}
 
 
-    function getShaderBackground() {
-        var vertexshader = [
-            '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'attribute vec3 Vertex;',
-            'attribute vec3 Normal;',
-            'attribute vec2 TexCoord0;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
-            'uniform mat4 NormalMatrix;',
+function getShaderBackground()
+{
+    var vertexshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "attribute vec3 Vertex;",
+        "attribute vec3 Normal;",
+        "attribute vec2 TexCoord0;",
+        "uniform mat4 ModelViewMatrix;",
+        "uniform mat4 ProjectionMatrix;",
+        "uniform mat4 NormalMatrix;",
 
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragVertex;',
-            'varying vec2 osg_TexCoord0;',
+        "varying vec3 osg_FragNormal;",
+        "varying vec3 osg_FragEye;",
+        "varying vec3 osg_FragVertex;",
+        "varying vec2 osg_TexCoord0;",
+        
+        "void main(void) {",
+        "  osg_FragVertex = Vertex;",
+        "  osg_TexCoord0 = TexCoord0;",
+        "  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));",
+        "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));",
+        "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
+        "}"
+    ].join('\n');
 
-            'void main(void) {',
-            '  osg_FragVertex = Vertex;',
-            '  osg_TexCoord0 = TexCoord0;',
-            '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
-            '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-            '}'
-        ].join( '\n' );
+    var fragmentshader = [
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "uniform samplerCube Texture0;",
+        "varying vec3 osg_FragNormal;",
+        "varying vec3 osg_FragEye;",
+        "varying vec3 osg_FragVertex;",
+        "varying vec2 osg_TexCoord0;",
 
-        var fragmentshader = [
-            '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'uniform samplerCube Texture0;',
-            'varying vec3 osg_FragNormal;',
-            'varying vec3 osg_FragEye;',
-            'varying vec3 osg_FragVertex;',
-            'varying vec2 osg_TexCoord0;',
+        "void main(void) {",
+        "  vec3 eye = -normalize(osg_FragVertex);",
+        "  gl_FragColor = textureCube(Texture0, eye);",
+        "}",
+        ""
+    ].join('\n');
 
-            'void main(void) {',
-            '  vec3 eye = -normalize(osg_FragVertex);',
-            '  gl_FragColor = textureCube(Texture0, eye);',
-            '}',
-            ''
-        ].join( '\n' );
+    var program = new osg.Program(
+        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
+        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
 
-        var program = new Program(
-            new Shader( gl.VERTEX_SHADER, vertexshader ),
-            new Shader( gl.FRAGMENT_SHADER, fragmentshader ) );
+    return program;
+}
 
-        return program;
+var nbLoading = 0;
+var loaded = [];
+var removeLoading = function(node, child) {
+    nbLoading -=1;
+    loaded.push(child);
+    if (nbLoading === 0) {
+        document.getElementById("loading").style.display = 'None';
+        Viewer.getManipulator().computeHomePosition();
     }
+};
+var addLoading = function() {
+    nbLoading+=1;
+    document.getElementById("loading").style.display = 'Block';
+};
 
-    var nbLoading = 0;
-    var loaded = [];
-    var removeLoading = function ( node, child ) {
-        nbLoading -= 1;
-        loaded.push( child );
-        if ( nbLoading === 0 ) {
-            document.getElementById( 'loading' ).style.display = 'None';
-            Viewer.getManipulator().computeHomePosition();
-        }
-    };
-    var addLoading = function () {
-        nbLoading += 1;
-        document.getElementById( 'loading' ).style.display = 'Block';
-    };
+var getModel = function(scene) {
+    var node = new osg.MatrixTransform();
+    node.setMatrix(osg.Matrix.makeRotate(-Math.PI/2, 1,0,0, []));
 
-    var getModel = function ( scene ) {
-        var node = new MatrixTransform();
-        node.setMatrix( Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, [] ) );
-
-        var loadModel = function ( url, cbfunc ) {
-            osg.log( 'loading ' + url );
-            var req = new XMLHttpRequest();
-            req.open( 'GET', url, true );
-            req.onreadystatechange = function ( aEvt ) {
-                if ( req.readyState == 4 ) {
-                    if ( req.status == 200 ) {
-                        Q.when( osgDB.parseSceneGraph( JSON.parse( req.responseText ) ) ).then( function ( child ) {
-                            if ( cbfunc ) {
-                                cbfunc( child );
+    var loadModel = function(url, cbfunc) {
+        osg.log("loading " + url);
+        var req = new XMLHttpRequest();
+        req.open('GET', url, true);
+        req.onreadystatechange = function (aEvt) {
+            if (req.readyState == 4) {
+                if(req.status == 200) {
+                    osgDB.Promise.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
+                            if (cbfunc) {
+                                cbfunc(child);
                             }
-                            node.addChild( child );
-                            removeLoading( node, child );
-                            osg.log( 'success ' + url );
-                        } );
-                    } else {
-                        removeLoading( node, child );
-                        osg.log( 'error ' + url );
-                    }
+                        node.addChild(child);
+                        removeLoading(node, child);
+                        osg.log("success " + url);
+                    });
+                } else{
+                    removeLoading(node, child);
+                    osg.log("error " + url);
                 }
-            };
-            req.send( null );
-            addLoading();
+            }
         };
-
-        loadModel( 'monkey.osgjs' );
-        return node;
+        req.send(null);
+        addLoading();
     };
 
-    function getCubeMap( size, scene ) {
-        // create the environment sphere
-        var geom = Shape.createTexturedBoxGeometry( 0, 0, 0,
-            size, size, size );
-        geom.getOrCreateStateSet().setAttributeAndModes( new CullFace( 'DISABLE' ) );
-        geom.getOrCreateStateSet().setAttributeAndModes( getShaderBackground() );
+    loadModel('monkey.osgjs');
+    return node;
+};
 
-        var cubemapTransform = Uniform.createMatrix4( Matrix.makeIdentity( [] ), 'CubemapTransform' );
+function getCubeMap(size, scene)
+{
+    // create the environment sphere
+    var geom = osg.createTexturedBoxGeometry(0,0,0,
+                                                   size,size,size);
+    geom.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
+    geom.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
 
-        var mt = new MatrixTransform();
-        mt.setMatrix( Matrix.makeRotate( -Math.PI / 2.0, 1, 0, 0, [] ) );
-        mt.addChild( geom );
+    var cubemapTransform = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), "CubemapTransform");
 
-        var CullCallback = function () {
-            this.cull = function ( node, nv ) {
-                // overwrite matrix, remove translate so environment is always at camera origin
-                Matrix.setTrans( nv.getCurrentModelviewMatrix(), 0, 0, 0 );
-                var m = nv.getCurrentModelviewMatrix();
-                Matrix.copy( m, cubemapTransform.get() );
-                cubemapTransform.dirty();
-                return true;
-            }
+    var mt = new osg.MatrixTransform();
+    mt.setMatrix(osg.Matrix.makeRotate(-Math.PI/2.0, 1,0,0,[]));
+    mt.addChild(geom);
+
+    var CullCallback = function() {
+        this.cull = function(node, nv) {
+            // overwrite matrix, remove translate so environment is always at camera origin
+            osg.Matrix.setTrans(nv.getCurrentModelviewMatrix(), 0,0,0);
+            var m = nv.getCurrentModelviewMatrix();
+            osg.Matrix.copy(m, cubemapTransform.get());
+            cubemapTransform.dirty();
+            return true;
         }
-        mt.setCullCallback( new CullCallback() );
-        scene.getOrCreateStateSet().addUniform( cubemapTransform );
+    }
+    mt.setCullCallback(new CullCallback());
+    scene.getOrCreateStateSet().addUniform(cubemapTransform);
+    
 
+    var cam = new osg.Camera();
 
-        var cam = new Camera();
+    cam.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
+    cam.addChild(mt);
 
-        cam.setReferenceFrame( Transform.ABSOLUTE_RF );
-        cam.addChild( mt );
+    var self = this;
+    // the update callback get exactly the same view of the camera
+    // but configure the projection matrix to always be in a short znear/zfar range to not vary depend on the scene size
+    var UpdateCallback = function() {
+        this.update = function(node, nv) {
+            var rootCam = Viewer.getCamera();
+            var info = {};
+            osg.Matrix.getPerspective(rootCam.getProjectionMatrix(), info);
+            var proj = [];
+            osg.Matrix.makePerspective(info.fovy, info.aspectRatio, 1.0, 100.0, proj);
+            cam.setProjectionMatrix(proj);
+            cam.setViewMatrix(rootCam.getViewMatrix());
 
-        var self = this;
-        // the update callback get exactly the same view of the camera
-        // but configure the projection matrix to always be in a short znear/zfar range to not vary depend on the scene size
-        var UpdateCallback = function () {
-            this.update = function ( node, nv ) {
-                var rootCam = Viewer.getCamera();
-                var info = {};
-                Matrix.getPerspective( rootCam.getProjectionMatrix(), info );
-                var proj = [];
-                Matrix.makePerspective( info.fovy, info.aspectRatio, 1.0, 100.0, proj );
-                cam.setProjectionMatrix( proj );
-                cam.setViewMatrix( rootCam.getViewMatrix() );
-
-                return true;
-            };
+            return true;
         };
+    };
 
-        cam.setUpdateCallback( new UpdateCallback() );
+    cam.setUpdateCallback(new UpdateCallback());
 
-        scene.addChild( cam );
+    scene.addChild(cam);
 
-        return geom;
-    }
+    return geom;
+}
 
-    function createScene() {
-        var group = new Node();
+function createScene() 
+{
+    var group = new osg.Node();
 
-        var size = 250;
-        var background = getCubeMap( size, group );
-        background.getOrCreateStateSet().setAttributeAndModes( new CullFace( 'DISABLE' ) );
-        background.getOrCreateStateSet().setAttributeAndModes( getShaderBackground() );
+    var size = 250;
+    var background = getCubeMap(size, group);
+    background.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
+    background.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
 
-        var ground = getModel( group );
+    var ground = getModel(group);
 
-        ground.getOrCreateStateSet().setAttributeAndMode( getShader() );
+    ground.getOrCreateStateSet().setAttributeAndMode(getShader());
 
-        Q.all( [
-            osgDB.readImage( 'textures/posx.jpg' ),
-            osgDB.readImage( 'textures/negx.jpg' ),
+    osgDB.Promise.all([
+        osgDB.readImage('textures/posx.jpg'),
+        osgDB.readImage('textures/negx.jpg'),
 
-            osgDB.readImage( 'textures/posy.jpg' ),
-            osgDB.readImage( 'textures/negy.jpg' ),
+        osgDB.readImage('textures/posy.jpg'),
+        osgDB.readImage('textures/negy.jpg'),
 
-            osgDB.readImage( 'textures/posz.jpg' ),
-            osgDB.readImage( 'textures/negz.jpg' )
-        ] ).then( function ( images ) {
+        osgDB.readImage('textures/posz.jpg'),
+        osgDB.readImage('textures/negz.jpg')]).then(function ( images) {
 
-            var texture = new TextureCubeMap();
+            var texture = new osg.TextureCubeMap();
 
-            texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_X', images[ 0 ] );
-            texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_X', images[ 1 ] );
+            texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_X', images[0]);
+            texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_X', images[1]);
 
-            texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_Y', images[ 3 ] );
-            texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_Y', images[ 2 ] );
+            texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Y', images[3]);
+            texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Y', images[2]);
 
-            texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_Z', images[ 4 ] );
-            texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_Z', images[ 5 ] );
+            texture.setImage('TEXTURE_CUBE_MAP_POSITIVE_Z', images[4]);
+            texture.setImage('TEXTURE_CUBE_MAP_NEGATIVE_Z', images[5]);
 
-            texture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
+            texture.setMinFilter('LINEAR_MIPMAP_LINEAR');
 
-            ground.getOrCreateStateSet().setTextureAttributeAndMode( 0, texture );
-            ground.getOrCreateStateSet().addUniform( Uniform.createInt1( 0, 'Texture0' ) );
+            ground.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
+            ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
 
-            background.getOrCreateStateSet().setTextureAttributeAndMode( 0, texture );
-            background.getOrCreateStateSet().addUniform(Uniform.createInt1( 0, 'Texture0' ) );
-        } );
+            background.getOrCreateStateSet().setTextureAttributeAndMode(0, texture);
+            background.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
+        });
 
-        group.addChild( ground );
-        return group;
-    }
+    group.addChild(ground);
+    return group;
+}
 
-    window.addEventListener( 'load', main, true );
-} );
+
+
+window.addEventListener("load", main ,true);

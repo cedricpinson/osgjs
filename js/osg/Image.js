@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Object'
-], function ( osg, Object ) {
+], function ( MACROUTILS, Object ) {
 
     var Image = function ( image ) {
         Object.call( this );
@@ -20,7 +20,7 @@ define( [
         this._isGreyscale = undefined;
     };
 
-    Image.prototype = osg.objectLibraryClass( osg.objectInherit( Object.prototype, {
+    Image.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
 
         dirty: function () {
             this._isGreyscale = undefined;
@@ -119,7 +119,7 @@ define( [
         }
     } ), 'osg', 'Image' );
 
-    Image.prototype.objectType = osg.objectType.generate( 'Image' );
+    Image.prototype.objectType = MACROUTILS.objectType.generate( 'Image' );
 
     return Image;
 } );

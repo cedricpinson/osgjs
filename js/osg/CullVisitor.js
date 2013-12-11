@@ -1,7 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/NodeVisitor',
     'osg/CullSettings',
     'osg/CullStack',
@@ -14,7 +15,7 @@ define( [
     'osg/Node',
     'osg/Transform',
     'osg/Camera'
-], function ( osg, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Transform, Camera ) {
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Transform, Camera ) {
 
     /** 
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
@@ -52,7 +53,7 @@ define( [
     };
 
     /** @lends CullVisitor.prototype */
-    CullVisitor.prototype = osg.objectInehrit( CullStack.prototype, osg.objectInehrit( CullSettings.prototype, osg.objectInehrit( NodeVisitor.prototype, {
+    CullVisitor.prototype = MACROUTILS.objectInehrit( CullStack.prototype, MACROUTILS.objectInehrit( CullSettings.prototype, MACROUTILS.objectInehrit( NodeVisitor.prototype, {
         distance: function ( coord, matrix ) {
             return -( coord[ 0 ] * matrix[ 2 ] + coord[ 1 ] * matrix[ 6 ] + coord[ 2 ] * matrix[ 10 ] + matrix[ 14 ] );
         },
@@ -102,7 +103,7 @@ define( [
         clampProjectionMatrix: function ( projection, znear, zfar, nearFarRatio, resultNearFar ) {
             var epsilon = 1e-6;
             if ( zfar < znear - epsilon ) {
-                osg.log( 'clampProjectionMatrix not applied, invalid depth range, znear = ' + znear + '  zfar = ' + zfar );
+                Notify.log( 'clampProjectionMatrix not applied, invalid depth range, znear = ' + znear + '  zfar = ' + zfar );
                 return false;
             }
 
@@ -492,7 +493,7 @@ define( [
             depth = this.distance( bb.center(), modelview );
         }
         if ( isNaN( depth ) ) {
-            osg.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + bb.center() );
+            Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + bb.center() );
         } else {
             //leaf.id = this._reserveLeafStack.current;
             leaf.parent = this._currentStateGraph;

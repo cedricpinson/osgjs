@@ -1,10 +1,11 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/Uniform',
     'osg/NodeVisitor'
-], function ( osg, Uniform, NodeVisitor ) {
+], function ( Notify, MACROUTILS, Uniform, NodeVisitor ) {
 
     /** -*- compile-command: 'jslint-cli ShaderParameterVisitor.js' -*-
      * Authors:
@@ -70,7 +71,7 @@ define( [
                 var func = function ( value ) {
                     cuniform.get()[ cindex ] = value;
                     cuniform.dirty();
-                    osg.debug( cname + ' value ' + value );
+                    Notify.debug( cname + ' value ' + value );
                     document.getElementById( cbnameIndex ).innerHTML = Number( value ).toFixed( 4 );
                     self.setValue( id, value );
                     if ( param.onchange !== undefined ) {
@@ -100,7 +101,7 @@ define( [
                     } else {
                         obj[ cfield ][ index ] = value;
                     }
-                    osg.debug( cname + ' value ' + value );
+                    Notify.debug( cname + ' value ' + value );
                     document.getElementById( cbnameIndex ).innerHTML = Number( value ).toFixed( 4 );
                     self.setValue( id, value );
                     if ( param.onchange !== undefined ) {
@@ -159,7 +160,7 @@ define( [
                 var dom = this.createHTMLSlider( param, value, nameIndex, cbnameIndex );
                 this.addToDom( dom );
                 window[ cbnameIndex ] = this.createUniformFunction( param, nameIndex, i, uniform, cbnameIndex );
-                osg.log( nameIndex + ' ' + value );
+                Notify.log( nameIndex + ' ' + value );
                 window[ cbnameIndex ]( value );
             }
             this.uniform = uniform;
@@ -198,7 +199,7 @@ define( [
                 var dom = this.createHTMLSlider( param, value, nameIndex, cbnameIndex );
                 this.addToDom( dom );
                 window[ cbnameIndex ] = this.createFunction( param, nameIndex, i, object, field, cbnameIndex );
-                osg.log( nameIndex + ' ' + value );
+                Notify.log( nameIndex + ' ' + value );
                 window[ cbnameIndex ]( value );
             }
         },
@@ -237,7 +238,7 @@ define( [
         ( new ArraySlider() ).createSlider( param );
     };
 
-    ParameterVisitor.prototype = osg.objectInehrit( NodeVisitor.prototype, {
+    ParameterVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
 
         setTargetHTML: function ( html ) {
             this.targetHTML = html;
@@ -312,7 +313,7 @@ define( [
             var BackVisitor = function () {
                 NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
             };
-            BackVisitor.prototype = osg.objectInehrit( NodeVisitor.prototype, {
+            BackVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
                 setUniformMap: function ( map ) {
                     this.uniformMap = map;
                 },
@@ -392,7 +393,7 @@ define( [
                 this.targetHTML.appendChild( mydiv );
             }
 
-            osg.log( uniformMap );
+            Notify.log( uniformMap );
         },
 
 

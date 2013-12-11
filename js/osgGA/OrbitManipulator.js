@@ -1,7 +1,7 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Vec3',
     'osg/Matrix',
     'osgGA/Manipulator',
@@ -9,7 +9,7 @@ define( [
     'osgGA/OrbitManipulatorMouseKeyboardController',
     'osgGA/OrbitManipulatorHammerController',
     'osgGA/OrbitManipulatorGamePadController'
-], function ( osg, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController ) {
+], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController ) {
 
     /** -*- compile-command: "jslint-cli OrbitManipulator.js" -*-
      * Authors:
@@ -105,7 +105,7 @@ define( [
     ];
 
     /** @lends OrbitManipulator.prototype */
-    OrbitManipulator.prototype = osg.objectInehrit( Manipulator.prototype, {
+    OrbitManipulator.prototype = MACROUTILS.objectInehrit( Manipulator.prototype, {
         init: function () {
             this._distance = 25;
             this._target = new Array( 3 );

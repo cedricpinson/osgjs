@@ -1,12 +1,12 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/NodeVisitor',
     'osg/Matrix',
     'osg/Vec3',
     'osgUtil/TriangleIntersect'
-], function ( osg, NodeVisitor, Matrix, Vec3, TriangleIntersect ) {
+], function ( MACROUTILS, NodeVisitor, Matrix, Vec3, TriangleIntersect ) {
 
     /** -*- compile-command: "jslint-cli IntersectVisitor.js" -*-
      * Authors:
@@ -19,7 +19,7 @@ define( [
         this.hits = [];
         this.nodePath = [];
     };
-    IntersectVisitor.prototype = osg.objectInehrit( NodeVisitor.prototype, {
+    IntersectVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
         addLineSegment: function ( start, end ) {
             this.start = start;
             this.end = end;

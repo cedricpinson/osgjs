@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/StateAttribute',
     'osg/Object'
-], function ( osg, StateAttribute, Object ) {
+], function ( MACROUTILS, StateAttribute, Object ) {
 
     /**
      * StateSet encapsulate StateAttribute
@@ -42,7 +42,7 @@ define( [
     };
 
     /** @lends StateSet.prototype */
-    StateSet.prototype = osg.objectLibraryClass( osg.objectInehrit( Object.prototype, {
+    StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Object.prototype, {
         getAttributePair: function ( attribute, value ) {
             return new StateSet.AttributePair( attribute, value );
         },

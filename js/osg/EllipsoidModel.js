@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
     'osg/Matrix',
     'osg/Vec3'
-], function ( osg, Matrix, Vec3 ) {
+], function ( Notify, Matrix, Vec3 ) {
 
     var EllipsoidModel = function () {
         this._radiusEquator = EllipsoidModel.WGS_84_RADIUS_EQUATOR;
@@ -32,7 +32,7 @@ define( [
         },
         convertLatLongHeightToXYZ: function ( latitude, longitude, height, result ) {
             if ( result === undefined ) {
-                osg.warn( 'deprecated, use this signature convertLatLongHeightToXYZ( latitude, longitude, height, result )' );
+                Notify.warn( 'deprecated, use this signature convertLatLongHeightToXYZ( latitude, longitude, height, result )' );
                 result = [];
             }
             var sin_latitude = Math.sin( latitude );
@@ -48,7 +48,7 @@ define( [
         },
         convertXYZToLatLongHeight: function ( X, Y, Z, result ) {
             if ( result === undefined ) {
-                osg.warn( 'deprecated, use this signature convertXYZToLatLongHeight( X,  Y,  Z , result)' );
+                Notify.warn( 'deprecated, use this signature convertXYZToLatLongHeight( X,  Y,  Z , result)' );
                 result = [];
             }
             // http://www.colorado.edu/geography/gcraft/notes/datum/gif/xyzllh.gif
@@ -95,7 +95,7 @@ define( [
         },
         computeLocalToWorldTransformFromLatLongHeight: function ( latitude, longitude, height, result ) {
             if ( result === undefined ) {
-                osg.warn( 'deprecated, use this signature computeLocalToWorldTransformFromLatLongHeight(latitude, longitude, height, result)' );
+                Notify.warn( 'deprecated, use this signature computeLocalToWorldTransformFromLatLongHeight(latitude, longitude, height, result)' );
                 result = new Array( 16 );
             }
             var pos = this.convertLatLongHeightToXYZ( latitude, longitude, height, result );

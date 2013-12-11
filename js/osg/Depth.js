@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/StateAttribute'
-], function ( osg, StateAttribute, Depth ) {
+], function ( MACROUTILS, StateAttribute, Depth ) {
 
     var Depth = function ( func, near, far, writeMask ) {
         StateAttribute.call( this );
@@ -41,7 +41,7 @@ define( [
     Depth.GEQUAL = 0x0206;
     Depth.ALWAYS = 0x0207;
 
-    Depth.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    Depth.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'Depth',
         cloneType: function () {
             return new Depth();

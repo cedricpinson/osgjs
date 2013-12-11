@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osgAnimation/Target'
-], function ( osg, Target ) {
+], function ( MACROUTILS, Target ) {
 
     /** -*- compile-command: "jslint-cli Target.js" -*-
      *
@@ -30,7 +30,7 @@ define( [
         this._target = [ value ];
     };
 
-    FloatTarget.prototype = osg.objectInehrit( Target.prototype, {
+    FloatTarget.prototype = MACROUTILS.objectInehrit( Target.prototype, {
         update: function ( weight, val, priority ) {
             if ( this._weight || this._priorityWeight ) {
 

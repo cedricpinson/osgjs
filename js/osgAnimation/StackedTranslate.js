@@ -1,12 +1,12 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Object',
     'osg/Matrix',
     'osgAnimation/Vec3Target',
     'osg/Vec3'
-], function ( osg, Object, Matrix, Vec3Target, Vec3 ) {
+], function ( MACROUTILS, Object, Matrix, Vec3Target, Vec3 ) {
 
     /** -*- compile-command: "jslint-cli StackedTransformElement.js" -*-
      *
@@ -44,7 +44,7 @@ define( [
     };
 
     /** @lends StackedTranslate.prototype */
-    StackedTranslate.prototype = osg.objectInehrit( Object.prototype, {
+    StackedTranslate.prototype = MACROUTILS.objectInehrit( Object.prototype, {
         setTranslate: function ( translate ) {
             Vec3.copy( translate, this._translate );
         },

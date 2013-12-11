@@ -1,11 +1,11 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/StateAttribute',
     'osg/Matrix',
     'osg/Viewport'
-], function ( osg, StateAttribute, Matrix, Viewport ) {
+], function ( MACROUTILS, StateAttribute, Matrix, Viewport ) {
 
     var Viewport = function ( x, y, w, h ) {
         StateAttribute.call( this );
@@ -30,7 +30,7 @@ define( [
         this._dirty = true;
     };
 
-    Viewport.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    Viewport.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'Viewport',
         cloneType: function () {
             return new Viewport();
@@ -70,8 +70,8 @@ define( [
             var translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
             var scale = Matrix.makeScale( 0.5 * this._width, 0.5 * this._height, 0.5 );
             var offset = Matrix.makeTranslate( this._x, this._y, 0.0 );
-            //return osg.Matrix.mult(osg.Matrix.mult(translate, scale, translate), offset, offset);
-            return osg.Matrix.preMult( offset, Matrix.preMult( scale, translate ) );
+            //return Matrix.mult(Matrix.mult(translate, scale, translate), offset, offset);
+            return Matrix.preMult( offset, Matrix.preMult( scale, translate ) );
         }
     } ), 'osg', 'Viewport' );
 

@@ -1,7 +1,7 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
     'osg/StateAttribute',
     'osg/Vec3',
     'osg/Uniform',
@@ -12,7 +12,7 @@ define( [
     'osg/DrawElements',
     'osg/Program',
     'osg/Shader'
-], function ( osg, StateAttribute, Vec3, Uniform, BufferArray, Geometry, PrimitiveSet, DrawArrays, DrawElements, Program, Shader ) {
+], function ( Notify, StateAttribute, Vec3, Uniform, BufferArray, Geometry, PrimitiveSet, DrawArrays, DrawElements, Program, Shader ) {
 
     /**
      * Create a Textured Box on the given center with given size
@@ -398,7 +398,7 @@ define( [
 
     var createTexturedBox = function ( centerx, centery, centerz,
         sizex, sizey, sizez ) {
-        osg.log( 'createTexturedBox is deprecated use instead createTexturedBoxGeometry' );
+        Notify.log( 'createTexturedBox is deprecated use instead createTexturedBoxGeometry' );
         return createTexturedBoxGeometry( centerx, centery, centerz,
             sizex, sizey, sizez );
     };
@@ -407,7 +407,7 @@ define( [
         wx, wy, wz,
         hx, hy, hz,
         l, b, r, t ) {
-        osg.log( 'createTexturedQuad is deprecated use instead createTexturedQuadGeometry' );
+        Notify.log( 'createTexturedQuad is deprecated use instead createTexturedQuadGeometry' );
         return createTexturedQuadGeometry( cornerx, cornery, cornerz,
             wx, wy, wz,
             hx, hy, hz,

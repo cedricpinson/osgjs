@@ -1,9 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg',
-    'osg/Vec3',
-], function ( osg, Vec3 ) {
+    'osg/Vec3'
+], function ( Vec3 ) {
 
     var BoundingSphere = function () {
         this._center = [ 0.0, 0.0, 0.0 ];

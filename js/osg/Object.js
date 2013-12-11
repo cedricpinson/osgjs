@@ -1,8 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/Utils'
+], function ( MACROUTILS ) {
 
     /** -*- compile-command: 'jslint-cli Object.js' -*- */
 
@@ -17,7 +17,7 @@ define( [
     };
 
     /** @lends Object.prototype */
-    Object.prototype = osg.objectLibraryClass( {
+    Object.prototype = MACROUTILS.objectLibraryClass( {
             getInstanceID: function () {
                 return this._instanceID;
             },

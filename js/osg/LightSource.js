@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Node',
-], function ( osg, Node ) {
+], function ( MACROUTILS, Node ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -17,7 +17,7 @@ define( [
     };
 
     /** @lends LightSource.prototype */
-    LightSource.prototype = osg.objectLibraryClass( osg.objectInehrit( Node.prototype, {
+    LightSource.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
         getLight: function () {
             return this._light;
         },
@@ -25,7 +25,7 @@ define( [
             this._light = light;
         }
     } ), 'osg', 'LightSource' );
-    LightSource.prototype.objectType = osg.objectType.generate( 'LightSource' );
+    LightSource.prototype.objectType = MACROUTILS.objectType.generate( 'LightSource' );
 
     return LightSource;
 } );

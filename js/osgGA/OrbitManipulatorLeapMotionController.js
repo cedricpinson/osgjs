@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
     'osg/Vec3'
-], function ( osg, Vec3 ) {
+], function ( Notify, Vec3 ) {
 
     var OrbitManipulatorLeapMotionController = function ( manipulator ) {
         this._manipulator = manipulator;
@@ -122,7 +122,7 @@ define( [
             }
             // change mode reset counter and skip this frame
             if ( mode !== this._mode ) {
-                osg.info( 'Switch to mode ' + mode );
+                Notify.info( 'Switch to mode ' + mode );
 
                 this._motion[ 0 ] = 0;
                 this._motion[ 1 ] = 0;
@@ -152,7 +152,7 @@ define( [
             this._manipulator[ method ]().setDelay( delay );
 
             if ( mode === 'zoom' ) {
-                osg.log( dist );
+                Notify.log( dist );
                 zoom.setTarget( dist );
             } else if ( mode === 'zoom-twohands' ) { // two hands zoom
                 // distance between two hands

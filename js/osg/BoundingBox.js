@@ -1,13 +1,13 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/Utils'
+], function ( MACROUTILS ) {
 
     var BoundingBox = function () {
         this.init();
     };
-    BoundingBox.prototype = osg.objectLibraryClass( {
+    BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
         _cache_radius2_tmp: [ 0, 0, 0 ],
 
         init: function () {

@@ -1,12 +1,11 @@
 /*global define */
 
 define( [
-    'osg/osg',
     'osgAnimation/Channel',
     'osgAnimation/Sampler',
     'osgAnimation/FloatLerpInterpolator',
     'osgAnimation/FloatTarget'
-], function ( osg, Channel, Sampler, FloatLerpInterpolator, FloatTarget ) {
+], function ( Channel, Sampler, FloatLerpInterpolator, FloatTarget ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *

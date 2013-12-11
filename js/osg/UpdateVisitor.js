@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/NodeVisitor',
     'osg/FrameStamp'
-], function ( osg, NodeVisitor, FrameStamp ) {
+], function ( MACROUTILS, NodeVisitor, FrameStamp ) {
 
     var UpdateVisitor = function () {
         NodeVisitor.call( this );
@@ -16,7 +16,7 @@ define( [
             framestamp = s;
         };
     };
-    UpdateVisitor.prototype = osg.objectInehrit( NodeVisitor.prototype, {
+    UpdateVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
         apply: function ( node ) {
             var ncs = node.getUpdateCallbackList();
             for ( var i = 0; i < ncs.length; i++ ) {

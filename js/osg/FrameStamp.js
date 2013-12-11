@@ -1,8 +1,6 @@
 /*global define */
 
-define( [
-    'osg/osg'
-], function ( osg ) {
+define( [], function () {
 
     var FrameStamp = function () {
         var frame = 0;

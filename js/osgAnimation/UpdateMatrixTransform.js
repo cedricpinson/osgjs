@@ -1,10 +1,11 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osgAnimation/AnimationUpdateCallback',
     'osg/matrix'
-], function ( osg, AnimationUpdateCallback, matrix ) {
+], function ( Notify, MACROUTILS, AnimationUpdateCallback, matrix ) {
 
     /** -*- compile-command: 'jslint-cli UpdateMatrixTransform.js' -*-
      *
@@ -36,7 +37,7 @@ define( [
     };
 
     /** @lends AnimationUpdateCallback.prototype */
-    UpdateMatrixTransform.prototype = osg.objectInehrit( AnimationUpdateCallback.prototype, {
+    UpdateMatrixTransform.prototype = MACROUTILS.objectInehrit( AnimationUpdateCallback.prototype, {
         getStackedTransforms: function () {
             return this._stackedTransforms;
         },
@@ -68,7 +69,7 @@ define( [
                     }
                 }
             }
-            osg.log( 'can\'t link channel ' + channelName + ', does not contain a symbolic name that can be linked to TransformElements' );
+            Notify.log( 'can\'t link channel ' + channelName + ', does not contain a symbolic name that can be linked to TransformElements' );
         }
 
     } );

@@ -1,8 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/Utils'
+], function ( MACROUTILS ) {
     /** -*- compile-command: 'jslint-cli Uniform.js' -*- */
 
     /** 
@@ -129,7 +129,7 @@ define( [
         uniform.glCall = function ( location, glData ) {
             gl.uniform1fv( location, glData );
         };
-        uniform.glData = new osg.Float32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Float32Array( uniform.data );
         uniform.update = Uniform.prototype._updateFloat1;
         uniform.set = function ( value ) {
             if ( typeof value === 'number' ) {
@@ -164,7 +164,7 @@ define( [
         uniform.glCall = function ( location, glData ) {
             gl.uniform2fv( location, glData );
         };
-        uniform.glData = new osg.Float32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Float32Array( uniform.data );
         uniform.update = Uniform.prototype._updateFloat2;
         uniform.name = name;
         uniform.type = 'vec2';
@@ -189,7 +189,7 @@ define( [
         uniform.glCall = function ( location, glData ) {
             gl.uniform3fv( location, glData );
         };
-        uniform.glData = new osg.Float32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Float32Array( uniform.data );
         uniform.update = Uniform.prototype._updateFloat3;
         uniform.name = name;
         uniform.type = 'vec3';
@@ -214,7 +214,7 @@ define( [
         uniform.glCall = function ( location, glData ) {
             gl.uniform4fv( location, glData );
         };
-        uniform.glData = new osg.Float32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Float32Array( uniform.data );
         uniform.update = Uniform.prototype._updateFloat4;
         uniform.name = name;
         uniform.type = 'vec4';
@@ -248,7 +248,7 @@ define( [
             this.dirty();
         };
 
-        uniform.glData = new osg.Int32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Int32Array( uniform.data );
         uniform.name = name;
         uniform.type = 'int';
         return uniform;
@@ -274,7 +274,7 @@ define( [
         uniform.glCall = function ( location, glData ) {
             gl.uniform2iv( location, glData );
         };
-        uniform.glData = new osg.Int32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Int32Array( uniform.data );
         uniform.name = name;
         uniform.type = 'vec2i';
         return uniform;
@@ -298,7 +298,7 @@ define( [
         uniform.glCall = function ( location, glData ) {
             gl.uniform3iv( location, glData );
         };
-        uniform.glData = new osg.Int32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Int32Array( uniform.data );
         uniform.name = name;
         uniform.type = 'vec3i';
         return uniform;
@@ -322,7 +322,7 @@ define( [
         uniform.glCall = function ( location, glData ) {
             gl.uniform4iv( location, glData );
         };
-        uniform.glData = new osg.Int32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Int32Array( uniform.data );
         uniform.name = name;
         uniform.type = 'vec4i';
         return uniform;
@@ -349,7 +349,7 @@ define( [
         };
         uniform.apply = uniform.applyMatrix;
         uniform.transpose = false;
-        uniform.glData = new osg.Float32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Float32Array( uniform.data );
         uniform.update = Uniform.prototype._updateFloat4;
         uniform.name = name;
         uniform.type = 'mat2';
@@ -372,7 +372,7 @@ define( [
         };
         uniform.apply = uniform.applyMatrix;
         uniform.transpose = false;
-        uniform.glData = new osg.Float32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Float32Array( uniform.data );
         uniform.update = Uniform.prototype._updateFloat9;
         uniform.name = name;
         uniform.type = 'mat3';
@@ -395,7 +395,7 @@ define( [
         };
         uniform.apply = uniform.applyMatrix;
         uniform.transpose = false;
-        uniform.glData = new osg.Float32Array( uniform.data );
+        uniform.glData = new MACROUTILS.Float32Array( uniform.data );
         uniform.update = Uniform.prototype._updateFloat16;
         uniform.name = name;
         uniform.type = 'mat4';

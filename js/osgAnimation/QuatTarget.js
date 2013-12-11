@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osgAnimation/Target',
     'osg/Quat'
-], function ( osg, Target, Quat ) {
+], function ( MACROUTILS, Target, Quat ) {
 
     /** -*- compile-command: "jslint-cli Target.js" -*-
      *
@@ -31,7 +31,7 @@ define( [
         this._target = [];
         Quat.makeIdentity( this._target );
     };
-    QuatTarget.prototype = osg.objectInehrit( Target.prototype, {
+    QuatTarget.prototype = MACROUTILS.objectInehrit( Target.prototype, {
         update: function ( weight, val, priority ) {
             if ( this._weight || this._priorityWeight ) {
 

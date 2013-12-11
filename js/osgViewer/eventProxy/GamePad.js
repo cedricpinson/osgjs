@@ -1,8 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/Notify'
+], function ( Notify ) {
 
     var GamePad = function ( viewer ) {
         this._viewer = viewer;
@@ -64,12 +64,12 @@ define( [
 
         onGamepadConnect: function ( evt ) {
             this._gamepad = evt.gamepad;
-            osg.log( "Detected new gamepad!", this._gamepad );
+            Notify.log( "Detected new gamepad!", this._gamepad );
         },
 
         onGamepadDisconnect: function ( evt ) {
             this._gamepad = false;
-            osg.log( "Gamepad disconnected", this._gamepad );
+            Notify.log( "Gamepad disconnected", this._gamepad );
         },
         getGamePad: function () {
             return this._gamepad;

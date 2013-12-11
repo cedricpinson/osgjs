@@ -1,14 +1,15 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Image',
     'osg/ShaderGenerator',
     'osgDB/osgDB',
     'vendors/Q'
-], function ( osg, StateAttribute, Uniform, Image, ShaderGenerator, osgDB, Q ) {
+], function ( Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, osgDB, Q ) {
 
     /** -*- compile-command: 'jslint-cli Texture.js' -*- */
 
@@ -59,7 +60,7 @@ define( [
 
 
     /** @lends Texture.prototype */
-    Texture.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'Texture',
         cloneType: function () {
             var t = new Texture();
@@ -411,7 +412,7 @@ define( [
     };
 
     Texture.create = function ( url ) {
-        osg.log( 'Texture.create is deprecated, use Texture.createFromURL instead' );
+        Notify.log( 'Texture.create is deprecated, use Texture.createFromURL instead' );
         return Texture.createFromURL( url );
     };
 

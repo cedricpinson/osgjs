@@ -1,13 +1,13 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Matrix',
     'osg/Vec4',
     'osg/ShaderGenerator'
-], function ( osg, StateAttribute, Uniform, Matrix, Vec4, ShaderGenerator ) {
+], function ( MACROUTILS, StateAttribute, Uniform, Matrix, Vec4, ShaderGenerator ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -40,7 +40,7 @@ define( [
 
     /** @lends Light.prototype */
     Light.uniforms = {};
-    Light.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'Light',
         cloneType: function () {
             return new Light( this._lightUnit );

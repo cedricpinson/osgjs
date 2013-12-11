@@ -1,11 +1,11 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
     'osg/Vec3',
     'osg/Vec4',
     'osg/Quat'
-], function ( osg, Vec3, Vec4, Quat ) {
+], function ( Notify, Vec3, Vec4, Quat ) {
 
     /** @class Matrix Operations */
     var Matrix = {
@@ -43,7 +43,7 @@ define( [
         makeIdentity: function ( matrix ) {
             if ( matrix === undefined ) {
                 matrix = [];
-                osg.log( 'Matrix.makeIdentity without matrix destination is deprecated' );
+                Notify.log( 'Matrix.makeIdentity without matrix destination is deprecated' );
             }
             Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
             Matrix.setRow( matrix, 1, 0.0, 1.0, 0.0, 0.0 );
@@ -552,7 +552,7 @@ define( [
 
         makeRotate: function ( angle, x, y, z, result ) {
             if ( result === undefined ) {
-                osg.log( 'makeRotate without given matrix destination is deprecated' );
+                Notify.log( 'makeRotate without given matrix destination is deprecated' );
                 result = [];
             }
 
@@ -623,7 +623,7 @@ define( [
             var d = 1.0 / ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] );
 
             if ( result === undefined ) {
-                osg.warn( 'deprecated, Matrix.transformVec3 needs a third parameter as result' );
+                Notify.warn( 'deprecated, Matrix.transformVec3 needs a third parameter as result' );
                 result = [];
             }
 
@@ -742,7 +742,7 @@ define( [
 
             var d1 = ( matrix[ 0 ] * t0 + matrix[ 4 ] * t1 + matrix[ 8 ] * t2 + matrix[ 12 ] * t3 );
             if ( Math.abs( d1 ) < 1e-5 ) {
-                osg.log( 'Warning can\'t inverse matrix ' + matrix );
+                Notify.log( 'Warning can\'t inverse matrix ' + matrix );
                 return false;
             }
             var d = 1.0 / d1;

@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
     'osg/StateGraph',
     'osg/Matrix'
-], function ( osg, StateGraph, Matrix ) {
+], function ( Notify, StateGraph, Matrix ) {
 
     var RenderBin = function () {
         this._leafs = [];
@@ -60,7 +60,7 @@ define( [
             }
 
             if ( detectedNaN ) {
-                osg.debug( 'warning: RenderBin::copyLeavesFromStateGraphListToRenderLeafList() detected NaN depth values, database may be corrupted.' );
+                Notify.debug( 'warning: RenderBin::copyLeavesFromStateGraphListToRenderLeafList() detected NaN depth values, database may be corrupted.' );
             }
             // empty the render graph list to prevent it being drawn along side the render leaf list (see drawImplementation.)
             this.stateGraphList.splice( 0, this.stateGraphList.length );

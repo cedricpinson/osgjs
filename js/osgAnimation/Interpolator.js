@@ -1,6 +1,8 @@
 /*global define */
 
-define( [], function () {
+define( [
+    'osg/Quat'
+], function ( Quat ) {
 
     /** -*- compile-command: "jslint-cli Interpolator.js" -*-
      *
@@ -163,7 +165,7 @@ define( [], function () {
         var t2 = keys[ i2 ].t;
         var r = ( t - t1 ) / ( t2 - t1 );
 
-        osg.Quat.slerp( r, keys[ i1 ], keys[ i2 ], result.value );
+        Quat.slerp( r, keys[ i1 ], keys[ i2 ], result.value );
         result.key = i1;
     };
 

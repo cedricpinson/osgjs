@@ -1,8 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/Notify'
+], function ( Notify ) {
 
     /** 
      * DrawArrays manage rendering primitives
@@ -31,7 +31,7 @@ define( [
         }
     };
     DrawArrays.create = function ( mode, first, count ) {
-        osg.log( 'DrawArrays.create is deprecated, use new DrawArrays with same arguments' );
+        Notify.log( 'DrawArrays.create is deprecated, use new DrawArrays with same arguments' );
         var d = new DrawArrays( mode, first, count );
         return d;
     };

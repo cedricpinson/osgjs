@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/StateAttribute'
-], function ( osg, StateAttribute ) {
+], function ( MACROUTILS, StateAttribute ) {
 
     /** 
      *  Manage BlendColor attribute
@@ -19,7 +19,7 @@ define( [
     };
 
     /** @lends BlendColor.prototype */
-    BlendColor.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    BlendColor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'BlendColor',
         cloneType: function () {
             return new BlendColor();

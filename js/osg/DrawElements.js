@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
     'osg/PrimitiveSet'
-], function ( osg, PrimitiveSet ) {
+], function ( Notify, PrimitiveSet ) {
 
     /** 
      * DrawElements manage rendering of indexed primitives
@@ -56,7 +56,7 @@ define( [
     };
 
     DrawElements.create = function ( mode, indices ) {
-        osg.log( 'DrawElements.create is deprecated, use new DrawElements with same arguments' );
+        Notify.log( 'DrawElements.create is deprecated, use new DrawElements with same arguments' );
         return new DrawElements( mode, indices );
     };
 

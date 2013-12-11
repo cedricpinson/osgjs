@@ -1,12 +1,12 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Object',
     'osg/Matrix',
     'osgAnimation/QuatTarget',
     'osg/Quat'
-], function ( osg, Object, Matrix, QuatTarget, Quat ) {
+], function ( MACROUTILS, Object, Matrix, QuatTarget, Quat ) {
 
     /** -*- compile-command: "jslint-cli StackedTransformElement.js" -*-
      *
@@ -45,7 +45,7 @@ define( [
     };
 
     /** @lends StackedQuaternion.prototype */
-    StackedQuaternion.prototype = osg.objectInehrit( Object.prototype, {
+    StackedQuaternion.prototype = MACROUTILS.objectInehrit( Object.prototype, {
         setQuaternion: function ( q ) {
             Quat.copy( q, this._quaternion );
         },

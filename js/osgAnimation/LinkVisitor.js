@@ -1,10 +1,11 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/NodeVisitor',
     'osg/Object'
-], function ( osg, NodeVisitor, Object ) {
+], function ( Notify, MACROUTILS, NodeVisitor, Object ) {
 
     /** -*- compile-command: "jslint-cli LinkVisitor.js" -*-
      *
@@ -38,7 +39,7 @@ define( [
     };
 
     /** @lends LinkVisitor.prototype */
-    LinkVisitor.prototype = osg.objectInehrit( NodeVisitor.prototype, {
+    LinkVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
         setAnimationMap: function ( anims ) {
             this._animations = anims;
             this._animationKeys = Object.keys( anims );
@@ -65,7 +66,7 @@ define( [
                 result += animCallback.linkAnimation( anim );
             }
             this._nbLinkedTarget += result;
-            osg.log( "linked " + result + " for \"" + animCallback.getName() + '"' );
+            Notify.log( "linked " + result + " for \"" + animCallback.getName() + '"' );
         }
 
     } );

@@ -1,7 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'vendors/Q',
     'osg/Texture',
     'osg/Uniform',
@@ -13,11 +14,12 @@ define( [
     'osg/DrawArrays',
     'osg/DrawElements',
     'osg/StateSet',
+    'osg/Node',
     'osg/Matrix',
     'osg/MatrixTransform',
     'osg/Projection',
     'osgDB/Input'
-], function ( osg, Q, Texture, Uniform, BlendFunc, Material, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Matrix, MatrixTransform, Projection, Input ) {
+], function ( Notify, MACROUTILS, Q, Texture, Uniform, BlendFunc, Material, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection, Input ) {
 
 
     /** -*- compile-command: 'jslint-cli osgDB.js' -*-
@@ -41,6 +43,7 @@ define( [
      */
 
     var osgDB = {};
+    osgDB.Input = Input;
 
     osgDB.ObjectWrapper = {};
     osgDB.ObjectWrapper.serializers = {};
@@ -91,7 +94,7 @@ define( [
                 return input.readObject();
                 //return osgDB.ObjectWrapper.readObject(obj);
             } else {
-                osg.log( 'can\'t parse scenegraph ' + node );
+                Notify.log( 'can\'t parse scenegraph ' + node );
             }
         } else {
             return osgDB.parseSceneGraph_deprecated( node );
@@ -160,7 +163,7 @@ define( [
                 for ( var t = 0, tl = textures.length; t < tl; t++ ) {
                     var file = getFieldBackwardCompatible( 'File', textures[ t ] );
                     if ( !file ) {
-                        osg.log( 'no texture on unit ' + t + ' skip it' );
+                        Notify.log( 'no texture on unit ' + t + ' skip it' );
                         continue;
                     }
                     var tex = new Texture();
@@ -196,7 +199,7 @@ define( [
 
             setName( newnode, node );
 
-            osg.extend( newnode, node ); // we should not do that
+            MACROUTILS.extend( newnode, node ); // we should not do that
             node = newnode;
             node.primitives = primitives; // we should not do that
             node.attributes = attributes; // we should not do that
@@ -241,7 +244,7 @@ define( [
             newnode = new MatrixTransform();
             setName( newnode, node );
 
-            osg.extend( newnode, node );
+            MACROUTILS.extend( newnode, node );
             newnode.setMatrix( Matrix.copy( matrix ) );
             node = newnode;
         }
@@ -250,16 +253,16 @@ define( [
         if ( projection ) {
             newnode = new Projection();
             setName( newnode, node );
-            osg.extend( newnode, node );
-            newnode.setProjectionMatrix( osg.Matrix.copy( projection ) );
+            MACROUTILS.extend( newnode, node );
+            newnode.setProjectionMatrix( Matrix.copy( projection ) );
             node = newnode;
         }
 
         // default type
         if ( node.objectType === undefined ) {
-            newnode = new osg.Node();
+            newnode = new Node();
             setName( newnode, node );
-            osg.extend( newnode, node );
+            MACROUTILS.extend( newnode, node );
             node = newnode;
         }
 

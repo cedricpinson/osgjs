@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Matrix',
     'osg/Transform'
-], function ( osg, Matrix, Transform ) {
+], function ( MACROUTILS, Matrix, Transform ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -18,7 +18,7 @@ define( [
     };
 
     /** @lends MatrixTransform.prototype */
-    MatrixTransform.prototype = osg.objectLibraryClass( osg.objectInehrit( Transform.prototype, {
+    MatrixTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Transform.prototype, {
         getMatrix: function () {
             return this.matrix;
         },
@@ -44,7 +44,7 @@ define( [
             return true;
         }
     } ), 'osg', 'MatrixTransform' );
-    MatrixTransform.prototype.objectType = osg.objectType.generate( 'MatrixTransform' );
+    MatrixTransform.prototype.objectType = MACROUTILS.objectType.generate( 'MatrixTransform' );
 
     return MatrixTransform;
 } );

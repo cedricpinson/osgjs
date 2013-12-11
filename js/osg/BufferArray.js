@@ -1,9 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/Object'
-], function ( osg, Object ) {
+], function ( Notify, MACROUTILS, Object ) {
 
     /** -*- compile-command: 'jslint-cli BufferArray.js' -*- */
 
@@ -26,9 +27,9 @@ define( [
 
         if ( elements !== undefined ) {
             if ( this._type === BufferArray.ELEMENT_ARRAY_BUFFER ) {
-                this._elements = new osg.Uint16Array( elements );
+                this._elements = new MACROUTILS.Uint16Array( elements );
             } else {
-                this._elements = new osg.Float32Array( elements );
+                this._elements = new MACROUTILS.Float32Array( elements );
             }
         }
     };
@@ -98,7 +99,7 @@ define( [
     };
 
     BufferArray.create = function ( type, elements, itemSize ) {
-        osg.log( 'BufferArray.create is deprecated, use new BufferArray with same arguments instead' );
+        Notify.log( 'BufferArray.create is deprecated, use new BufferArray with same arguments instead' );
         return new BufferArray( type, elements, itemSize );
     };
 

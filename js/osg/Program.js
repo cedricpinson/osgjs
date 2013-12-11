@@ -1,9 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/StateAttribute'
-], function ( osg, StateAttribute ) {
+], function ( Notify, MACROUTILS, StateAttribute ) {
 
     /**
      * Program encapsulate an vertex and fragment shader
@@ -19,7 +20,7 @@ define( [
     };
 
     /** @lends Program.prototype */
-    Program.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
 
         attributeType: 'Program',
         cloneType: function () {
@@ -64,8 +65,8 @@ define( [
                 gl.linkProgram( this.program );
                 gl.validateProgram( this.program );
                 if ( !gl.getProgramParameter( this.program, gl.LINK_STATUS ) && !gl.isContextLost() ) {
-                    osg.log( 'can\'t link program\n' + 'vertex shader:\n' + this.vertex.text + '\n fragment shader:\n' + this.fragment.text );
-                    osg.log( gl.getProgramInfoLog( this.program ) );
+                    Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this.vertex.text + '\n fragment shader:\n' + this.fragment.text );
+                    Notify.log( gl.getProgramInfoLog( this.program ) );
                     this.setDirty( false );
                     //debugger;
                     return null;
@@ -78,7 +79,7 @@ define( [
 
                 this.cacheUniformList( this.vertex.text );
                 this.cacheUniformList( this.fragment.text );
-                //osg.log(this.uniformsCache);
+                //Notify.log(this.uniformsCache);
 
                 this.cacheAttributeList( this.vertex.text );
 

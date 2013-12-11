@@ -2,8 +2,8 @@
 
 // #FIXME load leap
 define( [
-    'osg/osg'
-], function ( osg ) {
+    'osg/Notify'
+], function ( Notify ) {
 
     var LeapMotion = function ( viewer ) {
         this._viewer = viewer;
@@ -23,7 +23,7 @@ define( [
                 if ( args.readyCallback )
                     args.readyCallback( self._controller );
                 self._leapMotionReady = true;
-                osg.info( 'leapmotion ready' );
+                Notify.info( 'leapmotion ready' );
             } );
 
             this._controller.loop( this._update.bind( this ) );

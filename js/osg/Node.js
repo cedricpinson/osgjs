@@ -1,7 +1,7 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Object',
     'osg/BoundingBox',
     'osg/BoundingSphere',
@@ -10,7 +10,7 @@ define( [
     'osg/Matrix',
     /* #FIXME enum fix osg/Transform, */
     'osg/ComputeMatrixFromNodePath'
-], function ( osg, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, /* #FIXME enum fix Transform,*/ ComputeMatrixFromNodePath ) {
+], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, /* #FIXME enum fix Transform,*/ ComputeMatrixFromNodePath ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -31,7 +31,7 @@ define( [
     };
 
     /** @lends Node.prototype */
-    Node.prototype = osg.objectLibraryClass( osg.objectInehrit( Object.prototype, {
+    Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Object.prototype, {
         /**
         Return StateSet and create it if it does not exist yet
         @type StateSet
@@ -249,7 +249,7 @@ define( [
                 this.halt = halt;
                 NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
             };
-            CollectParentPaths.prototype = osg.objectInehrit( NodeVisitor.prototype, {
+            CollectParentPaths.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
                 apply: function ( node ) {
                     if ( node.parents.length === 0 || node === this.halt ) {
                         // copy
@@ -276,7 +276,7 @@ define( [
 
 
     } ), 'osg', 'Node' );
-    Node.prototype.objectType = osg.objectType.generate( 'Node' );
+    Node.prototype.objectType = MACROUTILS.objectType.generate( 'Node' );
 
     return Node;
 } );

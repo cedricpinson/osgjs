@@ -1,9 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/StateAttribute'
-], function ( osg, StateAttribute ) {
+], function ( Notify, MACROUTILS, StateAttribute ) {
 
     /** 
      * FrameBufferObject manage fbo / rtt
@@ -21,7 +22,7 @@ define( [
     FrameBufferObject.DEPTH_COMPONENT16 = 0x81A5;
 
     /** @lends FrameBufferObject.prototype */
-    FrameBufferObject.prototype = osg.objectInehrit( StateAttribute.prototype, {
+    FrameBufferObject.prototype = MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'FrameBufferObject',
         cloneType: function () {
             return new FrameBufferObject();
@@ -38,19 +39,19 @@ define( [
         _reportFrameBufferError: function ( code ) {
             switch ( code ) {
             case 0x8CD6:
-                osg.debug( 'FRAMEBUFFER_INCOMPLETE_ATTACHMENT' );
+                Notify.debug( 'FRAMEBUFFER_INCOMPLETE_ATTACHMENT' );
                 break;
             case 0x8CD7:
-                osg.debug( 'FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT' );
+                Notify.debug( 'FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT' );
                 break;
             case 0x8CD9:
-                osg.debug( 'FRAMEBUFFER_INCOMPLETE_DIMENSIONS' );
+                Notify.debug( 'FRAMEBUFFER_INCOMPLETE_DIMENSIONS' );
                 break;
             case 0x8CDD:
-                osg.debug( 'FRAMEBUFFER_UNSUPPORTED' );
+                Notifiy.debug( 'FRAMEBUFFER_UNSUPPORTED' );
                 break;
             default:
-                osg.debug( 'FRAMEBUFFER unknown error ' + code.toString( 16 ) );
+                Notify.debug( 'FRAMEBUFFER unknown error ' + code.toString( 16 ) );
             }
         },
         apply: function ( state ) {
@@ -93,7 +94,7 @@ define( [
                     this.setDirty( false );
                 } else {
                     gl.bindFramebuffer( gl.FRAMEBUFFER, this.fbo );
-                    if ( osg.reportWebGLError === true ) {
+                    if ( Notify.reportWebGLError === true ) {
                         status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
                         if ( status !== 0x8CD5 ) {
                             this._reportFrameBufferError( status );

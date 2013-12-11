@@ -1,11 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
     'osgAnimation/Channel',
     'osgAnimation/QuatLerpChannel',
     'osgAnimation/QuatSlerpInterpolator'
-], function ( osg, Channel, QuatLerpChannel, QuatSlerpInterpolator ) {
+], function ( Channel, QuatLerpChannel, QuatSlerpInterpolator ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *

@@ -1,8 +1,6 @@
 /*global define */
 
-define( [
-    'osg/osg'
-], function ( osg ) {
+define( [], function () {
 
     var NodeVisitor = function ( traversalMode ) {
         this.traversalMask = ~0x0;

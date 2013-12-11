@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Object'
-], function ( osg, Object ) {
+], function ( MACROUTILS, Object ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *
@@ -41,7 +41,7 @@ define( [
     };
 
     /** @lends Channel.prototype */
-    Channel.prototype = osg.objectInehrit( Object.prototype, {
+    Channel.prototype = MACROUTILS.objectInehrit( Object.prototype, {
         getKeyframes: function () {
             return this._sampler.getKeyframes();
         },

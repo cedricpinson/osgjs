@@ -1,6 +1,28 @@
 /*global define */
 
-define( [], function () {
+define( [
+	'osgAnimation/Animation',
+	'osgAnimation/AnimationUpdateCallBack',
+	'osgAnimation/BasicAnimationManager',
+	'osgAnimation/Channel',
+	'osgAnimation/Easing',
+	'osgAnimation/FloatLerpChannel',
+	'osgAnimation/FloatTarget',
+	'osgAnimation/Interpolator',
+	'osgAnimation/Keyframe',
+	'osgAnimation/LinkVisitor',
+	'osgAnimation/QuatLerpChannel',
+	'osgAnimation/QuatSLerpChannel',
+	'osgAnimation/QuatTarget',
+	'osgAnimation/Sampler',
+	'osgAnimation/StackedQuaternion',
+	'osgAnimation/StackedRotateAxis',
+	'osgAnimation/StackedTranslate',
+	'osgAnimation/Target',
+	'osgAnimation/UpdateMatrixTransform',
+	'osgAnimation/Vec3LerpChannel',
+	'osgAnimation/Vec3Target'
+], function ( Animation, AnimationUpdateCallBack, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSLerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
 
 	/** -*- compile-command: "jslint-cli osgAnimation.js" -*-
 	 *
@@ -24,41 +46,36 @@ define( [], function () {
 
 	var osgAnimation = {};
 
-	osgAnimation.easeOutQuad = function ( t ) {
-		return -( t * ( t - 2.0 ) );
-	};
-	osgAnimation.easeInQuad = function ( t ) {
-		return ( t * t );
-	};
-	osgAnimation.easeOutCubic = function ( t ) {
-		t = t - 1.0;
-		return ( t * t * t + 1 );
-	};
-	osgAnimation.easeInCubic = function ( t ) {
-		return ( t * t * t );
-	};
-	osgAnimation.easeOutQuart = function ( t ) {
-		t = t - 1;
-		return -( t * t * t * t - 1 );
-	};
-	osgAnimation.easeInQuart = function ( t ) {
-		return ( t * t * t * t );
-	};
-	osgAnimation.easeOutElastic = function ( t ) {
-		return Math.pow( 2.0, -10.0 * t ) * Math.sin( ( t - 0.3 / 4.0 ) * ( 2.0 * Math.PI ) / 0.3 ) + 1.0;
-	};
-	//osgAnimation.EaseInElastic = function(t) { return ; };
-	osgAnimation.easeOutBounce = function ( t ) {
-		if ( t < ( 1 / 2.75 ) ) {
-			return ( 7.5625 * t * t );
-		} else if ( t < ( 2 / 2.75 ) ) {
-			return ( 7.5625 * ( t -= ( 1.5 / 2.75 ) ) * t + 0.75 );
-		} else if ( t < ( 2.5 / 2.75 ) ) {
-			return ( 7.5625 * ( t -= ( 2.25 / 2.75 ) ) * t + 0.9375 );
-		} else {
-			return ( 7.5625 * ( t -= ( 2.625 / 2.75 ) ) * t + 0.984375 );
-		}
-	};
+	osgAnimation.Animation = Animation;
+	osgAnimation.AnimationUpdateCallBack = AnimationUpdateCallBack;
+	osgAnimation.BasicAnimationManager = BasicAnimationManager;
+	osgAnimation.Channel = Channel;
+	osgAnimation.Easing = Easing;
+	osgAnimation.FloatLerpChannel = FloatLerpChannel;
+	osgAnimation.FloatTarget = FloatTarget;
+	osgAnimation.Interpolator = Interpolator;
+	osgAnimation.Keyframe = Keyframe;
+	osgAnimation.LinkVisitor = LinkVisitor;
+	osgAnimation.QuatLerpChannel = QuatLerpChannel;
+	osgAnimation.QuatSLerpChannel = QuatSLerpChannel;
+	osgAnimation.QuatTarget = QuatTarget;
+	osgAnimation.Sampler = Sampler;
+	osgAnimation.StackedQuaternion = StackedQuaternion;
+	osgAnimation.StackedRotateAxis = StackedRotateAxis;
+	osgAnimation.StackedTranslate = StackedTranslate;
+	osgAnimation.Target = Target;
+	osgAnimation.UpdateMatrixTransform = UpdateMatrixTransform;
+	osgAnimation.Vec3LerpChannel = Vec3LerpChannel;
+	osgAnimation.Vec3Target = Vec3Target;
+
+	osgAnimation.easeOutQuad = Easing.easeOutQuad;
+	osgAnimation.easeInQuad = Easing.easeInQuad;
+	osgAnimation.easeOutCubic = Easing.easeOutCubic;
+	osgAnimation.easeInCubic = Easing.easeInCubic;
+	osgAnimation.easeOutQuart = Easing.easeOutQuart;
+	osgAnimation.easeInQuart = Easing.easeInQuart;
+	osgAnimation.easeOutElastic = Easing.easeOutElastic;
+	osgAnimation.easeOutBounce = Easing.easeOutBounce;
 
 	return osgAnimation;
 } );

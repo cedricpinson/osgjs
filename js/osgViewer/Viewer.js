@@ -1,7 +1,8 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/UpdateVisitor',
     'osg/CullVisitor',
     'osgUtil/osgUtil',
@@ -12,33 +13,14 @@ define( [
     'osg/State',
     'osgGA/OrbitManipulator',
     'osgViewer/eventProxy/EventProxy'
-], function ( osg, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy ) {
+], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy ) {
 
     /** -*- compile-command: 'jslint-cli Viewer.js' -*-
      * Authors:
      *  Cedric Pinson <cedric.pinson@plopbyte.com>
      */
 
-    //#FIXME delete this part !!
-    osg.performance = {};
-    osg.performance.now = ( function () {
-        // if no window.performance
-        if ( window.performance === undefined ) {
-            return function () {
-                return Date.now();
-            };
-        }
-
-        var fn = window.performance.now || window.performance.mozNow || window.performance.msNow || window.performance.oNow || window.performance.webkitNow ||
-                function () {
-                    return Date.now();
-            };
-        return function () {
-            return fn.apply( window.performance, arguments );
-        };
-    } )();
     ( function () {
-
 
         // install an html console logger for mobile
         var optionsURL = function () {
@@ -66,19 +48,19 @@ define( [
 
             switch ( level ) {
             case 'debug':
-                osg.setNotifyLevel( osg.DEBUG );
+                Notify.setNotifyLevel( Notify.DEBUG );
                 break;
             case 'info':
-                osg.setNotifyLevel( osg.INFO );
+                Notify.setNotifyLevel( Notify.INFO );
                 break;
             case 'notice':
-                osg.setNotifyLevel( osg.NOTICE );
+                Notify.setNotifyLevel( Notify.NOTICE );
                 break;
             case 'warn':
-                osg.setNotifyLevel( osg.WARN );
+                Notify.setNotifyLevel( Notify.WARN );
                 break;
             case 'error':
-                osg.setNotifyLevel( osg.ERROR );
+                Notify.setNotifyLevel( Notify.ERROR );
                 break;
             case 'html':
                 ( function () {
@@ -123,10 +105,11 @@ define( [
         }
         this._options = options;
 
-        if ( osg.SimulateWebGLLostContext ) {
-            canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas( canvas );
-            canvas.loseContextInNCalls( osg.SimulateWebGLLostContext );
-        }
+        // #FIXME uncomment  + change namespace ??
+        // if ( osg.SimulateWebGLLostContext ) {
+        //     canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas( canvas );
+        //     canvas.loseContextInNCalls( osg.SimulateWebGLLostContext );
+        // }
 
         gl = WebGLUtils.setupWebGL( canvas, options, error );
         var self = this;
@@ -140,14 +123,14 @@ define( [
         }, false );
 
 
-        if ( osg.reportWebGLError || options.reportWebGLError ) {
+        if ( Notify.reportWebGLError || options.reportWebGLError ) {
             gl = WebGLDebugUtils.makeDebugContext( gl );
         }
 
 
         if ( gl ) {
             this.setGraphicContext( gl );
-            osg.init();
+            MACROUTILS.init();
             this._canvas = canvas;
             this._frameRate = 60.0;
             osgUtil.UpdateVisitor = UpdateVisitor;
@@ -177,14 +160,14 @@ define( [
     };
 
 
-    Viewer.prototype = osg.objectInehrit( View.prototype, {
+    Viewer.prototype = MACROUTILS.objectInehrit( View.prototype, {
 
         contextLost: function () {
-            osg.log( 'webgl context lost' );
+            Notify.log( 'webgl context lost' );
             window.cancelRequestAnimFrame( this._requestID );
         },
         contextRestored: function () {
-            osg.log( 'webgl context restored, but not supported - reload the page' );
+            Notify.log( 'webgl context restored, but not supported - reload the page' );
         },
 
         init: function () {
@@ -436,7 +419,7 @@ define( [
 
         frame: function () {
             var frameTime, beginFrameTime;
-            frameTime = osg.performance.now();
+            frameTime = MACROUTILS.performance.now();
             if ( this._lastFrameTime === undefined ) {
                 this._lastFrameTime = 0;
             }
@@ -474,25 +457,25 @@ define( [
                 this.draw();
                 frameStamp.setFrameNumber( frameStamp.getFrameNumber() + 1 );
                 this._numberFrame++;
-                this._frameTime = osg.performance.now() - beginFrameTime;
+                this._frameTime = MACROUTILS.performance.now() - beginFrameTime;
             } else {
-                this._updateTime = osg.performance.now();
+                this._updateTime = MACROUTILS.performance.now();
                 this.update();
-                this._updateTime = osg.performance.now() - this._updateTime;
+                this._updateTime = MACROUTILS.performance.now() - this._updateTime;
 
 
-                this._cullTime = osg.performance.now();
+                this._cullTime = MACROUTILS.performance.now();
                 this.cull();
-                this._cullTime = osg.performance.now() - this._cullTime;
+                this._cullTime = MACROUTILS.performance.now() - this._cullTime;
 
-                this._drawTime = osg.performance.now();
+                this._drawTime = MACROUTILS.performance.now();
                 this.draw();
-                this._drawTime = osg.performance.now() - this._drawTime;
+                this._drawTime = MACROUTILS.performance.now() - this._drawTime;
 
                 frameStamp.setFrameNumber( frameStamp.getFrameNumber() + 1 );
 
                 this._numberFrame++;
-                this._frameTime = osg.performance.now() - beginFrameTime;
+                this._frameTime = MACROUTILS.performance.now() - beginFrameTime;
 
                 if ( window.performance && window.performance.memory && window.performance.memory.usedJSHeapSize )
                     this._memSize = window.performance.memory.usedJSHeapSize;
@@ -549,7 +532,7 @@ define( [
                 self._canvas.height = h;
                 self._canvas.style.width = w;
                 self._canvas.style.height = h;
-                osg.debug( 'window resize ' + prevWidth + 'x' + prevHeight + ' to ' + w + 'x' + h );
+                Notify.debug( 'window resize ' + prevWidth + 'x' + prevHeight + ' to ' + w + 'x' + h );
                 var widthChangeRatio = w / prevWidth;
                 var heightChangeRatio = h / prevHeight;
                 var aspectRatioChange = widthChangeRatio / heightChangeRatio;

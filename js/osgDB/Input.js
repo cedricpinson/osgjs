@@ -2,13 +2,14 @@
 
 define( [
     'osg/osg',
+    'osg/Notify',
     'vendors/Q',
     'osgDB/osgDB',
     'osg/Image',
     'osg/BufferArray',
     'osg/PrimitiveSet',
     'osg/DrawElements'
-], function ( osg, Q, osgDB, Image, BufferArray, PrimitiveSet, DrawElements ) {
+], function ( osg, Notify, Q, osgDB, Image, BufferArray, PrimitiveSet, DrawElements ) {
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -100,7 +101,7 @@ define( [
             var isInlineImage = ( url.substring( 0, checkInlineImage.length ) === checkInlineImage );
             var img = new window.Image();
             img.onerror = function () {
-                osg.warn( 'warning use white texture as fallback instead of ' + url );
+                Notify.warn( 'warning use white texture as fallback instead of ' + url );
                 image.setImage( Input.imageFallback );
                 if ( defer ) {
                     defer.resolve( image );
@@ -183,7 +184,7 @@ define( [
                                 opt ),
                             function ( child ) {
                                 defer.resolve( child );
-                                osg.log( 'loaded ' + url );
+                                Notify.log( 'loaded ' + url );
 
                             } ).fail( function ( error ) {
                             defer.reject( error );
@@ -277,7 +278,7 @@ define( [
                     vb = jsonObj.Array.Uint16Array;
                     type = 'Uint16Array';
                 } else {
-                    osg.warn( 'Typed Array ' + Object.keys( o.Array )[ 0 ] );
+                    Notify.warn( 'Typed Array ' + Object.keys( o.Array )[ 0 ] );
                     type = 'Float32Array';
                 }
 
@@ -308,7 +309,7 @@ define( [
                             var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
 
                             if ( big_endian ) {
-                                osg.log( 'big endian detected' );
+                                Notify.log( 'big endian detected' );
                                 var typed_array = osg[ type ];
                                 var tmpArray = new typed_array( nbItems * nbCoords );
                                 var data = new DataView( array, offset, totalSizeInBytes );
@@ -457,7 +458,7 @@ define( [
             var jsonObj = this.getJSON();
             var prop = Object.keys( jsonObj )[ 0 ];
             if ( !prop ) {
-                osg.warn( 'can\'t find property for object ' + jsonObj );
+                Notify.warn( 'can\'t find property for object ' + jsonObj );
                 return undefined;
             }
 
@@ -472,7 +473,7 @@ define( [
 
             var obj = this.getObjectWrapper( prop );
             if ( !obj ) {
-                osg.warn( 'can\'t instanciate object ' + prop );
+                Notify.warn( 'can\'t instanciate object ' + prop );
                 return undefined;
             }
 
@@ -481,7 +482,7 @@ define( [
             for ( var i = 0, l = splittedPath.length; i < l; i++ ) {
                 var reader = scope[ splittedPath[ i ] ];
                 if ( reader === undefined ) {
-                    osg.warn( 'can\'t find function to read object ' + prop + ' - undefined' );
+                    Notify.warn( 'can\'t find function to read object ' + prop + ' - undefined' );
                     return undefined;
                 }
                 scope = reader;

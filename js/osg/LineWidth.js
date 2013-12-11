@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/StateAttribute',
-], function ( osg, StateAttribute ) {
+], function ( MACROUTILS, StateAttribute ) {
 
     var LineWidth = function ( lineWidth ) {
         StateAttribute.call( this );
@@ -12,7 +12,7 @@ define( [
             this.lineWidth = lineWidth;
         }
     };
-    LineWidth.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    LineWidth.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'LineWidth',
         cloneType: function () {
             return new LineWidth();

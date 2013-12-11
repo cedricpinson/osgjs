@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/StateAttribute'
-], function ( osg, StateAttribute ) {
+], function ( MACROUTILS, StateAttribute ) {
 
     /** 
      *  Manage CullFace attribute
@@ -23,7 +23,7 @@ define( [
     CullFace.FRONT_AND_BACK = 0x0408;
 
     /** @lends CullFace.prototype */
-    CullFace.prototype = osg.objectLibraryClass( osg.objectInehrit( StateAttribute.prototype, {
+    CullFace.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'CullFace',
         cloneType: function () {
             return new CullFace();

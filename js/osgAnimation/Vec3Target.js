@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osgAnimation/Target',
     'osg/Vec3'
-], function ( osg, Target, Vec3 ) {
+], function ( MACROUTILS, Target, Vec3 ) {
 
     /** -*- compile-command: "jslint-cli Target.js" -*-
      *
@@ -30,7 +30,7 @@ define( [
         Target.call( this );
         this._target = [ 0, 0, 0 ];
     };
-    Vec3Target.prototype = osg.objectInehrit( Target.prototype, {
+    Vec3Target.prototype = MACROUTILS.objectInehrit( Target.prototype, {
         update: function ( weight, val, priority ) {
             if ( this._weight || this._priorityWeight ) {
 

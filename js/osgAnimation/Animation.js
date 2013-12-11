@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Object'
-], function ( osg, Object ) {
+], function ( MACROUTILS, Object ) {
 
     /** -*- compile-command: "jslint-cli Animation.js" -*-
      *
@@ -35,7 +35,7 @@ define( [
     };
 
     /** @lends Animation.prototype */
-    Animation.prototype = osg.objectInehrit( Object.prototype, {
+    Animation.prototype = MACROUTILS.objectInehrit( Object.prototype, {
         getChannels: function () {
             return this._channels;
         },

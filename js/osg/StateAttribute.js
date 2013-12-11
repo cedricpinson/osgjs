@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Utils',
     'osg/Object'
-], function ( osg, Object ) {
+], function ( MACROUTILS, Object ) {
 
     /**
      * StateAttribute base class
@@ -15,7 +15,7 @@ define( [
     };
 
     /** @lends StateAttribute.prototype */
-    StateAttribute.prototype = osg.objectLibraryClass( osg.objectInherit( Object.prototype, {
+    StateAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
         isDirty: function () {
             return this._dirty;
         },

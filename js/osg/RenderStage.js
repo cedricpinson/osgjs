@@ -1,11 +1,12 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
+    'osg/Utils',
     'osg/RenderBin',
     'osg/Camera',
     'osg/FrameBufferObject'
-], function ( osg, RenderBin, Camera, FrameBufferObject ) {
+], function ( Notify, MACROUTILS, RenderBin, Camera, FrameBufferObject ) {
 
     /**
      * From OpenSceneGraph http://www.openscenegraph.org
@@ -29,7 +30,7 @@ define( [
         this.postRenderList = [];
         this._renderStage = this;
     };
-    RenderStage.prototype = osg.objectInehrit( RenderBin.prototype, {
+    RenderStage.prototype = MACROUTILS.objectInehrit( RenderBin.prototype, {
         reset: function () {
             RenderBin.prototype.reset.call( this );
             this.preRenderList.length = 0;
@@ -189,7 +190,7 @@ define( [
             this.applyCamera( state );
 
             if ( this.viewport === undefined ) {
-                osg.log( 'RenderStage does not have a valid viewport' );
+                Notify.log( 'RenderStage does not have a valid viewport' );
             }
 
             state.applyAttribute( this.viewport );

@@ -1,10 +1,10 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
     'vendors/Q',
     'osgWrappers/serializers/osg'
-], function ( osg, Q, osgSerializer ) {
+], function ( Notify, Q, osgSerializer ) {
 
     /** -*- compile-command: "jslint-cli osgAnimation.js" -*-
      *
@@ -35,7 +35,7 @@ define( [
                 return true;
             }
             if ( !o.Name ) {
-                osg.log( "animation has field Name, error" );
+                Notify.log( "animation has field Name, error" );
                 return false;
             }
             return false;

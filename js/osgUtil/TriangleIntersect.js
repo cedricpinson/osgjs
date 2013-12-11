@@ -1,9 +1,9 @@
 /*global define */
 
 define( [
-    'osg/osg',
+    'osg/Notify',
     'osg/Vec3'
-], function ( osg, vec3 ) {
+], function ( Notify, vec3 ) {
 
     /** -*- compile-command: "jslint-cli TriangleIntersect.js" -*-
      * Authors:
@@ -356,11 +356,11 @@ define( [
                 inside,
                 inside );
             if ( !Vec3.valid( inside ) ) {
-                osg.log( "Warning: TriangleIntersect " );
-                osg.log( "hit:     " + inside );
-                osg.log( "         " + v1 );
-                osg.log( "         " + v2 );
-                osg.log( "         " + v3 );
+                Notify.log( "Warning: TriangleIntersect " );
+                Notify.log( "hit:     " + inside );
+                Notify.log( "         " + v1 );
+                Notify.log( "         " + v2 );
+                Notify.log( "         " + v3 );
                 return;
             }
 
