@@ -11,8 +11,10 @@ define( [
     'osg/LightSource',
     'osg/Geometry',
     'osg/RenderStage',
+    'osg/Node',
+    'osg/Transform',
     'osg/Camera'
-], function ( osg, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Camera ) {
+], function ( osg, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Transform, Camera ) {
 
     /** 
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse

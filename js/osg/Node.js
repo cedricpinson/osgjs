@@ -8,9 +8,9 @@ define( [
     'osg/StateSet',
     'osg/NodeVisitor',
     'osg/Matrix',
-    'osg/Transform',
+    /* #FIXME enum fix osg/Transform, */
     'osg/ComputeMatrixFromNodePath'
-], function ( osg, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, Transform, ComputeMatrixFromNodePath ) {
+], function ( osg, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, /* #FIXME enum fix Transform,*/ ComputeMatrixFromNodePath ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -224,7 +224,7 @@ define( [
             bsphere.init();
             for ( var i = 0, l = this.children.length; i < l; i++ ) {
                 var child = this.children[ i ];
-                if ( child.referenceFrame === undefined || child.referenceFrame === Transform.RELATIVE_RF ) {
+                if ( child.referenceFrame === undefined || child.referenceFrame === 0 /* #FIXME enum fix Transform.RELATIVE_RF*/ ) {
                     bb.expandBySphere( child.getBound() );
                 }
             }
@@ -235,7 +235,7 @@ define( [
             bsphere._radius = 0.0;
             for ( var j = 0, l2 = this.children.length; j < l2; j++ ) {
                 var cc = this.children[ j ];
-                if ( cc.referenceFrame === undefined || cc.referenceFrame === Transform.RELATIVE_RF ) {
+                if ( cc.referenceFrame === undefined || cc.referenceFrame === 0 /* #FIXME enum fix Transform.RELATIVE_RF*/ ) {
                     bsphere.expandRadiusBySphere( cc.getBound() );
                 }
             }

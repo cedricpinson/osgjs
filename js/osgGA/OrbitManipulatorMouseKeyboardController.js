@@ -1,8 +1,8 @@
 /*global define */
 
 define( [
-    'osgGA/OrbitManipulator'
-], function ( OrbitManipulator ) {
+    /* #FIXME enum fix 'osgGA/OrbitManipulator' */
+], function ( /* #FIXME enum fix OrbitManipulator */) {
 
     var Mode = {
         Rotate: 0,
@@ -91,13 +91,13 @@ define( [
             var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
             mode = this.getMode();
             //#FIXME enum degueu !!
-            if ( mode === OrbitManipulator.Rotate ) {
+            if ( mode === 0 /* #FIXME enum fix OrbitManipulator.Rotate */ ) {
                 manipulator.getRotateInterpolator().reset();
                 manipulator.getRotateInterpolator().set( pos[ 0 ], pos[ 1 ] );
-            } else if ( mode === OrbitManipulator.Pan ) {
+            } else if ( mode === 1 /* #FIXME enum fix OrbitManipulator.Pan */ ) {
                 manipulator.getPanInterpolator().reset();
                 manipulator.getPanInterpolator().set( pos[ 0 ], pos[ 1 ] );
-            } else if ( mode === OrbitManipulator.Zoom ) {
+            } else if ( mode === 2 /* #FIXME enum fix OrbitManipulator.Zoom */ ) {
                 manipulator.getZoomInterpolator()._start = pos[ 1 ];
                 manipulator.getZoomInterpolator().set( 0.0 );
             }
