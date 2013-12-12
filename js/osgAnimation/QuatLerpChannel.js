@@ -3,10 +3,10 @@
 define( [
     'osgAnimation/Channel',
     'osgAnimation/Sampler',
-    'osgAnimation/QuatLerpInterpolator',
+    'osgAnimation/Interpolator',
     'osgAnimation/QuatTarget',
     'osg/Quat'
-], function ( Channel, Sampler, Vec3LerpInterpolator, Vec3Target, Vec3 ) {
+], function ( Channel, Sampler, Interpolator, Vec3Target, Vec3 ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *
@@ -37,7 +37,7 @@ define( [
             target = new QuatTarget();
         }
         Channel.call( this, sampler, target );
-        sampler.setInterpolator( QuatLerpInterpolator );
+        sampler.setInterpolator( Interpolator.QuatLerpInterpolator );
         this.setKeyframes( keys );
         this._data.value = Quat.copy( target.getValue(), [] );
     };

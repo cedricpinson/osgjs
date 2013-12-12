@@ -3,9 +3,9 @@
 define( [
     'osgAnimation/Channel',
     'osgAnimation/Sampler',
-    'osgAnimation/FloatLerpInterpolator',
+    'osgAnimation/Interpolator',
     'osgAnimation/FloatTarget'
-], function ( Channel, Sampler, FloatLerpInterpolator, FloatTarget ) {
+], function ( Channel, Sampler, Interpolator, FloatTarget ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *
@@ -36,7 +36,7 @@ define( [
             target = new FloatTarget();
         }
         Channel.call( this, sampler, target );
-        sampler.setInterpolator( FloatLerpInterpolator );
+        sampler.setInterpolator( Interpolator.FloatLerpInterpolator );
         this.setKeyframes( keys );
         this._data.value = target.getValue();
     };

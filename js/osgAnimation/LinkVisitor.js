@@ -4,8 +4,9 @@ define( [
     'osg/Notify',
     'osg/Utils',
     'osg/NodeVisitor',
-    'osg/Object'
-], function ( Notify, MACROUTILS, NodeVisitor, Object ) {
+    'osg/Object',
+    'osgAnimation/AnimationUpdateCallback'
+], function ( Notify, MACROUTILS, NodeVisitor, Object, AnimationUpdateCallback ) {
 
     /** -*- compile-command: "jslint-cli LinkVisitor.js" -*-
      *
@@ -49,7 +50,7 @@ define( [
             var cbs = node.getUpdateCallbackList();
             for ( var i = 0, l = cbs.length; i < l; i++ ) {
                 var cb = cbs[ i ];
-                if ( cb instanceof osgAnimation.AnimationUpdateCallback ) {
+                if ( cb instanceof AnimationUpdateCallback ) {
                     this.link( cb );
                 }
             }

@@ -3,9 +3,8 @@
 define( [
     'osg/Notify',
     'osg/Utils',
-    'osgAnimation/AnimationUpdateCallback',
-    'osg/matrix'
-], function ( Notify, MACROUTILS, AnimationUpdateCallback, matrix ) {
+    'osgAnimation/AnimationUpdateCallback'
+], function ( Notify, MACROUTILS, AnimationUpdateCallback ) {
 
     /** -*- compile-command: 'jslint-cli UpdateMatrixTransform.js' -*-
      *
@@ -74,5 +73,5 @@ define( [
 
     } );
 
-    return osgAnimation;
+    return UpdateMatrixTransform;
 } );

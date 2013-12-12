@@ -3,10 +3,10 @@
 define( [
     'osgAnimation/Channel',
     'osgAnimation/Sampler',
-    'osgAnimation/Vec3LerpInterpolator',
+    'osgAnimation/Interpolator',
     'osgAnimation/Vec3Target',
     'osg/Vec3'
-], function ( Channel, Sampler, Vec3LerpInterpolator, Vec3Target, Vec3 ) {
+], function ( Channel, Sampler, Interpolator, Vec3Target, Vec3 ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *
@@ -37,7 +37,7 @@ define( [
             target = new Vec3Target();
         }
         Channel.call( this, sampler, target );
-        sampler.setInterpolator( Vec3LerpInterpolator );
+        sampler.setInterpolator( Interpolator.Vec3LerpInterpolator );
         this.setKeyframes( keys );
         this._data.value = Vec3.copy( target.getValue(), [] );
     };

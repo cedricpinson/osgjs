@@ -3,8 +3,8 @@
 define( [
     'osgAnimation/Channel',
     'osgAnimation/QuatLerpChannel',
-    'osgAnimation/QuatSlerpInterpolator'
-], function ( Channel, QuatLerpChannel, QuatSlerpInterpolator ) {
+    'osgAnimation/Interpolator'
+], function ( Channel, QuatLerpChannel, Interpolator ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *
@@ -26,12 +26,12 @@ define( [
      *
      */
 
-    var QuatSlerpChannel = function ( keys, target ) {
+    var QuatSLerpChannel = function ( keys, target ) {
         QuatLerpChannel.call( this, keys, target );
-        this.getSampler().setInterpolator( QuatSlerpInterpolator );
+        this.getSampler().setInterpolator( Interpolator.QuatSlerpInterpolator );
     };
 
-    QuatSlerpChannel.prototype = Channel.prototype;
+    QuatSLerpChannel.prototype = Channel.prototype;
 
     return QuatSLerpChannel;
 } );

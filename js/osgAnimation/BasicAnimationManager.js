@@ -4,7 +4,7 @@ define( [
     'osg/Notify',
     'osg/Utils',
     'osg/Object'
-], function ( Notify, Utils, Object ) {
+], function ( Notify, MACROUTILS, Object ) {
 
     /** -*- compile-command: "jslint-cli AnimationManager.js" -*-
      *

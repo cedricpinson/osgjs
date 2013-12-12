@@ -202,5 +202,5 @@ define( [
         module.StandardMouseKeyboard = FirstPersonManipulatorMouseKeyboardController;
     } )( FirstPersonManipulator );
 
-    return FirstPersonManipulator.
+    return FirstPersonManipulator;
 } );

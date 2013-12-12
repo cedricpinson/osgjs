@@ -2,7 +2,7 @@
 
 define( [
 	'osgAnimation/Animation',
-	'osgAnimation/AnimationUpdateCallBack',
+	'osgAnimation/AnimationUpdateCallback',
 	'osgAnimation/BasicAnimationManager',
 	'osgAnimation/Channel',
 	'osgAnimation/Easing',
@@ -22,7 +22,7 @@ define( [
 	'osgAnimation/UpdateMatrixTransform',
 	'osgAnimation/Vec3LerpChannel',
 	'osgAnimation/Vec3Target'
-], function ( Animation, AnimationUpdateCallBack, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSLerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
+], function ( Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSLerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
 
 	/** -*- compile-command: "jslint-cli osgAnimation.js" -*-
 	 *
@@ -47,7 +47,7 @@ define( [
 	var osgAnimation = {};
 
 	osgAnimation.Animation = Animation;
-	osgAnimation.AnimationUpdateCallBack = AnimationUpdateCallBack;
+	osgAnimation.AnimationUpdateCallback = AnimationUpdateCallback;
 	osgAnimation.BasicAnimationManager = BasicAnimationManager;
 	osgAnimation.Channel = Channel;
 	osgAnimation.Easing = Easing;
