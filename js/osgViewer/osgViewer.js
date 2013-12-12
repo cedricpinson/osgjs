@@ -1,6 +1,9 @@
 /*global define */
 
-define( [], function () {
+define( [
+    'osgViewer/View',
+    'osgViewer/Viewer'
+], function ( View, Viewer ) {
 
     /** -*- compile-command: "jslint-cli osgViewer.js" -*-
      * Authors:
@@ -8,6 +11,9 @@ define( [], function () {
      */
 
     var osgViewer = {};
+
+    osgViewer.View = View;
+    osgViewer.Viewer = Viewer;
 
     return osgViewer;
 } );
