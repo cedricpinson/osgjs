@@ -1,6 +1,7 @@
 /*global define */
 
 define( [
+	'osg/Utils',
 	'osgAnimation/Animation',
 	'osgAnimation/AnimationUpdateCallback',
 	'osgAnimation/BasicAnimationManager',
@@ -22,7 +23,7 @@ define( [
 	'osgAnimation/UpdateMatrixTransform',
 	'osgAnimation/Vec3LerpChannel',
 	'osgAnimation/Vec3Target'
-], function ( Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSLerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
+], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSLerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
 
 	/** -*- compile-command: "jslint-cli osgAnimation.js" -*-
 	 *
@@ -50,11 +51,11 @@ define( [
 	osgAnimation.AnimationUpdateCallback = AnimationUpdateCallback;
 	osgAnimation.BasicAnimationManager = BasicAnimationManager;
 	osgAnimation.Channel = Channel;
-	osgAnimation.Easing = Easing;
+	MACROUTILS.objectMix( osgAnimation, Easing );
 	osgAnimation.FloatLerpChannel = FloatLerpChannel;
 	osgAnimation.FloatTarget = FloatTarget;
-	osgAnimation.Interpolator = Interpolator;
-	osgAnimation.Keyframe = Keyframe;
+	MACROUTILS.objectMix( osgAnimation, Interpolator );
+	MACROUTILS.objectMix( osgAnimation, Keyframe );
 	osgAnimation.LinkVisitor = LinkVisitor;
 	osgAnimation.QuatLerpChannel = QuatLerpChannel;
 	osgAnimation.QuatSLerpChannel = QuatSLerpChannel;
@@ -67,15 +68,6 @@ define( [
 	osgAnimation.UpdateMatrixTransform = UpdateMatrixTransform;
 	osgAnimation.Vec3LerpChannel = Vec3LerpChannel;
 	osgAnimation.Vec3Target = Vec3Target;
-
-	osgAnimation.easeOutQuad = Easing.easeOutQuad;
-	osgAnimation.easeInQuad = Easing.easeInQuad;
-	osgAnimation.easeOutCubic = Easing.easeOutCubic;
-	osgAnimation.easeInCubic = Easing.easeInCubic;
-	osgAnimation.easeOutQuart = Easing.easeOutQuart;
-	osgAnimation.easeInQuart = Easing.easeInQuart;
-	osgAnimation.easeOutElastic = Easing.easeOutElastic;
-	osgAnimation.easeOutBounce = Easing.easeOutBounce;
 
 	return osgAnimation;
 } );

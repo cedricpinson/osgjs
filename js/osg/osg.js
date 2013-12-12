@@ -56,7 +56,7 @@ define( [
     'osg/Vec3',
     'osg/Vec4',
     'osg/Viewport'
-], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, Utils, Vec2, Vec3, Vec4, Viewport ) {
+], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport ) {
 
     var osg = {};
 
@@ -110,7 +110,7 @@ define( [
     osg.Transform = Transform;
     osg.Uniform = Uniform;
     osg.UpdateVisitor = UpdateVisitor;
-    osg.Utils = Utils;
+    MACROUTILS.objectMix( osg, MACROUTILS );
     osg.Vec2 = Vec2;
     osg.Vec3 = Vec3;
     osg.Vec4 = Vec4;

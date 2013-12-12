@@ -24,13 +24,23 @@ define( [
     // Hammer.NO_MOUSEEVENTS = true; // disable hammer js mouse events
 
     osgGA.FirstPersonManipulator = FirstPersonManipulator;
-    osgGA.FirstPersonManipulatorMouseKeyboardController = FirstPersonManipulatorMouseKeyboardController;
+    osgGA.getFirstPersonStandardMouseKeyboardControllerClass = function () {
+        return FirstPersonManipulatorMouseKeyboardController;
+    };
     osgGA.Manipulator = Manipulator;
     osgGA.OrbitManipulator = OrbitManipulator;
-    osgGA.OrbitManipulatorGamePadController = OrbitManipulatorGamePadController;
-    osgGA.OrbitManipulatorHammerController = OrbitManipulatorHammerController;
-    osgGA.OrbitManipulatorLeapMotionController = OrbitManipulatorLeapMotionController;
-    osgGA.OrbitManipulatorMouseKeyboardController = OrbitManipulatorMouseKeyboardController;
+    osgGA.getOrbitManipulatorGamePadController = function () {
+        return OrbitManipulatorGamePadController;
+    };
+    osgGA.getOrbitManipulatorHammerController = function () {
+        return OrbitManipulatorHammerController;
+    };
+    osgGA.getOrbitManipulatorLeapMotionController = function () {
+        return OrbitManipulatorLeapMotionController;
+    };
+    osgGA.getOrbitManipulatorMouseKeyboardController = function () {
+        return OrbitManipulatorMouseKeyboardController;
+    };
     osgGA.SwitchManipulator = SwitchManipulator;
 
     return osgGA;
