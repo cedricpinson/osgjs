@@ -6,9 +6,10 @@ define( [
 ], function ( osgPool, StateGraph ) {
 
     var Utils = {};
-    // Utils.memoryPools = {};
 
     Utils.init = function () {
+        // #FIXME circular dependencies
+        var StateGraph = require( 'osg/StateGraph' );
         osgPool.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool( StateGraph ).grow( 50 );
     };
 

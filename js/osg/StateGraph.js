@@ -13,7 +13,6 @@ define( [
         this.parent = undefined;
     };
 
-
     StateGraph.prototype = {
         clean: function () {
             this.leafs.splice( 0, this.leafs.length );

@@ -31,7 +31,7 @@ var main = function() {
     var stats = document.getElementById("Stats");
 
     var viewer;
-    try {
+    // try {
         viewer = new osgViewer.Viewer(canvas, {antialias : true, alpha: true });
         viewer.init();
         viewer.setupManipulator();
@@ -52,9 +52,9 @@ var main = function() {
         };
         document.getElementById("explanation").addEventListener("mousedown", mousedown, false);
 
-    } catch (er) {
-        osg.log("exception in osgViewer " + er);
-    }
+    // } catch (er) {
+    //     osg.log("exception in osgViewer " + er);
+    // }
 };
 
 function getShader()

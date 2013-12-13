@@ -508,7 +508,6 @@ define( 'osg/StateGraph',[
         this.parent = undefined;
     };
 
-
     StateGraph.prototype = {
         clean: function () {
             this.leafs.splice( 0, this.leafs.length );
@@ -646,9 +645,10 @@ define( 'osg/Utils',[
 ], function ( osgPool, StateGraph ) {
 
     var Utils = {};
-    // Utils.memoryPools = {};
 
     Utils.init = function () {
+        // #FIXME circular dependencies
+        var StateGraph = require( 'osg/StateGraph' );
         osgPool.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool( StateGraph ).grow( 50 );
     };
 
@@ -12701,8 +12701,9 @@ define( 'osg/osg',[
     'osg/Vec2',
     'osg/Vec3',
     'osg/Vec4',
-    'osg/Viewport'
-], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport ) {
+    'osg/Viewport',
+    'osgUtil/osgPool'
+], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool ) {
 
     var osg = {};
 
@@ -12712,7 +12713,7 @@ define( 'osg/osg',[
     osg.BoundingSphere = BoundingSphere;
     osg.BufferArray = BufferArray;
     osg.Camera = Camera;
-    osg.ComputeMatrixFromNodePath = ComputeMatrixFromNodePath;
+    MACROUTILS.objectMix( osg, ComputeMatrixFromNodePath );
     osg.CullFace = CullFace;
     osg.CullSettings = CullSettings;
     osg.CullStack = CullStack;
@@ -12722,6 +12723,8 @@ define( 'osg/osg',[
     osg.DrawArrays = DrawArrays;
     osg.DrawElements = DrawElements;
     osg.EllipsoidModel = EllipsoidModel;
+    osg.WGS_84_RADIUS_EQUATOR = EllipsoidModel.WGS_84_RADIUS_EQUATOR;
+    osg.WGS_84_RADIUS_POLAR = EllipsoidModel.WGS_84_RADIUS_POLAR;
     osg.FrameBufferObject = FrameBufferObject;
     osg.FrameStamp = FrameStamp;
     osg.Geometry = Geometry;
@@ -12730,7 +12733,7 @@ define( 'osg/osg',[
     osg.LightSource = LightSource;
     osg.LineWidth = LineWidth;
     osg.Material = Material;
-    osg.Math = Math;
+    MACROUTILS.objectMix( osg, Math );
     osg.Matrix = Matrix;
     osg.MatrixTransform = MatrixTransform;
     osg.Node = Node;
@@ -12745,6 +12748,7 @@ define( 'osg/osg',[
     osg.RenderStage = RenderStage;
     osg.Shader = Shader;
     osg.ShaderGenerator = ShaderGenerator;
+    osg.ShaderGeneratorType = ShaderGenerator.Type;
     MACROUTILS.objectMix( osg, Shape );
     osg.Stack = Stack;
     osg.State = State;
@@ -12761,6 +12765,8 @@ define( 'osg/osg',[
     osg.Vec3 = Vec3;
     osg.Vec4 = Vec4;
     osg.Viewport = Viewport;
+
+    osg.memoryPools = osgPool.memoryPools;
 
     return osg;
 } );
@@ -18622,7 +18628,7 @@ define( 'osgUtil/IntersectVisitor',[
 } );
 /*global define */
 
-define( 'osgUtil/ShaderParameterVisitor',[
+define( 'osgUtil/ParameterVisitor',[
     'osg/Notify',
     'osg/Utils',
     'osg/Uniform',
@@ -19047,9 +19053,9 @@ define( 'osgUtil/ShaderParameterVisitor',[
 define( 'osgUtil/osgUtil',[
     'osgUtil/Composer',
     'osgUtil/IntersectVisitor',
-    'osgUtil/ShaderParameterVisitor',
+    'osgUtil/ParameterVisitor',
     'osgUtil/TriangleIntersect'
-], function (Composer, IntersectVisitor, ShaderParameterVisitor, TriangleIntersect) {
+], function (Composer, IntersectVisitor, ParameterVisitor, TriangleIntersect) {
 
     /** -*- compile-command: "jslint-cli osgUtil.js" -*-
      * Authors:
@@ -19060,7 +19066,7 @@ define( 'osgUtil/osgUtil',[
 
     osgUtil.Composer = Composer;
     osgUtil.IntersectVisitor = IntersectVisitor;
-    osgUtil.ShaderParameterVisitor = ShaderParameterVisitor;
+    osgUtil.ParameterVisitor = ParameterVisitor;
     osgUtil.TriangleIntersect = TriangleIntersect;
 
     return osgUtil;
@@ -21878,8 +21884,9 @@ define( 'osgViewer/Viewer',[
 
 define( 'osgViewer/osgViewer',[
     'osgViewer/View',
-    'osgViewer/Viewer'
-], function ( View, Viewer ) {
+    'osgViewer/Viewer',
+    'osgViewer/eventProxy/EventProxy'
+], function ( View, Viewer, EventProxy ) {
 
     /** -*- compile-command: "jslint-cli osgViewer.js" -*-
      * Authors:
@@ -21890,6 +21897,7 @@ define( 'osgViewer/osgViewer',[
 
     osgViewer.View = View;
     osgViewer.Viewer = Viewer;
+    osgViewer.EventProxy = EventProxy;
 
     return osgViewer;
 } );

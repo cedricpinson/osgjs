@@ -3,9 +3,9 @@
 define( [
     'osgUtil/Composer',
     'osgUtil/IntersectVisitor',
-    'osgUtil/ShaderParameterVisitor',
+    'osgUtil/ParameterVisitor',
     'osgUtil/TriangleIntersect'
-], function (Composer, IntersectVisitor, ShaderParameterVisitor, TriangleIntersect) {
+], function (Composer, IntersectVisitor, ParameterVisitor, TriangleIntersect) {
 
     /** -*- compile-command: "jslint-cli osgUtil.js" -*-
      * Authors:
@@ -16,7 +16,7 @@ define( [
 
     osgUtil.Composer = Composer;
     osgUtil.IntersectVisitor = IntersectVisitor;
-    osgUtil.ShaderParameterVisitor = ShaderParameterVisitor;
+    osgUtil.ParameterVisitor = ParameterVisitor;
     osgUtil.TriangleIntersect = TriangleIntersect;
 
     return osgUtil;

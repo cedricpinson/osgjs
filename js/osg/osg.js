@@ -55,8 +55,9 @@ define( [
     'osg/Vec2',
     'osg/Vec3',
     'osg/Vec4',
-    'osg/Viewport'
-], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport ) {
+    'osg/Viewport',
+    'osgUtil/osgPool'
+], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool ) {
 
     var osg = {};
 
@@ -66,7 +67,7 @@ define( [
     osg.BoundingSphere = BoundingSphere;
     osg.BufferArray = BufferArray;
     osg.Camera = Camera;
-    osg.ComputeMatrixFromNodePath = ComputeMatrixFromNodePath;
+    MACROUTILS.objectMix( osg, ComputeMatrixFromNodePath );
     osg.CullFace = CullFace;
     osg.CullSettings = CullSettings;
     osg.CullStack = CullStack;
@@ -76,6 +77,8 @@ define( [
     osg.DrawArrays = DrawArrays;
     osg.DrawElements = DrawElements;
     osg.EllipsoidModel = EllipsoidModel;
+    osg.WGS_84_RADIUS_EQUATOR = EllipsoidModel.WGS_84_RADIUS_EQUATOR;
+    osg.WGS_84_RADIUS_POLAR = EllipsoidModel.WGS_84_RADIUS_POLAR;
     osg.FrameBufferObject = FrameBufferObject;
     osg.FrameStamp = FrameStamp;
     osg.Geometry = Geometry;
@@ -84,7 +87,7 @@ define( [
     osg.LightSource = LightSource;
     osg.LineWidth = LineWidth;
     osg.Material = Material;
-    osg.Math = Math;
+    MACROUTILS.objectMix( osg, Math );
     osg.Matrix = Matrix;
     osg.MatrixTransform = MatrixTransform;
     osg.Node = Node;
@@ -99,6 +102,7 @@ define( [
     osg.RenderStage = RenderStage;
     osg.Shader = Shader;
     osg.ShaderGenerator = ShaderGenerator;
+    osg.ShaderGeneratorType = ShaderGenerator.Type;
     MACROUTILS.objectMix( osg, Shape );
     osg.Stack = Stack;
     osg.State = State;
@@ -115,6 +119,8 @@ define( [
     osg.Vec3 = Vec3;
     osg.Vec4 = Vec4;
     osg.Viewport = Viewport;
+
+    osg.memoryPools = osgPool.memoryPools;
 
     return osg;
 } );

@@ -2,8 +2,9 @@
 
 define( [
     'osgViewer/View',
-    'osgViewer/Viewer'
-], function ( View, Viewer ) {
+    'osgViewer/Viewer',
+    'osgViewer/eventProxy/EventProxy'
+], function ( View, Viewer, EventProxy ) {
 
     /** -*- compile-command: "jslint-cli osgViewer.js" -*-
      * Authors:
@@ -14,6 +15,7 @@ define( [
 
     osgViewer.View = View;
     osgViewer.Viewer = Viewer;
+    osgViewer.EventProxy = EventProxy;
 
     return osgViewer;
 } );
