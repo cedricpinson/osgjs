@@ -2,14 +2,14 @@
 
 define( [
     'osgDB/ReaderParser',
-    'osg/osg',
+    'osg/Utils',
     'osg/Notify',
     'vendors/Q',
     'osg/Image',
     'osg/BufferArray',
     'osg/PrimitiveSet',
     'osg/DrawElements'
-], function ( ReaderParser, osg, Notify, Q, Image, BufferArray, PrimitiveSet, DrawElements ) {
+], function ( ReaderParser, MACROUTILS, Notify, Q, Image, BufferArray, PrimitiveSet, DrawElements ) {
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -81,7 +81,7 @@ define( [
                 return new( this._objectRegistry[ path ] )();
             }
 
-            // #FIXME hem hem to be fixed
+            // #FIXME hem hem to be fixed (or not?)
             var scope = window;
             var splittedPath = path.split( '.' );
             for ( var i = 0, l = splittedPath.length; i < l; i++ ) {
@@ -305,14 +305,14 @@ define( [
                                 offset = vb.Offset;
                             }
 
-                            var bytesPerElement = osg[ type ].BYTES_PER_ELEMENT;
+                            var bytesPerElement = MACROUTILS[ type ].BYTES_PER_ELEMENT;
                             var nbItems = vb.Size;
                             var nbCoords = buf.getItemSize();
                             var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
 
                             if ( big_endian ) {
                                 Notify.log( 'big endian detected' );
-                                var typed_array = osg[ type ];
+                                var typed_array = MACROUTILS[ type ];
                                 var tmpArray = new typed_array( nbItems * nbCoords );
                                 var data = new DataView( array, offset, totalSizeInBytes );
                                 var i = 0,
@@ -329,7 +329,7 @@ define( [
                                 typedArray = tempArray;
                                 data = null;
                             } else {
-                                typedArray = new osg[ type ]( array, offset, nbCoords * nbItems );
+                                typedArray = new MACROUTILS[ type ]( array, offset, nbCoords * nbItems );
                             }
                             a = b = null;
 
@@ -337,7 +337,7 @@ define( [
                             defer.resolve( buf );
                         } );
                     } else if ( vb.Elements !== undefined ) {
-                        var a = new osg[ type ]( vb.Elements );
+                        var a = new MACROUTILS[ type ]( vb.Elements );
                         buf.setElements( a );
                     }
                 }

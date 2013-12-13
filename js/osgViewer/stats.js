@@ -18,6 +18,8 @@
  *
  */
 
+// #FIXME make a module??
+
 var Stats = {};
 
 Stats.Stats = function(canvas, textCanvas) {

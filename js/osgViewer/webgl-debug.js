@@ -4,6 +4,8 @@
 
 // Various functions for helping debug WebGL apps.
 
+// #FIXME make a module
+
 WebGLDebugUtils = function() {
 
 /**

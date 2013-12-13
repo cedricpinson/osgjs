@@ -154,7 +154,6 @@ define( [
     Utils.Int32Array = typeof Int32Array !== 'undefined' ? Int32Array : null;
     Utils.Uint16Array = typeof Uint16Array !== 'undefined' ? Uint16Array : null;
 
-    //#FIXME Put it somewhere else ??
     Utils.performance = {};
     Utils.performance.now = ( function () {
         // if no window.performance
