@@ -24,7 +24,9 @@ define( [
      *
      */
 
-    var Object = function ( input, obj ) {
+    var osgWrapper = {};
+
+    osgWrapper.Object = function ( input, obj ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             return true;
@@ -47,7 +49,7 @@ define( [
         return obj;
     };
 
-    var Node = function ( input, node ) {
+    osgWrapper.Node = function ( input, node ) {
         var jsonObj = input.getJSON();
 
         var check = function ( o ) {
@@ -57,15 +59,15 @@ define( [
             return;
         }
 
-        Object( input, node );
+        osgWrapper.Object( input, node );
 
         var promiseArray = [];
 
         var createCallback = function ( jsonCallback ) {
             var promise = input.setJSON( jsonCallback ).readObject();
-            var df = Q.defer();
+            var df = osgDB.Promise.defer();
             promiseArray.push( df.promise );
-            Q.when( promise ).then( function ( cb ) {
+            osgDB.Promise.when( promise ).then( function ( cb ) {
                 if ( cb ) {
                     node.addUpdateCallback( cb );
                 }
@@ -82,9 +84,9 @@ define( [
 
         if ( jsonObj.StateSet ) {
             var pp = input.setJSON( jsonObj.StateSet ).readObject();
-            var df = Q.defer();
+            var df = osgDB.Promise.defer();
             promiseArray.push( df.promise );
-            Q.when( pp ).then( function ( stateset ) {
+            osgDB.Promise.when( pp ).then( function ( stateset ) {
                 node.setStateSet( stateset );
                 df.resolve();
             } );
@@ -92,9 +94,9 @@ define( [
 
         var createChildren = function ( jsonChildren ) {
             var promise = input.setJSON( jsonChildren ).readObject();
-            var df = Q.defer();
+            var df = osgDB.Promise.defer();
             promiseArray.push( df.promise );
-            Q.when( promise ).then( function ( obj ) {
+            osgDB.Promise.when( promise ).then( function ( obj ) {
                 if ( obj ) {
                     node.addChild( obj );
                 }
@@ -108,15 +110,15 @@ define( [
             }
         }
 
-        var defer = Q.defer();
-        Q.all( promiseArray ).then( function () {
+        var defer = osgDB.Promise.defer();
+        osgDB.Promise.all( promiseArray ).then( function () {
             defer.resolve( node );
         } );
 
         return defer.promise;
     };
 
-    var StateSet = function ( input, stateSet ) {
+    osgWrapper.StateSet = function ( input, stateSet ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             return true;
@@ -126,7 +128,7 @@ define( [
             return;
         }
 
-        Object( input, stateSet );
+        osgWrapper.Object( input, stateSet );
 
         if ( jsonObj.RenderingHint !== undefined ) {
             stateSet.setRenderingHint( jsonObj.RenderingHint );
@@ -134,9 +136,9 @@ define( [
 
         var createAttribute = function ( jsonAttribute ) {
             var promise = input.setJSON( jsonAttribute ).readObject();
-            var df = Q.defer();
+            var df = osgDB.Promise.defer();
             promiseArray.push( df.promise );
-            Q.when( promise ).then( function ( attribute ) {
+            osgDB.Promise.when( promise ).then( function ( attribute ) {
                 if ( attribute !== undefined ) {
                     stateSet.setAttributeAndMode( attribute );
                 }
@@ -154,9 +156,9 @@ define( [
 
         var createTextureAttribute = function ( unit, textureAttribute ) {
             var promise = input.setJSON( textureAttribute ).readObject();
-            var df = Q.defer();
+            var df = osgDB.Promise.defer();
             promiseArray.push( df.promise );
-            Q.when( promise ).then( function ( attribute ) {
+            osgDB.Promise.when( promise ).then( function ( attribute ) {
                 if ( attribute )
                     stateSet.setTextureAttributeAndMode( unit, attribute );
                 df.resolve();
@@ -173,15 +175,15 @@ define( [
             }
         }
 
-        var defer = Q.defer();
-        Q.all( promiseArray ).then( function () {
+        var defer = osgDB.Promise.defer();
+        osgDB.Promise.all( promiseArray ).then( function () {
             defer.resolve( stateSet );
         } );
 
         return defer.promise;
     };
 
-    var Material = function ( input, material ) {
+    osgWrapper.Material = function ( input, material ) {
         var jsonObj = input.getJSON();
 
         var check = function ( o ) {
@@ -198,7 +200,7 @@ define( [
             return;
         }
 
-        Object( input, material );
+        osgWrapper.Object( input, material );
 
         material.setAmbient( jsonObj.Ambient );
         material.setDiffuse( jsonObj.Diffuse );
@@ -208,7 +210,8 @@ define( [
         return material;
     };
 
-    var BlendFunc = function ( input, blend ) {
+
+    osgWrapper.BlendFunc = function ( input, blend ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             if ( o.SourceRGB && o.SourceAlpha && o.DestinationRGB && o.DestinationAlpha ) {
@@ -220,7 +223,7 @@ define( [
             return;
         }
 
-        Object( input, blend );
+        osgWrapper.Object( input, blend );
 
         blend.setSourceRGB( jsonObj.SourceRGB );
         blend.setSourceAlpha( jsonObj.SourceAlpha );
@@ -229,7 +232,7 @@ define( [
         return blend;
     };
 
-    var CullFace = function ( input, attr ) {
+    osgWrapper.CullFace = function ( input, attr ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             if ( o.Mode !== undefined ) {
@@ -241,12 +244,12 @@ define( [
             return;
         }
 
-        Object( input, attr );
+        osgWrapper.Object( input, attr );
         attr.setMode( jsonObj.Mode );
         return attr;
     };
 
-    var BlendColor = function ( input, attr ) {
+    osgWrapper.BlendColor = function ( input, attr ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             if ( o.ConstantColor !== undefined ) {
@@ -258,12 +261,12 @@ define( [
             return;
         }
 
-        Object( input, attr );
+        osgWrapper.Object( input, attr );
         attr.setConstantColor( jsonObj.ConstantColor );
         return attr;
     };
 
-    var Light = function ( input, light ) {
+    osgWrapper.Light = function ( input, light ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             if ( o.LightNum !== undefined &&
@@ -284,7 +287,7 @@ define( [
             return;
         }
 
-        Object( input, light );
+        osgWrapper.Object( input, light );
         light.setAmbient( jsonObj.Ambient );
         light.setConstantAttenuation( jsonObj.ConstantAttenuation );
         light.setDiffuse( jsonObj.Diffuse );
@@ -302,7 +305,7 @@ define( [
         return light;
     };
 
-    var Texture = function ( input, texture ) {
+    osgWrapper.Texture = function ( input, texture ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             return true;
@@ -311,7 +314,7 @@ define( [
             return;
         }
 
-        Object( input, texture );
+        osgWrapper.Object( input, texture );
 
         if ( jsonObj.MinFilter !== undefined ) {
             texture.setMinFilter( jsonObj.MinFilter );
@@ -333,8 +336,8 @@ define( [
             file = "no-image-provided";
         }
 
-        var defer = Q.defer();
-        Q.when( input.readImageURL( file ) ).then(
+        var defer = osgDB.Promise.defer();
+        osgDB.Promise.when( input.readImageURL( file ) ).then(
             function ( img ) {
                 texture.setImage( img );
                 defer.resolve( texture );
@@ -342,7 +345,7 @@ define( [
         return defer.promise;
     };
 
-    var Projection = function ( input, node ) {
+    osgWrapper.Projection = function ( input, node ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             if ( o.Matrix !== undefined ) {
@@ -354,7 +357,7 @@ define( [
             return;
         }
 
-        var promise = Node( input, node );
+        var promise = osgWrapper.Node( input, node );
 
         if ( jsonObj.Matrix !== undefined ) {
             node.setMatrix( jsonObj.Matrix );
@@ -362,7 +365,7 @@ define( [
         return promise;
     };
 
-    var MatrixTransform = function ( input, node ) {
+    osgWrapper.MatrixTransform = function ( input, node ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             if ( o.Matrix ) {
@@ -374,7 +377,7 @@ define( [
             return;
         }
 
-        var promise = Node( input, node );
+        var promise = osgWrapper.Node( input, node );
 
         if ( jsonObj.Matrix !== undefined ) {
             node.setMatrix( jsonObj.Matrix );
@@ -382,7 +385,7 @@ define( [
         return promise;
     };
 
-    var LightSource = function ( input, node ) {
+    osgWrapper.LightSource = function ( input, node ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             if ( o.Light !== undefined ) {
@@ -394,9 +397,9 @@ define( [
             return;
         }
 
-        var defer = Q.defer();
-        var promise = Node( input, node );
-        Q.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
+        var defer = osgDB.Promise.defer();
+        var promise = osgWrapper.Node( input, node );
+        osgDB.Promise.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
             var light = args[ 0 ];
             var lightsource = args[ 1 ];
             node.setLight( light );
@@ -405,7 +408,7 @@ define( [
         return defer.promise;
     };
 
-    var Geometry = function ( input, node ) {
+    osgWrapper.Geometry = function ( input, node ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
             if ( o.PrimitiveSetList !== undefined && o.VertexAttributeList !== undefined ) {
@@ -418,13 +421,13 @@ define( [
         }
 
         var arraysPromise = [];
-        arraysPromise.push( Node( input, node ) );
+        arraysPromise.push( osgWrapper.Node( input, node ) );
 
         var createPrimitive = function ( jsonPrimitive ) {
-            var defer = Q.defer();
+            var defer = osgDB.Promise.defer();
             arraysPromise.push( defer.promise );
             var promise = input.setJSON( jsonPrimitive ).readPrimitiveSet();
-            Q.when( promise ).then( function ( primitiveSet ) {
+            osgDB.Promise.when( promise ).then( function ( primitiveSet ) {
                 if ( primitiveSet !== undefined ) {
                     node.getPrimitives().push( primitiveSet );
                 }
@@ -438,10 +441,10 @@ define( [
         }
 
         var createVertexAttribute = function ( name, jsonAttribute ) {
-            var defer = Q.defer();
+            var defer = osgDB.Promise.defer();
             arraysPromise.push( defer.promise );
             var promise = input.setJSON( jsonAttribute ).readBufferArray();
-            Q.when( promise ).then( function ( buffer ) {
+            osgDB.Promise.when( promise ).then( function ( buffer ) {
                 if ( buffer !== undefined ) {
                     node.getVertexAttributeList()[ name ] = buffer;
                 }
@@ -454,26 +457,12 @@ define( [
             }
         }
 
-        var defer = Q.defer();
-        Q.all( arraysPromise ).then( function () {
+        var defer = osgDB.Promise.defer();
+        osgDB.Promise.all( arraysPromise ).then( function () {
             defer.resolve( node );
         } );
         return defer.promise;
     };
 
-    return {
-        Object: Object,
-        Node: Node,
-        StateSet: StateSet,
-        Material: Material,
-        BlendFunc: BlendFunc,
-        CullFace: CullFace,
-        BlendColor: BlendColor,
-        Light: Light,
-        Texture: Texture,
-        Projection: Projection,
-        MatrixTransform: MatrixTransform,
-        LightSource: LightSource,
-        Geometry: Geometry
-    };
+    return osgWrapper;
 } );

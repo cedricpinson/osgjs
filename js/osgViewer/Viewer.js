@@ -12,8 +12,9 @@ define( [
     'osg/Matrix',
     'osg/State',
     'osgGA/OrbitManipulator',
-    'osgViewer/eventProxy/EventProxy'
-], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy ) {
+    'osgViewer/eventProxy/EventProxy',
+    'osgViewer/webgl-utils'
+], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy, WebGLUtils ) {
 
     /** -*- compile-command: 'jslint-cli Viewer.js' -*-
      * Authors:

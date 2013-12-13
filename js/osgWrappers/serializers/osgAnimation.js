@@ -4,7 +4,7 @@ define( [
     'osg/Notify',
     'vendors/Q',
     'osgWrappers/serializers/osg'
-], function ( Notify, Q, osgSerializer ) {
+], function ( Notify, Q, osgWrapper ) {
 
     /** -*- compile-command: "jslint-cli osgAnimation.js" -*-
      *
@@ -26,7 +26,9 @@ define( [
      *
      */
 
-    var Animation = function ( input, animation ) {
+    var osgAnimationWrapper = {};
+
+    osgAnimationWrapper.Animation = function ( input, animation ) {
         var jsonObj = input.getJSON();
         // check
         // 
@@ -35,7 +37,7 @@ define( [
                 return true;
             }
             if ( !o.Name ) {
-                Notify.log( "animation has field Name, error" );
+                osg.log( "animation has field Name, error" );
                 return false;
             }
             return false;
@@ -44,13 +46,13 @@ define( [
             return;
         }
 
-        if ( !osgSerializer.Object( input, animation ) ) {
+        if ( !osgWrapper.Object( input, animation ) ) {
             return;
         }
 
         // channels
         for ( var i = 0, l = jsonObj.Channels.length; i < l; i++ ) {
-            Q.when( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( function ( channel ) {
+            osgDB.Promise.when( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( function ( channel ) {
                 if ( channel ) {
                     animation.getChannels().push( channel );
                 }
@@ -59,7 +61,7 @@ define( [
         return animation;
     };
 
-    osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel = function ( input, channel ) {
+    osgAnimationWrapper.Vec3LerpChannel = function ( input, channel ) {
         var jsonObj = input.getJSON();
         // check
         // 
@@ -74,7 +76,7 @@ define( [
         }
 
         // doit
-        if ( !osgDB.ObjectWrapper.serializers.osg.Object( input, channel ) ) {
+        if ( !osgWrapper.Object( input, channel ) ) {
             return;
         }
 
@@ -91,17 +93,15 @@ define( [
         return channel;
     };
 
-
-    osgDB.ObjectWrapper.serializers.osgAnimation.QuatLerpChannel = function ( input, channel ) {
-        return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel( input, channel );
+    osgAnimationWrapper.QuatLerpChannel = function ( input, channel ) {
+        return osgAnimationWrapperVec3LerpChannel( input, channel );
     };
 
-    osgDB.ObjectWrapper.serializers.osgAnimation.QuatSlerpChannel = function ( input, channel ) {
-        return osgDB.ObjectWrapper.serializers.osgAnimation.Vec3LerpChannel( input, channel );
+    osgAnimationWrapper.QuatSlerpChannel = function ( input, channel ) {
+        return osgAnimationWrapperVec3LerpChannel( input, channel );
     };
 
-
-    osgDB.ObjectWrapper.serializers.osgAnimation.FloatLerpChannel = function ( input, channel ) {
+    osgAnimationWrapper.FloatLerpChannel = function ( input, channel ) {
         var jsonObj = input.getJSON();
         // check
         // 
@@ -116,7 +116,7 @@ define( [
         }
 
         // doit
-        if ( !osgDB.ObjectWrapper.serializers.osg.Object( input, channel ) ) {
+        if ( !osgWrapper.Object( input, channel ) ) {
             return;
         }
 
@@ -133,9 +133,7 @@ define( [
         return channel;
     };
 
-
-
-    osgDB.ObjectWrapper.serializers.osgAnimation.BasicAnimationManager = function ( input, manager ) {
+    osgAnimationWrapper.BasicAnimationManager = function ( input, manager ) {
         var jsonObj = input.getJSON();
         // check
         // 
@@ -159,8 +157,7 @@ define( [
         return manager;
     };
 
-
-    osgDB.ObjectWrapper.serializers.osgAnimation.UpdateMatrixTransform = function ( input, umt ) {
+    osgAnimationWrapper.UpdateMatrixTransform = function ( input, umt ) {
         var jsonObj = input.getJSON();
         // check
         var check = function ( o ) {
@@ -173,7 +170,7 @@ define( [
             return;
         }
 
-        if ( osgDB.ObjectWrapper.serializers.osg.Object( input, umt ) === undefined ) {
+        if ( osgWrapper.Object( input, umt ) === undefined ) {
             return;
         }
 
@@ -187,8 +184,7 @@ define( [
         return umt;
     };
 
-
-    osgDB.ObjectWrapper.serializers.osgAnimation.StackedTranslate = function ( input, st ) {
+    osgAnimationWrapper.StackedTranslate = function ( input, st ) {
         var jsonObj = input.getJSON();
 
         // check
@@ -202,7 +198,7 @@ define( [
             return;
         }
 
-        if ( !osgDB.ObjectWrapper.serializers.osg.Object( input, st ) ) {
+        if ( !osgWrapper.Object( input, st ) ) {
             return;
         }
 
@@ -212,8 +208,7 @@ define( [
         return st;
     };
 
-
-    osgDB.ObjectWrapper.serializers.osgAnimation.StackedQuaternion = function ( input, st ) {
+    osgAnimationWrapper.StackedQuaternion = function ( input, st ) {
         var jsonObj = input.getJSON();
         // check
         var check = function ( o ) {
@@ -226,7 +221,7 @@ define( [
             return;
         }
 
-        if ( !osgDB.ObjectWrapper.serializers.osg.Object( input, st ) ) {
+        if ( !osgWrapper.Object( input, st ) ) {
             return;
         }
 
@@ -236,7 +231,7 @@ define( [
         return st;
     };
 
-    osgDB.ObjectWrapper.serializers.osgAnimation.StackedRotateAxis = function ( input, st ) {
+    osgAnimationWrapper.StackedRotateAxis = function ( input, st ) {
         var jsonObj = input.getJSON();
         // check
         var check = function ( o ) {
@@ -249,7 +244,7 @@ define( [
             return;
         }
 
-        if ( !osgDB.ObjectWrapper.serializers.osg.Object( input, st ) ) {
+        if ( !osgWrapper.Object( input, st ) ) {
             return;
         }
 
@@ -262,19 +257,5 @@ define( [
         return st;
     };
 
-    return {
-        Object: Object,
-        Node: Node,
-        StateSet: StateSet,
-        Material: Material,
-        BlendFunc: BlendFunc,
-        CullFace: CullFace,
-        BlendColor: BlendColor,
-        Light: Light,
-        Texture: Texture,
-        Projection: Projection,
-        MatrixTransform: MatrixTransform,
-        LightSource: LightSource,
-        Geometry: Geometry
-    };
+    return osgAnimationWrapper;
 } );

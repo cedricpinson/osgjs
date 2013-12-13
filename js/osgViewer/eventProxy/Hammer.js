@@ -1,7 +1,9 @@
 /*global define */
 
 // #FIXME load hammer lib
-define( [], function () {
+define( [
+    'vendors/hammer-1.0.5'
+], function () {
 
     var HammerController = function ( viewer ) {
         this._enable = true;

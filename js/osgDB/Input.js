@@ -1,15 +1,15 @@
 /*global define */
 
 define( [
+    'osgDB/ReaderParser',
     'osg/osg',
     'osg/Notify',
     'vendors/Q',
-    'osgDB/osgDB',
     'osg/Image',
     'osg/BufferArray',
     'osg/PrimitiveSet',
     'osg/DrawElements'
-], function ( osg, Notify, Q, osgDB, Image, BufferArray, PrimitiveSet, DrawElements ) {
+], function ( ReaderParser, osg, Notify, Q, Image, BufferArray, PrimitiveSet, DrawElements ) {
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -180,7 +180,9 @@ define( [
                 if ( req.readyState == 4 ) {
                     var child;
                     if ( req.status == 200 ) {
-                        Q.when( osgDB.parseSceneGraph( JSON.parse( req.responseText ),
+                        // #FIXME circular dependencies
+                        var ReaderParser = require( 'osgDB/ReaderParser' );
+                        Q.when( ReaderParser.parseSceneGraph( JSON.parse( req.responseText ),
                                 opt ),
                             function ( child ) {
                                 defer.resolve( child );
@@ -476,8 +478,9 @@ define( [
                 Notify.warn( 'can\'t instanciate object ' + prop );
                 return undefined;
             }
-
-            var scope = osgDB.ObjectWrapper.serializers;
+            // #FIXME circular dependencies
+            var ReaderParser = require( 'osgDB/ReaderParser' );
+            var scope = ReaderParser.ObjectWrapper.serializers;
             var splittedPath = prop.split( '.' );
             for ( var i = 0, l = splittedPath.length; i < l; i++ ) {
                 var reader = scope[ splittedPath[ i ] ];

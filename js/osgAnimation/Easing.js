@@ -66,6 +66,14 @@ define( [], function () {
 		easeOutQuart: easeOutQuart,
 		easeInQuart: easeInQuart,
 		easeOutElastic: easeOutElastic,
-		easeOutBounce: easeOutBounce
+		easeOutBounce: easeOutBounce,
+		EaseOutQuad: easeOutQuad,
+		EaseInQuad: easeInQuad,
+		EaseOutCubic: easeOutCubic,
+		EaseInCubic: easeInCubic,
+		EaseOutQuart: easeOutQuart,
+		EaseInQuart: easeInQuart,
+		EaseOutElastic: easeOutElastic,
+		EaseOutBounce: easeOutBounce
 	};
 } );

@@ -89,7 +89,7 @@ define( [
     osg.MatrixTransform = MatrixTransform;
     osg.Node = Node;
     osg.NodeVisitor = NodeVisitor;
-    osg.Notify = Notify;
+    MACROUTILS.objectMix( osg, Notify );
     osg.Object = Object;
     osg.PrimitiveSet = PrimitiveSet;
     osg.Program = Program;
@@ -99,7 +99,7 @@ define( [
     osg.RenderStage = RenderStage;
     osg.Shader = Shader;
     osg.ShaderGenerator = ShaderGenerator;
-    osg.Shape = Shape;
+    MACROUTILS.objectMix( osg, Shape );
     osg.Stack = Stack;
     osg.State = State;
     osg.StateAttribute = StateAttribute;

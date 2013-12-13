@@ -7,9 +7,9 @@ define( [
     'osg/Uniform',
     'osg/Image',
     'osg/ShaderGenerator',
-    'osgDB/osgDB',
+    'osgDB/ReaderParser',
     'vendors/Q'
-], function ( Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, osgDB, Q ) {
+], function ( Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser, Q ) {
 
     /** -*- compile-command: 'jslint-cli Texture.js' -*- */
 
@@ -393,7 +393,7 @@ define( [
 
     Texture.createFromURL = function ( imageSource, format ) {
         var texture = new Texture();
-        Q.when( osgDB.readImage( imageSource ) ).then(
+        Q.when( ReaderParser.readImage( imageSource ) ).then(
             function ( img ) {
                 texture.setImage( img, format );
             }
