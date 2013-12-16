@@ -180,7 +180,6 @@ define( [
                 if ( req.readyState == 4 ) {
                     var child;
                     if ( req.status == 200 ) {
-                        // #FIXME circular dependencies
                         var ReaderParser = require( 'osgDB/ReaderParser' );
                         Q.when( ReaderParser.parseSceneGraph( JSON.parse( req.responseText ),
                                 opt ),
@@ -478,7 +477,6 @@ define( [
                 Notify.warn( 'can\'t instanciate object ' + prop );
                 return undefined;
             }
-            // #FIXME circular dependencies
             var ReaderParser = require( 'osgDB/ReaderParser' );
             var scope = ReaderParser.ObjectWrapper.serializers;
             var splittedPath = prop.split( '.' );

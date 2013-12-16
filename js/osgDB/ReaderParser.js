@@ -57,7 +57,6 @@ define( [
     };
 
     ReaderParser.registry = function () {
-        // #FIXME circular dependencies
         var Input = require( 'osgDB/Input' );
         if ( ReaderParser.registry._input === undefined ) {
             ReaderParser.registry._input = new Input();
@@ -86,7 +85,6 @@ define( [
             if ( key ) {
                 var obj = {};
                 obj[ key ] = node[ key ];
-                // #FIXME circular dependencies
                 var Input = require( 'osgDB/Input' );
                 var input = new Input( obj );
                 input.setImageLoadingOptions( ReaderParser.registry().getImageLoadingOptions() );
@@ -169,7 +167,6 @@ define( [
                         Notify.log( 'no texture on unit ' + t + ' skip it' );
                         continue;
                     }
-                    // #FIXME circular dependencies
                     var Texture = require( 'osg/Texture' );
                     var tex = new Texture();
                     setTexture( tex, textures[ t ] );

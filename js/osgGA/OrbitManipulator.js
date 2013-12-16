@@ -88,10 +88,6 @@ define( [
         }
     };
 
-    OrbitManipulator.Rotate = 0;
-    OrbitManipulator.Pan = 1;
-    OrbitManipulator.Zoom = 2;
-
     OrbitManipulator.AvailableControllerList = [ 'StandardMouseKeyboard',
         'LeapMotion',
         'GamePad',

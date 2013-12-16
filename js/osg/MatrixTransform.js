@@ -3,8 +3,9 @@
 define( [
     'osg/Utils',
     'osg/Matrix',
-    'osg/Transform'
-], function ( MACROUTILS, Matrix, Transform ) {
+    'osg/Transform',
+    'osg/Enums'
+], function ( MACROUTILS, Matrix, Transform, Enums ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -26,7 +27,7 @@ define( [
             this.matrix = m;
         },
         computeLocalToWorldMatrix: function ( matrix, nodeVisitor ) {
-            if ( this.referenceFrame === Transform.RELATIVE_RF ) {
+            if ( this.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
                 Matrix.preMult( matrix, this.matrix );
             } else {
                 matrix = this.matrix;
@@ -36,7 +37,7 @@ define( [
         computeWorldToLocalMatrix: function ( matrix, nodeVisitor ) {
             var minverse = [];
             Matrix.inverse( this.matrix, minverse );
-            if ( this.referenceFrame === Transform.RELATIVE_RF ) {
+            if ( this.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
                 Matrix.postMult( minverse, matrix );
             } else { // absolute
                 matrix = inverse;

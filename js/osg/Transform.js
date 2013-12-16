@@ -4,8 +4,9 @@ define( [
     'osg/Utils',
     'osg/Node',
     'osg/Matrix',
-    'osg/Vec3'
-], function ( MACROUTILS, Node, Matrix, Vec3 ) {
+    'osg/Vec3',
+    'osg/Enums'
+], function ( MACROUTILS, Node, Matrix, Vec3, Enums ) {
     /** -*- compile-command: "jslint-cli Transform.js" -*- */
 
     /** 
@@ -15,10 +16,8 @@ define( [
      */
     var Transform = function () {
         Node.call( this );
-        this.referenceFrame = Transform.RELATIVE_RF;
+        this.referenceFrame = Enums.TRANSFORM_RELATIVE_RF;
     };
-    Transform.RELATIVE_RF = 0;
-    Transform.ABSOLUTE_RF = 1;
 
     /** @lends Transform.prototype */
     Transform.prototype = MACROUTILS.objectInehrit( Node.prototype, {

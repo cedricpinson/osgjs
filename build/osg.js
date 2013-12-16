@@ -793,7 +793,6 @@ define( 'osg/Utils',[
     Utils.Int32Array = typeof Int32Array !== 'undefined' ? Int32Array : null;
     Utils.Uint16Array = typeof Uint16Array !== 'undefined' ? Uint16Array : null;
 
-    //#FIXME Put it somewhere else ??
     Utils.performance = {};
     Utils.performance.now = ( function () {
         // if no window.performance
@@ -3452,13 +3451,25 @@ define( 'osg/Matrix',[
 
     return Matrix;
 } );
+/** -*- compile-command: 'jslint-cli osg.js' -*- */
+
+define( 'osg/Enums',[], function () {
+
+    return {
+        TRANSFORM_RELATIVE_RF: 0,
+        TRANSFORM_ABSOLUTE_RF: 1,
+        ORBIT_ROTATE: 0,
+        ORBIT_PAN: 1,
+        ORBIT_ZOOM: 2
+    };
+} );
 /*global define */
 
 define( 'osg/ComputeMatrixFromNodePath',[
-    /* #FIXME enum fix 'osg/Transform'
-    #FIXME enum fix 'osg/Camera', */
-    'osg/Matrix'
-], function ( /* Transform, Camera, */ Matrix ) {
+    'osg/Camera',
+    'osg/Matrix',
+    'osg/Enums'
+], function ( Camera, Matrix, Enums ) {
     /** -*- compile-command: "jslint-cli Transform.js" -*- */
 
     computeLocalToWorld = function ( nodePath, ignoreCameras ) {
@@ -3472,8 +3483,8 @@ define( 'osg/ComputeMatrixFromNodePath',[
         if ( ignoreCamera ) {
             for ( j = nodePath.length - 1; j > 0; j-- ) {
                 var camera = nodePath[ j ];
-                if ( camera.objectType === 1 /* #FIXME enum fix Camera.prototype.objectType */ &&
-                    ( camera.getReferenceFrame !== 0 /* #FIXME enum fix Transform.RELATIVE_RF */ || camera.getParents().length === 0 ) ) {
+                if ( camera.objectType === Camera.prototype.objectType &&
+                    ( camera.getReferenceFrame !== Enums.TRANSFORM_RELATIVE_RF || camera.getParents().length === 0 ) ) {
                     break;
                 }
             }
@@ -3502,9 +3513,9 @@ define( 'osg/Node',[
     'osg/StateSet',
     'osg/NodeVisitor',
     'osg/Matrix',
-    /* #FIXME enum fix osg/Transform, */
-    'osg/ComputeMatrixFromNodePath'
-], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, /* #FIXME enum fix Transform,*/ ComputeMatrixFromNodePath ) {
+    'osg/ComputeMatrixFromNodePath',
+    'osg/Enums'
+], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, ComputeMatrixFromNodePath, Enums ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -3718,7 +3729,7 @@ define( 'osg/Node',[
             bsphere.init();
             for ( var i = 0, l = this.children.length; i < l; i++ ) {
                 var child = this.children[ i ];
-                if ( child.referenceFrame === undefined || child.referenceFrame === 0 /* #FIXME enum fix Transform.RELATIVE_RF*/ ) {
+                if ( child.referenceFrame === undefined || child.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
                     bb.expandBySphere( child.getBound() );
                 }
             }
@@ -3729,7 +3740,7 @@ define( 'osg/Node',[
             bsphere._radius = 0.0;
             for ( var j = 0, l2 = this.children.length; j < l2; j++ ) {
                 var cc = this.children[ j ];
-                if ( cc.referenceFrame === undefined || cc.referenceFrame === 0 /* #FIXME enum fix Transform.RELATIVE_RF*/ ) {
+                if ( cc.referenceFrame === undefined || cc.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
                     bsphere.expandRadiusBySphere( cc.getBound() );
                 }
             }
@@ -3780,8 +3791,9 @@ define( 'osg/Transform',[
     'osg/Utils',
     'osg/Node',
     'osg/Matrix',
-    'osg/Vec3'
-], function ( MACROUTILS, Node, Matrix, Vec3 ) {
+    'osg/Vec3',
+    'osg/Enums'
+], function ( MACROUTILS, Node, Matrix, Vec3, Enums ) {
     /** -*- compile-command: "jslint-cli Transform.js" -*- */
 
     /** 
@@ -3791,10 +3803,8 @@ define( 'osg/Transform',[
      */
     var Transform = function () {
         Node.call( this );
-        this.referenceFrame = Transform.RELATIVE_RF;
+        this.referenceFrame = Enums.TRANSFORM_RELATIVE_RF;
     };
-    Transform.RELATIVE_RF = 0;
-    Transform.ABSOLUTE_RF = 1;
 
     /** @lends Transform.prototype */
     Transform.prototype = MACROUTILS.objectInehrit( Node.prototype, {
@@ -3895,8 +3905,9 @@ define( 'osg/Camera',[
     'osg/Utils',
     'osg/Transform',
     'osg/CullSettings',
-    'osg/Matrix'
-], function ( MACROUTILS, Transform, CullSettings, Matrix ) {
+    'osg/Matrix',
+    'osg/Enums'
+], function ( MACROUTILS, Transform, CullSettings, Matrix, Enums ) {
 
     /** 
      * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
@@ -4018,7 +4029,7 @@ define( 'osg/Camera',[
             },
 
             computeLocalToWorldMatrix: function ( matrix, nodeVisitor ) {
-                if ( this.referenceFrame === Transform.RELATIVE_RF ) {
+                if ( this.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
                     Matrix.preMult( matrix, this.modelviewMatrix );
                 } else { // absolute
                     matrix = this.modelviewMatrix;
@@ -4029,7 +4040,7 @@ define( 'osg/Camera',[
             computeWorldToLocalMatrix: function ( matrix, nodeVisitor ) {
                 var inverse = [];
                 Matrix.inverse( this.modelviewMatrix, inverse );
-                if ( this.referenceFrame === Transform.RELATIVE_RF ) {
+                if ( this.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
                     Matrix.postMult( inverse, matrix );
                 } else {
                     matrix = inverse;
@@ -4178,8 +4189,9 @@ define( 'osg/CullStack',[], function () {
 define( 'osg/MatrixTransform',[
     'osg/Utils',
     'osg/Matrix',
-    'osg/Transform'
-], function ( MACROUTILS, Matrix, Transform ) {
+    'osg/Transform',
+    'osg/Enums'
+], function ( MACROUTILS, Matrix, Transform, Enums ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -4201,7 +4213,7 @@ define( 'osg/MatrixTransform',[
             this.matrix = m;
         },
         computeLocalToWorldMatrix: function ( matrix, nodeVisitor ) {
-            if ( this.referenceFrame === Transform.RELATIVE_RF ) {
+            if ( this.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
                 Matrix.preMult( matrix, this.matrix );
             } else {
                 matrix = this.matrix;
@@ -4211,7 +4223,7 @@ define( 'osg/MatrixTransform',[
         computeWorldToLocalMatrix: function ( matrix, nodeVisitor ) {
             var minverse = [];
             Matrix.inverse( this.matrix, minverse );
-            if ( this.referenceFrame === Transform.RELATIVE_RF ) {
+            if ( this.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
                 Matrix.postMult( minverse, matrix );
             } else { // absolute
                 matrix = inverse;
@@ -5131,9 +5143,9 @@ define( 'osg/CullVisitor',[
     'osg/Geometry',
     'osg/RenderStage',
     'osg/Node',
-    'osg/Transform',
-    'osg/Camera'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Transform, Camera ) {
+    'osg/Camera',
+    'osg/Enums'
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Camera, Enums ) {
 
     /** 
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
@@ -5406,7 +5418,7 @@ define( 'osg/CullVisitor',[
         var modelview = this._getReservedMatrix();
         var projection = this._getReservedMatrix();
 
-        if ( camera.getReferenceFrame() === Transform.RELATIVE_RF ) {
+        if ( camera.getReferenceFrame() === Enums.TRANSFORM_RELATIVE_RF ) {
             var lastProjectionMatrix = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
             Matrix.mult( lastProjectionMatrix, camera.getProjectionMatrix(), projection );
             var lastViewMatrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
@@ -5499,7 +5511,7 @@ define( 'osg/CullVisitor',[
     CullVisitor.prototype[ MatrixTransform.prototype.objectType ] = function ( node ) {
         var matrix = this._getReservedMatrix();
 
-        if ( node.getReferenceFrame() === Transform.RELATIVE_RF ) {
+        if ( node.getReferenceFrame() === Enums.TRANSFORM_RELATIVE_RF ) {
             var lastMatrixStack = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
             Matrix.mult( lastMatrixStack, node.getMatrix(), matrix );
         } else {
@@ -11167,7 +11179,7 @@ define( 'osgDB/Input',[
                 return new( this._objectRegistry[ path ] )();
             }
 
-            // #FIXME hem hem to be fixed
+            // #FIXME hem hem to be fixed (or not?)
             var scope = window;
             var splittedPath = path.split( '.' );
             for ( var i = 0, l = splittedPath.length; i < l; i++ ) {
@@ -12702,8 +12714,9 @@ define( 'osg/osg',[
     'osg/Vec3',
     'osg/Vec4',
     'osg/Viewport',
-    'osgUtil/osgPool'
-], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool ) {
+    'osgUtil/osgPool',
+    'osg/Enums'
+], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool, Enums ) {
 
     var osg = {};
 
@@ -12767,6 +12780,9 @@ define( 'osg/osg',[
     osg.Viewport = Viewport;
 
     osg.memoryPools = osgPool.memoryPools;
+
+    osg.Transform.RELATIVE_RF = Enums.TRANSFORM_RELATIVE_RF;
+    osg.Transform.ABSOLUTE_RF = Enums.TRANSFORM_ABSOLUTE_RF;
 
     return osg;
 } );
@@ -15539,14 +15555,8 @@ define( 'osgGA/OrbitManipulatorLeapMotionController',[
 /*global define */
 
 define( 'osgGA/OrbitManipulatorMouseKeyboardController',[
-    /* #FIXME enum fix 'osgGA/OrbitManipulator' */
-], function ( /* #FIXME enum fix OrbitManipulator */) {
-
-    var Mode = {
-        Rotate: 0,
-        Pan: 1,
-        Zoom: 2
-    };
+'osg/Enums'
+], function ( Enums) {
 
     var OrbitManipulatorMouseKeyboardController = function ( manipulator ) {
         this._manipulator = manipulator;
@@ -15585,14 +15595,14 @@ define( 'osgGA/OrbitManipulatorMouseKeyboardController',[
                 var x, y;
 
                 var mode = this.getMode();
-                if ( mode === Mode.Rotate ) {
+                if ( mode === Enums.ORBIT_ROTATE ) {
                     manipulator.getRotateInterpolator().setDelay( this._delay );
                     manipulator.getRotateInterpolator().setTarget( pos[ 0 ], pos[ 1 ] );
 
-                } else if ( mode === Mode.Pan ) {
+                } else if ( mode === Enums.ORBIT_PAN ) {
                     manipulator.getPanInterpolator().setTarget( pos[ 0 ], pos[ 1 ] );
 
-                } else if ( mode === Mode.Zoom ) {
+                } else if ( mode === Enums.ORBIT_ZOOM ) {
                     var zoom = manipulator.getZoomInterpolator();
                     if ( zoom.isReset() ) {
                         zoom._start = pos[ 1 ];
@@ -15613,14 +15623,14 @@ define( 'osgGA/OrbitManipulatorMouseKeyboardController',[
             if ( mode === undefined ) {
                 if ( ev.button === 0 ) {
                     if ( ev.shiftKey ) {
-                        this.setMode( Mode.Pan );
+                        this.setMode( Enums.ORBIT_PAN );
                     } else if ( ev.ctrlKey ) {
-                        this.setMode( Mode.Zoom );
+                        this.setMode( Enums.ORBIT_ZOOM );
                     } else {
-                        this.setMode( Mode.Rotate );
+                        this.setMode( Enums.ORBIT_ROTATE );
                     }
                 } else {
-                    this.setMode( Mode.Pan );
+                    this.setMode( Enums.ORBIT_PAN );
                 }
             }
 
@@ -15628,14 +15638,13 @@ define( 'osgGA/OrbitManipulatorMouseKeyboardController',[
 
             var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
             mode = this.getMode();
-            //#FIXME enum degueu !!
-            if ( mode === 0 /* #FIXME enum fix OrbitManipulator.Rotate */ ) {
+            if ( mode === Enums.ORBIT_ROTATE ) {
                 manipulator.getRotateInterpolator().reset();
                 manipulator.getRotateInterpolator().set( pos[ 0 ], pos[ 1 ] );
-            } else if ( mode === 1 /* #FIXME enum fix OrbitManipulator.Pan */ ) {
+            } else if ( mode === Enums.ORBIT_PAN  ) {
                 manipulator.getPanInterpolator().reset();
                 manipulator.getPanInterpolator().set( pos[ 0 ], pos[ 1 ] );
-            } else if ( mode === 2 /* #FIXME enum fix OrbitManipulator.Zoom */ ) {
+            } else if ( mode === Enums.ORBIT_ZOOM ) {
                 manipulator.getZoomInterpolator()._start = pos[ 1 ];
                 manipulator.getZoomInterpolator().set( 0.0 );
             }
@@ -15664,20 +15673,20 @@ define( 'osgGA/OrbitManipulatorMouseKeyboardController',[
                 this._manipulator.computeHomePosition();
 
             } else if ( ev.keyCode === this._panKey &&
-                this.getMode() !== Mode.Pan ) {
-                this.setMode( Mode.Pan );
+                this.getMode() !== Enums.ORBIT_PAN ) {
+                this.setMode( Enums.ORBIT_PAN );
                 this._manipulator.getPanInterpolator().reset();
                 this.pushButton();
                 ev.preventDefault();
             } else if ( ev.keyCode === this._zoomKey &&
-                this.getMode() !== Mode.Zoom ) {
-                this.setMode( Mode.Zoom );
+                this.getMode() !== Enums.ORBIT_ZOOM) {
+                this.setMode(  Enums.ORBIT_ZOOM );
                 this._manipulator.getZoomInterpolator().reset();
                 this.pushButton();
                 ev.preventDefault();
             } else if ( ev.keyCode === this._rotateKey &&
-                this.getMode() !== Mode.Rotate ) {
-                this.setMode( Mode.Rotate );
+                this.getMode() !== Enums.ORBIT_ROTATE ) {
+                this.setMode( Enums.ORBIT_ROTATE );
                 this._manipulator.getRotateInterpolator().reset();
                 this.pushButton();
                 ev.preventDefault();
@@ -16051,10 +16060,6 @@ define( 'osgGA/OrbitManipulator',[
             return this._delta;
         }
     };
-
-    OrbitManipulator.Rotate = 0;
-    OrbitManipulator.Pan = 1;
-    OrbitManipulator.Zoom = 2;
 
     OrbitManipulator.AvailableControllerList = [ 'StandardMouseKeyboard',
         'LeapMotion',
@@ -16744,8 +16749,9 @@ define( 'osgGA/osgGA',[
     'osgGA/OrbitManipulatorHammerController',
     'osgGA/OrbitManipulatorLeapMotionController',
     'osgGA/OrbitManipulatorMouseKeyboardController',
-    'osgGA/SwitchManipulator'
-], function ( FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator ) {
+    'osgGA/SwitchManipulator',
+    'osg/Enums'
+], function ( FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, Enums ) {
 
     /** -*- compile-command: "jslint-cli osgGA.js" -*-
      * Authors:
@@ -16777,6 +16783,10 @@ define( 'osgGA/osgGA',[
     };
     osgGA.SwitchManipulator = SwitchManipulator;
 
+    osgGA.OrbitManipulator.Rotate = Enums.ORBIT_ROTATE;
+    osgGA.OrbitManipulator.Pan = Enums.ORBIT_PAN;
+    osgGA.OrbitManipulator.Zoom = Enums.ORBIT_ZOOM;
+
     return osgGA;
 } );
 /*global define */
@@ -16791,14 +16801,14 @@ define( 'osgUtil/Composer',[
     'osg/FrameBufferObject',
     'osg/Viewport',
     'osg/Matrix',
-    'osg/Transform',
     'osg/Uniform',
     'osg/StateSet',
     'osg/Program',
     'osg/Shader',
     'osg/Texture',
-    'osg/Shape'
-], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix, Transform, Uniform, StateSet, Program, Shader, Texture, Shape ) {
+    'osg/Shape',
+    'osg/Enums'
+], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix,  Uniform, StateSet, Program, Shader, Texture, Shape, Enums ) {
 
     /*
   Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
@@ -16954,7 +16964,7 @@ define( 'osgUtil/Composer',[
 
                 var vp = new Viewport( 0, 0, w, h );
                 var projection = Matrix.makeOrtho( -w / 2, w / 2, -h / 2, h / 2, -5, 5, [] );
-                camera.setReferenceFrame( Transform.ABSOLUTE_RF );
+                camera.setReferenceFrame( Enums.TRANSFORM_ABSOLUTE_RF );
                 camera.setViewport( vp );
                 camera.setProjectionMatrix( projection );
                 camera.setStateSet( element.filter.getStateSet() );
