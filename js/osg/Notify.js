@@ -10,7 +10,7 @@ define( [], function () {
     Notify.WARN = 3;
     Notify.ERROR = 4;
 
-    // #FIXME getStackTrace was initially in webgl-utils
+    // #FIXME getStackTrace was initially in webgl-utils (as a global function) but only used in this file
     /** Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
      */
     function getStackTrace( err ) {

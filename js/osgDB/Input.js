@@ -81,7 +81,7 @@ define( [
                 return new( this._objectRegistry[ path ] )();
             }
 
-            // #FIXME hem hem to be fixed (or not?)
+            // #FIXME to be fixed (or not?)
             var scope = window;
             var splittedPath = path.split( '.' );
             for ( var i = 0, l = splittedPath.length; i < l; i++ ) {

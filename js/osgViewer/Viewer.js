@@ -13,8 +13,9 @@ define( [
     'osg/State',
     'osgGA/OrbitManipulator',
     'osgViewer/eventProxy/EventProxy',
-    'osgViewer/webgl-utils'
-], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy, WebGLUtils ) {
+    'osgViewer/webgl-utils',
+    'osgViewer/webgl-debug'
+], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy, WebGLUtils, WebGLDebugUtils ) {
 
     /** -*- compile-command: 'jslint-cli Viewer.js' -*-
      * Authors:
@@ -106,11 +107,10 @@ define( [
         }
         this._options = options;
 
-        // #FIXME uncomment  + change namespace ??
-        // if ( osg.SimulateWebGLLostContext ) {
-        //     canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas( canvas );
-        //     canvas.loseContextInNCalls( osg.SimulateWebGLLostContext );
-        // }
+        if ( options.SimulateWebGLLostContext ) {
+            canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas( canvas );
+            canvas.loseContextInNCalls( options.SimulateWebGLLostContext );
+        }
 
         gl = WebGLUtils.setupWebGL( canvas, options, error );
         var self = this;
