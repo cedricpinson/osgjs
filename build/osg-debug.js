@@ -22340,6 +22340,7 @@ define( 'osgViewer/Viewer',[
         }
         this._options = options;
 
+        // #FIXME see tojiro's blog for webgl lost context stuffs 
         if ( options.SimulateWebGLLostContext ) {
             canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas( canvas );
             canvas.loseContextInNCalls( options.SimulateWebGLLostContext );
