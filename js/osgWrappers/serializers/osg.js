@@ -65,9 +65,9 @@ define( [
 
         var createCallback = function ( jsonCallback ) {
             var promise = input.setJSON( jsonCallback ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( promise ).then( function ( cb ) {
+            Q.when( promise ).then( function ( cb ) {
                 if ( cb ) {
                     node.addUpdateCallback( cb );
                 }
@@ -84,9 +84,9 @@ define( [
 
         if ( jsonObj.StateSet ) {
             var pp = input.setJSON( jsonObj.StateSet ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( pp ).then( function ( stateset ) {
+            Q.when( pp ).then( function ( stateset ) {
                 node.setStateSet( stateset );
                 df.resolve();
             } );
@@ -94,9 +94,9 @@ define( [
 
         var createChildren = function ( jsonChildren ) {
             var promise = input.setJSON( jsonChildren ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( promise ).then( function ( obj ) {
+            Q.when( promise ).then( function ( obj ) {
                 if ( obj ) {
                     node.addChild( obj );
                 }
@@ -110,8 +110,8 @@ define( [
             }
         }
 
-        var defer = osgDB.Promise.defer();
-        osgDB.Promise.all( promiseArray ).then( function () {
+        var defer = Q.defer();
+        Q.all( promiseArray ).then( function () {
             defer.resolve( node );
         } );
 
@@ -136,9 +136,9 @@ define( [
 
         var createAttribute = function ( jsonAttribute ) {
             var promise = input.setJSON( jsonAttribute ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( promise ).then( function ( attribute ) {
+            Q.when( promise ).then( function ( attribute ) {
                 if ( attribute !== undefined ) {
                     stateSet.setAttributeAndMode( attribute );
                 }
@@ -156,9 +156,9 @@ define( [
 
         var createTextureAttribute = function ( unit, textureAttribute ) {
             var promise = input.setJSON( textureAttribute ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( promise ).then( function ( attribute ) {
+            Q.when( promise ).then( function ( attribute ) {
                 if ( attribute )
                     stateSet.setTextureAttributeAndMode( unit, attribute );
                 df.resolve();
@@ -175,8 +175,8 @@ define( [
             }
         }
 
-        var defer = osgDB.Promise.defer();
-        osgDB.Promise.all( promiseArray ).then( function () {
+        var defer = Q.defer();
+        Q.all( promiseArray ).then( function () {
             defer.resolve( stateSet );
         } );
 
@@ -336,8 +336,8 @@ define( [
             file = "no-image-provided";
         }
 
-        var defer = osgDB.Promise.defer();
-        osgDB.Promise.when( input.readImageURL( file ) ).then(
+        var defer = Q.defer();
+        Q.when( input.readImageURL( file ) ).then(
             function ( img ) {
                 texture.setImage( img );
                 defer.resolve( texture );
@@ -397,9 +397,9 @@ define( [
             return;
         }
 
-        var defer = osgDB.Promise.defer();
+        var defer = Q.defer();
         var promise = osgWrapper.Node( input, node );
-        osgDB.Promise.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
+        Q.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
             var light = args[ 0 ];
             var lightsource = args[ 1 ];
             node.setLight( light );
@@ -424,10 +424,10 @@ define( [
         arraysPromise.push( osgWrapper.Node( input, node ) );
 
         var createPrimitive = function ( jsonPrimitive ) {
-            var defer = osgDB.Promise.defer();
+            var defer = Q.defer();
             arraysPromise.push( defer.promise );
             var promise = input.setJSON( jsonPrimitive ).readPrimitiveSet();
-            osgDB.Promise.when( promise ).then( function ( primitiveSet ) {
+            Q.when( promise ).then( function ( primitiveSet ) {
                 if ( primitiveSet !== undefined ) {
                     node.getPrimitives().push( primitiveSet );
                 }
@@ -441,10 +441,10 @@ define( [
         }
 
         var createVertexAttribute = function ( name, jsonAttribute ) {
-            var defer = osgDB.Promise.defer();
+            var defer = Q.defer();
             arraysPromise.push( defer.promise );
             var promise = input.setJSON( jsonAttribute ).readBufferArray();
-            osgDB.Promise.when( promise ).then( function ( buffer ) {
+            Q.when( promise ).then( function ( buffer ) {
                 if ( buffer !== undefined ) {
                     node.getVertexAttributeList()[ name ] = buffer;
                 }
@@ -457,8 +457,8 @@ define( [
             }
         }
 
-        var defer = osgDB.Promise.defer();
-        osgDB.Promise.all( arraysPromise ).then( function () {
+        var defer = Q.defer();
+        Q.all( arraysPromise ).then( function () {
             defer.resolve( node );
         } );
         return defer.promise;

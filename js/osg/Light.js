@@ -72,7 +72,7 @@ define( [
                     'invMatrix': uFact.createMatrix4( Matrix.makeIdentity( [] ), this.getUniformName( 'invMatrix' ) )
                 };
 
-                uniforms[ typeMember ].uniformKeys = Object.keys( uniforms[ typeMember ] );
+                uniforms[ typeMember ].uniformKeys = window.Object.keys( uniforms[ typeMember ] );
             }
             return uniforms[ typeMember ];
         },
@@ -398,7 +398,7 @@ define( [
         ].join( '\n' );
 
         // replace Light_xxxx by instance variable of 'this' light
-        uniforms = Object.keys( this.getOrCreateUniforms() );
+        uniforms = window.Object.keys( this.getOrCreateUniforms() );
         str = this._replace( 'Light_', uniforms, str, this.getUniformName );
         return str;
     };
@@ -438,7 +438,7 @@ define( [
             'attenuation'
         ];
         str = this._replace( '', fields, str, this.getParameterName );
-        uniforms = Object.keys( this.getOrCreateUniforms() );
+        uniforms = window.Object.keys( this.getOrCreateUniforms() );
         str = this._replace( 'Light_', uniforms, str, this.getUniformName );
         return str;
     };

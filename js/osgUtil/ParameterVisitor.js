@@ -299,7 +299,7 @@ define( [
             if ( !maps ) {
                 return;
             }
-            var keys = Object.keys( uniformMap );
+            var keys = window.Object.keys( uniformMap );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
                 var k = keys[ i ];
                 // get the first one found in the tree
@@ -339,7 +339,7 @@ define( [
             this.getUniformList( program.getFragmentShader().getText(), uniformMap );
 
 
-            var keys = Object.keys( uniformMap );
+            var keys = window.Object.keys( uniformMap );
 
             if ( programName === undefined ) {
                 var hashCode = function ( str ) {

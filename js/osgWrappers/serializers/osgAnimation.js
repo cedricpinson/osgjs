@@ -52,7 +52,7 @@ define( [
 
         // channels
         for ( var i = 0, l = jsonObj.Channels.length; i < l; i++ ) {
-            osgDB.Promise.when( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( function ( channel ) {
+            Q.when( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( function ( channel ) {
                 if ( channel ) {
                     animation.getChannels().push( channel );
                 }

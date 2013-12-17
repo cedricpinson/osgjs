@@ -555,7 +555,7 @@ define( [
             var lists = EventProxy;
             var argumentEventBackend = args.EventBackend;
             // loop on each devices and try to initialize it
-            var keys = Object.keys( lists );
+            var keys = window.Object.keys( lists );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
                 var device = keys[ i ];
 
@@ -576,7 +576,7 @@ define( [
             return deviceEnabled;
         },
         updateEventProxy: function ( list, frameStamp ) {
-            var keys = Object.keys( list );
+            var keys = window.Object.keys( list );
             keys.forEach( function ( key ) {
                 var device = list[ key ];
                 if ( device.update )

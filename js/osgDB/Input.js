@@ -282,7 +282,7 @@ define( [
                     vb = jsonObj.Array.Uint16Array;
                     type = 'Uint16Array';
                 } else {
-                    Notify.warn( 'Typed Array ' + Object.keys( o.Array )[ 0 ] );
+                    Notify.warn( 'Typed Array ' + window.Object.keys( o.Array )[ 0 ] );
                     type = 'Float32Array';
                 }
 
@@ -460,7 +460,7 @@ define( [
         readObject: function () {
 
             var jsonObj = this.getJSON();
-            var prop = Object.keys( jsonObj )[ 0 ];
+            var prop = window.Object.keys( jsonObj )[ 0 ];
             if ( !prop ) {
                 Notify.warn( 'can\'t find property for object ' + jsonObj );
                 return undefined;

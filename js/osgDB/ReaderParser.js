@@ -72,7 +72,7 @@ define( [
         if ( node.Version !== undefined && node.Version > 0 ) {
 
             var getPropertyValue = function ( o ) {
-                var props = Object.keys( o );
+                var props = window.Object.keys( o );
                 for ( var i = 0, l = props.length; i < l; i++ ) {
                     if ( props[ i ] !== 'Generator' && props[ i ] !== 'Version' ) {
                         return props[ i ];

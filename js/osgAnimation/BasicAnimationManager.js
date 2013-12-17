@@ -133,7 +133,7 @@ define( [
                 while ( pri >= 0 ) {
                     if ( this._actives[ pri ][ name ] ) {
                         delete this._actives[ pri ][ name ];
-                        this._actives[ pri ]._keys = Object.keys( this._actives[ pri ] ).filter( filterFunction );
+                        this._actives[ pri ]._keys = window.Object.keys( this._actives[ pri ] ).filter( filterFunction );
                         return;
                     }
                     pri--;
@@ -174,7 +174,7 @@ define( [
             if ( this._actives[ obj.priority ] === undefined ) {
                 this._actives[ obj.priority ] = {};
                 this._actives[ obj.priority ]._keys = [];
-                this._actives._keys.push( obj.priority ); // = Object.keys(this._actives);
+                this._actives._keys.push( obj.priority ); // = window.Object.keys(this._actives);
             }
 
             obj.start = undefined;
@@ -211,7 +211,7 @@ define( [
         },
         buildTargetList: function () {
             this._targets.length = 0;
-            var keys = Object.keys( this._animations );
+            var keys = window.Object.keys( this._animations );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
                 var a = this._animations[ keys[ i ] ];
                 var channels = a.getChannels();

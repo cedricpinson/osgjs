@@ -4535,7 +4535,7 @@ define( 'osg/RenderBin',[
             }
 
             var bins = this._bins;
-            var keys = Object.keys( bins );
+            var keys = window.Object.keys( bins );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
                 bins[ keys[ i ] ].sort();
             }
@@ -4593,7 +4593,7 @@ define( 'osg/RenderBin',[
 
         drawImplementation: function ( state, previousRenderLeaf ) {
             var previous = previousRenderLeaf;
-            var binsKeys = Object.keys( this._bins );
+            var binsKeys = window.Object.keys( this._bins );
             var bins = this._bins;
             var binsArray = [];
             for ( var i = 0, l = binsKeys.length; i < l; i++ ) {
@@ -7198,7 +7198,7 @@ define( 'osg/Light',[
                     'invMatrix': uFact.createMatrix4( Matrix.makeIdentity( [] ), this.getUniformName( 'invMatrix' ) )
                 };
 
-                uniforms[ typeMember ].uniformKeys = Object.keys( uniforms[ typeMember ] );
+                uniforms[ typeMember ].uniformKeys = window.Object.keys( uniforms[ typeMember ] );
             }
             return uniforms[ typeMember ];
         },
@@ -7524,7 +7524,7 @@ define( 'osg/Light',[
         ].join( '\n' );
 
         // replace Light_xxxx by instance variable of 'this' light
-        uniforms = Object.keys( this.getOrCreateUniforms() );
+        uniforms = window.Object.keys( this.getOrCreateUniforms() );
         str = this._replace( 'Light_', uniforms, str, this.getUniformName );
         return str;
     };
@@ -7564,7 +7564,7 @@ define( 'osg/Light',[
             'attenuation'
         ];
         str = this._replace( '', fields, str, this.getParameterName );
-        uniforms = Object.keys( this.getOrCreateUniforms() );
+        uniforms = window.Object.keys( this.getOrCreateUniforms() );
         str = this._replace( 'Light_', uniforms, str, this.getUniformName );
         return str;
     };
@@ -8726,7 +8726,7 @@ define( 'osg/State',[
                                     }
                                 }
                                 // regenerate uniforms keys
-                                var keys = Object.keys( activeUniforms );
+                                var keys = window.Object.keys( activeUniforms );
                                 for ( var j = 0, m = keys.length; j < m; j++ ) {
                                     if ( keys[ j ] === 'uniformKeys' ) {
                                         keys.splice( j, 1 );
@@ -11380,7 +11380,7 @@ define( 'osgDB/Input',[
                     vb = jsonObj.Array.Uint16Array;
                     type = 'Uint16Array';
                 } else {
-                    Notify.warn( 'Typed Array ' + Object.keys( o.Array )[ 0 ] );
+                    Notify.warn( 'Typed Array ' + window.Object.keys( o.Array )[ 0 ] );
                     type = 'Float32Array';
                 }
 
@@ -11558,7 +11558,7 @@ define( 'osgDB/Input',[
         readObject: function () {
 
             var jsonObj = this.getJSON();
-            var prop = Object.keys( jsonObj )[ 0 ];
+            var prop = window.Object.keys( jsonObj )[ 0 ];
             if ( !prop ) {
                 Notify.warn( 'can\'t find property for object ' + jsonObj );
                 return undefined;
@@ -11676,7 +11676,7 @@ define( 'osgDB/ReaderParser',[
         if ( node.Version !== undefined && node.Version > 0 ) {
 
             var getPropertyValue = function ( o ) {
-                var props = Object.keys( o );
+                var props = window.Object.keys( o );
                 for ( var i = 0, l = props.length; i < l; i++ ) {
                     if ( props[ i ] !== 'Generator' && props[ i ] !== 'Version' ) {
                         return props[ i ];
@@ -11970,7 +11970,7 @@ define( 'osg/Texture',[
                 var name = this.getType() + unit;
                 var uniforms = {};
                 uniforms.texture = Uniform.createInt1( unit, name );
-                uniforms.uniformKeys = Object.keys( uniforms );
+                uniforms.uniformKeys = window.Object.keys( uniforms );
                 Texture.uniforms[ unit ] = uniforms;
             }
             // uniform for an texture attribute should directly in Texture.uniforms[unit] and not in Texture.uniforms[unit][Texture0]
@@ -13034,7 +13034,7 @@ define( 'osgAnimation/BasicAnimationManager',[
                 while ( pri >= 0 ) {
                     if ( this._actives[ pri ][ name ] ) {
                         delete this._actives[ pri ][ name ];
-                        this._actives[ pri ]._keys = Object.keys( this._actives[ pri ] ).filter( filterFunction );
+                        this._actives[ pri ]._keys = window.Object.keys( this._actives[ pri ] ).filter( filterFunction );
                         return;
                     }
                     pri--;
@@ -13075,7 +13075,7 @@ define( 'osgAnimation/BasicAnimationManager',[
             if ( this._actives[ obj.priority ] === undefined ) {
                 this._actives[ obj.priority ] = {};
                 this._actives[ obj.priority ]._keys = [];
-                this._actives._keys.push( obj.priority ); // = Object.keys(this._actives);
+                this._actives._keys.push( obj.priority ); // = window.Object.keys(this._actives);
             }
 
             obj.start = undefined;
@@ -13112,7 +13112,7 @@ define( 'osgAnimation/BasicAnimationManager',[
         },
         buildTargetList: function () {
             this._targets.length = 0;
-            var keys = Object.keys( this._animations );
+            var keys = window.Object.keys( this._animations );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
                 var a = this._animations[ keys[ i ] ];
                 var channels = a.getChannels();
@@ -13877,7 +13877,7 @@ define( 'osgAnimation/LinkVisitor',[
     LinkVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
         setAnimationMap: function ( anims ) {
             this._animations = anims;
-            this._animationKeys = Object.keys( anims );
+            this._animationKeys = window.Object.keys( anims );
         },
 
         apply: function ( node ) {
@@ -14622,9 +14622,9 @@ define( 'osgWrappers/serializers/osg',[
 
         var createCallback = function ( jsonCallback ) {
             var promise = input.setJSON( jsonCallback ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( promise ).then( function ( cb ) {
+            Q.when( promise ).then( function ( cb ) {
                 if ( cb ) {
                     node.addUpdateCallback( cb );
                 }
@@ -14641,9 +14641,9 @@ define( 'osgWrappers/serializers/osg',[
 
         if ( jsonObj.StateSet ) {
             var pp = input.setJSON( jsonObj.StateSet ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( pp ).then( function ( stateset ) {
+            Q.when( pp ).then( function ( stateset ) {
                 node.setStateSet( stateset );
                 df.resolve();
             } );
@@ -14651,9 +14651,9 @@ define( 'osgWrappers/serializers/osg',[
 
         var createChildren = function ( jsonChildren ) {
             var promise = input.setJSON( jsonChildren ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( promise ).then( function ( obj ) {
+            Q.when( promise ).then( function ( obj ) {
                 if ( obj ) {
                     node.addChild( obj );
                 }
@@ -14667,8 +14667,8 @@ define( 'osgWrappers/serializers/osg',[
             }
         }
 
-        var defer = osgDB.Promise.defer();
-        osgDB.Promise.all( promiseArray ).then( function () {
+        var defer = Q.defer();
+        Q.all( promiseArray ).then( function () {
             defer.resolve( node );
         } );
 
@@ -14693,9 +14693,9 @@ define( 'osgWrappers/serializers/osg',[
 
         var createAttribute = function ( jsonAttribute ) {
             var promise = input.setJSON( jsonAttribute ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( promise ).then( function ( attribute ) {
+            Q.when( promise ).then( function ( attribute ) {
                 if ( attribute !== undefined ) {
                     stateSet.setAttributeAndMode( attribute );
                 }
@@ -14713,9 +14713,9 @@ define( 'osgWrappers/serializers/osg',[
 
         var createTextureAttribute = function ( unit, textureAttribute ) {
             var promise = input.setJSON( textureAttribute ).readObject();
-            var df = osgDB.Promise.defer();
+            var df = Q.defer();
             promiseArray.push( df.promise );
-            osgDB.Promise.when( promise ).then( function ( attribute ) {
+            Q.when( promise ).then( function ( attribute ) {
                 if ( attribute )
                     stateSet.setTextureAttributeAndMode( unit, attribute );
                 df.resolve();
@@ -14732,8 +14732,8 @@ define( 'osgWrappers/serializers/osg',[
             }
         }
 
-        var defer = osgDB.Promise.defer();
-        osgDB.Promise.all( promiseArray ).then( function () {
+        var defer = Q.defer();
+        Q.all( promiseArray ).then( function () {
             defer.resolve( stateSet );
         } );
 
@@ -14893,8 +14893,8 @@ define( 'osgWrappers/serializers/osg',[
             file = "no-image-provided";
         }
 
-        var defer = osgDB.Promise.defer();
-        osgDB.Promise.when( input.readImageURL( file ) ).then(
+        var defer = Q.defer();
+        Q.when( input.readImageURL( file ) ).then(
             function ( img ) {
                 texture.setImage( img );
                 defer.resolve( texture );
@@ -14954,9 +14954,9 @@ define( 'osgWrappers/serializers/osg',[
             return;
         }
 
-        var defer = osgDB.Promise.defer();
+        var defer = Q.defer();
         var promise = osgWrapper.Node( input, node );
-        osgDB.Promise.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
+        Q.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
             var light = args[ 0 ];
             var lightsource = args[ 1 ];
             node.setLight( light );
@@ -14981,10 +14981,10 @@ define( 'osgWrappers/serializers/osg',[
         arraysPromise.push( osgWrapper.Node( input, node ) );
 
         var createPrimitive = function ( jsonPrimitive ) {
-            var defer = osgDB.Promise.defer();
+            var defer = Q.defer();
             arraysPromise.push( defer.promise );
             var promise = input.setJSON( jsonPrimitive ).readPrimitiveSet();
-            osgDB.Promise.when( promise ).then( function ( primitiveSet ) {
+            Q.when( promise ).then( function ( primitiveSet ) {
                 if ( primitiveSet !== undefined ) {
                     node.getPrimitives().push( primitiveSet );
                 }
@@ -14998,10 +14998,10 @@ define( 'osgWrappers/serializers/osg',[
         }
 
         var createVertexAttribute = function ( name, jsonAttribute ) {
-            var defer = osgDB.Promise.defer();
+            var defer = Q.defer();
             arraysPromise.push( defer.promise );
             var promise = input.setJSON( jsonAttribute ).readBufferArray();
-            osgDB.Promise.when( promise ).then( function ( buffer ) {
+            Q.when( promise ).then( function ( buffer ) {
                 if ( buffer !== undefined ) {
                     node.getVertexAttributeList()[ name ] = buffer;
                 }
@@ -15014,8 +15014,8 @@ define( 'osgWrappers/serializers/osg',[
             }
         }
 
-        var defer = osgDB.Promise.defer();
-        osgDB.Promise.all( arraysPromise ).then( function () {
+        var defer = Q.defer();
+        Q.all( arraysPromise ).then( function () {
             defer.resolve( node );
         } );
         return defer.promise;
@@ -15077,7 +15077,7 @@ define( 'osgWrappers/serializers/osgAnimation',[
 
         // channels
         for ( var i = 0, l = jsonObj.Channels.length; i < l; i++ ) {
-            osgDB.Promise.when( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( function ( channel ) {
+            Q.when( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( function ( channel ) {
                 if ( channel ) {
                     animation.getChannels().push( channel );
                 }
@@ -18941,7 +18941,7 @@ define( 'osgUtil/ParameterVisitor',[
             if ( !maps ) {
                 return;
             }
-            var keys = Object.keys( uniformMap );
+            var keys = window.Object.keys( uniformMap );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
                 var k = keys[ i ];
                 // get the first one found in the tree
@@ -18981,7 +18981,7 @@ define( 'osgUtil/ParameterVisitor',[
             this.getUniformList( program.getFragmentShader().getText(), uniformMap );
 
 
-            var keys = Object.keys( uniformMap );
+            var keys = window.Object.keys( uniformMap );
 
             if ( programName === undefined ) {
                 var hashCode = function ( str ) {
@@ -22799,7 +22799,7 @@ define( 'osgViewer/Viewer',[
             var lists = EventProxy;
             var argumentEventBackend = args.EventBackend;
             // loop on each devices and try to initialize it
-            var keys = Object.keys( lists );
+            var keys = window.Object.keys( lists );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
                 var device = keys[ i ];
 
@@ -22820,7 +22820,7 @@ define( 'osgViewer/Viewer',[
             return deviceEnabled;
         },
         updateEventProxy: function ( list, frameStamp ) {
-            var keys = Object.keys( list );
+            var keys = window.Object.keys( list );
             keys.forEach( function ( key ) {
                 var device = list[ key ];
                 if ( device.update )

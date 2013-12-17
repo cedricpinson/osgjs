@@ -296,7 +296,7 @@ define( [
                                     }
                                 }
                                 // regenerate uniforms keys
-                                var keys = Object.keys( activeUniforms );
+                                var keys = window.Object.keys( activeUniforms );
                                 for ( var j = 0, m = keys.length; j < m; j++ ) {
                                     if ( keys[ j ] === 'uniformKeys' ) {
                                         keys.splice( j, 1 );

@@ -81,7 +81,7 @@ define( [
                 var name = this.getType() + unit;
                 var uniforms = {};
                 uniforms.texture = Uniform.createInt1( unit, name );
-                uniforms.uniformKeys = Object.keys( uniforms );
+                uniforms.uniformKeys = window.Object.keys( uniforms );
                 Texture.uniforms[ unit ] = uniforms;
             }
             // uniform for an texture attribute should directly in Texture.uniforms[unit] and not in Texture.uniforms[unit][Texture0]

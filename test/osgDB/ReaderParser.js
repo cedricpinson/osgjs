@@ -207,7 +207,7 @@ define( [
                 ok( result.getPrimitiveSetList()[ 0 ].getFirst() === 0, 'check triangles first index' );
                 ok( result.getPrimitiveSetList()[ 0 ].getIndices().getElements().length === 36, 'check triangles indices' );
                 ok( result.getPrimitiveSetList()[ 0 ].getIndices().getElements().length === result.getPrimitiveSetList()[ 0 ].getCount(), 'check triangles count' );
-                ok( Object.keys( result.getVertexAttributeList() ).length === 2, 'check vertex attributes' );
+                ok( window.Object.keys( result.getVertexAttributeList() ).length === 2, 'check vertex attributes' );
                 start();
             } );
         } );
