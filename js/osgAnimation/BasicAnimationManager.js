@@ -26,7 +26,6 @@ define( [
      *
      */
 
-
     /** 
      *  BasicAnimationManager
      *  @class BasicAnimationManager

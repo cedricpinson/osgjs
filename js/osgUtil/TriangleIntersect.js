@@ -3,7 +3,7 @@
 define( [
     'osg/Notify',
     'osg/Vec3'
-], function ( Notify, vec3 ) {
+], function ( Notify, Vec3 ) {
 
     /** -*- compile-command: "jslint-cli TriangleIntersect.js" -*-
      * Authors:
