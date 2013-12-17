@@ -13,7 +13,7 @@ define( [
 	'osgAnimation/Keyframe',
 	'osgAnimation/LinkVisitor',
 	'osgAnimation/QuatLerpChannel',
-	'osgAnimation/QuatSLerpChannel',
+	'osgAnimation/QuatSlerpChannel',
 	'osgAnimation/QuatTarget',
 	'osgAnimation/Sampler',
 	'osgAnimation/StackedQuaternion',
@@ -23,7 +23,7 @@ define( [
 	'osgAnimation/UpdateMatrixTransform',
 	'osgAnimation/Vec3LerpChannel',
 	'osgAnimation/Vec3Target'
-], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSLerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
+], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
 
 	/** -*- compile-command: "jslint-cli osgAnimation.js" -*-
 	 *
@@ -58,7 +58,7 @@ define( [
 	MACROUTILS.objectMix( osgAnimation, Keyframe );
 	osgAnimation.LinkVisitor = LinkVisitor;
 	osgAnimation.QuatLerpChannel = QuatLerpChannel;
-	osgAnimation.QuatSLerpChannel = QuatSLerpChannel;
+	osgAnimation.QuatSlerpChannel = QuatSlerpChannel;
 	osgAnimation.QuatTarget = QuatTarget;
 	osgAnimation.Sampler = Sampler;
 	osgAnimation.StackedQuaternion = StackedQuaternion;

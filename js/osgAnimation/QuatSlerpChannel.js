@@ -26,12 +26,12 @@ define( [
      *
      */
 
-    var QuatSLerpChannel = function ( keys, target ) {
+    var QuatSlerpChannel = function ( keys, target ) {
         QuatLerpChannel.call( this, keys, target );
         this.getSampler().setInterpolator( Interpolator.QuatSlerpInterpolator );
     };
 
-    QuatSLerpChannel.prototype = Channel.prototype;
+    QuatSlerpChannel.prototype = Channel.prototype;
 
-    return QuatSLerpChannel;
+    return QuatSlerpChannel;
 } );

@@ -75,8 +75,7 @@ define( [
         result.key = i1;
     };
 
-
-    QuatLerpInterpolator = function ( keys, t, result ) {
+    var QuatLerpInterpolator = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];
@@ -129,7 +128,7 @@ define( [
         result.key = i1;
     };
 
-    QuatSlerpInterpolator = function ( keys, t, result ) {
+    var QuatSlerpInterpolator = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];
@@ -169,11 +168,10 @@ define( [
         result.key = i1;
     };
 
-
     /** 
      *  Interpolator provide interpolation function to sampler
      */
-    FloatLerpInterpolator = function ( keys, t, result ) {
+    var FloatLerpInterpolator = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];
@@ -210,11 +208,10 @@ define( [
         result.key = i1;
     };
 
-
     /** 
      *  Interpolator provide interpolation function to sampler
      */
-    FloatStepInterpolator = function ( keys, t, result ) {
+    var FloatStepInterpolator = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];

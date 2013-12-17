@@ -28,13 +28,13 @@ define( [], function () {
         return k;
     };
 
-    createQuatKeyframe = function ( t, array ) {
+    var createQuatKeyframe = function ( t, array ) {
         var k = array.slice( 0 );
         k.t = t;
         return k;
     };
 
-    createFloatKeyframe = function ( t, value ) {
+    var createFloatKeyframe = function ( t, value ) {
         var k = [ value ];
         k.t = t;
         return k;

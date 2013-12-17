@@ -13455,8 +13455,7 @@ define( 'osgAnimation/Interpolator',[
         result.key = i1;
     };
 
-
-    QuatLerpInterpolator = function ( keys, t, result ) {
+    var QuatLerpInterpolator = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];
@@ -13509,7 +13508,7 @@ define( 'osgAnimation/Interpolator',[
         result.key = i1;
     };
 
-    QuatSlerpInterpolator = function ( keys, t, result ) {
+    var QuatSlerpInterpolator = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];
@@ -13549,11 +13548,10 @@ define( 'osgAnimation/Interpolator',[
         result.key = i1;
     };
 
-
     /** 
      *  Interpolator provide interpolation function to sampler
      */
-    FloatLerpInterpolator = function ( keys, t, result ) {
+    var FloatLerpInterpolator = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];
@@ -13590,11 +13588,10 @@ define( 'osgAnimation/Interpolator',[
         result.key = i1;
     };
 
-
     /** 
      *  Interpolator provide interpolation function to sampler
      */
-    FloatStepInterpolator = function ( keys, t, result ) {
+    var FloatStepInterpolator = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];
@@ -13817,13 +13814,13 @@ define( 'osgAnimation/Keyframe',[], function () {
         return k;
     };
 
-    createQuatKeyframe = function ( t, array ) {
+    var createQuatKeyframe = function ( t, array ) {
         var k = array.slice( 0 );
         k.t = t;
         return k;
     };
 
-    createFloatKeyframe = function ( t, value ) {
+    var createFloatKeyframe = function ( t, value ) {
         var k = [ value ];
         k.t = t;
         return k;
@@ -14022,7 +14019,7 @@ define( 'osgAnimation/QuatLerpChannel',[
 } );
 /*global define */
 
-define( 'osgAnimation/QuatSLerpChannel',[
+define( 'osgAnimation/QuatSlerpChannel',[
     'osgAnimation/Channel',
     'osgAnimation/QuatLerpChannel',
     'osgAnimation/Interpolator'
@@ -14048,14 +14045,14 @@ define( 'osgAnimation/QuatSLerpChannel',[
      *
      */
 
-    var QuatSLerpChannel = function ( keys, target ) {
+    var QuatSlerpChannel = function ( keys, target ) {
         QuatLerpChannel.call( this, keys, target );
         this.getSampler().setInterpolator( Interpolator.QuatSlerpInterpolator );
     };
 
-    QuatSLerpChannel.prototype = Channel.prototype;
+    QuatSlerpChannel.prototype = Channel.prototype;
 
-    return QuatSLerpChannel;
+    return QuatSlerpChannel;
 } );
 /*global define */
 
@@ -14500,7 +14497,7 @@ define( 'osgAnimation/osgAnimation',[
 	'osgAnimation/Keyframe',
 	'osgAnimation/LinkVisitor',
 	'osgAnimation/QuatLerpChannel',
-	'osgAnimation/QuatSLerpChannel',
+	'osgAnimation/QuatSlerpChannel',
 	'osgAnimation/QuatTarget',
 	'osgAnimation/Sampler',
 	'osgAnimation/StackedQuaternion',
@@ -14510,7 +14507,7 @@ define( 'osgAnimation/osgAnimation',[
 	'osgAnimation/UpdateMatrixTransform',
 	'osgAnimation/Vec3LerpChannel',
 	'osgAnimation/Vec3Target'
-], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSLerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
+], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
 
 	/** -*- compile-command: "jslint-cli osgAnimation.js" -*-
 	 *
@@ -14545,7 +14542,7 @@ define( 'osgAnimation/osgAnimation',[
 	MACROUTILS.objectMix( osgAnimation, Keyframe );
 	osgAnimation.LinkVisitor = LinkVisitor;
 	osgAnimation.QuatLerpChannel = QuatLerpChannel;
-	osgAnimation.QuatSLerpChannel = QuatSLerpChannel;
+	osgAnimation.QuatSlerpChannel = QuatSlerpChannel;
 	osgAnimation.QuatTarget = QuatTarget;
 	osgAnimation.Sampler = Sampler;
 	osgAnimation.StackedQuaternion = StackedQuaternion;

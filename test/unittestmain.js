@@ -15,6 +15,7 @@ requirejs.config( {
 /*global QUnit,define,module,test,ok */
 QUnit.config.testTimeout = 2000;
 define( [
+    'js/OSG',
     'osgViewer/Viewer',
     'test/osg',
     'test/osgAnimation',
@@ -22,14 +23,22 @@ define( [
     'test/osgGA',
     'test/osgUtil',
     'test/osgViewer'
-], function ( Viewer, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer ) {
+], function ( OSG, Viewer, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer ) {
+
+    window.OSG = OSG;
+    window.osg = OSG.osg;
+    window.osgAnimation = OSG.osgAnimation;
+    window.osgDB = OSG.osgDB;
+    window.osgUtil = OSG.osgUtil;
+    window.osgGA = OSG.osgGA;
+    window.osgViewer = OSG.osgViewer;
 
     // #FIXME for gl context and memory pool I think...?
     var viewer = new Viewer( document.getElementById( '3DView' ) );
 
     osg();
     osgAnimation();
-    // osgDB();
+    osgDB();
     osgGA();
     osgUtil();
     osgViewer();
