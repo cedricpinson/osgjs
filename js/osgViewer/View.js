@@ -10,8 +10,9 @@ define( [
     'osg/CullFace',
     'osg/Viewport',
     'osg/Matrix',
-    'osg/Light'
-], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light ) {
+    'osg/Light',
+    'osgUtil/IntersectVisitor'
+], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, IntersectVisitor ) {
 
     /** -*- compile-command: "jslint-cli View.js" -*- */
     var View = function () {

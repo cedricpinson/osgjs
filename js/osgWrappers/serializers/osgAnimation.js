@@ -94,11 +94,11 @@ define( [
     };
 
     osgAnimationWrapper.QuatLerpChannel = function ( input, channel ) {
-        return osgAnimationWrapperVec3LerpChannel( input, channel );
+        return osgAnimationWrapper.Vec3LerpChannel( input, channel );
     };
 
     osgAnimationWrapper.QuatSlerpChannel = function ( input, channel ) {
-        return osgAnimationWrapperVec3LerpChannel( input, channel );
+        return osgAnimationWrapper.Vec3LerpChannel( input, channel );
     };
 
     osgAnimationWrapper.FloatLerpChannel = function ( input, channel ) {

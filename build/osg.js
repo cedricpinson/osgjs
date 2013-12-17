@@ -11099,15 +11099,18 @@ return Q;
 /*global define */
 
 define( 'osgDB/Input',[
+    'require',
     'osgDB/ReaderParser',
     'osg/Utils',
     'osg/Notify',
     'vendors/Q',
     'osg/Image',
     'osg/BufferArray',
-    'osg/PrimitiveSet',
-    'osg/DrawElements'
-], function ( ReaderParser, MACROUTILS, Notify, Q, Image, BufferArray, PrimitiveSet, DrawElements ) {
+    'osg/DrawArrays',
+    'osg/DrawArrayLengths',
+    'osg/DrawElements',
+    'osg/PrimitiveSet'
+], function ( require, ReaderParser, MACROUTILS, Notify, Q, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -11179,7 +11182,7 @@ define( 'osgDB/Input',[
                 return new( this._objectRegistry[ path ] )();
             }
 
-            // #FIXME to be fixed (or not?)
+            // #FIXME to be fixed !
             var scope = window;
             var splittedPath = path.split( '.' );
             for ( var i = 0, l = splittedPath.length; i < l; i++ ) {
@@ -12924,7 +12927,6 @@ define( 'osgAnimation/BasicAnimationManager',[
      *
      */
 
-
     /** 
      *  BasicAnimationManager
      *  @class BasicAnimationManager
@@ -13978,7 +13980,7 @@ define( 'osgAnimation/QuatLerpChannel',[
     'osgAnimation/Interpolator',
     'osgAnimation/QuatTarget',
     'osg/Quat'
-], function ( Channel, Sampler, Interpolator, Vec3Target, Vec3 ) {
+], function ( Channel, Sampler, Interpolator, QuatTarget, Quat ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *
@@ -15120,11 +15122,11 @@ define( 'osgWrappers/serializers/osgAnimation',[
     };
 
     osgAnimationWrapper.QuatLerpChannel = function ( input, channel ) {
-        return osgAnimationWrapperVec3LerpChannel( input, channel );
+        return osgAnimationWrapper.Vec3LerpChannel( input, channel );
     };
 
     osgAnimationWrapper.QuatSlerpChannel = function ( input, channel ) {
-        return osgAnimationWrapperVec3LerpChannel( input, channel );
+        return osgAnimationWrapper.Vec3LerpChannel( input, channel );
     };
 
     osgAnimationWrapper.FloatLerpChannel = function ( input, channel ) {
@@ -18073,7 +18075,7 @@ define( 'osgUtil/Composer',[
 define( 'osgUtil/TriangleIntersect',[
     'osg/Notify',
     'osg/Vec3'
-], function ( Notify, vec3 ) {
+], function ( Notify, Vec3 ) {
 
     /** -*- compile-command: "jslint-cli TriangleIntersect.js" -*-
      * Authors:
@@ -19098,8 +19100,9 @@ define( 'osgViewer/View',[
     'osg/CullFace',
     'osg/Viewport',
     'osg/Matrix',
-    'osg/Light'
-], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light ) {
+    'osg/Light',
+    'osgUtil/IntersectVisitor'
+], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, IntersectVisitor ) {
 
     /** -*- compile-command: "jslint-cli View.js" -*- */
     var View = function () {

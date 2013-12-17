@@ -6,7 +6,7 @@ define( [
     'osgAnimation/Interpolator',
     'osgAnimation/QuatTarget',
     'osg/Quat'
-], function ( Channel, Sampler, Interpolator, Vec3Target, Vec3 ) {
+], function ( Channel, Sampler, Interpolator, QuatTarget, Quat ) {
 
     /** -*- compile-command: "jslint-cli Channel.js" -*-
      *

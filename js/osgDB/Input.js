@@ -1,15 +1,18 @@
 /*global define */
 
 define( [
+    'require',
     'osgDB/ReaderParser',
     'osg/Utils',
     'osg/Notify',
     'vendors/Q',
     'osg/Image',
     'osg/BufferArray',
-    'osg/PrimitiveSet',
-    'osg/DrawElements'
-], function ( ReaderParser, MACROUTILS, Notify, Q, Image, BufferArray, PrimitiveSet, DrawElements ) {
+    'osg/DrawArrays',
+    'osg/DrawArrayLengths',
+    'osg/DrawElements',
+    'osg/PrimitiveSet'
+], function ( require, ReaderParser, MACROUTILS, Notify, Q, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -81,7 +84,7 @@ define( [
                 return new( this._objectRegistry[ path ] )();
             }
 
-            // #FIXME to be fixed (or not?)
+            // #FIXME to be fixed !
             var scope = window;
             var splittedPath = path.split( '.' );
             for ( var i = 0, l = splittedPath.length; i < l; i++ ) {
