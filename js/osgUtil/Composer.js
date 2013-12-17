@@ -16,8 +16,8 @@ define( [
     'osg/Shader',
     'osg/Texture',
     'osg/Shape',
-    'osg/Enums'
-], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix,  Uniform, StateSet, Program, Shader, Texture, Shape, Enums ) {
+    'osg/TransformEnums'
+], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix,  Uniform, StateSet, Program, Shader, Texture, Shape, TransformEnums ) {
 
     /*
   Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
@@ -173,7 +173,7 @@ define( [
 
                 var vp = new Viewport( 0, 0, w, h );
                 var projection = Matrix.makeOrtho( -w / 2, w / 2, -h / 2, h / 2, -5, 5, [] );
-                camera.setReferenceFrame( Enums.TRANSFORM_ABSOLUTE_RF );
+                camera.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
                 camera.setViewport( vp );
                 camera.setProjectionMatrix( projection );
                 camera.setStateSet( element.filter.getStateSet() );

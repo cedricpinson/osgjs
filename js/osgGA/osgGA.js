@@ -11,8 +11,8 @@ define( [
     'osgGA/OrbitManipulatorLeapMotionController',
     'osgGA/OrbitManipulatorMouseKeyboardController',
     'osgGA/SwitchManipulator',
-    'osg/Enums'
-], function ( FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, Enums ) {
+    'osgGA/OrbitManipulatorEnums'
+], function ( FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums ) {
 
     /** -*- compile-command: "jslint-cli osgGA.js" -*-
      * Authors:
@@ -44,9 +44,9 @@ define( [
     };
     osgGA.SwitchManipulator = SwitchManipulator;
 
-    osgGA.OrbitManipulator.Rotate = Enums.ORBIT_ROTATE;
-    osgGA.OrbitManipulator.Pan = Enums.ORBIT_PAN;
-    osgGA.OrbitManipulator.Zoom = Enums.ORBIT_ZOOM;
+    osgGA.OrbitManipulator.Rotate = OrbitManipulatorEnums.ROTATE;
+    osgGA.OrbitManipulator.Pan = OrbitManipulatorEnums.PAN;
+    osgGA.OrbitManipulator.Zoom = OrbitManipulatorEnums.ZOOM;
 
     return osgGA;
 } );

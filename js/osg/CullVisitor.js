@@ -14,8 +14,8 @@ define( [
     'osg/RenderStage',
     'osg/Node',
     'osg/Camera',
-    'osg/Enums'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Camera, Enums ) {
+    'osg/TransformEnums'
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Camera, TransformEnums ) {
 
     /** 
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
@@ -288,7 +288,7 @@ define( [
         var modelview = this._getReservedMatrix();
         var projection = this._getReservedMatrix();
 
-        if ( camera.getReferenceFrame() === Enums.TRANSFORM_RELATIVE_RF ) {
+        if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
             var lastProjectionMatrix = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
             Matrix.mult( lastProjectionMatrix, camera.getProjectionMatrix(), projection );
             var lastViewMatrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
@@ -381,7 +381,7 @@ define( [
     CullVisitor.prototype[ MatrixTransform.prototype.objectType ] = function ( node ) {
         var matrix = this._getReservedMatrix();
 
-        if ( node.getReferenceFrame() === Enums.TRANSFORM_RELATIVE_RF ) {
+        if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
             var lastMatrixStack = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
             Matrix.mult( lastMatrixStack, node.getMatrix(), matrix );
         } else {

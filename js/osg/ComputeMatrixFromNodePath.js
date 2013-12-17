@@ -3,8 +3,8 @@
 define( [
     //#FIXME enum fix 'osg/Camera', 
     'osg/Matrix',
-    'osg/Enums'
-], function ( /* Camera, */ Matrix, Enums ) {
+    'osg/TransformEnums'
+], function ( /* Camera, */ Matrix, TransformEnums ) {
     /** -*- compile-command: "jslint-cli Transform.js" -*- */
 
     computeLocalToWorld = function ( nodePath, ignoreCameras ) {
@@ -19,7 +19,7 @@ define( [
             for ( j = nodePath.length - 1; j > 0; j-- ) {
                 var camera = nodePath[ j ];
                 if ( camera.objectType === 1 /* #FIXME enum fix Camera.prototype.objectType */ &&
-                    ( camera.getReferenceFrame !== Enums.TRANSFORM_RELATIVE_RF || camera.getParents().length === 0 ) ) {
+                    ( camera.getReferenceFrame !== TransformEnums.RELATIVE_RF || camera.getParents().length === 0 ) ) {
                     break;
                 }
             }

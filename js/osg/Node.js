@@ -9,8 +9,8 @@ define( [
     'osg/NodeVisitor',
     'osg/Matrix',
     'osg/ComputeMatrixFromNodePath',
-    'osg/Enums'
-], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, ComputeMatrixFromNodePath, Enums ) {
+    'osg/TransformEnums'
+], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, ComputeMatrixFromNodePath, TransformEnums ) {
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
@@ -224,7 +224,7 @@ define( [
             bsphere.init();
             for ( var i = 0, l = this.children.length; i < l; i++ ) {
                 var child = this.children[ i ];
-                if ( child.referenceFrame === undefined || child.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
+                if ( child.referenceFrame === undefined || child.referenceFrame === TransformEnums.RELATIVE_RF ) {
                     bb.expandBySphere( child.getBound() );
                 }
             }
@@ -235,7 +235,7 @@ define( [
             bsphere._radius = 0.0;
             for ( var j = 0, l2 = this.children.length; j < l2; j++ ) {
                 var cc = this.children[ j ];
-                if ( cc.referenceFrame === undefined || cc.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
+                if ( cc.referenceFrame === undefined || cc.referenceFrame === TransformEnums.RELATIVE_RF ) {
                     bsphere.expandRadiusBySphere( cc.getBound() );
                 }
             }

@@ -1,8 +1,8 @@
 /*global define */
 
 define( [
-'osg/Enums'
-], function ( Enums) {
+    'osgGA/OrbitManipulatorEnums'
+], function ( OrbitManipulatorEnums ) {
 
     var OrbitManipulatorMouseKeyboardController = function ( manipulator ) {
         this._manipulator = manipulator;
@@ -41,14 +41,14 @@ define( [
                 var x, y;
 
                 var mode = this.getMode();
-                if ( mode === Enums.ORBIT_ROTATE ) {
+                if ( mode === OrbitManipulatorEnums.ROTATE ) {
                     manipulator.getRotateInterpolator().setDelay( this._delay );
                     manipulator.getRotateInterpolator().setTarget( pos[ 0 ], pos[ 1 ] );
 
-                } else if ( mode === Enums.ORBIT_PAN ) {
+                } else if ( mode === OrbitManipulatorEnums.PAN ) {
                     manipulator.getPanInterpolator().setTarget( pos[ 0 ], pos[ 1 ] );
 
-                } else if ( mode === Enums.ORBIT_ZOOM ) {
+                } else if ( mode === OrbitManipulatorEnums.ZOOM ) {
                     var zoom = manipulator.getZoomInterpolator();
                     if ( zoom.isReset() ) {
                         zoom._start = pos[ 1 ];
@@ -69,14 +69,14 @@ define( [
             if ( mode === undefined ) {
                 if ( ev.button === 0 ) {
                     if ( ev.shiftKey ) {
-                        this.setMode( Enums.ORBIT_PAN );
+                        this.setMode( OrbitManipulatorEnums.PAN );
                     } else if ( ev.ctrlKey ) {
-                        this.setMode( Enums.ORBIT_ZOOM );
+                        this.setMode( OrbitManipulatorEnums.ZOOM );
                     } else {
-                        this.setMode( Enums.ORBIT_ROTATE );
+                        this.setMode( OrbitManipulatorEnums.ROTATE );
                     }
                 } else {
-                    this.setMode( Enums.ORBIT_PAN );
+                    this.setMode( OrbitManipulatorEnums.PAN );
                 }
             }
 
@@ -84,13 +84,13 @@ define( [
 
             var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
             mode = this.getMode();
-            if ( mode === Enums.ORBIT_ROTATE ) {
+            if ( mode === OrbitManipulatorEnums.ROTATE ) {
                 manipulator.getRotateInterpolator().reset();
                 manipulator.getRotateInterpolator().set( pos[ 0 ], pos[ 1 ] );
-            } else if ( mode === Enums.ORBIT_PAN  ) {
+            } else if ( mode === OrbitManipulatorEnums.PAN ) {
                 manipulator.getPanInterpolator().reset();
                 manipulator.getPanInterpolator().set( pos[ 0 ], pos[ 1 ] );
-            } else if ( mode === Enums.ORBIT_ZOOM ) {
+            } else if ( mode === OrbitManipulatorEnums.ZOOM ) {
                 manipulator.getZoomInterpolator()._start = pos[ 1 ];
                 manipulator.getZoomInterpolator().set( 0.0 );
             }
@@ -119,20 +119,20 @@ define( [
                 this._manipulator.computeHomePosition();
 
             } else if ( ev.keyCode === this._panKey &&
-                this.getMode() !== Enums.ORBIT_PAN ) {
-                this.setMode( Enums.ORBIT_PAN );
+                this.getMode() !== OrbitManipulatorEnums.PAN ) {
+                this.setMode( OrbitManipulatorEnums.PAN );
                 this._manipulator.getPanInterpolator().reset();
                 this.pushButton();
                 ev.preventDefault();
             } else if ( ev.keyCode === this._zoomKey &&
-                this.getMode() !== Enums.ORBIT_ZOOM) {
-                this.setMode(  Enums.ORBIT_ZOOM );
+                this.getMode() !== OrbitManipulatorEnums.ZOOM ) {
+                this.setMode( OrbitManipulatorEnums.ZOOM );
                 this._manipulator.getZoomInterpolator().reset();
                 this.pushButton();
                 ev.preventDefault();
             } else if ( ev.keyCode === this._rotateKey &&
-                this.getMode() !== Enums.ORBIT_ROTATE ) {
-                this.setMode( Enums.ORBIT_ROTATE );
+                this.getMode() !== OrbitManipulatorEnums.ROTATE ) {
+                this.setMode( OrbitManipulatorEnums.ROTATE );
                 this._manipulator.getRotateInterpolator().reset();
                 this.pushButton();
                 ev.preventDefault();

@@ -57,8 +57,8 @@ define( [
     'osg/Vec4',
     'osg/Viewport',
     'osgUtil/osgPool',
-    'osg/Enums'
-], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool, Enums ) {
+    'osg/TransformEnums'
+], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool, TransformEnums ) {
 
     var osg = {};
 
@@ -123,8 +123,8 @@ define( [
 
     osg.memoryPools = osgPool.memoryPools;
 
-    osg.Transform.RELATIVE_RF = Enums.TRANSFORM_RELATIVE_RF;
-    osg.Transform.ABSOLUTE_RF = Enums.TRANSFORM_ABSOLUTE_RF;
+    osg.Transform.RELATIVE_RF = TransformEnums.RELATIVE_RF;
+    osg.Transform.ABSOLUTE_RF = TransformEnums.ABSOLUTE_RF;
 
     return osg;
 } );

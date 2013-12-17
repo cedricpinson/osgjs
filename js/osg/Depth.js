@@ -3,7 +3,7 @@
 define( [
     'osg/Utils',
     'osg/StateAttribute'
-], function ( MACROUTILS, StateAttribute, Depth ) {
+], function ( MACROUTILS, StateAttribute ) {
 
     var Depth = function ( func, near, far, writeMask ) {
         StateAttribute.call( this );

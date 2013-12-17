@@ -2,8 +2,9 @@
 
 define( [
     'osg/Utils',
-    'osg/StateAttribute'
-], function ( MACROUTILS, StateAttribute ) {
+    'osg/StateAttribute',
+    'osg/Vec4'
+], function ( MACROUTILS, StateAttribute, Vec4 ) {
 
     /** 
      *  Manage BlendColor attribute
@@ -29,6 +30,9 @@ define( [
         },
         getTypeMember: function () {
             return this.attributeType;
+        },
+        setConstantColor: function ( color ) {
+            Vec4.copy( color, this._constantColor );
         },
         getConstantColor: function () {
             return this._constantColor;

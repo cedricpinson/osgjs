@@ -5,8 +5,8 @@ define( [
     'osg/Transform',
     'osg/CullSettings',
     'osg/Matrix',
-    'osg/Enums'
-], function ( MACROUTILS, Transform, CullSettings, Matrix, Enums ) {
+    'osg/TransformEnums'
+], function ( MACROUTILS, Transform, CullSettings, Matrix, TransformEnums ) {
 
     /** 
      * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
@@ -128,7 +128,7 @@ define( [
             },
 
             computeLocalToWorldMatrix: function ( matrix, nodeVisitor ) {
-                if ( this.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
+                if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                     Matrix.preMult( matrix, this.modelviewMatrix );
                 } else { // absolute
                     matrix = this.modelviewMatrix;
@@ -139,7 +139,7 @@ define( [
             computeWorldToLocalMatrix: function ( matrix, nodeVisitor ) {
                 var inverse = [];
                 Matrix.inverse( this.modelviewMatrix, inverse );
-                if ( this.referenceFrame === Enums.TRANSFORM_RELATIVE_RF ) {
+                if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                     Matrix.postMult( inverse, matrix );
                 } else {
                     matrix = inverse;
