@@ -1,21 +1,14 @@
 requirejs.config( {
-    baseUrl: '../',
+    baseUrl: '../sources',
     paths: {
-        osg: 'js/osg',
-        osgAnimation: 'js/osgAnimation',
-        osgDB: 'js/osgDB',
-        osgGA: 'js/osgGA',
-        osgUtil: 'js/osgUtil',
-        osgViewer: 'js/osgViewer',
-        osgWrappers: 'js/osgWrappers',
-        vendors: 'js/vendors'
+        test: '../test/'
     }
 } );
 
 /*global QUnit,define,module,test,ok */
 QUnit.config.testTimeout = 2000;
 define( [
-    'js/OSG',
+    'OSG',
     'osgViewer/Viewer',
     'test/osg',
     'test/osgAnimation',
