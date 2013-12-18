@@ -8,7 +8,7 @@ define( [
         this._center = [ 0.0, 0.0, 0.0 ];
         this._radius = -1;
     };
-    // #FIXME use obj.objectLibraryClass ?
+
     BoundingSphere.prototype = {
         init: function () {
             this._center = [ 0.0, 0.0, 0.0 ];

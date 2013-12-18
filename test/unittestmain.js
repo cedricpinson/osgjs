@@ -29,7 +29,7 @@ define( [
     window.osg = OSG.osg; // for osgDB
     window.osgAnimation = OSG.osgAnimation; //for osgAnimation
 
-    // #FIXME for gl context and memory pool I think...?
+    // #FIXME for gl context and memory pool I think...? (it was already here and needed before)
     var viewer = new Viewer( document.getElementById( '3DView' ) );
 
     osg();
