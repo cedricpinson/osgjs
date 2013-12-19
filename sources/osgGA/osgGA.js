@@ -1,6 +1,5 @@
 /*global define */
 
-// #FIXME load hammer
 define( [
     'osgGA/FirstPersonManipulator',
     'osgGA/FirstPersonManipulatorMouseKeyboardController',
@@ -11,8 +10,9 @@ define( [
     'osgGA/OrbitManipulatorLeapMotionController',
     'osgGA/OrbitManipulatorMouseKeyboardController',
     'osgGA/SwitchManipulator',
-    'osgGA/OrbitManipulatorEnums'
-], function ( FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums ) {
+    'osgGA/OrbitManipulatorEnums',
+    'vendors/Hammer'
+], function ( FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums, Hammer ) {
 
     /** -*- compile-command: "jslint-cli osgGA.js" -*-
      * Authors:
@@ -21,8 +21,7 @@ define( [
 
     var osgGA = {};
 
-    // #FIXME uncomment?
-    // Hammer.NO_MOUSEEVENTS = true; // disable hammer js mouse events
+    Hammer.NO_MOUSEEVENTS = true; // disable hammer js mouse events
 
     osgGA.FirstPersonManipulator = FirstPersonManipulator;
     osgGA.getFirstPersonStandardMouseKeyboardControllerClass = function () {

@@ -18,10 +18,6 @@ define( [
     'test/osgViewer'
 ], function ( OSG, Viewer, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer ) {
 
-    // #FIXME we don't need to load OSG if we fix the getObjectWrapper issue (cf #FIXME in Input.js)
-    window.osg = OSG.osg; // for osgDB
-    window.osgAnimation = OSG.osgAnimation; //for osgAnimation
-
     // #FIXME for gl context and memory pool I think...? (it was already here and needed before)
     var viewer = new Viewer( document.getElementById( '3DView' ) );
 

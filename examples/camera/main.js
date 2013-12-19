@@ -59,10 +59,6 @@ function createScene() {
 
 window.addEventListener("load",
                         function() {
-
-                            for (var x in OSG)
-                                window[x] = OSG[x];
-
                             var canvas = document.getElementById("3DView");
                             var w = window.innerWidth;
                             var h = window.innerHeight;

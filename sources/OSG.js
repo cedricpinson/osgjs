@@ -14,12 +14,12 @@ define( [
     OSG.version = '0.0.5';
     OSG.copyright = 'Cedric Pinson - cedric.pinson@plopbyte.com';
 
-    OSG.osg = osg;
-    OSG.osgAnimation = osgAnimation;
-    OSG.osgDB = osgDB;
-    OSG.osgGA = osgGA;
-    OSG.osgUtil = osgUtil;
-    OSG.osgViewer = osgViewer;
+    window.osg = OSG.osg = osg;
+    window.osgAnimation = OSG.osgAnimation = osgAnimation;
+    window.osgDB = OSG.osgDB = osgDB;
+    window.osgGA = OSG.osgGA = osgGA;
+    window.osgUtil = OSG.osgUtil = osgUtil;
+    window.osgViewer = OSG.osgViewer = osgViewer;
 
     return OSG;
 } );

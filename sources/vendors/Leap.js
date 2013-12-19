@@ -1,3 +1,3 @@
 define( function ( ) {
-    return window.Hammer;
+    return window.Leap;
 } );

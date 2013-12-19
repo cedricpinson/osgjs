@@ -37,7 +37,7 @@ define( [
                 return true;
             }
             if ( !o.Name ) {
-                osg.log( "animation has field Name, error" );
+                Notify.log( "animation has field Name, error" );
                 return false;
             }
             return false;

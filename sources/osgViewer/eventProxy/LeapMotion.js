@@ -1,8 +1,9 @@
 /*global define */
 
 define( [
-    'osg/Notify'
-], function ( Notify ) {
+    'osg/Notify',
+    'vendors/Leap'
+], function ( Notify, Leap ) {
 
     var LeapMotion = function ( viewer ) {
         this._viewer = viewer;
@@ -14,19 +15,18 @@ define( [
         init: function ( args ) {
             var element = document.getElementById( args.id );
             var self = this;
-            // #FIXME uncomment + load Leap
-            // this._controller = new Leap.Controller( {
-            //     enableGestures: args.gestures || true,
-            //     tryReconnectOnDisconnect: false
-            // } );
-            // this._controller.on( 'ready', function () {
-            //     if ( args.readyCallback )
-            //         args.readyCallback( self._controller );
-            //     self._leapMotionReady = true;
-            //     Notify.info( 'leapmotion ready' );
-            // } );
+            this._controller = new Leap.Controller( {
+                enableGestures: args.gestures || true,
+                tryReconnectOnDisconnect: false
+            } );
+            this._controller.on( 'ready', function () {
+                if ( args.readyCallback )
+                    args.readyCallback( self._controller );
+                self._leapMotionReady = true;
+                Notify.info( 'leapmotion ready' );
+            } );
 
-            // this._controller.loop( this._update.bind( this ) );
+            this._controller.loop( this._update.bind( this ) );
 
         },
 
