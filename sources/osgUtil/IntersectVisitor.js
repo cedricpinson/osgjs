@@ -81,7 +81,7 @@ define( [
             return this.viewMatrix;
         },
         intersectSegmentWithGeometry: function ( start, end, geometry ) {
-            ti = new TriangleIntersect();
+            var ti = new TriangleIntersect();
             ti.setNodePath( this.nodePath );
             ti.set( start, end );
             ti.apply( geometry );

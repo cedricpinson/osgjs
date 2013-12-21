@@ -1,4 +1,4 @@
-/*global define */
+/* jshint ignore:start */
 
 define( [], function () {
 
@@ -61,7 +61,7 @@ define( [], function () {
      * visible.
      */
 
-    WebGLUtils = function () {
+    var WebGLUtils = function () {
 
         /**
          * Creates the HTLM for a failure message
@@ -205,3 +205,5 @@ define( [], function () {
 
     return WebGLUtils;
 } );
+
+/* jshint ignore:end */

@@ -173,7 +173,7 @@ define( [
             var program;
             if ( this.attributeMap.Program !== undefined && this.attributeMap.Program.length !== 0 ) {
                 program = this.attributeMap.Program.back().object;
-                value = this.attributeMap.Program.back().value;
+                var value = this.attributeMap.Program.back().value;
                 if ( program !== undefined && value !== StateAttribute.OFF ) {
                     this.programs.push( this.getObjectPair( program, value ) );
                     return program;
@@ -220,7 +220,7 @@ define( [
 
             var programUniforms;
             var activeUniforms;
-            var i;
+            var i,l;
             var key;
             var self = this;
             var uniformMap;
@@ -230,115 +230,93 @@ define( [
 
                 programUniforms = program.uniformsCache;
                 activeUniforms = program.activeUniforms;
-                if ( false ) {
-                    var regenrateKeys = false;
-                    for ( i = 0, l = activeUniforms.uniformKeys.length; i < l; i++ ) {
-                        var name = activeUniforms.uniformKeys[ i ];
-                        var location = programUniforms[ name ];
-                        if ( location !== undefined ) {
-                            activeUniforms[ name ].apply( location );
-                        } else {
-                            regenrateKeys = true;
-                            delete activeUniforms[ name ];
-                        }
-                    }
-                    if ( regenrateKeys ) {
-                        var keys = [];
-                        for ( key in activeUniforms ) {
-                            if ( key !== 'uniformKeys' ) {
-                                keys.push( key );
-                            }
-                        }
-                        activeUniforms.uniformKeys = keys;
-                    }
-                } else {
-                    uniformMap = this.uniforms;
-                    ( function () {
+                uniformMap = this.uniforms;
+                ( function () {
 
-                        var programUniforms = program.uniformsCache;
-                        var activeUniforms = program.activeUniforms;
-                        var foreignUniforms = program.foreignUniforms;
+                    var programUniforms = program.uniformsCache;
+                    var activeUniforms = program.activeUniforms;
+                    var foreignUniforms = program.foreignUniforms;
 
-                        // when we apply the shader for the first time, we want to compute the active uniforms for this shader and the list of uniforms not extracted from attributes called foreignUniforms
+                    // when we apply the shader for the first time, we want to compute the active uniforms for this shader and the list of uniforms not extracted from attributes called foreignUniforms
 
-                        // typically the following code will be executed once on the first execution of generated program
-                        if ( !foreignUniforms ) {
+                    // typically the following code will be executed once on the first execution of generated program
+                    if ( !foreignUniforms ) {
 
-                            ( function () {
-
-                                foreignUniforms = [];
-                                for ( var i = 0, l = programUniforms.uniformKeys.length; i < l; i++ ) {
-                                    var name = programUniforms.uniformKeys[ i ];
-                                    var location = programUniforms[ name ];
-                                    if ( location !== undefined && activeUniforms[ name ] === undefined ) {
-                                        // filter 'standard' uniform matrix that will be applied for all shader
-                                        if ( name !== self.modelViewMatrix.name &&
-                                            name !== self.projectionMatrix.name &&
-                                            name !== self.normalMatrix.name &&
-                                            name !== 'ArrayColorEnabled' ) {
-                                            foreignUniforms.push( name );
-                                        }
-                                    }
-                                }
-                                program.foreignUniforms = foreignUniforms;
-
-                            } )();
-
-
-                            // remove uniforms listed by attributes (getActiveUniforms) but not required by the program
-                            ( function () {
-                                var regenrateKeys = false;
-                                for ( var i = 0, l = activeUniforms.uniformKeys.length; i < l; i++ ) {
-                                    var name = activeUniforms.uniformKeys[ i ];
-                                    var location = programUniforms[ name ];
-                                    if ( location === undefined || location === null ) {
-                                        delete activeUniforms[ name ];
-                                    }
-                                }
-                                // regenerate uniforms keys
-                                var keys = window.Object.keys( activeUniforms );
-                                for ( var j = 0, m = keys.length; j < m; j++ ) {
-                                    if ( keys[ j ] === 'uniformKeys' ) {
-                                        keys.splice( j, 1 );
-                                        break;
-                                    }
-                                }
-                                activeUniforms.uniformKeys = keys;
-                            } )();
-                        }
-
-
-                        // apply active uniforms
-                        // caching uniforms from attribtues make it impossible to overwrite uniform with a custom uniform instance not used in the attributes
                         ( function () {
+
+                            foreignUniforms = [];
+                            for ( var i = 0, l = programUniforms.uniformKeys.length; i < l; i++ ) {
+                                var name = programUniforms.uniformKeys[ i ];
+                                var location = programUniforms[ name ];
+                                if ( location !== undefined && activeUniforms[ name ] === undefined ) {
+                                    // filter 'standard' uniform matrix that will be applied for all shader
+                                    if ( name !== self.modelViewMatrix.name &&
+                                         name !== self.projectionMatrix.name &&
+                                         name !== self.normalMatrix.name &&
+                                         name !== 'ArrayColorEnabled' ) {
+                                             foreignUniforms.push( name );
+                                         }
+                                }
+                            }
+                            program.foreignUniforms = foreignUniforms;
+
+                        } )();
+
+
+                        // remove uniforms listed by attributes (getActiveUniforms) but not required by the program
+                        ( function () {
+
                             for ( var i = 0, l = activeUniforms.uniformKeys.length; i < l; i++ ) {
                                 var name = activeUniforms.uniformKeys[ i ];
                                 var location = programUniforms[ name ];
-                                activeUniforms[ name ].apply( location );
-                            }
-                        } )();
-
-
-                        // apply now foreign uniforms, it's uniforms needed by the program but not contains in attributes used to generate this program
-                        ( function () {
-                            for ( var i = 0, l = foreignUniforms.length; i < l; i++ ) {
-                                var name = foreignUniforms[ i ];
-                                var uniformStack = uniformMap[ name ];
-                                var location = programUniforms[ name ];
-                                var uniform;
-                                if ( uniformStack !== undefined ) {
-                                    if ( uniformStack.length === 0 ) {
-                                        uniform = uniformStack.globalDefault;
-                                    } else {
-                                        uniform = uniformStack.back().object;
-                                    }
-                                    uniform.apply( location );
+                                if ( location === undefined || location === null ) {
+                                    delete activeUniforms[ name ];
                                 }
                             }
+                            // regenerate uniforms keys
+                            var keys = window.Object.keys( activeUniforms );
+                            for ( var j = 0, m = keys.length; j < m; j++ ) {
+                                if ( keys[ j ] === 'uniformKeys' ) {
+                                    keys.splice( j, 1 );
+                                    break;
+                                }
+                            }
+                            activeUniforms.uniformKeys = keys;
                         } )();
+                    }
 
+
+                    // apply active uniforms
+                    // caching uniforms from attribtues make it impossible to overwrite uniform with a custom uniform instance not used in the attributes
+                    ( function () {
+                        for ( var i = 0, l = activeUniforms.uniformKeys.length; i < l; i++ ) {
+                            var name = activeUniforms.uniformKeys[ i ];
+                            var location = programUniforms[ name ];
+                            activeUniforms[ name ].apply( gl, location );
+                        }
                     } )();
-                }
+
+
+                    // apply now foreign uniforms, it's uniforms needed by the program but not contains in attributes used to generate this program
+                    ( function () {
+                        for ( var i = 0, l = foreignUniforms.length; i < l; i++ ) {
+                            var name = foreignUniforms[ i ];
+                            var uniformStack = uniformMap[ name ];
+                            var location = programUniforms[ name ];
+                            var uniform;
+                            if ( uniformStack !== undefined ) {
+                                if ( uniformStack.length === 0 ) {
+                                    uniform = uniformStack.globalDefault;
+                                } else {
+                                    uniform = uniformStack.back().object;
+                                }
+                                uniform.apply( gl, location );
+                            }
+                        }
+                    } )();
+
+                } )();
+
             } else {
 
                 //this.applyUniformList(this.uniforms, {});
@@ -360,7 +338,8 @@ define( [
                 var trackUniforms = program.trackUniforms;
                 var attribute;
                 var uniforms;
-                var a;
+                var a,b;
+                var attributeStack;
                 // loop on wanted attributes and texture attribute to track state graph uniforms from those attributes
                 if ( trackAttributes !== undefined && trackUniforms === undefined ) {
                     var attributeKeys = program.trackAttributes.attributeKeys;
@@ -433,7 +412,7 @@ define( [
                         if ( program.trackUniforms !== undefined ) {
                             uniform = program.trackUniforms[ uniformKey ];
                             if ( uniform !== undefined ) {
-                                uniform.apply( location1 );
+                                uniform.apply( gl, location1 );
                             }
                         }
                     } else {
@@ -442,21 +421,18 @@ define( [
                         } else {
                             uniform = uniformStack.back().object;
                         }
-                        uniform.apply( location1 );
+                        uniform.apply( gl, location1 );
                     }
                 }
             }
         },
 
         applyUniformList: function ( uniformMap, uniformList ) {
-
+            var gl = this.getGraphicContext();
             var program = this.getLastProgramApplied();
-            var programObject = program.program;
             var location;
             var uniformStack;
             var uniform;
-            var uniformKeys = {};
-            var key;
 
             var programUniforms = program.uniformsCache;
 
@@ -479,7 +455,7 @@ define( [
                         uniform = uniformStack.back().object;
                     }
                 }
-                uniform.apply( location );
+                uniform.apply( gl, location );
             }
         },
 
@@ -520,11 +496,12 @@ define( [
             };
         },
         pushUniformsList: function ( uniformMap, uniformList ) {
+            /*jshint bitwise: false */
             var name;
             var uniform;
             for ( var i = 0, l = uniformList.uniformKeys.length; i < l; i++ ) {
                 var key = uniformList.uniformKeys[ i ];
-                uniformPair = uniformList[ key ];
+                var uniformPair = uniformList[ key ];
                 uniform = uniformPair.getUniform();
                 name = uniform.name;
                 if ( uniformMap[ name ] === undefined ) {
@@ -542,9 +519,9 @@ define( [
                     stack.push( this.getObjectPair( uniform, value ) );
                 }
             }
+            /*jshint bitwise: true */
         },
         popUniformsList: function ( uniformMap, uniformList ) {
-            var uniform;
             for ( var i = 0, l = uniformList.uniformKeys.length; i < l; i++ ) {
                 var key = uniformList.uniformKeys[ i ];
                 uniformMap[ key ].pop();
@@ -598,6 +575,7 @@ define( [
         },
 
         pushAttributeMap: function ( attributeMap, attributeList ) {
+            /*jshint bitwise: false */
             var attributeStack;
             for ( var i = 0, l = attributeList.attributeKeys.length; i < l; i++ ) {
                 var type = attributeList.attributeKeys[ i ];
@@ -622,11 +600,12 @@ define( [
 
                 attributeStack.asChanged = true;
             }
+            /*jshint bitwise: true */
         },
         popAttributeMap: function ( attributeMap, attributeList ) {
             var attributeStack;
             for ( var i = 0, l = attributeList.attributeKeys.length; i < l; i++ ) {
-                type = attributeList.attributeKeys[ i ];
+                var type = attributeList.attributeKeys[ i ];
                 attributeStack = attributeMap[ type ];
                 attributeStack.pop();
                 attributeStack.asChanged = true;
@@ -670,6 +649,7 @@ define( [
             var program = this.programs.lastApplied;
 
             if ( program !== undefined ) {
+                var gl = this.getGraphicContext();
                 var updateColorUniform = false;
                 var hasColorAttrib = false;
                 if ( program.attributesCache.Color !== undefined ) {
@@ -691,7 +671,7 @@ define( [
                     uniform.dirty();
                 }
                 //Notify.log(uniform.get()[0]);
-                uniform.apply( program.uniformsCache.ArrayColorEnabled );
+                uniform.apply( gl, program.uniformsCache.ArrayColorEnabled );
             }
         },
         setVertexAttribArray: function ( attrib, array, normalize ) {

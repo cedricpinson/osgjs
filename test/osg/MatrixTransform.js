@@ -1,4 +1,5 @@
 define( [
+    'tests/mockup/mockup',
     'osg/MatrixTransform',
     'osg/Matrix',
     'osgDB/ReaderParser'
@@ -11,12 +12,12 @@ define( [
         test( 'Test MatrixTransform', function () {
 
             var n = new MatrixTransform();
-            var scene = ReaderParser.parseSceneGraph( getBoxScene() );
+            var scene = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
             n.setMatrix( Matrix.makeTranslate( 100, 0, 0 ) );
             n.addChild( scene );
             var bs = n.getBound();
-            near( bs.center(), [ 100, 0, 0 ] );
-            near( bs.radius(), 2.414213562373095 );
+            mockup.near( bs.center(), [ 100, 0, 0 ] );
+            mockup.near( bs.radius(), 2.414213562373095 );
         } );
     };
 } );

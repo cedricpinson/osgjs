@@ -1,10 +1,8 @@
-/*global define */
-
 define( [
     'osg/Notify'
 ], function ( Notify ) {
 
-    /** 
+    /**
      * DrawArrays manage rendering primitives
      * @class DrawArrays
      */

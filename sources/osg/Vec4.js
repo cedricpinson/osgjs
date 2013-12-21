@@ -25,7 +25,7 @@ define( [], function () {
             return r;
         },
 
-        mult: function ( a, b, result ) {
+        mult: function ( a, b, r ) {
             r[ 0 ] = a[ 0 ] * b;
             r[ 1 ] = a[ 1 ] * b;
             r[ 2 ] = a[ 2 ] * b;

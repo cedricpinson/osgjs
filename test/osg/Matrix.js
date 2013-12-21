@@ -1,7 +1,8 @@
 define( [
+    'test/mockup',
     'osg/Matrix',
     'osg/Notify'
-], function ( Matrix, Notify ) {
+], function ( mockup, Matrix, Notify ) {
 
     return function () {
 
@@ -10,7 +11,7 @@ define( [
         test( 'Matrix.makeRotateFromQuat', function () {
             var m = [];
             Matrix.makeRotateFromQuat( [ 0.653281, 0.270598, -0.653281, 0.270598 ], m );
-            near( m, [ 1.66533e-16, 1.11022e-16, -1, 0,
+            mockup.near( m, [ 1.66533e-16, 1.11022e-16, -1, 0,
                 0.707107, -0.707107, 0, 0, -0.707107, -0.707107, -1.66533e-16, 0,
                 0, 0, 0, 1
             ] );
@@ -20,7 +21,7 @@ define( [
             var m = [];
             Matrix.makeRotateFromQuat( [ 0.653281, 0.270598, -0.653281, 0.270598 ], m );
             var q = Matrix.getRotate( m );
-            near( q, [ 0.653281, 0.270598, -0.653281, 0.270598 ] );
+            mockup.near( q, [ 0.653281, 0.270598, -0.653281, 0.270598 ] );
 
         } );
 
@@ -29,15 +30,15 @@ define( [
             Matrix.makePerspective( 60, 800 / 200, 2.0, 500.0, m );
             var r = {};
             Matrix.getPerspective( m, r );
-            near( r.zNear, 2.0 );
-            near( r.zFar, 500.0 );
-            near( r.fovy, 60.0 );
-            near( r.aspectRatio, 4.0 );
+            mockup.near( r.zNear, 2.0 );
+            mockup.near( r.zFar, 500.0 );
+            mockup.near( r.fovy, 60.0 );
+            mockup.near( r.aspectRatio, 4.0 );
         } );
 
         test( 'Matrix.makeLookAt', function () {
             var m = Matrix.makeLookAt( [ 0, -10, 0 ], [ 0.0, 0.0, 0.0 ], [ 0.0, 0.0, 1.0 ] );
-            near( m, [ 1, 0, -0, 0,
+            mockup.near( m, [ 1, 0, -0, 0,
                 0, 0, -1, 0,
                 0, 1, -0, 0,
                 0, 0, -10, 1
@@ -45,7 +46,7 @@ define( [
 
 
             var m2 = Matrix.makeLookAt( [ 0, 0, -10 ], [ 0.0, 0.0, 0.0 ], [ 0.0, 1.0, 0.0 ] );
-            near( m2, [ -1, 0, -0, 0,
+            mockup.near( m2, [ -1, 0, -0, 0,
                 0, 1, -0, 0,
                 0, -0, -1, 0,
                 0, 0, -10, 1
@@ -73,10 +74,10 @@ define( [
             Matrix.computeFrustrumCornersVectors( m, vectors );
             Notify.log( corners );
             Notify.log( vectors );
-            near( vectors[ 0 ], corners[ 0 ] );
-            near( vectors[ 1 ], corners[ 1 ] );
-            near( vectors[ 2 ], corners[ 2 ] );
-            near( vectors[ 3 ], corners[ 3 ] );
+            mockup.near( vectors[ 0 ], corners[ 0 ] );
+            mockup.near( vectors[ 1 ], corners[ 1 ] );
+            mockup.near( vectors[ 2 ], corners[ 2 ] );
+            mockup.near( vectors[ 3 ], corners[ 3 ] );
             ok( true, 'check computeFrustrumVectors' );
         } );
 
@@ -89,9 +90,9 @@ define( [
                 eye,
                 target,
                 up, 5.0 );
-            near( eye, [ 0, -10, 0 ] );
-            near( target, [ 0, -5.0, 0 ] ); // should be five but mimic same behaviour as OpenSceneGraph
-            near( up, [ 0, 0, 1 ] );
+            mockup.near( eye, [ 0, -10, 0 ] );
+            mockup.near( target, [ 0, -5.0, 0 ] ); // should be five but mimic same behaviour as OpenSceneGraph
+            mockup.near( up, [ 0, 0, 1 ] );
         } );
 
         test( 'Matrix.transformVec3', function () {
@@ -100,10 +101,10 @@ define( [
             var inv = [];
             Matrix.inverse( m, inv );
             var res = Matrix.transformVec3( inv, vec );
-            near( res, [ 10, 0, 0 ] );
+            mockup.near( res, [ 10, 0, 0 ] );
 
             var res2 = Matrix.transformVec3( m, res );
-            near( res2, [ 0, 0, 10 ] );
+            mockup.near( res2, [ 0, 0, 10 ] );
 
 
             m = [ -0.00003499092540543186, 0, 0, 0, 0, 0.00003499092540543186, 0, 0, 0, 0, 1.8163636363636322, -9.989999999999977, 0.013996370162172783, -0.010497277621629587, -1.7999999999999958, 9.999999999999977 ];
@@ -119,7 +120,7 @@ define( [
             };
             var r0 = preMultVec3( m, [ 400, 300, 1 ] );
             Matrix.transformVec3( m, [ 400, 300, 1 ], res );
-            near( res, r0 );
+            mockup.near( res, r0 );
 
         } );
 
@@ -130,21 +131,21 @@ define( [
                 12, 13, 14, 15
             ];
             var res = Matrix.transpose( m, [] );
-            near( res, [ 0, 4, 8, 12,
+            mockup.near( res, [ 0, 4, 8, 12,
                 1, 5, 9, 13,
                 2, 6, 10, 14,
                 3, 7, 11, 15
             ] );
 
             var res2 = Matrix.transpose( m, [] );
-            near( res2, [ 0, 4, 8, 12,
+            mockup.near( res2, [ 0, 4, 8, 12,
                 1, 5, 9, 13,
                 2, 6, 10, 14,
                 3, 7, 11, 15
             ] );
 
             var res3 = Matrix.transpose( m, m );
-            near( res3, [ 0, 4, 8, 12,
+            mockup.near( res3, [ 0, 4, 8, 12,
                 1, 5, 9, 13,
                 2, 6, 10, 14,
                 3, 7, 11, 15
@@ -153,7 +154,7 @@ define( [
 
         test( 'Matrix.makeRotate', function () {
             var res = Matrix.makeRotate( 0, 0, 0, 1, [] );
-            near( res, [ 1, 0, 0, 0,
+            mockup.near( res, [ 1, 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1
@@ -169,7 +170,7 @@ define( [
             translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
             scale = Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5 );
             var res = Matrix.mult( scale, translate, [] );
-            near( res, [ 400, 0, 0, 0,
+            mockup.near( res, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
                 400, 300, 0.5, 1
@@ -178,7 +179,7 @@ define( [
             translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
             scale = Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5 );
             res = Matrix.preMult( scale, translate );
-            ok( check_near( res, [ 400, 0, 0, 0,
+            ok( mockup.check_near( res, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
                 400, 300, 0.5, 1
@@ -187,7 +188,7 @@ define( [
             translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
             scale = Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5 );
             res = Matrix.postMult( scale, translate );
-            ok( check_near( res, [ 400, 0, 0, 0,
+            ok( mockup.check_near( res, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
                 400, 300, 0.5, 1
@@ -201,13 +202,13 @@ define( [
             Matrix.preMult( ident, scale );
 
             Matrix.preMult( ident, translate );
-            near( ident, [ 400, 0, 0, 0,
+            mockup.near( ident, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
                 400, 300, 0.5, 1
             ] );
             Matrix.preMult( scale, translate );
-            near( scale, [ 400, 0, 0, 0,
+            mockup.near( scale, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
                 400, 300, 0.5, 1
@@ -238,7 +239,7 @@ define( [
             var result = [];
             var valid = Matrix.inverse4x3( m, result );
             ok( true, valid );
-            near( result, [ 1.0, 0, 0, 0,
+            mockup.near( result, [ 1.0, 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0, -10, -10, -10, 1
             ] );
@@ -250,7 +251,7 @@ define( [
             ];
             var m1result = [];
             var ok1 = Matrix.inverse4x3( m1, m1result );
-            near( m1result, [ 243.988, -49.3875, 393.386, 0,
+            mockup.near( m1result, [ 243.988, -49.3875, 393.386, 0,
                 284.374, 343.661, -133.23, 0, -276.267, 310.128, 210.282, 0, -0, -0, -0, 1
             ], 1e-3 );
 
@@ -260,7 +261,7 @@ define( [
             ];
             var m2result = [];
             var ok2 = Matrix.inverse4x3( m2, m2result );
-            near( m2result, [ 243.988, 284.374, -276.267, 0, -49.3875, 343.661, 310.128, 0,
+            mockup.near( m2result, [ 243.988, 284.374, -276.267, 0, -49.3875, 343.661, 310.128, 0,
                 393.386, -133.23, 210.282, 0, -0, -0, -0, 1
             ], 1e-3 );
 
@@ -296,7 +297,7 @@ define( [
             var result = [];
             var m = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.0020020020020022, 0 ];
             var res = Matrix.makePerspective( 60, 800 / 600, 1.0, 1000 );
-            ok( check_near( res, m ), 'makePerspective should be ' + m + ' and is ' + res );
+            ok( mockup.check_near( res, m ), 'makePerspective should be ' + m + ' and is ' + res );
         } );
     };
 } );

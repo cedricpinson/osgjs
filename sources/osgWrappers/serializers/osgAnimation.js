@@ -1,62 +1,43 @@
-/*global define */
-
 define( [
     'osg/Notify',
     'vendors/Q',
     'osgWrappers/serializers/osg'
 ], function ( Notify, Q, osgWrapper ) {
 
-    /** -*- compile-command: "jslint-cli osgAnimation.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
-
     var osgAnimationWrapper = {};
 
     osgAnimationWrapper.Animation = function ( input, animation ) {
         var jsonObj = input.getJSON();
         // check
-        // 
+        //
         var check = function ( o ) {
             if ( o.Name && o.Channels && o.Channels.length > 0 ) {
                 return true;
             }
             if ( !o.Name ) {
-                Notify.log( "animation has field Name, error" );
+                Notify.log( 'animation has field Name, error' );
                 return false;
             }
             return false;
         };
         if ( !check( jsonObj ) ) {
-            return;
+            return undefined;
         }
 
         if ( !osgWrapper.Object( input, animation ) ) {
-            return;
+            return undefined;
         }
 
+        var createPromiseCallback = function( animation ) {
+            return function( chan ) {
+                if ( chan ) {
+                    animation.getChannels().push( chan );
+                }
+            };
+        };
         // channels
         for ( var i = 0, l = jsonObj.Channels.length; i < l; i++ ) {
-            Q.when( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( function ( channel ) {
-                if ( channel ) {
-                    animation.getChannels().push( channel );
-                }
-            } );
+            Q.when( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( createPromiseCallback( animation ) );
         }
         return animation;
     };
@@ -64,7 +45,7 @@ define( [
     osgAnimationWrapper.Vec3LerpChannel = function ( input, channel ) {
         var jsonObj = input.getJSON();
         // check
-        // 
+        //
         var check = function ( o ) {
             if ( o.KeyFrames && o.TargetName && o.Name ) {
                 return true;
@@ -72,12 +53,12 @@ define( [
             return false;
         };
         if ( !check( jsonObj ) ) {
-            return;
+            return undefined;
         }
 
         // doit
         if ( !osgWrapper.Object( input, channel ) ) {
-            return;
+            return undefined;
         }
 
         channel.setTargetName( jsonObj.TargetName );
@@ -104,7 +85,7 @@ define( [
     osgAnimationWrapper.FloatLerpChannel = function ( input, channel ) {
         var jsonObj = input.getJSON();
         // check
-        // 
+        //
         var check = function ( o ) {
             if ( o.KeyFrames && o.TargetName && o.Name ) {
                 return true;
@@ -136,7 +117,7 @@ define( [
     osgAnimationWrapper.BasicAnimationManager = function ( input, manager ) {
         var jsonObj = input.getJSON();
         // check
-        // 
+        //
         var check = function ( o ) {
             if ( o.Animations ) {
                 return true;

@@ -1,4 +1,5 @@
 define( [
+    'test/mockup',
     'osg/ComputeMatrixFromNodePath',
     'osg/NodeVisitor',
     'osg/Utils',
@@ -6,7 +7,7 @@ define( [
     'osg/Matrix',
     'osg/Camera',
     'osg/TransformEnums'
-], function ( ComputeMatrixFromNodePath, NodeVisitor, MACROUTILS, MatrixTransform, Matrix, Camera, TransformEnums ) {
+], function ( mockup, ComputeMatrixFromNodePath, NodeVisitor, MACROUTILS, MatrixTransform, Matrix, Camera, TransformEnums ) {
 
     return function () {
 
@@ -49,7 +50,7 @@ define( [
                 var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
                 var trans = Matrix.getTrans( matrix, [] );
                 var result = [ 0, -10, 10 ];
-                ok( check_near( trans, result ), 'Translation of matrix should be ' + result );
+                ok( mockup.check_near( trans, result ), 'Translation of matrix should be ' + result );
             } )();
         } );
     };

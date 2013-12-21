@@ -28,7 +28,7 @@ define( [
                 var result = [ 0.4, 0.2, 0 ];
                 var found = Vec3.add( start,
                     Vec3.mult( dir, ti.hits[ 0 ].ratio, [] ), [] );
-                near( found, result, 1e-4 );
+                mockup.near( found, result, 1e-4 );
 
                 var ti2 = new TriangleIntersect();
                 ti2.set( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ] );

@@ -1,8 +1,9 @@
 define( [
+    'test/mockup',
     'osgViewer/Viewer',
     'osg/Shape',
     'osg/Notify'
-], function ( Viewer, Shape, Notify ) {
+], function ( mockup, Viewer, Shape, Notify ) {
 
     return function () {
 
@@ -10,7 +11,7 @@ define( [
 
         test( 'Test Viewer', function () {
             ( function () {
-                var canvas = createCanvas();
+                var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 ok( viewer.getCamera() !== undefined, 'Check camera creation' );
                 ok( viewer.getCamera().getViewport() !== undefined, 'Check camera viewport' );
@@ -20,11 +21,11 @@ define( [
                 ok( viewer._cullVisitor !== undefined, 'Check cull visitor' );
                 ok( viewer._state !== undefined, 'Check state' );
                 ok( viewer.getState().getGraphicContext() !== undefined, 'Check state graphic context' );
-                removeCanvas( canvas );
+                mockup.removeCanvas( canvas );
             } )();
 
             ( function () {
-                var canvas = createCanvas();
+                var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 var createScene = function () {
                     return Shape.createTexturedBoxGeometry( 0, 0, 0,
@@ -42,19 +43,19 @@ define( [
 
                 // with auto compute near far
 
-                ok( check_near( viewer.getCamera().getProjectionMatrix(), [ 0.960491063485583, 0, 0, 0, 0, 1.920982126971166, 0, 0, 0, 0, -3.6948013697711914, -1, 0, 0, -86.03523882425281, 0 ] ), 'check near / far computation' );
+                ok( mockup.check_near( viewer.getCamera().getProjectionMatrix(), [ 0.960491063485583, 0, 0, 0, 0, 1.920982126971166, 0, 0, 0, 0, -3.6948013697711914, -1, 0, 0, -86.03523882425281, 0 ] ), 'check near / far computation' );
 
                 viewer._cullVisitor.reset();
                 ok( viewer._cullVisitor._computedNear === Number.POSITIVE_INFINITY, 'Check near after reset' );
                 ok( viewer._cullVisitor._computedFar === Number.NEGATIVE_INFINITY, 'Check far after reset' );
 
-                removeCanvas( canvas );
+                mockup.removeCanvas( canvas );
 
             } )();
 
             // test device
             ( function () {
-                var canvas = createCanvas();
+                var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 var args = {
                     'devices': {
@@ -71,7 +72,7 @@ define( [
                 viewer.updateEventProxy( list, undefined );
                 //ok(true, 'detected mouse');
 
-                removeCanvas( canvas );
+                mockup.removeCanvas( canvas );
 
             } )();
         } );

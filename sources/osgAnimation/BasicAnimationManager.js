@@ -26,7 +26,7 @@ define( [
      *
      */
 
-    /** 
+    /**
      *  BasicAnimationManager
      *  @class BasicAnimationManager
      */
@@ -127,8 +127,8 @@ define( [
         stopAnimation: function ( name ) {
             if ( this._actives._keys.length > 0 ) {
                 var pri = this._actives._keys.length - 1;
-                var filterFunction = function ( element, index, array ) {
-                    return element !== "_keys";
+                var filterFunction = function ( element /*, index , array */ ) {
+                    return element !== '_keys';
                 };
                 while ( pri >= 0 ) {
                     if ( this._actives[ pri ][ name ] ) {
@@ -147,7 +147,7 @@ define( [
 
             var anim = this._animations[ obj.name ];
             if ( anim === undefined ) {
-                Notify.log( "no animation " + obj.name + " found" );
+                Notify.log( 'no animation ' + obj.name + ' found' );
                 return;
             }
 
@@ -186,7 +186,7 @@ define( [
 
         playAnimation: function ( name, priority, weight ) {
             var animName = name;
-            if ( typeof name === "object" ) {
+            if ( typeof name === 'object' ) {
                 if ( name.getName === undefined ) {
                     return this.playAnimationObject( name );
                 } else {

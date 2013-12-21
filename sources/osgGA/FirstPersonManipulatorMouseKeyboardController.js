@@ -36,7 +36,7 @@ define( [], function () {
             manipulator.getLookPositionInterpolator().set( pos[ 0 ], pos[ 1 ] );
             this.pushButton();
         },
-        mouseup: function ( ev ) {
+        mouseup: function ( /*ev */ ) {
             this.releaseButton();
         },
         mousemove: function ( ev ) {
@@ -44,15 +44,11 @@ define( [], function () {
                 return;
             }
 
-            var curX;
-            var curY;
-            var deltaX;
-            var deltaY;
             var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
             this._manipulator.getLookPositionInterpolator().setDelay( this._delay );
             this._manipulator.getLookPositionInterpolator().setTarget( pos[ 0 ], pos[ 1 ] );
         },
-        mousewheel: function ( ev, intDelta, deltaX, deltaY ) {
+        mousewheel: function ( ev, intDelta /*, deltaX, deltaY */ ) {
             ev.preventDefault();
             this._stepFactor = Math.min( Math.max( 0.001, this._stepFactor + intDelta * 0.01 ), 4.0 );
             this._manipulator.setStepFactor( this._stepFactor );
@@ -79,21 +75,23 @@ define( [], function () {
                 manipulator.getSideInterpolator().setTarget( -1 );
                 return false;
             }
+            return undefined;
         },
 
         keyup: function ( event ) {
             var manipulator = this._manipulator;
             if ( event.keyCode === 87 || event.keyCode === 90 || event.keyCode === 38 || // w/z/up
-                event.keyCode == 83 || event.keyCode === 40 ) { // S/down
+                event.keyCode === 83 || event.keyCode === 40 ) { // S/down
                 manipulator.getFowardInterpolator().setDelay( this._delay );
                 manipulator.getFowardInterpolator().setTarget( 0 );
                 return false;
-            } else if ( event.keyCode == 68 || event.keyCode === 39 || // D/right
+            } else if ( event.keyCode === 68 || event.keyCode === 39 || // D/right
                 event.keyCode === 65 || event.keyCode === 81 || event.keyCode === 37 ) { // a/q/left
                 manipulator.getSideInterpolator().setDelay( this._delay );
                 manipulator.getSideInterpolator().setTarget( 0 );
                 return false;
             }
+            return undefined;
         }
 
     };

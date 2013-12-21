@@ -15,13 +15,13 @@ define( [
 
         test( 'Quat.makeRotate', function () {
             var q0 = Quat.makeRotate( Math.PI, 1, 0, 0, [] );
-            near( q0, [ 1, 0, 0, 6.12303e-17 ], 1e-5 );
+            mockup.near( q0, [ 1, 0, 0, 6.12303e-17 ], 1e-5 );
 
             var q1 = Quat.makeRotate( Math.PI / 2, 0, 1, 0, [] );
-            near( q1, [ 0, 0.707107, 0, 0.707107 ] );
+            mockup.near( q1, [ 0, 0.707107, 0, 0.707107 ] );
 
             var q2 = Quat.makeRotate( Math.PI / 4, 0, 0, 1, [] );
-            near( q2, [ 0, 0, 0.382683, 0.92388 ] );
+            mockup.near( q2, [ 0, 0, 0.382683, 0.92388 ] );
         } );
 
         // test('Quat.rotateVec3', function() {
@@ -37,7 +37,7 @@ define( [
 
             var qr = [];
             Quat.mult( q1, q0, qr );
-            near( qr, [ 0.707107, 4.32964e-17, -0.707107, 4.32964e-17 ] );
+            mockup.near( qr, [ 0.707107, 4.32964e-17, -0.707107, 4.32964e-17 ] );
 
             // check consistency with quaternion and matrix multiplication order
             var m1 = [],
@@ -49,16 +49,16 @@ define( [
 
             var qr2 = [];
             Matrix.getRotate( mr, qr2 );
-            near( qr, qr2 );
+            mockup.near( qr, qr2 );
             // consistenty
 
-            near( Quat.mult( q2, Quat.mult( q1, q0, [] ), [] ), [ 0.653281, 0.270598, -0.653281, 0.270598 ] );
+            mockup.near( Quat.mult( q2, Quat.mult( q1, q0, [] ), [] ), [ 0.653281, 0.270598, -0.653281, 0.270598 ] );
         } );
 
         test( 'Quat.slerp', function () {
             var q = [];
             Quat.slerp( 0.5, [ 0, 0.707107, 0, 0.707107 ], [ 0, 0, 0.382683, 0.92388 ], q );
-            near( q, [ 0, 0.388863, 0.210451, 0.896937 ] );
+            mockup.near( q, [ 0, 0.388863, 0.210451, 0.896937 ] );
         } );
     };
 } );

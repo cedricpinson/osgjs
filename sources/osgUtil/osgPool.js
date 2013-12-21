@@ -15,7 +15,7 @@ define( [], function () {
      *  TODO: Debug Mode: check if not putting object twice, etc.
      *  USAGE: osg.memoryPools.stateGraph = new OsgObjectMemoryPool(osg.StateGraph).grow(50);
      */
-    osgPool.OsgObjectMemoryPool = function ( pooledObjectClassName ) {
+    osgPool.OsgObjectMemoryPool = function ( ObjectClassName ) {
         return {
             _memPool: [],
             reset: function () {
@@ -33,7 +33,7 @@ define( [], function () {
             grow: function ( sizeAdd ) {
                 if ( sizeAdd === undefined ) sizeAdd = ( this._memPool.length > 0 ) ? this._memPool.length * 2 : 20;
                 var i = this._memPool.length;
-                while ( i++ < sizeAdd ) this._memPool.push( new pooledObjectClassName() );
+                while ( i++ < sizeAdd ) this._memPool.push( new ObjectClassName() );
                 return this;
             }
         };

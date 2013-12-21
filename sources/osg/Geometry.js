@@ -2,9 +2,10 @@
 
 define( [
     'osg/Utils',
+    'osg/Vec3',
     'osg/Node',
     'osg/BoundingBox'
-], function ( MACROUTILS, Node, BoundingBox ) {
+], function ( MACROUTILS, Vec3, Node, BoundingBox ) {
 
     /** -*- compile-command: 'jslint-cli Geometry.js' -*- */
 
@@ -91,13 +92,18 @@ define( [
                 for ( var j = 0, m = primitives.length; j < m; ++j ) {
                     generated += 'primitives[' + j + '].draw(state);\n';
                 }
+
+                /*jshint evil: true */
                 this.cacheAttributeList[ prgID ] = new Function( 'state', generated );
+                /*jshint evil: false */
             }
             this.cacheAttributeList[ prgID ].call( this, state );
         },
 
         // for testing disabling drawing
         drawImplementationDummy: function ( state ) {
+            /*jshint unused: true */
+            // for testing only that's why the code is not removed
             var program = state.getLastProgramApplied();
             var attribute;
             var attributeList = [];
@@ -110,6 +116,7 @@ define( [
             for ( var j = 0, m = primitives.length; j < m; ++j ) {
                 //primitives[j].draw(state);
             }
+            /*jshint unused: false */
         },
 
         getBoundingBox: function () {
@@ -121,20 +128,21 @@ define( [
         },
 
         computeBoundingBox: function ( boundingBox ) {
-            var vertexArray = this.getAttributes().Vertex;
 
+            var vertexArray = this.getAttributes().Vertex;
+            var v = [ 0.0, 0.0, 0.0 ];
             if ( vertexArray !== undefined &&
-                vertexArray.getElements() !== undefined &&
-                vertexArray.getItemSize() > 2 ) {
-                var v = [ 0, 0, 0 ];
-                vertexes = vertexArray.getElements();
-                for ( var idx = 0, l = vertexes.length; idx < l; idx += 3 ) {
-                    v[ 0 ] = vertexes[ idx ];
-                    v[ 1 ] = vertexes[ idx + 1 ];
-                    v[ 2 ] = vertexes[ idx + 2 ];
-                    boundingBox.expandByVec3( v );
-                }
-            }
+                 vertexArray.getElements() !== undefined &&
+                 vertexArray.getItemSize() > 2 ) {
+                     var vertexes = vertexArray.getElements();
+                     Vec3.init( v );
+                     for ( var idx = 0, l = vertexes.length; idx < l; idx += 3 ) {
+                         v[ 0 ] = vertexes[ idx ];
+                         v[ 1 ] = vertexes[ idx + 1 ];
+                         v[ 2 ] = vertexes[ idx + 2 ];
+                         boundingBox.expandByVec3( v );
+                     }
+                 }
             return boundingBox;
         },
 
@@ -145,7 +153,8 @@ define( [
             return boundingSphere;
         }
     } ), 'osg', 'Geometry' );
-    Geometry.prototype.objectType = MACROUTILS.objectType.generate( 'Geometry' );
+
+    MACROUTILS.setTypeID( Geometry );
 
     return Geometry;
 } );

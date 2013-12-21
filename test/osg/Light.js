@@ -1,4 +1,5 @@
 define( [
+    'test/mockup',
     'osg/Light',
     'osgViewer/Viewer',
     'osg/Shape',
@@ -7,7 +8,7 @@ define( [
     'osg/RenderStage',
     'osg/StateGraph',
     'osg/Matrix'
-], function ( Light, Viewer, Shape, Node, CullVisitor, RenderStage, StateGraph, Matrix ) {
+], function ( mockup, Light, Viewer, Shape, Node, CullVisitor, RenderStage, StateGraph, Matrix ) {
 
     return function () {
 
@@ -16,7 +17,7 @@ define( [
         test( 'Test Light', function () {
 
             ( function () {
-                var canvas = createCanvas();
+                var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 viewer.init();
 
@@ -33,10 +34,17 @@ define( [
                 q.getOrCreateStateSet().setAttributeAndMode( l1 );
 
                 var state = viewer.getState();
-                state.setGraphicContext( createFakeRenderer() );
+
+                var fakeRenderer = mockup.createFakeRenderer();
+                fakeRenderer.validateProgram = function() { return true; };
+                fakeRenderer.getProgramParameter = function() { return true; };
+                fakeRenderer.isContextLost = function() { return false; };
+                state.setGraphicContext( fakeRenderer );
 
                 viewer.setSceneData( q );
                 viewer.frame();
+
+                mockup.removeCanvas( canvas );
             } )();
 
 

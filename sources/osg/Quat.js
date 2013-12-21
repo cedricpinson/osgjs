@@ -99,28 +99,28 @@ define( [], function () {
 
             var omega;
             var sinomega;
-            var scale_from;
-            var scale_to;
+            var scaleFrom;
+            var scaleTo;
             if ( ( 1.0 - cosomega ) > epsilon ) {
                 omega = Math.acos( cosomega ); // 0 <= omega <= Pi (see man acos)
                 sinomega = Math.sin( omega ); // this sinomega should always be +ve so
                 // could try sinomega=sqrt(1-cosomega*cosomega) to avoid a sin()?
-                scale_from = Math.sin( ( 1.0 - t ) * omega ) / sinomega;
-                scale_to = Math.sin( t * omega ) / sinomega;
+                scaleFrom = Math.sin( ( 1.0 - t ) * omega ) / sinomega;
+                scaleTo = Math.sin( t * omega ) / sinomega;
             } else {
                 /* --------------------------------------------------
              The ends of the vectors are very close
              we can use simple linear interpolation - no need
              to worry about the 'spherical' interpolation
              -------------------------------------------------- */
-                scale_from = 1.0 - t;
-                scale_to = t;
+                scaleFrom = 1.0 - t;
+                scaleTo = t;
             }
 
-            result[ 0 ] = from[ 0 ] * scale_from + quatTo[ 0 ] * scale_to;
-            result[ 1 ] = from[ 1 ] * scale_from + quatTo[ 1 ] * scale_to;
-            result[ 2 ] = from[ 2 ] * scale_from + quatTo[ 2 ] * scale_to;
-            result[ 3 ] = from[ 3 ] * scale_from + quatTo[ 3 ] * scale_to;
+            result[ 0 ] = from[ 0 ] * scaleFrom + quatTo[ 0 ] * scaleTo;
+            result[ 1 ] = from[ 1 ] * scaleFrom + quatTo[ 1 ] * scaleTo;
+            result[ 2 ] = from[ 2 ] * scaleFrom + quatTo[ 2 ] * scaleTo;
+            result[ 3 ] = from[ 3 ] * scaleFrom + quatTo[ 3 ] * scaleTo;
             return result;
         },
 
@@ -249,7 +249,7 @@ define( [], function () {
             this.add( qa, qb, qa );
             this.div( qa, -4.0, qa );
             this.exp( qa, qb );
-            return this.mult( qb, q1, r );
+            return this.mult( qb, qcur, r );
         }
 
     };

@@ -11,7 +11,7 @@ define( [
 
     /** -*- compile-command: 'jslint-cli Node.js' -*- */
 
-    /** 
+    /**
      *  Light
      *  @class Light
      */
@@ -152,7 +152,7 @@ define( [
             return this.getPrefix() + '_uniform_' + name;
         },
 
-        applyPositionedUniform: function ( matrix, state ) {
+        applyPositionedUniform: function ( matrix /*, state */ ) {
             var uniform = this.getOrCreateUniforms();
             Matrix.copy( matrix, uniform.matrix.get() );
             uniform.matrix.dirty();
@@ -166,7 +166,7 @@ define( [
             uniform.invMatrix.dirty();
         },
 
-        apply: function ( state ) {
+        apply: function ( /*state*/ ) {
             var light = this.getOrCreateUniforms();
 
             light.ambient.set( this._ambient );
@@ -398,7 +398,7 @@ define( [
         ].join( '\n' );
 
         // replace Light_xxxx by instance variable of 'this' light
-        uniforms = window.Object.keys( this.getOrCreateUniforms() );
+        var uniforms = window.Object.keys( this.getOrCreateUniforms() );
         str = this._replace( 'Light_', uniforms, str, this.getUniformName );
         return str;
     };
@@ -438,7 +438,7 @@ define( [
             'attenuation'
         ];
         str = this._replace( '', fields, str, this.getParameterName );
-        uniforms = window.Object.keys( this.getOrCreateUniforms() );
+        var uniforms = window.Object.keys( this.getOrCreateUniforms() );
         str = this._replace( 'Light_', uniforms, str, this.getUniformName );
         return str;
     };

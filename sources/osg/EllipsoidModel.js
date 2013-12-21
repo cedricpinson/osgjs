@@ -35,12 +35,12 @@ define( [
                 Notify.warn( 'deprecated, use this signature convertLatLongHeightToXYZ( latitude, longitude, height, result )' );
                 result = [];
             }
-            var sin_latitude = Math.sin( latitude );
-            var cos_latitude = Math.cos( latitude );
-            var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared * sin_latitude * sin_latitude );
-            var X = ( N + height ) * cos_latitude * Math.cos( longitude );
-            var Y = ( N + height ) * cos_latitude * Math.sin( longitude );
-            var Z = ( N * ( 1 - this._eccentricitySquared ) + height ) * sin_latitude;
+            var sinLatitude = Math.sin( latitude );
+            var cosLatitude = Math.cos( latitude );
+            var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared * sinLatitude * sinLatitude );
+            var X = ( N + height ) * cosLatitude * Math.cos( longitude );
+            var Y = ( N + height ) * cosLatitude * Math.sin( longitude );
+            var Z = ( N * ( 1 - this._eccentricitySquared ) + height ) * sinLatitude;
             result[ 0 ] = X;
             result[ 1 ] = Y;
             result[ 2 ] = Z;
@@ -56,17 +56,17 @@ define( [
             var theta = Math.atan2( Z * this._radiusEquator, ( p * this._radiusPolar ) );
             var eDashSquared = ( this._radiusEquator * this._radiusEquator - this._radiusPolar * this._radiusPolar ) / ( this._radiusPolar * this._radiusPolar );
 
-            var sin_theta = Math.sin( theta );
-            var cos_theta = Math.cos( theta );
+            var sinTheta = Math.sin( theta );
+            var cosTheta = Math.cos( theta );
 
-            latitude = Math.atan( ( Z + eDashSquared * this._radiusPolar * sin_theta * sin_theta * sin_theta ) /
-                ( p - this._eccentricitySquared * this._radiusEquator * cos_theta * cos_theta * cos_theta ) );
-            longitude = Math.atan2( Y, X );
+            var latitude = Math.atan( ( Z + eDashSquared * this._radiusPolar * sinTheta * sinTheta * sinTheta ) /
+                ( p - this._eccentricitySquared * this._radiusEquator * cosTheta * cosTheta * cosTheta ) );
+            var longitude = Math.atan2( Y, X );
 
-            var sin_latitude = Math.sin( latitude );
-            var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared * sin_latitude * sin_latitude );
+            var sinLatitude = Math.sin( latitude );
+            var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared * sinLatitude * sinLatitude );
 
-            height = p / Math.cos( latitude ) - N;
+            var height = p / Math.cos( latitude ) - N;
             result[ 0 ] = latitude;
             result[ 1 ] = longitude;
             result[ 2 ] = height;
@@ -86,7 +86,7 @@ define( [
                 Math.sin( latitude ) ];
         },
         isWGS84: function () {
-            return ( this._radiusEquator == EllipsoidModel.WGS_84_RADIUS_EQUATOR && this._radiusPolar == EllipsoidModel.WGS_84_RADIUS_POLAR );
+            return ( this._radiusEquator === EllipsoidModel.WGS_84_RADIUS_EQUATOR && this._radiusPolar === EllipsoidModel.WGS_84_RADIUS_POLAR );
         },
 
         computeCoefficients: function () {
@@ -99,7 +99,7 @@ define( [
                 result = new Array( 16 );
             }
             var pos = this.convertLatLongHeightToXYZ( latitude, longitude, height, result );
-            var m = Matrix.makeTranslate( pos[ 0 ], pos[ 1 ], pos[ 2 ], result );
+            Matrix.makeTranslate( pos[ 0 ], pos[ 1 ], pos[ 2 ], result );
             this.computeCoordinateFrame( latitude, longitude, result );
             return result;
         },

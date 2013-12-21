@@ -41,25 +41,27 @@ var gruntTasks = { };
 //
 ( function ( ) {
 
-    gruntTasks.jshint = { options : {
-        quotmark  : 'single',
-        bitwise   :  true,
-        camelcase :  true,
-        eqeqeq    :  true,
-        immed     :  true,
-        latedef   :  true,
-        newcap    :  true,
-        noarg     :  true,
-        undef     :  true,
-        unused    :  true,
-        trailing  :  true,
+    gruntTasks.jshint = {
+        options : {
+            quotmark  : 'single',
+            bitwise   :  true,
+            camelcase :  true,
+            eqeqeq    :  true,
+            immed     :  true,
+            latedef   :  true,
+            newcap    :  true,
+            noarg     :  true,
+            undef     :  true,
+            unused    :  true,
+            trailing  :  true,
 
-        eqnull    :  true,
-        laxcomma  :  true,
-        sub       :  true,
+            eqnull    :  true,
+            laxcomma  :  true,
+            sub       :  true,
 
-        browser   :  true,
-        devel     :  true } };
+            browser   :  true,
+            devel     :  true }
+        };
 
     gruntTasks.copy = { options : {
         } };
@@ -98,9 +100,15 @@ var gruntTasks = { };
         src : [ 'Gruntfile.js' ] };
 
     gruntTasks.jshint.sources = {
-        options : { globals : { define : true, require : true } },
+        options : { globals : { define : true, require : true }
+                  },
         src : find( SOURCE_PATH, '**/*.js' ).map( function ( path ) {
             return Path.join( SOURCE_PATH, path ); } ) };
+
+    // add another output from envvar to have better error tracking in emacs
+    if ( process.env.GRUNT_EMACS_REPORTER !== undefined ) {
+        gruntTasks.jshint.sources.options.reporter = process.env.GRUNT_EMACS_REPORTER;
+    }
 
 } )( );
 
@@ -140,6 +148,7 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-watch' );
 
     grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
+    grunt.registerTask( 'checkEmacs', [ 'jshint:self', 'jshint:sourcesEmacs' ] );
 
     grunt.registerTask( 'build:sources:dist', [ 'requirejs:distSources', 'clean:distAfterSourcesRjs' ] );
     grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );

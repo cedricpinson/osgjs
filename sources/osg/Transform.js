@@ -9,7 +9,7 @@ define( [
 ], function ( MACROUTILS, Node, Matrix, Vec3, TransformEnums ) {
     /** -*- compile-command: "jslint-cli Transform.js" -*- */
 
-    /** 
+    /**
      * Transform - base class for Transform type node ( Camera, MatrixTransform )
      * @class Transform
      * @inherits Node
@@ -53,24 +53,24 @@ define( [
             Vec3.sub( xdash,
                 bsphere._center,
                 xdash );
-            var len_xdash = Vec3.length( xdash );
+            var lenXdash = Vec3.length( xdash );
 
             Vec3.sub( ydash,
                 bsphere._center,
                 ydash );
-            var len_ydash = Vec3.length( ydash );
+            var lenYdash = Vec3.length( ydash );
 
             Vec3.sub( zdash,
                 bsphere._center,
                 zdash );
-            var len_zdash = Vec3.length( zdash );
+            var lenZdash = Vec3.length( zdash );
 
-            bsphere._radius = len_xdash;
-            if ( bsphere._radius < len_ydash ) {
-                bsphere._radius = len_ydash;
+            bsphere._radius = lenXdash;
+            if ( bsphere._radius < lenYdash ) {
+                bsphere._radius = lenYdash;
             }
-            if ( bsphere._radius < len_zdash ) {
-                bsphere._radius = len_zdash;
+            if ( bsphere._radius < lenZdash ) {
+                bsphere._radius = lenZdash;
             }
             return bsphere;
         }

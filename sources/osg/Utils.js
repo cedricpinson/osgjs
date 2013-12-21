@@ -1,18 +1,19 @@
-/** -*- compile-command: 'jslint-cli osg.js' -*- */
-
 define( [
     'osgUtil/osgPool',
     'osg/StateGraph'
 ], function ( osgPool, StateGraph ) {
 
+    // make the warning about StateGraph desappear
+    Object.keys(StateGraph);
+
     var Utils = {};
 
     Utils.init = function () {
-        var StateGraph = require( 'osg/StateGraph' );
-        osgPool.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool( StateGraph ).grow( 50 );
+        var StateGraphClass = require( 'osg/StateGraph' );
+        osgPool.memoryPools.stateGraph = new osgPool.OsgObjectMemoryPool( StateGraphClass ).grow( 50 );
     };
 
-    // from jquery
+    var toString = Object.prototype.toString;
     Utils.isArray = function ( obj ) {
         return toString.call( obj ) === '[object Array]';
     };
@@ -105,7 +106,7 @@ define( [
         return target;
     };
 
-    Utils.objectInehrit = Utils.objectInherit = function ( base, extras ) {
+    Utils.objectInehrit = Utils.objectInherit = function ( base /*, extras*/ ) {
         function F() {}
         F.prototype = base;
         var obj = new F();
@@ -125,6 +126,16 @@ define( [
         return obj;
     };
 
+    Utils.objectType = {};
+    Utils.objectType.type = 0;
+    Utils.objectType.generate = function ( arg ) {
+        var t = Utils.objectType.type;
+        Utils.objectType[ t ] = arg;
+        Utils.objectType[ arg ] = t;
+        Utils.objectType.type += 1;
+        return t;
+    };
+
     Utils.objectLibraryClass = function ( object, libName, className ) {
         object.className = function () {
             return className;
@@ -136,18 +147,16 @@ define( [
         object.libraryClassName = function () {
             return libraryClassName;
         };
+
         return object;
     };
-
-    Utils.objectType = {};
-    Utils.objectType.type = 0;
-    Utils.objectType.generate = function ( arg ) {
-        var t = Utils.objectType.type;
-        Utils.objectType[ t ] = arg;
-        Utils.objectType[ arg ] = t;
-        Utils.objectType.type += 1;
-        return t;
+    Utils.setTypeID = function( classObject ) {
+        var className = classObject.prototype.className();
+        var typeID = Utils.objectType.generate( className );
+        classObject.typeID = classObject.prototype.typeID = typeID;
     };
+
+
 
     Utils.Float32Array = typeof Float32Array !== 'undefined' ? Float32Array : null;
     Utils.Int32Array = typeof Int32Array !== 'undefined' ? Int32Array : null;

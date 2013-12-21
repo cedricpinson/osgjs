@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Camera',
     'osg/Node',
@@ -14,7 +12,6 @@ define( [
     'osgUtil/IntersectVisitor'
 ], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, IntersectVisitor ) {
 
-    /** -*- compile-command: "jslint-cli View.js" -*- */
     var View = function () {
         this._graphicContext = undefined;
         this._camera = new Camera();
@@ -54,9 +51,11 @@ define( [
             Matrix.makePerspective( 55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix() );
         },
         computeIntersections: function ( x, y, traversalMask ) {
+            /*jshint bitwise: false */
             if ( traversalMask === undefined ) {
                 traversalMask = ~0;
             }
+            /*jshint bitwise: true */
 
             var iv = new IntersectVisitor();
             iv.setTraversalMask( traversalMask );

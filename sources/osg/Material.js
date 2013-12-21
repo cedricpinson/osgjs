@@ -8,7 +8,7 @@ define( [
     'osg/ShaderGenerator'
 ], function ( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator ) {
 
-    /** 
+    /**
      * Material
      * @class Material
      */
@@ -87,7 +87,7 @@ define( [
             return Material.uniforms;
         },
 
-        apply: function ( state ) {
+        apply: function ( /*state*/ ) {
             var uniforms = this.getOrCreateUniforms();
             uniforms.ambient.set( this.ambient );
             uniforms.diffuse.set( this.diffuse );

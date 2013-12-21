@@ -1,4 +1,4 @@
-/*global define */
+/* jshint ignore:start */
 
 define( [], function () {
 
@@ -8,7 +8,7 @@ define( [], function () {
 
     // Various functions for helping debug WebGL apps.
 
-    WebGLDebugUtils = function () {
+    var WebGLDebugUtils = function () {
 
         /**
          * Wrapped logging function.
@@ -245,7 +245,7 @@ define( [], function () {
             if ( glEnums === null ) {
                 glEnums = {};
                 for ( var propertyName in ctx ) {
-                    if ( typeof ctx[ propertyName ] == 'number' ) {
+                    if ( typeof ctx[ propertyName ] === 'number' ) {
                         glEnums[ ctx[ propertyName ] ] = propertyName;
                     }
                 }
@@ -284,7 +284,7 @@ define( [], function () {
             checkInit();
             var name = glEnums[ value ];
             return ( name !== undefined ) ? name :
-                ( "*UNKNOWN WebGL ENUM (0x" + value.toString( 16 ) + ")" );
+                ( '*UNKNOWN WebGL ENUM (0x' + value.toString( 16 ) + ')' );
         }
 
         /**
@@ -934,3 +934,5 @@ define( [], function () {
 
     return WebGLDebugUtils;
 } );
+
+/* jshint ignore:end */

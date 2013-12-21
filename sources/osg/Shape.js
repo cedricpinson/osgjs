@@ -453,8 +453,8 @@ define( [
                         '}'
                     ].join( '\n' );
 
-                    var program = new Program( new Shader( gl.VERTEX_SHADER, vertexshader ),
-                        new Shader( gl.FRAGMENT_SHADER, fragmentshader ) );
+                    var program = new Program( new Shader( 'VERTEX_SHADER', vertexshader ),
+                                               new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
                     createAxisGeometry.getShader.program = program;
                 }
                 return createAxisGeometry.getShader.program;
@@ -549,8 +549,6 @@ define( [
 
         for ( y = 0; y < segmentsY; y++ ) {
             for ( x = 0; x < segmentsX; x++ ) {
-                var v1 = {}, v2 = {}, v3 = {}, v4 = {}; //zz here
-                var vtxStartOffset = ( y * segmentsX * 3 ) + ( x * 3 );
 
                 var v1 = vertices[ y ][ x + 1 ];
                 var v2 = vertices[ y ][ x ];
@@ -630,11 +628,11 @@ define( [
         }
 
         var g = new Geometry();
-        g.getAttributes().Vertex = new BufferArray( gl.ARRAY_BUFFER, fullVerticesList, 3 );
-        g.getAttributes().Normal = new BufferArray( gl.ARRAY_BUFFER, fullNormalsList, 3 );
-        g.getAttributes().TexCoord0 = new BufferArray( gl.ARRAY_BUFFER, fullUVList, 2 );
+        g.getAttributes().Vertex = new BufferArray( 'ARRAY_BUFFER', fullVerticesList, 3 );
+        g.getAttributes().Normal = new BufferArray( 'ARRAY_BUFFER', fullNormalsList, 3 );
+        g.getAttributes().TexCoord0 = new BufferArray( 'ARRAY_BUFFER', fullUVList, 2 );
 
-        var primitive = new DrawElements( gl.TRIANGLES, new BufferArray( gl.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+        var primitive = new DrawElements( 'TRIANGLES', new BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1 ) );
         g.getPrimitives().push( primitive );
         return g;
     };

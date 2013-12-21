@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/Object',
@@ -23,7 +21,10 @@ define( [
 
         this.children = [];
         this.parents = [];
+        /*jshint bitwise: false */
         this.nodeMask = ~0;
+        /*jshint bitwise: true */
+
         this.boundingSphere = new BoundingSphere();
         this.boundingSphereComputed = false;
         this._updateCallbacks = [];
@@ -63,7 +64,7 @@ define( [
         setNodeMask: function ( mask ) {
             this.nodeMask = mask;
         },
-        getNodeMask: function ( mask ) {
+        getNodeMask: function ( ) {
             return this.nodeMask;
         },
         setStateSet: function ( s ) {
@@ -276,7 +277,7 @@ define( [
 
 
     } ), 'osg', 'Node' );
-    Node.prototype.objectType = MACROUTILS.objectType.generate( 'Node' );
+    MACROUTILS.setTypeID( Node );
 
     return Node;
 } );

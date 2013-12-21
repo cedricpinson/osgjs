@@ -11,7 +11,11 @@ define( [
 
         test( 'Test ShaderGenerator', function () {
             var state = new State();
-            state.setGraphicContext( createFakeRenderer() );
+            var fakeRenderer = createFakeRenderer();
+            fakeRenderer.validateProgram = function() { return true; };
+            fakeRenderer.getProgramParameter = function() { return true; };
+            fakeRenderer.isContextLost = function() { return false; };
+            state.setGraphicContext( fakeRenderer );
 
             var stateSet0 = new StateSet();
             stateSet0.setAttributeAndMode( new Material() );

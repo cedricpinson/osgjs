@@ -16,6 +16,7 @@ define( [
     HammerController.prototype = {
         init: function ( args ) {
 
+            /*jshint camelcase: false */
             var options = {
                 prevent_default: true,
                 drag_max_touches: 2,
@@ -27,6 +28,7 @@ define( [
                 swipe: false,
                 tap: false
             };
+            /*jshint camelcase: true */
 
             this._eventNode = args.eventNode;
             if ( this._eventNode ) {

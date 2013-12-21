@@ -5,7 +5,7 @@ define( [
 ], function ( MACROUTILS ) {
     /** -*- compile-command: 'jslint-cli Uniform.js' -*- */
 
-    /** 
+    /**
      * Uniform manage variable used in glsl shader.
      * @class Uniform
      */
@@ -42,19 +42,19 @@ define( [
         dirty: function () {
             this._dirty = true;
         },
-        apply: function ( location ) {
+        apply: function ( gl, location ) {
             if ( this._dirty ) {
                 this.update.call( this.glData, this.data );
                 this._dirty = false;
             }
-            this.glCall( location, this.glData );
+            this.glCall( gl, location, this.glData );
         },
-        applyMatrix: function ( location ) {
+        applyMatrix: function ( gl, location ) {
             if ( this._dirty ) {
                 this.update.call( this.glData, this.data );
                 this._dirty = false;
             }
-            this.glCall( location, this.transpose, this.glData );
+            this.glCall( gl, location, this.transpose, this.glData );
         },
         update: function ( array ) {
             for ( var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
@@ -126,7 +126,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = [ value ];
-        uniform.glCall = function ( location, glData ) {
+        uniform.glCall = function ( gl, location, glData ) {
             gl.uniform1fv( location, glData );
         };
         uniform.glData = new MACROUTILS.Float32Array( uniform.data );
@@ -161,7 +161,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = value;
-        uniform.glCall = function ( location, glData ) {
+        uniform.glCall = function ( gl, location, glData ) {
             gl.uniform2fv( location, glData );
         };
         uniform.glData = new MACROUTILS.Float32Array( uniform.data );
@@ -186,7 +186,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = value;
-        uniform.glCall = function ( location, glData ) {
+        uniform.glCall = function ( gl, location, glData ) {
             gl.uniform3fv( location, glData );
         };
         uniform.glData = new MACROUTILS.Float32Array( uniform.data );
@@ -211,7 +211,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = value;
-        uniform.glCall = function ( location, glData ) {
+        uniform.glCall = function ( gl, location, glData ) {
             gl.uniform4fv( location, glData );
         };
         uniform.glData = new MACROUTILS.Float32Array( uniform.data );
@@ -236,7 +236,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = [ value ];
-        uniform.glCall = function ( location, glData ) {
+        uniform.glCall = function ( gl, location, glData ) {
             gl.uniform1iv( location, glData );
         };
         uniform.set = function ( value ) {
@@ -271,7 +271,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = value;
-        uniform.glCall = function ( location, glData ) {
+        uniform.glCall = function ( gl, location, glData ) {
             gl.uniform2iv( location, glData );
         };
         uniform.glData = new MACROUTILS.Int32Array( uniform.data );
@@ -295,7 +295,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = value;
-        uniform.glCall = function ( location, glData ) {
+        uniform.glCall = function ( gl, location, glData ) {
             gl.uniform3iv( location, glData );
         };
         uniform.glData = new MACROUTILS.Int32Array( uniform.data );
@@ -319,7 +319,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = value;
-        uniform.glCall = function ( location, glData ) {
+        uniform.glCall = function ( gl, location, glData ) {
             gl.uniform4iv( location, glData );
         };
         uniform.glData = new MACROUTILS.Int32Array( uniform.data );
@@ -344,7 +344,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = value;
-        uniform.glCall = function ( location, transpose, glData ) {
+        uniform.glCall = function ( gl, location, transpose, glData ) {
             gl.uniformMatrix2fv( location, transpose, glData );
         };
         uniform.apply = uniform.applyMatrix;
@@ -367,7 +367,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = value;
-        uniform.glCall = function ( location, transpose, glData ) {
+        uniform.glCall = function ( gl, location, transpose, glData ) {
             gl.uniformMatrix3fv( location, transpose, glData );
         };
         uniform.apply = uniform.applyMatrix;
@@ -390,7 +390,7 @@ define( [
         }
         var uniform = new Uniform();
         uniform.data = value;
-        uniform.glCall = function ( location, transpose, glData ) {
+        uniform.glCall = function ( gl, location, transpose, glData ) {
             gl.uniformMatrix4fv( location, transpose, glData );
         };
         uniform.apply = uniform.applyMatrix;

@@ -1,23 +1,16 @@
-/*global define */
-
 define( [
-    'osg/Notify',
     'osg/Utils',
+    'osg/Notify',
     'osg/Uniform',
     'osg/NodeVisitor'
-], function ( Notify, MACROUTILS, Uniform, NodeVisitor ) {
-
-    /** -*- compile-command: 'jslint-cli ShaderParameterVisitor.js' -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
+], function ( MACROUTILS, Notify, Uniform, NodeVisitor ) {
 
     var ArraySlider = function ( params ) {
         if ( params !== undefined ) {
             if ( params.object !== undefined && params.field !== undefined ) {
-                this.createInternalSlider( param );
+                this.createInternalSlider( params );
             }
-            this._uniform = this.createInternalSliderUniform( param );
+            this._uniform = this.createInternalSliderUniform( params );
         }
     };
 
@@ -62,7 +55,7 @@ define( [
         },
 
         createUniformFunction: function ( param, name, index, uniform, cbnameIndex ) {
-            self = this;
+            var self = this;
             return ( function () {
                 var cname = name;
                 var cindex = index;
@@ -84,10 +77,10 @@ define( [
         },
 
         createFunction: function ( param, name, index, object, field, cbnameIndex ) {
-            self = this;
+            var self = this;
             return ( function () {
                 var cname = name;
-                var cindex = index;
+                //var cindex = index;
                 var cfield = field;
                 var id = cbnameIndex;
                 var obj = object;
@@ -267,26 +260,29 @@ define( [
             var p = new RegExp( re1 + re2 + re3 + re4 + re5 + re6 + re7 + re8 + re9 + re10 + re11 + re12 + re13 + re14, [ 'g' ] );
             var r = str.match( p );
             var list = map;
+
+            var createGetter = function( value ) {
+                return function() { return value; };
+            };
+
             if ( r !== null ) {
                 var re = new RegExp( re1 + re2 + re3 + re4 + re5 + re6 + re7 + re8 + re9 + re10 + re11 + re12 + re13 + re14, [ 'i' ] );
                 for ( var i = 0, l = r.length; i < l; i++ ) {
                     var result = r[ i ].match( re );
                     //var result = p.exec(str);
                     if ( result !== null ) {
-                        var word1 = result[ 1 ];
+                        //var word1 = result[ 1 ];
                         var type = result[ 2 ];
                         var name = result[ 3 ];
-                        var c1 = result[ 4 ];
-                        var c2 = result[ 5 ];
+                        //var c1 = result[ 4 ];
+                        //var c2 = result[ 5 ];
                         var json = result[ 6 ];
 
                         var param = JSON.parse( json );
                         param.type = type;
                         param.name = name;
                         var value = param.value;
-                        param.value = function () {
-                            return value;
-                        };
+                        param.value = createGetter( value );
                         list[ name ] = param;
                     }
                 }
@@ -333,7 +329,7 @@ define( [
         applyProgram: function ( node, stateset ) {
             var program = stateset.getAttribute( 'Program' );
             var programName = program.getName();
-            var string = program.getVertexShader().getText();
+            //var string = program.getVertexShader().getText();
             var uniformMap = {};
             this.getUniformList( program.getVertexShader().getText(), uniformMap );
             this.getUniformList( program.getFragmentShader().getText(), uniformMap );
@@ -350,8 +346,10 @@ define( [
                     }
                     for ( i = 0; i < str.length; i++ ) {
                         chara = str.charCodeAt( i );
+                        /*jshint bitwise: false */
                         hash = ( ( hash << 5 ) - hash ) + chara;
                         hash = hash & hash; // Convert to 32bit integer
+                        /*jshint bitwise: true */
                     }
                     if ( hash < 0 ) {
                         hash = -hash;

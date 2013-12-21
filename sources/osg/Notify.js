@@ -15,16 +15,15 @@ define( [], function () {
      */
     function getStackTrace( err ) {
         var callstack = [];
-        var originalArgs = arguments;
         try {
-            if ( arguments.length == 1 ) {
+            if ( arguments.length === 1 ) {
                 throw err;
             } else {
                 throw new Error();
             }
-        } catch ( err ) {
-            if ( err.stack ) { //Firefox and Chrome
-                callstack = ( err.stack + '\n' ).replace( /^\S[^\(]+?[\n$]/gm, '' ).
+        } catch ( error ) {
+            if ( error.stack ) { //Firefox and Chrome
+                callstack = ( error.stack + '\n' ).replace( /^\S[^\(]+?[\n$]/gm, '' ).
                 replace( /^\s+(at eval )?at\s+/gm, '' ).
                 replace( /^([^\(]+?)([\n$])/gm, '{anonymous}()@$1$2' ).
                 replace( /^Object.<anonymous>\s*\(([^\)]+)\)/gm, '{anonymous}()@$1' ).split( '\n' );

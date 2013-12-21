@@ -196,7 +196,7 @@ define( [
             var ba = {
                 'Array': {
                     'Uint16Array': {
-                        'File': 'stream.bin',
+                        'File': 'mockup/stream.bin',
                         'Size': 3
                     }
                 },
@@ -234,7 +234,7 @@ define( [
                     'UniqueID': 202,
                     'Array': {
                         'Float32Array': {
-                            'File': 'multistream.bin',
+                            'File': 'mockup/multistream.bin',
                             'Offset': 0,
                             'Size': 3
                         }
@@ -246,7 +246,7 @@ define( [
                     'UniqueID': 204,
                     'Array': {
                         'Float32Array': {
-                            'File': 'multistream.bin',
+                            'File': 'mockup/multistream.bin',
                             'Offset': 24,
                             'Size': 3
                         }

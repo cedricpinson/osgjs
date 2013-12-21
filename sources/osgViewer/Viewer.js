@@ -98,7 +98,7 @@ define( [
 
     } )();
 
-    Viewer = function ( canvas, options, error ) {
+    var Viewer = function ( canvas, options, error ) {
         View.call( this );
 
         if ( options === undefined ) {
@@ -108,13 +108,13 @@ define( [
         }
         this._options = options;
 
-        // #FIXME see tojiro's blog for webgl lost context stuffs 
+        // #FIXME see tojiro's blog for webgl lost context stuffs
         if ( options.SimulateWebGLLostContext ) {
             canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas( canvas );
             canvas.loseContextInNCalls( options.SimulateWebGLLostContext );
         }
 
-        gl = WebGLUtils.setupWebGL( canvas, options, error );
+        var gl = WebGLUtils.setupWebGL( canvas, options, error );
         var self = this;
         canvas.addEventListener( 'webglcontextlost', function ( event ) {
             self.contextLost();
@@ -228,16 +228,16 @@ define( [
 
             var gl = this.getGraphicContext();
             // not the best way to do it
-            if ( options.depth_test === '0' ) {
+            if ( options['depth_test'] === '0' ) {
                 this.getGraphicContext().disable( gl.DEPTH_TEST );
             }
-            if ( options.blend === '0' ) {
+            if ( options['blend'] === '0' ) {
                 this.getGraphicContext().disable( gl.BLEND );
             }
-            if ( options.cull_face === '0' ) {
+            if ( options['cull_face'] === '0' ) {
                 this.getGraphicContext().disable( gl.CULL_FACE );
             }
-            if ( options.light === '0' ) {
+            if ( options['light'] === '0' ) {
                 this.setLightingMode( View.LightingMode.NO_LIGHT );
             }
 
@@ -247,7 +247,7 @@ define( [
 
             var maxMS = 35;
             var stepMS = 5;
-            var fontsize = 14;
+            //var fontsize = 14;
 
             if ( options.statsMaxMS !== undefined ) {
                 maxMS = parseInt( options.statsMaxMS, 10 );
@@ -315,53 +315,55 @@ define( [
             this._cullTime = 0;
             this._drawTime = 0;
             this._stats.addLayer( '#ff0fff', 120,
-                function ( t ) {
-                    return ( 1000.0 / that._frameRate );
-                },
-                function ( a ) {
-                    return 'FrameRate: ' + ( a ).toFixed( 0 ) + ' fps';
-                } );
+                                  function ( /*t*/ ) {
+                                      return ( 1000.0 / that._frameRate );
+                                  },
+                                  function ( a ) {
+                                      return 'FrameRate: ' + ( a ).toFixed( 0 ) + ' fps';
+                                  } );
 
             this._stats.addLayer( '#ffff00', maxMS,
-                function ( t ) {
-                    return that._frameTime;
-                },
-                function ( a ) {
-                    return 'FrameTime: ' + a.toFixed( 2 ) + ' ms';
-                } );
+                                  function ( /*t*/ ) {
+                                      return that._frameTime;
+                                  },
+                                  function ( a ) {
+                                      return 'FrameTime: ' + a.toFixed( 2 ) + ' ms';
+                                  } );
 
             this._stats.addLayer( '#d07b1f', maxMS,
-                function ( t ) {
-                    return that._updateTime;
-                },
-                function ( a ) {
-                    return 'UpdateTime: ' + a.toFixed( 2 ) + ' ms';
-                } );
+                                  function ( /*t*/ ) {
+                                      return that._updateTime;
+                                  },
+                                  function ( a ) {
+                                      return 'UpdateTime: ' + a.toFixed( 2 ) + ' ms';
+                                  } );
 
             this._stats.addLayer( '#73e0ff', maxMS,
-                function ( t ) {
-                    return that._cullTime;
-                },
-                function ( a ) {
-                    return 'CullTime: ' + a.toFixed( 2 ) + ' ms';
-                } );
+                                  function ( /*t*/ ) {
+                                      return that._cullTime;
+                                  },
+                                  function ( a ) {
+                                      return 'CullTime: ' + a.toFixed( 2 ) + ' ms';
+                                  } );
 
-            this._stats.addLayer( '#ff0000', maxMS,
-                function ( t ) {
-                    return that._drawTime;
-                },
-                function ( a ) {
-                    return 'DrawTime: ' + a.toFixed( 2 ) + ' ms';
-                } );
+            this._stats.addLayer( '#ff0000',
+                                  maxMS,
+                                  function ( /*t*/ ) {
+                                      return that._drawTime;
+                                  },
+                                  function ( a ) {
+                                      return 'DrawTime: ' + a.toFixed( 2 ) + ' ms';
+                                  } );
 
             if ( window.performance && window.performance.memory && window.performance.memory.totalJSHeapSize )
-                this._stats.addLayer( '#00ff00', window.performance.memory.totalJSHeapSize * 2,
-                    function ( t ) {
-                        return that._memSize;
-                    },
-                    function ( a ) {
-                        return 'Memory : ' + a.toFixed( 0 ) + ' b';
-                    } );
+                this._stats.addLayer( '#00ff00',
+                                      window.performance.memory.totalJSHeapSize * 2,
+                                      function ( /*t*/ ) {
+                                          return that._memSize;
+                                      },
+                                      function ( a ) {
+                                          return 'Memory : ' + a.toFixed( 0 ) + ' b';
+                                      } );
 
         },
 
@@ -382,7 +384,7 @@ define( [
             this._cullVisitor.pushProjectionMatrix( camera.getProjectionMatrix() );
 
             // update bound
-            var bs = camera.getBound();
+            camera.getBound();
 
             var identity = Matrix.makeIdentity( [] );
             this._cullVisitor.pushModelviewMatrix( identity );
@@ -504,7 +506,7 @@ define( [
             render();
         },
 
-        setupManipulator: function ( manipulator, dontBindDefaultEvent ) {
+        setupManipulator: function ( manipulator /*, dontBindDefaultEvent */ ) {
             if ( manipulator === undefined ) {
                 manipulator = new OrbitManipulator();
             }
@@ -518,11 +520,8 @@ define( [
 
             this.setManipulator( manipulator );
 
-            var that = this;
-            var viewer = this;
-
             var self = this;
-            var resize = function ( ev ) {
+            var resize = function ( /*ev*/ ) {
                 var w = window.innerWidth;
                 var h = window.innerHeight;
 

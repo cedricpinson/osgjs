@@ -1,12 +1,9 @@
-/*global define */
-
 define( [
-    'osg/Notify',
     'osg/Utils',
+    'osg/Notify',
     'osg/Object'
-], function ( Notify, MACROUTILS, Object ) {
 
-    /** -*- compile-command: 'jslint-cli BufferArray.js' -*- */
+], function ( MACROUTILS, Notify, Object ) {
 
     /**
      * BufferArray manage vertex / normal / ... array used by webgl.

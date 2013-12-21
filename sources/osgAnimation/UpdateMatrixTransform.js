@@ -1,32 +1,11 @@
-/*global define */
-
 define( [
-    'osg/Notify',
     'osg/Utils',
+    'osg/Notify',
+    'osg/Matrix',
     'osgAnimation/AnimationUpdateCallback'
-], function ( Notify, MACROUTILS, AnimationUpdateCallback ) {
+], function ( MACROUTILS, Notify, Matrix, AnimationUpdateCallback ) {
 
-    /** -*- compile-command: 'jslint-cli UpdateMatrixTransform.js' -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
-
-    /** 
+    /**
      *  UpdateMatrixTransform
      *  @class UpdateMatrixTransform
      */
@@ -40,7 +19,7 @@ define( [
         getStackedTransforms: function () {
             return this._stackedTransforms;
         },
-        update: function ( node, nv ) {
+        update: function ( node /*, nv */ ) {
 
             // not optimized, we could avoid operation the animation did not change
             // the content of the transform element
@@ -69,6 +48,7 @@ define( [
                 }
             }
             Notify.log( 'can\'t link channel ' + channelName + ', does not contain a symbolic name that can be linked to TransformElements' );
+            return false;
         }
 
     } );

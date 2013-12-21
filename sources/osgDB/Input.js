@@ -1,18 +1,17 @@
-/*global define */
-
 define( [
     'require',
+    'vendors/Q',
+    'osgNameSpace',
     'osgDB/ReaderParser',
     'osg/Utils',
     'osg/Notify',
-    'vendors/Q',
     'osg/Image',
     'osg/BufferArray',
     'osg/DrawArrays',
     'osg/DrawArrayLengths',
     'osg/DrawElements',
     'osg/PrimitiveSet'
-], function ( require, ReaderParser, MACROUTILS, Notify, Q, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
+], function ( require, Q, osgNameSpace, ReaderParser, MACROUTILS, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -54,8 +53,8 @@ define( [
 
         // used to override the type from pathname
         // typically if you want to create proxy object
-        registerObject: function ( fullyqualified_objectname, constructor ) {
-            this._objectRegistry[ fullyqualified_objectname ] = constructor;
+        registerObject: function ( fullyQualifiedObjectname, constructor ) {
+            this._objectRegistry[ fullyQualifiedObjectname ] = constructor;
         },
 
         getJSON: function () {
@@ -84,8 +83,7 @@ define( [
                 return new( this._objectRegistry[ path ] )();
             }
 
-            // #FIXME to be fixed !
-            var scope = window;
+            var scope = osgNameSpace;
             var splittedPath = path.split( '.' );
             for ( var i = 0, l = splittedPath.length; i < l; i++ ) {
                 var obj = scope[ splittedPath[ i ] ];
@@ -94,8 +92,9 @@ define( [
                 }
                 scope = obj;
             }
+            var ClassName = scope;
             // create the new obj
-            return new( scope )();
+            return new( ClassName )();
         },
 
         fetchImage: function ( image, url, options, defer ) {
@@ -133,7 +132,7 @@ define( [
         },
 
         readImageURL: function ( url, options ) {
-            var self = this;
+
             // if image is on inline image skip url computation
             if ( url.substr( 0, 10 ) !== 'data:image' ) {
                 url = this.computeURL( url );
@@ -148,7 +147,7 @@ define( [
                 return this.fetchImage( image, url, options );
             }
 
-            defer = Q.defer();
+            var defer = Q.defer();
             this.fetchImage( image, url, options, defer );
 
             return defer.promise;
@@ -179,10 +178,9 @@ define( [
 
             var req = new XMLHttpRequest();
             req.open( 'GET', url, true );
-            req.onreadystatechange = function ( aEvt ) {
-                if ( req.readyState == 4 ) {
-                    var child;
-                    if ( req.status == 200 ) {
+            req.onreadystatechange = function ( /*aEvt*/ ) {
+                if ( req.readyState === 4 ) {
+                    if ( req.status === 200 ) {
                         var ReaderParser = require( 'osgDB/ReaderParser' );
                         Q.when( ReaderParser.parseSceneGraph( JSON.parse( req.responseText ),
                                 opt ),
@@ -222,7 +220,7 @@ define( [
             }, false );
 
             var self = this;
-            xhr.addEventListener( 'load', function ( oEvent ) {
+            xhr.addEventListener( 'load', function ( /*oEvent */ ) {
                 var arrayBuffer = xhr.response; // Note: not oReq.responseText
                 if ( arrayBuffer ) {
                     // var byteArray = new Uint8Array(arrayBuffer);
@@ -260,7 +258,7 @@ define( [
             };
 
             if ( !check( jsonObj ) ) {
-                return;
+                return undefined;
             }
 
             var obj, defer;
@@ -282,7 +280,7 @@ define( [
                     vb = jsonObj.Array.Uint16Array;
                     type = 'Uint16Array';
                 } else {
-                    Notify.warn( 'Typed Array ' + window.Object.keys( o.Array )[ 0 ] );
+                    Notify.warn( 'Typed Array ' + window.Object.keys( jsonObj.Array )[ 0 ] );
                     type = 'Float32Array';
                 }
 
@@ -295,11 +293,11 @@ define( [
 
                             var typedArray;
                             // manage endianness
-                            var big_endian;
+                            var bigEndian;
                             ( function () {
                                 var a = new Uint8Array( [ 0x12, 0x34 ] );
                                 var b = new Uint16Array( a.buffer );
-                                big_endian = ( ( b[ 0 ] ).toString( 16 ) === '1234' );
+                                bigEndian = ( ( b[ 0 ] ).toString( 16 ) === '1234' );
                             } )();
 
                             var offset = 0;
@@ -312,35 +310,34 @@ define( [
                             var nbCoords = buf.getItemSize();
                             var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
 
-                            if ( big_endian ) {
+                            if ( bigEndian ) {
                                 Notify.log( 'big endian detected' );
-                                var typed_array = MACROUTILS[ type ];
-                                var tmpArray = new typed_array( nbItems * nbCoords );
+                                var TypedArray = MACROUTILS[ type ];
+                                var tmpArray = new TypedArray( nbItems * nbCoords );
                                 var data = new DataView( array, offset, totalSizeInBytes );
                                 var i = 0,
                                     l = tmpArray.length;
                                 if ( type === 'Uint16Array' ) {
                                     for ( ; i < l; i++ ) {
-                                        tempArray[ i ] = data.getUint16( i * bytesPerElement, true );
+                                        tmpArray[ i ] = data.getUint16( i * bytesPerElement, true );
                                     }
                                 } else if ( type === 'Float32Array' ) {
                                     for ( ; i < l; i++ ) {
-                                        tempArray[ i ] = data.getFloat32( i * bytesPerElement, true );
+                                        tmpArray[ i ] = data.getFloat32( i * bytesPerElement, true );
                                     }
                                 }
-                                typedArray = tempArray;
+                                typedArray = tmpArray;
                                 data = null;
                             } else {
                                 typedArray = new MACROUTILS[ type ]( array, offset, nbCoords * nbItems );
                             }
-                            a = b = null;
 
                             buf.setElements( typedArray );
                             defer.resolve( buf );
                         } );
                     } else if ( vb.Elements !== undefined ) {
-                        var a = new MACROUTILS[ type ]( vb.Elements );
-                        buf.setElements( a );
+                        var elements = new MACROUTILS[ type ]( vb.Elements );
+                        buf.setElements( elements );
                     }
                 }
                 obj = buf;
@@ -378,6 +375,8 @@ define( [
 
             var obj;
             var defer;
+            var mode;
+            var first, count;
             var drawElementPrimitive = jsonObj.DrawElementUShort || jsonObj.DrawElementUByte || jsonObj.DrawElementUInt || jsonObj.DrawElementsUShort || jsonObj.DrawElementsUByte || jsonObj.DrawElementsUInt || undefined;
             if ( drawElementPrimitive ) {
 

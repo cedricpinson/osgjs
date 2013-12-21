@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Notify',
     'osg/Utils',
@@ -11,7 +9,13 @@ define( [
     'vendors/Q'
 ], function ( Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser, Q ) {
 
-    /** -*- compile-command: 'jslint-cli Texture.js' -*- */
+    // helper
+    var isPowerOf2 = function ( x ) {
+        /*jshint bitwise: false */
+        return ( ( x !== 0 ) && ( ( x & ( ~x + 1 ) ) === x ) );
+        /*jshint bitwise: true */
+    };
+
 
     /**
      * Texture encapsulate webgl texture object
@@ -64,7 +68,7 @@ define( [
         attributeType: 'Texture',
         cloneType: function () {
             var t = new Texture();
-            t.default_type = true;
+            t.defaultType = true;
             return t;
         },
         getType: function () {
@@ -162,10 +166,10 @@ define( [
         getWrapS: function () {
             return this._wrapS;
         },
-        getMinFilter: function ( value ) {
+        getMinFilter: function () {
             return this._minFilter;
         },
-        getMagFilter: function ( value ) {
+        getMagFilter: function () {
             return this._magFilter;
         },
 
@@ -188,10 +192,10 @@ define( [
 
             var image = img;
             if ( img instanceof window.Image ||
-                img instanceof HTMLCanvasElement ||
-                img instanceof Uint8Array ) {
-                image = new Image( img );
-            }
+                 img instanceof HTMLCanvasElement ||
+                 img instanceof Uint8Array ) {
+                     image = new Image( img );
+                 }
 
             this._image = image;
             this.setImageFormat( imageFormat );
@@ -229,9 +233,6 @@ define( [
         },
 
         applyFilterParameter: function ( gl, target ) {
-            var isPowerOf2 = function ( x ) {
-                return ( ( x !== 0 ) && ( ( x & ( ~x + 1 ) ) === x ) );
-            };
 
             var powerOfTwo = isPowerOf2( this._textureWidth ) && isPowerOf2( this._textureHeight );
             if ( !powerOfTwo ) {
@@ -239,9 +240,9 @@ define( [
                 this.setWrapS( Texture.CLAMP_TO_EDGE );
 
                 if ( this._minFilter === Texture.LINEAR_MIPMAP_LINEAR ||
-                    this._minFilter === Texture.LINEAR_MIPMAP_NEAREST ) {
-                    this.setMinFilter( Texture.LINEAR );
-                }
+                     this._minFilter === Texture.LINEAR_MIPMAP_NEAREST ) {
+                         this.setMinFilter( Texture.LINEAR );
+                     }
             }
 
             gl.texParameteri( target, gl.TEXTURE_MAG_FILTER, this._magFilter );
@@ -252,14 +253,13 @@ define( [
 
         generateMipmap: function ( gl, target ) {
             if ( this._minFilter === gl.NEAREST_MIPMAP_NEAREST ||
-                this._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
-                this._minFilter === gl.NEAREST_MIPMAP_LINEAR ||
-                this._minFilter === gl.LINEAR_MIPMAP_LINEAR ) {
-                gl.generateMipmap( target );
-            }
+                 this._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
+                 this._minFilter === gl.NEAREST_MIPMAP_LINEAR ||
+                 this._minFilter === gl.LINEAR_MIPMAP_LINEAR ) {
+                     gl.generateMipmap( target );
+                 }
         },
         applyTexImage2D: function ( gl ) {
-            var gl = arguments[ 0 ];
             var args = Array.prototype.slice.call( arguments, 1 );
             gl.texImage2D.apply( gl, args );
 
@@ -276,7 +276,7 @@ define( [
             var gl = state.getGraphicContext();
             if ( this._textureObject !== undefined && !this.isDirty() ) {
                 gl.bindTexture( this._textureTarget, this._textureObject );
-            } else if ( this.default_type ) {
+            } else if ( this.defaultType ) {
                 gl.bindTexture( this._textureTarget, null );
             } else {
                 var image = this._image;
@@ -298,23 +298,23 @@ define( [
                         this.setTextureSize( imgWidth, imgHeight );
                         if ( image.isTypedArray() ) {
                             this.applyTexImage2D( gl,
-                                this._textureTarget,
-                                0,
-                                this._internalFormat,
-                                this._textureWidth,
-                                this._textureHeight,
-                                0,
-                                this._internalFormat,
-                                this._type,
-                                this._image.getImage() );
+                                                  this._textureTarget,
+                                                  0,
+                                                  this._internalFormat,
+                                                  this._textureWidth,
+                                                  this._textureHeight,
+                                                  0,
+                                                  this._internalFormat,
+                                                  this._type,
+                                                  this._image.getImage() );
                         } else {
                             this.applyTexImage2D( gl,
-                                this._textureTarget,
-                                0,
-                                this._internalFormat,
-                                this._imageFormat,
-                                this._type,
-                                image.getImage() );
+                                                  this._textureTarget,
+                                                  0,
+                                                  this._internalFormat,
+                                                  this._imageFormat,
+                                                  this._type,
+                                                  image.getImage() );
                         }
 
                         this.applyFilterParameter( gl, this._textureTarget );
@@ -344,23 +344,23 @@ define( [
 
 
         /**
-      set the injection code that will be used in the shader generation
-      for FragmentMain part we would write something like that
-      @example
-      var fragmentGenerator = function(unit) {
-          var str = 'texColor' + unit + ' = texture2D( Texture' + unit + ', FragTexCoord' + unit + '.xy );\n';
-          str += 'fragColor = fragColor * texColor' + unit + ';\n';
-      };
-      setShaderGeneratorFunction(fragmentGenerator, ShaderGenerator.Type.FragmentMain);
+         set the injection code that will be used in the shader generation
+         for FragmentMain part we would write something like that
+         @example
+         var fragmentGenerator = function(unit) {
+         var str = 'texColor' + unit + ' = texture2D( Texture' + unit + ', FragTexCoord' + unit + '.xy );\n';
+         str += 'fragColor = fragColor * texColor' + unit + ';\n';
+         };
+         setShaderGeneratorFunction(fragmentGenerator, ShaderGenerator.Type.FragmentMain);
 
-    */
+         */
         setShaderGeneratorFunction: function (
             /**Function*/
             injectionFunction,
             /**ShaderGenerator.Type*/
             mode ) {
-            this[ mode ] = injectionFunction;
-        },
+                this[ mode ] = injectionFunction;
+            },
 
         generateShader: function ( unit, type ) {
             if ( this[ type ] ) {

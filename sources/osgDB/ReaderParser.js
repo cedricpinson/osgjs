@@ -98,10 +98,12 @@ define( [
                 Notify.log( 'can\'t parse scenegraph ' + node );
             }
         } else {
-            return ReaderParser.parseSceneGraph_deprecated( node );
+            return ReaderParser.parseSceneGraphDeprecated( node );
         }
+        return undefined;
     };
-    ReaderParser.parseSceneGraph_deprecated = function ( node ) {
+
+    ReaderParser.parseSceneGraphDeprecated = function ( node ) {
         var getFieldBackwardCompatible = function ( field, json ) {
             var value = json[ field ];
             if ( value === undefined ) {
@@ -134,19 +136,19 @@ define( [
         };
 
         var setTexture = function ( osgjs, json ) {
-            var magFilter = json.MagFilter || json.mag_filter || undefined;
+            var magFilter = json.MagFilter || json['mag_filter'] || undefined;
             if ( magFilter ) {
                 osgjs.setMagFilter( magFilter );
             }
-            var minFilter = json.MinFilter || json.min_filter || undefined;
+            var minFilter = json.MinFilter || json['min_filter'] || undefined;
             if ( minFilter ) {
                 osgjs.setMinFilter( minFilter );
             }
-            var wrapT = json.WrapT || json.wrap_t || undefined;
+            var wrapT = json.WrapT || json['wrap_t'] || undefined;
             if ( wrapT ) {
                 osgjs.setWrapT( wrapT );
             }
-            var wrapS = json.WrapS || json.wrap_s || undefined;
+            var wrapS = json.WrapS || json['wrap_s'] || undefined;
             if ( wrapS ) {
                 osgjs.setWrapS( wrapS );
             }
@@ -206,20 +208,19 @@ define( [
             node.primitives = primitives; // we should not do that
             node.attributes = attributes; // we should not do that
 
-            var i;
             for ( var p = 0, lp = primitives.length; p < lp; p++ ) {
                 var mode = primitives[ p ].mode;
                 if ( primitives[ p ].indices ) {
                     var array = primitives[ p ].indices;
                     array = new BufferArray( BufferArray[ array.type ], array.elements, array.itemSize );
                     if ( !mode ) {
-                        mode = gl.TRIANGLES;
+                        mode = 'TRIANGLES';
                     } else {
                         mode = PrimitiveSet[ mode ];
                     }
                     primitives[ p ] = new DrawElements( mode, array );
                 } else {
-                    mode = gl[ mode ];
+                    mode = PrimitiveSet[ mode ];
                     var first = primitives[ p ].first;
                     var count = primitives[ p ].count;
                     primitives[ p ] = new DrawArrays( mode, first, count );
@@ -229,7 +230,7 @@ define( [
             for ( var key in attributes ) {
                 if ( attributes.hasOwnProperty( key ) ) {
                     var attributeArray = attributes[ key ];
-                    attributes[ key ] = new BufferArray( gl[ attributeArray.type ], attributeArray.elements, attributeArray.itemSize );
+                    attributes[ key ] = new BufferArray( attributeArray.type, attributeArray.elements, attributeArray.itemSize );
                 }
             }
         }
@@ -261,7 +262,7 @@ define( [
         }
 
         // default type
-        if ( node.objectType === undefined ) {
+        if ( node.typeID === undefined ) {
             newnode = new Node();
             setName( newnode, node );
             MACROUTILS.extend( newnode, node );
@@ -274,7 +275,7 @@ define( [
             node.children = [];
 
             for ( var child = 0, childLength = children.length; child < childLength; child++ ) {
-                node.addChild( ReaderParser.parseSceneGraph_deprecated( children[ child ] ) );
+                node.addChild( ReaderParser.parseSceneGraphDeprecated( children[ child ] ) );
             }
         }
 

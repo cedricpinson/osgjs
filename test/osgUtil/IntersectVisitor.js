@@ -1,4 +1,5 @@
 define( [
+    'tests/mockup/mockup',
     'osgUtil/IntersectVisitor',
     'osg/Camera',
     'osg/Viewport',
@@ -36,7 +37,7 @@ define( [
             view.getCamera().setViewport( new Viewport() );
             view.getCamera().setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ), [] );
             view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
-            var promise = ReaderParser.parseSceneGraph( getScene() );
+            var promise = ReaderParser.parseSceneGraph( mockup.getScene() );
             Q.when( promise ).then( function ( quad ) {
                 view.setSceneData( quad );
 

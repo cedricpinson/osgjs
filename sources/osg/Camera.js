@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/Transform',
@@ -8,7 +6,7 @@ define( [
     'osg/TransformEnums'
 ], function ( MACROUTILS, Transform, CullSettings, Matrix, TransformEnums ) {
 
-    /** 
+    /**
      * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
      * @class Camera
      * @inherits Transform CullSettings
@@ -20,7 +18,11 @@ define( [
         this.viewport = undefined;
         this.setClearColor( [ 0, 0, 0, 1.0 ] );
         this.setClearDepth( 1.0 );
+
+        /*jshint bitwise: false */
         this.setClearMask( Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT );
+        /*jshint bitwise: true */
+
         this.setViewMatrix( Matrix.makeIdentity( [] ) );
         this.setProjectionMatrix( Matrix.makeIdentity( [] ) );
         this.renderOrder = Camera.NESTED_RENDER;
@@ -127,7 +129,7 @@ define( [
                 };
             },
 
-            computeLocalToWorldMatrix: function ( matrix, nodeVisitor ) {
+            computeLocalToWorldMatrix: function ( matrix /*,nodeVisitor*/ ) {
                 if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                     Matrix.preMult( matrix, this.modelviewMatrix );
                 } else { // absolute
@@ -136,7 +138,7 @@ define( [
                 return true;
             },
 
-            computeWorldToLocalMatrix: function ( matrix, nodeVisitor ) {
+            computeWorldToLocalMatrix: function ( matrix /*, nodeVisitor */ ) {
                 var inverse = [];
                 Matrix.inverse( this.modelviewMatrix, inverse );
                 if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
@@ -148,8 +150,8 @@ define( [
             }
 
         } ) ), 'osg', 'Camera' );
-    Camera.prototype.objectType = MACROUTILS.objectType.generate( 'Camera' );
 
+    MACROUTILS.setTypeID( Camera );
 
     return Camera;
 } );

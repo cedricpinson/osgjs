@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/Matrix',
@@ -7,9 +5,7 @@ define( [
     'osg/TransformEnums'
 ], function ( MACROUTILS, Matrix, Transform, TransformEnums ) {
 
-    /** -*- compile-command: 'jslint-cli Node.js' -*- */
-
-    /** 
+    /**
      *  MatrixTransform is a Transform Node that can be customized with user matrix
      *  @class MatrixTransform
      */
@@ -26,7 +22,7 @@ define( [
         setMatrix: function ( m ) {
             this.matrix = m;
         },
-        computeLocalToWorldMatrix: function ( matrix, nodeVisitor ) {
+        computeLocalToWorldMatrix: function ( matrix /*, nodeVisitor */) {
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                 Matrix.preMult( matrix, this.matrix );
             } else {
@@ -34,18 +30,19 @@ define( [
             }
             return true;
         },
-        computeWorldToLocalMatrix: function ( matrix, nodeVisitor ) {
-            var minverse = [];
+        computeWorldToLocalMatrix: function ( matrix /*, nodeVisitor */ ) {
+            var minverse = Matrix.makeIdentity([]);
             Matrix.inverse( this.matrix, minverse );
+
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                 Matrix.postMult( minverse, matrix );
             } else { // absolute
-                matrix = inverse;
+                matrix = minverse;
             }
             return true;
         }
     } ), 'osg', 'MatrixTransform' );
-    MatrixTransform.prototype.objectType = MACROUTILS.objectType.generate( 'MatrixTransform' );
+    MACROUTILS.setTypeID( MatrixTransform );
 
     return MatrixTransform;
 } );

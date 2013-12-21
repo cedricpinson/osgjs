@@ -1,5 +1,3 @@
-/*global define */
-
 define( [], function () {
 
     var CullStack = function () {
@@ -43,8 +41,12 @@ define( [], function () {
             this._modelviewMatrixStack.push( matrix );
 
             var lookVector = this.getLookVectorLocal();
+
+            /*jshint bitwise: false */
             this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
             this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
+            /*jshint bitwise: true */
+
         },
         popModelviewMatrix: function () {
 
@@ -55,8 +57,12 @@ define( [], function () {
             } else {
                 lookVector = [ 0, 0, -1 ];
             }
+
+            /*jshint bitwise: false */
             this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
             this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
+            /*jshint bitwise: true */
+
 
         },
         pushProjectionMatrix: function ( matrix ) {

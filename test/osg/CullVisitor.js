@@ -1,4 +1,5 @@
 define( [
+    'test/mockup',
     'osg/CullVisitor',
     'osg/Node',
     'osg/Camera',
@@ -14,7 +15,7 @@ define( [
     'osg/BoundingBox',
     'osg/Vec3',
     'osg/RenderBin'
-], function ( CullVisitor, Node, Camera, RenderStage, StateGraph, Matrix, MatrixTransform, State, StateSet, Viewport, Shape, CullSettings, BoundingBox, Vec3, RenderBin ) {
+], function ( mockup, CullVisitor, Node, Camera, RenderStage, StateGraph, Matrix, MatrixTransform, State, StateSet, Viewport, Shape, CullSettings, BoundingBox, Vec3, RenderBin ) {
 
     return function () {
 
@@ -103,7 +104,12 @@ define( [
             // check render stage and render bin
             ( function () {
                 var state = new State();
-                state.setGraphicContext( createFakeRenderer() );
+                var fakeRenderer = createFakeRenderer();
+                fakeRenderer.validateProgram = function() { return true; };
+                fakeRenderer.getProgramParameter = function() { return true; };
+                fakeRenderer.isContextLost = function() { return false; };
+
+                state.setGraphicContext( fakeRenderer );
                 var camera0 = new Camera();
                 camera0.setViewport( new Viewport() );
                 camera0.setRenderOrder( Camera.NESTED_RENDER );
@@ -177,9 +183,9 @@ define( [
 
                 camera0.accept( cull );
                 var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0 ];
-                ok( check_near( stack[ 1 ][ 0 ], 5 ), 'near should be 5.0 and is ' + stack[ 1 ][ 0 ] );
-                ok( check_near( stack[ 1 ][ 1 ], 15 ), 'near should be 15.0 and is ' + stack[ 1 ][ 1 ] );
-                ok( check_near( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+                ok( mockup.check_near( stack[ 1 ][ 0 ], 5 ), 'near should be 5.0 and is ' + stack[ 1 ][ 0 ] );
+                ok( mockup.check_near( stack[ 1 ][ 1 ], 15 ), 'near should be 15.0 and is ' + stack[ 1 ][ 1 ] );
+                ok( mockup.check_near( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
             } )();
 
             // check the computation of nearfar with camera in position that it reverses near far
@@ -227,9 +233,9 @@ define( [
                 cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
 
                 camera0.accept( cull );
-                ok( check_near( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
-                ok( check_near( stack[ 1 ][ 1 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 1 ] );
-                ok( check_near( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+                ok( mockup.check_near( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
+                ok( mockup.check_near( stack[ 1 ][ 1 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 1 ] );
+                ok( mockup.check_near( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
 
             } )();
 
@@ -311,9 +317,9 @@ define( [
                 cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
 
                 camera0.accept( cull );
-                ok( check_near( stack[ 1 ][ 0 ], d_near, 0.8 ), 'near should be ' + d_near + ' and is ' + stack[ 1 ][ 0 ] );
-                ok( check_near( stack[ 1 ][ 1 ], d_far, 0.8 ), 'near should be ' + d_far + ' and is ' + stack[ 1 ][ 1 ] );
-                ok( check_near( resultProjection, supposedProjection, 0.8 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+                ok( mockup.check_near( stack[ 1 ][ 0 ], d_near, 0.8 ), 'near should be ' + d_near + ' and is ' + stack[ 1 ][ 0 ] );
+                ok( mockup.check_near( stack[ 1 ][ 1 ], d_far, 0.8 ), 'near should be ' + d_far + ' and is ' + stack[ 1 ][ 1 ] );
+                ok( mockup.check_near( resultProjection, supposedProjection, 0.8 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
 
             } )();
 
@@ -443,7 +449,12 @@ define( [
                 rs.sort();
 
                 var state = new State();
-                state.setGraphicContext( createFakeRenderer() );
+                var fakeRenderer = createFakeRenderer();
+                fakeRenderer.validateProgram = function() { return true; };
+                fakeRenderer.getProgramParameter = function() { return true; };
+                fakeRenderer.isContextLost = function() { return false; };
+                state.setGraphicContext( fakeRenderer );
+
                 rs.draw( state );
 
             } )();

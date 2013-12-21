@@ -3,7 +3,9 @@
 define( [], function () {
 
     var NodeVisitor = function ( traversalMode ) {
+        /*jshint bitwise: false */
         this.traversalMask = ~0x0;
+        /*jshint bitwise: true */
         this.nodeMaskOverride = 0;
         this.traversalMode = traversalMode;
         if ( traversalMode === undefined ) {
@@ -62,7 +64,9 @@ define( [], function () {
         },
         validNodeMask: function ( node ) {
             var nm = node.getNodeMask();
+            /*jshint bitwise: false */
             return ( ( this.traversalMask & ( this.nodeMaskOverride | nm ) ) !== 0 );
+            /*jshint bitwise: true */
         },
         apply: function ( node ) {
             this.traverse( node );

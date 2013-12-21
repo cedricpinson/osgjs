@@ -28,9 +28,9 @@ define( [
 
     Stats.Stats = function ( canvas, textCanvas ) {
         this.layers = [];
-        this.last_update = undefined;
+        this.lastUpdate = undefined;
         this.canvas = canvas;
-        this.text_canvas = textCanvas;
+        this.textCanvas = textCanvas;
         this.numberUpdate = 0;
     };
 
@@ -52,8 +52,8 @@ define( [
         update: function () {
 
             var delta, i, l, layer, value, c, ctx, height, myImageData, t = MACROUTILS.performance.now();
-            if ( this.last_update === undefined ) {
-                this.last_update = t;
+            if ( this.lastUpdate === undefined ) {
+                this.lastUpdate = t;
             }
             this.numberUpdate++;
             for ( i = 0, l = this.layers.length; i < l; i++ ) {
@@ -63,7 +63,7 @@ define( [
             }
             //i = 2.0 * 60.0 / 1000.0;
             i = 0.12; //4.0 * 60.0 / 1000.0;
-            delta = ( t - this.last_update ) * i;
+            delta = ( t - this.lastUpdate ) * i;
             if ( delta >= 1.0 ) {
 
                 t -= ( delta - Math.floor( delta ) ) / i;
@@ -92,7 +92,7 @@ define( [
             }
 
             if ( this.numberUpdate % 60 === 0 ) {
-                c = this.text_canvas;
+                c = this.textCanvas;
                 ctx = c.getContext( '2d' );
                 ctx.font = '14px Sans';
                 height = 17;
@@ -108,7 +108,7 @@ define( [
                 }
                 this.numberUpdate = 0;
             }
-            this.last_update = t;
+            this.lastUpdate = t;
         }
     };
 

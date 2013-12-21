@@ -11,12 +11,10 @@ define( [
     };
 
     GamePad.prototype = {
-        init: function ( args ) {
+        init: function ( /*args*/ ) {
 
             var gamepadSupportAvailable = !! navigator.webkitGetGamepads || !! navigator.webkitGamepads;
-
             // || (navigator.userAgent.indexOf('Firefox/') != -1); // impossible to detect Gamepad API support in FF
-
             if ( !gamepadSupportAvailable ) return;
 
         },
@@ -41,8 +39,6 @@ define( [
         },
 
         webkitGamepadPoll: function () {
-            var self = this;
-
             var rawGamepads = ( navigator.webkitGetGamepads && navigator.webkitGetGamepads() ) || navigator.webkitGamepads;
             if ( !rawGamepads ) {
                 return;
@@ -64,12 +60,12 @@ define( [
 
         onGamepadConnect: function ( evt ) {
             this._gamepad = evt.gamepad;
-            Notify.log( "Detected new gamepad!", this._gamepad );
+            Notify.log( 'Detected new gamepad!', this._gamepad );
         },
 
-        onGamepadDisconnect: function ( evt ) {
+        onGamepadDisconnect: function ( /*evt*/ ) {
             this._gamepad = false;
-            Notify.log( "Gamepad disconnected", this._gamepad );
+            Notify.log( 'Gamepad disconnected', this._gamepad );
         },
         getGamePad: function () {
             return this._gamepad;

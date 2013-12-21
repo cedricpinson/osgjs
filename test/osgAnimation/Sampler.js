@@ -1,8 +1,9 @@
 define( [
+    'test/mockup',
     'osgAnimation/Sampler',
     'osgAnimation/Keyframe',
-    'osgAnimation/Interpolator',
-], function ( Sampler, Keyframe, Interpolator ) {
+    'osgAnimation/Interpolator'
+], function ( mockup, Sampler, Keyframe, Interpolator ) {
 
     return function () {
 
@@ -23,7 +24,7 @@ define( [
                 'key': 0
             };
             sampler.getValueAt( 1.0, result );
-            ok( check_near( result.value, [ 0.0, 0.0, 0.0 ] ), 'Check value when time == 1.0' );
+            ok( mockup.check_near( result.value, [ 0.0, 0.0, 0.0 ] ), 'Check value when time == 1.0' );
 
             sampler.setKeyframes( [] );
             ok( sampler.getStartTime() === undefined, 'Check Start Time without keyframes' );

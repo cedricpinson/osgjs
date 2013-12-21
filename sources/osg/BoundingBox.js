@@ -8,7 +8,7 @@ define( [
         this.init();
     };
     BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
-        _cache_radius2_tmp: [ 0, 0, 0 ],
+        _cacheRadius2: [ 0.0, 0.0, 0.0 ],
 
         init: function () {
             this._min = [ Infinity, Infinity, Infinity ];
@@ -59,14 +59,15 @@ define( [
         radius2: function () {
             var min = this._min;
             var max = this._max;
-            var cache = this._cache_radius2_tmp;
+            var cache = this._cacheRadius2;
             cache[ 0 ] = max[ 0 ] - min[ 0 ];
             cache[ 1 ] = max[ 1 ] - min[ 1 ];
             cache[ 2 ] = max[ 2 ] - min[ 2 ];
             return 0.25 * ( cache[ 0 ] * cache[ 0 ] + cache[ 1 ] * cache[ 1 ] + cache[ 2 ] * cache[ 2 ] );
         },
         corner: function ( pos ) {
-            ret = [ 0.0, 0.0, 0.0 ];
+            /*jshint bitwise: false */
+            var ret = [ 0.0, 0.0, 0.0 ];
             if ( pos & 1 ) {
                 ret[ 0 ] = this._max[ 0 ];
             } else {
@@ -83,6 +84,7 @@ define( [
                 ret[ 2 ] = this._min[ 2 ];
             }
             return ret;
+            /*jshint bitwise: true */
         }
     }, 'osg', 'BoundingBox' );
 

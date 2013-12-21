@@ -29,7 +29,7 @@ define( [
      */
 
 
-    /** 
+    /**
      *  LinkVisitor search for animationUpdateCallback and link animation data
      *  @class LinkVisitor
      */
@@ -67,7 +67,7 @@ define( [
                 result += animCallback.linkAnimation( anim );
             }
             this._nbLinkedTarget += result;
-            Notify.log( "linked " + result + " for \"" + animCallback.getName() + '"' );
+            Notify.log( 'linked ' + result + ' for "' + animCallback.getName() + '"' );
         }
 
     } );

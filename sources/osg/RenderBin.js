@@ -98,7 +98,7 @@ define( [
             }
             this.sortImplementation();
 
-            _sorted = true;
+            this._sorted = true;
         },
 
         setParent: function ( parent ) {
@@ -187,24 +187,22 @@ define( [
         },
 
         drawLeafs: function ( state, previousRenderLeaf ) {
-
+            var gl = state.getGraphicContext();
             var stateList = this.stateGraphList;
             var leafs = this._leafs;
             var normalUniform;
             var modelViewUniform;
             var projectionUniform;
             var program;
-            var stateset;
             var previousLeaf = previousRenderLeaf;
             var normal = [];
-            var normalTranspose = [];
 
             if ( previousLeaf ) {
                 StateGraph.prototype.moveToRootStateGraph( state, previousRenderLeaf.parent );
             }
 
             var leaf, push;
-            var prev_rg, prev_rg_parent, rg;
+            var prevRenderGraph, prevRenderGraphParent, rg;
 
             // draw fine grained ordering.
             for ( var d = 0, dl = leafs.length; d < dl; d++ ) {
@@ -213,16 +211,16 @@ define( [
                 if ( previousLeaf !== undefined ) {
 
                     // apply state if required.
-                    prev_rg = previousLeaf.parent;
-                    prev_rg_parent = prev_rg.parent;
+                    prevRenderGraph = previousLeaf.parent;
+                    prevRenderGraphParent = prevRenderGraph.parent;
                     rg = leaf.parent;
-                    if ( prev_rg_parent !== rg.parent ) {
-                        rg.moveStateGraph( state, prev_rg_parent, rg.parent );
+                    if ( prevRenderGraphParent !== rg.parent ) {
+                        rg.moveStateGraph( state, prevRenderGraphParent, rg.parent );
 
                         // send state changes and matrix changes to OpenGL.
                         state.pushStateSet( rg.stateset );
                         push = true;
-                    } else if ( rg !== prev_rg ) {
+                    } else if ( rg !== prevRenderGraph ) {
                         // send state changes and matrix changes to OpenGL.
                         state.pushStateSet( rg.stateset );
                         push = true;
@@ -247,11 +245,11 @@ define( [
 
                 if ( modelViewUniform !== undefined ) {
                     state.modelViewMatrix.set( leaf.modelview );
-                    state.modelViewMatrix.apply( modelViewUniform );
+                    state.modelViewMatrix.apply( gl, modelViewUniform );
                 }
                 if ( projectionUniform !== undefined ) {
                     state.projectionMatrix.set( leaf.projection );
-                    state.projectionMatrix.apply( projectionUniform );
+                    state.projectionMatrix.apply( gl, projectionUniform );
                 }
                 if ( normalUniform !== undefined ) {
                     Matrix.copy( leaf.modelview, normal );
@@ -263,7 +261,7 @@ define( [
                     Matrix.inverse( normal, normal );
                     Matrix.transpose( normal, normal );
                     state.normalMatrix.set( normal );
-                    state.normalMatrix.apply( normalUniform );
+                    state.normalMatrix.apply( gl, normalUniform );
                 }
 
                 leaf.geometry.drawImplementation( state );
@@ -287,16 +285,16 @@ define( [
                     if ( previousLeaf !== undefined ) {
 
                         // apply state if required.
-                        prev_rg = previousLeaf.parent;
-                        prev_rg_parent = prev_rg.parent;
+                        prevRenderGraph = previousLeaf.parent;
+                        prevRenderGraphParent = prevRenderGraph.parent;
                         rg = leaf.parent;
-                        if ( prev_rg_parent !== rg.parent ) {
-                            rg.moveStateGraph( state, prev_rg_parent, rg.parent );
+                        if ( prevRenderGraphParent !== rg.parent ) {
+                            rg.moveStateGraph( state, prevRenderGraphParent, rg.parent );
 
                             // send state changes and matrix changes to OpenGL.
                             state.pushStateSet( rg.stateset );
                             push = true;
-                        } else if ( rg !== prev_rg ) {
+                        } else if ( rg !== prevRenderGraph ) {
                             // send state changes and matrix changes to OpenGL.
                             state.pushStateSet( rg.stateset );
                             push = true;
@@ -321,11 +319,11 @@ define( [
 
                     if ( modelViewUniform !== undefined ) {
                         state.modelViewMatrix.set( leaf.modelview );
-                        state.modelViewMatrix.apply( modelViewUniform );
+                        state.modelViewMatrix.apply( gl, modelViewUniform );
                     }
                     if ( projectionUniform !== undefined ) {
                         state.projectionMatrix.set( leaf.projection );
-                        state.projectionMatrix.apply( projectionUniform );
+                        state.projectionMatrix.apply( gl, projectionUniform );
                     }
                     if ( normalUniform !== undefined ) {
                         Matrix.copy( leaf.modelview, normal );
@@ -337,7 +335,7 @@ define( [
                         Matrix.inverse( normal, normal );
                         Matrix.transpose( normal, normal );
                         state.normalMatrix.set( normal );
-                        state.normalMatrix.apply( normalUniform );
+                        state.normalMatrix.apply( gl, normalUniform );
                     }
 
                     leaf.geometry.drawImplementation( state );

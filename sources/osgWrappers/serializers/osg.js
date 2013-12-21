@@ -1,38 +1,16 @@
-/*global define */
-
 define( [
     'vendors/Q'
 ], function ( Q ) {
-
-    /** -*- compile-command: "jslint-cli osg.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
     var osgWrapper = {};
 
     osgWrapper.Object = function ( input, obj ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
+        var check = function ( /*o*/ ) {
             return true;
         };
         if ( !check( jsonObj ) ) {
-            return;
+            return undefined;
         }
 
         if ( jsonObj.Name ) {
@@ -52,11 +30,11 @@ define( [
     osgWrapper.Node = function ( input, node ) {
         var jsonObj = input.getJSON();
 
-        var check = function ( o ) {
+        var check = function ( /*o*/ ) {
             return true;
         };
         if ( !check( jsonObj ) ) {
-            return;
+            return undefined;
         }
 
         osgWrapper.Object( input, node );
@@ -120,7 +98,7 @@ define( [
 
     osgWrapper.StateSet = function ( input, stateSet ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
+        var check = function ( /*o*/ ) {
             return true;
         };
 
@@ -284,7 +262,7 @@ define( [
             return false;
         };
         if ( !check( jsonObj ) ) {
-            return;
+            return undefined;
         }
 
         osgWrapper.Object( input, light );
@@ -307,11 +285,11 @@ define( [
 
     osgWrapper.Texture = function ( input, texture ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
+        var check = function ( /*o*/ ) {
             return true;
         };
         if ( !check( jsonObj ) ) {
-            return;
+            return undefined;
         }
 
         osgWrapper.Object( input, texture );
@@ -333,7 +311,7 @@ define( [
         // no file return dummy texture
         var file = jsonObj.File;
         if ( file === undefined ) {
-            file = "no-image-provided";
+            file = 'no-image-provided';
         }
 
         var defer = Q.defer();
@@ -374,7 +352,7 @@ define( [
             return false;
         };
         if ( !check( jsonObj ) ) {
-            return;
+            return undefined;
         }
 
         var promise = osgWrapper.Node( input, node );
@@ -394,14 +372,14 @@ define( [
             return false;
         };
         if ( !check( jsonObj ) ) {
-            return;
+            return undefined;
         }
 
         var defer = Q.defer();
         var promise = osgWrapper.Node( input, node );
         Q.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
             var light = args[ 0 ];
-            var lightsource = args[ 1 ];
+            //var lightsource = args[ 1 ];
             node.setLight( light );
             defer.resolve( node );
         } );

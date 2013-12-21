@@ -1,11 +1,10 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/Texture',
     'osg/Image'
+
 ], function ( MACROUTILS, Texture, Image ) {
-    /** 
+    /**
      * TextureCubeMap
      * @class TextureCubeMap
      * @inherits Texture
@@ -23,7 +22,7 @@ define( [
         },
         cloneType: function () {
             var t = new TextureCubeMap();
-            t.default_type = true;
+            t.defaultType = true;
             return t;
         },
         setImage: function ( face, img, imageFormat ) {
@@ -57,7 +56,7 @@ define( [
             return this._images[ face ].image;
         },
 
-        applyTexImage2D_load: function ( gl, target, level, internalFormat, format, type, image ) {
+        applyTexImage2DLoad: function ( gl, target, level, internalFormat, format, type, image ) {
             if ( !image ) {
                 return false;
             }
@@ -83,7 +82,7 @@ define( [
                 return 1;
             }
 
-            if ( this.applyTexImage2D_load( gl,
+            if ( this.applyTexImage2DLoad( gl,
                 target,
                 0,
                 internalFormat,
@@ -105,11 +104,10 @@ define( [
             if ( this._textureObject !== undefined && !this.isDirty() ) {
                 gl.bindTexture( this._textureTarget, this._textureObject );
 
-            } else if ( this.default_type ) {
+            } else if ( this.defaultType ) {
                 gl.bindTexture( this._textureTarget, null );
 
             } else {
-                var images = this._images;
                 if ( !this._textureObject ) {
                     this.init( gl );
                 }

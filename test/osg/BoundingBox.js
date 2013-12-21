@@ -1,7 +1,8 @@
 define( [
+    'tests/mockup/mockup',
     'osg/BoundingBox',
     'osgDB/ReaderParser'
-], function ( BoundingBox, ReaderParser ) {
+], function ( mockup, BoundingBox, ReaderParser ) {
 
     return function () {
 
@@ -24,9 +25,9 @@ define( [
                 ok( bb_test_ok, 'Expanding by BoundingBox ->  bounding box test' );
 
 
-                var o = ReaderParser.parseSceneGraph( getBoxScene() );
+                var o = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
                 o.getBound();
-                var bb_test_scene_graph_test = ( check_near( o.boundingSphere.radius(), 2.41421, 0.00001 ) );
+                var bb_test_scene_graph_test = ( mockup.check_near( o.boundingSphere.radius(), 2.41421, 0.00001 ) );
                 ok( bb_test_scene_graph_test, 'Box.js tested  ->  bounding sphere scene graph test' );
             } )();
 
@@ -35,8 +36,8 @@ define( [
                 bb._min = [ 1, 2, 3 ];
                 bb._max = [ 4, 5, 6 ];
 
-                ok( check_near( bb.corner( 0 ), [ 1, 2, 3 ] ), 'Box corner 0' );
-                ok( check_near( bb.corner( 7 ), [ 4, 5, 6 ] ), 'Box corner 0' );
+                ok( mockup.check_near( bb.corner( 0 ), [ 1, 2, 3 ] ), 'Box corner 0' );
+                ok( mockup.check_near( bb.corner( 7 ), [ 4, 5, 6 ] ), 'Box corner 0' );
             } )();
         } );
     };

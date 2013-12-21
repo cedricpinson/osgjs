@@ -4,7 +4,7 @@ define( [
     'osg/Notify'
 ], function ( Notify ) {
 
-    /** 
+    /**
      * Shader manage shader for vertex and fragment, you need both to create a glsl program.
      * @class Shader
      */
@@ -29,7 +29,7 @@ define( [
         getText: function () {
             return this.text;
         },
-        compile: function () {
+        compile: function ( gl ) {
             this.shader = gl.createShader( this.type );
             gl.shaderSource( this.shader, this.text );
             gl.compileShader( this.shader );

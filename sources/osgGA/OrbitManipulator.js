@@ -16,7 +16,7 @@ define( [
      *  Cedric Pinson <cedric.pinson@plopbyte.com>
      */
 
-    /** 
+    /**
      *  OrbitManipulator
      *  @class
      */
@@ -321,7 +321,7 @@ define( [
             if ( this._lastUpdate === undefined ) {
                 this._lastUpdate = t;
             }
-            var dt = t - this._lastUpdate;
+            //var dt = t - this._lastUpdate;
             this._lastUpdate = t;
 
             var delta;

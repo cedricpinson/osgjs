@@ -163,8 +163,8 @@ define( [
             var vertexshader = this.getOrCreateVertexShader( state, attributeKeys, textureAttributeKeys );
             var fragmentshader = this.getOrCreateFragmentShader( state, attributeKeys, textureAttributeKeys );
             var program = new Program(
-                new Shader( gl.VERTEX_SHADER, vertexshader ),
-                new Shader( gl.FRAGMENT_SHADER, fragmentshader ) );
+                new Shader( 'VERTEX_SHADER', vertexshader ),
+                new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
             program.flattenKeys = flattenKeys;
             program.activeAttributeKeys = attributeKeys;
@@ -242,7 +242,7 @@ define( [
         },
 
         getOrCreateVertexShader: function ( state, validAttributeKeys, validTextureAttributeKeys ) {
-            var i;
+
             var modes = ShaderGenerator.Type;
             var shader = [
                 '',
@@ -305,7 +305,7 @@ define( [
         },
 
         getOrCreateFragmentShader: function ( state, validAttributeKeys, validTextureAttributeKeys ) {
-            var i;
+
             var shader = [
                 '',
                 '#ifdef GL_ES',

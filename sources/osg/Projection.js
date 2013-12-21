@@ -18,7 +18,8 @@ define( [
             this.projection = m;
         }
     } );
-    Projection.prototype.objectType = MACROUTILS.objectType.generate( 'Projection' );
+
+    MACROUTILS.setTypeID( Projection );
 
     return Projection;
 } );

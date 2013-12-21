@@ -9,7 +9,7 @@ define( [
      *  Cedric Pinson <cedric.pinson@plopbyte.com>
      */
 
-    /** 
+    /**
      *  OrbitManipulator
      *  @class
      */
@@ -25,11 +25,12 @@ define( [
             if ( manipulator !== undefined ) {
                 return manipulator.update( nv );
             }
+            return undefined;
         },
         setNode: function ( node ) {
             var manipulator = this.getCurrentManipulator();
             if ( manipulator.setNode === undefined ) {
-                Notify.log( "manipulator has not setNode method" );
+                Notify.log( 'manipulator has not setNode method' );
                 return;
             }
             manipulator.setNode( node );

@@ -1,8 +1,9 @@
 define( [
+    'test/mockup',
     'osgAnimation/Keyframe',
     'osgAnimation/Vec3LerpChannel',
     'osgAnimation/FloatLerpChannel'
-], function ( Keyframe, Vec3LerpChannel, FloatLerpChannel ) {
+], function ( mockup, Keyframe, Vec3LerpChannel, FloatLerpChannel ) {
 
     return function () {
 
@@ -16,7 +17,7 @@ define( [
 
             var channel = new Vec3LerpChannel( keys );
             channel.update( 1.0 );
-            ok( check_near( channel.getTarget().getValue(), [ 0.0, 0.0, 0.0 ] ), 'Check vec3 channel update' );
+            ok( mockup.check_near( channel.getTarget().getValue(), [ 0.0, 0.0, 0.0 ] ), 'Check vec3 channel update' );
 
             keys.length = 0;
             keys.push( Keyframe.createFloatKeyframe( 0, 1 ) );
@@ -25,7 +26,7 @@ define( [
 
             channel = new FloatLerpChannel( keys );
             channel.update( 1.0 );
-            ok( check_near( channel.getTarget().getValue(), 0.0 ), 'Check float channel update' );
+            ok( mockup.check_near( channel.getTarget().getValue(), 0.0 ), 'Check float channel update' );
         } );
     };
 } );

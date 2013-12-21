@@ -49,70 +49,70 @@ define( [
             }
             return sg;
         },
-        moveToRootStateGraph: function ( state, sg_current ) {
+        moveToRootStateGraph: function ( state, sgCurrent ) {
             // need to pop back all statesets and matrices.
-            while ( sg_current ) {
-                if ( sg_current.stateSet ) {
+            while ( sgCurrent ) {
+                if ( sgCurrent.stateSet ) {
                     state.popStateSet();
                 }
-                sg_current = sg_current._parent;
+                sgCurrent = sgCurrent._parent;
             }
         },
-        moveStateGraph: function ( state, sg_current, sg_new ) {
+        moveStateGraph: function ( state, sgCurrent, sgNew ) {
             var stack;
-            var i;
-            if ( sg_new === sg_current || sg_new === undefined ) {
+            var i,l;
+            if ( sgNew === sgCurrent || sgNew === undefined ) {
                 return;
             }
 
-            if ( sg_current === undefined ) {
+            if ( sgCurrent === undefined ) {
                 stack = [];
-                // push stateset from sg_new to root, and apply
-                // stateset from root to sg_new
+                // push stateset from sgNew to root, and apply
+                // stateset from root to sgNew
                 do {
-                    if ( sg_new.stateset !== undefined ) {
-                        stack.push( sg_new.stateset );
+                    if ( sgNew.stateset !== undefined ) {
+                        stack.push( sgNew.stateset );
                     }
-                    sg_new = sg_new.parent;
-                } while ( sg_new );
+                    sgNew = sgNew.parent;
+                } while ( sgNew );
 
                 stack.reverse();
                 for ( i = 0, l = stack.length; i < l; ++i ) {
                     state.pushStateSet( stack[ i ] );
                 }
                 return;
-            } else if ( sg_current.parent === sg_new.parent ) {
+            } else if ( sgCurrent.parent === sgNew.parent ) {
                 // first handle the typical case which is two state groups
                 // are neighbours.
 
                 // state has changed so need to pop old state.
-                if ( sg_current.stateset !== undefined ) {
+                if ( sgCurrent.stateset !== undefined ) {
                     state.popStateSet();
                 }
                 // and push new state.
-                if ( sg_new.stateset !== undefined ) {
-                    state.pushStateSet( sg_new.stateset );
+                if ( sgNew.stateset !== undefined ) {
+                    state.pushStateSet( sgNew.stateset );
                 }
                 return;
             }
 
             // need to pop back up to the same depth as the new state group.
-            while ( sg_current.depth > sg_new.depth ) {
-                if ( sg_current.stateset !== undefined ) {
+            while ( sgCurrent.depth > sgNew.depth ) {
+                if ( sgCurrent.stateset !== undefined ) {
                     state.popStateSet();
                 }
-                sg_current = sg_current.parent;
+                sgCurrent = sgCurrent.parent;
             }
 
-            // use return path to trace back steps to sg_new.
+            // use return path to trace back steps to sgNew.
             stack = [];
 
             // need to pop back up to the same depth as the curr state group.
-            while ( sg_new.depth > sg_current.depth ) {
-                if ( sg_new.stateset !== undefined ) {
-                    stack.push( sg_new.stateset );
+            while ( sgNew.depth > sgCurrent.depth ) {
+                if ( sgNew.stateset !== undefined ) {
+                    stack.push( sgNew.stateset );
                 }
-                sg_new = sg_new.parent;
+                sgNew = sgNew.parent;
             }
 
             // now pop back up both parent paths until they agree.
@@ -120,20 +120,20 @@ define( [
             // DRT - 10/22/02
             // should be this to conform with above case where two StateGraph
             // nodes have the same parent
-            while ( sg_current !== sg_new ) {
-                if ( sg_current.stateset !== undefined ) {
+            while ( sgCurrent !== sgNew ) {
+                if ( sgCurrent.stateset !== undefined ) {
                     state.popStateSet();
                 }
-                sg_current = sg_current.parent;
+                sgCurrent = sgCurrent.parent;
 
-                if ( sg_new.stateset !== undefined ) {
-                    stack.push( sg_new.stateset );
+                if ( sgNew.stateset !== undefined ) {
+                    stack.push( sgNew.stateset );
                 }
-                sg_new = sg_new.parent;
+                sgNew = sgNew.parent;
             }
 
             stack.reverse();
-            stackLength = stack.length;
+            var stackLength = stack.length;
             for ( i = 0; i < stackLength; ++i ) {
                 state.pushStateSet( stack[ i ] );
             }

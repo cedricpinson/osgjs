@@ -38,7 +38,6 @@ define( [
             var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
             var manipulator = this._manipulator;
             if ( isNaN( pos[ 0 ] ) === false && isNaN( pos[ 1 ] ) === false ) {
-                var x, y;
 
                 var mode = this.getMode();
                 if ( mode === OrbitManipulatorEnums.ROTATE ) {
@@ -96,11 +95,11 @@ define( [
             }
             ev.preventDefault();
         },
-        mouseup: function ( ev ) {
+        mouseup: function ( /*ev */ ) {
             this.releaseButton();
             this.setMode( undefined );
         },
-        mousewheel: function ( ev, intDelta, deltaX, deltaY ) {
+        mousewheel: function ( ev, intDelta /*, deltaX, deltaY */) {
             var manipulator = this._manipulator;
             ev.preventDefault();
             var zoomTarget = manipulator.getZoomInterpolator().getTarget()[ 0 ] - intDelta;

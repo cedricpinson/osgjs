@@ -30,7 +30,7 @@ define( [], function () {
 
         addRotate: function ( rotate, x, y ) {
             rotate.setDelay( this._delay );
-            rotateTarget = rotate.getTarget();
+            //var rotateTarget = rotate.getTarget();
             rotate.addTarget( x * this._rotateFactor, y * this._rotateFactor );
         },
 
@@ -39,12 +39,12 @@ define( [], function () {
             // Block badly balanced controllers
             var AXIS_THRESHOLD = 0.005;
 
-            var rotateTarget, panTarget;
+            //var rotateTarget, panTarget;
             var rotate = this._manipulator.getRotateInterpolator();
             var zoom = this._manipulator.getZoomInterpolator();
             var pan = this._manipulator.getPanInterpolator();
             // Regular gamepads
-            if ( axes.length == 4 ) {
+            if ( axes.length === 4 ) {
 
                 if ( Math.abs( axes[ 0 ] ) > AXIS_THRESHOLD || Math.abs( axes[ 1 ] ) > AXIS_THRESHOLD ) {
                     this.addRotate( rotate, -axes[ 0 ], axes[ 1 ] );
@@ -71,7 +71,7 @@ define( [], function () {
 
         },
 
-        gamepadbuttondown: function ( event, pressed ) {
+        gamepadbuttondown: function ( event /*, pressed */ ) {
             // Buttons 12 to 15 are the d-pad.
             if ( event.button >= 12 && event.button <= 15 ) {
                 var pan = this._manipulator.getPanInterpolator();

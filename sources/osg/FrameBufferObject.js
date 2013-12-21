@@ -6,7 +6,7 @@ define( [
     'osg/StateAttribute'
 ], function ( Notify, MACROUTILS, StateAttribute ) {
 
-    /** 
+    /**
      * FrameBufferObject manage fbo / rtt
      * @class FrameBufferObject
      */
@@ -48,7 +48,7 @@ define( [
                 Notify.debug( 'FRAMEBUFFER_INCOMPLETE_DIMENSIONS' );
                 break;
             case 0x8CDD:
-                Notifiy.debug( 'FRAMEBUFFER_UNSUPPORTED' );
+                Notify.debug( 'FRAMEBUFFER_UNSUPPORTED' );
                 break;
             default:
                 Notify.debug( 'FRAMEBUFFER unknown error ' + code.toString( 16 ) );

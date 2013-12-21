@@ -22,8 +22,10 @@ define( [
         RenderBin.call( this );
         this.positionedAttribute = [];
         this.clearDepth = 1.0;
-        this.clearColor = [ 0, 0, 0, 1 ];
+        this.clearColor = [ 0.0, 0.0, 0.0, 1.0 ];
+        /*jshint bitwise: false */
         this.clearMask = Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT;
+        /*jshint bitwise: true */
         this.camera = undefined;
         this.viewport = undefined;
         this.preRenderList = [];
@@ -126,8 +128,8 @@ define( [
 
             RenderBin.prototype.sort.call( this );
 
-            for ( var j = 0, k = this.postRenderList.length; i < l; ++i ) {
-                this.postRenderList[ i ].renderStage.sort();
+            for ( var j = 0, k = this.postRenderList.length; j < k; ++j ) {
+                this.postRenderList[ j ].renderStage.sort();
             }
         },
 
@@ -184,7 +186,6 @@ define( [
         },
 
         drawImplementation: function ( state, previousRenderLeaf ) {
-            var error;
             var gl = state.getGraphicContext();
 
             this.applyCamera( state );
@@ -195,6 +196,7 @@ define( [
 
             state.applyAttribute( this.viewport );
 
+            /*jshint bitwise: false */
             if ( this.clearMask & gl.COLOR_BUFFER_BIT ) {
                 gl.clearColor( this.clearColor[ 0 ], this.clearColor[ 1 ], this.clearColor[ 2 ], this.clearColor[ 3 ] );
             }
@@ -202,6 +204,8 @@ define( [
                 gl.depthMask( true );
                 gl.clearDepth( this.clearDepth );
             }
+            /*jshint bitwise: true */
+
             gl.clear( this.clearMask );
 
             if ( this.positionedAttribute ) {

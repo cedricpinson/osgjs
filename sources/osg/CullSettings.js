@@ -1,5 +1,3 @@
-/*global define */
-
 define( [], function () {
 
     var CullSettings = function () {
@@ -7,8 +5,10 @@ define( [], function () {
         this._nearFarRatio = 0.005;
 
         var lookVector = [ 0.0, 0.0, -1.0 ];
+        /*jshint bitwise: false */
         this.bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
         this.bbCornerNear = ( ~this.bbCornerFar ) & 7;
+        /*jshint bitwise: true */
     };
 
     CullSettings.prototype = {

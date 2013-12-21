@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Notify',
     'osg/Utils',
@@ -17,7 +15,7 @@ define( [
     'osg/TransformEnums'
 ], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Camera, TransformEnums ) {
 
-    /** 
+    /**
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
      * @class CullVisitor
      */
@@ -36,8 +34,11 @@ define( [
         this._computedFar = Number.NEGATIVE_INFINITY;
 
         var lookVector = [ 0.0, 0.0, -1.0 ];
+
+        /*jshint bitwise: false */
         this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
         this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
+        /*jshint bitwise: true */
 
 
         // keep a matrix in memory to avoid to create matrix
@@ -71,30 +72,30 @@ define( [
         updateCalculatedNearFar: function ( matrix, drawable ) {
 
             var bb = drawable.getBoundingBox();
-            var d_near, d_far;
+            var dNear, dFar;
 
             // efficient computation of near and far, only taking into account the nearest and furthest
             // corners of the bounding box.
-            d_near = this.distance( bb.corner( this._bbCornerNear ), matrix );
-            d_far = this.distance( bb.corner( this._bbCornerFar ), matrix );
+            dNear = this.distance( bb.corner( this._bbCornerNear ), matrix );
+            dFar = this.distance( bb.corner( this._bbCornerFar ), matrix );
 
-            if ( d_near > d_far ) {
-                var tmp = d_near;
-                d_near = d_far;
-                d_far = tmp;
+            if ( dNear > dFar ) {
+                var tmp = dNear;
+                dNear = dFar;
+                dFar = tmp;
             }
 
-            if ( d_far < 0.0 ) {
+            if ( dFar < 0.0 ) {
                 // whole object behind the eye point so discard
                 return false;
             }
 
-            if ( d_near < this._computedNear ) {
-                this._computedNear = d_near;
+            if ( dNear < this._computedNear ) {
+                this._computedNear = dNear;
             }
 
-            if ( d_far > this._computedFar ) {
-                this._computedFar = d_far;
+            if ( dFar > this._computedFar ) {
+                this._computedFar = dFar;
             }
 
             return true;
@@ -107,7 +108,7 @@ define( [
                 return false;
             }
 
-            var desired_znear, desired_zfar;
+            var desiredZnear, desiredZfar;
             if ( zfar < znear + epsilon ) {
                 // znear and zfar are too close together and could cause divide by zero problems
                 // late on in the clamping code, so move the znear and zfar apart.
@@ -122,19 +123,19 @@ define( [
                 Math.abs( Matrix.get( projection, 2, 3 ) ) < epsilon ) {
                 // OSG_INFO << 'Orthographic matrix before clamping'<<projection<<std::endl;
 
-                var delta_span = ( zfar - znear ) * 0.02;
-                if ( delta_span < 1.0 ) {
-                    delta_span = 1.0;
+                var deltaSpan = ( zfar - znear ) * 0.02;
+                if ( deltaSpan < 1.0 ) {
+                    deltaSpan = 1.0;
                 }
-                desired_znear = znear - delta_span;
-                desired_zfar = zfar + delta_span;
+                desiredZnear = znear - deltaSpan;
+                desiredZfar = zfar + deltaSpan;
 
                 // assign the clamped values back to the computed values.
-                znear = desired_znear;
-                zfar = desired_zfar;
+                znear = desiredZnear;
+                zfar = desiredZfar;
 
-                Matrix.set( projection, 2, 2, -2.0 / ( desired_zfar - desired_znear ) );
-                Matrix.set( projection, 3, 2, -( desired_zfar + desired_znear ) / ( desired_zfar - desired_znear ) );
+                Matrix.set( projection, 2, 2, -2.0 / ( desiredZfar - desiredZnear ) );
+                Matrix.set( projection, 3, 2, -( desiredZfar + desiredZnear ) / ( desiredZfar - desiredZnear ) );
 
                 // OSG_INFO << 'Orthographic matrix after clamping '<<projection<<std::endl;
             } else {
@@ -146,30 +147,30 @@ define( [
                 var zfarPushRatio = 1.02;
                 var znearPullRatio = 0.98;
 
-                //znearPullRatio = 0.99; 
+                //znearPullRatio = 0.99;
 
-                desired_znear = znear * znearPullRatio;
-                desired_zfar = zfar * zfarPushRatio;
+                desiredZnear = znear * znearPullRatio;
+                desiredZfar = zfar * zfarPushRatio;
 
                 // near plane clamping.
-                var min_near_plane = zfar * nearFarRatio;
-                if ( desired_znear < min_near_plane ) {
-                    desired_znear = min_near_plane;
+                var minNearPlane = zfar * nearFarRatio;
+                if ( desiredZnear < minNearPlane ) {
+                    desiredZnear = minNearPlane;
                 }
 
                 // assign the clamped values back to the computed values.
-                znear = desired_znear;
-                zfar = desired_zfar;
+                znear = desiredZnear;
+                zfar = desiredZfar;
 
                 var m22 = Matrix.get( projection, 2, 2 );
                 var m32 = Matrix.get( projection, 3, 2 );
                 var m23 = Matrix.get( projection, 2, 3 );
                 var m33 = Matrix.get( projection, 3, 3 );
-                var trans_near_plane = ( -desired_znear * m22 + m32 ) / ( -desired_znear * m23 + m33 );
-                var trans_far_plane = ( -desired_zfar * m22 + m32 ) / ( -desired_zfar * m23 + m33 );
+                var transNearPlane = ( -desiredZnear * m22 + m32 ) / ( -desiredZnear * m23 + m33 );
+                var transFarPlane = ( -desiredZfar * m22 + m32 ) / ( -desiredZfar * m23 + m33 );
 
-                var ratio = Math.abs( 2.0 / ( trans_near_plane - trans_far_plane ) );
-                var center = -( trans_near_plane + trans_far_plane ) / 2.0;
+                var ratio = Math.abs( 2.0 / ( transNearPlane - transFarPlane ) );
+                var center = -( transNearPlane + transFarPlane ) / 2.0;
 
                 var matrix = [ 1.0, 0.0, 0.0, 0.0,
                     0.0, 1.0, 0.0, 0.0,
@@ -253,7 +254,7 @@ define( [
         },
 
         apply: function ( node ) {
-            this[ node.objectType ].call( this, node );
+            this[ node.typeID ].call( this, node );
         },
 
         _getReservedMatrix: function () {
@@ -272,7 +273,7 @@ define( [
         }
     } ) ) );
 
-    CullVisitor.prototype[ Camera.prototype.objectType ] = function ( camera ) {
+    CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
 
         var stateset = camera.getStateSet();
         if ( stateset ) {
@@ -283,7 +284,8 @@ define( [
             this.addPositionedAttribute( camera.light );
         }
 
-        var originalModelView = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+        // never used
+        //var originalModelView = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
 
         var modelview = this._getReservedMatrix();
         var projection = this._getReservedMatrix();
@@ -306,10 +308,10 @@ define( [
         }
 
         // save current state of the camera
-        var previous_znear = this._computedNear;
-        var previous_zfar = this._computedFar;
-        var previous_cullsettings = new CullSettings();
-        previous_cullsettings.setCullSettings( this );
+        var previousZnear = this._computedNear;
+        var previousZfar = this._computedFar;
+        var previousCullsettings = new CullSettings();
+        previousCullsettings.setCullSettings( this );
 
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
@@ -323,7 +325,7 @@ define( [
         } else {
             // not tested
 
-            var previous_stage = this.getCurrentRenderBin().getStage();
+            var previousStage = this.getCurrentRenderBin().getStage();
 
             // use render to texture stage
             var rtts = new RenderStage();
@@ -335,7 +337,7 @@ define( [
 
             var vp;
             if ( camera.getViewport() === undefined ) {
-                vp = previous_stage.getViewport();
+                vp = previousStage.getViewport();
             } else {
                 vp = camera.getViewport();
             }
@@ -367,9 +369,9 @@ define( [
         }
 
         // restore previous state of the camera
-        this.setCullSettings( previous_cullsettings );
-        this._computedNear = previous_znear;
-        this._computedFar = previous_zfar;
+        this.setCullSettings( previousCullsettings );
+        this._computedNear = previousZnear;
+        this._computedFar = previousZfar;
 
         if ( stateset ) {
             this.popStateSet();
@@ -378,7 +380,7 @@ define( [
     };
 
 
-    CullVisitor.prototype[ MatrixTransform.prototype.objectType ] = function ( node ) {
+    CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
         var matrix = this._getReservedMatrix();
 
         if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
@@ -410,8 +412,8 @@ define( [
 
     };
 
-    CullVisitor.prototype[ Projection.prototype.objectType ] = function ( node ) {
-        lastMatrixStack = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
+    CullVisitor.prototype[ Projection.typeID ] = function ( node ) {
+        var lastMatrixStack = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
         var matrix = this._getReservedMatrix();
         Matrix.mult( lastMatrixStack, node.getProjectionMatrix(), matrix );
         this.pushProjectionMatrix( matrix );
@@ -431,7 +433,7 @@ define( [
         this.popProjectionMatrix();
     };
 
-    CullVisitor.prototype[ Node.prototype.objectType ] = function ( node ) {
+    CullVisitor.prototype[ Node.typeID ] = function ( node ) {
 
         var stateset = node.getStateSet();
         if ( stateset ) {
@@ -447,7 +449,7 @@ define( [
             this.popStateSet();
         }
     };
-    CullVisitor.prototype[ LightSource.prototype.objectType ] = function ( node ) {
+    CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
 
         var stateset = node.getStateSet();
         if ( stateset ) {
@@ -466,7 +468,7 @@ define( [
         }
     };
 
-    CullVisitor.prototype[ Geometry.prototype.objectType ] = function ( node ) {
+    CullVisitor.prototype[ Geometry.typeID ] = function ( node ) {
         var modelview = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
         var bb = node.getBoundingBox();
         if ( this._computeNearFar && bb.valid() ) {

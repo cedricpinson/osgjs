@@ -25,7 +25,7 @@ define( [
         attributeType: 'Program',
         cloneType: function () {
             var p = new Program();
-            p.default_program = true;
+            p.defaultProgram = true;
             return p;
         },
         getType: function () {
@@ -47,17 +47,18 @@ define( [
             return this.fragment;
         },
         apply: function ( state ) {
+            var gl = state.getGraphicContext();
             if ( !this.program || this.isDirty() ) {
 
-                if ( this.default_program === true ) {
+                if ( this.defaultProgram === true ) {
                     return;
                 }
 
                 if ( !this.vertex.shader ) {
-                    this.vertex.compile();
+                    this.vertex.compile( gl );
                 }
                 if ( !this.fragment.shader ) {
-                    this.fragment.compile();
+                    this.fragment.compile( gl );
                 }
                 this.program = gl.createProgram();
                 gl.attachShader( this.program, this.vertex.shader );
@@ -69,7 +70,7 @@ define( [
                     Notify.log( gl.getProgramInfoLog( this.program ) );
                     this.setDirty( false );
                     //debugger;
-                    return null;
+                    return;
                 }
 
                 this.uniformsCache = {};
@@ -77,11 +78,11 @@ define( [
                 this.attributesCache = {};
                 this.attributesCache.attributeKeys = [];
 
-                this.cacheUniformList( this.vertex.text );
-                this.cacheUniformList( this.fragment.text );
+                this.cacheUniformList( gl, this.vertex.text );
+                this.cacheUniformList( gl, this.fragment.text );
                 //Notify.log(this.uniformsCache);
 
-                this.cacheAttributeList( this.vertex.text );
+                this.cacheAttributeList( gl, this.vertex.text );
 
                 this.setDirty( false );
             }
@@ -89,7 +90,7 @@ define( [
             gl.useProgram( this.program );
         },
 
-        cacheUniformList: function ( str ) {
+        cacheUniformList: function ( gl, str ) {
             var r = str.match( /uniform\s+\w+\s+\w+/g );
             if ( r !== null ) {
                 for ( var i = 0, l = r.length; i < l; i++ ) {
@@ -105,7 +106,7 @@ define( [
             }
         },
 
-        cacheAttributeList: function ( str ) {
+        cacheAttributeList: function ( gl, str ) {
             var r = str.match( /attribute\s+\w+\s+\w+/g );
             if ( r !== null ) {
                 for ( var i = 0, l = r.length; i < l; i++ ) {

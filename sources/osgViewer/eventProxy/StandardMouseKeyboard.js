@@ -129,7 +129,7 @@ define( [], function () {
             var orgEvent = event || window.event,
                 args = [].slice.call( arguments, 1 ),
                 delta = 0,
-                returnValue = true,
+                //returnValue = true,
                 deltaX = 0,
                 deltaY = 0;
             //event = $.event.fix(orgEvent);
@@ -171,7 +171,7 @@ define( [], function () {
             x = obj.offsetLeft;
             y = obj.offsetTop;
             var body = document.getElementsByTagName( 'body' )[ 0 ];
-            while ( obj.offsetParent && obj != body ) {
+            while ( obj.offsetParent && obj !== body ) {
                 x += obj.offsetParent.offsetLeft;
                 y += obj.offsetParent.offsetTop;
                 obj = obj.offsetParent;

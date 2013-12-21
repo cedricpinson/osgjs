@@ -1,8 +1,7 @@
-/*global define */
-
 define( [
-    'osg/Vec3'
-], function ( Vec3 ) {
+    'osg/Vec3',
+    'osg/BoundingBox'
+], function ( Vec3, BoundingBox ) {
 
     var BoundingSphere = function () {
         this._center = [ 0.0, 0.0, 0.0 ];
@@ -32,53 +31,52 @@ define( [
         },
 
         expandByBox: function ( bb ) {
-            if ( bb.valid() ) {
-                var c;
-                if ( this.valid() ) {
-                    var newbb = new BoundingBox();
-                    newbb._min[ 0 ] = bb._min[ 0 ];
-                    newbb._min[ 1 ] = bb._min[ 1 ];
-                    newbb._min[ 2 ] = bb._min[ 2 ];
-                    newbb._max[ 0 ] = bb._max[ 0 ];
-                    newbb._max[ 1 ] = bb._max[ 1 ];
-                    newbb._max[ 2 ] = bb._max[ 2 ];
+            if ( !bb.valid() )
+                return;
 
-                    // this code is not valid c is defined after the loop
-                    // FIXME
-                    for ( var i = 0; i < 8; i++ ) {
-                        var v = Vec3.sub( bb.corner( c ), this._center, [] ); // get the direction vector from corner
-                        Vec3.normalize( v, v ); // normalise it.
-                        nv[ 0 ] *= -this._radius; // move the vector in the opposite direction distance radius.
-                        nv[ 1 ] *= -this._radius; // move the vector in the opposite direction distance radius.
-                        nv[ 2 ] *= -this._radius; // move the vector in the opposite direction distance radius.
-                        nv[ 0 ] += this._center[ 0 ]; // move to absolute position.
-                        nv[ 1 ] += this._center[ 1 ]; // move to absolute position.
-                        nv[ 2 ] += this._center[ 2 ]; // move to absolute position.
-                        newbb.expandBy( nv ); // add it into the new bounding box.
-                    }
+            var c;
+            var v = [0.0, 0.0, 0.0];
+            if ( this.valid() ) {
+                var newbb = new BoundingBox();
+                newbb._min[ 0 ] = bb._min[ 0 ];
+                newbb._min[ 1 ] = bb._min[ 1 ];
+                newbb._min[ 2 ] = bb._min[ 2 ];
+                newbb._max[ 0 ] = bb._max[ 0 ];
+                newbb._max[ 1 ] = bb._max[ 1 ];
+                newbb._max[ 2 ] = bb._max[ 2 ];
 
-                    c = newbb.center();
-                    this._center[ 0 ] = c[ 0 ];
-                    this._center[ 1 ] = c[ 1 ];
-                    this._center[ 2 ] = c[ 2 ];
-                    this._radius = newbb.radius();
-                } else {
-                    c = bb.center();
-                    this._center[ 0 ] = c[ 0 ];
-                    this._center[ 1 ] = c[ 1 ];
-                    this._center[ 2 ] = c[ 2 ];
-                    this._radius = bb.radius();
+                for ( var i = 0; i < 8; i++ ) {
+                    Vec3.sub( bb.corner( c ), this._center, v ); // get the direction vector from corner
+                    Vec3.normalize( v, v ); // normalise it.
+                    v[ 0 ] *= -this._radius; // move the vector in the opposite direction distance radius.
+                    v[ 1 ] *= -this._radius; // move the vector in the opposite direction distance radius.
+                    v[ 2 ] *= -this._radius; // move the vector in the opposite direction distance radius.
+                    v[ 0 ] += this._center[ 0 ]; // move to absolute position.
+                    v[ 1 ] += this._center[ 1 ]; // move to absolute position.
+                    v[ 2 ] += this._center[ 2 ]; // move to absolute position.
+                    newbb.expandBy( v ); // add it into the new bounding box.
                 }
-            }
 
+                c = newbb.center();
+                this._center[ 0 ] = c[ 0 ];
+                this._center[ 1 ] = c[ 1 ];
+                this._center[ 2 ] = c[ 2 ];
+                this._radius = newbb.radius();
+            } else {
+                c = bb.center();
+                this._center[ 0 ] = c[ 0 ];
+                this._center[ 1 ] = c[ 1 ];
+                this._center[ 2 ] = c[ 2 ];
+                this._radius = bb.radius();
+            }
         },
 
         expandByVec3: function ( v ) {
             if ( this.valid() ) {
                 var dv = Vec3.sub( v, this.center(), [] );
-                r = Vec3.length( dv );
+                var r = Vec3.length( dv );
                 if ( r > this.radius() ) {
-                    dr = ( r - this.radius() ) * 0.5;
+                    var dr = ( r - this.radius() ) * 0.5;
                     this._center[ 0 ] += dv[ 0 ] * ( dr / r );
                     this._center[ 1 ] += dv[ 1 ] * ( dr / r );
                     this._center[ 2 ] += dv[ 2 ] * ( dr / r );
@@ -128,7 +126,7 @@ define( [
 
             // Calculate d == The distance between the sphere centers
             var tmp = Vec3.sub( this.center(), sh.center(), [] );
-            d = Vec3.length( tmp );
+            var d = Vec3.length( tmp );
 
             // New sphere is already inside this one
             if ( d + sh.radius() <= this.radius() ) {
@@ -151,24 +149,24 @@ define( [
             // points on the edges of the two spheres.
             //
             // Computing those two points is ugly - so we'll use similar triangles
-            new_radius = ( this.radius() + d + sh.radius() ) * 0.5;
-            ratio = ( new_radius - this.radius() ) / d;
+            var newRadius = ( this.radius() + d + sh.radius() ) * 0.5;
+            var ratio = ( newRadius - this.radius() ) / d;
 
             this._center[ 0 ] += ( sh._center[ 0 ] - this._center[ 0 ] ) * ratio;
             this._center[ 1 ] += ( sh._center[ 1 ] - this._center[ 1 ] ) * ratio;
             this._center[ 2 ] += ( sh._center[ 2 ] - this._center[ 2 ] ) * ratio;
 
-            this._radius = new_radius;
+            this._radius = newRadius;
 
         },
         contains: function ( v ) {
             var vc = Vec3.sub( v, this.center(), [] );
-            return valid() && ( Vec3.length2( vc ) <= radius2() );
+            return this.valid() && ( Vec3.length2( vc ) <= this.radius2() );
         },
         intersects: function ( bs ) {
             var lc = Vec3.length2( Vec3.sub( this.center(),
                 bs.center(), [] ) );
-            return valid() && bs.valid() &&
+            return this.valid() && bs.valid() &&
                 ( lc <= ( this.radius() + bs.radius() ) * ( this.radius() + bs.radius() ) );
         }
     };

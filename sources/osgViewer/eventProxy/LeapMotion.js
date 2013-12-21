@@ -13,7 +13,7 @@ define( [
 
     LeapMotion.prototype = {
         init: function ( args ) {
-            var element = document.getElementById( args.id );
+            //var element = document.getElementById( args.id );
             var self = this;
             this._controller = new Leap.Controller( {
                 enableGestures: args.gestures || true,

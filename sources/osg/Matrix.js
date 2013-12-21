@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Notify',
     'osg/Vec3',
@@ -11,6 +9,7 @@ define( [
     var Matrix = {
         _tmp0: [],
         _tmp1: [],
+
         valid: function ( matrix ) {
             for ( var i = 0; i < 16; i++ ) {
                 if ( isNaN( matrix[ i ] ) ) {
@@ -128,6 +127,7 @@ define( [
 
         // do a * b and result in b
         postMult: function ( a, b ) {
+            var btmp0, btmp1, btmp2, btmp3;
             // post mult
             btmp0 = ( b[ 0 ] * a[ 0 ] ) + ( b[ 1 ] * a[ 4 ] ) + ( b[ 2 ] * a[ 8 ] ) + ( b[ 3 ] * a[ 12 ] );
             btmp1 = ( b[ 0 ] * a[ 1 ] ) + ( b[ 1 ] * a[ 5 ] ) + ( b[ 2 ] * a[ 9 ] ) + ( b[ 3 ] * a[ 13 ] );
@@ -459,12 +459,12 @@ define( [
                 quatResult[ 0 ] = mat[ 1 * 4 + 2 ] - mat[ 2 * 4 + 1 ];
                 quatResult[ 1 ] = mat[ 2 * 4 + 0 ] - mat[ 0 + 2 ];
                 quatResult[ 2 ] = mat[ 0 + 1 ] - mat[ 1 * 4 + 0 ];
-            } else if ( j == 1 ) {
+            } else if ( j === 1 ) {
                 quatResult[ 3 ] = mat[ 1 * 4 + 2 ] - mat[ 2 * 4 + 1 ];
                 quatResult[ 0 ] = tq[ 1 ];
                 quatResult[ 1 ] = mat[ 0 + 1 ] + mat[ 1 * 4 + 0 ];
                 quatResult[ 2 ] = mat[ 2 * 4 + 0 ] + mat[ 0 + 2 ];
-            } else if ( j == 2 ) {
+            } else if ( j === 2 ) {
                 quatResult[ 3 ] = mat[ 2 * 4 + 0 ] - mat[ 0 + 2 ];
                 quatResult[ 0 ] = mat[ 0 + 1 ] + mat[ 1 * 4 + 0 ];
                 quatResult[ 1 ] = tq[ 2 ];
@@ -487,6 +487,7 @@ define( [
 
         // Matrix M = Matrix M * Matrix Translate
         preMultTranslate: function ( mat, translate ) {
+            var val;
             if ( translate[ 0 ] !== 0.0 ) {
                 val = translate[ 0 ];
                 mat[ 12 ] += val * mat[ 0 ];
@@ -563,7 +564,7 @@ define( [
             if ( mag > 0.0 ) {
                 var xx, yy, zz, xy, yz, zx, xs, ys, zs;
                 var oneMinusCos;
-                var rotMat;
+
                 mag = 1.0 / mag;
 
                 x *= mag;
@@ -706,39 +707,39 @@ define( [
          *  the return is identity if the matrix can not be inverted and the matrix overthise
          */
         inverse4x4: function ( matrix, result ) {
-            var tmp_0 = matrix[ 10 ] * matrix[ 15 ];
-            var tmp_1 = matrix[ 14 ] * matrix[ 11 ];
-            var tmp_2 = matrix[ 6 ] * matrix[ 15 ];
-            var tmp_3 = matrix[ 14 ] * matrix[ 7 ];
-            var tmp_4 = matrix[ 6 ] * matrix[ 11 ];
-            var tmp_5 = matrix[ 10 ] * matrix[ 7 ];
-            var tmp_6 = matrix[ 2 ] * matrix[ 15 ];
-            var tmp_7 = matrix[ 14 ] * matrix[ 3 ];
-            var tmp_8 = matrix[ 2 ] * matrix[ 11 ];
-            var tmp_9 = matrix[ 10 ] * matrix[ 3 ];
-            var tmp_10 = matrix[ 2 ] * matrix[ 7 ];
-            var tmp_11 = matrix[ 6 ] * matrix[ 3 ];
-            var tmp_12 = matrix[ 8 ] * matrix[ 13 ];
-            var tmp_13 = matrix[ 12 ] * matrix[ 9 ];
-            var tmp_14 = matrix[ 4 ] * matrix[ 13 ];
-            var tmp_15 = matrix[ 12 ] * matrix[ 5 ];
-            var tmp_16 = matrix[ 4 ] * matrix[ 9 ];
-            var tmp_17 = matrix[ 8 ] * matrix[ 5 ];
-            var tmp_18 = matrix[ 0 ] * matrix[ 13 ];
-            var tmp_19 = matrix[ 12 ] * matrix[ 1 ];
-            var tmp_20 = matrix[ 0 ] * matrix[ 9 ];
-            var tmp_21 = matrix[ 8 ] * matrix[ 1 ];
-            var tmp_22 = matrix[ 0 ] * matrix[ 5 ];
-            var tmp_23 = matrix[ 4 ] * matrix[ 1 ];
+            var tmp0 = matrix[ 10 ] * matrix[ 15 ];
+            var tmp1 = matrix[ 14 ] * matrix[ 11 ];
+            var tmp2 = matrix[ 6 ] * matrix[ 15 ];
+            var tmp3 = matrix[ 14 ] * matrix[ 7 ];
+            var tmp4 = matrix[ 6 ] * matrix[ 11 ];
+            var tmp5 = matrix[ 10 ] * matrix[ 7 ];
+            var tmp6 = matrix[ 2 ] * matrix[ 15 ];
+            var tmp7 = matrix[ 14 ] * matrix[ 3 ];
+            var tmp8 = matrix[ 2 ] * matrix[ 11 ];
+            var tmp9 = matrix[ 10 ] * matrix[ 3 ];
+            var tmp10 = matrix[ 2 ] * matrix[ 7 ];
+            var tmp11 = matrix[ 6 ] * matrix[ 3 ];
+            var tmp12 = matrix[ 8 ] * matrix[ 13 ];
+            var tmp13 = matrix[ 12 ] * matrix[ 9 ];
+            var tmp14 = matrix[ 4 ] * matrix[ 13 ];
+            var tmp15 = matrix[ 12 ] * matrix[ 5 ];
+            var tmp16 = matrix[ 4 ] * matrix[ 9 ];
+            var tmp17 = matrix[ 8 ] * matrix[ 5 ];
+            var tmp18 = matrix[ 0 ] * matrix[ 13 ];
+            var tmp19 = matrix[ 12 ] * matrix[ 1 ];
+            var tmp20 = matrix[ 0 ] * matrix[ 9 ];
+            var tmp21 = matrix[ 8 ] * matrix[ 1 ];
+            var tmp22= matrix[ 0 ] * matrix[ 5 ];
+            var tmp23= matrix[ 4 ] * matrix[ 1 ];
 
-            var t0 = ( ( tmp_0 * matrix[ 5 ] + tmp_3 * matrix[ 9 ] + tmp_4 * matrix[ 13 ] ) -
-                ( tmp_1 * matrix[ 5 ] + tmp_2 * matrix[ 9 ] + tmp_5 * matrix[ 13 ] ) );
-            var t1 = ( ( tmp_1 * matrix[ 1 ] + tmp_6 * matrix[ 9 ] + tmp_9 * matrix[ 13 ] ) -
-                ( tmp_0 * matrix[ 1 ] + tmp_7 * matrix[ 9 ] + tmp_8 * matrix[ 13 ] ) );
-            var t2 = ( ( tmp_2 * matrix[ 1 ] + tmp_7 * matrix[ 5 ] + tmp_10 * matrix[ 13 ] ) -
-                ( tmp_3 * matrix[ 1 ] + tmp_6 * matrix[ 5 ] + tmp_11 * matrix[ 13 ] ) );
-            var t3 = ( ( tmp_5 * matrix[ 1 ] + tmp_8 * matrix[ 5 ] + tmp_11 * matrix[ 9 ] ) -
-                ( tmp_4 * matrix[ 1 ] + tmp_9 * matrix[ 5 ] + tmp_10 * matrix[ 9 ] ) );
+            var t0 = ( ( tmp0 * matrix[ 5 ] + tmp3 * matrix[ 9 ] + tmp4 * matrix[ 13 ] ) -
+                ( tmp1 * matrix[ 5 ] + tmp2 * matrix[ 9 ] + tmp5 * matrix[ 13 ] ) );
+            var t1 = ( ( tmp1 * matrix[ 1 ] + tmp6  * matrix[ 9 ] + tmp9 * matrix[ 13 ] ) -
+                ( tmp0 * matrix[ 1 ] + tmp7 * matrix[ 9 ] + tmp8 * matrix[ 13 ] ) );
+            var t2 = ( ( tmp2 * matrix[ 1 ] + tmp7 * matrix[ 5 ] + tmp10 * matrix[ 13 ] ) -
+                ( tmp3 * matrix[ 1 ] + tmp6  * matrix[ 5 ] + tmp11 * matrix[ 13 ] ) );
+            var t3 = ( ( tmp5 * matrix[ 1 ] + tmp8 * matrix[ 5 ] + tmp11 * matrix[ 9 ] ) -
+                ( tmp4 * matrix[ 1 ] + tmp9 * matrix[ 5 ] + tmp10 * matrix[ 9 ] ) );
 
             var d1 = ( matrix[ 0 ] * t0 + matrix[ 4 ] * t1 + matrix[ 8 ] * t2 + matrix[ 12 ] * t3 );
             if ( Math.abs( d1 ) < 1e-5 ) {
@@ -747,54 +748,54 @@ define( [
             }
             var d = 1.0 / d1;
 
-            var out_00 = d * t0;
-            var out_01 = d * t1;
-            var out_02 = d * t2;
-            var out_03 = d * t3;
+            var out00 = d * t0;
+            var out01 = d * t1;
+            var out02 = d * t2;
+            var out03 = d * t3;
 
-            var out_10 = d * ( ( tmp_1 * matrix[ 4 ] + tmp_2 * matrix[ 8 ] + tmp_5 * matrix[ 12 ] ) -
-                ( tmp_0 * matrix[ 4 ] + tmp_3 * matrix[ 8 ] + tmp_4 * matrix[ 12 ] ) );
-            var out_11 = d * ( ( tmp_0 * matrix[ 0 ] + tmp_7 * matrix[ 8 ] + tmp_8 * matrix[ 12 ] ) -
-                ( tmp_1 * matrix[ 0 ] + tmp_6 * matrix[ 8 ] + tmp_9 * matrix[ 12 ] ) );
-            var out_12 = d * ( ( tmp_3 * matrix[ 0 ] + tmp_6 * matrix[ 4 ] + tmp_11 * matrix[ 12 ] ) -
-                ( tmp_2 * matrix[ 0 ] + tmp_7 * matrix[ 4 ] + tmp_10 * matrix[ 12 ] ) );
-            var out_13 = d * ( ( tmp_4 * matrix[ 0 ] + tmp_9 * matrix[ 4 ] + tmp_10 * matrix[ 8 ] ) -
-                ( tmp_5 * matrix[ 0 ] + tmp_8 * matrix[ 4 ] + tmp_11 * matrix[ 8 ] ) );
+            var out10 = d * ( ( tmp1 * matrix[ 4 ] + tmp2 * matrix[ 8 ] + tmp5 * matrix[ 12 ] ) -
+                ( tmp0 * matrix[ 4 ] + tmp3 * matrix[ 8 ] + tmp4 * matrix[ 12 ] ) );
+            var out11 = d * ( ( tmp0 * matrix[ 0 ] + tmp7 * matrix[ 8 ] + tmp8 * matrix[ 12 ] ) -
+                ( tmp1 * matrix[ 0 ] + tmp6  * matrix[ 8 ] + tmp9 * matrix[ 12 ] ) );
+            var out12 = d * ( ( tmp3 * matrix[ 0 ] + tmp6  * matrix[ 4 ] + tmp11 * matrix[ 12 ] ) -
+                ( tmp2 * matrix[ 0 ] + tmp7 * matrix[ 4 ] + tmp10 * matrix[ 12 ] ) );
+            var out13 = d * ( ( tmp4 * matrix[ 0 ] + tmp9 * matrix[ 4 ] + tmp10 * matrix[ 8 ] ) -
+                ( tmp5 * matrix[ 0 ] + tmp8 * matrix[ 4 ] + tmp11 * matrix[ 8 ] ) );
 
-            var out_20 = d * ( ( tmp_12 * matrix[ 7 ] + tmp_15 * matrix[ 11 ] + tmp_16 * matrix[ 15 ] ) -
-                ( tmp_13 * matrix[ 7 ] + tmp_14 * matrix[ 11 ] + tmp_17 * matrix[ 15 ] ) );
-            var out_21 = d * ( ( tmp_13 * matrix[ 3 ] + tmp_18 * matrix[ 11 ] + tmp_21 * matrix[ 15 ] ) -
-                ( tmp_12 * matrix[ 3 ] + tmp_19 * matrix[ 11 ] + tmp_20 * matrix[ 15 ] ) );
-            var out_22 = d * ( ( tmp_14 * matrix[ 3 ] + tmp_19 * matrix[ 7 ] + tmp_22 * matrix[ 15 ] ) -
-                ( tmp_15 * matrix[ 3 ] + tmp_18 * matrix[ 7 ] + tmp_23 * matrix[ 15 ] ) );
-            var out_23 = d * ( ( tmp_17 * matrix[ 3 ] + tmp_20 * matrix[ 7 ] + tmp_23 * matrix[ 11 ] ) -
-                ( tmp_16 * matrix[ 3 ] + tmp_21 * matrix[ 7 ] + tmp_22 * matrix[ 11 ] ) );
+            var out20 = d * ( ( tmp12 * matrix[ 7 ] + tmp15 * matrix[ 11 ] + tmp16 * matrix[ 15 ] ) -
+                ( tmp13 * matrix[ 7 ] + tmp14* matrix[ 11 ] + tmp17 * matrix[ 15 ] ) );
+            var out21 = d * ( ( tmp13 * matrix[ 3 ] + tmp18 * matrix[ 11 ] + tmp21 * matrix[ 15 ] ) -
+                ( tmp12 * matrix[ 3 ] + tmp19 * matrix[ 11 ] + tmp20 * matrix[ 15 ] ) );
+            var out22 = d * ( ( tmp14* matrix[ 3 ] + tmp19 * matrix[ 7 ] + tmp22* matrix[ 15 ] ) -
+                ( tmp15 * matrix[ 3 ] + tmp18 * matrix[ 7 ] + tmp23* matrix[ 15 ] ) );
+            var out23 = d * ( ( tmp17 * matrix[ 3 ] + tmp20 * matrix[ 7 ] + tmp23* matrix[ 11 ] ) -
+                ( tmp16 * matrix[ 3 ] + tmp21 * matrix[ 7 ] + tmp22* matrix[ 11 ] ) );
 
-            var out_30 = d * ( ( tmp_14 * matrix[ 10 ] + tmp_17 * matrix[ 14 ] + tmp_13 * matrix[ 6 ] ) -
-                ( tmp_16 * matrix[ 14 ] + tmp_12 * matrix[ 6 ] + tmp_15 * matrix[ 10 ] ) );
-            var out_31 = d * ( ( tmp_20 * matrix[ 14 ] + tmp_12 * matrix[ 2 ] + tmp_19 * matrix[ 10 ] ) -
-                ( tmp_18 * matrix[ 10 ] + tmp_21 * matrix[ 14 ] + tmp_13 * matrix[ 2 ] ) );
-            var out_32 = d * ( ( tmp_18 * matrix[ 6 ] + tmp_23 * matrix[ 14 ] + tmp_15 * matrix[ 2 ] ) -
-                ( tmp_22 * matrix[ 14 ] + tmp_14 * matrix[ 2 ] + tmp_19 * matrix[ 6 ] ) );
-            var out_33 = d * ( ( tmp_22 * matrix[ 10 ] + tmp_16 * matrix[ 2 ] + tmp_21 * matrix[ 6 ] ) -
-                ( tmp_20 * matrix[ 6 ] + tmp_23 * matrix[ 10 ] + tmp_17 * matrix[ 2 ] ) );
+            var out30 = d * ( ( tmp14* matrix[ 10 ] + tmp17 * matrix[ 14 ] + tmp13 * matrix[ 6 ] ) -
+                ( tmp16 * matrix[ 14 ] + tmp12 * matrix[ 6 ] + tmp15 * matrix[ 10 ] ) );
+            var out31 = d * ( ( tmp20 * matrix[ 14 ] + tmp12 * matrix[ 2 ] + tmp19 * matrix[ 10 ] ) -
+                ( tmp18 * matrix[ 10 ] + tmp21 * matrix[ 14 ] + tmp13 * matrix[ 2 ] ) );
+            var out32 = d * ( ( tmp18 * matrix[ 6 ] + tmp23* matrix[ 14 ] + tmp15 * matrix[ 2 ] ) -
+                ( tmp22* matrix[ 14 ] + tmp14 * matrix[ 2 ] + tmp19 * matrix[ 6 ] ) );
+            var out33 = d * ( ( tmp22* matrix[ 10 ] + tmp16 * matrix[ 2 ] + tmp21 * matrix[ 6 ] ) -
+                ( tmp20 * matrix[ 6 ] + tmp23* matrix[ 10 ] + tmp17 * matrix[ 2 ] ) );
 
-            result[ 0 ] = out_00;
-            result[ 1 ] = out_01;
-            result[ 2 ] = out_02;
-            result[ 3 ] = out_03;
-            result[ 4 ] = out_10;
-            result[ 5 ] = out_11;
-            result[ 6 ] = out_12;
-            result[ 7 ] = out_13;
-            result[ 8 ] = out_20;
-            result[ 9 ] = out_21;
-            result[ 10 ] = out_22;
-            result[ 11 ] = out_23;
-            result[ 12 ] = out_30;
-            result[ 13 ] = out_31;
-            result[ 14 ] = out_32;
-            result[ 15 ] = out_33;
+            result[ 0 ] = out00;
+            result[ 1 ] = out01;
+            result[ 2 ] = out02;
+            result[ 3 ] = out03;
+            result[ 4 ] = out10;
+            result[ 5 ] = out11;
+            result[ 6 ] = out12;
+            result[ 7 ] = out13;
+            result[ 8 ] = out20;
+            result[ 9 ] = out21;
+            result[ 10 ] = out22;
+            result[ 11 ] = out23;
+            result[ 12 ] = out30;
+            result[ 13 ] = out31;
+            result[ 14 ] = out32;
+            result[ 15 ] = out33;
 
             return true;
         },
@@ -848,15 +849,15 @@ define( [
             result[ 2 ] = r01 * r12 - r02 * r11;
 
             // Compute determinant of rot from 3 elements just computed
-            var one_over_det = 1.0 / ( r00 * result[ 0 ] + r10 * result[ 1 ] + r20 * result[ 2 ] );
-            r00 *= one_over_det;
-            r10 *= one_over_det;
-            r20 *= one_over_det; // Saves on later computations
+            var oneOverDet = 1.0 / ( r00 * result[ 0 ] + r10 * result[ 1 ] + r20 * result[ 2 ] );
+            r00 *= oneOverDet;
+            r10 *= oneOverDet;
+            r20 *= oneOverDet; // Saves on later computations
 
             // Finish computing inverse of rot
-            result[ 0 ] *= one_over_det;
-            result[ 1 ] *= one_over_det;
-            result[ 2 ] *= one_over_det;
+            result[ 0 ] *= oneOverDet;
+            result[ 1 ] *= oneOverDet;
+            result[ 2 ] *= oneOverDet;
             result[ 3 ] = 0.0;
             result[ 4 ] = r12 * r20 - r10 * r22; // Have already been divided by det
             result[ 5 ] = r00 * r22 - r02 * r20; // same
@@ -888,29 +889,29 @@ define( [
                 tx = matrix[ 12 ];
                 ty = matrix[ 13 ];
                 tz = matrix[ 14 ];
-                var one_over_s = 1.0 / ( d - ( tx * px + ty * py + tz * pz ) );
+                var oneOverS = 1.0 / ( d - ( tx * px + ty * py + tz * pz ) );
 
-                tx *= one_over_s;
-                ty *= one_over_s;
-                tz *= one_over_s; // Reduces number of calculations later on
+                tx *= oneOverS;
+                ty *= oneOverS;
+                tz *= oneOverS; // Reduces number of calculations later on
 
                 // Compute inverse of trans*corr
                 inv[ 0 ] = tx * px + 1.0;
                 inv[ 1 ] = ty * px;
                 inv[ 2 ] = tz * px;
-                inv[ 3 ] = -px * one_over_s;
+                inv[ 3 ] = -px * oneOverS;
                 inv[ 4 ] = tx * py;
                 inv[ 5 ] = ty * py + 1.0;
                 inv[ 6 ] = tz * py;
-                inv[ 7 ] = -py * one_over_s;
+                inv[ 7 ] = -py * oneOverS;
                 inv[ 8 ] = tx * pz;
                 inv[ 9 ] = ty * pz;
                 inv[ 10 ] = tz * pz + 1.0;
-                inv[ 11 ] = -pz * one_over_s;
+                inv[ 11 ] = -pz * oneOverS;
                 inv[ 12 ] = -tx;
                 inv[ 13 ] = -ty;
                 inv[ 14 ] = -tz;
-                inv[ 15 ] = one_over_s;
+                inv[ 15 ] = oneOverS;
 
                 Matrix.preMult( result, inv ); // Finish computing full inverse of mat
             } else {
@@ -990,6 +991,7 @@ define( [
             var left = 0.0;
             var top = 0.0;
             var bottom = 0.0;
+            var zNear,zFar;
 
             if ( matrix[ 0 * 4 + 3 ] !== 0.0 || matrix[ 1 * 4 + 3 ] !== 0.0 || matrix[ 2 * 4 + 3 ] !== -1.0 || matrix[ 3 * 4 + 3 ] !== 0.0 ) {
                 return false;
@@ -997,17 +999,17 @@ define( [
 
             // note: near and far must be used inside this method instead of zNear and zFar
             // because zNear and zFar are references and they may point to the same variable.
-            var temp_near = matrix[ 3 * 4 + 2 ] / ( matrix[ 2 * 4 + 2 ] - 1.0 );
-            var temp_far = matrix[ 3 * 4 + 2 ] / ( 1.0 + matrix[ 2 * 4 + 2 ] );
+            var tempNear = matrix[ 3 * 4 + 2 ] / ( matrix[ 2 * 4 + 2 ] - 1.0 );
+            var tempFar = matrix[ 3 * 4 + 2 ] / ( 1.0 + matrix[ 2 * 4 + 2 ] );
 
-            left = temp_near * ( matrix[ 2 * 4 ] - 1.0 ) / matrix[ 0 ];
-            right = temp_near * ( 1.0 + matrix[ 2 * 4 ] ) / matrix[ 0 ];
+            left = tempNear * ( matrix[ 2 * 4 ] - 1.0 ) / matrix[ 0 ];
+            right = tempNear * ( 1.0 + matrix[ 2 * 4 ] ) / matrix[ 0 ];
 
-            top = temp_near * ( 1.0 + matrix[ 2 * 4 + 1 ] ) / matrix[ 1 * 4 + 1 ];
-            bottom = temp_near * ( matrix[ 2 * 4 + 1 ] - 1.0 ) / matrix[ 1 * 4 + 1 ];
+            top = tempNear * ( 1.0 + matrix[ 2 * 4 + 1 ] ) / matrix[ 1 * 4 + 1 ];
+            bottom = tempNear * ( matrix[ 2 * 4 + 1 ] - 1.0 ) / matrix[ 1 * 4 + 1 ];
 
-            zNear = temp_near;
-            zFar = temp_far;
+            zNear = tempNear;
+            zFar = tempFar;
 
             result.left = left;
             result.right = right;
@@ -1052,8 +1054,8 @@ define( [
 
         // compute the 4 corners vector of the frustrum
         computeFrustrumCornersVectors: function ( projectionMatrix, vectorsArray ) {
-            var znear = projectionMatrix[ 12 + 2 ] / ( projectionMatrix[ 8 + 2 ] - 1.0 );
-            var zfar = projectionMatrix[ 12 + 2 ] / ( projectionMatrix[ 8 + 2 ] + 1.0 );
+            //var znear = projectionMatrix[ 12 + 2 ] / ( projectionMatrix[ 8 + 2 ] - 1.0 );
+            //var zfar = projectionMatrix[ 12 + 2 ] / ( projectionMatrix[ 8 + 2 ] + 1.0 );
             var x = 1.0 / projectionMatrix[ 0 ];
             var y = 1.0 / projectionMatrix[ 1 * 4 + 1 ];
 

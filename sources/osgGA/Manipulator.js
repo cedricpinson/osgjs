@@ -1,15 +1,8 @@
-/*global define */
-
 define( [
     'osg/Matrix'
 ], function ( Matrix ) {
 
-    /** -*- compile-command: "jslint-cli Manipulator.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
-
-    /** 
+    /**
      *  Manipulator
      *  @class
      */
@@ -23,7 +16,7 @@ define( [
     Manipulator.prototype = {
 
         // eg: var currentTime = nv.getFrameStamp().getSimulationTime();
-        update: function ( nv ) {},
+        update: function ( /*nv*/ ) {},
 
         getInverseMatrix: function () {
             return this._inverseMatrix;

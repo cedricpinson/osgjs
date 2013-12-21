@@ -1,10 +1,11 @@
 define( [
+    'test/mockup',
     'osgDB/ReaderParser',
     'vendors/Q',
     'osg/Texture',
     'osgDB/Input',
     'osg/PrimitiveSet'
-], function ( ReaderParser, Q, Texture, Input, PrimitiveSet ) {
+], function ( mockup, ReaderParser, Q, Texture, Input, PrimitiveSet ) {
 
     return function () {
 
@@ -41,11 +42,11 @@ define( [
                 ok( result.getStateSet() !== undefined, 'check old stateset' );
                 var material = result.getStateSet().getAttribute( 'Material' );
                 var materialCheck = ( material !== undefined &&
-                    check_near( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
-                    check_near( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
-                    check_near( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
-                    check_near( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
-                    check_near( material.getShininess(), 2.5 ) &&
+                    mockup.check_near( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
+                    mockup.check_near( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
+                    mockup.check_near( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
+                    mockup.check_near( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
+                    mockup.check_near( material.getShininess(), 2.5 ) &&
                     material.getName() === 'FloorBorder1' );
 
                 ok( materialCheck, 'check old material' );
@@ -105,11 +106,11 @@ define( [
                 ok( result.getStateSet().getAttribute( 'BlendFunc' ) !== undefined, 'check BlendFunc' );
                 var material = result.getStateSet().getAttribute( 'Material' );
                 var materialCheck = ( material !== undefined &&
-                    check_near( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
-                    check_near( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
-                    check_near( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
-                    check_near( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
-                    check_near( material.getShininess(), 2.5 ) &&
+                    mockup.check_near( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
+                    mockup.check_near( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
+                    mockup.check_near( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
+                    mockup.check_near( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
+                    mockup.check_near( material.getShininess(), 2.5 ) &&
                     material.getName() === 'FloorBorder1' );
 
                 ok( materialCheck, 'check Material' );

@@ -48,7 +48,7 @@ define( [
             this._motion = [ 0.0, 0.0 ];
             this._delay = 0.05;
             this._threshold = 0.08;
-            this._direction_dot_threshold = 0.5;
+            this._directionDotThreshold = 0.5;
             this._mode = 'rotate';
         },
 
@@ -107,12 +107,12 @@ define( [
                     d1 = Math.abs( Vec3.dot( frame.hands[ 1 ].palmNormal, this._top ) );
 
                 // two hands : zoom
-                if ( d0 < this._direction_dot_threshold && d1 < this._direction_dot_threshold ) {
+                if ( d0 < this._directionDotThreshold && d1 < this._directionDotThreshold ) {
                     mode = 'zoom-twohands';
                 } else {
                     // if hands flat do nothing
                     mode = undefined;
-                    this.hands_distance_old = undefined;
+                    this._handsDistanceOld = undefined;
                 }
             }
             var zoom = this._manipulator.getZoomInterpolator();
@@ -156,16 +156,16 @@ define( [
                 zoom.setTarget( dist );
             } else if ( mode === 'zoom-twohands' ) { // two hands zoom
                 // distance between two hands
-                var hands_distance = Vec3.distance( frame.hands[ 0 ].palmPosition, frame.hands[ 1 ].palmPosition );
+                var handsDistance = Vec3.distance( frame.hands[ 0 ].palmPosition, frame.hands[ 1 ].palmPosition );
 
-                if ( this.hands_distance_old !== undefined ) {
+                if ( this._handsDistanceOld !== undefined ) {
                     // compare distance with lastframe and zoom if they get nearer, unzoom if they separate
-                    var vel = dtx * ( hands_distance - this.hands_distance_old );
+                    var vel = dtx * ( handsDistance - this._handsDistanceOld );
 
                     dist = zoom._target;
                     dist[ 0 ] += vel;
                 }
-                this.hands_distance_old = hands_distance;
+                this._handsDistanceOld = handsDistance;
             } else {
                 if ( mode === 'rotate' ) {
                     dist = zoom._target[ 0 ];

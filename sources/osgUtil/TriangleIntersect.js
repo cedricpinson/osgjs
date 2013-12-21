@@ -1,14 +1,8 @@
-/*global define */
-
 define( [
     'osg/Notify',
-    'osg/Vec3'
-], function ( Notify, Vec3 ) {
-
-    /** -*- compile-command: "jslint-cli TriangleIntersect.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
+    'osg/Vec3',
+    'osg/PrimitiveSet'
+], function ( Notify, Vec3, PrimitiveSet ) {
 
     var TriangleHit = function ( index, normal, r1, v1, r2, v2, r3, v3 ) {
         this.index = index;
@@ -21,7 +15,7 @@ define( [
         this.v3 = v3;
     };
 
-    TriangleIntersect = function () {
+    var TriangleIntersect = function () {
         this.hits = [];
         this.nodePath = [];
     };
@@ -204,7 +198,6 @@ define( [
                 return;
             }
             var primitive;
-            var lastIndex;
             var vertexes = node.getAttributes().Vertex.getElements();
             this.index = 0;
             for ( var i = 0, l = node.primitives.length; i < l; i++ ) {
@@ -212,25 +205,25 @@ define( [
                 if ( primitive.getIndices !== undefined ) {
                     var indexes = primitive.indices.getElements();
                     switch ( primitive.getMode() ) {
-                    case gl.TRIANGLES:
+                    case PrimitiveSet.TRIANGLES:
                         this.applyDrawElementsTriangles( primitive.getCount(), vertexes, indexes );
                         break;
-                    case gl.TRIANGLE_STRIP:
+                    case PrimitiveSet.TRIANGLE_STRIP:
                         this.applyDrawElementsTriangleStrip( primitive.getCount(), vertexes, indexes );
                         break;
-                    case gl.TRIANGLE_FAN:
+                    case PrimitiveSet.TRIANGLE_FAN:
                         this.applyDrawElementsTriangleFan( primitive.getCount(), vertexes, indexes );
                         break;
                     }
                 } else { // draw array
                     switch ( primitive.getMode() ) {
-                    case gl.TRIANGLES:
+                    case PrimitiveSet.TRIANGLES:
                         this.applyDrawArraysTriangles( primitive.getFirst(), primitive.getCount(), vertexes );
                         break;
-                    case gl.TRIANGLE_STRIP:
+                    case PrimitiveSet.TRIANGLE_STRIP:
                         this.applyDrawArraysTriangleStrip( primitive.getFirst(), primitive.getCount(), vertexes );
                         break;
-                    case gl.TRIANGLE_FAN:
+                    case PrimitiveSet.TRIANGLE_FAN:
                         this.applyDrawArraysTriangleFan( primitive.getFirst(), primitive.getCount(), vertexes );
                         break;
                     }
@@ -242,7 +235,7 @@ define( [
         intersect: function ( v1, v2, v3 ) {
             this.index++;
 
-            if ( v1 == v2 || v2 == v3 || v1 == v3 ) {
+            if ( v1 === v2 || v2 === v3 || v1 === v3 ) {
                 return;
             }
 
@@ -337,15 +330,15 @@ define( [
                 return;
             } // the triangle and the line must be parallel intersection.
 
-            var total_r = ( r1 + r2 + r3 );
-            if ( total_r !== 1.0 ) {
-                if ( total_r === 0.0 ) {
+            var totalR = ( r1 + r2 + r3 );
+            if ( totalR !== 1.0 ) {
+                if ( totalR === 0.0 ) {
                     return;
                 } // the triangle and the line must be parallel intersection.
-                var inv_total_r = 1.0 / total_r;
-                r1 *= inv_total_r;
-                r2 *= inv_total_r;
-                r3 *= inv_total_r;
+                var invTotalR = 1.0 / totalR;
+                r1 *= invTotalR;
+                r2 *= invTotalR;
+                r3 *= invTotalR;
             }
 
             var inside = [];
@@ -356,11 +349,11 @@ define( [
                 inside,
                 inside );
             if ( !Vec3.valid( inside ) ) {
-                Notify.log( "Warning: TriangleIntersect " );
-                Notify.log( "hit:     " + inside );
-                Notify.log( "         " + v1 );
-                Notify.log( "         " + v2 );
-                Notify.log( "         " + v3 );
+                Notify.log( 'Warning: TriangleIntersect ' );
+                Notify.log( 'hit:     ' + inside );
+                Notify.log( '         ' + v1 );
+                Notify.log( '         ' + v2 );
+                Notify.log( '         ' + v3 );
                 return;
             }
 

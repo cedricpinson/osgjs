@@ -1,13 +1,11 @@
 /*global define */
 
 define( [
-    //#FIXME enum fix 'osg/Camera', 
     'osg/Matrix',
     'osg/TransformEnums'
-], function ( /* Camera, */ Matrix, TransformEnums ) {
-    /** -*- compile-command: "jslint-cli Transform.js" -*- */
+], function ( Matrix, TransformEnums ) {
 
-    computeLocalToWorld = function ( nodePath, ignoreCameras ) {
+    var computeLocalToWorld = function ( nodePath, ignoreCameras ) {
         var ignoreCamera = ignoreCameras;
         if ( ignoreCamera === undefined ) {
             ignoreCamera = true;
@@ -18,7 +16,7 @@ define( [
         if ( ignoreCamera ) {
             for ( j = nodePath.length - 1; j > 0; j-- ) {
                 var camera = nodePath[ j ];
-                if ( camera.objectType === 1 /* #FIXME enum fix Camera.prototype.objectType */ &&
+                if ( camera.className() === 'Camera' &&
                     ( camera.getReferenceFrame !== TransformEnums.RELATIVE_RF || camera.getParents().length === 0 ) ) {
                     break;
                 }

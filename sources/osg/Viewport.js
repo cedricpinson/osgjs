@@ -3,9 +3,8 @@
 define( [
     'osg/Utils',
     'osg/StateAttribute',
-    'osg/Matrix',
-    'osg/Viewport'
-], function ( MACROUTILS, StateAttribute, Matrix, Viewport ) {
+    'osg/Matrix'
+], function ( MACROUTILS, StateAttribute, Matrix ) {
 
     var Viewport = function ( x, y, w, h ) {
         StateAttribute.call( this );

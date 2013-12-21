@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Notify',
     'osg/Utils',
@@ -14,39 +12,39 @@ define( [
     'osg/StateSet',
     'osg/Program',
     'osg/Shader',
-    'osg/Texture',
     'osg/Shape',
-    'osg/TransformEnums'
-], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix,  Uniform, StateSet, Program, Shader, Texture, Shape, TransformEnums ) {
+    'osg/TransformEnums',
+    'osg/Vec3'
+], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix,  Uniform, StateSet, Program, Shader, Shape, TransformEnums, Vec3 ) {
 
     /*
-  Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
-  
-  how to use it:
+     Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
 
-  // example how to blur a texture and render it to screen
-  var myTexture; // imagine it's your texture you want to process
-  var composer = new Composer();
-  composer.addPass(new Composer.Filter.InputTexture(myTexture));
-  composer.addPass(new Composer.Filter.HBlur(5));
-  composer.addPass(new Composer.Filter.VBlur(5));
-  composer.renderToScreen(1200, 900);
-  composer.build(); // if you dont build manually it will be done in the scenegraph while upading
-  rootnode.addChild(composer);
+     how to use it:
 
-  // now you can imagine to some process and use the result as input texture for a geometry
-  var myTexture; // imagine it's your texture you want to process
-  var myResultTexture = new Texture(); // imagine it's your texture you want to process
-  myResultTexture.setTextureSize(1200,900);
-  var composer = new Composer();
-  composer.addPass(new Composer.Filter.InputTexture(myTexture));
-  composer.addPass(new Composer.Filter.HBlur(5));
-  composer.addPass(new Composer.Filter.VBlur(5), resultTexture);
+     // example how to blur a texture and render it to screen
+     var myTexture; // imagine it's your texture you want to process
+     var composer = new Composer();
+     composer.addPass(new Composer.Filter.InputTexture(myTexture));
+     composer.addPass(new Composer.Filter.HBlur(5));
+     composer.addPass(new Composer.Filter.VBlur(5));
+     composer.renderToScreen(1200, 900);
+     composer.build(); // if you dont build manually it will be done in the scenegraph while upading
+     rootnode.addChild(composer);
 
-  myGeometry.getStateSet().setTextureAttributeAndModes(0, resultTexture);
-  rootnode.addChild(composer);
-   
- */
+     // now you can imagine to some process and use the result as input texture for a geometry
+     var myTexture; // imagine it's your texture you want to process
+     var myResultTexture = new Texture(); // imagine it's your texture you want to process
+     myResultTexture.setTextureSize(1200,900);
+     var composer = new Composer();
+     composer.addPass(new Composer.Filter.InputTexture(myTexture));
+     composer.addPass(new Composer.Filter.HBlur(5));
+     composer.addPass(new Composer.Filter.VBlur(5), resultTexture);
+
+     myGeometry.getStateSet().setTextureAttributeAndModes(0, resultTexture);
+     rootnode.addChild(composer);
+
+     */
 
     var Composer = function () {
         Node.call( this );
@@ -57,7 +55,7 @@ define( [
 
         };
         UpdateCallback.prototype = {
-            update: function ( node, nv ) {
+            update: function ( node /*, nv */ ) {
                 if ( node.isDirty() ) {
                     node.build();
                 }
@@ -309,7 +307,7 @@ define( [
                     [ 1 ]
                 ];
                 for ( var j = 0; j < ( kernelSize - 1 ); j++ ) {
-                    var sum = Math.pow( 2, j );
+                    //var sum = Math.pow( 2, j );
                     var currentRow = pascalTriangle[ j ];
                     var currentRowSize = currentRow.length;
 
@@ -362,7 +360,6 @@ define( [
                 new Shader( 'VERTEX_SHADER', this._vertexShader ),
                 new Shader( 'FRAGMENT_SHADER', this._fragmentShader ) );
 
-            var self = this;
             if ( this._uniforms ) {
                 var unitIndex = 0;
 
@@ -370,22 +367,22 @@ define( [
                 if ( r !== null ) {
                     for ( var i = 0, l = r.length; i < l; i++ ) {
                         var match = r[ i ].match( /uniform\s+(\w+)\s+(\w+)/ );
-                        var uniform_type = match[ 1 ];
-                        var uniform_name = match[ 2 ];
+                        var uniformType = match[ 1 ];
+                        var uniformName = match[ 2 ];
                         var uniform;
 
-                        if ( this._uniforms[ uniform_name ] !== undefined ) {
-                            uniform_value = this._uniforms[ uniform_name ];
-                            if ( uniform_type.search( 'sampler' ) !== -1 ) {
-                                this._stateSet.setTextureAttributeAndModes( unitIndex, uniform_value );
-                                uniform = Uniform.createInt1( unitIndex, uniform_name );
+                        if ( this._uniforms[ uniformName ] !== undefined ) {
+                            var uniformValue = this._uniforms[ uniformName ];
+                            if ( uniformType.search( 'sampler' ) !== -1 ) {
+                                this._stateSet.setTextureAttributeAndModes( unitIndex, uniformValue );
+                                uniform = Uniform.createInt1( unitIndex, uniformName );
                                 unitIndex++;
                                 this._stateSet.addUniform( uniform );
                             } else {
-                                if ( Uniform.isUniform( uniform_value ) ) {
-                                    uniform = uniform_value;
+                                if ( Uniform.isUniform( uniformValue ) ) {
+                                    uniform = uniformValue;
                                 } else {
-                                    uniform = Uniform[ uniform_type ]( this._uniforms[ uniform_name ], uniform_name );
+                                    uniform = Uniform[ uniformType ]( this._uniforms[ uniformName ], uniformName );
                                 }
                                 this._stateSet.addUniform( uniform );
                             }
@@ -440,7 +437,7 @@ define( [
             return kernel;
         },
         build: function () {
-            var nbSamples = this._nbSamples;
+            //var nbSamples = this._nbSamples;
             var vtx = Composer.Filter.defaultVertexShader;
             var fgt = [
                 Composer.Filter.defaultFragmentShaderHeader,
@@ -547,7 +544,7 @@ define( [
             return kernel;
         },
         build: function () {
-            var nbSamples = this._nbSamples;
+            //var nbSamples = this._nbSamples;
             var vtx = Composer.Filter.defaultVertexShader;
             var fgt = [
                 Composer.Filter.defaultFragmentShaderHeader,
@@ -687,7 +684,7 @@ define( [
     } );
 
     // Operate a Gaussian vertical blur
-    Composer.Filter.VBlur = function ( nbSamplesOpt ) {
+    Composer.Filter.VBlur = function ( /*nbSamplesOpt*/ ) {
         Composer.Filter.HBlur.call( this );
     };
 
@@ -787,7 +784,7 @@ define( [
         stateSet.addUniform( Uniform.createInt1( unit0, 'Texture0' ) );
         stateSet.addUniform( Uniform.createInt1( unit1, 'Texture1' ) );
         this._mixValueUniform = Uniform.createFloat1( mixValue, 'MixValue' );
-        stateSet.addUniform( mixValueUniform );
+        stateSet.addUniform( this._mixValueUniform );
     };
 
     Composer.Filter.BlendMix = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
@@ -824,7 +821,7 @@ define( [
     Composer.Filter.BlendMultiply = function () {
         Composer.Filter.call( this );
         var stateSet = this._stateSet;
-        var texture0, texture1, mixValue;
+        var texture0, texture1;
         var unit0 = 0;
         var unit1 = 1;
         if ( arguments.length === 2 ) {
@@ -1014,9 +1011,9 @@ define( [
             }
             kernelglsl = kernelglsl.join( '\n' );
 
-            var ssaoRadiusMin = this._sceneRadius * 0.002;
-            var ssaoRadiusMax = this._sceneRadius * 0.05;
-            var ssaoRadiusStep = ( ssaoRadiusMax - ssaoRadiusMin ) / 200.0;
+            //var ssaoRadiusMin = this._sceneRadius * 0.002;
+            //var ssaoRadiusMax = this._sceneRadius * 0.05;
+            //var ssaoRadiusStep = ( ssaoRadiusMax - ssaoRadiusMin ) / 200.0;
 
             var fragmentshader = [
                 '',
@@ -1108,7 +1105,7 @@ define( [
             var stateSet = this._stateSet;
             var nbSamples = this._nbSamples;
             var kernel = new Array( nbSamples * 4 );
-            var angleLimit = this._angleLimit;
+            //var angleLimit = this._angleLimit;
             ( function ( array ) {
                 for ( var i = 0; i < nbSamples; i++ ) {
                     var x, y, z;
@@ -1126,7 +1123,7 @@ define( [
                 }
             } )( kernel );
 
-            var sizeNoise = this._noiseTextureSize;
+            //var sizeNoise = this._noiseTextureSize;
             stateSet.setTextureAttributeAndModes( 2, this._noiseTexture );
             var uniform = stateSet.getUniform( 'noiseSampling' );
             if ( uniform === undefined ) {
@@ -1162,9 +1159,9 @@ define( [
             }
             kernelglsl = kernelglsl.join( '\n' );
 
-            var ssaoRadiusMin = this._sceneRadius * 0.002;
-            var ssaoRadiusMax = this._sceneRadius * 0.05;
-            var ssaoRadiusStep = ( ssaoRadiusMax - ssaoRadiusMin ) / 200.0;
+            //var ssaoRadiusMin = this._sceneRadius * 0.002;
+            //var ssaoRadiusMax = this._sceneRadius * 0.05;
+            //var ssaoRadiusStep = ( ssaoRadiusMax - ssaoRadiusMin ) / 200.0;
 
             var fragmentshader = [
                 '',

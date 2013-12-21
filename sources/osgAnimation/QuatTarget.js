@@ -35,7 +35,7 @@ define( [
         update: function ( weight, val, priority ) {
             if ( this._weight || this._priorityWeight ) {
 
-                if ( this._lastPriority != priority ) {
+                if ( this._lastPriority !== priority ) {
                     // change in priority
                     // add to weight with the same previous priority cumulated weight
                     this._weight += this._priorityWeight * ( 1.0 - this._weight );
@@ -44,7 +44,7 @@ define( [
                 }
 
                 this._priorityWeight += weight;
-                t = ( 1.0 - this._weight ) * weight / this._priorityWeight;
+                var t = ( 1.0 - this._weight ) * weight / this._priorityWeight;
                 Quat.lerp( t, this._target, val, this._target );
                 Quat.normalize( this._target, this._target );
 

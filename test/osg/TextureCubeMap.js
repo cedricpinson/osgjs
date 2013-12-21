@@ -1,9 +1,10 @@
 define( [
+    'tests/mockup/mockup',
     'osg/TextureCubeMap',
     'osg/Texture',
     'osg/State',
     'osgDB/ReaderParser'
-], function ( TextureCubeMap, Texture, State, ReaderParser ) {
+], function ( mockup, TextureCubeMap, Texture, State, ReaderParser ) {
 
     return function () {
 
@@ -34,12 +35,12 @@ define( [
                 return texture;
             };
 
-            var greyscale = ReaderParser.readImage( 'greyscale.png', {
+            var greyscale = ReaderParser.readImage( 'mockup/greyscale.png', {
                 promise: false
             } );
 
             var state = new State();
-            state.setGraphicContext( createFakeRenderer() );
+            state.setGraphicContext( mockup.createFakeRenderer() );
 
             var texture = new TextureCubeMap();
             texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_X', greyscale, Texture.ALPHA );

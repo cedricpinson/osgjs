@@ -87,12 +87,12 @@ define( [
                     canvas = document.createElement( 'canvas' );
                 }
                 var ctx = canvas.getContext( '2d' );
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage( img, 0, 0 );
+                canvas.width = this._imageObject.width;
+                canvas.height = this._imageObject.height;
+                ctx.drawImage( this._imageObject, 0, 0 );
 
                 var data = ctx.getImageData( 0, 0, 1, 1 ).data;
-                var isGreyscale = ( data[ 0 ] == data[ 1 ] ) && ( data[ 1 ] == data[ 2 ] );
+                var isGreyscale = ( data[ 0 ] === data[ 1 ] ) && ( data[ 1 ] === data[ 2 ] );
                 this._isGreyscale = isGreyscale;
             }
             return this._isGreyscale;
@@ -119,7 +119,7 @@ define( [
         }
     } ), 'osg', 'Image' );
 
-    Image.prototype.objectType = MACROUTILS.objectType.generate( 'Image' );
+    MACROUTILS.setTypeID( Image );
 
     return Image;
 } );

@@ -1,13 +1,9 @@
-/*global define */
-
 define( [
     'osg/Utils',
-    'osg/Node',
+    'osg/Node'
 ], function ( MACROUTILS, Node ) {
 
-    /** -*- compile-command: 'jslint-cli Node.js' -*- */
-
-    /** 
+    /**
      *  LightSource is a positioned node to use with StateAttribute Light
      *  @class LightSource
      */
@@ -25,7 +21,8 @@ define( [
             this._light = light;
         }
     } ), 'osg', 'LightSource' );
-    LightSource.prototype.objectType = MACROUTILS.objectType.generate( 'LightSource' );
+
+    MACROUTILS.setTypeID( LightSource );
 
     return LightSource;
 } );

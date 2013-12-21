@@ -1,7 +1,8 @@
 define( [
+    'test/mockup',
     'osg/Texture',
     'osgViewer/Viewer'
-], function ( Texture, Viewer ) {
+], function ( mockup, Texture, Viewer ) {
 
     return function () {
 
@@ -37,11 +38,11 @@ define( [
                 return texture;
             };
 
-            var greyscale = loadTexture( 'greyscale.png', Texture.ALPHA );
+            var greyscale = loadTexture( 'mockup/greyscale.png', Texture.ALPHA );
             greyscale.setUnrefImageDataAfterApply( true );
 
-            var rgb24 = loadTexture( 'rgb24.png', Texture.RGB );
-            var rgba32 = loadTexture( 'rgba32.png', Texture.RGBA );
+            var rgb24 = loadTexture( 'mockup/rgb24.png', Texture.RGB );
+            var rgba32 = loadTexture( 'mockup/rgba32.png', Texture.RGBA );
 
             ready = function () {
                 var cnv = document.createElement( 'canvas' );
@@ -50,7 +51,7 @@ define( [
                 var tcanvas = new Texture();
                 tcanvas.setImage( cnv );
 
-                var canvas = createCanvas();
+                var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 viewer.init();
 
@@ -77,7 +78,7 @@ define( [
                 //rgb24.apply(state);
                 //rgba32.apply(state);
                 //tcanvas.apply(state);
-                removeCanvas( canvas );
+                mockup.removeCanvas( canvas );
 
                 start();
             };
