@@ -1,5 +1,3 @@
-/*global define */
-
 define( [], function () {
 
     /** @class Vec4 Operations */

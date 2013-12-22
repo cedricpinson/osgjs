@@ -1,8 +1,7 @@
-/*global define */
+define( [
+], function () {
 
-define( [], function () {
-
-    /** 
+    /**
      * DrawArrayLengths manage rendering primitives
      * @class DrawArrayLengths
      */

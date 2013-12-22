@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/Vec3',
@@ -10,11 +8,6 @@ define( [
     'osgGA/OrbitManipulatorHammerController',
     'osgGA/OrbitManipulatorGamePadController'
 ], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController ) {
-
-    /** -*- compile-command: "jslint-cli OrbitManipulator.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     /**
      *  OrbitManipulator

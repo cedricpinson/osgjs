@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osgGA/Manipulator',
@@ -10,13 +8,13 @@ define( [
     'osgGA/FirstPersonManipulatorMouseKeyboardController'
 ], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController ) {
 
-    /** -*- compile-command: "jslint-cli FirstPersonManipulator.js" -*-
+    /**
      * Authors:
      *  Matt Fontaine <tehqin@gmail.com>
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
+     *  Cedric Pinson <trigrou@gmail.com>
      */
 
-    /** 
+    /**
      *  FirstPersonManipulator
      *  @class
      */

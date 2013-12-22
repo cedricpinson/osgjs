@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/StateAttribute',
@@ -9,9 +7,7 @@ define( [
     'osg/ShaderGenerator'
 ], function ( MACROUTILS, StateAttribute, Uniform, Matrix, Vec4, ShaderGenerator ) {
 
-    /** -*- compile-command: 'jslint-cli Node.js' -*- */
-
-    /**
+        /**
      *  Light
      *  @class Light
      */

@@ -1,5 +1,3 @@
-/*global define */
-
 define( [], function () {
 
     var FirstPersonManipulatorMouseKeyboardController = function ( manipulator ) {

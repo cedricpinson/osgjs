@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/NodeVisitor',
@@ -7,11 +5,6 @@ define( [
     'osg/Vec3',
     'osgUtil/TriangleIntersect'
 ], function ( MACROUTILS, NodeVisitor, Matrix, Vec3, TriangleIntersect ) {
-
-    /** -*- compile-command: "jslint-cli IntersectVisitor.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     var IntersectVisitor = function () {
         NodeVisitor.call( this );

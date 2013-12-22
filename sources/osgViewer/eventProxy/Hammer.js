@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'vendors/Hammer'
 ], function ( Hammer ) {

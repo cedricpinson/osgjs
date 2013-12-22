@@ -1,11 +1,9 @@
-/*global define */
-
 define( [
     'osg/Notify',
     'osg/PrimitiveSet'
 ], function ( Notify, PrimitiveSet ) {
 
-    /** 
+    /**
      * DrawElements manage rendering of indexed primitives
      * @class DrawElements
      */

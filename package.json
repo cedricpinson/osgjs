@@ -1,5 +1,14 @@
 {
     "name": "OpenSceneGraph",
+    "description": "OpenSceneGraph implementation in javascript",
+    "license": "LGPL V3+ (https://spdx.org/licenses/LGPL-3.0+)",
+    "author": "Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)",
+    "version": "0.0.9",
+    "contributors": [
+        "Tuan.kuranes <tuan.kuranes@gmail.com>",
+        "Matt Fontaine <tehqin@gmail.com>"
+    ],
+
     "dependencies": {
         "extend": "*",
         "glob": "*",
@@ -10,5 +19,8 @@
         "grunt-contrib-jshint": "*",
         "grunt-contrib-uglify": "*",
         "grunt-contrib-watch": "*"
+    },
+    "devDependencies": {
+        "grunt-docco2": "~0.1.5"
     }
 }

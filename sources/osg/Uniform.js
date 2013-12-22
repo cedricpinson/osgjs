@@ -1,11 +1,7 @@
-/*global define */
-
 define( [
     'osg/Utils'
 ], function ( MACROUTILS ) {
-    /** -*- compile-command: 'jslint-cli Uniform.js' -*- */
-
-    /**
+        /**
      * Uniform manage variable used in glsl shader.
      * @class Uniform
      */

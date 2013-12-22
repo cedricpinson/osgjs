@@ -1,16 +1,9 @@
-/*global define */
-
 define( [
     'osgUtil/Composer',
     'osgUtil/IntersectVisitor',
     'osgUtil/ParameterVisitor',
     'osgUtil/TriangleIntersect'
 ], function (Composer, IntersectVisitor, ParameterVisitor, TriangleIntersect) {
-
-    /** -*- compile-command: "jslint-cli osgUtil.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     var osgUtil = {};
 

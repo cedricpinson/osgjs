@@ -10,9 +10,6 @@ define( [
 
     var openSceneGraph = osgNameSpace;
 
-    openSceneGraph.version = '0.0.9';
-    openSceneGraph.copyright = 'Cedric Pinson - trigrou@gmail.com';
-
     openSceneGraph.osg = osg;
     openSceneGraph.osgAnimation = osgAnimation;
     openSceneGraph.osgDB = osgDB;

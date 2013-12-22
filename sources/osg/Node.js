@@ -10,9 +10,7 @@ define( [
     'osg/TransformEnums'
 ], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, ComputeMatrixFromNodePath, TransformEnums ) {
 
-    /** -*- compile-command: 'jslint-cli Node.js' -*- */
-
-    /**
+        /**
      *  Node that can contains child node
      *  @class Node
      */

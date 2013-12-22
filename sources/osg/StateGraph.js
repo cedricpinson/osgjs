@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osgUtil/osgPool'
 ], function ( osgPool ) {

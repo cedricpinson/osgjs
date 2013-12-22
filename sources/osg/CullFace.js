@@ -1,11 +1,9 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/StateAttribute'
 ], function ( MACROUTILS, StateAttribute ) {
 
-    /** 
+    /**
      *  Manage CullFace attribute
      *  @class CullFace
      */

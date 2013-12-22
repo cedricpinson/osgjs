@@ -1,5 +1,3 @@
-/*global define */
-
 define( [], function () {
 
     var NodeVisitor = function ( traversalMode ) {

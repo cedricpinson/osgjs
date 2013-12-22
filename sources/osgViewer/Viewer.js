@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Notify',
     'osg/Utils',
@@ -17,11 +15,6 @@ define( [
     'osgViewer/webgl-debug',
     'osgViewer/stats'
 ], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy, WebGLUtils, WebGLDebugUtils, Stats ) {
-
-    /** -*- compile-command: 'jslint-cli Viewer.js' -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     ( function () {
 

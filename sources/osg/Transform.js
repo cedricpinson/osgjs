@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/Node',
@@ -7,9 +5,7 @@ define( [
     'osg/Vec3',
     'osg/TransformEnums'
 ], function ( MACROUTILS, Node, Matrix, Vec3, TransformEnums ) {
-    /** -*- compile-command: "jslint-cli Transform.js" -*- */
-
-    /**
+        /**
      * Transform - base class for Transform type node ( Camera, MatrixTransform )
      * @class Transform
      * @inherits Node

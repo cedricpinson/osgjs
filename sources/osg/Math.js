@@ -1,5 +1,3 @@
-/*global define */
-
 define( [], function () {
 
     var clamp = function ( x, min, max ) {

@@ -1,13 +1,9 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/Vec3',
     'osg/Node',
     'osg/BoundingBox'
 ], function ( MACROUTILS, Vec3, Node, BoundingBox ) {
-
-    /** -*- compile-command: 'jslint-cli Geometry.js' -*- */
 
     /**
      * Geometry manage array and primitives to draw a geometry.

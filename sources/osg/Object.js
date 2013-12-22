@@ -1,12 +1,8 @@
-/*global define */
-
 define( [
     'osg/Utils'
 ], function ( MACROUTILS ) {
 
-    /** -*- compile-command: 'jslint-cli Object.js' -*- */
-
-    /**
+        /**
      *  Object class
      *  @class Object
      */

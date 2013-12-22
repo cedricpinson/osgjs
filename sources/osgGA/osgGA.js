@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osgGA/FirstPersonManipulator',
     'osgGA/FirstPersonManipulatorMouseKeyboardController',
@@ -13,11 +11,6 @@ define( [
     'osgGA/OrbitManipulatorEnums',
     'vendors/Hammer'
 ], function ( FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums, Hammer ) {
-
-    /** -*- compile-command: "jslint-cli osgGA.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     var osgGA = {};
 

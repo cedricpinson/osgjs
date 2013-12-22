@@ -1,11 +1,9 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/StateAttribute'
 ], function ( MACROUTILS, StateAttribute ) {
 
-    /** 
+    /**
      *  Manage Blending mode
      *  @class BlendFunc
      */
@@ -57,24 +55,24 @@ define( [
 
     /** @lends BlendFunc.prototype */
     BlendFunc.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
-        /** 
+        /**
     StateAttribute type of BlendFunc
     @type String
      */
         attributeType: 'BlendFunc',
-        /** 
+        /**
         Create an instance of this StateAttribute
         */
         cloneType: function () /**BlendFunc*/ {
             return new BlendFunc();
         },
-        /** 
+        /**
         @type String
         */
         getType: function () {
             return this.attributeType;
         },
-        /** 
+        /**
         @type String
         */
         getTypeMember: function () {
@@ -125,7 +123,7 @@ define( [
             this._separate = this.checkSeparate();
         },
 
-        /** 
+        /**
         Apply the mode, must be called in the draw traversal
         @param state
     */

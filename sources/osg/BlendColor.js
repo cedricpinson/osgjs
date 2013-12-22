@@ -1,12 +1,10 @@
-/*global define */
-
 define( [
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Vec4'
 ], function ( MACROUTILS, StateAttribute, Vec4 ) {
 
-    /** 
+    /**
      *  Manage BlendColor attribute
      *  @class BlendColor
      */

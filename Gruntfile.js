@@ -8,7 +8,8 @@ var glob   = require( 'glob' );
 // They always have to finish with a '/'.
 //
 var SOURCE_PATH = 'sources/';
-var DIST_PATH   = 'builds/dist/';
+var BUILD_PATH   = 'builds/';
+var DIST_PATH   = BUILD_PATH+'dist/';
 var UTILS_PATH  = 'tools/build/';
 
 // Utility functions
@@ -88,6 +89,9 @@ var gruntTasks = { };
     gruntTasks.watch = { options : {
         } };
 
+    gruntTasks.docco = { options : {
+        } };
+
 } )( );
 
 // ## JSHint
@@ -136,12 +140,37 @@ var gruntTasks = { };
 
 } )( );
 
+
+// ## Docco
+//
+( function ( ) {
+
+    // generate a requirejs without anything to build a docco docs
+    gruntTasks.requirejs.docsSources = { options : {
+        out : Path.join( BUILD_PATH, 'docs/OSG.js' ),
+        include : [ 'OSG' ]
+    } };
+
+    gruntTasks.docco = {
+        docs: {
+            src: [ 'builds/docs/OSG.js' ],
+            options: {
+                output: 'docs/annotated-source'
+            }
+        }
+    };
+
+} )( );
+
+
 module.exports = function ( grunt ) {
 
     grunt.initConfig( extend( {
         pkg : grunt.file.readJSON( 'package.json' )
     }, gruntTasks ) );
 
+
+    grunt.loadNpmTasks( 'grunt-docco2' );
     grunt.loadNpmTasks( 'grunt-contrib-jshint' );
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
     grunt.loadNpmTasks( 'grunt-contrib-requirejs' );
@@ -149,7 +178,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-watch' );
 
     grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
-    grunt.registerTask( 'checkEmacs', [ 'jshint:self', 'jshint:sourcesEmacs' ] );
+
+    grunt.registerTask( 'docs', [ 'requirejs:docsSources', 'docco' ] );
 
     grunt.registerTask( 'build:sources:dist', [ 'requirejs:distSources', 'clean:distAfterSourcesRjs' ] );
     grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );

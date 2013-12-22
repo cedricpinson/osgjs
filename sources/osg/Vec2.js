@@ -1,5 +1,3 @@
-/*global define */
-
 define( [], function () {
 
     /** @class Vec2 Operations */
@@ -40,7 +38,7 @@ define( [], function () {
             return Math.sqrt( x * x + y * y );
         },
 
-        /** 
+        /**
         normalize an Array of 2 elements and write it in r
      */
         normalize: function ( a, r ) {
@@ -56,8 +54,8 @@ define( [], function () {
             return r;
         },
 
-        /** 
-        Compute the dot product 
+        /**
+        Compute the dot product
     */
         dot: function ( a, b ) {
             return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ];

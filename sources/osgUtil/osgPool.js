@@ -1,8 +1,6 @@
-/*global define */
-
 define( [], function () {
 
-    /** -*- compile-command: "jslint-cli osgUtil.js" -*-
+    /**
      * Authors:
      *  Tuan.kuranes <tuan.kuranes@gmail.com> Jerome Etienne <Jerome.etienne@gmail.com>
      */

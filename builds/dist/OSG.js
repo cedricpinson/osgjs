@@ -418,11 +418,9 @@ define( 'osgNameSpace',[
     return {};
 } );
 
-/*global define */
-
 define( 'osgUtil/osgPool',[], function () {
 
-    /** -*- compile-command: "jslint-cli osgUtil.js" -*-
+    /**
      * Authors:
      *  Tuan.kuranes <tuan.kuranes@gmail.com> Jerome Etienne <Jerome.etienne@gmail.com>
      */
@@ -499,8 +497,6 @@ define( 'osgUtil/osgPool',[], function () {
 
     return osgPool;
 } );
-
-/*global define */
 
 define( 'osg/StateGraph',[
     'osgUtil/osgPool'
@@ -830,15 +826,11 @@ define( 'osg/Utils',[
     return Utils;
 } );
 
-/*global define */
-
 define( 'osg/Object',[
     'osg/Utils'
 ], function ( MACROUTILS ) {
 
-    /** -*- compile-command: 'jslint-cli Object.js' -*- */
-
-    /**
+        /**
      *  Object class
      *  @class Object
      */
@@ -880,7 +872,6 @@ define( 'osg/Object',[
 
     return Object;
 } );
-/*global define */
 
 define( 'osg/StateAttribute',[
     'osg/Utils',
@@ -917,7 +908,6 @@ define( 'osg/StateAttribute',[
 
     return StateAttribute;
 } );
-/*global define */
 
 define( 'osg/Vec4',[], function () {
 
@@ -981,15 +971,13 @@ define( 'osg/Vec4',[], function () {
     return Vec4;
 } );
 
-/*global define */
-
 define( 'osg/BlendColor',[
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Vec4'
 ], function ( MACROUTILS, StateAttribute, Vec4 ) {
 
-    /** 
+    /**
      *  Manage BlendColor attribute
      *  @class BlendColor
      */
@@ -1032,14 +1020,13 @@ define( 'osg/BlendColor',[
 
     return BlendColor;
 } );
-/*global define */
 
 define( 'osg/BlendFunc',[
     'osg/Utils',
     'osg/StateAttribute'
 ], function ( MACROUTILS, StateAttribute ) {
 
-    /** 
+    /**
      *  Manage Blending mode
      *  @class BlendFunc
      */
@@ -1091,24 +1078,24 @@ define( 'osg/BlendFunc',[
 
     /** @lends BlendFunc.prototype */
     BlendFunc.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
-        /** 
+        /**
     StateAttribute type of BlendFunc
     @type String
      */
         attributeType: 'BlendFunc',
-        /** 
+        /**
         Create an instance of this StateAttribute
         */
         cloneType: function () /**BlendFunc*/ {
             return new BlendFunc();
         },
-        /** 
+        /**
         @type String
         */
         getType: function () {
             return this.attributeType;
         },
-        /** 
+        /**
         @type String
         */
         getTypeMember: function () {
@@ -1159,7 +1146,7 @@ define( 'osg/BlendFunc',[
             this._separate = this.checkSeparate();
         },
 
-        /** 
+        /**
         Apply the mode, must be called in the draw traversal
         @param state
     */
@@ -1177,7 +1164,6 @@ define( 'osg/BlendFunc',[
 
     return BlendFunc;
 } );
-/*global define */
 
 define( 'osg/BoundingBox',[
     'osg/Utils'
@@ -1269,8 +1255,6 @@ define( 'osg/BoundingBox',[
 
     return BoundingBox;
 } );
-
-/*global define */
 
 define( 'osg/Vec3',[], function () {
 
@@ -1386,6 +1370,7 @@ define( 'osg/Vec3',[], function () {
 
     return Vec3;
 } );
+
 define( 'osg/BoundingSphere',[
     'osg/Vec3',
     'osg/BoundingBox'
@@ -1561,8 +1546,6 @@ define( 'osg/BoundingSphere',[
 
     return BoundingSphere;
 } );
-
-/** -*- compile-command: 'jslint-cli osg.js' -*- */
 
 define( 'osg/Notify',[], function () {
 
@@ -1776,8 +1759,6 @@ define( 'osg/BufferArray',[
     return BufferArray;
 } );
 
-/*global define */
-
 define( 'osg/StateSet',[
     'osg/Utils',
     'osg/StateAttribute',
@@ -1977,7 +1958,6 @@ define( 'osg/StateSet',[
 
     return StateSet;
 } );
-/*global define */
 
 define( 'osg/NodeVisitor',[], function () {
 
@@ -2057,8 +2037,6 @@ define( 'osg/NodeVisitor',[], function () {
 
     return NodeVisitor;
 } );
-
-/*global define */
 
 define( 'osg/Quat',[], function () {
 
@@ -3482,8 +3460,6 @@ define( 'osg/Matrix',[
     return Matrix;
 } );
 
-/** -*- compile-command: 'jslint-cli osg.js' -*- */
-
 define( 'osg/TransformEnums',[], function () {
 
     return {
@@ -3491,7 +3467,6 @@ define( 'osg/TransformEnums',[], function () {
         ABSOLUTE_RF: 1
     };
 } );
-/*global define */
 
 define( 'osg/ComputeMatrixFromNodePath',[
     'osg/Matrix',
@@ -3542,9 +3517,7 @@ define( 'osg/Node',[
     'osg/TransformEnums'
 ], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, ComputeMatrixFromNodePath, TransformEnums ) {
 
-    /** -*- compile-command: 'jslint-cli Node.js' -*- */
-
-    /**
+        /**
      *  Node that can contains child node
      *  @class Node
      */
@@ -3814,8 +3787,6 @@ define( 'osg/Node',[
     return Node;
 } );
 
-/*global define */
-
 define( 'osg/Transform',[
     'osg/Utils',
     'osg/Node',
@@ -3823,9 +3794,7 @@ define( 'osg/Transform',[
     'osg/Vec3',
     'osg/TransformEnums'
 ], function ( MACROUTILS, Node, Matrix, Vec3, TransformEnums ) {
-    /** -*- compile-command: "jslint-cli Transform.js" -*- */
-
-    /**
+        /**
      * Transform - base class for Transform type node ( Camera, MatrixTransform )
      * @class Transform
      * @inherits Node
@@ -4088,14 +4057,12 @@ define( 'osg/Camera',[
     return Camera;
 } );
 
-/*global define */
-
 define( 'osg/CullFace',[
     'osg/Utils',
     'osg/StateAttribute'
 ], function ( MACROUTILS, StateAttribute ) {
 
-    /** 
+    /**
      *  Manage CullFace attribute
      *  @class CullFace
      */
@@ -4147,6 +4114,7 @@ define( 'osg/CullFace',[
 
     return CullFace;
 } );
+
 define( 'osg/CullStack',[], function () {
 
     var CullStack = function () {
@@ -4274,8 +4242,6 @@ define( 'osg/MatrixTransform',[
     return MatrixTransform;
 } );
 
-/*global define */
-
 define( 'osg/Projection',[
     'osg/Utils',
     'osg/Node',
@@ -4329,16 +4295,12 @@ define( 'osg/LightSource',[
     return LightSource;
 } );
 
-/*global define */
-
 define( 'osg/Geometry',[
     'osg/Utils',
     'osg/Vec3',
     'osg/Node',
     'osg/BoundingBox'
 ], function ( MACROUTILS, Vec3, Node, BoundingBox ) {
-
-    /** -*- compile-command: 'jslint-cli Geometry.js' -*- */
 
     /**
      * Geometry manage array and primitives to draw a geometry.
@@ -4489,8 +4451,6 @@ define( 'osg/Geometry',[
 
     return Geometry;
 } );
-
-/*global define */
 
 define( 'osg/RenderBin',[
     'osg/Notify',
@@ -4847,8 +4807,6 @@ define( 'osg/RenderBin',[
     return RenderBin;
 } );
 
-/*global define */
-
 define( 'osg/FrameBufferObject',[
     'osg/Notify',
     'osg/Utils',
@@ -4958,8 +4916,6 @@ define( 'osg/FrameBufferObject',[
 
     return FrameBufferObject;
 } );
-
-/*global define */
 
 define( 'osg/RenderStage',[
     'osg/Notify',
@@ -5698,8 +5654,6 @@ define( 'osg/CullVisitor',[
     return CullVisitor;
 } );
 
-/*global define */
-
 define( 'osg/Depth',[
     'osg/Utils',
     'osg/StateAttribute'
@@ -5774,11 +5728,11 @@ define( 'osg/Depth',[
 
     return Depth;
 } );
-/*global define */
 
-define( 'osg/DrawArrayLengths',[], function () {
+define( 'osg/DrawArrayLengths',[
+], function () {
 
-    /** 
+    /**
      * DrawArrayLengths manage rendering primitives
      * @class DrawArrayLengths
      */
@@ -5825,6 +5779,7 @@ define( 'osg/DrawArrayLengths',[], function () {
 
     return DrawArrayLengths;
 } );
+
 define( 'osg/DrawArrays',[
     'osg/Notify'
 ], function ( Notify ) {
@@ -5878,14 +5833,12 @@ define( 'osg/PrimitiveSet',[], function () {
     return PrimitiveSet;
 } );
 
-/*global define */
-
 define( 'osg/DrawElements',[
     'osg/Notify',
     'osg/PrimitiveSet'
 ], function ( Notify, PrimitiveSet ) {
 
-    /** 
+    /**
      * DrawElements manage rendering of indexed primitives
      * @class DrawElements
      */
@@ -5942,7 +5895,6 @@ define( 'osg/DrawElements',[
 
     return DrawElements;
 } );
-/*global define */
 
 define( 'osg/EllipsoidModel',[
     'osg/Notify',
@@ -6081,9 +6033,8 @@ define( 'osg/EllipsoidModel',[
     return EllipsoidModel;
 } );
 
-/*global define */
-
-define( 'osg/FrameStamp',[], function () {
+define( 'osg/FrameStamp',[
+], function () {
 
     var FrameStamp = function () {
         var frame = 0;
@@ -6112,7 +6063,6 @@ define( 'osg/FrameStamp',[], function () {
 
     return FrameStamp;
 } );
-/*global define */
 
 define( 'osg/Image',[
     'osg/Utils',
@@ -6238,14 +6188,10 @@ define( 'osg/Image',[
     return Image;
 } );
 
-/*global define */
-
 define( 'osg/Uniform',[
     'osg/Utils'
 ], function ( MACROUTILS ) {
-    /** -*- compile-command: 'jslint-cli Uniform.js' -*- */
-
-    /**
+        /**
      * Uniform manage variable used in glsl shader.
      * @class Uniform
      */
@@ -6647,8 +6593,6 @@ define( 'osg/Uniform',[
     return Uniform;
 } );
 
-/*global define */
-
 define( 'osg/Program',[
     'osg/Notify',
     'osg/Utils',
@@ -6781,8 +6725,6 @@ define( 'osg/Program',[
     return Program;
 } );
 
-/*global define */
-
 define( 'osg/Shader',[
     'osg/Notify'
 ], function ( Notify ) {
@@ -6838,7 +6780,6 @@ define( 'osg/Shader',[
     return Shader;
 } );
 
-/*global define */
 
 define( 'osg/ShaderGenerator',[
     'osg/Notify',
@@ -7186,8 +7127,6 @@ define( 'osg/ShaderGenerator',[
     return ShaderGenerator;
 } );
 
-/*global define */
-
 define( 'osg/Light',[
     'osg/Utils',
     'osg/StateAttribute',
@@ -7197,9 +7136,7 @@ define( 'osg/Light',[
     'osg/ShaderGenerator'
 ], function ( MACROUTILS, StateAttribute, Uniform, Matrix, Vec4, ShaderGenerator ) {
 
-    /** -*- compile-command: 'jslint-cli Node.js' -*- */
-
-    /**
+        /**
      *  Light
      *  @class Light
      */
@@ -7634,8 +7571,6 @@ define( 'osg/Light',[
     return Light;
 } );
 
-/*global define */
-
 define( 'osg/LineWidth',[
     'osg/Utils',
     'osg/StateAttribute',
@@ -7666,7 +7601,6 @@ define( 'osg/LineWidth',[
 
     return LineWidth;
 } );
-/*global define */
 
 define( 'osg/Material',[
     'osg/Utils',
@@ -7805,8 +7739,6 @@ define( 'osg/Material',[
     return Material;
 } );
 
-/*global define */
-
 define( 'osg/Math',[], function () {
 
     var clamp = function ( x, min, max ) {
@@ -7825,6 +7757,7 @@ define( 'osg/Math',[], function () {
         smoothStep: smoothStep
     };
 } );
+
 /*global define */
 
 define( 'osg/Shape',[
@@ -8474,8 +8407,6 @@ define( 'osg/Shape',[
     };
 } );
 
-/*global define */
-
 define( 'osg/Stack',[], function () {
 
     var Stack = function () {};
@@ -8491,7 +8422,6 @@ define( 'osg/Stack',[], function () {
 
     return Stack;
 } );
-/*global define */
 
 define( 'osg/State',[
     'osg/StateAttribute',
@@ -9712,8 +9642,6 @@ define( 'osgDB/Input',[
     return Input;
 } );
 
-/*global define */
-
 define( 'osgDB/ReaderParser',[
     'require',
     'osgDB/Input',
@@ -9736,26 +9664,6 @@ define( 'osgDB/ReaderParser',[
     'osg/Projection'
 ], function ( require, Input, Notify, MACROUTILS, Q, Texture, Uniform, BlendFunc, Material, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
 
-
-    /** -*- compile-command: 'jslint-cli osgDB.js' -*-
-     *
-     *  Copyright (C) 2010 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
     var ReaderParser = {};
 
     ReaderParser.ObjectWrapper = {};
@@ -10558,8 +10466,6 @@ define( 'osg/TextureCubeMap',[
     return TextureCubeMap;
 } );
 
-/*global define */
-
 define( 'osg/UpdateVisitor',[
     'osg/Utils',
     'osg/NodeVisitor',
@@ -10590,7 +10496,6 @@ define( 'osg/UpdateVisitor',[
 
     return UpdateVisitor;
 } );
-/*global define */
 
 define( 'osg/Vec2',[], function () {
 
@@ -10632,7 +10537,7 @@ define( 'osg/Vec2',[], function () {
             return Math.sqrt( x * x + y * y );
         },
 
-        /** 
+        /**
         normalize an Array of 2 elements and write it in r
      */
         normalize: function ( a, r ) {
@@ -10648,8 +10553,8 @@ define( 'osg/Vec2',[], function () {
             return r;
         },
 
-        /** 
-        Compute the dot product 
+        /**
+        Compute the dot product
     */
         dot: function ( a, b ) {
             return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ];
@@ -10687,7 +10592,6 @@ define( 'osg/Vec2',[], function () {
 
     return Vec2;
 } );
-/*global define */
 
 define( 'osg/Viewport',[
     'osg/Utils',
@@ -10765,8 +10669,6 @@ define( 'osg/Viewport',[
 
     return Viewport;
 } );
-
-/** -*- compile-command: 'jslint-cli osg.js' -*- */
 
 define( 'osg/osg',[
     'osg/BlendColor',
@@ -10896,34 +10798,13 @@ define( 'osg/osg',[
 
     return osg;
 } );
-/*global define */
 
 define( 'osgAnimation/Animation',[
     'osg/Utils',
     'osg/Object'
 ], function ( MACROUTILS, Object ) {
 
-    /** -*- compile-command: "jslint-cli Animation.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
-
-    /** 
+    /**
      *  Animation
      *  @class Animation
      */
@@ -10952,7 +10833,6 @@ define( 'osgAnimation/Animation',[
 
     return Animation;
 } );
-/*global define */
 
 define( 'osgAnimation/AnimationUpdateCallback',[
     'osg/Notify',
@@ -10960,27 +10840,7 @@ define( 'osgAnimation/AnimationUpdateCallback',[
     'osg/Object'
 ], function ( Notify, MACROUTILS, Object ) {
 
-    /** -*- compile-command: 'jslint-cli UpdateCallback.js' -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
-
-    /** 
+    /**
      *  AnimationUpdateCallback
      *  @class AnimationUpdateCallback
      */
@@ -11011,33 +10871,12 @@ define( 'osgAnimation/AnimationUpdateCallback',[
 
     return AnimationUpdateCallback;
 } );
-/*global define */
 
 define( 'osgAnimation/BasicAnimationManager',[
     'osg/Notify',
     'osg/Utils',
     'osg/Object'
 ], function ( Notify, MACROUTILS, Object ) {
-
-    /** -*- compile-command: "jslint-cli AnimationManager.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
     /**
      *  BasicAnimationManager
@@ -11240,34 +11079,12 @@ define( 'osgAnimation/BasicAnimationManager',[
     return BasicAnimationManager;
 } );
 
-/*global define */
-
 define( 'osgAnimation/Channel',[
     'osg/Utils',
     'osg/Object'
 ], function ( MACROUTILS, Object ) {
 
-    /** -*- compile-command: "jslint-cli Channel.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
-
-    /** 
+    /**
      *  Channel is responsible to interpolate keys
      *  @class Channel
      */
@@ -11332,29 +11149,8 @@ define( 'osgAnimation/Channel',[
 
     return Channel;
 } );
-/*global define */
 
 define( 'osgAnimation/Easing',[], function () {
-
-	/** -*- compile-command: "jslint-cli osgAnimation.js" -*-
-	 *
-	 *  Copyright (C) 2010 Cedric Pinson
-	 *
-	 *                  GNU LESSER GENERAL PUBLIC LICENSE
-	 *                      Version 3, 29 June 2007
-	 *
-	 * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-	 * Everyone is permitted to copy and distribute verbatim copies
-	 * of this license document, but changing it is not allowed.
-	 *
-	 * This version of the GNU Lesser General Public License incorporates
-	 * the terms and conditions of version 3 of the GNU General Public
-	 * License
-	 *
-	 * Authors:
-	 *  Cedric Pinson <cedric.pinson@plopbyte.com>
-	 *
-	 */
 
 	var easeOutQuad = function ( t ) {
 		return -( t * ( t - 2.0 ) );
@@ -11411,32 +11207,10 @@ define( 'osgAnimation/Easing',[], function () {
 		EaseOutBounce: easeOutBounce
 	};
 } );
-/*global define */
 
 define( 'osgAnimation/Sampler',[], function () {
 
-    /** -*- compile-command: "jslint-cli Sampler.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
-
-
-    /** 
+    /**
      *  Sampler is responsible to interpolate keys
      *  @class Sampler
      */
@@ -11491,6 +11265,7 @@ define( 'osgAnimation/Sampler',[], function () {
 
     return Sampler;
 } );
+
 define( 'osgAnimation/Interpolator',[
     'osg/Quat'
 ], function ( Quat ) {
@@ -11787,34 +11562,12 @@ define( 'osgAnimation/FloatTarget',[
     return FloatTarget;
 } );
 
-/*global define */
-
 define( 'osgAnimation/FloatLerpChannel',[
     'osgAnimation/Channel',
     'osgAnimation/Sampler',
     'osgAnimation/Interpolator',
     'osgAnimation/FloatTarget'
 ], function ( Channel, Sampler, Interpolator, FloatTarget ) {
-
-    /** -*- compile-command: "jslint-cli Channel.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
     var FloatLerpChannel = function ( keys, target ) {
         var sampler = new Sampler();
@@ -11834,29 +11587,8 @@ define( 'osgAnimation/FloatLerpChannel',[
 
     return FloatLerpChannel;
 } );
-/*global define */
 
 define( 'osgAnimation/Keyframe',[], function () {
-
-    /** -*- compile-command: "jslint-cli Keyframe.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
     var createVec3Keyframe = function ( t, array ) {
         var k = array.slice( 0 );
@@ -11882,7 +11614,6 @@ define( 'osgAnimation/Keyframe',[], function () {
         createFloatKeyframe: createFloatKeyframe
     };
 } );
-/*global define */
 
 define( 'osgAnimation/LinkVisitor',[
     'osg/Notify',
@@ -11891,26 +11622,6 @@ define( 'osgAnimation/LinkVisitor',[
     'osg/Object',
     'osgAnimation/AnimationUpdateCallback'
 ], function ( Notify, MACROUTILS, NodeVisitor, Object, AnimationUpdateCallback ) {
-
-    /** -*- compile-command: "jslint-cli LinkVisitor.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
 
     /**
@@ -11959,33 +11670,12 @@ define( 'osgAnimation/LinkVisitor',[
     return LinkVisitor;
 } );
 
-/*global define */
-
 define( 'osgAnimation/QuatTarget',[
     'osg/Utils',
     'osgAnimation/Target',
     'osg/Quat'
 ], function ( MACROUTILS, Target, Quat ) {
 
-    /** -*- compile-command: "jslint-cli Target.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
     var QuatTarget = function () {
         Target.call( this );
@@ -12021,8 +11711,6 @@ define( 'osgAnimation/QuatTarget',[
     return QuatTarget;
 } );
 
-/*global define */
-
 define( 'osgAnimation/QuatLerpChannel',[
     'osgAnimation/Channel',
     'osgAnimation/Sampler',
@@ -12030,26 +11718,6 @@ define( 'osgAnimation/QuatLerpChannel',[
     'osgAnimation/QuatTarget',
     'osg/Quat'
 ], function ( Channel, Sampler, Interpolator, QuatTarget, Quat ) {
-
-    /** -*- compile-command: "jslint-cli Channel.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
     var QuatLerpChannel = function ( keys, target ) {
         var sampler = new Sampler();
@@ -12069,7 +11737,6 @@ define( 'osgAnimation/QuatLerpChannel',[
 
     return QuatLerpChannel;
 } );
-/*global define */
 
 define( 'osgAnimation/QuatSlerpChannel',[
     'osgAnimation/Channel',
@@ -12077,25 +11744,6 @@ define( 'osgAnimation/QuatSlerpChannel',[
     'osgAnimation/Interpolator'
 ], function ( Channel, QuatLerpChannel, Interpolator ) {
 
-    /** -*- compile-command: "jslint-cli Channel.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
     var QuatSlerpChannel = function ( keys, target ) {
         QuatLerpChannel.call( this, keys, target );
@@ -12106,7 +11754,6 @@ define( 'osgAnimation/QuatSlerpChannel',[
 
     return QuatSlerpChannel;
 } );
-/*global define */
 
 define( 'osgAnimation/StackedQuaternion',[
     'osg/Utils',
@@ -12116,27 +11763,7 @@ define( 'osgAnimation/StackedQuaternion',[
     'osg/Quat'
 ], function ( MACROUTILS, Object, Matrix, QuatTarget, Quat ) {
 
-    /** -*- compile-command: "jslint-cli StackedTransformElement.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
-
-    /** 
+    /**
      *  StackedQuaternion
      *  @class StackedQuaternion
      */
@@ -12183,6 +11810,7 @@ define( 'osgAnimation/StackedQuaternion',[
 
     return StackedQuaternion;
 } );
+
 define( 'osgAnimation/Vec3Target',[
     'osg/Utils',
     'osgAnimation/Target',
@@ -12220,8 +11848,6 @@ define( 'osgAnimation/Vec3Target',[
     return Vec3Target;
 } );
 
-/*global define */
-
 define( 'osgAnimation/StackedRotateAxis',[
     'osg/Utils',
     'osg/Object',
@@ -12232,27 +11858,8 @@ define( 'osgAnimation/StackedRotateAxis',[
     'osg/Quat'
 ], function ( MACROUTILS, Object, Matrix, Vec3Target, FloatTarget, Vec3, Quat ) {
 
-    /** -*- compile-command: "jslint-cli StackedTransformElement.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
-    /** 
+    /**
      *  StackedRotateAxis
      *  @class StackedRotateAxis
      */
@@ -12314,7 +11921,6 @@ define( 'osgAnimation/StackedRotateAxis',[
 
     return StackedRotateAxis;
 } );
-/*global define */
 
 define( 'osgAnimation/StackedTranslate',[
     'osg/Utils',
@@ -12324,28 +11930,8 @@ define( 'osgAnimation/StackedTranslate',[
     'osg/Vec3'
 ], function ( MACROUTILS, Object, Matrix, Vec3Target, Vec3 ) {
 
-    /** -*- compile-command: "jslint-cli StackedTransformElement.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
-
-    /** 
+    /**
      *  StackedTranslate
      *  @class StackedTranslate
      */
@@ -12388,6 +11974,7 @@ define( 'osgAnimation/StackedTranslate',[
 
     return StackedTranslate;
 } );
+
 define( 'osgAnimation/UpdateMatrixTransform',[
     'osg/Utils',
     'osg/Notify',
@@ -12446,8 +12033,6 @@ define( 'osgAnimation/UpdateMatrixTransform',[
     return UpdateMatrixTransform;
 } );
 
-/*global define */
-
 define( 'osgAnimation/Vec3LerpChannel',[
     'osgAnimation/Channel',
     'osgAnimation/Sampler',
@@ -12455,26 +12040,6 @@ define( 'osgAnimation/Vec3LerpChannel',[
     'osgAnimation/Vec3Target',
     'osg/Vec3'
 ], function ( Channel, Sampler, Interpolator, Vec3Target, Vec3 ) {
-
-    /** -*- compile-command: "jslint-cli Channel.js" -*-
-     *
-     *  Copyright (C) 2010-2011 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
 
     var Vec3LerpChannel = function ( keys, target ) {
         var sampler = new Sampler();
@@ -12494,7 +12059,6 @@ define( 'osgAnimation/Vec3LerpChannel',[
 
     return Vec3LerpChannel;
 } );
-/*global define */
 
 define( 'osgAnimation/osgAnimation',[
 	'osg/Utils',
@@ -12520,26 +12084,6 @@ define( 'osgAnimation/osgAnimation',[
 	'osgAnimation/Vec3LerpChannel',
 	'osgAnimation/Vec3Target'
 ], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
-
-	/** -*- compile-command: "jslint-cli osgAnimation.js" -*-
-	 *
-	 *  Copyright (C) 2010 Cedric Pinson
-	 *
-	 *                  GNU LESSER GENERAL PUBLIC LICENSE
-	 *                      Version 3, 29 June 2007
-	 *
-	 * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-	 * Everyone is permitted to copy and distribute verbatim copies
-	 * of this license document, but changing it is not allowed.
-	 *
-	 * This version of the GNU Lesser General Public License incorporates
-	 * the terms and conditions of version 3 of the GNU General Public
-	 * License
-	 *
-	 * Authors:
-	 *  Cedric Pinson <cedric.pinson@plopbyte.com>
-	 *
-	 */
 
 	var osgAnimation = {};
 
@@ -12567,6 +12111,7 @@ define( 'osgAnimation/osgAnimation',[
 
 	return osgAnimation;
 } );
+
 define( 'osgWrappers/serializers/osg',[
     'vendors/Q'
 ], function ( Q ) {
@@ -13257,8 +12802,6 @@ define( 'osgWrappers/serializers/osgAnimation',[
     return osgAnimationWrapper;
 } );
 
-/*global define */
-
 define( 'osgDB/osgDB',[
     'osg/Utils',
     'vendors/Q',
@@ -13269,26 +12812,6 @@ define( 'osgDB/osgDB',[
 ], function ( MACROUTILS, Q, Input, ReaderParser, osgWrappers, osgAnimationWrappers ) {
 
 
-    /** -*- compile-command: 'jslint-cli osgDB.js' -*-
-     *
-     *  Copyright (C) 2010 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     *
-     */
-
     var osgDB = {};
     osgDB.Promise = Q;
     osgDB.Input = Input;
@@ -13298,6 +12821,7 @@ define( 'osgDB/osgDB',[
 
     return osgDB;
 } );
+
 define( 'osgGA/Manipulator',[
     'osg/Matrix'
 ], function ( Matrix ) {
@@ -13329,8 +12853,6 @@ define( 'osgGA/Manipulator',[
 
     return Manipulator;
 } );
-
-/*global define */
 
 define( 'osgGA/OrbitManipulatorLeapMotionController',[
     'osg/Notify',
@@ -13514,8 +13036,6 @@ define( 'osgGA/OrbitManipulatorLeapMotionController',[
     return OrbitManipulatorLeapMotionController;
 } );
 
-/** -*- compile-command: 'jslint-cli osg.js' -*- */
-
 define( 'osgGA/OrbitManipulatorEnums',[], function () {
 
     return {
@@ -13524,7 +13044,6 @@ define( 'osgGA/OrbitManipulatorEnums',[], function () {
         ZOOM: 2
     };
 } );
-/*global define */
 
 define( 'osgGA/OrbitManipulatorMouseKeyboardController',[
     'osgGA/OrbitManipulatorEnums'
@@ -13680,8 +13199,6 @@ define( 'osgGA/OrbitManipulatorMouseKeyboardController',[
     return OrbitManipulatorMouseKeyboardController;
 } );
 
-/*global define */
-
 define( 'osgGA/OrbitManipulatorHammerController',[
     'osg/Notify'
 ], function ( Notify ) {
@@ -13828,7 +13345,6 @@ define( 'osgGA/OrbitManipulatorHammerController',[
     };
     return OrbitManipulatorHammerController;
 } );
-/*global define */
 
 define( 'osgGA/OrbitManipulatorGamePadController',[], function () {
 
@@ -13944,8 +13460,6 @@ define( 'osgGA/OrbitManipulatorGamePadController',[], function () {
     return OrbitManipulatorGamePadController;
 } );
 
-/*global define */
-
 define( 'osgGA/OrbitManipulator',[
     'osg/Utils',
     'osg/Vec3',
@@ -13956,11 +13470,6 @@ define( 'osgGA/OrbitManipulator',[
     'osgGA/OrbitManipulatorHammerController',
     'osgGA/OrbitManipulatorGamePadController'
 ], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController ) {
-
-    /** -*- compile-command: "jslint-cli OrbitManipulator.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     /**
      *  OrbitManipulator
@@ -14323,8 +13832,6 @@ define( 'osgGA/OrbitManipulator',[
     return OrbitManipulator;
 } );
 
-/*global define */
-
 define( 'osgGA/FirstPersonManipulatorMouseKeyboardController',[], function () {
 
     var FirstPersonManipulatorMouseKeyboardController = function ( manipulator ) {
@@ -14424,8 +13931,6 @@ define( 'osgGA/FirstPersonManipulatorMouseKeyboardController',[], function () {
     return FirstPersonManipulatorMouseKeyboardController;
 } );
 
-/*global define */
-
 define( 'osgGA/FirstPersonManipulator',[
     'osg/Utils',
     'osgGA/Manipulator',
@@ -14436,13 +13941,13 @@ define( 'osgGA/FirstPersonManipulator',[
     'osgGA/FirstPersonManipulatorMouseKeyboardController'
 ], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController ) {
 
-    /** -*- compile-command: "jslint-cli FirstPersonManipulator.js" -*-
+    /**
      * Authors:
      *  Matt Fontaine <tehqin@gmail.com>
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
+     *  Cedric Pinson <trigrou@gmail.com>
      */
 
-    /** 
+    /**
      *  FirstPersonManipulator
      *  @class
      */
@@ -14630,16 +14135,10 @@ define( 'osgGA/FirstPersonManipulator',[
 
     return FirstPersonManipulator;
 } );
-/*global define */
 
 define( 'osgGA/SwitchManipulator',[
     'osg/Notify'
 ], function ( Notify ) {
-
-    /** -*- compile-command: "jslint-cli SwitchManipulator.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     /**
      *  OrbitManipulator
@@ -14716,8 +14215,6 @@ define( 'vendors/Hammer',[],function ( ) {
     return window.Hammer;
 } );
 
-/*global define */
-
 define( 'osgGA/osgGA',[
     'osgGA/FirstPersonManipulator',
     'osgGA/FirstPersonManipulatorMouseKeyboardController',
@@ -14731,11 +14228,6 @@ define( 'osgGA/osgGA',[
     'osgGA/OrbitManipulatorEnums',
     'vendors/Hammer'
 ], function ( FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums, Hammer ) {
-
-    /** -*- compile-command: "jslint-cli osgGA.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     var osgGA = {};
 
@@ -14767,6 +14259,7 @@ define( 'osgGA/osgGA',[
 
     return osgGA;
 } );
+
 define( 'osgUtil/Composer',[
     'osg/Notify',
     'osg/Utils',
@@ -16432,8 +15925,6 @@ define( 'osgUtil/TriangleIntersect',[
     return TriangleIntersect;
 } );
 
-/*global define */
-
 define( 'osgUtil/IntersectVisitor',[
     'osg/Utils',
     'osg/NodeVisitor',
@@ -16441,11 +15932,6 @@ define( 'osgUtil/IntersectVisitor',[
     'osg/Vec3',
     'osgUtil/TriangleIntersect'
 ], function ( MACROUTILS, NodeVisitor, Matrix, Vec3, TriangleIntersect ) {
-
-    /** -*- compile-command: "jslint-cli IntersectVisitor.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     var IntersectVisitor = function () {
         NodeVisitor.call( this );
@@ -17028,19 +16514,12 @@ define( 'osgUtil/ParameterVisitor',[
     return ParameterVisitor;
 } );
 
-/*global define */
-
 define( 'osgUtil/osgUtil',[
     'osgUtil/Composer',
     'osgUtil/IntersectVisitor',
     'osgUtil/ParameterVisitor',
     'osgUtil/TriangleIntersect'
 ], function (Composer, IntersectVisitor, ParameterVisitor, TriangleIntersect) {
-
-    /** -*- compile-command: "jslint-cli osgUtil.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     var osgUtil = {};
 
@@ -17051,6 +16530,7 @@ define( 'osgUtil/osgUtil',[
 
     return osgUtil;
 } );
+
 define( 'osgViewer/View',[
     'osg/Camera',
     'osg/Node',
@@ -17183,8 +16663,6 @@ define( 'osgViewer/View',[
     return View;
 } );
 
-/*global define */
-
 define( 'osgViewer/eventProxy/GamePad',[
     'osg/Notify'
 ], function ( Notify ) {
@@ -17275,8 +16753,6 @@ define( 'osgViewer/eventProxy/GamePad',[
     return GamePad;
 } );
 
-/*global define */
-
 define( 'osgViewer/eventProxy/Hammer',[
     'vendors/Hammer'
 ], function ( Hammer ) {
@@ -17340,8 +16816,6 @@ define( 'vendors/Leap',[],function ( ) {
     return window.Leap;
 } );
 
-/*global define */
-
 define( 'osgViewer/eventProxy/LeapMotion',[
     'osg/Notify',
     'vendors/Leap'
@@ -17403,8 +16877,6 @@ define( 'osgViewer/eventProxy/LeapMotion',[
     };
     return LeapMotion;
 } );
-
-/*global define */
 
 define( 'osgViewer/eventProxy/StandardMouseKeyboard',[], function () {
 
@@ -18796,31 +18268,9 @@ define( 'osgViewer/webgl-debug',[], function () {
 
 /* jshint ignore:end */
 ;
-/*global define */
-
 define( 'osgViewer/stats',[
     'osg/Utils'
 ], function ( MACROUTILS ) {
-
-    /** -*- compile-command: 'jslint-cli stats.js' -*-
-     *
-     *  Copyright (C) 2010 Cedric Pinson
-     *
-     *                  GNU LESSER GENERAL PUBLIC LICENSE
-     *                      Version 3, 29 June 2007
-     *
-     * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
-     * Everyone is permitted to copy and distribute verbatim copies
-     * of this license document, but changing it is not allowed.
-     *
-     * This version of the GNU Lesser General Public License incorporates
-     * the terms and conditions of version 3 of the GNU General Public
-     * License
-     *
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.net>
-     *
-     */
 
     var Stats = {};
 
@@ -18913,8 +18363,6 @@ define( 'osgViewer/stats',[
     return Stats;
 } );
 
-/*global define */
-
 define( 'osgViewer/Viewer',[
     'osg/Notify',
     'osg/Utils',
@@ -18932,11 +18380,6 @@ define( 'osgViewer/Viewer',[
     'osgViewer/webgl-debug',
     'osgViewer/stats'
 ], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy, WebGLUtils, WebGLDebugUtils, Stats ) {
-
-    /** -*- compile-command: 'jslint-cli Viewer.js' -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     ( function () {
 
@@ -19504,18 +18947,11 @@ define( 'osgViewer/Viewer',[
     return Viewer;
 } );
 
-/*global define */
-
 define( 'osgViewer/osgViewer',[
     'osgViewer/View',
     'osgViewer/Viewer',
     'osgViewer/eventProxy/EventProxy'
 ], function ( View, Viewer, EventProxy ) {
-
-    /** -*- compile-command: "jslint-cli osgViewer.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     var osgViewer = {};
 
@@ -19525,6 +18961,7 @@ define( 'osgViewer/osgViewer',[
 
     return osgViewer;
 } );
+
 define( 'OSG',[
     'osgNameSpace',
     'osg/osg',
@@ -19536,9 +18973,6 @@ define( 'OSG',[
 ], function ( osgNameSpace, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer ) {
 
     var openSceneGraph = osgNameSpace;
-
-    openSceneGraph.version = '0.0.9';
-    openSceneGraph.copyright = 'Cedric Pinson - trigrou@gmail.com';
 
     openSceneGraph.osg = osg;
     openSceneGraph.osgAnimation = osgAnimation;

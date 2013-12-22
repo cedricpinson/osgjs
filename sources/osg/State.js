@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/StateAttribute',
     'osg/Stack',

@@ -1,13 +1,6 @@
-/*global define */
-
 define( [
     'osg/Notify'
 ], function ( Notify ) {
-
-    /** -*- compile-command: "jslint-cli SwitchManipulator.js" -*-
-     * Authors:
-     *  Cedric Pinson <cedric.pinson@plopbyte.com>
-     */
 
     /**
      *  OrbitManipulator

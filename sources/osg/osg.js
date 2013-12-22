@@ -1,5 +1,3 @@
-/** -*- compile-command: 'jslint-cli osg.js' -*- */
-
 define( [
     'osg/BlendColor',
     'osg/BlendFunc',

@@ -1,5 +1,3 @@
-/*global define */
-
 define( [], function () {
 
     var Stack = function () {};
