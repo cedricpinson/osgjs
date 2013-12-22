@@ -16,3 +16,4 @@ test/lighting
 *.log
 *.c
 *.orig
+.hooks

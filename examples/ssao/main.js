@@ -95,7 +95,7 @@ var getModel = function(func) {
         req.send(null);
         addLoading();
     };
-    
+
     //loadModel('monkey.osgjs');
     //loadModel('sponza.osgjs');
     loadModel('raceship.osgjs');
@@ -200,8 +200,8 @@ var getNormalShader = function() {
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
     return program;
 };
 
@@ -253,8 +253,8 @@ var getDepthShader8 = function() {
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
     return program;
 };
 
@@ -295,8 +295,8 @@ var getPositionShader = function() {
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
     return program;
 };
 
@@ -344,8 +344,8 @@ var getNormalShaderSphereMapTransform = function() {
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
     return program;
 };
 
@@ -386,14 +386,14 @@ var getTextureShader = function() {
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
     return program;
 };
 
 
 var getSSAOShader = function(stateSet) {
-    
+
     var nbSamples = 16;
     var radius = 0.05;
 
@@ -409,7 +409,7 @@ var getSSAOShader = function(stateSet) {
             var scale = Math.random();
             //scale = i / nbSamples;
             //scale = 0.1*(1.0-scale) + 1.0*(scale * scale);
-            
+
             array[i*3+0] = v[0];
             array[i*3+1] = v[1];
             array[i*3+2] = v[2];
@@ -509,7 +509,7 @@ var getSSAOShader = function(stateSet) {
         "    float dist = 1.0-kernel[i].w;",
         "    w *= dist*dist;",
         "    sample = dir * float(Radius) + position;",
-        
+
         "    vec4 offset = projection * vec4(sample,1.0);",
 	"    offset.xy /= offset.w;",
 	"    offset.xy = offset.xy * 0.5 + 0.5;",
@@ -526,10 +526,10 @@ var getSSAOShader = function(stateSet) {
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
-        
+
     var array = [];
     var ratio = window.innerWidth/window.innerHeight;
 
@@ -578,7 +578,7 @@ var createCameraRtt = function(resultTexture, scene) {
     return camera;
 };
 
-function createSceneReal() 
+function createSceneReal()
 {
     var root = new osg.Node();
 
@@ -659,8 +659,8 @@ function createSceneReal()
         var blurH = new osgUtil.Composer.Filter.AverageHBlur(blurSize);
 
 
-        osgUtil.ParameterVisitor.createSlider({ min: 4, 
-                                                max: 64, 
+        osgUtil.ParameterVisitor.createSlider({ min: 4,
+                                                max: 64,
                                                 step: 2,
                                                 value: 16,
                                                 name: "ssaoSamples",
@@ -670,8 +670,8 @@ function createSceneReal()
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                max: 10, 
+        osgUtil.ParameterVisitor.createSlider({ min: 1,
+                                                max: 10,
                                                 step: 1,
                                                 value: 2,
                                                 name: "ssaoNoise",
@@ -687,8 +687,8 @@ function createSceneReal()
                                               });
 
 
-        osgUtil.ParameterVisitor.createSlider({ min: 0.0, 
-                                                max: 1.0, 
+        osgUtil.ParameterVisitor.createSlider({ min: 0.0,
+                                                max: 1.0,
                                                 step: 0.01,
                                                 value: 0.0,
                                                 name: "ssaoAngleLimit",
@@ -698,28 +698,28 @@ function createSceneReal()
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                max: 15, 
+        osgUtil.ParameterVisitor.createSlider({ min: 1,
+                                                max: 15,
                                                 step: 1,
                                                 value: 3,
                                                 name: "blurSize",
                                                 object: blurH,
                                                 field: '_nbSamples',
-                                                onchange: function(value) { 
+                                                onchange: function(value) {
                                                     blurV.setBlurSize(value);
                                                     blurH.setBlurSize(value);
                                                 },
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                max: 8, 
+        osgUtil.ParameterVisitor.createSlider({ min: 1,
+                                                max: 8,
                                                 step: 0.5,
                                                 value: 1,
                                                 name: "blurSizeDist",
                                                 object: blurH,
                                                 field: '_pixelSize',
-                                                onchange: function(value) { 
+                                                onchange: function(value) {
                                                     blurV.setPixelSize(value);
                                                     blurH.setPixelSize(value);
                                                 },
@@ -752,7 +752,7 @@ function createSceneReal()
 
 
 
-function createScene2() 
+function createScene2()
 {
     var root = new osg.Node();
 
@@ -825,8 +825,8 @@ function createScene2()
         var blurH = new osgUtil.Composer.Filter.AverageHBlur(blurSize);
 
 
-        osgUtil.ParameterVisitor.createSlider({ min: 4, 
-                                                max: 64, 
+        osgUtil.ParameterVisitor.createSlider({ min: 4,
+                                                max: 64,
                                                 step: 2,
                                                 value: 16,
                                                 name: "nbSamples",
@@ -836,8 +836,8 @@ function createScene2()
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                max: 10, 
+        osgUtil.ParameterVisitor.createSlider({ min: 1,
+                                                max: 10,
                                                 step: 1,
                                                 value: 3,
                                                 name: "ssaoNoise",
@@ -853,8 +853,8 @@ function createScene2()
                                               });
 
 
-        osgUtil.ParameterVisitor.createSlider({ min: 0.0, 
-                                                max: 1.0, 
+        osgUtil.ParameterVisitor.createSlider({ min: 0.0,
+                                                max: 1.0,
                                                 step: 0.01,
                                                 value: 0.0,
                                                 name: "ssaoAngleLimit",
@@ -864,28 +864,28 @@ function createScene2()
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                max: 15, 
+        osgUtil.ParameterVisitor.createSlider({ min: 1,
+                                                max: 15,
                                                 step: 1,
                                                 value: 3,
                                                 name: "blurSize",
                                                 object: blurH,
                                                 field: '_nbSamples',
-                                                onchange: function(value) { 
+                                                onchange: function(value) {
                                                     blurV.setBlurSize(value);
                                                     blurH.setBlurSize(value);
                                                 },
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                max: 8, 
+        osgUtil.ParameterVisitor.createSlider({ min: 1,
+                                                max: 8,
                                                 step: 0.5,
                                                 value: 1,
                                                 name: "blurSizeDist",
                                                 object: blurH,
                                                 field: '_pixelSize',
-                                                onchange: function(value) { 
+                                                onchange: function(value) {
                                                     blurV.setPixelSize(value);
                                                     blurH.setPixelSize(value);
                                                 },
@@ -916,7 +916,7 @@ function createScene2()
     return root;
 }
 
-function createSceneTestDepth() 
+function createSceneTestDepth()
 {
     var root = new osg.Node();
 
@@ -998,7 +998,7 @@ function createSceneTestDepth()
 }
 
 
-function createSceneTestNormal() 
+function createSceneTestNormal()
 {
     var root = new osg.Node();
 
@@ -1106,7 +1106,7 @@ function createSceneTestNormal()
     return root;
 }
 
-function createSceneTestReconstructPosition() 
+function createSceneTestReconstructPosition()
 {
     var root = new osg.Node();
 
@@ -1129,7 +1129,7 @@ function createSceneTestReconstructPosition()
         var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
         var modelview = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'camera');
 
-        
+
         var ucb = new CullCallback();
         var positionTextureFloat;
         (function() {
@@ -1203,7 +1203,7 @@ function createSceneTestReconstructPosition()
                 "uniform sampler2D Texture1;",
                 "uniform mat4 projection;",
                 "uniform mat4 camera;",
-                
+
                 pack,
                 "void main() {",
                 "  vec3 realPosition = texture2D(Texture1, FragTexCoord0).rgb;",
@@ -1244,14 +1244,14 @@ function createSceneTestReconstructPosition()
                 ""
             ].join('\n');
 
-            
+
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, frg));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', frg));
 
             var EndCullCallback = function(ucb,
-                                           projection, 
-                                           modelview, 
+                                           projection,
+                                           modelview,
                                            geom) {
                 this._ucb = ucb;
                 this._projection = projection;
@@ -1271,7 +1271,7 @@ function createSceneTestReconstructPosition()
                     osg.Matrix.copy(this._ucb._modelview, this._matrix.get());
                     this._projection.dirty();
                     this._matrix.dirty();
-                    
+
                     var coord = this._geom.getAttributes().TexCoord1.getElements();
                     var vectorsTmp = [];
                     osg.Matrix.computeFrustrumCornersVectors(this._projection.get(), vectorsTmp);
@@ -1319,7 +1319,7 @@ function createSceneTestReconstructPosition()
             camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
             camera.setViewport(vp);
             camera.setProjectionMatrix(proj);
-            
+
             var texture = new osg.Texture();
             texture.setTextureSize(textureSize[0], textureSize[1]);
             texture.setMinFilter('NEAREST');
@@ -1344,7 +1344,7 @@ function createSceneTestReconstructPosition()
                 draw.call(this);
             };
             Viewer.draw = newdraw;
-            
+
 
         })();
         var composer = new osgUtil.Composer();
@@ -1354,8 +1354,6 @@ function createSceneTestReconstructPosition()
         var w2,h2;
         w2 = textureSize[0];
         h2 = textureSize[1];
-//        w2 = w;
-//        h2 = h;
 
         var checkDepth = new osgUtil.Composer.Filter.Custom([
             "#ifdef GL_ES",
@@ -1388,7 +1386,7 @@ function createSceneTestReconstructPosition()
 }
 
 
-function createSceneOptimized() 
+function createSceneOptimized()
 {
     var root = new osg.Node();
 
@@ -1450,11 +1448,11 @@ function createSceneOptimized()
 
             rtt.setName("generateNormal");
             root.addChild(rtt);
-            
+
             textureNormal = texture;
         })();
 
-        
+
         var textureColor = new osg.Texture();
         (function() {
             textureColor.setTextureSize(w, h);
@@ -1488,7 +1486,7 @@ function createSceneOptimized()
         var blurV = new osgUtil.Composer.Filter.BilateralVBlur({ 'nbSamples' : blurSize,
                                                                  'depthTexture' : textureDepth,
                                                                  'radius' : 0.1});
-        
+
         var blurH = new osgUtil.Composer.Filter.BilateralHBlur({ 'nbSamples' : blurSize,
                                                                  'depthTexture' : textureDepth,
                                                                  'radius' : 0.1});
@@ -1502,8 +1500,8 @@ function createSceneOptimized()
         composer.build();
 
 
-        osgUtil.ParameterVisitor.createSlider({ min: 4, 
-                                                max: 64, 
+        osgUtil.ParameterVisitor.createSlider({ min: 4,
+                                                max: 64,
                                                 step: 2,
                                                 value: 16,
                                                 name: "nbSamples",
@@ -1514,8 +1512,8 @@ function createSceneOptimized()
                                               });
 
         if (false) {
-            osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                    max: 10, 
+            osgUtil.ParameterVisitor.createSlider({ min: 1,
+                                                    max: 10,
                                                     step: 1,
                                                     value: 2,
                                                     name: "ssaoNoise",
@@ -1531,8 +1529,8 @@ function createSceneOptimized()
                                                   });
         }
 
-        osgUtil.ParameterVisitor.createSlider({ min: 0.0, 
-                                                max: 1.0, 
+        osgUtil.ParameterVisitor.createSlider({ min: 0.0,
+                                                max: 1.0,
                                                 step: 0.01,
                                                 value: 0.0,
                                                 name: "angleThreshold",
@@ -1542,28 +1540,28 @@ function createSceneOptimized()
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                max: 15, 
+        osgUtil.ParameterVisitor.createSlider({ min: 1,
+                                                max: 15,
                                                 step: 1,
                                                 value: 3,
                                                 name: "blurNbSamples",
                                                 object: blurH,
                                                 field: '_nbSamples',
-                                                onchange: function(value) { 
+                                                onchange: function(value) {
                                                     blurV.setBlurSize(value);
                                                     blurH.setBlurSize(value);
                                                 },
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 1, 
-                                                max: 8, 
+        osgUtil.ParameterVisitor.createSlider({ min: 1,
+                                                max: 8,
                                                 step: 0.5,
                                                 value: 1,
                                                 name: "blurPixelDistance",
                                                 object: blurH,
                                                 field: '_pixelSize',
-                                                onchange: function(value) { 
+                                                onchange: function(value) {
                                                     blurV.setPixelSize(value);
                                                     blurH.setPixelSize(value);
                                                 },
@@ -1582,7 +1580,7 @@ function createSceneOptimized()
                                                 name: "radius",
                                                 onchange: function(value) {
                                                     ssao.setRadius(value);
-                                                    ssao.dirty(); 
+                                                    ssao.dirty();
 
                                                     blurV.setRadius(value);
                                                     blurH.setRadius(value);
@@ -1590,8 +1588,8 @@ function createSceneOptimized()
                                                 html: document.getElementById('parameters')
                                               });
 
-        osgUtil.ParameterVisitor.createSlider({ min: 0.1, 
-                                                max: 16.0, 
+        osgUtil.ParameterVisitor.createSlider({ min: 0.1,
+                                                max: 16.0,
                                                 step: 0.1,
                                                 value: 1.0,
                                                 name: "power",
@@ -1605,10 +1603,10 @@ function createSceneOptimized()
         var params = new osgUtil.ParameterVisitor();
         params.setTargetHTML(document.getElementById('parameters'));
         composer.accept(params);
-        
+
         var EndCullCallback = function(ucb,
-                                       projection, 
-                                       modelview, 
+                                       projection,
+                                       modelview,
                                        array) {
             this._ucb = ucb;
             this._projection = projection;
@@ -1627,7 +1625,7 @@ function createSceneOptimized()
                 osg.Matrix.copy(this._ucb._modelview, this._matrix.get());
                 this._projection.dirty();
                 this._matrix.dirty();
-                
+
                 var coord = this._array.getElements();
                 var vectorsTmp = [];
                 osg.Matrix.computeFrustrumCornersVectors(this._projection.get(), vectorsTmp);
@@ -1636,7 +1634,7 @@ function createSceneOptimized()
                 vectors[1] = vectorsTmp[1];
                 vectors[2] = vectorsTmp[2];
                 vectors[3] = vectorsTmp[3];
-                
+
                 for ( var i = 0; i < 4; i++) {
                     var vec = osg.Matrix.transform3x3(this._matrix.get(),vectors[i] , []);
                     vec = vectors[i];
@@ -1670,4 +1668,3 @@ function createSceneOptimized()
 
 var createScene = createSceneOptimized; //createSceneTestReconstructPosition; //createSceneTestDepth;
 window.addEventListener("load", main ,true);
-

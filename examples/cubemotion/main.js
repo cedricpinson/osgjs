@@ -18,7 +18,7 @@
  *
  */
 
-
+OSG.globalify();
 
 var main = function() {
     var canvas = document.getElementById("3DView");
@@ -86,7 +86,7 @@ TransitionUpdateCallback.prototype = {
             dz *= quot;
         }
         //osg.log("speed " + Math.sqrt(dx*dx + dy*dy + dz*dz) );
-        
+
         var ratio = osgAnimation.EaseInQuad(Math.min((t-node._start)/2.0, 1.0));
         current[0] += dx * dt * ratio;
         current[1] += dy * dt * ratio;
