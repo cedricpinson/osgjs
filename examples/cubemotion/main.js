@@ -18,6 +18,10 @@
  *
  */
 
+var osgViewer = OSG.osgViewer;
+var osg = OSG.osg;
+var osgGA = OSG.osgGA;
+var osgAnimation = OSG.osgAnimation;
 
 
 var main = function() {
@@ -86,7 +90,7 @@ TransitionUpdateCallback.prototype = {
             dz *= quot;
         }
         //osg.log("speed " + Math.sqrt(dx*dx + dy*dy + dz*dz) );
-        
+
         var ratio = osgAnimation.EaseInQuad(Math.min((t-node._start)/2.0, 1.0));
         current[0] += dx * dt * ratio;
         current[1] += dy * dt * ratio;

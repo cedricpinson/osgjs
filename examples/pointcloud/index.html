@@ -20,7 +20,7 @@
   position: absolute;
   }
 
-  
+
 </style>
 <title>PointCloud</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
@@ -32,10 +32,16 @@
 
 <script type="text/javascript">
 
+var osgViewer = OSG.osgViewer;
+var osg = OSG.osg;
+var osgGA = OSG.osgGA;
+var osgAnimation = OSG.osgAnimation;
+var osgUtil = OSG.osgUtil;
+var osgDB = OSG.osgDB;
 
 function getWindowSize() {
     var myWidth = 0, myHeight = 0;
-    
+
     if( typeof( window.innerWidth ) == 'number' ) {
         //Non-IE
         myWidth = window.innerWidth;

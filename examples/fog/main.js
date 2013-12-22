@@ -18,6 +18,12 @@
  *
  */
 
+var osgViewer = OSG.osgViewer;
+var osg = OSG.osg;
+var osgGA = OSG.osgGA;
+var osgAnimation = OSG.osgAnimation;
+var osgUtil = OSG.osgUtil;
+
 var main = function() {
     var canvas = document.getElementById("3DView");
     var w = window.innerWidth;
@@ -43,7 +49,7 @@ var main = function() {
 
         //viewer.getManipulator().setDistance(100.0);
         //viewer.getManipulator().setTarget([0,0,0]);
-            
+
         viewer.run();
 
 
@@ -81,7 +87,7 @@ function getShader()
         "#endif",
         "varying vec4 position;",
         "uniform vec4 MaterialAmbient;",
-        "uniform float density; //  { \"min\": 0.0,  \"max\": 0.006, \"step\": 0.001, \"value\": 0.00001 } ", 
+        "uniform float density; //  { \"min\": 0.0,  \"max\": 0.006, \"step\": 0.001, \"value\": 0.00001 } ",
         "void main(void) {",
         "  float d = density; //0.001;",
         "  float f = gl_FragCoord.z/gl_FragCoord.w;",
@@ -92,8 +98,8 @@ function getShader()
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
     program.trackAttributes = {};
     program.trackAttributes.attributeKeys = [];
@@ -117,7 +123,7 @@ function createScene() {
     ground.getOrCreateStateSet().setAttributeAndMode(materialGround);
     ground.getOrCreateStateSet().setAttributeAndMode(getShader());
 
-    density = osg.Uniform.createFloat1(0.0, 'density');
+    var density = osg.Uniform.createFloat1(0.0, 'density');
     ground.getOrCreateStateSet().addUniform(density);
 
     group.addChild(ground);

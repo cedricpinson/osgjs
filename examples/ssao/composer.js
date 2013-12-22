@@ -1,6 +1,13 @@
+var osgViewer = OSG.osgViewer;
+var osg = OSG.osg;
+var osgGA = OSG.osgGA;
+var osgAnimation = OSG.osgAnimation;
+var osgUtil = OSG.osgUtil;
+var osgDB = OSG.osgDB;
+
 /*
   Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
-  
+
   how to use it:
 
   // example how to blur a texture and render it to screen
@@ -24,7 +31,7 @@
 
   myGeometry.getStateSet().setTextureAttributeAndModes(0, resultTexture);
   rootnode.addChild(composer);
-   
+
  */
 (function() {
 
@@ -53,7 +60,7 @@
             if (arg0 instanceof osg.Texture) {
                 this._stack.push({ filter: filter, texture: arg0} );
             } else if ( arg0 !== undefined && arg1 !== undefined) {
-                this._stack.push({ filter: filter, 
+                this._stack.push({ filter: filter,
                                    width: Math.floor(arg0),
                                    height: Math.floor(arg1)
                                  } );
@@ -182,8 +189,8 @@
                     "}"
                 ].join('\n');
 
-                var program = new osg.Program(new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-                                              new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+                var program = new osg.Program(new osg.Shader('VERTEX_SHADER', vertexshader),
+                                              new osg.Shader('FRAGMENT_SHADER', fragmentshader));
                 quad.getOrCreateStateSet().setAttributeAndModes(program);
 
                 var camera = new osg.Camera();
@@ -267,7 +274,7 @@
                     for (var a = 0; a < pascalTriangle.length; a++) {
                         var row = pascalTriangle[a];
                         //var str = "";
-                        
+
                         var sum = Math.pow(2,a);
                         for (var i = 0; i < row.length; i++) {
                             row[i] = row[i]/sum;
@@ -292,13 +299,13 @@
         this._uniforms = uniforms;
         this._vertexShader = osgUtil.Composer.Filter.defaultVertexShader;
     };
-    
+
     osgUtil.Composer.Filter.Custom.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
         build: function() {
-            
+
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, this._vertexShader),
-                new osg.Shader(gl.FRAGMENT_SHADER, this._fragmentShader));
+                new osg.Shader('VERTEX_SHADER', this._vertexShader),
+                new osg.Shader('FRAGMENT_SHADER', this._fragmentShader));
 
             var self = this;
             if (this._uniforms) {
@@ -345,7 +352,7 @@
             this.setBlurSize(nbSamplesOpt);
         }
     };
-    
+
     osgUtil.Composer.Filter.HBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
         setBlurSize: function(nbSamples) {
             if (nbSamples%2 !== 1) {
@@ -386,8 +393,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             if (this._stateSet.getUniform('Texture0') === undefined) {
                 this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
@@ -408,7 +415,7 @@
         }
         this._pixelSize = 1.0;
     };
-    
+
     osgUtil.Composer.Filter.AverageHBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
         setBlurSize: function(nbSamples) {
             if (nbSamples%2 !== 1) {
@@ -452,8 +459,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             if (this._stateSet.getUniform('Texture0') === undefined) {
                 this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
@@ -467,7 +474,7 @@
     osgUtil.Composer.Filter.AverageVBlur = function(nbSamplesOpt) {
         osgUtil.Composer.Filter.AverageHBlur.call(this, nbSamplesOpt);
     };
-    
+
     osgUtil.Composer.Filter.AverageVBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.AverageHBlur.prototype, {
         getShaderBlurKernel: function() {
             var nbSamples = this._nbSamples;
@@ -508,7 +515,7 @@
         this._radius = osg.Uniform.createFloat(1.0,'radius');
         this.setRadius(radius);
     };
-    
+
     osgUtil.Composer.Filter.BilateralHBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
         setBlurSize: function(nbSamples) {
             if (nbSamples%2 !== 1) {
@@ -532,7 +539,7 @@
             var nbSamples = this._nbSamples;
             var kernel = [];
             kernel.push(" pixel = texture2D(Texture0, FragTexCoord0 );");
-            kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");            
+            kernel.push(" if (pixel.w == 0.0) { gl_FragColor = pixel; return; }");
             kernel.push(" vec2 offset, tmpUV;");
             kernel.push(" depth = getDepthValue(texture2D(Texture1, FragTexCoord0 ));");
             for (var i = 1; i < Math.ceil(nbSamples/2); i++) {
@@ -591,8 +598,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             if (this._stateSet.getUniform('Texture0') === undefined) {
                 this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
@@ -611,7 +618,7 @@
     osgUtil.Composer.Filter.BilateralVBlur = function(options) {
         osgUtil.Composer.Filter.BilateralHBlur.call(this, options);
     };
-    
+
     osgUtil.Composer.Filter.BilateralVBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.BilateralHBlur.prototype, {
         getUVOffset: function(value) {
             return "vec2(float("+value+"),0.0)/RenderSize[0];";
@@ -670,8 +677,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             if (this._stateSet.getUniform('Texture0') === undefined) {
                 this._stateSet.addUniform(osg.Uniform.createInt1(0,'Texture0'));
@@ -731,8 +738,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             stateSet.setAttributeAndModes(program);
             this._dirty = false;
@@ -777,8 +784,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vtx),
-                new osg.Shader(gl.FRAGMENT_SHADER, fgt));
+                new osg.Shader('VERTEX_SHADER', vtx),
+                new osg.Shader('FRAGMENT_SHADER', fgt));
 
             this._stateSet.setAttributeAndModes(program);
             this._dirty = false;
@@ -887,7 +894,7 @@
             noiseTexture.setWrapT('REPEAT');
             noiseTexture.setMinFilter('NEAREST');
             noiseTexture.setMagFilter('NEAREST');
-            
+
             noiseTexture.setTextureSize(sizeNoise,sizeNoise);
             noiseTexture.setImage(new Uint8Array(noise),'RGB');
             stateSet.setTextureAttributeAndModes(2,noiseTexture);
@@ -975,7 +982,7 @@
                 "    float dist = 1.0-kernel[i].w;",
                 "    w *= dist*dist*Power;",
                 "    sample = dir * float(Radius) + position.xyz;",
-                
+
                 "    vec4 offset = projection * vec4(sample,1.0);",
                 "    offset.xy /= offset.w;",
                 "    offset.xy = offset.xy * 0.5 + 0.5;",
@@ -992,8 +999,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-                new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+                new osg.Shader('VERTEX_SHADER', vertexshader),
+                new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
             stateSet.setAttributeAndModes(program);
             this._dirty = false;
@@ -1063,7 +1070,7 @@
             noiseTexture.setWrapT('REPEAT');
             noiseTexture.setMinFilter('NEAREST');
             noiseTexture.setMagFilter('NEAREST');
-            
+
             noiseTexture.setTextureSize(sizeNoise,sizeNoise);
             noiseTexture.setImage(new Uint8Array(noise),'RGB');
             stateSet.setTextureAttributeAndModes(2,noiseTexture);
@@ -1182,7 +1189,7 @@
                 "    float dist = 1.0-kernel[i].w;",
                 "    w *= dist*dist*Power;",
                 "    sample = dir * float(Radius) + position.xyz;",
-                
+
                 "    vec4 offset = projection * vec4(sample,1.0);",
                 "    offset.xy /= offset.w;",
                 "    offset.xy = offset.xy * 0.5 + 0.5;",
@@ -1199,8 +1206,8 @@
             ].join('\n');
 
             var program = new osg.Program(
-                new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-                new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+                new osg.Shader('VERTEX_SHADER', vertexshader),
+                new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
             stateSet.setAttributeAndModes(program);
             this._dirty = false;

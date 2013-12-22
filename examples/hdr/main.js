@@ -19,6 +19,13 @@
  *
  */
 
+var osgViewer = OSG.osgViewer;
+var osg = OSG.osg;
+var osgGA = OSG.osgGA;
+var osgAnimation = OSG.osgAnimation;
+var osgUtil = OSG.osgUtil;
+var osgDB = OSG.osgDB;
+
 function decodeHDRHeader(buf) {
     var info = {exposure: 1.0};
 
@@ -88,7 +95,7 @@ osg.readHDRImage = function(url, options) {
     xhr.open('GET', url, true);
     xhr.responseType = "arraybuffer";
 
-    var defer = osgDB.Promise.defer();
+    var defer = Q.defer();
     xhr.onload = function (ev) {
         if (xhr.response) {
             var bytes = new Uint8Array(xhr.response);
@@ -272,7 +279,7 @@ var main = function() {
 
         //viewer.getManipulator().setDistance(100.0);
         //viewer.getManipulator().setTarget([0,0,0]);
-            
+
         viewer.run();
 
 
@@ -305,7 +312,7 @@ function getShader()
         "varying vec3 osg_FragNormal;",
         "varying vec3 osg_FragNormalWorld;",
         "varying vec3 osg_FragLightDirection;",
-        
+
         "void main(void) {",
         "  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex, 1.0));",
         "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));",
@@ -321,7 +328,7 @@ function getShader()
         "precision highp float;",
         "#endif",
         "#define PI 3.14159",
-        
+
         "uniform sampler2D Texture0;",
         "uniform sampler2D Texture1;",
         "uniform float hdrExposure;",
@@ -378,8 +385,8 @@ function getShader()
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
     return program;
 }
@@ -402,7 +409,7 @@ function getShaderBackground()
         "varying vec3 osg_FragEye;",
         "varying vec3 osg_FragVertex;",
         "varying vec2 osg_TexCoord0;",
-        
+
         "void main(void) {",
         "  osg_FragVertex = Vertex;",
         "  osg_TexCoord0 = TexCoord0;",
@@ -455,8 +462,8 @@ function getShaderBackground()
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
     return program;
 }
@@ -487,7 +494,7 @@ var getModel = function(func) {
         req.onreadystatechange = function (aEvt) {
             if (req.readyState == 4) {
                 if(req.status == 200) {
-                    osgDB.Promise.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
+                    Q.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
                             if (cbfunc) {
                                 cbfunc(child);
                             }
@@ -504,7 +511,7 @@ var getModel = function(func) {
         req.send(null);
         addLoading();
     };
-    
+
     loadModel('monkey.osgjs');
     return node;
 };
@@ -530,7 +537,7 @@ function setEnvironment(name, background, ground) {
     };
     var urls = textures[name];
 
-    osgDB.Promise.all([
+    Q.all([
             readImageURL('textures/' + name + '/' + urls[0]),
             readImageURL('textures/' + name + '/' + urls[1])]).then(function(images) {
                 var textureHigh = new osg.Texture();
@@ -555,7 +562,7 @@ function setEnvironment(name, background, ground) {
             });
 }
 
-function createScene() 
+function createScene()
 {
     var group = new osg.Node();
 

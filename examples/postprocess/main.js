@@ -18,7 +18,14 @@
  *
  */
 
-var UpdateCallback = function() { 
+var osgViewer = OSG.osgViewer;
+var osg = OSG.osg;
+var osgGA = OSG.osgGA;
+var osgAnimation = OSG.osgAnimation;
+var osgUtil = OSG.osgUtil;
+var osgDB = OSG.osgDB;
+
+var UpdateCallback = function() {
     this.update = function(node, nv) {
         var currentTime = nv.getFrameStamp().getSimulationTime();
         var x = Math.cos(currentTime);
@@ -28,7 +35,7 @@ var UpdateCallback = function() {
 };
 
 
-function createPostSceneScanline(texture, time) 
+function createPostSceneScanline(texture, time)
 {
     var getShader = function() {
         var vertexshader = [
@@ -85,13 +92,13 @@ function createPostSceneScanline(texture, time)
         ].join('\n');
 
         var program = new osg.Program(
-            new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-            new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+            new osg.Shader('VERTEX_SHADER', vertexshader),
+            new osg.Shader('FRAGMENT_SHADER', fragmentshader));
         return program;
     };
 
 
-    var quadSize = [ 16/9, 1 ]; 
+    var quadSize = [ 16/9, 1 ];
 
     // add a node to animate the scene
     var root = new osg.MatrixTransform();
@@ -116,7 +123,7 @@ function createPostSceneScanline(texture, time)
 var changePixelW = undefined;
 var changePixelH = undefined;
 
-function createPostScenePixel(texture) 
+function createPostScenePixel(texture)
 {
     var getShader = function() {
         var vertexshader = [
@@ -161,8 +168,8 @@ function createPostScenePixel(texture)
         ].join('\n');
 
         var program = new osg.Program(
-            new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-            new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+            new osg.Shader('VERTEX_SHADER', vertexshader),
+            new osg.Shader('FRAGMENT_SHADER', fragmentshader));
         return program;
     };
 
@@ -170,7 +177,7 @@ function createPostScenePixel(texture)
     rttSize = [1024, 1024];
 
     var root = new osg.MatrixTransform();
-    var quadSize = [ 16/9, 1 ]; 
+    var quadSize = [ 16/9, 1 ];
 
     // create a textured quad with the texture that will contain the
     // scene
@@ -212,7 +219,7 @@ function createPostScenePixel(texture)
 var changeVignetteX = undefined;
 var changeVignetteY = undefined;
 
-function createPostSceneVignette(texture) 
+function createPostSceneVignette(texture)
 {
     var getShader = function() {
         var vertexshader = [
@@ -251,14 +258,14 @@ function createPostSceneVignette(texture)
         ].join('\n');
 
         var program = new osg.Program(
-            new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-            new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+            new osg.Shader('VERTEX_SHADER', vertexshader),
+            new osg.Shader('FRAGMENT_SHADER', fragmentshader));
         return program;
     };
 
 
     var root = new osg.MatrixTransform();
-    var quadSize = [ 16/9, 1 ]; 
+    var quadSize = [ 16/9, 1 ];
     // create a textured quad with the texture that will contain the
     // scene
     var quad = osg.createTexturedQuad(-quadSize[0]/2.0, 0 , -quadSize[1]/2.0,
@@ -297,7 +304,7 @@ function createPostSceneVignette(texture)
 var changeStitchingSize = undefined;
 var changeInvertStitching = undefined;
 
-function createPostSceneStitching(texture) 
+function createPostSceneStitching(texture)
 {
     var getShader = function() {
         var vertexshader = [
@@ -370,13 +377,13 @@ function createPostSceneStitching(texture)
         ].join('\n');
 
         var program = new osg.Program(
-            new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-            new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+            new osg.Shader('VERTEX_SHADER', vertexshader),
+            new osg.Shader('FRAGMENT_SHADER', fragmentshader));
         return program;
     };
 
     var root = new osg.MatrixTransform();
-    var quadSize = [ 16/9, 1 ]; 
+    var quadSize = [ 16/9, 1 ];
 
     // create a textured quad with the texture that will contain the
     // scene
@@ -419,7 +426,7 @@ var commonScene = function(rttSize) {
     var far = 100;
     var root = new osg.MatrixTransform();
 
-    var quadSize = [ 16/9, 1 ]; 
+    var quadSize = [ 16/9, 1 ];
 
     // add a node to animate the scene
     var rootModel = new osg.MatrixTransform();
@@ -430,7 +437,7 @@ var commonScene = function(rttSize) {
     var camera = new osg.Camera();
     camera.setName("scene");
     camera.setProjectionMatrix(osg.Matrix.makePerspective(50, quadSize[0], near, far, []));
-    camera.setViewMatrix(osg.Matrix.makeLookAt([ 0, -10, 0], 
+    camera.setViewMatrix(osg.Matrix.makeLookAt([ 0, -10, 0],
                                                [ 0,   0, 0],
                                                [ 0,   0, 1],
                                                []));
@@ -438,7 +445,7 @@ var commonScene = function(rttSize) {
     camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     camera.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
     camera.setClearColor([0.5, 0.5, 0.5, 1]);
-    
+
     // texture attach to the camera to render the scene on
     var rttTexture = new osg.Texture();
     rttTexture.setTextureSize(rttSize[0],rttSize[1]);
@@ -461,7 +468,7 @@ function createScene() {
     result = commonScene(rttSize);
     var commonNode = result[0];
     var texture = result[1];
-    
+
     var root = new osg.Node();
 
     var time = osg.Uniform.createFloat1(0.0, "time");
@@ -520,7 +527,7 @@ function createSceneBox() {
 
 
 
-var start = function() 
+var start = function()
 {
     var canvas = document.getElementById("3DView");
     canvas.style.width = window.innerWidth;

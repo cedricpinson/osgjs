@@ -19,8 +19,11 @@
  */
 
 var Viewer;
+var osg = OSG.osg;
+var osgViewer = OSG.osgViewer;
+var osgDB = OSG.osgDB;
+
 var main = function() {
-    //osg.ReportWebGLError = true;
 
     var canvas = document.getElementById("3DView");
     var w = window.innerWidth;
@@ -47,7 +50,7 @@ var main = function() {
 
         //viewer.getManipulator().setDistance(100.0);
         //viewer.getManipulator().setTarget([0,0,0]);
-            
+
         viewer.run();
 
         var mousedown = function(ev) {
@@ -118,8 +121,8 @@ function getShader()
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader( 'VERTEX_SHADER', vertexshader),
+        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader));
 
     return program;
 }
@@ -143,7 +146,7 @@ function getShaderBackground()
         "varying vec3 osg_FragEye;",
         "varying vec3 osg_FragVertex;",
         "varying vec2 osg_TexCoord0;",
-        
+
         "void main(void) {",
         "  osg_FragVertex = Vertex;",
         "  osg_TexCoord0 = TexCoord0;",
@@ -172,8 +175,8 @@ function getShaderBackground()
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
     return program;
 }
@@ -248,11 +251,11 @@ function getCubeMap(size, scene)
             osg.Matrix.copy(m, cubemapTransform.get());
             cubemapTransform.dirty();
             return true;
-        }
-    }
+        };
+    };
     mt.setCullCallback(new CullCallback());
     scene.getOrCreateStateSet().addUniform(cubemapTransform);
-    
+
 
     var cam = new osg.Camera();
 
@@ -283,7 +286,7 @@ function getCubeMap(size, scene)
     return geom;
 }
 
-function createScene() 
+function createScene()
 {
     var group = new osg.Node();
 

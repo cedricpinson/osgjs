@@ -1,8 +1,10 @@
 function createScene() {
+    var osg = OSG.osg;
+
     var canvas = document.getElementById("3DView");
 
     // create a camera that will render to texture
-    rttSize = [512,512];
+    var rttSize = [512,512];
     var rttCamera = new osg.Camera();
     rttCamera.setName("rttCamera");
     rttCamera.setProjectionMatrix(osg.Matrix.makeOrtho(0, rttSize[0], 0, rttSize[1], -5, 5));
@@ -23,7 +25,7 @@ function createScene() {
     rttTargetTexture.setTextureSize(rttSize[0],rttSize[1]);
     rttTargetTexture.setMinFilter('LINEAR');
     rttTargetTexture.setMagFilter('LINEAR');
-    rttCamera.attachTexture(gl.COLOR_ATTACHMENT0, rttTargetTexture, 0);
+    rttCamera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTargetTexture, 0);
 
 
 
@@ -59,6 +61,8 @@ function createScene() {
 
 window.addEventListener("load",
                         function() {
+                            var osgViewer = OSG.osgViewer;
+
                             var canvas = document.getElementById("3DView");
                             var w = window.innerWidth;
                             var h = window.innerHeight;

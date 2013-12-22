@@ -32,9 +32,16 @@
 
 <script type="text/javascript">
 
+var osgViewer = OSG.osgViewer;
+var osg = OSG.osg;
+var osgGA = OSG.osgGA;
+var osgAnimation = OSG.osgAnimation;
+var osgUtil = OSG.osgUtil;
+var osgDB = OSG.osgDB;
+
 function getWindowSize() {
     var myWidth = 0, myHeight = 0;
-    
+
     if( typeof( window.innerWidth ) == 'number' ) {
         //Non-IE
         myWidth = window.innerWidth;
@@ -53,7 +60,7 @@ function getWindowSize() {
 
 window.addEventListener("load",
 function() {
-  
+
   var size = getWindowSize();
 
   var canvas = document.getElementById("3DView");
