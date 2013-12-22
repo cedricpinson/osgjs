@@ -1,9 +1,4 @@
-var osgViewer = OSG.osgViewer;
-var osg = OSG.osg;
-var osgGA = OSG.osgGA;
-var osgAnimation = OSG.osgAnimation;
-var osgUtil = OSG.osgUtil;
-var osgDB = OSG.osgDB;
+OSG.globalify();
 
 /*
   Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.

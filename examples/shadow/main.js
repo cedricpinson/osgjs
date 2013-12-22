@@ -17,12 +17,7 @@
  *  Cedric Pinson <cedric.pinson@plopbyte.com>
  *
  */
-var osgViewer = OSG.osgViewer;
-var osg = OSG.osg;
-var osgGA = OSG.osgGA;
-var osgAnimation = OSG.osgAnimation;
-var osgUtil = OSG.osgUtil;
-var osgDB = OSG.osgDB;
+OSG.globalify();
 
 // http://www.opengl.org/resources/code/samples/advanced/advanced97/notes/node100.html
 function createShadowMatrix(ground, light, shadowMat)

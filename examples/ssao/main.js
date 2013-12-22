@@ -1354,8 +1354,6 @@ function createSceneTestReconstructPosition()
         var w2,h2;
         w2 = textureSize[0];
         h2 = textureSize[1];
-//        w2 = w;
-//        h2 = h;
 
         var checkDepth = new osgUtil.Composer.Filter.Custom([
             "#ifdef GL_ES",

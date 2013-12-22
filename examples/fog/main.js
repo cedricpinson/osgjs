@@ -18,11 +18,7 @@
  *
  */
 
-var osgViewer = OSG.osgViewer;
-var osg = OSG.osg;
-var osgGA = OSG.osgGA;
-var osgAnimation = OSG.osgAnimation;
-var osgUtil = OSG.osgUtil;
+OSG.globalify();
 
 var main = function() {
     var canvas = document.getElementById("3DView");

@@ -1,5 +1,4 @@
 function createScene() {
-    var osg = OSG.osg;
 
     var canvas = document.getElementById("3DView");
 
@@ -61,7 +60,7 @@ function createScene() {
 
 window.addEventListener("load",
                         function() {
-                            var osgViewer = OSG.osgViewer;
+                            OSG.globalify();
 
                             var canvas = document.getElementById("3DView");
                             var w = window.innerWidth;

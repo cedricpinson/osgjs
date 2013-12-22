@@ -70,7 +70,8 @@ var gruntTasks = { };
         } };
 
     gruntTasks.requirejs = { options : {
-        optimize : 'uglify2',
+        //optimize : 'uglify2',
+        optimize : 'none',
         preserveLicenseComments : false,
 
         findNestedDependencies: true,

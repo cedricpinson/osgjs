@@ -19,12 +19,7 @@
  *
  */
 
-var osgViewer = OSG.osgViewer;
-var osg = OSG.osg;
-var osgGA = OSG.osgGA;
-var osgAnimation = OSG.osgAnimation;
-var osgUtil = OSG.osgUtil;
-var osgDB = OSG.osgDB;
+OSG.globalify();
 
 function decodeHDRHeader(buf) {
     var info = {exposure: 1.0};

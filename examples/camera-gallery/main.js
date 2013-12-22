@@ -18,9 +18,7 @@
  *
  */
 var viewer;
-var osgViewer = OSG.osgViewer;
-var osg = OSG.osg;
-var osgGA = OSG.osgGA;
+OSG.globalify();
 
 // contructor that will generate random camera around a target
 var CameraSwitcher = function(nb, center, range) {

@@ -19,9 +19,7 @@
  */
 
 var Viewer;
-var osg = OSG.osg;
-var osgViewer = OSG.osgViewer;
-var osgDB = OSG.osgDB;
+OSG.globalify();
 
 var main = function() {
 
