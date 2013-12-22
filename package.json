@@ -1,5 +1,5 @@
 {
-    "name": "Sketchfab",
+    "name": "OpenSceneGraph",
     "dependencies": {
         "extend": "*",
         "glob": "*",
