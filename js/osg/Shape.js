@@ -482,15 +482,15 @@ osg.createAxisGeometry = function(size) {
  * @name osg.createTexturedSphere
  * @author Darrell Esau
  */
-osg.createTexturedSphere = function(radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength)
+osg.createTexturedSphere = function(radiusSrc, widthSegments, heightSegments, phiStartSrc, phiLengthSrc, thetaStartSrc, thetaLengthSrc)
 {
-    radius = radius || 50;
+    var radius = radiusSrc !== undefined ? radiusSrc : 50;
 
-    phiStart = phiStart !== undefined ? phiStart : 0;
-    phiLength = phiLength !== undefined ? phiLength : Math.PI * 2;
+    var phiStart = phiStartSrc !== undefined ? phiStartSrc : 0;
+    var phiLength = phiLengthSrc !== undefined ? phiLengthSrc : Math.PI * 2;
 
-    thetaStart = thetaStart !== undefined ? thetaStart : 0;
-    thetaLength = thetaLength !== undefined ? thetaLength : Math.PI;
+    var thetaStart = thetaStartSrc !== undefined ? thetaStartSrc : 0;
+    var thetaLength = thetaLengthSrc !== undefined ? thetaLengthSrc : Math.PI;
 
     var segmentsX = Math.max(3, Math.floor(widthSegments) || 8);
     var segmentsY = Math.max(2, Math.floor(heightSegments) || 6);
@@ -617,7 +617,7 @@ osg.createTexturedSphere = function(radius, widthSegments, heightSegments, phiSt
     g.getAttributes().Normal = new osg.BufferArray( 'ARRAY_BUFFER', fullNormalsList, 3);
     g.getAttributes().TexCoord0 = new osg.BufferArray( 'ARRAY_BUFFER', fullUVList, 2);
 
-    var primitive = new osg.DrawElements( 'TRIANGLES', new osg.BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1));
+    var primitive = new osg.DrawElements( osg.PrimitiveSet.TRIANGLES, new osg.BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1));
     g.getPrimitives().push(primitive);
     return g;
 };
