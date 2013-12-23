@@ -18,6 +18,9 @@ define( [
     'tests/osgViewer/osgViewerTests'
 ], function ( OSG, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer ) {
 
+    // start test when require finished its job
+    QUnit.start();
+
     // hack because of osgPool
     OSG.osg.init();
 

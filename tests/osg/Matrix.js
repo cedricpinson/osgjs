@@ -72,8 +72,8 @@ define( [
 
             var vectors = [];
             Matrix.computeFrustrumCornersVectors( m, vectors );
-            Notify.log( corners );
-            Notify.log( vectors );
+            // Notify.log( corners );
+            // Notify.log( vectors );
             mockup.near( vectors[ 0 ], corners[ 0 ] );
             mockup.near( vectors[ 1 ], corners[ 1 ] );
             mockup.near( vectors[ 2 ], corners[ 2 ] );
@@ -100,10 +100,10 @@ define( [
             var vec = [ 0, 0, 10 ];
             var inv = [];
             Matrix.inverse( m, inv );
-            var res = Matrix.transformVec3( inv, vec );
+            var res = Matrix.transformVec3( inv, vec, [] );
             mockup.near( res, [ 10, 0, 0 ] );
 
-            var res2 = Matrix.transformVec3( m, res );
+            var res2 = Matrix.transformVec3( m, res, [] );
             mockup.near( res2, [ 0, 0, 10 ] );
 
 
@@ -198,7 +198,7 @@ define( [
             translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
             scale = Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5 );
 
-            var ident = Matrix.makeIdentity();
+            var ident = Matrix.makeIdentity( [] );
             Matrix.preMult( ident, scale );
 
             Matrix.preMult( ident, translate );

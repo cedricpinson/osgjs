@@ -1,4 +1,3 @@
-
 define( [
     'osg/Notify',
     'osg/Program',
@@ -171,8 +170,8 @@ define( [
             program.activeUniforms = this.getActiveUniforms( state, attributeKeys, textureAttributeKeys );
             program.generated = true;
 
-            Notify.log( program.vertex.text );
-            Notify.log( program.fragment.text );
+            Notify.debug( program.vertex.text );
+            Notify.debug( program.fragment.text );
 
             this.cache.push( program );
             return program;

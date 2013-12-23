@@ -1,8 +1,8 @@
 define( [
-    'osg/Notify',
     'osg/Utils',
+    'osg/Notify',
     'osg/StateAttribute'
-], function ( Notify, MACROUTILS, StateAttribute ) {
+], function ( MACROUTILS, Notify, StateAttribute ) {
 
     /**
      * Program encapsulate an vertex and fragment shader
@@ -78,7 +78,6 @@ define( [
 
                 this.cacheUniformList( gl, this.vertex.text );
                 this.cacheUniformList( gl, this.fragment.text );
-                //Notify.log(this.uniformsCache);
 
                 this.cacheAttributeList( gl, this.vertex.text );
 

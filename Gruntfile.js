@@ -89,8 +89,11 @@ var gruntTasks = { };
     gruntTasks.watch = { options : {
         } };
 
-    gruntTasks.docco = { options : {
-        } };
+    gruntTasks.docco = {};
+
+    gruntTasks.qunit = {};
+    gruntTasks.connect = {};
+
 
 } )( );
 
@@ -162,6 +165,33 @@ var gruntTasks = { };
 
 } )( );
 
+// ## Qunit and connect
+//
+( function ( ) {
+
+    // qnuit using connect
+    gruntTasks.qunit = {
+        all: {
+            options: {
+                urls: [
+                    'http://localhost:9001/tests/index.html'
+                ]
+            }
+        }
+    };
+
+    // will start a server on port 9001 with root directory at the same level of
+    // the grunt file
+    gruntTasks.connect = {
+        server: {
+            options: {
+                port: 9001,
+                base: '.'
+            }
+        }
+    };
+
+} )( );
 
 module.exports = function ( grunt ) {
 
@@ -169,6 +199,22 @@ module.exports = function ( grunt ) {
         pkg : grunt.file.readJSON( 'package.json' )
     }, gruntTasks ) );
 
+    grunt.event.on('qunit.testStart', function (name) {
+        grunt.log.ok("Running test: " + name);
+    });
+
+    grunt.event.on('qunit.log', function (result, actual, expected, message, source) {
+        if ( !result ) {
+            if ( expected !== undefined ) {
+                grunt.log.error('failed ' + message + ' ' + source );
+            } else {
+                grunt.log.error('actual: ' + actual + ' expected: ' + expected + ' ,failed ' + message );
+            }
+        }
+    });
+
+    grunt.loadNpmTasks( 'grunt-contrib-connect' );
+    grunt.loadNpmTasks( 'grunt-contrib-qunit' );
 
     grunt.loadNpmTasks( 'grunt-docco2' );
     grunt.loadNpmTasks( 'grunt-contrib-jshint' );
@@ -178,6 +224,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-watch' );
 
     grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
+
+    grunt.registerTask( 'test', [ 'connect:server', 'qunit' ] );
 
     grunt.registerTask( 'docs', [ 'requirejs:docsSources', 'docco' ] );
 

@@ -1,8 +1,8 @@
 define( [
     'tests/mockup/mockup',
     'osg/Texture',
-    'osgViewer/Viewer'
-], function ( mockup, Texture, Viewer ) {
+    'osg/State'
+], function ( mockup, Texture, State ) {
 
     return function () {
 
@@ -51,11 +51,10 @@ define( [
                 var tcanvas = new Texture();
                 tcanvas.setImage( cnv );
 
-                var canvas = mockup.createCanvas();
-                var viewer = new Viewer( canvas );
-                viewer.init();
-
-                var state = viewer.getState();
+                var gl = mockup.createFakeRenderer();
+                gl.createTexture = function() { return 1; }; // simulate texture creation
+                var state = new State();
+                state.setGraphicContext( gl );
 
 
                 // check is ready api
@@ -73,12 +72,6 @@ define( [
                 ok( greyscale._image === undefined, 'image should be undefined because of unrefAfterApply' );
                 ok( greyscale._textureObject !== undefined, 'texture object' );
                 ok( greyscale.isDirty() === false, 'dirty is false' );
-
-
-                //rgb24.apply(state);
-                //rgba32.apply(state);
-                //tcanvas.apply(state);
-                mockup.removeCanvas( canvas );
 
                 start();
             };

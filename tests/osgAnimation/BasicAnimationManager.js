@@ -192,7 +192,7 @@ define( [
                     animationManager.playAnimation( 'Cube' );
                     animationManager.updateManager( 0 );
                     animationManager.updateManager( 0.5 );
-                    Notify.log( 'value ' + animationManager._targets[ 0 ].getValue() );
+                    //Notify.log( 'value ' + animationManager._targets[ 0 ].getValue() );
                     animationManager.updateManager( 1.0 );
                     ok( mockup.check_near( animationManager._targets[ 0 ].getValue(), [ 1.085831578947368, 0, 0 ] ), 'Check animation loop result' );
 
@@ -203,7 +203,7 @@ define( [
                         loop: 1
                     } );
                     animationManager.updateManager( 2.5 );
-                    Notify.log( 'value ' + animationManager._targets[ 0 ].getValue() );
+                    //Notify.log( 'value ' + animationManager._targets[ 0 ].getValue() );
                     animationManager.updateManager( 3.0 );
                     ok( animationManager.isPlaying( 'Cube' ), false, 'Check animation is not active' );
                     ok( mockup.check_near( animationManager._targets[ 0 ].getValue(), [ 2.6797789473684217, 0, 0 ] ), 'Check animation once result' );

@@ -45,7 +45,7 @@ define( [
                 result += animCallback.linkAnimation( anim );
             }
             this._nbLinkedTarget += result;
-            Notify.log( 'linked ' + result + ' for "' + animCallback.getName() + '"' );
+            Notify.info( 'linked ' + result + ' for "' + animCallback.getName() + '"' );
         }
 
     } );

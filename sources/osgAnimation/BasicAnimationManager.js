@@ -125,7 +125,7 @@ define( [
 
             var anim = this._animations[ obj.name ];
             if ( anim === undefined ) {
-                Notify.log( 'no animation ' + obj.name + ' found' );
+                Notify.info( 'no animation ' + obj.name + ' found' );
                 return;
             }
 
