@@ -1,6 +1,5 @@
 define( [
-    'Hammer',
-    'osg/Notify'
+    'Hammer'
 ], function ( Hammer ) {
 
     var HammerController = function ( viewer ) {

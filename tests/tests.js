@@ -1,6 +1,7 @@
 requirejs.config( {
     baseUrl: '../sources',
     paths: {
+        vr: '../sources/vendors/vr',
         Q: '../sources/vendors/Q',
         Hammer: '../sources/vendors/Hammer',
         Leap: '../sources/vendors/Leap',
