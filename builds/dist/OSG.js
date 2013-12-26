@@ -1,12 +1,12 @@
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD.
-        define([ 'Q' ], factory);
+        define([ 'Q', 'Hammer', 'Leap' ], factory);
     } else {
         // Browser globals
-        root.OSG = factory( root.Q );
+        root.OSG = factory( root.Q, root.Hammer, root.Leap );
     }
-}(this, function ( Q ) {
+}(this, function ( Q, Hammer, Leap ) {
 
 /**
  * almond 0.2.7 Copyright (c) 2011-2012, The Dojo Foundation All Rights Reserved.
@@ -9138,10 +9138,6 @@ define( 'osg/State',[
     return State;
 } );
 
-define( 'Q',[],function ( ) {
-    return window.Q;
-} );
-
 define( 'osgDB/Input',[
     'Q',
     'require',
@@ -12826,10 +12822,6 @@ define( 'osgDB/osgDB',[
     osgDB.ObjectWrapper.serializers.osgAnimation = osgAnimationWrappers;
 
     return osgDB;
-} );
-
-define( 'Hammer',[],function ( ) {
-    return window.Hammer;
 } );
 
 define( 'osgGA/Manipulator',[
@@ -16819,10 +16811,6 @@ define( 'osgViewer/eventProxy/Hammer',[
     return HammerController;
 } );
 
-define( 'Leap',[],function ( ) {
-    return window.Leap;
-} );
-
 define( 'osgViewer/eventProxy/LeapMotion',[
     'Leap',
     'osg/Notify'
@@ -19006,6 +18994,14 @@ define( 'OSG',[
     //as local almond modules
     define('Q', function () {
         return Q;
+    });
+
+    define('Hammer', function () {
+        return Hammer;
+    });
+
+    define('Leap', function () {
+        return Leap;
     });
 
     //Use almond's special top-level, synchronous require to trigger factory
