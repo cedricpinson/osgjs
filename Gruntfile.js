@@ -127,10 +127,15 @@ var gruntTasks = { };
     gruntTasks.requirejs.distSources = { options : {
         name : Path.join( Path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
         out : Path.join( DIST_PATH, 'OSG.js' ),
-        include : [ 'OSG' ], insertRequire : [ 'OSG' ],
+        include : [ 'OSG' ],
+        paths: {
+            'Q': 'vendors/Q',
+            'Hammer': 'vendors/Hammer',
+            'Leap': 'vendors/Leap'
+        },
         wrap : {
-            startFile : Path.join( UTILS_PATH, 'osg.start.js' ),
-            endFile : Path.join( UTILS_PATH, 'osg.end.js' ) } } };
+            startFile : Path.join( UTILS_PATH, 'wrap.start' ),
+            endFile : Path.join( UTILS_PATH, 'wrap.end' ) } } };
 
 } )( );
 
@@ -199,19 +204,19 @@ module.exports = function ( grunt ) {
         pkg : grunt.file.readJSON( 'package.json' )
     }, gruntTasks ) );
 
-    grunt.event.on('qunit.testStart', function (name) {
-        grunt.log.ok("Running test: " + name);
-    });
+    // grunt.event.on('qunit.testStart', function (name) {
+    //     grunt.log.ok("Running test: " + name);
+    // });
 
-    grunt.event.on('qunit.log', function (result, actual, expected, message, source) {
-        if ( !result ) {
-            if ( expected !== undefined ) {
-                grunt.log.error('failed ' + message + ' ' + source );
-            } else {
-                grunt.log.error('actual: ' + actual + ' expected: ' + expected + ' ,failed ' + message );
-            }
-        }
-    });
+    // grunt.event.on('qunit.log', function (result, actual, expected, message, source) {
+    //     if ( !result ) {
+    //         if ( expected !== undefined ) {
+    //             grunt.log.error('failed ' + message + ' ' + source );
+    //         } else {
+    //             grunt.log.error('actual: ' + actual + ' expected: ' + expected + ' ,failed ' + message );
+    //         }
+    //     }
+    // });
 
     grunt.loadNpmTasks( 'grunt-contrib-connect' );
     grunt.loadNpmTasks( 'grunt-contrib-qunit' );

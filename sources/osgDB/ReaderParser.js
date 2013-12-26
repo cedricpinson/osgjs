@@ -1,9 +1,9 @@
 define( [
+    'Q',
     'require',
     'osgDB/Input',
     'osg/Notify',
     'osg/Utils',
-    'vendors/Q',
     'osg/Texture',
     'osg/Uniform',
     'osg/BlendFunc',
@@ -18,7 +18,7 @@ define( [
     'osg/Matrix',
     'osg/MatrixTransform',
     'osg/Projection'
-], function ( require, Input, Notify, MACROUTILS, Q, Texture, Uniform, BlendFunc, Material, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
+], function ( Q, require, Input, Notify, MACROUTILS, Texture, Uniform, BlendFunc, Material, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
 
     var ReaderParser = {};
 

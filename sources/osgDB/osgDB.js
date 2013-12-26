@@ -1,11 +1,11 @@
 define( [
+    'Q',
     'osg/Utils',
-    'vendors/Q',
     'osgDB/Input',
     'osgDB/ReaderParser',
     'osgWrappers/serializers/osg',
     'osgWrappers/serializers/osgAnimation'
-], function ( MACROUTILS, Q, Input, ReaderParser, osgWrappers, osgAnimationWrappers ) {
+], function ( Q, MACROUTILS, Input, ReaderParser, osgWrappers, osgAnimationWrappers ) {
 
 
     var osgDB = {};

@@ -1,4 +1,12 @@
-window.OSG = ( function ( ) {
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD.
+        define([ 'Q' ], factory);
+    } else {
+        // Browser globals
+        root.OSG = factory( root.Q );
+    }
+}(this, function ( Q ) {
 
 /**
  * almond 0.2.7 Copyright (c) 2011-2012, The Dojo Foundation All Rights Reserved.
@@ -6594,10 +6602,10 @@ define( 'osg/Uniform',[
 } );
 
 define( 'osg/Program',[
-    'osg/Notify',
     'osg/Utils',
+    'osg/Notify',
     'osg/StateAttribute'
-], function ( Notify, MACROUTILS, StateAttribute ) {
+], function ( MACROUTILS, Notify, StateAttribute ) {
 
     /**
      * Program encapsulate an vertex and fragment shader
@@ -6673,7 +6681,6 @@ define( 'osg/Program',[
 
                 this.cacheUniformList( gl, this.vertex.text );
                 this.cacheUniformList( gl, this.fragment.text );
-                //Notify.log(this.uniformsCache);
 
                 this.cacheAttributeList( gl, this.vertex.text );
 
@@ -6779,7 +6786,6 @@ define( 'osg/Shader',[
 
     return Shader;
 } );
-
 
 define( 'osg/ShaderGenerator',[
     'osg/Notify',
@@ -6953,8 +6959,8 @@ define( 'osg/ShaderGenerator',[
             program.activeUniforms = this.getActiveUniforms( state, attributeKeys, textureAttributeKeys );
             program.generated = true;
 
-            Notify.log( program.vertex.text );
-            Notify.log( program.fragment.text );
+            Notify.debug( program.vertex.text );
+            Notify.debug( program.fragment.text );
 
             this.cache.push( program );
             return program;
@@ -9132,13 +9138,13 @@ define( 'osg/State',[
     return State;
 } );
 
-define( 'vendors/Q',[],function ( ) {
+define( 'Q',[],function ( ) {
     return window.Q;
 } );
 
 define( 'osgDB/Input',[
+    'Q',
     'require',
-    'vendors/Q',
     'osgNameSpace',
     'osgDB/ReaderParser',
     'osg/Utils',
@@ -9149,7 +9155,7 @@ define( 'osgDB/Input',[
     'osg/DrawArrayLengths',
     'osg/DrawElements',
     'osg/PrimitiveSet'
-], function ( require, Q, osgNameSpace, ReaderParser, MACROUTILS, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
+], function ( Q, require, osgNameSpace, ReaderParser, MACROUTILS, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -9643,11 +9649,11 @@ define( 'osgDB/Input',[
 } );
 
 define( 'osgDB/ReaderParser',[
+    'Q',
     'require',
     'osgDB/Input',
     'osg/Notify',
     'osg/Utils',
-    'vendors/Q',
     'osg/Texture',
     'osg/Uniform',
     'osg/BlendFunc',
@@ -9662,7 +9668,7 @@ define( 'osgDB/ReaderParser',[
     'osg/Matrix',
     'osg/MatrixTransform',
     'osg/Projection'
-], function ( require, Input, Notify, MACROUTILS, Q, Texture, Uniform, BlendFunc, Material, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
+], function ( Q, require, Input, Notify, MACROUTILS, Texture, Uniform, BlendFunc, Material, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
 
     var ReaderParser = {};
 
@@ -9908,15 +9914,15 @@ define( 'osgDB/ReaderParser',[
 } );
 
 define( 'osg/Texture',[
+    'Q',
     'osg/Notify',
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Image',
     'osg/ShaderGenerator',
-    'osgDB/ReaderParser',
-    'vendors/Q'
-], function ( Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser, Q ) {
+    'osgDB/ReaderParser'
+], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser ) {
 
     // helper
     var isPowerOf2 = function ( x ) {
@@ -10999,7 +11005,7 @@ define( 'osgAnimation/BasicAnimationManager',[
 
             var anim = this._animations[ obj.name ];
             if ( anim === undefined ) {
-                Notify.log( 'no animation ' + obj.name + ' found' );
+                Notify.info( 'no animation ' + obj.name + ' found' );
                 return;
             }
 
@@ -11662,7 +11668,7 @@ define( 'osgAnimation/LinkVisitor',[
                 result += animCallback.linkAnimation( anim );
             }
             this._nbLinkedTarget += result;
-            Notify.log( 'linked ' + result + ' for "' + animCallback.getName() + '"' );
+            Notify.info( 'linked ' + result + ' for "' + animCallback.getName() + '"' );
         }
 
     } );
@@ -12113,7 +12119,7 @@ define( 'osgAnimation/osgAnimation',[
 } );
 
 define( 'osgWrappers/serializers/osg',[
-    'vendors/Q'
+    'Q'
 ], function ( Q ) {
 
     var osgWrapper = {};
@@ -12560,10 +12566,10 @@ define( 'osgWrappers/serializers/osg',[
 } );
 
 define( 'osgWrappers/serializers/osgAnimation',[
+    'Q',
     'osg/Notify',
-    'vendors/Q',
     'osgWrappers/serializers/osg'
-], function ( Notify, Q, osgWrapper ) {
+], function ( Q, Notify, osgWrapper ) {
 
     var osgAnimationWrapper = {};
 
@@ -12803,13 +12809,13 @@ define( 'osgWrappers/serializers/osgAnimation',[
 } );
 
 define( 'osgDB/osgDB',[
+    'Q',
     'osg/Utils',
-    'vendors/Q',
     'osgDB/Input',
     'osgDB/ReaderParser',
     'osgWrappers/serializers/osg',
     'osgWrappers/serializers/osgAnimation'
-], function ( MACROUTILS, Q, Input, ReaderParser, osgWrappers, osgAnimationWrappers ) {
+], function ( Q, MACROUTILS, Input, ReaderParser, osgWrappers, osgAnimationWrappers ) {
 
 
     var osgDB = {};
@@ -12820,6 +12826,10 @@ define( 'osgDB/osgDB',[
     osgDB.ObjectWrapper.serializers.osgAnimation = osgAnimationWrappers;
 
     return osgDB;
+} );
+
+define( 'Hammer',[],function ( ) {
+    return window.Hammer;
 } );
 
 define( 'osgGA/Manipulator',[
@@ -14211,11 +14221,8 @@ define( 'osgGA/SwitchManipulator',[
     return SwitchManipulator;
 } );
 
-define( 'vendors/Hammer',[],function ( ) {
-    return window.Hammer;
-} );
-
 define( 'osgGA/osgGA',[
+    'Hammer',
     'osgGA/FirstPersonManipulator',
     'osgGA/FirstPersonManipulatorMouseKeyboardController',
     'osgGA/Manipulator',
@@ -14225,9 +14232,8 @@ define( 'osgGA/osgGA',[
     'osgGA/OrbitManipulatorLeapMotionController',
     'osgGA/OrbitManipulatorMouseKeyboardController',
     'osgGA/SwitchManipulator',
-    'osgGA/OrbitManipulatorEnums',
-    'vendors/Hammer'
-], function ( FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums, Hammer ) {
+    'osgGA/OrbitManipulatorEnums'
+], function ( Hammer, FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums ) {
 
     var osgGA = {};
 
@@ -16754,7 +16760,8 @@ define( 'osgViewer/eventProxy/GamePad',[
 } );
 
 define( 'osgViewer/eventProxy/Hammer',[
-    'vendors/Hammer'
+    'Hammer',
+    'osg/Notify'
 ], function ( Hammer ) {
 
     var HammerController = function ( viewer ) {
@@ -16812,14 +16819,14 @@ define( 'osgViewer/eventProxy/Hammer',[
     return HammerController;
 } );
 
-define( 'vendors/Leap',[],function ( ) {
+define( 'Leap',[],function ( ) {
     return window.Leap;
 } );
 
 define( 'osgViewer/eventProxy/LeapMotion',[
-    'osg/Notify',
-    'vendors/Leap'
-], function ( Notify, Leap ) {
+    'Leap',
+    'osg/Notify'
+], function ( Leap, Notify ) {
 
     var LeapMotion = function ( viewer ) {
         this._viewer = viewer;
@@ -16829,7 +16836,7 @@ define( 'osgViewer/eventProxy/LeapMotion',[
 
     LeapMotion.prototype = {
         init: function ( args ) {
-            //var element = document.getElementById( args.id );
+
             var self = this;
             this._controller = new Leap.Controller( {
                 enableGestures: args.gestures || true,
@@ -16841,7 +16848,6 @@ define( 'osgViewer/eventProxy/LeapMotion',[
                 self._leapMotionReady = true;
                 Notify.info( 'leapmotion ready' );
             } );
-
             this._controller.loop( this._update.bind( this ) );
 
         },
@@ -18972,6 +18978,10 @@ define( 'OSG',[
     'osgViewer/osgViewer'
 ], function ( osgNameSpace, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer ) {
 
+
+    /*jshint unused: true */
+    var Q = require('Q');
+    /*jshint unused: false */
     var openSceneGraph = osgNameSpace;
 
     openSceneGraph.osg = osg;
@@ -18992,7 +19002,14 @@ define( 'OSG',[
 
     return openSceneGraph;
 } );
+    //Register in the values from the outer closure for common dependencies
+    //as local almond modules
+    define('Q', function () {
+        return Q;
+    });
 
-require(["OSG"]);
-    return require( 'OSG' );
-} )( );
+    //Use almond's special top-level, synchronous require to trigger factory
+    //functions, get the final module value, and export it as the public
+    //value.
+    return require('OSG');
+}));

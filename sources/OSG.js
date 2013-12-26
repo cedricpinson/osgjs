@@ -8,6 +8,10 @@ define( [
     'osgViewer/osgViewer'
 ], function ( osgNameSpace, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer ) {
 
+
+    /*jshint unused: true */
+    var Q = require('Q');
+    /*jshint unused: false */
     var openSceneGraph = osgNameSpace;
 
     openSceneGraph.osg = osg;

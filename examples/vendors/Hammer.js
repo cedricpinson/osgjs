@@ -1,1 +1,1 @@
-Hammer-1.0.5.min.js
+Hammer-1.0.5.js

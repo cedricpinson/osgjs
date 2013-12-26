@@ -1,5 +1,5 @@
 define( [
-    'vendors/Q'
+    'Q'
 ], function ( Q ) {
 
     var osgWrapper = {};

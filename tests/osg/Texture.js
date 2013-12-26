@@ -56,7 +56,6 @@ define( [
                 var state = new State();
                 state.setGraphicContext( gl );
 
-
                 // check is ready api
                 var texture = new Texture();
                 texture.setImage( greyscale._image );

@@ -1,13 +1,13 @@
 define( [
+    'Q',
     'osg/Notify',
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Image',
     'osg/ShaderGenerator',
-    'osgDB/ReaderParser',
-    'vendors/Q'
-], function ( Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser, Q ) {
+    'osgDB/ReaderParser'
+], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser ) {
 
     // helper
     var isPowerOf2 = function ( x ) {

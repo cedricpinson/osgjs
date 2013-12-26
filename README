@@ -10,54 +10,24 @@ The mailing list is available here: http://groups.google.com/group/osgjs
 If you are interested in contributing, contact us on the IRC channels #webgl on Freenode, or by e-mail at contact@osgjs.org. Follow @trigrou on twitter to get news and update
 
 
-How to build your own Osgjs
+How to build your own osgjs
 ----------------------------
 
 
-First, clone a copy of the main jQuery git repo by running:
+First, clone a copy of the main git repo by running:
 
-```bash
-git clone git://github.com/cedricpinson/osgjs.git
 ```
-
-Enter the directory and install the Node  (install nodeJS if you don't already have it http://nodejs.org/ ) dependencies:
-
-```bash
-
-npm cache clean
-npm uninstall -g grunt
-npm install -g grunt-cli
-
-cd osgjs && npm install
+    git clone git://github.com/cedricpinson/osgjs.git
+    cd osgjs && ln -s build/dist build/active
+    npm install # before you may need to npm install -g grunt-cli
+    grunt
 ```
-
-
-Make sure you have `grunt` installed by testing:
-
-```bash
-grunt -version
-```
-
-
-
-Then, to get a complete, minified (w/ Uglify.js), linted (w/ JSHint) version of osgjs, type the following:
-
-```bash
-grunt release --force
-```
-
 
 The built version of osgjs will be put in the `build/` subdirectory.
 
-(more grunt command are available, just check them with --help, "grunt watch" is a must. A nicer and more complete workflow of grunt usage here: http://merrickchristensen.com/articles/gruntjs-workflow.html )
 
 OpenSceneGraph osgjs plugin
 ----------------------------
 
 There is a plugin on my openscengraph branch https://github.com/cedricpinson/osg. This plugin will help you to export data from osg to osgjs. osgconv
 See:
-
-* `man sh`
-* `man bash`
-* `man 3 fnmatch`
-* `man 5 gitignore`

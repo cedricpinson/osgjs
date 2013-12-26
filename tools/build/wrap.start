@@ -1,0 +1,9 @@
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD.
+        define([ 'Q' ], factory);
+    } else {
+        // Browser globals
+        root.OSG = factory( root.Q );
+    }
+}(this, function ( Q ) {

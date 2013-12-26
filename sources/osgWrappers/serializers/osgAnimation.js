@@ -1,8 +1,8 @@
 define( [
+    'Q',
     'osg/Notify',
-    'vendors/Q',
     'osgWrappers/serializers/osg'
-], function ( Notify, Q, osgWrapper ) {
+], function ( Q, Notify, osgWrapper ) {
 
     var osgAnimationWrapper = {};
 

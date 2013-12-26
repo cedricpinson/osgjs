@@ -1,7 +1,7 @@
 define( [
-    'osg/Notify',
-    'vendors/Leap'
-], function ( Notify, Leap ) {
+    'Leap',
+    'osg/Notify'
+], function ( Leap, Notify ) {
 
     var LeapMotion = function ( viewer ) {
         this._viewer = viewer;
@@ -11,7 +11,7 @@ define( [
 
     LeapMotion.prototype = {
         init: function ( args ) {
-            //var element = document.getElementById( args.id );
+
             var self = this;
             this._controller = new Leap.Controller( {
                 enableGestures: args.gestures || true,
@@ -23,7 +23,6 @@ define( [
                 self._leapMotionReady = true;
                 Notify.info( 'leapmotion ready' );
             } );
-
             this._controller.loop( this._update.bind( this ) );
 
         },

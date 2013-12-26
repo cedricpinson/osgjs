@@ -1,6 +1,6 @@
 define( [
+    'Q',
     'require',
-    'vendors/Q',
     'osgNameSpace',
     'osgDB/ReaderParser',
     'osg/Utils',
@@ -11,7 +11,7 @@ define( [
     'osg/DrawArrayLengths',
     'osg/DrawElements',
     'osg/PrimitiveSet'
-], function ( require, Q, osgNameSpace, ReaderParser, MACROUTILS, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
+], function ( Q, require, osgNameSpace, ReaderParser, MACROUTILS, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     var Input = function ( json, identifier ) {
         this._json = json;
