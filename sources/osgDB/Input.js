@@ -1,9 +1,10 @@
 define( [
     'Q',
     'require',
+    'osg/Utils',
     'osgNameSpace',
     'osgDB/ReaderParser',
-    'osg/Utils',
+    'osgDB/Options',
     'osg/Notify',
     'osg/Image',
     'osg/BufferArray',
@@ -11,7 +12,7 @@ define( [
     'osg/DrawArrayLengths',
     'osg/DrawElements',
     'osg/PrimitiveSet'
-], function ( Q, require, osgNameSpace, ReaderParser, MACROUTILS, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
+], function ( Q, require, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -21,12 +22,22 @@ define( [
         }
         this._identifierMap = map;
         this._objectRegistry = {};
-        this._progressXHRCallback = undefined;
-        this._prefixURL = '';
-        this.setImageLoadingOptions( {
-            promise: true,
-            onload: undefined
-        } );
+        // this._progressXHRCallback = undefined;
+        // this._prefixURL = '';
+        // this.setImageLoadingOptions( {
+        //     promise: true,
+        //     onload: undefined
+        // } );
+
+        this.setOptions ( MACROUTILS.objectMix( {}, Options) );
+
+        // {
+        //     prefixURL: '',
+        //     progressXHRCallback: undefined,
+        //     readImageURL: undefined,
+        //     imageLoadingUsePromise: undefined,
+        //     imageOnload: undefined,
+        // };
     };
 
 
@@ -41,14 +52,14 @@ define( [
 
     Input.prototype = {
 
-        setImageLoadingOptions: function ( options ) {
-            this._defaultImageOptions = options;
+        setOptions: function ( options ) {
+            this._defaultOptions = options;
         },
-        getImageLoadingOptions: function () {
-            return this._defaultImageOptions;
+        getOptions: function () {
+            return this._defaultOptions;
         },
         setProgressXHRCallback: function ( func ) {
-            this._progressXHRCallback = func;
+            this._defaultOptions.progressXHRCallback = func;
         },
 
         // used to override the type from pathname
@@ -67,16 +78,16 @@ define( [
         },
 
         setPrefixURL: function ( prefix ) {
-            this._prefixURL = prefix;
+            this._defaultOptions.prefixURL = prefix;
         },
         getPrefixURL: function () {
-            return this._prefixURL;
+            return this._defaultOptions.prefixURL;
         },
         computeURL: function ( url ) {
-            if ( this._prefixURL === undefined ) {
+            if ( this._defaultOptions.prefixURL === undefined ) {
                 return url;
             }
-            return this._prefixURL + url;
+            return this._defaultOptions.prefixURL + url;
         },
         getObjectWrapper: function ( path ) {
             if ( this._objectRegistry[ path ] !== undefined ) {
@@ -110,17 +121,17 @@ define( [
                 }
             };
 
-            if ( !isInlineImage && options.crossOrigin ) {
-                img.crossOrigin = options.crossOrigin;
+            if ( !isInlineImage && options.imageCrossOrigin ) {
+                img.crossOrigin = options.imageCrossOrigin;
             }
 
             img.onload = function () {
 
                 if ( defer ) {
-                    if ( options.onload ) options.onload.call( image );
+                    if ( options.imageOnload ) options.imageOnload.call( image );
                     defer.resolve( image );
-                } else if ( options.onload )
-                    options.onload.call( image );
+                } else if ( options.imageOnload )
+                    options.imageOnload.call( image );
 
             };
 
@@ -133,17 +144,27 @@ define( [
 
         readImageURL: function ( url, options ) {
 
+            if ( options === undefined ) {
+                options = this._defaultOptions;
+            }
+
+            // hook reader
+            if ( options.readImageURL ) {
+                // be carefull if you plan to call hook the call and after
+                // call the original readImageURL, you will need to remove
+                // from options the readImageURL if you dont want an infinte
+                // recursion call
+                return options.readImageURL.call(this, url, options );
+            }
+
             // if image is on inline image skip url computation
             if ( url.substr( 0, 10 ) !== 'data:image' ) {
                 url = this.computeURL( url );
             }
 
-            if ( options === undefined ) {
-                options = this._defaultImageOptions;
-            }
 
             var image = new Image();
-            if ( options.promise !== true ) {
+            if ( options.imageLoadingUsePromise !== true ) {
                 return this.fetchImage( image, url, options );
             }
 
@@ -160,11 +181,7 @@ define( [
             var defer = Q.defer();
 
             options = options || {};
-            var opt = {
-                progressXHRCallback: options.progressXHRCallback,
-                prefixURL: options.prefixURL,
-                defaultImageOptions: options.defaultImageOptions
-            };
+            var opt = MACROUTILS.objectMix( {}, options );
 
             // automatic prefix if non specfied
             if ( opt.prefixURL === undefined ) {
@@ -211,8 +228,8 @@ define( [
             xhr.open( 'GET', url, true );
             xhr.responseType = 'arraybuffer';
 
-            if ( this._progressXHRCallback ) {
-                xhr.addEventListener( 'progress', this._progressXHRCallback, false );
+            if ( this._defaultOptions.progressXHRCallback ) {
+                xhr.addEventListener( 'progress', this._defaultOptions.progressXHRCallback, false );
             }
 
             xhr.addEventListener( 'error', function () {

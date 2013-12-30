@@ -42,10 +42,6 @@ define( [
         return ReaderParser.registry._input;
     };
 
-    // stop on input with options
-    // how we transfer options from registry to serializer
-
-
     ReaderParser.parseSceneGraph = function ( node, options ) {
         if ( node.Version !== undefined && node.Version > 0 ) {
 
@@ -65,13 +61,11 @@ define( [
                 obj[ key ] = node[ key ];
                 var Input = require( 'osgDB/Input' );
                 var input = new Input( obj );
-                input.setImageLoadingOptions( ReaderParser.registry().getImageLoadingOptions() );
-                if ( options !== undefined ) {
-                    input.setProgressXHRCallback( options.progressXHRCallback );
-                    input.setPrefixURL( options.prefixURL );
-                }
+
+                // copy global options and override with user options
+                var opt = MACROUTILS.objectMix( MACROUTILS.objectMix( {}, ReaderParser.registry().getOptions() ), options || {} );
+                input.setOptions( opt );
                 return input.readObject();
-                //return ReaderParser.ObjectWrapper.readObject(obj);
             } else {
                 Notify.log( 'can\'t parse scenegraph ' + node );
             }
