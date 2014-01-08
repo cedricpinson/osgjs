@@ -106,6 +106,20 @@ define( [
 
         } );
 
+        asyncTest( 'Input.readBinaryArrayURL with replacement option', function () {
+            var calledBinaryArray = false;
+            var readBinaryArrayURL = function( url, options ) {
+                calledBinaryArray = true;
+                return true;
+            };
+            var input = new Input( );
+            Q.when( input.readBinaryArrayURL('toto', { readBinaryArrayURL: readBinaryArrayURL} ) ).then( function ( value ) {
+                ok ( calledBinaryArray, true, "readBinaryArray replacement has been called");
+                start();
+            } );
+
+        } );
+
         test( 'Input.getObjectWrapper', function () {
             ( function () {
                 var input = new Input();

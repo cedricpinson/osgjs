@@ -217,8 +217,18 @@ define( [
             return defer.promise;
         },
 
-        readBinaryArrayURL: function ( url ) {
+        readBinaryArrayURL: function ( url, options ) {
+
+            if ( options === undefined ) {
+                options = this._defaultOptions;
+            }
+
+            if ( options.readBinaryArrayURL ) {
+                return options.readBinaryArrayURL.call( this, url, options );
+            }
+
             url = this.computeURL( url );
+
 
             if ( this._identifierMap[ url ] !== undefined ) {
                 return this._identifierMap[ url ];
