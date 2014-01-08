@@ -8,8 +8,8 @@ define( [
 
         module( 'osg' );
 
-        test( 'Texture', function () {
-            stop();
+        asyncTest( 'Texture', function () {
+            //stop();
 
             var textureFromURL = Texture.createFromURL( '"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII="' );
             ok( textureFromURL !== undefined, 'Check textureFromURL' );
