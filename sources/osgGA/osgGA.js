@@ -2,6 +2,7 @@ define( [
     'Hammer',
     'osgGA/FirstPersonManipulator',
     'osgGA/FirstPersonManipulatorMouseKeyboardController',
+    'osgGA/FirstPersonManipulatorOculusController',
     'osgGA/Manipulator',
     'osgGA/OrbitManipulator',
     'osgGA/OrbitManipulatorGamePadController',
@@ -10,7 +11,7 @@ define( [
     'osgGA/OrbitManipulatorMouseKeyboardController',
     'osgGA/SwitchManipulator',
     'osgGA/OrbitManipulatorEnums'
-], function ( Hammer, FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums ) {
+], function ( Hammer, FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums ) {
 
     var osgGA = {};
 
@@ -19,6 +20,9 @@ define( [
     osgGA.FirstPersonManipulator = FirstPersonManipulator;
     osgGA.getFirstPersonStandardMouseKeyboardControllerClass = function () {
         return FirstPersonManipulatorMouseKeyboardController;
+    };
+    osgGA.getFirstPersonOculusControllerClass = function () {
+        return FirstPersonManipulatorOculusController;
     };
     osgGA.Manipulator = Manipulator;
     osgGA.OrbitManipulator = OrbitManipulator;

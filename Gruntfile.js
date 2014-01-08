@@ -128,11 +128,11 @@ var gruntTasks = { };
         name : Path.join( Path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
         out : Path.join( DIST_PATH, 'OSG.js' ),
         include : [ 'OSG' ],
-        exclude: [ 'Q', 'Hammer', 'Leap' ],
         paths: {
             'Q': 'vendors/Q',
             'Hammer': 'vendors/Hammer',
-            'Leap': 'vendors/Leap'
+            'Leap': 'vendors/Leap',
+            'vr': 'vendors/vr'
         },
         wrap : {
             startFile : Path.join( UTILS_PATH, 'wrap.start' ),
