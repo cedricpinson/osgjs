@@ -34,7 +34,7 @@ function createScene() {
         this.setMinFilter('LINEAR_MIPMAP_LINEAR');
     };
 
-    osgDB.Promise.when(osgDB.parseSceneGraph(getPokerScene())).then(function (child) {
+    Q.when(osgDB.parseSceneGraph(getPokerScene())).then(function (child) {
         root.addChild(child);
     });
     return root;
