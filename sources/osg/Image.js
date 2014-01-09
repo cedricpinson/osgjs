@@ -71,17 +71,14 @@ define( [
             return this._height;
         },
 
-        isGreyscale: function () {
+        isGreyscale: function ( nbSamples ) {
             if ( this._isGreyscale !== undefined )
                 return this._isGreyscale;
 
-            if ( this._imageObject !== undefined &&
-                this.isReady() &&
-                this._isGreyscale === undefined ) {
+            if ( this._imageObject !== undefined && this.isReady() && this._isGreyscale === undefined ) {
 
                 var canvas = this._imageObject;
                 if ( !this.isCanvas() ) {
-
                     canvas = document.createElement( 'canvas' );
                 }
                 var ctx = canvas.getContext( '2d' );
@@ -89,10 +86,34 @@ define( [
                 canvas.height = this._imageObject.height;
                 ctx.drawImage( this._imageObject, 0, 0 );
 
-                var data = ctx.getImageData( 0, 0, 1, 1 ).data;
-                var isGreyscale = ( data[ 0 ] === data[ 1 ] ) && ( data[ 1 ] === data[ 2 ] );
+                var sampleX, sampleY;
+                // cap sample if needed
+                if ( !nbSamples ) {
+                    sampleX = canvas.width;
+                    sampleY = canvas.height;
+                }
+                if ( nbSamples > 0 ) {
+                    nbSamples = Math.min( Math.min( canvas.width, canvas.height ), nbSamples );
+                    sampleX = sampleY = nbSamples;
+                }
+
+                var isGreyscale = true;
+                var xFactor = canvas.width / (sampleX );
+                var yFactor = canvas.height / (sampleY );
+                for ( var i = 0; i < sampleX; i++ ) {
+                    for ( var j = 0; j < sampleY; j++ ) {
+                        var x = Math.floor( xFactor * ( i + 0.5 ) ),
+                            y = Math.floor( yFactor * ( j + 0.5 ) );
+                        var data = ctx.getImageData( x, y, 1, 1 ).data;
+                        if ( !( data[ 0 ] === data[ 1 ] && data[ 0 ] === data[ 2 ]) ) {
+                            isGreyscale = false;
+                            break;
+                        }
+                    }
+                }
                 this._isGreyscale = isGreyscale;
             }
+
             return this._isGreyscale;
         },
 

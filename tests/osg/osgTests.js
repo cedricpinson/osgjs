@@ -1,4 +1,5 @@
 define( [
+    'tests/osg/Image',
     'tests/osg/BlendColor',
     'tests/osg/BoundingBox',
     'tests/osg/BoundingSphere',
@@ -21,9 +22,10 @@ define( [
     'tests/osg/TextureCubeMap',
     'tests/osg/UpdateVisitor',
     'tests/osg/Vec2'
-], function ( BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, Light, Matrix, MatrixTransform, Node, NodeVisitor, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, UpdateVisitor, Vec2 ) {
+], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, Light, Matrix, MatrixTransform, Node, NodeVisitor, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, UpdateVisitor, Vec2 ) {
 
     return function () {
+        Image();
         BlendColor();
         BoundingBox();
         BoundingSphere();
