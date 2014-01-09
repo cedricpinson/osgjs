@@ -5,8 +5,9 @@ define( [
     'osg/Matrix',
     'osg/Vec2',
     'osg/Vec3',
-    'osgGA/FirstPersonManipulatorMouseKeyboardController'
-], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController ) {
+    'osgGA/FirstPersonManipulatorMouseKeyboardController',
+    'osgGA/FirstPersonManipulatorOculusController'
+], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController ) {
 
     /**
      * Authors:
@@ -23,8 +24,8 @@ define( [
         this.init();
     };
 
-    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard' ];
-    FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard' ];
+    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus'];
+    FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus' ];
 
     /** @lends FirstPersonManipulator.prototype */
     FirstPersonManipulator.prototype = MACROUTILS.objectInehrit( Manipulator.prototype, {
@@ -58,6 +59,8 @@ define( [
             this._tmpComputeRotation2 = Matrix.makeIdentity( [] );
             this._tmpComputeRotation3 = Matrix.makeIdentity( [] );
             this._tmpGetTargetDir = Vec3.init( [] );
+
+            this._rotBase = Matrix.makeIdentity( [] );
 
             var self = this;
 
@@ -132,7 +135,11 @@ define( [
             Matrix.makeRotate( this._angleHorizontal, 0, 0, 1, second );
             Matrix.mult( second, first, rotMat );
 
-            this._direction = Matrix.transformVec3( rotMat, [ 0, 1, 0 ], this._direction );
+            var rotBase = this._rotBase;
+            // TOTO refactor the way the rotation matrix is managed
+            Matrix.preMult( rotMat, rotBase );
+
+            this._direction = Matrix.transformVec3(rotMat, [ 0, 1, 0 ], this._direction );
             Vec3.normalize( this._direction, this._direction );
 
             this._up = Matrix.transformVec3( rotMat, [ 0, 0, 1 ], this._up );
@@ -179,6 +186,10 @@ define( [
             Matrix.makeLookAt( this._eye, target, this._up, this._inverseMatrix );
         },
 
+        setRotationBaseFromQuat:function( quat ){
+            Matrix.makeRotateFromQuat( quat, this._rotBase );
+        },
+
         getInverseMatrix: function () {
             return this._inverseMatrix;
         },
@@ -198,6 +209,10 @@ define( [
 
     ( function ( module ) {
         module.StandardMouseKeyboard = FirstPersonManipulatorMouseKeyboardController;
+    } )( FirstPersonManipulator );
+
+    ( function ( module ) {
+        module.Oculus = FirstPersonManipulatorOculusController;
     } )( FirstPersonManipulator );
 
     return FirstPersonManipulator;
