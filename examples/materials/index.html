@@ -361,7 +361,7 @@ OSG.globalify();
 function createScene() {
     var mainNode = new osg.Node();
     var o = ReadJSON.create();
-    osgDB.Promise.when(osgDB.parseSceneGraph(o)).then(function(o) {
+    Q.when(osgDB.parseSceneGraph(o)).then(function(o) {
 
     mainNode.light = new osg.Light();
     mainNode.addChild(o);

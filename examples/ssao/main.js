@@ -69,7 +69,7 @@ var addLoading = function() {
 };
 
 var getModel = function(func) {
-    var defer = osgDB.Promise.defer();
+    var defer = Q.defer();
     var node = new osg.MatrixTransform();
     //node.setMatrix(osg.Matrix.makeRotate(-Math.PI/2, 1,0,0, []));
     var loadModel = function(url) {
@@ -80,7 +80,7 @@ var getModel = function(func) {
             if (req.readyState == 4) {
                 var child;
                 if(req.status == 200) {
-                    osgDB.Promise.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
+                    Q.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
                         node.addChild(child);
                         removeLoading(node, child);
                         defer.resolve(node);
@@ -582,7 +582,7 @@ function createSceneReal()
 {
     var root = new osg.Node();
 
-    osgDB.Promise.when(getModel()).then(function(model) {
+    Q.when(getModel()).then(function(model) {
 
         var group = new osg.Node();
 
@@ -756,7 +756,7 @@ function createScene2()
 {
     var root = new osg.Node();
 
-    osgDB.Promise.when(getModel()).then(function(model) {
+    Q.when(getModel()).then(function(model) {
 
         var group = new osg.Node();
 
@@ -920,7 +920,7 @@ function createSceneTestDepth()
 {
     var root = new osg.Node();
 
-    osgDB.Promise.when(getModel()).then(function(model) {
+    Q.when(getModel()).then(function(model) {
 
         var group = new osg.Node();
 
@@ -1002,7 +1002,7 @@ function createSceneTestNormal()
 {
     var root = new osg.Node();
 
-    osgDB.Promise.when(getModel()).then(function(model) {
+    Q.when(getModel()).then(function(model) {
 
         var group = new osg.Node();
 
@@ -1110,7 +1110,7 @@ function createSceneTestReconstructPosition()
 {
     var root = new osg.Node();
 
-    osgDB.Promise.when(getModel()).then(function(model) {
+    Q.when(getModel()).then(function(model) {
 
         var group = new osg.Node();
 
@@ -1390,7 +1390,7 @@ function createSceneOptimized()
 {
     var root = new osg.Node();
 
-    osgDB.Promise.when(getModel()).then(function(model) {
+    Q.when(getModel()).then(function(model) {
 
         var group = new osg.Node();
 

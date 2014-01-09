@@ -169,7 +169,7 @@ function loadUrl( url, viewer, rttCamLeft, rttCamRight ) {
 };
 
 function loadModel( data, viewer, rttCamLeft, rttCamRight ) {
-    osgDB.Promise.when( osgDB.parseSceneGraph( data ) ).then( function ( child ) {
+    Q.when( osgDB.parseSceneGraph( data ) ).then( function ( child ) {
         rttCamLeft.addChild( child );
         rttCamRight.addChild( child );
         viewer.getManipulator().computeHomePosition();

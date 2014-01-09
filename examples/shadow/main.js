@@ -850,7 +850,7 @@ function createScene() {
 
     if (true) {
         (function() {
-            osgDB.Promise.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
+            Q.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
                 var project = createProjectedShadowScene(model);
                 project.setMatrix(osg.Matrix.makeTranslate(-10,0,0.0,[]));
                 root.addChild(project);
@@ -860,7 +860,7 @@ function createScene() {
 
     if (true) {
         (function() {
-            osgDB.Promise.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
+            Q.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
                 var texproject = createTextureProjectedShadowScene(model);
                 texproject.setMatrix(osg.Matrix.makeTranslate(0,0,0.0,[]));
                 root.addChild(texproject);
@@ -870,7 +870,7 @@ function createScene() {
 
     if (true) {
         (function() {
-            osgDB.Promise.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
+            Q.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
                 var shadowmap = createShadowMapScene(model);
                 shadowmap.setMatrix(osg.Matrix.makeTranslate(10,0,0.0,[]));
                 root.addChild(shadowmap);

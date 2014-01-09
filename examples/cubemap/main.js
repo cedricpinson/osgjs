@@ -205,7 +205,7 @@ var getModel = function(scene) {
         req.onreadystatechange = function (aEvt) {
             if (req.readyState == 4) {
                 if(req.status == 200) {
-                    osgDB.Promise.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
+                    Q.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
                             if (cbfunc) {
                                 cbfunc(child);
                             }
@@ -297,7 +297,7 @@ function createScene()
 
     ground.getOrCreateStateSet().setAttributeAndMode(getShader());
 
-    osgDB.Promise.all([
+    Q.all([
         osgDB.readImage('textures/posx.jpg'),
         osgDB.readImage('textures/negx.jpg'),
 
