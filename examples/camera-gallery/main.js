@@ -18,6 +18,7 @@
  *
  */
 var viewer;
+OSG.globalify();
 
 // contructor that will generate random camera around a target
 var CameraSwitcher = function(nb, center, range) {
@@ -64,13 +65,13 @@ CameraSwitcher.prototype = {
         if (delta > duration) {
             // set the next current camera
             this._currentCamera = (this._currentCamera + 1) % this._camera.length;
-            
+
             // fix delta to new camera
             delta = delta - duration;
             duration = this._camera[this._currentCamera].duration;
             this._lastUpdate = t;
         }
-        
+
         // compute lerp position and target
         var srcPosition = this._camera[this._currentCamera].position;
         var dstPosition = this._camera[(this._currentCamera+1)%this._camera.length].position;
@@ -110,7 +111,7 @@ var main = function() {
     manipulator._cameraSwitcher = new CameraSwitcher(10, [0,0,0], [2000, 20, 2000]);
     manipulator.update = function(nv) {
         this._cameraSwitcher.update(nv);
-        
+
         osg.Matrix.makeLookAt(
             this._cameraSwitcher.getCurrentPosition(), // eye
             this._cameraSwitcher.getCurrentTarget(), // center

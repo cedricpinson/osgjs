@@ -19,8 +19,9 @@
  */
 
 var Viewer;
+OSG.globalify();
+
 var main = function() {
-    //osg.ReportWebGLError = true;
 
     var canvas = document.getElementById("3DView");
     var w = window.innerWidth;
@@ -47,7 +48,7 @@ var main = function() {
 
         //viewer.getManipulator().setDistance(100.0);
         //viewer.getManipulator().setTarget([0,0,0]);
-            
+
         viewer.run();
 
         var mousedown = function(ev) {
@@ -118,8 +119,8 @@ function getShader()
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader( 'VERTEX_SHADER', vertexshader),
+        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader));
 
     return program;
 }
@@ -143,7 +144,7 @@ function getShaderBackground()
         "varying vec3 osg_FragEye;",
         "varying vec3 osg_FragVertex;",
         "varying vec2 osg_TexCoord0;",
-        
+
         "void main(void) {",
         "  osg_FragVertex = Vertex;",
         "  osg_TexCoord0 = TexCoord0;",
@@ -172,8 +173,8 @@ function getShaderBackground()
     ].join('\n');
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader('VERTEX_SHADER', vertexshader),
+        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
 
     return program;
 }
@@ -204,7 +205,7 @@ var getModel = function(scene) {
         req.onreadystatechange = function (aEvt) {
             if (req.readyState == 4) {
                 if(req.status == 200) {
-                    osgDB.Promise.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
+                    Q.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
                             if (cbfunc) {
                                 cbfunc(child);
                             }
@@ -248,11 +249,11 @@ function getCubeMap(size, scene)
             osg.Matrix.copy(m, cubemapTransform.get());
             cubemapTransform.dirty();
             return true;
-        }
-    }
+        };
+    };
     mt.setCullCallback(new CullCallback());
     scene.getOrCreateStateSet().addUniform(cubemapTransform);
-    
+
 
     var cam = new osg.Camera();
 
@@ -283,7 +284,7 @@ function getCubeMap(size, scene)
     return geom;
 }
 
-function createScene() 
+function createScene()
 {
     var group = new osg.Node();
 
@@ -296,7 +297,7 @@ function createScene()
 
     ground.getOrCreateStateSet().setAttributeAndMode(getShader());
 
-    osgDB.Promise.all([
+    Q.all([
         osgDB.readImage('textures/posx.jpg'),
         osgDB.readImage('textures/negx.jpg'),
 

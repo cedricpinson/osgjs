@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QUnit Test Suite</title>
+    <link rel='stylesheet' href='vendors/qunit/qunit.css' type='text/css' media='screen'>
+    <script type='text/javascript' src='vendors/qunit/qunit.js'></script>
+    <script type='text/javascript'>
+    // disable qunit autostart
+    QUnit.config.autostart = false;
+    </script>
+    <script type='text/javascript' src='vendors/jquery-1.4.2.js'></script>
+    <script type='text/javascript' src='../examples/vendors/vr.js'></script>
+    <script type='text/javascript' src='../examples/vendors/Q.js'></script>
+    <script type='text/javascript' src='../examples/vendors/Hammer.js'></script>
+    <script type='text/javascript' src='../examples/vendors/Leap.js'></script>
+</head>
+<body>
+    <canvas id='3DView' style='border: none;' width='1' height='1'></canvas>
+    <h1 id='qunit-header'>QUnit Test Suite</h1>
+    <h2 id='qunit-banner'></h2>
+    <div id='qunit-testrunner-toolbar'></div>
+    <h2 id='qunit-userAgent'></h2>
+    <ol id='qunit-tests'></ol>
+    <script data-main='tests.js' src='vendors/require.js'></script>
+</body>
+</html>

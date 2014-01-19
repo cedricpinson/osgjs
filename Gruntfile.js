@@ -1,268 +1,246 @@
-﻿module.exports = function(grunt) {
+var Fs     = require( 'fs' );
+var Path   = require( 'path' );
 
-	// usual suspects
-	grunt.loadNpmTasks('grunt-contrib-uglify'); // todo : use the if(debug){} and deadcode removal
-	grunt.loadNpmTasks('grunt-contrib-jshint'); // promises...
-	grunt.loadNpmTasks('grunt-contrib-qunit'); // todo: separate gl dependant test and pure js tests, add visual diff, have a mock gl context ?
-	grunt.loadNpmTasks('grunt-contrib-watch');
-	grunt.loadNpmTasks('grunt-contrib-concat');
+var extend = require( 'extend' );
+var glob   = require( 'glob' );
 
-	grunt.loadNpmTasks('grunt-contrib-compress'); // get idea of compressed server size in gz
-	grunt.loadNpmTasks('grunt-contrib-copy'); // copy file builds
-	grunt.loadNpmTasks('grunt-strip'); // remove console.log, etc
+// Base paths used by the tasks.
+// They always have to finish with a '/'.
+//
+var SOURCE_PATH = 'sources/';
+var BUILD_PATH   = 'builds/';
+var DIST_PATH   = BUILD_PATH+'dist/';
+var UTILS_PATH  = 'tools/build/';
 
-	// benchmarks
-	//grunt.loadNpmTasks('grunt-benchmark');
-	//
-	//
-	grunt.loadTasks('tasks');
-	/********* using patched version from tasks folder
-		// convert to amd (requirejs like) module
-		//grunt.loadNpmTasks('grunt-wrap');
-		//grunt.loadNpmTasks('grunt-jsvalidate');
-	*/
+// Utility functions
+//
+var find = function ( cwd, pattern ) {
 
-	// non patched
-	// faster build using parallel task
-	//grunt.loadNpmTasks('grunt-glslvalidator'); // GL shader validator sublime plugin ?
-	//grunt.loadNpmTasks('grunt-glsloptimizer'); // @aras_p  glsl optimizer
-	//grunt.loadNpmTasks('grunt-glslmin'); // just min
+    if ( typeof pattern === 'undefined' ) {
+        pattern = cwd;
+        cwd = undefined;
+    }
+
+    var isEntity = function ( path ) {
+        if ( cwd ) path = Path.join( cwd, path );
+        return ! Fs.lstatSync( path ).isDirectory( ); };
+
+    var options = { };
+
+    if ( cwd )
+        options.cwd = cwd;
+
+    return glob.sync( pattern, options ).filter( isEntity );
+
+};
+
+// Used to store all Grunt tasks
+//
+var gruntTasks = { };
+
+// ## Top-level configurations
+//
+( function ( ) {
+
+    gruntTasks.jshint = {
+        options : {
+            quotmark  : 'single',
+            bitwise   :  true,
+            camelcase :  true,
+            eqeqeq    :  true,
+            immed     :  true,
+            latedef   :  true,
+            newcap    :  true,
+            noarg     :  true,
+            undef     :  true,
+            unused    :  true,
+            trailing  :  true,
+
+            eqnull    :  true,
+            laxcomma  :  true,
+            sub       :  true,
+
+            browser   :  true,
+            devel     :  true }
+        };
+
+    gruntTasks.copy = { options : {
+        } };
+
+    gruntTasks.uglify = { options : {
+        } };
+
+    gruntTasks.requirejs = { options : {
+        //optimize : 'uglify2',
+        optimize : 'none',
+        preserveLicenseComments : false,
+
+        findNestedDependencies: true,
+        optimizeAllPluginResources: true,
+
+        baseUrl : SOURCE_PATH } };
+
+    gruntTasks.clean = { options : {
+        } };
+
+    gruntTasks.requirejsconfiguration = { options : {
+        } };
+
+    gruntTasks.watch = { options : {
+        } };
+
+    gruntTasks.docco = {};
+
+    gruntTasks.qunit = {};
+    gruntTasks.connect = {};
 
 
-	// docs
-	grunt.loadNpmTasks('grunt-plato'); // bug prediction
-	grunt.loadNpmTasks('grunt-docco'); // nice docs. https://bitbucket.org/doklovic_atlassian/atlassian-docco/wiki/writing-docco-comments
+} )( );
 
-	// chrome dev tool for grunt
-	//grunt.loadNpmTasks('grunt-devtools');
-	//
+// ## JSHint
+//
+// Will check the Gruntfile and every "*.js" file in the "statics/sources/" folder.
+//
+( function ( ) {
+
+    gruntTasks.jshint.self = {
+        options : { node : true },
+        src : [ 'Gruntfile.js' ] };
+
+    gruntTasks.jshint.sources = {
+        options : { globals : { define : true, require : true }
+                  },
+        src : find( SOURCE_PATH, '**/*.js' ).map( function ( path ) {
+            return Path.join( SOURCE_PATH, path ); } ) };
+
+    // add another output from envvar to have better error tracking in emacs
+    if ( process.env.GRUNT_EMACS_REPORTER !== undefined ) {
+        gruntTasks.jshint.sources.options.reporter = process.env.GRUNT_EMACS_REPORTER;
+    }
+
+} )( );
+
+// ## Require.js
+//
+( function ( ) {
+
+    gruntTasks.requirejs.distSources = { options : {
+        name : Path.join( Path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
+        out : Path.join( DIST_PATH, 'OSG.js' ),
+        include : [ 'OSG' ],
+        paths: {
+            'Q': 'vendors/Q',
+            'Hammer': 'vendors/Hammer',
+            'Leap': 'vendors/Leap',
+            'vr': 'vendors/vr'
+        },
+        wrap : {
+            startFile : Path.join( UTILS_PATH, 'wrap.start' ),
+            endFile : Path.join( UTILS_PATH, 'wrap.end' ) } } };
+
+} )( );
+
+// ## Clean
+//
+( function ( ) {
+
+    gruntTasks.clean.distAfterSourcesRjs = {
+        src : [ Path.join( DIST_PATH, 'build.txt' ) ] };
+
+} )( );
 
 
-	// project files
-	var projectJson = grunt.file.read("project.json");
-	var project = JSON.parse(projectJson);
+// ## Docco
+//
+( function ( ) {
 
-	// Project configuration
-	grunt.initConfig({
-		pkg: grunt.file.readJSON('package.json'),
-		meta: {
-			banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' + '<%= grunt.template.today("yyyy-mm-dd") %>\n' + '<%= pkg.homepage ? "* " + pkg.homepage + "\n" : "" %>' + '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' + ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */'
-		},
-		jshint: {
-			options: {
-				// http://www.jshint.com/docs/
-				// Enforcing Options:
-				curly: false,
-				eqeqeq: false,
-				//eqeqeq: true, <= TODO: lots of cleaning
-				immed: false,
-				//immed: true, <= TODO: lots of cleaning
-				latedef: true,
-				noarg: true,
-				sub: true,
-				undef: false,
-				//undef: true, <= TODO: lots of cleaning
-				eqnull: true,
-				browser: true,
-				unused: false,
-				//unused: true, <= TODO: lots of cleaning
-				forin: true,
-				camelcase: false,
-				newcap: false,
-				// Relaxing Options:
-				loopfunc: true,
-				evil: true,
+    // generate a requirejs without anything to build a docco docs
+    gruntTasks.requirejs.docsSources = { options : {
+        out : Path.join( BUILD_PATH, 'docs/OSG.js' ),
+        include : [ 'OSG' ]
+    } };
 
-				globals: {
-					gl: true,
+    gruntTasks.docco = {
+        docs: {
+            src: [ 'builds/docs/OSG.js' ],
+            options: {
+                output: 'docs/annotated-source'
+            }
+        }
+    };
 
-					osg: true,
-					osgDB: true,
-					osgGA: true,
-					osgUtil: true,
-					osgViewer: true,
-					osgAnimation: true,
+} )( );
 
-					WebGLDebugUtils: true,
-					WebGLUtils: true,
+// ## Qunit and connect
+//
+( function ( ) {
 
-					Stats: true,
-					performance: true,
+    // qnuit using connect
+    gruntTasks.qunit = {
+        all: {
+            options: {
+                urls: [
+                    'http://localhost:9001/tests/index.html'
+                ]
+            }
+        }
+    };
 
-					WebGLRenderingContext: true,
-					WebGLBuffer: true,
-					WebGLRenderbuffer: true,
-					WebGLFramebuffer: true,
-					WebGLProgram: true,
-					WebGLTexture: true,
-					WebGLShader: true
-				}
-				//, force: true,
-				//ignores: [
-				//    'js/osgDB/Promise.js'
-				//]
-			},
-			beforeconcat: [project.scripts],
-			afterconcat: 'build/<%= pkg.name %>-debug.js'
-		},
-		jsvalidate: {
-			options: {
-				tolerant: true
-			},
-			main: {
-				src: [project.scripts,
-						'examples/*/*.js',
-						'sandbox/*/*.js',
-						'test/*.js'
-				]
-			}
-		},
-		qunit: {
-			options: {
-				timeout: 10000
-			},
-			base: ['test/index.html']
-		},
-		concat: {
-			build: {
-				src: ['<banner:meta.banner>', project.scripts],
-				dest: 'build/<%= pkg.name %>-debug.js'
-			}
-		},
-		strip: {
-			main: {
-				src: 'build/<%= pkg.name %>-debug.js',
-				dest: 'build/<%= pkg.name %>.js',
-				nodes: ['console', 'debug']
-			}
-		},
-		uglify: {
-			main: {
-				options: {
-					//wrap: 'osgLib',// amd step
-					//exportAll: true,
-					beautify: false,
-					quote_keys: false,
-					sourceMap: 'build/source-map.js',
-					sourceMapPrefix: 1,
-					compressor: {
-						sequences: true, // join consecutive statements with the “comma operator”
-						properties: false, // optimize property access: a["foo"] → a.foo
-						dead_code: false, // discard unreachable code
-						drop_debugger: true, // discard “debugger” statements
-						unsafe: true, // some unsafe optimizations (see below)
-						conditionals: true, // optimize if-s and conditional expressions
-						comparisons: true, // optimize comparisons
-						evaluate: true, // evaluate constant expressions
-						booleans: true, // optimize boolean expressions
-						loops: true, // optimize loops
-						unused: true, // drop unused variables/functions
-						hoist_funs: true, // hoist function declarations
-						hoist_vars: false, // hoist variable declarations
-						if_return: true, // optimize if-s followed by return/continue
-						join_vars: true, // join var declarations
-						cascade: true, // try to cascade `right` into `left` in sequences
-						side_effects: true, // drop side-effect-free statements
-						warnings: true, // warn about potentially dangerous optimizations/code
-						global_defs: {
-							//osg.debug: FALSE // will remove all code inside "if (osg.debug){..}"
-						} // global definitions
-					},
-					mangle: {
-						toplevel: false,
-						except: ['osgViewer']
-					}
-				},
-				files: {
-					'build/<%= pkg.name %>.min.js': ['build/<%= pkg.name %>.js']
-				}
-			}
-		},
-		compress: {
-			options: {
-				archive: 'build/<%= pkg.name %>.min.js.gz',
-				mode: 'gzip',
-				pretty: true
-			},
-			main: {
-				files: [{
-						src: 'build/<%= pkg.name %>.min.js',
-						dest: 'build/<%= pkg.name %>.min.js'
-					}
-				]
-			}
-		},
-		copy: {
-			min: {
-				files: {
-					'build/<%= pkg.name %>-<%= pkg.version %>.js': 'build/<%= pkg.name %>.min.js'
-				}
-			},
-			debug: {
-				files: {
-					'build/<%= pkg.name %>-debug-<%= pkg.version %>.js': 'build/<%= pkg.name %>-debug.js'
-				}
-			}
-		},
-		plato: {
-			options: {
-				// Task-specific options go here.
-			},
-			main: {
-				files: {
-					'docs/analysis': project.scripts
-				}
-			}
-		},
-		docco: {
-			options: {
-				//layout: 'parallel', //   'choose a layout (parallel, linear or classic'
-				css: 'docs/docco/docco.css' //'use a custom css file'
-				//template:  'docs/docco/mytemplace.jst',//'use a custom .jst template'
-				//extension:  'js'//'assume a file extension for all inputs'
-			},
-			main: {
-				src: project.scripts,
-				options: {
-					output: 'docs/docco'
-				}
-			}
-		},
-		wrap: { // wrap my modules with define
-			main: {
-				files: ['build/<%= pkg.name %>.min.js'],
-				dest: 'build',
-				pathSep: '/',
-				prefix: 'amd.',
-				wrapper: ['define(["osg"], function () {\n', '\nreturn osg;});']
-				// wrapper can also be a function, like so:
-				//
-				// wrapper: function(filepath, options) {
-				//   // ...
-				//   return ['define(function (require, exports, module) {\n', '\n});'];
-				// }
-			}
-		},
-		watch: {
-			syntax: {
-				files: [project.scripts,
-						'examples/*/*.js',
-						'test/*.js'
-				],
-				tasks: ['jsvalidate', 'jshint:beforeconcat', 'build_debug']
-			}
-		}
-	});
+    // will start a server on port 9001 with root directory at the same level of
+    // the grunt file
+    gruntTasks.connect = {
+        server: {
+            options: {
+                port: 9001,
+                base: '.'
+            }
+        }
+    };
 
-	grunt.registerTask('gzTest', ['compress']);
-	grunt.registerTask('release_side', ['docco', 'plato']);
-	grunt.registerTask('release_main', ['jshint:beforeconcat', 'concat', 'jshint:afterconcat', 'strip', 'uglify', 'copy', 'wrap']);
+} )( );
 
-	grunt.registerTask('release', ['release_main', 'release_side', 'gzTest']);
+module.exports = function ( grunt ) {
 
-	grunt.registerTask('build_debug', ['jshint:beforeconcat', 'concat', 'copy:debug']);
-	grunt.registerTask('build_min', ['jshint:beforeconcat', 'concat', 'strip', 'uglify', 'copy']);
-	grunt.registerTask('verify', ['jsvalidate', 'jshint:beforeconcat']);
-	grunt.registerTask('default', ['verify', 'build_debug']);
+    grunt.initConfig( extend( {
+        pkg : grunt.file.readJSON( 'package.json' )
+    }, gruntTasks ) );
+
+    // grunt.event.on('qunit.testStart', function (name) {
+    //     grunt.log.ok("Running test: " + name);
+    // });
+
+    // grunt.event.on('qunit.log', function (result, actual, expected, message, source) {
+    //     if ( !result ) {
+    //         if ( expected !== undefined ) {
+    //             grunt.log.error('failed ' + message + ' ' + source );
+    //         } else {
+    //             grunt.log.error('actual: ' + actual + ' expected: ' + expected + ' ,failed ' + message );
+    //         }
+    //     }
+    // });
+
+    grunt.loadNpmTasks( 'grunt-contrib-connect' );
+    grunt.loadNpmTasks( 'grunt-contrib-qunit' );
+
+    grunt.loadNpmTasks( 'grunt-docco2' );
+    grunt.loadNpmTasks( 'grunt-contrib-jshint' );
+    grunt.loadNpmTasks( 'grunt-contrib-copy' );
+    grunt.loadNpmTasks( 'grunt-contrib-requirejs' );
+    grunt.loadNpmTasks( 'grunt-contrib-clean' );
+    grunt.loadNpmTasks( 'grunt-contrib-watch' );
+
+    grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
+
+    grunt.registerTask( 'test', [ 'connect:server', 'qunit' ] );
+
+    grunt.registerTask( 'docs', [ 'requirejs:docsSources', 'docco' ] );
+
+    grunt.registerTask( 'build:sources:dist', [ 'requirejs:distSources', 'clean:distAfterSourcesRjs' ] );
+    grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );
+
+    grunt.registerTask( 'build:dist', [ 'build:sources:dist' ] );
+    grunt.registerTask( 'build', [ 'build:dist' ] );
+
+    grunt.registerTask( 'default', [ 'check', 'build' ] );
 
 };
