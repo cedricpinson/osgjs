@@ -9,6 +9,7 @@ define( [
     'tests/osg/CullFace',
     'tests/osg/CullVisitor',
     'tests/osg/Depth',
+    'tests/osg/KdTree',
     'tests/osg/Light',
     'tests/osg/Matrix',
     'tests/osg/MatrixTransform',
@@ -22,7 +23,7 @@ define( [
     'tests/osg/TextureCubeMap',
     'tests/osg/UpdateVisitor',
     'tests/osg/Vec2'
-], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, Light, Matrix, MatrixTransform, Node, NodeVisitor, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, UpdateVisitor, Vec2 ) {
+], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, UpdateVisitor, Vec2 ) {
 
     return function () {
         Image();
@@ -35,6 +36,7 @@ define( [
         CullVisitor();
         CullFace();
         Depth();
+        KdTree();
         Light();
         Matrix();
         MatrixTransform();
