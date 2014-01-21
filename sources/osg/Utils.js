@@ -4,7 +4,7 @@ define( [
 ], function ( osgPool, StateGraph ) {
 
     // make the warning about StateGraph desappear
-    Object.keys(StateGraph);
+    Object.keys( StateGraph );
 
     var Utils = {};
 
@@ -150,17 +150,16 @@ define( [
 
         return object;
     };
-    Utils.setTypeID = function( classObject ) {
+    Utils.setTypeID = function ( classObject ) {
         var className = classObject.prototype.className();
         var typeID = Utils.objectType.generate( className );
         classObject.typeID = classObject.prototype.typeID = typeID;
     };
 
-
-
     Utils.Float32Array = typeof Float32Array !== 'undefined' ? Float32Array : null;
     Utils.Int32Array = typeof Int32Array !== 'undefined' ? Int32Array : null;
     Utils.Uint16Array = typeof Uint16Array !== 'undefined' ? Uint16Array : null;
+    Utils.Uint32Array = typeof Uint32Array !== 'undefined' ? Uint32Array : null;
 
     Utils.performance = {};
     Utils.performance.now = ( function () {

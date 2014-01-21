@@ -16,6 +16,7 @@ define( [
         this.boundingBox = new BoundingBox();
         this.boundingBoxComputed = false;
         this.cacheAttributeList = {};
+        this._shape = null;
     };
 
     /** @lends Geometry.prototype */
@@ -49,6 +50,12 @@ define( [
         },
         getAttributes: function () {
             return this.attributes;
+        },
+        getShape: function () {
+            return this._shape;
+        },
+        setShape: function ( shape ) {
+            this._shape = shape;
         },
         getVertexAttributeList: function () {
             return this.attributes;
@@ -128,17 +135,17 @@ define( [
             var vertexArray = this.getAttributes().Vertex;
             var v = [ 0.0, 0.0, 0.0 ];
             if ( vertexArray !== undefined &&
-                 vertexArray.getElements() !== undefined &&
-                 vertexArray.getItemSize() > 2 ) {
-                     var vertexes = vertexArray.getElements();
-                     Vec3.init( v );
-                     for ( var idx = 0, l = vertexes.length; idx < l; idx += 3 ) {
-                         v[ 0 ] = vertexes[ idx ];
-                         v[ 1 ] = vertexes[ idx + 1 ];
-                         v[ 2 ] = vertexes[ idx + 2 ];
-                         boundingBox.expandByVec3( v );
-                     }
-                 }
+                vertexArray.getElements() !== undefined &&
+                vertexArray.getItemSize() > 2 ) {
+                var vertexes = vertexArray.getElements();
+                Vec3.init( v );
+                for ( var idx = 0, l = vertexes.length; idx < l; idx += 3 ) {
+                    v[ 0 ] = vertexes[ idx ];
+                    v[ 1 ] = vertexes[ idx + 1 ];
+                    v[ 2 ] = vertexes[ idx + 2 ];
+                    boundingBox.expandByVec3( v );
+                }
+            }
             return boundingBox;
         },
 

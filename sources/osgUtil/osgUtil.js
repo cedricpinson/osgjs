@@ -3,7 +3,7 @@ define( [
     'osgUtil/IntersectVisitor',
     'osgUtil/ParameterVisitor',
     'osgUtil/TriangleIntersect'
-], function (Composer, IntersectVisitor, ParameterVisitor, TriangleIntersect) {
+], function( Composer, IntersectVisitor, ParameterVisitor, TriangleIntersect ) {
 
     var osgUtil = {};
 

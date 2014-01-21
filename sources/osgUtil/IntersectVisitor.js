@@ -4,49 +4,58 @@ define( [
     'osg/Matrix',
     'osg/Vec3',
     'osgUtil/TriangleIntersect'
-], function ( MACROUTILS, NodeVisitor, Matrix, Vec3, TriangleIntersect ) {
+], function( MACROUTILS, NodeVisitor, Matrix, Vec3, TriangleIntersect ) {
 
-    var IntersectVisitor = function () {
+    var IntersectVisitor = function() {
         NodeVisitor.call( this );
         this.matrix = [];
         this.hits = [];
         this.nodePath = [];
     };
     IntersectVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
-        addLineSegment: function ( start, end ) {
+        addLineSegment: function( start, end ) {
             this.start = start;
             this.end = end;
         },
-        intersectSegmentWithSphere: function ( start, end, bsphere ) {
-            var sm = Vec3.sub( start, bsphere.center );
-            var c = Vec3.length2( sm ) - bsphere.radius * bsphere.radius;
-            if ( c < 0.0 ) {
+        intersectSegmentWithSphere: ( function() {
+            var sm = [ 0.0, 0.0, 0.0 ];
+            var se = [ 0.0, 0.0, 0.0 ];
+            return function( start, end, bsphere ) {
+                // test for _start inside the bounding sphere
+                Vec3.sub( start, bsphere.center(), sm );
+                var c = Vec3.length2( sm ) - bsphere.radius2();
+                if ( c < 0.0 ) {
+                    return true;
+                }
+
+                // solve quadratic equation
+                Vec3.sub( end, start, se );
+                var a = Vec3.length2( se );
+                var b = Vec3.dot( sm, se ) * 2.0;
+                var d = b * b - 4.0 * a * c;
+                // no intersections if d<0
+                if ( d < 0.0 ) {
+                    return false;
+                }
+
+                // compute two solutions of quadratic equation
+                d = Math.sqrt( d );
+                var div = 1.0 / ( 2.0 * a );
+                var r1 = ( -b - d ) * div;
+                var r2 = ( -b + d ) * div;
+
+                // return false if both intersections are before the ray start
+                if ( r1 <= 0.0 && r2 <= 0.0 ) {
+                    return false;
+                }
+
+                if ( r1 >= 1.0 && r2 >= 1.0 ) {
+                    return false;
+                }
                 return true;
-            }
-
-            var se = Vec3.sub( end, start );
-            var a = Vec3.length2( se );
-            var b = Vec3.dot( sm, se ) * 2.0;
-            var d = b * b - 4.0 * a * c;
-            if ( d < 0.0 ) {
-                return false;
-            }
-
-            d = Math.sqrt( d );
-            var div = 1.0 / 2.0 * a;
-            var r1 = ( -b - d ) * div;
-            var r2 = ( -b + d ) * div;
-
-            if ( r1 <= 0.0 && r2 <= 0.0 ) {
-                return false;
-            }
-
-            if ( r1 >= 1.0 && r2 >= 1.0 ) {
-                return false;
-            }
-            return true;
-        },
-        pushModelMatrix: function ( matrix ) {
+            };
+        } )(),
+        pushModelMatrix: function( matrix ) {
             if ( this.matrix.length > 0 ) {
                 var m = Matrix.copy( this.matrix[ this.matrix.length - 1 ] );
                 Matrix.preMult( m, matrix );
@@ -55,25 +64,28 @@ define( [
                 this.matrix.push( matrix );
             }
         },
-        getModelMatrix: function () {
+        getModelMatrix: function() {
             if ( this.matrix.length === 0 ) {
                 return Matrix.makeIdentity( [] );
             }
             return this.matrix[ this.matrix.length - 1 ];
         },
-        popModelMatrix: function () {
+        popModelMatrix: function() {
             return this.matrix.pop();
         },
-        getWindowMatrix: function () {
+        getWindowMatrix: function() {
             return this.windowMatrix;
         },
-        getProjectionMatrix: function () {
+        getProjectionMatrix: function() {
             return this.projectionMatrix;
         },
-        getViewMatrix: function () {
+        getViewMatrix: function() {
             return this.viewMatrix;
         },
-        intersectSegmentWithGeometry: function ( start, end, geometry ) {
+        intersectSegmentWithShape: function( start, end, shape ) {
+            return shape.intersect( start, end, this.hits, this.nodePath );
+        },
+        intersectSegmentWithGeometry: function( start, end, geometry ) {
             var ti = new TriangleIntersect();
             ti.setNodePath( this.nodePath );
             ti.set( start, end );
@@ -87,7 +99,7 @@ define( [
             }
             return false;
         },
-        pushCamera: function ( camera ) {
+        pushCamera: function( camera ) {
             // we should support hierarchy of camera
             // but right now we want just simple picking on main
             // camera
@@ -99,7 +111,7 @@ define( [
                 this.windowMatrix = vp.computeWindowMatrix();
             }
         },
-        applyCamera: function ( camera ) {
+        applyCamera: function( camera ) {
             // we should support hierarchy of camera
             // but right now we want just simple picking on main
             // camera
@@ -107,28 +119,17 @@ define( [
             this.traverse( camera );
         },
 
-        applyNode: function ( node ) {
+        applyNode: function( node, ns, ne ) {
             if ( node.getMatrix ) {
                 this.pushModelMatrix( node.getMatrix() );
             }
 
             if ( node.primitives ) {
-                var matrix = [];
-                Matrix.copy( this.getWindowMatrix(), matrix );
-                Matrix.preMult( matrix, this.getProjectionMatrix() );
-                Matrix.preMult( matrix, this.getViewMatrix() );
-                Matrix.preMult( matrix, this.getModelMatrix() );
-
-                var inv = [];
-                var valid = Matrix.inverse( matrix, inv );
-                // if matrix is invalid do nothing on this node
-                if ( !valid ) {
-                    return;
-                }
-
-                var ns = Matrix.transformVec3( inv, this.start, new Array( 3 ) );
-                var ne = Matrix.transformVec3( inv, this.end, new Array( 3 ) );
-                this.intersectSegmentWithGeometry( ns, ne, node );
+                var kdtree = node.getShape();
+                if ( kdtree ) {
+                    this.intersectSegmentWithShape( ns, ne, kdtree );
+                } else
+                    this.intersectSegmentWithGeometry( ns, ne, node );
             }
 
             if ( node.traverse ) {
@@ -140,26 +141,48 @@ define( [
             }
         },
 
-        apply: function ( node ) {
-            if ( this.enterNode( node ) === false ) {
-                return;
+        transformRay: function( tStart, tEnd ) {
+            var matrix = [];
+            Matrix.copy( this.getWindowMatrix(), matrix );
+            Matrix.preMult( matrix, this.getProjectionMatrix() );
+            Matrix.preMult( matrix, this.getViewMatrix() );
+            Matrix.preMult( matrix, this.getModelMatrix() );
+
+            var inv = [];
+            var valid = Matrix.inverse( matrix, inv );
+            // if matrix is invalid do nothing on this node
+            if ( !valid ) {
+                return false;
             }
 
-            if ( node.getViewMatrix ) { // Camera/View
-                this.applyCamera( node );
-            } else {
-                this.applyNode( node );
-            }
+            Matrix.transformVec3( inv, this.start, tStart );
+            Matrix.transformVec3( inv, this.end, tEnd );
+
+            return true;
         },
 
-        enterNode: function ( node ) {
-            var bsphere = node.boundingSphere;
-            if ( bsphere !== undefined ) {
-                if ( !this.intersectSegmentWithSphere ) {
-                    return false;
+        apply: ( function() {
+            var ns = [ 0.0, 0.0, 0.0 ];
+            var ne = [ 0.0, 0.0, 0.0 ];
+            return function( node ) {
+                if ( this.transformRay( ns, ne ) === false ) {
+                    return;
                 }
-            }
-            return true;
+
+                if ( this.enterNode( node, ns, ne ) === false ) {
+                    return;
+                }
+
+                if ( node.getViewMatrix ) { // Camera/View
+                    this.applyCamera( node );
+                } else {
+                    this.applyNode( node, ns, ne );
+                }
+            };
+        } )(),
+
+        enterNode: function( node, ns, ne ) {
+            return this.intersectSegmentWithSphere( ns, ne, node.getBound() );
         }
     } );
 
