@@ -13,6 +13,20 @@ define( [
             this._max = [ -Infinity, -Infinity, -Infinity ];
         },
 
+        copy: function ( bbox ) {
+            var min = this._min;
+            var bmin = bbox._min;
+            min[ 0 ] = bmin[ 0 ];
+            min[ 1 ] = bmin[ 1 ];
+            min[ 2 ] = bmin[ 2 ];
+
+            var max = this._max;
+            var bmax = bbox._max;
+            max[ 0 ] = bmax[ 0 ];
+            max[ 1 ] = bmax[ 1 ];
+            max[ 2 ] = bmax[ 2 ];
+        },
+
         valid: function () {
             return ( this._max[ 0 ] >= this._min[ 0 ] && this._max[ 1 ] >= this._min[ 1 ] && this._max[ 2 ] >= this._min[ 2 ] );
         },
@@ -42,6 +56,25 @@ define( [
             max[ 0 ] = Math.max( max[ 0 ], v[ 0 ] );
             max[ 1 ] = Math.max( max[ 1 ], v[ 1 ] );
             max[ 2 ] = Math.max( max[ 2 ], v[ 2 ] );
+        },
+
+        expandByBoundingBox: function ( bb ) {
+            if ( !bb.valid() )
+                return;
+
+            var min = this._min;
+            var max = this._max;
+            var bbmin = bb._min;
+            var bbmax = bb._max;
+
+            if ( bbmin[ 0 ] < min[ 0 ] ) min[ 0 ] = bbmin[ 0 ];
+            if ( bbmax[ 0 ] > max[ 0 ] ) max[ 0 ] = bbmax[ 0 ];
+
+            if ( bbmin[ 1 ] < min[ 1 ] ) min[ 1 ] = bbmin[ 1 ];
+            if ( bbmax[ 1 ] > max[ 1 ] ) max[ 1 ] = bbmax[ 1 ];
+
+            if ( bbmin[ 2 ] < min[ 2 ] ) min[ 2 ] = bbmin[ 2 ];
+            if ( bbmax[ 2 ] > max[ 2 ] ) max[ 2 ] = bbmax[ 2 ];
         },
 
         center: function () {

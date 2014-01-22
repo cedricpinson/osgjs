@@ -50,6 +50,10 @@ define( [
             Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], this._camera.getViewMatrix() );
             Matrix.makePerspective( 55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix() );
         },
+        /** 
+         * X = 0 at the left
+         * Y = 0 at the BOTTOM 
+         */
         computeIntersections: function ( x, y, traversalMask ) {
             /*jshint bitwise: false */
             if ( traversalMask === undefined ) {

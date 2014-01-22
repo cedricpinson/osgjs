@@ -1,6 +1,7 @@
 define( [
-    'osg/Notify'
-], function ( Notify ) {
+    'osg/Notify',
+    'osg/PrimitiveSet'
+], function ( Notify, PrimitiveSet ) {
 
     /**
      * DrawArrays manage rendering primitives
@@ -8,6 +9,12 @@ define( [
      */
     var DrawArrays = function ( mode, first, count ) {
         this.mode = mode;
+        if ( mode !== undefined ) {
+            if ( typeof ( mode ) === 'string' ) {
+                mode = PrimitiveSet[ mode ];
+            }
+            this.mode = mode;
+        }
         this.first = first;
         this.count = count;
     };

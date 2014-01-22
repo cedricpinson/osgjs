@@ -454,7 +454,7 @@ define( [
                     ].join( '\n' );
 
                     var program = new Program( new Shader( 'VERTEX_SHADER', vertexshader ),
-                                               new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+                        new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
                     createAxisGeometry.getShader.program = program;
                 }
                 return createAxisGeometry.getShader.program;
@@ -512,8 +512,7 @@ define( [
 
         var x, y, vertices = [],
             uvs = [],
-            allVertices = [],
-            indexes = [];
+            allVertices = [];
 
         for ( y = 0; y <= segmentsY; y++ ) {
             var verticesRow = [];
@@ -545,7 +544,12 @@ define( [
         var fullVerticesList = [];
         var fullNormalsList = [];
         var fullUVList = [];
+        var indexes = [];
         var vtxCount = 0;
+        // #FIXME quick fix to enable bigger mesh
+        // however we should check if the OES_element_index_uint
+        // has been enabled
+        var useDrawArrays = ( allVertices.length / 3 ) >= 65536;
 
         for ( y = 0; y < segmentsY; y++ ) {
             for ( x = 0; x < segmentsX; x++ ) {
@@ -560,71 +564,55 @@ define( [
                 var vtx3 = allVertices[ v3 ];
                 var vtx4 = allVertices[ v4 ];
 
-                fullVerticesList.push( vtx1.x );
-                fullVerticesList.push( vtx1.y );
-                fullVerticesList.push( vtx1.z );
-
-                fullVerticesList.push( vtx2.x );
-                fullVerticesList.push( vtx2.y );
-                fullVerticesList.push( vtx2.z );
-
-                fullVerticesList.push( vtx3.x );
-                fullVerticesList.push( vtx3.y );
-                fullVerticesList.push( vtx3.z );
-
-                fullVerticesList.push( vtx4.x );
-                fullVerticesList.push( vtx4.y );
-                fullVerticesList.push( vtx4.z );
-                vtxCount += 4;
-
-                var tristart = vtxCount - 4;
-                indexes.push( tristart );
-                indexes.push( tristart + 1 );
-                indexes.push( tristart + 2 );
-                indexes.push( tristart );
-                indexes.push( tristart + 2 );
-                indexes.push( tristart + 3 );
-
                 var n1 = Vec3.normalize( [ vtx1.x, vtx1.y, vtx1.z ], [] );
                 var n2 = Vec3.normalize( [ vtx2.x, vtx2.y, vtx2.z ], [] );
                 var n3 = Vec3.normalize( [ vtx3.x, vtx3.y, vtx3.z ], [] );
                 var n4 = Vec3.normalize( [ vtx4.x, vtx4.y, vtx4.z ], [] );
-
-                fullNormalsList.push( n1[ 0 ] );
-                fullNormalsList.push( n1[ 1 ] );
-                fullNormalsList.push( n1[ 2 ] );
-
-                fullNormalsList.push( n2[ 0 ] );
-                fullNormalsList.push( n2[ 1 ] );
-                fullNormalsList.push( n2[ 2 ] );
-
-                fullNormalsList.push( n3[ 0 ] );
-                fullNormalsList.push( n3[ 1 ] );
-                fullNormalsList.push( n3[ 2 ] );
-
-                fullNormalsList.push( n4[ 0 ] );
-                fullNormalsList.push( n4[ 1 ] );
-                fullNormalsList.push( n4[ 2 ] );
 
                 var uv1 = uvs[ y ][ x + 1 ];
                 var uv2 = uvs[ y ][ x ];
                 var uv3 = uvs[ y + 1 ][ x ];
                 var uv4 = uvs[ y + 1 ][ x + 1 ];
 
-                fullUVList.push( uv1.u );
-                fullUVList.push( uv1.v );
+                fullVerticesList.push( vtx1.x, vtx1.y, vtx1.z );
+                fullVerticesList.push( vtx2.x, vtx2.y, vtx2.z );
+                fullVerticesList.push( vtx3.x, vtx3.y, vtx3.z );
 
-                fullUVList.push( uv2.u );
-                fullUVList.push( uv2.v );
+                fullNormalsList.push( n1[ 0 ], n1[ 1 ], n1[ 2 ] );
+                fullNormalsList.push( n2[ 0 ], n2[ 1 ], n2[ 2 ] );
+                fullNormalsList.push( n3[ 0 ], n3[ 1 ], n3[ 2 ] );
 
-                fullUVList.push( uv3.u );
-                fullUVList.push( uv3.v );
+                fullUVList.push( uv1.u, uv1.v );
+                fullUVList.push( uv2.u, uv2.v );
+                fullUVList.push( uv3.u, uv3.v );
 
-                fullUVList.push( uv4.u );
-                fullUVList.push( uv4.v );
+                if ( useDrawArrays ) {
+                    fullVerticesList.push( vtx1.x, vtx1.y, vtx1.z );
+                    fullVerticesList.push( vtx3.x, vtx3.y, vtx3.z );
+                    fullVerticesList.push( vtx4.x, vtx4.y, vtx4.z );
 
+                    fullNormalsList.push( n1[ 0 ], n1[ 1 ], n1[ 2 ] );
+                    fullNormalsList.push( n3[ 0 ], n3[ 1 ], n3[ 2 ] );
+                    fullNormalsList.push( n4[ 0 ], n4[ 1 ], n4[ 2 ] );
+
+                    fullUVList.push( uv1.u, uv1.v );
+                    fullUVList.push( uv3.u, uv3.v );
+                    fullUVList.push( uv4.u, uv4.v );
+                } else {
+                    fullVerticesList.push( vtx4.x, vtx4.y, vtx4.z );
+                    fullNormalsList.push( n4[ 0 ], n4[ 1 ], n4[ 2 ] );
+                    fullUVList.push( uv4.u, uv4.v );
+
+                    vtxCount += 4;
+                    var tristart = vtxCount - 4;
+                    indexes.push( tristart );
+                    indexes.push( tristart + 1 );
+                    indexes.push( tristart + 2 );
+                    indexes.push( tristart );
+                    indexes.push( tristart + 2 );
+                    indexes.push( tristart + 3 );
+                }
             }
-
         }
 
         var g = new Geometry();
@@ -632,8 +620,10 @@ define( [
         g.getAttributes().Normal = new BufferArray( 'ARRAY_BUFFER', fullNormalsList, 3 );
         g.getAttributes().TexCoord0 = new BufferArray( 'ARRAY_BUFFER', fullUVList, 2 );
 
-        var primitive = new DrawElements( 'TRIANGLES', new BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1 ) );
-        g.getPrimitives().push( primitive );
+        if ( useDrawArrays )
+            g.getPrimitives().push( new DrawArrays( PrimitiveSet.TRIANGLES, 0, fullVerticesList.length / 3 ) );
+        else
+            g.getPrimitives().push( new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( 'ELEMENT_ARRAY_BUFFER', indexes, 1 ) ) );
         return g;
     };
 

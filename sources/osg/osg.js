@@ -19,6 +19,8 @@ define( [
     'osg/FrameStamp',
     'osg/Geometry',
     'osg/Image',
+    'osg/KdTree',
+    'osg/KdTreeBuilder',
     'osg/Light',
     'osg/LightSource',
     'osg/LineWidth',
@@ -47,6 +49,7 @@ define( [
     'osg/Texture',
     'osg/TextureCubeMap',
     'osg/Transform',
+    'osg/TriangleIndexFunctor',
     'osg/Uniform',
     'osg/UpdateVisitor',
     'osg/Utils',
@@ -56,7 +59,7 @@ define( [
     'osg/Viewport',
     'osgUtil/osgPool',
     'osg/TransformEnums'
-], function ( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool, TransformEnums ) {
+], function( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, KdTree, KdTreeBuilder, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, TriangleIndexFunctor, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool, TransformEnums ) {
 
     var osg = {};
 
@@ -82,6 +85,8 @@ define( [
     osg.FrameStamp = FrameStamp;
     osg.Geometry = Geometry;
     osg.Image = Image;
+    osg.KdTree = KdTree;
+    osg.KdTreeBuilder = KdTreeBuilder;
     osg.Light = Light;
     osg.LightSource = LightSource;
     osg.LineWidth = LineWidth;
@@ -111,6 +116,7 @@ define( [
     osg.Texture = Texture;
     osg.TextureCubeMap = TextureCubeMap;
     osg.Transform = Transform;
+    osg.TriangleIndexFunctor = TriangleIndexFunctor;
     osg.Uniform = Uniform;
     osg.UpdateVisitor = UpdateVisitor;
     MACROUTILS.objectMix( osg, MACROUTILS );
