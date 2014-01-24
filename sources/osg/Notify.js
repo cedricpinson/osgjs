@@ -12,6 +12,10 @@ define( [], function () {
     /** Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
      */
     function getStackTrace( err ) {
+		if (window.console && window.console.trace){
+			window.console.trace();
+			return '';
+		}		
         var callstack = [];
         try {
             if ( arguments.length === 1 ) {
