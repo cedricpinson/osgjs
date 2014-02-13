@@ -89,9 +89,12 @@ var gruntTasks = { };
     gruntTasks.watch = { options : {
         } };
 
+    gruntTasks.plato = {};
+
     gruntTasks.docco = {};
 
     gruntTasks.qunit = {};
+
     gruntTasks.connect = {};
 
 
@@ -157,13 +160,27 @@ var gruntTasks = { };
     // generate a requirejs without anything to build a docco docs
     gruntTasks.requirejs.docsSources = { options : {
         out : Path.join( BUILD_PATH, 'docs/OSG.js' ),
-        include : [ 'OSG' ]
+        include : [ 'OSG' ],
+        paths: {
+            'Q': 'vendors/Q',
+            'Hammer': 'vendors/Hammer',
+            'Leap': 'vendors/Leap',
+            'vr': 'vendors/vr'
+        }
     } };
 
     gruntTasks.docco = {
-        docs: {
-            src: [ 'builds/docs/OSG.js' ],
+        singleDoc: {            
+            src: Path.join( BUILD_PATH, 'docs/OSG.js' ),
+            //src:  find( SOURCE_PATH, '**/*.js' ).map( function ( path ) { return Path.join( SOURCE_PATH, path ); } ),
             options: {
+                output: 'docs/annotated-source'
+            }
+        },
+        docs: {
+            src:  find( SOURCE_PATH, '**/*.js' ).map( function ( path ) { return Path.join( SOURCE_PATH, path ); } ),
+            options: {
+                layout: 'classic',
                 output: 'docs/annotated-source'
             }
         }
@@ -171,11 +188,26 @@ var gruntTasks = { };
 
 } )( );
 
+// ## Plato 
+( function () {
+    gruntTasks.plato = {
+        options: {
+            // Task-specific options go here.
+        },
+        main: {
+            files: {
+                'docs/analysis': find( SOURCE_PATH, '**/*.js' ).map( function ( path ) {
+                    return Path.join( SOURCE_PATH, path ); } )
+            }
+        }
+    };
+} ) ();
+
 // ## Qunit and connect
 //
 ( function ( ) {
 
-    // qnuit using connect
+    // qunit using connect
     gruntTasks.qunit = {
         all: {
             options: {
@@ -183,7 +215,8 @@ var gruntTasks = { };
                     'http://localhost:9001/tests/index.html'
                 ]
             }
-        }
+	},
+	local: ['tests/index.html']
     };
 
     // will start a server on port 9001 with root directory at the same level of
@@ -222,7 +255,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-connect' );
     grunt.loadNpmTasks( 'grunt-contrib-qunit' );
 
-    grunt.loadNpmTasks( 'grunt-docco2' );
+    grunt.loadNpmTasks( 'grunt-docco' );
+    grunt.loadNpmTasks( 'grunt-plato' );
     grunt.loadNpmTasks( 'grunt-contrib-jshint' );
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
     grunt.loadNpmTasks( 'grunt-contrib-requirejs' );
@@ -231,7 +265,8 @@ module.exports = function ( grunt ) {
 
     grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
 
-    grunt.registerTask( 'test', [ 'connect:server', 'qunit' ] );
+    grunt.registerTask( 'webtest', [ 'connect:server', 'qunit' ] );
+    grunt.registerTask( 'test', [ 'qunit:local' ] );
 
     grunt.registerTask( 'docs', [ 'requirejs:docsSources', 'docco' ] );
 
