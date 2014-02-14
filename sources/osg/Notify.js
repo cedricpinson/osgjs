@@ -15,7 +15,7 @@ define( [], function () {
 		if (window.console && window.console.trace){
 			window.console.trace();
 			return '';
-		}		
+        }
         var callstack = [];
         try {
             if ( arguments.length === 1 ) {

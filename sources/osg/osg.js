@@ -24,6 +24,7 @@ define( [
     'osg/Light',
     'osg/LightSource',
     'osg/LineWidth',
+    'osg/Lod',
     'osg/Material',
     'osg/Math',
     'osg/Matrix',
@@ -59,7 +60,7 @@ define( [
     'osg/Viewport',
     'osgUtil/osgPool',
     'osg/TransformEnums'
-], function( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, KdTree, KdTreeBuilder, Light, LightSource, LineWidth, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, TriangleIndexFunctor, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool, TransformEnums ) {
+], function( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, KdTree, KdTreeBuilder, Light, LightSource, LineWidth, Lod, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, TriangleIndexFunctor, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool, TransformEnums ) {
 
     var osg = {};
 
@@ -90,6 +91,7 @@ define( [
     osg.Light = Light;
     osg.LightSource = LightSource;
     osg.LineWidth = LineWidth;
+    osg.Lod = Lod;
     osg.Material = Material;
     MACROUTILS.objectMix( osg, Math );
     osg.Matrix = Matrix;

@@ -14,7 +14,7 @@ define( [], function () {
     //NodeVisitor.TRAVERSE_NONE = 0;
     NodeVisitor.TRAVERSE_PARENTS = 1;
     NodeVisitor.TRAVERSE_ALL_CHILDREN = 2;
-    //NodeVisitor.TRAVERSE_ACTIVE_CHILDREN = 3;
+    NodeVisitor.TRAVERSE_ACTIVE_CHILDREN = 3;
     NodeVisitor._traversalFunctions = {};
     NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_PARENTS ] = function ( node ) {
         node.ascend( this );
@@ -22,7 +22,11 @@ define( [], function () {
     NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function ( node ) {
         node.traverse( this );
     };
-
+	NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function ( node ) {
+        node.traverse( this );
+    };
+	
+	
     NodeVisitor._pushOntoNodePath = {};
     NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_PARENTS ] = function ( node ) {
         this.nodePath.unshift( node );
@@ -30,12 +34,17 @@ define( [], function () {
     NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function ( node ) {
         this.nodePath.push( node );
     };
-
+	NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function ( node ) {
+        this.nodePath.push( node );
+    };
     NodeVisitor._popFromNodePath = {};
     NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_PARENTS ] = function () {
         return this.nodePath.shift();
     };
     NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function () {
+        this.nodePath.pop();
+    };
+	NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function () {
         this.nodePath.pop();
     };
 
