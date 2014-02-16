@@ -450,23 +450,10 @@ define( [
             this.popStateSet();
         }
     };
-    
-    CullVisitor.prototype[ Lod.typeID ] = function ( node ) {
-    
-     var stateset = node.getStateSet();
-        if ( stateset ) {
-            this.pushStateSet( stateset );
-        }
-        if ( node.light ) {
-            this.addPositionedAttribute( node.light );
-        }
-        this.handleCullCallbacksAndTraverse( node );
-        // pop the node's state off the render graph stack.
-     if ( stateset ) {
-            this.popStateSet();
-        }
-    };
-    
+
+    // same code like Node
+    CullVisitor.prototype[ Lod.typeID ] = CullVisitor.prototype[ Node.typeID ];
+
     CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
 
         var stateset = node.getStateSet();
