@@ -1,5 +1,6 @@
 OSG.JS WebGL framework
 ----------------------------
+
 (http://osgjs.org/)
 
 OSGJS is a WebGL framework based on OpenSceneGraph concepts. It allows an individual to use an “OpenSceneGraph-like” toolbox to interact with WebGL via JavaScript, and provides facilities for exporting various assets to the osgjs format. The API is kept as similar to OpenSceneGraph as possible, providing a familiar environment to veterans of the library and introducing newcomers to a popular and heavily-scrutinzed set of interfaces
@@ -16,12 +17,12 @@ How to build your own osgjs
 
 First, clone a copy of the main git repo by running:
 
-```
+
     git clone git://github.com/cedricpinson/osgjs.git
     cd osgjs && ln -s build/dist build/active
     npm install # before you may need to npm install -g grunt-cli
     grunt
-```
+
 
 The built version of osgjs will be put in the `build/` subdirectory.
 
