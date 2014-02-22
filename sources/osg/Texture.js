@@ -2,12 +2,13 @@ define( [
     'Q',
     'osg/Notify',
     'osg/Utils',
+    'osg/TextureManager',
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Image',
     'osg/ShaderGenerator',
     'osgDB/ReaderParser'
-], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser ) {
+], function ( Q, Notify, MACROUTILS, TextureManager, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser ) {
 
     // helper
     var isPowerOf2 = function ( x ) {
@@ -62,6 +63,7 @@ define( [
     Texture.UNSIGNED_BYTE = 0x1401;
     Texture.FLOAT = 0x1406;
 
+    Texture.textureManager = new TextureManager();
 
     /** @lends Texture.prototype */
     Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
@@ -116,7 +118,12 @@ define( [
         },
         init: function ( gl ) {
             if ( !this._textureObject ) {
-                this._textureObject = gl.createTexture();
+                this._textureObject = Texture.textureManager.generateTextureObject( gl,
+                                                                                    this,
+                                                                                    this._textureTarget,
+                                                                                    this._internalFormat,
+                                                                                    this._textureWidth,
+                                                                                    this._textureHeight );
                 this.dirty();
             }
         },
@@ -139,9 +146,10 @@ define( [
             return this._textureHeight;
         },
         releaseGLObjects: function ( gl ) {
+
             if ( this._textureObject !== undefined && this._textureObject !== null ) {
-                gl.deleteTexture( this._textureObject );
-                this._textureObject = null;
+                this._textureObject.releaseTextureObject( gl );
+                this._textureObject = undefined;
                 this._image = undefined;
             }
         },
@@ -274,8 +282,9 @@ define( [
 
         apply: function ( state ) {
             var gl = state.getGraphicContext();
+
             if ( this._textureObject !== undefined && !this.isDirty() ) {
-                gl.bindTexture( this._textureTarget, this._textureObject );
+                this._textureObject.bind( gl );
             } else if ( this.defaultType ) {
                 gl.bindTexture( this._textureTarget, null );
             } else {
@@ -285,17 +294,18 @@ define( [
                     // when data is ready we will upload it to the gpu
                     if ( image.isReady() ) {
 
+                        var imgWidth = image.getWidth() || this._textureWidth;
+                        var imgHeight = image.getHeight() || this._textureHeight;
+
+                        this.setTextureSize( imgWidth, imgHeight );
+
                         if ( !this._textureObject ) {
                             this.init( gl );
                         }
 
                         this.setDirty( false );
-                        gl.bindTexture( this._textureTarget, this._textureObject );
+                        this._textureObject.bind( gl );
 
-                        var imgWidth = image.getWidth() || this._textureWidth;
-                        var imgHeight = image.getHeight() || this._textureHeight;
-
-                        this.setTextureSize( imgWidth, imgHeight );
                         if ( image.isTypedArray() ) {
                             this.applyTexImage2D( gl,
                                                   this._textureTarget,
@@ -332,7 +342,7 @@ define( [
                     if ( !this._textureObject ) {
                         this.init( gl );
                     }
-                    gl.bindTexture( this._textureTarget, this._textureObject );
+                    this._textureObject.bind( gl );
                     this.applyTexImage2D( gl, this._textureTarget, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, this._internalFormat, this._type, null );
 
                     this.applyFilterParameter( gl, this._textureTarget );

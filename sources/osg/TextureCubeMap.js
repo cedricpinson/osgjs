@@ -102,7 +102,7 @@ define( [
             var gl = state.getGraphicContext();
 
             if ( this._textureObject !== undefined && !this.isDirty() ) {
-                gl.bindTexture( this._textureTarget, this._textureObject );
+                this._textureObject.bind( gl );
 
             } else if ( this.defaultType ) {
                 gl.bindTexture( this._textureTarget, null );
@@ -111,7 +111,7 @@ define( [
                 if ( !this._textureObject ) {
                     this.init( gl );
                 }
-                gl.bindTexture( this._textureTarget, this._textureObject );
+                this._textureObject.bind( gl );
 
                 var internalFormat = this._internalFormat;
 

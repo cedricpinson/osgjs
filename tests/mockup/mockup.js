@@ -93,6 +93,7 @@ define( [
                  depthFunc: function() {},
                  depthRange: function() {},
                  depthMask: function() {},
+                 deleteTexture: function() {},
                  activeTexture: function() {},
                  bindTexture: function() {},
                  bufferData: function() {},

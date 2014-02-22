@@ -81,7 +81,7 @@ define( [], function () {
 
         Notify.debug = dummy;
         Notify.info = dummy;
-        Notify.log = dummy;
+        Notify.log = Notify.notice = dummy;
         Notify.warn = dummy;
         Notify.error = dummy;
 
@@ -92,7 +92,7 @@ define( [], function () {
             Notify.info = info;
         }
         if ( level <= Notify.NOTICE ) {
-            Notify.log = log;
+            Notify.log = Notify.notice = log;
         }
         if ( level <= Notify.WARN ) {
             Notify.warn = warn;
