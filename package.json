@@ -20,7 +20,8 @@
     "grunt-contrib-watch": "*"
   },
   "devDependencies": {
-    "grunt-docco2": "~0.1.5",
+    "grunt-docco": "~0.3.2",
+    "grunt-plato": "~0.2.1",
     "grunt-contrib-qunit": "~0.3.0",
     "grunt-contrib-connect": "~0.5.0"
   }
