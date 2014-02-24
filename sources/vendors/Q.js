@@ -1,3 +1,6 @@
 define( function ( ) {
-    return window.Q;
+    if ( window.Q ) {
+        return Q;
+    }
+    return window.require( 'Q' );
 } );

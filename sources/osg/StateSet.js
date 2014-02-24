@@ -113,6 +113,7 @@ define( [
             this._setAttribute( this.getAttributePair( attribute, mode ) );
         },
 
+        // TODO: check if it's an attribute type or a attribute to remove it
         removeAttribute: function ( attributeName ) {
             if ( this.attributeMap[ attributeName ] !== undefined ) {
                 delete this.attributeMap[ attributeName ];
