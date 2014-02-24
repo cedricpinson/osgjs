@@ -179,17 +179,20 @@ define( [
                 for ( var i = 0, l = children.length; i < l; i++ ) {
                     children[ i ].removeParent( this );
                 }
-                this.children.splice( 0, this.children.length );
+                children.length = 0;
                 this.dirtyBound();
             }
         },
 
         // preserve order
         removeChild: function ( child ) {
-            for ( var i = 0, l = this.children.length; i < l; i++ ) {
-                if ( this.children[ i ] === child ) {
+            var children = this.children;
+            for ( var i = 0, l = children.length; i < l; i++ ) {
+                if ( children[ i ] === child ) {
                     child.removeParent( this );
-                    this.children.splice( i, 1 );
+                    children.splice( i, 1 );
+                    i--;
+                    l--;
                     this.dirtyBound();
                 }
             }
