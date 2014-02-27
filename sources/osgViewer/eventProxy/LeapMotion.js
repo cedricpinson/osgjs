@@ -15,7 +15,8 @@ define( [
             var self = this;
             this._controller = new Leap.Controller( {
                 enableGestures: args.gestures || true,
-                tryReconnectOnDisconnect: false
+                tryReconnectOnDisconnect: true,
+                connectAttempts: 3
             } );
             this._controller.on( 'ready', function () {
                 if ( args.readyCallback )
@@ -24,7 +25,6 @@ define( [
                 Notify.info( 'leapmotion ready' );
             } );
             this._controller.loop( this._update.bind( this ) );
-
         },
 
         isValid: function () {
