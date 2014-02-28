@@ -221,7 +221,9 @@ define( [
             } else {
                 this._imageFormat = Texture.RGBA;
             }
-            this.setInternalFormat( this._imageFormat );
+
+            // do not override if internal format is alrady set by the user
+            if ( !this.getInternalFormat() ) this.setInternalFormat( this._imageFormat );
         },
         setType: function ( value ) {
             if ( typeof ( value ) === 'string' ) {
