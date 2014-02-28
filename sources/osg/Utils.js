@@ -179,5 +179,15 @@ define( [
         };
     } )();
 
+    Utils.timeStamp = ( function () {
+
+        var fn = console.timeStamp || console.markTimeline || function () {};
+        return function () {
+            return fn.apply( console, arguments );
+        };
+
+    } )();
+
+
     return Utils;
 } );

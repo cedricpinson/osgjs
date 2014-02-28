@@ -82,6 +82,7 @@ define( [
         },
         compile: function ( gl ) {
             if ( this._dirty ) {
+                MACROUTILS.timeStamp( 'osgjs.metrics:bufferData' );
                 gl.bufferData( this._type, this._elements, gl.STATIC_DRAW );
                 this._dirty = false;
             }

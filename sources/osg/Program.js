@@ -1,7 +1,7 @@
 define( [
     'osg/Utils',
     'osg/Notify',
-    'osg/StateAttribute'
+    'osg/StateAttribute',
 ], function ( MACROUTILS, Notify, StateAttribute ) {
 
     /**
@@ -61,6 +61,7 @@ define( [
                 this.program = gl.createProgram();
                 gl.attachShader( this.program, this.vertex.shader );
                 gl.attachShader( this.program, this.fragment.shader );
+                MACROUTILS.timeStamp( 'osgjs.metrics:linkShader' );
                 gl.linkProgram( this.program );
                 gl.validateProgram( this.program );
                 if ( !gl.getProgramParameter( this.program, gl.LINK_STATUS ) && !gl.isContextLost() ) {

@@ -269,6 +269,7 @@ define( [
         },
         applyTexImage2D: function ( gl ) {
             var args = Array.prototype.slice.call( arguments, 1 );
+            MACROUTILS.timeStamp( 'osgjs.metrics:Texture.texImage2d' );
             gl.texImage2D.apply( gl, args );
 
             // call a callback when upload is done if there is one
