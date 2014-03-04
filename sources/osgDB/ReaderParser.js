@@ -44,7 +44,7 @@ define( [
 
     ReaderParser.parseSceneGraph = function ( node, options ) {
         if ( node.Version !== undefined && node.Version > 0 ) {
-            console.time('sketchfab.console:ReaderParser.parseSceneGraph');
+            MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraph');
 
             var getPropertyValue = function ( o ) {
                 var props = window.Object.keys( o );
@@ -67,15 +67,15 @@ define( [
                 var opt = MACROUTILS.objectMix( MACROUTILS.objectMix( {}, ReaderParser.registry().getOptions() ), options || {} );
                 input.setOptions( opt );
                 var obj = input.readObject();
-                console.timeEnd('sketchfab.console:ReaderParser.parseSceneGraph');
+                MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraph');
                 return obj;
             } else {
                 Notify.log( 'can\'t parse scenegraph ' + node );
             }
         } else {
-            console.time('sketchfab.console:ReaderParser.parseSceneGraphDeprecated');
+            MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
             var node = ReaderParser.parseSceneGraphDeprecated( node );
-            console.timeEnd('sketchfab.console:ReaderParser.parseSceneGraphDeprecated');
+            MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
             return node;
         }
         return undefined;

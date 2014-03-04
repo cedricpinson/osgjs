@@ -1,7 +1,8 @@
 define( [
     'osgUtil/osgPool',
-    'osg/StateGraph'
-], function ( osgPool, StateGraph ) {
+    'osg/StateGraph',
+    'osg/Notify'
+], function ( osgPool, StateGraph, Notify ) {
 
     // make the warning about StateGraph desappear
     Object.keys( StateGraph );
@@ -185,6 +186,43 @@ define( [
         return function () {
             return fn.apply( console, arguments );
         };
+
+    } )();
+
+    ( function () {
+
+        var times = {};
+
+        Utils.time = ( function () {
+
+            var fn = console.time || function ( name ) {
+                times[ name ] = Utils.performance.now();
+            };
+            return function ( name ) {
+                return fn.apply( console, arguments );
+            };
+
+        } )();
+
+        Utils.timeEnd = ( function () {
+
+            var fn = console.timeEnd || function ( name ) {
+
+                if ( times[ name ] === undefined )
+                    return;
+
+                var now = Utils.performance.now();
+                var duration = now - times[ name ];
+
+                Notify.debug( name + ': ' + duration + 'ms');
+                times[ name ] = undefined;
+
+            };
+            return function () {
+                return fn.apply( console, arguments );
+            };
+
+        } )();
 
     } )();
 
