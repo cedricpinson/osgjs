@@ -226,6 +226,24 @@ define( [
 
     } )();
 
+    Utils.profile = ( function () {
+
+        var fn = console.profile || function () {};
+        return function () {
+            return fn.apply( console, arguments );
+        };
+
+    } )();
+
+    Utils.profileEnd = ( function () {
+
+        var fn = console.profileEnd || function () {};
+        return function () {
+            return fn.apply( console, arguments );
+        };
+
+    } )();
+
 
     return Utils;
 } );
