@@ -44,6 +44,7 @@ define( [
 
     ReaderParser.parseSceneGraph = function ( node, options ) {
         if ( node.Version !== undefined && node.Version > 0 ) {
+            MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraph');
 
             var getPropertyValue = function ( o ) {
                 var props = window.Object.keys( o );
@@ -65,12 +66,17 @@ define( [
                 // copy global options and override with user options
                 var opt = MACROUTILS.objectMix( MACROUTILS.objectMix( {}, ReaderParser.registry().getOptions() ), options || {} );
                 input.setOptions( opt );
-                return input.readObject();
+                var obj = input.readObject();
+                MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraph');
+                return obj;
             } else {
                 Notify.log( 'can\'t parse scenegraph ' + node );
             }
         } else {
-            return ReaderParser.parseSceneGraphDeprecated( node );
+            MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
+            var node = ReaderParser.parseSceneGraphDeprecated( node );
+            MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
+            return node;
         }
         return undefined;
     };

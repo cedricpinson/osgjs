@@ -1,7 +1,8 @@
 define( [
     'osg/Utils',
     'osg/Texture',
-    'osg/Image'
+    'osg/Image',
+    'osg/Utils'
 
 ], function ( MACROUTILS, Texture, Image ) {
     /**
@@ -68,6 +69,7 @@ define( [
 
             this.setTextureSize( image.getWidth(), image.getHeight() );
 
+            MACROUTILS.timeStamp( 'osgjs.metrics:texImage2d' );
             gl.texImage2D( target, 0, internalFormat, format, type, image.getImage() );
             return true;
         },

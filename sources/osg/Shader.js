@@ -1,6 +1,7 @@
 define( [
-    'osg/Notify'
-], function ( Notify ) {
+    'osg/Notify',
+    'osg/Utils'
+], function ( Notify, Utils ) {
 
     /**
      * Shader manage shader for vertex and fragment, you need both to create a glsl program.
@@ -30,6 +31,7 @@ define( [
         compile: function ( gl ) {
             this.shader = gl.createShader( this.type );
             gl.shaderSource( this.shader, this.text );
+            Utils.timeStamp( 'osgjs.metrics:compileShader' );
             gl.compileShader( this.shader );
             if ( !gl.getShaderParameter( this.shader, gl.COMPILE_STATUS ) && !gl.isContextLost() ) {
                 Notify.log( 'can\'t compile shader:\n' + this.text + '\n' );
