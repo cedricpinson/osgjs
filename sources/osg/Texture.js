@@ -102,7 +102,7 @@ define( [
             this._textureWidth = 0;
             this._textureHeight = 0;
             this._unrefImageDataAfterApply = false;
-            this.setInternalFormat( Texture.RGBA );
+            this._internalFormat = undefined;
             this._textureTarget = Texture.TEXTURE_2D;
             this._type = Texture.UNSIGNED_BYTE;
         },
@@ -221,9 +221,6 @@ define( [
             } else {
                 this._imageFormat = Texture.RGBA;
             }
-
-            // do not override if internal format is alrady set by the user
-            if ( !this.getInternalFormat() ) this.setInternalFormat( this._imageFormat );
         },
         setType: function ( value ) {
             if ( typeof ( value ) === 'string' ) {
@@ -282,7 +279,15 @@ define( [
                 }
             }
         },
+        computeTextureFormat: function() {
+            if ( !this._internalFormat ) {
+                this._internalFormat = this._imageFormat || Texture.RGBA;
+                this._imageFormat = this._internalFormat;
+            } else {
+                this._imageFormat = this._internalFormat;
+            }
 
+        },
         apply: function ( state ) {
             var gl = state.getGraphicContext();
 
@@ -296,6 +301,9 @@ define( [
 
                     // when data is ready we will upload it to the gpu
                     if ( image.isReady() ) {
+
+                        // must be called before init
+                        this.computeTextureFormat();
 
                         var imgWidth = image.getWidth() || this._textureWidth;
                         var imgHeight = image.getHeight() || this._textureHeight;
@@ -325,7 +333,7 @@ define( [
                                                   this._textureTarget,
                                                   0,
                                                   this._internalFormat,
-                                                  this._imageFormat,
+                                                  this._internalFormat,
                                                   this._type,
                                                   image.getImage() );
                         }
@@ -342,6 +350,10 @@ define( [
                     }
 
                 } else if ( this._textureHeight !== 0 && this._textureWidth !== 0 ) {
+
+                    // must be called before init
+                    this.computeTextureFormat();
+
                     if ( !this._textureObject ) {
                         this.init( gl );
                     }
