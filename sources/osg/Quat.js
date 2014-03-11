@@ -17,10 +17,10 @@ define( [], function () {
         },
 
         init: function ( element ) {
-            element[ 0 ] = 0;
-            element[ 1 ] = 0;
-            element[ 2 ] = 0;
-            element[ 3 ] = 1;
+            element[ 0 ] = 0.0;
+            element[ 1 ] = 0.0;
+            element[ 2 ] = 0.0;
+            element[ 3 ] = 1.0;
             return element;
         },
 
@@ -57,19 +57,20 @@ define( [], function () {
         },
 
         makeRotate: function ( angle, x, y, z, result ) {
+            if ( result === undefined ) {
+                result = [ 0.0, 0.0, 0.0, 0.0 ];
+            }
+
             var epsilon = 0.0000001;
             var length = Math.sqrt( x * x + y * y + z * z );
             if ( length < epsilon ) {
-                return this.init();
+                return this.init( result );
             }
 
             var inversenorm = 1.0 / length;
             var coshalfangle = Math.cos( 0.5 * angle );
             var sinhalfangle = Math.sin( 0.5 * angle );
 
-            if ( result === undefined ) {
-                result = [];
-            }
             result[ 0 ] = x * sinhalfangle * inversenorm;
             result[ 1 ] = y * sinhalfangle * inversenorm;
             result[ 2 ] = z * sinhalfangle * inversenorm;
