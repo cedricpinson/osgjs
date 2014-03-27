@@ -114,6 +114,7 @@ define( [
         keydown: function ( ev ) {
             if ( ev.keyCode === 32 ) {
                 this._manipulator.computeHomePosition();
+                ev.preventDefault();
 
             } else if ( ev.keyCode === this._panKey &&
                 this.getMode() !== OrbitManipulatorEnums.PAN ) {
