@@ -57,14 +57,13 @@ define( [
             }
         },
         moveStateGraph: function ( state, sgCurrent, sgNew ) {
-            var stack;
-            var i,l;
+            var stack = [];
+            var i, l;
             if ( sgNew === sgCurrent || sgNew === undefined ) {
                 return;
             }
 
             if ( sgCurrent === undefined ) {
-                stack = [];
                 // push stateset from sgNew to root, and apply
                 // stateset from root to sgNew
                 do {
@@ -74,8 +73,7 @@ define( [
                     sgNew = sgNew.parent;
                 } while ( sgNew );
 
-                stack.reverse();
-                for ( i = 0, l = stack.length; i < l; ++i ) {
+                for ( i = stack.length - 1, l = 0; i >= l; --i ) {
                     state.pushStateSet( stack[ i ] );
                 }
                 return;
@@ -130,9 +128,7 @@ define( [
                 sgNew = sgNew.parent;
             }
 
-            stack.reverse();
-            var stackLength = stack.length;
-            for ( i = 0; i < stackLength; ++i ) {
+            for ( i = stack.length - 1, l = 0; i >= l; --i ) {
                 state.pushStateSet( stack[ i ] );
             }
         }
