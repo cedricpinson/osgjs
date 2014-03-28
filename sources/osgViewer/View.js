@@ -45,7 +45,7 @@ define( [
         getGraphicContext: function () {
             return this._graphicContext;
         },
-        getWebGLCaps: function ( str ) {
+        getWebGLCaps: function () {
             return this._webGLCaps;
         },
         initWebGLCaps: function( gl ) {

@@ -66,17 +66,17 @@ define( [
                 // copy global options and override with user options
                 var opt = MACROUTILS.objectMix( MACROUTILS.objectMix( {}, ReaderParser.registry().getOptions() ), options || {} );
                 input.setOptions( opt );
-                var obj = input.readObject();
+                var object = input.readObject();
                 MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraph');
-                return obj;
+                return object;
             } else {
                 Notify.log( 'can\'t parse scenegraph ' + node );
             }
         } else {
             MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
-            var node = ReaderParser.parseSceneGraphDeprecated( node );
+            var nodeOld = ReaderParser.parseSceneGraphDeprecated( node );
             MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
-            return node;
+            return nodeOld;
         }
         return undefined;
     };

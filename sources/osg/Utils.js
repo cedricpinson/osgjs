@@ -198,7 +198,7 @@ define( [
             var fn = console.time || function ( name ) {
                 times[ name ] = Utils.performance.now();
             };
-            return function ( name ) {
+            return function ( /*name*/ ) {
                 return fn.apply( console, arguments );
             };
 

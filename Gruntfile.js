@@ -1,8 +1,10 @@
-var Fs     = require( 'fs' );
-var Path   = require( 'path' );
+var fs     = require( 'fs' );
+var path   = require( 'path' );
 
 var extend = require( 'extend' );
 var glob   = require( 'glob' );
+
+var jshintrc = JSON.parse( fs.readFileSync('./.jshintrc').toString() );
 
 // Base paths used by the tasks.
 // They always have to finish with a '/'.
@@ -21,9 +23,9 @@ var find = function ( cwd, pattern ) {
         cwd = undefined;
     }
 
-    var isEntity = function ( path ) {
-        if ( cwd ) path = Path.join( cwd, path );
-        return ! Fs.lstatSync( path ).isDirectory( ); };
+    var isEntity = function ( pathname ) {
+        if ( cwd ) pathname = path.join( cwd, pathname );
+        return ! fs.lstatSync( pathname ).isDirectory( ); };
 
     var options = { };
 
@@ -43,26 +45,8 @@ var gruntTasks = { };
 ( function ( ) {
 
     gruntTasks.jshint = {
-        options : {
-            quotmark  : 'single',
-            bitwise   :  true,
-            camelcase :  true,
-            eqeqeq    :  true,
-            immed     :  true,
-            latedef   :  true,
-            newcap    :  true,
-            noarg     :  true,
-            undef     :  true,
-            unused    :  true,
-            trailing  :  true,
-
-            eqnull    :  true,
-            laxcomma  :  true,
-            sub       :  true,
-
-            browser   :  true,
-            devel     :  true }
-        };
+        options : jshintrc
+    };
 
     gruntTasks.copy = { options : {
         } };
@@ -113,8 +97,8 @@ var gruntTasks = { };
     gruntTasks.jshint.sources = {
         options : { globals : { define : true, require : true }
                   },
-        src : find( SOURCE_PATH, '**/*.js' ).map( function ( path ) {
-            return Path.join( SOURCE_PATH, path ); } ) };
+        src : find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) {
+            return path.join( SOURCE_PATH, pathname ); } ) };
 
     // add another output from envvar to have better error tracking in emacs
     if ( process.env.GRUNT_EMACS_REPORTER !== undefined ) {
@@ -128,8 +112,8 @@ var gruntTasks = { };
 ( function ( ) {
 
     gruntTasks.requirejs.distSources = { options : {
-        name : Path.join( Path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
-        out : Path.join( DIST_PATH, 'OSG.js' ),
+        name : path.join( path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
+        out : path.join( DIST_PATH, 'OSG.js' ),
         include : [ 'OSG' ],
         paths: {
             'Q': 'vendors/Q',
@@ -138,8 +122,8 @@ var gruntTasks = { };
             'vr': 'vendors/vr'
         },
         wrap : {
-            startFile : Path.join( UTILS_PATH, 'wrap.start' ),
-            endFile : Path.join( UTILS_PATH, 'wrap.end' ) } } };
+            startFile : path.join( UTILS_PATH, 'wrap.start' ),
+            endFile : path.join( UTILS_PATH, 'wrap.end' ) } } };
 
 } )( );
 
@@ -148,7 +132,7 @@ var gruntTasks = { };
 ( function ( ) {
 
     gruntTasks.clean.distAfterSourcesRjs = {
-        src : [ Path.join( DIST_PATH, 'build.txt' ) ] };
+        src : [ path.join( DIST_PATH, 'build.txt' ) ] };
 
 } )( );
 
@@ -159,7 +143,7 @@ var gruntTasks = { };
 
     // generate a requirejs without anything to build a docco docs
     gruntTasks.requirejs.docsSources = { options : {
-        out : Path.join( BUILD_PATH, 'docs/OSG.js' ),
+        out : path.join( BUILD_PATH, 'docs/OSG.js' ),
         include : [ 'OSG' ],
         paths: {
             'Q': 'vendors/Q',
@@ -171,14 +155,14 @@ var gruntTasks = { };
 
     gruntTasks.docco = {
         singleDoc: {
-            src: Path.join( BUILD_PATH, 'docs/OSG.js' ),
-            //src:  find( SOURCE_PATH, '**/*.js' ).map( function ( path ) { return Path.join( SOURCE_PATH, path ); } ),
+            src: path.join( BUILD_PATH, 'docs/OSG.js' ),
+            //src:  find( SOURCE_PATH, '**/*.js' ).map( function ( path ) { return path.join( SOURCE_PATH, path ); } ),
             options: {
                 output: 'docs/annotated-source'
             }
         },
         docs: {
-            src:  find( SOURCE_PATH, '**/*.js' ).map( function ( path ) { return Path.join( SOURCE_PATH, path ); } ),
+            src:  find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) { return path.join( SOURCE_PATH, pathname ); } ),
             options: {
                 layout: 'classic',
                 output: 'docs/annotated-source'
@@ -196,8 +180,8 @@ var gruntTasks = { };
         },
         main: {
             files: {
-                'docs/analysis': find( SOURCE_PATH, '**/*.js' ).map( function ( path ) {
-                    return Path.join( SOURCE_PATH, path ); } )
+                'docs/analysis': find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) {
+                    return path.join( SOURCE_PATH, pathname ); } )
             }
         }
     };
