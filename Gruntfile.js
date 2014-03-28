@@ -170,7 +170,7 @@ var gruntTasks = { };
     } };
 
     gruntTasks.docco = {
-        singleDoc: {            
+        singleDoc: {
             src: Path.join( BUILD_PATH, 'docs/OSG.js' ),
             //src:  find( SOURCE_PATH, '**/*.js' ).map( function ( path ) { return Path.join( SOURCE_PATH, path ); } ),
             options: {
@@ -188,7 +188,7 @@ var gruntTasks = { };
 
 } )( );
 
-// ## Plato 
+// ## Plato
 ( function () {
     gruntTasks.plato = {
         options: {

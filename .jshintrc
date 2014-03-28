@@ -1,0 +1,33 @@
+{
+    "quotmark": "single",
+    "bitwise": false,
+    "camelcase": true,
+    "eqeqeq": true,
+    "immed": true,
+    "latedef": true,
+    "newcap": true,
+    "noarg": true,
+    "undef": true,
+    "unused": true,
+    "trailing": true,
+
+    "eqnull": true,
+    "laxcomma": true,
+    "sub": true,
+
+    "browser": true,
+    "devel": true,
+
+    "globals": {
+        "define": false,
+        "require": false,
+        "ok": false,
+        "module": false,
+        "expect": false,
+        "test": false,
+        "asyncTest": false,
+        "equal": false,
+        "start": false,
+        "deepEqual": false
+    }
+}
