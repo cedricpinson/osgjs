@@ -129,8 +129,9 @@ define( [
 
         if ( gl ) {
             this.setGraphicContext( gl );
-            this.initWebGLParameters();
-            this.initWebGLExtensions();
+            this.initWebGLCaps( gl );
+
+
             MACROUTILS.init();
             this._canvas = canvas;
             this._frameRate = 60.0;
