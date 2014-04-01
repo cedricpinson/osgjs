@@ -7,8 +7,10 @@ define( [
 
     /** @class Matrix Operations */
     var Matrix = {
-        _tmp0: [],
-        _tmp1: [],
+
+        create: function () {
+            return [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+        },
 
         valid: function ( matrix ) {
             for ( var i = 0; i < 16; i++ ) {
@@ -41,8 +43,8 @@ define( [
 
         makeIdentity: function ( matrix ) {
             if ( matrix === undefined ) {
-                matrix = [];
-                Notify.log( 'Matrix.makeIdentity without matrix destination is deprecated' );
+                Notify.warn( 'no matrix destination !' );
+                return Matrix.create();
             }
             Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
             Matrix.setRow( matrix, 1, 0.0, 1.0, 0.0, 0.0 );
@@ -59,7 +61,10 @@ define( [
          */
         makeTranslate: function ( x, y, z, matrix ) {
             if ( matrix === undefined ) {
-                matrix = [];
+                Notify.warn( 'no matrix destination !' );
+                matrix = Matrix.create();
+                Matrix.setRow( matrix, 3, x, y, z, 1.0 );
+                return matrix;
             }
             Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
             Matrix.setRow( matrix, 1, 0.0, 1.0, 0.0, 0.0 );
@@ -169,12 +174,13 @@ define( [
         },
         multa: function ( a, b, r ) {
             if ( r === a ) {
-                return this.preMult( a, b );
+                return Matrix.preMult( a, b );
             } else if ( r === b ) {
-                return this.postMult( a, b );
+                return Matrix.postMult( a, b );
             } else {
                 if ( r === undefined ) {
-                    r = [];
+                    Notify.warn( 'no matrix destination !' );
+                    r = Matrix.create();
                 }
                 r[ 0 ] = b[ 0 ] * a[ 0 ] + b[ 1 ] * a[ 4 ] + b[ 2 ] * a[ 8 ] + b[ 3 ] * a[ 12 ];
                 r[ 1 ] = b[ 0 ] * a[ 1 ] + b[ 1 ] * a[ 5 ] + b[ 2 ] * a[ 9 ] + b[ 3 ] * a[ 13 ];
@@ -258,37 +264,39 @@ define( [
             return r;
         },
         multOrig: function ( a, b, r ) {
-            var t;
+            var inner1 = 0.0,
+                inner2 = 0.0,
+                inner3 = 0.0,
+                inner4 = 0.0;
             if ( r === a ) {
                 // pre mult
-                t = [];
                 for ( var col = 0; col < 4; col++ ) {
-                    t[ 0 ] = Matrix.innerProduct( b, a, 0, col );
-                    t[ 1 ] = Matrix.innerProduct( b, a, 1, col );
-                    t[ 2 ] = Matrix.innerProduct( b, a, 2, col );
-                    t[ 3 ] = Matrix.innerProduct( b, a, 3, col );
-                    a[ 0 + col ] = t[ 0 ];
-                    a[ 4 + col ] = t[ 1 ];
-                    a[ 8 + col ] = t[ 2 ];
-                    a[ 12 + col ] = t[ 3 ];
+                    inner1 = Matrix.innerProduct( b, a, 0, col );
+                    inner2 = Matrix.innerProduct( b, a, 1, col );
+                    inner3 = Matrix.innerProduct( b, a, 2, col );
+                    inner4 = Matrix.innerProduct( b, a, 3, col );
+                    a[ 0 + col ] = inner1;
+                    a[ 4 + col ] = inner2;
+                    a[ 8 + col ] = inner3;
+                    a[ 12 + col ] = inner4;
                 }
                 return a;
-                //return this.preMult(r, b);
+                //return Matrix.preMult(r, b);
             } else if ( r === b ) {
                 // post mult
-                t = [];
                 for ( var row = 0; row < 4; row++ ) {
-                    t[ 0 ] = Matrix.innerProduct( b, a, row, 0 );
-                    t[ 1 ] = Matrix.innerProduct( b, a, row, 1 );
-                    t[ 2 ] = Matrix.innerProduct( b, a, row, 2 );
-                    t[ 3 ] = Matrix.innerProduct( b, a, row, 3 );
-                    this.setRow( b, row, t[ 0 ], t[ 1 ], t[ 2 ], t[ 3 ] );
+                    inner1 = Matrix.innerProduct( b, a, row, 0 );
+                    inner2 = Matrix.innerProduct( b, a, row, 1 );
+                    inner3 = Matrix.innerProduct( b, a, row, 2 );
+                    inner4 = Matrix.innerProduct( b, a, row, 3 );
+                    Matrix.setRow( b, row, inner1, inner2, inner3, inner4 );
                 }
                 return b;
-                //return this.postMult(r, a);
+                //return Matrix.postMult(r, a);
             }
             if ( r === undefined ) {
-                r = [];
+                Notify.warn( 'no matrix destination !' );
+                r = Matrix.create();
             }
 
             var s00 = b[ 0 ];
@@ -348,51 +356,57 @@ define( [
             return r;
         },
 
-        makeLookAt: function ( eye, center, up, result ) {
+        makeLookAt: ( function () {
+            var f = [ 0.0, 0.0, 0.0 ];
+            var s = [ 0.0, 0.0, 0.0 ];
+            var u = [ 0.0, 0.0, 0.0 ];
+            var neg = [ 0.0, 0.0, 0.0 ];
 
+            return function ( eye, center, up, result ) {
+                if ( result === undefined ) {
+                    Notify.warn( 'no matrix destination !' );
+                    result = Matrix.create();
+                }
+
+                Vec3.sub( center, eye, f );
+                Vec3.normalize( f, f );
+
+                Vec3.cross( f, up, s );
+                Vec3.normalize( s, s );
+
+                Vec3.cross( s, f, u );
+                Vec3.normalize( u, u );
+
+                // s[0], u[0], -f[0], 0.0,
+                // s[1], u[1], -f[1], 0.0,
+                // s[2], u[2], -f[2], 0.0,
+                // 0,    0,    0,     1.0
+
+                result[ 0 ] = s[ 0 ];
+                result[ 1 ] = u[ 0 ];
+                result[ 2 ] = -f[ 0 ];
+                result[ 3 ] = 0.0;
+                result[ 4 ] = s[ 1 ];
+                result[ 5 ] = u[ 1 ];
+                result[ 6 ] = -f[ 1 ];
+                result[ 7 ] = 0.0;
+                result[ 8 ] = s[ 2 ];
+                result[ 9 ] = u[ 2 ];
+                result[ 10 ] = -f[ 2 ];
+                result[ 11 ] = 0.0;
+                result[ 12 ] = 0;
+                result[ 13 ] = 0;
+                result[ 14 ] = 0;
+                result[ 15 ] = 1.0;
+
+                Matrix.multTranslate( result, Vec3.neg( eye, neg ), result );
+                return result;
+            };
+        } )(),
+        makeOrtho: function ( left, right, bottom, top, zNear, zFar, result ) {
             if ( result === undefined ) {
-                result = [];
-            }
-
-            var f = Vec3.sub( center, eye, [] );
-            Vec3.normalize( f, f );
-
-            var s = Vec3.cross( f, up, [] );
-            Vec3.normalize( s, s );
-
-            var u = Vec3.cross( s, f, [] );
-            Vec3.normalize( u, u );
-
-            // s[0], u[0], -f[0], 0.0,
-            // s[1], u[1], -f[1], 0.0,
-            // s[2], u[2], -f[2], 0.0,
-            // 0,    0,    0,     1.0
-
-            result[ 0 ] = s[ 0 ];
-            result[ 1 ] = u[ 0 ];
-            result[ 2 ] = -f[ 0 ];
-            result[ 3 ] = 0.0;
-            result[ 4 ] = s[ 1 ];
-            result[ 5 ] = u[ 1 ];
-            result[ 6 ] = -f[ 1 ];
-            result[ 7 ] = 0.0;
-            result[ 8 ] = s[ 2 ];
-            result[ 9 ] = u[ 2 ];
-            result[ 10 ] = -f[ 2 ];
-            result[ 11 ] = 0.0;
-            result[ 12 ] = 0;
-            result[ 13 ] = 0;
-            result[ 14 ] = 0;
-            result[ 15 ] = 1.0;
-
-            Matrix.multTranslate( result, Vec3.neg( eye, [] ), result );
-            return result;
-        },
-        makeOrtho: function ( left, right,
-            bottom, top,
-            zNear, zFar, result ) {
-            if ( result === undefined ) {
-                result = [];
+                Notify.warn( 'no matrix destination !' );
+                result = Matrix.create();
             }
             // note transpose of Matrix_implementation wr.t OpenGL documentation, since the OSG use post multiplication rather than pre.
             // we will change this convention later
@@ -407,83 +421,93 @@ define( [
             return result;
         },
 
-        getLookAt: function ( matrix, eye, center, up, distance ) {
-            if ( distance === undefined ) {
-                distance = 1.0;
-            }
-            var inv = [];
-            var result = Matrix.inverse( matrix, inv );
-            if ( !result ) {
-                Matrix.makeIdentity( inv );
-            }
-            Matrix.transformVec3( inv, [ 0, 0, 0 ], eye );
-            Matrix.transform3x3( matrix, [ 0, 1, 0 ], up );
-            Matrix.transform3x3( matrix, [ 0, 0, -1 ], center );
-            Vec3.normalize( center, center );
-            Vec3.add( Vec3.mult( center, distance, [] ), eye, center );
-        },
+        getLookAt: ( function () {
+            var inv = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
+            var v1 = [ 0.0, 0.0, 0.0 ];
+            var v2 = [ 0.0, 1.0, 0.0 ];
+            var v3 = [ 0.0, 0.0, -1.0 ];
+
+            return function ( matrix, eye, center, up, distance ) {
+                if ( distance === undefined ) {
+                    distance = 1.0;
+                }
+                var result = Matrix.inverse( matrix, inv );
+                if ( !result ) {
+                    Matrix.makeIdentity( inv );
+                }
+                Matrix.transformVec3( inv, v1, eye );
+                Matrix.transform3x3( matrix, v2, up );
+                Matrix.transform3x3( matrix, v3, center );
+                Vec3.normalize( center, center );
+                Vec3.add( Vec3.mult( center, distance, v1 ), eye, center );
+            };
+        } )(),
 
         //getRotate_David_Spillings_Mk1
-        getRotate: function ( mat, quatResult ) {
-            if ( quatResult === undefined ) {
-                quatResult = [];
-            }
+        getRotate: ( function () {
+            var tq = [ 0.0, 0.0, 0.0, 0.0 ];
 
-            var s;
-            var tq = [];
-            var i, j;
-
-            // Use tq to store the largest trace
-            var mat00 = mat[ 4 * 0 + 0 ];
-            var mat11 = mat[ 4 * 1 + 1 ];
-            var mat22 = mat[ 4 * 2 + 2 ];
-            tq[ 0 ] = 1 + mat00 + mat11 + mat22;
-            tq[ 1 ] = 1 + mat00 - mat11 - mat22;
-            tq[ 2 ] = 1 - mat00 + mat11 - mat22;
-            tq[ 3 ] = 1 - mat00 - mat11 + mat22;
-
-            // Find the maximum (could also use stacked if's later)
-            j = 0;
-            for ( i = 1; i < 4; i++ ) {
-                if ( ( tq[ i ] > tq[ j ] ) ) {
-                    j = i;
-                } else {
-                    j = j;
+            return function ( mat, quatResult ) {
+                if ( quatResult === undefined ) {
+                    Notify.warn( 'no quat destination !' );
+                    quatResult = [ 0.0, 0.0, 0.0, 0.0 ];
                 }
-            }
 
-            // check the diagonal
-            if ( j === 0 ) {
-                /* perform instant calculation */
-                quatResult[ 3 ] = tq[ 0 ];
-                quatResult[ 0 ] = mat[ 1 * 4 + 2 ] - mat[ 2 * 4 + 1 ];
-                quatResult[ 1 ] = mat[ 2 * 4 + 0 ] - mat[ 0 + 2 ];
-                quatResult[ 2 ] = mat[ 0 + 1 ] - mat[ 1 * 4 + 0 ];
-            } else if ( j === 1 ) {
-                quatResult[ 3 ] = mat[ 1 * 4 + 2 ] - mat[ 2 * 4 + 1 ];
-                quatResult[ 0 ] = tq[ 1 ];
-                quatResult[ 1 ] = mat[ 0 + 1 ] + mat[ 1 * 4 + 0 ];
-                quatResult[ 2 ] = mat[ 2 * 4 + 0 ] + mat[ 0 + 2 ];
-            } else if ( j === 2 ) {
-                quatResult[ 3 ] = mat[ 2 * 4 + 0 ] - mat[ 0 + 2 ];
-                quatResult[ 0 ] = mat[ 0 + 1 ] + mat[ 1 * 4 + 0 ];
-                quatResult[ 1 ] = tq[ 2 ];
-                quatResult[ 2 ] = mat[ 1 * 4 + 2 ] + mat[ 2 * 4 + 1 ];
-            } else /* if (j==3) */ {
-                quatResult[ 3 ] = mat[ 0 + 1 ] - mat[ 1 * 4 + 0 ];
-                quatResult[ 0 ] = mat[ 2 * 4 + 0 ] + mat[ 0 + 2 ];
-                quatResult[ 1 ] = mat[ 1 * 4 + 2 ] + mat[ 2 * 4 + 1 ];
-                quatResult[ 2 ] = tq[ 3 ];
-            }
+                var s;
+                var i, j;
 
-            s = Math.sqrt( 0.25 / tq[ j ] );
-            quatResult[ 3 ] *= s;
-            quatResult[ 0 ] *= s;
-            quatResult[ 1 ] *= s;
-            quatResult[ 2 ] *= s;
+                // Use tq to store the largest trace
+                var mat00 = mat[ 4 * 0 + 0 ];
+                var mat11 = mat[ 4 * 1 + 1 ];
+                var mat22 = mat[ 4 * 2 + 2 ];
+                tq[ 0 ] = 1.0 + mat00 + mat11 + mat22;
+                tq[ 1 ] = 1.0 + mat00 - mat11 - mat22;
+                tq[ 2 ] = 1.0 - mat00 + mat11 - mat22;
+                tq[ 3 ] = 1.0 - mat00 - mat11 + mat22;
 
-            return quatResult;
-        },
+                // Find the maximum (could also use stacked if's later)
+                j = 0;
+                for ( i = 1; i < 4; i++ ) {
+                    if ( ( tq[ i ] > tq[ j ] ) ) {
+                        j = i;
+                    } else {
+                        j = j;
+                    }
+                }
+
+                // check the diagonal
+                if ( j === 0 ) {
+                    /* perform instant calculation */
+                    quatResult[ 3 ] = tq[ 0 ];
+                    quatResult[ 0 ] = mat[ 1 * 4 + 2 ] - mat[ 2 * 4 + 1 ];
+                    quatResult[ 1 ] = mat[ 2 * 4 + 0 ] - mat[ 0 + 2 ];
+                    quatResult[ 2 ] = mat[ 0 + 1 ] - mat[ 1 * 4 + 0 ];
+                } else if ( j === 1 ) {
+                    quatResult[ 3 ] = mat[ 1 * 4 + 2 ] - mat[ 2 * 4 + 1 ];
+                    quatResult[ 0 ] = tq[ 1 ];
+                    quatResult[ 1 ] = mat[ 0 + 1 ] + mat[ 1 * 4 + 0 ];
+                    quatResult[ 2 ] = mat[ 2 * 4 + 0 ] + mat[ 0 + 2 ];
+                } else if ( j === 2 ) {
+                    quatResult[ 3 ] = mat[ 2 * 4 + 0 ] - mat[ 0 + 2 ];
+                    quatResult[ 0 ] = mat[ 0 + 1 ] + mat[ 1 * 4 + 0 ];
+                    quatResult[ 1 ] = tq[ 2 ];
+                    quatResult[ 2 ] = mat[ 1 * 4 + 2 ] + mat[ 2 * 4 + 1 ];
+                } else /* if (j==3) */ {
+                    quatResult[ 3 ] = mat[ 0 + 1 ] - mat[ 1 * 4 + 0 ];
+                    quatResult[ 0 ] = mat[ 2 * 4 + 0 ] + mat[ 0 + 2 ];
+                    quatResult[ 1 ] = mat[ 1 * 4 + 2 ] + mat[ 2 * 4 + 1 ];
+                    quatResult[ 2 ] = tq[ 3 ];
+                }
+
+                s = Math.sqrt( 0.25 / tq[ j ] );
+                quatResult[ 3 ] *= s;
+                quatResult[ 0 ] *= s;
+                quatResult[ 1 ] *= s;
+                quatResult[ 2 ] *= s;
+
+                return quatResult;
+            };
+        } )(),
 
         // Matrix M = Matrix M * Matrix Translate
         preMultTranslate: function ( mat, translate ) {
@@ -514,11 +538,11 @@ define( [
             return mat;
         },
 
-
         // result = Matrix M * Matrix Translate
         multTranslate: function ( mat, translate, result ) {
             if ( result === undefined ) {
-                result = [];
+                Notify.warn( 'no matrix destination !' );
+                result = Matrix.create();
             }
             if ( result !== mat ) {
                 Matrix.copy( mat, result );
@@ -553,8 +577,8 @@ define( [
 
         makeRotate: function ( angle, x, y, z, result ) {
             if ( result === undefined ) {
-                Notify.log( 'makeRotate without given matrix destination is deprecated' );
-                result = [];
+                Notify.warn( 'no matrix destination !' );
+                result = Matrix.create();
             }
 
             var mag = Math.sqrt( x * x + y * y + z * z );
@@ -612,7 +636,8 @@ define( [
 
         transform3x3: function ( m, v, result ) {
             if ( result === undefined ) {
-                result = [];
+                Notify.warn( 'no matrix destination !' );
+                result = Matrix.create();
             }
             result[ 0 ] = m[ 0 ] * v[ 0 ] + m[ 1 ] * v[ 1 ] + m[ 2 ] * v[ 2 ];
             result[ 1 ] = m[ 4 ] * v[ 0 ] + m[ 5 ] * v[ 1 ] + m[ 6 ] * v[ 2 ];
@@ -620,54 +645,64 @@ define( [
             return result;
         },
 
-        transformVec3: function ( matrix, vector, result ) {
-            var d = 1.0 / ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] );
+        transformVec3: ( function () {
+            var tmpVec = [ 0.0, 0.0, 0.0 ];
 
-            if ( result === undefined ) {
-                Notify.warn( 'deprecated, Matrix.transformVec3 needs a third parameter as result' );
-                result = [];
-            }
+            return function ( matrix, vector, result ) {
+                var d = 1.0 / ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] );
 
-            var tmp;
-            if ( result === vector ) {
-                tmp = [];
-            } else {
-                tmp = result;
-            }
-            tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 4 ] * vector[ 1 ] + matrix[ 8 ] * vector[ 2 ] + matrix[ 12 ] ) * d;
-            tmp[ 1 ] = ( matrix[ 1 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 9 ] * vector[ 2 ] + matrix[ 13 ] ) * d;
-            tmp[ 2 ] = ( matrix[ 2 ] * vector[ 0 ] + matrix[ 6 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 14 ] ) * d;
+                if ( result === undefined ) {
+                    Notify.warn( 'no matrix destination !' );
+                    result = Matrix.create();
+                }
 
-            if ( result === vector ) {
-                Vec3.copy( tmp, result );
-            }
-            return result;
-        },
+                var tmp;
+                if ( result === vector ) {
+                    tmp = tmpVec;
+                } else {
+                    tmp = result;
+                }
+                tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 4 ] * vector[ 1 ] + matrix[ 8 ] * vector[ 2 ] + matrix[ 12 ] ) * d;
+                tmp[ 1 ] = ( matrix[ 1 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 9 ] * vector[ 2 ] + matrix[ 13 ] ) * d;
+                tmp[ 2 ] = ( matrix[ 2 ] * vector[ 0 ] + matrix[ 6 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 14 ] ) * d;
 
-        transformVec4: function ( matrix, vector, result ) {
-            if ( result === undefined ) {
-                result = [];
-            }
-            var tmp;
-            if ( result === vector ) {
-                tmp = [];
-            } else {
-                tmp = result;
-            }
-            tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 1 ] * vector[ 1 ] + matrix[ 2 ] * vector[ 2 ] + matrix[ 3 ] * vector[ 3 ] );
-            tmp[ 1 ] = ( matrix[ 4 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 6 ] * vector[ 2 ] + matrix[ 7 ] * vector[ 3 ] );
-            tmp[ 2 ] = ( matrix[ 8 ] * vector[ 0 ] + matrix[ 9 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 11 ] * vector[ 3 ] );
-            tmp[ 3 ] = ( matrix[ 12 ] * vector[ 0 ] + matrix[ 13 ] * vector[ 1 ] + matrix[ 14 ] * vector[ 2 ] + matrix[ 15 ] * vector[ 3 ] );
+                if ( result === vector ) {
+                    Vec3.copy( tmp, result );
+                }
+                return result;
+            };
+        } )(),
 
-            if ( result === vector ) {
-                Vec4.copy( tmp, result );
-            }
-            return result;
-        },
+        transformVec4: ( function () {
+            var tmpVec = [ 0.0, 0.0, 0.0 ];
+
+            return function ( matrix, vector, result ) {
+                if ( result === undefined ) {
+                    Notify.warn( 'no matrix destination !' );
+                    result = Matrix.create();
+                }
+                var tmp;
+                if ( result === vector ) {
+                    tmp = tmpVec;
+                } else {
+                    tmp = result;
+                }
+                tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 1 ] * vector[ 1 ] + matrix[ 2 ] * vector[ 2 ] + matrix[ 3 ] * vector[ 3 ] );
+                tmp[ 1 ] = ( matrix[ 4 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 6 ] * vector[ 2 ] + matrix[ 7 ] * vector[ 3 ] );
+                tmp[ 2 ] = ( matrix[ 8 ] * vector[ 0 ] + matrix[ 9 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 11 ] * vector[ 3 ] );
+                tmp[ 3 ] = ( matrix[ 12 ] * vector[ 0 ] + matrix[ 13 ] * vector[ 1 ] + matrix[ 14 ] * vector[ 2 ] + matrix[ 15 ] * vector[ 3 ] );
+
+                if ( result === vector ) {
+                    Vec4.copy( tmp, result );
+                }
+                return result;
+            };
+        } )(),
 
         copy: function ( matrix, result ) {
             if ( result === undefined ) {
-                result = [];
+                Notify.warn( 'no matrix destination !' );
+                result = Matrix.create();
             }
             result[ 0 ] = matrix[ 0 ];
             result[ 1 ] = matrix[ 1 ];
@@ -688,18 +723,22 @@ define( [
             return result;
         },
 
-        inverse: function ( matrix, result ) {
-            if ( result === matrix ) {
-                Matrix.copy( matrix, Matrix._tmp1 );
-                matrix = Matrix._tmp1;
-            }
+        inverse: ( function () {
+            var tmp = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
 
-            if ( matrix[ 3 ] === 0.0 && matrix[ 7 ] === 0.0 && matrix[ 11 ] === 0.0 && matrix[ 15 ] === 1.0 ) {
-                return this.inverse4x3( matrix, result );
-            } else {
-                return this.inverse4x4( matrix, result );
-            }
-        },
+            return function ( matrix, result ) {
+                if ( result === matrix ) {
+                    Matrix.copy( matrix, tmp );
+                    matrix = tmp;
+                }
+
+                if ( matrix[ 3 ] === 0.0 && matrix[ 7 ] === 0.0 && matrix[ 11 ] === 0.0 && matrix[ 15 ] === 1.0 ) {
+                    return Matrix.inverse4x3( matrix, result );
+                } else {
+                    return Matrix.inverse4x4( matrix, result );
+                }
+            };
+        } )(),
 
         /**
          *  if a result argument is given the return of the function is true or false
@@ -729,15 +768,15 @@ define( [
             var tmp19 = matrix[ 12 ] * matrix[ 1 ];
             var tmp20 = matrix[ 0 ] * matrix[ 9 ];
             var tmp21 = matrix[ 8 ] * matrix[ 1 ];
-            var tmp22= matrix[ 0 ] * matrix[ 5 ];
-            var tmp23= matrix[ 4 ] * matrix[ 1 ];
+            var tmp22 = matrix[ 0 ] * matrix[ 5 ];
+            var tmp23 = matrix[ 4 ] * matrix[ 1 ];
 
             var t0 = ( ( tmp0 * matrix[ 5 ] + tmp3 * matrix[ 9 ] + tmp4 * matrix[ 13 ] ) -
                 ( tmp1 * matrix[ 5 ] + tmp2 * matrix[ 9 ] + tmp5 * matrix[ 13 ] ) );
-            var t1 = ( ( tmp1 * matrix[ 1 ] + tmp6  * matrix[ 9 ] + tmp9 * matrix[ 13 ] ) -
+            var t1 = ( ( tmp1 * matrix[ 1 ] + tmp6 * matrix[ 9 ] + tmp9 * matrix[ 13 ] ) -
                 ( tmp0 * matrix[ 1 ] + tmp7 * matrix[ 9 ] + tmp8 * matrix[ 13 ] ) );
             var t2 = ( ( tmp2 * matrix[ 1 ] + tmp7 * matrix[ 5 ] + tmp10 * matrix[ 13 ] ) -
-                ( tmp3 * matrix[ 1 ] + tmp6  * matrix[ 5 ] + tmp11 * matrix[ 13 ] ) );
+                ( tmp3 * matrix[ 1 ] + tmp6 * matrix[ 5 ] + tmp11 * matrix[ 13 ] ) );
             var t3 = ( ( tmp5 * matrix[ 1 ] + tmp8 * matrix[ 5 ] + tmp11 * matrix[ 9 ] ) -
                 ( tmp4 * matrix[ 1 ] + tmp9 * matrix[ 5 ] + tmp10 * matrix[ 9 ] ) );
 
@@ -756,29 +795,29 @@ define( [
             var out10 = d * ( ( tmp1 * matrix[ 4 ] + tmp2 * matrix[ 8 ] + tmp5 * matrix[ 12 ] ) -
                 ( tmp0 * matrix[ 4 ] + tmp3 * matrix[ 8 ] + tmp4 * matrix[ 12 ] ) );
             var out11 = d * ( ( tmp0 * matrix[ 0 ] + tmp7 * matrix[ 8 ] + tmp8 * matrix[ 12 ] ) -
-                ( tmp1 * matrix[ 0 ] + tmp6  * matrix[ 8 ] + tmp9 * matrix[ 12 ] ) );
-            var out12 = d * ( ( tmp3 * matrix[ 0 ] + tmp6  * matrix[ 4 ] + tmp11 * matrix[ 12 ] ) -
+                ( tmp1 * matrix[ 0 ] + tmp6 * matrix[ 8 ] + tmp9 * matrix[ 12 ] ) );
+            var out12 = d * ( ( tmp3 * matrix[ 0 ] + tmp6 * matrix[ 4 ] + tmp11 * matrix[ 12 ] ) -
                 ( tmp2 * matrix[ 0 ] + tmp7 * matrix[ 4 ] + tmp10 * matrix[ 12 ] ) );
             var out13 = d * ( ( tmp4 * matrix[ 0 ] + tmp9 * matrix[ 4 ] + tmp10 * matrix[ 8 ] ) -
                 ( tmp5 * matrix[ 0 ] + tmp8 * matrix[ 4 ] + tmp11 * matrix[ 8 ] ) );
 
             var out20 = d * ( ( tmp12 * matrix[ 7 ] + tmp15 * matrix[ 11 ] + tmp16 * matrix[ 15 ] ) -
-                ( tmp13 * matrix[ 7 ] + tmp14* matrix[ 11 ] + tmp17 * matrix[ 15 ] ) );
+                ( tmp13 * matrix[ 7 ] + tmp14 * matrix[ 11 ] + tmp17 * matrix[ 15 ] ) );
             var out21 = d * ( ( tmp13 * matrix[ 3 ] + tmp18 * matrix[ 11 ] + tmp21 * matrix[ 15 ] ) -
                 ( tmp12 * matrix[ 3 ] + tmp19 * matrix[ 11 ] + tmp20 * matrix[ 15 ] ) );
-            var out22 = d * ( ( tmp14* matrix[ 3 ] + tmp19 * matrix[ 7 ] + tmp22* matrix[ 15 ] ) -
-                ( tmp15 * matrix[ 3 ] + tmp18 * matrix[ 7 ] + tmp23* matrix[ 15 ] ) );
-            var out23 = d * ( ( tmp17 * matrix[ 3 ] + tmp20 * matrix[ 7 ] + tmp23* matrix[ 11 ] ) -
-                ( tmp16 * matrix[ 3 ] + tmp21 * matrix[ 7 ] + tmp22* matrix[ 11 ] ) );
+            var out22 = d * ( ( tmp14 * matrix[ 3 ] + tmp19 * matrix[ 7 ] + tmp22 * matrix[ 15 ] ) -
+                ( tmp15 * matrix[ 3 ] + tmp18 * matrix[ 7 ] + tmp23 * matrix[ 15 ] ) );
+            var out23 = d * ( ( tmp17 * matrix[ 3 ] + tmp20 * matrix[ 7 ] + tmp23 * matrix[ 11 ] ) -
+                ( tmp16 * matrix[ 3 ] + tmp21 * matrix[ 7 ] + tmp22 * matrix[ 11 ] ) );
 
-            var out30 = d * ( ( tmp14* matrix[ 10 ] + tmp17 * matrix[ 14 ] + tmp13 * matrix[ 6 ] ) -
+            var out30 = d * ( ( tmp14 * matrix[ 10 ] + tmp17 * matrix[ 14 ] + tmp13 * matrix[ 6 ] ) -
                 ( tmp16 * matrix[ 14 ] + tmp12 * matrix[ 6 ] + tmp15 * matrix[ 10 ] ) );
             var out31 = d * ( ( tmp20 * matrix[ 14 ] + tmp12 * matrix[ 2 ] + tmp19 * matrix[ 10 ] ) -
                 ( tmp18 * matrix[ 10 ] + tmp21 * matrix[ 14 ] + tmp13 * matrix[ 2 ] ) );
-            var out32 = d * ( ( tmp18 * matrix[ 6 ] + tmp23* matrix[ 14 ] + tmp15 * matrix[ 2 ] ) -
-                ( tmp22* matrix[ 14 ] + tmp14 * matrix[ 2 ] + tmp19 * matrix[ 6 ] ) );
-            var out33 = d * ( ( tmp22* matrix[ 10 ] + tmp16 * matrix[ 2 ] + tmp21 * matrix[ 6 ] ) -
-                ( tmp20 * matrix[ 6 ] + tmp23* matrix[ 10 ] + tmp17 * matrix[ 2 ] ) );
+            var out32 = d * ( ( tmp18 * matrix[ 6 ] + tmp23 * matrix[ 14 ] + tmp15 * matrix[ 2 ] ) -
+                ( tmp22 * matrix[ 14 ] + tmp14 * matrix[ 2 ] + tmp19 * matrix[ 6 ] ) );
+            var out33 = d * ( ( tmp22 * matrix[ 10 ] + tmp16 * matrix[ 2 ] + tmp21 * matrix[ 6 ] ) -
+                ( tmp20 * matrix[ 6 ] + tmp23 * matrix[ 10 ] + tmp17 * matrix[ 2 ] ) );
 
             result[ 0 ] = out00;
             result[ 1 ] = out01;
@@ -828,106 +867,108 @@ define( [
       This problem is simplified if [px py pz s] = [0 0 0 1], which will happen if mat was composed only of rotations, scales, and translations (which is common).  In this case, we can ignore corr entirely which saves on a lot of computations.
     */
 
-        inverse4x3: function ( matrix, result ) {
+        inverse4x3: ( function () {
+            var inv = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
 
-            // Copy rotation components
-            var r00 = matrix[ 0 ];
-            var r01 = matrix[ 1 ];
-            var r02 = matrix[ 2 ];
+            return function ( matrix, result ) {
 
-            var r10 = matrix[ 4 ];
-            var r11 = matrix[ 5 ];
-            var r12 = matrix[ 6 ];
+                // Copy rotation components
+                var r00 = matrix[ 0 ];
+                var r01 = matrix[ 1 ];
+                var r02 = matrix[ 2 ];
 
-            var r20 = matrix[ 8 ];
-            var r21 = matrix[ 9 ];
-            var r22 = matrix[ 10 ];
+                var r10 = matrix[ 4 ];
+                var r11 = matrix[ 5 ];
+                var r12 = matrix[ 6 ];
 
-            // Partially compute inverse of rot
-            result[ 0 ] = r11 * r22 - r12 * r21;
-            result[ 1 ] = r02 * r21 - r01 * r22;
-            result[ 2 ] = r01 * r12 - r02 * r11;
+                var r20 = matrix[ 8 ];
+                var r21 = matrix[ 9 ];
+                var r22 = matrix[ 10 ];
 
-            // Compute determinant of rot from 3 elements just computed
-            var oneOverDet = 1.0 / ( r00 * result[ 0 ] + r10 * result[ 1 ] + r20 * result[ 2 ] );
-            r00 *= oneOverDet;
-            r10 *= oneOverDet;
-            r20 *= oneOverDet; // Saves on later computations
+                // Partially compute inverse of rot
+                result[ 0 ] = r11 * r22 - r12 * r21;
+                result[ 1 ] = r02 * r21 - r01 * r22;
+                result[ 2 ] = r01 * r12 - r02 * r11;
 
-            // Finish computing inverse of rot
-            result[ 0 ] *= oneOverDet;
-            result[ 1 ] *= oneOverDet;
-            result[ 2 ] *= oneOverDet;
-            result[ 3 ] = 0.0;
-            result[ 4 ] = r12 * r20 - r10 * r22; // Have already been divided by det
-            result[ 5 ] = r00 * r22 - r02 * r20; // same
-            result[ 6 ] = r02 * r10 - r00 * r12; // same
-            result[ 7 ] = 0.0;
-            result[ 8 ] = r10 * r21 - r11 * r20; // Have already been divided by det
-            result[ 9 ] = r01 * r20 - r00 * r21; // same
-            result[ 10 ] = r00 * r11 - r01 * r10; // same
-            result[ 11 ] = 0.0;
-            result[ 15 ] = 1.0;
+                // Compute determinant of rot from 3 elements just computed
+                var oneOverDet = 1.0 / ( r00 * result[ 0 ] + r10 * result[ 1 ] + r20 * result[ 2 ] );
+                r00 *= oneOverDet;
+                r10 *= oneOverDet;
+                r20 *= oneOverDet; // Saves on later computations
 
-            var tx, ty, tz;
+                // Finish computing inverse of rot
+                result[ 0 ] *= oneOverDet;
+                result[ 1 ] *= oneOverDet;
+                result[ 2 ] *= oneOverDet;
+                result[ 3 ] = 0.0;
+                result[ 4 ] = r12 * r20 - r10 * r22; // Have already been divided by det
+                result[ 5 ] = r00 * r22 - r02 * r20; // same
+                result[ 6 ] = r02 * r10 - r00 * r12; // same
+                result[ 7 ] = 0.0;
+                result[ 8 ] = r10 * r21 - r11 * r20; // Have already been divided by det
+                result[ 9 ] = r01 * r20 - r00 * r21; // same
+                result[ 10 ] = r00 * r11 - r01 * r10; // same
+                result[ 11 ] = 0.0;
+                result[ 15 ] = 1.0;
 
-            var d = matrix[ 15 ];
-            var dm = d - 1.0;
-            if ( dm * dm > 1.0e-6 ) // Involves perspective, so we must
-            { // compute the full inverse
+                var tx, ty, tz;
 
-                var inv = Matrix._tmp0;
-                result[ 12 ] = result[ 13 ] = result[ 14 ] = 0.0;
+                var d = matrix[ 15 ];
+                var dm = d - 1.0;
+                if ( dm * dm > 1.0e-6 ) // Involves perspective, so we must
+                { // compute the full inverse
 
-                var a = matrix[ 3 ];
-                var b = matrix[ 7 ];
-                var c = matrix[ 11 ];
-                var px = result[ 0 ] * a + result[ 1 ] * b + result[ 2 ] * c;
-                var py = result[ 4 ] * a + result[ 5 ] * b + result[ 6 ] * c;
-                var pz = result[ 8 ] * a + result[ 9 ] * b + result[ 10 ] * c;
+                    result[ 12 ] = result[ 13 ] = result[ 14 ] = 0.0;
 
-                tx = matrix[ 12 ];
-                ty = matrix[ 13 ];
-                tz = matrix[ 14 ];
-                var oneOverS = 1.0 / ( d - ( tx * px + ty * py + tz * pz ) );
+                    var a = matrix[ 3 ];
+                    var b = matrix[ 7 ];
+                    var c = matrix[ 11 ];
+                    var px = result[ 0 ] * a + result[ 1 ] * b + result[ 2 ] * c;
+                    var py = result[ 4 ] * a + result[ 5 ] * b + result[ 6 ] * c;
+                    var pz = result[ 8 ] * a + result[ 9 ] * b + result[ 10 ] * c;
 
-                tx *= oneOverS;
-                ty *= oneOverS;
-                tz *= oneOverS; // Reduces number of calculations later on
+                    tx = matrix[ 12 ];
+                    ty = matrix[ 13 ];
+                    tz = matrix[ 14 ];
+                    var oneOverS = 1.0 / ( d - ( tx * px + ty * py + tz * pz ) );
 
-                // Compute inverse of trans*corr
-                inv[ 0 ] = tx * px + 1.0;
-                inv[ 1 ] = ty * px;
-                inv[ 2 ] = tz * px;
-                inv[ 3 ] = -px * oneOverS;
-                inv[ 4 ] = tx * py;
-                inv[ 5 ] = ty * py + 1.0;
-                inv[ 6 ] = tz * py;
-                inv[ 7 ] = -py * oneOverS;
-                inv[ 8 ] = tx * pz;
-                inv[ 9 ] = ty * pz;
-                inv[ 10 ] = tz * pz + 1.0;
-                inv[ 11 ] = -pz * oneOverS;
-                inv[ 12 ] = -tx;
-                inv[ 13 ] = -ty;
-                inv[ 14 ] = -tz;
-                inv[ 15 ] = oneOverS;
+                    tx *= oneOverS;
+                    ty *= oneOverS;
+                    tz *= oneOverS; // Reduces number of calculations later on
 
-                Matrix.preMult( result, inv ); // Finish computing full inverse of mat
-            } else {
+                    // Compute inverse of trans*corr
+                    inv[ 0 ] = tx * px + 1.0;
+                    inv[ 1 ] = ty * px;
+                    inv[ 2 ] = tz * px;
+                    inv[ 3 ] = -px * oneOverS;
+                    inv[ 4 ] = tx * py;
+                    inv[ 5 ] = ty * py + 1.0;
+                    inv[ 6 ] = tz * py;
+                    inv[ 7 ] = -py * oneOverS;
+                    inv[ 8 ] = tx * pz;
+                    inv[ 9 ] = ty * pz;
+                    inv[ 10 ] = tz * pz + 1.0;
+                    inv[ 11 ] = -pz * oneOverS;
+                    inv[ 12 ] = -tx;
+                    inv[ 13 ] = -ty;
+                    inv[ 14 ] = -tz;
+                    inv[ 15 ] = oneOverS;
 
-                tx = matrix[ 12 ];
-                ty = matrix[ 13 ];
-                tz = matrix[ 14 ];
+                    Matrix.preMult( result, inv ); // Finish computing full inverse of mat
+                } else {
 
-                // Compute translation components of mat'
-                result[ 12 ] = -( tx * result[ 0 ] + ty * result[ 4 ] + tz * result[ 8 ] );
-                result[ 13 ] = -( tx * result[ 1 ] + ty * result[ 5 ] + tz * result[ 9 ] );
-                result[ 14 ] = -( tx * result[ 2 ] + ty * result[ 6 ] + tz * result[ 10 ] );
-            }
-            return true;
+                    tx = matrix[ 12 ];
+                    ty = matrix[ 13 ];
+                    tz = matrix[ 14 ];
 
-        },
+                    // Compute translation components of mat'
+                    result[ 12 ] = -( tx * result[ 0 ] + ty * result[ 4 ] + tz * result[ 8 ] );
+                    result[ 13 ] = -( tx * result[ 1 ] + ty * result[ 5 ] + tz * result[ 9 ] );
+                    result[ 14 ] = -( tx * result[ 2 ] + ty * result[ 6 ] + tz * result[ 10 ] );
+                }
+                return true;
+            };
+        } )(),
 
         transpose: function ( mat, dest ) {
             // from glMatrix
@@ -976,7 +1017,8 @@ define( [
 
         makePerspective: function ( fovy, aspect, znear, zfar, result ) {
             if ( result === undefined ) {
-                result = [];
+                Notify.warn( 'no matrix destination !' );
+                result = Matrix.create();
             }
             var ymax = znear * Math.tan( fovy * Math.PI / 360.0 );
             var ymin = -ymax;
@@ -991,7 +1033,7 @@ define( [
             var left = 0.0;
             var top = 0.0;
             var bottom = 0.0;
-            var zNear,zFar;
+            var zNear, zFar;
 
             if ( matrix[ 0 * 4 + 3 ] !== 0.0 || matrix[ 1 * 4 + 3 ] !== 0.0 || matrix[ 2 * 4 + 3 ] !== -1.0 || matrix[ 3 * 4 + 3 ] !== 0.0 ) {
                 return false;
@@ -1021,7 +1063,7 @@ define( [
             return true;
         },
 
-        getPerspective: function ( matrix, result ) {
+        getPerspective: ( function () {
             var c = {
                 'right': 0,
                 'left': 0,
@@ -1030,25 +1072,28 @@ define( [
                 'zNear': 0,
                 'zFar': 0
             };
-            // get frustum and compute results
-            var r = this.getFrustum( matrix, c );
-            if ( r ) {
-                result.fovy = 180 / Math.PI * ( Math.atan( c.top / c.zNear ) - Math.atan( c.bottom / c.zNear ) );
-                result.aspectRatio = ( c.right - c.left ) / ( c.top - c.bottom );
-            }
-            result.zNear = c.zNear;
-            result.zFar = c.zFar;
-            return result;
-        },
+            return function ( matrix, result ) {
+                // get frustum and compute results
+                var r = Matrix.getFrustum( matrix, c );
+                if ( r ) {
+                    result.fovy = 180 / Math.PI * ( Math.atan( c.top / c.zNear ) - Math.atan( c.bottom / c.zNear ) );
+                    result.aspectRatio = ( c.right - c.left ) / ( c.top - c.bottom );
+                }
+                result.zNear = c.zNear;
+                result.zFar = c.zFar;
+                return result;
+            };
+        } )(),
 
         makeScale: function ( x, y, z, result ) {
             if ( result === undefined ) {
-                result = [];
+                Notify.warn( 'no matrix destination !' );
+                result = Matrix.create();
             }
-            this.setRow( result, 0, x, 0, 0, 0 );
-            this.setRow( result, 1, 0, y, 0, 0 );
-            this.setRow( result, 2, 0, 0, z, 0 );
-            this.setRow( result, 3, 0, 0, 0, 1 );
+            Matrix.setRow( result, 0, x, 0.0, 0.0, 0.0 );
+            Matrix.setRow( result, 1, 0.0, y, 0.0, 0.0 );
+            Matrix.setRow( result, 2, 0.0, 0.0, z, 0.0 );
+            Matrix.setRow( result, 3, 0.0, 0.0, 0.0, 1.0 );
             return result;
         },
 
@@ -1066,28 +1111,27 @@ define( [
             return vectorsArray;
         },
 
-        makeFrustum: function ( left, right,
-            bottom, top,
-            znear, zfar, result ) {
+        makeFrustum: function ( left, right, bottom, top, znear, zfar, result ) {
             if ( result === undefined ) {
-                result = [];
+                Notify.warn( 'no matrix destination !' );
+                result = Matrix.create();
             }
-            var X = 2 * znear / ( right - left );
-            var Y = 2 * znear / ( top - bottom );
+            var X = 2.0 * znear / ( right - left );
+            var Y = 2.0 * znear / ( top - bottom );
             var A = ( right + left ) / ( right - left );
             var B = ( top + bottom ) / ( top - bottom );
             var C = -( zfar + znear ) / ( zfar - znear );
-            var D = -2 * zfar * znear / ( zfar - znear );
-            this.setRow( result, 0, X, 0, 0, 0 );
-            this.setRow( result, 1, 0, Y, 0, 0 );
-            this.setRow( result, 2, A, B, C, -1 );
-            this.setRow( result, 3, 0, 0, D, 0 );
+            var D = -2.0 * zfar * znear / ( zfar - znear );
+            Matrix.setRow( result, 0, X, 0.0, 0.0, 0.0 );
+            Matrix.setRow( result, 1, 0.0, Y, 0.0, 0.0 );
+            Matrix.setRow( result, 2, A, B, C, -1.0 );
+            Matrix.setRow( result, 3, 0.0, 0.0, D, 0.0 );
             return result;
         },
 
         makeRotateFromQuat: function ( quat, result ) {
-            this.makeIdentity( result );
-            return this.setRotateFromQuat( result, quat );
+            Matrix.makeIdentity( result );
+            return Matrix.setRotateFromQuat( result, quat );
         },
 
         setRotateFromQuat: function ( matrix, quat ) {

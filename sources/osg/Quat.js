@@ -1,7 +1,12 @@
-define( [], function () {
+define( [
+    'osg/Notify'
+], function ( Notify ) {
 
     /** @class Quaternion Operations */
     var Quat = {
+        create: function () {
+            return [ 0.0, 0.0, 0.0, 1.0 ];
+        },
         copy: function ( s, d ) {
             d[ 0 ] = s[ 0 ];
             d[ 1 ] = s[ 1 ];
@@ -189,7 +194,8 @@ define( [], function () {
                 s = et * Math.sin( r ) / r;
             }
             if ( res === undefined ) {
-                res = [];
+                Notify.warn( 'no quat destination !' );
+                res = Quat.create();
             }
             res[ 0 ] = s * a[ 0 ];
             res[ 1 ] = s * a[ 1 ];
@@ -206,7 +212,8 @@ define( [], function () {
                 t = Math.atan2( r, a[ 3 ] ) / r;
             }
             if ( res === undefined ) {
-                res = [];
+                Notify.warn( 'no quat destination !' );
+                res = Quat.create();
             }
             n += a[ 3 ] * a[ 3 ];
             res[ 0 ] = t * a[ 0 ];
