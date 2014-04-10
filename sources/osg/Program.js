@@ -2,7 +2,8 @@ define( [
     'osg/Utils',
     'osg/Notify',
     'osg/StateAttribute',
-], function ( MACROUTILS, Notify, StateAttribute ) {
+    'osg/Map'
+], function ( MACROUTILS, Notify, StateAttribute, Map ) {
 
     /**
      * Program encapsulate an vertex and fragment shader
@@ -72,10 +73,8 @@ define( [
                     return;
                 }
 
-                this.uniformsCache = {};
-                this.uniformsCache.uniformKeys = [];
-                this.attributesCache = {};
-                this.attributesCache.attributeKeys = [];
+                this.uniformsCache = new Map();
+                this.attributesCache = new Map();
 
                 this.cacheUniformList( gl, this.vertex.text );
                 this.cacheUniformList( gl, this.fragment.text );
@@ -90,14 +89,15 @@ define( [
 
         cacheUniformList: function ( gl, str ) {
             var r = str.match( /uniform\s+\w+\s+\w+/g );
+            var map = this.uniformsCache.getMap();
             if ( r !== null ) {
                 for ( var i = 0, l = r.length; i < l; i++ ) {
                     var uniform = r[ i ].match( /uniform\s+\w+\s+(\w+)/ )[ 1 ];
                     var location = gl.getUniformLocation( this.program, uniform );
                     if ( location !== undefined && location !== null ) {
-                        if ( this.uniformsCache[ uniform ] === undefined ) {
-                            this.uniformsCache[ uniform ] = location;
-                            this.uniformsCache.uniformKeys.push( uniform );
+                        if ( map[ uniform ] === undefined ) {
+                            map[ uniform ] = location;
+                            this.uniformsCache.dirty();
                         }
                     }
                 }
@@ -106,14 +106,15 @@ define( [
 
         cacheAttributeList: function ( gl, str ) {
             var r = str.match( /attribute\s+\w+\s+\w+/g );
+            var map = this.attributesCache.getMap();
             if ( r !== null ) {
                 for ( var i = 0, l = r.length; i < l; i++ ) {
                     var attr = r[ i ].match( /attribute\s+\w+\s+(\w+)/ )[ 1 ];
                     var location = gl.getAttribLocation( this.program, attr );
                     if ( location !== -1 && location !== undefined ) {
-                        if ( this.attributesCache[ attr ] === undefined ) {
-                            this.attributesCache[ attr ] = location;
-                            this.attributesCache.attributeKeys.push( attr );
+                        if ( map[ attr ] === undefined ) {
+                            map[ attr ] = location;
+                            this.attributesCache.dirty();
                         }
                     }
                 }

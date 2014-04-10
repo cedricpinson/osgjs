@@ -24,7 +24,8 @@ define( [
                 state.pushStateSet( stateSet0 );
                 state.pushStateSet( stateSet1 );
                 state.pushStateSet( stateSet2 );
-                ok( state.attributeMap.Material[ state.attributeMap.Material.length - 1 ] === state.attributeMap.Material[ state.attributeMap.Material.length - 2 ], 'check Override in state' );
+                var materialStack = state.attributeMap.getMap().Material;
+                ok( materialStack[ materialStack.length - 1 ] === materialStack[ materialStack.length - 2 ], 'check Override in state' );
             } )();
         } );
     };

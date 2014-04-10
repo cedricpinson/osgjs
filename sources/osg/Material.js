@@ -3,8 +3,9 @@ define( [
     'osg/StateAttribute',
     'osg/Vec4',
     'osg/Uniform',
-    'osg/ShaderGenerator'
-], function ( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator ) {
+    'osg/ShaderGenerator',
+    'osg/Map'
+], function ( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator, Map ) {
 
     /**
      * Material
@@ -69,29 +70,27 @@ define( [
         },
         getOrCreateUniforms: function () {
             if ( Material.uniforms === undefined ) {
-                Material.uniforms = {
+                var map = new Map();
+                Material.uniforms = map;
+                map.setMap( {
                     'ambient': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialAmbient' ),
                     'diffuse': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialDiffuse' ),
                     'specular': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialSpecular' ),
                     'emission': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialEmission' ),
                     'shininess': Uniform.createFloat1( [ 0 ], 'MaterialShininess' )
-                };
-                var uniformKeys = [];
-                for ( var k in Material.uniforms ) {
-                    uniformKeys.push( k );
-                }
-                Material.uniforms.uniformKeys = uniformKeys;
+                } );
             }
             return Material.uniforms;
         },
 
         apply: function ( /*state*/ ) {
-            var uniforms = this.getOrCreateUniforms();
-            uniforms.ambient.set( this.ambient );
-            uniforms.diffuse.set( this.diffuse );
-            uniforms.specular.set( this.specular );
-            uniforms.emission.set( this.emission );
-            uniforms.shininess.set( [ this.shininess ] );
+            var uniformMapContent = this.getOrCreateUniforms().getMap();
+
+            uniformMapContent.ambient.set( this.ambient );
+            uniformMapContent.diffuse.set( this.diffuse );
+            uniformMapContent.specular.set( this.specular );
+            uniformMapContent.emission.set( this.emission );
+            uniformMapContent.shininess.set( [ this.shininess ] );
             this._dirty = false;
         },
 

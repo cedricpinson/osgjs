@@ -70,7 +70,7 @@ define( [
             this.setTextureSize( image.getWidth(), image.getHeight() );
 
             MACROUTILS.timeStamp( 'osgjs.metrics:texImage2d' );
-            gl.texImage2D( target, 0, internalFormat, format, type, image.getImage() );
+            gl.texImage2D( target, 0, internalFormat, internalFormat, type, image.getImage() );
             return true;
         },
 
@@ -88,7 +88,7 @@ define( [
                 target,
                 0,
                 internalFormat,
-                imgObject.format,
+                internalFormat,
                 gl.UNSIGNED_BYTE,
                 imgObject.image ) ) {
                 imgObject.dirty = false;
@@ -111,6 +111,10 @@ define( [
 
             } else {
                 if ( !this._textureObject ) {
+
+                    // must be called before init
+                    this.computeTextureFormat();
+
                     this.init( gl );
                 }
                 this._textureObject.bind( gl );

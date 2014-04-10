@@ -184,16 +184,63 @@ define( [
             return previous;
         },
 
+        drawGeometry: ( function() {
+            var normal = Matrix.create();
+            var modelViewUniform, projectionUniform, normalUniform;
+
+            return function( program, state, leaf, push ) {
+
+                var gl = state.getGraphicContext();
+
+                if ( push === true ) {
+
+                    state.apply();
+                    program = state.getLastProgramApplied();
+
+                    modelViewUniform = program.uniformsCache.getMap()[ state.modelViewMatrix.name ];
+                    projectionUniform = program.uniformsCache.getMap()[ state.projectionMatrix.name ];
+                    normalUniform = program.uniformsCache.getMap()[ state.normalMatrix.name ];
+                }
+
+
+                if ( modelViewUniform !== undefined ) {
+                    state.modelViewMatrix.set( leaf.modelview );
+                    state.modelViewMatrix.apply( gl, modelViewUniform );
+                }
+
+                if ( projectionUniform !== undefined ) {
+                    state.projectionMatrix.set( leaf.projection );
+                    state.projectionMatrix.apply( gl, projectionUniform );
+                }
+
+                if ( normalUniform !== undefined ) {
+                    Matrix.copy( leaf.modelview, normal );
+                    normal[ 12 ] = 0.0;
+                    normal[ 13 ] = 0.0;
+                    normal[ 14 ] = 0.0;
+
+                    Matrix.inverse( normal, normal );
+                    Matrix.transpose( normal, normal );
+                    state.normalMatrix.set( normal );
+                    state.normalMatrix.apply( gl, normalUniform );
+                }
+
+                leaf.geometry.drawImplementation( state );
+
+                if ( push === true ) {
+                    state.popGeneratedProgram();
+                    state.popStateSet();
+                }
+
+                return program;
+            };
+        })(),
+
         drawLeafs: function ( state, previousRenderLeaf ) {
-            var gl = state.getGraphicContext();
             var stateList = this.stateGraphList;
             var leafs = this._leafs;
-            var normalUniform;
-            var modelViewUniform;
-            var projectionUniform;
             var program;
             var previousLeaf = previousRenderLeaf;
-            var normal = [];
 
             if ( previousLeaf ) {
                 StateGraph.prototype.moveToRootStateGraph( state, previousRenderLeaf.parent );
@@ -230,44 +277,7 @@ define( [
                     push = true;
                 }
 
-                if ( push === true ) {
-                    //state.pushGeneratedProgram();
-                    state.apply();
-                    program = state.getLastProgramApplied();
-
-                    modelViewUniform = program.uniformsCache[ state.modelViewMatrix.name ];
-                    projectionUniform = program.uniformsCache[ state.projectionMatrix.name ];
-                    normalUniform = program.uniformsCache[ state.normalMatrix.name ];
-                }
-
-
-                if ( modelViewUniform !== undefined ) {
-                    state.modelViewMatrix.set( leaf.modelview );
-                    state.modelViewMatrix.apply( gl, modelViewUniform );
-                }
-                if ( projectionUniform !== undefined ) {
-                    state.projectionMatrix.set( leaf.projection );
-                    state.projectionMatrix.apply( gl, projectionUniform );
-                }
-                if ( normalUniform !== undefined ) {
-                    Matrix.copy( leaf.modelview, normal );
-                    //Matrix.setTrans(normal, 0, 0, 0);
-                    normal[ 12 ] = 0;
-                    normal[ 13 ] = 0;
-                    normal[ 14 ] = 0;
-
-                    Matrix.inverse( normal, normal );
-                    Matrix.transpose( normal, normal );
-                    state.normalMatrix.set( normal );
-                    state.normalMatrix.apply( gl, normalUniform );
-                }
-
-                leaf.geometry.drawImplementation( state );
-
-                if ( push === true ) {
-                    state.popGeneratedProgram();
-                    state.popStateSet();
-                }
+                program = this.drawGeometry( program, state, leaf, push );
 
                 previousLeaf = leaf;
             }
@@ -304,44 +314,7 @@ define( [
                         push = true;
                     }
 
-                    if ( push === true ) {
-                        //state.pushGeneratedProgram();
-                        state.apply();
-                        program = state.getLastProgramApplied();
-
-                        modelViewUniform = program.uniformsCache[ state.modelViewMatrix.name ];
-                        projectionUniform = program.uniformsCache[ state.projectionMatrix.name ];
-                        normalUniform = program.uniformsCache[ state.normalMatrix.name ];
-                    }
-
-
-                    if ( modelViewUniform !== undefined ) {
-                        state.modelViewMatrix.set( leaf.modelview );
-                        state.modelViewMatrix.apply( gl, modelViewUniform );
-                    }
-                    if ( projectionUniform !== undefined ) {
-                        state.projectionMatrix.set( leaf.projection );
-                        state.projectionMatrix.apply( gl, projectionUniform );
-                    }
-                    if ( normalUniform !== undefined ) {
-                        Matrix.copy( leaf.modelview, normal );
-                        //Matrix.setTrans(normal, 0, 0, 0);
-                        normal[ 12 ] = 0;
-                        normal[ 13 ] = 0;
-                        normal[ 14 ] = 0;
-
-                        Matrix.inverse( normal, normal );
-                        Matrix.transpose( normal, normal );
-                        state.normalMatrix.set( normal );
-                        state.normalMatrix.apply( gl, normalUniform );
-                    }
-
-                    leaf.geometry.drawImplementation( state );
-
-                    if ( push === true ) {
-                        state.popGeneratedProgram();
-                        state.popStateSet();
-                    }
+                    program = this.drawGeometry( program, state, leaf, push );
 
                     previousLeaf = leaf;
                 }

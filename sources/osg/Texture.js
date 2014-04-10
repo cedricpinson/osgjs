@@ -7,8 +7,9 @@ define( [
     'osg/Uniform',
     'osg/Image',
     'osg/ShaderGenerator',
-    'osgDB/ReaderParser'
-], function ( Q, Notify, MACROUTILS, TextureManager, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser ) {
+    'osgDB/ReaderParser',
+    'osg/Map'
+], function ( Q, Notify, MACROUTILS, TextureManager, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser, Map ) {
 
     // helper
     var isPowerOf2 = function ( x ) {
@@ -85,10 +86,13 @@ define( [
             }
             if ( Texture.uniforms[ unit ] === undefined ) {
                 var name = this.getType() + unit;
-                var uniforms = {};
-                uniforms.texture = Uniform.createInt1( unit, name );
-                uniforms.uniformKeys = window.Object.keys( uniforms );
-                Texture.uniforms[ unit ] = uniforms;
+                var uniformMap = new Map();
+                var uniform = Uniform.createInt1( unit, name );
+                uniformMap.setMap( {
+                    texture: uniform
+                } );
+                uniform.dirty();
+                Texture.uniforms[ unit ] = uniformMap;
             }
             // uniform for an texture attribute should directly in Texture.uniforms[unit] and not in Texture.uniforms[unit][Texture0]
             return Texture.uniforms[ unit ];
