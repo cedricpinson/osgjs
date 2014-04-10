@@ -122,7 +122,7 @@ define( [
     } ), 'osg', 'Program' );
 
     Program.create = function ( vShader, fShader ) {
-        console.log( 'Program.create is deprecated use new Program(vertex, fragment) instead' );
+        Notify.log( 'Program.create is deprecated use new Program(vertex, fragment) instead' );
         var program = new Program( vShader, fShader );
         return program;
     };

@@ -335,7 +335,7 @@ define( [
                             row[ i ] = row[ i ] / sum;
                             //str += row[i].toString() + ' ';
                         }
-                        //console.log(str);
+                        //Notify.log(str);
                     }
                 } )();
 

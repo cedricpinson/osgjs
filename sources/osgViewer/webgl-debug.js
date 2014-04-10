@@ -1,6 +1,10 @@
 /* jshint ignore:start */
 
-define( [], function () {
+define( [
+
+    'osg/Notify'
+
+], function ( Notify ) {
 
     //Copyright (c) 2009 The Chromium Authors. All rights reserved.
     //Use of this source code is governed by a BSD-style license that can be
@@ -9,16 +13,6 @@ define( [], function () {
     // Various functions for helping debug WebGL apps.
 
     var WebGLDebugUtils = function () {
-
-        /**
-         * Wrapped logging function.
-         * @param {string} msg Message to log.
-         */
-        var log = function ( msg ) {
-            if ( window.console && window.console.log ) {
-                window.console.log( msg );
-            }
-        };
 
         /**
          * Which arguements are enums.
@@ -306,24 +300,24 @@ define( [], function () {
         }
 
         function makePropertyWrapper( wrapper, original, propertyName ) {
-            //log("wrap prop: " + propertyName);
+            //Notify.log("wrap prop: " + propertyName);
             wrapper.__defineGetter__( propertyName, function () {
                 return original[ propertyName ];
             } );
             // TODO(gmane): this needs to handle properties that take more than
             // one value?
             wrapper.__defineSetter__( propertyName, function ( value ) {
-                //log("set: " + propertyName);
+                //Notify.log("set: " + propertyName);
                 original[ propertyName ] = value;
             } );
         }
 
         // Makes a function that calls a function on another object.
         function makeFunctionWrapper( original, functionName ) {
-            //log("wrap fn: " + functionName);
+            //Notify.log("wrap fn: " + functionName);
             var f = original[ functionName ];
             return function () {
-                //log("call: " + functionName);
+                //Notify.log("call: " + functionName);
                 var result = f.apply( original, arguments );
                 return result;
             };
@@ -339,7 +333,7 @@ define( [], function () {
          * @param {!function(err, funcName, args): void} opt_onErrorFunc
          *        The function to call when gl.getError returns an
          *        error. If not specified the default function calls
-         *        console.log with a message.
+         *        Notify.log with a message.
          */
         function makeDebugContext( ctx, opt_onErrorFunc ) {
             init( ctx );
@@ -350,7 +344,7 @@ define( [], function () {
                     argStr += ( ( ii === 0 ) ? '' : ', ' ) +
                         glFunctionArgToString( functionName, ii, args[ ii ] );
                 }
-                log( "WebGL error " + glEnumToString( err ) + " in " + functionName +
+                Notify.log( "WebGL error " + glEnumToString( err ) + " in " + functionName +
                     "(" + argStr + ")" );
             };
 
@@ -545,9 +539,9 @@ define( [], function () {
                     var event = makeWebGLContextEvent( "context lost" );
                     var callbacks = onLost_.slice();
                     setTimeout( function () {
-                        //log("numCallbacks:" + callbacks.length);
+                        //Notify.log("numCallbacks:" + callbacks.length);
                         for ( var ii = 0; ii < callbacks.length; ++ii ) {
-                            //log("calling callback:" + ii);
+                            //Notify.log("calling callback:" + ii);
                             callbacks[ ii ]( event );
                         }
                         if ( restoreTimeout_ >= 0 ) {
@@ -636,7 +630,7 @@ define( [], function () {
             function makeLostContextFunctionWrapper( ctx, functionName ) {
                 var f = ctx[ functionName ];
                 return function () {
-                    // log("calling:" + functionName);
+                    // Notify.log("calling:" + functionName);
                     // Only call the functions if the context is not lost.
                     loseContextIfTime();
                     if ( !contextLost_ ) {
@@ -893,7 +887,7 @@ define( [], function () {
              * @param {!WebGLRenderingContext} ctx The webgl context to wrap.
              * @param {!function(err, funcName, args): void} opt_onErrorFunc The function
              *     to call when gl.getError returns an error. If not specified the default
-             *     function calls console.log with a message.
+             *     function calls Notify.log with a message.
              */
             'makeDebugContext': makeDebugContext,
 
