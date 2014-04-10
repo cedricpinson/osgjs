@@ -72,7 +72,7 @@ define( [
             if ( Material.uniforms === undefined ) {
                 var map = new Map();
                 Material.uniforms = map;
-                map.setMap( {
+                map.setMapContent( {
                     'ambient': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialAmbient' ),
                     'diffuse': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialDiffuse' ),
                     'specular': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialSpecular' ),
@@ -84,7 +84,7 @@ define( [
         },
 
         apply: function ( /*state*/ ) {
-            var uniformMapContent = this.getOrCreateUniforms().getMap();
+            var uniformMapContent = this.getOrCreateUniforms().getMapContent();
 
             uniformMapContent.ambient.set( this.ambient );
             uniformMapContent.diffuse.set( this.diffuse );

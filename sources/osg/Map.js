@@ -10,8 +10,8 @@ define( [
 
     Map.prototype = {
         dirty: function() { this._dirty = true; },
-        setMap: function( map ) { this._map = map; this._dirty = true; },
-        getMap: function() { return this._map; },
+        setMapContent: function( map ) { this._map = map; this._dirty = true; },
+        getMapContent: function() { return this._map; },
         getKeys: function() {
             if ( this._dirty ) {
                 this._keys = Object.keys( this._map );

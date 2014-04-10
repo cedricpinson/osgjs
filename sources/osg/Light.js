@@ -56,7 +56,7 @@ define( [
                 uniforms[ typeMember ] = map;
 
                 var uFact = Uniform;
-                map.setMap( {
+                map.setMapContent( {
                     'ambient': uFact.createFloat4( [ 0.2, 0.2, 0.2, 1 ], this.getUniformName( 'ambient' ) ),
                     'diffuse': uFact.createFloat4( [ 0.8, 0.8, 0.8, 1 ], this.getUniformName( 'diffuse' ) ),
                     'specular': uFact.createFloat4( [ 0.2, 0.2, 0.2, 1 ], this.getUniformName( 'specular' ) ),
@@ -153,7 +153,7 @@ define( [
 
         applyPositionedUniform: function ( matrix /*, state */ ) {
             var uniformMap = this.getOrCreateUniforms();
-            var uniformMapContent = uniformMap.getMap();
+            var uniformMapContent = uniformMap.getMapContent();
             Matrix.copy( matrix, uniformMapContent.matrix.get() );
             uniformMapContent.matrix.dirty();
 
@@ -168,7 +168,7 @@ define( [
 
         apply: function ( /*state*/ ) {
             var uniformMap = this.getOrCreateUniforms();
-            var uniformMapContent = uniformMap.getMap();
+            var uniformMapContent = uniformMap.getMapContent();
 
             uniformMapContent.ambient.set( this._ambient );
             uniformMapContent.diffuse.set( this._diffuse );

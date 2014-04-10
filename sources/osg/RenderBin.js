@@ -197,9 +197,9 @@ define( [
                     state.apply();
                     program = state.getLastProgramApplied();
 
-                    modelViewUniform = program.uniformsCache.getMap()[ state.modelViewMatrix.name ];
-                    projectionUniform = program.uniformsCache.getMap()[ state.projectionMatrix.name ];
-                    normalUniform = program.uniformsCache.getMap()[ state.normalMatrix.name ];
+                    modelViewUniform = program.uniformsCache.getMapContent()[ state.modelViewMatrix.name ];
+                    projectionUniform = program.uniformsCache.getMapContent()[ state.projectionMatrix.name ];
+                    normalUniform = program.uniformsCache.getMapContent()[ state.normalMatrix.name ];
                 }
 
 

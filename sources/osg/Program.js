@@ -89,7 +89,7 @@ define( [
 
         cacheUniformList: function ( gl, str ) {
             var r = str.match( /uniform\s+\w+\s+\w+/g );
-            var map = this.uniformsCache.getMap();
+            var map = this.uniformsCache.getMapContent();
             if ( r !== null ) {
                 for ( var i = 0, l = r.length; i < l; i++ ) {
                     var uniform = r[ i ].match( /uniform\s+\w+\s+(\w+)/ )[ 1 ];
@@ -106,7 +106,7 @@ define( [
 
         cacheAttributeList: function ( gl, str ) {
             var r = str.match( /attribute\s+\w+\s+\w+/g );
-            var map = this.attributesCache.getMap();
+            var map = this.attributesCache.getMapContent();
             if ( r !== null ) {
                 for ( var i = 0, l = r.length; i < l; i++ ) {
                     var attr = r[ i ].match( /attribute\s+\w+\s+(\w+)/ )[ 1 ];
