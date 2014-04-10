@@ -261,7 +261,7 @@ define( [
         _getReservedMatrix: function () {
             var m = this._reserveMatrixStack[ this._reserveMatrixStack.current++ ];
             if ( this._reserveMatrixStack.current === this._reserveMatrixStack.length ) {
-                this._reserveMatrixStack.push( Matrix.makeIdentity( [] ) );
+                this._reserveMatrixStack.push( Matrix.create() );
             }
             return m;
         },

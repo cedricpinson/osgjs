@@ -268,7 +268,7 @@ define( [
             for ( var i = 0, l = collected.nodePaths.length; i < l; i++ ) {
                 var np = collected.nodePaths[ i ];
                 if ( np.length === 0 ) {
-                    matrixList.push( Matrix.makeIdentity( [] ) );
+                    matrixList.push( Matrix.create() );
                 } else {
                     matrixList.push( ComputeMatrixFromNodePath.computeLocalToWorld( np ) );
                 }

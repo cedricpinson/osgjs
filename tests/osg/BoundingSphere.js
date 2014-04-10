@@ -77,7 +77,7 @@ define( [
                 50, 0, 0,
                 0, 50, 0 );
             var mt3 = new MatrixTransform();
-            mt3.setMatrix( Matrix.makeTranslate( -1000, 0, 0 ) );
+            Matrix.makeTranslate( -1000, 0, 0, mt3.getMatrix() );
             main2.addChild( q3 );
             main2.addChild( mt3 );
             mockup.near( main2.getBound().center(), [ 0, 0, 0 ] );

@@ -80,7 +80,7 @@ function createItems(deep)
             if (deep === 0 ) {
                 x = (-nbx * 0.5 + 0.5 + i) * 1.1;
                 y = (-nby * 0.5 + 0.5 + j) * 1.1;
-                mt.setMatrix(osg.Matrix.makeTranslate(x,y,0));
+                osg.Matrix.makeTranslate(x,y,0,mt.getMatrix());
                 if (i % 2 === 0 ) {
                     mt.addChild(getOrCreateItem());
                 } else {
@@ -91,7 +91,7 @@ function createItems(deep)
                 x = (-nbx * 0.5 + 0.5 + i) * (s);
                 y = (-nby * 0.5 + 0.5 + j) * (s*9/16.0);
                 //osg.log([x,y]);
-                mt.setMatrix(osg.Matrix.makeTranslate(x,y,0));
+                osg.Matrix.makeTranslate(x,y,0,mt.getMatrix());
                 mt.addChild(createItems(deep - 1));
             }
             root.addChild(mt);

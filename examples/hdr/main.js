@@ -197,7 +197,7 @@ function getEnvSphere(size, scene)
     geom.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
     geom.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
 
-    var cubemapTransform = osg.Uniform.createMatrix4(osg.Matrix.makeIdentity([]), "CubemapTransform");
+    var cubemapTransform = osg.Uniform.createMatrix4(osg.Matrix.create(), "CubemapTransform");
     var mt = new osg.MatrixTransform();
     mt.setMatrix(osg.Matrix.makeRotate(Math.PI/2.0, 1,0,0,[]));
     mt.addChild(geom);

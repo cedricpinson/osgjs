@@ -182,7 +182,7 @@ var createHudCamera = function(size3d, shader) {
     var size = [size3d[0]*size3d[2], size3d[1]];
 
     var hudCamera = new osg.Camera();
-    hudCamera.setProjectionMatrix(osg.Matrix.makeOrtho(0, size[0], 0, size[1], -5, 5));
+    osg.Matrix.makeOrtho(0, size[0], 0, size[1], -5, 5, hudCamera.getProjectionMatrix());
     hudCamera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     hudCamera.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     hudCamera.setViewport(new osg.Viewport(0,0,size[0],size[1]));

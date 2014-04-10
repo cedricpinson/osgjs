@@ -147,8 +147,8 @@ function createScene( viewer, unifs ) {
 };
 
 function projectToScreen( cam, hit ) {
-    var mat = osg.Matrix.makeIdentity( [] );
-    osg.Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix() : osg.Matrix.makeIdentity( [] ) );
+    var mat = osg.Matrix.create();
+    osg.Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix() : osg.Matrix.create() );
     osg.Matrix.preMult( mat, cam.getProjectionMatrix() );
     osg.Matrix.preMult( mat, cam.getViewMatrix() );
     osg.Matrix.preMult( mat, osg.computeLocalToWorld( hit.nodepath ) );

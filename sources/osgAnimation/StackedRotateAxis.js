@@ -16,20 +16,18 @@ define( [
     var StackedRotateAxis = function ( name, axis, angle ) {
         Object.call( this );
         if ( !axis ) {
-            axis = [ 1, 0, 0 ];
+            axis = [ 1.0, 0.0, 0.0 ];
         }
         if ( !angle ) {
-            angle = 0;
+            angle = 0.0;
         }
         this._axis = axis;
         this._angle = angle;
         this._target = undefined;
         this.setName( name );
 
-        this._matrixTmp = [];
-        Matrix.makeIdentity( this._matrixTmp );
-        this._quatTmp = [];
-        Quat.makeIdentity( this._quatTmp );
+        this._matrixTmp = Matrix.create();
+        this._quatTmp = Matrix.create();
     };
 
     /** @lends StackedRotateAxis.prototype */

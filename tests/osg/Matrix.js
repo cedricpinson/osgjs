@@ -164,30 +164,31 @@ define( [
         test( 'Matrix.mult', function () {
             var width = 800;
             var height = 600;
-            var translate;
-            var scale;
+            var translate = Matrix.create();
+            var scale = Matrix.create();
+            var res =  Matrix.create();
 
-            translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
-            scale = Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5 );
-            var res = Matrix.mult( scale, translate, [] );
+            Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
+            Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
+            Matrix.mult( scale, translate, res );
             mockup.near( res, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
                 400, 300, 0.5, 1
             ] );
 
-            translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
-            scale = Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5 );
-            res = Matrix.preMult( scale, translate );
+            Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
+            Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
+            Matrix.preMult( scale, translate, res );
             ok( mockup.check_near( res, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
                 400, 300, 0.5, 1
             ] ), 'check preMult' );
 
-            translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
-            scale = Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5 );
-            res = Matrix.postMult( scale, translate );
+            Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
+            Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
+            Matrix.postMult( scale, translate, res );
             ok( mockup.check_near( res, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
@@ -195,10 +196,10 @@ define( [
             ] ), 'check postMult' );
 
             // test to check equivalent
-            translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
-            scale = Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5 );
+            Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
+            Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
 
-            var ident = Matrix.makeIdentity( [] );
+            var ident = Matrix.create();
             Matrix.preMult( ident, scale );
 
             Matrix.preMult( ident, translate );

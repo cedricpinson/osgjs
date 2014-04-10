@@ -30,17 +30,17 @@ define( [
 
                 var root = new MatrixTransform();
                 root.setName( 'root' );
-                root.setMatrix( Matrix.makeTranslate( 10, 0, 0, [] ) );
+                Matrix.makeTranslate( 10, 0, 0, root.getMatrix() );
 
                 var child0 = new Camera();
                 child0.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
-                child0.setViewMatrix( Matrix.makeTranslate( 0, 10, 0, [] ) );
+                Matrix.makeTranslate( 0, 10, 0, child0.getViewMatrix() );
 
                 var child1 = new MatrixTransform();
-                child1.setMatrix( Matrix.makeTranslate( 0, -10, 0, [] ) );
+                Matrix.makeTranslate( 0, -10, 0, child1.getMatrix() );
 
                 var child2 = new MatrixTransform();
-                child2.setMatrix( Matrix.makeTranslate( 0, 0, 10, [] ) );
+                Matrix.makeTranslate( 0, 0, 10, child2.getMatrix() );
 
                 root.addChild( child0 );
                 child0.addChild( child1 );
@@ -48,7 +48,7 @@ define( [
 
                 path = [ root, child0, child1, child2 ];
                 var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
-                var trans = Matrix.getTrans( matrix, [] );
+                var trans = Matrix.getTrans( matrix, [0, 0, 0] );
                 var result = [ 0, -10, 10 ];
                 ok( mockup.check_near( trans, result ), 'Translation of matrix should be ' + result );
             } )();

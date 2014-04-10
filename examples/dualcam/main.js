@@ -19,14 +19,14 @@ function setupOculus( worldFactor, HMD, oculusUniforms, oculusMatrices ) {
     var distScale = ( HMD.distortionK[ 0 ] + HMD.distortionK[ 1 ] * Math.pow( r, 2 ) + HMD.distortionK[ 2 ] * Math.pow( r, 4 ) + HMD.distortionK[ 3 ] * Math.pow( r, 6 ) );
     var fov = ( 180.0 / Math.PI ) * 2.0 * Math.atan2( HMD.vScreenSize * distScale, 2.0 * HMD.eyeToScreenDistance );
 
-    var proj = osg.Matrix.makePerspective( fov, aspect, 0.3, 10000.0 );
+    var proj = osg.Matrix.makePerspective( fov, aspect, 0.3, 10000.0, osg.Matrix.create() );
     var hOffset = 4.0 * ( HMD.hScreenSize * 0.25 - HMD.interpupillaryDistance * 0.5 ) / HMD.hScreenSize;
     var lensShift = 4.0 * ( HMD.hScreenSize * 0.25 - HMD.lensSeparationDistance * 0.5 ) / HMD.hScreenSize;
 
-    oculusMatrices.projectionLeft = osg.Matrix.preMult( osg.Matrix.makeTranslate( hOffset, 0.0, 0.0 ), proj );
-    oculusMatrices.projectionRight = osg.Matrix.preMult( osg.Matrix.makeTranslate( -hOffset, 0.0, 0.0 ), proj );
-    oculusMatrices.viewLeft = osg.Matrix.makeTranslate( worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0 );
-    oculusMatrices.viewRight = osg.Matrix.makeTranslate( -worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0 );
+    oculusMatrices.projectionLeft = osg.Matrix.preMult( osg.Matrix.makeTranslate( hOffset, 0.0, 0.0, osg.Matrix.create() ), proj );
+    oculusMatrices.projectionRight = osg.Matrix.preMult( osg.Matrix.makeTranslate( -hOffset, 0.0, 0.0, osg.Matrix.create() ), proj );
+    oculusMatrices.viewLeft = osg.Matrix.makeTranslate( worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, osg.Matrix.create() );
+    oculusMatrices.viewRight = osg.Matrix.makeTranslate( -worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, osg.Matrix.create() );
 
     oculusUniforms.lensCenterLeft = [ lensShift, 0.0 ];
     oculusUniforms.lensCenterRight = [ -lensShift, 0.0 ];
@@ -135,7 +135,7 @@ function createOrthoRtt( left, viewportSize, canvasSize ) {
         orthoCamera.setViewport( new osg.Viewport( 0.5 * cw - vw, 0.5 * ( ch - vh ), vw, vh ) );
     else
         orthoCamera.setViewport( new osg.Viewport( 0.5 * cw, 0.5 * ( ch - vh ), vw, vh ) );
-    orthoCamera.setProjectionMatrix( osg.Matrix.makeOrtho( -0.5, 0.5, -0.5, 0.5, -5, 5 ) );
+    osg.Matrix.makeOrtho( -0.5, 0.5, -0.5, 0.5, -5, 5, orthoCamera.getProjectionMatrix() );
     orthoCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
     orthoCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
     return orthoCamera;

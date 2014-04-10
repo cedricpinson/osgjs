@@ -226,7 +226,7 @@ define( [
             setName( newnode, node );
 
             MACROUTILS.extend( newnode, node );
-            newnode.setMatrix( Matrix.copy( matrix ) );
+            Matrix.copy( matrix, newnode.getMatrix() );
             node = newnode;
         }
 
@@ -235,7 +235,7 @@ define( [
             newnode = new Projection();
             setName( newnode, node );
             MACROUTILS.extend( newnode, node );
-            newnode.setProjectionMatrix( Matrix.copy( projection ) );
+            Matrix.copy( projection, newnode.setProjectionMatrix() );
             node = newnode;
         }
 

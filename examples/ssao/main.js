@@ -623,7 +623,7 @@ function createSceneReal()
         var positionRttCamera = createCameraRtt(positionTexture, group);
         positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getPositionShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
 
-        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+        var projection = osg.Uniform.createMat4(osg.Matrix.create(),'projection');
         var ucb = new CullCallback(projection);
         positionRttCamera.setCullCallback(ucb);
 
@@ -789,7 +789,7 @@ function createScene2()
         positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getDepthShader8(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
 
 
-        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+        var projection = osg.Uniform.createMat4(osg.Matrix.create(),'projection');
         var ucb = new CullCallback(projection);
         positionRttCamera.setCullCallback(ucb);
 
@@ -945,7 +945,7 @@ function createSceneTestDepth()
         positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getDepthShader8(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
 
 
-        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+        var projection = osg.Uniform.createMat4(osg.Matrix.create(),'projection');
         var ucb = new CullCallback(projection);
         positionRttCamera.setCullCallback(ucb);
 
@@ -1047,7 +1047,7 @@ function createSceneTestNormal()
         })();
 
 
-        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+        var projection = osg.Uniform.createMat4(osg.Matrix.create(),'projection');
         var ucb = new CullCallback(projection);
         //positionRttCamera.setCullCallback(ucb);
 
@@ -1126,8 +1126,8 @@ function createSceneTestReconstructPosition()
         h = window.innerHeight;
         var textureSize = [ w, h ];
 
-        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
-        var modelview = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'camera');
+        var projection = osg.Uniform.createMat4(osg.Matrix.create(),'projection');
+        var modelview = osg.Uniform.createMat4(osg.Matrix.create(),'camera');
 
 
         var ucb = new CullCallback();
@@ -1145,7 +1145,7 @@ function createSceneTestReconstructPosition()
             var positionRttCamera = createCameraRtt(positionTexture, group);
             positionRttCamera.getOrCreateStateSet().setAttributeAndModes(getPositionShader(), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
 
-            var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
+            var projection = osg.Uniform.createMat4(osg.Matrix.create(),'projection');
             positionRttCamera.setCullCallback(ucb);
             root.addChild(positionRttCamera);
             positionTextureFloat = positionTexture;
@@ -1314,11 +1314,10 @@ function createSceneTestReconstructPosition()
             //camera.setStateSet(element.filter.getStateSet());
 
             var vp = new osg.Viewport(0,0,w,h);
-            var proj = osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, []);
 
             camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
             camera.setViewport(vp);
-            camera.setProjectionMatrix(proj);
+            osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, camera.getProjectionMatrix());
 
             var texture = new osg.Texture();
             texture.setTextureSize(textureSize[0], textureSize[1]);
@@ -1407,8 +1406,8 @@ function createSceneOptimized()
         var textureSize = [ w, h ];
 
 
-        var projection = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'projection');
-        var modelview = osg.Uniform.createMat4(osg.Matrix.makeIdentity([]),'camera');
+        var projection = osg.Uniform.createMat4(osg.Matrix.create(),'projection');
+        var modelview = osg.Uniform.createMat4(osg.Matrix.create(),'camera');
         var ucb = new CullCallback(projection, modelview);
 
         group.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));

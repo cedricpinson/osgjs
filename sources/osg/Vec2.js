@@ -32,6 +32,12 @@ define( [], function () {
             return Math.sqrt( a[ 0 ] * a[ 0 ] + a[ 1 ] * a[ 1 ] );
         },
 
+        distance2: function ( a, b ) {
+            var x = a[ 0 ] - b[ 0 ];
+            var y = a[ 1 ] - b[ 1 ];
+            return x * x + y * y;
+        },
+
         distance: function ( a, b ) {
             var x = a[ 0 ] - b[ 0 ];
             var y = a[ 1 ] - b[ 1 ];

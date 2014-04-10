@@ -107,7 +107,6 @@ OSG.globalify();
                 camera.setStateSet(element.filter.getStateSet());
 
                 var vp = new osg.Viewport(0,0,w,h);
-                var projection = osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, []);
 
                 var quad = osg.createTexturedQuadGeometry(-w/2, -h/2, 0,
                                                           w, 0, 0,
@@ -119,7 +118,7 @@ OSG.globalify();
                 quad.setName("composer layer");
                 camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
                 camera.setViewport(vp);
-                camera.setProjectionMatrix(projection);
+                osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, camera.getProjectionMatrix());
                 var texture = element.texture;
                 if (texture === undefined) {
                     texture = new osg.Texture();
@@ -149,7 +148,6 @@ OSG.globalify();
                 h = this._renderToScreenHeight;
                 var vp = new osg.Viewport(0,0, w, h);
                 vp.setName("RenderToScreen");
-                var projection = osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, []);
                 var quad = osg.createTexturedQuadGeometry(-w/2, -h/2, 0,
                                                           w, 0, 0,
                                                           0, h, 0);
@@ -192,7 +190,7 @@ OSG.globalify();
                 camera.setName("RenderToScreen");
                 camera.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
                 camera.setViewport(vp);
-                camera.setProjectionMatrix(projection);
+                osg.Matrix.makeOrtho(-w/2,w/2,-h/2,h/2,-5,5, camera.getProjectionMatrix());
                 camera.addChild(quad);
                 root.addChild(camera);
             }

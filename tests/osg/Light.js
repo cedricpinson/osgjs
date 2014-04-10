@@ -88,8 +88,8 @@ define( [
                 var cull = new CullVisitor();
                 var rs = new RenderStage();
                 var sg = new StateGraph();
-                cull.pushProjectionMatrix( Matrix.makeIdentity( [] ) );
-                cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
+                cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelviewMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
 

@@ -8,7 +8,7 @@ define( [
         if ( ignoreCamera === undefined ) {
             ignoreCamera = true;
         }
-        var matrix = Matrix.makeIdentity( [] );
+        var matrix = Matrix.create();
 
         var j = 0;
         if ( ignoreCamera ) {

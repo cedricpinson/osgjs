@@ -17,7 +17,7 @@ define( [
         Channel.call( this, sampler, target );
         sampler.setInterpolator( Interpolator.QuatLerpInterpolator );
         this.setKeyframes( keys );
-        this._data.value = Quat.copy( target.getValue(), [] );
+        this._data.value = Quat.copy( target.getValue(), Quat.create() );
     };
 
     QuatLerpChannel.prototype = Channel.prototype;
