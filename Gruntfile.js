@@ -42,36 +42,44 @@ var gruntTasks = { };
 
 // ## Top-level configurations
 //
-( function ( ) {
+( function () {
 
     gruntTasks.jshint = {
-        options : jshintrc
+        options: jshintrc
     };
 
-    gruntTasks.copy = { options : {
-        } };
+    gruntTasks.copy = {
+        options: {}
+    };
 
-    gruntTasks.uglify = { options : {
-        } };
+    gruntTasks.uglify = {
+        options: {}
+    };
 
-    gruntTasks.requirejs = { options : {
-        //optimize : 'uglify2',
-        optimize : 'none',
-        preserveLicenseComments : false,
+    gruntTasks.requirejs = {
+        options: {
+            //optimize : 'uglify2',
+            optimize: 'none',
+            preserveLicenseComments: false,
 
-        findNestedDependencies: true,
-        optimizeAllPluginResources: true,
+            findNestedDependencies: true,
+            optimizeAllPluginResources: true,
 
-        baseUrl : SOURCE_PATH } };
+            baseUrl: SOURCE_PATH
+        }
+    };
 
-    gruntTasks.clean = { options : {
-        } };
+    gruntTasks.clean = {
+        options: {}
+    };
 
-    gruntTasks.requirejsconfiguration = { options : {
-        } };
+    gruntTasks.requirejsconfiguration = {
+        options: {}
+    };
 
-    gruntTasks.watch = { options : {
-        } };
+    gruntTasks.watch = {
+        options: {}
+    };
 
     gruntTasks.plato = {};
 
@@ -82,7 +90,8 @@ var gruntTasks = { };
     gruntTasks.connect = {};
 
 
-} )( );
+} )();
+
 
 // ## JSHint
 //
@@ -106,6 +115,21 @@ var gruntTasks = { };
     }
 
 } )( );
+
+
+// ## Watch
+
+( function ( ) {
+
+    gruntTasks.watch.src = {
+        files: [
+            'sources/*.js',
+            'sources/**/*.js'
+        ],
+        tasks: [ 'build:sources' ]
+    };
+
+} )();
 
 // ## Require.js
 //

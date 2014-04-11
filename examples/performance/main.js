@@ -43,7 +43,7 @@ function getOrCreateItem() {
 
 function getRessource() {
     Texture = osg.Texture.createFromURL("textures/texture.png");
-    
+
 }
 
 var NbTotalItems = 0;
@@ -80,6 +80,7 @@ function createItems(deep)
             if (deep === 0 ) {
                 x = (-nbx * 0.5 + 0.5 + i) * 1.1;
                 y = (-nby * 0.5 + 0.5 + j) * 1.1;
+
                 osg.Matrix.makeTranslate(x,y,0,mt.getMatrix());
                 if (i % 2 === 0 ) {
                     mt.addChild(getOrCreateItem());

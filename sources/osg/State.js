@@ -27,10 +27,11 @@ define( [
         this.normalMatrix = Uniform.createMatrix4( Matrix.create(), 'NormalMatrix' );
 
         // track uniform for color array enabled
+
+        // Stoped HERE color array does not work
+        // check point cloud example
         var arrayColorEnable = Stack.create();
         arrayColorEnable.globalDefault = Uniform.createFloat1( 0.0, 'ArrayColorEnabled' );
-        arrayColorEnable.uniformKeys = [];
-        arrayColorEnable.uniformKeys.push( 'ArrayColorEnabled' );
         this.uniforms.setMapContent( {
             ArrayColorEnabled: arrayColorEnable
         } );
@@ -484,38 +485,6 @@ define( [
             };
         })(),
 
-        applyUniformList: function ( uniformMap, uniformList ) {
-            var gl = this.getGraphicContext();
-            var program = this.getLastProgramApplied();
-            var location;
-            var uniformStack;
-            var uniform;
-
-            var programUniforms = program.uniformsCache;
-
-            for ( var i = 0, l = programUniforms.uniformKeys.length; i < l; i++ ) {
-                var uniformKey = programUniforms.uniformKeys[ i ];
-                location = programUniforms[ uniformKey ];
-
-                // get the one in the list
-                uniform = uniformList[ uniformKey ];
-
-                // not found ? check on the stack
-                if ( uniform === undefined ) {
-                    uniformStack = uniformMap[ uniformKey ];
-                    if ( uniformStack === undefined ) {
-                        continue;
-                    }
-                    if ( uniformStack.length === 0 ) {
-                        uniform = uniformStack.globalDefault;
-                    } else {
-                        uniform = uniformStack.back().object;
-                    }
-                }
-                uniform.apply( gl, location );
-            }
-        },
-
         applyAttributeMap: function ( attributeMap ) {
             var attributeStack;
 
@@ -744,11 +713,13 @@ define( [
 
             if ( program !== undefined ) {
                 var gl = this.getGraphicContext();
+                var attributeCacheMapContentColor = program.attributesCache.getMapContent().Color;
                 var updateColorUniform = false;
                 var hasColorAttrib = false;
-                if ( program.attributesCache.Color !== undefined ) {
-                    hasColorAttrib = this.vertexAttribMap[ program.attributesCache.Color ];
+                if ( attributeCacheMapContentColor !== undefined ) {
+                    hasColorAttrib = this.vertexAttribMap[ attributeCacheMapContentColor ];
                 }
+
                 var uniform = this.uniforms.getMapContent().ArrayColorEnabled.globalDefault;
                 if ( this.previousHasColorAttrib !== hasColorAttrib ) {
                     updateColorUniform = true;
@@ -764,8 +735,8 @@ define( [
                     }
                     uniform.dirty();
                 }
-                //Notify.log(uniform.get()[0]);
-                uniform.apply( gl, program.uniformsCache.ArrayColorEnabled );
+
+                uniform.apply( gl, program.uniformsCache.getMapContent().ArrayColorEnabled );
             }
         },
         setVertexAttribArray: function ( attrib, array, normalize ) {

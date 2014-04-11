@@ -186,9 +186,9 @@ define( [
 
         drawGeometry: ( function() {
             var normal = Matrix.create();
-            var modelViewUniform, projectionUniform, normalUniform;
+            var modelViewUniform, projectionUniform, normalUniform, program;
 
-            return function( program, state, leaf, push ) {
+            return function( state, leaf, push ) {
 
                 var gl = state.getGraphicContext();
 
@@ -232,14 +232,12 @@ define( [
                     state.popStateSet();
                 }
 
-                return program;
             };
         })(),
 
         drawLeafs: function ( state, previousRenderLeaf ) {
             var stateList = this.stateGraphList;
             var leafs = this._leafs;
-            var program;
             var previousLeaf = previousRenderLeaf;
 
             if ( previousLeaf ) {
@@ -277,7 +275,7 @@ define( [
                     push = true;
                 }
 
-                program = this.drawGeometry( program, state, leaf, push );
+                this.drawGeometry( state, leaf, push );
 
                 previousLeaf = leaf;
             }
@@ -314,7 +312,7 @@ define( [
                         push = true;
                     }
 
-                    program = this.drawGeometry( program, state, leaf, push );
+                    this.drawGeometry( state, leaf, push );
 
                     previousLeaf = leaf;
                 }
