@@ -31,14 +31,14 @@ define( [
         convertLatLongHeightToXYZ: function ( latitude, longitude, height, result ) {
             if ( result === undefined ) {
                 Notify.warn( 'deprecated, use this signature convertLatLongHeightToXYZ( latitude, longitude, height, result )' );
-                result = [];
+                result = [ 0.0, 0.0, 0.0 ];
             }
             var sinLatitude = Math.sin( latitude );
             var cosLatitude = Math.cos( latitude );
             var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared * sinLatitude * sinLatitude );
             var X = ( N + height ) * cosLatitude * Math.cos( longitude );
             var Y = ( N + height ) * cosLatitude * Math.sin( longitude );
-            var Z = ( N * ( 1 - this._eccentricitySquared ) + height ) * sinLatitude;
+            var Z = ( N * ( 1.0 - this._eccentricitySquared ) + height ) * sinLatitude;
             result[ 0 ] = X;
             result[ 1 ] = Y;
             result[ 2 ] = Z;
@@ -47,7 +47,7 @@ define( [
         convertXYZToLatLongHeight: function ( X, Y, Z, result ) {
             if ( result === undefined ) {
                 Notify.warn( 'deprecated, use this signature convertXYZToLatLongHeight( X,  Y,  Z , result)' );
-                result = [];
+                result = [ 0.0, 0.0, 0.0 ];
             }
             // http://www.colorado.edu/geography/gcraft/notes/datum/gif/xyzllh.gif
             var p = Math.sqrt( X * X + Y * Y );
@@ -89,7 +89,7 @@ define( [
 
         computeCoefficients: function () {
             var flattening = ( this._radiusEquator - this._radiusPolar ) / this._radiusEquator;
-            this._eccentricitySquared = 2 * flattening - flattening * flattening;
+            this._eccentricitySquared = 2.0 * flattening - flattening * flattening;
         },
         computeLocalToWorldTransformFromLatLongHeight: function ( latitude, longitude, height, result ) {
             if ( result === undefined ) {
@@ -103,33 +103,41 @@ define( [
         },
         computeLocalToWorldTransformFromXYZ: function ( X, Y, Z ) {
             var lla = this.convertXYZToLatLongHeight( X, Y, Z );
-            var m = Matrix.makeTranslate( X, Y, Z );
+            var m = Matrix.makeTranslate( X, Y, Z, Matrix.create() );
             this.computeCoordinateFrame( lla[ 0 ], lla[ 1 ], m );
             return m;
         },
-        computeCoordinateFrame: function ( latitude, longitude, localToWorld ) {
-            // Compute up vector
-            var up = [ Math.cos( longitude ) * Math.cos( latitude ), Math.sin( longitude ) * Math.cos( latitude ), Math.sin( latitude ) ];
+        computeCoordinateFrame: ( function () {
+            var up = [ 0.0, 0.0, 0.0 ];
+            var east = [ 0.0, 0.0, 0.0 ];
+            var north = [ 0.0, 0.0, 0.0 ];
+            return function ( latitude, longitude, localToWorld ) {
+                // Compute up vector
+                up[ 0 ] = Math.cos( longitude ) * Math.cos( latitude );
+                up[ 1 ] = Math.sin( longitude ) * Math.cos( latitude );
+                up[ 2 ] = Math.sin( latitude );
 
-            // Compute east vector
-            var east = [ -Math.sin( longitude ), Math.cos( longitude ), 0 ];
+                // Compute east vector
+                east[ 0 ] = -Math.sin( longitude );
+                east[ 1 ] = -Math.cos( longitude );
 
-            // Compute north vector = outer product up x east
-            var north = Vec3.cross( up, east, [] );
+                // Compute north vector = outer product up x east
+                Vec3.cross( up, east, north );
 
-            // set matrix
-            Matrix.set( localToWorld, 0, 0, east[ 0 ] );
-            Matrix.set( localToWorld, 0, 1, east[ 1 ] );
-            Matrix.set( localToWorld, 0, 2, east[ 2 ] );
+                // set matrix
+                Matrix.set( localToWorld, 0, 0, east[ 0 ] );
+                Matrix.set( localToWorld, 0, 1, east[ 1 ] );
+                Matrix.set( localToWorld, 0, 2, east[ 2 ] );
 
-            Matrix.set( localToWorld, 1, 0, north[ 0 ] );
-            Matrix.set( localToWorld, 1, 1, north[ 1 ] );
-            Matrix.set( localToWorld, 1, 2, north[ 2 ] );
+                Matrix.set( localToWorld, 1, 0, north[ 0 ] );
+                Matrix.set( localToWorld, 1, 1, north[ 1 ] );
+                Matrix.set( localToWorld, 1, 2, north[ 2 ] );
 
-            Matrix.set( localToWorld, 2, 0, up[ 0 ] );
-            Matrix.set( localToWorld, 2, 1, up[ 1 ] );
-            Matrix.set( localToWorld, 2, 2, up[ 2 ] );
-        }
+                Matrix.set( localToWorld, 2, 0, up[ 0 ] );
+                Matrix.set( localToWorld, 2, 1, up[ 1 ] );
+                Matrix.set( localToWorld, 2, 2, up[ 2 ] );
+            };
+        } )()
     };
 
     return EllipsoidModel;

@@ -13,12 +13,11 @@ define( [
     var StackedQuaternion = function ( name, quat ) {
         Object.call( this );
         if ( !quat ) {
-            quat = [ 0, 0, 0, 1 ];
+            quat = Quat.create();
         }
         this._quaternion = quat;
         this._target = undefined;
-        this._matrixTmp = [];
-        Matrix.makeIdentity( this._matrixTmp );
+        this._matrixTmp = Matrix.create();
         this.setName( name );
     };
 

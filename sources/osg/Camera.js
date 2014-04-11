@@ -23,8 +23,8 @@ define( [
         this.setClearMask( Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT );
         /*jshint bitwise: true */
 
-        this.setViewMatrix( Matrix.makeIdentity( [] ) );
-        this.setProjectionMatrix( Matrix.makeIdentity( [] ) );
+        this.setViewMatrix( Matrix.create() );
+        this.setProjectionMatrix( Matrix.create() );
         this.renderOrder = Camera.NESTED_RENDER;
         this.renderOrderNum = 0;
     };
@@ -138,16 +138,17 @@ define( [
                 return true;
             },
 
-            computeWorldToLocalMatrix: function ( matrix /*, nodeVisitor */ ) {
-                var inverse = [];
-                Matrix.inverse( this.modelviewMatrix, inverse );
-                if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                    Matrix.postMult( inverse, matrix );
-                } else {
-                    matrix = inverse;
-                }
-                return true;
-            }
+            computeWorldToLocalMatrix: ( function ( matrix /*, nodeVisitor */ ) {
+                var inverse = Matrix.create();
+                return function () {
+                    if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
+                        Matrix.postMult( Matrix.inverse( this.modelviewMatrix, inverse ), matrix );
+                    } else {
+                        Matrix.inverse( this.modelviewMatrix, matrix );
+                    }
+                    return true;
+                };
+            } )()
 
         } ) ), 'osg', 'Camera' );
 

@@ -62,14 +62,18 @@ define( [
         height: function () {
             return this._height;
         },
-        computeWindowMatrix: function () {
-            // res = Matrix offset * Matrix scale * Matrix translate
-            var translate = Matrix.makeTranslate( 1.0, 1.0, 1.0 );
-            var scale = Matrix.makeScale( 0.5 * this._width, 0.5 * this._height, 0.5 );
-            var offset = Matrix.makeTranslate( this._x, this._y, 0.0 );
-            //return Matrix.mult(Matrix.mult(translate, scale, translate), offset, offset);
-            return Matrix.preMult( offset, Matrix.preMult( scale, translate ) );
-        }
+        computeWindowMatrix: ( function () {
+            var translate = Matrix.create();
+            var scale = Matrix.create();
+            return function () {
+                // res = Matrix offset * Matrix scale * Matrix translate
+                Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
+                Matrix.makeScale( 0.5 * this._width, 0.5 * this._height, 0.5, scale );
+                var offset = Matrix.makeTranslate( this._x, this._y, 0.0, Matrix.create() );
+                //return Matrix.mult(Matrix.mult(translate, scale, translate), offset, offset);
+                return Matrix.preMult( offset, Matrix.preMult( scale, translate ) );
+            };
+        } )()
     } ), 'osg', 'Viewport' );
 
     return Viewport;

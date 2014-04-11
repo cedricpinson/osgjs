@@ -11,8 +11,9 @@ define( [
     'osg/DrawArrays',
     'osg/DrawElements',
     'osg/Program',
-    'osg/Shader'
-], function ( Notify, StateAttribute, Vec3, Uniform, BufferArray, Geometry, PrimitiveSet, DrawArrays, DrawElements, Program, Shader ) {
+    'osg/Shader',
+    'osg/Utils'
+], function ( Notify, StateAttribute, Vec3, Uniform, BufferArray, Geometry, PrimitiveSet, DrawArrays, DrawElements, Program, Shader, MACROUTILS ) {
 
     /**
      * Create a Textured Box on the given center with given size
@@ -27,237 +28,237 @@ define( [
         dy = sizey / 2.0;
         dz = sizez / 2.0;
 
-        var vertexes = [];
-        var uv = [];
-        var normal = [];
+        var vertexes = new MACROUTILS.Float32Array( 72 );
+        var uv = new MACROUTILS.Float32Array( 72 );
+        var normal = new MACROUTILS.Float32Array( 48 );
 
         // -ve y plane
         vertexes[ 0 ] = centerx - dx;
         vertexes[ 1 ] = centery - dy;
         vertexes[ 2 ] = centerz + dz;
-        normal[ 0 ] = 0;
-        normal[ 1 ] = -1;
-        normal[ 2 ] = 0;
-        uv[ 0 ] = 0;
-        uv[ 1 ] = 1;
+        normal[ 0 ] = 0.0;
+        normal[ 1 ] = -1.0;
+        normal[ 2 ] = 0.0;
+        uv[ 0 ] = 0.0;
+        uv[ 1 ] = 1.0;
 
         vertexes[ 3 ] = centerx - dx;
         vertexes[ 4 ] = centery - dy;
         vertexes[ 5 ] = centerz - dz;
-        normal[ 3 ] = 0;
-        normal[ 4 ] = -1;
-        normal[ 5 ] = 0;
-        uv[ 2 ] = 0;
-        uv[ 3 ] = 0;
+        normal[ 3 ] = 0.0;
+        normal[ 4 ] = -1.0;
+        normal[ 5 ] = 0.0;
+        uv[ 2 ] = 0.0;
+        uv[ 3 ] = 0.0;
 
         vertexes[ 6 ] = centerx + dx;
         vertexes[ 7 ] = centery - dy;
         vertexes[ 8 ] = centerz - dz;
-        normal[ 6 ] = 0;
-        normal[ 7 ] = -1;
-        normal[ 8 ] = 0;
-        uv[ 4 ] = 1;
-        uv[ 5 ] = 0;
+        normal[ 6 ] = 0.0;
+        normal[ 7 ] = -1.0;
+        normal[ 8 ] = 0.0;
+        uv[ 4 ] = 1.0;
+        uv[ 5 ] = 0.0;
 
         vertexes[ 9 ] = centerx + dx;
         vertexes[ 10 ] = centery - dy;
         vertexes[ 11 ] = centerz + dz;
-        normal[ 9 ] = 0;
-        normal[ 10 ] = -1;
-        normal[ 11 ] = 0;
-        uv[ 6 ] = 1;
-        uv[ 7 ] = 1;
+        normal[ 9 ] = 0.0;
+        normal[ 10 ] = -1.0;
+        normal[ 11 ] = 0.0;
+        uv[ 6 ] = 1.0;
+        uv[ 7 ] = 1.0;
 
 
         // +ve y plane
         vertexes[ 12 ] = centerx + dx;
         vertexes[ 13 ] = centery + dy;
         vertexes[ 14 ] = centerz + dz;
-        normal[ 12 ] = 0;
-        normal[ 13 ] = 1;
-        normal[ 14 ] = 0;
-        uv[ 8 ] = 0;
-        uv[ 9 ] = 1;
+        normal[ 12 ] = 0.0;
+        normal[ 13 ] = 1.0;
+        normal[ 14 ] = 0.0;
+        uv[ 8 ] = 0.0;
+        uv[ 9 ] = 1.0;
 
         vertexes[ 15 ] = centerx + dx;
         vertexes[ 16 ] = centery + dy;
         vertexes[ 17 ] = centerz - dz;
-        normal[ 15 ] = 0;
-        normal[ 16 ] = 1;
-        normal[ 17 ] = 0;
-        uv[ 10 ] = 0;
-        uv[ 11 ] = 0;
+        normal[ 15 ] = 0.0;
+        normal[ 16 ] = 1.0;
+        normal[ 17 ] = 0.0;
+        uv[ 10 ] = 0.0;
+        uv[ 11 ] = 0.0;
 
         vertexes[ 18 ] = centerx - dx;
         vertexes[ 19 ] = centery + dy;
         vertexes[ 20 ] = centerz - dz;
-        normal[ 18 ] = 0;
-        normal[ 19 ] = 1;
-        normal[ 20 ] = 0;
-        uv[ 12 ] = 1;
-        uv[ 13 ] = 0;
+        normal[ 18 ] = 0.0;
+        normal[ 19 ] = 1.0;
+        normal[ 20 ] = 0.0;
+        uv[ 12 ] = 1.0;
+        uv[ 13 ] = 0.0;
 
         vertexes[ 21 ] = centerx - dx;
         vertexes[ 22 ] = centery + dy;
         vertexes[ 23 ] = centerz + dz;
-        normal[ 21 ] = 0;
-        normal[ 22 ] = 1;
-        normal[ 23 ] = 0;
-        uv[ 14 ] = 1;
-        uv[ 15 ] = 1;
+        normal[ 21 ] = 0.0;
+        normal[ 22 ] = 1.0;
+        normal[ 23 ] = 0.0;
+        uv[ 14 ] = 1.0;
+        uv[ 15 ] = 1.0;
 
 
         // +ve x plane
         vertexes[ 24 ] = centerx + dx;
         vertexes[ 25 ] = centery - dy;
         vertexes[ 26 ] = centerz + dz;
-        normal[ 24 ] = 1;
-        normal[ 25 ] = 0;
-        normal[ 26 ] = 0;
-        uv[ 16 ] = 0;
-        uv[ 17 ] = 1;
+        normal[ 24 ] = 1.0;
+        normal[ 25 ] = 0.0;
+        normal[ 26 ] = 0.0;
+        uv[ 16 ] = 0.0;
+        uv[ 17 ] = 1.0;
 
         vertexes[ 27 ] = centerx + dx;
         vertexes[ 28 ] = centery - dy;
         vertexes[ 29 ] = centerz - dz;
-        normal[ 27 ] = 1;
-        normal[ 28 ] = 0;
-        normal[ 29 ] = 0;
-        uv[ 18 ] = 0;
-        uv[ 19 ] = 0;
+        normal[ 27 ] = 1.0;
+        normal[ 28 ] = 0.0;
+        normal[ 29 ] = 0.0;
+        uv[ 18 ] = 0.0;
+        uv[ 19 ] = 0.0;
 
         vertexes[ 30 ] = centerx + dx;
         vertexes[ 31 ] = centery + dy;
         vertexes[ 32 ] = centerz - dz;
-        normal[ 30 ] = 1;
-        normal[ 31 ] = 0;
-        normal[ 32 ] = 0;
-        uv[ 20 ] = 1;
-        uv[ 21 ] = 0;
+        normal[ 30 ] = 1.0;
+        normal[ 31 ] = 0.0;
+        normal[ 32 ] = 0.0;
+        uv[ 20 ] = 1.0;
+        uv[ 21 ] = 0.0;
 
         vertexes[ 33 ] = centerx + dx;
         vertexes[ 34 ] = centery + dy;
         vertexes[ 35 ] = centerz + dz;
-        normal[ 33 ] = 1;
-        normal[ 34 ] = 0;
-        normal[ 35 ] = 0;
-        uv[ 22 ] = 1;
-        uv[ 23 ] = 1;
+        normal[ 33 ] = 1.0;
+        normal[ 34 ] = 0.0;
+        normal[ 35 ] = 0.0;
+        uv[ 22 ] = 1.0;
+        uv[ 23 ] = 1.0;
 
         // -ve x plane
         vertexes[ 36 ] = centerx - dx;
         vertexes[ 37 ] = centery + dy;
         vertexes[ 38 ] = centerz + dz;
-        normal[ 36 ] = -1;
-        normal[ 37 ] = 0;
-        normal[ 38 ] = 0;
-        uv[ 24 ] = 0;
-        uv[ 25 ] = 1;
+        normal[ 36 ] = -1.0;
+        normal[ 37 ] = 0.0;
+        normal[ 38 ] = 0.0;
+        uv[ 24 ] = 0.0;
+        uv[ 25 ] = 1.0;
 
         vertexes[ 39 ] = centerx - dx;
         vertexes[ 40 ] = centery + dy;
         vertexes[ 41 ] = centerz - dz;
-        normal[ 39 ] = -1;
-        normal[ 40 ] = 0;
-        normal[ 41 ] = 0;
-        uv[ 26 ] = 0;
-        uv[ 27 ] = 0;
+        normal[ 39 ] = -1.0;
+        normal[ 40 ] = 0.0;
+        normal[ 41 ] = 0.0;
+        uv[ 26 ] = 0.0;
+        uv[ 27 ] = 0.0;
 
         vertexes[ 42 ] = centerx - dx;
         vertexes[ 43 ] = centery - dy;
         vertexes[ 44 ] = centerz - dz;
-        normal[ 42 ] = -1;
-        normal[ 43 ] = 0;
-        normal[ 44 ] = 0;
-        uv[ 28 ] = 1;
-        uv[ 29 ] = 0;
+        normal[ 42 ] = -1.0;
+        normal[ 43 ] = 0.0;
+        normal[ 44 ] = 0.0;
+        uv[ 28 ] = 1.0;
+        uv[ 29 ] = 0.0;
 
         vertexes[ 45 ] = centerx - dx;
         vertexes[ 46 ] = centery - dy;
         vertexes[ 47 ] = centerz + dz;
-        normal[ 45 ] = -1;
-        normal[ 46 ] = 0;
-        normal[ 47 ] = 0;
-        uv[ 30 ] = 1;
-        uv[ 31 ] = 1;
+        normal[ 45 ] = -1.0;
+        normal[ 46 ] = 0.0;
+        normal[ 47 ] = 0.0;
+        uv[ 30 ] = 1.0;
+        uv[ 31 ] = 1.0;
 
         // top
         // +ve z plane
         vertexes[ 48 ] = centerx - dx;
         vertexes[ 49 ] = centery + dy;
         vertexes[ 50 ] = centerz + dz;
-        normal[ 48 ] = 0;
-        normal[ 49 ] = 0;
-        normal[ 50 ] = 1;
-        uv[ 32 ] = 0;
-        uv[ 33 ] = 1;
+        normal[ 48 ] = 0.0;
+        normal[ 49 ] = 0.0;
+        normal[ 50 ] = 1.0;
+        uv[ 32 ] = 0.0;
+        uv[ 33 ] = 1.0;
 
         vertexes[ 51 ] = centerx - dx;
         vertexes[ 52 ] = centery - dy;
         vertexes[ 53 ] = centerz + dz;
-        normal[ 51 ] = 0;
-        normal[ 52 ] = 0;
-        normal[ 53 ] = 1;
-        uv[ 34 ] = 0;
-        uv[ 35 ] = 0;
+        normal[ 51 ] = 0.0;
+        normal[ 52 ] = 0.0;
+        normal[ 53 ] = 1.0;
+        uv[ 34 ] = 0.0;
+        uv[ 35 ] = 0.0;
 
         vertexes[ 54 ] = centerx + dx;
         vertexes[ 55 ] = centery - dy;
         vertexes[ 56 ] = centerz + dz;
-        normal[ 54 ] = 0;
-        normal[ 55 ] = 0;
-        normal[ 56 ] = 1;
-        uv[ 36 ] = 1;
-        uv[ 37 ] = 0;
+        normal[ 54 ] = 0.0;
+        normal[ 55 ] = 0.0;
+        normal[ 56 ] = 1.0;
+        uv[ 36 ] = 1.0;
+        uv[ 37 ] = 0.0;
 
         vertexes[ 57 ] = centerx + dx;
         vertexes[ 58 ] = centery + dy;
         vertexes[ 59 ] = centerz + dz;
-        normal[ 57 ] = 0;
-        normal[ 58 ] = 0;
-        normal[ 59 ] = 1;
-        uv[ 38 ] = 1;
-        uv[ 39 ] = 1;
+        normal[ 57 ] = 0.0;
+        normal[ 58 ] = 0.0;
+        normal[ 59 ] = 1.0;
+        uv[ 38 ] = 1.0;
+        uv[ 39 ] = 1.0;
 
         // bottom
         // -ve z plane
         vertexes[ 60 ] = centerx + dx;
         vertexes[ 61 ] = centery + dy;
         vertexes[ 62 ] = centerz - dz;
-        normal[ 60 ] = 0;
-        normal[ 61 ] = 0;
-        normal[ 62 ] = -1;
-        uv[ 40 ] = 0;
-        uv[ 41 ] = 1;
+        normal[ 60 ] = 0.0;
+        normal[ 61 ] = 0.0;
+        normal[ 62 ] = -1.0;
+        uv[ 40 ] = 0.0;
+        uv[ 41 ] = 1.0;
 
         vertexes[ 63 ] = centerx + dx;
         vertexes[ 64 ] = centery - dy;
         vertexes[ 65 ] = centerz - dz;
-        normal[ 63 ] = 0;
-        normal[ 64 ] = 0;
-        normal[ 65 ] = -1;
-        uv[ 42 ] = 0;
-        uv[ 43 ] = 0;
+        normal[ 63 ] = 0.0;
+        normal[ 64 ] = 0.0;
+        normal[ 65 ] = -1.0;
+        uv[ 42 ] = 0.0;
+        uv[ 43 ] = 0.0;
 
         vertexes[ 66 ] = centerx - dx;
         vertexes[ 67 ] = centery - dy;
         vertexes[ 68 ] = centerz - dz;
-        normal[ 66 ] = 0;
-        normal[ 67 ] = 0;
-        normal[ 68 ] = -1;
-        uv[ 44 ] = 1;
-        uv[ 45 ] = 0;
+        normal[ 66 ] = 0.0;
+        normal[ 67 ] = 0.0;
+        normal[ 68 ] = -1.0;
+        uv[ 44 ] = 1.0;
+        uv[ 45 ] = 0.0;
 
         vertexes[ 69 ] = centerx - dx;
         vertexes[ 70 ] = centery + dy;
         vertexes[ 71 ] = centerz - dz;
-        normal[ 69 ] = 0;
-        normal[ 70 ] = 0;
-        normal[ 71 ] = -1;
-        uv[ 46 ] = 1;
-        uv[ 47 ] = 1;
+        normal[ 69 ] = 0.0;
+        normal[ 70 ] = 0.0;
+        normal[ 71 ] = -1.0;
+        uv[ 46 ] = 1.0;
+        uv[ 47 ] = 1.0;
 
-        var indexes = [];
+        var indexes = new MACROUTILS.Uint16Array( 36 );
         indexes[ 0 ] = 0;
         indexes[ 1 ] = 1;
         indexes[ 2 ] = 2;
@@ -317,13 +318,13 @@ define( [
         if ( r === undefined && t === undefined ) {
             r = l;
             t = b;
-            l = 0;
-            b = 0;
+            l = 0.0;
+            b = 0.0;
         }
 
         var g = new Geometry();
 
-        var vertexes = [];
+        var vertexes = new MACROUTILS.Float32Array( 12 );
         vertexes[ 0 ] = cornerx + hx;
         vertexes[ 1 ] = cornery + hy;
         vertexes[ 2 ] = cornerz + hz;
@@ -347,7 +348,7 @@ define( [
             t = 1.0;
         }
 
-        var uvs = [];
+        var uvs = new MACROUTILS.Float32Array( 8 );
         uvs[ 0 ] = l;
         uvs[ 1 ] = t;
 
@@ -360,8 +361,8 @@ define( [
         uvs[ 6 ] = r;
         uvs[ 7 ] = t;
 
-        var n = Vec3.cross( [ wx, wy, wz ], [ hx, hy, hz ], [] );
-        var normal = [];
+        var n = Vec3.cross( [ wx, wy, wz ], [ hx, hy, hz ], [ 0.0, 0.0, 0.0 ] );
+        var normal = new MACROUTILS.Float32Array( 12 );
         normal[ 0 ] = n[ 0 ];
         normal[ 1 ] = n[ 1 ];
         normal[ 2 ] = n[ 2 ];
@@ -379,7 +380,7 @@ define( [
         normal[ 11 ] = n[ 2 ];
 
 
-        var indexes = [];
+        var indexes = new MACROUTILS.Uint16Array( 6 );
         indexes[ 0 ] = 0;
         indexes[ 1 ] = 1;
         indexes[ 2 ] = 2;
@@ -463,25 +464,21 @@ define( [
 
         var g = new Geometry();
 
-        var vertexes = [];
-        vertexes.push( 0, 0, 0 );
-        vertexes.push( size, 0, 0 );
+        var vertexes = new MACROUTILS.Float32Array( 18 );
+        vertexes[ 3 ] = size;
+        vertexes[ 10 ] = size;
+        vertexes[ 17 ] = size;
 
-        vertexes.push( 0, 0, 0 );
-        vertexes.push( 0, size, 0 );
-
-        vertexes.push( 0, 0, 0 );
-        vertexes.push( 0, 0, size );
-
-        var colors = [];
-        colors.push( 1, 0, 0, 1.0 );
-        colors.push( 1, 0, 0, 1.0 );
-
-        colors.push( 0, 1, 0, 1.0 );
-        colors.push( 0, 1, 0, 1.0 );
-
-        colors.push( 0, 0, 1, 1.0 );
-        colors.push( 0, 0, 1, 1.0 );
+        var colors = new MACROUTILS.Float32Array( 24 );
+        //red color
+        colors[ 0 ] = colors[ 3 ] = 1.0;
+        colors[ 4 ] = colors[ 4 + 3 ] = 1.0;
+        //green color
+        colors[ 4 * 2 + 1 ] = colors[ 4 * 2 + 3 ] = 1.0;
+        colors[ 4 * 3 + 1 ] = colors[ 4 * 3 + 3 ] = 1.0;
+        //blue color
+        colors[ 4 * 4 + 2 ] = colors[ 4 * 4 + 3 ] = 1.0;
+        colors[ 4 * 5 + 2 ] = colors[ 4 * 5 + 3 ] = 1.0;
 
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
         g.getAttributes().Color = new BufferArray( BufferArray.ARRAY_BUFFER, colors, 4 );
@@ -499,118 +496,137 @@ define( [
      * @author Darrell Esau
      */
     var createTexturedSphere = function ( radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength ) {
-        radius = radius || 50;
+        radius = radius || 50.0;
 
-        phiStart = phiStart !== undefined ? phiStart : 0;
+        phiStart = phiStart !== undefined ? phiStart : 0.0;
         phiLength = phiLength !== undefined ? phiLength : Math.PI * 2;
 
-        thetaStart = thetaStart !== undefined ? thetaStart : 0;
+        thetaStart = thetaStart !== undefined ? thetaStart : 0.0;
         thetaLength = thetaLength !== undefined ? thetaLength : Math.PI;
 
         var segmentsX = Math.max( 3, Math.floor( widthSegments ) || 8 );
         var segmentsY = Math.max( 2, Math.floor( heightSegments ) || 6 );
 
-        var x, y, vertices = [],
-            uvs = [],
-            allVertices = [];
-
-        for ( y = 0; y <= segmentsY; y++ ) {
-            var verticesRow = [];
-            var uvsRow = [];
-
-            for ( x = 0; x <= segmentsX; x++ ) {
-                var u = x / segmentsX;
-                var v = y / segmentsY;
-
-                var vertex = {};
-                vertex.x = -radius * Math.cos( phiStart + u * phiLength ) * Math.sin( thetaStart + v * thetaLength );
-                vertex.y = radius * Math.cos( thetaStart + v * thetaLength );
-                vertex.z = radius * Math.sin( phiStart + u * phiLength ) * Math.sin( thetaStart + v * thetaLength );
-
-                allVertices.push( vertex );
-
-                verticesRow.push( allVertices.length - 1 );
-                uvsRow.push( {
-                    u: u,
-                    v: 1 - v
-                } );
-
-            }
-
-            vertices.push( verticesRow );
-            uvs.push( uvsRow );
-        }
-
-        var fullVerticesList = [];
-        var fullNormalsList = [];
-        var fullUVList = [];
-        var indexes = [];
+        var useDrawArrays = ( ( segmentsX * segmentsY ) / 3 ) >= 65536;
+        var nbPrim = useDrawArrays ? segmentsX * segmentsY * 6 : segmentsX * segmentsY * 4;
+        var fullVerticesList = new MACROUTILS.Float32Array( nbPrim * 3 );
+        var fullNormalsList = new MACROUTILS.Float32Array( nbPrim * 3 );
+        var fullUVList = new MACROUTILS.Float32Array( nbPrim * 2 );
+        var indexes = !useDrawArrays ? new MACROUTILS.Uint16Array( segmentsX * segmentsY * 6 ) : undefined;
         var vtxCount = 0;
-        // #FIXME quick fix to enable bigger mesh
-        // however we should check if the OES_element_index_uint
-        // has been enabled
-        var useDrawArrays = ( allVertices.length / 3 ) >= 65536;
+        var triCount = 0;
 
-        for ( y = 0; y < segmentsY; y++ ) {
-            for ( x = 0; x < segmentsX; x++ ) {
+        var v1 = new MACROUTILS.Float32Array( 3 );
+        var v2 = new MACROUTILS.Float32Array( 3 );
+        var v3 = new MACROUTILS.Float32Array( 3 );
+        var v4 = new MACROUTILS.Float32Array( 3 );
+        var n1 = new MACROUTILS.Float32Array( 3 );
+        var n2 = new MACROUTILS.Float32Array( 3 );
+        var n3 = new MACROUTILS.Float32Array( 3 );
+        var n4 = new MACROUTILS.Float32Array( 3 );
+        var uv1 = new MACROUTILS.Float32Array( 2 );
+        var uv2 = new MACROUTILS.Float32Array( 2 );
+        var uv3 = new MACROUTILS.Float32Array( 2 );
+        var uv4 = new MACROUTILS.Float32Array( 2 );
+        var getCoordAndUvSphere = function ( u, v, coord, norm, uv ) {
+            coord[ 0 ] = -radius * Math.cos( phiStart + u * phiLength ) * Math.sin( thetaStart + v * thetaLength );
+            coord[ 1 ] = radius * Math.cos( thetaStart + v * thetaLength );
+            coord[ 2 ] = radius * Math.sin( phiStart + u * phiLength ) * Math.sin( thetaStart + v * thetaLength );
+            Vec3.normalize( coord, norm );
+            uv[ 0 ] = u;
+            uv[ 1 ] = 1 - v;
+        };
+        for ( var y = 0; y < segmentsY; y++ ) {
+            for ( var x = 0; x < segmentsX; x++ ) {
+                getCoordAndUvSphere( ( x + 1 ) / segmentsX, y / segmentsY, v1, n1, uv1 );
+                getCoordAndUvSphere( x / segmentsX, y / segmentsY, v2, n2, uv2 );
+                getCoordAndUvSphere( x / segmentsX, ( y + 1 ) / segmentsY, v3, n3, uv3 );
+                getCoordAndUvSphere( ( x + 1 ) / segmentsX, ( y + 1 ) / segmentsY, v4, n4, uv4 );
 
-                var v1 = vertices[ y ][ x + 1 ];
-                var v2 = vertices[ y ][ x ];
-                var v3 = vertices[ y + 1 ][ x ];
-                var v4 = vertices[ y + 1 ][ x + 1 ];
+                var idv = vtxCount * 3;
+                fullVerticesList[ idv ] = v1[ 0 ];
+                fullVerticesList[ idv + 1 ] = v1[ 1 ];
+                fullVerticesList[ idv + 2 ] = v1[ 2 ];
+                fullVerticesList[ idv + 3 ] = v2[ 0 ];
+                fullVerticesList[ idv + 4 ] = v2[ 1 ];
+                fullVerticesList[ idv + 5 ] = v2[ 2 ];
+                fullVerticesList[ idv + 6 ] = v3[ 0 ];
+                fullVerticesList[ idv + 7 ] = v3[ 1 ];
+                fullVerticesList[ idv + 8 ] = v3[ 2 ];
 
-                var vtx1 = allVertices[ v1 ];
-                var vtx2 = allVertices[ v2 ];
-                var vtx3 = allVertices[ v3 ];
-                var vtx4 = allVertices[ v4 ];
+                fullNormalsList[ idv ] = n1[ 0 ];
+                fullNormalsList[ idv + 1 ] = n1[ 1 ];
+                fullNormalsList[ idv + 2 ] = n1[ 2 ];
+                fullNormalsList[ idv + 3 ] = n2[ 0 ];
+                fullNormalsList[ idv + 4 ] = n2[ 1 ];
+                fullNormalsList[ idv + 5 ] = n2[ 2 ];
+                fullNormalsList[ idv + 6 ] = n3[ 0 ];
+                fullNormalsList[ idv + 7 ] = n3[ 1 ];
+                fullNormalsList[ idv + 8 ] = n3[ 2 ];
 
-                var n1 = Vec3.normalize( [ vtx1.x, vtx1.y, vtx1.z ], [] );
-                var n2 = Vec3.normalize( [ vtx2.x, vtx2.y, vtx2.z ], [] );
-                var n3 = Vec3.normalize( [ vtx3.x, vtx3.y, vtx3.z ], [] );
-                var n4 = Vec3.normalize( [ vtx4.x, vtx4.y, vtx4.z ], [] );
+                var idu = vtxCount * 2;
+                fullUVList[ idu ] = uv1[ 0 ];
+                fullUVList[ idu + 1 ] = uv1[ 1 ];
+                fullUVList[ idu + 2 ] = uv2[ 0 ];
+                fullUVList[ idu + 3 ] = uv2[ 1 ];
+                fullUVList[ idu + 4 ] = uv3[ 0 ];
+                fullUVList[ idu + 5 ] = uv3[ 1 ];
 
-                var uv1 = uvs[ y ][ x + 1 ];
-                var uv2 = uvs[ y ][ x ];
-                var uv3 = uvs[ y + 1 ][ x ];
-                var uv4 = uvs[ y + 1 ][ x + 1 ];
-
-                fullVerticesList.push( vtx1.x, vtx1.y, vtx1.z );
-                fullVerticesList.push( vtx2.x, vtx2.y, vtx2.z );
-                fullVerticesList.push( vtx3.x, vtx3.y, vtx3.z );
-
-                fullNormalsList.push( n1[ 0 ], n1[ 1 ], n1[ 2 ] );
-                fullNormalsList.push( n2[ 0 ], n2[ 1 ], n2[ 2 ] );
-                fullNormalsList.push( n3[ 0 ], n3[ 1 ], n3[ 2 ] );
-
-                fullUVList.push( uv1.u, uv1.v );
-                fullUVList.push( uv2.u, uv2.v );
-                fullUVList.push( uv3.u, uv3.v );
-
+                vtxCount += 3;
                 if ( useDrawArrays ) {
-                    fullVerticesList.push( vtx1.x, vtx1.y, vtx1.z );
-                    fullVerticesList.push( vtx3.x, vtx3.y, vtx3.z );
-                    fullVerticesList.push( vtx4.x, vtx4.y, vtx4.z );
+                    idv = vtxCount * 3;
+                    fullVerticesList[ idv ] = v1[ 0 ];
+                    fullVerticesList[ idv + 1 ] = v1[ 1 ];
+                    fullVerticesList[ idv + 2 ] = v1[ 2 ];
+                    fullVerticesList[ idv + 3 ] = v3[ 0 ];
+                    fullVerticesList[ idv + 4 ] = v3[ 1 ];
+                    fullVerticesList[ idv + 5 ] = v3[ 2 ];
+                    fullVerticesList[ idv + 6 ] = v4[ 0 ];
+                    fullVerticesList[ idv + 7 ] = v4[ 1 ];
+                    fullVerticesList[ idv + 8 ] = v4[ 2 ];
 
-                    fullNormalsList.push( n1[ 0 ], n1[ 1 ], n1[ 2 ] );
-                    fullNormalsList.push( n3[ 0 ], n3[ 1 ], n3[ 2 ] );
-                    fullNormalsList.push( n4[ 0 ], n4[ 1 ], n4[ 2 ] );
+                    fullNormalsList[ idv ] = n1[ 0 ];
+                    fullNormalsList[ idv + 1 ] = n1[ 1 ];
+                    fullNormalsList[ idv + 2 ] = n1[ 2 ];
+                    fullNormalsList[ idv + 3 ] = n3[ 0 ];
+                    fullNormalsList[ idv + 4 ] = n3[ 1 ];
+                    fullNormalsList[ idv + 5 ] = n3[ 2 ];
+                    fullNormalsList[ idv + 6 ] = n4[ 0 ];
+                    fullNormalsList[ idv + 7 ] = n4[ 1 ];
+                    fullNormalsList[ idv + 8 ] = n4[ 2 ];
 
-                    fullUVList.push( uv1.u, uv1.v );
-                    fullUVList.push( uv3.u, uv3.v );
-                    fullUVList.push( uv4.u, uv4.v );
+                    idu = vtxCount * 2;
+                    fullUVList[ idu ] = uv1[ 0 ];
+                    fullUVList[ idu + 1 ] = uv1[ 1 ];
+                    fullUVList[ idu + 2 ] = uv3[ 0 ];
+                    fullUVList[ idu + 3 ] = uv3[ 1 ];
+                    fullUVList[ idu + 4 ] = uv4[ 0 ];
+                    fullUVList[ idu + 5 ] = uv4[ 1 ];
+                    vtxCount += 3;
                 } else {
-                    fullVerticesList.push( vtx4.x, vtx4.y, vtx4.z );
-                    fullNormalsList.push( n4[ 0 ], n4[ 1 ], n4[ 2 ] );
-                    fullUVList.push( uv4.u, uv4.v );
+                    idv = vtxCount * 3;
+                    fullVerticesList[ idv ] = v4[ 0 ];
+                    fullVerticesList[ idv + 1 ] = v4[ 1 ];
+                    fullVerticesList[ idv + 2 ] = v4[ 2 ];
 
-                    vtxCount += 4;
-                    var tristart = vtxCount - 4;
-                    indexes.push( tristart );
-                    indexes.push( tristart + 1 );
-                    indexes.push( tristart + 2 );
-                    indexes.push( tristart );
-                    indexes.push( tristart + 2 );
-                    indexes.push( tristart + 3 );
+                    fullNormalsList[ idv ] = n4[ 0 ];
+                    fullNormalsList[ idv + 1 ] = n4[ 1 ];
+                    fullNormalsList[ idv + 2 ] = n4[ 2 ];
+
+                    idu = vtxCount * 2;
+                    fullUVList[ idu ] = uv4[ 0 ];
+                    fullUVList[ idu + 1 ] = uv4[ 1 ];
+
+                    var iStart = triCount * 3;
+                    var tristart = vtxCount - 3;
+                    indexes[ iStart ] = tristart;
+                    indexes[ iStart + 1 ] = tristart + 1;
+                    indexes[ iStart + 2 ] = tristart + 2;
+                    indexes[ iStart + 3 ] = tristart;
+                    indexes[ iStart + 4 ] = tristart + 2;
+                    indexes[ iStart + 5 ] = tristart + 3;
+                    triCount += 2;
+                    vtxCount += 1;
                 }
             }
         }

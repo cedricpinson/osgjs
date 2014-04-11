@@ -15,8 +15,7 @@ define( [
      */
     var OrbitManipulator = function () {
         Manipulator.call( this );
-        this._tmpInverse = Matrix.makeIdentity( [] );
-        this._tmpHomePosition = Vec3.init( [] );
+        this._homePosition = [ 0.0, 0.0, 0.0 ];
         this.init();
     };
 
@@ -96,11 +95,15 @@ define( [
     /** @lends OrbitManipulator.prototype */
     OrbitManipulator.prototype = MACROUTILS.objectInehrit( Manipulator.prototype, {
         init: function () {
-            this._distance = 25;
-            this._target = new Array( 3 );
+            this._distance = 25.0;
+            this._target = [ 0.0, 0.0, 0.0 ];
+            this._upz = [ 0.0, 0.0, 1.0 ];
             Vec3.init( this._target );
 
-            this._rotation = Matrix.mult( Matrix.makeRotate( Math.PI, 0, 0, 1, [] ), Matrix.makeRotate( -Math.PI / 10.0, 1, 0, 0, [] ), [] );
+            var rot1 = Matrix.makeRotate( Math.PI, 0.0, 0.0, 1.0, Matrix.create() );
+            var rot2 = Matrix.makeRotate( -Math.PI / 10.0, 1.0, 0.0, 0.0, Matrix.create() );
+            this._rotation = Matrix.create();
+            Matrix.mult( rot1, rot2, this._rotation );
             this._time = 0.0;
 
             this._rotate = new OrbitManipulator.Interpolator( 2 );
@@ -114,11 +117,11 @@ define( [
             this._buttonup = true;
 
             this._scale = 10.0;
-            this._maxDistance = 0;
-            this._minDistance = 0;
+            this._maxDistance = 0.0;
+            this._minDistance = 0.0;
             this._scaleMouseMotion = 1.0;
 
-            this._inverseMatrix = new Array( 16 );
+            this._inverseMatrix = Matrix.create();
             this._rotateKey = 65; // a
             this._zoomKey = 83; // s
             this._panKey = 68; // d
@@ -140,47 +143,51 @@ define( [
         },
         setTarget: function ( target ) {
             Vec3.copy( target, this._target );
-            var eyePos = new Array( 3 );
+            var eyePos = [ 0.0, 0.0, 0.0 ];
             this.getEyePosition( eyePos );
             this._distance = Vec3.distance( eyePos, target );
         },
-        setEyePosition: function ( eye ) {
-            var result = this._rotation;
-            var center = this._target;
-            var up = [ 0, 0, 1 ];
+        setEyePosition: ( function () {
+            var f = [ 0.0, 0.0, 0.0 ];
+            var s = [ 0.0, 0.0, 0.0 ];
+            var u = [ 0.0, 0.0, 0.0 ];
+            return function ( eye ) {
+                var result = this._rotation;
+                var center = this._target;
 
-            var f = Vec3.sub( eye, center, [] );
-            Vec3.normalize( f, f );
+                Vec3.sub( eye, center, f );
+                Vec3.normalize( f, f );
 
-            var s = Vec3.cross( f, up, [] );
-            Vec3.normalize( s, s );
+                Vec3.cross( f, this._upz, s );
+                Vec3.normalize( s, s );
 
-            var u = Vec3.cross( s, f, [] );
-            Vec3.normalize( u, u );
+                Vec3.cross( s, f, u );
+                Vec3.normalize( u, u );
 
-            // s[0], f[0], u[0], 0.0,
-            // s[1], f[1], u[1], 0.0,
-            // s[2], f[2], u[2], 0.0,
-            // 0,    0,    0,     1.0
-            result[ 0 ] = s[ 0 ];
-            result[ 1 ] = f[ 0 ];
-            result[ 2 ] = u[ 0 ];
-            result[ 3 ] = 0.0;
-            result[ 4 ] = s[ 1 ];
-            result[ 5 ] = f[ 1 ];
-            result[ 6 ] = u[ 1 ];
-            result[ 7 ] = 0.0;
-            result[ 8 ] = s[ 2 ];
-            result[ 9 ] = f[ 2 ];
-            result[ 10 ] = u[ 2 ];
-            result[ 11 ] = 0.0;
-            result[ 12 ] = 0;
-            result[ 13 ] = 0;
-            result[ 14 ] = 0;
-            result[ 15 ] = 1.0;
+                // s[0], f[0], u[0], 0.0,
+                // s[1], f[1], u[1], 0.0,
+                // s[2], f[2], u[2], 0.0,
+                // 0,    0,    0,     1.0
+                result[ 0 ] = s[ 0 ];
+                result[ 1 ] = f[ 0 ];
+                result[ 2 ] = u[ 0 ];
+                result[ 3 ] = 0.0;
+                result[ 4 ] = s[ 1 ];
+                result[ 5 ] = f[ 1 ];
+                result[ 6 ] = u[ 1 ];
+                result[ 7 ] = 0.0;
+                result[ 8 ] = s[ 2 ];
+                result[ 9 ] = f[ 2 ];
+                result[ 10 ] = u[ 2 ];
+                result[ 11 ] = 0.0;
+                result[ 12 ] = 0;
+                result[ 13 ] = 0;
+                result[ 14 ] = 0;
+                result[ 15 ] = 1.0;
 
-            this._distance = Vec3.distance( eye, center );
-        },
+                this._distance = Vec3.distance( eye, center );
+            };
+        } )(),
         computeHomePosition: function () {
             if ( this._node !== undefined ) {
                 //this.reset();
@@ -191,17 +198,15 @@ define( [
         },
 
         getHomePosition: function () {
-            var eyePos = this._tmpHomePosition;
             if ( this._node !== undefined ) {
-
                 var bs = this._node.getBound();
                 var distance = bs.radius() * 1.5;
 
                 var target = bs.center();
 
-                this.computeEyePosition( target, distance, eyePos );
+                this.computeEyePosition( target, distance, this._homePosition );
             }
-            return eyePos;
+            return this._homePosition;
         },
 
         setMaxDistance: function ( d ) {
@@ -216,67 +221,74 @@ define( [
         getDistance: function () {
             return this._distance;
         },
-        computePan: function ( dx, dy ) {
-            dy *= this._distance;
-            dx *= this._distance;
+        computePan: ( function () {
+            var inv = Matrix.create();
+            var x = [ 0.0, 0.0, 0.0 ];
+            var y = [ 0.0, 0.0, 0.0 ];
+            return function ( dx, dy ) {
+                dy *= this._distance;
+                dx *= this._distance;
+                Matrix.inverse( this._rotation, inv );
+                x[ 0 ] = Matrix.get( inv, 0, 0 );
+                x[ 1 ] = Matrix.get( inv, 0, 1 );
+                x[ 2 ] = Matrix.get( inv, 0, 2 );
+                Vec3.normalize( x, x );
 
-            var inv = new Array( 16 );
-            var x = new Array( 3 );
-            var y = new Array( 3 );
-            Matrix.inverse( this._rotation, inv );
-            x[ 0 ] = Matrix.get( inv, 0, 0 );
-            x[ 1 ] = Matrix.get( inv, 0, 1 );
-            x[ 2 ] = Matrix.get( inv, 0, 2 );
-            Vec3.normalize( x, x );
+                y[ 0 ] = Matrix.get( inv, 2, 0 );
+                y[ 1 ] = Matrix.get( inv, 2, 1 );
+                y[ 2 ] = Matrix.get( inv, 2, 2 );
+                Vec3.normalize( y, y );
 
-            y[ 0 ] = Matrix.get( inv, 2, 0 );
-            y[ 1 ] = Matrix.get( inv, 2, 1 );
-            y[ 2 ] = Matrix.get( inv, 2, 2 );
-            Vec3.normalize( y, y );
+                Vec3.mult( x, -dx, x );
+                Vec3.mult( y, dy, y );
+                Vec3.add( this._target, x, this._target );
+                Vec3.add( this._target, y, this._target );
+            };
+        } )(),
+        computeRotation: ( function () {
+            var of = Matrix.create();
+            var r = Matrix.create();
+            var r2 = Matrix.create();
+            var inv = Matrix.create();
+            var tmp = [ 0.0, 0.0, 0.0 ];
+            var tmpDist = [ 0.0, 0.0, 0.0 ];
+            return function ( dx, dy ) {
+                Matrix.makeRotate( dx / 10.0, 0.0, 0.0, 1.0, of );
+                Matrix.mult( this._rotation, of, r );
 
-            Vec3.mult( x, -dx, x );
-            Vec3.mult( y, dy, y );
-            Vec3.add( this._target, x, this._target );
-            Vec3.add( this._target, y, this._target );
-        },
+                Matrix.makeRotate( dy / 10.0, 1.0, 0.0, 0.0, of );
+                Matrix.mult( of, r, r2 );
 
-        computeRotation: function ( dx, dy ) {
-            var of = Matrix.makeRotate( dx / 10.0, 0, 0, 1, [] );
-            var r = Matrix.mult( this._rotation, of, [] );
+                // test that the eye is not too up and not too down to not kill
+                // the rotation matrix
+                Matrix.inverse( r2, inv );
+                tmpDist[ 1 ] = this._distance;
+                Matrix.transformVec3( inv, tmpDist, tmp );
 
-            of = Matrix.makeRotate( dy / 10.0, 1, 0, 0, [] );
-            var r2 = Matrix.mult( of, r, [] );
+                Vec3.neg( tmp, tmp );
+                Vec3.normalize( tmp, tmp );
 
-            // test that the eye is not too up and not too down to not kill
-            // the rotation matrix
-            var inv = [];
-            Matrix.inverse( r2, inv );
-            var eye = Matrix.transformVec3( inv, [ 0, this._distance, 0 ], new Array( 3 ) );
-
-            var dir = Vec3.neg( eye, [] );
-            Vec3.normalize( dir, dir );
-
-            var p = Vec3.dot( dir, [ 0, 0, 1 ] );
-            if ( Math.abs( p ) > 0.95 ) {
-                //discard rotation on y
-                this._rotation = r;
-                return;
-            }
-            this._rotation = r2;
-        },
-
+                var p = Vec3.dot( tmp, this._upz );
+                if ( Math.abs( p ) > 0.95 ) {
+                    //discard rotation on y
+                    Matrix.copy( r, this._rotation );
+                    return;
+                }
+                Matrix.copy( r2, this._rotation );
+            };
+        } )(),
         computeZoom: function ( dz ) {
             this.zoom( dz );
         },
 
         zoom: function ( ratio ) {
             var newValue = this._distance * ratio;
-            if ( this._minDistance > 0 ) {
+            if ( this._minDistance > 0.0 ) {
                 if ( newValue < this._minDistance ) {
                     newValue = this._minDistance;
                 }
             }
-            if ( this._maxDistance > 0 ) {
+            if ( this._maxDistance > 0.0 ) {
                 if ( newValue > this._maxDistance ) {
                     newValue = this._maxDistance;
                 }
@@ -301,48 +313,52 @@ define( [
             this.computeEyePosition( this._target, this._distance, eye );
         },
 
-        computeEyePosition: function ( target, distance, eye ) {
-            var inv = this._tmpInverse;
-            Matrix.inverse( this._rotation, this._tmpInverse );
-            Matrix.transformVec3( inv, [ 0, distance, 0 ],
-                eye );
-            Vec3.add( target, eye, eye );
-        },
+        computeEyePosition: ( function () {
+            var tmpDist = [ 0.0, 0.0, 0.0 ];
+            var tmpInverse = Matrix.create();
+            return function ( target, distance, eye ) {
+                Matrix.inverse( this._rotation, tmpInverse );
+                tmpDist[ 1 ] = distance;
+                Matrix.transformVec3( tmpInverse, tmpDist, eye );
+                Vec3.add( target, eye, eye );
+            };
+        } )(),
 
-        update: function ( nv ) {
-            var t = nv.getFrameStamp().getSimulationTime();
-            if ( this._lastUpdate === undefined ) {
+        update: ( function () {
+            var eye = [ 0.0, 0.0, 0.0 ];
+            var tmpDist = [ 0.0, 0.0, 0.0 ];
+            return function ( nv ) {
+                var t = nv.getFrameStamp().getSimulationTime();
+                if ( this._lastUpdate === undefined ) {
+                    this._lastUpdate = t;
+                }
+                //var dt = t - this._lastUpdate;
                 this._lastUpdate = t;
-            }
-            //var dt = t - this._lastUpdate;
-            this._lastUpdate = t;
 
-            var delta;
-            var mouseFactor = 0.1;
-            delta = this._rotate.update();
-            this.computeRotation( -delta[ 0 ] * mouseFactor * this._scaleMouseMotion, -delta[ 1 ] * mouseFactor * this._scaleMouseMotion );
+                var delta;
+                var mouseFactor = 0.1;
+                delta = this._rotate.update();
+                this.computeRotation( -delta[ 0 ] * mouseFactor * this._scaleMouseMotion, -delta[ 1 ] * mouseFactor * this._scaleMouseMotion );
 
 
-            var panFactor = 0.002;
-            delta = this._pan.update();
-            this.computePan( -delta[ 0 ] * panFactor, -delta[ 1 ] * panFactor );
+                var panFactor = 0.002;
+                delta = this._pan.update();
+                this.computePan( -delta[ 0 ] * panFactor, -delta[ 1 ] * panFactor );
 
 
-            delta = this._zoom.update();
-            this.computeZoom( 1.0 + delta[ 0 ] / 10.0 );
+                delta = this._zoom.update();
+                this.computeZoom( 1.0 + delta[ 0 ] / 10.0 );
 
-            var target = this._target;
-            var distance = this._distance;
+                var target = this._target;
+                var distance = this._distance;
 
-            var eye = new Array( 3 );
-            Matrix.inverse( this._rotation, this._inverseMatrix );
-            Matrix.transformVec3( this._inverseMatrix, [ 0, distance, 0 ],
-                eye );
+                Matrix.inverse( this._rotation, this._inverseMatrix );
+                tmpDist[ 1 ] = distance;
+                Matrix.transformVec3( this._inverseMatrix, tmpDist, eye );
 
-            Matrix.makeLookAt( Vec3.add( target, eye, eye ),
-                target, [ 0, 0, 1 ],
-                this._inverseMatrix );
-        },
+                Matrix.makeLookAt( Vec3.add( target, eye, eye ), target, this._upz, this._inverseMatrix );
+            };
+        } )(),
 
         getInverseMatrix: function () {
             return this._inverseMatrix;

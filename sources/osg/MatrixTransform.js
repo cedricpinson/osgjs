@@ -11,7 +11,7 @@ define( [
      */
     var MatrixTransform = function () {
         Transform.call( this );
-        this.matrix = Matrix.makeIdentity( [] );
+        this.matrix = Matrix.create();
     };
 
     /** @lends MatrixTransform.prototype */
@@ -31,7 +31,7 @@ define( [
             return true;
         },
         computeWorldToLocalMatrix: function ( matrix /*, nodeVisitor */ ) {
-            var minverse = Matrix.makeIdentity([]);
+            var minverse = Matrix.create();
             Matrix.inverse( this.matrix, minverse );
 
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {

@@ -249,9 +249,9 @@ function createTextureProjectedShadowScene(model)
     rtt.setName("rtt_camera");
     rttSize = [512,512];
 
-    rtt.setProjectionMatrix(osg.Matrix.makePerspective(15, 1, 1.0, 1000.0));
+    osg.Matrix.makePerspective(15, 1, 1.0, 1000.0, rtt.getProjectionMatrix());
     var lightMatrix = [];
-    rtt.setViewMatrix(osg.Matrix.makeLookAt([0,0,80],[0,0,0],[0,1,0]));
+    osg.Matrix.makeLookAt([0,0,80],[0,0,0],[0,1,0],rtt.getViewMatrix());
     rtt.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     rtt.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     rtt.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
@@ -285,8 +285,8 @@ function createTextureProjectedShadowScene(model)
 
     q.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
     q.getOrCreateStateSet().setAttributeAndMode(getTextureProjectedShadowShader());
-    var projectionShadow = new osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ProjectionShadow");
-    var modelViewShadow = new osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ModelViewShadow");
+    var projectionShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ProjectionShadow");
+    var modelViewShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ModelViewShadow");
     q.getOrCreateStateSet().addUniform(projectionShadow);
 
     q.getOrCreateStateSet().addUniform(modelViewShadow);
@@ -299,7 +299,7 @@ function createTextureProjectedShadowScene(model)
 
 
     var blurr = new osg.Camera();
-    blurr.setProjectionMatrix(osg.Matrix.makeOrtho(0, rttSize[0], 0, rttSize[1], -5, 5));
+    osg.Matrix.makeOrtho(0, rttSize[0], 0, rttSize[1], -5, 5, blurr.getProjectionMatrix());
     blurr.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     blurr.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     blurr.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
@@ -771,10 +771,10 @@ function createShadowMapScene(model)
     var nearShadow = new osg.Uniform.createFloat1(near, "nearShadow");
     var farShadow = new osg.Uniform.createFloat1(far, "farShadow" );
 
-    var projectionShadow = new osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ProjectionShadow");
-    var modelViewShadow = new osg.Uniform.createMatrix4(osg.Matrix.makeIdentity(), "ModelViewShadow");
+    var projectionShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ProjectionShadow");
+    var modelViewShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ModelViewShadow");
 
-    rtt.setProjectionMatrix(osg.Matrix.makePerspective(15, 1, near, far));
+    osg.Matrix.makePerspective(15, 1, near, far, rtt.getProjectionMatrix());
     rtt.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     rtt.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     rtt.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));

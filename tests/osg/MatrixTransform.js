@@ -13,7 +13,7 @@ define( [
 
             var n = new MatrixTransform();
             var scene = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
-            n.setMatrix( Matrix.makeTranslate( 100, 0, 0 ) );
+            Matrix.makeTranslate( 100, 0, 0, n.getMatrix() );
             n.addChild( scene );
             var bs = n.getBound();
             mockup.near( bs.center(), [ 100, 0, 0 ] );

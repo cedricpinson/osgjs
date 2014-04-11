@@ -64,8 +64,8 @@ define( [
                     'linearAttenuation': uFact.createFloat1( 0, this.getUniformName( 'linearAttenuation' ) ),
                     'quadraticAttenuation': uFact.createFloat1( 0, this.getUniformName( 'quadraticAttenuation' ) ),
                     'enable': uFact.createInt1( 0, this.getUniformName( 'enable' ) ),
-                    'matrix': uFact.createMatrix4( Matrix.makeIdentity( [] ), this.getUniformName( 'matrix' ) ),
-                    'invMatrix': uFact.createMatrix4( Matrix.makeIdentity( [] ), this.getUniformName( 'invMatrix' ) )
+                    'matrix': uFact.createMatrix4( Matrix.create(), this.getUniformName( 'matrix' ) ),
+                    'invMatrix': uFact.createMatrix4( Matrix.create(), this.getUniformName( 'invMatrix' ) )
                 };
 
                 uniforms[ typeMember ].uniformKeys = window.Object.keys( uniforms[ typeMember ] );

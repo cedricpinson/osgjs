@@ -27,7 +27,7 @@ define( [
         set: function( start, end ) {
             this.start = start;
             this.end = end;
-            this.dir = Vec3.sub( end, start, [] );
+            this.dir = Vec3.sub( end, start, [ 0.0, 0.0, 0.0 ] );
             this.length = Vec3.length( this.dir );
             this.invLength = 1.0 / this.length;
             Vec3.mult( this.dir, this.invLength, this.dir );

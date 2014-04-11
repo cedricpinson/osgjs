@@ -66,7 +66,7 @@ define( [
         },
         getModelMatrix: function() {
             if ( this.matrix.length === 0 ) {
-                return Matrix.makeIdentity( [] );
+                return Matrix.create();
             }
             return this.matrix[ this.matrix.length - 1 ];
         },
@@ -141,26 +141,26 @@ define( [
             }
         },
 
-        transformRay: function( tStart, tEnd ) {
-            var matrix = [];
-            Matrix.copy( this.getWindowMatrix(), matrix );
-            Matrix.preMult( matrix, this.getProjectionMatrix() );
-            Matrix.preMult( matrix, this.getViewMatrix() );
-            Matrix.preMult( matrix, this.getModelMatrix() );
+        transformRay: (function() {
+            var inv = Matrix.create();
+            return function(tStart, tEnd) {
+                Matrix.copy(this.getWindowMatrix(), inv);
+                Matrix.preMult(inv, this.getProjectionMatrix());
+                Matrix.preMult(inv, this.getViewMatrix());
+                Matrix.preMult(inv, this.getModelMatrix());
 
-            var inv = [];
-            var valid = Matrix.inverse( matrix, inv );
-            // if matrix is invalid do nothing on this node
-            if ( !valid ) {
-                return false;
-            }
+                var valid = Matrix.inverse(inv, inv);
+                // if matrix is invalid do nothing on this node
+                if (!valid) {
+                    return false;
+                }
 
-            Matrix.transformVec3( inv, this.start, tStart );
-            Matrix.transformVec3( inv, this.end, tEnd );
+                Matrix.transformVec3(inv, this.start, tStart);
+                Matrix.transformVec3(inv, this.end, tEnd);
 
-            return true;
-        },
-
+                return true;
+            };
+        })(),
         apply: ( function() {
             var ns = [ 0.0, 0.0, 0.0 ];
             var ne = [ 0.0, 0.0, 0.0 ];

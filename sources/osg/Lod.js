@@ -51,7 +51,7 @@ define( [
             // instead create variable and use the same each time
             var zeroVector = [ 0.0, 0.0, 0.0 ];
             var eye = [ 0.0, 0.0, 0.0 ];
-            var viewModel = Matrix.makeIdentity( [] );
+            var viewModel = Matrix.create();
 
             return function ( visitor ) {
                 var traversalMode = visitor.traversalMode;

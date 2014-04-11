@@ -24,52 +24,45 @@ define( [
             return this.referenceFrame;
         },
 
-        computeBound: function ( bsphere ) {
-            Node.prototype.computeBound.call( this, bsphere );
-            if ( !bsphere.valid() ) {
+        computeBound: (function ( ) {
+            var xdash = [ 0.0, 0.0, 0.0 ];
+            var ydash = [ 0.0, 0.0, 0.0 ];
+            var zdash = [ 0.0, 0.0, 0.0 ];
+            return function ( bsphere ) {
+                Node.prototype.computeBound.call( this, bsphere );
+                if ( !bsphere.valid() ) {
+                    return bsphere;
+                }
+                var sphCenter = bsphere._center;
+                var sphRadius = bsphere._radius;
+
+                var matrix = Matrix.create();
+                this.computeLocalToWorldMatrix( matrix );
+
+                Vec3.copy( sphCenter, xdash );
+                xdash[ 0 ] += sphRadius;
+                Matrix.transformVec3( matrix, xdash, xdash );
+
+                Vec3.copy( sphCenter, ydash );
+                ydash[ 1 ] += sphRadius;
+                Matrix.transformVec3( matrix, ydash, ydash );
+
+                Vec3.copy( sphCenter, zdash );
+                zdash[ 2 ] += sphRadius;
+                Matrix.transformVec3( matrix, zdash, zdash );
+
+                Matrix.transformVec3( matrix, sphCenter, sphCenter );
+
+                var lenXdash = Vec3.distance( xdash, sphCenter );
+                var lenYdash = Vec3.distance( ydash, sphCenter );
+                var lenZdash = Vec3.distance( zdash, sphCenter );
+
+                // bsphere._radius = Math.max( lenXdash, lenYdash, lenZdash );
+                sphRadius = lenXdash < lenYdash ? lenXdash : lenYdash;
+                bsphere._radius = sphCenter < lenZdash ? sphCenter : lenZdash;
                 return bsphere;
-            }
-            var matrix = Matrix.makeIdentity( [] );
-            this.computeLocalToWorldMatrix( matrix );
-
-            var xdash = Vec3.copy( bsphere._center, [] );
-            xdash[ 0 ] += bsphere._radius;
-            Matrix.transformVec3( matrix, xdash, xdash );
-
-            var ydash = Vec3.copy( bsphere._center, [] );
-            ydash[ 1 ] += bsphere._radius;
-            Matrix.transformVec3( matrix, ydash, ydash );
-
-            var zdash = Vec3.copy( bsphere._center, [] );
-            zdash[ 2 ] += bsphere._radius;
-            Matrix.transformVec3( matrix, zdash, zdash );
-
-            Matrix.transformVec3( matrix, bsphere._center, bsphere._center );
-
-            Vec3.sub( xdash,
-                bsphere._center,
-                xdash );
-            var lenXdash = Vec3.length( xdash );
-
-            Vec3.sub( ydash,
-                bsphere._center,
-                ydash );
-            var lenYdash = Vec3.length( ydash );
-
-            Vec3.sub( zdash,
-                bsphere._center,
-                zdash );
-            var lenZdash = Vec3.length( zdash );
-
-            bsphere._radius = lenXdash;
-            if ( bsphere._radius < lenYdash ) {
-                bsphere._radius = lenYdash;
-            }
-            if ( bsphere._radius < lenZdash ) {
-                bsphere._radius = lenZdash;
-            }
-            return bsphere;
-        }
+            };
+        })()
     } );
 
     return Transform;

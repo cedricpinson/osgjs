@@ -7,8 +7,7 @@ define( [
 
     var QuatTarget = function () {
         Target.call( this );
-        this._target = [];
-        Quat.makeIdentity( this._target );
+        this._target = Quat.create();
     };
     QuatTarget.prototype = MACROUTILS.objectInehrit( Target.prototype, {
         update: function ( weight, val, priority ) {

@@ -6,7 +6,7 @@ define( [
 
     var Projection = function () {
         Node.call( this );
-        this.projection = Matrix.makeIdentity( [] );
+        this.projection = Matrix.create();
     };
     Projection.prototype = MACROUTILS.objectInehrit( Node.prototype, {
         getProjectionMatrix: function () {

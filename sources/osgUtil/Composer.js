@@ -14,8 +14,9 @@ define( [
     'osg/Shader',
     'osg/Shape',
     'osg/TransformEnums',
+    'osg/Vec2',
     'osg/Vec3'
-], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix,  Uniform, StateSet, Program, Shader, Shape, TransformEnums, Vec3 ) {
+], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix,  Uniform, StateSet, Program, Shader, Shape, TransformEnums, Vec2, Vec3 ) {
 
     /*
      Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
@@ -170,10 +171,9 @@ define( [
                 }
 
                 var vp = new Viewport( 0, 0, w, h );
-                var projection = Matrix.makeOrtho( -w / 2, w / 2, -h / 2, h / 2, -5, 5, [] );
                 camera.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
                 camera.setViewport( vp );
-                camera.setProjectionMatrix( projection );
+                Matrix.makeOrtho( -w / 2, w / 2, -h / 2, h / 2, -5, 5, camera.getProjectionMatrix() );
                 camera.setStateSet( element.filter.getStateSet() );
 
                 quad = Shape.createTexturedQuadGeometry( -w / 2, -h / 2, 0,
@@ -908,16 +908,15 @@ define( [
             var sizeNoise = this._noiseTextureSize;
             var noise = new Array( sizeNoise * sizeNoise * 3 );
             ( function ( array ) {
+                var n = [ 0.0, 0.0 ];
                 for ( var i = 0; i < sizeNoise * sizeNoise; i++ ) {
-                    var x, y, z;
-                    x = 2.0 * ( Math.random() - 0.5 );
-                    y = 2.0 * ( Math.random() - 0.5 );
-                    z = 0.0;
+                    n[ 0 ] = 2.0 * ( Math.random() - 0.5 );
+                    n[ 1 ] = 2.0 * ( Math.random() - 0.5 );
 
-                    var n = Vec3.normalize( [ x, y, z ], [] );
+                    Vec2.normalize( n, n );
                     array[ i * 3 + 0 ] = 255 * ( n[ 0 ] * 0.5 + 0.5 );
                     array[ i * 3 + 1 ] = 255 * ( n[ 1 ] * 0.5 + 0.5 );
-                    array[ i * 3 + 2 ] = 255 * ( n[ 2 ] * 0.5 + 0.5 );
+                    array[ i * 3 + 2 ] = 255 * 0.5;
                 }
             } )( noise );
 
@@ -962,13 +961,13 @@ define( [
             var nbSamples = this._nbSamples;
             var kernel = new Array( nbSamples * 4 );
             ( function ( array ) {
+                var v = [ 0.0, 0.0, 0.0 ];
                 for ( var i = 0; i < nbSamples; i++ ) {
-                    var x, y, z;
-                    x = 2.0 * ( Math.random() - 0.5 );
-                    y = 2.0 * ( Math.random() - 0.5 );
-                    z = Math.random();
+                    v[ 0 ] = 2.0 * ( Math.random() - 0.5 );
+                    v[ 1 ] = 2.0 * ( Math.random() - 0.5 );
+                    v[ 2 ] = Math.random();
 
-                    var v = Vec3.normalize( [ x, y, z ], [] );
+                    Vec3.normalize( v, v );
                     var scale = Math.max( i / nbSamples, 0.1 );
                     scale = 0.1 + ( 1.0 - 0.1 ) * ( scale * scale );
                     array[ i * 3 + 0 ] = v[ 0 ];
@@ -1107,13 +1106,13 @@ define( [
             var kernel = new Array( nbSamples * 4 );
             //var angleLimit = this._angleLimit;
             ( function ( array ) {
+                var v = [ 0.0, 0.0, 0.0 ];
                 for ( var i = 0; i < nbSamples; i++ ) {
-                    var x, y, z;
-                    x = 2.0 * ( Math.random() - 0.5 );
-                    y = 2.0 * ( Math.random() - 0.5 );
-                    z = Math.random();
+                    v[ 0 ] = 2.0 * ( Math.random() - 0.5 );
+                    v[ 1 ] = 2.0 * ( Math.random() - 0.5 );
+                    v[ 2 ] = Math.random();
 
-                    var v = Vec3.normalize( [ x, y, z ], [] );
+                    Vec3.normalize( v, v );
                     var scale = Math.max( i / nbSamples, 0.1 );
                     scale = 0.1 + ( 1.0 - 0.1 ) * ( scale * scale );
                     array[ i * 3 + 0 ] = v[ 0 ];

@@ -385,7 +385,7 @@ define( [
             // update bound
             camera.getBound();
 
-            var identity = Matrix.makeIdentity( [] );
+            var identity = Matrix.create();
             this._cullVisitor.pushModelviewMatrix( identity );
 
             if ( this._light ) {
@@ -552,7 +552,7 @@ define( [
                 vp.setViewport( vp.x() * widthChangeRatio, vp.y() * heightChangeRatio, vp.width() * widthChangeRatio, vp.height() * heightChangeRatio );
 
                 if ( aspectRatioChange !== 1.0 ) {
-                    Matrix.preMult( camera.getProjectionMatrix(), Matrix.makeScale( 1.0 / aspectRatioChange, 1.0, 1.0, [] ) );
+                    Matrix.preMult( camera.getProjectionMatrix(), Matrix.makeScale( 1.0 / aspectRatioChange, 1.0, 1.0, Matrix.create() ) );
                 }
             };
             window.addEventListener( 'resize', resize, true );

@@ -93,8 +93,8 @@ define( [
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
 
-                cull.pushProjectionMatrix( Matrix.makeIdentity( [] ) );
-                cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
+                cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelviewMatrix( Matrix.create() );
                 camera0.accept( cull );
 
                 ok( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); //+ cull.rootRenderStage === cull.currentRenderBin
@@ -128,8 +128,8 @@ define( [
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
 
-                cull.pushProjectionMatrix( Matrix.makeIdentity( [] ) );
-                cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
+                cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelviewMatrix( Matrix.create() );
                 cull.pushStateSet( new StateSet() );
 
                 camera0.accept( cull );
@@ -145,7 +145,7 @@ define( [
                 var camera0 = new Camera();
 
                 var mt = new MatrixTransform();
-                mt.setMatrix( Matrix.makeTranslate( 0, 0, 10 ) );
+                Matrix.makeTranslate( 0, 0, 10, mt.getMatrix() );
                 var geom = Shape.createTexturedQuadGeometry( -5.0, -5, 0,
                     10, 0, 0,
                     0, 10, 0,
@@ -153,8 +153,8 @@ define( [
                 mt.addChild( geom );
                 camera0.addChild( mt );
 
-                camera0.setViewMatrix( Matrix.makeLookAt( [ -10, 0, 10 ], [ 0, 0, 10 ], [ 0, 1, 0 ], [] ) );
-                camera0.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0, [] ) );
+                Matrix.makeLookAt( [ -10, 0, 10 ], [ 0, 0, 10 ], [ 0, 1, 0 ], camera0.getViewMatrix() );
+                Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0, camera0.getProjectionMatrix() );
 
                 var stack = [];
 
@@ -178,8 +178,8 @@ define( [
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
 
-                cull.pushProjectionMatrix( Matrix.makeIdentity( [] ) );
-                cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
+                cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelviewMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0 ];
@@ -193,7 +193,7 @@ define( [
                 var camera0 = new Camera();
 
                 var mt = new MatrixTransform();
-                mt.setMatrix( Matrix.makeTranslate( 0, 0, 10 ) );
+                Matrix.makeTranslate( 0, 0, 10, mt.getMatrix());
                 var geom = Shape.createTexturedQuadGeometry( -5.0, -5, 0,
                     10, 0, 0,
                     0, 10, 0,
@@ -201,8 +201,8 @@ define( [
                 mt.addChild( geom );
                 camera0.addChild( mt );
 
-                camera0.setViewMatrix( Matrix.makeLookAt( [ 0, 0, 20 ], [ 0, 0, 10 ], [ 0, 1, 0 ], [] ) );
-                camera0.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0 ) );
+                Matrix.makeLookAt( [ 0, 0, 20 ], [ 0, 0, 10 ], [ 0, 1, 0 ], camera0.getViewMatrix() );
+                Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0, camera0.getProjectionMatrix() ) ;
 
                 var stack = [];
 
@@ -229,8 +229,8 @@ define( [
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
 
-                cull.pushProjectionMatrix( Matrix.makeIdentity( [] ) );
-                cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
+                cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelviewMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 ok( mockup.check_near( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
@@ -280,8 +280,8 @@ define( [
                 //      var bbCornerFar = 1;
                 //      var bbCornerNear = 6;
 
-                camera0.setViewMatrix( Matrix.makeLookAt( Vec3.add( eye, target, [] ), target, [ 0, 0, 1 ], [] ) );
-                camera0.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 450, 1.0, 1000.0, [] ) );
+                Matrix.makeLookAt( Vec3.add( eye, target, [] ), target, [ 0, 0, 1 ], camera0.getViewMatrix() );
+                Matrix.makePerspective( 60, 800 / 450, 1.0, 1000.0, camera0.getProjectionMatrix() );
 
                 var stack = [];
 
@@ -313,8 +313,8 @@ define( [
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
 
-                cull.pushProjectionMatrix( Matrix.makeIdentity( [] ) );
-                cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
+                cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelviewMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 ok( mockup.check_near( stack[ 1 ][ 0 ], d_near, 0.8 ), 'near should be ' + d_near + ' and is ' + stack[ 1 ][ 0 ] );
@@ -329,24 +329,24 @@ define( [
                 var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
                 var node3 = new MatrixTransform();
-                node3.setMatrix( Matrix.makeTranslate( 0, 0, 20, [] ) );
+                Matrix.makeTranslate( 0, 0, 20, node3.getMatrix() );
                 node3.getOrCreateStateSet().setRenderBinDetails( 1, '' );
                 node3.getOrCreateStateSet().setName( 'Node3' );
                 node3.addChild( q );
 
                 var node0 = new MatrixTransform();
-                node0.setMatrix( Matrix.makeTranslate( 0, 0, -10, [] ) );
+                Matrix.makeTranslate( 0, 0, -10, node0.getMatrix() );
                 node0.getOrCreateStateSet().setRenderBinDetails( 0, 'DepthSortedBin' );
                 node0.getOrCreateStateSet().setName( 'Node0' );
                 node0.addChild( q );
 
                 var node1 = new MatrixTransform();
-                node1.setMatrix( Matrix.makeTranslate( 0, 0, 5, [] ) );
+                Matrix.makeTranslate( 0, 0, 5, node1.getMatrix() );
                 node1.getOrCreateStateSet().setName( 'Node1' );
                 node1.addChild( q );
 
                 var node2 = new MatrixTransform();
-                node2.setMatrix( Matrix.makeTranslate( 0, 0, -20, [] ) );
+                Matrix.makeTranslate( 0, 0, -20, node2.getMatrix() );
                 node2.getOrCreateStateSet().setRenderBinDetails( 0, 'RenderBin' );
                 node2.getOrCreateStateSet().setName( 'Node2' );
                 node2.addChild( q );
@@ -358,8 +358,8 @@ define( [
                 var cull = new CullVisitor();
                 var rs = new RenderStage();
                 var sg = new StateGraph();
-                cull.pushProjectionMatrix( Matrix.makeIdentity( [] ) );
-                cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
+                cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelviewMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );
@@ -380,13 +380,13 @@ define( [
                 var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
                 var node0 = new MatrixTransform();
-                node0.setMatrix( Matrix.makeTranslate( 0, 0, -10, [] ) );
+                Matrix.makeTranslate( 0, 0, -10, node0.getMatrix() );
                 node0.getOrCreateStateSet().setRenderingHint( 'OPAQUE_BIN' );
                 node0.getOrCreateStateSet().setName( 'Node0' );
                 node0.addChild( q );
 
                 var node1 = new MatrixTransform();
-                node1.setMatrix( Matrix.makeTranslate( 0, 0, 5, [] ) );
+                Matrix.makeTranslate( 0, 0, 5, node1.getMatrix() );
                 node0.getOrCreateStateSet().setRenderingHint( 'TRANSPARENT_BIN' );
                 node1.getOrCreateStateSet().setName( 'Node1' );
                 node1.addChild( q );
@@ -398,8 +398,8 @@ define( [
                 var cull = new CullVisitor();
                 var rs = new RenderStage();
                 var sg = new StateGraph();
-                cull.pushProjectionMatrix( Matrix.makeIdentity( [] ) );
-                cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
+                cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelviewMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );
@@ -420,13 +420,13 @@ define( [
                 var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
                 var node0 = new MatrixTransform();
-                node0.setMatrix( Matrix.makeTranslate( 0, 0, -10, [] ) );
+                Matrix.makeTranslate( 0, 0, -10, node0.getMatrix() );
                 node0.getOrCreateStateSet().setRenderingHint( 'OPAQUE_BIN' );
                 node0.getOrCreateStateSet().setName( 'Node0' );
                 node0.addChild( q );
 
                 var node1 = new MatrixTransform();
-                node1.setMatrix( Matrix.makeTranslate( 0, 0, 5, [] ) );
+                Matrix.makeTranslate( 0, 0, 5, node1.getMatrix() );
                 node0.getOrCreateStateSet().setRenderingHint( 'TRANSPARENT_BIN' );
                 node1.getOrCreateStateSet().setName( 'Node1' );
                 node1.addChild( q );
@@ -439,8 +439,8 @@ define( [
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 rs.setViewport( new Viewport() );
-                cull.pushProjectionMatrix( Matrix.makeIdentity( [] ) );
-                cull.pushModelviewMatrix( Matrix.makeIdentity( [] ) );
+                cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelviewMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );

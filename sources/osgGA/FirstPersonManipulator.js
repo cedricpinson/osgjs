@@ -37,7 +37,10 @@ define( [
             if ( this._node !== undefined ) {
                 var bs = this._node.getBound();
                 this._radius = bs.radius();
-                this._eye = [ 0, -bs.radius() * 1.5, 0 ];
+                var eye = this._eye;
+                eye[ 0 ] = 0.0;
+                eye[ 1 ] = -bs.radius();
+                eye[ 2 ] = 0.0;
             }
         },
         init: function () {
@@ -49,18 +52,17 @@ define( [
             this._side = new OrbitManipulator.Interpolator( 1 );
             this._lookPosition = new OrbitManipulator.Interpolator( 2 );
             this._stepFactor = 1.0; // meaning radius*stepFactor to move
-            this._target = new Array( 3 );
-            Vec3.init( this._target );
+            this._target = [ 0.0, 0.0, 0.0 ];
             this._angleVertical = 0.0;
             this._angleHorizontal = 0.0;
 
             // tmp value use for computation
-            this._tmpComputeRotation1 = Matrix.makeIdentity( [] );
-            this._tmpComputeRotation2 = Matrix.makeIdentity( [] );
-            this._tmpComputeRotation3 = Matrix.makeIdentity( [] );
-            this._tmpGetTargetDir = Vec3.init( [] );
+            this._tmpComputeRotation1 = Matrix.create();
+            this._tmpComputeRotation2 = Matrix.create();
+            this._tmpComputeRotation3 = Matrix.create();
+            this._tmpGetTargetDir = [ 0.0, 0.0, 0.0 ];
 
-            this._rotBase = Matrix.makeIdentity( [] );
+            this._rotBase = Matrix.create();
 
             var self = this;
 
@@ -89,7 +91,7 @@ define( [
 
         getTarget: function ( pos, distance ) {
             if ( distance === undefined ) {
-                distance = 25;
+                distance = 25.0;
             }
             var dir = Vec3.mult( this._direction, distance, this._tmpGetTargetDir );
             Vec3.add( this._eye, dir, pos );
@@ -101,10 +103,10 @@ define( [
             this._target[ 2 ] = pos[ 2 ];
             var dir = this._tmpGetTargetDir;
             Vec3.sub( pos, this._eye, dir );
-            dir[ 2 ] = 0;
+            dir[ 2 ] = 0.0;
             Vec3.normalize( dir, dir );
             this._angleHorizontal = Math.acos( dir[ 1 ] );
-            if ( dir[ 0 ] < 0 ) {
+            if ( dir[ 0 ] < 0.0 ) {
                 this._angleHorizontal = -this._angleHorizontal;
             }
             Vec3.sub( pos, this._eye, dir );
@@ -124,27 +126,30 @@ define( [
             return this._forward;
         },
 
-        computeRotation: function ( dx, dy ) {
-            this._angleVertical += dy * 0.01;
-            this._angleHorizontal -= dx * 0.01;
+        computeRotation: ( function () {
+            var upy = [ 0.0, 1.0, 0.0 ];
+            var upz = [ 0.0, 0.0, 1.0 ];
+            return function ( dx, dy ) {
+                this._angleVertical += dy * 0.01;
+                this._angleHorizontal -= dx * 0.01;
 
-            var first = this._tmpComputeRotation1;
-            var second = this._tmpComputeRotation2;
-            var rotMat = this._tmpComputeRotation3;
-            Matrix.makeRotate( this._angleVertical, 1, 0, 0, first );
-            Matrix.makeRotate( this._angleHorizontal, 0, 0, 1, second );
-            Matrix.mult( second, first, rotMat );
+                var first = this._tmpComputeRotation1;
+                var second = this._tmpComputeRotation2;
+                var rotMat = this._tmpComputeRotation3;
+                Matrix.makeRotate( this._angleVertical, 1.0, 0.0, 0.0, first );
+                Matrix.makeRotate( this._angleHorizontal, 0.0, 0.0, 1.0, second );
+                Matrix.mult( second, first, rotMat );
 
-            var rotBase = this._rotBase;
-            // TOTO refactor the way the rotation matrix is managed
-            Matrix.preMult( rotMat, rotBase );
+                var rotBase = this._rotBase;
+                // TOTO refactor the way the rotation matrix is managed
+                Matrix.preMult( rotMat, rotBase );
 
-            this._direction = Matrix.transformVec3(rotMat, [ 0, 1, 0 ], this._direction );
-            Vec3.normalize( this._direction, this._direction );
+                this._direction = Matrix.transformVec3( rotMat, upy, this._direction );
+                Vec3.normalize( this._direction, this._direction );
 
-            this._up = Matrix.transformVec3( rotMat, [ 0, 0, 1 ], this._up );
-        },
-
+                Matrix.transformVec3( rotMat, upz, this._up );
+            };
+        } )(),
         reset: function () {
             this.init();
         },
@@ -153,40 +158,40 @@ define( [
             this._stepFactor = t;
         },
 
-        update: function ( nv ) {
-            var t = nv.getFrameStamp().getSimulationTime();
-            if ( this._lastUpdate === undefined ) {
+        update: ( function () {
+            var vec = [ 0.0, 0.0 ];
+            return function ( nv ) {
+                var t = nv.getFrameStamp().getSimulationTime();
+                if ( this._lastUpdate === undefined ) {
+                    this._lastUpdate = t;
+                }
+                var dt = t - this._lastUpdate;
                 this._lastUpdate = t;
-            }
-            var dt = t - this._lastUpdate;
-            this._lastUpdate = t;
 
-            this._forward.update();
-            this._side.update();
-            var delta = this._lookPosition.update();
+                this._forward.update();
+                this._side.update();
+                var delta = this._lookPosition.update();
 
-            this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
+                this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
 
-            var vec = new Array( 2 );
-            vec[ 0 ] = this._forward.getCurrent()[ 0 ];
-            vec[ 1 ] = this._side.getCurrent()[ 0 ];
-            if ( Vec2.length( vec ) > 1.0 ) {
-                Vec2.normalize( vec, vec );
-            }
-            var factor = this._radius;
-            if ( this._radius < 1e-3 ) {
-                factor = 1.0;
-            }
-            this.moveForward( vec[ 0 ] * factor * this._stepFactor * dt );
-            this.strafe( vec[ 1 ] * factor * this._stepFactor * dt );
+                vec[ 0 ] = this._forward.getCurrent()[ 0 ];
+                vec[ 1 ] = this._side.getCurrent()[ 0 ];
+                if ( Vec2.length( vec ) > 1.0 ) {
+                    Vec2.normalize( vec, vec );
+                }
+                var factor = this._radius;
+                if ( this._radius < 1e-3 ) {
+                    factor = 1.0;
+                }
+                this.moveForward( vec[ 0 ] * factor * this._stepFactor * dt );
+                this.strafe( vec[ 1 ] * factor * this._stepFactor * dt );
 
-            var target = Vec3.add( this._eye, this._direction, [] );
-            this._target = target;
+                Vec3.add( this._eye, this._direction, this._target );
 
-            Matrix.makeLookAt( this._eye, target, this._up, this._inverseMatrix );
-        },
-
-        setRotationBaseFromQuat:function( quat ){
+                Matrix.makeLookAt( this._eye, this._target, this._up, this._inverseMatrix );
+            };
+        } )(),
+        setRotationBaseFromQuat: function ( quat ) {
             Matrix.makeRotateFromQuat( quat, this._rotBase );
         },
 
@@ -194,17 +199,24 @@ define( [
             return this._inverseMatrix;
         },
 
-        moveForward: function ( distance ) {
-            var d = Vec3.mult( Vec3.normalize( this._direction, [] ), distance, [] );
-            this._eye = Vec3.add( this._eye, d, [] );
-        },
+        moveForward: ( function () {
+            var tmp = [ 0.0, 0.0, 0.0 ];
+            return function ( distance ) {
+                Vec3.normalize( this._direction, tmp );
+                Vec3.mult( tmp, distance, tmp );
+                Vec3.add( this._eye, tmp, this._eye );
+            };
+        } )(),
 
-        strafe: function ( distance ) {
-            var cx = Vec3.cross( this._direction, this._up, [] );
-            var d = Vec3.mult( Vec3.normalize( cx, cx ), distance, [] );
-            this._eye = Vec3.add( this._eye, d, [] );
-        }
-
+        strafe: ( function () {
+            var tmp = [ 0.0, 0.0, 0.0 ];
+            return function ( distance ) {
+                Vec3.cross( this._direction, this._up, tmp );
+                Vec3.normalize( tmp, tmp );
+                Vec3.mult( tmp, distance, tmp );
+                Vec3.add( this._eye, tmp, this._eye );
+            };
+        } )()
     } );
 
     ( function ( module ) {
