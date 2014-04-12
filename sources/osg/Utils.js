@@ -180,70 +180,59 @@ define( [
         };
     } )();
 
-    Utils.timeStamp = ( function () {
+    Utils.timeStamp = function () {
 
-        var fn = console.timeStamp || console.markTimeline || function () {};
-        return function () {
-            return fn.apply( console, arguments );
+        var fn = Notify.console.timeStamp || Notify.console.markTimeline || function () {};
+        return fn.apply( Notify.console, arguments );
+
+    };
+
+    var times = {};
+
+    Utils.time = function () {
+
+        var fn = Notify.console.time || function ( name ) {
+            times[ name ] = Utils.performance.now();
         };
+        return fn.apply( Notify.console, arguments );
 
-    } )();
+    };
 
-    ( function () {
+    Utils.timeEnd = function () {
 
-        var times = {};
+        var fn = Notify.console.timeEnd || function ( name ) {
 
-        Utils.time = ( function () {
+            if ( times[ name ] === undefined )
+                return;
 
-            var fn = console.time || function ( name ) {
-                times[ name ] = Utils.performance.now();
-            };
-            return function ( /*name*/ ) {
-                return fn.apply( console, arguments );
-            };
+            var now = Utils.performance.now();
+            var duration = now - times[ name ];
 
-        } )();
+            Notify.debug( name + ': ' + duration + 'ms');
+            times[ name ] = undefined;
 
-        Utils.timeEnd = ( function () {
+        };
+        return fn.apply( Notify.console, arguments );
 
-            var fn = console.timeEnd || function ( name ) {
-
-                if ( times[ name ] === undefined )
-                    return;
-
-                var now = Utils.performance.now();
-                var duration = now - times[ name ];
-
-                Notify.debug( name + ': ' + duration + 'ms');
-                times[ name ] = undefined;
-
-            };
-            return function () {
-                return fn.apply( console, arguments );
-            };
-
-        } )();
-
-    } )();
+    };
 
     Utils.profile = ( function () {
 
-        var fn = console.profile || function () {};
+        var fn = Notify.console.profile || function () {};
         return function () {
-            return fn.apply( console, arguments );
+            return fn.apply( Notify.console, arguments );
         };
 
     } )();
 
     Utils.profileEnd = ( function () {
 
-        var fn = console.profileEnd || function () {};
+        var fn = Notify.console.profileEnd || function () {};
         return function () {
-            return fn.apply( console, arguments );
+            return fn.apply( Notify.console, arguments );
         };
 
     } )();
-
 
     return Utils;
 } );

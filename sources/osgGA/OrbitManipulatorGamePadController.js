@@ -53,7 +53,7 @@ define( [], function () {
 
                 //SpaceNavigator & 6-axis controllers
             } else if ( axes.length >= 5 ) {
-                //console.log(axes);
+                //Notify.log(axes);
                 if ( Math.abs( axes[ 0 ] ) > AXIS_THRESHOLD || Math.abs( axes[ 1 ] ) > AXIS_THRESHOLD ) {
                     this.addPan( pan, -axes[ 0 ], axes[ 1 ] );
                 }

@@ -8,12 +8,14 @@ define( [], function () {
     Notify.WARN = 3;
     Notify.ERROR = 4;
 
+    Notify.console = window.console;
+
     // #FIXME getStackTrace was initially in webgl-utils (as a global function) but only used in this file
     /** Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
      */
     function getStackTrace( err ) {
-		if (window.console && window.console.trace){
-			window.console.trace();
+		if (Notify.console && Notify.console.trace){
+			Notify.console.trace();
 			return '';
         }
         var callstack = [];
@@ -48,32 +50,32 @@ define( [], function () {
     Notify.setNotifyLevel = function ( level ) {
 
         var log = function ( str ) {
-            if ( window.console !== undefined ) {
-                window.console.log( str, getStackTrace() );
+            if ( this.console !== undefined ) {
+                this.console.log( str, getStackTrace() );
             }
         };
 
         var info = function ( str ) {
-            if ( window.console !== undefined ) {
-                window.console.info( str, getStackTrace() );
+            if ( this.console !== undefined ) {
+                this.console.info( str, getStackTrace() );
             }
         };
 
         var warn = function ( str ) {
-            if ( window.console !== undefined ) {
-                window.console.warn( str, getStackTrace() );
+            if ( this.console !== undefined ) {
+                this.console.warn( str, getStackTrace() );
             }
         };
 
         var error = function ( str ) {
-            if ( window.console !== undefined ) {
-                window.console.error( str, getStackTrace() );
+            if ( this.console !== undefined ) {
+                this.console.error( str, getStackTrace() );
             }
         };
 
         var debug = function ( str ) {
-            if ( window.console !== undefined ) {
-                window.console.debug( str, getStackTrace() );
+            if ( this.console !== undefined ) {
+                this.console.debug( str, getStackTrace() );
             }
         };
 
@@ -105,6 +107,10 @@ define( [], function () {
     Notify.setNotifyLevel( Notify.NOTICE );
 
     Notify.reportWebGLError = false;
+
+    Notify.setConsole = function( replacement ) {
+        Notify.console = replacement;
+    };
 
     return Notify;
 } );
