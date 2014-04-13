@@ -29,8 +29,8 @@ define( [
         dz = sizez / 2.0;
 
         var vertexes = new MACROUTILS.Float32Array( 72 );
-        var uv = new MACROUTILS.Float32Array( 72 );
-        var normal = new MACROUTILS.Float32Array( 48 );
+        var uv = new MACROUTILS.Float32Array( 48 );
+        var normal = new MACROUTILS.Float32Array( 72 );
 
         // -ve y plane
         vertexes[ 0 ] = centerx - dx;
