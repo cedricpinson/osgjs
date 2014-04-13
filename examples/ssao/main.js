@@ -24,6 +24,8 @@ var main = function() {
     osg.ReportWebGLError = true;
 
     var canvas = document.getElementById('3DView');
+    canvas.style.width = canvas.width = window.innerWidth;
+    canvas.style.height = canvas.height = window.innerHeight;
 
     var stats = document.getElementById('Stats');
 

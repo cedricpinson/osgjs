@@ -19,8 +19,7 @@ define( [
 
     var OptionsDefault = {
         'antialias': true,
-        'useDevicePixelRatio': true,
-        'fullscreen' : true
+        'useDevicePixelRatio': true
     };
 
 

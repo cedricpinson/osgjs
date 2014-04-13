@@ -43,7 +43,8 @@ define( [
 
                 // with auto compute near far
 
-                ok( mockup.check_near( viewer.getCamera().getProjectionMatrix(), [ 0.960491063485583, 0, 0, 0, 0, 1.920982126971166, 0, 0, 0, 0, -3.6948013697711914, -1, 0, 0, -86.03523882425281, 0 ] ), 'check near / far computation' );
+                var projection = viewer.getCamera().getProjectionMatrix();
+                ok( mockup.check_near( projection, [ 0.960491063485583, 0, 0, 0, 0, 1.920982126971166, 0, 0, 0, 0, -3.6948013697711914, -1, 0, 0, -86.03523882425281, 0 ] ), 'check near / far computation' );
 
                 viewer._cullVisitor.reset();
                 ok( viewer._cullVisitor._computedNear === Number.POSITIVE_INFINITY, 'Check near after reset' );
