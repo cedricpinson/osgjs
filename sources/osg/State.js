@@ -445,7 +445,7 @@ define( [
                 var programUniforms = program.uniformsCache;
 
                 // first time we see attributes key, so we will keep a list of uniforms from attributes
-                activeUniformsList.lenght = 0;
+                activeUniformsList.length = 0;
 
                 // fill the program with cached active uniforms map from attributes and texture attributes
                 if ( program.trackAttributes !== undefined && program.trackUniforms === undefined ) {
@@ -456,6 +456,10 @@ define( [
                 var programUniformMap = programUniforms.getMapContent();
                 var uniformMapStackContent = this.uniforms.getMapContent();
 
+                var programTrackUniformMapContent;
+                if ( program.trackUniforms )
+                    programTrackUniformMapContent = program.trackUniforms.getMapContent();
+
                 var uniform;
                 for ( var i = 0, l = programUniformKeys.length; i < l; i++ ) {
                     var uniformKey = programUniformKeys[ i ];
@@ -464,8 +468,8 @@ define( [
 
                     if ( uniformStack === undefined ) {
 
-                        if ( program.trackUniforms !== undefined ) {
-                            uniform = program.trackUniforms[ uniformKey ];
+                        if ( programTrackUniformMapContent !== undefined ) {
+                            uniform = programTrackUniformMapContent[ uniformKey ];
                             if ( uniform !== undefined ) {
                                 uniform.apply( this._graphicContext, location );
                             }
