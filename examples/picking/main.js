@@ -182,7 +182,12 @@ window.addEventListener( 'load',
             // TODO maybe doing some benchmark with a lot of geometry,
             // since there's one kdtree per geometry ...
             // console.time( 'pick' );
-            var hits = viewer.computeIntersections( ev.clientX, canvas.height - ev.clientY );
+
+            // take care of retina display canvas size
+            var ratioX = canvas.width / canvas.clientWidth;
+            var ratioY = canvas.height / canvas.clientHeight;
+
+            var hits = viewer.computeIntersections( ev.clientX * ratioX, (canvas.clientHeight - ev.clientY) * ratioY );
             // console.timeEnd( 'pick' );
             // console.log( hits.length );
 
@@ -199,8 +204,8 @@ window.addEventListener( 'load',
 
                 var pt = projectToScreen( viewer.getCamera(), hits[ 0 ] );
 
-                var ptx = parseInt( pt[ 0 ], 10 );
-                var pty = parseInt( canvas.height - pt[ 1 ], 10 );
+                var ptx = parseInt( pt[ 0 ], 10 ) / ratioX;
+                var pty = parseInt( canvas.height - pt[ 1 ], 10 ) / ratioY;
                 var d = document.getElementById( 'picking' );
                 d.innerText = 'x: ' + ptx + ' ' + 'y: ' + pty + '\n' + ptFixed;
                 d.style.webkitTransform = 'translate3d(' + ptx + 'px,' + pty + 'px,0)';

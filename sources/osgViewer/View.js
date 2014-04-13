@@ -52,23 +52,46 @@ define( [
             this._webGLCaps = new WebGLCaps();
             this._webGLCaps.init( gl );
         },
+
+        computeCanvasSize: function( canvas ) {
+
+            var clientWidth, clientHeight;
+            if ( this._options.getBoolean('fullscreen') === true ) {
+                clientWidth = window.innerWidth;
+                clientHeight = window.innerHeight;
+            } else {
+                clientWidth = canvas.clientWidth;
+                clientHeight = canvas.clientHeight;
+            }
+
+            if ( clientWidth < 1 ) clientWidth = 1;
+            if ( clientHeight < 1 ) clientHeight = 1;
+
+            var devicePixelRatio = 1;
+            if ( this._options.getBoolean( 'useDevicePixelRatio') ) {
+                devicePixelRatio = window.devicePixelRatio || 1;
+            }
+
+            var widthPixel = clientWidth * devicePixelRatio;
+            var heightPixel = clientHeight * devicePixelRatio;
+
+            canvas.width = widthPixel;
+            canvas.height = heightPixel;
+
+            canvas.style.width = widthPixel / devicePixelRatio;
+            canvas.style.height = heightPixel / devicePixelRatio;
+        },
+
         setUpView: function ( canvas ) {
 
-            var width = canvas.clientWidth !== 0 ? canvas.clientWidth : 800;
-            var height = canvas.clientHeight !== 0 ? canvas.clientHeight : 600;
+            this.computeCanvasSize( canvas );
 
-            var devicePixelRatio = window.devicePixelRatio || 1;
-            width *= devicePixelRatio;
-            height *= devicePixelRatio;
-
-            canvas.width = width;
-            canvas.height = height;
-
-            var ratio = width / height;
-            this._camera.setViewport( new Viewport( 0, 0, width, height ) );
+            var ratio = canvas.width / canvas.height;
+            this._camera.setViewport( new Viewport( 0, 0, canvas.width, canvas.height ) );
             Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], this._camera.getViewMatrix() );
             Matrix.makePerspective( 55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix() );
         },
+
         /**
          * X = 0 at the left
          * Y = 0 at the BOTTOM

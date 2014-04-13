@@ -39,3 +39,22 @@ function createScene() {
     });
     return root;
 }
+
+
+OSG.globalify();
+
+window.addEventListener(
+    'load',
+
+    function () {
+
+        var canvas = document.getElementById( "3DView" );
+
+        var viewer;
+        viewer = new osgViewer.Viewer( canvas );
+        viewer.init();
+        viewer.setSceneData( createScene() );
+        viewer.setupManipulator();
+        viewer.run();
+
+    }, true );

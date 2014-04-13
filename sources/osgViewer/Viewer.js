@@ -16,28 +16,66 @@ define( [
     'osgViewer/stats'
 ], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, OrbitManipulator, EventProxy, WebGLUtils, WebGLDebugUtils, Stats ) {
 
-    ( function () {
 
-        // install an html console logger for mobile
-        var optionsURL = function () {
+    var OptionsDefault = {
+        'antialias': true,
+        'useDevicePixelRatio': true,
+        'fullscreen' : true
+    };
+
+
+    var Options = function( defaults ) {
+
+        Object.keys( defaults ).forEach( function ( key ) {
+            this[ key ] = defaults[ key ];
+        }.bind( this ) );
+
+    };
+
+    Options.prototype = {
+        get: function( key ) {
+            return this[key];
+        },
+        getBoolean: function ( key ) {
+            var val = this.getString( key );
+            if ( val ) return Boolean( JSON.parse(val) );
+            return undefined;
+        },
+
+        getNumber: function ( key ) {
+            var val = this[ key ];
+            if ( val ) return Number( JSON.parse(val));
+            return undefined;
+        },
+
+        getString: function ( key ) {
+            var val = this[ key ];
+            if ( val ) return this[ key ].toString();
+            return undefined;
+        }
+
+    };
+
+    var OptionsURL = ( function () {
+        var options = {};
+        ( function ( options ) {
             var vars = [],
                 hash;
-            var hashes = window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ).split( '&' );
+            var indexOptions = window.location.href.indexOf( '?' );
+            if ( indexOptions < 0 ) return;
+
+            var hashes = window.location.href.slice( indexOptions + 1 ).split( '&' );
             for ( var i = 0; i < hashes.length; i++ ) {
                 hash = hashes[ i ].split( '=' );
-                var element = hash[ 0 ].toLowerCase();
+                var element = hash[ 0 ];
                 vars.push( element );
                 var result = hash[ 1 ];
                 if ( result === undefined ) {
                     result = '1';
                 }
-                vars[ element ] = result.toLowerCase();
-
+                options[ element ] = result;
             }
-            return vars;
-        };
-
-        var options = optionsURL();
+        } )( options );
 
         if ( options.log !== undefined ) {
             var level = options.log.toLowerCase();
@@ -89,25 +127,27 @@ define( [
             }
         }
 
+        return options;
     } )();
 
-    var Viewer = function ( canvas, options, error ) {
+    var Viewer = function ( canvas, userOptions, error ) {
         View.call( this );
 
-        if ( options === undefined ) {
-            options = {
-                antialias: true
-            };
+        // use default options
+        var options = new Options( OptionsDefault );
+        if ( userOptions ) {
+            // user options override by user options
+            MACROUTILS.objectMix( options, userOptions );
         }
+        // if url options override url options
+        MACROUTILS.objectMix( options, OptionsURL );
+
         this._options = options;
 
-        if ( this._options.fullscreen === undefined )
-            this._options.fullscreen = true;
-
         // #FIXME see tojiro's blog for webgl lost context stuffs
-        if ( options.SimulateWebGLLostContext ) {
+        if ( options.get( 'SimulateWebGLLostContext') ) {
             canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas( canvas );
-            canvas.loseContextInNCalls( options.SimulateWebGLLostContext );
+            canvas.loseContextInNCalls( options.get( 'SimulateWebGLLostContext' ) );
         }
 
         var gl = WebGLUtils.setupWebGL( canvas, options, error );
@@ -122,7 +162,7 @@ define( [
         }, false );
 
 
-        if ( Notify.reportWebGLError || options.reportWebGLError ) {
+        if ( Notify.reportWebGLError || options.get( 'reportWebGLError') ) {
             gl = WebGLDebugUtils.makeDebugContext( gl );
         }
 
@@ -137,20 +177,20 @@ define( [
             this._frameRate = 60.0;
             osgUtil.UpdateVisitor = UpdateVisitor;
             osgUtil.CullVisitor = CullVisitor;
-            this._urlOptions = true;
 
             // default argument for mouse binding
-            var eventsBackend = this._options.EventBackend || {};
-            this._options.EventBackend = eventsBackend;
+            var defaultMouseEventNode = options.mouseEventNode || canvas;
 
-            eventsBackend.StandardMouseKeyboard = this._options.EventBackend.StandardMouseKeyboard || {};
-            var mouseEventNode = eventsBackend.StandardMouseKeyboard.mouseEventNode || options.mouseEventNode || canvas;
+            var eventsBackend = options.EventBackend || {};
+            if ( !options.EventBackend )  options.EventBackend = eventsBackend;
+            eventsBackend.StandardMouseKeyboard = options.EventBackend.StandardMouseKeyboard || {};
+            var mouseEventNode = eventsBackend.StandardMouseKeyboard.mouseEventNode || defaultMouseEventNode;
             eventsBackend.StandardMouseKeyboard.mouseEventNode = mouseEventNode;
             eventsBackend.StandardMouseKeyboard.keyboardEventNode = eventsBackend.StandardMouseKeyboard.keyboardEventNode || document;
 
             // hammer
             eventsBackend.Hammer = eventsBackend.Hammer || {};
-            eventsBackend.Hammer.eventNode = eventsBackend.Hammer.eventNode || options.mouseEventNode || canvas;
+            eventsBackend.Hammer.eventNode = eventsBackend.Hammer.eventNode || defaultMouseEventNode;
 
             // gamepade
             eventsBackend.GamePad = eventsBackend.GamePad || {};
@@ -186,9 +226,7 @@ define( [
             this._renderStage = new RenderStage();
             this._stateGraph = new StateGraph();
 
-            if ( this._urlOptions ) {
-                this.parseOptions();
-            }
+            this.parseOptions();
 
             this.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
             this._eventProxy = this.initEventProxy( this._options );
@@ -199,45 +237,11 @@ define( [
             // in View or a new Renderer object
             return this._state;
         },
+
         parseOptions: function () {
 
-            var optionsURL = function () {
-                var vars = [],
-                    hash;
-                var hashes = window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ).split( '&' );
-                for ( var i = 0; i < hashes.length; i++ ) {
-                    hash = hashes[ i ].split( '=' );
-                    var element = hash[ 0 ].toLowerCase();
-                    vars.push( element );
-                    var result = hash[ 1 ];
-                    if ( result === undefined ) {
-                        result = '1';
-                    }
-                    vars[ element ] = result.toLowerCase();
-
-                }
-                return vars;
-            };
-
-            var options = optionsURL();
-
-            if ( options.stats === '1' ) {
-                this.initStats( options );
-            }
-
-            var gl = this.getGraphicContext();
-            // not the best way to do it
-            if ( options['depth_test'] === '0' ) {
-                this.getGraphicContext().disable( gl.DEPTH_TEST );
-            }
-            if ( options['blend'] === '0' ) {
-                this.getGraphicContext().disable( gl.BLEND );
-            }
-            if ( options['cull_face'] === '0' ) {
-                this.getGraphicContext().disable( gl.CULL_FACE );
-            }
-            if ( options['light'] === '0' ) {
-                this.setLightingMode( View.LightingMode.NO_LIGHT );
+            if ( this._options.stats ) {
+                this.initStats( this._options );
             }
 
         },
@@ -519,35 +523,20 @@ define( [
 
             this.setManipulator( manipulator );
 
-            var self = this;
             var resize = function ( /*ev*/ ) {
-                var w, h;
-                if ( self._options.fullscreen === true ) {
-                    w = window.innerWidth;
-                    h = window.innerHeight;
-                } else {
-                    w = self._canvas.clientWidth;
-                    h = self._canvas.clientHeight;
-                }
-                if ( w < 1 )
-                    w = 1;
-                if ( h < 1 )
-                    h = 1;
 
-                var camera = self.getCamera();
+                var canvas = this._canvas;
+                this.computeCanvasSize( canvas );
+
+                var camera = this.getCamera();
                 var vp = camera.getViewport();
 
                 var prevWidth = vp.width();
                 var prevHeight = vp.height();
-                if ( self._options.fullscreen === true ) {
-                    self._canvas.width = w;
-                    self._canvas.height = h;
-                    self._canvas.style.width = w;
-                    self._canvas.style.height = h;
-                }
-                Notify.debug( 'canvas resize ' + prevWidth + 'x' + prevHeight + ' to ' + w + 'x' + h );
-                var widthChangeRatio = w / prevWidth;
-                var heightChangeRatio = h / prevHeight;
+
+                Notify.debug( 'canvas resize ' + prevWidth + 'x' + prevHeight + ' to ' + canvas.width + 'x' + canvas.height );
+                var widthChangeRatio = canvas.width / prevWidth;
+                var heightChangeRatio = canvas.height / prevHeight;
                 var aspectRatioChange = widthChangeRatio / heightChangeRatio;
                 vp.setViewport( vp.x() * widthChangeRatio, vp.y() * heightChangeRatio, vp.width() * widthChangeRatio, vp.height() * heightChangeRatio );
 
@@ -555,7 +544,7 @@ define( [
                     Matrix.preMult( camera.getProjectionMatrix(), Matrix.makeScale( 1.0 / aspectRatioChange, 1.0, 1.0, Matrix.create() ) );
                 }
             };
-            window.addEventListener( 'resize', resize, true );
+            window.addEventListener( 'resize', resize.bind( this ), true );
         },
 
         // intialize all input devices
