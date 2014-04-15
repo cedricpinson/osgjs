@@ -133,8 +133,8 @@ define( [
             var uv = new Array( 3 );
             var uuv = new Array( 3 );
             var qvec = [q[0],q[1],q[2]];
-            Vec3.cross(q, vec, uv);
-            Vec3.cross(q, uv, uuv);
+            Vec3.cross(qvec, vec, uv);
+            Vec3.cross(qvec, uv, uuv);
             Vec3.mult(uv, 2.0 * q[3], uv);
             Vec3.mult(uuv, 2.0, uuv);
             var sum = new Array( 3 );
