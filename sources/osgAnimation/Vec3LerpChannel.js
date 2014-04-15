@@ -17,7 +17,7 @@ define( [
         Channel.call( this, sampler, target );
         sampler.setInterpolator( Interpolator.Vec3LerpInterpolator );
         this.setKeyframes( keys );
-        this._data.value = Vec3.copy( target.getValue(), [] );
+        this._data.value = Vec3.copy( target.getValue(), [ 0.0, 0.0, 0.0 ] );
     };
 
     Vec3LerpChannel.prototype = Channel.prototype;
