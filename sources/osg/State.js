@@ -32,7 +32,8 @@ define( [
         // check point cloud example
         var arrayColorEnable = Stack.create();
         arrayColorEnable.globalDefault = Uniform.createFloat1( 0.0, 'ArrayColorEnabled' );
-        this.uniforms.setMapContent( {
+
+        this.uniforms.setMap( {
             ArrayColorEnabled: arrayColorEnable
         } );
 
@@ -111,7 +112,7 @@ define( [
 
         haveAppliedAttribute: function ( attribute ) {
             var key = attribute.getTypeMember();
-            var attributeStack = this.attributeMap.getMapContent()[ key ];
+            var attributeStack = this.attributeMap[ key ];
             attributeStack.lastApplied = attribute;
             attributeStack.asChanged = true;
         },
@@ -119,13 +120,13 @@ define( [
         applyAttribute: function ( attribute ) {
             var key = attribute.getTypeMember();
 
-            var attributeMapContent = this.attributeMap.getMapContent();
-            var attributeStack = attributeMapContent[ key ];
+            var attributeMap = this.attributeMap;
+            var attributeStack = attributeMap[ key ];
 
             if ( attributeStack === undefined ) {
                 attributeStack = Stack.create();
-                attributeMapContent[ key ] = attributeStack;
-                attributeMapContent[ key ].globalDefault = attribute.cloneType();
+                attributeMap[ key ] = attributeStack;
+                attributeMap[ key ].globalDefault = attribute.cloneType();
                 this.attributeMap.dirty();
             }
 
@@ -148,13 +149,12 @@ define( [
             }
 
             var textureUnitAttributeMap = this.textureAttributeMapList[ unit ];
-            var textureUnitAttributeMapContent = textureUnitAttributeMap.getMapContent();
-            var attributeStack = textureUnitAttributeMapContent[ key ];
+            var attributeStack = textureUnitAttributeMap[ key ];
 
             if ( attributeStack === undefined ) {
 
                 attributeStack = Stack.create();
-                textureUnitAttributeMapContent[ key ] = attributeStack;
+                textureUnitAttributeMap[ key ] = attributeStack;
                 textureUnitAttributeMap.dirty();
                 attributeStack.globalDefault = attribute.cloneType();
 
@@ -176,11 +176,11 @@ define( [
 
         pushGeneratedProgram: function () {
             var program;
-            var attributeMapContent = this.attributeMap.getMapContent();
+            var attributeMap = this.attributeMap;
 
-            if ( attributeMapContent.Program !== undefined && attributeMapContent.Program.length !== 0 ) {
-                program = attributeMapContent.Program.back().object;
-                var value = attributeMapContent.Program.back().value;
+            if ( attributeMap.Program !== undefined && attributeMap.Program.length !== 0 ) {
+                program = attributeMap.Program.back().object;
+                var value = attributeMap.Program.back().value;
                 if ( program !== undefined && value !== StateAttribute.OFF ) {
                     this.programs.push( this.getObjectPair( program, value ) );
                     return program;
@@ -212,12 +212,12 @@ define( [
 
         computeForeignUniforms: function( programUniformMap, activeUniformMap ) {
             var uniformMapKeys = programUniformMap.getKeys();
-            var uniformMapContent = programUniformMap.getMapContent();
+            var uniformMap = programUniformMap;
 
             var foreignUniforms = [];
             for ( var i = 0, l = uniformMapKeys.length; i < l; i++ ) {
                 var name = uniformMapKeys[ i ];
-                var location = uniformMapContent[ name ];
+                var location = uniformMap[ name ];
                 if ( location !== undefined && activeUniformMap[ name ] === undefined ) {
                     // filter 'standard' uniform matrix that will be applied for all shader
                     if ( name !== this.modelViewMatrix.name &&
@@ -232,14 +232,14 @@ define( [
         },
 
         removeUniformsNotRequiredByProgram: function( activeUniformMap, programUniformMap ) {
-            var activeUniformMapContent = activeUniformMap.getMapContent();
+
             var activeUniformMapKeys = activeUniformMap.getKeys();
 
             for ( var i = 0, l = activeUniformMapKeys.length; i < l; i++ ) {
                 var name = activeUniformMapKeys[ i ];
                 var location = programUniformMap[ name ];
                 if ( location === undefined || location === null ) {
-                    delete activeUniformMapContent[ name ];
+                    delete activeUniformMap[ name ];
                     activeUniformMap.dirty();
                 }
             }
@@ -249,12 +249,12 @@ define( [
 
         cacheUniformsForGeneratedProgram: function( program ) {
 
-            var foreignUniforms = this.computeForeignUniforms( program.uniformsCache, program.activeUniforms.getMapContent() );
+            var foreignUniforms = this.computeForeignUniforms( program.uniformsCache, program.activeUniforms );
             program.foreignUniforms = foreignUniforms;
 
 
             // remove uniforms listed by attributes (getActiveUniforms) but not required by the program
-            this.removeUniformsNotRequiredByProgram( program.activeUniforms, program.uniformsCache.getMapContent() );
+            this.removeUniformsNotRequiredByProgram( program.activeUniforms, program.uniformsCache );
 
         },
 
@@ -274,33 +274,31 @@ define( [
             }
 
 
-            var programUniforms = program.uniformsCache;
-            var activeUniforms = program.activeUniforms;
+            var programUniformMap = program.uniformsCache;
+            var activeUniformMap = program.activeUniforms;
 
-            var programUniformMapContent = programUniforms.getMapContent();
-            var activeUniformMapKeys = activeUniforms.getMapContent();
 
             // apply active uniforms
             // caching uniforms from attribtues make it impossible to overwrite uniform with a custom uniform instance not used in the attributes
             var i,l, name, location;
-            var activeUniformKeys = activeUniforms.getKeys();
+            var activeUniformKeys = activeUniformMap.getKeys();
 
             for ( i = 0, l = activeUniformKeys.length; i < l; i++ ) {
 
                 name = activeUniformKeys[ i ];
-                location = programUniformMapContent[ name ];
-                activeUniformMapKeys[ name ].apply( this._graphicContext, location );
+                location = programUniformMap[ name ];
+                activeUniformMap[ name ].apply( this._graphicContext, location );
 
             }
 
-            var uniformMapStackContent = this.uniforms.getMapContent();
+            var uniformMapStack = this.uniforms;
 
             // apply now foreign uniforms, it's uniforms needed by the program but not contains in attributes used to generate this program
             for ( i = 0, l = foreignUniformKeys.length; i < l; i++ ) {
 
                 name = foreignUniformKeys[ i ];
-                var uniformStack = uniformMapStackContent[ name ];
-                location = programUniformMapContent[ name ];
+                var uniformStack = uniformMapStack[ name ];
+                location = programUniformMap[ name ];
                 var uniform;
 
                 if ( uniformStack !== undefined ) {
@@ -348,28 +346,34 @@ define( [
 
         getActiveUniformsFromProgramAttributes: function( program, activeUniformsList ) {
 
-            var attributeMapStackContent = this.attributeMap.getMapContent();
+            var attributeMapStack = this.attributeMap;
 
             var attributeKeys = program.trackAttributes.attributeKeys;
+
             if ( attributeKeys.length > 0 ) {
+
                 for ( var i = 0, l = attributeKeys.length; i < l; i++ ) {
+
                     var key = attributeKeys[ i ];
-                    var attributeStack = attributeMapStackContent[ key ];
+                    var attributeStack = attributeMapStack[ key ];
                     if ( attributeStack === undefined ) {
                         continue;
                     }
+
                     // we just need the uniform list and not the attribute itself
                     var attribute = attributeStack.globalDefault;
                     if ( attribute.getOrCreateUniforms === undefined ) {
                         continue;
                     }
-                    var uniforms = attribute.getOrCreateUniforms();
-                    var uniformKeys = uniforms.getKeys();
-                    var uniformMap = uniforms.getMapContent();
+
+                    var uniformMap = attribute.getOrCreateUniforms();
+                    var uniformKeys = uniformMap.getKeys();
+
                     for ( var a = 0, b = uniformKeys.length; a < b; a++ ) {
                         activeUniformsList.push( uniformMap[ uniformKeys[ a ] ] );
                     }
                 }
+
             }
         },
 
@@ -400,10 +404,9 @@ define( [
                     }
                     var uniformMap = attribute.getOrCreateUniforms();
                     var uniformMapKeys = uniformMap.getKeys();
-                    var uniformMapContent = uniformMap.getMapContent();
 
                     for ( var a = 0, b = uniformMapKeys.length; a < b; a++ ) {
-                        activeUniformsList.push( uniformMapContent[ uniformMapKeys[ a ] ] );
+                        activeUniformsList.push( uniformMap[ uniformMapKeys[ a ] ] );
                     }
                 }
             }
@@ -420,12 +423,12 @@ define( [
             // now we have a list on uniforms we want to track but we will filter them to use only what is needed by our program
             // not that if you create a uniforms whith the same name of a tracked attribute, and it will override it
             var uniformsFinal = new Map();
-            var uniformsFinalMap = uniformsFinal.getMapContent();
+
             for ( var i = 0, l = activeUniformsList.length; i < l; i++ ) {
                 var u = activeUniformsList[ i ];
                 var loc = gl.getUniformLocation( program.program, u.name );
                 if ( loc !== undefined && loc !== null ) {
-                    uniformsFinalMap[ u.name ] = u;
+                    uniformsFinal[ u.name ] = u;
                 }
             }
             uniformsFinal.dirty();
@@ -442,7 +445,6 @@ define( [
                 // custom program so we will iterate on uniform from the program and apply them
                 // but in order to be able to use Attribute in the state graph we will check if
                 // our program want them. It must be defined by the user
-                var programUniforms = program.uniformsCache;
 
                 // first time we see attributes key, so we will keep a list of uniforms from attributes
                 activeUniformsList.length = 0;
@@ -452,13 +454,13 @@ define( [
                     this.cacheUniformsForCustomProgram( program, activeUniformsList );
                 }
 
-                var programUniformKeys = programUniforms.getKeys();
-                var programUniformMap = programUniforms.getMapContent();
-                var uniformMapStackContent = this.uniforms.getMapContent();
+                var programUniformMap = program.uniformsCache;
+                var programUniformKeys = programUniformMap.getKeys();
+                var uniformMapStackContent = this.uniforms;
 
-                var programTrackUniformMapContent;
+                var programTrackUniformMap;
                 if ( program.trackUniforms )
-                    programTrackUniformMapContent = program.trackUniforms.getMapContent();
+                    programTrackUniformMap = program.trackUniforms;
 
                 var uniform;
                 for ( var i = 0, l = programUniformKeys.length; i < l; i++ ) {
@@ -468,8 +470,8 @@ define( [
 
                     if ( uniformStack === undefined ) {
 
-                        if ( programTrackUniformMapContent !== undefined ) {
-                            uniform = programTrackUniformMapContent[ uniformKey ];
+                        if ( programTrackUniformMap !== undefined ) {
+                            uniform = programTrackUniformMap[ uniformKey ];
                             if ( uniform !== undefined ) {
                                 uniform.apply( this._graphicContext, location );
                             }
@@ -493,12 +495,11 @@ define( [
             var attributeStack;
 
             var attributeMapKeys = attributeMap.getKeys();
-            var attributeMapContent = attributeMap.getMapContent();
 
             for ( var i = 0, l = attributeMapKeys.length; i < l; i++ ) {
                 var key = attributeMapKeys[ i ];
 
-                attributeStack = attributeMapContent[ key ];
+                attributeStack = attributeMap[ key ];
                 if ( attributeStack === undefined ) {
                     continue;
                 }
@@ -528,28 +529,26 @@ define( [
                 value: value
             };
         },
+
         pushUniformsList: function ( uniformMap, stateSetUniformMap ) {
             /*jshint bitwise: false */
             var name;
             var uniform;
 
-            var uniformMapContent = uniformMap.getMapContent();
-
             var stateSetUniformMapKeys = stateSetUniformMap.getKeys();
-            var stateSetUniformMapContent = stateSetUniformMap.getMapContent();
 
             for ( var i = 0, l = stateSetUniformMapKeys.length; i < l; i++ ) {
                 var key = stateSetUniformMapKeys[ i ];
-                var uniformPair = stateSetUniformMapContent[ key ];
+                var uniformPair = stateSetUniformMap[ key ];
                 uniform = uniformPair.getUniform();
                 name = uniform.name;
-                if ( uniformMapContent[ name ] === undefined ) {
-                    uniformMapContent[ name ] = Stack.create();
-                    uniformMapContent[ name ].globalDefault = uniform;
+                if ( uniformMap[ name ] === undefined ) {
+                    uniformMap[ name ] = Stack.create();
+                    uniformMap[ name ].globalDefault = uniform;
                     uniformMap.dirty();
                 }
                 var value = uniformPair.getValue();
-                var stack = uniformMapContent[ name ];
+                var stack = uniformMap[ name ];
                 if ( stack.length === 0 ) {
                     stack.push( this.getObjectPair( uniform, value ) );
                 } else if ( ( stack[ stack.length - 1 ].value & StateAttribute.OVERRIDE ) && !( value & StateAttribute.PROTECTED ) ) {
@@ -560,14 +559,14 @@ define( [
             }
             /*jshint bitwise: true */
         },
+
         popUniformsList: function ( uniformMap, stateSetUniformMap ) {
 
             var stateSetUniformMapKeys = stateSetUniformMap.getKeys();
-            var uniformMapContent = uniformMap.getMapContent();
 
             for ( var i = 0, l = stateSetUniformMapKeys.length; i < l; i++ ) {
                 var key = stateSetUniformMapKeys[ i ];
-                uniformMapContent[ key ].pop();
+                uniformMap[ key ].pop();
             }
         },
 
@@ -582,13 +581,12 @@ define( [
                 }
 
 
-                var textureAttributeMapContent = textureAttributeMap.getMapContent();
                 var textureAttributeMapKeys = textureAttributeMap.getKeys();
 
                 for ( var i = 0, lt = textureAttributeMapKeys.length; i < lt; i++ ) {
                     var key = textureAttributeMapKeys[ i ];
 
-                    var attributeStack = textureAttributeMapContent[ key ];
+                    var attributeStack = textureAttributeMap[ key ];
                     if ( attributeStack === undefined ) {
                         continue;
                     }
@@ -613,14 +611,14 @@ define( [
         setGlobalDefaultValue: function ( attribute ) {
 
             var key = attribute.getTypeMember();
-            var attributeMapContent = this.attributeMap.getMapContent();
+            var attributeMap = this.attributeMap;
 
-            if ( attributeMapContent[ key ] ) {
-                attributeMapContent[ key ].globalDefault = attribute;
+            if ( attributeMap[ key ] ) {
+                attributeMap[ key ].globalDefault = attribute;
 
             } else {
-                attributeMapContent[ key ] = Stack.create();
-                attributeMapContent[ key ].globalDefault = attribute;
+                attributeMap[ key ] = Stack.create();
+                attributeMap[ key ].globalDefault = attribute;
 
                 this.attributeMap.dirty();
             }
@@ -629,27 +627,24 @@ define( [
         pushAttributeMap: function ( attributeMap, stateSetAttributeMap ) {
             /*jshint bitwise: false */
             var attributeStack;
-            var attributeMapContent = attributeMap.getMapContent();
-
             var stateSetAttributeMapKeys = stateSetAttributeMap.getKeys();
-            var stateSetAttributeMapContent = stateSetAttributeMap.getMapContent();
 
             for ( var i = 0, l = stateSetAttributeMapKeys.length; i < l; i++ ) {
 
                 var type = stateSetAttributeMapKeys[ i ];
-                var attributePair = stateSetAttributeMapContent[ type ];
+                var attributePair = stateSetAttributeMap[ type ];
                 var attribute = attributePair.getAttribute();
 
-                if ( attributeMapContent[ type ] === undefined ) {
-                    attributeMapContent[ type ] = Stack.create();
-                    attributeMapContent[ type ].globalDefault = attribute.cloneType();
+                if ( attributeMap[ type ] === undefined ) {
+                    attributeMap[ type ] = Stack.create();
+                    attributeMap[ type ].globalDefault = attribute.cloneType();
 
                     attributeMap.dirty();
                 }
 
                 var value = attributePair.getValue();
 
-                attributeStack = attributeMapContent[ type ];
+                attributeStack = attributeMap[ type ];
                 if ( attributeStack.length === 0 ) {
                     attributeStack.push( this.getObjectPair( attribute, value ) );
                 } else if ( ( attributeStack[ attributeStack.length - 1 ].value & StateAttribute.OVERRIDE ) && !( value & StateAttribute.PROTECTED ) ) {
@@ -667,12 +662,11 @@ define( [
 
             var attributeStack;
             var stateSetAttributeMapKeys = stateSetAttributeMap.getKeys();
-            var attributeMapContent = attributeMap.getMapContent();
 
             for ( var i = 0, l = stateSetAttributeMapKeys.length; i < l; i++ ) {
 
                 var type = stateSetAttributeMapKeys[ i ];
-                attributeStack = attributeMapContent[ type ];
+                attributeStack = attributeMap[ type ];
                 attributeStack.pop();
                 attributeStack.asChanged = true;
 
@@ -717,14 +711,14 @@ define( [
 
             if ( program !== undefined ) {
                 var gl = this.getGraphicContext();
-                var attributeCacheMapContentColor = program.attributesCache.getMapContent().Color;
+                var color  = program.attributesCache.Color;
                 var updateColorUniform = false;
                 var hasColorAttrib = false;
-                if ( attributeCacheMapContentColor !== undefined ) {
-                    hasColorAttrib = this.vertexAttribMap[ attributeCacheMapContentColor ];
+                if ( color !== undefined ) {
+                    hasColorAttrib = this.vertexAttribMap[ color ];
                 }
 
-                var uniform = this.uniforms.getMapContent().ArrayColorEnabled.globalDefault;
+                var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
                 if ( this.previousHasColorAttrib !== hasColorAttrib ) {
                     updateColorUniform = true;
                 }
@@ -740,7 +734,7 @@ define( [
                     uniform.dirty();
                 }
 
-                uniform.apply( gl, program.uniformsCache.getMapContent().ArrayColorEnabled );
+                uniform.apply( gl, program.uniformsCache.ArrayColorEnabled );
             }
         },
         setVertexAttribArray: function ( attrib, array, normalize ) {

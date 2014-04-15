@@ -88,7 +88,7 @@ define( [
                 var name = this.getType() + unit;
                 var uniformMap = new Map();
                 var uniform = Uniform.createInt1( unit, name );
-                uniformMap.setMapContent( {
+                uniformMap.setMap( {
                     texture: uniform
                 } );
                 uniform.dirty();

@@ -26,10 +26,10 @@ define( [
             // we should check attribute is active or not
             var types = [];
             var attributeMapKeys = state.attributeMap.getKeys();
-            var attributeMapContent = state.attributeMap.getMapContent();
+            var attributeMap = state.attributeMap;
             for ( var j = 0, k = attributeMapKeys.length; j < k; j++ ) {
                 var keya = attributeMapKeys[ j ];
-                var attributeStack = attributeMapContent[ keya ];
+                var attributeStack = attributeMap[ keya ];
                 if ( attributeStack.length === 0 && attributeStack.globalDefault.applyPositionedUniform === undefined ) {
                     continue;
                 }
@@ -45,11 +45,11 @@ define( [
                 }
 
                 var textureAttributeMapKeys = attributesForUnit.getKeys();
-                var textureAttributeMapContent = attributesForUnit.getMapContent();
+                var textureAttributeMap = attributesForUnit;
 
                 for ( var h = 0, m = textureAttributeMapKeys.length; h < m; h++ ) {
                     var key = textureAttributeMapKeys[ h ];
-                    var textureAttributeStack = textureAttributeMapContent[ key ];
+                    var textureAttributeStack = textureAttributeMap[ key ];
                     if ( textureAttributeStack.length === 0 ) {
                         continue;
                     }
@@ -64,11 +64,11 @@ define( [
         getActiveAttributeMapKeys: function ( state ) {
             var keys = [];
             var attributeMapKeys = state.attributeMap.getKeys();
-            var attributeMapContent = state.attributeMap.getMapContent();
+            var attributeMap = state.attributeMap;
 
             for ( var j = 0, k = attributeMapKeys.length; j < k; j++ ) {
                 var keya = attributeMapKeys[ j ];
-                var attributeStack = attributeMapContent[ keya ];
+                var attributeStack = attributeMap[ keya ];
                 if ( attributeStack.length === 0 && attributeStack.globalDefault.applyPositionedUniform === undefined ) {
                     continue;
                 }
@@ -88,12 +88,12 @@ define( [
                 }
 
                 var textureAttributeMapKeys = attributesForUnit.getKeys();
-                var textureAttributeMapContent = attributesForUnit.getMapContent();
+                var textureAttributeMap = attributesForUnit;
 
                 textureAttributeKeys[ i ] = [];
                 for ( var j = 0, m = textureAttributeMapKeys.length; j < m; j++ ) {
                     var key = textureAttributeMapKeys[ j ];
-                    var textureAttributeStack = textureAttributeMapContent[ key ];
+                    var textureAttributeStack = textureAttributeMap[ key ];
                     if ( textureAttributeStack.length === 0 ) {
                         continue;
                     }
@@ -109,25 +109,23 @@ define( [
         // return the list of uniforms enabled from the State
         // The idea behind this is to generate a shader depending on attributes/uniforms enabled by the user
         getActiveUniforms: function ( state, attributeKeys, textureAttributeKeys ) {
-            var uniformMap = new Map();
-            var uniformMapContent = uniformMap.getMapContent();
 
-            var attributeMapContent = state.attributeMap.getMapContent();
+            var uniformMap = new Map();
+            var attributeMap = state.attributeMap;
 
             for ( var i = 0, l = attributeKeys.length; i < l; i++ ) {
                 var key = attributeKeys[ i ];
 
-                if ( attributeMapContent[ key ].globalDefault.getOrCreateUniforms === undefined ) {
+                if ( attributeMap[ key ].globalDefault.getOrCreateUniforms === undefined ) {
                     continue;
                 }
-                var attributeUniforms = attributeMapContent[ key ].globalDefault.getOrCreateUniforms();
+                var attributeUniforms = attributeMap[ key ].globalDefault.getOrCreateUniforms();
 
                 var attributeUniformKeys = attributeUniforms.getKeys();
-                var attributeUniformContent = attributeUniforms.getMapContent();
                 for ( var j = 0, m = attributeUniformKeys.length; j < m; j++ ) {
                     var name = attributeUniformKeys[ j ];
-                    var uniform = attributeUniformContent[ name ];
-                    uniformMapContent[ uniform.name ] = uniform;
+                    var uniform = attributeUniforms[ name ];
+                    uniformMap[ uniform.name ] = uniform;
                 }
             }
 
@@ -141,17 +139,16 @@ define( [
                     //if (state.textureAttributeMapList[a][attrName].globalDefault === undefined) {
                     //debugger;
                     //}
-                    var textureAttribute = state.textureAttributeMapList[ a ].getMapContent()[ attrName ].globalDefault;
+                    var textureAttribute = state.textureAttributeMapList[ a ][ attrName ].globalDefault;
                     if ( textureAttribute.getOrCreateUniforms === undefined ) {
                         continue;
                     }
                     var texUniformMap = textureAttribute.getOrCreateUniforms( a );
                     var texUniformMapKeys = texUniformMap.getKeys();
-                    var texUniformContent = texUniformMap.getMapContent();
                     for ( var t = 0, tl = texUniformMapKeys.length; t < tl; t++ ) {
                         var tname = texUniformMapKeys[ t ];
-                        var tuniform = texUniformContent[ tname ];
-                        uniformMapContent[ tuniform.name ] = tuniform;
+                        var tuniform = texUniformMap[ tname ];
+                        uniformMap[ tuniform.name ] = tuniform;
                     }
                 }
             }
@@ -219,11 +216,10 @@ define( [
                     continue;
                 }
                 var attributeMap = attributeMapList[ i ];
-                var attributeMapContent = attributeMap.getMapContent();
                 for ( var j = 0, m = attributeKeys.length; j < m; j++ ) {
                     var key = attributeKeys[ j ];
 
-                    var element = attributeMapContent[ key ].globalDefault;
+                    var element = attributeMap[ key ].globalDefault;
 
                     if ( element.generateShaderCommon !== undefined && commonTypeShader[ key ] === undefined ) {
                         shader += element.generateShaderCommon( i, mode );
@@ -241,10 +237,10 @@ define( [
         fillShader: function ( attributeMap, validAttributeKeys, mode ) {
             var shader = '';
             var commonTypeShader = {};
-            var attributeMapContent = attributeMap.getMapContent();
+
             for ( var j = 0, m = validAttributeKeys.length; j < m; j++ ) {
                 var key = validAttributeKeys[ j ];
-                var element = attributeMapContent[ key ].globalDefault;
+                var element = attributeMap[ key ].globalDefault;
                 var type = element.getType();
                 if ( element.generateShaderCommon !== undefined && commonTypeShader[ type ] === undefined ) {
                     shader += element.generateShaderCommon( mode );
