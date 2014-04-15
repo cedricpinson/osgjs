@@ -1,6 +1,7 @@
 define( [
-    'osg/Notify'
-], function ( Notify ) {
+    'osg/Notify',
+    'osg/Vec3'
+], function ( Notify, Vec3 ) {
 
     /** @class Quaternion Operations */
     var Quat = {
@@ -127,20 +128,20 @@ define( [
             result[ 3 ] = from[ 3 ] * scaleFrom + quatTo[ 3 ] * scaleTo;
             return result;
         },
-
-        // transformVec3: function (q, vec, result) {
-        //     // nVidia SDK implementation
-        //     var uv = new Array(3);
-        //     var uuv = new Array(3);
-        //     Vec3.cross(q, vec, uv);
-        //     Vec3.cross(q, uv, result);
-        //     Vec3.mult(uv, 2.0 * q[3], uv);
-        //     Vec3.mult(result, 2.0, result);
-        //     Vec3.add(result, uv, result);
-        //     Vec3.add(result, vec, result);
-        //     return result;
-        // },
-
+        transformVec3: function (q, vec, result) {
+            // nVidia SDK implementation
+            var uv = new Array( 3 );
+            var uuv = new Array( 3 );
+            var qvec = [q[0],q[1],q[2]];
+            Vec3.cross(q, vec, uv);
+            Vec3.cross(q, uv, uuv);
+            Vec3.mult(uv, 2.0 * q[3], uv);
+            Vec3.mult(uuv, 2.0, uuv);
+            var sum = new Array( 3 );
+            Vec3.add(vec, uv, sum);
+            Vec3.add(sum, uuv, result);
+            return result;
+        },
         normalize: function ( q, qr ) {
             var div = 1.0 / this.length2( q );
             qr[ 0 ] = q[ 0 ] * div;
