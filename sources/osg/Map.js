@@ -1,6 +1,7 @@
 define( [
 
 ], function () {
+    'use strict';
 
     var Map = function( obj ) {
 
@@ -38,14 +39,22 @@ define( [
 
         setMap: function( map ) {
 
+            var i,l;
             // remove all
-            Object.keys( this ).forEach( function ( key ) {
-                delete this[ key ];
-            }.bind( this ) );
+            var keys = Object.keys( this );
+            if ( keys.length > 0) {
+                for ( i = 0, l = keys.length; i < l; i++)
+                    delete this[ keys[i] ];
+            }
 
-            Object.keys( map ).forEach( function ( key ) {
-                this[ key ] = map[ key ];
-            }.bind( this ) );
+            // add new
+            keys = Object.keys( map );
+            if ( keys.length > 0) {
+                for ( i = 0, l = keys.length; i < l; i++ ) {
+                    var key = keys[ i ];
+                    this[ key ] = map[ key ];
+                }
+            }
 
             this.dirty();
         }

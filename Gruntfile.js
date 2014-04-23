@@ -273,7 +273,7 @@ module.exports = function ( grunt ) {
 
     grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
 
-    grunt.registerTask( 'webtest', [ 'connect:server', 'qunit' ] );
+    grunt.registerTask( 'webtest', [ 'connect:server', 'qunit:all' ] );
     grunt.registerTask( 'test', [ 'qunit:local' ] );
 
     grunt.registerTask( 'docs', [ 'requirejs:docsSources', 'docco' ] );

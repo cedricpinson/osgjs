@@ -11,7 +11,7 @@ define( [
 
         test( 'Viewer', function () {
             ( function () {
-                var canvas = mockup.createCanvas();
+                var canvas = mockup.createWebGLCanvas();
                 var viewer = new Viewer( canvas );
                 ok( viewer.getCamera() !== undefined, 'Check camera creation' );
                 ok( viewer.getCamera().getViewport() !== undefined, 'Check camera viewport' );
@@ -23,6 +23,10 @@ define( [
                 ok( viewer.getState().getGraphicContext() !== undefined, 'Check state graphic context' );
                 mockup.removeCanvas( canvas );
             } )();
+
+            if ( navigator.userAgent.indexOf('PhantomJS') !== -1 ) {
+                return;
+            }
 
             ( function () {
                 var canvas = mockup.createCanvas();
@@ -66,7 +70,7 @@ define( [
                     }
                 };
                 var list = viewer.initEventProxy( args );
-                console.log( list );
+
                 ok( list.LeapMotion !== undefined, 'detected leapmotion' );
                 ok( list.StandardMouseKeyboard !== undefined, 'detected mouse' );
 

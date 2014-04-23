@@ -4,7 +4,7 @@ define( [
 
 ], function( getScene, getBoxScene) {
 
-    var check_near = function (a, b, threshold) {
+    var checkNear = function (a, b, threshold) {
 
         if (threshold === undefined) {
             threshold = 1e-5;
@@ -53,6 +53,20 @@ define( [
         ok(true, "okay: " + QUnit.jsDump.parse(a));
     };
 
+    var createFakeWebGLCanvas = function() {
+        var obj = {
+            addEventListener: function() {},
+            getContext: function() {
+                return createFakeRenderer();
+            },
+            style: {
+                width: 300
+            },
+            getAttribute: function() { return 0; }
+        };
+        return obj;
+    };
+
     var createCanvas = function() {
         var parent = document.body;
 
@@ -67,8 +81,11 @@ define( [
     };
 
     var removeCanvas = function(canvas) {
+        if ( !canvas ) return;
         var id = canvas.getAttribute('id');
         var parent = document.getElementById("div_"+id);
+        if (!parent)
+            return;
         parent.removeChild(canvas);
     };
 
@@ -77,6 +94,8 @@ define( [
                  'DEPTH_TEST': 1,
                  'CULL_FACE': 0,
                  'UNSIGNED_SHORT': 0,
+                 'HIGH_FLOAT': 0,
+                 'FRAGMENT_SHADER' : 0,
                  'TEXTURE_CUBE_MAP_POSITIVE_X': 0x8515,
                  'TEXTURE_CUBE_MAP_NEGATIVE_X': 0x8516,
                  'TEXTURE_CUBE_MAP_POSITIVE_Y': 0x8517,
@@ -84,6 +103,7 @@ define( [
                  'TEXTURE_CUBE_MAP_POSITIVE_Z': 0x8519,
                  'TEXTURE_CUBE_MAP_NEGATIVE_Z': 0x851A,
                  'MAX_CUBE_MAP_TEXTURE_SIZE': 0x851C,
+                 'UNPACK_FLIP_Y_WEBGL': 0,
                  drawElements: function() {},
                  createBuffer: function() {},
                  deleteBuffer: function(arg) {},
@@ -91,6 +111,7 @@ define( [
                  enable: function() {},
                  disable: function() {},
                  depthFunc: function() {},
+                 pixelStorei: function() {},
                  depthRange: function() {},
                  depthMask: function() {},
                  deleteTexture: function() {},
@@ -99,6 +120,8 @@ define( [
                  bufferData: function() {},
                  bindBuffer: function() {},
                  blendFunc: function() {},
+                 getShaderPrecisionFormat: function() { return { 'precision': 1}; },
+                 getSupportedExtensions: function() { return {}; },
                  enableVertexAttribArray: function() {},
                  vertexAttribPointer: function() {},
                  createTexture: function() {},
@@ -118,6 +141,7 @@ define( [
                  attachShader: function() {},
                  validateProgram: function() {},
                  linkProgram: function() {},
+                 getParameter: function() {},
                  getProgramParameter: function() {},
                  getProgramInfoLog: function() {},
                  getUniformLocation: function() { return 0;},
@@ -132,8 +156,9 @@ define( [
     };
 
     return {
-        check_near: check_near,
+        check_near: checkNear,
         createFakeRenderer: createFakeRenderer,
+        createWebGLCanvas: createFakeWebGLCanvas,
         removeCanvas: removeCanvas,
         createCanvas: createCanvas,
         near: near,

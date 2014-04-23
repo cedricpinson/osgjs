@@ -171,7 +171,7 @@ define( [
                 return quad;
             };
 
-            createGeometry = function () {
+            var createGeometry = function () {
                 var geom1 = createTrianglesIndexed();
                 var geom2 = createTrianglesNotIndexed();
                 var geom3 = createTriangleStripIndex();
@@ -188,14 +188,14 @@ define( [
 
                 var i = 0;
                 var j = 0;
-                for ( var i = 0; i < nbGeom; ++i ) {
+                for ( i = 0; i < nbGeom; ++i ) {
                     var geo = geoms[ i ];
                     var prim = geo.getPrimitives()[ 0 ];
                     var offset = vertices.length / 3;
                     if ( prim.getIndices ) {
                         var indices = prim.indices.getElements();
                         var nbPrim = indices.length;
-                        for ( var j = 0; j < nbPrim; ++j )
+                        for ( j = 0; j < nbPrim; ++j )
                             indices[ j ] += offset;
                     } else
                         prim.first = offset;
@@ -203,12 +203,12 @@ define( [
 
                     var verts = geo.getAttributes().Vertex.getElements();
                     var nbVerts = verts.length;
-                    for ( var j = 0; j < nbVerts; ++j )
+                    for ( j = 0; j < nbVerts; ++j )
                         vertices.push( verts[ j ] );
                 }
                 geomTotal.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
                 return geomTotal;
-            }
+            };
 
             var geomTotal = createGeometry();
             var nbPrimitives = geomTotal.getPrimitives().length;
@@ -224,7 +224,7 @@ define( [
 
             var hits = [];
             kdTree.intersect( start, end, hits, [] );
-            console.log( hits )
+            //console.log( hits )
 
             ok( hits.length === nbPrimitives, ' Hits should be 1 and result is ' + hits.length );
             var result = [ 0.4, 0.2, 0 ];
