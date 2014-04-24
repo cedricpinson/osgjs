@@ -12,19 +12,19 @@ define( [
 
         if ( $.isArray(a)) {
             for (var i = 0; i < a.length; ++i) {
-                var number = typeof a[i] === "number" && typeof b[i] === "number";
+                var number = typeof a[i] === 'number' && typeof b[i] === 'number';
                 if (Math.abs(a[i]-b[i]) > threshold || number === false) {
-                    QUnit.log( function() { return QUnit.jsDump.parse(a) + " expected " + QUnit.jsDump.parse(b); });
+                    QUnit.log( function() { return QUnit.jsDump.parse(a) + ' expected ' + QUnit.jsDump.parse(b); });
                     return false;
                 }
             }
         } else {
             if (a === undefined || b === undefined) {
-                QUnit.log(function() { return "undefined value : " + a + ", " + b;});
+                QUnit.log(function() { return 'undefined value : ' + a + ', ' + b;});
                 return false;
             }
             if (Math.abs(a-b) > threshold) {
-                QUnit.log(function() { return a + " != " + b;});
+                QUnit.log(function() { return a + ' != ' + b;});
                 return false;
             }
         }
@@ -38,19 +38,19 @@ define( [
 
         if ( $.isArray(a)) {
             for (var i = 0; i < a.length; ++i) {
-                var number = typeof a[i] === "number" && typeof b[i] === "number" && !isNaN(a[i]) && !isNaN(b[i]);
+                var number = typeof a[i] === 'number' && typeof b[i] === 'number' && !isNaN(a[i]) && !isNaN(b[i]);
                 if (Math.abs(a[i]-b[i]) > threshold || number === false) {
-                    ok(false, QUnit.jsDump.parse(a) + " expected " + QUnit.jsDump.parse(b));
+                    ok(false, QUnit.jsDump.parse(a) + ' expected ' + QUnit.jsDump.parse(b));
                     return;
                 }
             }
         } else {
             if (Math.abs(a-b) > threshold) {
-                ok(false, a + " != " + b);
+                ok(false, a + ' != ' + b);
                 return;
             }
         }
-        ok(true, "okay: " + QUnit.jsDump.parse(a));
+        ok(true, 'okay: ' + QUnit.jsDump.parse(a));
     };
 
     var createFakeWebGLCanvas = function() {
@@ -68,13 +68,19 @@ define( [
     };
 
     var createCanvas = function() {
+
+        // mockup for phantomjs
+        if ( navigator.userAgent.indexOf('PhantomJS') !== -1 ) {
+            return createFakeWebGLCanvas();
+        }
+
         var parent = document.body;
 
-        var t = "" + (new Date()).getTime();
-        var cnv = "<canvas id='" + t + "'></canvas>";
+        var t = '' + (new Date()).getTime();
+        var cnv = '<canvas id=\'' + t + '\'></canvas>';
 
         var mydiv = document.createElement('div');
-        mydiv.setAttribute('id', "div_"+t);
+        mydiv.setAttribute('id', 'div_'+t);
         mydiv.innerHTML = cnv;
         parent.appendChild(mydiv);
         return document.getElementById(t);
@@ -83,7 +89,7 @@ define( [
     var removeCanvas = function(canvas) {
         if ( !canvas ) return;
         var id = canvas.getAttribute('id');
-        var parent = document.getElementById("div_"+id);
+        var parent = document.getElementById('div_'+id);
         if (!parent)
             return;
         parent.removeChild(canvas);
@@ -158,7 +164,6 @@ define( [
     return {
         check_near: checkNear,
         createFakeRenderer: createFakeRenderer,
-        createWebGLCanvas: createFakeWebGLCanvas,
         removeCanvas: removeCanvas,
         createCanvas: createCanvas,
         near: near,

@@ -17,7 +17,7 @@ define( [
         test( 'Light', function () {
 
             ( function () {
-                var canvas = mockup.createWebGLCanvas();
+                var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 viewer.init();
 
