@@ -64,7 +64,9 @@ define( [
             var sinLatitude = Math.sin( latitude );
             var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared * sinLatitude * sinLatitude );
 
-            var height = p / Math.cos( latitude ) - N;
+            var cosLat = Math.cos( latitude );
+            if ( cosLat === 0) cosLat = 1;
+            var height = p / cosLat - N;
             result[ 0 ] = latitude;
             result[ 1 ] = longitude;
             result[ 2 ] = height;
