@@ -8,7 +8,7 @@ define( [], function () {
         this._mouseEventNode = undefined;
         this._wheelEventNode = undefined;
         this._keyboardEventNode = undefined;
-        this._eventList = [ 'mousedown', 'mouseup', 'mousemove', 'dblclick' ];
+        this._eventList = [ 'mousedown', 'mouseup', 'mouseout', 'mousemove', 'dblclick' ];
         this._mousePosition = [ 0, 0 ];
     };
 
@@ -99,6 +99,13 @@ define( [], function () {
                 return;
             if ( this.getManipulatorController().mouseup )
                 return this.getManipulatorController().mouseup( ev );
+        },
+
+        mouseout: function ( ev ) {
+            if ( !this.isValid() )
+                return;
+            if ( this.getManipulatorController().mouseout )
+                return this.getManipulatorController().mouseout( ev );
         },
 
         mousemove: function ( ev ) {

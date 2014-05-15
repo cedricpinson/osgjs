@@ -37,6 +37,9 @@ define( [], function () {
         mouseup: function ( /*ev */ ) {
             this.releaseButton();
         },
+        mouseout: function ( /*ev */ ) {
+            this.releaseButton();
+        },
         mousemove: function ( ev ) {
             if ( this._buttonup === true ) {
                 return;
@@ -56,21 +59,26 @@ define( [], function () {
             var manipulator = this._manipulator;
             if ( event.keyCode === 32 ) {
                 manipulator.computeHomePosition();
+                event.preventDefault();
             } else if ( event.keyCode === 87 || event.keyCode === 90 || event.keyCode === 38 ) { // w/z/up
                 manipulator.getFowardInterpolator().setDelay( this._delay );
                 manipulator.getFowardInterpolator().setTarget( 1 );
+                event.preventDefault();
                 return false;
             } else if ( event.keyCode === 83 || event.keyCode === 40 ) { // S/down
                 manipulator.getFowardInterpolator().setDelay( this._delay );
                 manipulator.getFowardInterpolator().setTarget( -1 );
+                event.preventDefault();
                 return false;
             } else if ( event.keyCode === 68 || event.keyCode === 39 ) { // D/right
                 manipulator.getSideInterpolator().setDelay( this._delay );
                 manipulator.getSideInterpolator().setTarget( 1 );
+                event.preventDefault();
                 return false;
             } else if ( event.keyCode === 65 || event.keyCode === 81 || event.keyCode === 37 ) { // a/q/left
                 manipulator.getSideInterpolator().setDelay( this._delay );
                 manipulator.getSideInterpolator().setTarget( -1 );
+                event.preventDefault();
                 return false;
             }
             return undefined;
