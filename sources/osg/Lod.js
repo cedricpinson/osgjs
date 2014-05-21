@@ -32,6 +32,20 @@ define( [
             this.radius = radius;
         },
 
+        addChildNode: function ( node ) {
+
+            Node.prototype.addChild.call( this, node );
+            if ( this.children.length > this.range.length ) {
+                var r = [];
+                var max = 0.0;
+                if (this.range.lenght > 0 )
+                    max = this.range[ this.range.length -1 ][1];
+                r.push( [ max, max ] );
+                this.range.push( r );
+            }
+        return true;
+        },
+
         addChild: function ( node, min, max ) {
             Node.prototype.addChild.call( this, node );
 

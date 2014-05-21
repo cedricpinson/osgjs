@@ -12,9 +12,10 @@ define( [
     'osg/RenderStage',
     'osg/Node',
     'osg/Lod',
+    'osg/PagedLOD',
     'osg/Camera',
     'osg/TransformEnums'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, Camera, TransformEnums ) {
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums ) {
 
     /**
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
@@ -453,6 +454,9 @@ define( [
 
     // same code like Node
     CullVisitor.prototype[ Lod.typeID ] = CullVisitor.prototype[ Node.typeID ];
+
+    // same code like Node
+    CullVisitor.prototype[ PagedLOD.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
     CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
 
