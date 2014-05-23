@@ -445,7 +445,7 @@ define( [
 
             // setup framestamp
             this._updateVisitor.setFrameStamp( frameStamp );
-            //this._cullVisitor.setFrameStamp(this.getFrameStamp());
+            this._cullVisitor.setFrameStamp( frameStamp );
 
             // update inputs devices
             this.updateEventProxy( this._eventProxy, frameStamp );

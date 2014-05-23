@@ -4,23 +4,43 @@
 
 
 define( [
+    'Q',
     'osg/Utils',
     'osg/Lod',
     'osg/NodeVisitor',
     'osg/Matrix',
     'osg/Vec3',
-    'osg/Shape'
-], function ( MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Shape ) {
+    'osg/Node',
+    'osgDB/ReaderParser'
+], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Node, ReaderParser ) {
     /**
      *  PagedLOD that can contains paged child nodes
-     *  @class Lod
+     *  @class PagedLod
      */
     var PagedLOD = function () {
         Lod.call( this );
         this.radius = -1;
         this.range = [];
+        this.perRangeDataList = [];
+        this.loading = false;
+        this.expiryTime = 10.0;
     };
-    /** @lends Lod.prototype */
+
+
+    /**
+     *  PerRangeData utility structure to store per range values
+     *  @class PerRangeData
+     */
+    var PerRangeData=function()
+    {
+        this.filename = undefined;
+        this.loaded = false;
+        this.timeStamp = 0.0;
+        this.frameNumber = 0;
+        this.frameNumberOfLastTraversal = 0;
+    };
+
+    /** @lends PagedLOD.prototype */
     PagedLOD.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Lod.prototype, {
         // Functions here
         setRange: function ( childNo, min, max ) {
@@ -33,6 +53,76 @@ define( [
             this.range[ childNo ][ 1 ] = max;
         },
 
+        setExpiryTime: function ( expiryTime )
+        {
+            this.expiryTime = expiryTime;
+        },
+
+        setFileName: function ( childNo, filename)
+        {
+            // May we should expand the vector first?
+            if ( childNo >= this.perRangeDataList.length)
+            {
+                var rd = new PerRangeData();
+                rd.filename = filename;
+                this.perRangeDataList.push( rd );
+            } else {
+                this.perRangeDataList[childNo].filename = filename;
+            }
+        },
+
+        addChild: function ( node, min, max ) {
+            Lod.prototype.addChild.call( this, node, min, max );
+            this.perRangeDataList.push( new PerRangeData() );
+        },
+
+        addChildNode : function ( node ) {
+            Lod.prototype.addChildNode.call( this, node );
+            // this.perRangeDataList.push ( null );
+        },
+
+        loadUrl : function ( perRangeData, node ) {
+            // TODO:
+            // we should ask to the Cache if the data is in the IndexedDB first
+            console.log( 'loading ' + perRangeData.filename );
+            var req = new XMLHttpRequest();
+            req.open( 'GET', perRangeData.filename, true );
+            req.onload = function( aEvt ) {
+                var promise = ReaderParser.parseSceneGraph( JSON.parse( req.responseText ) );
+                Q.when( promise ).then( function( child ) {
+                    node.addChildNode( child );
+                    //perRangeData.loaded = false;
+                } );
+                console.log( 'success ' + perRangeData.filename, aEvt );
+            };
+
+            req.onerror = function( aEvt ) {
+                console.log( 'error ' + perRangeData.filename, aEvt );
+            };
+            req.send( null );
+        },
+
+        removeExpiredChildren : function ( frameStamp ) {
+
+            if (frameStamp.getFrameNumber() === 0) return;
+             var numChildren = this.children.length;
+             for (var i = numChildren - 1; i > 0; i--) {
+                //First children never expires
+                var timed = frameStamp.getSimulationTime() - this.perRangeDataList[i].timeStamp;
+                if  (timed > this.expiryTime ){
+                    if (i === this.children.length - 1)
+                    {
+                        this.removeChild(this.children[i]);
+                        this.perRangeDataList[i].loaded = false;
+                        console.log('removing node number', i);
+                        numChildren--;
+                    }
+                } else {
+                    return;
+                }
+             }
+        },
+
         traverse: (function() {
 
             // avoid to generate variable on the heap to limit garbage collection
@@ -40,9 +130,14 @@ define( [
             var zeroVector = [ 0.0, 0.0, 0.0 ];
             var eye = [ 0.0, 0.0, 0.0 ];
             var viewModel = Matrix.create();
-
             return function ( visitor ) {
                 var traversalMode = visitor.traversalMode;
+                var updateTimeStamp = false;
+                if (visitor.getVisitorType() === NodeVisitor.CULL_VISITOR)
+                {
+                    updateTimeStamp = true;
+                    this.frameNumberOfLastTraversal = visitor.getFrameStamp().getFrameNumber();
+                }
 
                 switch ( traversalMode ) {
 
@@ -63,13 +158,16 @@ define( [
                     var d = Vec3.distance( eye, this.getBound().center() );
                     requiredRange = d;
 
-                    var numChildren = this.children.length;
                     var needToLoadChild = false;
                     var lastChildTraversed = -1;
                     for ( var j = 0; j < this.range.length; ++j ) {
                         if ( this.range[ j ][ 0 ] <= requiredRange && requiredRange < this.range[ j ][ 1 ] ) {
-                            if ( j < numChildren ) {
-                                // if (updateTimeStamp)....
+                            if ( j < this.children.length ) {
+                                if (updateTimeStamp)
+                                {
+                                    this.perRangeDataList[j].timeStamp = visitor.getFrameStamp().getSimulationTime();
+                                    //this.perRangeDataList[j].frameNumber = visitor.getFrameStamp().getFrameNumber();
+                                }
                                 this.children[ j ].accept( visitor );
                                 lastChildTraversed = j;
                             }
@@ -80,19 +178,31 @@ define( [
                     }
                     if ( needToLoadChild )
                     {
-                        if ( numChildren > 0 && numChildren -1 !== lastChildTraversed ) {
-                            // if (updateTimeStamp) ....
+                        var numChildren = this.children.length;
+                        if ( numChildren > 0 && ((numChildren -1) !== lastChildTraversed )) {
+
+                            if (updateTimeStamp) {
+                                this.perRangeDataList[numChildren -1].timeStamp = visitor.getFrameStamp().getSimulationTime();
+                                //this.perRangeDataList[numChildren -1].frameNumber = visitor.getFrameStamp().getFrameNumber();
+                            }
+
                             this.children[numChildren-1].accept( visitor );
                         }
                          // now request the loading of the next unloaded child.
-                         if ( numChildren < this.range.length ){
+                        if ( numChildren < this.range.length ){
 
                             // Here we should do the request
-                            console.log('Requesting the child number ', numChildren, visitor.nodePath[visitor.nodePath.length -1]);
                             var group = visitor.nodePath[visitor.nodePath.length -1];
-                            group.addChildNode(Shape.createAxisGeometry(10));
-                         }
+                            if (this.perRangeDataList[numChildren].loaded === false)
+                            {
+                                console.log('Requesting the child file : ', this.perRangeDataList[numChildren]);
+                                this.perRangeDataList[numChildren].loaded = true;
+                                this.loadUrl(this.perRangeDataList[numChildren], group);
+                            }
+                        }
                     }
+                    // Remove the expired childs if any
+                    this.removeExpiredChildren(visitor.getFrameStamp());
                     break;
 
                 default:

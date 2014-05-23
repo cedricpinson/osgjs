@@ -53,6 +53,7 @@ define( [
         this._reserveLeafStack.current = 0;
 
         this._renderBinStack = [];
+        this.visitorType = NodeVisitor.CULL_VISITOR;
     };
 
     /** @lends CullVisitor.prototype */
