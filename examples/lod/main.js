@@ -35,6 +35,7 @@ var main = function () {
 
 function createScene() {
     var lodNode = new osg.Lod();
+   lodNode.setRangeMode(1);
     Q.when( osgDB.parseSceneGraph( getModelB() ) ).then( function ( o ) {
         lodNode.addChild( o, 0, 50 );
     } );

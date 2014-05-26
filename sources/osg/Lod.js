@@ -18,7 +18,12 @@ define( [
         Node.call( this );
         this.radius = -1;
         this.range = [];
+        this.rangeMode = Lod.DISTANCE_FROM_EYE_POINT;
     };
+    
+    Lod.DISTANCE_FROM_EYE_POINT = 0;
+    Lod.PIXEL_SIZE_ON_SCREEN = 1;
+
     /** @lends Lod.prototype */
     Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
         // Functions here
@@ -31,6 +36,34 @@ define( [
         setRadius: function ( radius ) {
             this.radius = radius;
         },
+        projectSphere: function ( sph, camMatrix, fle ) {
+  
+            // transform to camera space
+            var sphVector = [sph.center()[0],sph.center()[1],sph.center()[2],1];
+            var o4 = [0,0,0,0];
+            Matrix.transformVec4(camMatrix, sphVector, o4 );
+            var o = [o4[0],o4[1],o4[2]];
+            var r2 = sph.radius2(); var r4 = r2*r2;
+            var z2 = o[2]*o[2];     var z4 = z2*z2;
+            var l2 = Vec3.dot(o,o); var l4 = l2*l2;
+
+            var m = (r2-l2)*(r2-z2); // m = -discriminant{ f(x,y) } = c² - 4ab
+            var n = r2*(r4 - r2*(l2-z2) + (z4 - l2 - z2 - l2*z2*(l2-z2) )) + l4 + l4*z2 - l2*z4 - z4;
+           // var fle = 1;
+            var area = Math.PI*n*fle*fle/Math.sqrt(m*m*m);
+            var cen = [];
+            cen[0]= fle*o[2]*o[0]/(z2-r2);
+            cen[1]= fle*o[2]*o[1]/(z2-r2);
+            if( m < 0.0 ) area=-1.0;    
+            console.log ('PIXEL SIZE =' ,area, 'CENTER', cen );
+            //console.log ('camMatrix', camMatrix);
+            return area; 
+        },
+
+        setRangeMode: function (mode) {
+            //TODO: check if mode is correct
+            this.rangeMode = mode;
+        }, 
 
         addChildNode: function ( node ) {
 
@@ -81,13 +114,18 @@ define( [
 
                 case ( NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ):
                     var requiredRange = 0;
-
-                    // First approximation calculate distance from viewpoint
                     var matrix = visitor.getCurrentModelviewMatrix();
                     Matrix.inverse( matrix, viewModel );
-                    Matrix.transformVec3( viewModel, zeroVector, eye );
-                    var d = Vec3.distance( eye, this.getBound().center() );
-                    requiredRange = d;
+                    // First approximation calculate distance from viewpoint
+                    if ( this.rangeMode ===  Lod.DISTANCE_FROM_EYE_POINT){
+                    //    var matrix = visitor.getCurrentModelviewMatrix();
+                    //    Matrix.inverse( matrix, viewModel );
+                        Matrix.transformVec3( viewModel, zeroVector, eye );
+                        var d = Vec3.distance( eye, this.getBound().center() );
+                        requiredRange = d;
+                    }else {
+                        requiredRange = this.projectSphere(this.getBound(),viewModel, 30);
+                    }
 
                     var numChildren = this.children.length;
                     if ( this.range.length < numChildren ) numChildren = this.range.length;

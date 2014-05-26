@@ -12,7 +12,7 @@ define( [
     'osg/Vec3',
     'osg/Node',
     'osgDB/ReaderParser'
-], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Node, ReaderParser ) {
+], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Node, ReaderParser) {
     /**
      *  PagedLOD that can contains paged child nodes
      *  @class PagedLod
@@ -34,6 +34,7 @@ define( [
     var PerRangeData=function()
     {
         this.filename = undefined;
+        this.function = undefined;
         this.loaded = false;
         this.timeStamp = 0.0;
         this.frameNumber = 0;
@@ -70,6 +71,17 @@ define( [
                 this.perRangeDataList[childNo].filename = filename;
             }
         },
+        setFunction : function ( childNo, func )
+        {
+            if ( childNo >= this.perRangeDataList.length)
+            {
+                var rd = new PerRangeData();
+                rd.function = func;
+                this.perRangeDataList.push( rd );
+            } else {
+                this.perRangeDataList[childNo].function = func;
+            }
+        },  
 
         addChild: function ( node, min, max ) {
             Lod.prototype.addChild.call( this, node, min, max );
@@ -81,7 +93,14 @@ define( [
             // this.perRangeDataList.push ( null );
         },
 
-        loadUrl : function ( perRangeData, node ) {
+        loadNode : function (perRangeData, node)
+        {
+            if (perRangeData.function === undefined)
+                this.loadNodeFromUrl (perRangeData, node);
+            else this.loadNodeFromFunction (perRangeData, node);
+        },
+
+        loadNodeFromUrl : function ( perRangeData, node ) {
             // TODO:
             // we should ask to the Cache if the data is in the IndexedDB first
             console.log( 'loading ' + perRangeData.filename );
@@ -101,6 +120,18 @@ define( [
             };
             req.send( null );
         },
+
+        loadNodeFromFunction : function ( perRangeData, node) {
+            //var defer = Q.defer();
+            //var child = (perRangeData.function)();
+            Q.when((perRangeData.function)()).then(function ( child )
+                {
+                     node.addChildNode(child);
+                 });
+           
+        },
+
+
 
         removeExpiredChildren : function ( frameStamp ) {
 
@@ -197,7 +228,7 @@ define( [
                             {
                                 console.log('Requesting the child file : ', this.perRangeDataList[numChildren]);
                                 this.perRangeDataList[numChildren].loaded = true;
-                                this.loadUrl(this.perRangeDataList[numChildren], group);
+                                this.loadNode(this.perRangeDataList[numChildren], group);
                             }
                         }
                     }
