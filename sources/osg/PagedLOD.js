@@ -81,7 +81,7 @@ define( [
             } else {
                 this.perRangeDataList[childNo].function = func;
             }
-        },  
+        },
 
         addChild: function ( node, min, max ) {
             Lod.prototype.addChild.call( this, node, min, max );
@@ -185,9 +185,27 @@ define( [
                     // First approximation calculate distance from viewpoint
                     var matrix = visitor.getCurrentModelviewMatrix();
                     Matrix.inverse( matrix, viewModel );
-                    Matrix.transformVec3( viewModel, zeroVector, eye );
-                    var d = Vec3.distance( eye, this.getBound().center() );
-                    requiredRange = d;
+                    if ( this.rangeMode ===  Lod.DISTANCE_FROM_EYE_POINT){
+                        Matrix.transformVec3( viewModel, zeroVector, eye );
+                        var d = Vec3.distance( eye, this.getBound().center() );
+                        requiredRange = d;
+
+                    } else {
+
+                        var viewMatrix = Matrix.create();
+                        var center = [ 0.0, 0.0, 0.0 ];
+                        var up = [ 0.0, 0.0, 0.0 ];
+                        // Get the View Matrix
+                        Matrix.getLookAt( viewModel, eye, center, up, 1 );
+                        Matrix.makeLookAt( eye, Vec3.neg(center, center), up, viewMatrix);
+                        var projmatrix = visitor.getCurrentProjectionMatrix();
+                        var info = {};
+                        Matrix.getFrustum(projmatrix, info);
+                        requiredRange = this.projectSphere(this.getBound(),viewMatrix, info.zNear/info.right);
+                        // Try to get near the real value
+                        requiredRange = (requiredRange*visitor.getViewport().width()*visitor.getViewport().width())/ 6;
+                        if ( requiredRange < 0 ) requiredRange = 0;
+                    }
 
                     var needToLoadChild = false;
                     var lastChildTraversed = -1;

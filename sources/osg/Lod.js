@@ -36,12 +36,17 @@ define( [
         setRadius: function ( radius ) {
             this.radius = radius;
         },
+
         projectSphere: function ( sph, camMatrix, fle ) {
-  
+            //from http://www.iquilezles.org/www/articles/sphereproj/sphereproj.htm
+            // Need to change basis to Y-UP
+            var matrix3 = [1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1];
+            var yup = Matrix.mult(camMatrix, matrix3, []);
+            var sphVector = [sph.center()[0],sph.center()[1],sph.center()[2]];
             // transform to camera space
-            var sphVector = [sph.center()[0],sph.center()[1],sph.center()[2],1];
-            var o4 = [0,0,0,0];
-            Matrix.transformVec4(camMatrix, sphVector, o4 );
+            var sphv = Matrix.transformVec3 (matrix3, sphVector,[]);
+            var o4 = [0,0,0];
+            Matrix.transformVec3(yup, sphv, o4 );
             var o = [o4[0],o4[1],o4[2]];
             var r2 = sph.radius2(); var r4 = r2*r2;
             var z2 = o[2]*o[2];     var z4 = z2*z2;
@@ -49,21 +54,18 @@ define( [
 
             var m = (r2-l2)*(r2-z2); // m = -discriminant{ f(x,y) } = c² - 4ab
             var n = r2*(r4 - r2*(l2-z2) + (z4 - l2 - z2 - l2*z2*(l2-z2) )) + l4 + l4*z2 - l2*z4 - z4;
-           // var fle = 1;
             var area = Math.PI*n*fle*fle/Math.sqrt(m*m*m);
             var cen = [];
-            cen[0]= fle*o[2]*o[0]/(z2-r2);
-            cen[1]= fle*o[2]*o[1]/(z2-r2);
-            if( m < 0.0 ) area=-1.0;    
-            console.log ('PIXEL SIZE =' ,area, 'CENTER', cen );
-            //console.log ('camMatrix', camMatrix);
-            return area; 
+            cen[0]= fle*o[1]*o[0]/(z2-r2);
+            cen[1]= fle*o[1]*o[2]/(z2-r2);
+            if( m < 0.0 ) area=-1.0;
+            return area;
         },
 
         setRangeMode: function (mode) {
             //TODO: check if mode is correct
             this.rangeMode = mode;
-        }, 
+        },
 
         addChildNode: function ( node ) {
 
@@ -99,10 +101,10 @@ define( [
             var zeroVector = [ 0.0, 0.0, 0.0 ];
             var eye = [ 0.0, 0.0, 0.0 ];
             var viewModel = Matrix.create();
-
+            
             return function ( visitor ) {
                 var traversalMode = visitor.traversalMode;
-
+                
                 switch ( traversalMode ) {
 
                 case NodeVisitor.TRAVERSE_ALL_CHILDREN:
@@ -118,13 +120,25 @@ define( [
                     Matrix.inverse( matrix, viewModel );
                     // First approximation calculate distance from viewpoint
                     if ( this.rangeMode ===  Lod.DISTANCE_FROM_EYE_POINT){
-                    //    var matrix = visitor.getCurrentModelviewMatrix();
-                    //    Matrix.inverse( matrix, viewModel );
                         Matrix.transformVec3( viewModel, zeroVector, eye );
                         var d = Vec3.distance( eye, this.getBound().center() );
                         requiredRange = d;
-                    }else {
-                        requiredRange = this.projectSphere(this.getBound(),viewModel, 30);
+                    } else {
+                        // Calculate pixels on screen, not exact yet
+                        var viewMatrix = Matrix.create();
+                        var center = [ 0.0, 0.0, 0.0 ];
+                        var up = [ 0.0, 0.0, 0.0 ];
+                        // Get the View Matrix
+                        Matrix.getLookAt( viewModel, eye, center, up, 1 );
+                        Matrix.makeLookAt( eye, Vec3.neg(center, center), up, viewMatrix);
+                        var projmatrix = visitor.getCurrentProjectionMatrix();
+                        var info = {};
+                        Matrix.getFrustum(projmatrix, info);
+                        requiredRange = this.projectSphere(this.getBound(),viewMatrix, info.zNear/info.right);
+                        // Try to get near the real value
+                        requiredRange = (requiredRange*visitor.getViewport().width()*visitor.getViewport().width())/ 6;
+                        if ( requiredRange < 0 ) requiredRange = 0;
+                        //console.log ('PIXEL SIZE =' , requiredRange, 'center', center );
                     }
 
                     var numChildren = this.children.length;
