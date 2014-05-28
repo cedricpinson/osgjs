@@ -39,6 +39,7 @@ define( [], function () {
             if ( mousewheel ) {
                 mousewheel.addEventListener( 'DOMMouseScroll', this.mousewheel.bind( this ), false );
                 mousewheel.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
+                mousewheel.addEventListener( 'MozMousePixelScroll', this.preventDefault.bind( this ), false );
             }
 
             if ( keyboard ) {
@@ -59,6 +60,7 @@ define( [], function () {
             if ( mousewheel ) {
                 mousewheel.removeEventListener( 'DOMMouseScroll', this.mousewheel );
                 mousewheel.removeEventListener( 'mousewheel', this.mousewheel );
+                mousewheel.removeEventListener( 'MozMousePixelScroll', this.preventDefault );
             }
             if ( keyboard ) {
                 keyboard.removeEventListener( 'keydown', this.keydown );
@@ -161,6 +163,10 @@ define( [], function () {
             args.unshift( event, delta, deltaX, deltaY );
 
             return this.getManipulatorController().mousewheel.apply( manipulatorAdapter, args );
+        },
+
+        preventDefault: function ( event ) {
+            event.preventDefault();
         },
 
         divGlobalOffset: function ( obj ) {
