@@ -221,7 +221,8 @@ define( [
 
             this._updateVisitor = new osgUtil.UpdateVisitor();
             this._cullVisitor = new osgUtil.CullVisitor();
-
+            // It should be done in RenderStage
+            this._cullVisitor.setCamera(this.getCamera());
             this._renderStage = new RenderStage();
             this._stateGraph = new StateGraph();
 
@@ -384,7 +385,6 @@ define( [
             var camera = this.getCamera();
             this._cullVisitor.pushStateSet( camera.getStateSet() );
             this._cullVisitor.pushProjectionMatrix( camera.getProjectionMatrix() );
-
             // update bound
             camera.getBound();
 
@@ -398,7 +398,6 @@ define( [
             this._cullVisitor.pushModelviewMatrix( camera.getViewMatrix() );
             this._cullVisitor.pushViewport( camera.getViewport() );
             this._cullVisitor.setCullSettings( camera );
-
             this._renderStage.setClearDepth( camera.getClearDepth() );
             this._renderStage.setClearColor( camera.getClearColor() );
             this._renderStage.setClearMask( camera.getClearMask() );

@@ -88,6 +88,7 @@ define( [
 
             var ratio = canvas.width / canvas.height;
             this._camera.setViewport( new Viewport( 0, 0, canvas.width, canvas.height ) );
+            this._camera.setGraphicContext(this._graphicContext);
             Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], this._camera.getViewMatrix() );
             Matrix.makePerspective( 55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix() );
         },

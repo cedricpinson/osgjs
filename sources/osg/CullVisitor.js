@@ -36,7 +36,7 @@ define( [
         this._computedFar = Number.NEGATIVE_INFINITY;
 
         var lookVector = [ 0.0, 0.0, -1.0 ];
-
+        this._camera = undefined;
         /*jshint bitwise: false */
         this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
         this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
@@ -71,7 +71,12 @@ define( [
             }
             this.traverse( node );
         },
-
+        setCamera: function(camera){
+            this._camera = camera;
+        },
+        getCurrentCamera: function (){
+            return this._camera;
+        },
         updateCalculatedNearFar: function ( matrix, drawable ) {
 
             var bb = drawable.getBoundingBox();

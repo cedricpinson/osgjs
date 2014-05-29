@@ -11,8 +11,9 @@ define( [
     'osg/Matrix',
     'osg/Vec3',
     'osg/Node',
+    'osg/Geometry',
     'osgDB/ReaderParser'
-], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Node, ReaderParser) {
+], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Node, Geometry, ReaderParser) {
     /**
      *  PagedLOD that can contains paged child nodes
      *  @class PagedLod
@@ -133,7 +134,25 @@ define( [
 
 
 
-        removeExpiredChildren : function ( frameStamp ) {
+        removeExpiredChildren : function ( frameStamp, gl ) {
+
+            var ReleaseVisitor = function( gl ) {
+                            NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
+                            this.gl = gl;
+                        };
+                        
+                        ReleaseVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+
+
+                            apply: function(node) {
+                                if (node instanceof Geometry)
+                                {
+                                    node.releaseGLObjects(this.gl);
+                                    console.log('RELEASED GL OBJECTS');
+                                }
+                                this.traverse(node);
+                            }
+                        });
 
             if (frameStamp.getFrameNumber() === 0) return;
              var numChildren = this.children.length;
@@ -143,6 +162,8 @@ define( [
                 if  (timed > this.expiryTime ){
                     if (i === this.children.length - 1)
                     {
+
+                        this.children[i].accept(new ReleaseVisitor(gl));
                         this.removeChild(this.children[i]);
                         this.perRangeDataList[i].loaded = false;
                         console.log('removing node number', i);
@@ -201,9 +222,11 @@ define( [
                         var projmatrix = visitor.getCurrentProjectionMatrix();
                         var info = {};
                         Matrix.getFrustum(projmatrix, info);
-                        requiredRange = this.projectSphere(this.getBound(),viewMatrix, info.zNear/info.right);
+                        //requiredRange = this.projectSphere(this.getBound(),viewMatrix, info.zNear/info.right);
+                        requiredRange = this.projectSphere(this.getBound(),viewMatrix, projmatrix[0]);
                         // Try to get near the real value
-                        requiredRange = (requiredRange*visitor.getViewport().width()*visitor.getViewport().width())/ 6;
+                        requiredRange = requiredRange*visitor.getViewport().height()*visitor.getViewport().height()*0.25;
+                        console.log('PIXEL SIZE: ', requiredRange);
                         if ( requiredRange < 0 ) requiredRange = 0;
                     }
 
@@ -251,7 +274,7 @@ define( [
                         }
                     }
                     // Remove the expired childs if any
-                    this.removeExpiredChildren(visitor.getFrameStamp());
+                    this.removeExpiredChildren(visitor.getFrameStamp(), visitor.getCurrentCamera().getGraphicContext());
                     break;
 
                 default:
