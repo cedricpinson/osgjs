@@ -132,28 +132,22 @@ define( [
            
         },
 
-
-
         removeExpiredChildren : function ( frameStamp, gl ) {
 
             var ReleaseVisitor = function( gl ) {
-                            NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
-                            this.gl = gl;
-                        };
-                        
-                        ReleaseVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
-
-
-                            apply: function(node) {
-                                if (node instanceof Geometry)
-                                {
-                                    node.releaseGLObjects(this.gl);
-                                    console.log('RELEASED GL OBJECTS');
-                                }
-                                this.traverse(node);
-                            }
-                        });
-
+                NodeVisitor.call(this, NodeVisitor.TRAVERSE_ALL_CHILDREN);
+                this.gl = gl;
+            };
+            ReleaseVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+               apply: function(node) {
+                   if (node instanceof Geometry)
+                    {
+                        node.releaseGLObjects(this.gl);
+                        console.log('RELEASED GL OBJECTS');
+                    }
+                    this.traverse(node);
+                }
+            });
             if (frameStamp.getFrameNumber() === 0) return;
              var numChildren = this.children.length;
              for (var i = numChildren - 1; i > 0; i--) {
@@ -162,7 +156,6 @@ define( [
                 if  (timed > this.expiryTime ){
                     if (i === this.children.length - 1)
                     {
-
                         this.children[i].accept(new ReleaseVisitor(gl));
                         this.removeChild(this.children[i]);
                         this.perRangeDataList[i].loaded = false;

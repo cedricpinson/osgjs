@@ -8,7 +8,7 @@ define( [
     'osg/Node',
     'osg/NodeVisitor',
     'osg/Matrix',
-    'osg/Vec3'
+    'osg/Vec3',
 ], function ( MACROUTILS, Node, NodeVisitor, Matrix, Vec3) {
     /**
      *  Lod that can contains child node
@@ -37,28 +37,15 @@ define( [
             this.radius = radius;
         },
 
-        projectSphere: function ( sph, camMatrix, fle ) {
-            //from http://www.iquilezles.org/www/articles/sphereproj/sphereproj.htm
-            // Need to change basis to Y-UP
-            var matrix3 = [1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1];
-            var yup = Matrix.mult(camMatrix, matrix3, []);
-            var sphVector = [sph.center()[0],sph.center()[1],sph.center()[2]];
-            // transform to camera space
-            var sphv = Matrix.transformVec3 (matrix3, sphVector,[]);
-            var o4 = [0,0,0];
-            Matrix.transformVec3(yup, sphv, o4 );
-            var o = [o4[0],o4[1],o4[2]];
-            var r2 = sph.radius2(); var r4 = r2*r2;
-            var z2 = o[2]*o[2];     var z4 = z2*z2;
-            var l2 = Vec3.dot(o,o); var l4 = l2*l2;
-
-            var m = (r2-l2)*(r2-z2); // m = -discriminant{ f(x,y) } = c² - 4ab
-            var n = r2*(r4 - r2*(l2-z2) + (z4 - l2 - z2 - l2*z2*(l2-z2) )) + l4 + l4*z2 - l2*z4 - z4;
-            var area = Math.PI*n*fle*fle/Math.sqrt(m*m*m);
-            var cen = [];
-            cen[0]= fle*o[1]*o[0]/(z2-r2);
-            cen[1]= fle*o[1]*o[2]/(z2-r2);
-            if( m < 0.0 ) area=-1.0;
+        projectBoundingSphere: function ( sph, camMatrix, fle ) {
+            // from http://www.iquilezles.org/www/articles/sphereproj/sphereproj.htm
+            // Sample code at http://www.shadertoy.com/view/XdBGzd?
+            var o = [0,0,0];
+            Matrix.transformVec3(camMatrix, sph.center(), o );
+            var r2 = sph.radius2();
+            var z2 = o[2]*o[2];
+            var l2 = Vec3.length2(o);
+            var area = -Math.PI*fle*fle*(l2-r2)*r2/(r2-z2)/Math.sqrt((r2-l2)*(r2-z2));
             return area;
         },
 
@@ -125,20 +112,11 @@ define( [
                         requiredRange = d;
                     } else {
                         // Calculate pixels on screen, not exact yet
-                        var viewMatrix = Matrix.create();
-                        var center = [ 0.0, 0.0, 0.0 ];
-                        var up = [ 0.0, 0.0, 0.0 ];
-                        // Get the View Matrix
-                        Matrix.getLookAt( viewModel, eye, center, up, 1 );
-                        Matrix.makeLookAt( eye, Vec3.neg(center, center), up, viewMatrix);
                         var projmatrix = visitor.getCurrentProjectionMatrix();
-                        var info = {};
-                        Matrix.getFrustum(projmatrix, info);
-                        requiredRange = this.projectSphere(this.getBound(),viewMatrix, info.zNear/info.right);
-                        // Try to get near the real value
-                        requiredRange = (requiredRange*visitor.getViewport().width()*visitor.getViewport().width())/ 6;
-                        if ( requiredRange < 0 ) requiredRange = 0;
-                        //console.log ('PIXEL SIZE =' , requiredRange, 'center', center );
+                        // focal lenght is the value stored in projmatrix[0] 
+                        requiredRange = this.projectBoundingSphere(this.getBound(),matrix, projmatrix[0]);
+                        // Multiply by a factor to get the real area value
+                        requiredRange = (requiredRange*visitor.getViewport().width()*visitor.getViewport().width())*0.25;
                     }
 
                     var numChildren = this.children.length;
