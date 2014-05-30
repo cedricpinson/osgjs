@@ -123,13 +123,11 @@ define( [
         },
 
         loadNodeFromFunction : function ( perRangeData, node) {
-            //var defer = Q.defer();
-            //var child = (perRangeData.function)();
-            Q.when((perRangeData.function)()).then(function ( child )
-                {
+            // Need to call with this paged lod as parent
+            Q.when((perRangeData.function)(this)).then(function ( child )
+            {
                      node.addChildNode(child);
-                 });
-           
+            });
         },
 
         removeExpiredChildren : function ( frameStamp, gl ) {
@@ -203,24 +201,13 @@ define( [
                         Matrix.transformVec3( viewModel, zeroVector, eye );
                         var d = Vec3.distance( eye, this.getBound().center() );
                         requiredRange = d;
-
                     } else {
-
-                        var viewMatrix = Matrix.create();
-                        var center = [ 0.0, 0.0, 0.0 ];
-                        var up = [ 0.0, 0.0, 0.0 ];
-                        // Get the View Matrix
-                        Matrix.getLookAt( viewModel, eye, center, up, 1 );
-                        Matrix.makeLookAt( eye, Vec3.neg(center, center), up, viewMatrix);
+                        // Calculate pixels on screen, not exact yet
                         var projmatrix = visitor.getCurrentProjectionMatrix();
-                        var info = {};
-                        Matrix.getFrustum(projmatrix, info);
-                        //requiredRange = this.projectSphere(this.getBound(),viewMatrix, info.zNear/info.right);
-                        requiredRange = this.projectSphere(this.getBound(),viewMatrix, projmatrix[0]);
-                        // Try to get near the real value
-                        requiredRange = requiredRange*visitor.getViewport().height()*visitor.getViewport().height()*0.25;
-                        console.log('PIXEL SIZE: ', requiredRange);
-                        if ( requiredRange < 0 ) requiredRange = 0;
+                        // focal lenght is the value stored in projmatrix[0] 
+                        requiredRange = this.projectBoundingSphere(this.getBound(),matrix, projmatrix[0]);
+                        // Multiply by a factor to get the real area value
+                        requiredRange = (requiredRange*visitor.getViewport().width()*visitor.getViewport().width())*0.25;
                     }
 
                     var needToLoadChild = false;

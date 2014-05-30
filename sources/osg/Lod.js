@@ -117,7 +117,7 @@ define( [
                         requiredRange = this.projectBoundingSphere(this.getBound(),matrix, projmatrix[0]);
                         // Multiply by a factor to get the real area value
                         requiredRange = (requiredRange*visitor.getViewport().width()*visitor.getViewport().width())*0.25;
-                        console.log('area', requiredRange);
+                        //console.log('area', requiredRange);
                     }
 
                     var numChildren = this.children.length;
