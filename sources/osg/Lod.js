@@ -45,7 +45,7 @@ define( [
             var r2 = sph.radius2();
             var z2 = o[2]*o[2];
             var l2 = Vec3.length2(o);
-            var area = -Math.PI*fle*fle*(l2-r2)*r2/(r2-z2)/Math.sqrt((r2-l2)*(r2-z2));
+            var area = -Math.PI*fle*fle*r2*Math.sqrt(Math.abs((l2-r2)/(r2-z2)))/(r2-z2);
             return area;
         },
 
@@ -117,6 +117,7 @@ define( [
                         requiredRange = this.projectBoundingSphere(this.getBound(),matrix, projmatrix[0]);
                         // Multiply by a factor to get the real area value
                         requiredRange = (requiredRange*visitor.getViewport().width()*visitor.getViewport().width())*0.25;
+                        console.log('area', requiredRange);
                     }
 
                     var numChildren = this.children.length;
