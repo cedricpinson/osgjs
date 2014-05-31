@@ -57,24 +57,57 @@ function createScene() {
     return root;
 }
 
+var start = function() {
+    OSG.globalify();
 
-window.addEventListener("load",
-                        function() {
-                            OSG.globalify();
+    var canvas = document.getElementById("3DView");
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    canvas.style.width = w;
+    canvas.style.height = h;
+    canvas.width = w;
+    canvas.height = h;
 
-                            var canvas = document.getElementById("3DView");
-                            var w = window.innerWidth;
-                            var h = window.innerHeight;
-                            canvas.style.width = w;
-                            canvas.style.height = h;
-                            canvas.width = w;
-                            canvas.height = h;
+    var viewer = new osgViewer.Viewer(document.getElementById("3DView"));
+    viewer.init();
+    viewer.setSceneData(createScene());
+    //var m = new osgGA.FirstPersonManipulator();
+    viewer.setupManipulator();
+    viewer.run();
+};
 
-                            var viewer = new osgViewer.Viewer(document.getElementById("3DView"));
-                            viewer.init();
-                            viewer.setSceneData(createScene());
-                            //var m = new osgGA.FirstPersonManipulator();
-                            viewer.setupManipulator();
-                            viewer.run();
-                        }
-                        ,true);
+var  appendScript = function(scriptUrl){
+  var s = document.createElement("script");
+  s.type = "text/javascript";
+  s.src = scriptUrl;
+  document.head.appendChild(s);
+};
+
+var params = window.location.href.split("?");
+params = (params.length > 1) ? params[1].split("&") : [];
+if (params.length)  {
+  appendScript ('../vendors/Require.js');
+
+
+  window.addEventListener('load', function(){
+      //var requirejs = {};
+      requirejs.config ({
+      baseUrl: '../../sources/',
+      paths: {
+            'require/text': 'vendors/require/text',
+            'Q': 'vendors/Q',
+            'Hammer': 'vendors/Hammer',
+            'Leap': 'vendors/Leap',
+            'vr': 'vendors/vr'
+        }
+      });
+    require(['OSG'], function(OSG){
+        window.OSG = OSG;
+        start();
+    });
+  });
+}
+else{
+  appendScript ('../../builds/active/OSG.js');
+  window.addEventListener('load', start, true);
+}

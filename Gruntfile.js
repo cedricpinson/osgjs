@@ -36,6 +36,10 @@ var find = function ( cwd, pattern ) {
 
 };
 
+// get source file once and for all, caching results.
+var src_files =  find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) { return pathname; } );
+
+
 // Used to store all Grunt tasks
 //
 var gruntTasks = { };
@@ -106,7 +110,7 @@ var gruntTasks = { };
     gruntTasks.jshint.sources = {
         options : { globals : { define : true, require : true }
                   },
-        src : find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) {
+        src : src_files.map( function ( pathname ) {
             return path.join( SOURCE_PATH, pathname ); } ) };
 
     // add another output from envvar to have better error tracking in emacs
@@ -186,7 +190,7 @@ var gruntTasks = { };
             }
         },
         docs: {
-            src:  find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) { return path.join( SOURCE_PATH, pathname ); } ),
+            src:  src_files.map( function ( pathname ) { return path.join( SOURCE_PATH, pathname ); } ),
             options: {
                 layout: 'classic',
                 output: 'docs/annotated-source'
@@ -204,7 +208,7 @@ var gruntTasks = { };
         },
         main: {
             files: {
-                'docs/analysis': find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) {
+                'docs/analysis': src_files.map( function ( pathname ) {
                     return path.join( SOURCE_PATH, pathname ); } )
             }
         }
@@ -234,6 +238,40 @@ var gruntTasks = { };
                 port: 9001,
                 base: '.'
             }
+        }
+    };
+
+} )( );
+
+// ## Symlinks 
+// (explicit because windows)
+( function ( ) {
+
+    // qunit using connect
+    gruntTasks.symlink = {
+       // Enable overwrite to delete symlinks before recreating them
+       options: {
+         overwrite: false
+        },
+        Hammer: {
+            src: 'examples/vendors/Hammer-1.0.5.js',
+            dest: 'examples/vendors/Hammer.js'
+        },
+        Require: {
+            src: 'examples/vendors/Require-2.1.11.js',
+            dest: 'examples/vendors/Require.js'
+        },
+        RequireText: {
+            src: 'examples/vendors/require/Text-2.0.12.js',
+            dest: 'examples/vendors/require/Text.js'
+        },
+        Q: {
+            src: 'examples/vendors/Q-0.9.7.js',
+            dest: 'examples/vendors/Q.js'
+        }, 
+        build_active_dist_A: {
+            src: DIST_PATH,
+            dest: 'builds/active'
         }
     };
 
@@ -269,6 +307,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-requirejs' );
     grunt.loadNpmTasks( 'grunt-contrib-clean' );
     grunt.loadNpmTasks( 'grunt-contrib-watch' );
+    grunt.loadNpmTasks( 'grunt-contrib-symlink' );
+
 
     grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
 
@@ -280,7 +320,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );
 
     grunt.registerTask( 'build:dist', [ 'build:sources:dist' ] );
-    grunt.registerTask( 'build', [ 'build:dist' ] );
+    grunt.registerTask( 'build', [ 'build:dist', 'symlink' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
 
