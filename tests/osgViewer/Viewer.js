@@ -35,20 +35,17 @@ define( [
                 viewer.setupManipulator();
 
                 viewer.setSceneData( createScene() );
+                viewer.draw = function() {}; // do nothing
                 viewer.frame();
 
-                // Notify.log( viewer.getCamera().getProjectionMatrix() );
-                // without auto compute near far
-                // [1.7320508075688774, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.002002002002002, 0]
-
                 // with auto compute near far
-
                 var projection = viewer.getCamera().getProjectionMatrix();
-                ok( mockup.check_near( projection, [ 0.960491063485583, 0, 0, 0, 0, 1.920982126971166, 0, 0, 0, 0, -3.6948013697711914, -1, 0, 0, -86.03523882425281, 0 ] ), 'check near / far computation' );
+                equal( projection[14] , -86.03523882425281, 'check far');
+                equal( projection[10] , -3.6948013697711914, 'check near');
 
                 viewer._cullVisitor.reset();
-                ok( viewer._cullVisitor._computedNear === Number.POSITIVE_INFINITY, 'Check near after reset' );
-                ok( viewer._cullVisitor._computedFar === Number.NEGATIVE_INFINITY, 'Check far after reset' );
+                equal( viewer._cullVisitor._computedNear, Number.POSITIVE_INFINITY, 'Check near after reset' );
+                equal( viewer._cullVisitor._computedFar, Number.NEGATIVE_INFINITY, 'Check far after reset' );
 
                 mockup.removeCanvas( canvas );
 
@@ -66,9 +63,9 @@ define( [
                     }
                 };
                 var list = viewer.initEventProxy( args );
-                console.log( list );
-                ok( list.LeapMotion !== undefined, 'detected leapmotion' );
-                ok( list.StandardMouseKeyboard !== undefined, 'detected mouse' );
+
+                QUnit.notEqual( list.LeapMotion, undefined, 'detected leapmotion' );
+                QUnit.notEqual( list.StandardMouseKeyboard, undefined, 'detected mouse' );
 
                 viewer.updateEventProxy( list, undefined );
                 //ok(true, 'detected mouse');

@@ -72,7 +72,7 @@ define( [
             if ( Material.uniforms === undefined ) {
                 var map = new Map();
                 Material.uniforms = map;
-                map.setMapContent( {
+                map.setMap( {
                     'ambient': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialAmbient' ),
                     'diffuse': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialDiffuse' ),
                     'specular': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialSpecular' ),
@@ -84,13 +84,13 @@ define( [
         },
 
         apply: function ( /*state*/ ) {
-            var uniformMapContent = this.getOrCreateUniforms().getMapContent();
+            var uniformMap = this.getOrCreateUniforms();
 
-            uniformMapContent.ambient.set( this.ambient );
-            uniformMapContent.diffuse.set( this.diffuse );
-            uniformMapContent.specular.set( this.specular );
-            uniformMapContent.emission.set( this.emission );
-            uniformMapContent.shininess.set( [ this.shininess ] );
+            uniformMap.ambient.set( this.ambient );
+            uniformMap.diffuse.set( this.diffuse );
+            uniformMap.specular.set( this.specular );
+            uniformMap.emission.set( this.emission );
+            uniformMap.shininess.set( [ this.shininess ] );
             this._dirty = false;
         },
 

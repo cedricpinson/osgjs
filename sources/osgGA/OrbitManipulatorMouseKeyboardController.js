@@ -97,6 +97,10 @@ define( [
             this.releaseButton();
             this.setMode( undefined );
         },
+        mouseout: function ( /*ev */ ) {
+            this.releaseButton();
+            this.setMode( undefined );
+        },
         mousewheel: function ( ev, intDelta /*, deltaX, deltaY */) {
             var manipulator = this._manipulator;
             ev.preventDefault();
@@ -115,7 +119,6 @@ define( [
             if ( ev.keyCode === 32 ) {
                 this._manipulator.computeHomePosition();
                 ev.preventDefault();
-
             } else if ( ev.keyCode === this._panKey &&
                 this.getMode() !== OrbitManipulatorEnums.PAN ) {
                 this.setMode( OrbitManipulatorEnums.PAN );

@@ -8,7 +8,7 @@ define( [], function () {
         this._mouseEventNode = undefined;
         this._wheelEventNode = undefined;
         this._keyboardEventNode = undefined;
-        this._eventList = [ 'mousedown', 'mouseup', 'mousemove', 'dblclick' ];
+        this._eventList = [ 'mousedown', 'mouseup', 'mouseout', 'mousemove', 'dblclick' ];
         this._mousePosition = [ 0, 0 ];
     };
 
@@ -39,6 +39,7 @@ define( [], function () {
             if ( mousewheel ) {
                 mousewheel.addEventListener( 'DOMMouseScroll', this.mousewheel.bind( this ), false );
                 mousewheel.addEventListener( 'mousewheel', this.mousewheel.bind( this ), false );
+                mousewheel.addEventListener( 'MozMousePixelScroll', this.preventDefault.bind( this ), false );
             }
 
             if ( keyboard ) {
@@ -59,6 +60,7 @@ define( [], function () {
             if ( mousewheel ) {
                 mousewheel.removeEventListener( 'DOMMouseScroll', this.mousewheel );
                 mousewheel.removeEventListener( 'mousewheel', this.mousewheel );
+                mousewheel.removeEventListener( 'MozMousePixelScroll', this.preventDefault );
             }
             if ( keyboard ) {
                 keyboard.removeEventListener( 'keydown', this.keydown );
@@ -99,6 +101,13 @@ define( [], function () {
                 return;
             if ( this.getManipulatorController().mouseup )
                 return this.getManipulatorController().mouseup( ev );
+        },
+
+        mouseout: function ( ev ) {
+            if ( !this.isValid() )
+                return;
+            if ( this.getManipulatorController().mouseout )
+                return this.getManipulatorController().mouseout( ev );
         },
 
         mousemove: function ( ev ) {
@@ -161,6 +170,10 @@ define( [], function () {
             args.unshift( event, delta, deltaX, deltaY );
 
             return this.getManipulatorController().mousewheel.apply( manipulatorAdapter, args );
+        },
+
+        preventDefault: function ( event ) {
+            event.preventDefault();
         },
 
         divGlobalOffset: function ( obj ) {

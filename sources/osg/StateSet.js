@@ -54,17 +54,17 @@ define( [
             }
 
             var name = uniform.name;
-            this.uniforms.getMapContent()[ name ] = this.getAttributePair( uniform, mode );
+            this.uniforms[ name ] = this.getAttributePair( uniform, mode );
             this.uniforms.dirty();
         },
         getUniform: function ( uniform ) {
-            var map = this.uniforms.getMapContent();
-            if ( map[ uniform ] ) return map[ uniform ].getAttribute();
+            var uniformMap = this.uniforms;
+            if ( uniformMap[ uniform ] ) return uniformMap[ uniform ].getAttribute();
 
             return undefined;
         },
         getUniformList: function () {
-            return this.uniforms.getMapContent();
+            return this.uniforms;
         },
 
         setTextureAttributeAndMode: function ( unit, attribute, mode ) {
@@ -79,29 +79,30 @@ define( [
         getTextureAttribute: function ( unit, attribute ) {
             if ( this.textureAttributeMapList[ unit ] === undefined ) return undefined;
 
-            var textureMapContent = this.textureAttributeMapList[ unit ].getMapContent();
-            if ( textureMapContent[ attribute ] === undefined ) return undefined;
+            var textureMap = this.textureAttributeMapList[ unit ];
+            if ( textureMap[ attribute ] === undefined ) return undefined;
 
-            return textureMapContent[ attribute ].getAttribute();
+            return textureMap[ attribute ].getAttribute();
         },
 
         removeTextureAttribute: function ( unit, attributeName ) {
             if ( this.textureAttributeMapList[ unit ] === undefined ) return;
 
-            var textureAttributeMapContent = this.textureAttributeMapList[ unit ].getMapContent();
-            if ( textureAttributeMapContent[ attributeName ] === undefined ) return;
+            var textureAttributeMap = this.textureAttributeMapList[ unit ];
+            if ( textureAttributeMap[ attributeName ] === undefined ) return;
 
 
-            delete textureAttributeMapContent[ attributeName ];
+            delete textureAttributeMap[ attributeName ];
             this.textureAttributeMapList[ unit ].dirty();
         },
 
         getAttribute: function ( attributeType ) {
-            if ( this.attributeMap.getMapContent()[ attributeType ] === undefined ) {
+            if ( this.attributeMap[ attributeType ] === undefined ) {
                 return undefined;
             }
-            return this.attributeMap.getMapContent()[ attributeType ].getAttribute();
+            return this.attributeMap[ attributeType ].getAttribute();
         },
+
         setAttributeAndMode: function ( attribute, mode ) {
             if ( mode === undefined ) {
                 mode = StateAttribute.ON;
@@ -118,8 +119,8 @@ define( [
         // TODO: check if it's an attribute type or a attribute to remove it
         removeAttribute: function ( attributeName ) {
 
-            if ( this.attributeMap.getMapContent()[ attributeName ] !== undefined ) {
-                delete this.attributeMap.getMapContent()[ attributeName ];
+            if ( this.attributeMap[ attributeName ] !== undefined ) {
+                delete this.attributeMap[ attributeName ];
                 this.attributeMap.dirty();
             }
         },
@@ -154,13 +155,13 @@ define( [
             this._binName = binName;
         },
         getAttributeList: function () {
-            var attributes = this.attributeMap;
-            var attributeMapKeys = attributes.getKeys();
-            var attributeMapContent = attributes.getMapContent();
+            var attributeMap = this.attributeMap;
+            var attributeMapKeys = attributeMap.getKeys();
+
             var l = attributeMapKeys.length;
-            var list = new Array( l );
+            var list = [];
             for ( var i = 0; i < l; i++ ) {
-                list[ i ] = attributeMapContent[ attributeMapKeys[ i ] ];
+                list.push( attributeMap[ attributeMapKeys[ i ] ] );
             }
             return list;
         },
@@ -184,8 +185,7 @@ define( [
             var name = attributePair.getAttribute().getTypeMember();
             var textureUnitAttributeMap = this.textureAttributeMapList[ unit ];
 
-            var textureUnitAttributeMapContent = textureUnitAttributeMap.getMapContent();
-            textureUnitAttributeMapContent[ name ] = attributePair;
+            textureUnitAttributeMap[ name ] = attributePair;
             textureUnitAttributeMap.dirty();
 
         },
@@ -194,7 +194,7 @@ define( [
         _setAttribute: function ( attributePair ) {
 
             var name = attributePair.getAttribute().getTypeMember();
-            this.attributeMap.getMapContent()[ name ] = attributePair;
+            this.attributeMap[ name ] = attributePair;
             this.attributeMap.dirty();
 
         }

@@ -95,7 +95,6 @@ define( [
             };
             var input = new Input( ba );
             Q.when( input.readBufferArray() ).then( function ( value ) {
-                console.log( 'readBufferArray' );
                 return input.setJSON( {
                     'UniqueID': 10
                 } ).readBufferArray();
@@ -307,10 +306,14 @@ define( [
                 Q.when( Q.all( arraysPromise ) ).then( function () {
                     var tc = buffers.TexCoord0.getElements();
                     var tcl = tc.length;
-                    ok( ( tc[ 2 ] === 3438139408384 ) && ( tc[ 1 ] === 14584712192 ) && ( tcl === 6 ), 'readBufferArray with new array typed external file with offset' );
+                    equal( tc[ 2 ], 2, 'readBufferArray with new array typed external file with offset');
+                    equal( tc[ 1 ], 1, 'readBufferArray with new array typed external file with offset');
+                    equal( tcl, 6, 'readBufferArray with new array typed external file with offset');
                     var tg = buffers.Tangent.getElements();
                     var tgl = tg.length;
-                    ok( ( tg[ 2 ] === 1.6629726922706152e-19 ) && ( tg[ 1 ] === 1.5941142850195433e-10 ) && ( tgl === 9 ), 'readBufferArray with new array typed external file with offset' );
+                    equal( tg[ 2 ], 8, 'readBufferArray with new array typed external file with offset' );
+                    equal( tg[ 1 ], 7, 'readBufferArray with new array typed external file with offset' );
+                    equal( tgl, 9, 'readBufferArray with new array typed external file with offset' );
                     start();
                 } );
             } )();

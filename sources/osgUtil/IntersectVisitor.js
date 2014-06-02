@@ -57,7 +57,7 @@ define( [
         } )(),
         pushModelMatrix: function( matrix ) {
             if ( this.matrix.length > 0 ) {
-                var m = Matrix.copy( this.matrix[ this.matrix.length - 1 ] );
+                var m = Matrix.copy( this.matrix[ this.matrix.length - 1 ], Matrix.create() );
                 Matrix.preMult( m, matrix );
                 this.matrix.push( m );
             } else {

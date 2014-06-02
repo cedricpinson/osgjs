@@ -223,8 +223,7 @@ var gruntTasks = { };
                     'http://localhost:9001/tests/index.html'
                 ]
             }
-	},
-	local: ['tests/index.html']
+	}
     };
 
     // will start a server on port 9001 with root directory at the same level of
@@ -273,8 +272,7 @@ module.exports = function ( grunt ) {
 
     grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
 
-    grunt.registerTask( 'webtest', [ 'connect:server', 'qunit' ] );
-    grunt.registerTask( 'test', [ 'qunit:local' ] );
+    grunt.registerTask( 'test', [ 'connect:server', 'qunit:all' ] );
 
     grunt.registerTask( 'docs', [ 'requirejs:docsSources', 'docco' ] );
 

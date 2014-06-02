@@ -52,11 +52,12 @@ define( [
             var uniforms = Light.uniforms;
             var typeMember = this.getTypeMember();
             if ( uniforms[ typeMember ] === undefined ) {
+
                 var map = new Map();
                 uniforms[ typeMember ] = map;
 
                 var uFact = Uniform;
-                map.setMapContent( {
+                map.setMap( {
                     'ambient': uFact.createFloat4( [ 0.2, 0.2, 0.2, 1 ], this.getUniformName( 'ambient' ) ),
                     'diffuse': uFact.createFloat4( [ 0.8, 0.8, 0.8, 1 ], this.getUniformName( 'diffuse' ) ),
                     'specular': uFact.createFloat4( [ 0.2, 0.2, 0.2, 1 ], this.getUniformName( 'specular' ) ),
@@ -153,44 +154,42 @@ define( [
 
         applyPositionedUniform: function ( matrix /*, state */ ) {
             var uniformMap = this.getOrCreateUniforms();
-            var uniformMapContent = uniformMap.getMapContent();
-            Matrix.copy( matrix, uniformMapContent.matrix.get() );
-            uniformMapContent.matrix.dirty();
+            Matrix.copy( matrix, uniformMap.matrix.get() );
+            uniformMap.matrix.dirty();
 
-            Matrix.copy( matrix, uniformMapContent.invMatrix.get() );
-            uniformMapContent.invMatrix.get()[ 12 ] = 0;
-            uniformMapContent.invMatrix.get()[ 13 ] = 0;
-            uniformMapContent.invMatrix.get()[ 14 ] = 0;
-            Matrix.inverse( uniformMapContent.invMatrix.get(), uniformMapContent.invMatrix.get() );
-            Matrix.transpose( uniformMapContent.invMatrix.get(), uniformMapContent.invMatrix.get() );
-            uniformMapContent.invMatrix.dirty();
+            Matrix.copy( matrix, uniformMap.invMatrix.get() );
+            uniformMap.invMatrix.get()[ 12 ] = 0;
+            uniformMap.invMatrix.get()[ 13 ] = 0;
+            uniformMap.invMatrix.get()[ 14 ] = 0;
+            Matrix.inverse( uniformMap.invMatrix.get(), uniformMap.invMatrix.get() );
+            Matrix.transpose( uniformMap.invMatrix.get(), uniformMap.invMatrix.get() );
+            uniformMap.invMatrix.dirty();
         },
 
         apply: function ( /*state*/ ) {
             var uniformMap = this.getOrCreateUniforms();
-            var uniformMapContent = uniformMap.getMapContent();
 
-            uniformMapContent.ambient.set( this._ambient );
-            uniformMapContent.diffuse.set( this._diffuse );
-            uniformMapContent.specular.set( this._specular );
-            uniformMapContent.position.set( this._position );
-            uniformMapContent.direction.set( this._direction );
+            uniformMap.ambient.set( this._ambient );
+            uniformMap.diffuse.set( this._diffuse );
+            uniformMap.specular.set( this._specular );
+            uniformMap.position.set( this._position );
+            uniformMap.direction.set( this._direction );
 
             var spotsize = Math.cos( this._spotCutoff * Math.PI / 180.0 );
-            uniformMapContent.spotCutoff.get()[ 0 ] = spotsize;
-            uniformMapContent.spotCutoff.dirty();
+            uniformMap.spotCutoff.get()[ 0 ] = spotsize;
+            uniformMap.spotCutoff.dirty();
 
-            uniformMapContent.spotBlend.get()[ 0 ] = ( 1.0 - spotsize ) * this._spotBlend;
-            uniformMapContent.spotBlend.dirty();
+            uniformMap.spotBlend.get()[ 0 ] = ( 1.0 - spotsize ) * this._spotBlend;
+            uniformMap.spotBlend.dirty();
 
-            uniformMapContent.constantAttenuation.get()[ 0 ] = this._constantAttenuation;
-            uniformMapContent.constantAttenuation.dirty();
+            uniformMap.constantAttenuation.get()[ 0 ] = this._constantAttenuation;
+            uniformMap.constantAttenuation.dirty();
 
-            uniformMapContent.linearAttenuation.get()[ 0 ] = this._linearAttenuation;
-            uniformMapContent.linearAttenuation.dirty();
+            uniformMap.linearAttenuation.get()[ 0 ] = this._linearAttenuation;
+            uniformMap.linearAttenuation.dirty();
 
-            uniformMapContent.quadraticAttenuation.get()[ 0 ] = this._quadraticAttenuation;
-            uniformMapContent.quadraticAttenuation.dirty();
+            uniformMap.quadraticAttenuation.get()[ 0 ] = this._quadraticAttenuation;
+            uniformMap.quadraticAttenuation.dirty();
 
             //light._enable.set([this.enable]);
 
