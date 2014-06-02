@@ -27,7 +27,6 @@ define( [
         this.expiryTime = 10.0;
     };
 
-
     /**
      *  PerRangeData utility structure to store per range values
      *  @class PerRangeData
@@ -141,7 +140,6 @@ define( [
                    if (node instanceof Geometry)
                     {
                         node.releaseGLObjects(this.gl);
-                        console.log('RELEASED GL OBJECTS');
                     }
                     this.traverse(node);
                 }
@@ -157,7 +155,6 @@ define( [
                         this.children[i].accept(new ReleaseVisitor(gl));
                         this.removeChild(this.children[i]);
                         this.perRangeDataList[i].loaded = false;
-                        console.log('removing node number', i);
                         numChildren--;
                     }
                 } else {
@@ -206,7 +203,7 @@ define( [
                         var projmatrix = visitor.getCurrentProjectionMatrix();
                         // focal lenght is the value stored in projmatrix[0] 
                         requiredRange = this.projectBoundingSphere(this.getBound(),matrix, projmatrix[0]);
-                        // Multiply by a factor to get the real area value
+                        // Get the real area value
                         requiredRange = (requiredRange*visitor.getViewport().width()*visitor.getViewport().width())*0.25;
                     }
 
@@ -247,7 +244,6 @@ define( [
                             var group = visitor.nodePath[visitor.nodePath.length -1];
                             if (this.perRangeDataList[numChildren].loaded === false)
                             {
-                                console.log('Requesting the child file : ', this.perRangeDataList[numChildren]);
                                 this.perRangeDataList[numChildren].loaded = true;
                                 this.loadNode(this.perRangeDataList[numChildren], group);
                             }
