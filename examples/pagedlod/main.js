@@ -1,3 +1,8 @@
+/**
+ * @author Jordi Torres
+ */
+
+
 OSG.globalify();
 
  var minExtent = [ -1000000.0,-1000000.0 ];
