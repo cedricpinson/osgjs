@@ -321,11 +321,12 @@ var gruntTasks = { };
     gruntTasks.copy = {
         static_web: {
             files: [
-              {expand: true, src: ['sources/*'], dest: path.join( BUILD_PATH, 'web/sources' )},
-              {expand: true, src: ['docs/**'], dest: path.join( BUILD_PATH, 'web/docs' ) },
-              {expand: true, src: ['examples/**'], dest: path.join( BUILD_PATH, 'web/examples' ) },
-              {expand: true, src: ['tests/**'], dest: path.join( BUILD_PATH, 'web/tests' ) },
-              {expand: true, src: ['builds/dist/**'], dest: path.join( BUILD_PATH, 'web/builds/active' ) }
+              {expand: true, src: ['sources/**'], dest: path.join( BUILD_PATH, 'web/' )},
+              {expand: true, src: ['docs/**'], dest: path.join( BUILD_PATH, 'web/' ) },
+              {expand: true, src: ['examples/**'], dest: path.join( BUILD_PATH, 'web/' ) },
+              {expand: true, src: ['tests/**'], dest: path.join( BUILD_PATH, 'web/' ) },
+              {expand: true, cwd: 'builds', src: ['dist/**'], dest: path.join( BUILD_PATH, 'web/builds/' ) },
+              {expand: true, cwd: 'builds', src: ['active/**'], dest: path.join( BUILD_PATH, 'web/builds/' ) }
             ]
           }
     };
@@ -346,13 +347,16 @@ var gruntTasks = { };
         }
     };
 
+
     // missing add --all
     gruntTasks.shell =  {                               
-        static_web: {                 
-            options: {                     
-                stderr: false
+        static_web: {  
+            options: {
+                execOptions: {
+                    cwd: path.join( BUILD_PATH, 'web' ) 
+                }
             },
-            command: 'git add -A'
+            command: 'git add -A -v'
         }
     };
 
