@@ -1,0 +1,138 @@
+body,
+section {
+  padding: 50px 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+body {
+    background: #F3F3F3;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 300;
+}
+a {
+    color: #009ebb;
+}
+a:hover,
+a:focus {
+    color: #0089a1;
+}
+h1 {
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 700;
+}
+h2 {
+    font-family: 'Exo 2', sans-serif;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: #052326;
+}
+h3 {
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 400;
+    color: #052326;
+}
+.btn-primary {
+    background: #FF7400;
+    border: 0;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    background: #d76200;
+}
+
+.navbar-inverse {
+    background: #052326;
+    border: 0;
+}
+    .navbar-header .navbar-brand {
+        color: #FFF;
+        font-family: 'Exo 2', sans-serif;
+        font-weight: 700;
+    }
+    .navbar-brand .logo {
+        margin-top: -5px;
+    }
+    .navbar-collapse {
+        float: right;
+    }
+    .navbar-inverse .navbar-nav>.active>a,
+    .navbar-inverse .navbar-nav>.active>a:hover,
+    .navbar-inverse .navbar-nav>.active>a:focus {
+        background: #020c0d;
+    }
+
+#about {
+    background: #009ebb;
+    color: #fff;
+}
+    #about h2,
+    #about a {
+        color: #FFF;
+    }
+    .about-download {
+        min-height: 300px;
+        padding-top: 130px;
+        text-align: center;
+        background: transparent url(about.png) no-repeat center center;
+        background-size: contain;
+    }
+    .about-download .github {
+        border-bottom: 1px solid rgba(255,255,255,.5);
+    }
+    .about-download .github:hover {
+        text-decoration: none;
+        border-bottom: 1px solid #FFF;
+    }
+
+#examples {
+    background: #3a4243;
+    color: #FFF;
+}
+    .examples {
+        list-style: none;
+        padding: 0;
+    }
+        .examples li {
+            padding: 0;
+            margin: 0;
+        }
+        .examples .btn {
+            display: block;
+            background: #052326;
+            margin: 1em;
+        }
+        .examples .btn:hover {
+            background: #020c0d;
+        }
+    #examples h2,
+    #examples a {
+        color: #FFF;
+    }
+    #examples .more {
+        border-bottom: 1px solid rgba(255,255,255,.5);
+    }
+    #examples .more:hover {
+        text-decoration: none;
+        border-bottom: 1px solid #FFF;
+    }
+    #examples .row {
+        margin-top: 2em;
+        margin-bottom: 2em;
+    }
+    .example {
+        margin-bottom: 2em;
+    }
+    .example img {
+        display: block;
+        width: 100%;
+    }
+
+#support {
+    background: #F3F3F3;
+    background-size: cover;
+}
+
+#download {
+    background: #FFF;
+    text-align: center;
+}

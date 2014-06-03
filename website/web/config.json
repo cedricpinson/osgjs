@@ -1,0 +1,9 @@
+{
+  "output": "../build/web",
+  "locals": {
+    "title": "OSG.JS"
+  },
+  "plugins": [
+  	"wintersmith-nunjucks"
+  ]
+}

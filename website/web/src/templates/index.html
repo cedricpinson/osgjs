@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="assets/favicon.png">
+
+    <title>{{title}}</title>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Exo+2:400,800,900,700,600,500|Roboto:100,300,400,500,700,900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="assets/screen.css">
+</head>
+
+<body data-spy="scroll" data-target=".navbar-collapse">
+
+<!-- Header / Navigation -->
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="">
+                <img src="assets/logo.png" alt="" width="32" height="32" class="logo" alt="">
+                OSG.JS
+            </a>
+        </div>
+
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#about">About</a></li>
+                <li><a href="#documentation">Documentation</a></li>
+                <li><a href="#examples">Examples</a></li>
+                <li><a href="#support">Support</a></li>
+                <li><a href="{{page.metadata.github}}">Github</a></li>
+                <li><a href="{{page.metadata.download}}">Download</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- About -->
+<section id="about">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                {{page.html}}
+            </div>
+            <div class="col-md-6 about-download">
+                <p>
+                    <a href="{{page.metadata.download}}" class="btn btn-primary btn-lg">
+                        Download OSG.JS
+                    </a>
+                </p>
+                <p>or <a href="{{page.metadata.github}}" class="github">clone the repository</a></p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Docs -->
+<section id="documentation">
+    <div class="container">
+        <h2>Documentation</h2>
+        <div class="row">
+            <div class="col-md-6">
+                {{contents['installation.md'].html}}
+            </div>
+            <div class="col-md-3">
+                {{contents['getting-started.md'].link}}
+                {{contents['getting-started.md'].html}}
+                <p><a class="btn btn-default" href="{{contents['getting-started.md'].metadata.url}}" role="button">Read more &raquo;</a></p>
+            </div>
+            <div class="col-md-3">
+                {{contents['api-documentation.md'].html}}
+                <p><a class="btn btn-default" href="{{contents['api-documentation.md'].metadata.url}}" role="button">Go to documentation &raquo;</a></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Examples -->
+<section id="examples">
+    <div class="container">
+        <h2>{{contents['examples.md'].title}}</h2>
+        <div class="row examples">
+            {% for item in contents['examples.md'].metadata.samples %}
+                <a href="{{item.link}}" class="col-md-3 example">
+                    <img src="{{item.image}}" alt="{{item.title}}">
+                    {{item.title}}
+                </a>
+            {% endfor %}
+        </div>
+
+        <h2>{{contents['projects.md'].title}}</h2>
+        <div class="row projects">
+            {% for item in contents['projects.md'].metadata.examples %}
+                <a href="{{item.link}}" class="col-md-3 example">
+                    <img src="{{item.image}}" alt="{{item.title}}">
+                    {{item.title}}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+<section id="further">
+    <div class="container">
+        <h2>Going Further</h2>
+        <div class="row">
+            <!-- Support -->
+            <div id="support" class="col-md-6">
+                {{contents['support.md'].html}}
+            </div>
+            <!-- Concepts -->
+            <div id="concepts" class="col-md-6">
+                {{contents['concepts.md'].html}}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Download -->
+<section id="download">
+    <div class="container">
+        <h2>Download OSG.JS</h2>
+        <p>
+            <a href="{{page.metadata.download}}" class="btn btn-primary btn-lg">
+                Download OSG.JS
+            </a>
+        </p>
+        <p>
+            <iframe src="http://ghbtns.com/github-btn.html?user=cedricpinson&amp;repo=osgjs&amp;type=watch&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+        </p>
+    </div>
+</section>
+
+<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+$('body').scrollspy({ target: '.navbar-collapse' })
+</script>
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-22680456-2', 'osgjs.org');
+  ga('send', 'pageview');
+</script>
+
+
+
+</body>
+</html>

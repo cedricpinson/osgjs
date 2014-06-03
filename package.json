@@ -14,11 +14,15 @@
     "grunt": "*",
     "grunt-contrib-clean": "*",
     "grunt-contrib-copy": "*",
-    "grunt-contrib-requirejs": "*",
     "grunt-contrib-jshint": "*",
+    "grunt-contrib-requirejs": "*",
+    "grunt-contrib-symlink": "*",
     "grunt-contrib-uglify": "*",
     "grunt-contrib-watch": "*",
-    "grunt-contrib-symlink": "*"
+    "grunt-wintersmith-compile": "*",
+    "grunt-git": "*",
+    "grunt-shell": "*",
+    "wintersmith-nunjucks": "^0.5.0"
   },
   "devDependencies": {
     "grunt-docco": "~0.3.2",

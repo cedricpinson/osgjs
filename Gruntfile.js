@@ -48,10 +48,12 @@ var gruntTasks = { };
 //
 ( function () {
 
+//lint
     gruntTasks.jshint = {
         options: jshintrc
     };
 
+//build/bundle
     gruntTasks.copy = {
         options: {}
     };
@@ -85,13 +87,24 @@ var gruntTasks = { };
         options: {}
     };
 
+// docs
     gruntTasks.plato = {};
 
     gruntTasks.docco = {};
 
+//tests
     gruntTasks.qunit = {};
 
     gruntTasks.connect = {};
+
+// static website
+    gruntTasks.gitclone = {};
+    gruntTasks.gitpush = {};
+    gruntTasks.shell = {};
+    gruntTasks.gitcommit= {};
+
+    gruntTasks.wintersmith_compile = {};
+
 
 
 } )();
@@ -161,6 +174,11 @@ var gruntTasks = { };
 
     gruntTasks.clean.distAfterSourcesRjs = {
         src : [ path.join( DIST_PATH, 'build.txt' ) ] };
+
+
+    gruntTasks.clean.static_web = {
+        src : [ path.join( BUILD_PATH, 'web' ) ] };
+
 
 } )( );
 
@@ -247,7 +265,6 @@ var gruntTasks = { };
 // (explicit because windows)
 ( function ( ) {
 
-    // qunit using connect
     gruntTasks.symlink = {
        // Enable overwrite to delete symlinks before recreating them
        options: {
@@ -271,11 +288,100 @@ var gruntTasks = { };
         }, 
         build_active_dist_A: {
             src: DIST_PATH,
-            dest: 'builds/active'
+            dest: path.join( BUILD_PATH, 'active' ) 
         }
     };
 
 } )( );
+
+// ## WinterSmith:  
+// (static site gen for osgjs.org)
+( function ( ) {
+
+    gruntTasks.wintersmith_compile = {
+        build: {
+            options: {
+              config: './website/web/config.json',
+              output: path.join( BUILD_PATH, 'web' ) 
+            }
+        }, 
+        preview: {
+            options: {
+              action: 'preview',
+              config: './website/web/config.json',
+              output: path.join( BUILD_PATH, 'web' ) 
+            }
+        }
+    };
+
+} )( );
+
+
+( function ( ) {
+    gruntTasks.copy = {
+        static_web: {
+            files: [
+              {expand: true, src: ['sources/*'], dest: path.join( BUILD_PATH, 'web/sources' )},
+              {expand: true, src: ['docs/**'], dest: path.join( BUILD_PATH, 'web/docs' ) },
+              {expand: true, src: ['examples/**'], dest: path.join( BUILD_PATH, 'web/examples' ) },
+              {expand: true, src: ['tests/**'], dest: path.join( BUILD_PATH, 'web/tests' ) },
+              {expand: true, src: ['builds/dist/**'], dest: path.join( BUILD_PATH, 'web/builds/active' ) }
+            ]
+          }
+    };
+} )( );
+
+// ## git:  
+// (static site upload)
+( function ( ) {
+//git clone -b my-branch git@github.com:user/myproject.git
+    gruntTasks.gitclone = {
+        static_web: {
+          options: {
+            branch: 'gh-pages',
+            repository: '../osgjs_refactore',
+            directory: path.join( BUILD_PATH, 'web' ) 
+            //, depth: -1 // cannot push from a shallow clone
+          }
+        }
+    };
+
+    // missing add --all
+    gruntTasks.shell =  {                               
+        static_web: {                 
+            options: {                     
+                stderr: false
+            },
+            command: 'git add -A'
+        }
+    };
+
+    gruntTasks.gitcommit = {
+        static_web: {
+          options: {
+            branch: 'gh-pages',
+            repository: '../osgjs_refactore',
+            message: 'website update to latest develop'
+          }
+        },
+        files: {
+            src: ''
+        }
+    };
+
+
+    gruntTasks.gitpush = {
+        static_web: {
+          options: {
+            branch: 'gh-pages',
+            repository: '../osgjs_refactore',
+          }
+        }
+    };
+    
+} )( );
+
+
 
 module.exports = function ( grunt ) {
 
@@ -307,8 +413,12 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-requirejs' );
     grunt.loadNpmTasks( 'grunt-contrib-clean' );
     grunt.loadNpmTasks( 'grunt-contrib-watch' );
+    // windows
     grunt.loadNpmTasks( 'grunt-contrib-symlink' );
-
+    //static site
+    grunt.loadNpmTasks( 'grunt-wintersmith-compile' );
+    grunt.loadNpmTasks( 'grunt-git' );
+    grunt.loadNpmTasks( 'grunt-shell' );
 
     grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
 
@@ -324,4 +434,6 @@ module.exports = function ( grunt ) {
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
 
+    grunt.registerTask( 'website_only', [ 'copy:static_web', 'clean:static_web', 'gitclone:static_web', 'wintersmith_compile:build', 'shell:static_web', 'gitcommit:static_web', 'gitpush:static_web' ] );
+    grunt.registerTask( 'website', [ 'default', 'docs', 'website_only' ] );
 };
