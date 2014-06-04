@@ -8,7 +8,7 @@ define( [
     'osg/Node',
     'osg/NodeVisitor',
     'osg/Matrix',
-    'osg/Vec3',
+    'osg/Vec3'
 ], function ( MACROUTILS, Node, NodeVisitor, Matrix, Vec3) {
     /**
      *  Lod that can contains child node

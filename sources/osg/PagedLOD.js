@@ -11,9 +11,8 @@ define( [
     'osg/Matrix',
     'osg/Vec3',
     'osg/Node',
-    'osg/Geometry',
-    'osgDB/ReaderParser'
-], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Node, Geometry, ReaderParser) {
+    'osg/Geometry'
+], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Node, Geometry ) {
     /**
      *  PagedLOD that can contains paged child nodes
      *  @class PagedLod
@@ -103,6 +102,7 @@ define( [
         loadNodeFromUrl : function ( perRangeData, node ) {
             // TODO:
             // we should ask to the Cache if the data is in the IndexedDB first
+            var ReaderParser = require('osgDB/ReaderParser');
             console.log( 'loading ' + perRangeData.filename );
             var req = new XMLHttpRequest();
             req.open( 'GET', perRangeData.filename, true );
