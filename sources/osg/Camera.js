@@ -44,10 +44,10 @@ define( [
         MACROUTILS.objectInehrit( Transform.prototype, {
 
             setGraphicContext: function ( gc ) {
-            this._graphicContext = gc;
+                this._graphicContext = gc;
             },
             getGraphicContext: function () {
-            return this._graphicContext;
+                return this._graphicContext;
             },
             setClearDepth: function ( depth ) {
                 this.clearDepth = depth;
