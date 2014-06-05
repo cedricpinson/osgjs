@@ -1,28 +1,29 @@
 {
-  "name": "OpenSceneGraph",
-  "description": "OpenSceneGraph implementation in javascript",
-  "license": "LGPL V3+ (https://spdx.org/licenses/LGPL-3.0+)",
-  "author": "Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)",
-  "version": "0.0.9",
-  "contributors": [
-    "Tuan.kuranes <tuan.kuranes@gmail.com>",
-    "Matt Fontaine <tehqin@gmail.com>"
-  ],
-  "dependencies": {
-    "extend": "*",
-    "glob": "*",
-    "grunt": "*",
-    "grunt-contrib-clean": "*",
-    "grunt-contrib-copy": "*",
-    "grunt-contrib-requirejs": "*",
-    "grunt-contrib-jshint": "*",
-    "grunt-contrib-uglify": "*",
-    "grunt-contrib-watch": "*"
-  },
-  "devDependencies": {
-    "grunt-docco": "~0.3.2",
-    "grunt-plato": "~0.2.1",
-    "grunt-contrib-qunit": "~0.4.0",
-    "grunt-contrib-connect": "~0.5.0"
-  }
+ "name": "OpenSceneGraph",
+ "description": "OpenSceneGraph implementation in javascript",
+ "license": "LGPL V3+ (https://spdx.org/licenses/LGPL-3.0+)",
+ "author": "Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)",
+ "version": "0.0.9",
+ "contributors": [
+                  "Tuan.kuranes <tuan.kuranes@gmail.com>",
+                  "Matt Fontaine <tehqin@gmail.com>"
+                 ],
+ "dependencies": {
+                  "extend": "*",
+                  "glob": "*",
+                  "grunt": "*",
+                  "grunt-contrib-clean": "*",
+                  "grunt-contrib-copy": "*",
+                  "grunt-contrib-requirejs": "*",
+                  "grunt-contrib-jshint": "*",
+                  "grunt-contrib-uglify": "*",
+                  "grunt-contrib-watch": "*",
+                  +    "grunt-contrib-symlink": "*"
+                 },
+ "devDependencies": {
+                     "grunt-docco": "~0.3.2",
+                     "grunt-plato": "~0.2.1",
+                     "grunt-contrib-qunit": "~0.4.0",
+                     "grunt-contrib-connect": "~0.5.0"
+                    }
 }
