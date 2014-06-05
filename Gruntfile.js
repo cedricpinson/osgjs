@@ -37,7 +37,7 @@ var find = function ( cwd, pattern ) {
 };
 
 // get source file once and for all, caching results.
-var src_files =  find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) { return pathname; } );
+var srcFiles =  find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) { return pathname; } );
 
 
 // Used to store all Grunt tasks
@@ -103,7 +103,9 @@ var gruntTasks = { };
     gruntTasks.shell = {};
     gruntTasks.gitcommit= {};
 
-    gruntTasks.wintersmith_compile = {};
+    gruntTasks.wintersmith= {};
+    // duck the camel. (case)
+	gruntTasks[ 'wintersmith_compile' ] = gruntTasks.wintersmith;
 
 
 
@@ -123,7 +125,7 @@ var gruntTasks = { };
     gruntTasks.jshint.sources = {
         options : { globals : { define : true, require : true }
                   },
-        src : src_files.map( function ( pathname ) {
+        src : srcFiles.map( function ( pathname ) {
             return path.join( SOURCE_PATH, pathname ); } ) };
 
     // add another output from envvar to have better error tracking in emacs
@@ -176,7 +178,7 @@ var gruntTasks = { };
         src : [ path.join( DIST_PATH, 'build.txt' ) ] };
 
 
-    gruntTasks.clean.static_web = {
+    gruntTasks.clean.staticWeb = {
         src : [ path.join( BUILD_PATH, 'web' ) ] };
 
 
@@ -208,7 +210,7 @@ var gruntTasks = { };
             }
         },
         docs: {
-            src:  src_files.map( function ( pathname ) { return path.join( SOURCE_PATH, pathname ); } ),
+            src:  srcFiles.map( function ( pathname ) { return path.join( SOURCE_PATH, pathname ); } ),
             options: {
                 layout: 'classic',
                 output: 'docs/annotated-source'
@@ -226,7 +228,7 @@ var gruntTasks = { };
         },
         main: {
             files: {
-                'docs/analysis': src_files.map( function ( pathname ) {
+                'docs/analysis': srcFiles.map( function ( pathname ) {
                     return path.join( SOURCE_PATH, pathname ); } )
             }
         }
@@ -286,7 +288,7 @@ var gruntTasks = { };
             src: 'examples/vendors/Q-0.9.7.js',
             dest: 'examples/vendors/Q.js'
         }, 
-        build_active_dist_A: {
+        active: {
             src: DIST_PATH,
             dest: path.join( BUILD_PATH, 'active' ) 
         }
@@ -298,7 +300,7 @@ var gruntTasks = { };
 // (static site gen for osgjs.org)
 ( function ( ) {
 
-    gruntTasks.wintersmith_compile = {
+    gruntTasks.wintersmith = {
         build: {
             options: {
               config: './website/web/config.json',
@@ -319,7 +321,7 @@ var gruntTasks = { };
 
 ( function ( ) {
     gruntTasks.copy = {
-        static_web: {
+        staticWeb: {
             files: [
               {expand: true, src: ['sources/**'], dest: path.join( BUILD_PATH, 'web/' )},
               {expand: true, src: ['docs/**'], dest: path.join( BUILD_PATH, 'web/' ) },
@@ -337,7 +339,7 @@ var gruntTasks = { };
 ( function ( ) {
 //git clone -b my-branch git@github.com:user/myproject.git
     gruntTasks.gitclone = {
-        static_web: {
+        staticWeb: {
           options: {
             branch: 'gh-pages',
             repository: '../osgjs_refactore',
@@ -350,7 +352,7 @@ var gruntTasks = { };
 
     // missing add --all
     gruntTasks.shell =  {                               
-        static_web: {  
+        staticWeb: {  
             options: {
                 execOptions: {
                     cwd: path.join( BUILD_PATH, 'web' ) 
@@ -361,7 +363,7 @@ var gruntTasks = { };
     };
 
     gruntTasks.gitcommit = {
-        static_web: {
+        staticWeb: {
           options: {
             branch: 'gh-pages',
             repository: '../osgjs_refactore',
@@ -375,7 +377,7 @@ var gruntTasks = { };
 
 
     gruntTasks.gitpush = {
-        static_web: {
+        staticWeb: {
           options: {
             branch: 'gh-pages',
             repository: '../osgjs_refactore',
@@ -434,10 +436,10 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );
 
     grunt.registerTask( 'build:dist', [ 'build:sources:dist' ] );
-    grunt.registerTask( 'build', [ 'build:dist', 'symlink' ] );
+    grunt.registerTask( 'build', [ 'symlink', 'build:dist' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
 
-    grunt.registerTask( 'website_only', [ 'copy:static_web', 'clean:static_web', 'gitclone:static_web', 'wintersmith_compile:build', 'shell:static_web', 'gitcommit:static_web', 'gitpush:static_web' ] );
+    grunt.registerTask( 'website_only', [ 'copy:staticWeb', 'clean:staticWeb', 'gitclone:staticWeb', 'wintersmith:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb' ] );
     grunt.registerTask( 'website', [ 'default', 'docs', 'website_only' ] );
 };
