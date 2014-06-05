@@ -18,7 +18,7 @@
                   "grunt-contrib-jshint": "*",
                   "grunt-contrib-uglify": "*",
                   "grunt-contrib-watch": "*",
-                  +    "grunt-contrib-symlink": "*"
+                  "grunt-contrib-symlink": "*"
                  },
  "devDependencies": {
                      "grunt-docco": "~0.3.2",
