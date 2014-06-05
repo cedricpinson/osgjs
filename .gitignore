@@ -17,3 +17,9 @@ test/lighting
 *.c
 *.orig
 .hooks
+builds/active/OSG.js
+builds/dist/OSG.js
+examples/vendors/Hammer.js
+examples/vendors/Q.js
+examples/vendors/Require.js
+examples/vendors/require/Text.js

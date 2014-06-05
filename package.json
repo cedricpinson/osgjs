@@ -14,15 +14,20 @@
     "grunt": "*",
     "grunt-contrib-clean": "*",
     "grunt-contrib-copy": "*",
-    "grunt-contrib-requirejs": "*",
     "grunt-contrib-jshint": "*",
+    "grunt-contrib-requirejs": "*",
+    "grunt-contrib-symlink": "*",
     "grunt-contrib-uglify": "*",
-    "grunt-contrib-watch": "*"
+    "grunt-contrib-watch": "*",
+    "grunt-wintersmith-compile": "*",
+    "grunt-git": "*",
+    "grunt-shell": "*",
+    "wintersmith-nunjucks": "^0.5.0"
   },
   "devDependencies": {
     "grunt-docco": "~0.3.2",
     "grunt-plato": "~0.2.1",
-    "grunt-contrib-qunit": "~0.4.0",
+    "grunt-contrib-qunit": "~0.5.0",
     "grunt-contrib-connect": "~0.5.0"
   }
 }
