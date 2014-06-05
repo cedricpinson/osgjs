@@ -10,8 +10,8 @@ var jshintrc = JSON.parse( fs.readFileSync('./.jshintrc').toString() );
 // They always have to finish with a '/'.
 //
 var SOURCE_PATH = 'sources/';
-var BUILD_PATH   = 'builds/';
-var DIST_PATH   = BUILD_PATH+'dist/';
+var BUILD_PATH  = 'builds/';
+var DIST_PATH   = path.join( BUILD_PATH, 'dist/');
 var UTILS_PATH  = 'tools/build/';
 
 // Utility functions
@@ -343,7 +343,7 @@ var gruntTasks = { };
         staticWeb: {
           options: {
             branch: 'gh-pages',
-            repository: '../osgjs_refactore',
+            repository: '.',
             directory: path.join( BUILD_PATH, 'web' )
             //, depth: -1 // cannot push from a shallow clone
           }
@@ -367,7 +367,7 @@ var gruntTasks = { };
         staticWeb: {
           options: {
             branch: 'gh-pages',
-            repository: '../osgjs_refactore',
+            repository: '.',
             message: 'website update to latest develop'
           }
         },
@@ -381,7 +381,7 @@ var gruntTasks = { };
         staticWeb: {
           options: {
             branch: 'gh-pages',
-            repository: '../osgjs_refactore',
+            repository: '.',
           }
         }
     };
@@ -437,7 +437,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );
 
     grunt.registerTask( 'build:dist', [ 'build:sources:dist' ] );
-    grunt.registerTask( 'build', [ 'symlink', 'build:dist' ] );
+    grunt.registerTask( 'build', [ 'build:dist', 'symlink' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
 
