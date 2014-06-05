@@ -1,135 +1,86 @@
-define( [
+/*global define */
+
+define ( [
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Vec4',
     'osg/Uniform',
-    'osg/ShaderGenerator',
-    'osg/Map'
-], function ( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator, Map ) {
+    'osgShader/ShaderGenerator',
+    'osg/Map',
+    'defineGetterSetter'
 
-    /**
-     * Material
-     * @class Material
-     */
-    var Material = function () {
-        StateAttribute.call( this );
-        this.ambient = [ 0.2, 0.2, 0.2, 1.0 ];
-        this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
-        this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
-        this.emission = [ 0.0, 0.0, 0.0, 1.0 ];
-        this.shininess = 12.5;
+] , function( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator, Map, defineGetterSetter ) {
+
+    // Define a material attribute
+
+    var Material = function() {
+        StateAttribute.call(this);
+
+        this._diffuseColor = [ 0,0,0];
+        this._diffuseIntensity = [ 1,1,1];
+
+        this._specularColor = [ 0,0,0];
+        this._specularIntensity = 1.0;
+
+        this._emitColor = [0.0, 0.0, 0.0];
+        this._opacity = 1.0;
+        this._specularHardness = 12.5;
+
+        this._reflection = 0.0;
+
+        this._shadeless = false;
     };
-    /** @lends Material.prototype */
-    Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
-        setEmission: function ( a ) {
-            Vec4.copy( a, this.emission );
-            this._dirty = true;
-        },
-        setAmbient: function ( a ) {
-            Vec4.copy( a, this.ambient );
-            this._dirty = true;
-        },
-        setSpecular: function ( a ) {
-            Vec4.copy( a, this.specular );
-            this._dirty = true;
-        },
-        setDiffuse: function ( a ) {
-            Vec4.copy( a, this.diffuse );
-            this._dirty = true;
-        },
-        setShininess: function ( a ) {
-            this.shininess = a;
-            this._dirty = true;
-        },
 
-        getEmission: function () {
-            return this.emission;
-        },
-        getAmbient: function () {
-            return this.ambient;
-        },
-        getSpecular: function () {
-            return this.specular;
-        },
-        getDiffuse: function () {
-            return this.diffuse;
-        },
-        getShininess: function () {
-            return this.shininess;
-        },
+    Material.prototype = MACROUTILS.objectLibraryClass( defineGetterSetter(
+        [ 'Shadeless',
+          'Reflection'
+        ],
 
-        attributeType: 'Material',
-        cloneType: function () {
-            return new Material();
-        },
-        getType: function () {
-            return this.attributeType;
-        },
-        getTypeMember: function () {
-            return this.attributeType;
-        },
-        getOrCreateUniforms: function () {
-            if ( Material.uniforms === undefined ) {
-                var map = new Map();
-                Material.uniforms = map;
-                map.setMap( {
-                    'ambient': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialAmbient' ),
-                    'diffuse': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialDiffuse' ),
-                    'specular': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialSpecular' ),
-                    'emission': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialEmission' ),
-                    'shininess': Uniform.createFloat1( [ 0 ], 'MaterialShininess' )
-                } );
+        MACROUTILS.objectInherit( StateAttribute.prototype, {
+            attributeType: 'Material',
+            getHash: function() {
+                return this.attributeType + this._diffuseShader + this._specularShader + this._shadeless.toString();
+            },
+
+            cloneType: function() {return new Material(); },
+            getType: function() { return this.attributeType;},
+            getTypeMember: function() { return this.attributeType;},
+            getParameterName: function (name) { return this.getType()+ '_uniform_' + name; },
+
+            getOrCreateUniforms: function () {
+
+                var obj = Material;
+                if ( obj.uniforms ) return obj.uniforms;
+
+                var uniformList = {
+                    'reflection': 'createFloat1'
+                };
+
+                var uniforms = {};
+                Object.keys( uniformList ).forEach( function( key ) {
+
+                    var type = uniformList[ key ];
+                    var func = Uniform[ type ];
+                    uniforms[ key ] = func( this.getParameterName( key ) );
+
+                }.bind(this) );
+
+                obj.uniforms = new Map( uniforms );
+                return obj.uniforms;
+            },
+
+
+            apply: function( /*state*/ )
+            {
+                var uniformMap = this.getOrCreateUniforms();
+
+                uniformMap.reflection.set( this._reflection );
+
+                this.setDirty( false );
             }
-            return Material.uniforms;
-        },
 
-        apply: function ( /*state*/ ) {
-            var uniformMap = this.getOrCreateUniforms();
-
-            uniformMap.ambient.set( this.ambient );
-            uniformMap.diffuse.set( this.diffuse );
-            uniformMap.specular.set( this.specular );
-            uniformMap.emission.set( this.emission );
-            uniformMap.shininess.set( [ this.shininess ] );
-            this._dirty = false;
-        },
-
-
-        // will contain functions to generate shader
-        _shader: {},
-        _shaderCommon: {},
-
-        generateShader: function ( type ) {
-            if ( this._shader[ type ] ) {
-                return this._shader[ type ].call( this );
-            }
-            return '';
-        }
-
-    } ), 'osg', 'Material' );
-
-
-    Material.prototype._shader[ ShaderGenerator.Type.VertexInit ] = function () {
-        var str = [ 'uniform vec4 MaterialAmbient;',
-            'uniform vec4 MaterialDiffuse;',
-            'uniform vec4 MaterialSpecular;',
-            'uniform vec4 MaterialEmission;',
-            'uniform float MaterialShininess;',
-            ''
-        ].join( '\n' );
-        return str;
-    };
-
-    Material.prototype._shader[ ShaderGenerator.Type.FragmentInit ] = function () {
-        var str = [ 'uniform vec4 MaterialAmbient;',
-            'uniform vec4 MaterialDiffuse;',
-            'uniform vec4 MaterialSpecular;',
-            'uniform vec4 MaterialEmission;',
-            'uniform float MaterialShininess;',
-            ''
-        ].join( '\n' );
-        return str;
-    };
+        })), 'osg' , 'Material' );
 
     return Material;
-} );
+
+});

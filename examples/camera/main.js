@@ -94,6 +94,7 @@ if (params.length)  {
       requirejs.config ({
       baseUrl: '../../sources/',
       paths: {
+            'text': 'vendors/require/text',
             'require/text': 'vendors/require/text',
             'Q': 'vendors/Q',
             'Hammer': 'vendors/Hammer',

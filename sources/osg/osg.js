@@ -41,7 +41,25 @@ define( [
     'osg/RenderBin',
     'osg/RenderStage',
     'osg/Shader',
-    'osg/ShaderGenerator',
+    'osgShader/ShaderGeneratorProxy',
+    'osgShader/ShaderGenerator',
+    'osgShader/Compiler',
+    'osgShader/shaderGenerator/ShaderGeneratorOutputLog',
+    'osgShader/shaderGenerator/CompilerOutputLog',
+    'osgShader/shaderGenerator/ShaderGeneratorShadeless',
+    'osgShader/shaderGenerator/CompilerShadeless',
+    'osgShader/ShaderProcessor',
+    'osgShader/ShaderLib',
+    'osgShader/TextureMaterial.js',
+    'osgShader/ShaderNode',
+    'osgShader/ShaderNode/data.js',
+    'osgShader/ShaderNode/envirronment.js',
+    'osgShader/ShaderNode/functions.js',
+    'osgShader/ShaderNode/lights.js',
+    'osgShader/ShaderNode/operations.js',
+    'osgShader/ShaderNode/shadows.js',
+    'osgShader/ShaderNode/textures.js',
+    'osgShader/utils/sprintf',
     'osg/Shape',
     'osg/Stack',
     'osg/State',
@@ -63,7 +81,7 @@ define( [
     'osg/TransformEnums',
     'osg/WebGLCaps'
 
-], function( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, KdTree, KdTreeBuilder, Light, LightSource, LineWidth, Lod, Map, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, TriangleIndexFunctor, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool, TransformEnums, WebGLCaps ) {
+], function( BlendColor, BlendFunc, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullSettings, CullStack, CullVisitor, Depth, DrawArrayLengths, DrawArrays, DrawElements, EllipsoidModel, FrameBufferObject, FrameStamp, Geometry, Image, KdTree, KdTreeBuilder, Light, LightSource, LineWidth, Lod, Map, Material, Math, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, PrimitiveSet, Program, Projection, Quat, RenderBin, RenderStage, Shader, ShaderGenerator, ShaderGeneratorProxy, Compiler, ShaderProcessor, ShaderLib, TextureMaterial, data, envirronment, functions, lights, operations, shadows, textures, sprintf, Shape, Stack, State, StateAttribute, StateGraph, StateSet, Texture, TextureCubeMap, Transform, TriangleIndexFunctor, Uniform, UpdateVisitor, MACROUTILS, Vec2, Vec3, Vec4, Viewport, osgPool, TransformEnums, WebGLCaps ) {
 
     var osg = {};
 
@@ -113,6 +131,9 @@ define( [
     osg.Shader = Shader;
     osg.ShaderGenerator = ShaderGenerator;
     osg.ShaderGeneratorType = ShaderGenerator.Type;
+    osg.ShaderGeneratorProxy = ShaderGeneratorProxy;
+    osg.ShaderLib = ShaderLib;
+    osg.ShaderProcessor = ShaderProcessor;
     MACROUTILS.objectMix( osg, Shape );
     osg.Stack = Stack;
     osg.State = State;
