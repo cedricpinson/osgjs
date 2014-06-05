@@ -243,6 +243,7 @@ var gruntTasks = { };
     gruntTasks.qunit = {
         all: {
             options: {
+                timeout: 10000,
                 urls: [
                     'http://localhost:9001/tests/index.html'
                 ]
@@ -263,7 +264,7 @@ var gruntTasks = { };
 
 } )( );
 
-// ## Symlinks 
+// ## Symlinks
 // (explicit because windows)
 ( function ( ) {
 
@@ -287,16 +288,16 @@ var gruntTasks = { };
         Q: {
             src: 'examples/vendors/Q-0.9.7.js',
             dest: 'examples/vendors/Q.js'
-        }, 
+        },
         active: {
             src: DIST_PATH,
-            dest: path.join( BUILD_PATH, 'active' ) 
+            dest: path.join( BUILD_PATH, 'active' )
         }
     };
 
 } )( );
 
-// ## WinterSmith:  
+// ## WinterSmith:
 // (static site gen for osgjs.org)
 ( function ( ) {
 
@@ -304,14 +305,14 @@ var gruntTasks = { };
         build: {
             options: {
               config: './website/web/config.json',
-              output: path.join( BUILD_PATH, 'web' ) 
+              output: path.join( BUILD_PATH, 'web' )
             }
-        }, 
+        },
         preview: {
             options: {
               action: 'preview',
               config: './website/web/config.json',
-              output: path.join( BUILD_PATH, 'web' ) 
+              output: path.join( BUILD_PATH, 'web' )
             }
         }
     };
@@ -334,7 +335,7 @@ var gruntTasks = { };
     };
 } )( );
 
-// ## git:  
+// ## git:
 // (static site upload)
 ( function ( ) {
 //git clone -b my-branch git@github.com:user/myproject.git
@@ -343,7 +344,7 @@ var gruntTasks = { };
           options: {
             branch: 'gh-pages',
             repository: '../osgjs_refactore',
-            directory: path.join( BUILD_PATH, 'web' ) 
+            directory: path.join( BUILD_PATH, 'web' )
             //, depth: -1 // cannot push from a shallow clone
           }
         }
@@ -351,11 +352,11 @@ var gruntTasks = { };
 
 
     // missing add --all
-    gruntTasks.shell =  {                               
-        staticWeb: {  
+    gruntTasks.shell =  {
+        staticWeb: {
             options: {
                 execOptions: {
-                    cwd: path.join( BUILD_PATH, 'web' ) 
+                    cwd: path.join( BUILD_PATH, 'web' )
                 }
             },
             command: 'git add -A -v'
@@ -384,7 +385,7 @@ var gruntTasks = { };
           }
         }
     };
-    
+
 } )( );
 
 
