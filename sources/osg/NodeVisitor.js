@@ -1,4 +1,4 @@
-define( [], function () {
+define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
 
     var NodeVisitor = function ( traversalMode ) {
         /*jshint bitwise: false */
@@ -10,11 +10,25 @@ define( [], function () {
             this.traversalMode = NodeVisitor.TRAVERSE_ALL_CHILDREN;
         }
         this.nodePath = [];
+        this.visitorType = NodeVisitor.NODE_VISITOR;
+
+        var framestamp = new FrameStamp();
+        this.getFrameStamp = function () {
+            return framestamp;
+        };
+        this.setFrameStamp = function ( s ) {
+            framestamp = s;
+        };
     };
     //NodeVisitor.TRAVERSE_NONE = 0;
     NodeVisitor.TRAVERSE_PARENTS = 1;
     NodeVisitor.TRAVERSE_ALL_CHILDREN = 2;
     NodeVisitor.TRAVERSE_ACTIVE_CHILDREN = 3;
+    NodeVisitor.NODE_VISITOR = 0;
+    NodeVisitor.UPDATE_VISITOR = 1;
+    NodeVisitor.CULL_VISITOR = 2;
+
+    
     NodeVisitor._traversalFunctions = {};
     NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_PARENTS ] = function ( node ) {
         node.ascend( this );
@@ -80,6 +94,9 @@ define( [], function () {
         },
         traverse: function ( node ) {
             NodeVisitor._traversalFunctions[ this.traversalMode ].call( this, node );
+        },
+        getVisitorType: function ( ) {
+            return this.visitorType;
         }
     };
 
