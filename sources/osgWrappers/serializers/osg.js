@@ -59,7 +59,6 @@ define( [
             }
         }
 
-
         if ( jsonObj.StateSet ) {
             var pp = input.setJSON( jsonObj.StateSet ).readObject();
             var df = Q.defer();
@@ -81,18 +80,29 @@ define( [
 
         var queue = [];
         // For each url, create a function call and add it to the queue
-        jsonObj.Children.forEach( function ( jsonChildren ) {
-            queue.push( createChildren( jsonChildren ) );
-        } );
+        if ( jsonObj.Children ) {
+            jsonObj.Children.forEach( function ( jsonChildren ) {
+                queue.push( createChildren( jsonChildren ) );
+            } );
+        }
 
+        // Resolve first updateCallbacks and stateset.
+        var deferred = Q.defer();
+        Q.all( promiseArray ).then( function () {
+            deferred.resolve( );
+        } );
+        
         var defer = Q.defer();
-        Q.all( queue ).then( function () {
-            // All the results from Q.all are on the argument as an array
-            for ( var i = 0; i < queue.length; i++ )
-                node.addChild( queue[ i ] );
-            defer.resolve( node );
-        } );
-
+        // Need to wait until the stateset and the all the callbacks are resolved
+        Q.when (deferred.promise).then (function(){
+            Q.all( queue ).then( function () {
+                // All the results from Q.all are on the argument as an array
+                // Now insert children in the right order
+                for ( var i = 0; i < queue.length; i++ )
+                    node.addChild( queue[ i ] );
+                defer.resolve( node );
+            } );
+        });
         return defer.promise;
     };
 
