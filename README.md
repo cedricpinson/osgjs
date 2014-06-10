@@ -19,7 +19,7 @@ First, clone a copy of the main git repo by running:
 
 
     git clone git://github.com/cedricpinson/osgjs.git
-    cd osgjs && ln -s build/dist build/active
+    cd osgjs
     npm install # before you may need to npm install -g grunt-cli
     grunt
 
