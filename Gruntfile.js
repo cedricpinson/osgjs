@@ -64,13 +64,13 @@ var gruntTasks = { };
 
     gruntTasks.requirejs = {
         options: {
-            //optimize : 'uglify2',
-            optimize: 'none',
-            preserveLicenseComments: false,
+            optimize: 'uglify2',
+            generateSourceMaps: true,
+            useSourceUrl: true,
 
+            preserveLicenseComments: false,
             findNestedDependencies: true,
             optimizeAllPluginResources: true,
-
             baseUrl: SOURCE_PATH
         }
     };
@@ -121,7 +121,7 @@ var gruntTasks = { };
     gruntTasks.jshint.sources = {
         options : { globals : { define : true, require : true }
                   },
-        src : srcFiles.map( function ( pathname ) {
+        src : srcFiles.filter(function(pathName){return pathName.indexOf('vendors') === -1;}).map( function ( pathname ) {
             return path.join( SOURCE_PATH, pathname ); } ) };
 
     // add another output from envvar to have better error tracking in emacs
@@ -157,7 +157,8 @@ var gruntTasks = { };
         paths: {
             'Q': 'vendors/Q',
             'Hammer': 'vendors/Hammer',
-            'Leap': 'vendors/Leap'
+            'Leap': 'vendors/Leap',
+            'text': 'vendors/require/text'
         },
         wrap : {
             startFile : path.join( UTILS_PATH, 'wrap.start' ),
@@ -242,7 +243,7 @@ var gruntTasks = { };
                     'http://localhost:9001/tests/index.html'
                 ]
             }
-	}
+        }
     };
 
     // will start a server on port 9001 with root directory at the same level of
@@ -278,6 +279,10 @@ var gruntTasks = { };
         RequireText: {
             src: 'examples/vendors/require/Text-2.0.12.js',
             dest: 'examples/vendors/require/Text.js'
+        },
+        RequireTextBuild: {
+            src: 'examples/vendors/require/Text-2.0.12.js',
+            dest: 'sources/vendors/require/Text.js'
         },
         Q: {
             src: 'examples/vendors/Q-0.9.7.js',
@@ -332,7 +337,7 @@ var gruntTasks = { };
 // ## git:
 // (static site upload)
 ( function ( ) {
-//git clone -b my-branch git@github.com:user/myproject.git
+//git clone -b my-branch git@github.com:cedricpinson/osgjs.git
     gruntTasks.gitclone = {
         staticWeb: {
           options: {
@@ -435,7 +440,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );
 
     grunt.registerTask( 'build:dist', [ 'build:sources:dist' ] );
-    grunt.registerTask( 'build', [ 'build:dist', 'symlink' ] );
+    grunt.registerTask( 'build', [ 'symlink', 'build:dist'  ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
 
