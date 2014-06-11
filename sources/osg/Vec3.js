@@ -2,6 +2,11 @@ define( [], function () {
 
     /** @class Vec3 Operations */
     var Vec3 = {
+
+        create: function () {
+            return [ 0.0, 0.0, 0.0 ];
+        },
+
         init: function ( a ) {
             a[ 0 ] = 0.0;
             a[ 1 ] = 0.0;

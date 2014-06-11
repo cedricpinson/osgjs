@@ -16,9 +16,9 @@ define( [
      */
     var Lod = function () {
         Node.call( this );
-        this.radius = -1;
-        this.range = [];
-        this.rangeMode = Lod.DISTANCE_FROM_EYE_POINT;
+        this._radius = -1;
+        this._range = [];
+        this._rangeMode = Lod.DISTANCE_FROM_EYE_POINT;
     };
 
     Lod.DISTANCE_FROM_EYE_POINT = 0;
@@ -28,19 +28,19 @@ define( [
     Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
         // Functions here
         getRadius: function () {
-            return this.radius;
+            return this._radius;
         },
 
         /** Set the object-space reference radius of the volume enclosed by the LOD.
          * Used to determine the bounding sphere of the LOD in the absence of any children.*/
         setRadius: function ( radius ) {
-            this.radius = radius;
+            this._radius = radius;
         },
 
         projectBoundingSphere: ( function () {
             // from http://www.iquilezles.org/www/articles/sphereproj/sphereproj.htm
             // Sample code at http://www.shadertoy.com/view/XdBGzd?
-            var o = [ 0, 0, 0 ];
+            var o = Vec3.create();
             return function ( sph, camMatrix, fle ) {
                 Matrix.transformVec3( camMatrix, sph.center(), o );
                 var r2 = sph.radius2();
@@ -53,19 +53,19 @@ define( [
 
         setRangeMode: function ( mode ) {
             //TODO: check if mode is correct
-            this.rangeMode = mode;
+            this._rangeMode = mode;
         },
 
         addChildNode: function ( node ) {
 
             Node.prototype.addChild.call( this, node );
-            if ( this.children.length > this.range.length ) {
+            if ( this.children.length > this._range.length ) {
                 var r = [];
                 var max = 0.0;
-                if ( this.range.lenght > 0 )
-                    max = this.range[ this.range.length - 1 ][ 1 ];
+                if ( this._range.lenght > 0 )
+                    max = this._range[ this._range.length - 1 ][ 1 ];
                 r.push( [ max, max ] );
-                this.range.push( r );
+                this._range.push( r );
             }
             return true;
         },
@@ -73,13 +73,13 @@ define( [
         addChild: function ( node, min, max ) {
             Node.prototype.addChild.call( this, node );
 
-            if ( this.children.length > this.range.length ) {
+            if ( this.children.length > this._range.length ) {
                 var r = [];
                 r.push( [ min, min ] );
-                this.range.push( r );
+                this._range.push( r );
             }
-            this.range[ this.children.length - 1 ][ 0 ] = min;
-            this.range[ this.children.length - 1 ][ 1 ] = max;
+            this._range[ this.children.length - 1 ][ 0 ] = min;
+            this._range[ this.children.length - 1 ][ 1 ] = max;
             return true;
         },
 
@@ -87,8 +87,8 @@ define( [
 
             // avoid to generate variable on the heap to limit garbage collection
             // instead create variable and use the same each time
-            var zeroVector = [ 0.0, 0.0, 0.0 ];
-            var eye = [ 0.0, 0.0, 0.0 ];
+            var zeroVector = Vec3.create();
+            var eye = Vec3.create();
             var viewModel = Matrix.create();
 
             return function ( visitor ) {
@@ -119,14 +119,13 @@ define( [
                         requiredRange = this.projectBoundingSphere( this.getBound(), matrix, projmatrix[ 0 ] );
                         // Multiply by a factor to get the real area value
                         requiredRange = ( requiredRange * visitor.getViewport().width() * visitor.getViewport().width() ) * 0.25;
-                        //console.log('area', requiredRange);
                     }
 
                     var numChildren = this.children.length;
-                    if ( this.range.length < numChildren ) numChildren = this.range.length;
+                    if ( this._range.length < numChildren ) numChildren = this._range.length;
 
                     for ( var j = 0; j < numChildren; ++j ) {
-                        if ( this.range[ j ][ 0 ] <= requiredRange && requiredRange < this.range[ j ][ 1 ] ) {
+                        if ( this._range[ j ][ 0 ] <= requiredRange && requiredRange < this._range[ j ][ 1 ] ) {
                             this.children[ j ].accept( visitor );
                         }
                     }
