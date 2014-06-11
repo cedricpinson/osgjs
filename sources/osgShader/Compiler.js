@@ -5,12 +5,11 @@ define( [
     'osg/Uniform',
     'osg/Texture',
     'osgShader/utils/sprintf',
-    'osgShader/TextureMaterial',
     'osgShader/ShaderNode',
     'osgShader/ShaderProcessor'
 
 
-], function ( MACROUTILS, Uniform, Texture, sprintf, TextureMaterial, ShaderNode, ShaderProcessor ) {
+], function ( MACROUTILS, Uniform, Texture, sprintf, ShaderNode, ShaderProcessor ) {
 
 
     var shaderProcessor;
