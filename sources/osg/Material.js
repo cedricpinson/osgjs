@@ -6,81 +6,107 @@ define ( [
     'osg/Vec4',
     'osg/Uniform',
     'osgShader/ShaderGenerator',
-    'osg/Map',
-    'defineGetterSetter'
-
-] , function( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator, Map, defineGetterSetter ) {
+    'osg/Map'
+] , function( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator, Map) {
 
     // Define a material attribute
 
     var Material = function() {
         StateAttribute.call(this);
-
-        this._diffuseColor = [ 0,0,0];
-        this._diffuseIntensity = [ 1,1,1];
-
-        this._specularColor = [ 0,0,0];
-        this._specularIntensity = 1.0;
-
-        this._emitColor = [0.0, 0.0, 0.0];
-        this._opacity = 1.0;
-        this._specularHardness = 12.5;
-
-        this._reflection = 0.0;
-
+        this.ambient = [ 0.2, 0.2, 0.2, 1.0 ];
+        this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
+        this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
+        this.emission = [ 0.0, 0.0, 0.0, 1.0 ];
+        this.shininess = 12.5;
         this._shadeless = false;
     };
 
-    Material.prototype = MACROUTILS.objectLibraryClass( defineGetterSetter(
-        [ 'Shadeless',
-          'Reflection'
-        ],
+    Material.prototype = MACROUTILS.objectLibraryClass(MACROUTILS.objectInherit( StateAttribute.prototype, {
+        setEmission: function ( a ) {
+            Vec4.copy( a, this.emission );
+            this._dirty = true;
+        },
+        setAmbient: function ( a ) {
+            Vec4.copy( a, this.ambient );
+            this._dirty = true;
+        },
+        setSpecular: function ( a ) {
+            Vec4.copy( a, this.specular );
+            this._dirty = true;
+        },
+        setDiffuse: function ( a ) {
+            Vec4.copy( a, this.diffuse );
+            this._dirty = true;
+        },
+        setShininess: function ( a ) {
+            this.shininess = a;
+            this._dirty = true;
+        },
 
-        MACROUTILS.objectInherit( StateAttribute.prototype, {
-            attributeType: 'Material',
-            getHash: function() {
-                return this.attributeType + this._diffuseShader + this._specularShader + this._shadeless.toString();
-            },
+        getEmission: function () {
+            return this.emission;
+        },
+        getAmbient: function () {
+            return this.ambient;
+        },
+        getSpecular: function () {
+            return this.specular;
+        },
+        getDiffuse: function () {
+            return this.diffuse;
+        },
+        getShininess: function () {
+            return this.shininess;
+        },
 
-            cloneType: function() {return new Material(); },
-            getType: function() { return this.attributeType;},
-            getTypeMember: function() { return this.attributeType;},
-            getParameterName: function (name) { return this.getType()+ '_uniform_' + name; },
+        attributeType: 'Material',
 
-            getOrCreateUniforms: function () {
+        cloneType: function() {return new Material(); },
+        getType: function() { return this.attributeType;},
+        getTypeMember: function() { return this.attributeType;},
+        getParameterName: function (name) { return this.getType()+ '_uniform_' + name; },
 
-                var obj = Material;
-                if ( obj.uniforms ) return obj.uniforms;
+        getOrCreateUniforms: function () {
 
-                var uniformList = {
-                    'reflection': 'createFloat1'
-                };
+            var obj = Material;
+            if ( obj.uniforms ) return obj.uniforms;
 
-                var uniforms = {};
-                Object.keys( uniformList ).forEach( function( key ) {
+            var uniformList = {
+                'ambient': 'createFloat1',
+                'diffuse': 'createFloat1',
+                'specular': 'createFloat1',
+                'emission': 'createFloat1',
+                'shininess': 'createFloat1'
+            };
 
-                    var type = uniformList[ key ];
-                    var func = Uniform[ type ];
-                    uniforms[ key ] = func( this.getParameterName( key ) );
+            var uniforms = {};
+            Object.keys( uniformList ).forEach( function( key ) {
 
-                }.bind(this) );
+                var type = uniformList[ key ];
+                var func = Uniform[ type ];
+                uniforms[ key ] = func( this.getParameterName( key ) );
 
-                obj.uniforms = new Map( uniforms );
-                return obj.uniforms;
-            },
+            }.bind(this) );
+
+            obj.uniforms = new Map( uniforms );
+            return obj.uniforms;
+        },
 
 
-            apply: function( /*state*/ )
-            {
-                var uniformMap = this.getOrCreateUniforms();
+        apply: function( /*state*/ )
+        {
+            var uniforms = this.getOrCreateUniforms();
 
-                uniformMap.reflection.set( this._reflection );
+            uniforms.ambient.set( this.ambient );
+            uniforms.diffuse.set( this.diffuse );
+            uniforms.specular.set( this.specular );
+            uniforms.emission.set( this.emission );
+            uniforms.shininess.set( [ this.shininess ] );
 
-                this.setDirty( false );
-            }
+            this.setDirty( false );
+        }
 
-        })), 'osg' , 'Material' );
+    }), 'osg' , 'Material' );
 
     return Material;
-
 });

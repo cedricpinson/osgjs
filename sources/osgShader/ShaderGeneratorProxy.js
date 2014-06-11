@@ -3,8 +3,8 @@
 define( [
     'osg/Utils',
     'osgShader/ShaderGenerator',
-    'osgShader/shaderGenerators/ShaderGeneratorShadeless',
-    'osgShader/shaderGenerators/ShaderGeneratorOutputLog'
+    'osgShader/shaderGenerator/ShaderGeneratorShadeless',
+    'osgShader/shaderGenerator/ShaderGeneratorOutputLog'
 ], function ( MACROUTILS, ShaderGenerator, ShaderGeneratorShadeless, ShaderGeneratorOutputLog ) {
 
 

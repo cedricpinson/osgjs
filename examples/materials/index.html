@@ -383,20 +383,13 @@ function() {
   canvas.width = size.w;
   canvas.height = size.h;
   var viewer;
-try {
   viewer = new osgViewer.Viewer(canvas);
   viewer.init();
   viewer.setSceneData(createScene());
   viewer.setupManipulator();
   viewer.run();
-} catch (er) {
-  osg.log('exception in osgViewer ' + er);
-}
-
 }
 ,true);
-
-//);
 
 </script>
 

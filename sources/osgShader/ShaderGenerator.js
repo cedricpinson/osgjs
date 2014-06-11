@@ -4,9 +4,8 @@ define( [
     'osg/Shader',
     'osg/Map',
     'osg/Light',
-    'osgShader/Compiler',
-    'osgShader/TextureMaterial'
-], function ( Notify, Program, Shader, Map, Light, Compiler, TextureMaterial ) {
+    'osgShader/Compiler'
+], function ( Notify, Program, Shader, Map, Light, Compiler ) {
 
 
     var ShaderGenerator = function () {
@@ -49,8 +48,6 @@ define( [
 
         // filter all texture attribute that comes from osgShader namespace
         getActiveTextureAttributeList: function ( state, list ) {
-            var channelActif = {};
-            var channelActifSet = false;
             var hash = '';
             var attributeMapList = state.textureAttributeMapList;
             var i,l;
@@ -81,21 +78,9 @@ define( [
                         continue;
                     }
 
-                    if ( attr.typeID === TextureMaterial.typeID ) {
-                        channelActifSet = true;
-                        channelActif[  attr.getChannel().getName() ] = attr.getHash();
-                    } else {
-                        hash += attr.getHash();
-                    }
+
+                    hash += attr.getHash();
                     list[ i ].push( attr );
-                }
-            }
-            if ( channelActifSet ) {
-                for ( i = 0, l = TextureMaterial.ChannelType.length; i < l; i++ ) {
-                    var channelType = TextureMaterial.ChannelType[i];
-                    if ( channelActif[ channelType ] !== undefined ) {
-                        hash += channelActif[ channelType ];
-                    }
                 }
             }
             return hash;

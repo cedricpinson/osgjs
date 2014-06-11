@@ -3,10 +3,11 @@ define ( [
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Matrix',
+    'osg/Vec3',
     'osg/Vec4',
     'osgShader/ShaderGenerator',
     'osg/Map'
-] , function( MACROUTILS, StateAttribute, Uniform, Matrix, Vec4, ShaderGenerator, Map ) {
+] , function( MACROUTILS, StateAttribute, Uniform, Matrix, Vec3, Vec4, ShaderGenerator, Map ) {
 
 
     var Light = function( lightNumber ) {
@@ -21,7 +22,7 @@ define ( [
         this._useSpecular = true;
         this._position = [ 0.0, 0.0, 0.0 ];
         this._direction = [ 0.0, 0.0, -1.0 ];
-        this._spotCutoff = Math.cos(25);
+        this._spotCutoff = 1.0;
         this._spotBlend = 0.01;
         this._falloffType = 'INVERSE_SQUARE';
         this._distance = 25;
@@ -77,10 +78,10 @@ define ( [
 
         isEnable: function() { return this._enable; },
         setEnable: function( bool ) { this._enable = bool;},
-        setPosition: function(a) { MACROUTILS.Vec3.copy(a, this._position); },
-        setDirection: function(a) { MACROUTILS.Vec3.copy(a, this._direction); },
+        setPosition: function(a) { Vec3.copy(a, this._position); },
+        setDirection: function(a) { Vec3.copy(a, this._direction); },
 
-        setColor: function(a) { MACROUTILS.Vec3.copy(a, this._color); this.dirty(); },
+        setColor: function(a) { Vec3.copy(a, this._color); this.dirty(); },
         getColor: function() { return this._color; },
 
         setEnergy: function(a) { this._energy = a; this.dirty(); },
@@ -128,25 +129,25 @@ define ( [
                 var uniformMap = this.getOrCreateUniforms();
 
                 if ( this._type === 'SUN' || this._type === 'HEMI' ) {
-                    MACROUTILS.Matrix.copy( matrix, invMatrix );
+                    Matrix.copy( matrix, invMatrix );
                     invMatrix[ 12 ] = 0.0;
                     invMatrix[ 13 ] = 0.0;
                     invMatrix[ 14 ] = 0.0;
-                    MACROUTILS.Matrix.inverse( invMatrix, invMatrix );
-                    MACROUTILS.Matrix.transpose( invMatrix, invMatrix );
-                    MACROUTILS.Matrix.transformVec3( invMatrix, this._position, uniformMap.position.get() );
+                    Matrix.inverse( invMatrix, invMatrix );
+                    Matrix.transpose( invMatrix, invMatrix );
+                    Matrix.transformVec3( invMatrix, this._position, uniformMap.position.get() );
                 }
                 else {
-                    MACROUTILS.Matrix.transformVec3( matrix, this._position, uniformMap.position.get() );
+                    Matrix.transformVec3( matrix, this._position, uniformMap.position.get() );
                 }
                 if ( this._type === 'SPOT' ) {
-                    MACROUTILS.Matrix.copy( matrix, invMatrix );
+                    Matrix.copy( matrix, invMatrix );
                     invMatrix[ 12 ] = 0.0;
                     invMatrix[ 13 ] = 0.0;
                     invMatrix[ 14 ] = 0.0;
-                    MACROUTILS.Matrix.inverse( invMatrix, invMatrix );
-                    MACROUTILS.Matrix.transpose( invMatrix, invMatrix );
-                    MACROUTILS.Matrix.transformVec3( invMatrix, this._direction, uniformMap.direction.get() );
+                    Matrix.inverse( invMatrix, invMatrix );
+                    Matrix.transpose( invMatrix, invMatrix );
+                    Matrix.transformVec3( invMatrix, this._direction, uniformMap.direction.get() );
                 }
 
                 uniformMap.position.dirty();
@@ -164,8 +165,8 @@ define ( [
             color[ 2 ] = this._color[ 2 ] * this._energy;
             uniformMap.color.dirty();
 
-            MACROUTILS.Vec3.copy( this._position, uniformMap.position.get() );
-            MACROUTILS.Vec3.copy( this._direction, uniformMap.direction.get() );
+            Vec3.copy( this._position, uniformMap.position.get() );
+            Vec3.copy( this._direction, uniformMap.direction.get() );
             uniformMap.position.dirty();
             uniformMap.direction.dirty();
 
