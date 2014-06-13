@@ -192,6 +192,7 @@ define( [
                         requiredRange = this.projectBoundingSphere( this.getBound(), matrix, projmatrix[ 0 ] );
                         // Get the real area value
                         requiredRange = ( requiredRange * visitor.getViewport().width() * visitor.getViewport().width() ) * 0.25;
+                        if ( requiredRange < 0 ) requiredRange = this._range[ this._range.length -1 ][ 0 ];
                     }
 
                     var needToLoadChild = false;
