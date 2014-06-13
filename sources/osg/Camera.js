@@ -16,6 +16,7 @@ define( [
         CullSettings.call( this );
 
         this.viewport = undefined;
+        this._graphicContext = undefined;
         this.setClearColor( [ 0, 0, 0, 1.0 ] );
         this.setClearDepth( 1.0 );
 
@@ -42,6 +43,12 @@ define( [
         CullSettings.prototype,
         MACROUTILS.objectInehrit( Transform.prototype, {
 
+            setGraphicContext: function ( gc ) {
+                this._graphicContext = gc;
+            },
+            getGraphicContext: function () {
+                return this._graphicContext;
+            },
             setClearDepth: function ( depth ) {
                 this.clearDepth = depth;
             },

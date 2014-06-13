@@ -48,15 +48,15 @@ define( [
         getWebGLCaps: function () {
             return this._webGLCaps;
         },
-        initWebGLCaps: function( gl ) {
+        initWebGLCaps: function ( gl ) {
             this._webGLCaps = new WebGLCaps();
             this._webGLCaps.init( gl );
         },
 
-        computeCanvasSize: function( canvas ) {
+        computeCanvasSize: function ( canvas ) {
 
             var clientWidth, clientHeight;
-            if ( this._options.getBoolean('fullscreen') === true ) {
+            if ( this._options.getBoolean( 'fullscreen' ) === true ) {
                 clientWidth = window.innerWidth;
                 clientHeight = window.innerHeight;
             } else {
@@ -68,7 +68,7 @@ define( [
             if ( clientHeight < 1 ) clientHeight = 1;
 
             var devicePixelRatio = 1;
-            if ( this._options.getBoolean( 'useDevicePixelRatio') ) {
+            if ( this._options.getBoolean( 'useDevicePixelRatio' ) ) {
                 devicePixelRatio = window.devicePixelRatio || 1;
             }
 
@@ -88,6 +88,7 @@ define( [
 
             var ratio = canvas.width / canvas.height;
             this._camera.setViewport( new Viewport( 0, 0, canvas.width, canvas.height ) );
+            this._camera.setGraphicContext( this._graphicContext );
             Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], this._camera.getViewMatrix() );
             Matrix.makePerspective( 55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix() );
         },

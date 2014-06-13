@@ -1,18 +1,18 @@
 define( [
     'osg/Utils',
     'osg/NodeVisitor',
-    'osg/FrameStamp'
-], function ( MACROUTILS, NodeVisitor, FrameStamp ) {
+], function ( MACROUTILS, NodeVisitor ) {
 
     var UpdateVisitor = function () {
         NodeVisitor.call( this );
-        var framestamp = new FrameStamp();
-        this.getFrameStamp = function () {
-            return framestamp;
-        };
-        this.setFrameStamp = function ( s ) {
-            framestamp = s;
-        };
+        // var framestamp = new FrameStamp();
+        // this.getFrameStamp = function () {
+        //     return framestamp;
+        // };
+        // this.setFrameStamp = function ( s ) {
+        //     framestamp = s;
+        // };
+        this.visitorType = NodeVisitor.UPDATE_VISITOR;
     };
     UpdateVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
         apply: function ( node ) {

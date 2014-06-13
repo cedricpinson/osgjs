@@ -1,5 +1,9 @@
 {
   "name": "OpenSceneGraph",
+  "repository":{ 
+	"type": "git",
+    "url": "git@github.com:cedricpinson/osgjs.git"
+  },
   "description": "OpenSceneGraph implementation in javascript",
   "license": "LGPL V3+ (https://spdx.org/licenses/LGPL-3.0+)",
   "author": "Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)",
