@@ -18,6 +18,14 @@
  *
  */
 
+window.OSG.globalify();
+
+var osg = window.osg;
+var osgViewer = window.osgViewer;
+var osgDB = window.osgDB;
+var osgUtil = window.osgUtil;
+var Q = window.Q;
+
 var Viewer;
 
 var main = function() {
@@ -73,9 +81,9 @@ var getModel = function(func) {
         var req = new XMLHttpRequest();
         req.open('GET', url, true);
         req.onreadystatechange = function (aEvt) {
-            if (req.readyState == 4) {
+            if (req.readyState === 4) {
                 var child;
-                if(req.status == 200) {
+                if(req.status === 200) {
                     Q.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
                         node.addChild(child);
                         removeLoading(node, child);

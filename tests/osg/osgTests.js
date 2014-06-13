@@ -15,6 +15,7 @@ define( [
     'tests/osg/MatrixTransform',
     'tests/osg/Node',
     'tests/osg/NodeVisitor',
+    'tests/osg/PagedLOD',
     'tests/osg/Quat',
     'tests/osg/ShaderGenerator',
     'tests/osg/State',
@@ -24,7 +25,7 @@ define( [
     'tests/osg/TextureManager',
     'tests/osg/UpdateVisitor',
     'tests/osg/Vec2'
-], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Vec2 ) {
+], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Vec2 ) {
 
     return function () {
         Image();
@@ -43,6 +44,7 @@ define( [
         MatrixTransform();
         Node();
         NodeVisitor();
+        PagedLOD();
         Quat();
         ShaderGenerator();
         State();

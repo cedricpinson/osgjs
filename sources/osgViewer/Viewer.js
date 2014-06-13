@@ -222,7 +222,8 @@ define( [
 
             this._updateVisitor = new osgUtil.UpdateVisitor();
             this._cullVisitor = new osgUtil.CullVisitor();
-
+            // It should be done in RenderStage
+            this._cullVisitor.setCamera( this.getCamera() );
             this._renderStage = new RenderStage();
             this._stateGraph = new StateGraph();
 
@@ -446,7 +447,7 @@ define( [
 
             // setup framestamp
             this._updateVisitor.setFrameStamp( frameStamp );
-            //this._cullVisitor.setFrameStamp(this.getFrameStamp());
+            this._cullVisitor.setFrameStamp( frameStamp );
 
             // update inputs devices
             this.updateEventProxy( this._eventProxy, frameStamp );
