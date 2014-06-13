@@ -81,21 +81,21 @@ define( [
         var queue = [];
         // For each url, create a function call and add it to the queue
         if ( jsonObj.Children ) {
-            jsonObj.Children.forEach( function ( jsonChildren ) {
-                queue.push( createChildren( jsonChildren ) );
-            } );
+            for ( var i = 0, k = jsonObj.Children.length; i < k; i++ )
+            {
+                queue.push( createChildren( jsonObj.Children[ i ] ) );
+            }
         }
-
         // Resolve first updateCallbacks and stateset.
         var deferred = Q.defer();
-        Q.all( promiseArray ).then( function () {
+        Q.all( promiseArray ).then( function( ) {
             deferred.resolve( );
         } );
         
         var defer = Q.defer();
         // Need to wait until the stateset and the all the callbacks are resolved
-        Q.when (deferred.promise).then (function(){
-            Q.all( queue ).then( function () {
+        Q( deferred.promise ).then( function( ){
+            Q.all( queue ).then( function( ) {
                 // All the results from Q.all are on the argument as an array
                 // Now insert children in the right order
                 for ( var i = 0; i < queue.length; i++ )
