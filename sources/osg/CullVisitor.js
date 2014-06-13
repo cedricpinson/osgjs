@@ -12,9 +12,10 @@ define( [
     'osg/RenderStage',
     'osg/Node',
     'osg/Lod',
+    'osg/PagedLOD',
     'osg/Camera',
     'osg/TransformEnums'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, Camera, TransformEnums ) {
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums ) {
 
     /**
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
@@ -35,7 +36,7 @@ define( [
         this._computedFar = Number.NEGATIVE_INFINITY;
 
         var lookVector = [ 0.0, 0.0, -1.0 ];
-
+        this._camera = undefined;
         /*jshint bitwise: false */
         this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
         this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
@@ -52,6 +53,7 @@ define( [
         this._reserveLeafStack.current = 0;
 
         this._renderBinStack = [];
+        this.visitorType = NodeVisitor.CULL_VISITOR;
     };
 
     /** @lends CullVisitor.prototype */
@@ -69,7 +71,12 @@ define( [
             }
             this.traverse( node );
         },
-
+        setCamera: function(camera){
+            this._camera = camera;
+        },
+        getCurrentCamera: function (){
+            return this._camera;
+        },
         updateCalculatedNearFar: function ( matrix, drawable ) {
 
             var bb = drawable.getBoundingBox();
@@ -453,6 +460,9 @@ define( [
 
     // same code like Node
     CullVisitor.prototype[ Lod.typeID ] = CullVisitor.prototype[ Node.typeID ];
+
+    // same code like Node
+    CullVisitor.prototype[ PagedLOD.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
     CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
 
