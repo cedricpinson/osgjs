@@ -24,8 +24,9 @@ define( [
     'tests/osg/TextureCubeMap',
     'tests/osg/TextureManager',
     'tests/osg/UpdateVisitor',
+    'tests/osg/Uniform',
     'tests/osg/Vec2'
-], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Vec2 ) {
+], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2 ) {
 
     return function () {
         Image();
@@ -53,6 +54,7 @@ define( [
         TextureCubeMap();
         TextureManager();
         UpdateVisitor();
+        Uniform();
         Vec2();
     };
 } );
