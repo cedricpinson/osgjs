@@ -1,7 +1,7 @@
 define( [
     'osg/Utils'
 ], function ( MACROUTILS ) {
-        /**
+    /**
      * Uniform manage variable used in glsl shader.
      * @class Uniform
      */
@@ -13,7 +13,7 @@ define( [
     };
 
     Uniform.isUniform = function ( obj ) {
-        if ( obj.prototype === Uniform.prototype ) {
+        if ( typeof obj === 'object' && Object.getPrototypeOf(obj) === Uniform.prototype ) {
             return true;
         }
         return false;
@@ -128,7 +128,7 @@ define( [
         uniform.glData = new MACROUTILS.Float32Array( uniform.data );
         uniform.update = Uniform.prototype._updateFloat1;
         uniform.set = function ( value ) {
-            if ( typeof value === 'number' ) {
+            if ( value.length === undefined ) {
                 this.data[ 0 ] = value;
             } else {
                 this.data = value;
@@ -236,7 +236,7 @@ define( [
             gl.uniform1iv( location, glData );
         };
         uniform.set = function ( value ) {
-            if ( typeof value === 'number' ) {
+            if ( value.length === undefined ) {
                 this.data[ 0 ] = value;
             } else {
                 this.data = value;
