@@ -31,7 +31,7 @@ define( [
         this._currentRenderBin = undefined;
         this._currentRenderStage = undefined;
         this._rootRenderStage = undefined;
-
+        this._frustum = [];
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
 
@@ -278,6 +278,21 @@ define( [
                 this._reserveLeafStack.push( {} );
             }
             return l;
+        },
+
+        isCulled: function( node ) {
+            var position = node.getBound().center();
+            var radius = - node.getBound().radius();
+            var d;
+
+            for ( var i = 0; i < 6; i ++ ) {
+                d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
+                if ( d <= radius )
+                {
+                    return true;
+                }
+            }
+        return false;
         }
     } ) ) );
 
@@ -442,6 +457,8 @@ define( [
     };
 
     CullVisitor.prototype[ Node.typeID ] = function ( node ) {
+
+        if ( this.isCulled ( node ) ) return;
 
         var stateset = node.getStateSet();
         if ( stateset ) {

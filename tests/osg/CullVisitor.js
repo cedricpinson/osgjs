@@ -14,8 +14,9 @@ define( [
     'osg/CullSettings',
     'osg/BoundingBox',
     'osg/Vec3',
-    'osg/RenderBin'
-], function ( mockup, CullVisitor, Node, Camera, RenderStage, StateGraph, Matrix, MatrixTransform, State, StateSet, Viewport, Shape, CullSettings, BoundingBox, Vec3, RenderBin ) {
+    'osg/RenderBin',
+    'osgViewer/Viewer'
+], function ( mockup, CullVisitor, Node, Camera, RenderStage, StateGraph, Matrix, MatrixTransform, State, StateSet, Viewport, Shape, CullSettings, BoundingBox, Vec3, RenderBin, Viewer ) {
 
     return function () {
 
@@ -23,8 +24,13 @@ define( [
 
         test( 'CullVisitor', function () {
 
-            var uv = new CullVisitor();
-
+            var canvas = mockup.createCanvas();
+            var viewer = new Viewer( canvas );
+            viewer.setupManipulator();
+            viewer.init();
+            viewer.frame();
+            var uv = viewer._cullVisitor;
+            uv._frustum[4][3] = 100;
             var root = new Node();
             root.setName( 'a' );
             var b = new Node();
@@ -64,6 +70,7 @@ define( [
             root.setNodeMask( ~0 );
             ok( callb === 1, 'Called b cull callback' );
             ok( callc === 0, 'Did not Call c cull callback as expected' );
+            mockup.removeCanvas( canvas );
         } );
 
 
@@ -71,6 +78,13 @@ define( [
 
             // check render stage and render bin
             ( function () {
+                var canvas = mockup.createCanvas();
+                var viewer = new Viewer( canvas );
+                viewer.setupManipulator();
+                viewer.init();
+                viewer.frame();
+                var cull = viewer._cullVisitor;
+
                 var camera0 = new Camera();
                 camera0.setRenderOrder( Camera.NESTED_RENDER );
                 var node0 = new Node();
@@ -87,7 +101,7 @@ define( [
 
                 camera0.addChild( camera1 );
 
-                var cull = new CullVisitor();
+                //var cull = new CullVisitor();
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.setRenderStage( rs );
@@ -98,6 +112,7 @@ define( [
                 camera0.accept( cull );
 
                 ok( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); //+ cull.rootRenderStage === cull.currentRenderBin
+                mockup.removeCanvas( canvas );
             } )();
 
 
@@ -395,7 +410,12 @@ define( [
                 root.addChild( node1 );
                 root.addChild( node0 );
 
-                var cull = new CullVisitor();
+                var canvas = mockup.createCanvas();
+                var viewer = new Viewer( canvas );
+                viewer.init();
+                viewer.frame();
+                var cull = viewer._cullVisitor;
+                //var cull = new CullVisitor();
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
@@ -411,12 +431,16 @@ define( [
                 ok( rs._bins[ '10' ].getStateGraphList().length === 0, 'Check transparent bin StateGraphList' );
                 ok( rs._leafs.length === 0, 'Check leafs for normal rendering bin' );
                 ok( rs.getStateGraphList().length === 1, 'Check StateGraphList for normal rendering bin' );
-
+                mockup.removeCanvas( canvas );
             } )();
 
 
             ( function () {
-
+                var canvas = mockup.createCanvas();
+                var viewer = new Viewer( canvas );
+                viewer.init();
+                viewer.frame();
+                var cull = viewer._cullVisitor;
                 var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
                 var node0 = new MatrixTransform();
@@ -435,7 +459,7 @@ define( [
                 root.addChild( node1 );
                 root.addChild( node0 );
 
-                var cull = new CullVisitor();
+                //var cull = new CullVisitor();
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 rs.setViewport( new Viewport() );
