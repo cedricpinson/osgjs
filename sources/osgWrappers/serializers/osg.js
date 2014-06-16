@@ -26,7 +26,7 @@ define( [
 
         return obj;
     };
-
+    /* jshint newcap: false */
     osgWrapper.Node = function ( input, node ) {
         var jsonObj = input.getJSON();
 
