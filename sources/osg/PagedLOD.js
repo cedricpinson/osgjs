@@ -181,7 +181,7 @@ define( [
                     // Calculate distance from viewpoint
                     var matrix = visitor.getCurrentModelviewMatrix();
                     Matrix.inverse( matrix, viewModel );
-                    if ( this.rangeMode === Lod.DISTANCE_FROM_EYE_POINT ) {
+                    if ( this._rangeMode === Lod.DISTANCE_FROM_EYE_POINT ) {
                         Matrix.transformVec3( viewModel, zeroVector, eye );
                         var d = Vec3.distance( eye, this.getBound().center() );
                         requiredRange = d;
