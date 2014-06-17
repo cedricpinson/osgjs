@@ -515,6 +515,43 @@ define( [
             } );
         } );
 
+        asyncTest( 'Node Children Ordering', function () {
+            var tree = {
+                'osg.Node': {
+                    'UniqueID': 2,
+                    'Children': [ {
+                        'osg.Node': {
+                            'UniqueID': 3,
+                            'Name': 'cow',
+                            'Children': [ {
+                                'osg.Geometry': {
+                                    'PrimitiveSetList': [ {
+                                        'DrawArrayLengths': {
+                                            'First': 10,
+                                            'Mode': 'TRIANGLES',
+                                            'ArrayLengths': [ 3, 3, 3 ]
+                                        }
+                                    } ],
+                                    'VertexAttributeList': {}
+                                }
+                            } ]
+                        }
+                    }, {
+                        'osg.Node': {
+                            'UniqueID': 16,
+                            'Name': 'cessna',
+                            'Children': []
+                        }
+                    } ]
+                }
+            };
 
+            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+                console.log( result.getChildren()[ 0 ].getName() );
+                ok( result.getChildren()[ 0 ].getName() === 'cow', 'the first node should be cow' );
+                ok( result.getChildren()[ 1 ].getName() === 'cessna', 'the second node should be cessna' );
+                start();
+            } );
+        } );
     };
 } );
