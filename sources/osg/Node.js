@@ -27,6 +27,8 @@ define( [
         this.boundingSphereComputed = false;
         this._updateCallbacks = [];
         this._cullCallback = undefined;
+        this._cullingActive = true;
+        this._numChildrenWithCullingDisabled = 0;
     };
 
     /** @lends Node.prototype */
@@ -274,8 +276,53 @@ define( [
                 }
             }
             return matrixList;
-        }
+        }, 
 
+        setCullingActive: function ( value ) {
+            if ( this._cullingActive === value ) return;
+            if ( this._numChildrenWithCullingDisabled === 0 && this.parents.length > 0 )
+            {
+                var delta = 0;
+                if ( !this._cullingActive ) --delta;
+                if ( !value ) ++delta;
+                if ( delta!==0 )
+                {
+                     for ( var i = 0, k = this.parents.length; i < k; i++ ) {
+                        this.parents[ i ].setNumChildrenWithCullingDisabled ( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
+                    }
+                }
+            }
+            this._cullingActive = value;
+        },
+
+        getCullingActive: function () {
+            return this._cullingActive;
+        }, 
+
+        isCullingActive: function () {
+            return this._numChildrenWithCullingDisabled === 0 && this._cullingActive && this.getBound().valid();
+        }, 
+
+        setNumChildrenWithCullingDisabled: function ( num ) {
+            if ( this._numChildrenWithCullingDisabled === num) return;
+            if ( this._cullingActive && this.parents.length > 0 )
+            {
+                var delta = 0;
+                if ( this._numChildrenWithCullingDisabled > 0 ) --delta;
+                if ( num > 0 ) ++delta;
+                if ( delta !== 0)
+                {
+                    for ( var i = 0, k = this.parents.length; i < k; i++ ) {
+                        this.parents[ i ].setNumChildrenWithCullingDisabled ( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
+                    }
+                }
+            }
+            this._numChildrenWithCullingDisabled = num;
+        },
+
+        getNumChildrenWithCullingDisabled: function ( ) {
+            return this._numChildrenWithCullingDisabled;
+        }
 
     } ), 'osg', 'Node' );
     MACROUTILS.setTypeID( Node );

@@ -31,7 +31,12 @@ define( [
 
             var matrixes = n1.getWorldMatrices();
             ok( ( matrixes.length === 1 ) && ( matrixes[ 0 ][ 0 ] === 1.0 ) && ( matrixes[ 0 ][ 5 ] === 1.0 ) && ( matrixes[ 0 ][ 10 ] === 1.0 ) && ( matrixes[ 0 ][ 15 ] === 1.0 ), 'getWorldMatrices should return one identity matrix' );
-
+            // Test culling active, we need a valid bounding sphere
+            n1.getBound()._radius = 1 ;
+            n1.setCullingActive ( false );
+            ok ( n.isCullingActive() === false, 'culling should be disabled because n has a child with the culling disabled');
+            n1.setCullingActive ( true );
+            ok ( n.isCullingActive() === true, 'culling should be enabled because all of the children have their culling active');
         } );
     };
 } );

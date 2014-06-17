@@ -458,7 +458,7 @@ define( [
 
     CullVisitor.prototype[ Node.typeID ] = function ( node ) {
 
-        if ( this.isCulled ( node ) ) return;
+        if ( node.isCullingActive() && this.isCulled ( node ) ) return;
 
         var stateset = node.getStateSet();
         if ( stateset ) {
