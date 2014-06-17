@@ -787,7 +787,7 @@ define( [
         stateSet.addUniform( this._mixValueUniform );
     };
 
-    Composer.Filter.BlendMix = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.BlendMix.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
         getBlendFactorUniform: function () {
             return this._mixValueUniform;
         },
