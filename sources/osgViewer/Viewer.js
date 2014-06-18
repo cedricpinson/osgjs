@@ -20,7 +20,8 @@ define( [
     var OptionsDefault = {
         'antialias': true,
         'useDevicePixelRatio': true,
-        'fullscreen': true
+        'fullscreen': true,
+        'enableFrustumCulling': true
     };
 
 
@@ -405,11 +406,14 @@ define( [
             this._renderStage.setClearColor( camera.getClearColor() );
             this._renderStage.setClearMask( camera.getClearMask() );
             this._renderStage.setViewport( camera.getViewport() );
-            
-            var mvp = Matrix.create();
-            Matrix.mult( camera.getProjectionMatrix(), camera.getViewMatrix(), mvp );
-            Matrix.getFrustumPlanes( mvp, this._cullVisitor._frustum );
 
+            // Check if Frustum culling is enabled to calculate the clip planes
+            if ( this._options.getBoolean( 'enableFrustumCulling' ) === true ){
+                this._cullVisitor.setEnableFrustumCulling ( true );
+                var mvp = Matrix.create();
+                Matrix.mult( camera.getProjectionMatrix(), camera.getViewMatrix(), mvp );
+                Matrix.getFrustumPlanes( mvp, this._cullVisitor._frustum );
+            }
             //CullVisitor.prototype.handleCullCallbacksAndTraverse.call(this._cullVisitor,camera);
             this.getScene().accept( this._cullVisitor );
 

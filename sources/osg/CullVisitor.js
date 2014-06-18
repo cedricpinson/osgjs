@@ -34,7 +34,7 @@ define( [
         this._frustum = [];
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
-
+        this._enableFrustumCulling = false;
         var lookVector = [ 0.0, 0.0, -1.0 ];
         this._camera = undefined;
         /*jshint bitwise: false */
@@ -280,6 +280,10 @@ define( [
             return l;
         },
 
+        setEnableFrustumCulling: function ( value ) {
+            this._enableFrustumCulling = value;
+        },
+
         isCulled: function( node ) {
             var position = node.getBound().center();
             var radius = - node.getBound().radius();
@@ -458,7 +462,7 @@ define( [
 
     CullVisitor.prototype[ Node.typeID ] = function ( node ) {
 
-        if ( node.isCullingActive() && this.isCulled ( node ) ) return;
+        if ( this._enableFrustumCulling === true && node.isCullingActive() && this.isCulled ( node ) ) return;
 
         var stateset = node.getStateSet();
         if ( stateset ) {
