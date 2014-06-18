@@ -55,19 +55,19 @@ function createPostSceneStitching( sceneTexture, textureSize ) {
 
     var scene = new osg.MatrixTransform();
 
-    // create a texture to render the postfx to
-    var posfxTexture = new osg.Texture();
-    posfxTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
-    posfxTexture.setMinFilter( 'NEAREST' );
-    posfxTexture.setMagFilter( 'NEAREST' );
+    // create a texture to render the final texture to
+    var finalTexture = new osg.Texture();
+    finalTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
+    finalTexture.setMinFilter( 'NEAREST' );
+    finalTexture.setMagFilter( 'NEAREST' );
 
-    // create a textured quad on which is applied the postfx texture
+    // create a textured quad on which is applied the final texture
     var quadSize = [ 16 / 9, 1 ];
     var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
                                                 quadSize[ 0 ]       , 0, 0,
                                                 0                   , 0, quadSize[ 1 ] );
     quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, posfxTexture );
+    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
 
     var stichingShader = new osgUtil.Composer.Filter.Custom(
@@ -127,9 +127,9 @@ function createPostSceneStitching( sceneTexture, textureSize ) {
         }
     );
 
-    // Apply the stitching_shader on sceneTexture and render to postfx_texture
+    // Apply the stitching_shader on sceneTexture and render to final texture
     var composer = new osgUtil.Composer();
-    composer.addPass( stichingShader, posfxTexture );
+    composer.addPass( stichingShader, finalTexture );
 
     composer.build(); // if you dont build manually it will be done in the scenegraph while upading
 
@@ -145,19 +145,19 @@ function createPostSceneVignette( sceneTexture, textureSize ) {
 
     var scene = new osg.MatrixTransform();
 
-    // create a texture to render the postfx to
-    var posfxTexture = new osg.Texture();
-    posfxTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
-    posfxTexture.setMinFilter( 'NEAREST' );
-    posfxTexture.setMagFilter( 'NEAREST' );
+    // create a texture to render the effect to
+    var finalTexture = new osg.Texture();
+    finalTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
+    finalTexture.setMinFilter( 'NEAREST' );
+    finalTexture.setMagFilter( 'NEAREST' );
 
-    // create a textured quad on which is applied the postfx texture
+    // create a textured quad on which is applied the final texture
     var quadSize = [ 16 / 9, 1 ];
     var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
                                                 quadSize[ 0 ]       , 0, 0,
                                                 0                   , 0, quadSize[ 1 ] );
     quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, posfxTexture );
+    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
 
     var vignetteShader = new osgUtil.Composer.Filter.Custom(
@@ -183,9 +183,9 @@ function createPostSceneVignette( sceneTexture, textureSize ) {
         }
     );
 
-    // Apply the stitching_shader on sceneTexture and render to postfx_texture
+    // Apply the stitching_shader on sceneTexture and render to final texture
     var composer = new osgUtil.Composer();
-    composer.addPass( vignetteShader, posfxTexture );
+    composer.addPass( vignetteShader, finalTexture );
 
     composer.build(); // if you dont build manually it will be done in the scenegraph while upading
 
@@ -225,25 +225,25 @@ function createPostSceneBloom( sceneTexture, textureSize, bloomTextureFactor ) {
 
     var scene = new osg.MatrixTransform();
 
-    // create a texture to render the bloom to
+    // create a downsized texture to render the bloom to
     var bloomTexture = new osg.Texture();
     bloomTexture.setTextureSize( textureSize[ 0 ] / bloomTextureFactor, textureSize[ 1 ] / bloomTextureFactor);
     bloomTexture.setMinFilter( 'LINEAR' );
-    bloomTexture.setMagFilter( 'LINEAR' );    // create a texture to render the postfx to
+    bloomTexture.setMagFilter( 'LINEAR' );    
    
-    // create a smaller texture to downsample the scene into
-    var postfx_texture = new osg.Texture();
-    postfx_texture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
-    postfx_texture.setMinFilter( 'LINEAR' );
-    postfx_texture.setMagFilter( 'LINEAR' );
+    // create a texture to render the effect to
+    var final_texture = new osg.Texture();
+    final_texture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
+    final_texture.setMinFilter( 'LINEAR' );
+    final_texture.setMagFilter( 'LINEAR' );
 
-    // create a textured quad on which is applied the postfx texture
+    // create a textured quad on which is applied the final texture
     var quadSize = [ 16 / 9, 1 ];
     var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
                                                 quadSize[ 0 ]       , 0, 0,
                                                 0                   , 0, quadSize[ 1 ] );
     quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, postfx_texture );
+    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, final_texture );
 
     var brightPass = new osgUtil.Composer.Filter.Custom(
         [
@@ -257,6 +257,7 @@ function createPostSceneBloom( sceneTexture, textureSize, bloomTextureFactor ) {
             'uniform sampler2D Texture0;',
             'uniform float threshold;',
 
+            // Definition of luminance from http://en.wikipedia.org/wiki/Luma_%28video%29
             'float calcLuminance(vec3 pixel) {',
                 '#ifdef USE_LINEAR_SPACE',
                     'pixel = pow(pixel, vec3(2.2));',
@@ -308,14 +309,14 @@ function createPostSceneBloom( sceneTexture, textureSize, bloomTextureFactor ) {
     // Keep only the bright pixels and downsize the scene texture
     composer.addPass(brightPass, bloomTexture);
 
-   // Blur the bright downsampled sceneTexture
+   // Blur the bright downsized sceneTexture
     composer.addPass(new osgUtil.Composer.Filter.HBlur(16));
     composer.addPass(new osgUtil.Composer.Filter.VBlur(16));
     composer.addPass(new osgUtil.Composer.Filter.HBlur(16));
     composer.addPass(new osgUtil.Composer.Filter.VBlur(16), bloomTexture);
     
-    // Add the original scene texture and the bloom texture and render into postfx texture
-    composer.addPass(additiveShader, postfx_texture);
+    // Add the original scene texture and the bloom texture and render into final texture
+    composer.addPass(additiveShader, final_texture);
 
     composer.build(); 
 
