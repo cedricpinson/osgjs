@@ -195,14 +195,21 @@ function createPostSceneVignette( sceneTexture, textureSize ) {
     return scene;
 }
 
-var luminance = osg.Uniform.createFloat1( 0.5, 'luminance');
-var middleGrey = osg.Uniform.createFloat1( 0.5, 'middleGrey');
 var threshold = osg.Uniform.createFloat1( 0.5, 'threshold');
 var setSceneTexture;
 
-function createPostSceneBloom( sceneTexture, textureSize ) {
+/// General idea for the bloom's algorithm:
+// - Apply a brightpass to the scene texture to keep only the bright areas
+// - Downsample the bright texture
+// - Blur the bright texture to have a "glow" effect
+// - Apply the blurred texture on the original scene texture
+// (the downsample helps to reduce the cost of the blur)
+function createPostSceneBloom( sceneTexture, textureSize, bloomTextureFactor ) {
+   
+    if (bloomTextureFactor === undefined) 
+        bloomTextureFactor = 8;
 
-    var currentSceneTexture = sceneTexture;
+    var currentSceneTexture = osg.Texture.createFromURL('Budapest.jpg');
     var cached_scenes = [];
 
     setSceneTexture = function(scene_file) {
@@ -220,7 +227,7 @@ function createPostSceneBloom( sceneTexture, textureSize ) {
 
     // create a texture to render the bloom to
     var bloomTexture = new osg.Texture();
-    bloomTexture.setTextureSize( textureSize[ 0 ] / 8.0, textureSize[ 1 ] / 8.0);
+    bloomTexture.setTextureSize( textureSize[ 0 ] / bloomTextureFactor, textureSize[ 1 ] / bloomTextureFactor);
     bloomTexture.setMinFilter( 'LINEAR' );
     bloomTexture.setMagFilter( 'LINEAR' );    // create a texture to render the postfx to
    
@@ -243,32 +250,33 @@ function createPostSceneBloom( sceneTexture, textureSize ) {
             '#ifdef GL_ES',
             'precision highp float;',
             '#endif',
+
+            '#define USE_LINEAR_SPACE 1',
+
             'varying vec2 FragTexCoord0;',
             'uniform sampler2D Texture0;',
-            'uniform float luminance;',
-            'uniform float middleGrey;',
             'uniform float threshold;',
+
+            'float calcLuminance(vec3 pixel) {',
+                '#ifdef USE_LINEAR_SPACE',
+                    'pixel = pow(pixel, vec3(2.2));',
+                    'return pow(max(dot(pixel, vec3(0.2126, 0.7152, 0.0722)), 0.001), 1.0/2.2);',
+                '#else',
+                    'return max(dot(pixel, vec3(0.2126, 0.7152, 0.0722)), 0.001);',
+                '#endif',
+            '}',
 
             'void main(void) {',
             '  vec4 color = texture2D( Texture0, FragTexCoord0);',
 
-            /* 2 implementations for the brightpass, comment out one */
+                // Keep only the pixels whose luminance is above threshold
+                'if (calcLuminance(color.rgb) > threshold)',
+                    'gl_FragColor = color;',
 
-            // This code come from http://wes-uoit-comp-graphics.blogspot.fr/2013/04/shaders-time-bloom-hdr.html
-	            '  color *= (middleGrey / luminance);',
-	            '   color *= (1.0 + (color / (threshold * threshold)));',
-	            '   color -= 0.5;',
-	            '   color /= (1.0 + color);',
-	        // This one from http://tonypeng.com/blog/view-post-more-fun-with-shaders-and-how-to-write-your-own-bloom-shader/
-            // '   color.rgb = clamp(((color.rgb - threshold) / (1.0 - threshold)), 0.0, 1.0);',
-            
-            '  gl_FragColor = color;',
             '}',
         ].join('\n'), 
         {
             'Texture0' : currentSceneTexture,
-            'luminance' : luminance,
-            'middleGrey' : middleGrey,
             'threshold' : threshold,
         }
     );
@@ -297,19 +305,19 @@ function createPostSceneBloom( sceneTexture, textureSize ) {
 
     var composer = new osgUtil.Composer();
 
-    // Keep only the bright pixels and downsample the scene texture
-    composer.addPass(brightPass, textureSize[0]/8.0, textureSize[1]/8.0);
+    // Keep only the bright pixels and downsize the scene texture
+    composer.addPass(brightPass, bloomTexture);
 
    // Blur the bright downsampled sceneTexture
-    composer.addPass(new osgUtil.Composer.Filter.VBlur(10));
-    composer.addPass(new osgUtil.Composer.Filter.HBlur(10));
-    composer.addPass(new osgUtil.Composer.Filter.VBlur(10));
-    composer.addPass(new osgUtil.Composer.Filter.HBlur(10), bloomTexture);
+    composer.addPass(new osgUtil.Composer.Filter.HBlur(16));
+    composer.addPass(new osgUtil.Composer.Filter.VBlur(16));
+    composer.addPass(new osgUtil.Composer.Filter.HBlur(16));
+    composer.addPass(new osgUtil.Composer.Filter.VBlur(16), bloomTexture);
     
     // Add the original scene texture and the bloom texture and render into postfx texture
     composer.addPass(additiveShader, postfx_texture);
 
-    composer.build(); // if you dont build manually it will be done in the scenegraph while upading
+    composer.build(); 
 
     scene.addChild( composer );
     scene.addChild( quad );
@@ -455,24 +463,12 @@ function buildBloomGui(mainGui) {
     var folder = mainGui.addFolder('Bloom');
 
     var bloom = {
-        scene : ['Beaumaris.jpg', 'Seattle.jpg', 'Budapest.jpg'],
-        luminance : luminance.get()[0],
-        middleGrey : middleGrey.get()[0],
+        scene : ['Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg'],
         threshold : threshold.get()[0],
     };
 
     var scene_controller = folder.add(bloom, 'scene', bloom.scene);
-    var luminance_controller = folder.add(bloom, 'luminance', 0.01, 1);
-    var middleGrey_controller = folder.add(bloom, 'middleGrey', 0, 1);
-    var threshold_controller = folder.add(bloom, 'threshold', 0.01, 1);
-
-    luminance_controller.onChange(function ( value ) {
-        luminance.set(value);
-    });
-
-    middleGrey_controller.onChange(function ( value ) {
-        middleGrey.set(value);
-    });
+    var threshold_controller = folder.add(bloom, 'threshold', 0.001, 0.99);
 
     threshold_controller.onChange(function ( value ) {
         threshold.set(value);
