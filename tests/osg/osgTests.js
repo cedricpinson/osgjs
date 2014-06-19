@@ -28,6 +28,8 @@ define( [
     'tests/osg/Vec2'
 ], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2 ) {
 
+    'use strict';
+
     return function () {
         Image();
         BlendColor();

@@ -5,7 +5,9 @@ define( [
     'osg/Vec3',
     'osg/TransformEnums'
 ], function ( MACROUTILS, Node, Matrix, Vec3, TransformEnums ) {
-        /**
+
+    'use strict';
+    /**
      * Transform - base class for Transform type node ( Camera, MatrixTransform )
      * @class Transform
      * @inherits Node
@@ -24,7 +26,7 @@ define( [
             return this.referenceFrame;
         },
 
-        computeBound: (function ( ) {
+        computeBound: ( function () {
             var xdash = [ 0.0, 0.0, 0.0 ];
             var ydash = [ 0.0, 0.0, 0.0 ];
             var zdash = [ 0.0, 0.0, 0.0 ];
@@ -57,12 +59,13 @@ define( [
                 var lenYdash = Vec3.distance( ydash, sphCenter );
                 var lenZdash = Vec3.distance( zdash, sphCenter );
 
-                // bsphere._radius = Math.max( lenXdash, lenYdash, lenZdash );
-                sphRadius = lenXdash < lenYdash ? lenXdash : lenYdash;
-                bsphere._radius = sphCenter < lenZdash ? sphCenter : lenZdash;
+                if ( lenXdash > lenYdash )
+                    bsphere._radius = lenXdash > lenZdash ? lenXdash : lenZdash;
+                else
+                    bsphere._radius = lenYdash > lenZdash ? lenYdash : lenZdash;
                 return bsphere;
             };
-        })()
+        } )()
     } );
 
     return Transform;
