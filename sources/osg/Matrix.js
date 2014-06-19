@@ -1063,6 +1063,65 @@ define( [
             return true;
         },
 
+        getFrustumPlanes: ( function () {
+
+            var right = Vec4.create();
+            var left = Vec4.create();
+            var bottom = Vec4.create();
+            var top = Vec4.create();
+            var far = Vec4.create();
+            var near = Vec4.create();
+
+            return function ( matrix, result ) {
+                // Right clipping plane.
+                right[ 0 ] = matrix[ 3 ] - matrix[ 0 ];
+                right[ 1 ] = matrix[ 7 ] - matrix[ 4 ];
+                right[ 2 ] = matrix[ 11 ] - matrix[ 8 ];
+                right[ 3 ] = matrix[ 15 ] - matrix[ 12 ];
+                result[ 0 ] = right;
+                // Left clipping plane.
+                left[ 0 ] = matrix[ 3 ] + matrix[ 0 ];
+                left[ 1 ] = matrix[ 7 ] + matrix[ 4 ];
+                left[ 2 ] = matrix[ 11 ] + matrix[ 8 ];
+                left[ 3 ] = matrix[ 15 ] + matrix[ 12 ];
+                result[ 1 ] = left;
+                // Bottom clipping plane.
+                bottom[ 0 ] = matrix[ 3 ] + matrix[ 1 ];
+                bottom[ 1 ] = matrix[ 7 ] + matrix[ 5 ];
+                bottom[ 2 ] = matrix[ 11 ] + matrix[ 9 ];
+                bottom[ 3 ] = matrix[ 15 ] + matrix[ 13 ];
+                result[ 2 ] = bottom;
+                // Top clipping plane.
+                top[ 0 ] = matrix[ 3 ] - matrix[ 1 ];
+                top[ 1 ] = matrix[ 7 ] - matrix[ 5 ];
+                top[ 2 ] = matrix[ 11 ] - matrix[ 9 ];
+                top[ 3 ] = matrix[ 15 ] - matrix[ 13 ];
+                result[ 3 ] = top;
+                // Far clipping plane.
+                far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
+                far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
+                far[ 2 ] = matrix[ 11 ] - matrix[ 10 ];
+                far[ 2 ] = matrix[ 15 ] - matrix[ 14 ];
+                result[ 4 ] = far;
+                // Near clipping plane.
+                near[ 0 ] = matrix[ 3 ] + matrix[ 2 ];
+                near[ 1 ] = matrix[ 7 ] + matrix[ 6 ];
+                near[ 2 ] = matrix[ 11 ] + matrix[ 10 ];
+                near[ 3 ] = matrix[ 15 ] + matrix[ 14 ];
+                result[ 5 ] = near;
+
+                //Normalize the planes
+                for ( var i = 0; i < 6; i++ ) {
+                    var norm = result[ i ][ 0 ] * result[ i ][ 0 ] + result[ i ][ 1 ] * result[ i ][ 1 ] + result[ i ][ 2 ] * result[ i ][ 2 ];
+                    var inv = 1.0 / Math.sqrt( norm );
+                    result[ i ][ 0 ] = result[ i ][ 0 ] * inv;
+                    result[ i ][ 1 ] = result[ i ][ 1 ] * inv;
+                    result[ i ][ 2 ] = result[ i ][ 2 ] * inv;
+                    result[ i ][ 3 ] = result[ i ][ 3 ] * inv;
+                }
+            };
+        } )(),
+
         getPerspective: ( function () {
             var c = {
                 'right': 0,
