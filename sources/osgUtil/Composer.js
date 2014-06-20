@@ -153,7 +153,7 @@ define( [
 
                 // check if we want to render on screen
                 var camera = new Camera();
-                camera.setClearMask( 0 );
+                camera.setStateSet( element.filter.getStateSet() );
 
                 var texture;
                 var quad;
@@ -174,7 +174,6 @@ define( [
                 camera.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
                 camera.setViewport( vp );
                 Matrix.makeOrtho( -w / 2, w / 2, -h / 2, h / 2, -5, 5, camera.getProjectionMatrix() );
-                camera.setStateSet( element.filter.getStateSet() );
 
                 quad = Shape.createTexturedQuadGeometry( -w / 2, -h / 2, 0,
                     w, 0, 0,
