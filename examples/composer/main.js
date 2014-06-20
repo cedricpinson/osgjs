@@ -615,8 +615,6 @@ var main = function () {
     buildVignettegGui(gui);
     buildBloomGui(gui);
     buildSharpenGui(gui);
-    
-    document.getElementById( 'gui' ).appendChild( gui.domElement );
 
     var rotate = new osg.MatrixTransform();
     rotate.addChild( createScene( canvas.width, canvas.height ) );
