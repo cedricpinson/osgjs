@@ -51,24 +51,15 @@ function getTextureShader() {
 var stitchingSize = osg.Uniform.createFloat1( 84, 'stitchingSize' );
 var invert = osg.Uniform.createInt1( true, 'invert' );
 
-function createPostSceneStitching( sceneTexture, textureSize ) {
+function createPostSceneStitching( sceneTexture, textureSize, quad ) {
 
     var scene = new osg.MatrixTransform();
 
-    // create a texture to render the final texture to
+    // create a texture to render the effect to
     var finalTexture = new osg.Texture();
     finalTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
     finalTexture.setMinFilter( 'NEAREST' );
     finalTexture.setMagFilter( 'NEAREST' );
-
-    // create a textured quad on which is applied the final texture
-    var quadSize = [ 16 / 9, 1 ];
-    var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
-                                                quadSize[ 0 ]       , 0, 0,
-                                                0                   , 0, quadSize[ 1 ] );
-    quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
-
 
     var stichingShader = new osgUtil.Composer.Filter.Custom(
         [
@@ -130,8 +121,11 @@ function createPostSceneStitching( sceneTexture, textureSize ) {
     // Apply the stitching_shader on sceneTexture and render to final texture
     var composer = new osgUtil.Composer();
     composer.addPass( stichingShader, finalTexture );
+    composer.build();
 
-    composer.build(); // if you dont build manually it will be done in the scenegraph while upading
+    // Set the final texture to the scene's StateSet so that 
+    // it will be applied when rendering the quad
+    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
     scene.addChild( composer );
     scene.addChild( quad );
@@ -141,7 +135,7 @@ function createPostSceneStitching( sceneTexture, textureSize ) {
 
 var lensRadius = osg.Uniform.createFloat2( [0.5, 0.25], 'lensRadius');
 
-function createPostSceneVignette( sceneTexture, textureSize ) {
+function createPostSceneVignette( sceneTexture, textureSize, quad ) {
 
     var scene = new osg.MatrixTransform();
 
@@ -150,15 +144,6 @@ function createPostSceneVignette( sceneTexture, textureSize ) {
     finalTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
     finalTexture.setMinFilter( 'NEAREST' );
     finalTexture.setMagFilter( 'NEAREST' );
-
-    // create a textured quad on which is applied the final texture
-    var quadSize = [ 16 / 9, 1 ];
-    var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
-                                                quadSize[ 0 ]       , 0, 0,
-                                                0                   , 0, quadSize[ 1 ] );
-    quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
-
 
     var vignetteShader = new osgUtil.Composer.Filter.Custom(
         [
@@ -186,8 +171,11 @@ function createPostSceneVignette( sceneTexture, textureSize ) {
     // Apply the stitching_shader on sceneTexture and render to final texture
     var composer = new osgUtil.Composer();
     composer.addPass( vignetteShader, finalTexture );
+    composer.build();
 
-    composer.build(); // if you dont build manually it will be done in the scenegraph while upading
+    // Set the final texture to the scene's StateSet so that 
+    // it will be applied when rendering the quad
+    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
     scene.addChild( composer );
     scene.addChild( quad );
@@ -204,7 +192,7 @@ var setSceneTexture;
 // - Blur the bright texture to have a "glow" effect
 // - Apply the blurred texture on the original scene texture
 // (the downsample helps to reduce the cost of the blur)
-function createPostSceneBloom( sceneTexture, textureSize, bloomTextureFactor ) {
+function createPostSceneBloom( sceneTexture, textureSize, quad, bloomTextureFactor) {
    
     if (bloomTextureFactor === undefined) 
         bloomTextureFactor = 8;
@@ -236,14 +224,6 @@ function createPostSceneBloom( sceneTexture, textureSize, bloomTextureFactor ) {
     final_texture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
     final_texture.setMinFilter( 'LINEAR' );
     final_texture.setMagFilter( 'LINEAR' );
-
-    // create a textured quad on which is applied the final texture
-    var quadSize = [ 16 / 9, 1 ];
-    var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
-                                                quadSize[ 0 ]       , 0, 0,
-                                                0                   , 0, quadSize[ 1 ] );
-    quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, final_texture );
 
     var brightPass = new osgUtil.Composer.Filter.Custom(
         [
@@ -320,6 +300,10 @@ function createPostSceneBloom( sceneTexture, textureSize, bloomTextureFactor ) {
 
     composer.build(); 
 
+    // Set the final texture to the scene's StateSet so that 
+    // it will be applied when rendering the quad
+    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, final_texture );
+
     scene.addChild( composer );
     scene.addChild( quad );
 
@@ -329,7 +313,7 @@ function createPostSceneBloom( sceneTexture, textureSize, bloomTextureFactor ) {
 var setFactor;
 var enableDiagonal;
 
-function createPostSceneSharpen(textureSize) {
+function createPostSceneSharpen(textureSize, quad) {
 
     var scene = new osg.MatrixTransform();
 
@@ -412,20 +396,15 @@ function createPostSceneSharpen(textureSize) {
             'input_texture': input_texture
         }
     );
-    // create a textured quad on which is applied the final texture
-    var quadSize = [ 16 / 9, 1 ];
-    var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
-                                                quadSize[ 0 ]       , 0, 0,
-                                                0                   , 0, quadSize[ 1 ] );
-
-    quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, final_texture );
-
+    
+    // Apply the filter and render to final_texture
     var composer = new osgUtil.Composer();
-
     composer.addPass(sharpenFilter, final_texture);
-
     composer.build();
+
+    // Set the final texture to the scene's StateSet so that 
+    // it will be applied when rendering the quad
+    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, final_texture );
 
     scene.addChild(quad);
     scene.addChild(composer);
@@ -498,29 +477,36 @@ function createScene() {
     root.getOrCreateStateSet().addUniform( texW );
     root.getOrCreateStateSet().addUniform( texH );
 
+    // create a quad on which will be applied the postprocess effects
+    var quadSize = [ 16 / 9, 1 ];
+    var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
+                                                quadSize[ 0 ]       , 0, 0,
+                                                0                   , 0, quadSize[ 1 ] );
+    quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
+
     root.addChild( commonNode );
     var scene;
 
     if ( true ) {
-        scene = createPostSceneStitching( sceneTexture, rttSize );
+        scene = createPostSceneStitching( sceneTexture, rttSize, quad );
         scene.setMatrix( osg.Matrix.makeTranslate( -2.0, 0.0, 0.0, [] ) );
         root.addChild( scene );
     }
 
     if (true) {
-        scene = createPostSceneVignette(sceneTexture, rttSize);
+        scene = createPostSceneVignette(sceneTexture, rttSize, quad);
         scene.setMatrix(osg.Matrix.makeTranslate(0.0, 0.0, 0.0, []));
         root.addChild(scene);
     }
 
     if (true) {
-        scene = createPostSceneBloom(sceneTexture, rttSize);
+        scene = createPostSceneBloom(sceneTexture, rttSize, quad);
         scene.setMatrix(osg.Matrix.makeTranslate(2.0, 0.0, 0.0, []));
         root.addChild(scene);
     }
 
     if (true) {
-        scene = createPostSceneSharpen(rttSize);
+        scene = createPostSceneSharpen(rttSize, quad);
         scene.setMatrix(osg.Matrix.makeTranslate(2.0, 0.0, -1.25, []));
         root.addChild(scene);
     }
@@ -634,6 +620,7 @@ var main = function () {
 
     var rotate = new osg.MatrixTransform();
     rotate.addChild( createScene( canvas.width, canvas.height ) );
+    rotate.getOrCreateStateSet().setAttributeAndMode( new osg.CullFace( 'DISABLE' ) );
 
     var viewer = new osgViewer.Viewer( canvas );
     viewer.init();
