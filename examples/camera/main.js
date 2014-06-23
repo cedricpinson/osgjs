@@ -97,8 +97,7 @@ if (params.length)  {
             'require/text': 'vendors/require/text',
             'Q': 'vendors/Q',
             'Hammer': 'vendors/Hammer',
-            'Leap': 'vendors/Leap',
-            'vr': 'vendors/vr'
+            'Leap': 'vendors/Leap'
         }
       });
     require(['OSG'], function(OSG){
