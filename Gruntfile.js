@@ -161,8 +161,7 @@ var gruntTasks = { };
         paths: {
             'Q': 'vendors/Q',
             'Hammer': 'vendors/Hammer',
-            'Leap': 'vendors/Leap',
-            'vr': 'vendors/vr'
+            'Leap': 'vendors/Leap'
         },
         wrap : {
             startFile : path.join( UTILS_PATH, 'wrap.start' ),
@@ -196,8 +195,7 @@ var gruntTasks = { };
         paths: {
             'Q': 'vendors/Q',
             'Hammer': 'vendors/Hammer',
-            'Leap': 'vendors/Leap',
-            'vr': 'vendors/vr'
+            'Leap': 'vendors/Leap'
         }
     } };
 

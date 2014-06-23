@@ -1,7 +1,7 @@
 'use strict';
 
 function onSceneLoaded( viewer, data, HMDconfig ) {
-    Q.when( osgDB.parseSceneGraph( data ) ).then( function( child ) {
+    Q.when( osgDB.parseSceneGraph( data ) ).then( function ( child ) {
         // load scene... as usual
         var nodeSingleCamera = new osg.Node();
         viewer.getScene().addChild( nodeSingleCamera );
@@ -26,39 +26,31 @@ function onURLloaded( url, viewer, HMDconfig ) {
     osg.log( 'loading ' + url );
     var req = new XMLHttpRequest();
     req.open( 'GET', url, true );
-    req.onload = function( aEvt ) {
+    req.onload = function ( aEvt ) {
         onSceneLoaded( viewer, JSON.parse( req.responseText ), HMDconfig );
         osg.log( 'success ' + url );
     };
-    req.onerror = function( aEvt ) {
+    req.onerror = function ( aEvt ) {
         osg.log( 'error ' + url );
     };
     req.send( null );
 };
 
-window.addEventListener( 'load',
-    function() {
-        OSG.globalify();
+function init() {
+    OSG.globalify();
 
-        if ( !vr.isInstalled() ) {
-            alert( 'NPVR plugin not installed!' );
-        }
-        vr.load( function( error ) {
-            if ( error ) {
-                alert( 'Plugin load failed: ' + error.toString() );
-            }
+    try {
+        var canvas = document.getElementById( '3DView' );
+        canvas.style.width = canvas.width = window.innerWidth;
+        canvas.style.height = canvas.height = window.innerHeight;
 
-            try {
-                var canvas = document.getElementById( '3DView' );
-                canvas.style.width = canvas.width = window.innerWidth;
-                canvas.style.height = canvas.height = window.innerHeight;
+        var viewer = new osgViewer.Viewer( canvas );
+        viewer.init();
+        onSceneLoaded( viewer, getPokerScene() );
+        // onURLloaded( 'models/ogre.osgjs', viewer, HMDconfig );
+    } catch ( e ) {
+        console.log( e );
+    }
+};
 
-                var viewer = new osgViewer.Viewer( canvas );
-                viewer.init();
-                onSceneLoaded( viewer, getPokerScene() );
-                // onURLloaded( 'models/ogre.osgjs', viewer, HMDconfig );
-            } catch ( e ) {
-                console.log( e );
-            }
-        } );
-    }, true );
+window.addEventListener( 'load', init, true );
