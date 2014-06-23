@@ -48,20 +48,106 @@ function getTextureShader() {
     return program;
 }
 
-var stitchingSize = osg.Uniform.createFloat1( 84, 'stitchingSize' );
-var invert = osg.Uniform.createInt1( true, 'invert' );
+function commonScene( rttSize ) {
 
-function createPostSceneStitching( sceneTexture, textureSize, quad ) {
+    var model = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
 
-    var scene = new osg.MatrixTransform();
+    var near = 0.1;
+    var far = 100;
+    var root = new osg.MatrixTransform();
 
-    // create a texture to render the effect to
-    var finalTexture = new osg.Texture();
-    finalTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
-    finalTexture.setMinFilter( 'NEAREST' );
-    finalTexture.setMagFilter( 'NEAREST' );
+    var quadSize = [ 16 / 9, 1 ];
 
-    var stichingShader = new osgUtil.Composer.Filter.Custom(
+    // add a node to animate the scene
+    var rootModel = new osg.MatrixTransform();
+    rootModel.addChild( model );
+
+    var UpdateCallback = function () {
+        this.update = function ( node, nv ) {
+            var currentTime = nv.getFrameStamp().getSimulationTime();
+            var x = Math.cos( currentTime );
+            osg.Matrix.makeRotate( x, 0, 0, 1, node.getMatrix() );
+            node.traverse( nv );
+        };
+    };
+    rootModel.setUpdateCallback( new UpdateCallback() );
+
+    // create the camera that render the scene
+    var camera = new osg.Camera();
+    camera.setName( 'scene' );
+    camera.setProjectionMatrix( osg.Matrix.makePerspective( 50, quadSize[ 0 ], near, far, [] ) );
+    camera.setViewMatrix( osg.Matrix.makeLookAt( [ 0, -10, 0 ], [ 0, 0, 0 ], [ 0, 0, 1 ], [] ) );
+    camera.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
+    camera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+    camera.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
+    camera.setClearColor( [ 0.5, 0.5, 0.5, 1 ] );
+
+    // attach a texture to the camera to render the scene on
+    var sceneTexture = new osg.Texture();
+    sceneTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
+    sceneTexture.setMinFilter( 'LINEAR' );
+    sceneTexture.setMagFilter( 'LINEAR' );
+    camera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, sceneTexture, 0 );
+    camera.attachRenderBuffer( osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16 );
+    // add the scene to the camera
+    camera.addChild( rootModel );
+
+    // attach camera to root
+    root.addChild( camera );
+    return [ root, sceneTexture ];
+}
+
+function createScene(width, height, gui) {
+
+    var rttSize = [ 1024, 1024 ];
+
+    var result = commonScene( rttSize );
+    var commonNode = result[ 0 ];
+    var sceneTexture = result[ 1 ];
+
+    var root = new osg.Node();
+
+    var texW = osg.Uniform.createFloat1( rttSize[ 0 ], 'tex_w' );
+    var texH = osg.Uniform.createFloat1( rttSize[ 1 ], 'tex_h' );
+
+    root.getOrCreateStateSet().addUniform( texW );
+    root.getOrCreateStateSet().addUniform( texH );
+
+    // create a quad on which will be applied the postprocess effects
+    var quadSize = [ 16 / 9, 1 ];
+    var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
+                                                quadSize[ 0 ]       , 0, 0,
+                                                0                   , 0, quadSize[ 1 ] );
+    quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
+
+    root.addChild( commonNode );
+    var scene;
+
+    var effects = [
+        {effect: getPostSceneStitching(sceneTexture), matrix: osg.Matrix.makeTranslate( -2.0, 0.0, 0.0, [] )},
+        {effect: getPostSceneVignette(sceneTexture), matrix: osg.Matrix.makeTranslate( -0.0, 0.0, 0.0, [] )},
+        {effect: getPostSceneBloom(sceneTexture), matrix: osg.Matrix.makeTranslate( 2.0, 0.0, 0.0, [] )},
+        {effect: getPostSceneSharpen(sceneTexture), matrix: osg.Matrix.makeTranslate( 2.0, 0.0, -1.25, [] )},
+        {effect: getPostSceneChromaticAberration(sceneTexture), matrix: osg.Matrix.makeTranslate( 0.0, 0.0, -1.25, [] )},
+    ];
+
+    for (var i = 0; i < effects.length; i++)
+    {
+        scene = createPostScene(effects[i].effect, quad, rttSize);
+        scene.setMatrix(effects[i].matrix);
+        root.addChild(scene);
+        effects[i].effect.buildGui(gui);
+    }
+
+    return root;
+}
+
+function getPostSceneStitching(sceneTexture) {
+
+    var stitchingSize = osg.Uniform.createFloat1( 84, 'stitchingSize' );
+    var invert = osg.Uniform.createInt1( true, 'invert' );
+
+    var stichingFilter = new osgUtil.Composer.Filter.Custom(
         [
             '',
             '#ifdef GL_ES',
@@ -115,37 +201,50 @@ function createPostSceneStitching( sceneTexture, textureSize, quad ) {
             'Texture0': sceneTexture,
             'stitchingSize': stitchingSize,
             'invert': invert,
+        });
+
+    var effect = {
+        
+        name: 'Stitching',
+
+        buildComposer: function(finalTexture) {
+
+            var composer = new osgUtil.Composer();
+            composer.addPass(stichingFilter, finalTexture);
+            composer.build();
+
+            return composer;
+        },
+
+        buildGui: function(mainGui) {
+
+            var folder = mainGui.addFolder(this.name);
+
+            var stitching = {
+                sizeValue: stitchingSize.get()[ 0 ],
+                invertValue: invert.get()[ 0 ],
+            };
+
+            var sizeController = folder.add( stitching, 'sizeValue', 1, 128 );
+            var invertController = folder.add( stitching, 'invertValue' );
+
+            sizeController.onChange( function ( value ) {
+                stitchingSize.set( value );
+            } );
+            invertController.onFinishChange( function ( value ) {
+                invert.set( value );
+            } );
         }
-    );
+    };
 
-    // Apply the stitching_shader on sceneTexture and render to final texture
-    var composer = new osgUtil.Composer();
-    composer.addPass( stichingShader, finalTexture );
-    composer.build();
-
-    // Set the final texture to the scene's StateSet so that 
-    // it will be applied when rendering the quad
-    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
-
-    scene.addChild( composer );
-    scene.addChild( quad );
-
-    return scene;
+    return effect;
 }
 
-var lensRadius = osg.Uniform.createFloat2( [0.5, 0.25], 'lensRadius');
+function getPostSceneVignette(sceneTexture) {
 
-function createPostSceneVignette( sceneTexture, textureSize, quad ) {
+    var lensRadius = osg.Uniform.createFloat2( [0.5, 0.25], 'lensRadius');
 
-    var scene = new osg.MatrixTransform();
-
-    // create a texture to render the effect to
-    var finalTexture = new osg.Texture();
-    finalTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
-    finalTexture.setMinFilter( 'NEAREST' );
-    finalTexture.setMagFilter( 'NEAREST' );
-
-    var vignetteShader = new osgUtil.Composer.Filter.Custom(
+    var vignetteFilter = new osgUtil.Composer.Filter.Custom(
         [
             '',
             '#ifdef GL_ES',
@@ -168,23 +267,45 @@ function createPostSceneVignette( sceneTexture, textureSize, quad ) {
         }
     );
 
-    // Apply the stitching_shader on sceneTexture and render to final texture
-    var composer = new osgUtil.Composer();
-    composer.addPass( vignetteShader, finalTexture );
-    composer.build();
+    var effect = {
 
-    // Set the final texture to the scene's StateSet so that 
-    // it will be applied when rendering the quad
-    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
+        name: 'Vignette',
 
-    scene.addChild( composer );
-    scene.addChild( quad );
+        buildComposer: function(finalTexture) {
 
-    return scene;
+            var composer = new osgUtil.Composer();
+            composer.addPass(vignetteFilter, finalTexture);
+            composer.build();
+            return composer;
+        },
+
+        buildGui: function(mainGui) {
+
+            var folder = mainGui.addFolder(this.name);
+
+            var vignette = {
+                inner_radius : lensRadius.get()[1],
+                outer_radius : lensRadius.get()[0]
+            };
+
+            var inner_controller = folder.add(vignette, 'inner_radius', 0, 1);
+            var outer_controller = folder.add(vignette, 'outer_radius', 0, 1);
+
+            inner_controller.onChange(function ( value ) {
+                lensRadius.get()[1] = value;
+                lensRadius.dirty();
+            });
+
+            outer_controller.onChange(function ( value ) {
+                lensRadius.get()[0] = value;
+                lensRadius.dirty();
+            });
+        }
+    };
+
+    return effect;
+
 }
-
-var threshold = osg.Uniform.createFloat1( 0.5, 'threshold');
-var setSceneTexture;
 
 /// General idea for the bloom's algorithm:
 // - Apply a brightpass to the scene texture to keep only the bright areas
@@ -192,40 +313,34 @@ var setSceneTexture;
 // - Blur the bright texture to have a "glow" effect
 // - Apply the blurred texture on the original scene texture
 // (the downsample helps to reduce the cost of the blur)
-function createPostSceneBloom( sceneTexture, textureSize, quad, bloomTextureFactor) {
-   
+function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
+
+    var threshold = osg.Uniform.createFloat1( 0.8, 'threshold');
+
     if (bloomTextureFactor === undefined) 
         bloomTextureFactor = 8;
 
     var currentSceneTexture = osg.Texture.createFromURL('Budapest.jpg');
     var cached_scenes = [];
 
-    setSceneTexture = function(scene_file) {
+    var setSceneTexture = function(scene_file) {
 
-    	// On met en cache lors du premier chargement
+        // On met en cache lors du premier chargement
         if (cached_scenes[scene_file] === undefined)
             cached_scenes[scene_file] = osg.Texture.createFromURL(scene_file);
 
         currentSceneTexture = cached_scenes[scene_file];
-        additiveShader.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
-        brightPass.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
+        additiveFilter.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
+        brightFilter.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
     };
-
-    var scene = new osg.MatrixTransform();
 
     // create a downsized texture to render the bloom to
     var bloomTexture = new osg.Texture();
-    bloomTexture.setTextureSize( textureSize[ 0 ] / bloomTextureFactor, textureSize[ 1 ] / bloomTextureFactor);
+    bloomTexture.setTextureSize( sceneTexture.getWidth() / bloomTextureFactor, sceneTexture.getHeight() / bloomTextureFactor);
     bloomTexture.setMinFilter( 'LINEAR' );
-    bloomTexture.setMagFilter( 'LINEAR' );    
-   
-    // create a texture to render the effect to
-    var final_texture = new osg.Texture();
-    final_texture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
-    final_texture.setMinFilter( 'LINEAR' );
-    final_texture.setMagFilter( 'LINEAR' );
+    bloomTexture.setMagFilter( 'LINEAR' );   
 
-    var brightPass = new osgUtil.Composer.Filter.Custom(
+    var brightFilter = new osgUtil.Composer.Filter.Custom(
         [
             '#ifdef GL_ES',
             'precision highp float;',
@@ -253,6 +368,8 @@ function createPostSceneBloom( sceneTexture, textureSize, quad, bloomTextureFact
                 // Keep only the pixels whose luminance is above threshold
                 'if (calcLuminance(color.rgb) > threshold)',
                     'gl_FragColor = color;',
+                'else',
+                    'gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);',
 
             '}',
         ].join('\n'), 
@@ -262,7 +379,7 @@ function createPostSceneBloom( sceneTexture, textureSize, quad, bloomTextureFact
         }
     );
 
-    var additiveShader = new osgUtil.Composer.Filter.Custom(
+    var additiveFilter = new osgUtil.Composer.Filter.Custom(
         [
             '#ifdef GL_ES',
             'precision highp float;',
@@ -284,60 +401,66 @@ function createPostSceneBloom( sceneTexture, textureSize, quad, bloomTextureFact
         }
     );
 
-    var composer = new osgUtil.Composer();
+    var effect = {
+        
+        name: 'Bloom',
 
-    // Keep only the bright pixels and downsize the scene texture
-    composer.addPass(brightPass, bloomTexture);
+        buildComposer: function(finalTexture) {
 
-   // Blur the bright downsized sceneTexture
-    composer.addPass(new osgUtil.Composer.Filter.HBlur(16));
-    composer.addPass(new osgUtil.Composer.Filter.VBlur(16));
-    composer.addPass(new osgUtil.Composer.Filter.HBlur(16));
-    composer.addPass(new osgUtil.Composer.Filter.VBlur(16), bloomTexture);
-    
-    // Add the original scene texture and the bloom texture and render into final texture
-    composer.addPass(additiveShader, final_texture);
+            var composer = new osgUtil.Composer();
 
-    composer.build(); 
+            // Keep only the bright pixels and downsize the scene texture
+            composer.addPass(brightFilter, bloomTexture);
 
-    // Set the final texture to the scene's StateSet so that 
-    // it will be applied when rendering the quad
-    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, final_texture );
+           // Blur the bright downsized sceneTexture
+            composer.addPass(new osgUtil.Composer.Filter.AverageVBlur(4));
+            composer.addPass(new osgUtil.Composer.Filter.AverageHBlur(4));
+            composer.addPass(new osgUtil.Composer.Filter.AverageVBlur(4));
+            composer.addPass(new osgUtil.Composer.Filter.AverageHBlur(4), bloomTexture);
+            
+            // Add the original scene texture and the bloom texture and render into final texture
+            composer.addPass(additiveFilter, finalTexture);
 
-    scene.addChild( composer );
-    scene.addChild( quad );
+            composer.build(); 
 
-    return scene;
+            return composer;
+        },
+
+        buildGui: function(mainGui) {
+
+            var folder = mainGui.addFolder('Bloom');
+
+            var bloom = {
+                scene : ['Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg'],
+                threshold : threshold.get()[0],
+            };
+
+            var scene_controller = folder.add(bloom, 'scene', bloom.scene);
+            var threshold_controller = folder.add(bloom, 'threshold', 0.001, 0.99);
+
+            threshold_controller.onChange(function ( value ) {
+                threshold.set(value);
+            });
+
+            scene_controller.onChange(function(value) {
+                setSceneTexture(value);
+            });           
+        }
+    };
+
+    return effect;
+
 }
 
-var setFactor;
-var enableDiagonal;
-
-function createPostSceneSharpen(textureSize, quad) {
-
-    var scene = new osg.MatrixTransform();
+function getPostSceneSharpen(sceneTexture) {
 
     var input_texture = osg.Texture.createFromURL('Medusa.png');
 
-    // create a texture to render the effect to
-    var final_texture = new osg.Texture();
-    final_texture.setTextureSize( textureSize[0], textureSize[1] );
-    final_texture.setMinFilter( 'LINEAR' );
-    final_texture.setMagFilter( 'LINEAR' );
+    //SET FINAL8TEXTURE LINEAR
 
     var kernel = osg.Uniform.createMatrix3(laplace(1), 'kernel');
     var use_diagonal = false;
     var factor = 0;
-
-    setFactor = function(x) {
-        factor = x;
-        updateKernel();
-    };
-    
-    enableDiagonal = function(bool) {
-        use_diagonal = bool;
-        updateKernel();
-    };
 
     function updateKernel() {
 
@@ -396,208 +519,66 @@ function createPostSceneSharpen(textureSize, quad) {
             'input_texture': input_texture
         }
     );
+
+    var effect = {
+
+        name: 'Sharpen',
+
+        buildComposer: function(finalTexture) {
+
+            var composer = new osgUtil.Composer();
+            composer.addPass(sharpenFilter, finalTexture);
+            composer.build();
+
+            return composer;
+        },
+
+        buildGui: function(mainGui) {
+
+            var folder = mainGui.addFolder(this.name);
+
+            var kernel = {
+                'kernel': 0,
+                'sample diagonal': false
+            };
+
+            var kernel_controller = folder.add(kernel, 'kernel', 0, 5.0);
+            var diagonal_controller = folder.add(kernel, 'sample diagonal');
+
+            kernel_controller.onChange(function ( value ) {
+                factor = value;
+                updateKernel();
+            });
+            diagonal_controller.onChange(function ( bool ) {
+                use_diagonal = bool;
+                updateKernel();
+            });
+        }
+    };
+
+    return effect;
+}
+
+function createPostScene(effect, quad, textureSize) {
+
+    var scene = new osg.MatrixTransform();
+
+    // create a texture to render the effect to
+    var finalTexture = new osg.Texture();
+    finalTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
+    finalTexture.setMinFilter( 'LINEAR' );
+    finalTexture.setMagFilter( 'LINEAR' );
     
-    // Apply the filter and render to final_texture
-    var composer = new osgUtil.Composer();
-    composer.addPass(sharpenFilter, final_texture);
-    composer.build();
+    var composer = effect.buildComposer(finalTexture);
 
     // Set the final texture to the scene's StateSet so that 
     // it will be applied when rendering the quad
-    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, final_texture );
+    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
-    scene.addChild(quad);
-    scene.addChild(composer);
+    scene.addChild( composer );
+    scene.addChild( quad );
 
     return scene;
-}
-
-function commonScene( rttSize ) {
-
-    var model = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
-
-    var near = 0.1;
-    var far = 100;
-    var root = new osg.MatrixTransform();
-
-    var quadSize = [ 16 / 9, 1 ];
-
-    // add a node to animate the scene
-    var rootModel = new osg.MatrixTransform();
-    rootModel.addChild( model );
-
-    var UpdateCallback = function () {
-        this.update = function ( node, nv ) {
-            var currentTime = nv.getFrameStamp().getSimulationTime();
-            var x = Math.cos( currentTime );
-            osg.Matrix.makeRotate( x, 0, 0, 1, node.getMatrix() );
-            node.traverse( nv );
-        };
-    };
-    rootModel.setUpdateCallback( new UpdateCallback() );
-
-    // create the camera that render the scene
-    var camera = new osg.Camera();
-    camera.setName( 'scene' );
-    camera.setProjectionMatrix( osg.Matrix.makePerspective( 50, quadSize[ 0 ], near, far, [] ) );
-    camera.setViewMatrix( osg.Matrix.makeLookAt( [ 0, -10, 0 ], [ 0, 0, 0 ], [ 0, 0, 1 ], [] ) );
-    camera.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
-    camera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
-    camera.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
-    camera.setClearColor( [ 0.5, 0.5, 0.5, 1 ] );
-
-    // attach a texture to the camera to render the scene on
-    var sceneTexture = new osg.Texture();
-    sceneTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
-    sceneTexture.setMinFilter( 'LINEAR' );
-    sceneTexture.setMagFilter( 'LINEAR' );
-    camera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, sceneTexture, 0 );
-    camera.attachRenderBuffer( osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16 );
-    // add the scene to the camera
-    camera.addChild( rootModel );
-
-    // attach camera to root
-    root.addChild( camera );
-    return [ root, sceneTexture ];
-}
-
-function createScene() {
-
-    var rttSize = [ 1024, 1024 ];
-
-    var result = commonScene( rttSize );
-    var commonNode = result[ 0 ];
-    var sceneTexture = result[ 1 ];
-
-    var root = new osg.Node();
-
-    var texW = osg.Uniform.createFloat1( rttSize[ 0 ], 'tex_w' );
-    var texH = osg.Uniform.createFloat1( rttSize[ 1 ], 'tex_h' );
-
-    root.getOrCreateStateSet().addUniform( texW );
-    root.getOrCreateStateSet().addUniform( texH );
-
-    // create a quad on which will be applied the postprocess effects
-    var quadSize = [ 16 / 9, 1 ];
-    var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
-                                                quadSize[ 0 ]       , 0, 0,
-                                                0                   , 0, quadSize[ 1 ] );
-    quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-
-    root.addChild( commonNode );
-    var scene;
-
-    if ( true ) {
-        scene = createPostSceneStitching( sceneTexture, rttSize, quad );
-        scene.setMatrix( osg.Matrix.makeTranslate( -2.0, 0.0, 0.0, [] ) );
-        root.addChild( scene );
-    }
-
-    if (true) {
-        scene = createPostSceneVignette(sceneTexture, rttSize, quad);
-        scene.setMatrix(osg.Matrix.makeTranslate(0.0, 0.0, 0.0, []));
-        root.addChild(scene);
-    }
-
-    if (true) {
-        scene = createPostSceneBloom(sceneTexture, rttSize, quad);
-        scene.setMatrix(osg.Matrix.makeTranslate(2.0, 0.0, 0.0, []));
-        root.addChild(scene);
-    }
-
-    if (true) {
-        scene = createPostSceneSharpen(rttSize, quad);
-        scene.setMatrix(osg.Matrix.makeTranslate(2.0, 0.0, -1.25, []));
-        root.addChild(scene);
-    }
-
-    return root;
-}
-
-
-function buildStitchingGui(mainGui) {
-
-    var folder = mainGui.addFolder('Stitching');
-
-    var stitching = {
-        sizeValue: stitchingSize.get()[ 0 ],
-        invertValue: invert.get()[ 0 ],
-    };
-
-    var sizeController = folder.add( stitching, 'sizeValue', 1, 128 );
-    var invertController = folder.add( stitching, 'invertValue' );
-
-    sizeController.onChange( function ( value ) {
-        stitchingSize.set( value );
-    } );
-    invertController.onFinishChange( function ( value ) {
-        invert.set( value );
-    } );
-}
-
-function buildVignettegGui(mainGui) {
-
-    var folder = mainGui.addFolder('Vignette');
-
-    var vignette = {
-        inner_radius : lensRadius.get()[1],
-        outer_radius : lensRadius.get()[0]
-    };
-
-    var inner_controller = folder.add(vignette, 'inner_radius', 0, 1);
-    var outer_controller = folder.add(vignette, 'outer_radius', 0, 1);
-
-    inner_controller.onChange(function ( value ) {
-        lensRadius.get()[1] = value;
-        lensRadius.dirty();
-    });
-
-    outer_controller.onChange(function ( value ) {
-        lensRadius.get()[0] = value;
-        lensRadius.dirty();
-    });
-}
-
-function buildBloomGui(mainGui) {
-
-    var folder = mainGui.addFolder('Bloom');
-
-    var bloom = {
-        scene : ['Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg'],
-        threshold : threshold.get()[0],
-    };
-
-    var scene_controller = folder.add(bloom, 'scene', bloom.scene);
-    var threshold_controller = folder.add(bloom, 'threshold', 0.001, 0.99);
-
-    threshold_controller.onChange(function ( value ) {
-        threshold.set(value);
-    });
-
-    scene_controller.onChange(function(value) {
-        setSceneTexture(value);
-    });
-}
-
-function buildSharpenGui(mainGui) {
-
-    var folder = mainGui.addFolder('Sharpen');
-
-    var kernel = {
-        'kernel': 0,
-        'sample diagonal': false
-    };
-
-    var kernel_controller = folder.add(kernel, 'kernel', 0, 5.0);
-    var diagonal_controller = folder.add(kernel, 'sample diagonal');
-
-    kernel_controller.onChange(function ( value ) {
-        setFactor(value);
-    });
-    diagonal_controller.onChange(function ( bool ) {
-        enableDiagonal(bool);
-    });
-
 
 }
 
@@ -610,14 +591,9 @@ var main = function () {
     canvas.style.height = canvas.height = window.innerHeight;
 
     var gui = new dat.GUI();
-    
-    buildStitchingGui(gui);
-    buildVignettegGui(gui);
-    buildBloomGui(gui);
-    buildSharpenGui(gui);
 
     var rotate = new osg.MatrixTransform();
-    rotate.addChild( createScene( canvas.width, canvas.height ) );
+    rotate.addChild( createScene( canvas.width, canvas.height, gui ) );
     rotate.getOrCreateStateSet().setAttributeAndMode( new osg.CullFace( 'DISABLE' ) );
 
     var viewer = new osgViewer.Viewer( canvas );
