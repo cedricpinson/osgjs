@@ -462,7 +462,8 @@ define( [
 
     CullVisitor.prototype[ Node.typeID ] = function ( node ) {
 
-        if ( this._enableFrustumCulling === true && node.isCullingActive() && this.isCulled ( node ) ) return;
+        // We need the frame stamp > 0 to do the frustum culling, otherwise the projection matrix is not correct
+        if ( this._enableFrustumCulling === true && node.isCullingActive() && this.getFrameStamp().getFrameNumber() !== 0 && this.isCulled ( node ) ) return;
 
         var stateset = node.getStateSet();
         if ( stateset ) {
