@@ -1101,7 +1101,7 @@ define( [
                 far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
                 far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
                 far[ 2 ] = matrix[ 11 ] - matrix[ 10 ];
-                far[ 2 ] = matrix[ 15 ] - matrix[ 14 ];
+                far[ 3 ] = matrix[ 15 ] - matrix[ 14 ];
                 result[ 4 ] = far;
                 // Near clipping plane.
                 near[ 0 ] = matrix[ 3 ] + matrix[ 2 ];
