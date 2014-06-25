@@ -59,4 +59,8 @@ samples:
         image: assets/img/performance.jpg
         link: examples/performance
     -
+        title: PagedLOD
+        image: assets/img/plod.jpg
+        link: examples/pagedlod
+    -
 ---
