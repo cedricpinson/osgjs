@@ -13,6 +13,8 @@ define( [
     'osgUtil/IntersectVisitor'
 ], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, WebGLCaps, IntersectVisitor ) {
 
+    'use strict';
+
     var View = function () {
         this._graphicContext = undefined;
         this._camera = new Camera();
@@ -78,8 +80,8 @@ define( [
             canvas.width = widthPixel;
             canvas.height = heightPixel;
 
-            canvas.style.width = widthPixel / devicePixelRatio;
-            canvas.style.height = heightPixel / devicePixelRatio;
+            canvas.style.width = (widthPixel / devicePixelRatio).toString() + 'px';
+            canvas.style.height = (heightPixel / devicePixelRatio).toString() + 'px';
         },
 
         setUpView: function ( canvas ) {

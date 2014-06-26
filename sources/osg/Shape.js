@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Notify',
     'osg/StateAttribute',
@@ -15,12 +13,22 @@ define( [
     'osg/Utils'
 ], function ( Notify, StateAttribute, Vec3, Uniform, BufferArray, Geometry, PrimitiveSet, DrawArrays, DrawElements, Program, Shader, MACROUTILS ) {
 
+    'use strict';
+
     /**
      * Create a Textured Box on the given center with given size
      * @name createTexturedBox
      */
-    var createTexturedBoxGeometry = function ( centerx, centery, centerz,
-        sizex, sizey, sizez ) {
+    var createTexturedBoxGeometry = function ( cx, cy, cz,
+        sx, sy, sz ) {
+
+        var centerx = cx !== undefined ? cx : 0.0;
+        var centery = cy !== undefined ? cy : 0.0;
+        var centerz = cz !== undefined ? cz : 0.0;
+
+        var sizex = sx !== undefined ? sx : 1.0;
+        var sizey = sy !== undefined ? sy : 1.0;
+        var sizez = sz !== undefined ? sz : 1.0;
 
         var g = new Geometry();
         var dx, dy, dz;
