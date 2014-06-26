@@ -1,0 +1,43 @@
+Trouve l'intensité maximale parmi tous les pixels de la scène
+On considère que ce max est le "point blanc" vec3(1.0, 1.0, 1.0) 
+On rescale tous les autres pixels par rapport ce max*
+
+Trouver l'intensité logarithmique moyenne de la scène
+-- Somme des luminance logarithmiques de tous les pixels divisée par le nombre de pixels --
+
+	Globale:
+		Boucler jusqu'à 1x1
+			Render log luminance and Downsample 
+	Locale:
+		Pour chaque texel, faire la moyenne à la main sur les 5x5 alentour
+
+On prend une valeur de "middleGrey"
+On modifie le texel pour que sa luminance rejoigne celle du middleGrey
+Cad qu'on prend le ratio    middleGrey / avgLogLum
+et qu'on multiplie le texel par ce ratio
+	
+	Scène claire: 
+		avgLogLum > middleGrey
+		0 < ratio < 1
+		texel va être "assombri"
+
+	Scène sombre: 
+		avgLogLum < middleGrey
+		1 < ratio < inf
+		texel va être "éclairci"
+
+Cette valeur de middleGrey sert un peu "d'exposure"
+
+Le problème c'est que maintenant la couleur peut dépasser 1
+Donc on va compenser en divisant le texel par [lui-même + 1]
+x = x / (x+1)
+Cette fonction converge vers 1
+
+Problème c'est que ca compense un peu trop, donc encore une étape
+...
+
+REF
+http://content.gpwiki.org/D3DBook:High-Dynamic_Range_Rendering
+https://software.intel.com/en-us/articles/compute-shader-hdr-and-bloom/
+https://web.archive.org/web/20120319105020/http://software.intel.com/en-us/articles/high-dynamic-range-environment-mapping-on-mainstream-graphics-hardware/
+http://www.cs.utah.edu/~reinhard/cdrom/tonemap.pdf
