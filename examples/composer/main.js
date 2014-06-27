@@ -57,7 +57,7 @@ function commonScene( rttSize ) {
 
 function createScene(width, height, gui) {
 
-    var rttSize = [ 1024, 1024 ];
+    var rttSize = [ 2048, 2048 ];
 
     var result = commonScene( rttSize );
     var commonNode = result[ 0 ];
@@ -110,8 +110,8 @@ function createPostScene(effect, quad, textureSize) {
     // create a texture to render the effect to
     var finalTexture = new osg.Texture();
     finalTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
-    finalTexture.setMinFilter( 'LINEAR' );
-    finalTexture.setMagFilter( 'LINEAR' );
+    finalTexture.setMinFilter( osg.Texture.LINEAR );
+    finalTexture.setMagFilter( osg.Texture.LINEAR );
     
     var composer = effect.buildComposer(finalTexture);
 
