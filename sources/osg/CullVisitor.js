@@ -14,8 +14,9 @@ define( [
     'osg/Lod',
     'osg/PagedLOD',
     'osg/Camera',
-    'osg/TransformEnums'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums ) {
+    'osg/TransformEnums',
+    'osg/Vec4'
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4 ) {
 
     /**
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
@@ -31,7 +32,7 @@ define( [
         this._currentRenderBin = undefined;
         this._currentRenderStage = undefined;
         this._rootRenderStage = undefined;
-        this._frustum = [];
+        this._frustum = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
         this._enableFrustumCulling = false;
