@@ -30,7 +30,6 @@ define( [
             viewer.init();
             viewer.frame();
             var uv = viewer._cullVisitor;
-            uv._frustum[4][3] = 100;
             var root = new Node();
             root.setName( 'a' );
             var b = new Node();

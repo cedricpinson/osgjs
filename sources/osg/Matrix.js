@@ -1072,7 +1072,9 @@ define( [
             var far = Vec4.create();
             var near = Vec4.create();
 
-            return function ( matrix, result ) {
+            return function ( matrix, result, withNearFar ) {
+                if ( withNearFar === undefined )
+                    withNearFar = false;
                 // Right clipping plane.
                 right[ 0 ] = matrix[ 3 ] - matrix[ 0 ];
                 right[ 1 ] = matrix[ 7 ] - matrix[ 4 ];
@@ -1097,21 +1099,23 @@ define( [
                 top[ 2 ] = matrix[ 11 ] - matrix[ 9 ];
                 top[ 3 ] = matrix[ 15 ] - matrix[ 13 ];
                 result[ 3 ] = top;
-                // Far clipping plane.
-                far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
-                far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
-                far[ 2 ] = matrix[ 11 ] - matrix[ 10 ];
-                far[ 3 ] = matrix[ 15 ] - matrix[ 14 ];
-                result[ 4 ] = far;
-                // Near clipping plane.
-                near[ 0 ] = matrix[ 3 ] + matrix[ 2 ];
-                near[ 1 ] = matrix[ 7 ] + matrix[ 6 ];
-                near[ 2 ] = matrix[ 11 ] + matrix[ 10 ];
-                near[ 3 ] = matrix[ 15 ] + matrix[ 14 ];
-                result[ 5 ] = near;
 
+                if( withNearFar ) {
+                    // Far clipping plane.
+                    far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
+                    far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
+                    far[ 2 ] = matrix[ 11 ] - matrix[ 10 ];
+                    far[ 3 ] = matrix[ 15 ] - matrix[ 14 ];
+                    result[ 4 ] = far;
+                    // Near clipping plane.
+                    near[ 0 ] = matrix[ 3 ] + matrix[ 2 ];
+                    near[ 1 ] = matrix[ 7 ] + matrix[ 6 ];
+                    near[ 2 ] = matrix[ 11 ] + matrix[ 10 ];
+                    near[ 3 ] = matrix[ 15 ] + matrix[ 14 ];
+                    result[ 5 ] = near;
+                }
                 //Normalize the planes
-                for ( var i = 0; i < 6; i++ ) {
+                for ( var i = 0, j = result.length; i < j; i++ ) {
                     var norm = result[ i ][ 0 ] * result[ i ][ 0 ] + result[ i ][ 1 ] * result[ i ][ 1 ] + result[ i ][ 2 ] * result[ i ][ 2 ];
                     var inv = 1.0 / Math.sqrt( norm );
                     result[ i ][ 0 ] = result[ i ][ 0 ] * inv;

@@ -15,8 +15,11 @@ define( [
     'osg/PagedLOD',
     'osg/Camera',
     'osg/TransformEnums',
-    'osg/Vec4'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4 ) {
+    'osg/Vec4',
+    'osg/Vec3',
+    'osg/ComputeMatrixFromNodePath'
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath ) {
+
 
     /**
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
@@ -285,20 +288,27 @@ define( [
             this._enableFrustumCulling = value;
         },
 
-        isCulled: function( node ) {
-            var position = node.getBound().center();
-            var radius = - node.getBound().radius();
-            var d;
+        isCulled: ( function () {
+            var position = Vec3.create();
 
-            for ( var i = 0; i < 6; i ++ ) {
-                d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
-                if ( d <= radius )
-                {
-                    return true;
+            return function ( node ) {
+                var pos = node.getBound().center();
+                Vec3.copy( pos, position );
+                var radius = - node.getBound().radius();
+                var d;
+                var m = ComputeMatrixFromNodePath.computeLocalToWorld( this.nodePath );
+                Matrix.transformVec3( m, position, position);
+
+                for ( var i = 0, j = this._frustum.length; i < j; i++ ) {
+                    d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
+                    if ( d <= radius )
+                    {
+                        return true;
+                    }
                 }
-            }
-        return false;
-        }
+                return false;
+        };
+    } )()
     } ) ) );
 
     CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
