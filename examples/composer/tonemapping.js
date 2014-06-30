@@ -28,12 +28,17 @@ function getPostSceneToneMapping() {
         'Arches_E_PineTree': 'Arches_E_PineTree_3k.hdr',
         'GrandCanyon_C_YumaPoint': 'GCanyon_C_YumaPoint_3k.hdr',
         'Milkyway': 'Milkyway_small.hdr',
-        'Walk_Of_Fame': 'Mans_Outside_2k.hdr'
+        'Walk_Of_Fame': 'Mans_Outside_2k.hdr',
+        'PaperMill_Ruins_E': 'PaperMill_E_3k.hdr',
+        'Tropical_Ruins': 'TropicalRuins_3k.hdr'
     };
 
     var cachedScenes = [];
 
     var currentSceneTexture = osg.Texture.createHDRFromURL('../hdr/textures/Alexs_Apartment/Alexs_Apt_2k.hdr');
+    var lumTexture = new osg.Texture();
+    lumTexture.setTextureSize(2048, 2048);
+    lumTexture.setMinFilter(osg.Texture.LINEAR_MIPMAP_LINEAR);
 
     var methods = ['Simple', 'Reinhardt', 'Filmic'];
 
@@ -42,17 +47,16 @@ function getPostSceneToneMapping() {
     var method = osg.Uniform.createInt1(2, 'method');
     var exposure = osg.Uniform.createFloat1(1, 'exposure');
     var middleGrey = osg.Uniform.createFloat1(0.36, 'middleGrey');
-    var avgLogLum = osg.Uniform.createFloat1(0.54, 'avgLogLum');
     var whitePoint = osg.Uniform.createFloat1(3, 'whitePoint');
 
     var toneMappingFilter = new osgUtil.Composer.Filter.Custom(
-        [
+       [
         '#ifdef GL_ES',
         'precision highp float;',
         '#endif',
-
         'varying vec2 FragTexCoord0;',
         'uniform sampler2D input_texture;',
+        'uniform sampler2D lum_texture;',
 
         'uniform int method;',
         'uniform float gamma;',
@@ -60,92 +64,116 @@ function getPostSceneToneMapping() {
         'uniform float exposure;',
 
         'uniform float middleGrey;',
-        'uniform float avgLogLum;', // This should really be computed from the scene
+        'float avgLogLum = texture2D(lum_texture, FragTexCoord0, 11.0).r;',
         'uniform float whitePoint;', // This can be computed from the scene as max lum value
+        
+        // RGB / Yxy color spaces conversions from:
+        // http://content.gpwiki.org/D3DBook:High-Dynamic_Range_Rendering#Luminance_Transform
+        'vec3 RGB2Yxy(vec3 rgb) {',
+        '    mat3 RGB2XYZ;',
+        '    RGB2XYZ[0] = vec3(0.5141364, 0.3238786, 0.16036376);',
+        '    RGB2XYZ[1] = vec3(0.265068, 0.67023428, 0.06409157);',
+        '    RGB2XYZ[2] = vec3(0.0241188, 0.1228178, 0.84442666);',
+        '    vec3 XYZ = RGB2XYZ * rgb; ',
+        '    vec3 Yxy = XYZ;',
+        '    Yxy.gb = XYZ.rg / dot(vec3(1.0), XYZ.rgb);',
+        '    return Yxy;',
+        '}',
+
+        'vec3 Yxy2RGB(vec3 Yxy) {',
+        '    vec3 XYZ;',
+        '    XYZ.r = Yxy.r * Yxy.g / Yxy. b; ',
+        '    XYZ.g = Yxy.r;',
+        '    XYZ.b = Yxy.r * (1.0 - Yxy.g - Yxy.b) / Yxy.b;',
+        '    mat3 XYZ2RGB;',
+        '    XYZ2RGB[0] = vec3(2.5651,-1.1665,-0.3986);',
+        '    XYZ2RGB[1] = vec3(-1.0217, 1.9777, 0.0439);',
+        '    XYZ2RGB[2] = vec3(0.0753, -0.2543, 1.1892);',
+        '    return XYZ2RGB * XYZ;',
+        '}',
 
         // convert 8-bit RGB channels into floats using the common E exponent
-        "vec3 decodeRGBE(vec4 rgbe) {",
-        "  float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));",
-        "  return rgbe.rgb * 255.0 * f;",
-        "}",
-
-        'vec3 toneMapReinhardt(vec3 lum) {',
-          
-            'lum *= avgLogLum / middleGrey;',
-            'return lum *  (1.0 / ( lum + 1.0)) * ( 1.0 + (lum / whitePoint)) ;',
-        '}',
-        'vec3 toneMapFilmic(vec3 texColor)',
-        '{',
-            'vec3 x = max(vec3(0), texColor - 0.004);',
-            'return (x * (6.2 * x + 0.5) ) / ( x * (6.2 * x + 1.7) + 0.06);',
+        'vec3 decodeRGBE(vec4 rgbe) {',
+        '   float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));',
+        '   return rgbe.rgb * 255.0 * f;',
         '}',
 
-        // Color spaces conversions from
-        // http://www.chilliant.com/rgb2hsv.html
-        'vec3 HUEtoRGB(in float H)',
-        '{',
-           ' float R = abs(H * 6.0 - 3.0) - 1.0;',
-            'float G = 2.0 - abs(H * 6.0 - 2.0);',
-            'float B = 2.0 - abs(H * 6.0 - 4.0);',
-           ' return clamp(vec3(R,G,B), 0.0, 1.0);',
+        'float toneMapReinhardt(float lum) {',
+        '   lum *= avgLogLum / middleGrey;',
+        '   return lum *  (1.0 / ( lum + 1.0)) * ( 1.0 + (lum / (whitePoint*whitePoint))) ;',
         '}',
-        'vec3 HSLtoRGB(in vec3 HSL)',
-        '{',
-            'vec3 RGB = HUEtoRGB(HSL.x);',
-            'float C = (1.0 - abs(2.0 * HSL.z - 1.0)) * HSL.y;',
-            'return (RGB - 0.5) * C + HSL.z;',
+        'vec3 toneMapFilmic(vec3 texColor) {',
+        '   vec3 x = max(vec3(0), texColor - 0.004);',
+        '   return (x * (6.2 * x + 0.5) ) / ( x * (6.2 * x + 1.7) + 0.06);',
         '}',
-        'float Epsilon = 1e-10;',
-        'vec3 RGBtoHCV(in vec3 RGB)',
-        '{',
-            // Based on work by Sam Hocevar and Emil Persson
-            'vec4 P = (RGB.g < RGB.b) ? vec4(RGB.bg, -1.0, 2.0/3.0) : vec4(RGB.gb, 0.0, -1.0/3.0);',
-            'vec4 Q = (RGB.r < P.x) ? vec4(P.xyw, RGB.r) : vec4(RGB.r, P.yzx);',
-            'float C = Q.x - min(Q.w, Q.y);',
-            'float H = abs((Q.w - Q.y) / (6.0 * C + Epsilon) + Q.z);',
-            'return vec3(H, C, Q.x);',
-        '}',
-        'vec3 RGBtoHSL(in vec3 RGB)',
-        '{',
-            'vec3 HCV = RGBtoHCV(RGB);',
-            'float L = HCV.z - HCV.y * 0.5;',
-            'float S = HCV.y / (1.0 - abs(L * 2.0 - 1.0) + Epsilon);',
-            'return vec3(HCV.x, S, L);',
-        '}',
+
         'void main() {',
 
-            'vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
-            // 'texel = RGBtoHSL(texel);',
-            // 'float lum = texel.z;',
-            'if (method == 1)',
-            '{',
-                'texel *= exposure;',
-                'texel = pow(texel, vec3(1.0 / gamma));',
-            '}',
-            'else if (method == 2)',
-            '{',
-                'texel = toneMapReinhardt(texel);',
-                'texel = pow(texel, vec3(1.0 / gamma));',
-            '}',
-            'else if (method == 3)',
-                'texel = toneMapFilmic(texel);',
-            // 'texel.z = lum;',
-            // 'texel = HSLtoRGB(texel);',
+        '   vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
+        '   vec3 Yxy = RGB2Yxy(texel);',
 
+        '   if (method == 1) {',
+        '      texel *= exposure;',
+        '      texel = pow(texel, vec3(1.0 / gamma));',
+        '   }',
+        '   else if (method == 2) {',
+        '      Yxy.r = toneMapReinhardt(Yxy.r);',
+        '      texel = pow(Yxy2RGB(Yxy), vec3(1.0 / gamma));',
+        '   }',
+        '   else if (method == 3)',
+        '       texel = toneMapFilmic(texel);',
 
-            'gl_FragColor = vec4(texel, 1.0);',
+            // 'texel = texture2D(lum_texture, FragTexCoord0).rgb;',
+        '   gl_FragColor = vec4(texel, 1.0);',
             
         '}',
         ].join('\n'),
         {
             'input_texture': currentSceneTexture,
+            'lum_texture': lumTexture,
             'method': method,
             'gamma': gamma,
             'exposure': exposure,
             'middleGrey': middleGrey,
-            'avgLogLum': avgLogLum,
             'whitePoint': whitePoint
         });
+    
+    var luminanceComputeFilter = new osgUtil.Composer.Filter.Custom(
+        [
+            '#ifdef GL_ES',
+            'precision highp float;',
+            '#endif',
+            '#define USE_LINEAR_SPACE 0',
+
+            'varying vec2 FragTexCoord0;',
+            'uniform sampler2D input_texture;',
+
+            // convert 8-bit RGB channels into floats using the common E exponent
+            'vec3 decodeRGBE(vec4 rgbe) {',
+            '   float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));',
+            '   return rgbe.rgb * 255.0 * f;',
+            '}',
+
+            // Definition of luminance from http://en.wikipedia.org/wiki/Luma_%28video%29
+            'float calcLuminance(vec3 pixel) {',
+            '   #ifdef USE_LINEAR_SPACE',
+            '      pixel = pow(pixel, vec3(2.2));',
+            '      return pow(max(dot(pixel, vec3(0.2126, 0.7152, 0.0722)), 0.001), 1.0/2.2);',
+            '   #else',
+            '       return max(dot(pixel, vec3(0.2126, 0.7152, 0.0722)), 0.001);',
+            '   #endif',
+            '}',
+
+            'void main() {',
+            '   vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
+            '   gl_FragColor = vec4(vec3(calcLuminance(texel)), 1.0);',            
+            '}',
+
+        ].join('\n'),
+        {
+            'input_texture': currentSceneTexture,
+        }
+    );
 
     function setSceneTexture(scene_file) {
 
@@ -155,6 +183,8 @@ function getPostSceneToneMapping() {
 
         currentSceneTexture = cachedScenes[scene_file];
         toneMappingFilter.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
+        luminanceComputeFilter.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
+        lumTexture.dirty();
     };
 
     var effect = {
@@ -164,7 +194,9 @@ function getPostSceneToneMapping() {
         buildComposer: function(finalTexture) {
 
             var composer = new osgUtil.Composer();
+            composer.addPass(luminanceComputeFilter, lumTexture);
             composer.addPass(toneMappingFilter, finalTexture);
+            composer.build();
             return composer;
         },
 
@@ -178,7 +210,6 @@ function getPostSceneToneMapping() {
                 'gamma': gamma.get()[0],
                 'exposure': exposure.get()[0],
                 'middleGrey': middleGrey.get()[0],
-                'avgLogLum': avgLogLum.get()[0],
                 'whitePoint': whitePoint.get()[0],
             };
 
@@ -203,10 +234,7 @@ function getPostSceneToneMapping() {
            
             var middleGreyCtrl = reinhardt.add(param, 'middleGrey', 0.01, 1);
             middleGreyCtrl.onChange(function (value) { middleGrey.set(value) } );
-         
-            var avgLogLumCtrl = reinhardt.add(param, 'avgLogLum', 0, 1);
-            avgLogLumCtrl.onChange(function (value) { avgLogLum.set(value) } );
-                 
+
             var whitePointCtrl = reinhardt.add(param, 'whitePoint', 0.01, 10);
             whitePointCtrl.onChange(function (value) { whitePoint.set(value) } );
         
