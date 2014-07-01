@@ -36,18 +36,24 @@ function getPostSceneToneMapping() {
     var cachedScenes = [];
 
     var currentSceneTexture = osg.Texture.createHDRFromURL('../hdr/textures/Alexs_Apartment/Alexs_Apt_2k.hdr');
+    currentSceneTexture.addApplyTexImage2DCallback(function() {lumTexture.dirty()});
+
     var lumTexture = new osg.Texture();
-    lumTexture.setTextureSize(2048, 2048);
+    lumTexture.setTextureSize(4096, 2048);
     lumTexture.setMinFilter(osg.Texture.LINEAR_MIPMAP_LINEAR);
 
-    var methods = ['Simple', 'Reinhardt', 'Filmic'];
+    var methods = ['None', 'Reinhardt', 'Filmic'];
 
     // HDR parameters uniform
     var gamma = osg.Uniform.createFloat1(2.2, 'gamma');
     var method = osg.Uniform.createInt1(2, 'method');
     var exposure = osg.Uniform.createFloat1(1, 'exposure');
+    var brightness = osg.Uniform.createFloat(0.0, 'brightness');
+    var contrast = osg.Uniform.createFloat(0.0, 'contrast');
+    var saturation = osg.Uniform.createFloat(1.0, 'saturation');
     var middleGrey = osg.Uniform.createFloat1(0.36, 'middleGrey');
-    var whitePoint = osg.Uniform.createFloat1(3, 'whitePoint');
+    var locality = osg.Uniform.createFloat1(11.0, 'locality');
+    var whitePoint = osg.Uniform.createFloat1(10, 'whitePoint');
 
     var toneMappingFilter = new osgUtil.Composer.Filter.Custom(
        [
@@ -60,12 +66,15 @@ function getPostSceneToneMapping() {
 
         'uniform int method;',
         'uniform float gamma;',
-
         'uniform float exposure;',
+        'uniform float brightness;',
+        'uniform float saturation;',
+        'uniform float contrast;',
 
         'uniform float middleGrey;',
-        'float avgLogLum = texture2D(lum_texture, FragTexCoord0, 11.0).r;',
         'uniform float whitePoint;', // This can be computed from the scene as max lum value
+        'uniform float locality;', // Mipmap level to fetch from the luminance texture
+        'float avgLogLum = texture2D(lum_texture, FragTexCoord0, locality).r;',
         
         // RGB / Yxy color spaces conversions from:
         // http://content.gpwiki.org/D3DBook:High-Dynamic_Range_Rendering#Luminance_Transform
@@ -99,7 +108,7 @@ function getPostSceneToneMapping() {
         '}',
 
         'float toneMapReinhardt(float lum) {',
-        '   lum *= avgLogLum / middleGrey;',
+        '   lum *= middleGrey / avgLogLum;',
         '   return lum *  (1.0 / ( lum + 1.0)) * ( 1.0 + (lum / (whitePoint*whitePoint))) ;',
         '}',
         'vec3 toneMapFilmic(vec3 texColor) {',
@@ -111,7 +120,7 @@ function getPostSceneToneMapping() {
 
         '   vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
         '   vec3 Yxy = RGB2Yxy(texel);',
-
+        '',
         '   if (method == 1) {',
         '      texel *= exposure;',
         '      texel = pow(texel, vec3(1.0 / gamma));',
@@ -123,8 +132,17 @@ function getPostSceneToneMapping() {
         '   else if (method == 3)',
         '       texel = toneMapFilmic(texel);',
 
-            // 'texel = texture2D(lum_texture, FragTexCoord0).rgb;',
+        '   texel = clamp(texel, 0.0, 1.0);',
+        '   vec3 greyscale = vec3(dot(texel * (1.0+brightness), vec3(0.2126, 0.7152, 0.0722)));',
+        '   texel = mix(greyscale, texel * (1.0+brightness), vec3(saturation));',
+        '   if (contrast > 0.0) {',
+        '       texel.rgb = (texel.rgb - 0.5) / (1.0 - contrast) + 0.5;',
+        '   } else {',
+        '       texel.rgb = (texel.rgb - 0.5) * (1.0 + contrast) + 0.5;',
+        '   }',
+
         '   gl_FragColor = vec4(texel, 1.0);',
+        '   // gl_FragColor = vec4(vec3(avgLogLum), 1.0);',
             
         '}',
         ].join('\n'),
@@ -134,6 +152,10 @@ function getPostSceneToneMapping() {
             'method': method,
             'gamma': gamma,
             'exposure': exposure,
+            'brightness': brightness,
+            'contrast': contrast,
+            'saturation': saturation,
+            'locality': locality,
             'middleGrey': middleGrey,
             'whitePoint': whitePoint
         });
@@ -143,7 +165,7 @@ function getPostSceneToneMapping() {
             '#ifdef GL_ES',
             'precision highp float;',
             '#endif',
-            '#define USE_LINEAR_SPACE 0',
+            '//#define USE_LINEAR_SPACE 0',
 
             'varying vec2 FragTexCoord0;',
             'uniform sampler2D input_texture;',
@@ -178,13 +200,18 @@ function getPostSceneToneMapping() {
     function setSceneTexture(scene_file) {
 
         // On met en cache lors du premier chargement
-        if (cachedScenes[scene_file] === undefined)
+        if (cachedScenes[scene_file] === undefined) {
             cachedScenes[scene_file] = osg.Texture.createHDRFromURL('../hdr/textures/' + scene_file + '/' + scenes[scene_file]);
-
+            // On attends la fin du chargement de la texture pour générer la mipmap chain
+            cachedScenes[scene_file].addApplyTexImage2DCallback(function() {lumTexture.dirty()});
+        }
+        else {
+            // On flag la lumTexture pour regénérer la mipmap chain
+            lumTexture.dirty()
+        }
         currentSceneTexture = cachedScenes[scene_file];
         toneMappingFilter.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
         luminanceComputeFilter.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
-        lumTexture.dirty();
     };
 
     var effect = {
@@ -209,6 +236,10 @@ function getPostSceneToneMapping() {
                 'method': methods[method.get()[0]-1],
                 'gamma': gamma.get()[0],
                 'exposure': exposure.get()[0],
+                'brightness': brightness.get()[0],
+                'contrast': contrast.get()[0],
+                'saturation': saturation.get()[0],
+                'locality': locality.get()[0],
                 'middleGrey': middleGrey.get()[0],
                 'whitePoint': whitePoint.get()[0],
             };
@@ -218,20 +249,31 @@ function getPostSceneToneMapping() {
                 setSceneTexture(value);
             } );
 
+            var exposureCtrl = folder.add(param, 'exposure', 0.0, 2.0);
+            exposureCtrl.onChange(function (value) { exposure.set(value) } );
+           
+            var brightnessCtrl = folder.add(param, 'brightness', -2.0, 2.0);
+            brightnessCtrl.onChange(function (value) { brightness.set(value) } );
+                               
+            var contrastCtrl = folder.add(param, 'contrast', -1.0, 1.0);
+            contrastCtrl.onChange(function (value) { contrast.set(value) } );
+                               
+            var saturationCtrl = folder.add(param, 'saturation', 0.0, 5.0);
+            saturationCtrl.onChange(function (value) { saturation.set(value) } );
+                      
+            var localityCtrl = folder.add(param, 'locality', 0.0, 11.0);
+            localityCtrl.onChange(function (value) { locality.set(value) } );
+           
+            var gammaCtrl = folder.add(param, 'gamma', 0, 3);
+            gammaCtrl.onChange(function (value) { gamma.set(value) } );
+
             var methodCtrl = folder.add(param, 'method', methods);
             methodCtrl.onChange(function (value) {
                 method.set(methods.indexOf(value) + 1);
             } );
-      
-            var gammaCtrl = folder.add(param, 'gamma', 0, 3);
-            gammaCtrl.onChange(function (value) { gamma.set(value) } );
-            
-            var simple = folder.addFolder('Simple');
+
             var reinhardt = folder.addFolder('Reinhardt');
 
-            var exposureCtrl = simple.add(param, 'exposure', 0, 2);
-            exposureCtrl.onChange(function (value) { exposure.set(value) } );
-           
             var middleGreyCtrl = reinhardt.add(param, 'middleGrey', 0.01, 1);
             middleGreyCtrl.onChange(function (value) { middleGrey.set(value) } );
 
