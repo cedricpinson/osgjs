@@ -16,6 +16,7 @@ test/lighting
 *.log
 *.c
 *.orig
+*Thumbs.db
 .hooks
 builds/active/OSG.js
 builds/dist/OSG.js
