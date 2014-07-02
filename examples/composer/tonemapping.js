@@ -281,6 +281,7 @@ function getPostSceneToneMapping() {
             var whitePointCtrl = reinhardt.add(param, 'whitePoint', 0.01, 10);
             whitePointCtrl.onChange(function (value) { whitePoint.set(value) } );
         
+            mainGui.remember(param);
         }
     };
 
