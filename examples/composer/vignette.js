@@ -1,7 +1,7 @@
 
 function getPostSceneVignette(sceneTexture) {
 
-    var lensRadius = osg.Uniform.createFloat2( [0.5, 0.25], 'lensRadius');
+    var lensRadius = osg.Uniform.createFloat2( [0.8, 0.25], 'lensRadius');
 
     var vignetteFilter = new osgUtil.Composer.Filter.Custom(
         [
@@ -41,7 +41,8 @@ function getPostSceneVignette(sceneTexture) {
         buildGui: function(mainGui) {
 
             var folder = mainGui.addFolder(this.name);
-
+            folder.open();
+            
             var vignette = {
                 inner_radius : lensRadius.get()[1],
                 outer_radius : lensRadius.get()[0]

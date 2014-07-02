@@ -230,7 +230,8 @@ function getPostSceneToneMapping() {
         buildGui: function(mainGui) {
 
             var folder = mainGui.addFolder(this.name);
-
+            folder.open();
+            
             var param = {
                 'scene': Object.keys(scenes)[0],
                 'method': methods[method.get()[0]-1],

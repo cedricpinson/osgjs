@@ -77,53 +77,74 @@ function createScene(width, height, gui) {
                                                 quadSize[ 0 ]       , 0, 0,
                                                 0                   , 0, quadSize[ 1 ] );
     quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-
-    root.addChild( commonNode );
-    var scene;
-
-    var effects = [
-        // {effect: getPostSceneStitching(sceneTexture), matrix: osg.Matrix.makeTranslate( -2.0, 0.0, 0.0, [] )},
-        // {effect: getPostSceneVignette(sceneTexture), matrix: osg.Matrix.makeTranslate( 0.0, 0.0, 0.0, [] )},
-        // {effect: getPostSceneBloom(sceneTexture), matrix: osg.Matrix.makeTranslate( 2.0, 0.0, 0.0, [] )},
-        // {effect: getPostSceneSharpen(sceneTexture), matrix: osg.Matrix.makeTranslate( 2.0, 0.0, -1.25, [] )},
-        // {effect: getPostSceneChromaticAberration(), matrix: osg.Matrix.makeTranslate( 0.0, 0.0, -1.25, [] )},
-        {effect: getPostSceneToneMapping(), matrix: osg.Matrix.makeTranslate( -2.0, 0.0, -1.25, [] )},
-    ];
-
-    for (var i = 0; i < effects.length; i++)
-    {
-        scene = createPostScene(effects[i].effect, quad, rttSize);
-        scene.setMatrix(effects[i].matrix);
-        root.addChild(scene);
-        effects[i].effect.buildGui(gui);
-    }
-
-    return root;
-}
-
-
-
-function createPostScene(effect, quad, textureSize) {
-
+    
     var scene = new osg.MatrixTransform();
 
     // create a texture to render the effect to
     var finalTexture = new osg.Texture();
-    finalTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
+    finalTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
     finalTexture.setMinFilter( osg.Texture.LINEAR );
     finalTexture.setMagFilter( osg.Texture.LINEAR );
     
-    var composer = effect.buildComposer(finalTexture);
+    // Set the final texture on the quad
+    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
-    // Set the final texture to the scene's StateSet so that 
-    // it will be applied when rendering the quad
-    scene.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
+    var postScenes = [
+        getPostSceneStitching(sceneTexture),
+        getPostSceneVignette(sceneTexture),
+        getPostSceneBloom(sceneTexture),
+        getPostSceneSharpen(sceneTexture),
+        getPostSceneChromaticAberration(),
+        getPostSceneToneMapping(),
+    ];
 
-    scene.addChild( composer );
+    var effects = [];
+    for (var i = 0; i < postScenes.length; i++)
+        effects[postScenes[i].name] = postScenes[i];
+
+    var globalGui = {
+        'filter': postScenes[0].name,
+    };
+
+    function addSceneController() {
+        gui.add(globalGui, 'filter', Object.keys(effects)).onChange(function (value) {
+            setComposer(value);
+        } );
+    };
+
+    var currentComposer = postScenes[0].buildComposer(finalTexture);
+    var cachedComposers = [];
+    cachedComposers[postScenes[0].name] = currentComposer;
+
+    function setComposer(effectName) {
+
+        // Put the composer in cache at first utilisation
+        if (cachedComposers[effectName] === undefined) {
+            cachedComposers[effectName] = effects[effectName].buildComposer(finalTexture);
+        }
+
+        // Recreate the whole gui
+        gui.destroy();
+        gui = new dat.GUI();
+        addSceneController();
+        effects[effectName].buildGui(gui);
+
+        // Change the composer
+        scene.removeChild(currentComposer);
+        currentComposer = cachedComposers[effectName];
+        scene.addChild(currentComposer);
+
+    }
+
     scene.addChild( quad );
+    scene.addChild(currentComposer);
 
-    return scene;
+    root.addChild( scene );
+    root.addChild( commonNode );
 
+    addSceneController();
+
+    return root;
 }
 
 var main = function () {

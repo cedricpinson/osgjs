@@ -75,7 +75,8 @@ function getPostSceneStitching(sceneTexture) {
         buildGui: function(mainGui) {
 
             var folder = mainGui.addFolder(this.name);
-
+            folder.open();
+            
             var stitching = {
                 sizeValue: stitchingSize.get()[ 0 ],
                 invertValue: invert.get()[ 0 ],

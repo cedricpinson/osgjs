@@ -60,7 +60,8 @@ function getPostSceneChromaticAberration() {
         buildGui: function(mainGui) {
 
             var folder = mainGui.addFolder(this.name);
-
+            folder.open();
+            
             var param = {
                 'factor': factor.get()[0],
             };

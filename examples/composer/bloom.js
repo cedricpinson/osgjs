@@ -121,7 +121,8 @@ function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
         buildGui: function(mainGui) {
 
             var folder = mainGui.addFolder('Bloom');
-
+            folder.open();
+            
             var bloom = {
                 scene : ['Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg'],
                 threshold : threshold.get()[0],

@@ -85,7 +85,8 @@ function getPostSceneSharpen(sceneTexture) {
         buildGui: function(mainGui) {
 
             var folder = mainGui.addFolder(this.name);
-
+            folder.open();
+            
             var kernel = {
                 'kernel': 0,
                 'sample diagonal': false
