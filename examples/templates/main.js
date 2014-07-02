@@ -12,7 +12,7 @@ Example.prototype = {
         var osg = OSG.osg;
 
 
-        var canvas = document.getElementById( '3DView' );
+        var canvas = document.getElementById( 'View' );
 
         var viewer;
         viewer = new osgViewer.Viewer( canvas );

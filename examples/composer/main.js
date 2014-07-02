@@ -151,7 +151,7 @@ var main = function () {
 
     // osg.ReportWebGLError = true;
 
-    var canvas = document.getElementById( '3DView' );
+    var canvas = document.getElementById( 'View' );
     canvas.style.width = canvas.width = window.innerWidth;
     canvas.style.height = canvas.height = window.innerHeight;
 
