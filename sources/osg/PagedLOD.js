@@ -23,6 +23,7 @@ define( [
         this._perRangeDataList = [];
         this._loading = false;
         this._expiryTime = 10.0;
+        this._centerMode = Lod.USER_DEFINED_CENTER;
     };
 
     /**
@@ -30,7 +31,7 @@ define( [
      *  @class PerRangeData
      */
     var PerRangeData = function () {
-        this.filename = undefined;
+        this.filename = '';
         this.function = undefined;
         this.loaded = false;
         this.timeStamp = 0.0;
@@ -136,9 +137,10 @@ define( [
             if ( frameStamp.getFrameNumber() === 0 ) return;
             var numChildren = this.children.length;
             for ( var i = numChildren - 1; i > 0; i-- ) {
-                //First children never expires
+                //First children never expires, also children added with addChild method should not be deleted
                 var timed = frameStamp.getSimulationTime() - this._perRangeDataList[ i ].timeStamp;
-                if ( timed > this._expiryTime ) {
+                if ( ( timed > this._expiryTime ) && ( this._perRangeDataList[ i ].filename.length > 0 ||
+                                                    this._perRangeDataList[ i ].function !== undefined ) ){
                     if ( i === this.children.length - 1 ) {
                         this.children[ i ].accept( new ReleaseVisitor( gl ) );
                         this.removeChild( this.children[ i ] );
