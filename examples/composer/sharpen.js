@@ -1,11 +1,11 @@
-
-
-
+/*
+    This filter makes the image look more sharp and defined.
+    It is useful on blurred images to regain details
+    It works by increasing the difference between near pixels
+*/
 function getPostSceneSharpen(sceneTexture) {
 
     var input_texture = osg.Texture.createFromURL('Medusa.png');
-
-    //SET FINAL8TEXTURE LINEAR
 
     var kernel = osg.Uniform.createMatrix3(laplace(1), 'kernel');
     var use_diagonal = false;
@@ -25,9 +25,12 @@ function getPostSceneSharpen(sceneTexture) {
 
     function laplace_diagonal(x) {return [-0.5*x, -x, -0.5*x, -x, x*6, -x, -0.5*x, -x, -0.5*x]; }
 
+    // 3x3 tap, 9 textures fetches
     // For each texel, we sum the difference with its neighboors
     // and add this computed difference to the original texel
     // which produce a 'sharpened' look
+    // TODO: decides if we keep the diagonal one
+    // If yes, optimize the path witout diagonals
     var sharpenFilter = new osgUtil.Composer.Filter.Custom(
         [
         '#ifdef GL_ES',

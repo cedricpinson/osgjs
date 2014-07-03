@@ -1,26 +1,10 @@
-//-------------------------------------------------------
-
-/** -*- compile-command: "jslint-cli main.js" -*-
- *
- *  Copyright (C) 2010-2011 Cedric Pinson
- *
- *                  GNU LESSER GENERAL PUBLIC LICENSE
- *                      Version 3, 29 June 2007
- *
- * Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
- * Everyone is permitted to copy and distribute verbatim copies
- * of this license document, but changing it is not allowed.
- *
- * This version of the GNU Lesser General Public License incorporates
- * the terms and conditions of version 3 of the GNU General Public
- * License
- *
- * Authors:
- *  Cedric Pinson <cedric.pinson@plopbyte.com>
- *  Clément Léger <clement.leger@haxx.es>
- *
- */
-
+/*
+    This filter is used to 'correctly' render HDR images
+    Monitors's output range is limited (LDR, Low Dynamic Range) so
+    they can't directly display HDR (High Dynamic Range) images.
+    To do this we modify the range of the image by 'mapping' it to
+    LDR and try to conserve as much detail as possible in the process.
+*/
 function getPostSceneToneMapping() {
 
     var scenes = {
@@ -106,11 +90,18 @@ function getPostSceneToneMapping() {
         '   float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));',
         '   return rgbe.rgb * 255.0 * f;',
         '}',
-
+        '/* Original Reinhard paper: http://www.cs.utah.edu/~reinhard/cdrom/tonemap.pdf',
+        'First we "calibrate" the middle luminance of the scene by applying to all luminance values',
+        'a ratio between a chosen middle luminance and the computed average luminance of the scene',
+        'This luminance is divided by (luminance + 1) in order to scale down only the high luminance values',
+        'With this scaling, high luminances converge under 1.0, so we add another parameter "whitepoint"',
+        'to allow high values to go above 1.0 and burn out',
+        '*/',
         'float toneMapReinhardt(float lum) {',
         '   lum *= middleGrey / avgLogLum;',
-        '   return lum *  (1.0 / ( lum + 1.0)) * ( 1.0 + (lum / (whitePoint*whitePoint))) ;',
+        '   return (lum + ((lum * lum) / (whitePoint * whitePoint)) ) / (lum + 1.0);',
         '}',
+        '// Filmic curve from: http://filmicgames.com/archives/75',
         'vec3 toneMapFilmic(vec3 texColor) {',
         '   vec3 x = max(vec3(0), texColor - 0.004);',
         '   return (x * (6.2 * x + 0.5) ) / ( x * (6.2 * x + 1.7) + 0.06);',
@@ -119,6 +110,7 @@ function getPostSceneToneMapping() {
         'void main() {',
 
         '   vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
+        '   // We do the tonemapping on the Yxy luminance to preserve colors',
         '   vec3 Yxy = RGB2Yxy(texel);',
         '',
         '   if (method == 1) {',
@@ -130,11 +122,11 @@ function getPostSceneToneMapping() {
         '      texel = pow(Yxy2RGB(Yxy), vec3(1.0 / gamma));',
         '   }',
         '   else if (method == 3)',
-        '       texel = toneMapFilmic(texel);',
+        '       texel = toneMapFilmic(texel); // Gamma included in the curve',
 
         '   texel = clamp(texel, 0.0, 1.0);',
-        '   vec3 greyscale = vec3(dot(texel * (1.0+brightness), vec3(0.2126, 0.7152, 0.0722)));',
-        '   texel = mix(greyscale, texel * (1.0+brightness), vec3(saturation));',
+        '   float luminance = dot(texel * (1.0 + brightness), vec3(0.2126, 0.7152, 0.0722));',
+        '   texel = mix(vec3(luminance), texel * (1.0 + brightness), vec3(saturation));',
         '   if (contrast > 0.0) {',
         '       texel.rgb = (texel.rgb - 0.5) / (1.0 - contrast) + 0.5;',
         '   } else {',
@@ -187,6 +179,7 @@ function getPostSceneToneMapping() {
             '}',
 
             'void main() {',
+            '   // TODO: Use log on luminance to decrease the influence of small bright spots',
             '   vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
             '   gl_FragColor = vec4(vec3(calcLuminance(texel)), 1.0);',            
             '}',

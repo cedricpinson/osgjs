@@ -1,8 +1,17 @@
-
+/*
+    This filter simulate the reduction of an image's brightness at the periphery compared to the image center.
+    It can be used as an artistic effect or to reproduce the look of old photo and films
+*/
 function getPostSceneVignette(sceneTexture) {
 
     var lensRadius = osg.Uniform.createFloat2( [0.8, 0.25], 'lensRadius');
-
+    
+    /*
+        2 radiuses are used:
+        Pixels which are inside  the circle defined by the inner radius are not altered
+        Pixels which are outside the circle defined by the outer radius are set to black
+        Pixels which are in between these two circles are progressively darkened towards the exterior
+    */
     var vignetteFilter = new osgUtil.Composer.Filter.Custom(
         [
             '',
@@ -11,7 +20,7 @@ function getPostSceneVignette(sceneTexture) {
             '#endif',
             'varying vec2 FragTexCoord0;',
             'uniform sampler2D Texture0;',
-            'uniform vec2 lensRadius;', // 0.45, 0.38
+            'uniform vec2 lensRadius;',
 
             'void main(void) {',
             '  vec4 color = texture2D( Texture0, FragTexCoord0);',

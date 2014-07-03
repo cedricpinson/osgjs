@@ -1,10 +1,7 @@
-
-/// General idea for the bloom's algorithm:
-// - Apply a brightpass to the scene texture to keep only the bright areas
-// - Downsample the bright texture
-// - Blur the bright texture to have a "glow" effect
-// - Apply the blurred texture on the original scene texture
-// (the downsample helps to reduce the cost of the blur)
+/*
+    This filter simulate a property of lenses which tends to make
+    highly lit areas bleed along its normal borders
+*/
 function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
 
     var threshold = osg.Uniform.createFloat1( 0.8, 'threshold');
@@ -93,6 +90,16 @@ function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
         }
     );
 
+    var AvgVBlurFilter = new osgUtil.Composer.Filter.AverageVBlur(4);
+    var AvgHBlurFilter = new osgUtil.Composer.Filter.AverageHBlur(4);
+
+    /* General idea for the bloom's algorithm:
+        - Apply a brightpass to the scene texture to keep only the bright areas
+        - Downsample the bright texture
+        - Blur the bright texture to have a "glow" effect
+        - Apply the blurred texture on the original scene texture
+        (the downsampling helps to reduce the cost of the blur) 
+    */
     var effect = {
         
         name: 'Bloom',
@@ -105,10 +112,10 @@ function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
             composer.addPass(brightFilter, bloomTexture);
 
            // Blur the bright downsized sceneTexture
-            composer.addPass(new osgUtil.Composer.Filter.AverageVBlur(4));
-            composer.addPass(new osgUtil.Composer.Filter.AverageHBlur(4));
-            composer.addPass(new osgUtil.Composer.Filter.AverageVBlur(4));
-            composer.addPass(new osgUtil.Composer.Filter.AverageHBlur(4), bloomTexture);
+            composer.addPass(AvgVBlurFilter);
+            composer.addPass(AvgHBlurFilter);
+            composer.addPass(AvgVBlurFilter);
+            composer.addPass(AvgHBlurFilter, bloomTexture);
             
             // Add the original scene texture and the bloom texture and render into final texture
             composer.addPass(additiveFilter, finalTexture);
