@@ -66,7 +66,7 @@ define( [
                 bsphere.set( this._userDefinedCenter, this._radius);
                 return bsphere;
             }
-            else if ( this._centerMode === this.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED && this._radius >= 0.0)
+            else if ( this._centerMode === Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED && this._radius >= 0.0)
             {
                 bsphere.set( this._userDefinedCenter, this._radius);
                 var bs = new BoundingSphere();
