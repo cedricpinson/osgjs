@@ -5,6 +5,8 @@ define( [
     'osg/Map'
 ], function ( MACROUTILS, StateAttribute, Object, Map ) {
 
+    'use strict';
+
     /**
      * StateSet encapsulate StateAttribute
      * @class StateSet
@@ -21,6 +23,7 @@ define( [
         this._binNumber = 0;
 
         this._shaderGenerator = undefined;
+        this._updateCallbackList = [];
 
         this.uniforms = new Map();
 
@@ -133,6 +136,21 @@ define( [
             } else {
                 this.setRenderBinDetails( 0, '' );
             }
+        },
+
+        getUpdateCallbackList: function () {
+            return this._updateCallbackList;
+        },
+        removeUpdateCallback: function ( cb ) {
+            var arrayIdx = this._updateCallbackList.indexOf( cb );
+            if ( arrayIdx !== -1 )
+                this._updateCallbackList.splice( arrayIdx, 1 );
+        },
+        addUpdateCallback: function ( cb ) {
+            this._updateCallbackList.push( cb );
+        },
+        hasUpdateCallback: function ( cb ) {
+            return this._updateCallbackList.indexOf( cb ) !== -1;
         },
 
         setRenderBinDetails: function ( num, binName ) {

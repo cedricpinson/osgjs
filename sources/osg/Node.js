@@ -10,7 +10,9 @@ define( [
     'osg/TransformEnums'
 ], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, ComputeMatrixFromNodePath, TransformEnums ) {
 
-        /**
+    'use strict';
+
+    /**
      *  Node that can contains child node
      *  @class Node
      */
@@ -64,7 +66,7 @@ define( [
         setNodeMask: function ( mask ) {
             this.nodeMask = mask;
         },
-        getNodeMask: function ( ) {
+        getNodeMask: function () {
             return this.nodeMask;
         },
         setStateSet: function ( s ) {
@@ -94,7 +96,10 @@ define( [
         @param Oject callback
      */
         setUpdateCallback: function ( cb ) {
-            this._updateCallbacks[ 0 ] = cb;
+            if ( !this._updateCallbacks.length )
+                this.addUpdateCallback( cb );
+            else
+                this._updateCallbacks[ 0 ] = cb;
         },
         /** Get update node callback, called during update traversal.
         @type Oject
@@ -276,19 +281,17 @@ define( [
                 }
             }
             return matrixList;
-        }, 
+        },
 
         setCullingActive: function ( value ) {
             if ( this._cullingActive === value ) return;
-            if ( this._numChildrenWithCullingDisabled === 0 && this.parents.length > 0 )
-            {
+            if ( this._numChildrenWithCullingDisabled === 0 && this.parents.length > 0 ) {
                 var delta = 0;
-                if ( !this._cullingActive ) --delta;
-                if ( !value ) ++delta;
-                if ( delta!==0 )
-                {
-                     for ( var i = 0, k = this.parents.length; i < k; i++ ) {
-                        this.parents[ i ].setNumChildrenWithCullingDisabled ( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
+                if ( !this._cullingActive )--delta;
+                if ( !value )++delta;
+                if ( delta !== 0 ) {
+                    for ( var i = 0, k = this.parents.length; i < k; i++ ) {
+                        this.parents[ i ].setNumChildrenWithCullingDisabled( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
                     }
                 }
             }
@@ -297,30 +300,28 @@ define( [
 
         getCullingActive: function () {
             return this._cullingActive;
-        }, 
+        },
 
         isCullingActive: function () {
             return this._numChildrenWithCullingDisabled === 0 && this._cullingActive && this.getBound().valid();
-        }, 
+        },
 
         setNumChildrenWithCullingDisabled: function ( num ) {
-            if ( this._numChildrenWithCullingDisabled === num) return;
-            if ( this._cullingActive && this.parents.length > 0 )
-            {
+            if ( this._numChildrenWithCullingDisabled === num ) return;
+            if ( this._cullingActive && this.parents.length > 0 ) {
                 var delta = 0;
-                if ( this._numChildrenWithCullingDisabled > 0 ) --delta;
-                if ( num > 0 ) ++delta;
-                if ( delta !== 0)
-                {
+                if ( this._numChildrenWithCullingDisabled > 0 )--delta;
+                if ( num > 0 )++delta;
+                if ( delta !== 0 ) {
                     for ( var i = 0, k = this.parents.length; i < k; i++ ) {
-                        this.parents[ i ].setNumChildrenWithCullingDisabled ( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
+                        this.parents[ i ].setNumChildrenWithCullingDisabled( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
                     }
                 }
             }
             this._numChildrenWithCullingDisabled = num;
         },
 
-        getNumChildrenWithCullingDisabled: function ( ) {
+        getNumChildrenWithCullingDisabled: function () {
             return this._numChildrenWithCullingDisabled;
         }
 
