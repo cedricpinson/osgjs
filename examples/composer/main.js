@@ -90,7 +90,6 @@ function createScene(width, height, gui) {
     quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
     var postScenes = [
-        getPostSceneStitching(sceneTexture),
         getPostSceneVignette(sceneTexture),
         getPostSceneBloom(sceneTexture),
         getPostSceneSharpen(sceneTexture),
