@@ -23,7 +23,7 @@ function getPostSceneToneMapping() {
     currentSceneTexture.addApplyTexImage2DCallback(function() {lumTexture.dirty()});
 
     var lumTexture = new osg.Texture();
-    lumTexture.setTextureSize(4096, 2048);
+    lumTexture.setTextureSize(1024, 1024); // Chrome doesn't mipmap above this power of 2
     lumTexture.setMinFilter(osg.Texture.LINEAR_MIPMAP_LINEAR);
 
     var methods = ['None', 'Reinhardt', 'Filmic'];
@@ -58,8 +58,7 @@ function getPostSceneToneMapping() {
         'uniform float middleGrey;',
         'uniform float whitePoint;', // This can be computed from the scene as max lum value
         'uniform float locality;', // Mipmap level to fetch from the luminance texture
-        'float avgLogLum = texture2D(lum_texture, FragTexCoord0, locality).r;',
-        
+
         // RGB / Yxy color spaces conversions from:
         // http://content.gpwiki.org/D3DBook:High-Dynamic_Range_Rendering#Luminance_Transform
         'vec3 RGB2Yxy(vec3 rgb) {',
@@ -97,7 +96,7 @@ function getPostSceneToneMapping() {
         'With this scaling, high luminances converge under 1.0, so we add another parameter "whitepoint"',
         'to allow high values to go above 1.0 and burn out',
         '*/',
-        'float toneMapReinhardt(float lum) {',
+        'float toneMapReinhardt(float lum, float avgLogLum) {',
         '   lum *= middleGrey / avgLogLum;',
         '   return (lum + ((lum * lum) / (whitePoint * whitePoint)) ) / (lum + 1.0);',
         '}',
@@ -108,7 +107,8 @@ function getPostSceneToneMapping() {
         '}',
 
         'void main() {',
-
+        '   float avgLogLum = texture2D(lum_texture, FragTexCoord0, locality).r;',
+        
         '   vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
         '   // We do the tonemapping on the Yxy luminance to preserve colors',
         '   vec3 Yxy = RGB2Yxy(texel);',
@@ -118,7 +118,7 @@ function getPostSceneToneMapping() {
         '      texel = pow(texel, vec3(1.0 / gamma));',
         '   }',
         '   else if (method == 2) {',
-        '      Yxy.r = toneMapReinhardt(Yxy.r);',
+        '      Yxy.r = toneMapReinhardt(Yxy.r, avgLogLum);',
         '      texel = pow(Yxy2RGB(Yxy), vec3(1.0 / gamma));',
         '   }',
         '   else if (method == 3)',
@@ -134,7 +134,7 @@ function getPostSceneToneMapping() {
         '   }',
 
         '   gl_FragColor = vec4(texel, 1.0);',
-        '   // gl_FragColor = vec4(vec3(avgLogLum), 1.0);',
+        '    //gl_FragColor = vec4(vec3(avgLogLum), 1.0);',
             
         '}',
         ].join('\n'),
