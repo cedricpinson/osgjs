@@ -1,83 +1,56 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-<style>
-  body {
-  background:-moz-radial-gradient(farthest-side, rgba(0,0,0,0) 90%, rgba(0,0,0,0.1) 150%) rgb(76,76,76);
-  background:-webkit-gradient(radial, center center, 500, center center, 1400, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.2))) rgb(76,76,76);
-  overflow:hidden;
-  padding:0;
-  margin:0;
-  color: white;
-  }
+    <meta charset="utf-8">
+    <title>Postprocess</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
 
-  a:link {text-decoration: none; color: black;}
-  a:visited {text-decoration: none; color: black;}
-  a:active {text-decoration: none; color: black;}
-  a:hover {text-decoration: underline;  color: black;}
+    <style type="text/css">
+    /* Custom CSS goes here */
+    #ViewContainer {
+      position: absolute;
+    }
+    #View {
+      display: block;
+    }
+    </style>
 
-  #ViewContainer {
-  position: absolute;
-  }
-
-  #explanation {
-  overflow:auto;
-  position: absolute;
-  left: 70%;
-  height: 100%;
-  }
-  
-  #explanation:focus { outline: none; }
-
-  code {
-    font-size: 10px;
-  }
-  
-</style>
-<title>Post Process</title>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-<script type="text/javascript" src="../vendors/Q.js"></script>
-<script type="text/javascript" src="../vendors/Hammer.js"></script>
-<script type="text/javascript" src="../vendors/Leap.js"></script>
-<script type="text/javascript" src="../../builds/active/OSG.js"></script>
-<script type="text/javascript" src="main.js"></script>
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/dat.gui.js"></script>
+    <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
+    <script type="text/javascript" src="../vendors/Hammer-1.0.5.js"></script>
+    <script type="text/javascript" src="../vendors/Leap.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="vignette.js"></script>
+    <script type="text/javascript" src="bloom.js"></script>
+    <script type="text/javascript" src="chromaticAbberation.js"></script>
+    <script type="text/javascript" src="sharpen.js"></script>
+    <script type="text/javascript" src="tonemapping.js"></script>
 </head>
 
-<body>
+
+
+<body class="osgjs-theme-dark">
 
   <div id="ViewContainer">
-  <canvas id="3DView"></canvas>
+    <canvas id="View"></canvas>
   </div>
-  <div id="explanation" tabIndex="0" >
 
-    <h1>Post Process example with <a href="http://osgjs.org">osgjs</a></h1>
-    This sample demonstrate how to do post process with a pre render of the scene and then use it with a post process shader.</a>
+  <div class="osgjs-info osgjs-info-dark">
 
-    <h2>Vignetting</h2>
-    <p>
-    Vignetting is add some darker color on corner of the image. You can find more explanation <a href="http://en.wikipedia.org/wiki/Vignetting"> on wikipedia </a>. There is also an implementation on <a href="http://www.geeks3d.com/20091020/shader-library-lens-circle-post-processing-effect-glsl/"> geek3D </a>. Play with the slider to test it.</p>
-    <p>
-  Change value of x [0-1] <input type="range" min="0" max="1.0" value="0.77" step="0.01" onchange="changeVignetteX(this.value)"/> <span id="VignetteX"> 0.77</span><br>
-  Change value of y [0-1] <input type="range" min="0" max="1.0" value="0.42" step="0.01" onchange="changeVignetteY(this.value)"/> <span id="VignetteY"> 0.42</span></p>
+    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+      <strong>OSG.JS</strong>
+    </a>
 
-    <h2>Pixelation</h2>
-    <p>
-    Pixelate the scene. The shader comes from <a href="http://www.geeks3d.com/20101029/shader-library-pixelation-post-processing-effect-glsl/"> Geek3D</a>.</p>
-    <p>
-  Change value of x [0-300] <input type="range" min="1" max="300" value="0.77" step="1" onchange="changePixelW(this.value)"/> <span id="PixelW"> 0.77</span><br>
-  Change value of y [0-300] <input type="range" min="1" max="300" value="0.77" step="1" onchange="changePixelH(this.value)"/> <span id="PixelH"> 0.77</span></p>
-
-    <h2>Monitor</h2>
-    <p>
-    This is a post process shader from <a href="http://www.iquilezles.org/apps/shadertoy/?p=Postpro/"> shadertoy</a> called 'Postpro' by iq (2009).</p>
-
-
-    <h2>Stitching</h2>
-    <p>
-    This is a post process shader from <a href="http://www.geeks3d.com/20110408/cross-stitching-post-processing-shader-glsl-filter-geexlab-pixel-bender/"> Geek3D</a>. </p>
-    Change stiching size [0-128] <input type="range" min="0" max="128" value="6" step="1" onchange="changeStitchingSize(this.value)"/> <span id="StitchingSize"> 6</span><br>
-  Invert <input type="range" min="0" max="1" value="0" step="1" onchange="changeInvertStitching(this.value)"/> <span id="StitchingInvert"> 0</span></p>
+    <div class="osgjs-description">
+      This example demonstrates the use of the Composer component to implement
+      different postprocess effects<br>
+    </div>
 
   </div>
+
 </body>
+
 </html>

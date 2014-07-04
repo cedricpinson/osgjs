@@ -103,6 +103,7 @@ function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
     var effect = {
         
         name: 'Bloom',
+        needCommonCube: false,
 
         buildComposer: function(finalTexture) {
 

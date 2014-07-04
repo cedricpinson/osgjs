@@ -55,6 +55,7 @@ function getPostSceneChromaticAberration() {
     var effect = {
 
         name: 'Chromatic abberation',
+        needCommonCube: false,
 
         buildComposer: function(finalTexture) {
 

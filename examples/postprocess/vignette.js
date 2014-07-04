@@ -38,6 +38,7 @@ function getPostSceneVignette(sceneTexture) {
     var effect = {
 
         name: 'Vignette',
+        needCommonCube: true,
 
         buildComposer: function(finalTexture) {
 

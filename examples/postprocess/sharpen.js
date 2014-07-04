@@ -75,6 +75,7 @@ function getPostSceneSharpen(sceneTexture) {
     var effect = {
 
         name: 'Sharpen',
+        needCommonCube: false,
 
         buildComposer: function(finalTexture) {
 

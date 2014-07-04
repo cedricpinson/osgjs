@@ -210,6 +210,7 @@ function getPostSceneToneMapping() {
     var effect = {
 
         name: 'Tone Mapping',
+        needCommonCube: false,
 
         buildComposer: function(finalTexture) {
 
@@ -224,7 +225,6 @@ function getPostSceneToneMapping() {
 
             var folder = mainGui.addFolder(this.name);
             folder.open();
-            
             var param = {
                 'scene': Object.keys(scenes)[0],
                 'method': methods[method.get()[0]-1],
