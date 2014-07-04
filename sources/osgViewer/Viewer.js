@@ -21,7 +21,7 @@ define( [
         'antialias': true,
         'useDevicePixelRatio': true,
         'fullscreen': true,
-        'enableFrustumCulling': true
+        'enableFrustumCulling': false
     };
 
 
