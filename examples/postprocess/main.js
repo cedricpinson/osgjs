@@ -4,7 +4,6 @@ window.OSG.globalify();
 
 var osg = window.osg;
 var osgViewer = window.osgViewer;
-var osgUtil = window.osgUtil;
 
 function commonScene( rttSize ) {
 
@@ -55,7 +54,7 @@ function commonScene( rttSize ) {
     return [ root, sceneTexture ];
 }
 
-function createScene(width, height, gui) {
+function createScene( width, height, gui ) {
 
     var rttSize = [ 2048, 2048 ];
 
@@ -73,11 +72,11 @@ function createScene(width, height, gui) {
 
     // create a quad on which will be applied the postprocess effects
     var quadSize = [ 16 / 9, 1 ];
-    var quad = osg.createTexturedQuadGeometry(  -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
-                                                quadSize[ 0 ]       , 0, 0,
-                                                0                   , 0, quadSize[ 1 ] );
+    var quad = osg.createTexturedQuadGeometry( -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
+        quadSize[ 0 ], 0, 0,
+        0, 0, quadSize[ 1 ] );
     quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
-    
+
     var scene = new osg.MatrixTransform();
 
     // create a texture to render the effect to
@@ -85,63 +84,63 @@ function createScene(width, height, gui) {
     finalTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
     finalTexture.setMinFilter( osg.Texture.LINEAR );
     finalTexture.setMagFilter( osg.Texture.LINEAR );
-    
+
     // Set the final texture on the quad
     quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
     var postScenes = [
-        getPostSceneVignette(sceneTexture),
-        getPostSceneBloom(sceneTexture),
-        getPostSceneSharpen(sceneTexture),
+        getPostSceneVignette( sceneTexture ),
+        getPostSceneBloom( sceneTexture ),
+        getPostSceneSharpen( sceneTexture ),
         getPostSceneChromaticAberration(),
         getPostSceneToneMapping(),
     ];
 
     var effects = [];
-    for (var i = 0; i < postScenes.length; i++)
-        effects[postScenes[i].name] = postScenes[i];
+    for ( var i = 0; i < postScenes.length; i++ )
+        effects[ postScenes[ i ].name ] = postScenes[ i ];
 
     var globalGui = {
-        'filter': postScenes[0].name,
+        'filter': postScenes[ 0 ].name,
     };
 
     function addSceneController() {
-        gui.add(globalGui, 'filter', Object.keys(effects)).onChange(function (value) {
-            setComposer(value);
+        gui.add( globalGui, 'filter', Object.keys( effects ) ).onChange( function ( value ) {
+            setComposer( value );
         } );
-    };
+    }
 
-    var currentComposer = postScenes[0].buildComposer(finalTexture);
+    var currentComposer = postScenes[ 0 ].buildComposer( finalTexture );
     var cachedComposers = [];
-    cachedComposers[postScenes[0].name] = currentComposer;
+    cachedComposers[ postScenes[ 0 ].name ] = currentComposer;
 
-    function setComposer(effectName) {
+    function setComposer( effectName ) {
 
         // Put the composer in cache at first utilisation
-        if (cachedComposers[effectName] === undefined) {
-            cachedComposers[effectName] = effects[effectName].buildComposer(finalTexture);
+        if ( cachedComposers[ effectName ] === undefined ) {
+            cachedComposers[ effectName ] = effects[ effectName ].buildComposer( finalTexture );
         }
 
         // Recreate the whole gui
         gui.destroy();
         gui = new dat.GUI();
         addSceneController();
-        effects[effectName].buildGui(gui);
+        effects[ effectName ].buildGui( gui );
 
         // Change the composer
-        scene.removeChild(currentComposer);
-        currentComposer = cachedComposers[effectName];
-        scene.addChild(currentComposer);
+        scene.removeChild( currentComposer );
+        currentComposer = cachedComposers[ effectName ];
+        scene.addChild( currentComposer );
 
-        if (effects[effectName].needCommonCube)
-            root.addChild(commonNode);
+        if ( effects[ effectName ].needCommonCube )
+            root.addChild( commonNode );
         else
-            root.removeChild(commonNode);
+            root.removeChild( commonNode );
 
     }
 
     scene.addChild( quad );
-    scene.addChild(currentComposer);
+    scene.addChild( currentComposer );
 
     root.addChild( scene );
     root.addChild( commonNode );

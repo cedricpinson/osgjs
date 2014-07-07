@@ -1,34 +1,41 @@
+'use strict';
+
+window.OSG.globalify();
+
+var osg = window.osg;
+var osgUtil = window.osgUtil;
+
 /*
     This filter simulate a property of lenses which tends to make
     highly lit areas bleed along its normal borders
 */
-function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
+function getPostSceneBloom( sceneTexture, bloomTextureFactor ) {
 
-    var threshold = osg.Uniform.createFloat1( 0.8, 'threshold');
-    var factor = osg.Uniform.createFloat1( 0.6, 'factor');
+    var threshold = osg.Uniform.createFloat1( 0.8, 'threshold' );
+    var factor = osg.Uniform.createFloat1( 0.6, 'factor' );
 
-    if (bloomTextureFactor === undefined) 
+    if ( bloomTextureFactor === undefined )
         bloomTextureFactor = 8;
 
-    var currentSceneTexture = osg.Texture.createFromURL('Budapest.jpg');
-    var cached_scenes = [];
+    var currentSceneTexture = osg.Texture.createFromURL( 'Budapest.jpg' );
+    var cachedScenes = [];
 
-    var setSceneTexture = function(scene_file) {
+    var setSceneTexture = function ( sceneFile ) {
 
         // On met en cache lors du premier chargement
-        if (cached_scenes[scene_file] === undefined)
-            cached_scenes[scene_file] = osg.Texture.createFromURL(scene_file);
+        if ( cachedScenes[ sceneFile ] === undefined )
+            cachedScenes[ sceneFile ] = osg.Texture.createFromURL( sceneFile );
 
-        currentSceneTexture = cached_scenes[scene_file];
-        additiveFilter.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
-        brightFilter.getStateSet().setTextureAttributeAndMode(0, currentSceneTexture);
+        currentSceneTexture = cachedScenes[ sceneFile ];
+        additiveFilter.getStateSet().setTextureAttributeAndMode( 0, currentSceneTexture );
+        brightFilter.getStateSet().setTextureAttributeAndMode( 0, currentSceneTexture );
     };
 
     // create a downsized texture to render the bloom to
     var bloomTexture = new osg.Texture();
-    bloomTexture.setTextureSize( sceneTexture.getWidth() / bloomTextureFactor, sceneTexture.getHeight() / bloomTextureFactor);
+    bloomTexture.setTextureSize( sceneTexture.getWidth() / bloomTextureFactor, sceneTexture.getHeight() / bloomTextureFactor );
     bloomTexture.setMinFilter( 'LINEAR' );
-    bloomTexture.setMagFilter( 'LINEAR' );   
+    bloomTexture.setMagFilter( 'LINEAR' );
 
     var brightFilter = new osgUtil.Composer.Filter.Custom(
         [
@@ -57,7 +64,7 @@ function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
             '   vec4 color = texture2D( Texture0, FragTexCoord0);',
             '   vec3 result = vec3(0);',
             '',
-                // Keep only the pixels whose luminance is above threshold
+            // Keep only the pixels whose luminance is above threshold
             '   if (calcLuminance(color.rgb) > threshold)',
             '      result = color.rgb;',
             '',
@@ -67,10 +74,9 @@ function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
             '   gl_FragColor = vec4(result, 1.0);',
 
             '}',
-        ].join('\n'), 
-        {
-            'Texture0' : currentSceneTexture,
-            'threshold' : threshold,
+        ].join( '\n' ), {
+            'Texture0': currentSceneTexture,
+            'threshold': threshold,
         }
     );
 
@@ -91,8 +97,7 @@ function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
 
             '  gl_FragColor = color_a + (color_b * factor);',
             '}',
-        ].join('\n'),
-        {
+        ].join( '\n' ), {
             'Texture0': currentSceneTexture,
             'Texture1': bloomTexture,
             'factor': factor,
@@ -107,57 +112,57 @@ function getPostSceneBloom(sceneTexture, bloomTextureFactor) {
         (the downsampling helps to reduce the cost of the blur) 
     */
     var effect = {
-        
+
         name: 'Bloom',
         needCommonCube: false,
 
-        buildComposer: function(finalTexture) {
+        buildComposer: function ( finalTexture ) {
 
             var composer = new osgUtil.Composer();
 
             // Keep only the bright pixels and downsize the scene texture
-            composer.addPass(brightFilter, bloomTexture);
+            composer.addPass( brightFilter, bloomTexture );
 
-           // Blur the bright downsized sceneTexture
-            composer.addPass(new osgUtil.Composer.Filter.AverageVBlur(10));
-            composer.addPass(new osgUtil.Composer.Filter.AverageHBlur(10));
-            composer.addPass(new osgUtil.Composer.Filter.AverageVBlur(10));
-            composer.addPass(new osgUtil.Composer.Filter.AverageHBlur(10), bloomTexture);
-            
+            // Blur the bright downsized sceneTexture
+            composer.addPass( new osgUtil.Composer.Filter.AverageVBlur( 10 ) );
+            composer.addPass( new osgUtil.Composer.Filter.AverageHBlur( 10 ) );
+            composer.addPass( new osgUtil.Composer.Filter.AverageVBlur( 10 ) );
+            composer.addPass( new osgUtil.Composer.Filter.AverageHBlur( 10 ), bloomTexture );
+
             // Add the original scene texture and the bloom texture and render into final texture
-            composer.addPass(additiveFilter, finalTexture);
+            composer.addPass( additiveFilter, finalTexture );
 
-            composer.build(); 
+            composer.build();
 
             return composer;
         },
 
-        buildGui: function(mainGui) {
+        buildGui: function ( mainGui ) {
 
-            var folder = mainGui.addFolder('Bloom');
+            var folder = mainGui.addFolder( 'Bloom' );
             folder.open();
-            
+
             var bloom = {
-                scene: ['Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg'],
-                threshold: threshold.get()[0],
-                factor: factor.get()[0],
+                scene: [ 'Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg' ],
+                threshold: threshold.get()[ 0 ],
+                factor: factor.get()[ 0 ],
             };
 
-            var sceneCtrl = folder.add(bloom, 'scene', bloom.scene);
-            var thresholdCtrl = folder.add(bloom, 'threshold', 0.0, 1.0);
-            var factorCtrl = folder.add(bloom, 'factor', 0.0, 1.0);
+            var sceneCtrl = folder.add( bloom, 'scene', bloom.scene );
+            var thresholdCtrl = folder.add( bloom, 'threshold', 0.0, 1.0 );
+            var factorCtrl = folder.add( bloom, 'factor', 0.0, 1.0 );
 
-            thresholdCtrl.onChange(function ( value ) {
-                threshold.set(value);
-            });
+            thresholdCtrl.onChange( function ( value ) {
+                threshold.set( value );
+            } );
 
-            factorCtrl.onChange(function ( value ) {
-                factor.set(value);
-            });
+            factorCtrl.onChange( function ( value ) {
+                factor.set( value );
+            } );
 
-            sceneCtrl.onChange(function(value) {
-                setSceneTexture(value);
-            });           
+            sceneCtrl.onChange( function ( value ) {
+                setSceneTexture( value );
+            } );
         }
     };
 

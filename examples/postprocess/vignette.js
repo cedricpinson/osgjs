@@ -1,11 +1,18 @@
+'use strict';
+
+window.OSG.globalify();
+
+var osg = window.osg;
+var osgUtil = window.osgUtil;
+
 /*
     This filter simulate the reduction of an image's brightness at the periphery compared to the image center.
     It can be used as an artistic effect or to reproduce the look of old photo and films
 */
-function getPostSceneVignette(sceneTexture) {
+function getPostSceneVignette( sceneTexture ) {
 
-    var lensRadius = osg.Uniform.createFloat2( [0.8, 0.25], 'lensRadius');
-    
+    var lensRadius = osg.Uniform.createFloat2( [ 0.8, 0.25 ], 'lensRadius' );
+
     /*
         2 radiuses are used:
         Pixels which are inside  the circle defined by the inner radius are not altered
@@ -28,8 +35,7 @@ function getPostSceneVignette(sceneTexture) {
             '  color.rgb *= smoothstep(lensRadius.x, lensRadius.y, dist);',
             '  gl_FragColor = color;',
             '}',
-        ].join('\n'), 
-        {
+        ].join( '\n' ), {
             'Texture0': sceneTexture,
             'lensRadius': lensRadius,
         }
@@ -40,36 +46,36 @@ function getPostSceneVignette(sceneTexture) {
         name: 'Vignette',
         needCommonCube: true,
 
-        buildComposer: function(finalTexture) {
+        buildComposer: function ( finalTexture ) {
 
             var composer = new osgUtil.Composer();
-            composer.addPass(vignetteFilter, finalTexture);
+            composer.addPass( vignetteFilter, finalTexture );
             composer.build();
             return composer;
         },
 
-        buildGui: function(mainGui) {
+        buildGui: function ( mainGui ) {
 
-            var folder = mainGui.addFolder(this.name);
+            var folder = mainGui.addFolder( this.name );
             folder.open();
-            
+
             var vignette = {
-                inner_radius : lensRadius.get()[1],
-                outer_radius : lensRadius.get()[0]
+                innerRadius: lensRadius.get()[ 1 ],
+                outerRadius: lensRadius.get()[ 0 ]
             };
 
-            var inner_controller = folder.add(vignette, 'inner_radius', 0, 1);
-            var outer_controller = folder.add(vignette, 'outer_radius', 0, 1);
+            var innerCtrl = folder.add( vignette, 'innerRadius', 0, 1 );
+            var outerCtrl = folder.add( vignette, 'outerRadius', 0, 1 );
 
-            inner_controller.onChange(function ( value ) {
-                lensRadius.get()[1] = value;
+            innerCtrl.onChange( function ( value ) {
+                lensRadius.get()[ 1 ] = value;
                 lensRadius.dirty();
-            });
+            } );
 
-            outer_controller.onChange(function ( value ) {
-                lensRadius.get()[0] = value;
+            outerCtrl.onChange( function ( value ) {
+                lensRadius.get()[ 0 ] = value;
                 lensRadius.dirty();
-            });
+            } );
         }
     };
 
