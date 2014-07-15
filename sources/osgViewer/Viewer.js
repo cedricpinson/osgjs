@@ -393,11 +393,21 @@ define( [
 
             var identity = Matrix.create();
             this._cullVisitor.pushModelviewMatrix( identity );
-
-            if ( this._light ) {
-                this._cullVisitor.addPositionedAttribute( this._light );
+            switch ( this.getLightingMode() )
+            {
+                case View.LightingMode.HEADLIGHT:
+                    if ( this._light ) {
+                        this._cullVisitor.addPositionedAttribute( this._light );
+                    }
+                    break;
+                case View.LightingMode.SKY_LIGHT:
+                    if ( this._light ) {
+                        this._cullVisitor.addPositionedAttribute( this._light, camera.getViewMatrix() );
+                    }
+                    break;
+                default:
+                    break;
             }
-
             this._cullVisitor.pushModelviewMatrix( camera.getViewMatrix() );
             this._cullVisitor.pushViewport( camera.getViewport() );
             this._cullVisitor.setCullSettings( camera );
