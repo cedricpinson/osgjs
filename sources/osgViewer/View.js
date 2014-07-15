@@ -55,41 +55,49 @@ define( [
             this._webGLCaps.init( gl );
         },
 
-        computeCanvasSize: function ( canvas ) {
+        computeCanvasSize: ( function() {
+            var canvasWidth = 0;
+            var canvasHeight = 0;
 
-            var clientWidth, clientHeight;
-            if ( this._options.getBoolean( 'fullscreen' ) === true ) {
-                clientWidth = window.innerWidth;
-                clientHeight = window.innerHeight;
-            } else {
+            return function ( canvas ) {
+
+                var clientWidth, clientHeight;
                 clientWidth = canvas.clientWidth;
                 clientHeight = canvas.clientHeight;
-            }
 
-            if ( clientWidth < 1 ) clientWidth = 1;
-            if ( clientHeight < 1 ) clientHeight = 1;
+                if ( clientWidth < 1 ) clientWidth = 1;
+                if ( clientHeight < 1 ) clientHeight = 1;
 
-            var devicePixelRatio = 1;
-            if ( this._options.getBoolean( 'useDevicePixelRatio' ) ) {
-                devicePixelRatio = window.devicePixelRatio || 1;
-            }
+                var devicePixelRatio = 1;
+                if ( this._options.getBoolean( 'useDevicePixelRatio' ) ) {
+                    devicePixelRatio = window.devicePixelRatio || 1;
+                }
 
-            var widthPixel = clientWidth * devicePixelRatio;
-            var heightPixel = clientHeight * devicePixelRatio;
+                var widthPixel = clientWidth * devicePixelRatio;
+                var heightPixel = clientHeight * devicePixelRatio;
 
-            canvas.width = widthPixel;
-            canvas.height = heightPixel;
+                if ( canvasWidth !== widthPixel ) {
+                    canvas.width = widthPixel;
+                    canvasWidth = widthPixel;
+                }
 
-            canvas.style.width = (widthPixel / devicePixelRatio).toString() + 'px';
-            canvas.style.height = (heightPixel / devicePixelRatio).toString() + 'px';
-        },
+                if ( canvasHeight !== heightPixel ) {
+                    canvas.height = heightPixel;
+                    canvasHeight = heightPixel;
+                }
+
+            }; })(),
 
         setUpView: function ( canvas ) {
-
             this.computeCanvasSize( canvas );
 
-            var ratio = canvas.width / canvas.height;
-            this._camera.setViewport( new Viewport( 0, 0, canvas.width, canvas.height ) );
+            var ratio = canvas.clientWidth / canvas.clientHeight;
+
+            var width  = canvas.width;
+            var height = canvas.height;
+
+            this._camera.setViewport( new Viewport( 0, 0, width, height ) );
+
             this._camera.setGraphicContext( this._graphicContext );
             Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], this._camera.getViewMatrix() );
             Matrix.makePerspective( 55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix() );

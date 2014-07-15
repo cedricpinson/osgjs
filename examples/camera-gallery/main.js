@@ -96,16 +96,6 @@ CameraSwitcher.prototype = {
 
 var main = function() {
     var canvas = document.getElementById("3DView");
-    var w = window.innerWidth;
-    var h = window.innerHeight;
-    osg.log("size " + w + " x " + h );
-    canvas.style.width = w;
-    canvas.style.height = h;
-    canvas.width = w;
-    canvas.height = h;
-
-    var stats = document.getElementById("Stats");
-
 
     var manipulator = new osgGA.OrbitManipulator();
     manipulator._cameraSwitcher = new CameraSwitcher(10, [0,0,0], [2000, 20, 2000]);

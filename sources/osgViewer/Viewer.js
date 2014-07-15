@@ -167,14 +167,11 @@ define( [
             gl = WebGLDebugUtils.makeDebugContext( gl );
         }
 
-
         if ( gl ) {
             this.setGraphicContext( gl );
             this.initWebGLCaps( gl );
 
-
             MACROUTILS.init();
-            this._canvas = canvas;
             this._frameRate = 60.0;
             osgUtil.UpdateVisitor = UpdateVisitor;
             osgUtil.CullVisitor = CullVisitor;
@@ -196,7 +193,7 @@ define( [
             // gamepade
             eventsBackend.GamePad = eventsBackend.GamePad || {};
 
-            this.setUpView( canvas );
+            this.setUpView( gl.canvas );
         } else {
             throw 'No WebGL implementation found';
         }
@@ -435,6 +432,9 @@ define( [
         },
 
         frame: function () {
+
+            this.updateViewport();
+
             var frameTime, beginFrameTime;
             frameTime = MACROUTILS.performance.now();
             if ( this._lastFrameTime === undefined ) {
@@ -531,29 +531,31 @@ define( [
             }
 
             this.setManipulator( manipulator );
+       },
 
-            var resize = function ( /*ev*/ ) {
 
-                var canvas = this._canvas;
-                this.computeCanvasSize( canvas );
+        // updateViewport
+        updateViewport: function() {
 
-                var camera = this.getCamera();
-                var vp = camera.getViewport();
+            var gl = this.getGraphicContext();
+            var canvas = gl.canvas;
 
-                var prevWidth = vp.width();
-                var prevHeight = vp.height();
+            this.computeCanvasSize( canvas );
 
-                Notify.debug( 'canvas resize ' + prevWidth + 'x' + prevHeight + ' to ' + canvas.width + 'x' + canvas.height );
-                var widthChangeRatio = canvas.width / prevWidth;
-                var heightChangeRatio = canvas.height / prevHeight;
-                var aspectRatioChange = widthChangeRatio / heightChangeRatio;
-                vp.setViewport( vp.x() * widthChangeRatio, vp.y() * heightChangeRatio, vp.width() * widthChangeRatio, vp.height() * heightChangeRatio );
+            var camera = this.getCamera();
+            var vp = camera.getViewport();
 
-                if ( aspectRatioChange !== 1.0 ) {
-                    Matrix.preMult( camera.getProjectionMatrix(), Matrix.makeScale( 1.0 / aspectRatioChange, 1.0, 1.0, Matrix.create() ) );
-                }
-            };
-            window.addEventListener( 'resize', resize.bind( this ), true );
+            var prevWidth = vp.width();
+            var prevHeight = vp.height();
+
+            var widthChangeRatio = canvas.width / prevWidth;
+            var heightChangeRatio = canvas.height / prevHeight;
+            var aspectRatioChange = widthChangeRatio / heightChangeRatio;
+            vp.setViewport( vp.x() * widthChangeRatio, vp.y() * heightChangeRatio, vp.width() * widthChangeRatio, vp.height() * heightChangeRatio );
+
+            if ( aspectRatioChange !== 1.0 ) {
+                Matrix.preMult( camera.getProjectionMatrix(), Matrix.makeScale( 1.0 / aspectRatioChange, 1.0, 1.0, Matrix.create() ) );
+            }
         },
 
         // intialize all input devices
