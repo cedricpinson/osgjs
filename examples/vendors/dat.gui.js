@@ -3579,7 +3579,9 @@ dat.dom.CenteredDiv = (function (dom, common) {
       display: 'none',
       zIndex: '1000',
       opacity: 0,
-      WebkitTransition: 'opacity 0.2s linear'
+      WebkitTransition: 'opacity 0.2s linear',
+      transition: 'opacity 0.2s linear'
+
     });
 
     dom.makeFullscreen(this.backgroundElement);
@@ -3591,7 +3593,8 @@ dat.dom.CenteredDiv = (function (dom, common) {
       display: 'none',
       zIndex: '1001',
       opacity: 0,
-      WebkitTransition: '-webkit-transform 0.2s ease-out, opacity 0.2s linear'
+      WebkitTransition: '-webkit-transform 0.2s ease-out, opacity 0.2s linear',
+      transition: 'transform 0.2s ease-out, opacity 0.2s linear'
     });
 
 
