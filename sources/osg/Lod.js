@@ -8,8 +8,9 @@ define( [
     'osg/Node',
     'osg/NodeVisitor',
     'osg/Matrix',
-    'osg/Vec3'
-], function ( MACROUTILS, Node, NodeVisitor, Matrix, Vec3 ) {
+    'osg/Vec3',
+    'osg/BoundingSphere'
+], function ( MACROUTILS, Node, NodeVisitor, Matrix, Vec3, BoundingSphere ) {
     /**
      *  Lod that can contains child node
      *  @class Lod
@@ -19,10 +20,16 @@ define( [
         this._radius = -1;
         this._range = [];
         this._rangeMode = Lod.DISTANCE_FROM_EYE_POINT;
+        this._userDefinedCenter = [];
+        this._centerMode = Lod.USE_BOUNDING_SPHERE_CENTER;
     };
 
     Lod.DISTANCE_FROM_EYE_POINT = 0;
     Lod.PIXEL_SIZE_ON_SCREEN = 1;
+
+    Lod.USE_BOUNDING_SPHERE_CENTER = 0;
+    Lod.USER_DEFINED_CENTER = 1;
+    Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED = 2;
 
     /** @lends Lod.prototype */
     Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
@@ -35,6 +42,42 @@ define( [
          * Used to determine the bounding sphere of the LOD in the absence of any children.*/
         setRadius: function ( radius ) {
             this._radius = radius;
+        },
+
+        setCenter: function ( center ) {
+            if ( this._centerMode !== Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED )
+                this._centerMode = Lod.USER_DEFINED_CENTER;
+            this._userDefinedCenter = center;
+        },
+
+        getCenter: function () {
+            if ( ( this._centerMode === Lod.USER_DEFINED_CENTER ) || ( this._centerMode === Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED ) )
+                return this._userDefinedCenter; 
+            else return this.getBound().center(); 
+        },
+
+        setCenterMode: function ( centerMode ) {
+            this._centerMode = centerMode;
+        },
+
+        computeBound: function ( bsphere ) {
+            if ( this._centerMode === Lod.USER_DEFINED_CENTER && this._radius >= 0.0)
+            {
+                bsphere.set( this._userDefinedCenter, this._radius);
+                return bsphere;
+            }
+            else if ( this._centerMode === Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED && this._radius >= 0.0)
+            {
+                bsphere.set( this._userDefinedCenter, this._radius);
+                var bs = new BoundingSphere();
+                bsphere.expandBy( Node.prototype.computeBound.call( this, bs ) );
+                return bsphere;
+            }
+            else
+            {
+                Node.prototype.computeBound.call( this, bsphere );
+                return bsphere;
+            }
         },
 
         projectBoundingSphere: ( function () {
