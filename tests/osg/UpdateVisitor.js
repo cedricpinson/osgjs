@@ -3,6 +3,8 @@ define( [
     'osg/Node'
 ], function ( UpdateVisitor, Node ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -20,39 +22,53 @@ define( [
             root.addChild( b );
             b.addChild( c );
 
+
+
+
             var callRoot = 0;
             var callb = 0;
             var callc = 0;
+            var stateSetUpdateCallbackCalled = 0;
 
-            var froot = function () {};
-            froot.prototype = {
+            var StateSetUpdateCallback = function () {
+                this.update = function ( /*stateset, nv */) {
+                    stateSetUpdateCallbackCalled += 1;
+                };
+            };
+            var ss = b.getOrCreateStateSet();
+            ss.addUpdateCallback( new StateSetUpdateCallback() );
+
+            var Froot = function () {};
+            Froot.prototype = {
                 update: function ( node, nv ) {
                     callRoot = 1;
                     node.traverse( nv );
                 }
             };
 
-            var fb = function () {};
-            fb.prototype = {
-                update: function ( node, nv ) {
+            var Fb = function () {};
+            Fb.prototype = {
+                update: function ( /*node, nv */) {
                     callb = 1;
                     return false;
                 }
             };
 
-            var fc = function () {};
-            fc.prototype = {
-                update: function ( node, nv ) {
+            var Fc = function () {};
+            Fc.prototype = {
+                update: function ( /*node, nv */) {
                     callc = 1;
                     return true;
                 }
             };
 
-            root.setUpdateCallback( new froot() );
-            b.setUpdateCallback( new fb() );
-            c.setUpdateCallback( new fc() );
+            root.setUpdateCallback( new Froot() );
+            b.setUpdateCallback( new Fb() );
+            c.setUpdateCallback( new Fc() );
 
             uv.apply( root );
+
+            ok( stateSetUpdateCallbackCalled > 0, 'Called stateSet update callback' );
 
             ok( callRoot === 1, 'Called root update callback' );
             ok( callb === 1, 'Called b update callback' );
