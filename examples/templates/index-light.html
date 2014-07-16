@@ -7,12 +7,12 @@
 
     <style type="text/css">
     /* Custom CSS goes here */
-    #ViewContainer {
-      position: absolute;
-    }
-    #View {
-      display: block;
-    }
+    <!-- #ViewContainer { -->
+    <!--   position: absolute; -->
+    <!-- } -->
+    <!-- #View { -->
+    <!--   display: block; -->
+    <!-- } -->
     </style>
 
     <!-- Javascript -->
@@ -29,8 +29,9 @@
 
 <body class="osgjs-theme-light">
 
-  <div id="ViewContainer">
-    <canvas id="View"></canvas>
+  <div id="ViewContainer" class="osgjs-fullpage">
+    <!-- very important change the size of the parent element instead-->
+    <canvas id="View" style="height:100%;width:100%;"></canvas>
   </div>
 
   <div class="osgjs-info osgjs-info-dark">
@@ -42,7 +43,7 @@
 
     <div class="osgjs-description">
       Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua.<br>
+      tempor incididunt ut labore et dolore magna aliqua.
       <a href="#">Read the blog post for more info</a>
     </div>
 
