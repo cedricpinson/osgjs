@@ -4,6 +4,7 @@ window.OSG.globalify();
 
 var osg = window.osg;
 var osgUtil = window.osgUtil;
+var osgDB = window.osgDB;
 
 /*
     This filter is used to 'correctly' render HDR images
@@ -312,15 +313,16 @@ function decodeHDRHeader( buf ) {
 
     // find header size
     var size = -1,
-        size2 = -1;
-    for ( var i = 0; i < buf.length - 1; i++ ) {
-        if ( buf[ i ] == 10 && buf[ i + 1 ] == 10 ) {
+        size2 = -1,
+        i;
+    for ( i = 0; i < buf.length - 1; i++ ) {
+        if ( buf[ i ] === 10 && buf[ i + 1 ] === 10 ) {
             size = i;
             break;
         }
     }
-    for ( var i = size + 2; i < buf.length - 1; i++ ) {
-        if ( buf[ i ] == 10 ) {
+    for ( i = size + 2; i < buf.length - 1; i++ ) {
+        if ( buf[ i ] === 10 ) {
             size2 = i;
             break;
         }
@@ -328,35 +330,45 @@ function decodeHDRHeader( buf ) {
 
     // convert header from binary to text lines
     var header = String.fromCharCode.apply( null, new Uint8Array( buf.subarray( 0, size ) ) ); // header is in text format
-    var lines = header.split( "\n" );
-    if ( lines[ 0 ] != "#?RADIANCE" ) {
-        console.error( "Invalid HDR image." );
+    var lines = header.split( '\n' );
+    if ( lines[ 0 ] !== '#?RADIANCE' ) {
+        console.error( 'Invalid HDR image.' );
         return false;
     }
-    for ( var i = 0; i < lines.length; i++ ) {
-        var line = lines[ i ];
-        var matches = line.match( /(\w+)=(.*)/i );
+    var line;
+    var matches;
+    for ( i = 0; i < lines.length; i++ ) {
+        line = lines[ i ];
+        matches = line.match( /(\w+)=(.*)/i );
         if ( matches != null ) {
             var key = matches[ 1 ],
                 value = matches[ 2 ];
 
-            if ( key == "FORMAT" )
+            if ( key === 'FORMAT' )
                 info.format = value;
-            else if ( key == "EXPOSURE" )
+            else if ( key === 'EXPOSURE' )
                 info.exposure = parseFloat( value );
         }
     }
 
     // fill image resolution
-    var line = String.fromCharCode.apply( null, new Uint8Array( buf.subarray( size + 2, size2 ) ) );
-    var matches = line.match( /-Y (\d+) \+X (\d+)/ );
+    line = String.fromCharCode.apply( null, new Uint8Array( buf.subarray( size + 2, size2 ) ) );
+    matches = line.match( /-Y (\d+) \+X (\d+)/ );
     info.width = parseInt( matches[ 2 ] );
     info.height = parseInt( matches[ 1 ] );
-    info.scanline_width = parseInt( matches[ 2 ] );
-    info.num_scanlines = parseInt( matches[ 1 ] );
+    info.scanlineWidth = parseInt( matches[ 2 ] );
+    info.numScanlines = parseInt( matches[ 1 ] );
 
     info.size = size2 + 1;
     return info;
+}
+
+function readImageURL( url ) {
+    var ext = url.split( '.' ).pop();
+    if ( ext === 'hdr' )
+        return osg.readHDRImage( url );
+
+    return osgDB.readImageURL( url );
 }
 
 osg.Texture.createHDRFromURL = function ( imageSource, format ) {
@@ -389,73 +401,74 @@ osg.readHDRImage = function ( url, options ) {
     // download .hdr file
     var xhr = new XMLHttpRequest();
     xhr.open( 'GET', url, true );
-    xhr.responseType = "arraybuffer";
+    xhr.responseType = 'arraybuffer';
 
     var defer = Q.defer();
-    xhr.onload = function ( ev ) {
+    xhr.onload = function ( ) {
         if ( xhr.response ) {
             var bytes = new Uint8Array( xhr.response );
 
             var header = decodeHDRHeader( bytes );
-            if ( header == false )
+            if ( header === false )
                 return;
 
             // initialize output buffer
             var data = new Uint8Array( header.width * header.height * 4 );
-            var img_offset = 0;
+            var imgOffset = 0;
 
-            if ( ( header.scanline_width < 8 ) || ( header.scanline_width > 0x7fff ) ) {
+            if ( ( header.scanlineWidth < 8 ) || ( header.scanlineWidth > 0x7fff ) ) {
                 console.error( 'not rle compressed .hdr file' );
                 return;
             }
 
             // read in each successive scanline
-            var scanline_buffer = new Uint8Array( 4 * header.scanline_width );
-            var read_offset = header.size;
-            var num_scanlines = header.num_scanlines;
-            while ( num_scanlines > 0 ) {
+            var scanlineBuffer = new Uint8Array( 4 * header.scanlineWidth );
+            var readOffset = header.size;
+            var numScanlines = header.numScanlines;
+            while ( numScanlines > 0 ) {
                 var offset = 0;
-                var rgbe = [ bytes[ read_offset++ ], bytes[ read_offset++ ], bytes[ read_offset++ ], bytes[ read_offset++ ] ];
+                var rgbe = [ bytes[ readOffset++ ], bytes[ readOffset++ ], bytes[ readOffset++ ], bytes[ readOffset++ ] ];
                 var buf = [ 0, 0 ];
 
-                if ( ( rgbe[ 0 ] != 2 ) || ( rgbe[ 1 ] != 2 ) || ( rgbe[ 2 ] & 0x80 ) ) {
+                if ( ( rgbe[ 0 ] !== 2 ) || ( rgbe[ 1 ] !== 2 ) || ( rgbe[ 2 ] & 0x80 ) ) {
                     console.error( 'this file is not run length encoded' );
                     return;
                 }
 
-                if ( ( ( rgbe[ 2 ] ) << 8 | rgbe[ 3 ] ) != header.scanline_width ) {
+                if ( ( ( rgbe[ 2 ] ) << 8 | rgbe[ 3 ] ) !== header.scanlineWidth ) {
                     console.error( 'wrong scanline width' );
                     return;
                 }
 
                 // read each of the four channels for the scanline into the buffer
                 for ( var i = 0; i < 4; i++ ) {
-                    var offset_end = ( i + 1 ) * header.scanline_width;
-                    while ( offset < offset_end ) {
-                        buf[ 0 ] = bytes[ read_offset++ ];
-                        buf[ 1 ] = bytes[ read_offset++ ];
+                    var offsetEnd = ( i + 1 ) * header.scanlineWidth;
+                    var count;
+                    while ( offset < offsetEnd ) {
+                        buf[ 0 ] = bytes[ readOffset++ ];
+                        buf[ 1 ] = bytes[ readOffset++ ];
 
                         if ( buf[ 0 ] > 128 ) {
                             // a run of the same value
                             count = buf[ 0 ] - 128;
-                            if ( ( count == 0 ) || ( count > offset_end - offset ) ) {
+                            if ( ( count === 0 ) || ( count > offsetEnd - offset ) ) {
                                 console.error( 'bad scanline data' );
                                 return;
                             }
                             while ( count-- > 0 )
-                                scanline_buffer[ offset++ ] = buf[ 1 ];
+                                scanlineBuffer[ offset++ ] = buf[ 1 ];
                         } else {
                             // a non-run
                             count = buf[ 0 ];
-                            if ( ( count == 0 ) || ( count > offset_end - offset ) ) {
+                            if ( ( count === 0 ) || ( count > offsetEnd - offset ) ) {
                                 console.error( 'bad scanline data' );
                                 return;
                             }
-                            scanline_buffer[ offset++ ] = buf[ 1 ];
+                            scanlineBuffer[ offset++ ] = buf[ 1 ];
 
                             if ( --count > 0 ) {
                                 while ( count-- > 0 ) {
-                                    scanline_buffer[ offset++ ] = bytes[ read_offset++ ];
+                                    scanlineBuffer[ offset++ ] = bytes[ readOffset++ ];
                                 }
                             }
                         }
@@ -463,14 +476,14 @@ osg.readHDRImage = function ( url, options ) {
                 }
 
                 // fill the image array
-                for ( var i = 0; i < header.scanline_width; i++ ) {
-                    data[ img_offset++ ] = scanline_buffer[ i ];
-                    data[ img_offset++ ] = scanline_buffer[ i + header.scanline_width ];
-                    data[ img_offset++ ] = scanline_buffer[ i + 2 * header.scanline_width ];
-                    data[ img_offset++ ] = scanline_buffer[ i + 3 * header.scanline_width ];
+                for ( i = 0; i < header.scanlineWidth; i++ ) {
+                    data[ imgOffset++ ] = scanlineBuffer[ i ];
+                    data[ imgOffset++ ] = scanlineBuffer[ i + header.scanlineWidth ];
+                    data[ imgOffset++ ] = scanlineBuffer[ i + 2 * header.scanlineWidth ];
+                    data[ imgOffset++ ] = scanlineBuffer[ i + 3 * header.scanlineWidth ];
                 }
 
-                num_scanlines--;
+                numScanlines--;
             }
 
             // send deferred info
@@ -479,17 +492,9 @@ osg.readHDRImage = function ( url, options ) {
             img.height = header.height;
             defer.resolve( img );
         }
-    }
+    };
 
     // async/defer
     xhr.send( null );
     return defer.promise;
-}
-
-function readImageURL( url ) {
-    var ext = url.split( '.' ).pop();
-    if ( ext == "hdr" )
-        return osg.readHDRImage( url );
-
-    return osgDB.readImageURL( url );
-}
+};
