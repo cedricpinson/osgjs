@@ -224,8 +224,9 @@ define( [
         setCurrentRenderBin: function ( rb ) {
             this._currentRenderBin = rb;
         },
-        addPositionedAttribute: function ( attribute ) {
-            var matrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+        addPositionedAttribute: function ( attribute, matrix ) {
+            if ( matrix === undefined )
+                matrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
             this._currentRenderBin.getStage().positionedAttribute.push( [ matrix, attribute ] );
         },
 
