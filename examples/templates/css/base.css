@@ -37,6 +37,12 @@ a:hover {
     padding: 20px 160px 20px 20px;
 }
 
+.osgjs-fullpage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
 .osgjs-description {
     font-size: 14px;
 }
