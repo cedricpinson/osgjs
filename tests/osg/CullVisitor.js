@@ -15,8 +15,9 @@ define( [
     'osg/BoundingBox',
     'osg/Vec3',
     'osg/RenderBin',
-    'osgViewer/Viewer'
-], function ( mockup, CullVisitor, Node, Camera, RenderStage, StateGraph, Matrix, MatrixTransform, State, StateSet, Viewport, Shape, CullSettings, BoundingBox, Vec3, RenderBin, Viewer ) {
+    'osgViewer/Viewer',
+    'osgViewer/View'
+], function ( mockup, CullVisitor, Node, Camera, RenderStage, StateGraph, Matrix, MatrixTransform, State, StateSet, Viewport, Shape, CullSettings, BoundingBox, Vec3, RenderBin, Viewer, View ) {
 
     return function () {
 
@@ -480,6 +481,35 @@ define( [
                 state.setGraphicContext( fakeRenderer );
 
                 rs.draw( state );
+
+            } )();
+
+            ( function (){
+                var canvas = mockup.createCanvas();
+                var viewer = new Viewer( canvas );
+                viewer.init();
+
+                viewer.frame();
+                var cull = viewer._cullVisitor;
+                var m =  cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
+                // Test for HeadLight, matrix should be identity
+                mockup.near( m, [ 1, 0, -0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+                ] );
+                // Test for Sky_Light, matrix != identity
+                viewer.setLightingMode( View.LightingMode.SKY_LIGHT );
+                viewer.frame();
+                m =  cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
+                mockup.near( m, [ -1, 0, -0, 0,
+                0, 1, -0, 0,
+                0, -0, -1, 0,
+                0, 0, -10, 1
+                ] );
+
+
+                mockup.removeCanvas( canvas );
 
             } )();
         } );
