@@ -1,33 +1,44 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-<style>
-  body {
-  background:-moz-radial-gradient(farthest-side, rgba(0,0,0,0) 90%, rgba(0,0,0,0.1) 150%) rgb(76,76,76);
-  background:-webkit-gradient(radial, center center, 500, center center, 1400, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.2))) rgb(76,76,76);
-  overflow:hidden;
-  padding:0;
-  margin:0;
-  color: white;
-  }
+    <meta charset="utf-8">
+    <title>Lod</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
 
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/dat.gui.js"></script>
+    <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
+    <script type="text/javascript" src="../vendors/Hammer-1.0.5.js"></script>
+    <script type="text/javascript" src="../vendors/Leap.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="mickey.osgjs"></script>
+    <script type="text/javascript" src="monkey.osgjs"></script>
 
-</style>
-<title>Lod</title>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-<script type="text/javascript" src="../vendors/Q.js"></script>
-<script type="text/javascript" src="../vendors/Hammer.js"></script>
-<script type="text/javascript" src="../vendors/Leap.js"></script>
-<script type="text/javascript" src="../../builds/active/OSG.js"></script>
-<script type="text/javascript" src="main.js"></script>
-<script type="text/javascript" src="monkey.osgjs"></script>
-<script type="text/javascript" src="mickey.osgjs"></script>
 </head>
 
-<body>
 
-  <div id="ViewContainer">
-    <canvas id="3DView"> </canvas>
+
+<body class="osgjs-theme-dark">
+
+  <div id="ViewContainer" class="osgjs-fullpage">
+    <!-- very important change the size of the parent element instead-->
+    <canvas id="View" style="height:100%;width:100%;"></canvas>
   </div>
+
+  <div class="osgjs-info osgjs-info-dark">
+
+    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+      <strong>OSG.JS</strong>
+    </a>
+
+    <div class="osgjs-description">
+      This sample demonstrate Level of Detail (Lod).
+    </div>
+
+  </div>
+
 </body>
+
 </html>

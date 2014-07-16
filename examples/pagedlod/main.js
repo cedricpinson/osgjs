@@ -11,7 +11,7 @@ var maxExtent = [ 1000000.0, 1000000.0 ];
 var main = function () {
 
     // The 3D canvas.
-    var canvas = document.getElementById( "3DView" );
+    var canvas = document.getElementById( "View" );
     var w = window.innerWidth;
     var h = window.innerHeight;
     osg.log( "size " + w + " x " + h );

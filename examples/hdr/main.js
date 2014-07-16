@@ -1,4 +1,4 @@
-/** -*- compile-command: "jslint-cli main.js" -*-
+/** -*- compile-command: 'jslint-cli main.js' -*-
  *
  *  Copyright (C) 2010-2011 Cedric Pinson
  *
@@ -18,22 +18,27 @@
  *  Clément Léger <clement.leger@haxx.es>
  *
  */
+'use strict';
 
+var OSG = window.OSG;
 OSG.globalify();
+var osg = window.osg;
+var osgDB = window.osgDB;
+var osgViewer = window.osgViewer;
 
 function decodeHDRHeader(buf) {
     var info = {exposure: 1.0};
 
     // find header size
-    var size = -1, size2 = -1;
-    for (var i = 0; i < buf.length - 1; i++) {
-        if (buf[i] == 10 && buf[i + 1] == 10) {
+    var size = -1, size2 = -1, i;
+    for (i = 0; i < buf.length - 1; i++) {
+        if (buf[i] === 10 && buf[i + 1] === 10) {
             size = i;
             break;
         }
     }
-    for (var i = size + 2; i < buf.length - 1; i++) {
-        if (buf[i] == 10) {
+    for (i = size + 2; i < buf.length - 1; i++) {
+        if (buf[i] === 10) {
             size2 = i;
             break;
         }
@@ -41,32 +46,35 @@ function decodeHDRHeader(buf) {
 
     // convert header from binary to text lines
     var header = String.fromCharCode.apply(null, new Uint8Array(buf.subarray(0, size))); // header is in text format
-    var lines = header.split("\n");
-    if (lines[0] != "#?RADIANCE") {
-        console.error("Invalid HDR image.");
+    var lines = header.split('\n');
+    if (lines[0] !== '#?RADIANCE') {
+        console.error('Invalid HDR image.');
         return false;
-    }
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        var matches = line.match(/(\w+)=(.*)/i);
-        if (matches != null) {
+    }  
+
+    var line;
+    var matches;
+    for (i = 0; i < lines.length; i++) {
+        line = lines[i];
+        matches = line.match(/(\w+)=(.*)/i);
+        if (matches !== null) {
             var key = matches[1],
                 value = matches[2];
 
-            if (key == "FORMAT")
+            if (key === 'FORMAT')
                 info.format = value;
-            else if (key == "EXPOSURE")
+            else if (key === 'EXPOSURE')
                 info.exposure = parseFloat(value);
         }
     }
 
     // fill image resolution
-    var line = String.fromCharCode.apply(null, new Uint8Array(buf.subarray(size + 2, size2)));
-    var matches = line.match(/-Y (\d+) \+X (\d+)/);
+    line = String.fromCharCode.apply(null, new Uint8Array(buf.subarray(size + 2, size2)));
+    matches = line.match(/-Y (\d+) \+X (\d+)/);
     info.width = parseInt(matches[2]);
     info.height = parseInt(matches[1]);
-    info.scanline_width = parseInt(matches[2]);
-    info.num_scanlines = parseInt(matches[1]);
+    info.scanlineWidth = parseInt(matches[2]);
+    info.numScanlines = parseInt(matches[1]);
 
     info.size = size2 + 1;
     return info;
@@ -88,7 +96,7 @@ osg.readHDRImage = function(url, options) {
     // download .hdr file
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
-    xhr.responseType = "arraybuffer";
+    xhr.responseType = 'arraybuffer';
 
     var defer = Q.defer();
     xhr.onload = function (ev) {
@@ -96,65 +104,66 @@ osg.readHDRImage = function(url, options) {
             var bytes = new Uint8Array(xhr.response);
 
             var header = decodeHDRHeader(bytes);
-            if (header == false)
+            if (header === false)
                 return;
 
             // initialize output buffer
             var data = new Uint8Array(header.width * header.height * 4);
-            var img_offset = 0;
+            var imgOffset = 0;
 
-            if ((header.scanline_width < 8)||(header.scanline_width > 0x7fff)) {
+            if ((header.scanlineWidth < 8)||(header.scanlineWidth > 0x7fff)) {
                 console.error('not rle compressed .hdr file');
                 return;
             }
 
             // read in each successive scanline
-            var scanline_buffer = new Uint8Array(4 * header.scanline_width);
-            var read_offset = header.size;
-            var num_scanlines = header.num_scanlines;
-            while (num_scanlines > 0) {
+            var scanlineBuffer = new Uint8Array(4 * header.scanlineWidth);
+            var readOffset = header.size;
+            var numScanlines = header.numScanlines;
+            while (numScanlines > 0) {
                 var offset = 0;
-                var rgbe = [bytes[read_offset++], bytes[read_offset++], bytes[read_offset++], bytes[read_offset++]];
+                var rgbe = [bytes[readOffset++], bytes[readOffset++], bytes[readOffset++], bytes[readOffset++]];
                 var buf = [0, 0];
 
-                if ((rgbe[0] != 2) || (rgbe[1] != 2) || (rgbe[2] & 0x80)) {
+                if ((rgbe[0] !== 2) || (rgbe[1] !== 2) || (rgbe[2] & 0x80)) {
                     console.error('this file is not run length encoded');
                     return;
                 }
 
-                if (((rgbe[2]) << 8 | rgbe[3]) != header.scanline_width) {
+                if (((rgbe[2]) << 8 | rgbe[3]) !== header.scanlineWidth) {
                     console.error('wrong scanline width');
                     return;
                 }
 
                 // read each of the four channels for the scanline into the buffer
+                var count;
                 for (var i=0;i<4;i++) {
-                    var offset_end = (i + 1) * header.scanline_width;
-                    while (offset < offset_end) {
-                        buf[0] = bytes[read_offset++];
-                        buf[1] = bytes[read_offset++];
+                    var offsetEnd = (i + 1) * header.scanlineWidth;
+                    while (offset < offsetEnd) {
+                        buf[0] = bytes[readOffset++];
+                        buf[1] = bytes[readOffset++];
 
                         if (buf[0] > 128) {
                             // a run of the same value
                             count = buf[0] - 128;
-                            if ((count == 0) || (count > offset_end - offset)) {
+                            if ((count === 0) || (count > offsetEnd - offset)) {
                                 console.error('bad scanline data');
                                 return;
                             }
                             while (count-- > 0)
-                                scanline_buffer[offset++] = buf[1];
+                                scanlineBuffer[offset++] = buf[1];
                         } else {
                             // a non-run
                             count = buf[0];
-                            if ((count == 0) || (count > offset_end - offset)) {
+                            if ((count === 0) || (count > offsetEnd - offset)) {
                                 console.error('bad scanline data');
                                 return;
                             }
-                            scanline_buffer[offset++] = buf[1];
+                            scanlineBuffer[offset++] = buf[1];
 
                             if (--count > 0) {
                                 while (count-- > 0) {
-                                    scanline_buffer[offset++] = bytes[read_offset++];
+                                    scanlineBuffer[offset++] = bytes[readOffset++];
                                 }
                             }
                         }
@@ -162,14 +171,14 @@ osg.readHDRImage = function(url, options) {
                 }
 
                 // fill the image array
-                for (var i = 0; i < header.scanline_width; i++) {
-                    data[img_offset++] = scanline_buffer[i];
-                    data[img_offset++] = scanline_buffer[i + header.scanline_width];
-                    data[img_offset++] = scanline_buffer[i + 2 * header.scanline_width];
-                    data[img_offset++] = scanline_buffer[i + 3 * header.scanline_width];
+                for (i = 0; i < header.scanlineWidth; i++) {
+                    data[imgOffset++] = scanlineBuffer[i];
+                    data[imgOffset++] = scanlineBuffer[i + header.scanlineWidth];
+                    data[imgOffset++] = scanlineBuffer[i + 2 * header.scanlineWidth];
+                    data[imgOffset++] = scanlineBuffer[i + 3 * header.scanlineWidth];
                 }
 
-                num_scanlines--;
+                numScanlines--;
             }
 
             // send deferred info
@@ -178,16 +187,16 @@ osg.readHDRImage = function(url, options) {
             img.height = header.height;
             defer.resolve(img);
         }
-    }
+    };
 
     // async/defer
     xhr.send(null);
     return defer.promise;
-}
+};
 
 var SphereEnvMap = function(viewer) {
     this._viewer = viewer;
-}
+};
 
 function getEnvSphere(size, scene)
 {
@@ -197,7 +206,7 @@ function getEnvSphere(size, scene)
     geom.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'));
     geom.getOrCreateStateSet().setAttributeAndModes(getShaderBackground());
 
-    var cubemapTransform = osg.Uniform.createMatrix4(osg.Matrix.create(), "CubemapTransform");
+    var cubemapTransform = osg.Uniform.createMatrix4(osg.Matrix.create(), 'CubemapTransform');
     var mt = new osg.MatrixTransform();
     mt.setMatrix(osg.Matrix.makeRotate(Math.PI/2.0, 1,0,0,[]));
     mt.addChild(geom);
@@ -209,8 +218,8 @@ function getEnvSphere(size, scene)
             osg.Matrix.copy(m, cubemapTransform.get());
             cubemapTransform.dirty();
             return true;
-        }
-    }
+        };
+    };
     mt.setCullCallback(new CullCallback());
     scene.getOrCreateStateSet().addUniform(cubemapTransform);
 
@@ -220,7 +229,6 @@ function getEnvSphere(size, scene)
     cam.addChild(mt);
 
 
-    var self = this;
     // the update callback get exactly the same view of the camera
     // but configure the projection matrix to always be in a short znear/zfar range to not vary depend on the scene size
     var UpdateCallback = function() {
@@ -249,16 +257,7 @@ var Viewer;
 var main = function() {
     //osg.ReportWebGLError = true;
 
-    var canvas = document.getElementById("3DView");
-    var w = window.innerWidth;
-    var h = window.innerHeight;
-    osg.log("size " + w + " x " + h );
-    canvas.style.width = w;
-    canvas.style.height = h;
-    canvas.width = w;
-    canvas.height = h;
-
-    var stats = document.getElementById("Stats");
+    var canvas = document.getElementById('View');
 
     var viewer;
     try {
@@ -281,102 +280,102 @@ var main = function() {
         var mousedown = function(ev) {
             ev.stopPropagation();
         };
-        document.getElementById("explanation").addEventListener("mousedown", mousedown, false);
+        document.getElementById('explanation').addEventListener('mousedown', mousedown, false);
 
     } catch (er) {
-        osg.log("exception in osgViewer " + er);
+        osg.log('exception in osgViewer ' + er);
     }
 };
 
 function getShader()
 {
     var vertexshader = [
-        "",
-        "#ifdef GL_ES",
-        "precision highp float;",
-        "#endif",
+        '',
+        '#ifdef GL_ES',
+        'precision highp float;',
+        '#endif',
 
-        "attribute vec3 Vertex;",
-        "attribute vec3 Normal;",
+        'attribute vec3 Vertex;',
+        'attribute vec3 Normal;',
 
-        "uniform mat4 ModelViewMatrix;",
-        "uniform mat4 ProjectionMatrix;",
-        "uniform mat4 NormalMatrix;",
+        'uniform mat4 ModelViewMatrix;',
+        'uniform mat4 ProjectionMatrix;',
+        'uniform mat4 NormalMatrix;',
 
-        "varying vec3 osg_FragEye;",
-        "varying vec3 osg_FragNormal;",
-        "varying vec3 osg_FragNormalWorld;",
-        "varying vec3 osg_FragLightDirection;",
+        'varying vec3 osg_FragEye;',
+        'varying vec3 osg_FragNormal;',
+        'varying vec3 osg_FragNormalWorld;',
+        'varying vec3 osg_FragLightDirection;',
 
-        "void main(void) {",
-        "  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex, 1.0));",
-        "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));",
-        "  osg_FragNormalWorld = Normal;",
-        "  osg_FragLightDirection = vec3(NormalMatrix * vec4(0.0, -1.0, 0.0, 1.0));",
-        "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
-        "}"
+        'void main(void) {',
+        '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex, 1.0));',
+        '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
+        '  osg_FragNormalWorld = Normal;',
+        '  osg_FragLightDirection = vec3(NormalMatrix * vec4(0.0, -1.0, 0.0, 1.0));',
+        '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+        '}'
     ].join('\n');
 
     var fragmentshader = [
-        "",
-        "#ifdef GL_ES",
-        "precision highp float;",
-        "#endif",
-        "#define PI 3.14159",
+        '',
+        '#ifdef GL_ES',
+        'precision highp float;',
+        '#endif',
+        '#define PI 3.14159',
 
-        "uniform sampler2D Texture0;",
-        "uniform sampler2D Texture1;",
-        "uniform float hdrExposure;",
-        "uniform float hdrGamma;",
-        "uniform mat4 CubemapTransform;",
+        'uniform sampler2D Texture0;',
+        'uniform sampler2D Texture1;',
+        'uniform float hdrExposure;',
+        'uniform float hdrGamma;',
+        'uniform mat4 CubemapTransform;',
 
-        "varying vec3 osg_FragEye;",
-        "varying vec3 osg_FragNormal;",
-        "varying vec3 osg_FragNormalWorld;",
-        "varying vec3 osg_FragLightDirection;",
+        'varying vec3 osg_FragEye;',
+        'varying vec3 osg_FragNormal;',
+        'varying vec3 osg_FragNormalWorld;',
+        'varying vec3 osg_FragLightDirection;',
 
-        "vec3 cubemapReflectionVector(const in mat4 transform, const in vec3 view, const in vec3 normal)",
-        "{",
-        "  vec3 lv = reflect(view, normal);",
-        "  lv = normalize(lv);",
-        "  vec3 x = vec3(transform[0][0], transform[1][0], transform[2][0]);",
-        "  vec3 y = vec3(transform[0][1], transform[1][1], transform[2][1]);",
-        "  vec3 z = vec3(transform[0][2], transform[1][2], transform[2][2]);",
-        "  mat3 m = mat3(x,y,z);",
-        "  return m*lv;",
-        "}",
+        'vec3 cubemapReflectionVector(const in mat4 transform, const in vec3 view, const in vec3 normal)',
+        '{',
+        '  vec3 lv = reflect(view, normal);',
+        '  lv = normalize(lv);',
+        '  vec3 x = vec3(transform[0][0], transform[1][0], transform[2][0]);',
+        '  vec3 y = vec3(transform[0][1], transform[1][1], transform[2][1]);',
+        '  vec3 z = vec3(transform[0][2], transform[1][2], transform[2][2]);',
+        '  mat3 m = mat3(x,y,z);',
+        '  return m*lv;',
+        '}',
 
         // convert 8-bit RGB channels into floats using the common E exponent
-        "vec3 decodeRGBE(vec4 rgbe) {",
-        "  float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));",
-        "  return rgbe.rgb * 255.0 * f;",
-        "}",
+        'vec3 decodeRGBE(vec4 rgbe) {',
+        '  float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));',
+        '  return rgbe.rgb * 255.0 * f;',
+        '}',
 
         // apply some gamma correction (http://www.geeks3d.com/20101001/tutorial-gamma-correction-a-story-of-linearity/)
-        "vec3 toneMapHDR(vec3 rgb) {",
-        "  return pow(rgb * hdrExposure, 1.0 / vec3(hdrGamma));",
-        "}",
+        'vec3 toneMapHDR(vec3 rgb) {',
+        '  return pow(rgb * hdrExposure, 1.0 / vec3(hdrGamma));',
+        '}',
 
         // fetch from environment sphere texture
-        "vec4 textureSphere(sampler2D tex, vec3 n) {",
-        "  float yaw = acos(n.y) / PI;",
-        "  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);",
-        "  return texture2D(tex, vec2(pitch, yaw));",
-        "}",
+        'vec4 textureSphere(sampler2D tex, vec3 n) {',
+        '  float yaw = acos(n.y) / PI;',
+        '  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);',
+        '  return texture2D(tex, vec2(pitch, yaw));',
+        '}',
 
-        "void main(void) {",
-        "  vec3 normalWorld = normalize(osg_FragNormalWorld);",
-        "  vec3 N = normalize(osg_FragNormal);",
-        "  vec3 L = normalize(osg_FragLightDirection);",
-        "  vec3 E = normalize(osg_FragEye);",
-        "  vec3 R = cubemapReflectionVector(CubemapTransform, E, N);",
+        'void main(void) {',
+        '  vec3 normalWorld = normalize(osg_FragNormalWorld);',
+        '  vec3 N = normalize(osg_FragNormal);',
+        '  vec3 L = normalize(osg_FragLightDirection);',
+        '  vec3 E = normalize(osg_FragEye);',
+        '  vec3 R = cubemapReflectionVector(CubemapTransform, E, N);',
 
-        "  float NdotL = dot(-N, L);",
-        "  vec3 diffuse = toneMapHDR(decodeRGBE(textureSphere(Texture1, normalWorld)));",
-        "  vec3 specular = toneMapHDR(decodeRGBE(textureSphere(Texture0, R)));",
-        "  gl_FragColor = vec4(mix(diffuse, specular, 1.0), 1.0);",
-        "}",
-        ""
+        '  float NdotL = dot(-N, L);',
+        '  vec3 diffuse = toneMapHDR(decodeRGBE(textureSphere(Texture1, normalWorld)));',
+        '  vec3 specular = toneMapHDR(decodeRGBE(textureSphere(Texture0, R)));',
+        '  gl_FragColor = vec4(mix(diffuse, specular, 1.0), 1.0);',
+        '}',
+        ''
     ].join('\n');
 
     var program = new osg.Program(
@@ -389,71 +388,71 @@ function getShader()
 function getShaderBackground()
 {
     var vertexshader = [
-        "",
-        "#ifdef GL_ES",
-        "precision highp float;",
-        "#endif",
-        "attribute vec3 Vertex;",
-        "attribute vec3 Normal;",
-        "attribute vec2 TexCoord0;",
-        "uniform mat4 ModelViewMatrix;",
-        "uniform mat4 ProjectionMatrix;",
-        "uniform mat4 NormalMatrix;",
+        '',
+        '#ifdef GL_ES',
+        'precision highp float;',
+        '#endif',
+        'attribute vec3 Vertex;',
+        'attribute vec3 Normal;',
+        'attribute vec2 TexCoord0;',
+        'uniform mat4 ModelViewMatrix;',
+        'uniform mat4 ProjectionMatrix;',
+        'uniform mat4 NormalMatrix;',
 
-        "varying vec3 osg_FragNormal;",
-        "varying vec3 osg_FragEye;",
-        "varying vec3 osg_FragVertex;",
-        "varying vec2 osg_TexCoord0;",
+        'varying vec3 osg_FragNormal;',
+        'varying vec3 osg_FragEye;',
+        'varying vec3 osg_FragVertex;',
+        'varying vec2 osg_TexCoord0;',
 
-        "void main(void) {",
-        "  osg_FragVertex = Vertex;",
-        "  osg_TexCoord0 = TexCoord0;",
-        "  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));",
-        "  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));",
-        "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
-        "}"
+        'void main(void) {',
+        '  osg_FragVertex = Vertex;',
+        '  osg_TexCoord0 = TexCoord0;',
+        '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
+        '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));',
+        '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+        '}'
     ].join('\n');
 
     var fragmentshader = [
-        "",
-        "#ifdef GL_ES",
-        "precision highp float;",
-        "#endif",
-        "#define PI 3.14159",
+        '',
+        '#ifdef GL_ES',
+        'precision highp float;',
+        '#endif',
+        '#define PI 3.14159',
 
-        "uniform sampler2D Texture0;",
-        "uniform float hdrExposure;",
-        "uniform float hdrGamma;",
+        'uniform sampler2D Texture0;',
+        'uniform float hdrExposure;',
+        'uniform float hdrGamma;',
 
-        "varying vec3 osg_FragNormal;",
-        "varying vec3 osg_FragEye;",
-        "varying vec3 osg_FragVertex;",
-        "varying vec2 osg_TexCoord0;",
+        'varying vec3 osg_FragNormal;',
+        'varying vec3 osg_FragEye;',
+        'varying vec3 osg_FragVertex;',
+        'varying vec2 osg_TexCoord0;',
 
         // convert 8-bit RGB channels into floats using the common E exponent
-        "vec3 decodeRGBE(vec4 rgbe) {",
-        "  float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));",
-        "  return rgbe.rgb * 255.0 * f;",
-        "}",
+        'vec3 decodeRGBE(vec4 rgbe) {',
+        '  float f = pow(2.0, rgbe.w * 255.0 - (128.0 + 8.0));',
+        '  return rgbe.rgb * 255.0 * f;',
+        '}',
 
         // apply some gamma correction (http://www.geeks3d.com/20101001/tutorial-gamma-correction-a-story-of-linearity/)
-        "vec3 toneMapHDR(vec3 rgb) {",
-        "  return pow(rgb * hdrExposure, 1.0 / vec3(hdrGamma));",
-        "}",
+        'vec3 toneMapHDR(vec3 rgb) {',
+        '  return pow(rgb * hdrExposure, 1.0 / vec3(hdrGamma));',
+        '}',
 
         // fetch from environment sphere texture
-        "vec4 textureSphere(sampler2D tex, vec3 n) {",
-        "  float yaw = acos(n.y) / PI;",
-        "  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);",
-        "  return texture2D(tex, vec2(pitch, yaw));",
-        "}",
+        'vec4 textureSphere(sampler2D tex, vec3 n) {',
+        '  float yaw = acos(n.y) / PI;',
+        '  float pitch = (atan(n.x, n.z) + PI) / (2.0 * PI);',
+        '  return texture2D(tex, vec2(pitch, yaw));',
+        '}',
 
-        "void main(void) {",
-        "  vec3 normal = normalize(osg_FragVertex.xyz);",
-        "  vec3 c = toneMapHDR(decodeRGBE(textureSphere(Texture0, normal)));",
-        "  gl_FragColor = vec4(c, 1.0);",
-        "}",
-        ""
+        'void main(void) {',
+        '  vec3 normal = normalize(osg_FragVertex.xyz);',
+        '  vec3 c = toneMapHDR(decodeRGBE(textureSphere(Texture0, normal)));',
+        '  gl_FragColor = vec4(c, 1.0);',
+        '}',
+        ''
     ].join('\n');
 
     var program = new osg.Program(
@@ -469,37 +468,37 @@ var removeLoading = function(node, child) {
     nbLoading -=1;
     loaded.push(child);
     if (nbLoading === 0) {
-        document.getElementById("loading").style.display = 'None';
+        document.getElementById('loading').style.display = 'None';
         Viewer.getManipulator().computeHomePosition();
     }
 };
 var addLoading = function() {
     nbLoading+=1;
-    document.getElementById("loading").style.display = 'Block';
+    document.getElementById('loading').style.display = 'Block';
 };
 
-var getModel = function(func) {
+var getModel = function() {
     var node = new osg.MatrixTransform();
     node.setMatrix(osg.Matrix.makeRotate(-Math.PI/2, 1,0,0, []));
 
     var loadModel = function(url, cbfunc) {
-        osg.log("loading " + url);
+        osg.log('loading ' + url);
         var req = new XMLHttpRequest();
         req.open('GET', url, true);
         req.onreadystatechange = function (aEvt) {
-            if (req.readyState == 4) {
-                if(req.status == 200) {
+            if (req.readyState === 4) {
+                if(req.status === 200) {
                     Q.when(osgDB.parseSceneGraph(JSON.parse(req.responseText))).then(function(child) {
                             if (cbfunc) {
                                 cbfunc(child);
                             }
                         node.addChild(child);
                         removeLoading(node, child);
-                        osg.log("success " + url);
+                        osg.log('success ' + url);
                     });
                 } else{
                     removeLoading(node, child);
-                    osg.log("error " + url);
+                    osg.log('error ' + url);
                 }
             }
         };
@@ -513,7 +512,7 @@ var getModel = function(func) {
 
 function readImageURL(url) {
     var ext = url.split('.').pop();
-    if(ext == "hdr")
+    if(ext === 'hdr')
         return osg.readHDRImage(url);
 
     return osgDB.readImageURL(url);
@@ -578,13 +577,13 @@ function createScene()
     // gui
     document.getElementById('rangeExposure').onchange = function() {
 	    uniformCenter.set(parseFloat(this.value));
-    }
+    };
     document.getElementById('rangeGamma').onchange = function() {
 	    uniformGamma.set(parseFloat(this.value));
-    }
+    };
     document.getElementById('texture').onchange = function() {
 	    setEnvironment(this.value, background, ground);
-    }
+    };
     setEnvironment('Alexs_Apartment', background, ground);
 
     group.addChild(ground);
@@ -593,4 +592,4 @@ function createScene()
 
 
 
-window.addEventListener("load", main ,true);
+window.addEventListener('load', main ,true);
