@@ -412,7 +412,7 @@ define( [
                 this._cullVisitor.setEnableFrustumCulling ( true );
                 var mvp = Matrix.create();
                 Matrix.mult( camera.getProjectionMatrix(), camera.getViewMatrix(), mvp );
-                Matrix.getFrustumPlanes( mvp, this._cullVisitor._frustum );
+                this._cullVisitor.getFrustumPlanes( mvp, this._cullVisitor._frustum );
             }
             //CullVisitor.prototype.handleCullCallbacksAndTraverse.call(this._cullVisitor,camera);
             this.getScene().accept( this._cullVisitor );
