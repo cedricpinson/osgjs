@@ -157,12 +157,17 @@ define( [
                  uniform1fv: function() { },
                  uniform4fv: function() { },
                  uniform3fv: function() { },
-                 uniform1iv: function() { }
+                 uniform1iv: function() { },
+                 canvas: {
+                     clientWidth: 300,
+                     clientHeight: 300
+                 }
+
                };
     };
 
     return {
-        check_near: checkNear,
+        'check_near': checkNear,
         createFakeRenderer: createFakeRenderer,
         removeCanvas: removeCanvas,
         createCanvas: createCanvas,

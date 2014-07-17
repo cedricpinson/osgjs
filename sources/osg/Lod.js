@@ -52,8 +52,8 @@ define( [
 
         getCenter: function () {
             if ( ( this._centerMode === Lod.USER_DEFINED_CENTER ) || ( this._centerMode === Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED ) )
-                return this._userDefinedCenter; 
-            else return this.getBound().center(); 
+                return this._userDefinedCenter;
+            else return this.getBound().center();
         },
 
         setCenterMode: function ( centerMode ) {
@@ -158,7 +158,7 @@ define( [
                     } else {
                         // Let's calculate pixels on screen
                         var projmatrix = visitor.getCurrentProjectionMatrix();
-                        // focal lenght is the value stored in projmatrix[0] 
+                        // focal lenght is the value stored in projmatrix[0]
                         requiredRange = this.projectBoundingSphere( this.getBound(), matrix, projmatrix[ 0 ] );
                         // Multiply by a factor to get the real area value
                         requiredRange = ( requiredRange * visitor.getViewport().width() * visitor.getViewport().width() ) * 0.25;

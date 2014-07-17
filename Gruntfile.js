@@ -379,7 +379,7 @@ var gruntTasks = { };
         staticWeb: {
           options: {
             branch: 'gh-pages',
-            repository: '.',
+            repository: '.'
           }
         }
     };
