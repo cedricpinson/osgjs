@@ -277,7 +277,7 @@ function createTextureProjectedShadowScene(model)
     light.lightShadow = new osg.Light();
     light.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
 
-    var q = osg.createTexturedQuad(-10,-10,-5.0,
+    var q = osg.createTexturedQuadGeometry(-10,-10,-5.0,
                                   20, 0 ,0,
                                   0, 20 ,0);
     q.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('ONE', 'ONE_MINUS_SRC_ALPHA'));
@@ -303,7 +303,7 @@ function createTextureProjectedShadowScene(model)
     blurr.setRenderOrder(osg.Camera.PRE_RENDER, 0);
     blurr.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
     blurr.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    var quad = osg.createTexturedQuad(0,0,0,
+    var quad = osg.createTexturedQuadGeometry(0,0,0,
                                       rttSize[0], 0 ,0,
                                       0, rttSize[1],0);
     quad.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
@@ -796,7 +796,7 @@ function createShadowMapScene(model)
     light.lightShadow = new osg.Light();
     light.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
 
-    var q = osg.createTexturedQuad(-10,-10,-5.0,
+    var q = osg.createTexturedQuadGeometry(-10,-10,-5.0,
                                   20, 0 ,0,
                                   0, 20 ,0);
     var stateSet = new osg.StateSet();
@@ -889,13 +889,7 @@ function createSceneBox() {
 
 var start = function() {
 
-    var canvas = document.getElementById("3DView");
-    canvas.style.width = window.innerWidth;
-    canvas.style.height = window.innerHeight;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    var stats = document.getElementById("Stats");
+    var canvas = document.getElementById("View");
 
     var viewer;
     try {
@@ -908,11 +902,6 @@ var start = function() {
         viewer.setSceneData(rotate);
         viewer.getManipulator().computeHomePosition();
         viewer.run();
-
-        var mousedown = function(ev) {
-            ev.stopPropagation();
-        };
-        document.getElementById("explanation").addEventListener("mousedown", mousedown, false);
 
     } catch (er) {
         osg.log("exception in osgViewer " + er);

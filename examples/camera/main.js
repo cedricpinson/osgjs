@@ -20,7 +20,7 @@
 
         // we will render a textured quad on the rtt target with a fixed texture without
         // motion
-        var textureQuad = osg.createTexturedQuad( 0, 0, 0,
+        var textureQuad = osg.createTexturedQuadGeometry( 0, 0, 0,
                                                   rttSize[ 0 ], 0, 0,
                                                   0, rttSize[ 1 ], 0 );
         textureQuad.getOrCreateStateSet().setTextureAttributeAndMode( 0, osg.Texture.createFromURL( 'textures/sol_trauma_periph.png' ) );
@@ -38,7 +38,7 @@
         // now we want to use the result of the previous rtt
         // for this we will create a textured quad that will use the rtt
         // target texture
-        var texturedQuadUsingTargetTexture = osg.createTexturedQuad( -25, -25, 0,
+        var texturedQuadUsingTargetTexture = osg.createTexturedQuadGeometry( -25, -25, 0,
                                                                      50, 0, 0,
                                                                      0, 50, 0 );
         texturedQuadUsingTargetTexture.getOrCreateStateSet().setTextureAttributeAndMode( 0, rttTargetTexture );
