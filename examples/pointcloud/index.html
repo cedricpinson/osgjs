@@ -10,32 +10,9 @@
     <script type="text/javascript" src="../vendors/Hammer-1.0.5.js"></script>
     <script type="text/javascript" src="../vendors/Leap.js"></script>
     <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
-    <script type="text/javascript" src="main.js"></script>
     <script type="text/javascript" src="mickey.osgjs"></script>
+    <script type="text/javascript" src="main.js"></script>
 
-<script type="text/javascript">
-
-  OSG.globalify();
-
-  window.addEventListener('load',
-    function() {
-
-      var canvas = document.getElementById('View');
-
-      var viewer;
-      viewer = new osgViewer.Viewer(canvas);
-      viewer.init();
-      viewer.setupManipulator();
-      var rotate = new osg.MatrixTransform();
-      osg.Matrix.makeRotate(-Math.PI * 0.5, 1, 0, 0, rotate.getMatrix());
-      Q.when(osgDB.parseSceneGraph(getModel())).then(function(data) {
-        rotate.addChild(data);
-      });
-      viewer.setSceneData(rotate);
-      viewer.run();
-    }, true);
-
-</script>
 </head>
 
 <body class="osgjs-theme-dark">
@@ -53,9 +30,7 @@
     </a>
 
     <div class="osgjs-description">
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua.
-      <a href="#">Read the blog post for more info</a>
+      Demonstrate point cloud support
     </div>
 
   </div>
