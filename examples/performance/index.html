@@ -1,95 +1,42 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-<style>
-  body {
-  background:-moz-radial-gradient(farthest-side, rgba(0,0,0,0) 90%, rgba(0,0,0,0.1) 150%) rgb(76,76,76);
-  background:-webkit-gradient(radial, center center, 500, center center, 1400, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.2))) rgb(76,76,76);
-  overflow:hidden;
-  padding:0;
-  margin:0;
-  color: white;
-  }
+    <meta charset="utf-8">
+    <title>Performance</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
 
-  a:link {text-decoration: none; color: black;}
-  a:visited {text-decoration: none; color: black;}
-  a:active {text-decoration: none; color: black;}
-  a:hover {text-decoration: underline;  color: black;}
-
-  #ViewContainer {
-  position: absolute;
-  }
-
-
-</style>
-<title>Performance</title>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-<script type="text/javascript" src="../vendors/Q.js"></script>
-<script type="text/javascript" src="../vendors/Hammer.js"></script>
-<script type="text/javascript" src="../vendors/Leap.js"></script>
-<script type="text/javascript" src="../../builds/active/OSG.js"></script>
-<script type="text/javascript" src="main.js"></script>
-
-<script type="text/javascript">
-
-OSG.globalify();
-
-function getWindowSize() {
-    var myWidth = 0, myHeight = 0;
-
-    if( typeof( window.innerWidth ) == 'number' ) {
-        //Non-IE
-        myWidth = window.innerWidth;
-        myHeight = window.innerHeight;
-    } else if( document.documentElement && ( document.documentElement.clientWidth || document.documentElement.clientHeight ) ) {
-        //IE 6+ in 'standards compliant mode'
-        myWidth = document.documentElement.clientWidth;
-        myHeight = document.documentElement.clientHeight;
-    } else if( document.body && ( document.body.clientWidth || document.body.clientHeight ) ) {
-        //IE 4 compatible
-        myWidth = document.body.clientWidth;
-        myHeight = document.body.clientHeight;
-    }
-    return { 'w': myWidth, 'h': myHeight };
-//    window.alert( 'Width = ' + myWidth );
-//    window.alert( 'Height = ' + myHeight );
-}
-
-window.addEventListener("load",
-function() {
-
-    var size = getWindowSize();
-
-    var canvas = document.getElementById("3DView");
-    canvas.style.width = size.w;
-    canvas.style.height = size.h;
-    canvas.width = size.w;
-    canvas.height = size.h;
-
-    var stats = document.getElementById("Stats");
-
-  var viewer;
-try {
-  viewer = new osgViewer.Viewer(canvas);
-  viewer.init();
-  viewer.setSceneData(createScene());
-  viewer.setupManipulator();
-  viewer.getManipulator().computeHomePosition();
-  viewer.run();
-} catch (er) {
-  osg.log("exception in osgViewer " + er);
-}
-
-}
-,true);
-
-</script>
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
+    <script type="text/javascript" src="../vendors/Hammer-1.0.5.js"></script>
+    <script type="text/javascript" src="../vendors/Leap.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    
 </head>
 
-<body>
 
-  <div id="ViewContainer">
-  <canvas id="3DView"></canvas>
+<body class="osgjs-theme-dark">
+
+  <div id="ViewContainer" class="osgjs-fullpage">
+    <!-- very important change the size of the parent element instead-->
+    <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
   </div>
+
+  <div class="osgjs-info osgjs-info-dark">
+
+    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+      <strong>OSG.JS</strong>
+    </a>
+
+    <div class="osgjs-description">
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua.
+      <a href="#">Read the blog post for more info</a>
+    </div>
+
+  </div>
+
 </body>
+
 </html>

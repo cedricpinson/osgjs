@@ -84,7 +84,7 @@ function getShader() {
         new osg.Shader( osg.Shader.FRAGMENT_SHADER, fragmentshader ) );
 
     return program;
-}
+};
 
 function loadUrl( url, viewer, node, unifs ) {
     osg.log( 'loading ' + url );
@@ -126,7 +126,6 @@ function loadModel( data, viewer, node, unifs ) {
 };
 
 function createScene( viewer, unifs ) {
-    var canvas = document.getElementById( '3DView' );
 
     var root = new osg.Node();
 
@@ -162,9 +161,7 @@ window.addEventListener( 'load',
     function() {
         OSG.globalify();
 
-        var canvas = document.getElementById( '3DView' );
-        canvas.style.width = canvas.width = window.innerWidth;
-        canvas.style.height = canvas.height = window.innerHeight;
+        var canvas = document.getElementById( 'View' );
 
         var unifs = {
             center: osg.Uniform.createFloat3( new Float32Array( 3 ), 'uCenterPicking' ),

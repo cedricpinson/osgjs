@@ -195,7 +195,7 @@ var createHudCamera = function(size3d, shader) {
     rttTexture.setMagFilter('LINEAR');
     hudCamera.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTexture, 0);
 
-    var quad = osg.createTexturedQuad(0,0,0,
+    var quad = osg.createTexturedQuadGeometry(0,0,0,
                                       size[0], 0 ,0,
                                       0, size[1] ,0 );
     quad.getOrCreateStateSet().setAttributeAndMode(shader);
@@ -305,7 +305,7 @@ function createScene() {
 
     var size = 2.0;
     for (var i = 0, l = maxPlan; i < l; i++) {
-        var plan = osg.createTexturedQuad(-size*0.5, size/2 - i*size/maxPlan, -size*0.5,
+        var plan = osg.createTexturedQuadGeometry(-size*0.5, size/2 - i*size/maxPlan, -size*0.5,
                                             size,0,0,
                                             0,0,size);
         group.addChild(plan);
@@ -423,7 +423,7 @@ function createScene() {
     var generator = generateTexture(size);
     var texture = generator.renderedTexture;
     var qsize = [texture.getWidth()/10, texture.getHeight()/10];
-    var generatorQuad = osg.createTexturedQuad(-qsize[0]*0.5, 0, -qsize[1]*0.5,
+    var generatorQuad = osg.createTexturedQuadGeometry(-qsize[0]*0.5, 0, -qsize[1]*0.5,
                                             qsize[0],0,0,
                                             0,0,qsize[1]);
     var mt = new osg.MatrixTransform();

@@ -1,4 +1,4 @@
-/** -*- compile-command: "jslint-cli main.js" -*-
+/** -*- compile-command: 'jslint-cli main.js' -*-
  *
  * Copyright (C) 2010 Cedric Pinson
  *
@@ -21,82 +21,106 @@
  *  Cedric Pinson <cedric.pinson@plopbyte.net>
  *
  */
+'use strict';
+
+var OSG = window.OSG;
+OSG.globalify();
+var osg = window.osg;
+var osgViewer = window.osgViewer;
+
+var NbTotalItems = 0;
+var NbTotalNodes = 0;
 
 var NbItems = 4;
 var Deep = 3;
 
 var QuadSizeX = 1;
-var QuadSizeY = QuadSizeX*9/16.0;
+var QuadSizeY = QuadSizeX * 9 / 16.0;
 
-var Item = undefined;
-var Texture = undefined;
+var Item;
+var Texture;
+
 function getOrCreateItem() {
-    if (Item === undefined) {
-        var rq = osg.createTexturedQuad(-QuadSizeX/2.0, -QuadSizeY/2.0,0,
-                                       QuadSizeX, 0 ,0,
-                                       0, QuadSizeY,0);
-        rq.getOrCreateStateSet().setTextureAttributeAndMode(0, Texture);
+    if ( Item === undefined ) {
+        var rq = osg.createTexturedQuadGeometry( -QuadSizeX / 2.0, -QuadSizeY / 2.0, 0,
+            QuadSizeX, 0, 0,
+            0, QuadSizeY, 0 );
+        rq.getOrCreateStateSet().setTextureAttributeAndMode( 0, Texture );
         Item = rq;
     }
     return Item;
 }
 
 function getRessource() {
-    Texture = osg.Texture.createFromURL("textures/texture.png");
-
+    Texture = osg.Texture.createFromURL( 'textures/texture.png' );
 }
 
-var NbTotalItems = 0;
-var NbTotalNodes = 0;
-
-function createScene() {
-    Texture = osg.Texture.createFromURL("textures/texture.png");
-    //var root = new osg.Node();
-    var root = createItems(Deep);
-    //root.addChild(items);
-
-    osg.log("Total Items " + NbTotalItems);
-    osg.log("Total Nodes " + NbTotalNodes);
-    return root;
-}
-
-
-function createItems(deep)
-{
-    var scale = Math.pow(2,deep-1);
+function createItems( deep ) {
+    var scale = Math.pow( 2, deep - 1 );
 
     var root = new osg.MatrixTransform();
     var nbx = NbItems;
-    var nby = Math.floor(nbx * 9/16.0);
-    if (deep === 0) {
-        NbTotalItems += nbx*nby;
+    var nby = Math.floor( nbx * 9 / 16.0 );
+    if ( deep === 0 ) {
+        NbTotalItems += nbx * nby;
     }
-    NbTotalNodes += nbx*nby;
+    NbTotalNodes += nbx * nby;
 
-    for (var i = 0, l = nbx; i < l; i++) {
-        for (var j = 0, m = nby; j < m; j++) {
+    for ( var i = 0, l = nbx; i < l; i++ ) {
+        for ( var j = 0, m = nby; j < m; j++ ) {
             var mt = new osg.MatrixTransform();
-            var x,y;
-            if (deep === 0 ) {
-                x = (-nbx * 0.5 + 0.5 + i) * 1.1;
-                y = (-nby * 0.5 + 0.5 + j) * 1.1;
+            var x, y;
+            if ( deep === 0 ) {
+                x = ( -nbx * 0.5 + 0.5 + i ) * 1.1;
+                y = ( -nby * 0.5 + 0.5 + j ) * 1.1;
 
-                osg.Matrix.makeTranslate(x,y,0,mt.getMatrix());
-                if (i % 2 === 0 ) {
-                    mt.addChild(getOrCreateItem());
+                osg.Matrix.makeTranslate( x, y, 0, mt.getMatrix() );
+                if ( i % 2 === 0 ) {
+                    mt.addChild( getOrCreateItem() );
                 } else {
-                    mt.addChild(getOrCreateItem());
+                    mt.addChild( getOrCreateItem() );
                 }
             } else {
-                var s = nbx*deep*scale*1.1;
-                x = (-nbx * 0.5 + 0.5 + i) * (s);
-                y = (-nby * 0.5 + 0.5 + j) * (s*9/16.0);
+                var s = nbx * deep * scale * 1.1;
+                x = ( -nbx * 0.5 + 0.5 + i ) * ( s );
+                y = ( -nby * 0.5 + 0.5 + j ) * ( s * 9 / 16.0 );
                 //osg.log([x,y]);
-                osg.Matrix.makeTranslate(x,y,0,mt.getMatrix());
-                mt.addChild(createItems(deep - 1));
+                osg.Matrix.makeTranslate( x, y, 0, mt.getMatrix() );
+                mt.addChild( createItems( deep - 1 ) );
             }
-            root.addChild(mt);
+            root.addChild( mt );
         }
     }
     return root;
 }
+
+function createScene() {
+    getRessource();
+    //var root = new osg.Node();
+    var root = createItems( Deep );
+    //root.addChild(items);
+
+    osg.log( 'Total Items ' + NbTotalItems );
+    osg.log( 'Total Nodes ' + NbTotalNodes );
+    return root;
+}
+
+function main() {
+
+    var canvas = document.getElementById( 'View' );
+
+    var viewer;
+    try {
+        viewer = new osgViewer.Viewer( canvas );
+        viewer.init();
+        viewer.setSceneData( createScene() );
+        viewer.setupManipulator();
+        viewer.getManipulator().computeHomePosition();
+        viewer.run();
+    } catch ( er ) {
+        osg.log( 'exception in osgViewer ' + er );
+    }
+
+}
+
+addEventListener( 'load', main, true );

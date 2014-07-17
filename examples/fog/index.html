@@ -1,75 +1,44 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-<style>
-  body {
-  background:-moz-radial-gradient(farthest-side, rgba(0,0,0,0) 90%, rgba(0,0,0,0.1) 150%) rgb(76,76,76);
-  background:-webkit-gradient(radial, center center, 500, center center, 1400, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.2))) rgb(76,76,76);
-  overflow:hidden;
-  padding:0;
-  margin:0;
-  color: white;
-  }
+    <meta charset="utf-8">
+    <title>Fog</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
 
-  a:link {text-decoration: none; color: black;}
-  a:visited {text-decoration: none; color: black;}
-  a:active {text-decoration: none; color: black;}
-  a:hover {text-decoration: underline;  color: black;}
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/dat.gui.js"></script>
+    <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
+    <script type="text/javascript" src="../vendors/Hammer-1.0.5.js"></script>
+    <script type="text/javascript" src="../vendors/Leap.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="main.js"></script>
 
-  #ViewContainer {
-  position: absolute;
-  }
-
-  #explanation {
-  overflow:auto;
-  position: absolute;
-  left: 70%;
-  }
-  
-  #explanation:focus { outline: none; }
-
-  code {
-    font-size: 10px;
-  }
-  
-</style>
-<title>Fog</title>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-<script type="text/javascript" src="../vendors/Q.js"></script>
-<script type="text/javascript" src="../vendors/Hammer.js"></script>
-<script type="text/javascript" src="../vendors/Leap.js"></script>
-<script type="text/javascript" src="../../builds/active/OSG.js"></script>
-<script type="text/javascript" src="main.js"></script>
 </head>
 
-<body>
 
-  <div id="ViewContainer">
-    <canvas id="3DView"></canvas>
+
+<body class="osgjs-theme-dark">
+
+  <div id="ViewContainer" class="osgjs-fullpage">
+    <!-- very important change the size of the parent element instead-->
+    <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
   </div>
-  <div id="explanation" tabIndex="0" >
-    <h1>Fog example with <a href="http://osgjs.org">osgjs</a></h1>
-    This sample demonstrate a ver simple how to implement fog with osgjs. It's very simple to be useful for beginners</a>
 
-<h2>Fog Equation</h2>
-<p>
-  There is a very good article about fog equation <a href="http://www.ozone3d.net/tutorials/"> here </a> <br>
-  <div id="Parameters"></div>
-</p>
-<h2>Shader uniform extraction</h2>
-<p>
-  The example demonstrates also the new osgUtil.ShaderParameterVisitor.js . This visitor extract uniform and insert sliders in you page to customize value. It's useful to fine tune shader effect. It also saves the result into the localStorage for conveniance.
-  The visitor let you redefine parameters for example if you want to change the range.
-<pre>
-    // add a comment like the following line into your shader to configure the slider
-    // "uniform float density; //  { "min": 0.0,  "max": 0.006, "step": 0.001, "value": 0.00001 } ", 
+  <div class="osgjs-info osgjs-info-dark">
 
-    var params = new osgUtil.ParameterVisitor();
-    params.setTargetHTML(document.getElementById('Parameters'));
-    group.accept(params);
+    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+      <strong>OSG.JS</strong>
+    </a>
 
-</pre>  
-</p>
-</div>
+    <div class="osgjs-description">
+    This sample demonstrate how to implement fog with osgjs. It's very simple to be useful for beginners</a></br>
+    There is a very good article about fog equation on <a href="http://www.ozone3d.net/tutorials/">Ozone3D</a> <br>
+
+    </div>
+
+  </div>
+
 </body>
+
 </html>

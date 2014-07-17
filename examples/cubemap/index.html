@@ -5,16 +5,6 @@
     <title>Cubemap</title>
     <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
 
-    <style type="text/css">
-    /* Custom CSS goes here */
-    <!-- #ViewContainer { -->
-    <!--   position: absolute; -->
-    <!-- } -->
-    <!-- #View { -->
-    <!--   display: block; -->
-    <!-- } -->
-    </style>
-
     <!-- Javascript -->
     <script type="text/javascript" src="../vendors/dat.gui.js"></script>
     <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
@@ -31,7 +21,7 @@
 
   <div id="ViewContainer" class="osgjs-fullpage">
     <!-- very important change the size of the parent element instead-->
-    <canvas id="View" style="height:100%;width:100%;"></canvas>
+    <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
   </div>
 
   <div class="osgjs-info osgjs-info-dark">

@@ -1,89 +1,46 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-<style>
-  body {
-  background:-moz-radial-gradient(farthest-side, rgba(0,0,0,0) 90%, rgba(0,0,0,0.1) 150%) rgb(76,76,76);
-  background:-webkit-gradient(radial, center center, 500, center center, 1400, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.2))) rgb(76,76,76);
-  overflow:hidden;
-  padding:0;
-  margin:0;
-  color: white;
-  }
+    <meta charset="utf-8">
+    <title>Shadow</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
 
-  a:link {text-decoration: none; color: black;}
-  a:visited {text-decoration: none; color: black;}
-  a:active {text-decoration: none; color: black;}
-  a:hover {text-decoration: underline;  color: black;}
-
-  #ViewContainer {
-  position: absolute;
-  }
-
-  #explanation {
-  overflow:auto;
-  position: absolute;
-  left: 70%;
-  height: 100%;
-  }
-  
-  #explanation:focus { outline: none; }
-
-  code {
-    font-size: 10px;
-  }
-  
-</style>
-<title>Shadow</title>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-<script type="text/javascript" src="../vendors/Q.js"></script>
-<script type="text/javascript" src="../vendors/Hammer.js"></script>
-<script type="text/javascript" src="../vendors/Leap.js"></script>
-<script type="text/javascript" src="../../builds/active/OSG.js"></script>
-<script type="text/javascript" src="main.js"></script>
-<script type="text/javascript" src="ogre.osgjs"></script>
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
+    <script type="text/javascript" src="../vendors/Hammer-1.0.5.js"></script>
+    <script type="text/javascript" src="../vendors/Leap.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="ogre.osgjs"></script>
 
 </head>
 
-<body>
 
-  <div id="ViewContainer">
-  <canvas id="3DView"></canvas>
+
+<body class="osgjs-theme-dark">
+
+  <div id="ViewContainer" class="osgjs-fullpage">
+    <!-- very important change the size of the parent element instead-->
+    <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
   </div>
-  <div id="explanation" tabIndex="0" >
-    <h1>Shadow example with <a href="http://osgjs.org">osgjs</a></h1>
-    This sample demonstrate how to do different type of shadow with osgjs. The model used for this example comes from <a href="http://www.ogre3d.org"> Ogre project</a>
 
-    <h2>Shadow Matrix</h2>
-    <p>
-    On the left, the shadow is done using a 'special matrix' that projects the model onto a plane, it does not use any texture. This technique is really simple to implement you just need to generate shadow matrix and render your model with this matrix. The problem is that you can't have soft shadow and self shadowing. More explanation <a href="http://www.opengl.org/resources/code/samples/advanced/advanced97/notes/node100.html">here </a>.</p>
-    <h2>Projective Texturing</h2>
-    <p>
-    On the middle, the shadow is done using a texture from the light view. It's known as <a href="http://en.wikipedia.org/wiki/Projective_texture_mapping"> projective texture</a>, there is also a good article <a href="http://www.ozone3d.net/tutorials/glsl_texturing_p08.php"> here</a>. To achieve this you first have to render the model from the light position, then compute uv on the final model you want to shadow onto to map the shadow texture correctly. In order to have soft edges, I do an extra render to texture to to blur the texture. This technique does not allow self shadowing but can be good for ground shadow. The texture resolution used is 512x512.
-    </p>
-    <h2>ShadowMap</h2>
-    <p>
-    On the right, the shadow is done using <a href="http://en.wikipedia.org/wiki/Shadow_mapping"> shadowmap technique</a>. First I render the model from the light position like for Projective Texturing to create a DepthTexture. Then when I draw models, I use this texture as a depth comparaison for each pixel. If the current depth pixel in light space is farest than the one in the shadow texture then this pixel is shadowed. In this current example I sample 16 values to have soft edge, but even with that there is still pixelization effect (could be improved with higher texture resolution). 
-In webgl there is not Depth texture so to create the depth texture I encoded depth in a rgba texture in 24 bits precision. About this subject It can be tricky to encode correctly float into rgba. I tried different methods but I finally used this one:
-<code>
-<pre>
-  vec4 pack2(float value) {
-    return vec4(
-    floor(value * 256.0)/255.0,
-    floor(fract(value * 256.0) * 256.0)/255.0 , 
-    floor(fract(value * 65536.0) * 256.0)/255.0, 
-    0.0);
-  }
-  float unpack2(vec4 depth) {
-    return depth[0] * 255.0 / 256.0 + 
-           depth[1] * 255.0 / (256.0 * 256.0) + 
-           depth[2] * 255.0 / (256.0 * 256.0 * 256.0);
-  }
-</pre>
-</code>
-This technique can be used to self shadowing objects. The texture resolution used was 512x512.
-    </p>
+  <div class="osgjs-info osgjs-info-dark">
+
+    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+      <strong>OSG.JS</strong>
+    </a>
+
+    <div class="osgjs-description">
+      This sample demonstrate how to do different type of shadow with osgjs. The model used for this example comes from <a href="http://www.ogre3d.org"> Ogre project</a></br>
+      Shadow Matrix: <a href="http://www.opengl.org/resources/code/samples/advanced/advanced97/notes/node100.html">OpenGL Wiki code sample</a></br>
+      Projective Texturing: <a href="http://en.wikipedia.org/wiki/Projective_texture_mapping">Wikipedia page</a>
+      and <a href="http://www.ozone3d.net/tutorials/glsl_texturing_p08.php">Ozone3D tutorial</a></br>
+      ShadowMap: <a href="http://en.wikipedia.org/wiki/Shadow_mapping">Wikipedia page</a>
+    </div>
 
   </div>
+
 </body>
+
 </html>
