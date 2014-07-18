@@ -159,6 +159,7 @@ define( [
 
     Utils.Float32Array = typeof Float32Array !== 'undefined' ? Float32Array : null;
     Utils.Int32Array = typeof Int32Array !== 'undefined' ? Int32Array : null;
+    Utils.Uint8Array = typeof Uint8Array !== 'undefined' ? Uint8Array : null;
     Utils.Uint16Array = typeof Uint16Array !== 'undefined' ? Uint16Array : null;
     Utils.Uint32Array = typeof Uint32Array !== 'undefined' ? Uint32Array : null;
 

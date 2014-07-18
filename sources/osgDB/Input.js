@@ -370,6 +370,9 @@ define( [
                 } else if ( jsonObj.Array.Uint16Array !== undefined ) {
                     vb = jsonObj.Array.Uint16Array;
                     type = 'Uint16Array';
+                } else if ( jsonObj.Array.Uint8Array !== undefined ) {
+                    vb = jsonObj.Array.Uint8Array;
+                    type = 'Uint8Array';
                 } else {
                     Notify.warn( 'Typed Array ' + window.Object.keys( jsonObj.Array )[ 0 ] );
                     type = 'Float32Array';

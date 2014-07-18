@@ -3,6 +3,8 @@ define( [
     'osg/PrimitiveSet'
 ], function ( Notify, PrimitiveSet ) {
 
+    'use strict';
+
     /**
      * DrawElements manage rendering of indexed primitives
      * @class DrawElements
@@ -18,10 +20,14 @@ define( [
         this.count = 0;
         this.offset = 0;
         this.indices = indices;
+        this.uType = DrawElements.UNSIGNED_SHORT;
         if ( indices !== undefined ) {
             this.setIndices( indices );
         }
     };
+
+    DrawElements.UNSIGNED_BYTE = 0x1401;
+    DrawElements.UNSIGNED_SHORT = 0x1403;
 
     /** @lends DrawElements.prototype */
     DrawElements.prototype = {
@@ -31,11 +37,13 @@ define( [
         draw: function ( state ) {
             state.setIndexArray( this.indices );
             var gl = state.getGraphicContext();
-            gl.drawElements( this.mode, this.count, gl.UNSIGNED_SHORT, this.offset );
+            gl.drawElements( this.mode, this.count, this.uType, this.offset );
         },
         setIndices: function ( indices ) {
             this.indices = indices;
-            this.count = indices.getElements().length;
+            var elts = indices.getElements();
+            this.count = elts.length;
+            this.uType = elts.BYTES_PER_ELEMENT === 1 ? DrawElements.UNSIGNED_BYTE : DrawElements.UNSIGNED_SHORT;
         },
         getIndices: function () {
             return this.indices;
