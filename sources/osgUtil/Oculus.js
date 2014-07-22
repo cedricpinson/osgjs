@@ -232,7 +232,7 @@ define( [
         if ( hmdConfig === 2 || hmdConfig === undefined )
             return hmd;
         if ( hmdConfig === 1 ) {
-            // Oculus Rift DK2
+            // Oculus Rift DK1
             hmd.hResolution = 1280;
             hmd.vResolution = 800;
             hmd.hScreenSize = 0.14976;
