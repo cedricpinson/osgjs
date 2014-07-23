@@ -393,11 +393,21 @@ define( [
 
             var identity = Matrix.create();
             this._cullVisitor.pushModelviewMatrix( identity );
-
-            if ( this._light ) {
-                this._cullVisitor.addPositionedAttribute( this._light );
+            switch ( this.getLightingMode() )
+            {
+                case View.LightingMode.HEADLIGHT:
+                    if ( this._light ) {
+                        this._cullVisitor.addPositionedAttribute( this._light );
+                    }
+                    break;
+                case View.LightingMode.SKY_LIGHT:
+                    if ( this._light ) {
+                        this._cullVisitor.addPositionedAttribute( this._light, camera.getViewMatrix() );
+                    }
+                    break;
+                default:
+                    break;
             }
-
             this._cullVisitor.pushModelviewMatrix( camera.getViewMatrix() );
             this._cullVisitor.pushViewport( camera.getViewport() );
             this._cullVisitor.setCullSettings( camera );
@@ -412,7 +422,7 @@ define( [
                 this._cullVisitor.setEnableFrustumCulling ( true );
                 var mvp = Matrix.create();
                 Matrix.mult( camera.getProjectionMatrix(), camera.getViewMatrix(), mvp );
-                Matrix.getFrustumPlanes( mvp, this._cullVisitor._frustum );
+                this._cullVisitor.getFrustumPlanes( mvp, this._cullVisitor._frustum );
             }
             //CullVisitor.prototype.handleCullCallbacksAndTraverse.call(this._cullVisitor,camera);
             this.getScene().accept( this._cullVisitor );

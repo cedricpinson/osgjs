@@ -15,8 +15,11 @@ define( [
     'osg/PagedLOD',
     'osg/Camera',
     'osg/TransformEnums',
-    'osg/Vec4'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4 ) {
+    'osg/Vec4',
+    'osg/Vec3',
+    'osg/ComputeMatrixFromNodePath'
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath ) {
+
 
     /**
      * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse
@@ -221,8 +224,9 @@ define( [
         setCurrentRenderBin: function ( rb ) {
             this._currentRenderBin = rb;
         },
-        addPositionedAttribute: function ( attribute ) {
-            var matrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+        addPositionedAttribute: function ( attribute, matrix ) {
+            if ( matrix === undefined )
+                matrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
             this._currentRenderBin.getStage().positionedAttribute.push( [ matrix, attribute ] );
         },
 
@@ -285,20 +289,90 @@ define( [
             this._enableFrustumCulling = value;
         },
 
-        isCulled: function( node ) {
-            var position = node.getBound().center();
-            var radius = - node.getBound().radius();
-            var d;
+        getFrustumPlanes: ( function () {
 
-            for ( var i = 0; i < 6; i ++ ) {
-                d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
-                if ( d <= radius )
-                {
-                    return true;
+            var right = Vec4.create();
+            var left = Vec4.create();
+            var bottom = Vec4.create();
+            var top = Vec4.create();
+            var far = Vec4.create();
+            var near = Vec4.create();
+
+            return function ( matrix, result, withNearFar ) {
+                if ( withNearFar === undefined )
+                    withNearFar = false;
+                // Right clipping plane.
+                right[ 0 ] = matrix[ 3 ] - matrix[ 0 ];
+                right[ 1 ] = matrix[ 7 ] - matrix[ 4 ];
+                right[ 2 ] = matrix[ 11 ] - matrix[ 8 ];
+                right[ 3 ] = matrix[ 15 ] - matrix[ 12 ];
+                result[ 0 ] = right;
+                // Left clipping plane.
+                left[ 0 ] = matrix[ 3 ] + matrix[ 0 ];
+                left[ 1 ] = matrix[ 7 ] + matrix[ 4 ];
+                left[ 2 ] = matrix[ 11 ] + matrix[ 8 ];
+                left[ 3 ] = matrix[ 15 ] + matrix[ 12 ];
+                result[ 1 ] = left;
+                // Bottom clipping plane.
+                bottom[ 0 ] = matrix[ 3 ] + matrix[ 1 ];
+                bottom[ 1 ] = matrix[ 7 ] + matrix[ 5 ];
+                bottom[ 2 ] = matrix[ 11 ] + matrix[ 9 ];
+                bottom[ 3 ] = matrix[ 15 ] + matrix[ 13 ];
+                result[ 2 ] = bottom;
+                // Top clipping plane.
+                top[ 0 ] = matrix[ 3 ] - matrix[ 1 ];
+                top[ 1 ] = matrix[ 7 ] - matrix[ 5 ];
+                top[ 2 ] = matrix[ 11 ] - matrix[ 9 ];
+                top[ 3 ] = matrix[ 15 ] - matrix[ 13 ];
+                result[ 3 ] = top;
+
+                if( withNearFar ) {
+                    // Far clipping plane.
+                    far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
+                    far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
+                    far[ 2 ] = matrix[ 11 ] - matrix[ 10 ];
+                    far[ 3 ] = matrix[ 15 ] - matrix[ 14 ];
+                    result[ 4 ] = far;
+                    // Near clipping plane.
+                    near[ 0 ] = matrix[ 3 ] + matrix[ 2 ];
+                    near[ 1 ] = matrix[ 7 ] + matrix[ 6 ];
+                    near[ 2 ] = matrix[ 11 ] + matrix[ 10 ];
+                    near[ 3 ] = matrix[ 15 ] + matrix[ 14 ];
+                    result[ 5 ] = near;
                 }
-            }
-        return false;
-        }
+                //Normalize the planes
+                for ( var i = 0, j = result.length; i < j; i++ ) {
+                    var norm = result[ i ][ 0 ] * result[ i ][ 0 ] + result[ i ][ 1 ] * result[ i ][ 1 ] + result[ i ][ 2 ] * result[ i ][ 2 ];
+                    var inv = 1.0 / Math.sqrt( norm );
+                    result[ i ][ 0 ] = result[ i ][ 0 ] * inv;
+                    result[ i ][ 1 ] = result[ i ][ 1 ] * inv;
+                    result[ i ][ 2 ] = result[ i ][ 2 ] * inv;
+                    result[ i ][ 3 ] = result[ i ][ 3 ] * inv;
+                }
+            };
+        } )(),
+
+        isCulled: ( function () {
+            var position = Vec3.create();
+
+            return function ( node ) {
+                var pos = node.getBound().center();
+                Vec3.copy( pos, position );
+                var radius = - node.getBound().radius();
+                var d;
+                var m = ComputeMatrixFromNodePath.computeLocalToWorld( this.nodePath );
+                Matrix.transformVec3( m, position, position);
+
+                for ( var i = 0, j = this._frustum.length; i < j; i++ ) {
+                    d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
+                    if ( d <= radius )
+                    {
+                        return true;
+                    }
+                }
+                return false;
+        };
+    } )()
     } ) ) );
 
     CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {

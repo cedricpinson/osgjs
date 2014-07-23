@@ -132,10 +132,10 @@ define( [
             this._leafs.length = 0;
             this._sorted = false;
         },
-        applyPositionedAttribute: function ( state, positionedAttibutes ) {
+        applyPositionedAttribute: function ( state, positionedAttributes ) {
             // the idea is to set uniform 'globally' in uniform map.
-            for ( var index = 0, l = positionedAttibutes.length; index < l; index++ ) {
-                var element = positionedAttibutes[ index ];
+            for ( var index = 0, l = positionedAttributes.length; index < l; index++ ) {
+                var element = positionedAttributes[ index ];
                 // add or set uniforms in state
                 var stateAttribute = element[ 1 ];
                 var matrix = element[ 0 ];
