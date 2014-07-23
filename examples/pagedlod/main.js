@@ -120,7 +120,7 @@ var main = function () {
     plod.setRange( 1, 100000, Infinity );
 
     // The viewer
-    viewer = new osgViewer.Viewer( canvas, { enableFrustumCulling : true } );
+    viewer = new osgViewer.Viewer( canvas , { 'enableFrustumCulling': true } );
     viewer.init();
     viewer.setSceneData( plod );
     var bs = plod.getBound();
