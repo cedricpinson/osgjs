@@ -361,8 +361,10 @@ var gruntTasks = { };
         staticWeb: {
           options: {
             branch: 'gh-pages',
-            repository: '.',
-            message: 'website update to latest develop'
+            repository: 'git@github.com:cedricpinson/osgjs.git',
+              message: 'website update to latest develop',
+              cwd: path.join( BUILD_PATH, 'web' ),
+              verbose: true
           }
         },
         files: {
@@ -374,8 +376,10 @@ var gruntTasks = { };
     gruntTasks.gitpush = {
         staticWeb: {
           options: {
-            branch: 'gh-pages',
-            repository: '.'
+              branch: 'gh-pages',
+              repository: 'git@github.com:cedricpinson/osgjs.git',
+              cwd: path.join( BUILD_PATH, 'web' ),
+              verbose: true
           }
         }
     };
