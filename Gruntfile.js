@@ -64,7 +64,8 @@ var gruntTasks = { };
 
     gruntTasks.requirejs = {
         options: {
-            optimize: 'uglify2',
+            //optimize: 'uglify2',
+            optimize: 'none',
             generateSourceMaps: true,
             useSourceUrl: true,
 
@@ -276,13 +277,9 @@ var gruntTasks = { };
             src: 'examples/vendors/Require-2.1.11.js',
             dest: 'examples/vendors/Require.js'
         },
-        RequireText: {
-            src: 'examples/vendors/require/Text-2.0.12.js',
-            dest: 'examples/vendors/require/Text.js'
-        },
         RequireTextBuild: {
             src: 'examples/vendors/require/Text-2.0.12.js',
-            dest: 'sources/vendors/require/Text.js'
+            dest: 'sources/vendors/require/text.js'
         },
         Q: {
             src: 'examples/vendors/Q-0.9.7.js',
@@ -291,6 +288,10 @@ var gruntTasks = { };
         active: {
             src: DIST_PATH,
             dest: path.join( BUILD_PATH, 'active' )
+        },
+        RequireText: {
+            src: 'examples/vendors/require/Text-2.0.12.js',
+            dest: 'examples/vendors/require/Text.js'
         }
     };
 

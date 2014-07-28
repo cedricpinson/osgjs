@@ -20,6 +20,10 @@ define( [
     'osg/Projection'
 ], function ( Q, require, Input, Notify, MACROUTILS, Texture, Uniform, BlendFunc, Material, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
 
+    require( [ 'osg/Material' ], function ( CircularDependency ) {
+        Material = CircularDependency;
+    } );
+
     var ReaderParser = {};
 
     ReaderParser.ObjectWrapper = {};

@@ -3,9 +3,9 @@ define( [
     'osg/Stack',
     'osg/Uniform',
     'osg/Matrix',
-    'osg/ShaderGenerator',
+    'osgShader/ShaderGeneratorProxy',
     'osg/Map'
-], function ( StateAttribute, Stack, Uniform, Matrix, ShaderGenerator, Map ) {
+], function ( StateAttribute, Stack, Uniform, Matrix, ShaderGeneratorProxy, Map ) {
 
     var State = function () {
         this._graphicContext = undefined;
@@ -20,7 +20,7 @@ define( [
 
         this.attributeMap = new Map();
 
-        this.shaderGenerator = new ShaderGenerator();
+        this.shaderGenerator = new ShaderGeneratorProxy();
 
         this.modelViewMatrix = Uniform.createMatrix4( Matrix.create(), 'ModelViewMatrix' );
         this.projectionMatrix = Uniform.createMatrix4( Matrix.create(), 'ProjectionMatrix' );
@@ -176,6 +176,7 @@ define( [
 
         pushGeneratedProgram: function () {
             var program;
+
             var attributeMap = this.attributeMap;
 
             if ( attributeMap.Program !== undefined && attributeMap.Program.length !== 0 ) {
@@ -187,16 +188,22 @@ define( [
                 }
             }
 
-            var attributes = {
-                'textureAttributeMapList': this.textureAttributeMapList,
-                'attributeMap': this.attributeMap
-            };
+            //var attributes = {
+            //    'textureAttributeMapList': this.textureAttributeMapList,
+            //     'attributeMap': this.attributeMap
+            // };
 
             var generator = this.stateSets.back().getShaderGenerator();
             if ( generator === undefined ) {
                 generator = this.shaderGenerator;
+                if ( this.attributeMap.Material ) {
+                    // not the default shadergenerator
+                    this.shaderGenerator.setShaderGenerator( 'material' );
+                }
+                // could check if no light in whole viewport and go shadeless.
             }
-            program = generator.getOrCreateProgram( attributes );
+            //program = generator.getOrCreateProgram( attributes );
+            program = generator.getOrCreateProgram( this );
             this.programs.push( this.getObjectPair( program, StateAttribute.ON ) );
             return program;
         },
@@ -210,7 +217,7 @@ define( [
             this.applyTextureAttributeMapList( this.textureAttributeMapList );
         },
 
-        computeForeignUniforms: function( programUniformMap, activeUniformMap ) {
+        computeForeignUniforms: function ( programUniformMap, activeUniformMap ) {
             var uniformMapKeys = programUniformMap.getKeys();
             var uniformMap = programUniformMap;
 
@@ -221,17 +228,17 @@ define( [
                 if ( location !== undefined && activeUniformMap[ name ] === undefined ) {
                     // filter 'standard' uniform matrix that will be applied for all shader
                     if ( name !== this.modelViewMatrix.name &&
-                         name !== this.projectionMatrix.name &&
-                         name !== this.normalMatrix.name &&
-                         name !== 'ArrayColorEnabled' ) {
-                             foreignUniforms.push( name );
-                         }
+                        name !== this.projectionMatrix.name &&
+                        name !== this.normalMatrix.name &&
+                        name !== 'ArrayColorEnabled' ) {
+                        foreignUniforms.push( name );
+                    }
                 }
             }
             return foreignUniforms;
         },
 
-        removeUniformsNotRequiredByProgram: function( activeUniformMap, programUniformMap ) {
+        removeUniformsNotRequiredByProgram: function ( activeUniformMap, programUniformMap ) {
 
             var activeUniformMapKeys = activeUniformMap.getKeys();
 
@@ -247,7 +254,7 @@ define( [
 
 
 
-        cacheUniformsForGeneratedProgram: function( program ) {
+        cacheUniformsForGeneratedProgram: function ( program ) {
 
             var foreignUniforms = this.computeForeignUniforms( program.uniformsCache, program.activeUniforms );
             program.foreignUniforms = foreignUniforms;
@@ -258,7 +265,7 @@ define( [
 
         },
 
-        applyGeneratedProgram: function( program ) {
+        applyGeneratedProgram: function ( program ) {
 
             // note that about TextureAttribute that need uniform on unit we would need to improve
             // the current uniformList ...
@@ -280,7 +287,7 @@ define( [
 
             // apply active uniforms
             // caching uniforms from attribtues make it impossible to overwrite uniform with a custom uniform instance not used in the attributes
-            var i,l, name, location;
+            var i, l, name, location;
             var activeUniformKeys = activeUniformMap.getKeys();
 
             for ( i = 0, l = activeUniformKeys.length; i < l; i++ ) {
@@ -344,7 +351,7 @@ define( [
 
 
 
-        getActiveUniformsFromProgramAttributes: function( program, activeUniformsList ) {
+        getActiveUniformsFromProgramAttributes: function ( program, activeUniformsList ) {
 
             var attributeMapStack = this.attributeMap;
 
@@ -377,7 +384,7 @@ define( [
             }
         },
 
-        getActiveUniformsFromProgramTextureAttributes: function( program, activeUniformsList ) {
+        getActiveUniformsFromProgramTextureAttributes: function ( program, activeUniformsList ) {
 
             var textureAttributeKeysList = program.trackAttributes.textureAttributeKeys;
             if ( textureAttributeKeysList === undefined ) return;
@@ -412,7 +419,7 @@ define( [
             }
         },
 
-        cacheUniformsForCustomProgram: function( program, activeUniformsList ) {
+        cacheUniformsForCustomProgram: function ( program, activeUniformsList ) {
 
             this.getActiveUniformsFromProgramAttributes( program, activeUniformsList );
 
@@ -436,11 +443,11 @@ define( [
 
         },
 
-        applyCustomProgram: (function() {
+        applyCustomProgram: ( function () {
 
             var activeUniformsList = [];
 
-            return function( program ) {
+            return function ( program ) {
 
                 // custom program so we will iterate on uniform from the program and apply them
                 // but in order to be able to use Attribute in the state graph we will check if
@@ -489,7 +496,7 @@ define( [
                     }
                 }
             };
-        })(),
+        } )(),
 
         applyAttributeMap: function ( attributeMap ) {
             var attributeStack;
@@ -711,7 +718,7 @@ define( [
 
             if ( program !== undefined ) {
                 var gl = this.getGraphicContext();
-                var color  = program.attributesCache.Color;
+                var color = program.attributesCache.Color;
                 var updateColorUniform = false;
                 var hasColorAttrib = false;
                 if ( color !== undefined ) {

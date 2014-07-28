@@ -4,9 +4,12 @@ define( [
     'osg/Shader',
     'osg/Map',
     'osg/Light',
-    'osgShader/Compiler'
+    'osgShader/shaderGenerator/Compiler'
 ], function ( Notify, Program, Shader, Map, Light, Compiler ) {
 
+    require( [ 'osg/Light' ], function ( CircularDependency ) {
+        Light = CircularDependency;
+    } );
 
     var ShaderGenerator = function () {
         this._cache = {};
@@ -31,7 +34,7 @@ define( [
                 var keya = attributeMapKeys[ j ];
                 var attributeStack = attributeMap[ keya ];
                 var attr = attributeStack.lastApplied;
-                if ( attr.libraryName() !== 'osgShader' ) {
+                if ( attr.libraryName() !== 'osg' ) {
                     continue;
                 }
 
@@ -40,7 +43,11 @@ define( [
                     continue;
                 }
 
-                hash += attr.getHash();
+                if ( attr.getHash ) {
+                    hash += attr.getHash();
+                } else {
+                    hash += attr.getType();
+                }
                 list.push( attr );
             }
             return hash;
@@ -50,7 +57,7 @@ define( [
         getActiveTextureAttributeList: function ( state, list ) {
             var hash = '';
             var attributeMapList = state.textureAttributeMapList;
-            var i,l;
+            var i, l;
 
             for ( i = 0, l = attributeMapList.length; i < l; i++ ) {
                 var attributeMapForUnit = attributeMapList[ i ];
@@ -74,12 +81,15 @@ define( [
                     }
 
                     var attr = attributeStack.lastApplied;
-                    if ( attr.libraryName() !== 'osgShader' ) {
+                    if ( attr.libraryName() !== 'osg' ) {
                         continue;
                     }
 
-
-                    hash += attr.getHash();
+                    if ( attr.getHash ) {
+                        hash += attr.getHash();
+                    } else {
+                        hash += attr.getType();
+                    }
                     list[ i ].push( attr );
                 }
             }
@@ -93,13 +103,15 @@ define( [
             for ( var i = 0, l = attributeList.length; i < l; i++ ) {
 
                 var at = attributeList[ i ];
-                var attributeUniformMap = at.getOrCreateUniforms();
-                var attributeUniformMapKeys = attributeUniformMap.getKeys();
+                if ( at.getOrCreateUniforms ){
+                    var attributeUniformMap = at.getOrCreateUniforms();
+                    var attributeUniformMapKeys = attributeUniformMap.getKeys();
 
-                for ( var j = 0, m = attributeUniformMapKeys.length; j < m; j++ ) {
-                    var name = attributeUniformMapKeys[ j ];
-                    var uniform = attributeUniformMap[ name ];
-                    uniforms[ uniform.name ] = uniform;
+                    for ( var j = 0, m = attributeUniformMapKeys.length; j < m; j++ ) {
+                        var name = attributeUniformMapKeys[ j ];
+                        var uniform = attributeUniformMap[ name ];
+                        uniforms[ uniform.name ] = uniform;
+                    }
                 }
             }
 
@@ -124,11 +136,11 @@ define( [
             return new Map( uniforms );
         },
 
-        getOrCreateProgram: ( function() {
+        getOrCreateProgram: ( function () {
+            // TODO: double check GC impact of this stack
             var textureAttributes = [];
             var attributes = [];
             return function ( state ) {
-
                 // extract valid attributes
                 var hash = '';
                 attributes.length = 0;
@@ -154,7 +166,7 @@ define( [
                 this._cache[ hash ] = program;
                 return program;
             };
-        })()
+        } )()
     };
 
     return ShaderGenerator;

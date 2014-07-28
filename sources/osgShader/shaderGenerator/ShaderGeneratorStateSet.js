@@ -1,15 +1,19 @@
 define( [
+    'osg/Utils',
     'osg/Notify',
     'osg/Program',
     'osg/Shader',
-    'osg/Map'
-], function ( Notify, Program, Shader, Map ) {
+    'osg/Map',
+    'osg/Light',
+    'osgShader/shaderGenerator/ShaderGenerator',
+    'osgShader/shaderGenerator/CompilerMaterial'
+], function ( MACROUTILS, Notify, Program, Shader, Map, Light, ShaderGenerator, Compiler ) {
 
-    var ShaderGenerator = function () {
-        this.cache = [];
+    var ShaderGeneratorStateSet = function () {
+        ShaderGenerator.call( this );
     };
 
-    ShaderGenerator.Type = {
+    ShaderGeneratorStateSet.Type = {
         VertexInit: 0,
         VertexFunction: 1,
         VertexMain: 2,
@@ -20,7 +24,7 @@ define( [
         FragmentEnd: 8
     };
 
-    ShaderGenerator.prototype = {
+    ShaderGeneratorStateSet.prototype = {
 
         getActiveTypeMember: function ( state ) {
             // we should check attribute is active or not
@@ -256,7 +260,7 @@ define( [
 
         getOrCreateVertexShader: function ( state, validAttributeKeys, validTextureAttributeKeys ) {
 
-            var modes = ShaderGenerator.Type;
+            var modes = ShaderGeneratorStateSet.Type;
             var shader = [
                 '',
                 '#ifdef GL_ES',
@@ -330,7 +334,7 @@ define( [
                 ''
             ].join( '\n' );
 
-            var modes = ShaderGenerator.Type;
+            var modes = ShaderGeneratorStateSet.Type;
 
             shader += this._writeShaderFromMode( state, validAttributeKeys, validTextureAttributeKeys, modes.FragmentInit );
 
@@ -356,5 +360,5 @@ define( [
         }
     };
 
-    return ShaderGenerator;
+    return ShaderGeneratorStateSet;
 } );
