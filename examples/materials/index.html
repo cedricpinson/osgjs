@@ -26,7 +26,7 @@
 <script type="text/javascript" src="../vendors/Q.js"></script>
 <script type="text/javascript" src="../vendors/Hammer.js"></script>
 <script type="text/javascript" src="../vendors/Leap.js"></script>
-<script type="text/javascript" src="../../builds/active/OSG.js"></script>
+
 <script type="text/javascript">
 
   function ReadJSON() {}
@@ -356,7 +356,6 @@
 };
   };
 
-OSG.globalify();
 
 function createScene() {
     var mainNode = new osg.Node();
@@ -390,8 +389,16 @@ function getWindowSize() {
     return { 'w': myWidth, 'h': myHeight };
 }
 
-window.addEventListener("load",
-function() {
+
+var  appendScript = function(scriptUrl){
+  var s = document.createElement("script");
+  s.type = "text/javascript";
+  s.src = scriptUrl;
+  document.head.appendChild(s);
+};
+
+var start = function(){
+  OSG.globalify();
 
   var size = getWindowSize();
 
@@ -407,9 +414,37 @@ function() {
   viewer.run();
 
 }
-,true);
 
-//);
+var params = window.location.href.split("?");
+params = (params.length > 1) ? params[1].split("&") : [];
+if (params.length)  {
+  appendScript ('../vendors/Require.js');
+
+
+  window.addEventListener('load', function(){
+      //var requirejs = {};
+      requirejs.config ({
+      baseUrl: '../../sources/',
+      paths: {
+            'text': 'vendors/require/text',
+            'require/text': 'vendors/require/text',
+            'Q': 'vendors/Q',
+            'Hammer': 'vendors/Hammer',
+            'Leap': 'vendors/Leap',
+            'vr': 'vendors/vr'
+        }
+      });
+    require(['OSG'], function(OSG){
+        window.OSG = OSG;
+        start();
+    });
+  });
+}
+else{
+  appendScript ('../../builds/active/OSG.js');
+  window.addEventListener('load', start, true);
+}
+
 
 </script>
 

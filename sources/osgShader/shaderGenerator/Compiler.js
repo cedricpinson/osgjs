@@ -1,18 +1,20 @@
 /*global define */
 
 define( [
-    'osg/Utils',
+    'osg/Notify',
     'osg/Uniform',
     'osg/Texture',
+    'osg/Map',
     'osgShader/utils/sprintf',
     'osgShader/ShaderNode',
     'osgShader/ShaderProcessor'
 
 
-], function ( MACROUTILS, Uniform, Texture, sprintf, ShaderNode, ShaderProcessor ) {
+], function ( Notify, Uniform, Texture, Map, sprintf, ShaderNode, ShaderProcessor ) {
 
 
     var shaderProcessor;
+
     function getOrCreateShaderProcessor() {
 
         if ( shaderProcessor === undefined ) {
@@ -28,10 +30,16 @@ define( [
         this._variables = {};
         this._vertexShader = [];
         this._fragmentShader = [];
+
+        // global stuffs
         this._scene = scene;
         this._shaderProcessor = getOrCreateShaderProcessor();
+        this._lightNodes = [];
+        this._texturesByName = {};
 
-        // separate Material / Light / TextureMaterial
+        // TODO: extract material + light to propoer method callable by inheriting
+
+        // separate Material / Light / Texture
         // because this shader generator is specific for this
         var lights = [];
         var material;
@@ -41,20 +49,30 @@ define( [
             if ( type === 'Light' ) { // && lights.length === 0) {
                 lights.push( attributes[ i ] );
             } else if ( type === 'Material' ) {
+                if ( material !== undefined ) Notify.warn( 'Multiple Material attributes latest Chosen ' );
                 material = attributes[ i ];
+
             } else {
-                MACROUTILS.warn( 'Compiler, does not know type ' + type );
+                Notify.warn( 'Compiler, does not know type ' + type );
             }
         }
 
-        var textures = new Array( textureAttributes.length );
-        for ( var j = 0, jl = textureAttributes.length; j < jl; j++ ) {
+        var texturesNum = textureAttributes.length;
+        var textures = new Array( texturesNum );
+        for ( var j = 0; j < texturesNum; j++ ) {
             var tu = textureAttributes[ j ];
             if ( tu !== undefined ) {
                 for ( var t = 0, tl = tu.length; t < tl; t++ ) {
-                    var ttype = tu[ t ].className();
-                    if ( ttype === 'TextureMaterial' || ttype === 'TextureEnvironment' ) {
-                        textures[ j ] = tu[ t ];
+                    var tuTarget = tu[ t ];
+                    var ttype = tuTarget.className();
+                    if ( ttype === 'Texture' ) {
+                        textures[ j ] = tuTarget;
+                        if ( tuTarget.getName() !== undefined ) {
+                            this._texturesByName[ tuTarget.getName() ] = tuTarget;
+                        }
+                        else {
+                            this._texturesByName[ ttype + t ] = tuTarget;
+                        }
                     }
                 }
             }
@@ -63,11 +81,8 @@ define( [
         this._lights = lights;
         this._material = material;
         this._textures = textures;
+        this._state = state;
 
-        // global stuffs
-        this._lightNodes = [];
-        this._texturesChannels = {};
-        this._environmentTextures = {};
     };
 
     Compiler.prototype = {
@@ -155,15 +170,17 @@ define( [
 
         declareUniforms: function () {
 
-            var uniformMap = this._material.getOrCreateUniforms();
-            var uniformMapKeys = uniformMap.getKeys();
+            if ( this._material ) {
+                var uniformMap = this._material.getOrCreateUniforms();
+                var uniformMapKeys = uniformMap.getKeys();
 
-            for ( var m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
+                for ( var m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
 
-                var kk = uniformMapKeys[ m ];
-                var kkey = uniformMap[ kk ];
-                this.Uniform( kkey.type, kkey.name );
+                    var kk = uniformMapKeys[ m ];
+                    var kkey = uniformMap[ kk ];
+                    this.Uniform( kkey.type, kkey.name );
 
+                }
             }
         },
 
@@ -171,43 +188,16 @@ define( [
             this.declareUniforms();
             this.declareTextures();
 
-            var finalColor;
+            var finalColor = [ 1.0, 1.0, 1.0, 1.0 ];
+            var alpha = 1.0;
 
-            // alpha
-            var alpha = this.getTextureChannel( 'Opacity' ) || new ShaderNode.InlineConstant( '1.0' );
-            // emit color
-            var emitColor = this.getTextureChannel( 'EmitColor' );
-
-            // diffuse color
-            var diffuseColor = this.getTextureChannel( 'DiffuseColor' );
-            diffuseColor = this.getVertexColor( diffuseColor );
-            if ( this._material.getShadeless() === false ) {
-                // by default geometryNormal is normal, but can change with normal map / bump map
-                var normal = this.getOrCreateGeometryNormal();
-
-                // diffuse intensity
-                var diffuseIntensity = this.getTextureChannel( 'DiffuseIntensity' );
-                diffuseColor = this.getDiffuseIntensity( diffuseColor, diffuseIntensity );
-                // diffuse output after the lambertian operation
-                var diffuseOutput = this.getLambertOutput( diffuseColor, normal );
-
-                // specular color
-                var specularColor = this.getTextureChannel( 'SpecularColor' );
-                // specular hardness
-                var specularHardness = this.getTextureChannel( 'SpecularHardness' );
-                // specular output after the cook torrance operation
-                var specularOutput = this.getCookTorranceOutput( specularColor, normal, specularHardness );
-
-                // get environments
-                var envOutput = this.getEnvironment( diffuseColor, normal, specularColor );
-
-                // get final color
-                finalColor = this.getFinalColor( emitColor, diffuseOutput, specularOutput, envOutput );
-            } else {
-                finalColor = this.getFinalColor( emitColor, diffuseColor );
+            if ( this._material ) {
+                // diffuse color
+                var diffuseColor = this.getTexture();
+                diffuseColor = this.getVertexColor( diffuseColor );
+                finalColor = this.getFinalColor( diffuseColor );
+                finalColor = this.getPremultAlpha( finalColor, diffuseColor.alpha );
             }
-
-            finalColor = this.getPremultAlpha( finalColor, alpha );
             // get srgb color and apply alpha
             var fragColor = new ShaderNode.FragColor();
             new ShaderNode.SetAlpha( this.getSrgbColor( finalColor ), alpha, fragColor );
@@ -231,22 +221,11 @@ define( [
             if ( opFinalColor.getInputs().length === 0 )
                 opFinalColor.connectInput( new ShaderNode.InlineConstant( 'vec3( 0.0, 0.0, 0.0 )' ) );
 
-            this.applyAlphaMask( finalColor );
 
             return finalColor;
         },
 
-        applyAlphaMask: function ( finalColor ) {
-            var alpha = this.getTextureChannel( 'AlphaMask', true );
-            if ( alpha ) {
-                // TODO the discard test id done at the end of the shader which is stupid
-                // it would be better to find a way to move it at the top of the shader
-                var str = 'if (' + alpha.getVariable() + '< 0.01 ) discard;';
-                var operator = new ShaderNode.InlineCode( alpha );
-                operator.setCode( str );
-                operator.connectOutput( finalColor );
-            }
-        },
+
 
         getOrCreateLightNodes: function () {
             var lights = this._lights;
@@ -277,18 +256,6 @@ define( [
             return this.Varying( 'vec3', 'FragEyeVector' );
         },
 
-        getOrCreateInputTangent: function () {
-            return this.Varying( 'vec4', 'FragTangent' );
-        },
-
-        getOrCreateFrontTangent: function () {
-            var inputTangent = this.getOrCreateInputTangent();
-            var frontTangent = this.Variable( 'vec4', 'frontTangent' );
-            new ShaderNode.FrontNormal( inputTangent, frontTangent );
-
-            return frontTangent;
-        },
-
         getOrCreateNormalizedNormal: function () {
             var normal = this._variables[ 'normal' ];
             if ( normal )
@@ -303,32 +270,6 @@ define( [
                 return eye;
             this.normalizeNormalAndEyeVector();
             return this._variables[ 'eyeVector' ];
-        },
-
-        getOrCreateGeometryNormal: function () {
-            var geoNormal = this._variables[ 'geoNormal' ];
-            if ( geoNormal )
-                return geoNormal;
-            geoNormal = this.Variable( 'vec3', 'geoNormal' );
-
-            var texturesChannels = this._texturesChannels;
-            var normal = this.getOrCreateNormalizedNormal();
-
-            if ( texturesChannels.Geometry === undefined ) {
-                new ShaderNode.PassValue( normal, geoNormal );
-                return geoNormal;
-            }
-
-            var geoType = this._textures[ texturesChannels.Geometry.texture ].getRealType();
-
-            if ( geoType === 'Normal' ) {
-                normal = this.getNormalMapNormal( texturesChannels.Geometry );
-            } else if ( geoType === 'Bump' ) {
-                normal = this.getBumpMapNormal( texturesChannels.Geometry );
-            }
-
-            new ShaderNode.PassValue( normal, geoNormal );
-            return geoNormal;
         },
 
         // It should be called by getOrCreateNormalizedNormal or getOrCreateNormalizedPosition ONLY
@@ -349,15 +290,6 @@ define( [
             normalizeNormalAndVector.connectOutputEyeVector( outputPosition );
         },
 
-        getSrgbColor: function ( finalColor ) {
-            var gamma = this.Variable( 'float' );
-            gamma.setValue( ShaderNode.Linear2sRGB.defaultGamma );
-            var finalSrgbColor = this.Variable( 'vec3' );
-            new ShaderNode.Linear2sRGB( finalColor, finalSrgbColor, gamma );
-
-            return finalSrgbColor;
-        },
-
         getPremultAlpha: function ( finalColor, alpha ) {
             if ( alpha === undefined )
                 return finalColor;
@@ -368,83 +300,15 @@ define( [
             return premultAlpha;
         },
 
-        getEnvironment: function ( diffColor, normal, specColor ) {
-            var envTextures = this._environmentTextures;
-            var envTexDiffuse = envTextures.diffuse;
-            if ( envTexDiffuse === undefined )
-                return undefined;
+        getSrgbColor: function ( finalColor ) {
+            var gamma = this.Variable( 'float' );
+            gamma.setValue( ShaderNode.Linear2sRGB.defaultGamma );
+            var finalSrgbColor = this.Variable( 'vec3' );
+            new ShaderNode.Linear2sRGB( finalColor, finalSrgbColor, gamma );
 
-            var envTexSpecular = envTextures.specular;
-
-            if ( diffColor === undefined && ( envTexSpecular === undefined || specColor === undefined ) )
-                return undefined;
-
-            // common uniform name to use in shaders
-            var textureEnv = envTexSpecular || envTexDiffuse;
-            var envUniformMap = textureEnv.getCommonUniforms();
-
-            var envTransform = this.Uniform( envUniformMap.environmentTransform );
-            // factor to boost the intensity of the enfironment
-            var envExposure = this.Uniform( envUniformMap.exposure );
-
-            // envOutput = spec + diff
-            // or envOutput = diff
-            var envOutput = this.Variable( 'vec3' );
-            var opEnvironment = new ShaderNode.AddVector();
-            opEnvironment.connectOutput( envOutput );
-
-            if ( envTexSpecular && specColor ) {
-                var envSpec = this.getEnvironmentSpecular( envTexSpecular, envUniformMap, envTransform, envExposure, normal, specColor );
-                opEnvironment.connectInput( envSpec );
-            }
-
-            if ( envTexDiffuse && diffColor ) {
-                var envDiff = this.getEnvironmentDiffuse( envTexDiffuse, envUniformMap, envTransform, envExposure, diffColor, normal );
-                opEnvironment.connectInput( envDiff );
-            }
-
-            return envOutput;
+            return finalSrgbColor;
         },
 
-        getEnvironmentSpecular: function ( envTexSpecular, envUniformMap, envTransform, envExposure, normal, specColor ) {
-
-            var uniformMap = this._material.getOrCreateUniforms();
-            var matRef = this.getVariable( uniformMap.reflection.name );
-
-            var eye = this.getOrCreateNormalizedPosition();
-
-            var spheremapLookup = this.Variable( 'vec3' );
-            var spheremapSampler = this.Sampler( 'sampler2D', envUniformMap.textureSpecular.getName() );
-            var textureSize = this.Uniform( envTexSpecular.getOrCreateUniforms().size );
-            var nodeReflection = new ShaderNode.SpheremapReflection( envTransform, spheremapSampler, textureSize, eye, normal, spheremapLookup );
-            nodeReflection.createFragmentShaderGraph( this );
-
-            var operator = new ShaderNode.MultVector( spheremapLookup, specColor, envExposure, matRef );
-            var environmentReflection = this.Variable( 'vec3' );
-            operator.connectOutput( environmentReflection );
-
-            return environmentReflection;
-        },
-
-        getEnvironmentDiffuse: function ( envTexDiffuse, envUniformMap, envTransform, envExposure, diffColor, normal ) {
-            // factor of light used as a multiplier
-            var environmentLight = this.Uniform( envUniformMap.light );
-            var environmentNormal = this.Variable( 'vec3' );
-            new ShaderNode.EnvironmentTransform( envTransform, normal, environmentNormal );
-
-            var sampler = this.Sampler( 'sampler2D', envUniformMap.textureDiffuse.getName() );
-            var textureSize = this.Uniform( envTexDiffuse.getOrCreateUniforms().size );
-
-            var decodedColor = this.Variable( 'vec3' );
-            new ShaderNode.TextureSpheremapHDR( sampler, textureSize, environmentNormal, decodedColor );
-
-            // lighting intensity
-            var operator = new ShaderNode.MultVector( decodedColor, environmentLight, envExposure, diffColor );
-            var environmentLighting = this.Variable( 'vec3' );
-            operator.connectOutput( environmentLighting );
-
-            return environmentLighting;
-        },
 
         getLambertOutput: function ( diffuseColor, normal ) {
 
@@ -482,54 +346,6 @@ define( [
             return specularOutput;
         },
 
-        getNormalMapNormal: function ( channel ) {
-            var normal = this.getOrCreateNormalizedNormal();
-
-            var textures = this._textures;
-            var texUnit = channel.texture;
-
-            var output = this.Variable( 'vec3' );
-            var normalTmp = this.Variable( 'vec3' );
-            new ShaderNode.NormalTangentSpace( this.getOrCreateFrontTangent(), normal, channel.variable, normalTmp );
-
-            var textureNormal = textures[ texUnit ];
-            var normalUniform = textureNormal.getOrCreateUniforms( texUnit ).Geometry;
-            var normalFactor = this.Uniform( normalUniform.getType(), normalUniform.getName() );
-
-            var mult = new ShaderNode.Blend( 'MIX', normal, normalTmp, normalFactor );
-            mult.connectOutput( output );
-            return output;
-        },
-
-        getBumpMapNormal: function ( channel ) {
-            var normal = this.getOrCreateNormalizedNormal();
-
-            var textures = this._textures;
-            var texUnit = channel.texture;
-
-            var output = this.Variable( 'vec3' );
-            var normalTmp = this.Variable( 'vec3', 'normalTmp' );
-            new ShaderNode.Bumpmap( this.getOrCreateFrontTangent(), normal, channel.variable, normalTmp );
-
-            var textureBump = textures[ texUnit ];
-            var bumpUniform = textureBump.getOrCreateUniforms( texUnit ).Geometry;
-            var bumpFactor = this.Uniform( bumpUniform.getType(), bumpUniform.getName() );
-
-            var mult = new ShaderNode.Blend( 'MIX', normal, normalTmp, bumpFactor );
-            mult.connectOutput( output );
-            return output;
-        },
-
-        getDiffuseIntensity: function ( diffuseColor, diffuseIntensity ) {
-            if ( diffuseColor === undefined || diffuseIntensity === undefined )
-                return diffuseColor;
-            var colorTmp = this.Variable( 'vec3' );
-            var operator = new ShaderNode.MultVector( diffuseColor, diffuseIntensity );
-            operator.comment( 'diffuse_color = diffuse_color * diffuse_intensity' );
-            operator.connectOutput( colorTmp );
-            return colorTmp;
-        },
-
         getVertexColor: function ( diffuseColor ) {
             if ( diffuseColor === undefined )
                 return undefined;
@@ -551,22 +367,66 @@ define( [
             return tmp;
         },
 
-        getTextureChannel: function ( channelName, dontApplyFactor ) {
-            var texturesChannels = this._texturesChannels;
-            var texChannel = texturesChannels[ channelName ];
-            if ( texChannel === undefined )
-                return undefined;
 
-            var texColor = texChannel.variable;
-            if ( dontApplyFactor === true )
+        getOrCreateUniformSharedOnTextureUnit: function ( unit ) {
+            var map = this.uniformsSharedOnTextureUnit;
+
+            if ( map )
+                return map;
+
+            // handle texture unit uniform here
+            // Here there is an issue because we need to add the used uniform for
+            // this channel name
+            var uniforms = {};
+
+            var uniformTextureUnitName = 'Texture' + unit.toString();
+            if ( !uniforms[ uniformTextureUnitName ] ) {
+                uniforms[ uniformTextureUnitName ] = Uniform.createInt( 0, uniformTextureUnitName );
+            }
+
+            var uniformName = 'u' + unit + 'Factor';
+            uniforms[ unit ] = Uniform.createFloat1( uniformName );
+
+
+            this.uniformsSharedOnTextureUnit = new Map( uniforms );
+
+            return this.uniformsSharedOnTextureUnit;
+        },
+
+        getOrCreateUniforms: function ( unit ) {
+            var obj = this.uniforms;
+
+            if ( obj[ unit ] ) return obj[ unit ];
+
+            var uniformMap = this.getOrCreateUniformSharedOnTextureUnit( unit );
+            obj[ unit ] = uniformMap;
+
+            return obj[ unit ];
+        },
+        getTexture: function ( name, dontApplyFactor ) {
+            var textures = this._textures;
+            var tex, texUnit = 0;
+            if ( name === undefined ) {
+                tex = textures[ texUnit ];
+                name = 'Texture' + texUnit;
+            }
+            else {
+                tex = this.textures[ name ];
+                if ( tex === undefined )
+                    return undefined;
+            }
+
+            var texColor = this._texturesByName[ name ].variable;
+            if ( dontApplyFactor === true ) {
                 return texColor;
+            }
 
-            var texUnit = texChannel.texture;
+            //texUnit = tex.texture;
             var uniformMap = this._textures[ texUnit ].getOrCreateUniforms( texUnit );
-            var texFactorUniform = uniformMap[ channelName ];
+            var texFactorUniform = uniformMap[ 'texture' ]; // was uniformMap[name], but doesn't do
             var factorUniform = this.Uniform( texFactorUniform.getType(), texFactorUniform.getName() );
 
-            var output = this.Variable( texColor.getType(), 'channel' + channelName );
+            var output = this.Variable( texColor.getType(), name );
 
             var mult = new ShaderNode.MultVector( texColor, factorUniform );
             mult.connectOutput( output );
@@ -575,8 +435,6 @@ define( [
         },
 
         declareTextures: function () {
-            var texturesChannels = this._texturesChannels;
-            var environmentsTextures = this._environmentTextures;
 
             var textures = this._textures;
             var nbTextures = textures.length;
@@ -587,72 +445,39 @@ define( [
                     continue;
                 }
                 var textureClassName = texture.className();
-                if ( textureClassName === 'TextureEnvironment' ) {
-                    var channel = texture.getChannel();
-                    if ( channel === 'Specular' ) {
-                        environmentsTextures.specular = texture;
-                    } else if ( channel === 'Diffuse' ) {
-                        environmentsTextures.diffuse = texture;
-                    }
-                } else if ( textureClassName === 'TextureMaterial' ) {
+                if ( textureClassName === 'Texture' ) {
 
-                    var textureChannel = texture.getChannel();
-
-                    var samplerName = texture.getSamplerName();
+                    var samplerName = 'Texture' + t.toString();
                     var textureSampler = this.getVariable( samplerName );
                     if ( textureSampler === undefined ) {
-                        if ( texture.getTexture().className() === 'Texture' ) {
+                        if ( texture.className() === 'Texture' ) {
                             textureSampler = this.Sampler( 'sampler2D', samplerName );
-                        } else if ( texture.getTexture().className() === 'TextureCubeMap' ) {
-                            textureSampler = this.Sampler( 'samplerCube', 'Texture' + t );
+                        } else if ( texture.className() === 'TextureCubeMap' ) {
+                            textureSampler = this.Sampler( 'samplerCube', samplerName );
                         }
                     }
 
-                    var texCoordUnit = texture.getTexCoordUnit();
-                    if ( texCoordUnit === undefined ) {
-                        texCoordUnit = t;
-                    }
+                    //texture.getTexCoordUnit(); // a way for material to specify uv ?
+                    var texCoordUnit = t;
 
                     var texCoord = this.getVariable( 'FragTexCoord' + texCoordUnit );
                     if ( texCoord === undefined ) {
                         texCoord = this.Varying( 'vec2', 'FragTexCoord' + texCoordUnit );
                     }
 
-                    var channelName = textureChannel.getName();
+                    var name = texture.getName();
+                    if ( name === undefined ) {
+                        name = 'Texture' + texCoordUnit;
+                    }
                     var output;
+                    //texture.getTexCoordUnit(); // a way for material to specify uv ?
                     var textureUnit = t;
 
-                    switch ( channelName ) {
-                    case 'DiffuseColor':
-                        output = this.createTextureChannelsDiffuseColor( texture, textureSampler, texCoord );
-                        break;
-                    case 'DiffuseIntensity':
-                        output = this.createTextureChannelsDiffuseIntensity( textureSampler, texCoord );
-                        break;
-                    case 'Opacity':
-                    case 'AlphaMask':
-                        output = this.createTextureChannelsAlphaOpacity( texture, textureSampler, texCoord );
-                        break;
-                    case 'SpecularColor':
-                        output = this.createTextureChannelsSpecularColor( textureSampler, texCoord );
-                        break;
-                    case 'SpecularHardness':
-                        output = this.createTextureChannelsSpecularHardness( textureSampler, texCoord );
-                        break;
-                    case 'EmitColor':
-                        output = this.createTextureChannelsEmitColor( texture, textureSampler, texCoord );
-                        break;
-                    case 'Mirror':
-                        output = this.createTextureChannelsMirror( textureSampler, texCoord );
-                        break;
-                    case 'Geometry':
-                        output = this.createTextureChannelsGeometry( texture, textureSampler, texCoord, textureUnit );
-                        break;
-                    }
+                    output = this.createTexturesDiffuseColor( texture, textureSampler, texCoord );
 
                     // if the texture channel is valid we register it
                     if ( output !== undefined ) {
-                        texturesChannels[ channelName ] = {
+                        this._texturesByName[ name ] = {
                             'variable': output,
                             'texture': textureUnit
                         };
@@ -662,42 +487,20 @@ define( [
             }
         },
 
-        createTextureChannelsDiffuseColor: function ( texture, textureSampler, texCoord ) {
+        createTexturesDiffuseColor: function ( texture, textureSampler, texCoord ) {
             var output, node, texel, srgb2linearTmp;
-            if ( texture.getPremultiplyAlpha() ) {
-                texel = this.Variable( 'vec4' );
-                var premult = this.Variable( 'vec3' );
-                node = new ShaderNode.TextureRGBA( textureSampler, texCoord, texel );
-                if ( texture.getSRGB() ) {
-                    srgb2linearTmp = this.Variable( 'vec4' );
-                    node = new ShaderNode.sRGB2Linear( texel, srgb2linearTmp );
-                    node = new ShaderNode.PreMultAlpha( srgb2linearTmp, premult );
-                } else {
-                    node = new ShaderNode.PreMultAlpha( texel, premult );
-                }
-                output = premult;
-            } else {
-                texel = this.Variable( 'vec3' );
-                node = new ShaderNode.TextureRGB( textureSampler, texCoord, texel );
-                if ( texture.getSRGB() ) {
-                    srgb2linearTmp = this.Variable( 'vec3' );
-                    node = new ShaderNode.sRGB2Linear( texel, srgb2linearTmp );
-                    output = srgb2linearTmp;
-                } else {
-                    output = texel;
-                }
-            }
+            texel = this.Variable( 'vec4' );
+            var premult = this.Variable( 'vec3' );
+            node = new ShaderNode.TextureRGBA( textureSampler, texCoord, texel );
+            srgb2linearTmp = this.Variable( 'vec4' );
+            node = new ShaderNode.sRGB2Linear( texel, srgb2linearTmp );
+            node = new ShaderNode.PreMultAlpha( srgb2linearTmp, premult );
+            output = premult;
             return output;
         },
 
-        createTextureChannelsDiffuseIntensity: function ( textureSampler, texCoord ) {
-            var node = new ShaderNode.TextureRGB( textureSampler, texCoord );
-            var output = this.Variable( 'vec3' );
-            node.connectOutput( output );
-            return output;
-        },
 
-        createTextureChannelsAlphaOpacity: function ( texture, textureSampler, texCoord ) {
+        createTexturesAlphaOpacity: function ( texture, textureSampler, texCoord ) {
             var node;
             var useTextureIntensity = false;
             // TODO it look that this part should be rewritten
@@ -711,7 +514,7 @@ define( [
                     useTextureIntensity = true;
                 }
             }
-            if ( texture.getTexture().getInternalFormat() === Texture.LUMINANCE || useTextureIntensity ) {
+            if ( texture.getInternalFormat() === Texture.LUMINANCE || useTextureIntensity ) {
                 node = new ShaderNode.TextureIntensity( textureSampler, texCoord );
             } else {
                 node = new ShaderNode.TextureAlpha( textureSampler, texCoord );
@@ -721,21 +524,21 @@ define( [
             return output;
         },
 
-        createTextureChannelsSpecularColor: function ( textureSampler, texCoord ) {
+        createTexturesSpecularColor: function ( textureSampler, texCoord ) {
             var node = new ShaderNode.TextureRGB( textureSampler, texCoord );
             var output = this.Variable( 'vec3' );
             node.connectOutput( output );
             return output;
         },
 
-        createTextureChannelsSpecularHardness: function ( textureSampler, texCoord ) {
+        createTexturesShininess: function ( textureSampler, texCoord ) {
             var node = new ShaderNode.TextureIntensity( textureSampler, texCoord );
             var output = this.Variable( 'float' );
             node.connectOutput( output );
             return output;
         },
 
-        createTextureChannelsEmitColor: function ( texture, textureSampler, texCoord ) {
+        createTexturesEmissionColor: function ( texture, textureSampler, texCoord ) {
             var node;
             var output = this.Variable( 'vec3' );
             var texel, srgb2linearTmp;
@@ -765,37 +568,10 @@ define( [
             return output;
         },
 
-        createTextureChannelsMirror: function ( textureSampler, texCoord ) {
+        createTexturesMirror: function ( textureSampler, texCoord ) {
             var node = new ShaderNode.TextureIntensity( textureSampler, texCoord );
             var output = this.Variable( 'float' );
             node.connectOutput( output );
-            return output;
-        },
-
-        createTextureChannelsGeometry: function ( texture, textureSampler, texCoord, texUnit ) {
-            var geoType = texture.getRealType();
-            var output, node;
-
-            if ( geoType === 'Normal' ) {
-                node = new ShaderNode.TextureNormal( textureSampler, texCoord );
-                output = this.Variable( 'vec3' );
-                node.connectOutput( output );
-            } else if ( geoType === 'Bump' ) {
-                var bumpPassSize = new ShaderNode.PassValue();
-                var texSize = this.Variable( 'vec2', 'texSize' );
-                bumpPassSize.connectOutput( texSize );
-
-                var bumpSizeUniform = texture.getOrCreateUniforms( texUnit ).GeometrySize;
-                var bumpSize = this.Uniform( bumpSizeUniform.getType(), bumpSizeUniform.getName() );
-
-                bumpSize.connectOutput( bumpPassSize );
-
-                node = new ShaderNode.TextureGradient( textureSampler, texCoord, texSize );
-                output = this.Variable( 'vec2', 'bumpGradient' );
-                node.connectOutput( output );
-            } else {
-                MACROUTILS.error( 'impossible has happened with bump texture ' + texture.getTexture().getImage().getURL() );
-            }
             return output;
         },
 
@@ -810,6 +586,7 @@ define( [
             }
             functor.call( functor, node );
         },
+
         evaluateGlobalFunctionDeclaration: function ( node ) {
             var func = function ( node ) {
                 if ( node.globalFunctionDeclaration &&
@@ -875,14 +652,12 @@ define( [
                 'attribute vec3 Vertex;',
                 'attribute vec4 Color;',
                 'attribute vec3 Normal;',
-                'attribute vec4 Tangent;',
                 'uniform float ArrayColorEnabled;',
                 'uniform mat4 ModelViewMatrix;',
                 'uniform mat4 ProjectionMatrix;',
                 'uniform mat4 NormalMatrix;',
                 'varying vec4 VertexColor;',
                 'varying vec3 FragNormal;',
-                'varying vec4 FragTangent;',
                 'varying vec3 FragEyeVector;',
                 '',
                 ''
@@ -912,7 +687,6 @@ define( [
             this._vertexShader.push( [ '',
                 'void main() {',
                 '  FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
-                '  FragTangent = NormalMatrix * Tangent;',
                 '  FragEyeVector = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
                 '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
                 '  if (ArrayColorEnabled == 1.0)',
@@ -950,6 +724,7 @@ define( [
         },
 
         createVertexShader: function () {
+            // Call to specialised inhenrited shader Compiler
             this.createVertexShaderGraph();
             var shader = this._vertexShader.join( '\n' );
             //osg.log('Vertex Shader');
@@ -959,6 +734,7 @@ define( [
         },
 
         createFragmentShader: function () {
+            // Call to specialised inhenrited shader Compiler
             var root = this.createFragmentShaderGraph();
 
             this._fragmentShader.push( [ '',
@@ -1000,7 +776,7 @@ define( [
 
             shader = this._shaderProcessor.processShader( shader );
 
-            MACROUTILS.debug( shader );
+            Notify.debug( shader );
             return shader;
         }
     };

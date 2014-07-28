@@ -2,7 +2,7 @@ define( [
     'osg/Utils',
     'osg/Program',
     'osg/Shader',
-    'osgShader/ShaderGenerator',
+    'osgShader/shaderGenerator/ShaderGenerator',
     'osgShader/shaderGenerator/CompilerShadeless'
 
 ], function ( MACROUTILS, Program, Shader, ShaderGenerator, CompilerShadeless ) {

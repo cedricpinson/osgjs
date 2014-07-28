@@ -5,20 +5,21 @@ define( [
 
 ], function ( MACROUTILS, Compiler, shaderNode ) {
 
-    var CompilerShadeless = function ( state, attributes, textureAttributes, scene ) {
+    var CompilerMaterial = function ( state, attributes, textureAttributes, scene ) {
         Compiler.call( this, state, attributes, textureAttributes, scene );
+
     };
 
-    CompilerShadeless.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
+    CompilerMaterial.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
         createFragmentShaderGraph: function () {
             this.declareUniforms();
             this.declareTextures();
 
             // diffuse color
-            var diffuseColor = this.getTexture( 'DiffuseColor' );
+            var diffuseColor = this.getTexture();
             diffuseColor = this.getVertexColor( diffuseColor );
 
-            var alpha = this.getTexture( 'Opacity' ) || new shaderNode.InlineConstant( '1.0' );
+            var alpha =  new shaderNode.InlineConstant( '1.0' ); //|| this.getTexture( 'Opacity' );
 
             // get final color
             var finalColor = this.getFinalColor( diffuseColor );
@@ -34,5 +35,5 @@ define( [
         }
     } );
 
-    return CompilerShadeless;
+    return CompilerMaterial;
 } );

@@ -13,13 +13,13 @@ define ( [
     var lib = {};
 
     // use sublib except _ of course
-    var subnamespace = Array.prototype.slice.call(arguments, 1);
+    var subnamespace = Array.prototype.slice.call(arguments, 0);
 
     // add all sub component to root level of the lib
     subnamespace.forEach( function( component, index ) {
-                var shaderNodeEntries = Object.keys(component);
+        var shaderNodeEntries = Object.keys(component);
         shaderNodeEntries.forEach( function( key ) {
-                var element = component[key];
+            var element = component[key];
             if ( this[key] !== undefined ) { // if exist throw exception
                 throw 'duplicate entry in ShaderNode library';
             }
