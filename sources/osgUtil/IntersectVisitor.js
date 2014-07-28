@@ -165,6 +165,7 @@ define( [
             var ns = [ 0.0, 0.0, 0.0 ];
             var ne = [ 0.0, 0.0, 0.0 ];
             return function( node ) {
+                // World space Operation
                 if ( this.transformRay( ns, ne ) === false ) {
                     return;
                 }
@@ -176,6 +177,7 @@ define( [
                 if ( node.getViewMatrix ) { // Camera/View
                     this.applyCamera( node );
                 } else {
+                    // now on to local space
                     this.applyNode( node, ns, ne );
                 }
             };

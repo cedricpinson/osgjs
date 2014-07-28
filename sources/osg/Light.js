@@ -1,23 +1,23 @@
-define ( [
+define( [
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Matrix',
     'osg/Vec3',
     'osg/Vec4',
-    'osgShader/ShaderGenerator',
     'osg/Map'
-] , function( MACROUTILS, StateAttribute, Uniform, Matrix, Vec3, Vec4, ShaderGenerator, Map ) {
+], function ( MACROUTILS, StateAttribute, Uniform, Matrix, Vec3, Vec4, Map ) {
 
 
-    var Light = function( lightNumber ) {
-        StateAttribute.call(this);
+    var Light = function ( lightNumber ) {
+        StateAttribute.call( this );
 
-        if (lightNumber === undefined) {
+        if ( lightNumber === undefined ) {
             lightNumber = 0;
         }
 
         this._color = [ 1.0, 1.0, 1.0 ];
+        this._ambient = [ 0.0, 0.0, 0.0 ];
         this._useDiffuse = true;
         this._useSpecular = true;
         this._position = [ 0.0, 0.0, 0.0 ];
@@ -38,14 +38,22 @@ define ( [
     Light.uniforms = {};
     Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
         attributeType: 'Light',
-        cloneType: function() {return new Light(this._lightUnit); },
-        getType: function() { return this.attributeType; },
-        getTypeMember: function() { return this.attributeType + this._lightUnit;},
-        getUniformName: function (name) { return this.getPrefix()+ '_uniform_' + name; },
-        getHash: function() {
-            return 'Light'+this._lightUnit + this._type + this._falloffType + this._useSphere.toString()+this._useDiffuse.toString() + this._useSpecular.toString();
+        cloneType: function () {
+            return new Light( this._lightUnit );
         },
-        getOrCreateUniforms: function() {
+        getType: function () {
+            return this.attributeType;
+        },
+        getTypeMember: function () {
+            return this.attributeType + this._lightUnit;
+        },
+        getUniformName: function ( name ) {
+            return this.getPrefix() + '_uniform_' + name;
+        },
+        getHash: function () {
+            return 'Light' + this._lightUnit + this._type + this._falloffType + this._useSphere.toString() + this._useDiffuse.toString() + this._useSpecular.toString();
+        },
+        getOrCreateUniforms: function () {
 
             var obj = Light;
             var typeMember = this.getTypeMember();
@@ -76,55 +84,155 @@ define ( [
             return obj.uniforms[ typeMember ];
         },
 
-        isEnable: function() { return this._enable; },
-        setEnable: function( bool ) { this._enable = bool;},
-        setPosition: function(a) { Vec3.copy(a, this._position); },
-        setDirection: function(a) { Vec3.copy(a, this._direction); },
-
-        setColor: function(a) { Vec3.copy(a, this._color); this.dirty(); },
-        getColor: function() { return this._color; },
-
-        setEnergy: function(a) { this._energy = a; this.dirty(); },
-        getEnergy: function() { return this._energy; },
-
-        setSpotCutoff: function(a) { this._spotCutoff = a; this.dirty(); },
-        setSpotBlend: function(a) { this._spotBlend = a; this.dirty(); },
-
-        setUseDiffuse: function(a) { this._useDiffuse = a; this.dirty(); },
-        getUseDiffuse: function() { return this._useDiffuse; },
-
-        setUseSpecular: function(a) { this._useSpecular = a; this.dirty(); },
-        getUseSpecular: function() { return this._useSpecular; },
-
-        setLightType: function(a) {
-            if (a === 'SUN' || a === 'HEMI' ) {
-                this._position = [0,0,-1];
-            } else {
-                this._position = [0,0,0];
-            }
-            this._type = a; this.dirty();
+        isEnable: function () {
+            return this._enable;
         },
-        getLightType: function() { return this._type; },
+        setEnable: function ( bool ) {
+            this._enable = bool;
+        },
+        setPosition: function ( a ) {
+            Vec3.copy( a, this._position );
+        },
+        setDirection: function ( a ) {
+            Vec3.copy( a, this._direction );
+        },
 
-        setFalloffType: function(value) { this._falloffType = value;},
-        getFalloffType: function() { return this._falloffType; },
+        setColor: function ( a ) {
+            Vec3.copy( a, this._color );
+            this.dirty();
+        },
+        getColor: function () {
+            return this._color;
+        },
 
-        setUseSphere: function(value) { this._useSphere = value;},
-        getUseSphere: function() { return this._useSphere;},
+        setAmbient: function ( a ) {
+            Vec3.copy( a, this._ambient );
+            this.dirty();
+        },
+        getAmbient: function () {
+            return this._ambient;
+        },
 
-        setDistance: function(value) { this._distance = value; this.dirty();},
-        getDistance: function() { return this._distance; },
 
-        setLightNumber: function(unit) { this._lightUnit = unit; this.dirty(); },
-        getLightNumber: function() { return this._lightUnit; },
+        setEnergy: function ( a ) {
+            this._energy = a;
+            this.dirty();
+        },
+        getEnergy: function () {
+            return this._energy;
+        },
 
-        getPrefix: function() { return this.getType() + this._lightUnit; },
-        getParameterName: function (name) { return this.getPrefix()+ '_' + name; },
+        setSpotCutoff: function ( a ) {
+            this._spotCutoff = a;
+            this.dirty();
+        },
+        setSpotBlend: function ( a ) {
+            this._spotBlend = a;
+            this.dirty();
+        },
 
-        applyPositionedUniform: (function() {
+
+        setConstantAttenuation: function ( value ) {
+            this._falloffType = 'INVERSE_CONSTANT';
+            this._distance = value;
+            this.dirty();
+        },
+
+        setLinearAttenuation: function ( value ) {
+            this._falloffType = 'INVERSE_LINEAR';
+            this._distance = value;
+            this.dirty();
+        },
+
+        setQuadraticAttenuation: function ( value ) {
+            this._falloffType = 'INVERSE_SQUARE';
+            this._distance = value;
+            this.dirty();
+        },
+
+        setDiffuse: function ( a ) {
+            this._diffuse = a;
+            this.setUseDiffuse(a);
+            this.dirty();
+        },
+
+        setUseDiffuse: function ( a ) {
+            this._useDiffuse = a;
+            this.dirty();
+        },
+
+        getUseDiffuse: function () {
+            return this._useDiffuse;
+        },
+
+        setSpecular: function ( a ) {
+            this._specular = a;
+            this.setUseSpecular(a);
+            this.dirty();
+        },
+
+        setUseSpecular: function ( a ) {
+            this._useSpecular = a;
+            this.dirty();
+        },
+        getUseSpecular: function () {
+            return this._useSpecular;
+        },
+
+        setLightType: function ( a ) {
+            if ( a === 'SUN' || a === 'HEMI' ) {
+                this._position = [ 0, 0, -1 ];
+            } else {
+                this._position = [ 0, 0, 0 ];
+            }
+            this._type = a;
+            this.dirty();
+        },
+        getLightType: function () {
+            return this._type;
+        },
+
+        setFalloffType: function ( value ) {
+            this._falloffType = value;
+        },
+        getFalloffType: function () {
+            return this._falloffType;
+        },
+
+        setUseSphere: function ( value ) {
+            this._useSphere = value;
+        },
+        getUseSphere: function () {
+            return this._useSphere;
+        },
+
+        setDistance: function ( value ) {
+            this._distance = value;
+            this.dirty();
+        },
+        getDistance: function () {
+            return this._distance;
+        },
+
+        setLightNumber: function ( unit ) {
+            this._lightUnit = unit;
+            this.dirty();
+        },
+        getLightNumber: function () {
+            return this._lightUnit;
+        },
+
+        getPrefix: function () {
+            return this.getType() + this._lightUnit;
+        },
+        getParameterName: function ( name ) {
+            return this.getPrefix() + '_' + name;
+        },
+
+        applyPositionedUniform: ( function () {
             var invMatrix = new Matrix.create();
 
-            return function( matrix /*, state*/) {
+            return function ( matrix /*, state*/ ) {
 
                 var uniformMap = this.getOrCreateUniforms();
 
@@ -136,8 +244,7 @@ define ( [
                     Matrix.inverse( invMatrix, invMatrix );
                     Matrix.transpose( invMatrix, invMatrix );
                     Matrix.transformVec3( invMatrix, this._position, uniformMap.position.get() );
-                }
-                else {
+                } else {
                     Matrix.transformVec3( matrix, this._position, uniformMap.position.get() );
                 }
                 if ( this._type === 'SPOT' ) {
@@ -153,10 +260,9 @@ define ( [
                 uniformMap.position.dirty();
                 uniformMap.direction.dirty();
             };
-        })(),
+        } )(),
 
-        apply: function( /*state*/)
-        {
+        apply: function ( /*state*/) {
             var uniformMap = this.getOrCreateUniforms();
 
             var color = uniformMap.color.get();
@@ -183,9 +289,9 @@ define ( [
             this.setDirty( false );
         }
 
-    }),'osg','Light');
+    } ), 'osg', 'Light' );
 
     MACROUTILS.setTypeID( Light );
 
     return Light;
-});
+} );

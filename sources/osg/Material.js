@@ -1,18 +1,18 @@
 /*global define */
 
-define ( [
+define( [
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Vec4',
     'osg/Uniform',
-    'osgShader/ShaderGenerator',
+    'osgShader/ShaderGeneratorProxy',
     'osg/Map'
-] , function( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator, Map) {
+], function ( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator, Map ) {
 
     // Define a material attribute
 
-    var Material = function() {
-        StateAttribute.call(this);
+    var Material = function () {
+        StateAttribute.call( this );
         this.ambient = [ 0.2, 0.2, 0.2, 1.0 ];
         this.diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
         this.specular = [ 0.0, 0.0, 0.0, 1.0 ];
@@ -21,7 +21,7 @@ define ( [
         this._shadeless = false;
     };
 
-    Material.prototype = MACROUTILS.objectLibraryClass(MACROUTILS.objectInherit( StateAttribute.prototype, {
+    Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
         setEmission: function ( a ) {
             Vec4.copy( a, this.emission );
             this._dirty = true;
@@ -61,10 +61,18 @@ define ( [
 
         attributeType: 'Material',
 
-        cloneType: function() {return new Material(); },
-        getType: function() { return this.attributeType;},
-        getTypeMember: function() { return this.attributeType;},
-        getParameterName: function (name) { return this.getType()+ '_uniform_' + name; },
+        cloneType: function () {
+            return new Material();
+        },
+        getType: function () {
+            return this.attributeType;
+        },
+        getTypeMember: function () {
+            return this.attributeType;
+        },
+        getParameterName: function ( name ) {
+            return this.getType() + '_uniform_' + name;
+        },
 
         getOrCreateUniforms: function () {
 
@@ -80,21 +88,20 @@ define ( [
             };
 
             var uniforms = {};
-            Object.keys( uniformList ).forEach( function( key ) {
+            Object.keys( uniformList ).forEach( function ( key ) {
 
                 var type = uniformList[ key ];
                 var func = Uniform[ type ];
                 uniforms[ key ] = func( this.getParameterName( key ) );
 
-            }.bind(this) );
+            }.bind( this ) );
 
             obj.uniforms = new Map( uniforms );
             return obj.uniforms;
         },
 
 
-        apply: function( /*state*/ )
-        {
+        apply: function ( /*state*/) {
             var uniforms = this.getOrCreateUniforms();
 
             uniforms.ambient.set( this.ambient );
@@ -104,9 +111,14 @@ define ( [
             uniforms.shininess.set( [ this.shininess ] );
 
             this.setDirty( false );
+        },
+
+        getHash: function () {
+            return this.attributeType + this.ambient.toString() + this.diffuse.toString() + this.specular.toString() + this.emission.toString() + this._shadeless.toString();
         }
 
-    }), 'osg' , 'Material' );
+
+    } ), 'osg', 'Material' );
 
     return Material;
-});
+} );

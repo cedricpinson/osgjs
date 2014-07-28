@@ -1,9 +1,10 @@
 /*global define,require */
 
 define( [
+    'osg/Notify',
     'osgShader/ShaderLib'
 
-], function ( shaderLib ) {
+], function ( Notify, shaderLib ) {
 
     var shaderPrefix = shaderLib.prefix;
 
@@ -25,26 +26,26 @@ define( [
      */
 
     var getParametersURL = function () {
-        var params = {};
-        var urlParam = window.location.href;
-        if ( urlParam.indexOf( '?' ) !== -1 ) {
-            urlParam = urlParam.split( '?' )[ 1 ];
-            if ( urlParam.length > 1 ) {
-                // this detection does not work well
-                // it fails on "https://localhost.com/?testNumber=31"
-                urlParam = urlParam.replace( /&&/g, '&' ).replace( /^&/g, '' ).replace( /&/g, '\',\'' ).replace( /=/g, '\':\'' );
-                urlParam = decodeURI( urlParam );
-                urlParam = JSON.parse( '{"' + urlParam + '"}' );
-                for ( var option in urlParam ) {
-                    var val = parseFloat( urlParam[ option ] );
-                    if ( !isNaN( val ) )
-                        params[ option ] = val;
-                    else
-                        params[ option ] = urlParam[ option ];
+        var vars = [], hash;
+        if ( typeof window !== 'undefined' ){
+            var hashes = window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ).split( '&' );
+            for( var i = 0; i < hashes.length; i++ )
+            {
+                hash = hashes[i].split( '=' );
+                var element = hash[0].toLowerCase();
+                vars.push(element);
+                var result = hash[1];
+                if ( result === undefined ) {
+                    result = '1';
                 }
+                var val = parseFloat( result );
+                if ( !isNaN( val ) )
+                    vars[ element ] = val;
+                else
+                    vars[ element ] = result.toLowerCase();
             }
         }
-        return params;
+        return vars;
     };
 
     var ShaderLoader = function ( opt ) {
@@ -108,7 +109,7 @@ define( [
                 }
                 this._loaded = true;
 
-                window.dbg.viewer.assert( this._numtoLoad === 0 );
+                Notify.assert( this._numtoLoad === 0 );
             }
 
         },
@@ -152,7 +153,7 @@ define( [
                 }
                 this._loaded = true;
 
-                window.dbg.viewer.assert( this._numtoLoad === 0 );
+                Notify.assert( this._numtoLoad === 0 );
             }
             return this;
             */

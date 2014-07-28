@@ -1,11 +1,10 @@
 /*global define */
 
 define( [
-    'osg/Utils',
-    'osgShader/ShaderGenerator',
+    'osgShader/shaderGenerator/ShaderGeneratorMaterial',
     'osgShader/shaderGenerator/ShaderGeneratorShadeless',
-    'osgShader/shaderGenerator/ShaderGeneratorOutputLog'
-], function ( MACROUTILS, ShaderGenerator, ShaderGeneratorShadeless, ShaderGeneratorOutputLog ) {
+    'osgShader/shaderGenerator/ShaderGeneratorStateSet'
+], function ( ShaderGeneratorMaterial, ShaderGeneratorShadeless, ShaderGeneratorStateSet ) {
 
 
     var ShaderGeneratorProxy = function ( createInstance ) {
@@ -17,9 +16,9 @@ define( [
         }
         // object of shader generators
         this._generators = {};
-        this.addShaderGenerator( new ShaderGenerator(), 'default' );
+        this.addShaderGenerator( new ShaderGeneratorStateSet(), 'default' );
+        this.addShaderGenerator( new ShaderGeneratorMaterial(), 'material' );
         this.addShaderGenerator( new ShaderGeneratorShadeless(), 'shadeless' );
-        this.addShaderGenerator( new ShaderGeneratorOutputLog(), 'outputlog' );
         this._current = this._generators[ 'default' ];
         return this;
     };
