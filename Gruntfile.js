@@ -103,11 +103,7 @@ var gruntTasks = { };
     gruntTasks.shell = {};
     gruntTasks.gitcommit= {};
 
-    gruntTasks.wintersmith= {};
-    // duck the camel. (case)
-	gruntTasks[ 'wintersmith_compile' ] = gruntTasks.wintersmith;
-
-
+    gruntTasks[ 'wintersmith_compile' ] = {};
 
 } )();
 
@@ -299,7 +295,7 @@ var gruntTasks = { };
 // (static site gen for osgjs.org)
 ( function ( ) {
 
-    gruntTasks.wintersmith = {
+    gruntTasks[ 'wintersmith_compile' ] = {
         build: {
             options: {
               config: './website/web/config.json',
@@ -341,7 +337,7 @@ var gruntTasks = { };
         staticWeb: {
           options: {
             branch: 'gh-pages',
-            repository: '.',
+            repository: 'git@github.com:cedricpinson/osgjs.git',
             directory: path.join( BUILD_PATH, 'web' )
             //, depth: -1 // cannot push from a shallow clone
           }
@@ -365,8 +361,10 @@ var gruntTasks = { };
         staticWeb: {
           options: {
             branch: 'gh-pages',
-            repository: '.',
-            message: 'website update to latest develop'
+            repository: 'git@github.com:cedricpinson/osgjs.git',
+              message: 'website update to latest develop',
+              cwd: path.join( BUILD_PATH, 'web' ),
+              verbose: true
           }
         },
         files: {
@@ -378,8 +376,10 @@ var gruntTasks = { };
     gruntTasks.gitpush = {
         staticWeb: {
           options: {
-            branch: 'gh-pages',
-            repository: '.'
+              branch: 'gh-pages',
+              repository: 'git@github.com:cedricpinson/osgjs.git',
+              cwd: path.join( BUILD_PATH, 'web' ),
+              verbose: true
           }
         }
     };
@@ -439,6 +439,6 @@ module.exports = function ( grunt ) {
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
 
-    grunt.registerTask( 'website_only', [ 'copy:staticWeb', 'clean:staticWeb', 'gitclone:staticWeb', 'wintersmith:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb' ] );
+    grunt.registerTask( 'website_only', [ 'copy:staticWeb', 'clean:staticWeb', 'gitclone:staticWeb', 'wintersmith_compile:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb' ] );
     grunt.registerTask( 'website', [ 'default', 'docs', 'website_only' ] );
 };
