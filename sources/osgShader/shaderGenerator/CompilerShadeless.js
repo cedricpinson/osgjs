@@ -1,7 +1,7 @@
 define( [
     'osg/Utils',
     'osgShader/shaderGenerator/Compiler',
-    'osgShader/shaderNode'
+    'osgShader/ShaderNode'
 
 ], function ( MACROUTILS, Compiler, shaderNode ) {
 

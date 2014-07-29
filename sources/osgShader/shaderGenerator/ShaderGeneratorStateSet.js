@@ -7,7 +7,7 @@ define( [
     'osg/Light',
     'osgShader/shaderGenerator/ShaderGenerator',
     'osgShader/shaderGenerator/CompilerMaterial'
-], function ( MACROUTILS, Notify, Program, Shader, Map, Light, ShaderGenerator, Compiler ) {
+], function ( MACROUTILS, Notify, Program, Shader, Map, Light, ShaderGenerator ) {
 
     var ShaderGeneratorStateSet = function () {
         ShaderGenerator.call( this );

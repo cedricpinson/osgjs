@@ -493,7 +493,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );
 
     grunt.registerTask( 'build:dist', [ 'build:sources:dist' ] );
-    grunt.registerTask( 'build', [ 'build:dist', 'symlink' ] );
+    grunt.registerTask( 'build', [ 'symlink', 'build:dist' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
 
