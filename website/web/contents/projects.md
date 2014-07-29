@@ -23,8 +23,12 @@ examples:
         image: assets/img/demojs-fff.jpg
         link: http://cedricpinson.com/demojs-fff/
     -
-        tittle: Terrain Editor
+        title: Terrain Editor
         image: assets/img/terrain.jpg
         link: http://www.chromeexperiments.com/detail/webgl-terrain-editor/
+    -
+        title: PointCloudViz
+        image: assets/img/pointcloudviz.jpg
+        link: http://server.pointcloudviz.com:9090
     -
 ---
