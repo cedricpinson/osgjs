@@ -117,6 +117,7 @@ define( [
              NodeVisitor,
              Notify,
              Object,
+			 PagedLOD,
              PrimitiveSet,
              Program,
              Projection,
@@ -203,6 +204,7 @@ define( [
 	 osg.NodeVisitor = NodeVisitor;
 	 MACROUTILS.objectMix( osg, Notify );
 	 osg.Object = Object;
+     osg.PagedLOD = PagedLOD;
 	 osg.PrimitiveSet = PrimitiveSet;
 	 osg.Program = Program;
 	 osg.Projection = Projection;

@@ -104,12 +104,12 @@ define( [
                 state.apply();
 
                 var frag = state.programs[0].object.fragment.text;
-//                var fragExpected =
 
-                 ok( frag.indexOf(''), 'check shader generated fragment for material' );
+
+                ok( frag.indexOf('vec4 tmp_7; vec3 tmp_8; vec4 tmp_9; vec3 tmp_12; vec3 tmp_13; vec4 tmp_14; vec3 tmp_15; float tmp_16 = 2.4; vec3 tmp_17;') !== -1, 'check shader generated fragment for material' );
                 var uniforms  = state.programs[0].object.foreignUniforms;
 
-                 ok( frag.indexOf(''), 'check shader generated uniform for material' );
+                 ok( uniforms.length === 0, 'check shader generated uniform for material' );
                 // get and check shader generated
 
             } )();

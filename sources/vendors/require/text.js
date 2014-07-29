@@ -1,1 +1,0 @@
-../../../examples/vendors/require/Text-2.0.12.js
