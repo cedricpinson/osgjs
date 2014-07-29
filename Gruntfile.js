@@ -169,21 +169,22 @@ var gruntTasks = {};
 //
 ( function ( ) {
 
-    gruntTasks.requirejs.distSources = { options : {
-        name : path.join( path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
-        out : path.join( DIST_PATH, 'OSG.js' ),
-        include : [ 'OSG' ],
-        paths: {
-            'Q': 'vendors/Q',
-            'Hammer': 'vendors/Hammer',
-            'Leap': 'vendors/Leap',
-            'text': 'vendors/require/text'
-        },
-        wrap : {
-            startFile : path.join( UTILS_PATH, 'wrap.start' ),
-            endFile : path.join( UTILS_PATH, 'wrap.end' ) } } };
-            }
-        }
+    gruntTasks.requirejs.distSources = { 
+		options : {
+			name : path.join( path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
+			out : path.join( DIST_PATH, 'OSG.js' ),
+			include : [ 'OSG' ],
+			paths: {
+				'Q': 'vendors/Q',
+				'Hammer': 'vendors/Hammer',
+				'Leap': 'vendors/Leap',
+				'text': 'vendors/require/text'
+			},
+			wrap : {
+				startFile : path.join( UTILS_PATH, 'wrap.start' ),
+				endFile : path.join( UTILS_PATH, 'wrap.end' ) 
+			}
+		} 		
     };
 
 } )();
@@ -210,14 +211,16 @@ var gruntTasks = {};
 ( function () {
 
     // generate a requirejs without anything to build a docco docs
-    gruntTasks.requirejs.docsSources = { options : {
-        out : path.join( BUILD_PATH, 'docs/OSG.js' ),
-        include : [ 'OSG' ],
-        paths: {
-            'Q': 'vendors/Q',
-            'Hammer': 'vendors/Hammer',
-            'Leap': 'vendors/Leap'
-        }
+    gruntTasks.requirejs.docsSources = { 
+		options : {
+			out : path.join( BUILD_PATH, 'docs/OSG.js' ),
+			include : [ 'OSG' ],
+			paths: {
+				'Q': 'vendors/Q',
+				'Hammer': 'vendors/Hammer',
+				'Leap': 'vendors/Leap'
+			}
+		}
     };
 
     gruntTasks.docco = {
