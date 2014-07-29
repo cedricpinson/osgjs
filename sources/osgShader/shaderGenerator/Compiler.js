@@ -64,15 +64,18 @@ define( [
             if ( tu !== undefined ) {
                 for ( var t = 0, tl = tu.length; t < tl; t++ ) {
                     var tuTarget = tu[ t ];
-                    var ttype = tuTarget.className();
-                    if ( ttype === 'Texture' ) {
+                    var tType = tuTarget.className();
+                    var tName  = tuTarget.getName();
+                    if ( tType === 'Texture' ) {
+                        if ( tName   === undefined ) {
+                            tName = tType + t;
+                            tuTarget.setName( tName );
+                        }
                         textures[ j ] = tuTarget;
-                        if ( tuTarget.getName() !== undefined ) {
-                            this._texturesByName[ tuTarget.getName() ] = tuTarget;
-                        }
-                        else {
-                            this._texturesByName[ ttype + t ] = tuTarget;
-                        }
+                        this._texturesByName[ tName ] = {
+                            'variable': undefined,
+                            'texture': t
+                        };
                     }
                 }
             }
@@ -403,35 +406,20 @@ define( [
 
             return obj[ unit ];
         },
-        getTexture: function ( name, dontApplyFactor ) {
+        getTexture: function ( name ) {
             var textures = this._textures;
             var tex, texUnit = 0;
             if ( name === undefined ) {
                 tex = textures[ texUnit ];
                 name = 'Texture' + texUnit;
             }
-            else {
-                tex = this.textures[ name ];
-                if ( tex === undefined )
-                    return undefined;
-            }
 
-            var texColor = this._texturesByName[ name ].variable;
-            if ( dontApplyFactor === true ) {
-                return texColor;
-            }
+            tex = this._texturesByName[ name ];
+            if ( tex === undefined )
+                return undefined;
 
-            //texUnit = tex.texture;
-            var uniformMap = this._textures[ texUnit ].getOrCreateUniforms( texUnit );
-            var texFactorUniform = uniformMap[ 'texture' ]; // was uniformMap[name], but doesn't do
-            var factorUniform = this.Uniform( texFactorUniform.getType(), texFactorUniform.getName() );
-
-            var output = this.Variable( texColor.getType(), name );
-
-            var mult = new ShaderNode.MultVector( texColor, factorUniform );
-            mult.connectOutput( output );
-
-            return output;
+            var texColor = tex.variable;
+            return texColor;
         },
 
         declareTextures: function () {
@@ -464,23 +452,31 @@ define( [
                     if ( texCoord === undefined ) {
                         texCoord = this.Varying( 'vec2', 'FragTexCoord' + texCoordUnit );
                     }
-
-                    var name = texture.getName();
-                    if ( name === undefined ) {
-                        name = 'Texture' + texCoordUnit;
-                    }
                     var output;
-                    //texture.getTexCoordUnit(); // a way for material to specify uv ?
-                    var textureUnit = t;
 
                     output = this.createTexturesDiffuseColor( texture, textureSampler, texCoord );
 
                     // if the texture channel is valid we register it
+
                     if ( output !== undefined ) {
-                        this._texturesByName[ name ] = {
-                            'variable': output,
-                            'texture': textureUnit
-                        };
+                        var textureUnit = t;
+
+                        var name = texture.getName();
+                        if ( name === undefined ) {
+                            name = 'Texture' + texCoordUnit;
+                        }
+
+                        var textureMaterial = this._texturesByName[ name ];
+                        if ( textureMaterial === undefined ){
+                            this._texturesByName[ name ] = {
+                                'variable': output,
+                                'texture': textureUnit
+                            };
+                        }
+                        else{
+                            textureMaterial.variable = output;
+                            textureMaterial.texture = textureUnit;
+                        }
                     }
 
                 }
@@ -646,7 +642,9 @@ define( [
         },
 
         createVertexShaderGraph: function () {
+            var texCoordMap = {};
             var textures = this._textures;
+            var texturesMaterial = this._texturesByName;
 
             this._vertexShader.push( [ '',
                 'attribute vec3 Vertex;',
@@ -663,18 +661,18 @@ define( [
                 ''
             ].join( '\n' ) );
 
-            var texCoordMap = {};
             for ( var t = 0, tl = textures.length; t < tl; t++ ) {
                 var texture = textures[ t ];
                 if ( texture !== undefined ) {
-
                     // no method to retrieve textureCoordUnit, we maybe dont need any uvs
-                    if ( !texture.getTexCoordUnit )
+                    var textureMaterial = texturesMaterial[ texture.getName() ];
+                    if ( !textureMaterial && !textureMaterial.textureUnit )
                         continue;
 
-                    var texCoordUnit = texture.getTexCoordUnit();
+                    var texCoordUnit = textureMaterial.textureUnit;
                     if ( texCoordUnit === undefined ) {
                         texCoordUnit = t;
+                        textureMaterial.textureUnit = t;
                     }
                     if ( texCoordMap[ texCoordUnit ] === undefined ) {
                         this._vertexShader.push( 'attribute vec2 TexCoord' + texCoordUnit + ';' );
@@ -704,13 +702,15 @@ define( [
                 for ( var tt = 0, ttl = textures.length; tt < ttl; tt++ ) {
                     if ( textures[ tt ] !== undefined ) {
                         var texture = textures[ tt ];
+                        var textureMaterial = texturesMaterial[ texture.getName() ];
                         // no method getTexCoordUnit, maybe we dont need it at all
-                        if ( !texture.getTexCoordUnit )
+                        if ( !textureMaterial && !textureMaterial.textureUnit )
                             continue;
 
-                        var texCoordUnit = texture.getTexCoordUnit();
+                        var texCoordUnit = texture.textureUnit;
                         if ( texCoordUnit === undefined ) {
                             texCoordUnit = tt;
+                            textureMaterial.textureUnit = tt;
                         }
 
                         if ( texCoordMap[ texCoordUnit ] === undefined ) {
