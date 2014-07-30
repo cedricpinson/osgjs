@@ -11,6 +11,7 @@ define( [
 
     var ShaderGeneratorStateSet = function () {
         ShaderGenerator.call( this );
+        this.cache = [];
     };
 
     ShaderGeneratorStateSet.Type = {
@@ -263,9 +264,6 @@ define( [
             var modes = ShaderGeneratorStateSet.Type;
             var shader = [
                 '',
-                '#ifdef GL_ES',
-                'precision highp float;',
-                '#endif',
                 'attribute vec3 Vertex;',
                 'attribute vec4 Color;',
                 'attribute vec3 Normal;',
