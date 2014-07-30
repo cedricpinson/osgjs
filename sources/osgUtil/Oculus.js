@@ -139,16 +139,14 @@ define( [
         return quad;
     };
 
-    var createOrthoRtt = function ( left, viewportSize, canvasSize ) {
+    var createOrthoRtt = function ( left, canvasSize ) {
         var orthoCamera = new Camera();
-        var vw = viewportSize[ 0 ];
-        var vh = viewportSize[ 1 ];
         var cw = canvasSize[ 0 ];
         var ch = canvasSize[ 1 ];
         if ( left )
-            orthoCamera.setViewport( new Viewport( 0.5 * cw - vw, 0.5 * ( ch - vh ), vw, vh ) );
+            orthoCamera.setViewport( new Viewport( 0.0, 0.0, cw / 2.0, ch ) );
         else
-            orthoCamera.setViewport( new Viewport( 0.5 * cw, 0.5 * ( ch - vh ), vw, vh ) );
+            orthoCamera.setViewport( new Viewport( cw / 2.0, 0.0, cw / 2.0, ch ) );
         Matrix.makeOrtho( -0.5, 0.5, -0.5, 0.5, -5, 5, orthoCamera.getProjectionMatrix() );
         orthoCamera.setRenderOrder( Camera.NESTED_RENDER, 0 );
         orthoCamera.setReferenceFrame( Transform.ABSOLUTE_RF );
@@ -160,7 +158,7 @@ define( [
         camera.setName( 'rtt camera' );
         camera.setViewport( new Viewport( 0, 0, texture.getWidth(), texture.getHeight() ) );
         camera.setProjectionMatrix( projMatrix );
-        camera.setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+        camera.setClearColor( [ 0.3, 0.3, 0.3, 0.0 ] );
         camera.setRenderOrder( Camera.POST_RENDER, 0 );
         camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture, 0 );
         camera.attachRenderBuffer( FrameBufferObject.DEPTH_ATTACHMENT, FrameBufferObject.DEPTH_COMPONENT16 );
@@ -173,9 +171,8 @@ define( [
     Oculus.createScene = function ( viewer, rttScene, HMDconfig ) {
         var HMD = Oculus.getDefaultConfig( HMDconfig );
         var rttSize = [ HMD.hResolution, HMD.vResolution ];
-        var viewportSize = [ HMD.hResolution * 0.5, HMD.vResolution ];
-        var vp = viewer.getCamera().getViewport();
-        var canvasSize = [ vp.width(), vp.height() ];
+        var canvas = viewer.getGraphicContext().canvas;
+        var canvasSize = [ canvas.width, canvas.height ];
 
         var worldFactor = 1.0; //world unit
         var oculusUniforms = {};
@@ -189,13 +186,13 @@ define( [
         var rttTextureLeft = createTextureRtt( rttSize );
         var rttCamLeft = createCameraRtt( rttTextureLeft, oculusMatrices.projectionLeft );
         var quadTextLeft = createQuadRtt( true, rttTextureLeft, oculusUniforms );
-        var orthoCameraLeft = createOrthoRtt( true, viewportSize, canvasSize );
+        var orthoCameraLeft = createOrthoRtt( true, canvasSize );
         rttCamLeft.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, oculusMatrices.viewLeft ) );
 
         var rttTextureRight = createTextureRtt( rttSize );
         var rttCamRight = createCameraRtt( rttTextureRight, oculusMatrices.projectionRight );
         var quadTextRight = createQuadRtt( false, rttTextureRight, oculusUniforms );
-        var orthoCameraRight = createOrthoRtt( false, viewportSize, canvasSize );
+        var orthoCameraRight = createOrthoRtt( false, canvasSize );
         rttCamRight.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, oculusMatrices.viewRight ) );
 
         rttCamLeft.addChild( rttScene );
