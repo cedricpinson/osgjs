@@ -311,6 +311,7 @@ define( [
         },
         getEyePosition: function ( eye ) {
             this.computeEyePosition( this._target, this._distance, eye );
+            return eye;
         },
 
         computeEyePosition: ( function () {

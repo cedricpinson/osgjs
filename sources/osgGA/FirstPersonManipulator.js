@@ -95,6 +95,7 @@ define( [
             }
             var dir = Vec3.mult( this._direction, distance, this._tmpGetTargetDir );
             Vec3.add( this._eye, dir, pos );
+            return pos;
         },
 
         setTarget: function ( pos ) {
@@ -140,9 +141,8 @@ define( [
                 Matrix.makeRotate( this._angleHorizontal, 0.0, 0.0, 1.0, second );
                 Matrix.mult( second, first, rotMat );
 
-                var rotBase = this._rotBase;
                 // TOTO refactor the way the rotation matrix is managed
-                Matrix.preMult( rotMat, rotBase );
+                Matrix.preMult( rotMat, this._rotBase );
 
                 this._direction = Matrix.transformVec3( rotMat, upy, this._direction );
                 Vec3.normalize( this._direction, this._direction );
