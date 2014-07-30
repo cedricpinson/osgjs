@@ -444,7 +444,7 @@ var gruntTasks = {};
 
 module.exports = function ( grunt ) {
 
-    var distFullPath = path.normalize( __dirname + 'DIST_PATH' );
+    var distFullPath = path.normalize( path.join( __dirname, DIST_PATH) );
     grunt.file.mkdir( distFullPath );
 
     grunt.initConfig( extend( {
