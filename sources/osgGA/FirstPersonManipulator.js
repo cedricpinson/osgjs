@@ -6,8 +6,9 @@ define( [
     'osg/Vec2',
     'osg/Vec3',
     'osgGA/FirstPersonManipulatorMouseKeyboardController',
-    'osgGA/FirstPersonManipulatorOculusController'
-], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController ) {
+    'osgGA/FirstPersonManipulatorOculusController',
+    'osgGA/FirstPersonManipulatorDeviceOrientationController'
+], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController, FirstPersonManipulatorDeviceOrientationController ) {
 
     /**
      * Authors:
@@ -24,8 +25,8 @@ define( [
         this.init();
     };
 
-    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus'];
-    FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus' ];
+    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation'];
+    FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation' ];
 
     /** @lends FirstPersonManipulator.prototype */
     FirstPersonManipulator.prototype = MACROUTILS.objectInehrit( Manipulator.prototype, {
@@ -225,6 +226,10 @@ define( [
 
     ( function ( module ) {
         module.Oculus = FirstPersonManipulatorOculusController;
+    } )( FirstPersonManipulator );
+
+    ( function ( module ) {
+        module.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;
     } )( FirstPersonManipulator );
 
     return FirstPersonManipulator;
