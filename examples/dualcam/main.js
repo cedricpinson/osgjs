@@ -2,25 +2,33 @@
 
 var viewer;
 
+var OSG = window.OSG;
+OSG.globalify();
+
 var osg = window.osg;
 var osgGA = window.osgGA;
 var osgUtil = window.osgUtil;
 var osgDB = window.osgDB;
-
 var osgViewer = window.osgViewer;
 
+var viewer;
+
+function setupScene(viewer, sceneData) {
+    // load scene... as usual
+    viewer.setSceneData( sceneData );
+
+    // setup manipulator
+    viewer.setupManipulator( new osgGA.OrbitManipulator() );
+    viewer.getManipulator().setNode( viewer.getSceneData() );
+    viewer.getManipulator().computeHomePosition();
+    viewer.getManipulator().setEyePosition([0, -10, 5]);
+
+    viewer.run();
+}
 function onSceneLoaded( viewer, data ) {
 
-    Q( osgDB.parseSceneGraph( data ) ).then( function ( sceneData ) {
-
-        // load scene... as usual
-        viewer.setSceneData( sceneData );
-
-        viewer.setupManipulator( new osgGA.FirstPersonManipulator() );
-        viewer.getManipulator().setNode( viewer.getSceneData() );
-        viewer.getManipulator().computeHomePosition();
-
-        viewer.run();
+    new Q( osgDB.parseSceneGraph( data ) ).then( function ( sceneData ) {
+        setupScene(viewer, sceneData);
     } );
 }
 
@@ -81,7 +89,13 @@ function toggleVR() {
         // If no vrNode (first time vr is toggled), create one
         // The modelNode will be attached to it
         if ( !vrNode )
-            vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus._hmd );
+        {
+            
+            if (viewer._eventProxy.Oculus._hmd)
+                vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus._hmd );
+            else
+                vrNode = osgUtil.Oculus.createScene( viewer, modelNode );
+        }
 
         // Attach the vrNode to sceneData instead of the model
         sceneData.addChild( vrNode );
@@ -107,7 +121,7 @@ document.addEventListener('mozfullscreenchange', function( ) {
 });
 // Prefixed on Chrome up to v38
 document.addEventListener('webkitfullscreenchange', function( ) {
-    toggleVR();
+    setTimeout(toggleVR, 500);
     fullscreen = !fullscreen;
 });
 document.addEventListener('msfullscreenchange', function () {
@@ -123,8 +137,7 @@ function requestVRFullscreen() {
 
     var hmd = viewer._eventProxy.Oculus._hmd;
     if ( !hmd ) {
-        alert( 'WebVR Api is not supported by your navigator' );
-        return;
+        console.log( 'WebVR Api is not supported by your navigator' );
     }
 
     var canvas = viewer.getGraphicContext().canvas;
@@ -139,24 +152,25 @@ function requestVRFullscreen() {
 }
 
 function init() {
-    OSG.globalify();
-    // osg.setNotifyLevel(osg.DEBUG);
+
     try {
         var canvas = document.getElementById( 'View' );
 
-        viewer = new osgViewer.Viewer( canvas, {
-            antialias: true,
-            alpha: true
-        } );
+        viewer = new osgViewer.Viewer( canvas );
+        
         viewer.init();
-        onSceneLoaded( viewer, getPokerScene() );
-        // onURLloaded( 'models/ogre.osgjs', viewer );
         viewer.setLightingMode( osgViewer.View.LightingMode.SKYLIGHT );
+
+        // onSceneLoaded( viewer, getPokerScene() );
+        // setupScene( viewer, getSimpleScene() );
+        onURLloaded( 'models/ogre.osgjs', viewer );
+
         window.addEventListener( 'keypress', 
             function (event) {
                 if ( event.charCode === 'f'.charCodeAt( 0 ) )
                     requestVRFullscreen();
             }, true);
+
     } catch ( e ) {
         console.log( e );
     }
