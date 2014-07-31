@@ -35,13 +35,14 @@ define( [
         this._scene = scene;
         this._shaderProcessor = getOrCreateShaderProcessor();
         this._lightNodes = [];
+        this._lights = [];
         this._texturesByName = {};
 
         // TODO: extract material + light to propoer method callable by inheriting
 
         // separate Material / Light / Texture
         // because this shader generator is specific for this
-        var lights = [];
+        var lights = this._lights;
         var material;
         for ( var i = 0, l = attributes.length; i < l; i++ ) {
             var type = attributes[ i ].className();
