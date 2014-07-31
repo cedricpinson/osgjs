@@ -3,13 +3,9 @@ define( [
     'osg/Program',
     'osg/Shader',
     'osg/Map',
-    'osg/Light',
     'osgShader/shaderGenerator/Compiler'
-], function ( Notify, Program, Shader, Map, Light, Compiler ) {
+], function ( Notify, Program, Shader, Map, Compiler ) {
 
-    require( [ 'osg/Light' ], function ( CircularDependency ) {
-        Light = CircularDependency;
-    } );
 
     var ShaderGenerator = function () {
         this._cache = {};
@@ -25,7 +21,7 @@ define( [
 
         // filter all attribute that comes from osgShader namespace
         getActiveAttributeList: function ( state, list ) {
-
+            var Light =  require(  'osg/Light' );
             var hash = '';
             var attributeMap = state.attributeMap;
             var attributeMapKeys = attributeMap.getKeys();

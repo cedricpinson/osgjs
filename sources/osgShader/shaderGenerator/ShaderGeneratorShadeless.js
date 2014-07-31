@@ -2,43 +2,43 @@ define( [
     'osg/Utils',
     'osg/Program',
     'osg/Shader',
-    'osgShader/shaderGenerator/ShaderGenerator',
-    'osgShader/shaderGenerator/CompilerShadeless'
+    'osgShader/shaderGenerator/ShaderGenerator'
 
-], function ( MACROUTILS, Program, Shader, ShaderGenerator, CompilerShadeless ) {
+], function ( MACROUTILS, Program, Shader, ShaderGenerator ) {
 
     var ShaderGeneratorShadeless = function () {
         ShaderGenerator.call( this );
     };
 
     ShaderGeneratorShadeless.prototype = MACROUTILS.objectInherit( ShaderGenerator.prototype, {
-        getOrCreateProgram: function ( state ) {
-
-            // extract valid attributes
+        // filter all attribute that comes from osgShader namespace
+        getActiveAttributeList: function ( state, list ) {
+            var Light =  require(  'osg/Light' );
             var hash = '';
-            var attributes = [];
-            var textureAttributes = [];
-            hash += this.getActiveAttributeList( state, attributes );
-            hash += this.getActiveTextureAttributeList( state, textureAttributes );
+            var attributeMap = state.attributeMap;
+            var attributeMapKeys = attributeMap.getKeys();
 
-            if ( this._cache[ hash ] !== undefined ) {
-                return this._cache[ hash ];
+            for ( var j = 0, k = attributeMapKeys.length; j < k; j++ ) {
+                var keya = attributeMapKeys[ j ];
+                var attributeStack = attributeMap[ keya ];
+                var attr = attributeStack.lastApplied;
+                if ( attr.libraryName() !== 'osg' ) {
+                    continue;
+                }
+
+                // if it's a light we filter it (as we're shadeless)
+                if ( attr.typeID === Light.typeID  ) {
+                    continue;
+                }
+
+                if ( attr.getHash ) {
+                    hash += attr.getHash();
+                } else {
+                    hash += attr.getType();
+                }
+                list.push( attr );
             }
-
-            var shaderGen = new CompilerShadeless( state, attributes, textureAttributes, this._scene );
-            var vertexshader = shaderGen.createVertexShader();
-            var fragmentshader = shaderGen.createFragmentShader();
-
-            var program = new Program(
-                new Shader( Shader.VERTEX_SHADER, vertexshader ),
-                new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
-
-            program.hash = hash;
-            program.activeUniforms = this.getActiveUniforms( state, attributes, textureAttributes );
-            program.generated = true;
-
-            this._cache[ hash ] = program;
-            return program;
+            return hash;
         }
     } );
 

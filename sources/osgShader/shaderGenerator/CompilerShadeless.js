@@ -18,7 +18,7 @@ define( [
             var diffuseColor = this.getTexture( 'DiffuseColor' );
             diffuseColor = this.getVertexColor( diffuseColor );
 
-            var alpha = this.getTexture( 'Opacity' ) || new shaderNode.InlineConstant( '1.0' );
+            var alpha =  new shaderNode.InlineConstant( '1.0' );
 
             // get final color
             var finalColor = this.getFinalColor( diffuseColor );
