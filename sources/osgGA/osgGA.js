@@ -11,10 +11,10 @@ define( [
     'osgGA/OrbitManipulatorLeapMotionController',
     'osgGA/OrbitManipulatorMouseKeyboardController',
     'osgGA/OrbitManipulatorDeviceOrientationController',
+    'osgGA/OrbitManipulatorOculusController',
     'osgGA/SwitchManipulator',
     'osgGA/OrbitManipulatorEnums'
-
-], function ( Hammer, FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController, FirstPersonManipulatorDeviceOrientationController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorDeviceOrientationController, SwitchManipulator, OrbitManipulatorEnums ) {
+], function ( Hammer, FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController, FirstPersonManipulatorDeviceOrientationController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController, SwitchManipulator, OrbitManipulatorEnums ) {
 
     'use strict';
 
@@ -49,6 +49,10 @@ define( [
     osgGA.getOrbitManipulatorDeviceOrientationController = function () {
         return OrbitManipulatorDeviceOrientationController;
     };
+    osgGA.getOrbitManipulatorOculusController = function () {
+        return OrbitManipulatorOculusController;
+    };
+
     osgGA.SwitchManipulator = SwitchManipulator;
 
     osgGA.OrbitManipulator.Rotate = OrbitManipulatorEnums.ROTATE;

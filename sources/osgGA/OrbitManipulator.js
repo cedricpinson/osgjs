@@ -8,7 +8,9 @@ define( [
     'osgGA/OrbitManipulatorHammerController',
     'osgGA/OrbitManipulatorGamePadController',
     'osgGA/OrbitManipulatorDeviceOrientationController',
-], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController, OrbitManipulatorDeviceOrientationController ) {
+    'osgGA/OrbitManipulatorOculusController',
+
+], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController ) {
     
     'use strict';
 
@@ -87,14 +89,16 @@ define( [
         'LeapMotion',
         'GamePad',
         'Hammer',
-        'DeviceOrientation'
+        'DeviceOrientation',
+        'Oculus',
     ];
 
     OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
         'LeapMotion',
         'GamePad',
         'Hammer',
-        'DeviceOrientation'
+        'DeviceOrientation',
+        'Oculus',
     ];
 
     /** @lends OrbitManipulator.prototype */
@@ -362,8 +366,17 @@ define( [
                 var target = this._target;
                 var distance = this._distance;
 
+                /* 1. Works but bypass other manipulators */
+                // Matrix.copy( this._rotBase, this._inverseMatrix );
+
+                /* 2. Works but gets broken by other manipulators */
                 Matrix.inverse( this._rotation, this._inverseMatrix );
                 Matrix.postMult( this._rotBase, this._inverseMatrix );
+
+                /* 3. Doesnt' work */
+                // Matrix.preMult( this._rotBase, this._rotation );
+                // Matrix.inverse( this._rotBase, this._inverseMatrix );
+
                 tmpDist[ 1 ] = distance;
                 Matrix.transformVec3( this._inverseMatrix, tmpDist, eye );
 
@@ -394,6 +407,10 @@ define( [
 
     ( function ( module ) {
         module.DeviceOrientation = OrbitManipulatorDeviceOrientationController;
+    } )( OrbitManipulator );
+
+    ( function ( module ) {
+        module.Oculus = OrbitManipulatorOculusController;
     } )( OrbitManipulator );
 
     return OrbitManipulator;
