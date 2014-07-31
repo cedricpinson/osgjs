@@ -25,7 +25,7 @@ define( [
 
 
             var inputNormal = this.Varying( 'vec3', 'FragNormal' );
-            var inputTangent = this.Varying( 'vec4', 'FragTangent' );
+            //var inputTangent = this.Varying( 'vec4', 'FragTangent' );
 
             var inputPosition = this.Varying( 'vec3', 'FragEyeVector' );
             var normal = this.Variable( 'vec3', 'normal' );
