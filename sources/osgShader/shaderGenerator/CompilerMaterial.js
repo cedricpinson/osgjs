@@ -1,7 +1,7 @@
 define( [
     'osg/Utils',
     'osgShader/shaderGenerator/Compiler',
-    'osgShader/shaderNode'
+    'osgShader/ShaderNode'
 
 ], function ( MACROUTILS, Compiler, shaderNode ) {
 
@@ -25,8 +25,6 @@ define( [
 
 
             var inputNormal = this.Varying( 'vec3', 'FragNormal' );
-            var inputTangent = this.Varying( 'vec4', 'FragTangent' );
-
             var inputPosition = this.Varying( 'vec3', 'FragEyeVector' );
             var normal = this.Variable( 'vec3', 'normal' );
             var eyeVector = this.Variable( 'vec3', 'eyeVector' );
@@ -46,21 +44,10 @@ define( [
             //var alpha =  materialOpacity || new shaderNode.InlineConstant( '1.0' );
             var alpha = new shaderNode.InlineConstant( '1.0' );
 
+            var finalColor;
 
-            var finalColor = this.getFinalColor( diffuseColor );
+            if ( this._lights.length > 0 ){
 
-
-            var lightNodes = [];
-
-            var lights = this._lights;
-            for ( var i = 0, l = lights.length; i < l; i++ ) {
-                var light = lights[ i ];
-                var nodeLight = new shaderNode.Light( light );
-                nodeLight.init( this );
-                lightNodes.push( nodeLight );
-            }
-
-            if ( lightNodes.length > 0 ){
                 // by default geometryNormal is normal, but can change with normal map / bump map
                 var geometryNormal = normal;
 
@@ -75,6 +62,14 @@ define( [
                                                                     materialShininess,
                                                                     specularOutput );
 
+                var lightNodes = [];
+                var lights = this._lights;
+                for ( var i = 0, l = lights.length; i < l; i++ ) {
+                    var light = lights[ i ];
+                    var nodeLight = new shaderNode.Light( light );
+                    nodeLight.init( this );
+                    lightNodes.push( nodeLight );
+                }
 
                 nodeDiffuse.connectLights( lightNodes );
                 nodeDiffuse.createFragmentShaderGraph( this );
@@ -83,14 +78,10 @@ define( [
                 nodeCookTorrance.createFragmentShaderGraph( this );
 
                 // get final color
-                var opFinalColor = new shaderNode.AddVector( materialEmissionColor );
-                opFinalColor.connectOutput( finalColor );
-
-                // diffuse term
-                opFinalColor.connectInput( diffuseOutput );
-
-                // specular term
-                opFinalColor.connectInput( specularOutput );
+                finalColor = this.getFinalColor( materialEmissionColor, diffuseOutput, specularOutput);
+            }
+            else{
+                finalColor = this.getFinalColor( diffuseColor );
             }
 
             // premult alpha
