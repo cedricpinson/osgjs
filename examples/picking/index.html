@@ -4,6 +4,16 @@
     <meta charset="utf-8">
     <title>Picking</title>
     <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
+    <style>
+     #picking {
+       position: absolute;
+       pointer-events: none;
+     }
+     #ViewContainer {
+       position: absolute;
+       transform: translateZ(0);
+     }
+     </style>
 
     <!-- Javascript -->
     <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
@@ -21,6 +31,7 @@
     <!-- very important change the size of the parent element instead-->
     <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
   </div>
+  <div id="picking"></div>
 
   <div class="osgjs-info osgjs-info-dark">
 
