@@ -40,32 +40,7 @@ function getShader() {
         'varying vec3 vNormal;',
         'varying vec3 vInter;',
 
-        'const vec3 vecLight = vec3( 0.06189, 0.12379, 0.99037 );',
-        'const vec3 colorBackface = vec3( 0.45, 0.21, 0.13 );',
-        'const float shininess = 500.0;',
-
         'void main( void ) {',
-        '  vec3 fragColor;',
-        '  vec3 normal;',
-        '  if(gl_FrontFacing)',
-        '  {',
-        '    normal = vNormal;',
-        '    fragColor = vNormal * 0.5 + 0.5;',
-        '  }',
-        '  else',
-        '  {',
-        '    normal = -vNormal;',
-        '    fragColor = colorBackface;',
-        '  }',
-
-        '  float dotLN = dot( normal, vecLight );',
-        '  vec3 vecR = normalize( 2.0 * dotLN * normal - vecLight );',
-        '  float dotRVpow = pow( dot( vecR, vecLight ), shininess );',
-        '  vec3 ambiant = fragColor * 0.5;',
-        '  vec3 diffuse = fragColor * 0.5 * max( 0.0, dotLN );',
-        '  vec3 specular = fragColor * 0.8 * max( 0.0, dotRVpow );',
-        '  fragColor = ambiant + diffuse + specular;',
-
         '  float t = mod( uTime * 0.5, 1000.0 ) / 1000.0;', // time [0..1]
         '  t = t > 0.5 ? 1.0 - t : t;', // [0->0.5] , [0.5->0]
         '  vec3 vecDistance = ( vVertex - vInter );',
@@ -75,7 +50,7 @@ function getShader() {
         '  else if ( dotSquared < uRadiusSquared )',
         '    discard;',
         '  else',
-        '    gl_FragColor = vec4( fragColor, 1.0 );',
+        '    gl_FragColor = vec4( vNormal * 0.5 + 0.5, 1.0 );',
         '}'
     ].join( '\n' );
 
@@ -205,7 +180,7 @@ window.addEventListener( 'load',
                 var pty = parseInt( canvas.height - pt[ 1 ], 10 ) / ratioY;
                 var d = document.getElementById( 'picking' );
                 d.innerText = 'x: ' + ptx + ' ' + 'y: ' + pty + '\n' + ptFixed;
-                d.style.webkitTransform = 'translate3d(' + ptx + 'px,' + pty + 'px,0)';
+                d.style.transform = 'translate3d(' + ptx + 'px,' + pty + 'px,0)';
             }
 
         }, true );
