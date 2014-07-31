@@ -74,7 +74,7 @@ define( [
                         textures[ j ] = tuTarget;
                         this._texturesByName[ tName ] = {
                             'variable': undefined,
-                            'texture': t
+                            'textureUnit': t
                         };
                     }
                 }
@@ -446,7 +446,7 @@ define( [
                     }
 
                     //texture.getTexCoordUnit(); // a way for material to specify uv ?
-                    var texCoordUnit = t;
+                    var texCoordUnit = 0;// TODO: Check texcoord handling
 
                     var texCoord = this.getVariable( 'FragTexCoord' + texCoordUnit );
                     if ( texCoord === undefined ) {
@@ -459,7 +459,7 @@ define( [
                     // if the texture channel is valid we register it
 
                     if ( output !== undefined ) {
-                        var textureUnit = t;
+                        var textureUnit = texCoordUnit;
 
                         var name = texture.getName();
                         if ( name === undefined ) {
@@ -470,12 +470,12 @@ define( [
                         if ( textureMaterial === undefined ){
                             this._texturesByName[ name ] = {
                                 'variable': output,
-                                'texture': textureUnit
+                                'textureUnit': textureUnit
                             };
                         }
                         else{
                             textureMaterial.variable = output;
-                            textureMaterial.texture = textureUnit;
+                            textureMaterial.textureUnit = textureUnit;
                         }
                     }
 
@@ -671,8 +671,8 @@ define( [
 
                     var texCoordUnit = textureMaterial.textureUnit;
                     if ( texCoordUnit === undefined ) {
-                        texCoordUnit = t;
-                        textureMaterial.textureUnit = t;
+                        texCoordUnit = 0;// TODO: Check texcoord handling
+                        textureMaterial.textureUnit = 0;
                     }
                     if ( texCoordMap[ texCoordUnit ] === undefined ) {
                         this._vertexShader.push( 'attribute vec2 TexCoord' + texCoordUnit + ';' );

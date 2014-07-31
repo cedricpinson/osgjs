@@ -7,7 +7,6 @@ define( [
     'osg/Texture',
     'osg/Uniform',
     'osg/BlendFunc',
-    'osg/Material',
     'osg/Geometry',
     'osg/BufferArray',
     'osg/PrimitiveSet',
@@ -18,11 +17,8 @@ define( [
     'osg/Matrix',
     'osg/MatrixTransform',
     'osg/Projection'
-], function ( Q, require, Input, Notify, MACROUTILS, Texture, Uniform, BlendFunc, Material, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
+], function ( Q, require, Input, Notify, MACROUTILS, Texture, Uniform, BlendFunc, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
 
-    require( [ 'osg/Material' ], function ( CircularDependency ) {
-        Material = CircularDependency;
-    } );
 
     var ReaderParser = {};
 
@@ -169,6 +165,7 @@ define( [
 
             var material = getFieldBackwardCompatible( 'Material', json );
             if ( material ) {
+                var Material = require(  'osg/Material' );
                 var newmaterial = new Material();
                 setMaterial( newmaterial, material );
                 osgjs.setAttributeAndMode( newmaterial );

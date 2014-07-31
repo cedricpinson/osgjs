@@ -80,10 +80,10 @@ define( [
             if ( obj.uniforms ) return obj.uniforms;
 
             var uniformList = {
-                'ambient': 'createFloat1',
-                'diffuse': 'createFloat1',
-                'specular': 'createFloat1',
-                'emission': 'createFloat1',
+                'ambient': 'createFloat3',
+                'diffuse': 'createFloat3',
+                'specular': 'createFloat3',
+                'emission': 'createFloat3',
                 'shininess': 'createFloat1'
             };
 
