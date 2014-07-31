@@ -106,7 +106,7 @@ define( [
                 var frag = state.programs[0].object.fragment.text;
 
 
-                ok( frag.indexOf('vec4 tmp_7; vec3 tmp_8; vec4 tmp_9; vec3 tmp_12; vec3 tmp_13; vec4 tmp_14; vec3 tmp_15; float tmp_16 = 2.4; vec3 tmp_17;') !== -1, 'check shader generated fragment for material' );
+                ok( frag.indexOf('vec4 tmp_7; vec3 tmp_8; vec4 tmp_9; vec3 normal; vec3 eyeVector; vec3 tmp_16; vec3 tmp_17; vec3 tmp_18; vec4 tmp_19; float tmp_20 = 2.4; vec3 tmp_21;') !== -1, 'check shader generated fragment for material' );
                 var uniforms  = state.programs[0].object.foreignUniforms;
 
                  ok( uniforms.length === 0, 'check shader generated uniform for material' );
