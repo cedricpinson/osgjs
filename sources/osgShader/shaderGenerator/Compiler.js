@@ -446,7 +446,7 @@ define( [
                     }
 
                     //texture.getTexCoordUnit(); // a way for material to specify uv ?
-                    var texCoordUnit = 0;// TODO: Check texcoord handling
+                    var texCoordUnit = 0;// = t; // TODO: Check texcoord handling
 
                     var texCoord = this.getVariable( 'FragTexCoord' + texCoordUnit );
                     if ( texCoord === undefined ) {
@@ -671,7 +671,7 @@ define( [
 
                     var texCoordUnit = textureMaterial.textureUnit;
                     if ( texCoordUnit === undefined ) {
-                        texCoordUnit = 0;// TODO: Check texcoord handling
+                        texCoordUnit = 0;// = t; // TODO: Check texcoord handling
                         textureMaterial.textureUnit = 0;
                     }
                     if ( texCoordMap[ texCoordUnit ] === undefined ) {
@@ -709,8 +709,8 @@ define( [
 
                         var texCoordUnit = texture.textureUnit;
                         if ( texCoordUnit === undefined ) {
-                            texCoordUnit = tt;
-                            textureMaterial.textureUnit = tt;
+                            texCoordUnit = 0;// = tt; // TODO: Check texcoord handling
+                            textureMaterial.textureUnit = texCoordUnit;
                         }
 
                         if ( texCoordMap[ texCoordUnit ] === undefined ) {
