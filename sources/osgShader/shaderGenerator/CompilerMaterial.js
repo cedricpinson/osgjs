@@ -47,19 +47,8 @@ define( [
             var alpha = new shaderNode.InlineConstant( '1.0' );
 
 
-            // by default geometryNormal is normal, but can change with normal map / bump map
-            var geometryNormal = normal;
+            var finalColor = this.getFinalColor( diffuseColor );
 
-            var diffuseOutput = this.Variable( 'vec3', 'diffuseOutput_' );
-            var nodeDiffuse = new shaderNode.Lambert( diffuseColor,
-                                                      geometryNormal,
-                                                      diffuseOutput );
-
-            var specularOutput = this.Variable( 'vec3' );
-            var nodeCookTorrance = new shaderNode.CookTorrance( materialSpecularColor,
-                                                                geometryNormal,
-                                                                materialShininess,
-                                                                specularOutput );
 
             var lightNodes = [];
 
@@ -70,22 +59,40 @@ define( [
                 nodeLight.init( this );
                 lightNodes.push( nodeLight );
             }
-            nodeDiffuse.connectLights( lightNodes );
-            nodeDiffuse.createFragmentShaderGraph( this );
 
-            nodeCookTorrance.connectLights( lightNodes );
-            nodeCookTorrance.createFragmentShaderGraph( this );
+            if ( lightNodes.length > 0 ){
+                // by default geometryNormal is normal, but can change with normal map / bump map
+                var geometryNormal = normal;
 
-            // get final color
-            var finalColor = this.getFinalColor( diffuseColor );
-            var opFinalColor = new shaderNode.AddVector( materialEmissionColor );
-            opFinalColor.connectOutput( finalColor );
+                var diffuseOutput = this.Variable( 'vec3', 'diffuseOutput_' );
+                var nodeDiffuse = new shaderNode.Lambert( diffuseColor,
+                                                          geometryNormal,
+                                                          diffuseOutput );
 
-            // diffuse term
-            opFinalColor.connectInput( diffuseOutput );
+                var specularOutput = this.Variable( 'vec3' );
+                var nodeCookTorrance = new shaderNode.CookTorrance( materialSpecularColor,
+                                                                    geometryNormal,
+                                                                    materialShininess,
+                                                                    specularOutput );
 
-            // specular term
-            opFinalColor.connectInput( specularOutput );
+
+                nodeDiffuse.connectLights( lightNodes );
+                nodeDiffuse.createFragmentShaderGraph( this );
+
+                nodeCookTorrance.connectLights( lightNodes );
+                nodeCookTorrance.createFragmentShaderGraph( this );
+
+                // get final color
+                var opFinalColor = new shaderNode.AddVector( materialEmissionColor );
+                opFinalColor.connectOutput( finalColor );
+
+                // diffuse term
+                opFinalColor.connectInput( diffuseOutput );
+
+                // specular term
+                opFinalColor.connectInput( specularOutput );
+            }
+
             // premult alpha
             if ( true ) {
                 var premultAlpha = this.Variable( 'vec3' );
