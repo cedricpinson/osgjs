@@ -13,9 +13,7 @@ define( [], function () {
             beta: 0, // angle of rotation around X axis
             gamma: -90 // angle of rotation around Y axis
         };
-        // On desktop, no screen orientation so set it to 90 to test landscape mode
         this._screenOrientation = window.orientation || 90;
-        this._debugDiv = document.getElementById( 'debug' ) || null;
     };
 
     DeviceOrientation.prototype = {
@@ -24,29 +22,14 @@ define( [], function () {
 
             var self = this;
 
-            var onDeviceOrientationChangeEvent = function ( rawEvtData ) {
+            window.addEventListener( 'orientationchange', function ( rawEvtData ) {
                 self._deviceOrientation = rawEvtData;
-                self._enable = true;
-                self.printState();
-            };
+            }, false );
 
-            var onScreenOrientationChangeEvent = function () {
+            window.addEventListener( 'deviceorientation', function () {
                 self._screenOrientation = window.orientation;
-                self.printState();
-            };
+            };, false );
 
-            window.addEventListener( 'orientationchange', onScreenOrientationChangeEvent, false );
-            window.addEventListener( 'deviceorientation', onDeviceOrientationChangeEvent, false );
-            self.printState();
-        },
-
-        printState: function () {
-            if ( this._debugDiv ) {
-                this._debugDiv.innerHTML = 'Alpha (Around Z): ' + Math.floor( this._deviceOrientation.alpha ) + '</br>' +
-                    'Beta (Around X): ' + Math.floor( this._deviceOrientation.beta ) + '</br>' +
-                    'Gamma (Around Y) :' + Math.floor( this._deviceOrientation.gamma ) + '</br>' +
-                    'ScreenOrientation: ' + this._screenOrientation;
-            }
         },
 
         getManipulatorController: function () {

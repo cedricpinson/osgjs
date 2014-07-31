@@ -90,7 +90,6 @@ function toggleVR() {
         // The modelNode will be attached to it
         if ( !vrNode )
         {
-            
             if (viewer._eventProxy.Oculus._hmd)
                 vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus._hmd );
             else
