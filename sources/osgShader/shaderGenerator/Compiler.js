@@ -37,7 +37,8 @@ define( [
         this._lightNodes = [];
         this._texturesByName = {};
 
-        // TODO: extract material + light to propoer method callable by inheriting
+        // TODO: extract material + light to proper method callable by inheriting
+
 
         // separate Material / Light / Texture
         // because this shader generator is specific for this
@@ -67,14 +68,15 @@ define( [
                     var tType = tuTarget.className();
                     var tName  = tuTarget.getName();
                     if ( tType === 'Texture' ) {
+                        var texUnit = j;
                         if ( tName   === undefined ) {
-                            tName = tType + t;
+                            tName = tType + texUnit;
                             tuTarget.setName( tName );
                         }
-                        textures[ j ] = tuTarget;
+                        textures[ texUnit ] = tuTarget;
                         this._texturesByName[ tName ] = {
                             'variable': undefined,
-                            'textureUnit': t
+                            'textureUnit': texUnit
                         };
                     }
                 }
@@ -445,8 +447,7 @@ define( [
                         }
                     }
 
-                    //texture.getTexCoordUnit(); // a way for material to specify uv ?
-                    var texCoordUnit = 0;// = t; // TODO: Check texcoord handling
+                    var texCoordUnit = t;
 
                     var texCoord = this.getVariable( 'FragTexCoord' + texCoordUnit );
                     if ( texCoord === undefined ) {
@@ -671,7 +672,7 @@ define( [
 
                     var texCoordUnit = textureMaterial.textureUnit;
                     if ( texCoordUnit === undefined ) {
-                        texCoordUnit = 0;// = t; // TODO: Check texcoord handling
+                        texCoordUnit = t;// = t;
                         textureMaterial.textureUnit = 0;
                     }
                     if ( texCoordMap[ texCoordUnit ] === undefined ) {
@@ -709,7 +710,7 @@ define( [
 
                         var texCoordUnit = texture.textureUnit;
                         if ( texCoordUnit === undefined ) {
-                            texCoordUnit = 0;// = tt; // TODO: Check texcoord handling
+                            texCoordUnit = tt;
                             textureMaterial.textureUnit = texCoordUnit;
                         }
 
