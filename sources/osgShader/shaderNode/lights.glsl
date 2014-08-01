@@ -18,7 +18,7 @@ void computeLightPoint(const in vec3 vertexPosition, const in vec3 lampPosition,
 {
     lightVector = lampPosition-vertexPosition;
     dist = length(lightVector);
-    lightVector = dist > 0.0 ? 1.0 dist;  vec3(0.0,1.0,1.0);
+    lightVector = dist > 0.0 ? lightVector / dist :  vec3( 0.0, 1.0, 1.0 );
 }
 
 float specularCookTorrance(const in vec3 n, const in vec3 l, const in vec3 v, const in float hard)
