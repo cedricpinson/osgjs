@@ -28,7 +28,7 @@ define( [
     };
     osgGA.getFirstPersonOculusControllerClass = function () {
         return FirstPersonManipulatorOculusController;
-    };    
+    };
     osgGA.getFirstPersonDeviceOrientationController = function () {
         return FirstPersonManipulatorDeviceOrientationController;
     };

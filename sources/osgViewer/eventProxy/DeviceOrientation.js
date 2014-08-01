@@ -22,13 +22,16 @@ define( [], function () {
 
             var self = this;
 
+            // Check because Chrome send _one_ event with all angles to null
             window.addEventListener( 'orientationchange', function ( rawEvtData ) {
-                self._deviceOrientation = rawEvtData;
+                if (rawEvtData.alpha !== null && rawEvtData.alpha !== undefined)
+                    self._deviceOrientation = rawEvtData;
             }, false );
 
             window.addEventListener( 'deviceorientation', function () {
-                self._screenOrientation = window.orientation;
-            };, false );
+                if (window.orientation !== null && window.orientation !== undefined)
+                    self._screenOrientation = window.orientation;
+            }, false );
 
         },
 

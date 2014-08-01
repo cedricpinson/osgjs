@@ -23,9 +23,8 @@ define( ['osg/Quat'], function (Quat) {
         },
 
     };
-    var computeQuaternion = function () {
+    var computeQuaternion = (function () {
 
-        var finalQuaternion = Quat.create();
         var screenTransform = Quat.create();
         var worldTransform = [-Math.sqrt( 0.5 ), 0, 0, Math.sqrt( 0.5 ) ]; // - PI/2 around the x-axis
         var minusHalfAngle = 0;
@@ -35,12 +34,13 @@ define( ['osg/Quat'], function (Quat) {
             var alpha = deviceOrientation.alpha * degtorad;
             var beta = deviceOrientation.beta * degtorad;
             var gamma = deviceOrientation.gamma * degtorad;
-            var screenOrientation = screenOrientation * degtorad;
+            var screenAngle = screenOrientation * degtorad;
 
             setQuatFromEuler(quat, beta, alpha, -gamma, 'YXZ');
 
-            minusHalfAngle = -screenOrientation / 2.0;
-            screenTransform = [ 0, Math.sin( minusHalfAngle ), 0, Math.cos( minusHalfAngle ) ];
+            minusHalfAngle = -screenAngle / 2.0;
+            screenTransform[1] = Math.sin( minusHalfAngle );
+            screenTransform[3] = Math.cos( minusHalfAngle );
 
             Quat.mult(quat, screenTransform, quat );
             Quat.mult(quat, worldTransform, quat );
@@ -50,9 +50,9 @@ define( ['osg/Quat'], function (Quat) {
             quat[2] = yTemp;
 
             return quat;
-        }
+        };
 
-    }();
+    })();
 
     var setQuatFromEuler = function ( quat, x, y, z, order ) {
 

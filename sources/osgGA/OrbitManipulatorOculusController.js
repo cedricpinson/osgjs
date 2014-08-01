@@ -10,8 +10,8 @@ define( [], function () {
     OrbitManipulatorOculusController.prototype = {
         init: function () {},
         update: function ( quaternion ) {
-            
-            this._manipulator.setRotationBaseFromQuat( quaternion );            
+
+            this._manipulator.setRotationBaseFromQuat( quaternion );
         },
 
     };

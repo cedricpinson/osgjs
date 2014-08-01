@@ -13,7 +13,7 @@ var osgViewer = window.osgViewer;
 
 var viewer;
 
-function setupScene(viewer, sceneData) {
+function setupScene( viewer, sceneData ) {
     // load scene... as usual
     viewer.setSceneData( sceneData );
 
@@ -21,14 +21,15 @@ function setupScene(viewer, sceneData) {
     viewer.setupManipulator( new osgGA.OrbitManipulator() );
     viewer.getManipulator().setNode( viewer.getSceneData() );
     viewer.getManipulator().computeHomePosition();
-    viewer.getManipulator().setEyePosition([0, -10, 5]);
+    viewer.getManipulator().setEyePosition( [ 0, -10, 5 ] );
 
     viewer.run();
 }
+
 function onSceneLoaded( viewer, data ) {
 
     new Q( osgDB.parseSceneGraph( data ) ).then( function ( sceneData ) {
-        setupScene(viewer, sceneData);
+        setupScene( viewer, sceneData );
     } );
 }
 
@@ -48,26 +49,26 @@ function onURLloaded( url, viewer ) {
 }
 
 // Find the right method, call on correct element
-function launchFullscreen(element, hmd) {
-  if(element.requestFullscreen) {
-    element.requestFullscreen(hmd);
-  } else if(element.mozRequestFullScreen) {
-    element.mozRequestFullScreen(hmd);
-  } else if(element.webkitRequestFullscreen) {
-    element.webkitRequestFullscreen(hmd);
-  } else if(element.msRequestFullscreen) {
-    element.msRequestFullscreen(hmd);
-  }
+function launchFullscreen( element, hmd ) {
+    if ( element.requestFullscreen ) {
+        element.requestFullscreen( hmd );
+    } else if ( element.mozRequestFullScreen ) {
+        element.mozRequestFullScreen( hmd );
+    } else if ( element.webkitRequestFullscreen ) {
+        element.webkitRequestFullscreen( hmd );
+    } else if ( element.msRequestFullscreen ) {
+        element.msRequestFullscreen( hmd );
+    }
 }
 
 function exitFullscreen() {
-  if(document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if(document.mozCancelFullScreen) {
-    document.mozCancelFullScreen();
-  } else if(document.webkitExitFullscreen) {
-    document.webkitExitFullscreen();
-  }
+    if ( document.exitFullscreen ) {
+        document.exitFullscreen();
+    } else if ( document.mozCancelFullScreen ) {
+        document.mozCancelFullScreen();
+    } else if ( document.webkitExitFullscreen ) {
+        document.webkitExitFullscreen();
+    }
 }
 
 var vrNode;
@@ -88,9 +89,8 @@ function toggleVR() {
 
         // If no vrNode (first time vr is toggled), create one
         // The modelNode will be attached to it
-        if ( !vrNode )
-        {
-            if (viewer._eventProxy.Oculus._hmd)
+        if ( !vrNode ) {
+            if ( navigator.getVRDevices )
                 vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus._hmd );
             else
                 vrNode = osgUtil.Oculus.createScene( viewer, modelNode );
@@ -114,35 +114,36 @@ function toggleVR() {
 // So we could add a little delay via setTimeout to ensure we get the fullscreen size
 
 // Prefixed on Firefox up to v33
-document.addEventListener('mozfullscreenchange', function( ) {
+document.addEventListener( 'mozfullscreenchange', function () {
     toggleVR();
     fullscreen = !fullscreen;
-});
+} );
 // Prefixed on Chrome up to v38
-document.addEventListener('webkitfullscreenchange', function( ) {
-    setTimeout(toggleVR, 500);
+document.addEventListener( 'webkitfullscreenchange', function () {
+    setTimeout( toggleVR, 500 );
     fullscreen = !fullscreen;
-});
-document.addEventListener('msfullscreenchange', function () {
+} );
+document.addEventListener( 'msfullscreenchange', function () {
     toggleVR();
     fullscreen = !fullscreen;
-}, false);
-document.addEventListener('fullscreenchange', function( ) {
+}, false );
+document.addEventListener( 'fullscreenchange', function () {
     toggleVR();
     fullscreen = !fullscreen;
-});
+} );
 
 function requestVRFullscreen() {
 
-    var hmd = viewer._eventProxy.Oculus._hmd;
-    if ( !hmd ) {
-        console.log( 'WebVR Api is not supported by your navigator' );
+    if ( !navigator.getVRDevices ) {
+        osg.log( 'WebVR Api is not supported by your navigator' );
     }
 
     var canvas = viewer.getGraphicContext().canvas;
-    
-    if (fullscreen === false)
-        launchFullscreen(canvas, {vrDisplay: hmd} );
+
+    if ( fullscreen === false )
+        launchFullscreen( canvas, {
+            vrDisplay: viewer._eventProxy.Oculus.getHmd();
+        } );
     else
         exitFullscreen();
 
@@ -152,27 +153,26 @@ function requestVRFullscreen() {
 
 function init() {
 
-    try {
-        var canvas = document.getElementById( 'View' );
+    var canvas = document.getElementById( 'View' );
 
-        viewer = new osgViewer.Viewer( canvas );
-        
-        viewer.init();
-        viewer.setLightingMode( osgViewer.View.LightingMode.SKYLIGHT );
+    viewer = new osgViewer.Viewer( canvas );
 
-        // onSceneLoaded( viewer, getPokerScene() );
-        // setupScene( viewer, getSimpleScene() );
-        onURLloaded( 'models/ogre.osgjs', viewer );
+    viewer.init();
+    viewer.setLightingMode( osgViewer.View.LightingMode.SKYLIGHT );
 
-        window.addEventListener( 'keypress', 
-            function (event) {
-                if ( event.charCode === 'f'.charCodeAt( 0 ) )
-                    requestVRFullscreen();
-            }, true);
+    // onSceneLoaded( viewer, getPokerScene() );
+    // setupScene( viewer, getSimpleScene() );
+    onURLloaded( 'models/ogre.osgjs', viewer );
 
-    } catch ( e ) {
-        console.log( e );
-    }
+    var button = document.getElementById( 'button' );
+    button.addEventListener( 'click', requestVRFullscreen, false );
+
+    window.addEventListener( 'keypress',
+        function ( event ) {
+            if ( event.charCode === 'f'.charCodeAt( 0 ) )
+                requestVRFullscreen();
+        }, true );
+
 }
 
 window.addEventListener( 'load', init, true );
