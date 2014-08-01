@@ -158,7 +158,9 @@ var gruntTasks = {};
     gruntTasks.watch.src = {
         files: [
             'sources/*.js',
-            'sources/**/*.js'
+            'sources/**/*.js',
+            'sources/*.glsl',
+            'sources/**/*.glsl'
         ],
         tasks: [ 'build:sources' ]
     };
@@ -169,7 +171,7 @@ var gruntTasks = {};
 //
 ( function ( ) {
 
-    gruntTasks.requirejs.distSources = { 
+    gruntTasks.requirejs.distSources = {
 		options : {
 			name : path.join( path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
 			out : path.join( DIST_PATH, 'OSG.js' ),
@@ -182,9 +184,9 @@ var gruntTasks = {};
 			},
 			wrap : {
 				startFile : path.join( UTILS_PATH, 'wrap.start' ),
-				endFile : path.join( UTILS_PATH, 'wrap.end' ) 
+				endFile : path.join( UTILS_PATH, 'wrap.end' )
 			}
-		} 		
+		}
     };
 
 } )();
@@ -211,7 +213,7 @@ var gruntTasks = {};
 ( function () {
 
     // generate a requirejs without anything to build a docco docs
-    gruntTasks.requirejs.docsSources = { 
+    gruntTasks.requirejs.docsSources = {
 		options : {
 			out : path.join( BUILD_PATH, 'docs/OSG.js' ),
 			include : [ 'OSG' ],
