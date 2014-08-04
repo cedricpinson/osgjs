@@ -6,8 +6,13 @@ define( [
     'osgGA/OrbitManipulatorLeapMotionController',
     'osgGA/OrbitManipulatorMouseKeyboardController',
     'osgGA/OrbitManipulatorHammerController',
-    'osgGA/OrbitManipulatorGamePadController'
-], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController ) {
+    'osgGA/OrbitManipulatorGamePadController',
+    'osgGA/OrbitManipulatorDeviceOrientationController',
+    'osgGA/OrbitManipulatorOculusController',
+
+], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController ) {
+    
+    'use strict';
 
     /**
      *  OrbitManipulator
@@ -83,13 +88,17 @@ define( [
     OrbitManipulator.AvailableControllerList = [ 'StandardMouseKeyboard',
         'LeapMotion',
         'GamePad',
-        'Hammer'
+        'Hammer',
+        'DeviceOrientation',
+        'Oculus',
     ];
 
     OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
         'LeapMotion',
         'GamePad',
-        'Hammer'
+        'Hammer',
+        'DeviceOrientation',
+        'Oculus',
     ];
 
     /** @lends OrbitManipulator.prototype */
@@ -105,6 +114,7 @@ define( [
             this._rotation = Matrix.create();
             Matrix.mult( rot1, rot2, this._rotation );
             this._time = 0.0;
+            this._rotBase = Matrix.create();
 
             this._rotate = new OrbitManipulator.Interpolator( 2 );
             this._pan = new OrbitManipulator.Interpolator( 2 );
@@ -221,6 +231,9 @@ define( [
         getDistance: function () {
             return this._distance;
         },
+        setRotationBaseFromQuat: function ( quat ) {
+            Matrix.makeRotateFromQuat( quat, this._rotBase );
+        },
         computePan: ( function () {
             var inv = Matrix.create();
             var x = [ 0.0, 0.0, 0.0 ];
@@ -311,6 +324,7 @@ define( [
         },
         getEyePosition: function ( eye ) {
             this.computeEyePosition( this._target, this._distance, eye );
+            return eye;
         },
 
         computeEyePosition: ( function () {
@@ -352,7 +366,17 @@ define( [
                 var target = this._target;
                 var distance = this._distance;
 
+                /* 1. Works but bypass other manipulators */
+                // Matrix.copy( this._rotBase, this._inverseMatrix );
+
+                /* 2. Works but gets broken by other manipulators */
                 Matrix.inverse( this._rotation, this._inverseMatrix );
+                Matrix.postMult( this._rotBase, this._inverseMatrix );
+
+                /* 3. Doesnt' work */
+                // Matrix.preMult( this._rotBase, this._rotation );
+                // Matrix.inverse( this._rotBase, this._inverseMatrix );
+
                 tmpDist[ 1 ] = distance;
                 Matrix.transformVec3( this._inverseMatrix, tmpDist, eye );
 
@@ -369,11 +393,9 @@ define( [
         module.LeapMotion = OrbitManipulatorLeapMotionController;
     } )( OrbitManipulator );
 
-
     ( function ( module ) {
         module.StandardMouseKeyboard = OrbitManipulatorMouseKeyboardController;
     } )( OrbitManipulator );
-
 
     ( function ( module ) {
         module.Hammer = OrbitManipulatorHammerController;
@@ -381,6 +403,14 @@ define( [
 
     ( function ( module ) {
         module.GamePad = OrbitManipulatorGamePadController;
+    } )( OrbitManipulator );
+
+    ( function ( module ) {
+        module.DeviceOrientation = OrbitManipulatorDeviceOrientationController;
+    } )( OrbitManipulator );
+
+    ( function ( module ) {
+        module.Oculus = OrbitManipulatorOculusController;
     } )( OrbitManipulator );
 
     return OrbitManipulator;

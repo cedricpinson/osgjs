@@ -12,6 +12,7 @@
     <script type="text/javascript" src="../vendors/Leap.js"></script>
     <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
     <script type="text/javascript" src="pokerscene.js"></script>
+    <script type="text/javascript" src="simplescene.js"></script>
     <script type="text/javascript" src="main.js"></script>
 </head>
 
@@ -21,7 +22,6 @@
     <!-- very important change the size of the parent element instead-->
     <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
   </div>
-
   <div class="osgjs-info osgjs-info-dark">
 
     <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
@@ -30,9 +30,9 @@
     </a>
 
     <div class="osgjs-description">
-      This example demonstrates the rendering of 3D scenes for virtual reality devices like Oculus Rift or Cardboard. 
+      This example demonstrates the rendering of 3D scenes for virtual reality devices like Oculus Rift or Cardboard.
     </div>
-    <input type="button" value="Toggle VR" onclick="toggleVRFullscreen()"></input>
+    <input id="button" type="button" value="Toggle VR"></input>
   </div>
 
 </body>

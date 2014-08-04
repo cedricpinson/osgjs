@@ -3,15 +3,20 @@ define( [
     'osgGA/FirstPersonManipulator',
     'osgGA/FirstPersonManipulatorMouseKeyboardController',
     'osgGA/FirstPersonManipulatorOculusController',
+    'osgGA/FirstPersonManipulatorDeviceOrientationController',
     'osgGA/Manipulator',
     'osgGA/OrbitManipulator',
     'osgGA/OrbitManipulatorGamePadController',
     'osgGA/OrbitManipulatorHammerController',
     'osgGA/OrbitManipulatorLeapMotionController',
     'osgGA/OrbitManipulatorMouseKeyboardController',
+    'osgGA/OrbitManipulatorDeviceOrientationController',
+    'osgGA/OrbitManipulatorOculusController',
     'osgGA/SwitchManipulator',
     'osgGA/OrbitManipulatorEnums'
-], function ( Hammer, FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, SwitchManipulator, OrbitManipulatorEnums ) {
+], function ( Hammer, FirstPersonManipulator, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController, FirstPersonManipulatorDeviceOrientationController, Manipulator, OrbitManipulator, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController, SwitchManipulator, OrbitManipulatorEnums ) {
+
+    'use strict';
 
     var osgGA = {};
 
@@ -23,6 +28,9 @@ define( [
     };
     osgGA.getFirstPersonOculusControllerClass = function () {
         return FirstPersonManipulatorOculusController;
+    };
+    osgGA.getFirstPersonDeviceOrientationController = function () {
+        return FirstPersonManipulatorDeviceOrientationController;
     };
     osgGA.Manipulator = Manipulator;
     osgGA.OrbitManipulator = OrbitManipulator;
@@ -38,6 +46,13 @@ define( [
     osgGA.getOrbitManipulatorMouseKeyboardController = function () {
         return OrbitManipulatorMouseKeyboardController;
     };
+    osgGA.getOrbitManipulatorDeviceOrientationController = function () {
+        return OrbitManipulatorDeviceOrientationController;
+    };
+    osgGA.getOrbitManipulatorOculusController = function () {
+        return OrbitManipulatorOculusController;
+    };
+
     osgGA.SwitchManipulator = SwitchManipulator;
 
     osgGA.OrbitManipulator.Rotate = OrbitManipulatorEnums.ROTATE;

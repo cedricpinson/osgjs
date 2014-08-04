@@ -2,12 +2,12 @@ define( [], function () {
 
     'use strict';
 
-    var FirstPersonManipulatorOculusController = function ( manipulator ) {
+    var OrbitManipulatorOculusController = function ( manipulator ) {
         this._manipulator = manipulator;
         this.init();
     };
 
-    FirstPersonManipulatorOculusController.prototype = {
+    OrbitManipulatorOculusController.prototype = {
         init: function () {},
         update: function ( quaternion ) {
 
@@ -16,5 +16,5 @@ define( [], function () {
 
     };
 
-    return FirstPersonManipulatorOculusController;
+    return OrbitManipulatorOculusController;
 } );

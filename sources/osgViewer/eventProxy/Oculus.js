@@ -1,6 +1,7 @@
-define( [ 
+define( [
     'osg/Notify',
-    'osg/Quat' ], function ( Notify, Quat ) {
+    'osg/Quat'
+], function ( Notify, Quat ) {
 
     'use strict';
 
@@ -99,6 +100,10 @@ define( [
 
                 manipulatorAdapter.update( this._quat );
             }
+        },
+
+        getHmd: function() {
+            return this._hmd;
         }
     };
     return Oculus;

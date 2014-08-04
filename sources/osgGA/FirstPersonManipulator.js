@@ -6,8 +6,9 @@ define( [
     'osg/Vec2',
     'osg/Vec3',
     'osgGA/FirstPersonManipulatorMouseKeyboardController',
-    'osgGA/FirstPersonManipulatorOculusController'
-], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController ) {
+    'osgGA/FirstPersonManipulatorOculusController',
+    'osgGA/FirstPersonManipulatorDeviceOrientationController'
+], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController, FirstPersonManipulatorDeviceOrientationController ) {
 
     /**
      * Authors:
@@ -24,8 +25,8 @@ define( [
         this.init();
     };
 
-    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus'];
-    FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus' ];
+    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation'];
+    FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation' ];
 
     /** @lends FirstPersonManipulator.prototype */
     FirstPersonManipulator.prototype = MACROUTILS.objectInehrit( Manipulator.prototype, {
@@ -95,6 +96,7 @@ define( [
             }
             var dir = Vec3.mult( this._direction, distance, this._tmpGetTargetDir );
             Vec3.add( this._eye, dir, pos );
+            return pos;
         },
 
         setTarget: function ( pos ) {
@@ -140,9 +142,8 @@ define( [
                 Matrix.makeRotate( this._angleHorizontal, 0.0, 0.0, 1.0, second );
                 Matrix.mult( second, first, rotMat );
 
-                var rotBase = this._rotBase;
                 // TOTO refactor the way the rotation matrix is managed
-                Matrix.preMult( rotMat, rotBase );
+                Matrix.preMult( rotMat, this._rotBase );
 
                 this._direction = Matrix.transformVec3( rotMat, upy, this._direction );
                 Vec3.normalize( this._direction, this._direction );
@@ -225,6 +226,10 @@ define( [
 
     ( function ( module ) {
         module.Oculus = FirstPersonManipulatorOculusController;
+    } )( FirstPersonManipulator );
+
+    ( function ( module ) {
+        module.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;
     } )( FirstPersonManipulator );
 
     return FirstPersonManipulator;
