@@ -7,7 +7,7 @@ define( [
     'osg/Vec4',
     'osg/Map'
 ], function ( MACROUTILS, StateAttribute, Uniform, Matrix, Vec3, Vec4, Map ) {
-
+    'use strict';
 
     var Light = function ( lightNumber ) {
         StateAttribute.call( this );
@@ -55,7 +55,7 @@ define( [
             return this.getPrefix() + '_uniform_' + name;
         },
         getHash: function () {
-            return 'Light' + this._lightUnit + this._type + this._falloffType + this._useSphere.toString() + this._useDiffuse.toString() + this._useSpecular.toString();
+            return 'Light' + this._lightUnit + this._type + this._falloffType + this._useSphere.toString() + this._ambient.toString() + this._diffuse.toString() + this._specular.toString();
         },
         getOrCreateUniforms: function () {
 
@@ -113,6 +113,25 @@ define( [
             return this._ambient;
         },
 
+        setDiffuse: function ( a ) {
+            this._diffuse = a;
+            this.setUseDiffuse( a );
+            this.dirty();
+        },
+
+        getDiffuse: function () {
+            return this._diffuse;
+        },
+
+        setSpecular: function ( a ) {
+            this._specular = a;
+            this.dirty();
+        },
+
+        getSpecular: function () {
+            return this._specular;
+        },
+
         setEnergy: function ( a ) {
             this._energy = a;
             this.dirty();
@@ -147,30 +166,6 @@ define( [
             this._falloffType = 'INVERSE_SQUARE';
             this._distance = value;
             this.dirty();
-        },
-
-        setDiffuse: function ( a ) {
-            this._diffuse = a;
-            this.setUseDiffuse( a );
-            this.dirty();
-        },
-
-        setUseDiffuse: function ( a ) {
-            this._diffuse = a;
-            this.dirty();
-        },
-
-        getDiffuse: function () {
-            return this._diffuse;
-        },
-
-        setSpecular: function ( a ) {
-            this._specular = a;
-            this.dirty();
-        },
-
-        getSpecular: function () {
-            return this._specular;
         },
 
         setLightType: function ( a ) {
@@ -256,14 +251,20 @@ define( [
             };
         } )(),
 
+        applyEnergy: function ( colorUniform, colorVar ) {
+            var color = colorUniform.get();
+            color[ 0 ] = colorVar[ 0 ] * this._energy;
+            color[ 1 ] = colorVar[ 1 ] * this._energy;
+            color[ 2 ] = colorVar[ 2 ] * this._energy;
+            colorUniform.dirty();
+        },
+
         apply: function ( /*state*/) {
             var uniformMap = this.getOrCreateUniforms();
 
-            var color = uniformMap.color.get();
-            color[ 0 ] = this._color[ 0 ] * this._energy;
-            color[ 1 ] = this._color[ 1 ] * this._energy;
-            color[ 2 ] = this._color[ 2 ] * this._energy;
-            uniformMap.color.dirty();
+            this.applyEnergy( uniformMap.ambient, this._ambient );
+            this.applyEnergy( uniformMap.diffuse, this._diffuse );
+            this.applyEnergy( uniformMap.specular, this._specular );
 
             Vec3.copy( this._position, uniformMap.position.get() );
             Vec3.copy( this._direction, uniformMap.direction.get() );
