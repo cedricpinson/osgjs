@@ -158,7 +158,7 @@ define( [
                 var lightColor = context.getVariable( nodeLight.getOrCreateUniforms().diffuse.name );
                 var materialColor = this._color;
 
-                var lightColorMaterial = context.Variable( 'vec3' );
+                var lightColorMaterial = context.Variable( 'vec4' );
                 var normal = this._normal;
 
                 // lightColorMaterial = lightColor * materialColor
@@ -180,7 +180,7 @@ define( [
                 } )( term );
 
                 // diffuseOutput = ldotn * lightColorAttenuation
-                var lightDiffuse = context.Variable( 'vec3' );
+                var lightDiffuse = context.Variable( 'vec4' );
                 ( function ( output ) {
                     var operator = new operations.MultVector( term, lightColorMaterial );
                     operator.comment( 'lambert_color_contribution = lambert_color * lambert_term' );
@@ -274,7 +274,7 @@ define( [
                 var lightColor = context.getVariable( nodeLight.getOrCreateUniforms().specular.name );
                 var materialColor = this._color;
                 var viewVector = context.getVariable( 'eyeVector' );
-                var lightColorMaterial = context.Variable( 'vec3' );
+                var lightColorMaterial = context.Variable( 'vec4' );
                 var normal = this._normal;
                 var hardness = this._hardness;
 
@@ -298,7 +298,7 @@ define( [
                 } )( term );
 
                 // specularOutput = specTerm * lightColorAttenuation
-                var specularOutput = context.Variable( 'vec3' );
+                var specularOutput = context.Variable( 'vec4' );
                 ( function ( output ) {
                     var operator = new operations.MultVector( term, lightColorMaterial );
                     operator.comment( 'cooktorrance_color_contribution = cooktorrance_color * cooktorrance_term' );

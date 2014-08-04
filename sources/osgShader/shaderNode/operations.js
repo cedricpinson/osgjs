@@ -1,4 +1,4 @@
-define ( [
+define( [
     'osg/Utils',
     'osgShader/shaderNode/Node'
 
@@ -115,6 +115,18 @@ define ( [
         }
     } );
 
+    var Vec4ToVec3 = function ( input, value, output ) {
+        Node.call( this, input );
+        this._lastValue = value;
+        this.connectOutput( output );
+    };
+
+    Vec4ToVec3.prototype = MACROUTILS.objectInherit( Node.prototype, {
+        computeFragment: function () {
+            return this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + '.rgb;';
+        }
+    } );
+
 
     var DotVector = function () {
         Node.apply( this, arguments );
@@ -182,9 +194,10 @@ define ( [
         'SetAlpha': SetAlpha,
         'PassValue': PassValue,
         'Vec3ToVec4': Vec3ToVec4,
+        'Vec4ToVec3': Vec4ToVec3,
         'DotVector': DotVector,
         'PreMultAlpha': PreMultAlpha,
         'FragColor': FragColor
     };
 
-});
+} );

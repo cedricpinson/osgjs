@@ -42,7 +42,7 @@ define( [
         },
 
         getEmission: function () {
-            return this.emission;
+            return this._emission;
         },
         getAmbient: function () {
             return this._ambient;
