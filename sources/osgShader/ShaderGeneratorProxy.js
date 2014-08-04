@@ -1,11 +1,9 @@
-/*global define */
-
 define( [
     'osgShader/shaderGenerator/ShaderGeneratorMaterial',
     'osgShader/shaderGenerator/ShaderGeneratorShadeless',
     'osgShader/shaderGenerator/ShaderGeneratorStateSet'
 ], function ( ShaderGeneratorMaterial, ShaderGeneratorShadeless, ShaderGeneratorStateSet ) {
-
+    'use strict';
 
     var ShaderGeneratorProxy = function ( createInstance ) {
         if ( !createInstance ) {

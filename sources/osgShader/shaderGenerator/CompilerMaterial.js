@@ -4,6 +4,7 @@ define( [
     'osgShader/ShaderNode'
 
 ], function ( MACROUTILS, Compiler, shaderNode ) {
+    'use strict';
 
     var CompilerMaterial = function ( state, attributes, textureAttributes, scene ) {
         Compiler.call( this, state, attributes, textureAttributes, scene );

@@ -11,7 +11,7 @@ define( [
 
 
 ], function ( Notify, Uniform, Texture, Map, sprintf, ShaderNode, ShaderProcessor ) {
-
+    'use strict';
 
     var shaderProcessor;
 
@@ -66,10 +66,10 @@ define( [
                 for ( var t = 0, tl = tu.length; t < tl; t++ ) {
                     var tuTarget = tu[ t ];
                     var tType = tuTarget.className();
-                    var tName  = tuTarget.getName();
+                    var tName = tuTarget.getName();
                     if ( tType === 'Texture' ) {
                         var texUnit = j;
-                        if ( tName   === undefined ) {
+                        if ( tName === undefined ) {
                             tName = tType + texUnit;
                             tuTarget.setName( tName );
                         }
@@ -468,13 +468,12 @@ define( [
                         }
 
                         var textureMaterial = this._texturesByName[ name ];
-                        if ( textureMaterial === undefined ){
+                        if ( textureMaterial === undefined ) {
                             this._texturesByName[ name ] = {
                                 'variable': output,
                                 'textureUnit': textureUnit
                             };
-                        }
-                        else{
+                        } else {
                             textureMaterial.variable = output;
                             textureMaterial.textureUnit = textureUnit;
                         }
@@ -672,7 +671,7 @@ define( [
 
                     var texCoordUnit = textureMaterial.textureUnit;
                     if ( texCoordUnit === undefined ) {
-                        texCoordUnit = t;// = t;
+                        texCoordUnit = t; // = t;
                         textureMaterial.textureUnit = 0;
                     }
                     if ( texCoordMap[ texCoordUnit ] === undefined ) {

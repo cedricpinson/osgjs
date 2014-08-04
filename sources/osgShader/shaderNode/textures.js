@@ -1,11 +1,9 @@
-/*global define */
-
 define ( [
     'osg/Utils',
     'osgShader/shaderNode/Node'
 
 ], function ( MACROUTILS, Node ) {
-
+    'use strict';
 
     var TextureRGB = function ( sampler, uv, output ) {
         Node.call( this );
