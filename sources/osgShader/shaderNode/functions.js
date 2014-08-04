@@ -1,4 +1,4 @@
-define ( [
+define( [
     'osg/Utils',
     'osgShader/shaderNode/Node'
 
@@ -6,29 +6,29 @@ define ( [
     'use strict';
 
     // TODO populate function.glsl replacement
-    var NormalizeNormalAndEyeVector = function(fnormal, fpos) {
-        Node.apply(this, arguments);
+    var NormalizeNormalAndEyeVector = function ( fnormal, fpos ) {
+        Node.apply( this, arguments );
         this._normal = fnormal;
         this._position = fpos;
     };
-    NormalizeNormalAndEyeVector.prototype = MACROUTILS.objectInherit(Node.prototype, {
+    NormalizeNormalAndEyeVector.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'NormalizeNormalAndEyeVector',
-        connectOutputNormal: function(n) {
+        connectOutputNormal: function ( n ) {
             this._outputNormal = n;
-            this.autoLink(this._outputNormal);
+            this.autoLink( this._outputNormal );
         },
-        connectOutputEyeVector: function(n) {
+        connectOutputEyeVector: function ( n ) {
             this._outputEyeVector = n;
-            this.autoLink(this._outputEyeVector);
+            this.autoLink( this._outputEyeVector );
         },
-        computeFragment: function() {
+        computeFragment: function () {
             var str = [ '',
-                        this._outputNormal.getVariable() + ' = normalize('+this._normal.getVariable() +');',
-                        this._outputEyeVector.getVariable() + ' = -normalize('+this._position.getVariable() + ');'
-                      ].join('\n');
+                this._outputNormal.getVariable() + ' = normalize(' + this._normal.getVariable() + ');',
+                this._outputEyeVector.getVariable() + ' = -normalize(' + this._position.getVariable() + ');'
+            ].join( '\n' );
             return str;
         }
-    });
+    } );
 
     var sRGB2Linear = function ( input, output ) {
         Node.call( this, input );
@@ -43,7 +43,8 @@ define ( [
         globalFunctionDeclaration: function () {
             var str = [
                 '#pragma include "functions.glsl"',
-                '' ].join( '\n' );
+                ''
+            ].join( '\n' );
             return str;
         }
     } );
@@ -56,13 +57,14 @@ define ( [
     Linear2sRGB.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'Linear2sRGB',
         computeFragment: function () {
-            return this.getOutput().getVariable() + ' = linearrgb2srgb_' + this._inputs[ 0 ].getType() + '(' + this._inputs[ 0 ].getVariable() + ', ' + this._gamma.getVariable() + ');';
+            return this.getOutput().getVariable() + ' = linearrgb2srgb_vec3(' + this._inputs[ 0 ].getVariable() + '.rgb, ' + this._gamma.getVariable() + ');';
         },
         globalFunctionDeclaration: function () {
             var str = [
                 '#pragma include "functions.glsl"',
                 '',
-                '' ].join( '\n' );
+                ''
+            ].join( '\n' );
             return str;
         }
     } );
@@ -118,8 +120,8 @@ define ( [
 
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = environmentTransform(' + this._environmentTransform.getVariable() + ', ' + this._direction.getVariable() + ');'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = environmentTransform(' + this._environmentTransform.getVariable() + ', ' + this._direction.getVariable() + ');'
+            ].join( '\n' );
             return str;
         },
 
@@ -136,7 +138,8 @@ define ( [
                 '  return m*direction;',
                 '  //return direction*mat3(transform);',
                 '}',
-                '' ].join( '\n' );
+                ''
+            ].join( '\n' );
         }
     } );
 
@@ -181,14 +184,15 @@ define ( [
     TonemapHDR.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'TonemapHDR',
         computeFragment: function () {
-            return this.getOutput().getVariable() + ' = tonemapHDR(' + this._inputs[ 0 ].getVariable() +');';
+            return this.getOutput().getVariable() + ' = tonemapHDR(' + this._inputs[ 0 ].getVariable() + ');';
         },
         globalFunctionDeclaration: function () {
             var str = [
                 'vec3 tonemapHDR(const in vec3 hdr) {',
                 '  float e = 1.0;',
                 '  return hdr * e;',
-                '}' ].join( '\n' );
+                '}'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -200,7 +204,7 @@ define ( [
     NormalMatcap.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'NormalMatcap',
         computeFragment: function () {
-            return this.getOutput().getVariable() + ' = normalMatcap(' + this._inputs[ 0 ].getVariable() +');';
+            return this.getOutput().getVariable() + ' = normalMatcap(' + this._inputs[ 0 ].getVariable() + ');';
         },
         globalFunctionDeclaration: function () {
             var str = [
@@ -212,7 +216,8 @@ define ( [
                 'vec3 coord = vec3(dot(nTrans, nm_x), dot(nTrans, nm_y), dot(nTrans, nm_z));',
                 'vec2 texCoord = vec2( 0.5 * coord.x + 0.5, 0.5 * coord.y + 0.5 );',
                 'return texCoord;',
-                '}' ].join( '\n' );
+                '}'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -223,7 +228,7 @@ define ( [
     };
     FrontNormal.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'FrontNormal',
-        computeFragment: function() {
+        computeFragment: function () {
             return this.getOutput().getVariable() + ' = gl_FrontFacing ? ' + this._inputs[ 0 ].getVariable() + ' : -' + this._inputs[ 0 ].getVariable() + ';';
         },
     } );

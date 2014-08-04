@@ -147,7 +147,7 @@ define( [
     PreMultAlpha.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'PreMultAlpha',
         computeFragment: function () {
-            var str = this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + '.rgb * ' + this._inputs[ 0 ].getVariable() + '.a;';
+            var str = this.getOutput().getVariable() + '.rgb = ' + this._inputs[ 0 ].getVariable() + '.rgb * ' + this._inputs[ 0 ].getVariable() + '.a;';
             return str;
         }
     } );

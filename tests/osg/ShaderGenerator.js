@@ -18,9 +18,15 @@ define( [
             ( function () {
                 var state = new State();
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() { return true; };
-                fakeRenderer.getProgramParameter = function() { return true; };
-                fakeRenderer.isContextLost = function() { return false; };
+                fakeRenderer.validateProgram = function () {
+                    return true;
+                };
+                fakeRenderer.getProgramParameter = function () {
+                    return true;
+                };
+                fakeRenderer.isContextLost = function () {
+                    return false;
+                };
                 state.setGraphicContext( fakeRenderer );
 
                 var stateSet0 = new StateSet();
@@ -39,15 +45,20 @@ define( [
             ( function () {
                 var state = new State();
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() { return true; };
-                fakeRenderer.getProgramParameter = function() { return true; };
-                fakeRenderer.isContextLost = function() { return false; };
+                fakeRenderer.validateProgram = function () {
+                    return true;
+                };
+                fakeRenderer.getProgramParameter = function () {
+                    return true;
+                };
+                fakeRenderer.isContextLost = function () {
+                    return false;
+                };
                 state.setGraphicContext( fakeRenderer );
 
                 var stateSet = new StateSet();
 
-                function getShader()
-                {
+                function getShader() {
                     var vertexshader = [
                         '',
                         'attribute vec3 Vertex;',
@@ -55,7 +66,7 @@ define( [
                         'void main(void) {',
                         '  gl_Position = vec4(Vertex,1.0);',
                         '}'
-                    ].join('\n');
+                    ].join( '\n' );
 
                     var fragmentshader = [
                         '',
@@ -65,11 +76,11 @@ define( [
                         '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);',
                         '}',
                         ''
-                    ].join('\n');
+                    ].join( '\n' );
 
                     var program = new Program(
-                        new Shader('VERTEX_SHADER', vertexshader),
-                        new Shader('FRAGMENT_SHADER', fragmentshader));
+                        new Shader( 'VERTEX_SHADER', vertexshader ),
+                        new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
                     program.trackAttributes = {};
                     program.trackAttributes.attributeKeys = [];
@@ -88,9 +99,15 @@ define( [
             ( function () {
                 var state = new State();
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() { return true; };
-                fakeRenderer.getProgramParameter = function() { return true; };
-                fakeRenderer.isContextLost = function() { return false; };
+                fakeRenderer.validateProgram = function () {
+                    return true;
+                };
+                fakeRenderer.getProgramParameter = function () {
+                    return true;
+                };
+                fakeRenderer.isContextLost = function () {
+                    return false;
+                };
                 state.setGraphicContext( fakeRenderer );
 
                 var stateSet = new StateSet();
@@ -103,13 +120,13 @@ define( [
                 state.pushStateSet( stateSet );
                 state.apply();
 
-                var frag = state.programs[0].object.fragment.text;
+                var frag = state.programs[ 0 ].object.fragment.text;
 
 
-                ok( frag.indexOf('vec4 tmp_7; vec3 tmp_8; vec4 tmp_9; vec3 normal; vec3 eyeVector; vec3 tmp_16; vec3 tmp_17; vec3 tmp_18; vec4 tmp_19; float tmp_20 = 2.4; vec3 tmp_21;') !== -1, 'check shader generated fragment for material' );
-                var uniforms  = state.programs[0].object.foreignUniforms;
+                ok( frag.indexOf( ' vec4 tmp_7; vec3 tmp_8; vec4 tmp_9; vec3 normal; vec3 eyeVector; vec4 tmp_16; vec4 tmp_17; vec4 tmp_18; vec4 tmp_19; float tmp_20 = 2.4; vec3 tmp_21;' ) !== -1, 'check shader generated fragment for material' );
+                var uniforms = state.programs[ 0 ].object.foreignUniforms;
 
-                 ok( uniforms.length === 0, 'check shader generated uniform for material' );
+                ok( uniforms.length === 0, 'check shader generated uniform for material' );
                 // get and check shader generated
 
             } )();
