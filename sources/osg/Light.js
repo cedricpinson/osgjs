@@ -16,19 +16,23 @@ define( [
             lightNumber = 0;
         }
 
-        this._color = [ 1.0, 1.0, 1.0 ];
-        this._ambient = [ 0.0, 0.0, 0.0 ];
-        this._useDiffuse = true;
-        this._useSpecular = true;
-        this._position = [ 0.0, 0.0, 0.0 ];
+        this._ambient = [ 0.2, 0.2, 0.2, 1.0 ];
+        this._diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
+        this._specular = [ 0.2, 0.2, 0.2, 1.0 ];
+
+        this._position = [ 0.0, 0.0, 1.0, 0.0 ];
         this._direction = [ 0.0, 0.0, -1.0 ];
+
         this._spotCutoff = 1.0;
         this._spotBlend = 0.01;
         this._falloffType = 'INVERSE_SQUARE';
         this._distance = 25;
+
         this._energy = 1.0;
+
         this._lightUnit = lightNumber;
         this._type = 'POINT';
+
         this._useSphere = false;
         this._enable = true;
         this.dirty();
@@ -61,9 +65,13 @@ define( [
             if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
 
             var uniformList = {
-                'color': 'createFloat3',
-                'position': 'createFloat3',
+                'ambient': 'createFloat4',
+                'diffuse': 'createFloat4',
+                'specular': 'createFloat4',
+
+                'position': 'createFloat4',
                 'direction': 'createFloat3',
+
                 'spotCutoff': 'createFloat1',
                 'spotBlend': 'createFloat1',
                 'distance': 'createFloat1'
@@ -91,18 +99,10 @@ define( [
             this._enable = bool;
         },
         setPosition: function ( a ) {
-            Vec3.copy( a, this._position );
+            Vec4.copy( a, this._position );
         },
         setDirection: function ( a ) {
             Vec3.copy( a, this._direction );
-        },
-
-        setColor: function ( a ) {
-            Vec3.copy( a, this._color );
-            this.dirty();
-        },
-        getColor: function () {
-            return this._color;
         },
 
         setAmbient: function ( a ) {
@@ -112,7 +112,6 @@ define( [
         getAmbient: function () {
             return this._ambient;
         },
-
 
         setEnergy: function ( a ) {
             this._energy = a;
@@ -152,31 +151,26 @@ define( [
 
         setDiffuse: function ( a ) {
             this._diffuse = a;
-            this.setUseDiffuse(a);
+            this.setUseDiffuse( a );
             this.dirty();
         },
 
         setUseDiffuse: function ( a ) {
-            this._useDiffuse = a;
+            this._diffuse = a;
             this.dirty();
         },
 
-        getUseDiffuse: function () {
-            return this._useDiffuse;
+        getDiffuse: function () {
+            return this._diffuse;
         },
 
         setSpecular: function ( a ) {
             this._specular = a;
-            this.setUseSpecular(a);
             this.dirty();
         },
 
-        setUseSpecular: function ( a ) {
-            this._useSpecular = a;
-            this.dirty();
-        },
-        getUseSpecular: function () {
-            return this._useSpecular;
+        getSpecular: function () {
+            return this._specular;
         },
 
         setLightType: function ( a ) {
