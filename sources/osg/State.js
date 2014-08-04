@@ -6,6 +6,7 @@ define( [
     'osgShader/ShaderGeneratorProxy',
     'osg/Map'
 ], function ( StateAttribute, Stack, Uniform, Matrix, ShaderGeneratorProxy, Map ) {
+    'use strict';
 
     var State = function () {
         this._graphicContext = undefined;

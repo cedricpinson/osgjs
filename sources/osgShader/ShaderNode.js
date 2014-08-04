@@ -1,6 +1,3 @@
-/*global define */
-/*jshint unused: false*/
-
 define ( [
     'osgShader/shaderNode/data',
     'osgShader/shaderNode/textures',
@@ -9,6 +6,7 @@ define ( [
     'osgShader/shaderNode/operations'
 
 ], function ( data, textures, functions, lights, operations ) {
+    'use strict';
 
     var lib = {};
 

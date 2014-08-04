@@ -1,12 +1,9 @@
-/*global define */
-
 define ( [
     'osg/Utils',
     'osgShader/shaderNode/Node'
 
 ], function ( MACROUTILS, Node ) {
-
-
+    'use strict';
 
     var Blend = function ( mode, val0, val1, t ) {
         Node.call( this, val0, val1, t );

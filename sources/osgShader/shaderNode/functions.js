@@ -1,15 +1,11 @@
-/*global define */
-
 define ( [
     'osg/Utils',
     'osgShader/shaderNode/Node'
 
 ], function ( MACROUTILS, Node ) {
-
+    'use strict';
 
     // TODO populate function.glsl replacement
-
-
     var NormalizeNormalAndEyeVector = function(fnormal, fpos) {
         Node.apply(this, arguments);
         this._normal = fnormal;

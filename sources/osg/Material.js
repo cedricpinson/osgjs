@@ -6,9 +6,9 @@ define( [
     'osgShader/ShaderGeneratorProxy',
     'osg/Map'
 ], function ( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator, Map ) {
+    'use strict';
 
     // Define a material attribute
-
     var Material = function () {
         StateAttribute.call( this );
         this._ambient = [ 0.2, 0.2, 0.2, 1.0 ];

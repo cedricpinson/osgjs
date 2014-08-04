@@ -1,7 +1,3 @@
-/*global define */
-/*jshint unused: false */
-/*jshint loopfunc: true */
-
 define( [
     'osg/Utils',
     'osgShader/utils/sprintf',
@@ -10,7 +6,7 @@ define( [
     'osgShader/shaderNode/operations'
 
 ], function ( MACROUTILS, sprintf, Node, textures, operations ) {
-
+    'use strict';
 
     var Light = function ( light ) {
         Node.call( this );
@@ -38,12 +34,12 @@ define( [
         },
 
         POINT: function () {
-            return 'computeLightPoint(' + this._eyePosition.getVariable() + ',' + this._light.getOrCreateUniforms().position.getName() + ' , ' + this._lightVector.getVariable() + ', ' + this._distance.getVariable() + ');';
+            return 'computeLightPoint(' + this._eyePosition.getVariable() + ',' + this._light.getOrCreateUniforms().position.getName() + '.rgb , ' + this._lightVector.getVariable() + ', ' + this._distance.getVariable() + ');';
         },
 
         // like point light
         SPOT: function () {
-            return 'computeLightPoint(' + this._eyePosition.getVariable() + ',' + this._light.getOrCreateUniforms().position.getName() + ' , ' + this._lightVector.getVariable() + ', ' + this._distance.getVariable() + ');';
+            return 'computeLightPoint(' + this._eyePosition.getVariable() + ',' + this._light.getOrCreateUniforms().position.getName() + '.rgb , ' + this._lightVector.getVariable() + ', ' + this._distance.getVariable() + ');';
         },
 
         init: function ( context ) {
@@ -89,15 +85,14 @@ define( [
             // compute light direction and attenuation
             if ( this[ light.getLightType() ] === undefined ) {
                 lightComputation = this.SUN( this.getOutput() );
-            }
-            else {
+            } else {
                 lightComputation = this[ light.getLightType() ]();
             }
 
 
             // no falloff for directionnal light
             if ( light.getLightType() !== 'SUN' &&
-                 light.getLightType() !== 'HEMI' ) {
+                light.getLightType() !== 'HEMI' ) {
 
                 // fallof with the good type
                 if ( this[ light.getFalloffType() ] !== undefined ) {
@@ -111,7 +106,8 @@ define( [
                 this._lightVector.getVariable() + ' = vec3(0.0);',
                 lightComputation,
                 lightFalloff,
-                '' ].join( '\n' );
+                ''
+            ].join( '\n' );
 
             return str;
         },
@@ -142,7 +138,7 @@ define( [
 
             var accumulator = new operations.AddVector();
             accumulator.connectOutput( lambertOutput );
-            accumulator.comment('lambertOutput = ???');
+            accumulator.comment( 'lambertOutput = ???' );
 
             // CP: TODO
             // lambert node use an light input ( direct )
@@ -159,7 +155,7 @@ define( [
                 var attenuation = nodeLight.getOutputAttenuation();
                 var lightVector = nodeLight.getOutputLightVector();
 
-                var lightColor = context.getVariable( nodeLight.getOrCreateUniforms().color.name );
+                var lightColor = context.getVariable( nodeLight.getOrCreateUniforms().diffuse.name );
                 var materialColor = this._color;
 
                 var lightColorMaterial = context.Variable( 'vec3' );
@@ -226,8 +222,8 @@ define( [
 
             // compute the reflection vector
             var operator = new operations.InlineCode( this._environmentTransform,
-                                                      this._eye,
-                                                      this._normal );
+                this._eye,
+                this._normal );
             var str = sprintf( '%s = computeAndRotateReflectionVector(%s,%s,%s);', [ reflect.getVariable(), this._environmentTransform.getVariable(), this._eye.getVariable(), this._normal.getVariable() ] );
             operator.setCode( str );
             operator.comment( '// environment reflection' );
@@ -275,7 +271,7 @@ define( [
                 var attenuation = nodeLight.getOutputAttenuation();
                 var lightVector = nodeLight.getOutputLightVector();
 
-                var lightColor = context.getVariable( nodeLight.getOrCreateUniforms().color.name );
+                var lightColor = context.getVariable( nodeLight.getOrCreateUniforms().specular.name );
                 var materialColor = this._color;
                 var viewVector = context.getVariable( 'eyeVector' );
                 var lightColorMaterial = context.Variable( 'vec3' );
@@ -321,7 +317,7 @@ define( [
         computeFragment: function () {
             return '';
         }
-    });
+    } );
 
 
     return {

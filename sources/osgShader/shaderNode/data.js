@@ -4,8 +4,7 @@ define ( [
     'osgShader/shaderNode/Node'
 
 ], function ( MACROUTILS, Node ) {
-
-
+    'use strict';
 
     var Variable = function ( type, prefix ) {
         Node.call( this );

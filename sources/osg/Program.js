@@ -4,6 +4,7 @@ define( [
     'osg/StateAttribute',
     'osg/Map'
 ], function ( MACROUTILS, Notify, StateAttribute, Map ) {
+    'use strict';
 
     /**
      * Program encapsulate an vertex and fragment shader

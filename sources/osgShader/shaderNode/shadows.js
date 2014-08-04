@@ -1,11 +1,9 @@
-/*global define */
-
 define ( [
     'osg/Utils',
     'osgShader/shaderNode/Node'
 
 ], function ( MACROUTILS, Node ) {
-
+    'use strict';
 
     // TODO : use GLSL libraries shadow.glsl
     var ShadowNode = function ( material, shadow ) {

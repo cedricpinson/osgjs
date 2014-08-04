@@ -1,6 +1,7 @@
 define ( [
     'require'
 ], function ( require ) {
+    'use strict';
 
     var instance = 0;
     var Node = function() {

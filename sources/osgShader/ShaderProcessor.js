@@ -1,10 +1,8 @@
-/*global define,require */
-
 define( [
     'osg/Notify',
     'osgShader/ShaderLib'
-
 ], function ( Notify, shaderLib ) {
+    'use strict';
 
     var shaderPrefix = shaderLib.prefix;
 
