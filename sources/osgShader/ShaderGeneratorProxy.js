@@ -19,7 +19,7 @@ define( [
         this.addShaderGenerator( new ShaderGeneratorMaterial(), 'material' );
         this.addShaderGenerator( new ShaderGeneratorShadeless(), 'shadeless' );
 
-        this._generators[ 'default' ] = this._generators[ 'stateset' ];
+        this._generators[ 'default' ] = this._generators[ 'material' ];
         this._current = this._generators[ 'default' ];
 
         return this;
