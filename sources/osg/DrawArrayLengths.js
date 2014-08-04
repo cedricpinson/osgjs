@@ -1,5 +1,6 @@
-define( [
-], function () {
+define( [], function () {
+
+    'use strict';
 
     /**
      * DrawArrayLengths manage rendering primitives
@@ -34,6 +35,9 @@ define( [
                 count += array[ i ];
             }
             return count;
+        },
+        getCount: function () {
+            return this.getNumIndices();
         },
         getArrayLengths: function () {
             return this._arrayLengths;

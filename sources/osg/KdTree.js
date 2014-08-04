@@ -7,6 +7,8 @@ define( [
     'osg/PrimitiveSet'
 ], function( MACROUTILS, BoundingBox, Vec3, TriangleIndexFunctor, TriangleIntersect, PrimitiveSet ) {
 
+    'use strict';
+
     // **** GENERAL INFO ON KDTREE ****
     // A KdTree is a Spatial Partitionning Tree (http://en.wikipedia.org/wiki/Space_partitioning)
     // The type of tree is sort of defined by the splitting axis method:
@@ -334,9 +336,10 @@ define( [
             for ( i = 0; i < nbPrimitives; i++ ) {
                 var prim = geomPrimitives[ i ];
                 var mode = prim.getMode();
+                // ignore points and line stuffs
                 if ( mode === PrimitiveSet.TRIANGLES )
                     totalLenArray += prim.getCount();
-                else
+                else if ( mode === PrimitiveSet.TRIANGLE_STRIP || mode === PrimitiveSet.TRIANGLE_FAN )
                     totalLenArray += ( prim.getCount() - 2 ) * 3;
             }
             var indices = new MACROUTILS.Uint32Array( totalLenArray );
