@@ -115,7 +115,6 @@ define( [
 
         setDiffuse: function ( a ) {
             this._diffuse = a;
-            this.setUseDiffuse( a );
             this.dirty();
         },
 

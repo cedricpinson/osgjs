@@ -14,19 +14,29 @@ define( [
         }
         // object of shader generators
         this._generators = {};
-        this.addShaderGenerator( new ShaderGeneratorStateSet(), 'default' );
+
+        this.addShaderGenerator( new ShaderGeneratorStateSet(), 'stateset' );
         this.addShaderGenerator( new ShaderGeneratorMaterial(), 'material' );
         this.addShaderGenerator( new ShaderGeneratorShadeless(), 'shadeless' );
+
+        this._generators[ 'default' ] = this._generators[ 'stateset' ];
         this._current = this._generators[ 'default' ];
+
         return this;
     };
 
     ShaderGeneratorProxy.prototype = {
         getShaderGenerator: function ( name ) {
+            if ( !name ) name = 'default';
             return this._generators[ name ];
         },
+        // user-space facility to provide its own
         addShaderGenerator: function ( sg, name ) {
             this._generators[ name ] = sg;
+        },
+        setDefaultShaderGenerator: function ( name ) {
+            if ( !name ) return;
+            this._generators[ 'default' ] = this._generators[ name ];
         },
         setShaderGenerator: function ( name ) {
             var generator = this._generators[ name ];

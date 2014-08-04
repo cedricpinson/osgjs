@@ -21,8 +21,6 @@ define( [
 
         this.attributeMap = new Map();
 
-        this.shaderGenerator = new ShaderGeneratorProxy();
-
         this.modelViewMatrix = Uniform.createMatrix4( Matrix.create(), 'ModelViewMatrix' );
         this.projectionMatrix = Uniform.createMatrix4( Matrix.create(), 'ProjectionMatrix' );
         this.normalMatrix = Uniform.createMatrix4( Matrix.create(), 'NormalMatrix' );
@@ -194,17 +192,11 @@ define( [
             //     'attributeMap': this.attributeMap
             // };
 
+            // get shader generator name from stateset if any
             var generator = this.stateSets.back().getShaderGenerator();
-            if ( generator === undefined ) {
-                generator = this.shaderGenerator;
-                if ( this.attributeMap.Material ) {
-                    // not the default shadergenerator
-                    this.shaderGenerator.setShaderGenerator( 'material' );
-                }
-                // could check if no light in whole viewport and go shadeless.
-            }
-            //program = generator.getOrCreateProgram( attributes );
-            program = generator.getOrCreateProgram( this );
+            var shaderGenerator = State.globalShaderGenerator.getShaderGenerator( generator );
+            //program = shaderGenerator.getOrCreateProgram( attributes );
+            program = shaderGenerator.getOrCreateProgram( this );
             this.programs.push( this.getObjectPair( program, StateAttribute.ON ) );
             return program;
         },
@@ -776,6 +768,8 @@ define( [
         }
 
     };
+
+    State.globalShaderGenerator = new ShaderGeneratorProxy();
 
     return State;
 } );
