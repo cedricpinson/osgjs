@@ -37,7 +37,7 @@ define( [
 
             // diffuse color
             var diffuseColor = this.getTexture();
-            if ( diffuseColor === undefined ){
+            if ( diffuseColor === undefined ) {
                 diffuseColor = materialDiffuseColor;
             }
             diffuseColor = this.getVertexColor( diffuseColor );
@@ -47,21 +47,21 @@ define( [
 
             var finalColor;
 
-            if ( this._lights.length > 0 ){
+            if ( this._lights.length > 0 ) {
 
                 // by default geometryNormal is normal, but can change with normal map / bump map
                 var geometryNormal = normal;
 
-                var diffuseOutput = this.Variable( 'vec3', 'diffuseOutput_' );
+                var diffuseOutput = this.Variable( 'vec4', 'diffuseOutput_' );
                 var nodeDiffuse = new shaderNode.Lambert( diffuseColor,
-                                                          geometryNormal,
-                                                          diffuseOutput );
+                    geometryNormal,
+                    diffuseOutput );
 
-                var specularOutput = this.Variable( 'vec3' );
+                var specularOutput = this.Variable( 'vec4' );
                 var nodeCookTorrance = new shaderNode.CookTorrance( materialSpecularColor,
-                                                                    geometryNormal,
-                                                                    materialShininess,
-                                                                    specularOutput );
+                    geometryNormal,
+                    materialShininess,
+                    specularOutput );
 
                 var lightNodes = [];
                 var lights = this._lights;
@@ -79,15 +79,14 @@ define( [
                 nodeCookTorrance.createFragmentShaderGraph( this );
 
                 // get final color
-                finalColor = this.getFinalColor( materialEmissionColor, diffuseOutput, specularOutput);
-            }
-            else{
+                finalColor = this.getFinalColor( materialEmissionColor, diffuseOutput, specularOutput );
+            } else {
                 finalColor = this.getFinalColor( diffuseColor );
             }
 
             // premult alpha
             if ( true ) {
-                var premultAlpha = this.Variable( 'vec3' );
+                var premultAlpha = this.Variable( 'vec4' );
                 var tmp = this.Variable( 'vec4' );
                 new shaderNode.SetAlpha( finalColor, alpha, tmp );
                 new shaderNode.PreMultAlpha( tmp, premultAlpha );

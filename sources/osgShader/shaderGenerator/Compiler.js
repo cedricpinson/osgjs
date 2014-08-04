@@ -211,7 +211,7 @@ define( [
         },
 
         getFinalColor: function () {
-            var finalColor = this.Variable( 'vec3' );
+            var finalColor = this.Variable( 'vec4' );
 
             var opFinalColor = new ShaderNode.AddVector();
             opFinalColor.comment( 'finalColor = ???' );
@@ -224,7 +224,7 @@ define( [
             }
 
             if ( opFinalColor.getInputs().length === 0 )
-                opFinalColor.connectInput( new ShaderNode.InlineConstant( 'vec3( 0.0, 0.0, 0.0 )' ) );
+                opFinalColor.connectInput( new ShaderNode.InlineConstant( 'vec4( 0.0, 0.0, 0.0, 1.0 )' ) );
 
 
             return finalColor;
@@ -300,7 +300,7 @@ define( [
                 return finalColor;
             var tmp = this.Variable( 'vec4' );
             new ShaderNode.SetAlpha( finalColor, alpha, tmp );
-            var premultAlpha = this.Variable( 'vec3' );
+            var premultAlpha = this.Variable( 'vec4' );
             new ShaderNode.PreMultAlpha( tmp, premultAlpha );
             return premultAlpha;
         },
@@ -356,12 +356,12 @@ define( [
                 return undefined;
             var vertexColor = this.Varying( 'vec4', 'VertexColor' );
             var vertexColorUniform = this.Uniform( 'float', 'ArrayColorEnabled' );
-            var tmp = this.Variable( 'vec3' );
+            var tmp = this.Variable( 'vec4' );
 
             var str = [ '',
-                sprintf( '%s = %s;', [ tmp.getVariable(), diffuseColor.getVariable() ] ),
+                sprintf( '%s.rgb = %s.rgb;', [ tmp.getVariable(), diffuseColor.getVariable() ] ),
                 sprintf( 'if ( %s == 1.0) {', [ vertexColorUniform.getVariable() ] ),
-                sprintf( '  %s *= %s.rgb;', [ tmp.getVariable(), vertexColor.getVariable() ] ),
+                sprintf( '  %s *= %s.rgba;', [ tmp.getVariable(), vertexColor.getVariable() ] ),
                 '}'
             ].join( '\n' );
 
