@@ -13,12 +13,6 @@ define( [
 
     ShaderGenerator.prototype = {
 
-        // scene is needed only for cubemap and environment
-        // maybe we could refactore this
-        setSceneContext: function ( scene ) {
-            this._scene = scene;
-        },
-
         // filter all attribute that comes from osgShader namespace
         getActiveAttributeList: function ( state, list ) {
             var Light =  require(  'osg/Light' );
