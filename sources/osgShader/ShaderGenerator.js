@@ -3,7 +3,7 @@ define( [
     'osg/Program',
     'osg/Shader',
     'osg/Map',
-    'osgShader/shaderGenerator/Compiler'
+    'osgShader/Compiler'
 ], function ( Notify, Program, Shader, Map, Compiler ) {
 
 

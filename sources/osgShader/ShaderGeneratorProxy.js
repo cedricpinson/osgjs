@@ -1,8 +1,7 @@
 define( [
-    'osgShader/shaderGenerator/ShaderGeneratorMaterial',
-    'osgShader/shaderGenerator/ShaderGeneratorShadeless',
-    'osgShader/shaderGenerator/ShaderGeneratorStateSet'
-], function ( ShaderGeneratorMaterial, ShaderGeneratorShadeless, ShaderGeneratorStateSet ) {
+    'osgShader/ShaderGenerator'
+
+], function ( ShaderGenerator ) {
     'use strict';
 
     var ShaderGeneratorProxy = function ( createInstance ) {
@@ -15,9 +14,7 @@ define( [
         // object of shader generators
         this._generators = {};
 
-        this.addShaderGenerator( new ShaderGeneratorStateSet(), 'stateset' );
-        this.addShaderGenerator( new ShaderGeneratorMaterial(), 'material' );
-        this.addShaderGenerator( new ShaderGeneratorShadeless(), 'shadeless' );
+        this.addShaderGenerator( new ShaderGenerator(), 'default' );
 
         this._generators[ 'default' ] = this._generators[ 'material' ];
         this._current = this._generators[ 'default' ];
