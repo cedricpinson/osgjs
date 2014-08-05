@@ -13,10 +13,7 @@ define( [
         }
         // object of shader generators
         this._generators = {};
-
         this.addShaderGenerator( new ShaderGenerator(), 'default' );
-
-        this._generators[ 'default' ] = this._generators[ 'material' ];
         this._current = this._generators[ 'default' ];
 
         return this;

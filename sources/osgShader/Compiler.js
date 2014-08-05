@@ -4,26 +4,11 @@ define( [
     'osg/Texture',
     'osg/Map',
     'osgShader/utils/sprintf',
-    'osgShader/ShaderNode',
-    'osgShader/ShaderProcessor'
-
-
-], function ( Notify, Uniform, Texture, Map, sprintf, ShaderNode, ShaderProcessor ) {
+    'osgShader/ShaderNode'
+], function ( Notify, Uniform, Texture, Map, sprintf, ShaderNode ) {
     'use strict';
 
-    var shaderProcessor;
-
-    function getOrCreateShaderProcessor() {
-
-        if ( shaderProcessor === undefined ) {
-            shaderProcessor = new ShaderProcessor();
-        }
-        return shaderProcessor;
-
-    }
-
-
-    var Compiler = function ( state, attributes, textureAttributes ) {
+    var Compiler = function ( state, attributes, textureAttributes, scene, shaderProcessor ) {
 
         this._state = state;
         this._variables = {};
@@ -31,7 +16,7 @@ define( [
         this._fragmentShader = [];
 
         // global stuffs
-        this._shaderProcessor = getOrCreateShaderProcessor();
+        this._shaderProcessor = shaderProcessor;
         this._lightNodes = [];
         this._texturesByName = {};
 
@@ -187,26 +172,6 @@ define( [
             }
         },
 
-        createFragmentShaderGraph: function () {
-            this.declareUniforms();
-            this.declareTextures();
-
-            var finalColor = [ 1.0, 1.0, 1.0, 1.0 ];
-            var alpha = 1.0;
-
-            if ( this._material ) {
-                // diffuse color
-                var diffuseColor = this.getTexture();
-                diffuseColor = this.getVertexColor( diffuseColor );
-                finalColor = this.getFinalColor( diffuseColor );
-                finalColor = this.getPremultAlpha( finalColor, diffuseColor.alpha );
-            }
-            // get srgb color and apply alpha
-            var fragColor = new ShaderNode.FragColor();
-            new ShaderNode.SetAlpha( this.getSrgbColor( finalColor ), alpha, fragColor );
-
-            return fragColor;
-        },
 
         getFinalColor: function () {
             var finalColor = this.Variable( 'vec4' );
@@ -776,6 +741,115 @@ define( [
 
             Notify.debug( shader );
             return shader;
+        },
+
+        createFragmentShaderGraphStateSet: function () {
+
+            var finalColor = [ 1.0, 1.0, 1.0, 1.0 ];
+            var alpha = 1.0;
+
+            // diffuse color
+            var diffuseColor = this.getTexture();
+            diffuseColor = this.getVertexColor( diffuseColor );
+            finalColor = this.getFinalColor( diffuseColor );
+            finalColor = this.getPremultAlpha( finalColor, diffuseColor.alpha );
+
+            // get srgb color and apply alpha
+            var fragColor = new ShaderNode.FragColor();
+            new ShaderNode.SetAlpha( this.getSrgbColor( finalColor ), alpha, fragColor );
+
+            return fragColor;
+        },
+        createFragmentShaderGraph: function () {
+            this.declareUniforms();
+            this.declareTextures();
+
+            if ( !this._material ) return this.createFragmentShaderGraphStateSet();
+
+            var uniforms = this._material.getOrCreateUniforms();
+            var materialDiffuseColor = this.getVariable( uniforms.diffuse.name );
+            //var materialAmbientColor = this.getVariable( uniforms.ambient.name );
+            var materialEmissionColor = this.getVariable( uniforms.emission.name );
+            var materialSpecularColor = this.getVariable( uniforms.specular.name );
+            var materialShininess = this.getVariable( uniforms.shininess.name );
+            //var materialOpacity = this.getVariable( uniforms.opacity.name );
+
+
+            var inputNormal = this.Varying( 'vec3', 'FragNormal' );
+            var inputPosition = this.Varying( 'vec3', 'FragEyeVector' );
+            var normal = this.Variable( 'vec3', 'normal' );
+            var eyeVector = this.Variable( 'vec3', 'eyeVector' );
+
+
+            var normalizeNormalAndVector = new ShaderNode.NormalizeNormalAndEyeVector( inputNormal, inputPosition );
+            normalizeNormalAndVector.connectOutputNormal( normal );
+            normalizeNormalAndVector.connectOutputEyeVector( eyeVector );
+
+            // diffuse color
+            var diffuseColor = this.getTexture();
+            if ( diffuseColor === undefined ) {
+                diffuseColor = materialDiffuseColor;
+            }
+            diffuseColor = this.getVertexColor( diffuseColor );
+
+            //var alpha =  materialOpacity || new shaderNode.InlineConstant( '1.0' );
+            var alpha = new ShaderNode.InlineConstant( '1.0' );
+
+            var finalColor;
+
+            if ( this._lights.length > 0 ) {
+
+                // by default geometryNormal is normal, but can change with normal map / bump map
+                var geometryNormal = normal;
+
+                var diffuseOutput = this.Variable( 'vec4', 'diffuseOutput_' );
+                var nodeDiffuse = new ShaderNode.Lambert( diffuseColor,
+                    geometryNormal,
+                    diffuseOutput );
+
+                var specularOutput = this.Variable( 'vec4' );
+                var nodeCookTorrance = new ShaderNode.CookTorrance( materialSpecularColor,
+                    geometryNormal,
+                    materialShininess,
+                    specularOutput );
+
+                var lightNodes = [];
+                var lights = this._lights;
+                for ( var i = 0, l = lights.length; i < l; i++ ) {
+                    var light = lights[ i ];
+                    var nodeLight = new ShaderNode.Light( light );
+                    nodeLight.init( this );
+                    lightNodes.push( nodeLight );
+                }
+
+                nodeDiffuse.connectLights( lightNodes );
+                nodeDiffuse.createFragmentShaderGraph( this );
+
+                nodeCookTorrance.connectLights( lightNodes );
+                nodeCookTorrance.createFragmentShaderGraph( this );
+
+                // get final color
+                finalColor = this.getFinalColor( materialEmissionColor, diffuseOutput, specularOutput );
+            } else {
+                finalColor = this.getFinalColor( diffuseColor );
+            }
+
+            // premult alpha
+            if ( true ) {
+                var premultAlpha = this.Variable( 'vec4' );
+                var tmp = this.Variable( 'vec4' );
+                new ShaderNode.SetAlpha( finalColor, alpha, tmp );
+                new ShaderNode.PreMultAlpha( tmp, premultAlpha );
+                finalColor = premultAlpha;
+            }
+
+            // get srgb color
+            var srgbColor = this.getSrgbColor( finalColor );
+
+            var fragColor = new ShaderNode.FragColor();
+            new ShaderNode.SetAlpha( srgbColor, alpha, fragColor );
+
+            return fragColor;
         }
     };
 
