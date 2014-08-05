@@ -5,38 +5,23 @@ define( [
 ], function ( MACROUTILS, Node ) {
     'use strict';
 
-    var Blend = function ( mode, val0, val1, t ) {
+    var Mix = function ( val0, val1, t ) {
         Node.call( this, val0, val1, t );
-        this._mode = mode;
     };
-    Blend.prototype = MACROUTILS.objectInherit( Node.prototype, {
+    Mix.prototype = MACROUTILS.objectInherit( Node.prototype, {
+        type: 'Mix',
         computeFragment: function () {
-            var mode = this._mode;
-            if ( this[ mode ] === undefined ) {
-                mode = 'MIX';
-            }
-            return this[ mode ]();
-        },
-        ADD: function () {
-            return this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + ' + (' + this._inputs[ 1 ].getVariable() + ' * ' + this._inputs[ 2 ].getVariable() + ');';
-        },
-        MIX: function () {
             // result = val0*(1.0-t) + t*val1
             return this.getOutput().getVariable() + ' = mix(' + this._inputs[ 0 ].getVariable() + ', ' + this._inputs[ 1 ].getVariable() + ', ' + this._inputs[ 2 ].getVariable() + ');';
-
-        },
-
-        MULTIPLY: function () {
-            return this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + ' * mix( ' + this._inputs[ 0 ].getType() + '(1.0), ' + this._inputs[ 1 ].getVariable() + ', ' + this._inputs[ 2 ].getVariable() + ');';
         }
-
     } );
 
-    var AddVector = function () {
+
+    var Add = function () {
         Node.apply( this, arguments );
     };
-    AddVector.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'AddVector',
+    Add.prototype = MACROUTILS.objectInherit( Node.prototype, {
+        type: 'Add',
         computeFragment: function () {
             var str = this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable();
             for ( var i = 1, l = this._inputs.length; i < l; i++ ) {
@@ -46,6 +31,37 @@ define( [
             return str;
         }
     } );
+
+
+    var Mult = function () {
+        Node.apply( this, arguments );
+    };
+    Mult.prototype = MACROUTILS.objectInherit( Node.prototype, {
+        type: 'Mult',
+        computeFragment: function () {
+            var str = this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable();
+            this._inputs.forEach( function ( element, index /*, array */ ) {
+                if ( index === 0 ) {
+                    return;
+                }
+                str += ' * ' + element.getVariable();
+            } );
+            str += ';\n';
+            return str;
+        }
+    } );
+
+
+    var DotClamp = function () {
+        Node.call( this );
+    };
+    DotClamp.prototype = MACROUTILS.objectInherit( Node.prototype, {
+        type: 'DotClamp',
+        computeFragment: function () {
+            return this.getOutput().getVariable() + ' = max( dot(' + this._inputs[ 0 ].getVariable() + ', ' + this._inputs[ 1 ].getVariable() + '), 0.0);';
+        }
+    } );
+
 
 
     var InlineCode = function () {
@@ -58,20 +74,6 @@ define( [
         },
         computeFragment: function () {
             return this._text;
-        }
-    } );
-
-
-
-
-    var ReflectionVector = function () {
-        Node.apply( this, arguments );
-    };
-    ReflectionVector.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'ReflectionVector',
-        computeFragment: function () {
-            var str = '  reflection_spec(' + this._inputs[ 0 ].getVariable() + ', ' + this._inputs[ 1 ].getVariable() + ', ' + this.getOutput().getVariable() + ');';
-            return str;
         }
     } );
 
@@ -89,19 +91,6 @@ define( [
         }
     } );
 
-
-
-    var PassValue = function ( input, output ) {
-        Node.call( this, input );
-        if ( output !== undefined ) {
-            this.connectOutput( output );
-        }
-    };
-    PassValue.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        computeFragment: function () {
-            return this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + ';';
-        }
-    } );
 
     var Vec3ToVec4 = function ( input, value, output ) {
         Node.call( this, input );
@@ -128,10 +117,10 @@ define( [
     } );
 
 
-    var DotVector = function () {
+    var Dot = function () {
         Node.apply( this, arguments );
     };
-    DotVector.prototype = MACROUTILS.objectInherit( Node.prototype, {
+    Dot.prototype = MACROUTILS.objectInherit( Node.prototype, {
         computeFragment: function () {
             return this.getOutput().getVariable() + ' = dot(' + this._inputs[ 0 ].getVariable() + ',' + this._inputs[ 1 ].getVariable() + ');';
         }
@@ -153,26 +142,6 @@ define( [
     } );
 
 
-    var MultVector = function () {
-        Node.apply( this, arguments );
-    };
-    MultVector.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'MultVector',
-        computeFragment: function () {
-            var str = this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable();
-            this._inputs.forEach( function ( element, index /*, array */ ) {
-                if ( index === 0 ) {
-                    return;
-                }
-                str += ' * ' + element.getVariable();
-            } );
-            str += ';\n';
-            return str;
-        }
-    } );
-
-
-
     var FragColor = function () {
         Node.call( this );
         this._prefix = 'gl_FragColor';
@@ -186,16 +155,15 @@ define( [
     } );
 
     return {
-        'Blend': Blend,
-        'MultVector': MultVector,
-        'AddVector': AddVector,
+        'Mix': Mix,
+        'Mult': Mult,
+        'Add': Add,
+        'Dot': Dot,
+        'DotClamp': DotClamp,
         'InlineCode': InlineCode,
-        'ReflectionVector': ReflectionVector,
         'SetAlpha': SetAlpha,
-        'PassValue': PassValue,
         'Vec3ToVec4': Vec3ToVec4,
         'Vec4ToVec3': Vec4ToVec3,
-        'DotVector': DotVector,
         'PreMultAlpha': PreMultAlpha,
         'FragColor': FragColor
     };

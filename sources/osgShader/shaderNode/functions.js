@@ -71,16 +71,6 @@ define( [
     Linear2sRGB.defaultGamma = 2.4;
 
 
-    var DotClamp = function () {
-        Node.call( this );
-    };
-    DotClamp.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'DotClamp',
-        computeFragment: function () {
-            return this.getOutput().getVariable() + ' = max( dot(' + this._inputs[ 0 ].getVariable() + ', ' + this._inputs[ 1 ].getVariable() + '), 0.0);';
-        }
-    } );
-
     var NormalTangentSpace = function ( tangent, normal, texNormal, output ) {
         Node.call( this, tangent, normal, texNormal );
         if ( output !== undefined ) {
@@ -175,75 +165,14 @@ define( [
         }
     } );
 
-    var TonemapHDR = function ( input, parameters, output ) {
-        Node.call( this, input );
-        this.connectInputs( parameters );
-        this._parameters = parameters;
-        this.connectOutput( output );
-    };
-    TonemapHDR.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'TonemapHDR',
-        computeFragment: function () {
-            return this.getOutput().getVariable() + ' = tonemapHDR(' + this._inputs[ 0 ].getVariable() + ');';
-        },
-        globalFunctionDeclaration: function () {
-            var str = [
-                'vec3 tonemapHDR(const in vec3 hdr) {',
-                '  float e = 1.0;',
-                '  return hdr * e;',
-                '}'
-            ].join( '\n' );
-            return str;
-        }
-    } );
-
-    var NormalMatcap = function ( input, output ) {
-        Node.call( this, input );
-        this.connectOutput( output );
-    };
-    NormalMatcap.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'NormalMatcap',
-        computeFragment: function () {
-            return this.getOutput().getVariable() + ' = normalMatcap(' + this._inputs[ 0 ].getVariable() + ');';
-        },
-        globalFunctionDeclaration: function () {
-            var str = [
-                'vec2 normalMatcap(const in vec3 normal) {',
-                'vec3 nm_z = normalize(-FragEyeVector);',
-                'vec3 nm_x = cross(nm_z, vec3(0.0, 1.0, 0.0));',
-                'vec3 nm_y = cross(nm_x, nm_z);',
-                'vec3 nTrans = normalize(normal);',
-                'vec3 coord = vec3(dot(nTrans, nm_x), dot(nTrans, nm_y), dot(nTrans, nm_z));',
-                'vec2 texCoord = vec2( 0.5 * coord.x + 0.5, 0.5 * coord.y + 0.5 );',
-                'return texCoord;',
-                '}'
-            ].join( '\n' );
-            return str;
-        }
-    } );
-
-    var FrontNormal = function ( input, output ) {
-        Node.call( this, input );
-        this.connectOutput( output );
-    };
-    FrontNormal.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'FrontNormal',
-        computeFragment: function () {
-            return this.getOutput().getVariable() + ' = gl_FrontFacing ? ' + this._inputs[ 0 ].getVariable() + ' : -' + this._inputs[ 0 ].getVariable() + ';';
-        },
-    } );
 
     return {
-        'sRGB2Linear': sRGB2Linear,
-        'Linear2sRGB': Linear2sRGB,
-        'DotClamp': DotClamp,
+        'sRGBToLinear': sRGB2Linear,
+        'LinearTosRGB': Linear2sRGB,
         'NormalTangentSpace': NormalTangentSpace,
         'EnvironmentTransform': EnvironmentTransform,
-        'TomemapHDR': TonemapHDR,
         'Bumpmap': Bumpmap,
-        'NormalizeNormalAndEyeVector': NormalizeNormalAndEyeVector,
-        'NormalMatcap': NormalMatcap,
-        'FrontNormal': FrontNormal
+        'NormalizeNormalAndEyeVector': NormalizeNormalAndEyeVector
     };
 
 } );

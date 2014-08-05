@@ -1,29 +1,39 @@
-define ( [
+define( [
     'require'
+
 ], function ( require ) {
     'use strict';
 
     var instance = 0;
-    var Node = function() {
+    var Node = function () {
         this._name = 'AbstractNode';
         this._inputs = [];
         this._outputs = [];
         this._id = instance++;
-        this.connectInputs.apply(this, arguments );
+
+        this.connectInputs.apply( this, arguments );
     };
 
     Node.prototype = {
+
         toString: function () {
             return this._name + ' : { input: ' + this._inputs.toString() + ' }, output: { ' + this._output.toString() + ' } ';
         },
-        connectInput: function ( input ) {
-            this._inputs.push( input );
+
+        getInputsSlots: function () {
+            return this._inputs;
         },
+
+        getOutputsSlots: function () {
+            return this._outputs;
+        },
+
         connectInputs: function () {
 
             // circular denpendency
-            var data = require('osgShader/shaderNode/data');
+            var data = require( 'osgShader/shaderNode/data' );
             var InlineConstant = data.InlineConstant;
+
             for ( var i = 0, l = arguments.length; i < l; i++ ) {
 
                 var input = arguments[ i ];
@@ -39,26 +49,21 @@ define ( [
                 this._inputs.push( input );
             }
         },
+
         connectOutput: function ( i ) {
             this._outputs.push( i );
             this.autoLink( i );
         },
-        getOutput: function () {
-            return this._outputs[ 0 ];
-        },
-        getOutputs: function () {
-            return this._outputs;
-        },
-        getInputs: function () {
-            return this._inputs;
-        },
+
         autoLink: function ( output ) {
             if ( output === undefined ) {
                 return;
             }
-            output.connectInput( this );
+            output.connectInputs( this );
         },
+
         connectUniforms: function ( context, attribute ) {
+
             var uniformMap = attribute.getOrCreateUniforms();
             var uniformMapKeys = uniformMap.getKeys();
 
@@ -77,15 +82,19 @@ define ( [
                 this.connectInput( uniform );
             }
         },
+
         computeFragment: function () {
             return undefined;
         },
+
         computeVertex: function () {
             return undefined;
         },
+
         comment: function ( txt ) {
             this._comment = '//' + txt;
         },
+
         getComment: function () {
             return this._comment;
         }
@@ -93,4 +102,4 @@ define ( [
 
 
     return Node;
-});
+} );
