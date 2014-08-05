@@ -6,56 +6,24 @@ define( [
 
     var shaderPrefix = shaderLib.prefix;
 
-    //     Manage External Load Shader
-    //     Or storage as json inside code
-    //     (like concatened from shader file
-    //     to json using a build tool like grunt)
-    //     TODO: tests load/reload shaders for realtime editing.
-    //
-    //     Idea is to be able to edit shader in separate files than js, getting readable code, and avoid string/shader duplication in code, resulting in min code.
-    //     Handle loading shader files using ajax,json,jsonp or  even inline, with a grunt dir2json task that will generate according files.
-    //     Handle (recursive) include, avoiding code repeat and help code factorization
-    //     Handle per shader and global define (upon extension supported, hw capabilites ("highp precision") or shader usage ("LAMBERT or BLINN_PHONG").)
-    //     Possible afterward Todo list:
-    //     use glsl optimizer on shaders
-    //     use glsl minimizer on shaders.
+    //     Shader as vert/frag/glsl files Using requirejs text plugin
+    //     Preprocess features like:    //
+    //     - Handle (recursive) include, avoiding code repeat and help code factorization
+    //     - Handle per shader and global define/precision
     /**
      * @class ShaderLoader
      */
 
-    var getParametersURL = function () {
-        var vars = [], hash;
-        if ( typeof window !== 'undefined' ){
-            var hashes = window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ).split( '&' );
-            for( var i = 0; i < hashes.length; i++ )
-            {
-                hash = hashes[i].split( '=' );
-                var element = hash[0].toLowerCase();
-                vars.push(element);
-                var result = hash[1];
-                if ( result === undefined ) {
-                    result = '1';
-                }
-                var val = parseFloat( result );
-                if ( !isNaN( val ) )
-                    vars[ element ] = val;
-                else
-                    vars[ element ] = result.toLowerCase();
-            }
-        }
-        return vars;
-    };
 
     var ShaderLoader = function ( opt ) {
         var options = opt;
         if ( !options ) {
             options = {
-                inline: getParametersURL()[ 'debug' ] ? false : true,
                 callbacksingle: function ( file ) {
                     window.dbg.viewer.log( file + 'is loaded' );
                 },
                 libs: [ {
-                    loadprefix:  shaderPrefix,
+                    loadprefix: shaderPrefix,
                     shaders: shaderLib
                 } ]
             };
@@ -79,7 +47,7 @@ define( [
         _precisionR: /precision\s+(high|low|medium)p\s+float/,
 
 
-        initShaderLib: function ( lib, inline ) {
+        initShaderLib: function ( lib ) {
 
             if ( !lib.loadprefix ) lib.loadprefix = '';
             var i;
@@ -88,103 +56,35 @@ define( [
                     this._numtoLoad++;
                 }
             }
-            if ( !inline ) {
-                for ( i in lib.shaders ) {
-                    if ( lib.shaders.hasOwnProperty( i ) ) {
-                        this._shadersList[ i ] = lib.loadprefix + i;
-                    }
+            for ( i in lib.shaders ) {
+                if ( lib.shaders.hasOwnProperty( i ) ) {
+                    this._shadersList[ i ] = i;
+                    this._shadersText[ i ] = lib.shaders[ i ];
+                    if ( this._callbackSingle ) this._callbackSingle( i );
+                    this._numtoLoad--;
                 }
-                this._loaded = false;
-
-            } else {
-                for ( i in lib.shaders ) {
-                    if ( lib.shaders.hasOwnProperty( i ) ) {
-                        this._shadersList[ i ] = i;
-                        this._shadersText[ i ] = lib.shaders[ i ];
-                        if ( this._callbackSingle ) this._callbackSingle( i );
-                        this._numtoLoad--;
-                    }
-                }
-                this._loaded = true;
-
-                Notify.assert( this._numtoLoad === 0 );
             }
+            this._loaded = true;
+
+            Notify.assert( this._numtoLoad === 0 );
+
 
         },
 
-        init: function(options) {
+        init: function ( options ) {
 
             this._callbackSingle = options.callbackSingle;
             this._numtoLoad = 0;
 
             if ( options.libs ) {
-                options.libs.forEach( function( lib ) {
-                    this.initShaderLib( lib, options.inline );
+                options.libs.forEach( function ( lib ) {
+                    this.initShaderLib( lib );
                 }, this );
             }
 
             return this;
         },
-        load: function( shaderFilename, shaderName, callbackSingle ) {
 
-            if ( !this._shadersList[ shaderName ] )
-                this._shadersList[ shaderName ] = shaderFilename;
-
-            // require the shader
-            require( [ 'text!'+shaderFilename ], function ( content ) {
-
-                this._shadersText[ shaderName ] = content;
-                if ( this._callbackSingle ) this._callbackSingle();
-                this._numtoLoad--;
-
-            }.bind( this ) );
-
-            if ( callbackSingle )
-                this._callbackSingle = callbackSingle;
-
-            return this;
-        },
-
-        loadAll: function ( options ) {
-            if ( this._numtoLoad > 0 ) {
-
-                Object.keys( this._shadersList ).forEach( function( shader ) {
-                    var shaderPath = this._shadersList[ shader ];
-                    this.load( shaderPath, shader, options && options.callbackSingle );
-                }, this );
-
-            }
-            return this;
-        },
-
-        reloadAll: function ( options ) {
-            this._shaderLoaded = {};
-            this._loaded = false;
-            this._numtoLoad = 0;
-
-            Object.keys( this._shadersList ).forEach( function( shader ) {
-                // unload from require
-                require.undef( 'vendors/require/text!'+ shader );
-                this._numtoLoad++;
-
-            }, this );
-
-            this.loadAll( options );
-            return this;
-        },
-
-        reload: function ( options ) {
-            this._shaderLoaded[ options.shaderName ] = undefined;
-            this._loaded = false;
-            this._numtoLoad = 1;
-
-            // unload from require
-            var shaderPath = this._shadersList[ options.shaderName ];
-            require.undef( 'vendors/require/text!' + shaderPath );
-
-            this.load( this._shaders[ options.shaderName ], options && options.shaderName, options && options.callbackSingle );
-            return this;
-        },
 
         instrumentShaderlines: function ( content, sourceID ) {
             // TODO instrumentShaderlines
@@ -224,14 +124,13 @@ define( [
                     window.dbg.viewer.error( 'shader file/text: ' + shaderName + ' not loaded' );
                     return '';
                 }
-            }
-            else {
+            } else {
                 preShader = this._shadersText[ shaderName ];
             }
             return preShader;
         },
 
-        getShader: function( shaderName ) {
+        getShader: function ( shaderName ) {
             var shader = this.getShaderTextPure( shaderName );
             return this.processShader( shader );
         },
@@ -292,4 +191,4 @@ define( [
     };
     return ShaderLoader;
 
-});
+} );
