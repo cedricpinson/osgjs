@@ -3,13 +3,14 @@ define( [
     'osg/Stack',
     'osg/Uniform',
     'osg/Matrix',
-    'osgShader/ShaderGeneratorProxy',
     'osg/Map'
-], function ( StateAttribute, Stack, Uniform, Matrix, ShaderGeneratorProxy, Map ) {
+], function ( StateAttribute, Stack, Uniform, Matrix, Map ) {
     'use strict';
 
-    var State = function () {
+    var State = function ( shaderGeneratorProxy ) {
+
         this._graphicContext = undefined;
+        this._shaderGeneratorProxy = shaderGeneratorProxy;
 
         this.currentVBO = null;
         this.vertexAttribList = [];
@@ -50,7 +51,7 @@ define( [
         getGraphicContext: function () {
             return this._graphicContext;
         },
-
+        getShaderGeneratorProxy: function() { return this._shaderGeneratorProxy; },
         pushStateSet: function ( stateset ) {
             this.stateSets.push( stateset );
 
@@ -768,8 +769,6 @@ define( [
         }
 
     };
-
-    State.globalShaderGenerator = new ShaderGeneratorProxy();
 
     return State;
 } );
