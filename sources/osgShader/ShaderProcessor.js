@@ -46,7 +46,6 @@ define( [
         _defineR: /#define\s+([a-zA-Z_0-9]+)\s+(.*)/,
         _precisionR: /precision\s+(high|low|medium)p\s+float/,
 
-
         initShaderLib: function ( lib ) {
 
             if ( !lib.loadprefix ) lib.loadprefix = '';
