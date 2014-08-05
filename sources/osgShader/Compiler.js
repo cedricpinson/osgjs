@@ -1,5 +1,3 @@
-/*global define */
-
 define( [
     'osg/Notify',
     'osg/Uniform',
@@ -25,14 +23,14 @@ define( [
     }
 
 
-    var Compiler = function ( state, attributes, textureAttributes, scene ) {
+    var Compiler = function ( state, attributes, textureAttributes ) {
+
         this._state = state;
         this._variables = {};
         this._vertexShader = [];
         this._fragmentShader = [];
 
         // global stuffs
-        this._scene = scene;
         this._shaderProcessor = getOrCreateShaderProcessor();
         this._lightNodes = [];
         this._texturesByName = {};
