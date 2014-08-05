@@ -124,37 +124,6 @@ define( [
             }
 
             return this;
-/*
-            if ( !options.loadprefix ) options.loadprefix = '';
-            var i;
-            for ( i in options.shaders ) {
-                if ( options.shaders.hasOwnProperty( i ) ) {
-                    this._numtoLoad++;
-                }
-            }
-            if ( !options.inline ) {
-                for ( i in options.shaders ) {
-                    if ( options.shaders.hasOwnProperty( i ) ) {
-                        this._shadersList[ i ] = options.loadprefix + i;
-                    }
-                }
-                this._loaded = false;
-
-            } else {
-                for ( i in options.shaders ) {
-                    if ( options.shaders.hasOwnProperty( i ) ) {
-                        this._shadersList[ i ] = i;
-                        this._shadersText[ i ] = options.shaders[ i ];
-                        if ( this._callbackSingle ) this._callbackSingle( i );
-                        this._numtoLoad--;
-                    }
-                }
-                this._loaded = true;
-
-                Notify.assert( this._numtoLoad === 0 );
-            }
-            return this;
-            */
         },
         load: function( shaderFilename, shaderName, callbackSingle ) {
 
