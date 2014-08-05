@@ -90,8 +90,8 @@ function toggleVR() {
         // If no vrNode (first time vr is toggled), create one
         // The modelNode will be attached to it
         if ( !vrNode ) {
-            if ( navigator.getVRDevices )
-                vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus._hmd );
+            if ( navigator.getVRDevices || navigator.mozGetVRDevices )
+                vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus.getHmd() );
             else
                 vrNode = osgUtil.Oculus.createScene( viewer, modelNode );
         }
@@ -134,7 +134,7 @@ document.addEventListener( 'fullscreenchange', function () {
 
 function requestVRFullscreen() {
 
-    if ( !navigator.getVRDevices ) {
+    if ( !navigator.getVRDevices && !navigator.mozGetVRDevices ) {
         osg.log( 'WebVR Api is not supported by your navigator' );
     }
 
@@ -142,7 +142,7 @@ function requestVRFullscreen() {
 
     if ( fullscreen === false )
         launchFullscreen( canvas, {
-            vrDisplay: viewer._eventProxy.Oculus.getHmd();
+            vrDisplay: viewer._eventProxy.Oculus.getHmd()
         } );
     else
         exitFullscreen();
