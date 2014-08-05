@@ -3,19 +3,21 @@ define( [
     'osg/Program',
     'osg/Shader',
     'osg/Map',
-    'osgShader/Compiler'
-], function ( Notify, Program, Shader, Map, Compiler ) {
-
+    'osgShader/Compiler',
+    'osgShader/ShaderProcessor'
+], function ( Notify, Program, Shader, Map, Compiler, ShaderProcessor ) {
 
     var ShaderGenerator = function () {
         this._cache = {};
+        // one processor per shadergenerator
+        this._shaderProcessor = new ShaderProcessor();
     };
 
     ShaderGenerator.prototype = {
 
         // filter all attribute that comes from osgShader namespace
         getActiveAttributeList: function ( state, list ) {
-            var Light =  require(  'osg/Light' );
+            var Light = require( 'osg/Light' );
             var hash = '';
             var attributeMap = state.attributeMap;
             var attributeMapKeys = attributeMap.getKeys();
@@ -93,7 +95,7 @@ define( [
             for ( var i = 0, l = attributeList.length; i < l; i++ ) {
 
                 var at = attributeList[ i ];
-                if ( at.getOrCreateUniforms ){
+                if ( at.getOrCreateUniforms ) {
                     var attributeUniformMap = at.getOrCreateUniforms();
                     var attributeUniformMapKeys = attributeUniformMap.getKeys();
 
@@ -141,7 +143,7 @@ define( [
                 if ( this._cache[ hash ] !== undefined ) {
                     return this._cache[ hash ];
                 }
-                var shaderGen = new Compiler( state, attributes, textureAttributes, this._scene );
+                var shaderGen = new Compiler( state, attributes, textureAttributes, this._scene, this._shaderProcessor );
                 var vertexshader = shaderGen.createVertexShader();
                 var fragmentshader = shaderGen.createFragmentShader();
 
