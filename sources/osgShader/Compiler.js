@@ -746,13 +746,17 @@ define( [
         createFragmentShaderGraphStateSet: function () {
 
             var finalColor = [ 1.0, 1.0, 1.0, 1.0 ];
-            var alpha = 1.0;
+
+            var alpha = new ShaderNode.InlineConstant( '1.0' );
+
 
             // diffuse color
             var diffuseColor = this.getTexture();
             diffuseColor = this.getVertexColor( diffuseColor );
             finalColor = this.getFinalColor( diffuseColor );
-            finalColor = this.getPremultAlpha( finalColor, diffuseColor.alpha );
+            if ( diffuseColor ) {
+                finalColor = this.getPremultAlpha( finalColor, diffuseColor.alpha );
+            }
 
             // get srgb color and apply alpha
             var fragColor = new ShaderNode.FragColor();
