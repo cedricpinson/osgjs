@@ -81,7 +81,7 @@ define( [
                     uniform = context.Uniform( kkey.type, kkey.name );
                 }
                 // connect uniform to this node
-                this.connectInput( uniform );
+                this.connectInputs( uniform );
             }
         },
 
