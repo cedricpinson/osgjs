@@ -1,7 +1,7 @@
 define( [
     'osg/Utils',
     'osgShader/shaderNode/Node',
-    'osgShader/sprintf'
+    'osgShader/utils/sprintf'
 
 ], function ( MACROUTILS, Node, sprintf ) {
     'use strict';
