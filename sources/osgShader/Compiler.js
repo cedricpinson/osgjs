@@ -20,9 +20,6 @@ define( [
         this._lightNodes = [];
         this._texturesByName = {};
 
-        // TODO: extract material + light to proper method callable by inheriting
-
-
         // separate Material / Light / Texture
         // because this shader generator is specific for this
         var lights = [];
@@ -802,8 +799,8 @@ define( [
             var finalColor;
 
             if ( this._lights.length > 0 ) {
-                var lightedOutput = this.Variable( 'vec4', 'lightOutput_' );
-                var nodeLight = new ShaderNode.Light( this._lights, normal, diffuseColor, materialAmbientColor, materialSpecularColor, materialShininess, lightedOutput );
+                var lightedOutput = this.Variable( 'vec4', 'lightOutput' );
+                var nodeLight = new ShaderNode.Lighting( this._lights, normal, diffuseColor, materialAmbientColor, materialSpecularColor, materialShininess, lightedOutput );
                 nodeLight.createFragmentShaderGraph( this );
                 // get final color
                 finalColor = this.getFinalColor( materialEmissionColor, lightedOutput );
