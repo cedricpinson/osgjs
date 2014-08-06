@@ -8,18 +8,28 @@ define( [
 ], function ( MACROUTILS, sprintf, Node, textures, operations ) {
     'use strict';
 
-    var Light = function ( light ) {
+    var NodeLights = function () {
         Node.call( this );
+    };
+
+    NodeLights.prototype = MACROUTILS.objectInherit( Node.prototype, {
+
+        globalFunctionDeclaration: function () {
+            return '#pragma include "lights.glsl"';
+        }
+
+    });
+
+
+
+    var Light = function ( light ) {
+        NodeLights.call( this );
         this._light = light;
     };
 
-    Light.prototype = MACROUTILS.objectInherit( Node.prototype, {
+    Light.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
+
         type: 'Light',
-        globalFunctionDeclaration: function () {
-            return [
-                '#pragma include "lights.glsl"'
-            ].join( '\n' );
-        },
 
         INVERSE_SQUARE: function () {
             return this._attenuation.getVariable() + ' = invSquareFalloff(' + this._light.getOrCreateUniforms().distance.getName() + ' , ' + this._distance.getVariable() + ' );';
@@ -118,7 +128,7 @@ define( [
 
 
     var Lambert = function ( color, normal, output ) {
-        Node.call( this );
+        NodeLights.call( this );
         this._color = color;
         this._normal = normal;
         if ( output !== undefined ) {
@@ -128,7 +138,7 @@ define( [
         this._lights = [];
     };
 
-    Lambert.prototype = MACROUTILS.objectInherit( Node.prototype, {
+    Lambert.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
         type: 'Lambert',
         connectLights: function ( lights ) {
             this._lights = lights;
@@ -197,52 +207,8 @@ define( [
     } );
 
 
-    var SpheremapReflection = function ( environmentTransform, texture, textureSize, eyeDirection, normal, output ) {
-        Node.call( this );
-        this.connectInputs( environmentTransform, texture, textureSize, eyeDirection, normal );
-        this._sampler = texture;
-        this._eye = eyeDirection;
-        this._normal = normal;
-        this._environmentTransform = environmentTransform;
-        this._textureSize = textureSize;
-
-        if ( output !== undefined ) {
-            this.connectOutput( output );
-        }
-
-        this._output = output;
-    };
-    SpheremapReflection.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'SpheremapReflection',
-
-        createFragmentShaderGraph: function ( context ) {
-            var lambertOutput = this.getOutput();
-
-            var reflect = context.Variable( 'vec3' );
-
-            // compute the reflection vector
-            var operator = new operations.InlineCode( this._environmentTransform,
-                this._eye,
-                this._normal );
-            var str = sprintf( '%s = computeAndRotateReflectionVector(%s,%s,%s);', [ reflect.getVariable(), this._environmentTransform.getVariable(), this._eye.getVariable(), this._normal.getVariable() ] );
-            operator.setCode( str );
-            operator.comment( '// environment reflection' );
-            operator.connectOutput( reflect );
-
-            // get the texture filtered from the refelction vector
-            var node = new textures.TextureSpheremapHDR( this._sampler, this._textureSize, reflect ).connectOutput( this._output );
-        },
-
-        globalFunctionDeclaration: function () {
-            return [
-                '#pragma include "functions.glsl"'
-            ].join( '\n' );
-        },
-    } );
-
-
     var CookTorrance = function ( color, normal, hardness, output ) {
-        Node.call( this );
+        NodeLights.call( this );
         this._color = color;
         this._normal = normal;
         this._hardness = hardness;
@@ -253,11 +219,14 @@ define( [
         this._lights = [];
     };
 
-    CookTorrance.prototype = MACROUTILS.objectInherit( Node.prototype, {
+    CookTorrance.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
+
         type: 'CookTorrance',
+
         connectLights: function ( lights ) {
             this._lights = lights;
         },
+
         createFragmentShaderGraph: function ( context ) {
             var lambertOutput = this.getOutput();
 
@@ -323,7 +292,6 @@ define( [
     return {
         'Light': Light,
         'Lambert': Lambert,
-        'SpheremapReflection': SpheremapReflection,
         'CookTorrance': CookTorrance
     };
 
