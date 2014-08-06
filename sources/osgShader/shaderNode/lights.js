@@ -146,7 +146,7 @@ define( [
         createFragmentShaderGraph: function ( context ) {
             var lambertOutput = this.getOutput();
 
-            var accumulator = new operations.AddVector();
+            var accumulator = new operations.Add();
             accumulator.connectOutput( lambertOutput );
             accumulator.comment( 'lambertOutput = ???' );
 
@@ -230,7 +230,7 @@ define( [
         createFragmentShaderGraph: function ( context ) {
             var lambertOutput = this.getOutput();
 
-            var operator = new operations.AddVector();
+            var operator = new operations.Add();
             operator.connectOutput( lambertOutput );
 
             for ( var i = 0, l = this._lights.length; i < l; i++ ) {
@@ -249,7 +249,7 @@ define( [
 
                 // lightColorMaterial = lightColor * materialColor
                 ( function ( output ) {
-                    var operator = new operations.MultVector( lightColor, materialColor );
+                    var operator = new operations.Mult( lightColor, materialColor );
                     operator.comment( 'cooktorrance_color = light_color * material_color' );
                     operator.connectOutput( output );
                 } )( lightColorMaterial );
@@ -269,7 +269,7 @@ define( [
                 // specularOutput = specTerm * lightColorAttenuation
                 var specularOutput = context.Variable( 'vec4' );
                 ( function ( output ) {
-                    var operator = new operations.MultVector( term, lightColorMaterial );
+                    var operator = new operations.Mult( term, lightColorMaterial );
                     operator.comment( 'cooktorrance_color_contribution = cooktorrance_color * cooktorrance_term' );
                     operator.connectOutput( output );
                 } )( specularOutput );

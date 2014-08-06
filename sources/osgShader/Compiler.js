@@ -176,18 +176,18 @@ define( [
         getFinalColor: function () {
             var finalColor = this.Variable( 'vec4' );
 
-            var opFinalColor = new ShaderNode.AddVector();
+            var opFinalColor = new ShaderNode.Add();
             opFinalColor.comment( 'finalColor = ???' );
             opFinalColor.connectOutput( finalColor );
 
             for ( var i = 0, l = arguments.length; i < l; ++i ) {
                 if ( arguments[ i ] ) {
-                    opFinalColor.connectInput( arguments[ i ] );
+                    opFinalColor.connectInputs( arguments[ i ] );
                 }
             }
 
             if ( opFinalColor.getInputs().length === 0 )
-                opFinalColor.connectInput( new ShaderNode.InlineConstant( 'vec4( 0.0, 0.0, 0.0, 1.0 )' ) );
+                opFinalColor.connectInputs( new ShaderNode.InlineConstant( 'vec4( 0.0, 0.0, 0.0, 1.0 )' ) );
 
 
             return finalColor;
@@ -270,9 +270,9 @@ define( [
 
         getSrgbColor: function ( finalColor ) {
             var gamma = this.Variable( 'float' );
-            gamma.setValue( ShaderNode.Linear2sRGB.defaultGamma );
+            gamma.setValue( ShaderNode.LinearTosRGB.defaultGamma );
             var finalSrgbColor = this.Variable( 'vec3' );
-            new ShaderNode.Linear2sRGB( finalColor, finalSrgbColor, gamma );
+            new ShaderNode.LinearTosRGB( finalColor, finalSrgbColor, gamma );
 
             return finalSrgbColor;
         },
