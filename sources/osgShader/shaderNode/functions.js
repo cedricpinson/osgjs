@@ -19,7 +19,7 @@ define( [
             return '#pragma include "functions.glsl"';
         }
 
-    });
+    } );
 
 
     // TODO populate function.glsl replacement
@@ -60,7 +60,8 @@ define( [
         computeFragment: function () {
             //var inputType = this._inputs[ 0 ].getType();
             return sprintf( '%s = sRGBToLinear( %s )', [ this.getOutput().getVariable(),
-                                                         this._inputs[ 0 ].getVariable() ] );
+                this._inputs[ 0 ].getVariable()
+            ] );
         }
 
     } );
@@ -79,9 +80,9 @@ define( [
 
         computeFragment: function () {
             return sprintf( '%s = linearTosRGB( %s, %s ).rgb', [ this.getOutput().getVariable(),
-                                                                 this._inputs[ 0 ].getVariable(),
-                                                                 this._gamma.getVariable()
-                                                               ] );
+                this._inputs[ 0 ].getVariable(),
+                this._gamma.getVariable()
+            ] );
         }
 
     } );
@@ -90,6 +91,7 @@ define( [
 
 
     return {
+        'NormalizeNormalAndEyeVector': NormalizeNormalAndEyeVector,
         'sRGBToLinear': sRGBToLinear,
         'LinearTosRGB': LinearTosRGB
     };
