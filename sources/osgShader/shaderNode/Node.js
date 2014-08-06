@@ -20,6 +20,8 @@ define( [
             return this._name + ' : { input: ' + this._inputs.toString() + ' }, output: { ' + this._output.toString() + ' } ';
         },
 
+        getOutput: function() { return this._outputs[0]; },
+
         getInputs: function () {
             return this._inputs;
         },
