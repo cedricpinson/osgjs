@@ -1,9 +1,9 @@
 define( [
     'osg/Utils',
-    'osgShader/shaderNode/Node',
-    'osgShader/utils/sprintf'
+    'osgShader/utils/sprintf',
+    'osgShader/shaderNode/Node'
 
-], function ( MACROUTILS, Node, sprintf ) {
+], function ( MACROUTILS, sprintf, Node ) {
     'use strict';
 
 
