@@ -54,7 +54,7 @@ define( [
     TextureRGB.prototype = MACROUTILS.objectInherit( NodeTextures.prototype, {
 
         type: 'TextureRGB',
-        command: 'textureRGB'
+        functionName: 'textureRGB'
 
     } );
 
