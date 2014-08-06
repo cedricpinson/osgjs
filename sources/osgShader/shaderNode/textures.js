@@ -1,4 +1,4 @@
-define ( [
+define( [
     'osg/Utils',
     'osgShader/shaderNode/Node'
 
@@ -8,8 +8,8 @@ define ( [
     var TextureRGB = function ( sampler, uv, output ) {
         Node.call( this );
         this._sampler = sampler;
-        this.connectInput( sampler );
-        this.connectInput( uv );
+        this.connectInputs( sampler );
+        this.connectInputs( uv );
         if ( output !== undefined ) {
             this.connectOutput( output );
         }
@@ -19,17 +19,17 @@ define ( [
         type: 'TextureRGB',
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = textureRGB( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = textureRGB( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
+            ].join( '\n' );
             return str;
         },
 
         globalFunctionDeclaration: function () {
             var str = [ '',
-                        'vec3 textureRGB(const in sampler2D texture, const in vec2 uv) {',
-                        '  return texture2D(texture, uv).rgb;',
-                        '}'
-                      ].join( '\n' );
+                'vec3 textureRGB(const in sampler2D texture, const in vec2 uv) {',
+                '  return texture2D(texture, uv).rgb;',
+                '}'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -42,17 +42,17 @@ define ( [
         type: 'TextureRGBA',
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = textureRGBA( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = textureRGBA( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
+            ].join( '\n' );
             return str;
         },
 
         globalFunctionDeclaration: function () {
             var str = [ '',
-                        'vec4 textureRGBA(const in sampler2D texture, const in vec2 uv) {',
-                        '  return texture2D(texture, uv);',
-                        '}'
-                      ].join( '\n' );
+                'vec4 textureRGBA(const in sampler2D texture, const in vec2 uv) {',
+                '  return texture2D(texture, uv);',
+                '}'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -65,17 +65,17 @@ define ( [
         type: 'TextureAlpha',
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = textureAlpha( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = textureAlpha( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
+            ].join( '\n' );
             return str;
         },
 
         globalFunctionDeclaration: function () {
             var str = [ '',
-                        'float textureAlpha(const in sampler2D texture, const in vec2 uv) {',
-                        '  return texture2D(texture, uv).a;',
-                        '}'
-                      ].join( '\n' );
+                'float textureAlpha(const in sampler2D texture, const in vec2 uv) {',
+                '  return texture2D(texture, uv).a;',
+                '}'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -88,15 +88,15 @@ define ( [
         type: 'TextureCubemapRGB',
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = textureCubemapRGB( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xyz);'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = textureCubemapRGB( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xyz);'
+            ].join( '\n' );
             return str;
         },
 
         globalFunctionDeclaration: function () {
             var str = [ '',
-                        '#pragma include "textures.glsl"'
-                      ].join( '\n' );
+                '#pragma include "textures.glsl"'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -108,15 +108,15 @@ define ( [
         type: 'TextureSpheremap',
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = textureSpheremap( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xyz);'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = textureSpheremap( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xyz);'
+            ].join( '\n' );
             return str;
         },
 
         globalFunctionDeclaration: function () {
             var str = [ '',
-                        '#pragma include "textures.glsl"'
-                      ].join( '\n' );
+                '#pragma include "textures.glsl"'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -131,15 +131,15 @@ define ( [
         type: 'TextureSpheremapHDR',
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = textureSpheremapHDR( ' + this._sampler.getVariable() + ', ' + this._size.getVariable() + ' , ' + this._uv.getVariable() + '.xyz);'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = textureSpheremapHDR( ' + this._sampler.getVariable() + ', ' + this._size.getVariable() + ' , ' + this._uv.getVariable() + '.xyz);'
+            ].join( '\n' );
             return str;
         },
 
         globalFunctionDeclaration: function () {
             var str = [ '',
-                        '#pragma include "textures.glsl"'
-                      ].join( '\n' );
+                '#pragma include "textures.glsl"'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -150,8 +150,8 @@ define ( [
     TextureTranslucency.prototype = MACROUTILS.objectInherit( TextureAlpha.prototype, {
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = 1.0 - textureAlpha( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = 1.0 - textureAlpha( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -163,15 +163,15 @@ define ( [
         type: 'TextureIntensity',
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = textureIntensity( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = textureIntensity( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
+            ].join( '\n' );
             return str;
         },
 
         globalFunctionDeclaration: function () {
             var str = [ '',
-                        '#pragma include "textures.glsl"'
-                      ].join( '\n' );
+                '#pragma include "textures.glsl"'
+            ].join( '\n' );
             return str;
         }
     } );
@@ -184,52 +184,53 @@ define ( [
         type: 'TextureNormal',
         computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = textureNormal( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
-                      ].join( '\n' );
+                this.getOutput().getVariable() + ' = textureNormal( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy);'
+            ].join( '\n' );
             return str;
         },
 
         globalFunctionDeclaration: function () {
             var str = [ '',
-                        '#pragma include "textures.glsl"'
-                      ].join( '\n' );
+                '#pragma include "textures.glsl"'
+            ].join( '\n' );
             return str;
         }
     } );
 
 
-    var TextureGradient = function(sampler, coord, size, output) {
-        TextureRGB.call(this, sampler, coord, output);
+    var TextureGradient = function ( sampler, coord, size, output ) {
+        TextureRGB.call( this, sampler, coord, output );
         this._step = size;
-        this.connectInput(size);
+        this.connectInputs( size );
     };
-    TextureGradient.prototype = MACROUTILS.objectInherit(TextureRGB.prototype, {
+    TextureGradient.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
         type: 'TextureGradient',
-        computeFragment: function() {
+        computeFragment: function () {
             var str = [ '',
-                        this.getOutput().getVariable() + ' = textureGradient( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy, ' + this._step.getVariable() + ');'
-                      ].join('\n');
+                this.getOutput().getVariable() + ' = textureGradient( ' + this._sampler.getVariable() + ' , ' + this._uv.getVariable() + '.xy, ' + this._step.getVariable() + ');'
+            ].join( '\n' );
             return str;
         },
 
-        globalFunctionDeclaration: function() {
+        globalFunctionDeclaration: function () {
             var str = [ '',
-                        '#pragma include "textures.glsl"'
-                      ].join( '\n' );
+                '#pragma include "textures.glsl"'
+            ].join( '\n' );
             return str;
         }
-    });
+    } );
 
 
-    return { 'TextureRGB': TextureRGB,
-             'TextureRGBA': TextureRGBA,
-             'TextureAlpha': TextureAlpha,
-             'TextureCubemapRGB': TextureCubemapRGB,
-             'TextureSpheremap': TextureSpheremap,
-             'TextureSpheremapHDR': TextureSpheremapHDR,
-             'TextureTranslucency': TextureTranslucency,
-             'TextureIntensity': TextureIntensity,
-             'TextureNormal': TextureNormal,
-             'TextureGradient': TextureGradient
-           };
-});
+    return {
+        'TextureRGB': TextureRGB,
+        'TextureRGBA': TextureRGBA,
+        'TextureAlpha': TextureAlpha,
+        'TextureCubemapRGB': TextureCubemapRGB,
+        'TextureSpheremap': TextureSpheremap,
+        'TextureSpheremapHDR': TextureSpheremapHDR,
+        'TextureTranslucency': TextureTranslucency,
+        'TextureIntensity': TextureIntensity,
+        'TextureNormal': TextureNormal,
+        'TextureGradient': TextureGradient
+    };
+} );

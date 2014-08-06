@@ -452,7 +452,7 @@ define( [
             var premult = this.Variable( 'vec3' );
             node = new ShaderNode.TextureRGBA( textureSampler, texCoord, texel );
             srgb2linearTmp = this.Variable( 'vec4' );
-            node = new ShaderNode.sRGB2Linear( texel, srgb2linearTmp );
+            node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp );
             node = new ShaderNode.PreMultAlpha( srgb2linearTmp, premult );
             output = premult;
             return output;
@@ -507,7 +507,7 @@ define( [
                 var premult = this.Variable( 'vec3' );
                 if ( texture.getSRGB() ) {
                     srgb2linearTmp = this.Variable( 'vec4' );
-                    node = new ShaderNode.sRGB2Linear( texel, srgb2linearTmp );
+                    node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp );
                     node = new ShaderNode.PreMultAlpha( srgb2linearTmp, premult );
                 } else {
                     node = new ShaderNode.PreMultAlpha( texel, premult );
@@ -518,7 +518,7 @@ define( [
                 node = new ShaderNode.TextureRGB( textureSampler, texCoord, texel );
                 if ( texture.getSRGB() ) {
                     srgb2linearTmp = this.Variable( 'vec3' );
-                    node = new ShaderNode.sRGB2Linear( texel, srgb2linearTmp );
+                    node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp );
                     output = srgb2linearTmp;
                 } else {
                     output = texel;
@@ -772,7 +772,7 @@ define( [
 
             var uniforms = this._material.getOrCreateUniforms();
             var materialDiffuseColor = this.getVariable( uniforms.diffuse.name );
-            //var materialAmbientColor = this.getVariable( uniforms.ambient.name );
+            var materialAmbientColor = this.getVariable( uniforms.ambient.name );
             var materialEmissionColor = this.getVariable( uniforms.emission.name );
             var materialSpecularColor = this.getVariable( uniforms.specular.name );
             var materialShininess = this.getVariable( uniforms.shininess.name );
@@ -802,38 +802,11 @@ define( [
             var finalColor;
 
             if ( this._lights.length > 0 ) {
-
-                // by default geometryNormal is normal, but can change with normal map / bump map
-                var geometryNormal = normal;
-
-                var diffuseOutput = this.Variable( 'vec4', 'diffuseOutput_' );
-                var nodeDiffuse = new ShaderNode.Lambert( diffuseColor,
-                    geometryNormal,
-                    diffuseOutput );
-
-                var specularOutput = this.Variable( 'vec4' );
-                var nodeCookTorrance = new ShaderNode.CookTorrance( materialSpecularColor,
-                    geometryNormal,
-                    materialShininess,
-                    specularOutput );
-
-                var lightNodes = [];
-                var lights = this._lights;
-                for ( var i = 0, l = lights.length; i < l; i++ ) {
-                    var light = lights[ i ];
-                    var nodeLight = new ShaderNode.Light( light );
-                    nodeLight.init( this );
-                    lightNodes.push( nodeLight );
-                }
-
-                nodeDiffuse.connectLights( lightNodes );
-                nodeDiffuse.createFragmentShaderGraph( this );
-
-                nodeCookTorrance.connectLights( lightNodes );
-                nodeCookTorrance.createFragmentShaderGraph( this );
-
+                var lightedOutput = this.Variable( 'vec4', 'lightOutput_' );
+                var nodeLight = new ShaderNode.Light( this._lights, normal, diffuseColor, materialAmbientColor, materialSpecularColor, materialShininess, lightedOutput );
+                nodeLight.createFragmentShaderGraph( this );
                 // get final color
-                finalColor = this.getFinalColor( materialEmissionColor, diffuseOutput, specularOutput );
+                finalColor = this.getFinalColor( materialEmissionColor, lightedOutput );
             } else {
                 finalColor = this.getFinalColor( diffuseColor );
             }
