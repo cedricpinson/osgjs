@@ -20,11 +20,11 @@ define( [
             return this._name + ' : { input: ' + this._inputs.toString() + ' }, output: { ' + this._output.toString() + ' } ';
         },
 
-        getInputsSlots: function () {
+        getInputs: function () {
             return this._inputs;
         },
 
-        getOutputsSlots: function () {
+        getOutputs: function () {
             return this._outputs;
         },
 
