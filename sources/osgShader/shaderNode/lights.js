@@ -9,6 +9,8 @@ define( [
 ], function ( MACROUTILS, sprintf, ShaderNode, Node, textures, operations ) {
     'use strict';
 
+
+    // maybe we will need a struct later for the material
     var Lighting = function ( lights, normal, ambient, diffuse, specular, shininess, output ) {
 
         Node.call( this );
@@ -62,8 +64,11 @@ define( [
     } );
 
 
-    var PointLight = function ( lighting, light, output ) {
-        Node.call( this );
+    // base class for all point based light: Point/Directional/Spot/Hemi
+    // avoid duplicate code
+    var NodeLightsPointBased = function( lighting, light, output ) {
+        Node.apply( this, arguments );
+
         if ( output !== undefined ) {
             this.connectOutput( output );
         }
@@ -75,10 +80,25 @@ define( [
         this._shininess = lighting.shininess;
 
         this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, this._normal );
+
     };
 
-    PointLight.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'pointLight',
+    NodeLightsPointBased.prototype = MACROUTILS.objectInherit( Node.prototype, {
+
+        globalFunctionDeclaration: function () {
+            return '#pragma include "lights.glsl"';
+        }
+
+    } );
+
+
+
+    var PointLight = function ( lighting, light, output ) {
+        NodeLightsPointBased.call( this, lighting, light, output );
+    };
+
+    PointLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
+        type: 'PointLight',
         createFragmentShaderGraph: function ( context ) {
 
             var accumulator = new ShaderNode.Add();
@@ -167,72 +187,30 @@ define( [
 
             // accumulate light contribution
             accumulator.connectInput( specularOutput );
-
-        },
-        globalFunctionDeclaration: function () {
-            return [
-                '#pragma include "lights.glsl"'
-            ].join( '\n' );
         }
+
     } );
 
 
 
     var SpotLight = function ( lighting, light, output ) {
-        Node.call( this );
-        if ( output !== undefined ) {
-            this.connectOutput( output );
-        }
-
-
-        this._normal = lighting.normal;
-        this._ambientColor = lighting.ambient;
-        this._diffuseColor = lighting.diffuse;
-        this._specularColor = lighting.specular;
-        this._shininess = lighting.shininess;
-
-        this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, this._normal );
+        NodeLightsPointBased.call( this, lighting, light, output );
     };
 
-    SpotLight.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'spotLight',
+    SpotLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
+        type: 'SpotLight',
         createFragmentShaderGraph: function () {
-
-        },
-        globalFunctionDeclaration: function () {
-            return [
-                '#pragma include "lights.glsl"'
-            ].join( '\n' );
         }
     } );
 
 
     var SunLight = function ( lighting, light, output ) {
-        Node.call( this );
-
-        if ( output !== undefined ) {
-            this.connectOutput( output );
-        }
-
-
-        this._normal = lighting.normal;
-        this._ambientColor = lighting.ambient;
-        this._diffuseColor = lighting.diffuse;
-        this._specularColor = lighting.specular;
-        this._shininess = lighting.shininess;
-
-        this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, this._normal );
+        NodeLightsPointBased.call( this, lighting, light, output );
     };
 
-    SunLight.prototype = MACROUTILS.objectInherit( Node.prototype, {
+    SunLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
         type: 'SunLight',
         createFragmentShaderGraph: function () {
-
-        },
-        globalFunctionDeclaration: function () {
-            return [
-                '#pragma include "lights.glsl"'
-            ].join( '\n' );
         }
     } );
 
