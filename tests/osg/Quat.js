@@ -4,6 +4,8 @@ define( [
     'osg/Matrix'
 ], function ( mockup, Quat, Matrix ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -60,6 +62,12 @@ define( [
             var q = [];
             Quat.slerp( 0.5, [ 0, 0.707107, 0, 0.707107 ], [ 0, 0, 0.382683, 0.92388 ], q );
             mockup.near( q, [ 0, 0.388863, 0.210451, 0.896937 ] );
+        } );
+
+        test( 'Quat.transformVec3', function () {
+            var v = [ 1.0, 2.0, 3.0 ];
+            Quat.transformVec3( [ 0, 0.707107, 0, 0.707107 ], v, v );
+            mockup.near( v, [ 3.0, 2.0, -1.0 ] );
         } );
     };
 } );
