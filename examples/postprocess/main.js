@@ -111,6 +111,9 @@ function createScene( width, height, gui ) {
     }
 
     var currentComposer = postScenes[ 0 ].buildComposer( finalTexture );
+    addSceneController();
+    postScenes[ 0 ].buildGui( gui );
+
     var cachedComposers = [];
     cachedComposers[ postScenes[ 0 ].name ] = currentComposer;
 
@@ -144,8 +147,6 @@ function createScene( width, height, gui ) {
 
     root.addChild( scene );
     root.addChild( commonNode );
-
-    addSceneController();
 
     return root;
 }
