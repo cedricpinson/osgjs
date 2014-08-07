@@ -18,8 +18,11 @@ test/lighting
 *.orig
 *Thumbs.db
 .hooks
+build/active
 builds/active/OSG.js
-builds/dist/OSG.js
+builds/dist/OSG.js.map
+builds/active/OSG.js
+builds/dist/OSG.js.map
 examples/vendors/Hammer.js
 examples/vendors/Q.js
 examples/vendors/Require.js
