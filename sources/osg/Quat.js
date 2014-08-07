@@ -3,6 +3,8 @@ define( [
     'osg/Notify'
 ], function ( Vec3, Notify ) {
 
+    'use strict';
+
     /** @class Quaternion Operations */
     var Quat = {
         create: function () {
@@ -129,19 +131,26 @@ define( [
             return result;
         },
 
-        transformVec3: ( function () {
-            var uv = [ 0.0, 0.0, 0.0 ];
-            return function ( q, vec, result ) {
-                // nVidia SDK implementation
-                Vec3.cross( q, vec, uv );
-                Vec3.cross( q, uv, result );
-                Vec3.mult( uv, 2.0 * q[ 3 ], uv );
-                Vec3.mult( result, 2.0, result );
-                Vec3.add( result, uv, result );
-                Vec3.add( result, vec, result );
-                return result;
-            };
-        } )(),
+        transformVec3: function ( q, a, result ) {
+            var x = a[ 0 ];
+            var y = a[ 1 ];
+            var z = a[ 2 ];
+            var qx = q[ 0 ];
+            var qy = q[ 1 ];
+            var qz = q[ 2 ];
+            var qw = q[ 3 ];
+            // calculate quat * vec
+            var ix = qw * x + qy * z - qz * y;
+            var iy = qw * y + qz * x - qx * z;
+            var iz = qw * z + qx * y - qy * x;
+            var iw = -qx * x - qy * y - qz * z;
+
+            // calculate result * inverse quat
+            result[ 0 ] = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+            result[ 1 ] = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+            result[ 2 ] = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+            return result;
+        },
 
         normalize: function ( q, qr ) {
             var div = 1.0 / this.length2( q );
