@@ -29,11 +29,12 @@ function getPostSceneToneMapping() {
 
     var currentSceneTexture = osg.Texture.createHDRFromURL( '../hdr/textures/Alexs_Apartment/Alexs_Apt_2k.hdr' );
     currentSceneTexture.addApplyTexImage2DCallback( function () {
-        lumTexture.dirty();
+        console.log( 'sceneTexture loaded' );
+        lumTexture.mipmapDirty();
     } );
 
     var lumTexture = new osg.Texture();
-    lumTexture.setTextureSize( 1024, 1024 ); // Chrome doesn't mipmap above this power of 2
+    lumTexture.setTextureSize( 1024, 1024 );
     lumTexture.setMinFilter( osg.Texture.LINEAR_MIPMAP_LINEAR );
 
     var methods = [ 'None', 'Reinhardt', 'Filmic' ];
@@ -102,12 +103,12 @@ function getPostSceneToneMapping() {
             '/* Original Reinhard paper: http://www.cs.utah.edu/~reinhard/cdrom/tonemap.pdf',
             'First we "calibrate" the middle luminance of the scene by applying to all luminance values',
             'a ratio between a chosen middle luminance and the computed average luminance of the scene',
-            'This luminance is divided by (luminance + 1) in order to scale down only the high luminance values',
+            'This luminance is then divided by (luminance + 1) in order to scale down only the high luminance values',
             'With this scaling, high luminances converge under 1.0, so we add another parameter "whitepoint"',
             'to allow high values to go above 1.0 and burn out',
             '*/',
-            'float toneMapReinhardt(float lum, float avgLogLum) {',
-            '   lum *= middleGrey / avgLogLum;',
+            'float toneMapReinhardt(float lum, float avgLum) {',
+            '   lum *= middleGrey / avgLum;',
             '   return (lum + ((lum * lum) / (whitePoint * whitePoint)) ) / (lum + 1.0);',
             '}',
             '// Filmic curve from: http://filmicgames.com/archives/75',
@@ -117,7 +118,7 @@ function getPostSceneToneMapping() {
             '}',
 
             'void main() {',
-            '   float avgLogLum = texture2D(lum_texture, FragTexCoord0, locality).r;',
+            '   float avgLum = texture2D(lum_texture, FragTexCoord0, locality).r;',
 
             '   vec3 texel = decodeRGBE(texture2D(input_texture, FragTexCoord0));',
             '   // We do the tonemapping on the Yxy luminance to preserve colors',
@@ -128,7 +129,7 @@ function getPostSceneToneMapping() {
             '      texel = pow(texel, vec3(1.0 / gamma));',
             '   }',
             '   else if (method == 2) {',
-            '      Yxy.r = toneMapReinhardt(Yxy.r, avgLogLum);',
+            '      Yxy.r = toneMapReinhardt(Yxy.r, avgLum);',
             '      texel = pow(Yxy2RGB(Yxy), vec3(1.0 / gamma));',
             '   }',
             '   else if (method == 3)',
@@ -144,7 +145,7 @@ function getPostSceneToneMapping() {
             '   }',
 
             '   gl_FragColor = vec4(texel, 1.0);',
-            '    //gl_FragColor = vec4(vec3(avgLogLum), 1.0);',
+            '    //gl_FragColor = vec4(vec3(avgLum), 1.0);',
 
             '}',
         ].join( '\n' ), {
@@ -166,7 +167,7 @@ function getPostSceneToneMapping() {
             '#ifdef GL_ES',
             'precision highp float;',
             '#endif',
-            '//#define USE_LINEAR_SPACE 0',
+            '#define USE_LINEAR_SPACE 1',
 
             'varying vec2 FragTexCoord0;',
             'uniform sampler2D input_texture;',
@@ -205,11 +206,13 @@ function getPostSceneToneMapping() {
             cachedScenes[ sceneFile ] = osg.Texture.createHDRFromURL( '../hdr/textures/' + sceneFile + '/' + scenes[ sceneFile ] );
             // On attends la fin du chargement de la texture pour générer la mipmap chain
             cachedScenes[ sceneFile ].addApplyTexImage2DCallback( function () {
-                lumTexture.dirty();
+                lumTexture.mipmapDirty();
+                console.log( 'sceneTexture loaded from cache' );
             } );
         } else {
             // On flag la lumTexture pour regénérer la mipmap chain
-            lumTexture.dirty();
+            lumTexture.mipmapDirty();
+            console.log( 'sceneTexture loaded' );
         }
         currentSceneTexture = cachedScenes[ sceneFile ];
         toneMappingFilter.getStateSet().setTextureAttributeAndMode( 0, currentSceneTexture );
@@ -236,7 +239,7 @@ function getPostSceneToneMapping() {
             folder.open();
             var param = {
                 'scene': Object.keys( scenes )[ 0 ],
-                'method': methods[ method.get()[ 0 ] - 1 ],
+                'tonemapping': methods[ method.get()[ 0 ] - 1 ],
                 'gamma': gamma.get()[ 0 ],
                 'exposure': exposure.get()[ 0 ],
                 'brightness': brightness.get()[ 0 ],
@@ -272,17 +275,12 @@ function getPostSceneToneMapping() {
                 saturation.set( value );
             } );
 
-            var localityCtrl = folder.add( param, 'locality', 0.0, 11.0 );
-            localityCtrl.onChange( function ( value ) {
-                locality.set( value );
-            } );
-
             var gammaCtrl = folder.add( param, 'gamma', 0, 3 );
             gammaCtrl.onChange( function ( value ) {
                 gamma.set( value );
             } );
 
-            var methodCtrl = folder.add( param, 'method', methods );
+            var methodCtrl = folder.add( param, 'tonemapping', methods );
             methodCtrl.onChange( function ( value ) {
                 method.set( methods.indexOf( value ) + 1 );
             } );
@@ -292,6 +290,11 @@ function getPostSceneToneMapping() {
             var middleGreyCtrl = reinhardt.add( param, 'middleGrey', 0.01, 1 );
             middleGreyCtrl.onChange( function ( value ) {
                 middleGrey.set( value );
+            } );
+
+            var localityCtrl = reinhardt.add( param, 'locality', 0.0, 11.0 );
+            localityCtrl.onChange( function ( value ) {
+                locality.set( value );
             } );
 
             var whitePointCtrl = reinhardt.add( param, 'whitePoint', 0.01, 10 );
@@ -404,7 +407,7 @@ osg.readHDRImage = function ( url, options ) {
     xhr.responseType = 'arraybuffer';
 
     var defer = Q.defer();
-    xhr.onload = function ( ) {
+    xhr.onload = function () {
         if ( xhr.response ) {
             var bytes = new Uint8Array( xhr.response );
 

@@ -107,6 +107,7 @@ define( [
             this._textureHeight = 0;
             this._unrefImageDataAfterApply = false;
             this._internalFormat = undefined;
+            this._mipmapDirty = false;
             this._textureTarget = Texture.TEXTURE_2D;
             this._type = Texture.UNSIGNED_BYTE;
         },
@@ -242,7 +243,14 @@ define( [
         getInternalFormat: function () {
             return this._internalFormat;
         },
-
+        isMipmapDirty: function () {
+            return this._mipmapDirty;
+        },
+        // Will cause the mipmaps to be regenerated on the next bind of the texture
+        // Nothing will be done if the minFilter is not of the form XXX_MIPMAP_XXX
+        mipmapDirty: function () {
+            this._mipmapDirty = true;
+        },
         applyFilterParameter: function ( gl, target ) {
 
             var powerOfTwo = isPowerOf2( this._textureWidth ) && isPowerOf2( this._textureHeight );
@@ -267,7 +275,8 @@ define( [
                  this._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
                  this._minFilter === gl.NEAREST_MIPMAP_LINEAR ||
                  this._minFilter === gl.LINEAR_MIPMAP_LINEAR ) {
-                     gl.generateMipmap( target );
+                    gl.generateMipmap( target );
+                    this._mipmapDirty = false;
                  }
         },
         applyTexImage2D: function ( gl ) {
@@ -297,9 +306,16 @@ define( [
 
             if ( this._textureObject !== undefined && !this.isDirty() ) {
                 this._textureObject.bind( gl );
+                // If we have modified the texture via Rtt or texSubImage2D and _need_ updated mipmaps,
+                // then we must regenerate the mipmaps explicitely.
+                // In all other cases, don't set this flag because it can be costly
+                if ( this.isMipmapDirty() ) {
+                    this.generateMipmap( gl, this._textureTarget );
+                }
             } else if ( this.defaultType ) {
                 gl.bindTexture( this._textureTarget, null );
             } else {
+
                 var image = this._image;
                 if ( image !== undefined ) {
 
