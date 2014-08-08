@@ -29,11 +29,12 @@ function getPostSceneToneMapping() {
 
     var currentSceneTexture = osg.Texture.createHDRFromURL( '../hdr/textures/Alexs_Apartment/Alexs_Apt_2k.hdr' );
     currentSceneTexture.addApplyTexImage2DCallback( function () {
-        lumTexture.dirty();
+        console.log( 'sceneTexture loaded' );
+        lumTexture.mipmapDirty();
     } );
 
     var lumTexture = new osg.Texture();
-    lumTexture.setTextureSize( 1024, 1024 ); // Chrome doesn't mipmap above this power of 2
+    lumTexture.setTextureSize( 1024, 1024 );
     lumTexture.setMinFilter( osg.Texture.LINEAR_MIPMAP_LINEAR );
 
     var methods = [ 'None', 'Reinhardt', 'Filmic' ];
@@ -205,11 +206,13 @@ function getPostSceneToneMapping() {
             cachedScenes[ sceneFile ] = osg.Texture.createHDRFromURL( '../hdr/textures/' + sceneFile + '/' + scenes[ sceneFile ] );
             // On attends la fin du chargement de la texture pour générer la mipmap chain
             cachedScenes[ sceneFile ].addApplyTexImage2DCallback( function () {
-                lumTexture.dirty();
+                lumTexture.mipmapDirty();
+                console.log( 'sceneTexture loaded from cache' );
             } );
         } else {
             // On flag la lumTexture pour regénérer la mipmap chain
-            lumTexture.dirty();
+            lumTexture.mipmapDirty();
+            console.log( 'sceneTexture loaded' );
         }
         currentSceneTexture = cachedScenes[ sceneFile ];
         toneMappingFilter.getStateSet().setTextureAttributeAndMode( 0, currentSceneTexture );
