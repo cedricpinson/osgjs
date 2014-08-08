@@ -18,6 +18,7 @@ function setupScene( viewer, sceneData ) {
     viewer.setSceneData( sceneData );
 
     // setup manipulator
+    // viewer.setupManipulator( new osgGA.FirstPersonManipulator() );
     viewer.setupManipulator( new osgGA.OrbitManipulator() );
     viewer.getManipulator().setNode( viewer.getSceneData() );
     viewer.getManipulator().computeHomePosition();
@@ -93,7 +94,7 @@ function toggleVR() {
             if ( navigator.getVRDevices || navigator.mozGetVRDevices )
                 vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus.getHmd() );
             else
-                vrNode = osgUtil.Oculus.createScene( viewer, modelNode );
+                vrNode = osgUtil.Oculus.createScene( viewer, modelNode, { isCardboard: true } );
         }
 
         // Attach the vrNode to sceneData instead of the model

@@ -14,13 +14,28 @@ define( [
 
     'use strict';
 
-    var UpdateRttCameraCallback = function ( rootView, offsetView ) {
+    var UpdateRttCameraCallback = function ( rootView, offsetView, canvas, orthoCam, isLeft, isCardboard ) {
         this._rootView = rootView;
         this._offsetView = offsetView;
+        this._canvas = canvas;
+        this._width = canvas.width;
+        this._height = canvas.height;
+        this._isLeft = isLeft;
+        this._orthoCam = orthoCam;
+        this._isCardboard = isCardboard;
     };
 
     UpdateRttCameraCallback.prototype = {
         update: function ( node /*, nv */ ) {
+            var canvas = this._canvas;
+            if ( this._isCardboard && ( canvas.width !== this._width || canvas.height !== this._height ) ) {
+                this._width = canvas.width;
+                this._height = canvas.height;
+                if ( this._isLeft )
+                    this._orthoCam.setViewport( new Viewport( 0.0, 0.0, this._width / 2.0, this._height ) );
+                else
+                    this._orthoCam.setViewport( new Viewport( this._width / 2.0, 0.0, this._width / 2.0, this._height ) );
+            }
             var nodeView = node.getViewMatrix();
             Matrix.mult( this._offsetView, this._rootView, nodeView );
             return true;
@@ -139,14 +154,23 @@ define( [
         return quad;
     };
 
-    var createOrthoRtt = function ( left, canvasSize ) {
+    var createOrthoRtt = function ( left, viewportSize, canvasSize, cardboard ) {
         var orthoCamera = new Camera();
+        var vw = viewportSize[ 0 ];
+        var vh = viewportSize[ 1 ];
         var cw = canvasSize[ 0 ];
         var ch = canvasSize[ 1 ];
-        if ( left )
-            orthoCamera.setViewport( new Viewport( 0.0, 0.0, cw / 2.0, ch ) );
-        else
-            orthoCamera.setViewport( new Viewport( cw / 2.0, 0.0, cw / 2.0, ch ) );
+        if ( cardboard === true ) {
+            if ( left )
+                orthoCamera.setViewport( new Viewport( 0.0, 0.0, cw / 2.0, ch ) );
+            else
+                orthoCamera.setViewport( new Viewport( cw / 2.0, 0.0, cw / 2.0, ch ) );
+        } else {
+            if ( left )
+                orthoCamera.setViewport( new Viewport( 0.5 * cw - vw, 0.5 * ( ch - vh ), vw, vh ) );
+            else
+                orthoCamera.setViewport( new Viewport( 0.5 * cw, 0.5 * ( ch - vh ), vw, vh ) );
+        }
         Matrix.makeOrtho( -0.5, 0.5, -0.5, 0.5, -5, 5, orthoCamera.getProjectionMatrix() );
         orthoCamera.setRenderOrder( Camera.NESTED_RENDER, 0 );
         orthoCamera.setReferenceFrame( Transform.ABSOLUTE_RF );
@@ -171,8 +195,15 @@ define( [
     Oculus.createScene = function ( viewer, rttScene, HMDconfig ) {
         var HMD = Oculus.getDefaultConfig( HMDconfig );
         var rttSize = [ HMD.hResolution, HMD.vResolution ];
+        var viewportSize = [ HMD.hResolution * 0.5, HMD.vResolution ];
+        var vp = viewer.getCamera().getViewport();
+        var canvasSize = [ vp.width(), vp.height() ];
+
         var canvas = viewer.getGraphicContext().canvas;
-        var canvasSize = [ canvas.width, canvas.height ];
+        if ( HMD.isCardboard ) {
+            canvasSize[ 0 ] = canvas.width;
+            canvasSize[ 1 ] = canvas.height;
+        }
 
         var worldFactor = 1.0; //world unit
         var oculusUniforms = {};
@@ -186,14 +217,14 @@ define( [
         var rttTextureLeft = createTextureRtt( rttSize );
         var rttCamLeft = createCameraRtt( rttTextureLeft, oculusMatrices.projectionLeft );
         var quadTextLeft = createQuadRtt( true, rttTextureLeft, oculusUniforms );
-        var orthoCameraLeft = createOrthoRtt( true, canvasSize );
-        rttCamLeft.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, oculusMatrices.viewLeft ) );
+        var orthoCameraLeft = createOrthoRtt( true, viewportSize, canvasSize, HMD.isCardboard );
+        rttCamLeft.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, oculusMatrices.viewLeft, canvas, orthoCameraLeft, true, HMD.isCardboard ) );
 
         var rttTextureRight = createTextureRtt( rttSize );
         var rttCamRight = createCameraRtt( rttTextureRight, oculusMatrices.projectionRight );
         var quadTextRight = createQuadRtt( false, rttTextureRight, oculusUniforms );
-        var orthoCameraRight = createOrthoRtt( false, canvasSize );
-        rttCamRight.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, oculusMatrices.viewRight ) );
+        var orthoCameraRight = createOrthoRtt( false, viewportSize, canvasSize, HMD.isCardboard );
+        rttCamRight.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, oculusMatrices.viewRight, canvas, orthoCameraRight, false, HMD.isCardboard ) );
 
         rttCamLeft.addChild( rttScene );
         rttCamRight.addChild( rttScene );
@@ -224,7 +255,8 @@ define( [
             lensSeparationDistance: 0.0635,
             eyeToScreenDistance: 0.04,
             distortionK: [ 1.0, 0.22, 0.13, 0.02 ],
-            chromaAbParameter: [ 0.996, -0.004, 1.014, 0.0 ]
+            chromaAbParameter: [ 0.996, -0.004, 1.014, 0.0 ],
+            isCardboard: false
         };
         if ( hmdConfig === 2 || hmdConfig === undefined )
             return hmd;
@@ -249,6 +281,7 @@ define( [
         if ( hmdConfig.eyeToScreenDistance !== undefined ) hmd.eyeToScreenDistance = hmdConfig.eyeToScreenDistance;
         if ( hmdConfig.distortionK !== undefined ) hmd.distortionK = hmdConfig.distortionK;
         if ( hmdConfig.chromaAbParameter !== undefined ) hmd.chromaAbParameter = hmdConfig.chromaAbParameter;
+        if ( hmdConfig.isCardboard !== undefined ) hmd.isCardboard = hmdConfig.isCardboard;
 
         return hmd;
     };
