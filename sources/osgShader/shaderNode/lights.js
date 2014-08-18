@@ -35,6 +35,8 @@ define( [
 
         createFragmentShaderGraph: function ( lights ) {
 
+            ShaderNode = require( 'osgShader/ShaderNode' );
+
             var accumulator = new ShaderNode.Add();
             accumulator.connectOutput( this.getOutput() );
             for ( var i = 0; i < this._lights.length; i++ ) {
@@ -66,7 +68,7 @@ define( [
 
     // base class for all point based light: Point/Directional/Spot/Hemi
     // avoid duplicate code
-    var NodeLightsPointBased = function( lighting, light, output ) {
+    var NodeLightsPointBased = function ( lighting, light, output ) {
         Node.apply( this, arguments );
 
         if ( output !== undefined ) {
@@ -199,8 +201,7 @@ define( [
 
     SpotLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
         type: 'SpotLight',
-        createFragmentShaderGraph: function () {
-        }
+        createFragmentShaderGraph: function () {}
     } );
 
 
@@ -210,8 +211,7 @@ define( [
 
     SunLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
         type: 'SunLight',
-        createFragmentShaderGraph: function () {
-        }
+        createFragmentShaderGraph: function () {}
     } );
 
 
