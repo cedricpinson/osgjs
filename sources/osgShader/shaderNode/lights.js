@@ -33,17 +33,17 @@ define( [
     Lighting.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'Light',
 
-        createFragmentShaderGraph: function ( lights ) {
+        createFragmentShaderGraph: function () {
 
             ShaderNode = require( 'osgShader/ShaderNode' );
 
             var accumulator = new ShaderNode.Add();
             accumulator.connectOutput( this.getOutput() );
             for ( var i = 0; i < this._lights.length; i++ ) {
-                var light = lights[ 0 ];
+                var light = this._lights[ 0 ];
                 var lightNode;
 
-                var lightedOutput = this.Variable( 'vec4', 'lightTempOutput' );
+                var lightedOutput = new ShaderNode.Variable( 'vec4', 'lightTempOutput' );
 
                 switch ( light.getType() ) {
                 case 'Sun':
@@ -81,6 +81,8 @@ define( [
         this._specularColor = lighting.specular;
         this._shininess = lighting.shininess;
 
+        this._light = light;
+
         this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, this._normal );
 
     };
@@ -108,8 +110,8 @@ define( [
 
             var nodeLight = this._light;
             // connect variable to light node
-            var attenuation = nodeLight.getOutputAttenuation();
-            var lightVector = nodeLight.getOutputLightVector();
+            //var attenuation = nodeLight.getOutputAttenuation();
+            //var lightVector = nodeLight.getOutputLightVector();
             var normal = this._normal;
 
 
