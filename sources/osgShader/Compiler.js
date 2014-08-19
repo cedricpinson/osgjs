@@ -154,15 +154,32 @@ define( [
         },
 
         declareUniforms: function () {
-
+            var uniformMap;
+            var uniformMapKeys;
+            var kk;
+            var kkey;
+            var m, ml;
             if ( this._material ) {
-                var uniformMap = this._material.getOrCreateUniforms();
-                var uniformMapKeys = uniformMap.getKeys();
+                uniformMap = this._material.getOrCreateUniforms();
+                uniformMapKeys = uniformMap.getKeys();
 
-                for ( var m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
+                for ( m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
 
-                    var kk = uniformMapKeys[ m ];
-                    var kkey = uniformMap[ kk ];
+                    kk = uniformMapKeys[ m ];
+                    kkey = uniformMap[ kk ];
+                    this.Uniform( kkey.type, kkey.name );
+
+                }
+            }
+            var l = this._lights;
+            for ( var t = 0, tl = l.length; t < tl; t++ ) {
+                uniformMap = l[ t ].getOrCreateUniforms();
+                uniformMapKeys = uniformMap.getKeys();
+
+                for ( m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
+
+                    kk = uniformMapKeys[ m ];
+                    kkey = uniformMap[ kk ];
                     this.Uniform( kkey.type, kkey.name );
 
                 }

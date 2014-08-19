@@ -33,7 +33,7 @@ define( [
     Lighting.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'Light',
 
-        createFragmentShaderGraph: function () {
+        createFragmentShaderGraph: function ( context ) {
 
             ShaderNode = require( 'osgShader/ShaderNode' );
 
@@ -59,7 +59,7 @@ define( [
                     break;
                 }
 
-                lightNode.createFragmentShaderGraph();
+                lightNode.createFragmentShaderGraph( context );
                 accumulator.connectInputs( lightedOutput );
             }
         }
@@ -109,9 +109,10 @@ define( [
             accumulator.connectOutput( this.getOutput() );
 
             var nodeLight = this._light;
+            var lightUniforms = nodeLight.getOrCreateUniforms();
             // connect variable to light node
-            //var attenuation = nodeLight.getOutputAttenuation();
-            //var lightVector = nodeLight.getOutputLightVector();
+            var attenuation = context.getVariable( lightUniforms.attenuation.name ); //nodeLight.getOutputAttenuation();
+            var lightVector = context.getVariable( lightUniforms.attenuation.name ); //nodeLight.getOutputLightVector();
             var normal = this._normal;
 
 
@@ -120,12 +121,12 @@ define( [
             /////////////////////////
 
             var lightDiffuseColorMaterial = context.Variable( 'vec4' );
-            var lightDiffuseColor = context.getVariable( nodeLight.getOrCreateUniforms().diffuse.name );
+            var lightDiffuseColor = context.getVariable( lightUniforms.diffuse.name );
             var materialDiffuseColor = this._diffuse;
 
             // lightColorMaterial = lightColor * materialColor
             ( function ( output ) {
-                var operator = new operations.MultVector( lightDiffuseColor, materialDiffuseColor );
+                var operator = new operations.Mult( lightDiffuseColor, materialDiffuseColor );
                 operator.comment( 'lambert_color = light_color * material_color' );
                 operator.connectOutput( output );
             } )( lightDiffuseColorMaterial );
