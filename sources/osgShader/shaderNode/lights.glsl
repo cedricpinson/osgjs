@@ -61,8 +61,8 @@ void computeLightPoint(const in vec3 vertexPosition, const in vec3 lampPosition,
 
 vec4 computeSpotLightShading(
     const in vec3 normal,
-    const in vec3 eyeVector,
-    const in vec3 vertexPosition,
+    const in vec3 eyeVector, // varying reuse global ?
+    const in vec3 vertexPosition, // varying reuse global ?
 
     //const in vec4 u_materialAmbient,
     //const in vec4 u_materialDiffuse,
@@ -127,7 +127,7 @@ vec4 computeSpotLightShading(
 vec4 computeSunLightShading(
 
                             const in vec3 normal,
-                            const in vec3 eyeVector,
+                            const in vec3 eyeVector, // varying reuse global ?
 
                             //const in vec4 u_materialAmbient,
                             //const in vec4 u_materialDiffuse,
@@ -161,22 +161,25 @@ vec4 computeSunLightShading(
 }
 
 vec4 computePointLightShading(
-                              vec3 normal,
-                              vec3 eyeVector,
+                              const in vec3 normal,
+                              const in vec3 eyeVector, // varying reuse global ?
+                              const in vec3 vertexPos, // varying reuse global ?
 
                               // const in vec4 u_materialAmbient,
                               // const in vec4 u_materialDiffuse,
                               // const in vec4 u_materialSpecular,
                               // const in float u_materialShininess,
+                              // const in float u_vertexPosition,
 
-                              vec4 lightAmbient,
-                              vec4 lightDiffuse,
-                              vec4 lightSpecular,
-
-                              vec3 lightDirection)
+                              const in vec4 lightAmbient,
+                              const in vec4 lightDiffuse,
+                              const in vec4 lightSpecular,
+                              const in vec4 lightPosition,
+                              const in vec4 lightAttenuation
+                              )
 {
   // compute dist
-  Vec3 lightVector = lightSpotPosition - vertexPosition;
+  Vec3 lightVector = lightPosition.xyz - vertexPos;
   float dist = length(lightVector);
   // compute attenuation
   float attenuation = getLightAttenuation(dist, lightAttenuation.x, lightAttenuation.y, lightAttenuation.z);

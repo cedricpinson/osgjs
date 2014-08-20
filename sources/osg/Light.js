@@ -27,6 +27,7 @@ define( [
         this._spotBlend = 0.01;
         this._falloffType = 'INVERSE_SQUARE';
         this._distance = 25;
+        this._attenuation = [ 25.0, 0.0, 0.0, 1.0 ];
 
         this._energy = 1.0;
 
@@ -69,12 +70,14 @@ define( [
                 'diffuse': 'createFloat4',
                 'specular': 'createFloat4',
 
+                'attenuation': 'createFloat4',
                 'position': 'createFloat4',
                 'direction': 'createFloat3',
 
                 'spotCutoff': 'createFloat1',
                 'spotBlend': 'createFloat1',
                 'distance': 'createFloat1'
+
             };
 
             var uniforms = {};
@@ -152,18 +155,31 @@ define( [
         setConstantAttenuation: function ( value ) {
             this._falloffType = 'INVERSE_CONSTANT';
             this._distance = value;
+            this._attenuation[ 0 ] = value;
+            this._attenuation[ 1 ] = 1.0;
+            this._attenuation[ 2 ] = 0.0;
+            this._attenuation[ 3 ] = 0.0;
             this.dirty();
         },
 
         setLinearAttenuation: function ( value ) {
             this._falloffType = 'INVERSE_LINEAR';
             this._distance = value;
+            this._attenuation[ 0 ] = value;
+            this._attenuation[ 1 ] = 0.0;
+            this._attenuation[ 2 ] = 1.0;
+            this._attenuation[ 3 ] = 0.0;
+
             this.dirty();
         },
 
         setQuadraticAttenuation: function ( value ) {
             this._falloffType = 'INVERSE_SQUARE';
             this._distance = value;
+            this._attenuation[ 0 ] = value;
+            this._attenuation[ 1 ] = 0.0;
+            this._attenuation[ 2 ] = 0.0;
+            this._attenuation[ 3 ] = 1.0;
             this.dirty();
         },
 
@@ -181,7 +197,19 @@ define( [
         },
 
         setFalloffType: function ( value ) {
-            this._falloffType = value;
+            switch ( value ) {
+            case 'INVERSE_LINEAR':
+                this.setLinearAttenuation( this._distance );
+                break;
+            case 'INVERSE_CONSTANT':
+                this.setConstantAttenuation( this._distance );
+                break;
+            case 'INVERSE_SQUARE':
+                this.setQuadraticAttenuation( this._distance );
+                break;
+            default:
+                return;
+            }
         },
         getFalloffType: function () {
             return this._falloffType;
@@ -279,6 +307,9 @@ define( [
 
             uniformMap.distance.get()[ 0 ] = this._distance;
             uniformMap.distance.dirty();
+
+            Vec4.copy( this._attenuation, uniformMap.attenuation.get() );
+            uniformMap.attenuation.dirty();
 
             this.setDirty( false );
         }
