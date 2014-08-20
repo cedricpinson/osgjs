@@ -1,8 +1,9 @@
 define( [
     'osg/Utils',
-    'osgShader/shaderNode/Node'
+    'osgShader/shaderNode/Node',
+    'osgShader/utils/sprintf'
 
-], function ( MACROUTILS, Node ) {
+], function ( MACROUTILS, Node, sprintf ) {
     'use strict';
 
     var Mix = function ( val0, val1, t ) {
@@ -62,6 +63,25 @@ define( [
         }
     } );
 
+
+    var FunctionCall = function () {
+        Node.apply( this, arguments );
+    };
+
+    FunctionCall.prototype = MACROUTILS.objectInherit( Node.prototype, {
+        type: 'FunctionCall',
+        setCall: function ( functionName, params, comment ) {
+            var txt = '//' + comment + '\n';
+            txt += this.getOutput().getVariable();
+            txt += ' = ';
+            txt += functionName;
+            txt += sprintf( params, this._inputs );
+            this._text = txt;
+        },
+        computeFragment: function () {
+            return this._text;
+        }
+    } );
 
 
     var InlineCode = function () {
@@ -161,6 +181,7 @@ define( [
         'Dot': Dot,
         'DotClamp': DotClamp,
         'InlineCode': InlineCode,
+        'FunctionCall': FunctionCall,
         'SetAlpha': SetAlpha,
         'Vec3ToVec4': Vec3ToVec4,
         'Vec4ToVec3': Vec4ToVec3,

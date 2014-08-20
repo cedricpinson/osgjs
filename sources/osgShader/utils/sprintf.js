@@ -1,30 +1,34 @@
-define ( [
+define( [
+    'osgShader/shaderNode/Node'
+], function ( Node ) {
 
-], function ( ) {
-
-    var sprintf = function (string, args) {
-        if (!string || !args) {
+    var sprintf = function ( string, args ) {
+        if ( !string || !args ) {
             return '';
         }
 
         var arg, reg;
 
-        for (var index in args) {
-            arg = args[index];
+        for ( var index in args ) {
+            arg = args[ index ];
 
-            if (typeof arg === 'string') {
+            if ( arg instanceof Node ) {
+                arg = arg.getVariable();
+            }
+
+            if ( typeof arg === 'string' ) {
                 reg = '%s';
-            } else if (typeof arg === 'number' && /\./.test(arg.toString())) {
+            } else if ( typeof arg === 'number' && /\./.test( arg.toString() ) ) {
                 reg = '%f';
-            } else if (typeof arg === 'number') {
+            } else if ( typeof arg === 'number' ) {
                 reg = '%d';
             } else {
                 continue;
             }
-            string = string.replace(reg, arg);
+            string = string.replace( reg, arg );
         }
         return string;
     };
 
     return sprintf;
-});
+} );

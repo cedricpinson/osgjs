@@ -32,7 +32,6 @@ define( [
 
     Lighting.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'Light',
-
         createFragmentShaderGraph: function ( context ) {
 
             ShaderNode = require( 'osgShader/ShaderNode' );
@@ -75,12 +74,7 @@ define( [
             this.connectOutput( output );
         }
 
-        this._normal = lighting.normal;
-        this._ambientColor = lighting.ambient;
-        this._diffuseColor = lighting.diffuse;
-        this._specularColor = lighting.specular;
-        this._shininess = lighting.shininess;
-
+        this._normal = lighting._normal;
         this._light = light;
 
         this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, this._normal );
@@ -88,7 +82,6 @@ define( [
     };
 
     NodeLightsPointBased.prototype = MACROUTILS.objectInherit( Node.prototype, {
-
         globalFunctionDeclaration: function () {
             return '#pragma include "lights.glsl"';
         }
@@ -105,93 +98,27 @@ define( [
         type: 'PointLight',
         createFragmentShaderGraph: function ( context ) {
 
-            var accumulator = new ShaderNode.Add();
-            accumulator.connectOutput( this.getOutput() );
+            // Common
+            var normal = this._normal;
+            var eyeVector = context.getVariable( 'FragEyeVector' );
+            var vertexPos = context.getVariable( 'FragVertexPos' );
 
+            // light specifics
             var nodeLight = this._light;
             var lightUniforms = nodeLight.getOrCreateUniforms();
+
             // connect variable to light node
-            var attenuation = context.getVariable( lightUniforms.attenuation.name ); //nodeLight.getOutputAttenuation();
-            var lightVector = context.getVariable( lightUniforms.attenuation.name ); //nodeLight.getOutputLightVector();
-            var normal = this._normal;
-
-
-            //////////////////////////////////////////////
-            // DIFFUSE LAMBERT
-            /////////////////////////
-
-            var lightDiffuseColorMaterial = context.Variable( 'vec4' );
+            var lightAttenuation = context.getVariable( lightUniforms.attenuation.name );
+            var lightPosition = context.getVariable( lightUniforms.position.name );
             var lightDiffuseColor = context.getVariable( lightUniforms.diffuse.name );
-            var materialDiffuseColor = this._diffuse;
-
-            // lightColorMaterial = lightColor * materialColor
-            ( function ( output ) {
-                var operator = new operations.Mult( lightDiffuseColor, materialDiffuseColor );
-                operator.comment( 'lambert_color = light_color * material_color' );
-                operator.connectOutput( output );
-            } )( lightDiffuseColorMaterial );
+            var lightAmbientColor = context.getVariable( lightUniforms.ambient.name );
+            var lightSpecularColor = context.getVariable( lightUniforms.specular.name );
 
 
-            // compute lambert term. term = max( LdotN * attenuation, 0.0)
-            var termDiffuse = context.Variable( 'float' );
-            ( function ( output ) {
-                var str = output.getVariable() + ' = max(' + attenuation.getVariable() + ' * dot(' + lightVector.getVariable() + ', ' + normal.getVariable() + ') , 0.0);';
-                var operator = new operations.InlineCode( attenuation, lightVector, normal );
-                operator.comment( 'lambert_term = max(NdotL*attenuation, 0.0)' );
-                operator.setCode( str );
-                operator.connectOutput( output );
-            } )( termDiffuse );
+            var funcOp = new operations.FunctionCall( normal, eyeVector, vertexPos, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightPosition, lightAttenuation );
+            funcOp.connectOutput( this.getOutput() );
+            funcOp.setCall( 'computePointLightShading', '(%s, %s, %s, %s, %s, %s, %s, %s);', 'woo PointLight' );
 
-            // diffuseOutput = ldotn * lightColorAttenuation
-            var lightDiffuse = context.Variable( 'vec4' );
-            ( function ( output ) {
-                var operator = new operations.MultVector( termDiffuse, lightDiffuseColorMaterial );
-                operator.comment( 'lambert_color_contribution = lambert_color * lambert_term' );
-                operator.connectOutput( output );
-            } )( lightDiffuse );
-
-            // accumulate light contribution
-            accumulator.connectInput( lightDiffuse );
-
-            //////////////////////////////////////////////
-            //SPECULAR COOK TORRANCE
-            /////////////////////////
-            // connect variable to light node
-            var lightSpecularColor = context.getVariable( nodeLight.getOrCreateUniforms().specular.name );
-            var materialSpecularColor = this._specular;
-            var viewVector = context.getVariable( 'eyeVector' );
-            var lightSpecularColorMaterial = context.Variable( 'vec4' );
-            var hardness = this._hardness;
-
-            // lightSpecularColorMaterial = lightSpecularColor * materialSpecularColor
-            ( function ( output ) {
-                var operator = new operations.MultVector( lightSpecularColor, materialSpecularColor );
-                operator.comment( 'cooktorrance_color = light_color * material_color' );
-                operator.connectOutput( output );
-            } )( lightSpecularColorMaterial );
-
-
-            // compute lambert term. term = max( LdotN * attenuation, 0.0)
-            var termSpecular = context.Variable( 'float' );
-
-            ( function ( output ) {
-                var str = output.getVariable() + ' = ' + attenuation.getVariable() + ' * specularCookTorrance(' + normal.getVariable() + ', ' + lightVector.getVariable() + ', ' + viewVector.getVariable() + ', ' + hardness.getVariable() + ');';
-                var operator = new operations.InlineCode( attenuation, lightVector, normal );
-                operator.comment( 'specular_term = attenuation * specularCookTorrance(normal, lightVector, viewVector, hardness)' );
-                operator.setCode( str );
-                operator.connectOutput( output );
-            } )( termSpecular );
-
-            // specularOutput = specTerm * lightColorAttenuation
-            var specularOutput = context.Variable( 'vec4' );
-            ( function ( output ) {
-                var operator = new operations.MultVector( termSpecular, lightSpecularColorMaterial );
-                operator.comment( 'cooktorrance_color_contribution = cooktorrance_color * cooktorrance_term' );
-                operator.connectOutput( output );
-            } )( specularOutput );
-
-            // accumulate light contribution
-            accumulator.connectInput( specularOutput );
         }
 
     } );
@@ -204,7 +131,32 @@ define( [
 
     SpotLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
         type: 'SpotLight',
-        createFragmentShaderGraph: function () {}
+        createFragmentShaderGraph: function ( context ) {
+            // Common
+            var normal = this._normal;
+            var eyeVector = context.getVariable( 'FragEyeVector' );
+            var vertexPos = context.getVariable( 'FragVertexPos' );
+
+            // light specifics
+            var nodeLight = this._light;
+            var lightUniforms = nodeLight.getOrCreateUniforms();
+
+            // connect variable to light node
+            var lightAttenuation = context.getVariable( lightUniforms.attenuation.name );
+            var lightPosition = context.getVariable( lightUniforms.position.name );
+            var lightDirection = context.getVariable( lightUniforms.direction.name );
+            var lightSpotCutOff = context.getVariable( lightUniforms.spotCutOff.name );
+            var lightSpotBlend = context.getVariable( lightUniforms.spotBlend.name );
+
+            var lightDiffuseColor = context.getVariable( lightUniforms.diffuse.name );
+            var lightAmbientColor = context.getVariable( lightUniforms.ambient.name );
+            var lightSpecularColor = context.getVariable( lightUniforms.specular.name );
+
+
+            var funcOp = new operations.FunctionCall( normal, eyeVector, vertexPos, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection, lightAttenuation, lightPosition, lightSpotCutOff, lightSpotBlend );
+            funcOp.connectOutput( this.getOutput() );
+            funcOp.setCall( 'computeSpotLightShading', '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', 'woo SpotLight' );
+        }
     } );
 
 
@@ -214,7 +166,26 @@ define( [
 
     SunLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
         type: 'SunLight',
-        createFragmentShaderGraph: function () {}
+        createFragmentShaderGraph: function ( context ) {
+            // Common
+            var normal = this._normal;
+            var eyeVector = context.getVariable( 'FragEyeVector' );
+
+            // light specifics
+            var nodeLight = this._light;
+            var lightUniforms = nodeLight.getOrCreateUniforms();
+
+            // connect variable to light node
+            var lightDirection = context.getVariable( lightUniforms.direction.name );
+            var lightDiffuseColor = context.getVariable( lightUniforms.diffuse.name );
+            var lightAmbientColor = context.getVariable( lightUniforms.ambient.name );
+            var lightSpecularColor = context.getVariable( lightUniforms.specular.name );
+
+
+            var funcOp = new operations.FunctionCall( normal, eyeVector, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection );
+            funcOp.connectOutput( this.getOutput() );
+            funcOp.setCall( 'computeSunLightShading', '(%s, %s, %s, %s, %s, %s);', 'waa SunLight' );
+        }
     } );
 
 
