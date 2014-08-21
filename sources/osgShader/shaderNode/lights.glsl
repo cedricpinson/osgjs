@@ -107,7 +107,7 @@ vec4 computeSpotLightShading(
                         lambert(NdotL, Material_uniform_diffuse.rgb, lightDiffuse.rgb, diffuseContrib);
                         vec3 specularContrib;
                         specularCookTorrance(normal, lightDirection, eyeVector, Material_uniform_shininess, Material_uniform_specular.rgb, lightSpecular.rgb, specularContrib.rgb);
-                        return vec4(lightAmbient.rgb*Material_uniform_ambient.rgb + attenuation*spotblend*diffuseContrib.rgb*specularContrib.rgb*shadowContrib, 1.0);
+                        return vec4(lightAmbient.rgb*Material_uniform_ambient.rgb + attenuation*spot*diffuseContrib.rgb*specularContrib.rgb*shadowContrib, 1.0);
                     }
                 }
             }

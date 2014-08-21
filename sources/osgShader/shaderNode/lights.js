@@ -13,7 +13,7 @@ define([
     // maybe we will need a struct later for the material
     var Lighting = function(lights, normal, ambient, diffuse, specular, shininess, output) {
 
-        Node.call(this);
+        Node.call(this, ambient, diffuse, specular, shininess);
 
         this._lights = lights || [];
         this._normal = normal;
