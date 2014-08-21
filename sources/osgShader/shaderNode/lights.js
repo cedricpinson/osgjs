@@ -68,7 +68,8 @@ define( [
     // base class for all point based light: Point/Directional/Spot/Hemi
     // avoid duplicate code
     var NodeLightsPointBased = function ( lighting, light, output ) {
-        Node.apply( this, arguments );
+
+        Node.call( this );
 
         if ( output !== undefined ) {
             this.connectOutput( output );
