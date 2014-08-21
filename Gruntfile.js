@@ -1,48 +1,48 @@
-var fs = require( 'fs' );
-var path = require( 'path' );
+var fs = require('fs');
+var path = require('path');
 
-var extend = require( 'extend' );
-var glob = require( 'glob' );
+var extend = require('extend');
+var glob = require('glob');
 
-var jshintrc = JSON.parse( fs.readFileSync( './.jshintrc' ).toString() );
+var jshintrc = JSON.parse(fs.readFileSync('./.jshintrc').toString());
 
 // Base paths used by the tasks.
 // They always have to finish with a '/'.
 //
 var SOURCE_PATH = 'sources/';
 var BUILD_PATH = 'builds/';
-var DIST_PATH = path.join( BUILD_PATH, 'dist/' );
+var DIST_PATH = path.join(BUILD_PATH, 'dist/');
 var UTILS_PATH = 'tools/build/';
 
 
 
 // Utility functions
 //
-var find = function ( cwd, pattern ) {
+var find = function(cwd, pattern) {
 
-    if ( typeof pattern === 'undefined' ) {
+    if (typeof pattern === 'undefined') {
         pattern = cwd;
         cwd = undefined;
     }
 
-    var isEntity = function ( pathname ) {
-        if ( cwd ) pathname = path.join( cwd, pathname );
-        return !fs.lstatSync( pathname ).isDirectory();
+    var isEntity = function(pathname) {
+        if (cwd) pathname = path.join(cwd, pathname);
+        return !fs.lstatSync(pathname).isDirectory();
     };
 
     var options = {};
 
-    if ( cwd )
+    if (cwd)
         options.cwd = cwd;
 
-    return glob.sync( pattern, options ).filter( isEntity );
+    return glob.sync(pattern, options).filter(isEntity);
 
 };
 
 // get source file once and for all, caching results.
-var srcFiles = find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) {
+var srcFiles = find(SOURCE_PATH, '**/*.js').map(function(pathname) {
     return pathname;
-} );
+});
 
 
 // Used to store all Grunt tasks
@@ -51,7 +51,7 @@ var gruntTasks = {};
 
 // ## Top-level configurations
 //
-( function () {
+(function() {
 
     //lint
     gruntTasks.jshint = {
@@ -111,22 +111,22 @@ var gruntTasks = {};
     gruntTasks.gitcommit = {};
 
     // duck the camel. (case)
-    gruntTasks[ 'wintersmith_compile' ] = {};
+    gruntTasks['wintersmith_compile'] = {};
 
-} )();
+})();
 
 
 // ## JSHint
 //
 // Will check the Gruntfile and every "*.js" file in the "statics/sources/" folder.
 //
-( function () {
+(function() {
 
     gruntTasks.jshint.self = {
         options: {
             node: true
         },
-        src: [ 'Gruntfile.js' ]
+        src: ['Gruntfile.js']
     };
 
     gruntTasks.jshint.sources = {
@@ -136,24 +136,24 @@ var gruntTasks = {};
                 require: true
             }
         },
-        src: srcFiles.filter( function ( pathName ) {
-            return pathName.indexOf( 'vendors' ) === -1;
-        } ).map( function ( pathname ) {
-            return path.join( SOURCE_PATH, pathname );
-        } )
+        src: srcFiles.filter(function(pathName) {
+            return pathName.indexOf('vendors') === -1;
+        }).map(function(pathname) {
+            return path.join(SOURCE_PATH, pathname);
+        })
     };
 
     // add another output from envvar to have better error tracking in emacs
-    if ( process.env.GRUNT_EMACS_REPORTER !== undefined ) {
+    if (process.env.GRUNT_EMACS_REPORTER !== undefined) {
         gruntTasks.jshint.sources.options.reporter = process.env.GRUNT_EMACS_REPORTER;
     }
 
-} )();
+})();
 
 
 // ## Watch
 
-( function () {
+(function() {
 
     gruntTasks.watch.src = {
         files: [
@@ -162,81 +162,81 @@ var gruntTasks = {};
             'sources/*.glsl',
             'sources/**/*.glsl'
         ],
-        tasks: [ 'build:sources' ]
+        tasks: ['build:sources']
     };
 
-} )();
+})();
 
 // ## Require.js
 //
-( function ( ) {
+(function() {
 
     gruntTasks.requirejs.distSources = {
-		options : {
-			name : path.join( path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
-			out : path.join( DIST_PATH, 'OSG.js' ),
-			include : [ 'OSG' ],
-			paths: {
-				'Q': 'vendors/Q',
-				'Hammer': 'vendors/Hammer',
-				'Leap': 'vendors/Leap',
-				'text': 'vendors/require/text'
-			},
-			wrap : {
-				startFile : path.join( UTILS_PATH, 'wrap.start' ),
-				endFile : path.join( UTILS_PATH, 'wrap.end' )
-			}
-		}
+        options: {
+            name: path.join(path.relative(SOURCE_PATH, UTILS_PATH), 'almond'),
+            out: path.join(DIST_PATH, 'OSG.js'),
+            include: ['OSG'],
+            paths: {
+                'Q': 'vendors/Q',
+                'Hammer': 'vendors/Hammer',
+                'Leap': 'vendors/Leap',
+                'text': 'vendors/require/text'
+            },
+            wrap: {
+                startFile: path.join(UTILS_PATH, 'wrap.start'),
+                endFile: path.join(UTILS_PATH, 'wrap.end')
+            }
+        }
     };
 
-} )();
+})();
 
 // ## Clean
 //
-( function () {
+(function() {
 
     gruntTasks.clean.distAfterSourcesRjs = {
-        src: [ path.join( DIST_PATH, 'build.txt' ) ]
+        src: [path.join(DIST_PATH, 'build.txt')]
     };
 
 
     gruntTasks.clean.staticWeb = {
-        src: [ path.join( BUILD_PATH, 'web' ) ]
+        src: [path.join(BUILD_PATH, 'web')]
     };
 
 
-} )();
+})();
 
 
 // ## Docco
 //
-( function () {
+(function() {
 
     // generate a requirejs without anything to build a docco docs
     gruntTasks.requirejs.docsSources = {
-		options : {
-			out : path.join( BUILD_PATH, 'docs/OSG.js' ),
-			include : [ 'OSG' ],
-			paths: {
-				'Q': 'vendors/Q',
-				'Hammer': 'vendors/Hammer',
-				'Leap': 'vendors/Leap'
-			}
-		}
+        options: {
+            out: path.join(BUILD_PATH, 'docs/OSG.js'),
+            include: ['OSG'],
+            paths: {
+                'Q': 'vendors/Q',
+                'Hammer': 'vendors/Hammer',
+                'Leap': 'vendors/Leap'
+            }
+        }
     };
 
     gruntTasks.docco = {
         singleDoc: {
-            src: path.join( BUILD_PATH, 'docs/OSG.js' ),
+            src: path.join(BUILD_PATH, 'docs/OSG.js'),
             //src:  find( SOURCE_PATH, '**/*.js' ).map( function ( path ) { return path.join( SOURCE_PATH, path ); } ),
             options: {
                 output: 'docs/annotated-source'
             }
         },
         docs: {
-            src: srcFiles.map( function ( pathname ) {
-                return path.join( SOURCE_PATH, pathname );
-            } ),
+            src: srcFiles.map(function(pathname) {
+                return path.join(SOURCE_PATH, pathname);
+            }),
             options: {
                 layout: 'classic',
                 output: 'docs/annotated-source'
@@ -244,27 +244,27 @@ var gruntTasks = {};
         }
     };
 
-} )();
+})();
 
 // ## Plato
-( function () {
+(function() {
     gruntTasks.plato = {
         options: {
             // Task-specific options go here.
         },
         main: {
             files: {
-                'docs/analysis': srcFiles.map( function ( pathname ) {
-                    return path.join( SOURCE_PATH, pathname );
-                } )
+                'docs/analysis': srcFiles.map(function(pathname) {
+                    return path.join(SOURCE_PATH, pathname);
+                })
             }
         }
     };
-} )();
+})();
 
 // ## Qunit and connect
 //
-( function () {
+(function() {
 
     // qunit using connect
     gruntTasks.qunit = {
@@ -289,16 +289,16 @@ var gruntTasks = {};
         }
     };
 
-} )();
+})();
 
 // ## Symlinks
 // (explicit because windows)
-( function () {
+(function() {
 
     gruntTasks.symlink = {
         // Enable overwrite to delete symlinks before recreating them
         options: {
-            overwrite: false
+            overwrite: true
         },
         Hammer: {
             src: 'examples/vendors/Hammer-1.0.5.js',
@@ -318,7 +318,7 @@ var gruntTasks = {};
         },
         active: {
             src: DIST_PATH,
-            dest: path.join( BUILD_PATH, 'active' )
+            dest: path.join(BUILD_PATH, 'active')
         },
         RequireText: {
             src: 'examples/vendors/require/Text-2.0.12.js',
@@ -326,77 +326,77 @@ var gruntTasks = {};
         }
     };
 
-} )();
+})();
 
 // ## WinterSmith:
 // (static site gen for osgjs.org)
-( function () {
+(function() {
 
-    gruntTasks[ 'wintersmith_compile' ] = {
+    gruntTasks['wintersmith_compile'] = {
         build: {
             options: {
                 config: './website/web/config.json',
-                output: path.join( BUILD_PATH, 'web' )
+                output: path.join(BUILD_PATH, 'web')
             }
         },
         preview: {
             options: {
                 action: 'preview',
                 config: './website/web/config.json',
-                output: path.join( BUILD_PATH, 'web' )
+                output: path.join(BUILD_PATH, 'web')
             }
         }
     };
 
-} )();
+})();
 
 
-( function () {
+(function() {
     gruntTasks.copy = {
         staticWeb: {
-            files: [ {
+            files: [{
                 expand: true,
-                src: [ 'sources/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
+                src: ['sources/**'],
+                dest: path.join(BUILD_PATH, 'web/')
             }, {
                 expand: true,
-                src: [ 'docs/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
+                src: ['docs/**'],
+                dest: path.join(BUILD_PATH, 'web/')
             }, {
                 expand: true,
-                src: [ 'examples/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
+                src: ['examples/**'],
+                dest: path.join(BUILD_PATH, 'web/')
             }, {
                 expand: true,
-                src: [ 'tests/**' ],
-                dest: path.join( BUILD_PATH, 'web/' )
-            }, {
-                expand: true,
-                cwd: 'builds',
-                src: [ 'dist/**' ],
-                dest: path.join( BUILD_PATH, 'web/builds/' )
+                src: ['tests/**'],
+                dest: path.join(BUILD_PATH, 'web/')
             }, {
                 expand: true,
                 cwd: 'builds',
-                src: [ 'active/**' ],
-                dest: path.join( BUILD_PATH, 'web/builds/' )
-            } ]
+                src: ['dist/**'],
+                dest: path.join(BUILD_PATH, 'web/builds/')
+            }, {
+                expand: true,
+                cwd: 'builds',
+                src: ['active/**'],
+                dest: path.join(BUILD_PATH, 'web/builds/')
+            }]
         }
     };
-} )();
+})();
 
 // ## git:
 // (static site upload)
-( function ( ) {
-//git clone -b my-branch git@github.com:cedricpinson/osgjs.git
+(function() {
+    //git clone -b my-branch git@github.com:cedricpinson/osgjs.git
     gruntTasks.gitclone = {
         staticWeb: {
-          options: {
-            branch: 'gh-pages',
-            repository: 'git@github.com:cedricpinson/osgjs.git',
-            directory: path.join( BUILD_PATH, 'web' )
-            //, depth: -1 // cannot push from a shallow clone
-          }
+            options: {
+                branch: 'gh-pages',
+                repository: 'git@github.com:cedricpinson/osgjs.git',
+                directory: path.join(BUILD_PATH, 'web')
+                //, depth: -1 // cannot push from a shallow clone
+            }
         }
     };
 
@@ -406,7 +406,7 @@ var gruntTasks = {};
         staticWeb: {
             options: {
                 execOptions: {
-                    cwd: path.join( BUILD_PATH, 'web' )
+                    cwd: path.join(BUILD_PATH, 'web')
                 }
             },
             command: 'git add -A -v'
@@ -415,13 +415,13 @@ var gruntTasks = {};
 
     gruntTasks.gitcommit = {
         staticWeb: {
-          options: {
-            branch: 'gh-pages',
-            repository: 'git@github.com:cedricpinson/osgjs.git',
-              message: 'website update to latest develop',
-              cwd: path.join( BUILD_PATH, 'web' ),
-              verbose: true
-          }
+            options: {
+                branch: 'gh-pages',
+                repository: 'git@github.com:cedricpinson/osgjs.git',
+                message: 'website update to latest develop',
+                cwd: path.join(BUILD_PATH, 'web'),
+                verbose: true
+            }
         },
         files: {
             src: ''
@@ -431,27 +431,27 @@ var gruntTasks = {};
 
     gruntTasks.gitpush = {
         staticWeb: {
-          options: {
-              branch: 'gh-pages',
-              repository: 'git@github.com:cedricpinson/osgjs.git',
-              cwd: path.join( BUILD_PATH, 'web' ),
-              verbose: true
-          }
+            options: {
+                branch: 'gh-pages',
+                repository: 'git@github.com:cedricpinson/osgjs.git',
+                cwd: path.join(BUILD_PATH, 'web'),
+                verbose: true
+            }
         }
     };
 
-} )();
+})();
 
 
 
-module.exports = function ( grunt ) {
+module.exports = function(grunt) {
 
-    var distFullPath = path.normalize( path.join( __dirname, DIST_PATH) );
-    grunt.file.mkdir( distFullPath );
+    var distFullPath = path.normalize(path.join(__dirname, DIST_PATH));
+    grunt.file.mkdir(distFullPath);
 
-    grunt.initConfig( extend( {
-        pkg: grunt.file.readJSON( 'package.json' )
-    }, gruntTasks ) );
+    grunt.initConfig(extend({
+        pkg: grunt.file.readJSON('package.json')
+    }, gruntTasks));
 
     // grunt.event.on('qunit.testStart', function (name) {
     //     grunt.log.ok("Running test: " + name);
@@ -467,37 +467,37 @@ module.exports = function ( grunt ) {
     //     }
     // });
 
-    grunt.loadNpmTasks( 'grunt-contrib-connect' );
-    grunt.loadNpmTasks( 'grunt-contrib-qunit' );
+    grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-contrib-qunit');
 
-    grunt.loadNpmTasks( 'grunt-docco' );
-    grunt.loadNpmTasks( 'grunt-plato' );
-    grunt.loadNpmTasks( 'grunt-contrib-jshint' );
-    grunt.loadNpmTasks( 'grunt-contrib-copy' );
-    grunt.loadNpmTasks( 'grunt-contrib-requirejs' );
-    grunt.loadNpmTasks( 'grunt-contrib-clean' );
-    grunt.loadNpmTasks( 'grunt-contrib-watch' );
+    grunt.loadNpmTasks('grunt-docco');
+    grunt.loadNpmTasks('grunt-plato');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-requirejs');
+    grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-watch');
     // windows
-    grunt.loadNpmTasks( 'grunt-contrib-symlink' );
+    grunt.loadNpmTasks('grunt-contrib-symlink');
     //static site
-    grunt.loadNpmTasks( 'grunt-wintersmith-compile' );
-    grunt.loadNpmTasks( 'grunt-git' );
-    grunt.loadNpmTasks( 'grunt-shell' );
+    grunt.loadNpmTasks('grunt-wintersmith-compile');
+    grunt.loadNpmTasks('grunt-git');
+    grunt.loadNpmTasks('grunt-shell');
 
-    grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
+    grunt.registerTask('check', ['jshint:self', 'jshint:sources']);
 
-    grunt.registerTask( 'test', [ 'connect:server', 'qunit:all' ] );
+    grunt.registerTask('test', ['connect:server', 'qunit:all']);
 
-    grunt.registerTask( 'docs', [ 'requirejs:docsSources', 'docco' ] );
+    grunt.registerTask('docs', ['requirejs:docsSources', 'docco']);
 
-    grunt.registerTask( 'build:sources:dist', [ 'requirejs:distSources', 'clean:distAfterSourcesRjs' ] );
-    grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );
+    grunt.registerTask('build:sources:dist', ['requirejs:distSources', 'clean:distAfterSourcesRjs']);
+    grunt.registerTask('build:sources', ['build:sources:dist']);
 
-    grunt.registerTask( 'build:dist', [ 'build:sources:dist' ] );
-    grunt.registerTask( 'build', [ 'symlink', 'build:dist'  ] );
+    grunt.registerTask('build:dist', ['build:sources:dist']);
+    grunt.registerTask('build', ['symlink', 'build:dist']);
 
-    grunt.registerTask( 'default', [ 'check', 'build' ] );
+    grunt.registerTask('default', ['check', 'build']);
 
-    grunt.registerTask( 'website_only', [ 'copy:staticWeb', 'clean:staticWeb', 'gitclone:staticWeb', 'wintersmith_compile:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb' ] );
-    grunt.registerTask( 'website', [ 'default', 'docs', 'website_only' ] );
+    grunt.registerTask('website_only', ['copy:staticWeb', 'clean:staticWeb', 'gitclone:staticWeb', 'wintersmith_compile:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb']);
+    grunt.registerTask('website', ['default', 'docs', 'website_only']);
 };
