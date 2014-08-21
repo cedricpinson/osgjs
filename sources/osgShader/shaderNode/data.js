@@ -34,13 +34,12 @@ define([
 
             if (this._value !== undefined) {
                 // TODO: tricky here.
-                if (this.type === 'float') {
+                if (this._type === 'float') {
                     return sprintf('%s %s = %f;', [this._type, this.getVariable(), this._value]);
-                } else if (this.type === 'int') {
+                } else if (this._type === 'int') {
                     return sprintf('%s %s = %d;', [this._type, this.getVariable(), this._value]);
                 } else {
-                    // other type might need checks there...
-                    return sprintf('%s %s = %s;', [this._type, this.getVariable(), this._value.toStrint()]);
+                    return sprintf('%s %s = %s;', [this._type, this.getVariable(), this._value.toString()]);
                 }
 
             } else {
