@@ -36,6 +36,7 @@ define( [
 
         this._useSphere = false;
         this._enable = true;
+        this._invMatrix = new Matrix.create();
         this.dirty();
     };
 
@@ -74,7 +75,7 @@ define( [
                 'position': 'createFloat4',
                 'direction': 'createFloat3',
 
-                'spotCutoff': 'createFloat1',
+                'spotCutOff': 'createFloat1',
                 'spotBlend': 'createFloat1',
                 'distance': 'createFloat1'
 
@@ -245,38 +246,34 @@ define( [
             return this.getPrefix() + '_' + name;
         },
 
-        applyPositionedUniform: ( function () {
-            var invMatrix = new Matrix.create();
+        applyPositionedUniform: function ( matrix /*, state*/ ) {
 
-            return function ( matrix /*, state*/ ) {
+            var uniformMap = this.getOrCreateUniforms();
 
-                var uniformMap = this.getOrCreateUniforms();
+            if ( this._type === 'SUN' || this._type === 'HEMI' ) {
+                Matrix.copy( matrix, this._invMatrix );
+                this._invMatrix[ 12 ] = 0.0;
+                this._invMatrix[ 13 ] = 0.0;
+                this._invMatrix[ 14 ] = 0.0;
+                Matrix.inverse( this._invMatrix, this._invMatrix );
+                Matrix.transpose( this._invMatrix, this._invMatrix );
+                Matrix.transformVec3( this._invMatrix, this._position, uniformMap.position.get() );
+            } else {
+                Matrix.transformVec3( matrix, this._position, uniformMap.position.get() );
+            }
+            if ( this._type === 'SPOT' ) {
+                Matrix.copy( matrix, this._invMatrix );
+                this._invMatrix[ 12 ] = 0.0;
+                this._invMatrix[ 13 ] = 0.0;
+                this._invMatrix[ 14 ] = 0.0;
+                Matrix.inverse( this._invMatrix, this._invMatrix );
+                Matrix.transpose( this._invMatrix, this._invMatrix );
+                Matrix.transformVec3( this._invMatrix, this._direction, uniformMap.direction.get() );
+            }
 
-                if ( this._type === 'SUN' || this._type === 'HEMI' ) {
-                    Matrix.copy( matrix, invMatrix );
-                    invMatrix[ 12 ] = 0.0;
-                    invMatrix[ 13 ] = 0.0;
-                    invMatrix[ 14 ] = 0.0;
-                    Matrix.inverse( invMatrix, invMatrix );
-                    Matrix.transpose( invMatrix, invMatrix );
-                    Matrix.transformVec3( invMatrix, this._position, uniformMap.position.get() );
-                } else {
-                    Matrix.transformVec3( matrix, this._position, uniformMap.position.get() );
-                }
-                if ( this._type === 'SPOT' ) {
-                    Matrix.copy( matrix, invMatrix );
-                    invMatrix[ 12 ] = 0.0;
-                    invMatrix[ 13 ] = 0.0;
-                    invMatrix[ 14 ] = 0.0;
-                    Matrix.inverse( invMatrix, invMatrix );
-                    Matrix.transpose( invMatrix, invMatrix );
-                    Matrix.transformVec3( invMatrix, this._direction, uniformMap.direction.get() );
-                }
-
-                uniformMap.position.dirty();
-                uniformMap.direction.dirty();
-            };
-        } )(),
+            uniformMap.position.dirty();
+            uniformMap.direction.dirty();
+        },
 
         applyEnergy: function ( colorUniform, colorVar ) {
             var color = colorUniform.get();
@@ -299,8 +296,8 @@ define( [
             uniformMap.direction.dirty();
 
             var spotsize = Math.cos( this._spotCutoff * 0.5 );
-            uniformMap.spotCutoff.get()[ 0 ] = spotsize;
-            uniformMap.spotCutoff.dirty();
+            uniformMap.spotCutOff.get()[ 0 ] = spotsize;
+            uniformMap.spotCutOff.dirty();
 
             uniformMap.spotBlend.get()[ 0 ] = ( 1.0 - spotsize ) * this._spotBlend;
             uniformMap.spotBlend.dirty();

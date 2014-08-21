@@ -5,13 +5,6 @@ float getLightAttenuation(const in float dist, const in float constant, const in
 {
     return 1.0 / ( constant + linear*dist + quadratic*dist*dist );
 }
-///////////////
-// SPOT CUT OFF
-/////
-float getLightSpotCutOff()
-{
-
-}
 //
 // LIGTHING EQUATION TERMS
 ///
@@ -32,7 +25,7 @@ float specularCookTorrance(const in vec3 n, const in vec3 l, const in vec3 v, co
     return specfac;
 }
 
-float lambert(const in float ndl, const in vec3 diffuse, const out vec3 diffuseContrib)
+void lambert(const in float ndl, const in vec3 diffuse, out vec3 diffuseContrib)
 {
     diffuseContrib = ndl*diffuse;
 }
@@ -61,8 +54,7 @@ void computeLightPoint(const in vec3 vertexPosition, const in vec3 lampPosition,
 
 vec4 computeSpotLightShading(
     const in vec3 normal,
-    const in vec3 eyeVector, // varying reuse global ?
-    const in vec3 vertexPosition, // varying reuse global ?
+    const in vec3 eyeVector,
 
     //const in vec4 u_materialAmbient,
     //const in vec4 u_materialDiffuse,
@@ -80,18 +72,18 @@ vec4 computeSpotLightShading(
     const in float lightSpotBlend)
 {
     // compute dist
-    Vec3 lightVector = lightSpotPosition - vertexPosition;
+    vec3 lightVector = lightSpotPosition - eyeVector;
     float dist = length(lightVector);
     // compute attenuation
     float attenuation = getLightAttenuation(dist, lightAttenuation.x, lightAttenuation.y, lightAttenuation.z);
     if (attenuation <= 0.0)
     {
         // compute direction
-        vector3 lightDirection = dist > 0.0 ? lightVector / dist :  vec3( 0.0, 1.0, 0.0 );
+        vec3 lightDirection = dist > 0.0 ? lightVector / dist :  vec3( 0.0, 1.0, 0.0 );
         if (lightCosSpotCutoff > 0.0 && lightSpotBlend > 0.0)
         {
             //compute lightSpotBlend
-            float cosCurAngle = dot(-LightDirection, LightSpotDirection);
+          float cosCurAngle = dot(-lightDirection, lightSpotDirection);
             float diffAngle = cosCurAngle - lightCosSpotCutoff;
             float spot;;
             if (diffAngle < 0.0 || lightSpotBlend <= 0.0) {
@@ -127,7 +119,7 @@ vec4 computeSpotLightShading(
 vec4 computeSunLightShading(
 
                             const in vec3 normal,
-                            const in vec3 eyeVector, // varying reuse global ?
+                            const in vec3 eyeVector,
 
                             //const in vec4 u_materialAmbient,
                             //const in vec4 u_materialDiffuse,
@@ -162,8 +154,7 @@ vec4 computeSunLightShading(
 
 vec4 computePointLightShading(
                               const in vec3 normal,
-                              const in vec3 eyeVector, // varying reuse global ?
-                              const in vec3 vertexPos, // varying reuse global ?
+                              const in vec3 eyeVector,
 
                               // const in vec4 u_materialAmbient,
                               // const in vec4 u_materialDiffuse,
@@ -179,14 +170,14 @@ vec4 computePointLightShading(
                               )
 {
   // compute dist
-  Vec3 lightVector = lightPosition.xyz - vertexPos;
+  vec3 lightVector = lightPosition.xyz - eyeVector;
   float dist = length(lightVector);
   // compute attenuation
   float attenuation = getLightAttenuation(dist, lightAttenuation.x, lightAttenuation.y, lightAttenuation.z);
   if (attenuation <= 0.0)
     {
       // compute direction
-      vector3 lightDirection = dist > 0.0 ? lightVector / dist :  vec3( 0.0, 1.0, 0.0 );
+      vec3 lightDirection = dist > 0.0 ? lightVector / dist :  vec3( 0.0, 1.0, 0.0 );
       // compute NdL
       float NdotL = dot(lightDirection, normal);
       if (NdotL > 0.0)
