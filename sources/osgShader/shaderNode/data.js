@@ -1,13 +1,13 @@
-define( [
+define([
     'osg/Utils',
     'osgShader/utils/sprintf',
     'osgShader/shaderNode/Node'
 
-], function ( MACROUTILS, sprintf, Node ) {
+], function(MACROUTILS, sprintf, Node) {
     'use strict';
 
-    var Variable = function ( type, prefix ) {
-        Node.call( this );
+    var Variable = function(type, prefix) {
+        Node.call(this);
         this._name = 'Variable';
         this._prefix = prefix;
         this._type = type;
@@ -16,100 +16,109 @@ define( [
         this._value = undefined;
     };
 
-    Variable.prototype = MACROUTILS.objectInherit( Node.prototype, {
+    Variable.prototype = MACROUTILS.objectInherit(Node.prototype, {
 
-        getType: function () {
+        getType: function() {
             return this._type;
         },
 
-        getVariable: function () {
+        getVariable: function() {
             return this._prefix;
         },
 
-        setValue: function ( value ) {
+        setValue: function(value) {
             this._value = value;
         },
 
-        declare: function () {
+        declare: function() {
 
-            if ( this._value !== undefined ) {
-                return sprintf( '%s %s = %s;', [ this._type, this.getVariable(), this._value ] );
+            if (this._value !== undefined) {
+                // TODO: tricky here.
+                if (this.type === 'float') {
+                    return sprintf('%s %s = %f;', [this._type, this.getVariable(), this._value]);
+                } else if (this.type === 'int') {
+                    return sprintf('%s %s = %d;', [this._type, this.getVariable(), this._value]);
+                } else {
+                    // other type might need checks there...
+                    return sprintf('%s %s = %s;', [this._type, this.getVariable(), this._value.toStrint()]);
+                }
+
             } else {
-                return sprintf( '%s %s;', [ this._type, this.getVariable() ] );
+                return sprintf('%s %s;', [this._type, this.getVariable()]);
             }
         }
-    } );
+    });
 
 
-    var InlineConstant = function ( content ) {
-        Node.call( this );
+    var InlineConstant = function(content) {
+        Node.call(this);
         this._value = content;
     };
 
-    InlineConstant.prototype = MACROUTILS.objectInherit( Node.prototype, {
+    InlineConstant.prototype = MACROUTILS.objectInherit(Node.prototype, {
 
-        getVariable: function () {
+        getVariable: function() {
             return this._value;
         },
 
-        setValue: function ( value ) {
+        setValue: function(value) {
             this._value = value;
         }
 
-    } );
+    });
 
-    var Uniform = function ( type, prefix ) {
-        Variable.call( this, type, prefix );
+    var Uniform = function(type, prefix) {
+        Variable.call(this, type, prefix);
     };
 
-    Uniform.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+    Uniform.prototype = MACROUTILS.objectInherit(Variable.prototype, {
 
-        declare: function () {
+        declare: function() {
             return undefined;
         },
 
-        globalDeclaration: function () {
-            return sprintf( 'uniform %s %s;', [ this._type, this.getVariable() ] );
+        globalDeclaration: function() {
+            return sprintf('uniform %s %s;', [this._type, this.getVariable()]);
         }
 
-    } );
+    });
 
 
 
-    var Varying = function ( type, prefix ) {
-        Variable.call( this, type, prefix );
+    var Varying = function(type, prefix) {
+        Variable.call(this, type, prefix);
     };
 
-    Varying.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+    Varying.prototype = MACROUTILS.objectInherit(Variable.prototype, {
 
-        declare: function () {
+        declare: function() {
             return undefined;
         },
 
-        globalDeclaration: function () {
-            return sprintf( 'varying %s %s;', [ this._type, this.getVariable() ] );
+        globalDeclaration: function() {
+            return sprintf('varying %s %s;', [this._type, this.getVariable()]);
         }
 
-    } );
+    });
 
 
 
 
-    var Sampler = function ( type, prefix ) {
-        Variable.call( this, type, prefix );
+    var Sampler = function(type, prefix) {
+        Variable.call(this, type, prefix);
     };
 
-    Sampler.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+    Sampler.prototype = MACROUTILS.objectInherit(Variable.prototype, {
 
-        declare: function () {
+        declare: function() {
             return undefined;
         },
 
-        globalDeclaration: function () {
-            return sprintf( 'uniform %s %s;', [ this._type, this.getVariable() ] );
+        globalDeclaration: function() {
+            return sprintf('uniform %s %s;', [this._type, this.getVariable()]);
         }
 
-    } );
+    });
 
 
     return {
@@ -120,4 +129,4 @@ define( [
         'InlineConstant': InlineConstant
     };
 
-} );
+});
