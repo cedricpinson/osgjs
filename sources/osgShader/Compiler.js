@@ -283,7 +283,7 @@ define( [
         },
 
         getSrgbColor: function ( finalColor ) {
-            var gamma = this.Variable( 'float', 'gamma' );
+            var gamma = this.getVariable( 'gamma' );
             gamma.setValue( ShaderNode.LinearTosRGB.defaultGamma );
             var finalSrgbColor = this.Variable( 'vec3' );
             new ShaderNode.LinearTosRGB( finalColor, finalSrgbColor, gamma );
@@ -466,10 +466,9 @@ define( [
             var premult = this.Variable( 'vec3' );
             node = new ShaderNode.TextureRGBA( textureSampler, texCoord, texel );
             srgb2linearTmp = this.Variable( 'vec4' );
-            var gamma = this.Variable( 'float', 'gamma' );
-            //gamma.setValue(ShaderNode.LinearTosRGB.defaultGamma);
+            var gamma = this.getVariable( 'gamma' );
             node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp, gamma );
-            node = new ShaderNode.PreMultAlpha( srgb2linearTmp, premult );
+            node = new ShaderNode.PreMultAlpha( srgb2linearTmp, texel, premult );
             output = premult;
             return output;
         },
@@ -781,6 +780,9 @@ define( [
             return fragColor;
         },
         createFragmentShaderGraph: function () {
+            var gamma = this.Variable( 'float', 'gamma' ); // initialize once, will be reused.
+            gamma.setValue( ShaderNode.LinearTosRGB.defaultGamma );
+
             this.declareUniforms();
             this.declareTextures();
 
@@ -811,8 +813,8 @@ define( [
             if ( diffuseColor === undefined ) {
                 diffuseColor = materialDiffuseColor;
             } else {
-                var str = sprintf( '%s.rgb *= %s.rgb;', [ diffuseColor.getVariable(), diffuseColor.getVariable() ] );
-                var operator = new ShaderNode.InlineCode();
+                var str = sprintf( '%s.rgb *= %s.rgb;', [ diffuseColor.getVariable(), materialDiffuseColor.getVariable() ] );
+                var operator = new ShaderNode.InlineCode( materialDiffuseColor );
                 operator.connectOutput( diffuseColor );
                 operator.setCode( str );
 
