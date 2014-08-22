@@ -1,9 +1,14 @@
 ////////////////
 // ATTENUATION
 /////////////
-float getLightAttenuation(const in float dist, const in float constant, const in float linear, const in float quadratic)
+float getLightAttenuation(const in float dist, const in vec4 lightAttenuation)
 {
-    return 1.0 / ( constant + linear*dist + quadratic*dist*dist );
+  // lightAttenuation(constant, constantEnabled, linearEnabled, quadraticEnabled)
+  // TODO find a vector alu instead of 4 scalar
+  float constant = lightAttenuation.x * lightAttenuation.y;
+  float linear = lightAttenuation.z*dist;
+  float quadratic = lightAttenuation.w*dist*dist;
+  return 1.0 / ( constant + linear + quadratic );
 }
 //
 // LIGTHING EQUATION TERMS
@@ -16,11 +21,12 @@ void specularCookTorrance(const in vec3 n, const in vec3 l, const in vec3 v, con
 
     if(nh > 0.0)
     {
-        float nv = max(dot(n, v), 0.0);
-        float i = pow(nh, hard);
-
-        i = i / (0.1 + nv);
-        specfac = i;
+        float nv = dot(n, v);
+        if(nh >= 0.0){
+          float i = pow(nh, hard);
+          i = i / (0.1 + nv);
+          specfac = i;
+        }
     }
     specularContrib = specfac*materialSpecular*lightSpecular;
 }
@@ -28,14 +34,6 @@ void specularCookTorrance(const in vec3 n, const in vec3 l, const in vec3 v, con
 void lambert(const in float ndl,  const in vec3 materialDiffuse, const in vec3 lightDiffuse, out vec3 diffuseContrib)
 {
     diffuseContrib = ndl*materialDiffuse*lightDiffuse;
-}
-/////////
-/// UTILS
-/////////
-
-void computeLightDirection(const in vec3 lampvec, out vec3 lv )
-{
-    lv = -lampvec;
 }
 ////////////////////////
 /// Main func
@@ -58,7 +56,7 @@ vec4 computeSpotLightShading(
     const in vec4 lightSpecular,
 
     const in vec3  lightSpotDirection,
-    const in vec3  lightAttenuation,
+    const in vec4  lightAttenuation,
     const in vec3  lightSpotPosition,
     const in float lightCosSpotCutoff,
     const in float lightSpotBlend)
@@ -67,7 +65,7 @@ vec4 computeSpotLightShading(
     vec3 lightVector = - lightSpotPosition;
     float dist = length(lightVector);
     // compute attenuation
-    float attenuation = getLightAttenuation(dist, lightAttenuation.x, lightAttenuation.y, lightAttenuation.z);
+    float attenuation = getLightAttenuation(dist, lightAttenuation);
     if (attenuation != 0.0)
     {
         // compute direction
@@ -130,7 +128,7 @@ vec4 computePointLightShading(
   vec3 lightVector = - lightPosition.xyz;
   float dist = length(lightVector);
   // compute attenuation
-  float attenuation = getLightAttenuation(dist, lightAttenuation.x, lightAttenuation.y, lightAttenuation.z);
+  float attenuation = getLightAttenuation(dist, lightAttenuation);
   if (attenuation != 0.0)
     {
       // compute direction

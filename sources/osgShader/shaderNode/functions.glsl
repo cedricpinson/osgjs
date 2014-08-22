@@ -1,4 +1,4 @@
-#define DefaultGamma 2.4
+#define DefaultGamma 2.2
 
 // coding style should be camel case except for acronyme like SRGB or HDR
 float linearTosRGB(const in float c, const in float gamma)
