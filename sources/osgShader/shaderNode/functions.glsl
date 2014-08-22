@@ -1,14 +1,52 @@
 #define DefaultGamma 2.4
 
 // coding style should be camel case except for acronyme like SRGB or HDR
-vec4 linearTosRGB(const in vec4 col_from, const in float gamma)
+float linearTosRGB(const in float c, const in float gamma)
 {
-    vec4 col_to;
-    col_to.r = linearrgb_to_srgb1(col_from.r, gamma);
-    col_to.g = linearrgb_to_srgb1(col_from.g, gamma);
-    col_to.b = linearrgb_to_srgb1(col_from.b, gamma);
-    col_to.a = col_from.a;
-    return col_to;
+  float v = 0.0;
+  if(c < 0.0031308) {
+    if ( c > 0.0)
+      v = c * 12.92;
+  } else {
+    v = 1.055 * pow(c, 1.0/gamma) - 0.055;
+  }
+  return v;
+}
+
+vec3 linearTosRGB(const in vec3 c, const in float gamma)
+{
+  vec4 col_to;
+  vec3 v = vec3(0.0);
+  if(all(lessThan(c.rgb, vec3(0.0031308))))
+  {
+    if ( all(greaterThan(c.rgb, vec3(0.0))))
+    {
+      v = c.rgb * vec3(12.92);
+    }
+  }
+  else
+  {
+    v = 1.055 * pow(c.rgb, vec3(1.0/gamma)) - vec3(0.055);
+  }
+  return v.rgb;
+}
+
+vec4 linearTosRGB(const in vec4 c, const in float gamma)
+{
+  vec4 col_to;
+  vec3 v = vec3(0.0);
+  if(all(lessThan(c.rgb, vec3(0.0031308))))
+  {
+    if ( all(greaterThan(c.rgb, vec3(0.0))))
+    {
+      v = c.rgb * vec3(12.92);
+    }
+  }
+  else
+  {
+    v = 1.055 * pow(c.rgb, vec3(1.0/gamma)) - vec3(0.055);
+  }
+  return vec4(v.rgb, c.a);
 }
 
 float sRGBToLinear(const in float c, const in float gamma)
