@@ -31,7 +31,7 @@ define( [
         functionName: 'noTextureFunction',
 
         computeFragment: function () {
-            return sprintf( '%s = %s( %s, %s.xy )', [
+            return sprintf( '%s = %s( %s, %s.xy );', [
                 this.getOutput().getVariable(),
                 this.functionName,
                 this._sampler.getVariable(),
