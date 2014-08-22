@@ -147,8 +147,14 @@ define( [
     } );
 
 
-    var PreMultAlpha = function ( color, output ) {
+    var PreMultAlpha = function ( color, alpha, output ) {
+        if ( output === undefined ) {
+            output = alpha;
+        } else {
+            this._alpha = alpha;
+        }
         Node.call( this, color );
+
         if ( output !== undefined ) {
             this.connectOutput( output );
         }
@@ -156,7 +162,9 @@ define( [
     PreMultAlpha.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'PreMultAlpha',
         computeFragment: function () {
-            var str = this.getOutput().getVariable() + '.rgb = ' + this._inputs[ 0 ].getVariable() + '.rgb * ' + this._inputs[ 0 ].getVariable() + '.a;';
+            var srcAlpha = this._alpha !== undefined ? this._alpha.getVariable() : this._inputs[ 0 ].getVariable();
+
+            var str = this.getOutput().getVariable() + '.rgb = ' + this._inputs[ 0 ].getVariable() + '.rgb * ' + srcAlpha + '.a;';
             return str;
         }
     } );
