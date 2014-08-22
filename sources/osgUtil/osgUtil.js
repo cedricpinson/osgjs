@@ -4,8 +4,9 @@ define( [
     'osgUtil/ParameterVisitor',
     'osgUtil/TriangleIntersect',
     'osgUtil/Oculus',
-    'osgUtil/WebVR'
-], function( Composer, IntersectVisitor, ParameterVisitor, TriangleIntersect, Oculus, WebVR ) {
+    'osgUtil/WebVR',
+    'osgUtil/Ground'
+], function( Composer, IntersectVisitor, ParameterVisitor, TriangleIntersect, Oculus, WebVR, Ground ) {
 
     var osgUtil = {};
 
@@ -15,6 +16,7 @@ define( [
     osgUtil.TriangleIntersect = TriangleIntersect;
     osgUtil.Oculus = Oculus;
     osgUtil.WebVR = WebVR;
+    osgUtil.Ground = Ground;
 
     return osgUtil;
 } );
