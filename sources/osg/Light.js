@@ -25,9 +25,9 @@ define( [
 
         this._spotCutoff = 1.0;
         this._spotBlend = 0.01;
-        this._falloffType = 'INVERSE_SQUARE';
+        this._falloffType = 'INVERSE_LINEAR';
         this._distance = 25;
-        this._attenuation = [ 25.0, 0.0, 0.0, 1.0 ];
+        this._attenuation = [ 25.0, 0.0, 1.0, 0.0 ];
 
         this._energy = 1.0;
 

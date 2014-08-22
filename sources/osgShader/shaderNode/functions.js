@@ -89,7 +89,7 @@ define( [
 
     } );
 
-    LinearTosRGB.defaultGamma = 2.4;
+    LinearTosRGB.defaultGamma = 2.2;
 
 
     return {
