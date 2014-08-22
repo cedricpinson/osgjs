@@ -48,9 +48,10 @@ define( [
     } );
 
 
-    var sRGBToLinear = function ( input, output ) {
+    var sRGBToLinear = function ( input, output, gamma ) {
         NodeFunctions.call( this, input );
         this.connectOutput( output );
+        this._gamma = gamma;
     };
 
     sRGBToLinear.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
@@ -59,8 +60,9 @@ define( [
 
         computeFragment: function () {
             //var inputType = this._inputs[ 0 ].getType();
-            return sprintf( '%s = sRGBToLinear( %s );', [ this.getOutput().getVariable(),
-                this._inputs[ 0 ].getVariable()
+            return sprintf( '%s.rgb = sRGBToLinear( %s.rgb, %s );', [ this.getOutput().getVariable(),
+                this._inputs[ 0 ].getVariable(),
+                this._gamma.getVariable()
             ] );
         }
 
@@ -79,7 +81,7 @@ define( [
         type: 'LinearTosRGB',
 
         computeFragment: function () {
-            return sprintf( '%s = linearTosRGB( %s, %s ).rgb;', [ this.getOutput().getVariable(),
+            return sprintf( '%s.rgb = linearTosRGB( %s.rgb, %s );', [ this.getOutput().getVariable(),
                 this._inputs[ 0 ].getVariable(),
                 this._gamma.getVariable()
             ] );

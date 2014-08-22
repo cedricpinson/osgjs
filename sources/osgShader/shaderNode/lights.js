@@ -78,6 +78,7 @@ define( [
         }
 
         this._normal = lighting._normal;
+        this._lighting = lighting;
         this._light = light;
 
         this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, this._normal );
@@ -117,9 +118,9 @@ define( [
             var lightSpecularColor = context.Uniform( lightUniforms.specular );
 
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightPosition, lightAttenuation );
+            var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightPosition, lightAttenuation );
             funcOp.connectOutput( this.getOutput() );
-            funcOp.setCall( 'computePointLightShading', '(%s, %s, %s, %s, %s, %s, %s);', 'woo PointLight' );
+            funcOp.setCall( 'computePointLightShading', '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', 'woo PointLight' );
 
         }
 
@@ -154,9 +155,9 @@ define( [
             var lightSpecularColor = context.Uniform( lightUniforms.specular );
 
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection, lightAttenuation, lightPosition, lightSpotCutOff, lightSpotBlend );
+            var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection, lightAttenuation, lightPosition, lightSpotCutOff, lightSpotBlend );
             funcOp.connectOutput( this.getOutput() );
-            funcOp.setCall( 'computeSpotLightShading', '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', 'woo SpotLight' );
+            funcOp.setCall( 'computeSpotLightShading', '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', 'woo SpotLight' );
         }
     } );
 
@@ -183,9 +184,9 @@ define( [
             var lightSpecularColor = context.Uniform( lightUniforms.specular );
 
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection );
+            var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection );
             funcOp.connectOutput( this.getOutput() );
-            funcOp.setCall( 'computeSunLightShading', '(%s, %s, %s, %s, %s, %s);', 'waa SunLight' );
+            funcOp.setCall( 'computeSunLightShading', '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', 'waa SunLight' );
         }
     } );
 
