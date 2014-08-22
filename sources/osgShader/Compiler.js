@@ -807,11 +807,13 @@ define( [
 
             // diffuse color
             var diffuseColor = this.getTexture();
+            diffuseColor = this.getVertexColor( diffuseColor );
             if ( diffuseColor === undefined ) {
                 diffuseColor = materialDiffuseColor;
+            } else {
+                var diffMult = new ShaderNode.Mult( diffuseColor, materialDiffuseColor );
+                diffMult.connectOutput( diffuseColor );
             }
-            diffuseColor = this.getVertexColor( diffuseColor );
-
             //var alpha =  materialOpacity || new shaderNode.InlineConstant( '1.0' );
             var alpha = new ShaderNode.InlineConstant( '1.0' );
 
