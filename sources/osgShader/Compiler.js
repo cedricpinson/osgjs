@@ -200,8 +200,10 @@ define( [
                 }
             }
 
-            if ( opFinalColor.getInputs().length === 0 )
-                opFinalColor.connectInputs( new ShaderNode.InlineConstant( 'vec4( 0.0, 0.0, 0.0, 1.0 )' ) );
+            if ( opFinalColor.getInputs().length === 0 ) {
+                // DEBUG COLOR
+                opFinalColor.connectInputs( new ShaderNode.InlineConstant( 'vec4( 1.0, 0.0, 1.0, 0.7 )' ) );
+            }
 
 
             return finalColor;
@@ -282,7 +284,7 @@ define( [
             return premultAlpha;
         },
 
-        getSrgbColor: function ( finalColor ) {
+        getColorsRGB: function ( finalColor ) {
             var gamma = this.getVariable( 'gamma' );
             gamma.setValue( ShaderNode.LinearTosRGB.defaultGamma );
             var finalSrgbColor = this.Variable( 'vec3' );
@@ -542,13 +544,6 @@ define( [
             return output;
         },
 
-        createTexturesMirror: function ( textureSampler, texCoord ) {
-            var node = new ShaderNode.TextureIntensity( textureSampler, texCoord );
-            var output = this.Variable( 'float' );
-            node.connectOutput( output );
-            return output;
-        },
-
         traverse: function ( functor, node ) {
             for ( var i = 0, l = node.getInputs().length; i < l; i++ ) {
                 var child = node.getInputs()[ i ];
@@ -775,7 +770,7 @@ define( [
 
             // get srgb color and apply alpha
             var fragColor = new ShaderNode.FragColor();
-            new ShaderNode.SetAlpha( this.getSrgbColor( finalColor ), alpha, fragColor );
+            new ShaderNode.SetAlpha( this.getColorsRGB( finalColor ), alpha, fragColor );
 
             return fragColor;
         },
@@ -847,7 +842,7 @@ define( [
             }
 
             // get srgb color
-            var srgbColor = this.getSrgbColor( finalColor );
+            var srgbColor = this.getColorsRGB( finalColor );
 
             var fragColor = new ShaderNode.FragColor();
             new ShaderNode.SetAlpha( srgbColor, alpha, fragColor );
