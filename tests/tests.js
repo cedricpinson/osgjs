@@ -26,7 +26,6 @@ requirejs.config( {
     paths: {
 
         'text': '../sources/vendors/require/text',
-        'require/text': '../sources/vendors/require/text',
         vr: '../sources/vendors/vr',
         Q: '../sources/vendors/Q',
         Hammer: '../sources/vendors/Hammer',

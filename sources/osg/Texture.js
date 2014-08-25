@@ -94,7 +94,21 @@ define( [
                 uniform.dirty();
                 Texture.uniforms[ unit ] = uniformMap;
             }
-            // uniform for an texture attribute should directly in Texture.uniforms[unit] and not in Texture.uniforms[unit][Texture0]
+
+
+            // uniform for an texture attribute should directly in Texture.uniforms[unit]
+            // and not in Texture.uniforms[unit][Texture0]
+
+            // Why it's in Texture.uniforms[unit]['texture'] :
+            // a 'texture' is a texture attribute but you also have old texenv
+            //  that are texture attribute because  they are applied on a texture unit.
+            // I admit that currently we dont have this or we used to but we dont have it anymore.
+            // It's the same design than osg.
+            // We could imagine for example a TextureGreyScale texture attributes,
+            // that would transform the input texture
+            // on unit X into greyscale used in the shader.
+
+>>>>>>> Cleans for pull: renames var, removes unused code, adds comment
             return Texture.uniforms[ unit ];
         },
         setDefaultParameters: function () {
