@@ -1,8 +1,9 @@
 define( [
     'tests/mockup/mockup',
     'osg/Texture',
-    'osg/State'
-], function ( mockup, Texture, State ) {
+    'osg/State',
+    'osgShader/ShaderGeneratorProxy'
+], function ( mockup, Texture, State, ShaderGeneratorProxy ) {
 
     return function () {
 
@@ -52,8 +53,10 @@ define( [
                 tcanvas.setImage( cnv );
 
                 var gl = mockup.createFakeRenderer();
-                gl.createTexture = function() { return 1; }; // simulate texture creation
-                var state = new State();
+                gl.createTexture = function () {
+                    return 1;
+                }; // simulate texture creation
+                var state = new State( new ShaderGeneratorProxy() );
                 state.setGraphicContext( gl );
 
                 // check is ready api

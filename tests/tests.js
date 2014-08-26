@@ -1,9 +1,9 @@
 // polyfill for phantomjs
 if ( !Function.prototype.bind ) {
     Function.prototype.bind = function ( oThis ) {
-        if ( typeof this !== "function" ) {
+        if ( typeof this !== 'function' ) {
             // closest thing possible to the ECMAScript 5 internal IsCallable function
-            throw new TypeError( "Function.prototype.bind - what is trying to be bound is not callable" );
+            throw new TypeError( 'Function.prototype.bind - what is trying to be bound is not callable' );
         }
 
         var aArgs = Array.prototype.slice.call( arguments, 1 ),
@@ -25,7 +25,7 @@ requirejs.config( {
     baseUrl: '../sources',
     paths: {
 
-        'text': '../sources/vendors/require/text',
+        text: '../sources/vendors/require/text',
         vr: '../sources/vendors/vr',
         Q: '../sources/vendors/Q',
         Hammer: '../sources/vendors/Hammer',
@@ -38,7 +38,7 @@ requirejs.config( {
 
 
 /*global QUnit,define,module,test,ok */
-QUnit.config.testTimeout = 2000;
+QUnit.config.testTimeout = 5000;
 
 define( [
     'OSG',
