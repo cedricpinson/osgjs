@@ -51,7 +51,9 @@ define( [
         getGraphicContext: function () {
             return this._graphicContext;
         },
-        getShaderGeneratorProxy: function() { return this._shaderGeneratorProxy; },
+        getShaderGeneratorProxy: function () {
+            return this._shaderGeneratorProxy;
+        },
         pushStateSet: function ( stateset ) {
             this.stateSets.push( stateset );
 
@@ -194,8 +196,8 @@ define( [
             // };
 
             // get shader generator name from stateset if any
-            var generator = this.stateSets.back().getShaderGenerator();
-            var shaderGenerator = State.globalShaderGenerator.getShaderGenerator( generator );
+            var generatorName = this.stateSets.back().getShaderGeneratorName();
+            var shaderGenerator = State.globalShaderGenerator.getShaderGenerator( generatorName );
             //program = shaderGenerator.getOrCreateProgram( attributes );
             program = shaderGenerator.getOrCreateProgram( this );
             this.programs.push( this.getObjectPair( program, StateAttribute.ON ) );
