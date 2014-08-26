@@ -208,7 +208,6 @@ define( [
     MACROUTILS.objectMix( osg, Shape );
     osg.Stack = Stack;
     osg.State = State;
-    osg.State.globalShaderGenerator = new ShaderGeneratorProxy();
     osg.StateAttribute = StateAttribute;
     osg.StateGraph = StateGraph;
     osg.StateSet = StateSet;

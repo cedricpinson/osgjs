@@ -197,7 +197,7 @@ define( [
 
             // get shader generator name from stateset if any
             var generatorName = this.stateSets.back().getShaderGeneratorName();
-            var shaderGenerator = State.globalShaderGenerator.getShaderGenerator( generatorName );
+            var shaderGenerator = this._shaderGeneratorProxy.getShaderGenerator( generatorName );
             //program = shaderGenerator.getOrCreateProgram( attributes );
             program = shaderGenerator.getOrCreateProgram( this );
             this.programs.push( this.getObjectPair( program, StateAttribute.ON ) );
