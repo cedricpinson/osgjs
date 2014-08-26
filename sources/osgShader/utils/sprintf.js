@@ -19,6 +19,7 @@ define( [
             if ( typeof arg === 'string' ) {
                 reg = '%s';
             } else if ( typeof arg === 'number' && /\./.test( arg.toString() ) ) {
+                //regexp check for float separator, the dot character '.'
                 reg = '%f';
             } else if ( typeof arg === 'number' ) {
                 reg = '%d';

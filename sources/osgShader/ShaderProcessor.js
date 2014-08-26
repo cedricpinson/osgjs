@@ -13,8 +13,6 @@ define( [
     /**
      * @class ShaderLoader
      */
-
-
     var ShaderLoader = function ( opt ) {
         var options = opt;
         if ( !options ) {

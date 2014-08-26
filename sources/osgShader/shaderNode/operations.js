@@ -6,18 +6,6 @@ define( [
 ], function ( MACROUTILS, Node, sprintf ) {
     'use strict';
 
-    var Mix = function ( val0, val1, t ) {
-        Node.call( this, val0, val1, t );
-    };
-    Mix.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'Mix',
-        computeFragment: function () {
-            // result = val0*(1.0-t) + t*val1
-            return this.getOutput().getVariable() + ' = mix(' + this._inputs[ 0 ].getVariable() + ', ' + this._inputs[ 1 ].getVariable() + ', ' + this._inputs[ 2 ].getVariable() + ');';
-        }
-    } );
-
-
     var Add = function () {
         Node.apply( this, arguments );
     };
@@ -52,16 +40,6 @@ define( [
         }
     } );
 
-
-    var DotClamp = function () {
-        Node.call( this );
-    };
-    DotClamp.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'DotClamp',
-        computeFragment: function () {
-            return this.getOutput().getVariable() + ' = max( dot(' + this._inputs[ 0 ].getVariable() + ', ' + this._inputs[ 1 ].getVariable() + '), 0.0);';
-        }
-    } );
 
 
     var FunctionCall = function () {
@@ -183,11 +161,9 @@ define( [
     } );
 
     return {
-        'Mix': Mix,
         'Mult': Mult,
         'Add': Add,
         'Dot': Dot,
-        'DotClamp': DotClamp,
         'InlineCode': InlineCode,
         'FunctionCall': FunctionCall,
         'SetAlpha': SetAlpha,
