@@ -169,24 +169,24 @@ var gruntTasks = {};
 
 // ## Require.js
 //
-( function ( ) {
+( function () {
 
     gruntTasks.requirejs.distSources = {
-		options : {
-			name : path.join( path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
-			out : path.join( DIST_PATH, 'OSG.js' ),
-			include : [ 'OSG' ],
-			paths: {
-				'Q': 'vendors/Q',
-				'Hammer': 'vendors/Hammer',
-				'Leap': 'vendors/Leap',
-				'text': 'vendors/require/text'
-			},
-			wrap : {
-				startFile : path.join( UTILS_PATH, 'wrap.start' ),
-				endFile : path.join( UTILS_PATH, 'wrap.end' )
-			}
-		}
+        options: {
+            name: path.join( path.relative( SOURCE_PATH, UTILS_PATH ), 'almond' ),
+            out: path.join( DIST_PATH, 'OSG.js' ),
+            include: [ 'OSG' ],
+            paths: {
+                'Q': 'vendors/Q',
+                'Hammer': 'vendors/Hammer',
+                'Leap': 'vendors/Leap',
+                'text': 'vendors/require/text'
+            },
+            wrap: {
+                startFile: path.join( UTILS_PATH, 'wrap.start' ),
+                endFile: path.join( UTILS_PATH, 'wrap.end' )
+            }
+        }
     };
 
 } )();
@@ -214,15 +214,15 @@ var gruntTasks = {};
 
     // generate a requirejs without anything to build a docco docs
     gruntTasks.requirejs.docsSources = {
-		options : {
-			out : path.join( BUILD_PATH, 'docs/OSG.js' ),
-			include : [ 'OSG' ],
-			paths: {
-				'Q': 'vendors/Q',
-				'Hammer': 'vendors/Hammer',
-				'Leap': 'vendors/Leap'
-			}
-		}
+        options: {
+            out: path.join( BUILD_PATH, 'docs/OSG.js' ),
+            include: [ 'OSG' ],
+            paths: {
+                'Q': 'vendors/Q',
+                'Hammer': 'vendors/Hammer',
+                'Leap': 'vendors/Leap'
+            }
+        }
     };
 
     gruntTasks.docco = {
@@ -304,12 +304,8 @@ var gruntTasks = {};
             src: 'examples/vendors/Hammer-1.0.5.js',
             dest: 'examples/vendors/Hammer.js'
         },
-        Require: {
-            src: 'examples/vendors/Require-2.1.11.js',
-            dest: 'examples/vendors/Require.js'
-        },
         RequireTextBuild: {
-            src: 'examples/vendors/require/Text-2.0.12.js',
+            src: 'sources/vendors/require/Text-2.0.12.js',
             dest: 'sources/vendors/require/text.js'
         },
         Q: {
@@ -319,10 +315,6 @@ var gruntTasks = {};
         active: {
             src: DIST_PATH,
             dest: path.join( BUILD_PATH, 'active' )
-        },
-        RequireText: {
-            src: 'examples/vendors/require/Text-2.0.12.js',
-            dest: 'examples/vendors/require/Text.js'
         }
     };
 
@@ -387,16 +379,16 @@ var gruntTasks = {};
 
 // ## git:
 // (static site upload)
-( function ( ) {
-//git clone -b my-branch git@github.com:cedricpinson/osgjs.git
+( function () {
+    //git clone -b my-branch git@github.com:cedricpinson/osgjs.git
     gruntTasks.gitclone = {
         staticWeb: {
-          options: {
-            branch: 'gh-pages',
-            repository: 'git@github.com:cedricpinson/osgjs.git',
-            directory: path.join( BUILD_PATH, 'web' )
-            //, depth: -1 // cannot push from a shallow clone
-          }
+            options: {
+                branch: 'gh-pages',
+                repository: 'git@github.com:cedricpinson/osgjs.git',
+                directory: path.join( BUILD_PATH, 'web' )
+                //, depth: -1 // cannot push from a shallow clone
+            }
         }
     };
 
@@ -415,13 +407,13 @@ var gruntTasks = {};
 
     gruntTasks.gitcommit = {
         staticWeb: {
-          options: {
-            branch: 'gh-pages',
-            repository: 'git@github.com:cedricpinson/osgjs.git',
-              message: 'website update to latest develop',
-              cwd: path.join( BUILD_PATH, 'web' ),
-              verbose: true
-          }
+            options: {
+                branch: 'gh-pages',
+                repository: 'git@github.com:cedricpinson/osgjs.git',
+                message: 'website update to latest develop',
+                cwd: path.join( BUILD_PATH, 'web' ),
+                verbose: true
+            }
         },
         files: {
             src: ''
@@ -431,12 +423,12 @@ var gruntTasks = {};
 
     gruntTasks.gitpush = {
         staticWeb: {
-          options: {
-              branch: 'gh-pages',
-              repository: 'git@github.com:cedricpinson/osgjs.git',
-              cwd: path.join( BUILD_PATH, 'web' ),
-              verbose: true
-          }
+            options: {
+                branch: 'gh-pages',
+                repository: 'git@github.com:cedricpinson/osgjs.git',
+                cwd: path.join( BUILD_PATH, 'web' ),
+                verbose: true
+            }
         }
     };
 
@@ -446,7 +438,7 @@ var gruntTasks = {};
 
 module.exports = function ( grunt ) {
 
-    var distFullPath = path.normalize( path.join( __dirname, DIST_PATH) );
+    var distFullPath = path.normalize( path.join( __dirname, DIST_PATH ) );
     grunt.file.mkdir( distFullPath );
 
     grunt.initConfig( extend( {
@@ -494,7 +486,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );
 
     grunt.registerTask( 'build:dist', [ 'build:sources:dist' ] );
-    grunt.registerTask( 'build', [ 'symlink', 'build:dist'  ] );
+    grunt.registerTask( 'build', [ 'symlink', 'build:dist' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
 

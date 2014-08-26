@@ -32,7 +32,7 @@ define( [
         this._energy = 1.0;
 
         this._lightUnit = lightNumber;
-        this._type = 'POINT';
+        this._type = 'SPOT';
 
         this._useSphere = false;
         this._enable = true;
