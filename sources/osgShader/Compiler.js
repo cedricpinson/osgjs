@@ -75,7 +75,7 @@ define( [
             return this._variables[ name ];
         },
 
-        Variable: function ( type, varname ) {
+        getOrCreateVariable: function ( type, varname ) {
             var name = varname;
             if ( name === undefined ) {
                 var len = Object.keys( this._variables ).length;
@@ -95,7 +95,7 @@ define( [
             return v;
         },
 
-        Uniform: function ( type, varname ) {
+        getOrCreateUniform: function ( type, varname ) {
             var name = varname;
 
             // accept uniform as parameter to simplify code
@@ -119,7 +119,7 @@ define( [
             return v;
         },
 
-        Varying: function ( type, varname ) {
+        getOrCreateVarying: function ( type, varname ) {
             var name = varname;
             if ( name === undefined ) {
                 var len = Object.keys( this._variables ).length;
@@ -136,7 +136,7 @@ define( [
             return v;
         },
 
-        Sampler: function ( type, varname ) {
+        getOrCreateSampler: function ( type, varname ) {
             var name = varname;
             if ( name === undefined ) {
                 var len = Object.keys( this._variables ).length;
@@ -167,7 +167,7 @@ define( [
 
                     kk = uniformMapKeys[ m ];
                     kkey = uniformMap[ kk ];
-                    this.Uniform( kkey.type, kkey.name );
+                    this.getOrCreateUniform( kkey.type, kkey.name );
 
                 }
             }
@@ -180,7 +180,7 @@ define( [
 
                     kk = uniformMapKeys[ m ];
                     kkey = uniformMap[ kk ];
-                    this.Uniform( kkey.type, kkey.name );
+                    this.getOrCreateUniform( kkey.type, kkey.name );
 
                 }
             }
@@ -188,7 +188,7 @@ define( [
 
 
         getFinalColor: function () {
-            var finalColor = this.Variable( 'vec4' );
+            var finalColor = this.getOrCreateVariable( 'vec4' );
 
             var opFinalColor = new ShaderNode.Add();
             opFinalColor.comment( 'finalColor = ???' );
@@ -225,19 +225,19 @@ define( [
         },
 
         getOrCreateInputNormal: function () {
-            return this.Varying( 'vec3', 'FragNormal' );
+            return this.getOrCreateVarying( 'vec3', 'FragNormal' );
         },
 
         getOrCreateFrontNormal: function () {
             var inputNormal = this.getOrCreateInputNormal();
-            var frontNormal = this.Variable( 'vec3', 'frontNormal' );
+            var frontNormal = this.getOrCreateVariable( 'vec3', 'frontNormal' );
             new ShaderNode.FrontNormal( inputNormal, frontNormal );
 
             return frontNormal;
         },
 
         getOrCreateInputPosition: function () {
-            return this.Varying( 'vec3', 'FragEyeVector' );
+            return this.getOrCreateVarying( 'vec3', 'FragEyeVector' );
         },
 
         getOrCreateNormalizedNormal: function () {
@@ -264,11 +264,11 @@ define( [
 
             // get or create normalized normal
             var outputNormal = this._variables[ 'normal' ];
-            if ( outputNormal === undefined ) outputNormal = this.Variable( 'vec3', 'normal' );
+            if ( outputNormal === undefined ) outputNormal = this.getOrCreateVariable( 'vec3', 'normal' );
 
             // get or create normalized position
             var outputPosition = this._variables[ 'eyeVector' ];
-            if ( outputPosition === undefined ) outputPosition = this.Variable( 'vec3', 'eyeVector' );
+            if ( outputPosition === undefined ) outputPosition = this.getOrCreateVariable( 'vec3', 'eyeVector' );
 
             normalizeNormalAndVector.connectOutputNormal( outputNormal );
             normalizeNormalAndVector.connectOutputEyeVector( outputPosition );
@@ -277,9 +277,9 @@ define( [
         getPremultAlpha: function ( finalColor, alpha ) {
             if ( alpha === undefined )
                 return finalColor;
-            var tmp = this.Variable( 'vec4' );
+            var tmp = this.getOrCreateVariable( 'vec4' );
             new ShaderNode.SetAlpha( finalColor, alpha, tmp );
-            var premultAlpha = this.Variable( 'vec4' );
+            var premultAlpha = this.getOrCreateVariable( 'vec4' );
             new ShaderNode.PreMultAlpha( tmp, premultAlpha );
             return premultAlpha;
         },
@@ -287,7 +287,7 @@ define( [
         getColorsRGB: function ( finalColor ) {
             var gamma = this.getVariable( 'gamma' );
             gamma.setValue( ShaderNode.LinearTosRGB.defaultGamma );
-            var finalSrgbColor = this.Variable( 'vec3' );
+            var finalSrgbColor = this.getOrCreateVariable( 'vec3' );
             new ShaderNode.LinearTosRGB( finalColor, finalSrgbColor, gamma );
 
             return finalSrgbColor;
@@ -304,7 +304,7 @@ define( [
             if ( !lightNodes.length )
                 return undefined;
 
-            var diffuseOutput = this.Variable( 'vec3', 'diffuseOutput' );
+            var diffuseOutput = this.getOrCreateVariable( 'vec3', 'diffuseOutput' );
             var nodeLambert = new ShaderNode.Lambert( diffuseColor, normal, diffuseOutput );
             nodeLambert.connectLights( lightNodes );
             nodeLambert.createFragmentShaderGraph( this );
@@ -322,7 +322,7 @@ define( [
             if ( !lightNodes.length )
                 return undefined;
 
-            var specularOutput = this.Variable( 'vec3', 'specularOutput' );
+            var specularOutput = this.getOrCreateVariable( 'vec3', 'specularOutput' );
             var nodeCookTorrance = new ShaderNode.CookTorrance( specularColor, normal, specularHardness, specularOutput );
             nodeCookTorrance.connectLights( lightNodes );
             nodeCookTorrance.createFragmentShaderGraph( this );
@@ -333,9 +333,9 @@ define( [
         getVertexColor: function ( diffuseColor ) {
             if ( diffuseColor === undefined )
                 return undefined;
-            var vertexColor = this.Varying( 'vec4', 'VertexColor' );
-            var vertexColorUniform = this.Uniform( 'float', 'ArrayColorEnabled' );
-            var tmp = this.Variable( 'vec4' );
+            var vertexColor = this.getOrCreateVarying( 'vec4', 'VertexColor' );
+            var vertexColorUniform = this.getOrCreateUniform( 'float', 'ArrayColorEnabled' );
+            var tmp = this.getOrCreateVariable( 'vec4' );
 
             var str = [ '',
                 sprintf( '%s.rgb = %s.rgb;', [ tmp.getVariable(), diffuseColor.getVariable() ] ),
@@ -420,9 +420,9 @@ define( [
                     var textureSampler = this.getVariable( samplerName );
                     if ( textureSampler === undefined ) {
                         if ( texture.className() === 'Texture' ) {
-                            textureSampler = this.Sampler( 'sampler2D', samplerName );
+                            textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
                         } else if ( texture.className() === 'TextureCubeMap' ) {
-                            textureSampler = this.Sampler( 'samplerCube', samplerName );
+                            textureSampler = this.getOrCreateSampler( 'samplerCube', samplerName );
                         }
                     }
 
@@ -430,7 +430,7 @@ define( [
 
                     var texCoord = this.getVariable( 'FragTexCoord' + texCoordUnit );
                     if ( texCoord === undefined ) {
-                        texCoord = this.Varying( 'vec2', 'FragTexCoord' + texCoordUnit );
+                        texCoord = this.getOrCreateVarying( 'vec2', 'FragTexCoord' + texCoordUnit );
                     }
                     var output;
 
@@ -464,10 +464,10 @@ define( [
 
         createTexturesDiffuseColor: function ( texture, textureSampler, texCoord ) {
             var output, node, texel, srgb2linearTmp;
-            texel = this.Variable( 'vec4' );
-            var premult = this.Variable( 'vec3' );
+            texel = this.getOrCreateVariable( 'vec4' );
+            var premult = this.getOrCreateVariable( 'vec3' );
             node = new ShaderNode.TextureRGBA( textureSampler, texCoord, texel );
-            srgb2linearTmp = this.Variable( 'vec4' );
+            srgb2linearTmp = this.getOrCreateVariable( 'vec4' );
             var gamma = this.getVariable( 'gamma' );
             node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp, gamma );
             node = new ShaderNode.PreMultAlpha( srgb2linearTmp, texel, premult );
@@ -495,35 +495,35 @@ define( [
             } else {
                 node = new ShaderNode.TextureAlpha( textureSampler, texCoord );
             }
-            var output = this.Variable( 'float' );
+            var output = this.getOrCreateVariable( 'float' );
             node.connectOutput( output );
             return output;
         },
 
         createTexturesSpecularColor: function ( textureSampler, texCoord ) {
             var node = new ShaderNode.TextureRGB( textureSampler, texCoord );
-            var output = this.Variable( 'vec3' );
+            var output = this.getOrCreateVariable( 'vec3' );
             node.connectOutput( output );
             return output;
         },
 
         createTexturesShininess: function ( textureSampler, texCoord ) {
             var node = new ShaderNode.TextureIntensity( textureSampler, texCoord );
-            var output = this.Variable( 'float' );
+            var output = this.getOrCreateVariable( 'float' );
             node.connectOutput( output );
             return output;
         },
 
         createTexturesEmissionColor: function ( texture, textureSampler, texCoord ) {
             var node;
-            var output = this.Variable( 'vec3' );
+            var output = this.getOrCreateVariable( 'vec3' );
             var texel, srgb2linearTmp;
             if ( texture.getPremultiplyAlpha() ) {
-                texel = this.Variable( 'vec4' );
+                texel = this.getOrCreateVariable( 'vec4' );
                 node = new ShaderNode.TextureRGBA( textureSampler, texCoord, texel );
-                var premult = this.Variable( 'vec3' );
+                var premult = this.getOrCreateVariable( 'vec3' );
                 if ( texture.getSRGB() ) {
-                    srgb2linearTmp = this.Variable( 'vec4' );
+                    srgb2linearTmp = this.getOrCreateVariable( 'vec4' );
                     node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp );
                     node = new ShaderNode.PreMultAlpha( srgb2linearTmp, premult );
                 } else {
@@ -531,10 +531,10 @@ define( [
                 }
                 output = premult;
             } else {
-                texel = this.Variable( 'vec3' );
+                texel = this.getOrCreateVariable( 'vec3' );
                 node = new ShaderNode.TextureRGB( textureSampler, texCoord, texel );
                 if ( texture.getSRGB() ) {
-                    srgb2linearTmp = this.Variable( 'vec3' );
+                    srgb2linearTmp = this.getOrCreateVariable( 'vec3' );
                     node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp );
                     output = srgb2linearTmp;
                 } else {
@@ -775,7 +775,7 @@ define( [
             return fragColor;
         },
         createFragmentShaderGraph: function () {
-            var gamma = this.Variable( 'float', 'gamma' ); // initialize once, will be reused.
+            var gamma = this.getOrCreateVariable( 'float', 'gamma' ); // initialize once, will be reused.
             gamma.setValue( ShaderNode.LinearTosRGB.defaultGamma );
 
             this.declareUniforms();
@@ -784,18 +784,18 @@ define( [
             if ( !this._material ) return this.createFragmentShaderGraphStateSet();
 
             var uniforms = this._material.getOrCreateUniforms();
-            var materialDiffuseColor = this.Uniform( uniforms.diffuse );
-            var materialAmbientColor = this.Uniform( uniforms.ambient );
-            var materialEmissionColor = this.Uniform( uniforms.emission );
-            var materialSpecularColor = this.Uniform( uniforms.specular );
-            var materialShininess = this.Uniform( uniforms.shininess );
+            var materialDiffuseColor = this.getOrCreateUniform( uniforms.diffuse );
+            var materialAmbientColor = this.getOrCreateUniform( uniforms.ambient );
+            var materialEmissionColor = this.getOrCreateUniform( uniforms.emission );
+            var materialSpecularColor = this.getOrCreateUniform( uniforms.specular );
+            var materialShininess = this.getOrCreateUniform( uniforms.shininess );
             //var materialOpacity = this.getVariable( uniforms.opacity );
 
 
-            var inputNormal = this.Varying( 'vec3', 'FragNormal' );
-            var inputPosition = this.Varying( 'vec3', 'FragEyeVector' );
-            var normal = this.Variable( 'vec3', 'normal' );
-            var eyeVector = this.Variable( 'vec3', 'eyeVector' );
+            var inputNormal = this.getOrCreateVarying( 'vec3', 'FragNormal' );
+            var inputPosition = this.getOrCreateVarying( 'vec3', 'FragEyeVector' );
+            var normal = this.getOrCreateVariable( 'vec3', 'normal' );
+            var eyeVector = this.getOrCreateVariable( 'vec3', 'eyeVector' );
 
 
             var normalizeNormalAndVector = new ShaderNode.NormalizeNormalAndEyeVector( inputNormal, inputPosition );
@@ -823,7 +823,7 @@ define( [
             var finalColor;
 
             if ( this._lights.length > 0 ) {
-                var lightedOutput = this.Variable( 'vec4', 'lightOutput' );
+                var lightedOutput = this.getOrCreateVariable( 'vec4', 'lightOutput' );
                 var nodeLight = new ShaderNode.Lighting( this._lights, normal, diffuseColor, materialAmbientColor, materialSpecularColor, materialShininess, lightedOutput );
                 nodeLight.createFragmentShaderGraph( this );
                 // get final color
@@ -834,8 +834,8 @@ define( [
 
             // premult alpha
             if ( true ) {
-                var premultAlpha = this.Variable( 'vec4' );
-                var tmp = this.Variable( 'vec4' );
+                var premultAlpha = this.getOrCreateVariable( 'vec4' );
+                var tmp = this.getOrCreateVariable( 'vec4' );
                 new ShaderNode.SetAlpha( finalColor, alpha, tmp );
                 new ShaderNode.PreMultAlpha( tmp, premultAlpha );
                 finalColor = premultAlpha;

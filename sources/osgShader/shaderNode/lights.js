@@ -42,7 +42,7 @@ define( [
                 var light = this._lights[ 0 ];
                 var lightNode;
 
-                var lightedOutput = context.Variable( 'vec4', 'lightTempOutput' );
+                var lightedOutput = context.getOrCreateVariable( 'vec4', 'lightTempOutput' );
 
                 switch ( light.getType() ) {
                 case 'Sun':
@@ -111,11 +111,11 @@ define( [
             var lightUniforms = nodeLight.getOrCreateUniforms();
 
             // connect variable to light node
-            var lightAttenuation = context.Uniform( lightUniforms.attenuation );
-            var lightPosition = context.Uniform( lightUniforms.position );
-            var lightDiffuseColor = context.Uniform( lightUniforms.diffuse );
-            var lightAmbientColor = context.Uniform( lightUniforms.ambient );
-            var lightSpecularColor = context.Uniform( lightUniforms.specular );
+            var lightAttenuation = context.getOrCreateUniform( lightUniforms.attenuation );
+            var lightPosition = context.getOrCreateUniform( lightUniforms.position );
+            var lightDiffuseColor = context.getOrCreateUniform( lightUniforms.diffuse );
+            var lightAmbientColor = context.getOrCreateUniform( lightUniforms.ambient );
+            var lightSpecularColor = context.getOrCreateUniform( lightUniforms.specular );
 
 
             var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightPosition, lightAttenuation );
@@ -144,15 +144,15 @@ define( [
             var lightUniforms = nodeLight.getOrCreateUniforms();
 
             // connect variable to light node
-            var lightAttenuation = context.Uniform( lightUniforms.attenuation );
-            var lightPosition = context.Uniform( lightUniforms.position );
-            var lightDirection = context.Uniform( lightUniforms.direction );
-            var lightSpotCutOff = context.Uniform( lightUniforms.spotCutOff );
-            var lightSpotBlend = context.Uniform( lightUniforms.spotBlend );
+            var lightAttenuation = context.getOrCreateUniform( lightUniforms.attenuation );
+            var lightPosition = context.getOrCreateUniform( lightUniforms.position );
+            var lightDirection = context.getOrCreateUniform( lightUniforms.direction );
+            var lightSpotCutOff = context.getOrCreateUniform( lightUniforms.spotCutOff );
+            var lightSpotBlend = context.getOrCreateUniform( lightUniforms.spotBlend );
 
-            var lightDiffuseColor = context.Uniform( lightUniforms.diffuse );
-            var lightAmbientColor = context.Uniform( lightUniforms.ambient );
-            var lightSpecularColor = context.Uniform( lightUniforms.specular );
+            var lightDiffuseColor = context.getOrCreateUniform( lightUniforms.diffuse );
+            var lightAmbientColor = context.getOrCreateUniform( lightUniforms.ambient );
+            var lightSpecularColor = context.getOrCreateUniform( lightUniforms.specular );
 
 
             var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection, lightAttenuation, lightPosition, lightSpotCutOff, lightSpotBlend );
@@ -178,10 +178,10 @@ define( [
             var lightUniforms = nodeLight.getOrCreateUniforms();
 
             // connect variable to light node
-            var lightDirection = context.Uniform( lightUniforms.direction );
-            var lightDiffuseColor = context.Uniform( lightUniforms.diffuse );
-            var lightAmbientColor = context.Uniform( lightUniforms.ambient );
-            var lightSpecularColor = context.Uniform( lightUniforms.specular );
+            var lightDirection = context.getOrCreateUniform( lightUniforms.direction );
+            var lightDiffuseColor = context.getOrCreateUniform( lightUniforms.diffuse );
+            var lightAmbientColor = context.getOrCreateUniform( lightUniforms.ambient );
+            var lightSpecularColor = context.getOrCreateUniform( lightUniforms.specular );
 
 
             var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection );
