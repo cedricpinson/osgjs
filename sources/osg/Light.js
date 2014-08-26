@@ -34,7 +34,6 @@ define( [
         this._lightUnit = lightNumber;
         this._type = 'SPOT';
 
-        this._useSphere = false;
         this._enable = true;
         this._invMatrix = new Matrix.create();
         this.dirty();
@@ -57,7 +56,7 @@ define( [
             return this.getPrefix() + '_uniform_' + name;
         },
         getHash: function () {
-            return 'Light' + this._lightUnit + this._type + this._falloffType + this._useSphere.toString() + this._ambient.toString() + this._diffuse.toString() + this._specular.toString();
+            return 'Light' + this._lightUnit + this._type + this._falloffType + this._ambient.toString() + this._diffuse.toString() + this._specular.toString();
         },
         getOrCreateUniforms: function () {
 
@@ -214,13 +213,6 @@ define( [
         },
         getFalloffType: function () {
             return this._falloffType;
-        },
-
-        setUseSphere: function ( value ) {
-            this._useSphere = value;
-        },
-        getUseSphere: function () {
-            return this._useSphere;
         },
 
         setDistance: function ( value ) {
