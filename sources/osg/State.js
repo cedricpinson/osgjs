@@ -11,6 +11,8 @@ define( [
 
         this._graphicContext = undefined;
         this._shaderGeneratorProxy = shaderGeneratorProxy;
+        if ( shaderGeneratorProxy === undefined )
+            console.break();
 
         this.currentVBO = null;
         this.vertexAttribList = [];

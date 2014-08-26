@@ -2,8 +2,9 @@ define( [
     'osg/State',
     'osg/StateSet',
     'osg/Material',
-    'osg/StateAttribute'
-], function ( State, StateSet, Material, StateAttribute ) {
+    'osg/StateAttribute',
+    'osgShader/ShaderGeneratorProxy'
+], function ( State, StateSet, Material, StateAttribute, ShaderGeneratorProxy ) {
 
     return function () {
 
@@ -12,7 +13,7 @@ define( [
         test( 'State', function () {
 
             ( function () {
-                var state = new State();
+                var state = new State( new ShaderGeneratorProxy() );
 
                 var stateSet0 = new StateSet();
                 var stateSet1 = new StateSet();

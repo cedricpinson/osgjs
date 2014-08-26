@@ -5,8 +5,9 @@ define( [
     'osg/Material',
     'osg/Shader',
     'osg/Program',
-    'osg/Texture'
-], function ( mockup, State, StateSet, Material, Shader, Program, Texture ) {
+    'osg/Texture',
+    'osgShader/ShaderGeneratorProxy'
+], function ( mockup, State, StateSet, Material, Shader, Program, Texture, ShaderGeneratorProxy ) {
 
     return function () {
 
@@ -16,7 +17,7 @@ define( [
 
 
             ( function () {
-                var state = new State();
+                var state = new State( new ShaderGeneratorProxy() );
                 var fakeRenderer = mockup.createFakeRenderer();
                 fakeRenderer.validateProgram = function () {
                     return true;
@@ -43,7 +44,7 @@ define( [
             } )();
 
             ( function () {
-                var state = new State();
+                var state = new State( new ShaderGeneratorProxy() );
                 var fakeRenderer = mockup.createFakeRenderer();
                 fakeRenderer.validateProgram = function () {
                     return true;

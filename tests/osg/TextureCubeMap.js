@@ -3,8 +3,9 @@ define( [
     'osg/TextureCubeMap',
     'osg/Texture',
     'osg/State',
-    'osgDB/ReaderParser'
-], function ( mockup, TextureCubeMap, Texture, State, ReaderParser ) {
+    'osgDB/ReaderParser',
+    'osgShader/ShaderGeneratorProxy'
+], function ( mockup, TextureCubeMap, Texture, State, ReaderParser, ShaderGeneratorProxy ) {
 
     return function () {
 
@@ -39,7 +40,7 @@ define( [
                 promise: false
             } );
 
-            var state = new State();
+            var state = new State( new ShaderGeneratorProxy() );
             state.setGraphicContext( mockup.createFakeRenderer() );
 
             var texture = new TextureCubeMap();

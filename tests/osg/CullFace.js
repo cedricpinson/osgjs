@@ -1,8 +1,9 @@
 define( [
     'tests/mockup/mockup',
     'osg/CullFace',
-    'osg/State'
-], function ( mockup, CullFace, State ) {
+    'osg/State',
+    'osgShader/ShaderGeneratorProxy'
+], function ( mockup, CullFace, State, ShaderGeneratorProxy ) {
 
     return function () {
 
@@ -13,7 +14,7 @@ define( [
             var n = new CullFace();
             ok( n.getMode() === CullFace.BACK, "Check default mode" );
 
-            var state = new State();
+            var state = new State( new ShaderGeneratorProxy() );
             state.setGraphicContext( mockup.createFakeRenderer() );
 
             n.apply( state );
