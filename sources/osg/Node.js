@@ -219,6 +219,9 @@ define( [
             }
         },
 
+        // gets World Space Bounds
+        // Transform Node does the local to world
+        // by overriding computeBounds
         getBound: function () {
             if ( !this.boundingSphereComputed ) {
                 this.computeBound( this.boundingSphere );
@@ -226,8 +229,12 @@ define( [
             }
             return this.boundingSphere;
         },
-
+        // gets World Space Bounds
+        // gets World Space Bounds
+        // Transform Node does the local to world
+        // by overriding computeBounds
         computeBound: function ( bsphere ) {
+            // TODO: Store/share/reuse var, avoid GC stalls
             var bb = new BoundingBox();
             bb.init();
             bsphere.init();

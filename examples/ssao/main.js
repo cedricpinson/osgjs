@@ -547,16 +547,17 @@ var getSSAOShader = function ( stateSet ) {
 
 var CullCallback = function () {
     this._projection = undefined;
-    this._modelview = undefined;
+    this._model = undefined;
+    this._view = undefined;
 };
 CullCallback.prototype = {
     cull: function ( node, nv ) {
         //osg.log('cull');
         var matrix = nv.getCurrentProjectionMatrix();
         this._projection = matrix;
-        matrix._projection = 'me';
-        matrix = nv.getCurrentModelviewMatrix();
-        this._modelview = matrix;
+
+        this._view = nv.getCurrentViewMatrix();
+        this._model = nv.getCurrentModelWorldMatrix();
         return true;
     }
 };
@@ -1292,7 +1293,9 @@ function createSceneTestReconstructPosition() {
 
 
                     osg.Matrix.copy( this._ucb._projection, this._projection.get() );
-                    osg.Matrix.copy( this._ucb._modelview, this._matrix.get() );
+
+                    osg.Matrix.mult( this._ucb._view, this._ucb._model, this._matrix.get() );
+
                     this._projection.dirty();
                     this._matrix.dirty();
 
@@ -1329,7 +1332,6 @@ function createSceneTestReconstructPosition() {
                 0, 0, 0,
                 0, 0, 0
             ], 3 );
-            //quad.setCullCallback(new cullCallback(projection,ucb._modelview, quad));
             quad.getOrCreateStateSet().setAttributeAndModes( program );
             quad.getOrCreateStateSet().addUniform( modelview );
             quad.getOrCreateStateSet().addUniform( projection );
@@ -1429,7 +1431,6 @@ function createSceneOptimized( width, height ) {
         w = width;
         h = height;
         var textureSize = [ w, h ];
-
 
         var projection = osg.Uniform.createMat4( osg.Matrix.create(), 'projection' );
         var modelview = osg.Uniform.createMat4( osg.Matrix.create(), 'camera' );
@@ -1680,7 +1681,7 @@ function createSceneOptimized( width, height ) {
                 //osg.log('znear ' + znear + ' zfar ' + zfar);
 
                 osg.Matrix.copy( this._ucb._projection, this._projection.get() );
-                osg.Matrix.copy( this._ucb._modelview, this._matrix.get() );
+                osg.Matrix.mult( this._ucb._view, this._ucb._model, this._matrix.get() );
                 this._projection.dirty();
                 this._matrix.dirty();
 
@@ -1724,5 +1725,7 @@ function createSceneOptimized( width, height ) {
     return root;
 }
 
-var createScene = createSceneOptimized; //createSceneTestReconstructPosition; //createSceneTestDepth;
+var createScene = createSceneOptimized;
+//var createScene = createSceneTestReconstructPosition;
+//var createScene = createSceneTestDepth;
 window.addEventListener( 'load', main, true );

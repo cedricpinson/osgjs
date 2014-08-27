@@ -109,7 +109,8 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 camera0.accept( cull );
 
                 ok( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); //+ cull.rootRenderStage === cull.currentRenderBin
@@ -151,7 +152,8 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 cull.pushStateSet( new StateSet() );
 
                 camera0.accept( cull );
@@ -201,7 +203,8 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0 ];
@@ -252,7 +255,8 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 ok( mockup.check_near( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
@@ -336,7 +340,8 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 ok( mockup.check_near( stack[ 1 ][ 0 ], d_near, 0.8 ), 'near should be ' + d_near + ' and is ' + stack[ 1 ][ 0 ] );
@@ -381,7 +386,8 @@ define( [
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );
@@ -426,7 +432,8 @@ define( [
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );
@@ -471,7 +478,8 @@ define( [
                 var sg = new StateGraph();
                 rs.setViewport( new Viewport() );
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );
