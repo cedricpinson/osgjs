@@ -3,9 +3,9 @@ define( [
     'osg/BoundingBox',
     'osg/Vec3',
     'osg/TriangleIndexFunctor',
-    'osgUtil/TriangleIntersect',
+    'osgUtil/TriangleIntersector',
     'osg/PrimitiveSet'
-], function( MACROUTILS, BoundingBox, Vec3, TriangleIndexFunctor, TriangleIntersect, PrimitiveSet ) {
+], function( MACROUTILS, BoundingBox, Vec3, TriangleIndexFunctor, TriangleIntersector, PrimitiveSet ) {
 
     // **** GENERAL INFO ON KDTREE ****
     // A KdTree is a Spatial Partitionning Tree (http://en.wikipedia.org/wiki/Space_partitioning)
@@ -54,7 +54,7 @@ define( [
         this._vertices = vertices;
         this._kdNodes = nodes;
         this._triangles = triangles;
-        this._intersector = new TriangleIntersect();
+        this._intersector = new TriangleIntersector();
         this._dinvX = [ 0.0, 0.0, 0.0 ];
         this._dinvY = [ 0.0, 0.0, 0.0 ];
         this._dinvZ = [ 0.0, 0.0, 0.0 ];
@@ -73,7 +73,7 @@ define( [
             if ( d[ 1 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 1 ], this._dinvY );
             if ( d[ 2 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 2 ], this._dinvZ );
 
-            this._intersector.hits = intersections;
+            this._intersector._intersections = intersections;
             this._intersector.setNodePath( nodePath );
             this._intersector.set( start, end );
         },

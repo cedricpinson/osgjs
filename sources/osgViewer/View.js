@@ -10,8 +10,9 @@ define( [
     'osg/Matrix',
     'osg/Light',
     'osg/WebGLCaps',
-    'osgUtil/IntersectVisitor'
-], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, WebGLCaps, IntersectVisitor ) {
+    'osgUtil/IntersectionVisitor',
+    'osgUtil/LineSegmentIntersector'
+], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, WebGLCaps, IntersectionVisitor, LineSegmentIntersector ) {
 
     'use strict';
 
@@ -113,13 +114,13 @@ define( [
                 traversalMask = ~0;
             }
             /*jshint bitwise: true */
-
-            var iv = new IntersectVisitor();
+            var lsi = new LineSegmentIntersector();
+            lsi.set ( [ x, y, 0.0 ], [ x, y, 1.0 ] );
+            var iv = new IntersectionVisitor();
             iv.setTraversalMask( traversalMask );
-            iv.addLineSegment( [ x, y, 0.0 ], [ x, y, 1.0 ] );
-            iv.pushCamera( this._camera );
-            this._sceneData.accept( iv );
-            return iv.hits;
+            iv.setIntersector( lsi );
+            this._camera.accept( iv );
+            return lsi.getIntersections();
         },
 
         setFrameStamp: function ( frameStamp ) {
@@ -139,6 +140,7 @@ define( [
             this._scene.removeChildren();
             this._scene.addChild( node );
             this._sceneData = node;
+            this._camera.addChild( this._sceneData );
         },
         getSceneData: function () {
             return this._sceneData;

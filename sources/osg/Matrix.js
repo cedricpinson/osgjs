@@ -674,9 +674,37 @@ define( [
         } )(),
 
         transformVec4: ( function () {
-            var tmpVec = [ 0.0, 0.0, 0.0 ];
+            var tmpVec = [ 0.0, 0.0, 0.0, 0.0 ];
 
             return function ( matrix, vector, result ) {
+
+                if ( result === undefined ) {
+                    Notify.warn( 'no matrix destination !' );
+                    result = Matrix.create();
+                }
+                var tmp;
+                if ( result === vector ) {
+                    tmp = tmpVec;
+                } else {
+                    tmp = result;
+                }
+                tmp[ 0 ] = ( matrix[ 0 ] * vector[ 0 ] + matrix[ 4 ] * vector[ 1 ] + matrix[ 8 ] * vector[ 2 ] + matrix[ 12 ] * vector[ 3 ] );
+                tmp[ 1 ] = ( matrix[ 1 ] * vector[ 0 ] + matrix[ 5 ] * vector[ 1 ] + matrix[ 9 ] * vector[ 2 ] + matrix[ 13 ] * vector[ 3 ] );
+                tmp[ 2 ] = ( matrix[ 2 ] * vector[ 0 ] + matrix[ 6 ] * vector[ 1 ] + matrix[ 10 ] * vector[ 2 ] + matrix[ 14 ] * vector[ 3 ] );
+                tmp[ 3 ] = ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] * vector[ 3 ] );
+
+                if ( result === vector ) {
+                    Vec4.copy( tmp, result );
+                }
+                return result;
+            };
+        } )(),
+
+        transformVec4PostMult: ( function () {
+            var tmpVec = [ 0.0, 0.0, 0.0, 0.0 ];
+
+            return function ( matrix, vector, result ) {
+
                 if ( result === undefined ) {
                     Notify.warn( 'no matrix destination !' );
                     result = Matrix.create();
@@ -698,7 +726,6 @@ define( [
                 return result;
             };
         } )(),
-
         copy: function ( matrix, result ) {
             if ( result === undefined ) {
                 Notify.warn( 'no matrix destination !' );

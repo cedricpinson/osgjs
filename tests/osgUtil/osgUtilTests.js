@@ -1,10 +1,12 @@
 define( [
-    'tests/osgUtil/IntersectVisitor',
-    'tests/osgUtil/TriangleIntersect'
-], function ( IntersectVisitor, TriangleIntersect ) {
+    'tests/osgUtil/LineSegmentIntersector',
+    'tests/osgUtil/TriangleIntersector', 
+    'tests/osgUtil/PolytopeIntersector'
+], function ( LineSegmentIntersector, TriangleIntersector, PolytopeIntersector ) {
 
     return function () {
-        IntersectVisitor();
-        TriangleIntersect();
+        LineSegmentIntersector();
+        TriangleIntersector();
+        PolytopeIntersector();
     };
 } );
