@@ -210,8 +210,9 @@
         var CullCallback = function () {
             this.cull = function ( node, nv ) {
                 // overwrite matrix, remove translate so environment is always at camera origin
-                osg.Matrix.setTrans( nv.getCurrentModelviewMatrix(), 0, 0, 0 );
-                var m = nv.getCurrentModelviewMatrix();
+
+                var m = nv.getCurrentModelWorldMatrix();
+                osg.Matrix.setTrans( m, 0, 0, 0 );
                 osg.Matrix.copy( m, cubemapTransform.get() );
                 cubemapTransform.dirty();
                 return true;
