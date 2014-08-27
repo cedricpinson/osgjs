@@ -24,6 +24,8 @@ define( [
 
         this.attributeMap = new Map();
 
+        this.modelWorldMatrix = Uniform.createMatrix4( Matrix.create(), 'ModelWorldMatrix' );
+        this.viewMatrix = Uniform.createMatrix4( Matrix.create(), 'ViewMatrix' );
         this.modelViewMatrix = Uniform.createMatrix4( Matrix.create(), 'ModelViewMatrix' );
         this.projectionMatrix = Uniform.createMatrix4( Matrix.create(), 'ProjectionMatrix' );
         this.normalMatrix = Uniform.createMatrix4( Matrix.create(), 'NormalMatrix' );
@@ -226,6 +228,8 @@ define( [
                 if ( location !== undefined && activeUniformMap[ name ] === undefined ) {
                     // filter 'standard' uniform matrix that will be applied for all shader
                     if ( name !== this.modelViewMatrix.name &&
+                        name !== this.modelWorldMatrix.name &&
+                        name !== this.viewMatrix.name &&
                         name !== this.projectionMatrix.name &&
                         name !== this.normalMatrix.name &&
                         name !== 'ArrayColorEnabled' ) {

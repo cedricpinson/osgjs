@@ -124,6 +124,7 @@ define( [
             /*jshint unused: false */
         },
 
+        // local Bounding Box
         getBoundingBox: function () {
             if ( !this.boundingBoxComputed ) {
                 this.computeBoundingBox( this.boundingBox );
@@ -132,6 +133,7 @@ define( [
             return this.boundingBox;
         },
 
+        // Local BoundingBox
         computeBoundingBox: function ( boundingBox ) {
 
             var vertexArray = this.getAttributes().Vertex;
@@ -151,6 +153,7 @@ define( [
             return boundingBox;
         },
 
+        // local Bounding Box
         computeBound: function ( boundingSphere ) {
             boundingSphere.init();
             var bb = this.getBoundingBox();

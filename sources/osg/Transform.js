@@ -26,6 +26,7 @@ define( [
             return this.referenceFrame;
         },
 
+        // local to World
         computeBound: ( function () {
             var xdash = [ 0.0, 0.0, 0.0 ];
             var ydash = [ 0.0, 0.0, 0.0 ];
