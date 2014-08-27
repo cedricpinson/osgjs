@@ -17,8 +17,9 @@ define( [
     'osg/TransformEnums',
     'osg/Vec4',
     'osg/Vec3',
-    'osg/ComputeMatrixFromNodePath'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath ) {
+    'osg/ComputeMatrixFromNodePath',
+    'osg/BoundingBox'
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath, BoundingBox ) {
 
 
     /**
@@ -26,7 +27,7 @@ define( [
      * @class CullVisitor
      */
     var CullVisitor = function () {
-        NodeVisitor.call( this, NodeVisitor.TRAVERSE_ACTIVE_CHILDREN);
+        NodeVisitor.call( this, NodeVisitor.TRAVERSE_ACTIVE_CHILDREN );
         CullSettings.call( this );
         CullStack.call( this );
 
@@ -53,6 +54,11 @@ define( [
         ];
         this._reserveMatrixStack.current = 0;
 
+        this._reserveBoundingBoxStack = [
+            new BoundingBox()
+        ];
+        this._reserveBoundingBoxStack.current = 0;
+
         this._reserveLeafStack = [ {} ];
         this._reserveLeafStack.current = 0;
 
@@ -75,15 +81,14 @@ define( [
             }
             this.traverse( node );
         },
-        setCamera: function(camera){
+        setCamera: function ( camera ) {
             this._camera = camera;
         },
-        getCurrentCamera: function (){
+        getCurrentCamera: function () {
             return this._camera;
         },
-        updateCalculatedNearFar: function ( matrix, drawable ) {
+        updateCalculatedNearFar: function ( matrix, bb ) {
 
-            var bb = drawable.getBoundingBox();
             var dNear, dFar;
 
             // efficient computation of near and far, only taking into account the nearest and furthest
@@ -210,10 +215,16 @@ define( [
         reset: function () {
             //this._modelviewMatrixStack.length = 0;
             this._modelviewMatrixStack.splice( 0, this._modelviewMatrixStack.length );
+            //this._viewMatrixStack.length = 0;
+            this._viewMatrixStack.splice( 0, this._viewMatrixStack.length );
+            //this._modelWorldMatrixStack.length = 0;
+            this._modelWorldMatrixStack.splice( 0, this._modelWorldMatrixStack.length );
             //this._projectionMatrixStack.length = 0;
             this._projectionMatrixStack.splice( 0, this._projectionMatrixStack.length );
+
             this._reserveMatrixStack.current = 0;
             this._reserveLeafStack.current = 0;
+            this._reserveBoundingBoxStack.current = 0;
 
             this._computedNear = Number.POSITIVE_INFINITY;
             this._computedFar = Number.NEGATIVE_INFINITY;
@@ -225,8 +236,10 @@ define( [
             this._currentRenderBin = rb;
         },
         addPositionedAttribute: function ( attribute, matrix ) {
-            if ( matrix === undefined )
-                matrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+            if ( matrix === undefined ) {
+                matrix = this._viewMatrixStack[ this._viewMatrixStack.length - 1 ];
+
+            }
             this._currentRenderBin.getStage().positionedAttribute.push( [ matrix, attribute ] );
         },
 
@@ -285,6 +298,14 @@ define( [
             return l;
         },
 
+        _getReservedBoundingBox: function () {
+            var m = this._reserveBoundingBoxStack[ this._reserveBoundingBoxStack.current++ ];
+            if ( this._reserveBoundingBoxStack.current === this._reserveBoundingBoxStack.length ) {
+                this._reserveBoundingBoxStack.push( new BoundingBox() );
+            }
+            return m;
+        },
+
         setEnableFrustumCulling: function ( value ) {
             this._enableFrustumCulling = value;
         },
@@ -326,7 +347,7 @@ define( [
                 top[ 3 ] = matrix[ 15 ] - matrix[ 13 ];
                 result[ 3 ] = top;
 
-                if( withNearFar ) {
+                if ( withNearFar ) {
                     // Far clipping plane.
                     far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
                     far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
@@ -358,21 +379,20 @@ define( [
             return function ( node ) {
                 var pos = node.getBound().center();
                 Vec3.copy( pos, position );
-                var radius = - node.getBound().radius();
+                var radius = -node.getBound().radius();
                 var d;
                 var m = ComputeMatrixFromNodePath.computeLocalToWorld( this.nodePath );
-                Matrix.transformVec3( m, position, position);
+                Matrix.transformVec3( m, position, position );
 
                 for ( var i = 0, j = this._frustum.length; i < j; i++ ) {
                     d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
-                    if ( d <= radius )
-                    {
+                    if ( d <= radius ) {
                         return true;
                     }
                 }
                 return false;
-        };
-    } )()
+            };
+        } )()
     } ) ) );
 
     CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
@@ -386,24 +406,37 @@ define( [
             this.addPositionedAttribute( camera.light );
         }
 
-        // never used
-        //var originalModelView = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
-
+        var modelWorld = this._getReservedMatrix();
         var modelview = this._getReservedMatrix();
+        var view = this._getReservedMatrix();
         var projection = this._getReservedMatrix();
 
         if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
+
             var lastProjectionMatrix = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
             Matrix.mult( lastProjectionMatrix, camera.getProjectionMatrix(), projection );
-            var lastViewMatrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
-            Matrix.mult( lastViewMatrix, camera.getViewMatrix(), modelview );
+
+            var lastModelViewMatrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+            Matrix.mult( lastModelViewMatrix, camera.getViewMatrix(), modelview );
+
+            var lastViewMatrix = this._viewMatrixStack[ this._viewMatrixStack.length - 1 ];
+            var lastModelWorldMatrix = this._modelWorldMatrixStack[ this._modelWorldMatrixStack.length - 1 ];
+            Matrix.makeIdentity( modelWorld );
+            Matrix.mult( lastViewMatrix, lastModelWorldMatrix, view );
+            Matrix.mult( view, camera.getViewMatrix(), view );
+
         } else {
             // absolute
-            Matrix.copy( camera.getViewMatrix(), modelview );
+            Matrix.copy( camera.getViewMatrix(), view );
             Matrix.copy( camera.getProjectionMatrix(), projection );
+            // make sure to reset to identity in case of
+            // treenode changes after initialisations
+            Matrix.makeIdentity( modelWorld );
         }
         this.pushProjectionMatrix( projection );
         this.pushModelviewMatrix( modelview );
+        this.pushModelWorldMatrix( modelWorld );
+        this.pushViewMatrix( view );
 
         if ( camera.getViewport() ) {
             this.pushViewport( camera.getViewport() );
@@ -463,6 +496,8 @@ define( [
             }
         }
 
+        this.popModelWorldMatrix();
+        this.popViewMatrix();
         this.popModelviewMatrix();
         this.popProjectionMatrix();
 
@@ -483,16 +518,23 @@ define( [
 
 
     CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
-        var matrix = this._getReservedMatrix();
+        var modelViewMatrix = this._getReservedMatrix();
+        var modelWorldMatrix = this._getReservedMatrix();
 
         if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
-            var lastMatrixStack = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
-            Matrix.mult( lastMatrixStack, node.getMatrix(), matrix );
+            var lastModelViewMatrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+            Matrix.mult( lastModelViewMatrix, node.getMatrix(), modelViewMatrix );
+
+            var lastModelWorldMatrix = this._modelWorldMatrixStack[ this._modelWorldMatrixStack.length - 1 ];
+            Matrix.mult( lastModelWorldMatrix, node.getMatrix(), modelWorldMatrix );
         } else {
             // absolute
-            Matrix.copy( node.getMatrix(), matrix );
+            Matrix.copy( node.getMatrix(), modelViewMatrix );
+            Matrix.copy( node.getMatrix(), modelWorldMatrix );
+
         }
-        this.pushModelviewMatrix( matrix );
+        this.pushModelviewMatrix( modelViewMatrix );
+        this.pushModelWorldMatrix( modelWorldMatrix );
 
 
         var stateset = node.getStateSet();
@@ -511,6 +553,7 @@ define( [
         }
 
         this.popModelviewMatrix();
+        this.popModelWorldMatrix();
 
     };
 
@@ -538,7 +581,7 @@ define( [
     CullVisitor.prototype[ Node.typeID ] = function ( node ) {
 
         // We need the frame stamp > 0 to do the frustum culling, otherwise the projection matrix is not correct
-        if ( this._enableFrustumCulling === true && node.isCullingActive() && this.getFrameStamp().getFrameNumber() !== 0 && this.isCulled ( node ) ) return;
+        if ( this._enableFrustumCulling === true && node.isCullingActive() && this.getFrameStamp().getFrameNumber() !== 0 && this.isCulled( node ) ) return;
 
         var stateset = node.getStateSet();
         if ( stateset ) {
@@ -581,11 +624,25 @@ define( [
     };
 
     CullVisitor.prototype[ Geometry.typeID ] = function ( node ) {
+        var view = this._viewMatrixStack[ this._viewMatrixStack.length - 1 ];
+        var modelWorld = this._modelWorldMatrixStack[ this._modelWorldMatrixStack.length - 1 ];
         var modelview = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
-        var bb = node.getBoundingBox();
-        if ( this._computeNearFar && bb.valid() ) {
-            if ( !this.updateCalculatedNearFar( modelview, node ) ) {
-                return;
+
+
+        var localbb = node.getBoundingBox();
+        var bb = this._getReservedBoundingBox();
+        var validBB = localbb.valid();
+        if ( validBB ) {
+            // to World BBox
+            Matrix.transformBoundingbox( modelWorld, localbb, bb );
+            validBB = bb.valid();
+            if ( this._computeNearFar && validBB ) {
+                if ( !this.updateCalculatedNearFar( view, bb ) ) {
+                    return;
+                    //if ( !this.updateCalculatedNearFar( modelview, bb ) ) {
+                    //    return;
+                    //}
+                }
             }
         }
 
@@ -603,8 +660,8 @@ define( [
 
         var leaf = this._getReservedLeaf();
         var depth = 0;
-        if ( bb.valid() ) {
-            depth = this.distance( bb.center(), modelview );
+        if ( validBB ) {
+            depth = this.distance( bb.center(), view );
         }
         if ( isNaN( depth ) ) {
             Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + bb.center() );
@@ -614,6 +671,8 @@ define( [
             leaf.projection = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
             leaf.geometry = node;
             leaf.modelview = modelview;
+            leaf.view = view;
+            leaf.modelWorld = modelWorld;
             leaf.depth = depth;
             leafs.push( leaf );
         }

@@ -184,11 +184,11 @@ define( [
             return previous;
         },
 
-        drawGeometry: ( function() {
+        drawGeometry: ( function () {
             var normal = Matrix.create();
-            var modelViewUniform, projectionUniform, normalUniform, program;
+            var modelViewUniform, viewUniform, modelWorldUniform, projectionUniform, normalUniform, program;
 
-            return function( state, leaf, push ) {
+            return function ( state, leaf, push ) {
 
                 var gl = state.getGraphicContext();
 
@@ -198,6 +198,8 @@ define( [
                     program = state.getLastProgramApplied();
 
                     modelViewUniform = program.uniformsCache[ state.modelViewMatrix.name ];
+                    modelWorldUniform = program.uniformsCache[ state.modelWorldMatrix.name ];
+                    viewUniform = program.uniformsCache[ state.viewMatrix.name ];
                     projectionUniform = program.uniformsCache[ state.projectionMatrix.name ];
                     normalUniform = program.uniformsCache[ state.normalMatrix.name ];
                 }
@@ -207,6 +209,14 @@ define( [
                     state.modelViewMatrix.set( leaf.modelview );
                     state.modelViewMatrix.apply( gl, modelViewUniform );
                 }
+                if ( modelWorldUniform !== undefined ) {
+                    state.modelWorldMatrix.set( leaf.modelWorld );
+                    state.modelWorldMatrix.apply( gl, modelWorldUniform );
+                }
+                if ( viewUniform !== undefined ) {
+                    state.viewMatrix.set( leaf.view );
+                    state.viewMatrix.apply( gl, viewUniform );
+                }
 
                 if ( projectionUniform !== undefined ) {
                     state.projectionMatrix.set( leaf.projection );
@@ -214,6 +224,8 @@ define( [
                 }
 
                 if ( normalUniform !== undefined ) {
+                    // TODO: optimize the uniform scaling case
+                    // where inversion is simpler/faster/shared
                     Matrix.copy( leaf.modelview, normal );
                     normal[ 12 ] = 0.0;
                     normal[ 13 ] = 0.0;
@@ -233,7 +245,7 @@ define( [
                 }
 
             };
-        })(),
+        } )(),
 
         drawLeafs: function ( state, previousRenderLeaf ) {
             var stateList = this.stateGraphList;
