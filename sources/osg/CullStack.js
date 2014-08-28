@@ -42,7 +42,8 @@ define( [], function () {
             return this._viewportStack[ this._viewportStack.length - 1 ];
         },
         getLookVectorLocal: function () {
-            var m = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+            //var m = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+            var m = this.getCurrentViewMatrix();
             return [ -m[ 2 ], -m[ 6 ], -m[ 10 ] ];
         },
         pushViewport: function ( vp ) {
@@ -54,27 +55,27 @@ define( [], function () {
         pushModelviewMatrix: function ( matrix ) {
             this._modelviewMatrixStack.push( matrix );
 
-            var lookVector = this.getLookVectorLocal();
+            // var lookVector = this.getLookVectorLocal();
 
-            /*jshint bitwise: false */
-            this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
-            this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
+            // /*jshint bitwise: false */
+            // this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
+            //this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
             /*jshint bitwise: true */
 
         },
         popModelviewMatrix: function () {
 
             this._modelviewMatrixStack.pop();
-            var lookVector;
-            if ( this._modelviewMatrixStack.length !== 0 ) {
-                lookVector = this.getLookVectorLocal();
-            } else {
-                lookVector = [ 0, 0, -1 ];
-            }
+            // var lookVector;
+            // if ( this._modelviewMatrixStack.length !== 0 ) {
+            //     lookVector = this.getLookVectorLocal();
+            // } else {
+            //     lookVector = [ 0, 0, -1 ];
+            // }
 
-            /*jshint bitwise: false */
-            this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
-            this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
+            // /*jshint bitwise: false */
+            // this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
+            // this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
             /*jshint bitwise: true */
 
 
@@ -87,9 +88,30 @@ define( [], function () {
         },
         pushViewMatrix: function ( matrix ) {
             this._viewMatrixStack.push( matrix );
+
+            var lookVector = this.getLookVectorLocal();
+
+            /*jshint bitwise: false */
+            this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
+            this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
+            /*jshint bitwise: true */
         },
         popViewMatrix: function () {
+
             this._viewMatrixStack.pop();
+
+            var lookVector;
+            if ( this._viewMatrixStack.length !== 0 ) {
+                lookVector = this.getLookVectorLocal();
+            } else {
+                lookVector = [ 0, 0, -1 ];
+            }
+
+            /*jshint bitwise: false */
+            this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
+            this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
+            /*jshint bitwise: true */
+
         },
         pushProjectionMatrix: function ( matrix ) {
             this._projectionMatrixStack.push( matrix );

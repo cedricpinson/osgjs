@@ -25,7 +25,7 @@ define( [
     };
 
 
-    var Options = function( defaults ) {
+    var Options = function ( defaults ) {
 
         Object.keys( defaults ).forEach( function ( key ) {
             this[ key ] = defaults[ key ];
@@ -34,18 +34,18 @@ define( [
     };
 
     Options.prototype = {
-        get: function( key ) {
-            return this[key];
+        get: function ( key ) {
+            return this[ key ];
         },
         getBoolean: function ( key ) {
             var val = this.getString( key );
-            if ( val ) return Boolean( JSON.parse(val) );
+            if ( val ) return Boolean( JSON.parse( val ) );
             return undefined;
         },
 
         getNumber: function ( key ) {
             var val = this[ key ];
-            if ( val ) return Number( JSON.parse(val));
+            if ( val ) return Number( JSON.parse( val ) );
             return undefined;
         },
 
@@ -146,7 +146,7 @@ define( [
         this._options = options;
 
         // #FIXME see tojiro's blog for webgl lost context stuffs
-        if ( options.get( 'SimulateWebGLLostContext') ) {
+        if ( options.get( 'SimulateWebGLLostContext' ) ) {
             canvas = WebGLDebugUtils.makeLostContextSimulatingCanvas( canvas );
             canvas.loseContextInNCalls( options.get( 'SimulateWebGLLostContext' ) );
         }
@@ -163,7 +163,7 @@ define( [
         }, false );
 
 
-        if ( Notify.reportWebGLError || options.get( 'reportWebGLError') ) {
+        if ( Notify.reportWebGLError || options.get( 'reportWebGLError' ) ) {
             gl = WebGLDebugUtils.makeDebugContext( gl );
         }
 
@@ -180,7 +180,7 @@ define( [
             var defaultMouseEventNode = options.mouseEventNode || canvas;
 
             var eventsBackend = options.EventBackend || {};
-            if ( !options.EventBackend )  options.EventBackend = eventsBackend;
+            if ( !options.EventBackend ) options.EventBackend = eventsBackend;
             eventsBackend.StandardMouseKeyboard = options.EventBackend.StandardMouseKeyboard || {};
             var mouseEventNode = eventsBackend.StandardMouseKeyboard.mouseEventNode || defaultMouseEventNode;
             eventsBackend.StandardMouseKeyboard.mouseEventNode = mouseEventNode;
@@ -317,55 +317,55 @@ define( [
             this._cullTime = 0;
             this._drawTime = 0;
             this._stats.addLayer( '#ff0fff', 120,
-                                  function ( /*t*/ ) {
-                                      return ( 1000.0 / that._frameRate );
-                                  },
-                                  function ( a ) {
-                                      return 'FrameRate: ' + ( a ).toFixed( 0 ) + ' fps';
-                                  } );
+                function ( /*t*/) {
+                    return ( 1000.0 / that._frameRate );
+                },
+                function ( a ) {
+                    return 'FrameRate: ' + ( a ).toFixed( 0 ) + ' fps';
+                } );
 
             this._stats.addLayer( '#ffff00', maxMS,
-                                  function ( /*t*/ ) {
-                                      return that._frameTime;
-                                  },
-                                  function ( a ) {
-                                      return 'FrameTime: ' + a.toFixed( 2 ) + ' ms';
-                                  } );
+                function ( /*t*/) {
+                    return that._frameTime;
+                },
+                function ( a ) {
+                    return 'FrameTime: ' + a.toFixed( 2 ) + ' ms';
+                } );
 
             this._stats.addLayer( '#d07b1f', maxMS,
-                                  function ( /*t*/ ) {
-                                      return that._updateTime;
-                                  },
-                                  function ( a ) {
-                                      return 'UpdateTime: ' + a.toFixed( 2 ) + ' ms';
-                                  } );
+                function ( /*t*/) {
+                    return that._updateTime;
+                },
+                function ( a ) {
+                    return 'UpdateTime: ' + a.toFixed( 2 ) + ' ms';
+                } );
 
             this._stats.addLayer( '#73e0ff', maxMS,
-                                  function ( /*t*/ ) {
-                                      return that._cullTime;
-                                  },
-                                  function ( a ) {
-                                      return 'CullTime: ' + a.toFixed( 2 ) + ' ms';
-                                  } );
+                function ( /*t*/) {
+                    return that._cullTime;
+                },
+                function ( a ) {
+                    return 'CullTime: ' + a.toFixed( 2 ) + ' ms';
+                } );
 
             this._stats.addLayer( '#ff0000',
-                                  maxMS,
-                                  function ( /*t*/ ) {
-                                      return that._drawTime;
-                                  },
-                                  function ( a ) {
-                                      return 'DrawTime: ' + a.toFixed( 2 ) + ' ms';
-                                  } );
+                maxMS,
+                function ( /*t*/) {
+                    return that._drawTime;
+                },
+                function ( a ) {
+                    return 'DrawTime: ' + a.toFixed( 2 ) + ' ms';
+                } );
 
             if ( window.performance && window.performance.memory && window.performance.memory.totalJSHeapSize )
                 this._stats.addLayer( '#00ff00',
-                                      window.performance.memory.totalJSHeapSize * 2,
-                                      function ( /*t*/ ) {
-                                          return that._memSize;
-                                      },
-                                      function ( a ) {
-                                          return 'Memory : ' + a.toFixed( 0 ) + ' b';
-                                      } );
+                    window.performance.memory.totalJSHeapSize * 2,
+                    function ( /*t*/) {
+                        return that._memSize;
+                    },
+                    function ( a ) {
+                        return 'Memory : ' + a.toFixed( 0 ) + ' b';
+                    } );
 
         },
 
@@ -387,25 +387,29 @@ define( [
 
             // update bound
             camera.getBound();
-
             var identity = Matrix.create();
             this._cullVisitor.pushModelviewMatrix( identity );
-            switch ( this.getLightingMode() )
-            {
-                case View.LightingMode.HEADLIGHT:
-                    if ( this._light ) {
-                        this._cullVisitor.addPositionedAttribute( this._light );
-                    }
-                    break;
-                case View.LightingMode.SKY_LIGHT:
-                    if ( this._light ) {
-                        this._cullVisitor.addPositionedAttribute( this._light, camera.getViewMatrix() );
-                    }
-                    break;
-                default:
-                    break;
+            var identity2 = Matrix.create();
+            this._cullVisitor.pushModelWorldMatrix( identity2 );
+            var identity3 = Matrix.create();
+            this._cullVisitor.pushViewMatrix( identity3 );
+
+            switch ( this.getLightingMode() ) {
+            case View.LightingMode.HEADLIGHT:
+                if ( this._light ) {
+                    this._cullVisitor.addPositionedAttribute( this._light );
+                }
+                break;
+            case View.LightingMode.SKY_LIGHT:
+                if ( this._light ) {
+                    this._cullVisitor.addPositionedAttribute( this._light, camera.getViewMatrix() );
+                }
+                break;
+            default:
+                break;
             }
             this._cullVisitor.pushModelviewMatrix( camera.getViewMatrix() );
+            this._cullVisitor.pushViewMatrix( camera.getViewMatrix() );
             this._cullVisitor.pushViewport( camera.getViewport() );
             this._cullVisitor.setCullSettings( camera );
 
@@ -415,8 +419,8 @@ define( [
             this._renderStage.setViewport( camera.getViewport() );
 
             // Check if Frustum culling is enabled to calculate the clip planes
-            if ( this._options.getBoolean( 'enableFrustumCulling' ) === true ){
-                this._cullVisitor.setEnableFrustumCulling ( true );
+            if ( this._options.getBoolean( 'enableFrustumCulling' ) === true ) {
+                this._cullVisitor.setEnableFrustumCulling( true );
                 var mvp = Matrix.create();
                 Matrix.mult( camera.getProjectionMatrix(), camera.getViewMatrix(), mvp );
                 this._cullVisitor.getFrustumPlanes( mvp, this._cullVisitor._frustum );
@@ -541,11 +545,11 @@ define( [
             }
 
             this.setManipulator( manipulator );
-       },
+        },
 
 
         // updateViewport
-        updateViewport: function() {
+        updateViewport: function () {
 
             var gl = this.getGraphicContext();
             var canvas = gl.canvas;
