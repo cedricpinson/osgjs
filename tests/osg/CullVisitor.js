@@ -109,6 +109,8 @@ define( [
 
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 camera0.accept( cull );
 
                 ok( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); //+ cull.rootRenderStage === cull.currentRenderBin
@@ -120,9 +122,15 @@ define( [
             ( function () {
                 var state = new State();
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() { return true; };
-                fakeRenderer.getProgramParameter = function() { return true; };
-                fakeRenderer.isContextLost = function() { return false; };
+                fakeRenderer.validateProgram = function () {
+                    return true;
+                };
+                fakeRenderer.getProgramParameter = function () {
+                    return true;
+                };
+                fakeRenderer.isContextLost = function () {
+                    return false;
+                };
 
                 state.setGraphicContext( fakeRenderer );
                 var camera0 = new Camera();
@@ -145,6 +153,8 @@ define( [
 
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 cull.pushStateSet( new StateSet() );
 
                 camera0.accept( cull );
@@ -195,6 +205,8 @@ define( [
 
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0 ];
@@ -208,7 +220,7 @@ define( [
                 var camera0 = new Camera();
 
                 var mt = new MatrixTransform();
-                Matrix.makeTranslate( 0, 0, 10, mt.getMatrix());
+                Matrix.makeTranslate( 0, 0, 10, mt.getMatrix() );
                 var geom = Shape.createTexturedQuadGeometry( -5.0, -5, 0,
                     10, 0, 0,
                     0, 10, 0,
@@ -217,7 +229,7 @@ define( [
                 camera0.addChild( mt );
 
                 Matrix.makeLookAt( [ 0, 0, 20 ], [ 0, 0, 10 ], [ 0, 1, 0 ], camera0.getViewMatrix() );
-                Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0, camera0.getProjectionMatrix() ) ;
+                Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0, camera0.getProjectionMatrix() );
 
                 var stack = [];
 
@@ -246,6 +258,8 @@ define( [
 
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 ok( mockup.check_near( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
@@ -330,6 +344,8 @@ define( [
 
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 ok( mockup.check_near( stack[ 1 ][ 0 ], d_near, 0.8 ), 'near should be ' + d_near + ' and is ' + stack[ 1 ][ 0 ] );
@@ -375,6 +391,8 @@ define( [
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );
@@ -420,6 +438,8 @@ define( [
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );
@@ -465,6 +485,8 @@ define( [
                 rs.setViewport( new Viewport() );
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );
@@ -474,37 +496,43 @@ define( [
 
                 var state = new State();
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() { return true; };
-                fakeRenderer.getProgramParameter = function() { return true; };
-                fakeRenderer.isContextLost = function() { return false; };
+                fakeRenderer.validateProgram = function () {
+                    return true;
+                };
+                fakeRenderer.getProgramParameter = function () {
+                    return true;
+                };
+                fakeRenderer.isContextLost = function () {
+                    return false;
+                };
                 state.setGraphicContext( fakeRenderer );
 
                 rs.draw( state );
 
             } )();
 
-            ( function (){
+            ( function () {
                 var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 viewer.init();
 
                 viewer.frame();
                 var cull = viewer._cullVisitor;
-                var m =  cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
+                var m = cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
                 // Test for HeadLight, matrix should be identity
                 mockup.near( m, [ 1, 0, -0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1
                 ] );
                 // Test for Sky_Light, matrix != identity
                 viewer.setLightingMode( View.LightingMode.SKY_LIGHT );
                 viewer.frame();
-                m =  cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
+                m = cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
                 mockup.near( m, [ -1, 0, -0, 0,
-                0, 1, -0, 0,
-                0, -0, -1, 0,
-                0, 0, -10, 1
+                    0, 1, -0, 0,
+                    0, -0, -1, 0,
+                    0, 0, -10, 1
                 ] );
 
 

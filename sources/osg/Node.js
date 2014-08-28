@@ -25,8 +25,9 @@ define( [
         this.nodeMask = ~0;
         /*jshint bitwise: true */
 
-        this.boundingSphere = new BoundingSphere();
-        this.boundingSphereComputed = false;
+        this._boundingSphere = new BoundingSphere();
+        this._boundingBox = new BoundingBox();
+        this._boundsComputed = false;
         this._updateCallbacks = [];
         this._cullCallback = undefined;
         this._cullingActive = true;
@@ -56,8 +57,8 @@ define( [
             }
         },
         dirtyBound: function () {
-            if ( this.boundingSphereComputed === true ) {
-                this.boundingSphereComputed = false;
+            if ( this._boundsComputed === true ) {
+                this._boundsComputed = false;
                 for ( var i = 0, l = this.parents.length; i < l; i++ ) {
                     this.parents[ i ].dirtyBound();
                 }
@@ -220,15 +221,15 @@ define( [
         },
 
         getBound: function () {
-            if ( !this.boundingSphereComputed ) {
-                this.computeBound( this.boundingSphere );
-                this.boundingSphereComputed = true;
+            if ( !this._boundsComputed ) {
+                this.computeBound( this._boundingSphere, this._boundingBox );
+                this._boundsComputed = true;
             }
-            return this.boundingSphere;
+            return this._boundingSphere;
         },
 
-        computeBound: function ( bsphere ) {
-            var bb = new BoundingBox();
+        computeBound: function ( bsphere, bbox ) {
+            var bb = bbox || this._boundingBox; //new BoundingBox(); OUCH?
             bb.init();
             bsphere.init();
             for ( var i = 0, l = this.children.length; i < l; i++ ) {

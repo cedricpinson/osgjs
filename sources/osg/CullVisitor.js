@@ -419,11 +419,22 @@ define( [
             var lastModelViewMatrix = this.getCurrentModelviewMatrix();
             Matrix.mult( lastModelViewMatrix, camera.getViewMatrix(), modelview );
 
-            var lastViewMatrix = this.getCurrentViewMatrixStack();
+            var lastViewMatrix = this.getCurrentViewMatrix();
             var lastModelWorldMatrix = this.getCurrentModelWorldMatrix();
             Matrix.makeIdentity( modelWorld );
             Matrix.mult( lastViewMatrix, lastModelWorldMatrix, view );
             Matrix.mult( view, camera.getViewMatrix(), view );
+
+            /// TODO remove when removing modelview
+            ( function () {
+                var tempMatrice = Matrix.create();
+                Matrix.mult( modelWorld, view, tempMatrice );
+                /// TODO remove when removing modelview
+                if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
+                    Notify.warn( 'wrong modelview' );
+                }
+            } )();
+
 
         } else {
             // absolute
@@ -432,6 +443,16 @@ define( [
             // make sure to reset to identity in case of
             // treenode changes after initialisations
             Matrix.makeIdentity( modelWorld );
+
+            /// TODO remove when removing modelview
+            ( function () {
+                var tempMatrice = Matrix.create();
+                Matrix.mult( modelWorld, view, tempMatrice );
+                /// TODO remove when removing modelview
+                if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
+                    Notify.warn( 'wrong modelview' );
+                }
+            } )();
         }
         this.pushProjectionMatrix( projection );
         this.pushModelviewMatrix( modelview );
@@ -527,11 +548,31 @@ define( [
 
             var lastModelWorldMatrix = this.getCurrentModelWorldMatrix();
             Matrix.mult( lastModelWorldMatrix, node.getMatrix(), modelWorldMatrix );
+
+            /// TODO remove when removing modelview
+            ( function () {
+                var tempMatrice = Matrix.create();
+                Matrix.mult( modelWorld, view, tempMatrice );
+                /// TODO remove when removing modelview
+                if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
+                    Notify.warn( 'wrong modelview' );
+                }
+            } )();
+
         } else {
             // absolute
             Matrix.copy( node.getMatrix(), modelViewMatrix );
             Matrix.copy( node.getMatrix(), modelWorldMatrix );
 
+            /// TODO remove when removing modelview
+            ( function () {
+                var tempMatrice = Matrix.create();
+                Matrix.mult( modelWorld, view, tempMatrice );
+                /// TODO remove when removing modelview
+                if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
+                    Notify.warn( 'wrong modelview' );
+                }
+            } )();
         }
         this.pushModelviewMatrix( modelViewMatrix );
         this.pushModelWorldMatrix( modelWorldMatrix );
@@ -629,6 +670,16 @@ define( [
         var view = this.getCurrentViewMatrix();
         var modelWorld = this.getCurrentModelWorldMatrix();
         var modelview = this.getCurrentModelviewMatrix();
+
+        /// TODO remove when removing modelview
+        ( function () {
+            var tempMatrice = Matrix.create();
+            Matrix.mult( modelWorld, view, tempMatrice );
+            /// TODO remove when removing modelview
+            if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
+                Notify.warn( 'wrong modelview' );
+            }
+        } )();
 
 
         var localbb = node.getBoundingBox();

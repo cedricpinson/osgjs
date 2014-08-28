@@ -387,11 +387,12 @@ define( [
 
             // update bound
             camera.getBound();
-            var identity = Matrix.create();
+            // Avoid node/geom without cam/transform parent fault
+            var identity = Matrix.makeIdentity( this._cullVisitor._getReservedMatrix() );
             this._cullVisitor.pushModelviewMatrix( identity );
-            var identity2 = Matrix.create();
+            var identity2 = Matrix.makeIdentity( this._cullVisitor._getReservedMatrix() );
             this._cullVisitor.pushModelWorldMatrix( identity2 );
-            var identity3 = Matrix.create();
+            var identity3 = Matrix.makeIdentity( this._cullVisitor._getReservedMatrix() );
             this._cullVisitor.pushViewMatrix( identity3 );
 
             switch ( this.getLightingMode() ) {

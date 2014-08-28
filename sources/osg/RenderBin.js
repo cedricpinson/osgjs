@@ -185,7 +185,7 @@ define( [
         },
 
         drawGeometry: ( function () {
-            var normal = Matrix.create();
+            var tempMatrice = Matrix.create();
             var modelViewUniform, viewUniform, modelWorldUniform, projectionUniform, normalUniform, program;
 
             return function ( state, leaf, push ) {
@@ -206,6 +206,12 @@ define( [
 
 
                 if ( modelViewUniform !== undefined ) {
+                    tempMatrice = Matrix.create();
+                    Matrix.mult( leaf.modelWorld, leaf.view, tempMatrice );
+                    /// TODO remove when removing modelview
+                    if ( tempMatrice.join( ',' ) !== leaf.modelview.join( ',' ) ) {
+                        Notify.warn( 'wrong modelview' );
+                    }
                     state.modelViewMatrix.set( leaf.modelview );
                     state.modelViewMatrix.apply( gl, modelViewUniform );
                 }
@@ -226,6 +232,7 @@ define( [
                 if ( normalUniform !== undefined ) {
                     // TODO: optimize the uniform scaling case
                     // where inversion is simpler/faster/shared
+                    var normal = tempMatrice;
                     Matrix.copy( leaf.modelview, normal );
                     normal[ 12 ] = 0.0;
                     normal[ 13 ] = 0.0;
