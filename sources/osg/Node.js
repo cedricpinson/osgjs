@@ -25,9 +25,8 @@ define( [
         this.nodeMask = ~0;
         /*jshint bitwise: true */
 
-        this._boundingSphere = new BoundingSphere();
-        this._boundingBox = new BoundingBox();
-        this._boundsComputed = false;
+        this.boundingSphere = new BoundingSphere();
+        this.boundingSphereComputed = false;
         this._updateCallbacks = [];
         this._cullCallback = undefined;
         this._cullingActive = true;
@@ -57,8 +56,8 @@ define( [
             }
         },
         dirtyBound: function () {
-            if ( this._boundsComputed === true ) {
-                this._boundsComputed = false;
+            if ( this.boundingSphereComputed === true ) {
+                this.boundingSphereComputed = false;
                 for ( var i = 0, l = this.parents.length; i < l; i++ ) {
                     this.parents[ i ].dirtyBound();
                 }
@@ -220,16 +219,23 @@ define( [
             }
         },
 
+        // gets World Space Bounds
+        // Transform Node does the local to world
+        // by overriding computeBounds
         getBound: function () {
-            if ( !this._boundsComputed ) {
-                this.computeBound( this._boundingSphere, this._boundingBox );
-                this._boundsComputed = true;
+            if ( !this.boundingSphereComputed ) {
+                this.computeBound( this.boundingSphere );
+                this.boundingSphereComputed = true;
             }
-            return this._boundingSphere;
+            return this.boundingSphere;
         },
-
-        computeBound: function ( bsphere, bbox ) {
-            var bb = bbox || this._boundingBox; //new BoundingBox(); OUCH?
+        // gets World Space Bounds
+        // gets World Space Bounds
+        // Transform Node does the local to world
+        // by overriding computeBounds
+        computeBound: function ( bsphere ) {
+            // TODO: Store/share/reuse var, avoid GC stalls
+            var bb = new BoundingBox();
             bb.init();
             bsphere.init();
             for ( var i = 0, l = this.children.length; i < l; i++ ) {

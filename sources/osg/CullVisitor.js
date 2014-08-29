@@ -448,6 +448,7 @@ define( [
             Matrix.makeIdentity( modelWorld );
 
             /// TODO remove when removing modelview
+            Matrix.copy( camera.getViewMatrix(), modelview );
             ( function () {
                 var tempMatrice = Matrix.create();
                 Matrix.mult( modelWorld, view, tempMatrice );
@@ -687,6 +688,8 @@ define( [
         } )();
 
 
+        // could get parent Transform/camera bbox too
+        // frustum culling does compile them...
         var localbb = node.getBoundingBox();
         var bb = this._getReservedBoundingBox();
         var validBB = localbb.valid();
@@ -701,9 +704,6 @@ define( [
             if ( this._computeNearFar && validBB ) {
                 if ( !this.updateCalculatedNearFar( view, bb ) ) {
                     return;
-                    //if ( !this.updateCalculatedNearFar( modelview, bb ) ) {
-                    //    return;
-                    //}
                 }
             }
         }
@@ -732,7 +732,8 @@ define( [
             leaf.parent = this._currentStateGraph;
             leaf.projection = this.getCurrentProjectionMatrix();
             leaf.geometry = node;
-            leaf.modelview = modelview;
+            /// TODO remove when removing modelview
+            //leaf.modelview = modelview;
             leaf.view = view;
             leaf.modelWorld = modelWorld;
             leaf.depth = depth;

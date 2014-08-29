@@ -480,6 +480,7 @@ define( [
             if ( this.getManipulator() ) {
                 this.getManipulator().update( this._updateVisitor );
                 Matrix.copy( this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix() );
+                this.getCamera().updateMatrices();
             }
 
             if ( this._stats === undefined ) {
