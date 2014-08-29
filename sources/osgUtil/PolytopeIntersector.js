@@ -66,8 +66,8 @@ define( [
                     }
                 }
                 return true;
-        };
-    } )(),
+            };
+        } )(),
 
         // Intersection Polytope/Geometry
         intersect : function ( iv, node ) {
