@@ -421,7 +421,9 @@ define( [
 
             var lastViewMatrix = this.getCurrentViewMatrix();
             var lastModelWorldMatrix = this.getCurrentModelWorldMatrix();
+
             Matrix.makeIdentity( modelWorld );
+            //Matrix.mult( lastModelWorldMatrix, camera.getModelMatrix(), modelWorld );
             Matrix.mult( lastViewMatrix, lastModelWorldMatrix, view );
             Matrix.mult( view, camera.getViewMatrix(), view );
 
@@ -431,7 +433,7 @@ define( [
             /// TODO remove when removing modelview
             ( function () {
                 var tempMatrice = Matrix.create();
-                Matrix.mult( modelWorld, view, tempMatrice );
+                Matrix.mult( view, modelWorld, tempMatrice );
                 /// TODO remove when removing modelview
                 if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
                     Notify.warn( 'wrong modelview' );
@@ -451,7 +453,7 @@ define( [
             Matrix.copy( camera.getViewMatrix(), modelview );
             ( function () {
                 var tempMatrice = Matrix.create();
-                Matrix.mult( modelWorld, view, tempMatrice );
+                Matrix.mult( view, modelWorld, tempMatrice );
                 /// TODO remove when removing modelview
                 if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
                     Notify.warn( 'wrong modelview' );
@@ -459,9 +461,11 @@ define( [
             } )();
         }
         this.pushProjectionMatrix( projection );
-        this.pushModelviewMatrix( modelview );
-        this.pushModelWorldMatrix( modelWorld );
         this.pushViewMatrix( view );
+        this.pushModelWorldMatrix( modelWorld );
+
+        /// TODO remove when removing modelview
+        this.pushModelviewMatrix( modelview );
 
         if ( camera.getViewport() ) {
             this.pushViewport( camera.getViewport() );
@@ -523,7 +527,10 @@ define( [
 
         this.popModelWorldMatrix();
         this.popViewMatrix();
+
+        /// TODO remove when removing modelview
         this.popModelviewMatrix();
+
         this.popProjectionMatrix();
 
         if ( camera.getViewport() ) {
@@ -557,7 +564,7 @@ define( [
             var view = this.getCurrentViewMatrix();
             ( function () {
                 var tempMatrice = Matrix.create();
-                Matrix.mult( modelWorldMatrix, view, tempMatrice );
+                Matrix.mult( view, modelWorldMatrix, tempMatrice );
                 /// TODO remove when removing modelview
                 if ( tempMatrice.join( ',' ) !== modelViewMatrix.join( ',' ) ) {
                     Notify.warn( 'wrong modelview' );
@@ -573,15 +580,16 @@ define( [
             var view = this.getCurrentViewMatrix();
             ( function () {
                 var tempMatrice = Matrix.create();
-                Matrix.mult( modelWorldMatrix, view, tempMatrice );
+                Matrix.mult( view, modelWorldMatrix, tempMatrice );
                 /// TODO remove when removing modelview
                 if ( tempMatrice.join( ',' ) !== modelViewMatrix.join( ',' ) ) {
                     Notify.warn( 'wrong modelview' );
                 }
             } )();
         }
-        this.pushModelviewMatrix( modelViewMatrix );
         this.pushModelWorldMatrix( modelWorldMatrix );
+        /// TODO remove when removing modelview
+        this.pushModelviewMatrix( modelViewMatrix );
 
 
         var stateset = node.getStateSet();
@@ -599,6 +607,7 @@ define( [
             this.popStateSet();
         }
 
+        /// TODO remove when removing modelview
         this.popModelviewMatrix();
         this.popModelWorldMatrix();
 
@@ -680,7 +689,7 @@ define( [
         /// TODO remove when removing modelview
         ( function () {
             var tempMatrice = Matrix.create();
-            Matrix.mult( modelWorld, view, tempMatrice );
+            Matrix.mult( view, modelWorld, tempMatrice );
             /// TODO remove when removing modelview
             if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
                 Notify.warn( 'wrong modelview' );

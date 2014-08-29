@@ -238,6 +238,7 @@
                 osg.Matrix.makePerspective( info.fovy, info.aspectRatio, 1.0, 100.0, proj );
                 cam.setProjectionMatrix( proj );
                 cam.setViewMatrix( rootCam.getViewMatrix() );
+                cam.updateMatrices();
 
                 return true;
             };

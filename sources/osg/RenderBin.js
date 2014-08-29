@@ -207,7 +207,7 @@ define( [
                 var modelViewComputed = false;
                 if ( modelViewUniform !== undefined ) {
                     tempMatrice = Matrix.create();
-                    Matrix.mult( leaf.modelWorld, leaf.view, tempMatrice );
+                    Matrix.mult( leaf.view, leaf.modelWorld, tempMatrice );
                     /// TODO remove when removing modelview
                     //if ( tempMatrice.join( ',' ) !== leaf.modelview.join( ',' ) ) {
                     //    Notify.warn( 'wrong modelview' );
@@ -237,7 +237,11 @@ define( [
                     // where inversion is simpler/faster/shared
                     if ( !modelViewComputed ) {
                         tempMatrice = Matrix.create();
-                        Matrix.mult( leaf.modelWorld, leaf.view, tempMatrice );
+                        Matrix.mult( leaf.view, leaf.modelWorld, tempMatrice );
+                        /// TODO remove when removing modelview
+                        //if ( tempMatrice.join( ',' ) !== leaf.modelview.join( ',' ) ) {
+                        //    Notify.warn( 'wrong modelview' );
+                        //}
                     }
                     var normal = tempMatrice;
                     //Matrix.copy( leaf.modelview, normal );

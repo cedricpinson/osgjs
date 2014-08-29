@@ -89,6 +89,12 @@ define( [
             getViewMatrix: function () {
                 return this.viewMatrix;
             },
+            getModelMatrix: function () {
+                return this.modelMatrix;
+            },
+            setModelMatrix: function ( matrix ) {
+                this.modelMatrix = matrix;
+            },
             updateMatrices: function () {
                 this.modelviewMatrix = this.viewMatrix;
                 Matrix.inverse( this.viewMatrix, this.modelMatrix );
