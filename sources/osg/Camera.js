@@ -24,6 +24,8 @@ define( [
         this.setClearMask( Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT );
         /*jshint bitwise: true */
 
+        this.tmpMatrix = Matrix.create();
+        this.modelMatrix = Matrix.makeIdentity( [] );
         this.setViewMatrix( Matrix.create() );
         this.setProjectionMatrix( Matrix.create() );
         this.renderOrder = Camera.NESTED_RENDER;
@@ -81,6 +83,15 @@ define( [
 
             setViewMatrix: function ( matrix ) {
                 this.modelviewMatrix = matrix;
+                this.viewMatrix = matrix;
+                Matrix.inverse( matrix, this.modelMatrix );
+            },
+            getViewMatrix: function () {
+                return this.viewMatrix;
+            },
+            updateMatrices: function () {
+                this.modelviewMatrix = this.viewMatrix;
+                Matrix.inverse( this.viewMatrix, this.modelMatrix );
             },
 
             setProjectionMatrix: function ( matrix ) {
@@ -94,9 +105,6 @@ define( [
                 Matrix.makeOrtho( left, right, bottom, top, zNear, zFar, this.getProjectionMatrix() );
             },
 
-            getViewMatrix: function () {
-                return this.modelviewMatrix;
-            },
             getProjectionMatrix: function () {
                 return this.projectionMatrix;
             },
@@ -136,26 +144,26 @@ define( [
                 };
             },
 
-            computeLocalToWorldMatrix: function ( matrix /*,nodeVisitor*/ ) {
-                if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                    Matrix.preMult( matrix, this.modelviewMatrix );
+            computeLocalToWorldMatrix: function ( matrix ) {
+                if ( this.referenceFrame === Transform.RELATIVE_RF ) {
+                    Matrix.preMult( matrix, this.modelMatrix );
                 } else { // absolute
-                    matrix = this.modelviewMatrix;
+                    matrix = this.modelMatrix;
                 }
                 return true;
             },
 
-            computeWorldToLocalMatrix: ( function ( matrix /*, nodeVisitor */ ) {
-                var inverse = Matrix.create();
-                return function () {
-                    if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                        Matrix.postMult( Matrix.inverse( this.modelviewMatrix, inverse ), matrix );
-                    } else {
-                        Matrix.inverse( this.modelviewMatrix, matrix );
-                    }
-                    return true;
-                };
-            } )()
+            computeWorldToLocalMatrix: function ( matrix ) {
+                var inverse = this.tmpMatrix;
+                Matrix.inverse( this.modelMatrix, inverse );
+                if ( this.referenceFrame === Transform.RELATIVE_RF ) {
+                    Matrix.postMult( inverse, matrix );
+                } else {
+                    matrix = inverse;
+                }
+                return true;
+            }
+
 
         } ) ), 'osg', 'Camera' );
 

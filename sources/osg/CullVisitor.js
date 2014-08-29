@@ -425,6 +425,9 @@ define( [
             Matrix.mult( lastViewMatrix, lastModelWorldMatrix, view );
             Matrix.mult( view, camera.getViewMatrix(), view );
 
+
+            // CHANGE CAMERA VIEW MODEL as Shadow Code.
+
             /// TODO remove when removing modelview
             ( function () {
                 var tempMatrice = Matrix.create();
@@ -550,11 +553,12 @@ define( [
             Matrix.mult( lastModelWorldMatrix, node.getMatrix(), modelWorldMatrix );
 
             /// TODO remove when removing modelview
+            var view = this.getCurrentViewMatrix();
             ( function () {
                 var tempMatrice = Matrix.create();
-                Matrix.mult( modelWorld, view, tempMatrice );
+                Matrix.mult( modelWorldMatrix, view, tempMatrice );
                 /// TODO remove when removing modelview
-                if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
+                if ( tempMatrice.join( ',' ) !== modelViewMatrix.join( ',' ) ) {
                     Notify.warn( 'wrong modelview' );
                 }
             } )();
@@ -565,11 +569,12 @@ define( [
             Matrix.copy( node.getMatrix(), modelWorldMatrix );
 
             /// TODO remove when removing modelview
+            var view = this.getCurrentViewMatrix();
             ( function () {
                 var tempMatrice = Matrix.create();
-                Matrix.mult( modelWorld, view, tempMatrice );
+                Matrix.mult( modelWorldMatrix, view, tempMatrice );
                 /// TODO remove when removing modelview
-                if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
+                if ( tempMatrice.join( ',' ) !== modelViewMatrix.join( ',' ) ) {
                     Notify.warn( 'wrong modelview' );
                 }
             } )();
