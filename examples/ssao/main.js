@@ -555,7 +555,8 @@ CullCallback.prototype = {
         var matrix = nv.getCurrentProjectionMatrix();
         this._projection = matrix;
         matrix._projection = 'me';
-        matrix = nv.getCurrentModelviewMatrix();
+        matrix = nv.getCurrentModelWorldMatrix() * nv.getCurrentViewMatrix();
+        //matrix = nv.getCurrentModelviewMatrix();
         this._modelview = matrix;
         return true;
     }
@@ -1429,7 +1430,6 @@ function createSceneOptimized( width, height ) {
         w = width;
         h = height;
         var textureSize = [ w, h ];
-
 
         var projection = osg.Uniform.createMat4( osg.Matrix.create(), 'projection' );
         var modelview = osg.Uniform.createMat4( osg.Matrix.create(), 'camera' );

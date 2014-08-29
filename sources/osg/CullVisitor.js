@@ -423,12 +423,8 @@ define( [
             var lastModelWorldMatrix = this.getCurrentModelWorldMatrix();
 
             Matrix.makeIdentity( modelWorld );
-            //Matrix.mult( lastModelWorldMatrix, camera.getModelMatrix(), modelWorld );
             Matrix.mult( lastViewMatrix, lastModelWorldMatrix, view );
             Matrix.mult( view, camera.getViewMatrix(), view );
-
-
-            // CHANGE CAMERA VIEW MODEL as Shadow Code.
 
             /// TODO remove when removing modelview
             ( function () {

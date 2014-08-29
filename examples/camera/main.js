@@ -53,7 +53,6 @@
 
         osg.Matrix.makeOrtho( 0, canvas.width, 0, canvas.height, -5, 5, hudCamera.getProjectionMatrix() );
         osg.Matrix.makeTranslate( 25, 25, 0, hudCamera.getViewMatrix() );
-        hudCamera.updateMatrices();
         hudCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
         hudCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
 
