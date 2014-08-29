@@ -29,6 +29,11 @@ define( [
         this.nodePath = nodePath;
     };
 
+    var PlanesLine = function ( planeMask, pos, dir ) {
+        this._planeMask = planeMask;
+        this._pos = pos;
+        this._dir = dir;
+    };
     var PolytopePrimitiveIntersector = function() {
         this._intersections = [];
         this._nodePath = [];
@@ -52,6 +57,7 @@ define( [
             this._planes = polytope;
             this._referencePlane = referencePlane;
             this._planesMask = 0;
+            this._lines.length = 0;
             for( var i = 0; i < this._planes.length; i++ )
             {
                 this._planesMask = ( this._planesMask << 1 ) | 1;
@@ -105,7 +111,6 @@ define( [
 
         intersectPoint : function ( v ) {
             // Might we use _limitOneIntersection ?
-            //if (_limitOneIntersection && !intersections.empty()) return;
             this._index++;
             var d ;
             for ( var i = 0, j = this._planes.length; i < j; ++i )
@@ -208,7 +213,7 @@ define( [
             }
         },
 
-        intersectTriangle : function () {
+        intersectTriangle : function ( v1, v2, v3 ) {
             this._index++;
             var selectorMask = 0x1;
             var insideMask = 0x0;
@@ -327,26 +332,81 @@ define( [
             }
             // handle case where the polytope goes through the triangle
             // without containing any point of it
-            
+            var lines = this.getPolytopeLines();
+            this._candidates = [];
+            // check all polytope lines against the triangle
+            // use algorithm from "Real-time rendering" (second edition) pp.580
+            var e1= Vec3.create();
+            var e2= Vec3.create();
 
-
-        },
-        getPolytopeLines: function ()
-        {
-            if ( this._lines.length === 0 ) return; // Polytope lines already calculated
-            var selector_mask = 0x1;
-            for ( var i = 0, j = this._planes.length; i < j; i++, selectorMask <<= 1 )
+            Vec3.sub( v2, v1, e1);
+            Vec3.sub( v3, v1, e2);
+            for ( i = 0; i < lines.length; ++i )
             {
-                var normal1 = this.getNormal ( this._planes[ i ] );
-                var point1 = Vec3.mult( normal, -this._planes[ i ][ 3 ]); // canonical point on plane[ i ]
-                var subSelectorMask = ( selector_mask << 1 );
-                for ( var jt = i +1, k = this._planes.length; jt < k; ++jt, subSelectorMask <<= 1 )
-                {
-                    var normal2 = this.getNormal( this._planes[ jt ] );
-                    if ( Math.abs( Vec3.dot( normal1, normal2 ) ) > (1.0 - 1e6 ) ) continue;
-                }
+                // review closures later
+                var point = Vec3.create();
+
+                var p = Vec3.create(); 
+                Vec3.cross( lines[i].dir , e2, p );
+                var a = Vec3.dot( e1, p );
+                if ( Math.abs( a ) < 1E6) continue;
+                var f = 1.0 / a;
+                var s = Vec3.create();
+                Vec3.sub( lines[i].pos, v1, s);
+                var u = f *( Vec3.dot ( s, p) );
+                if ( u < 0.0 || u > 1.0 ) continue;
+                var q = Vec3.create();
+                Vec3.cross( s, e1, q );
+                var v = f *( Vec3.dot( lines[i].dir, q ) );
+                if ( v<0.0 || u + v > 1.0) continue;
+                var t = f * ( Vec3.dot( e2, q ) );
+                Vec3.mult (lines.dir, t, point);
+                Vec3.add( lines[ i ].pos, point, point );
+                this._candidates.push( point );
+                this._candidatesMasks.push( lines[ i ].mask );
             }
-        }
+            numCands = this.checkCandidatePoints( insideMask );
+            if ( numCands >0 )
+            {
+                this._intersections.push( new PolytopeIntersection ( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ));
+                return;
+            }
+        },
+
+        getPolytopeLines: ( function ()
+        {
+            var lineDirection = Vec3.create();
+            var searchDirection = Vec3.create();
+            var normal1 = Vec3.create();
+            var point1 = Vec3.create();
+            var normal2 = Vec3.create();
+            var linePoint = Vec3.create();
+            var epsilon = 1E6;
+            return function () {
+                if ( this._lines.length === 0 ) return; // Polytope lines already calculated
+                var selectorMask = 0x1;
+                for ( var i = 0, j = this._planes.length; i < j; i++, selectorMask <<= 1 )
+                {
+                    normal1 = this.getNormal ( this._planes[ i ] );
+                    point1 = Vec3.mult( normal1, -this._planes[ i ][ 3 ]); // canonical point on plane[ i ]
+                    var subSelectorMask = ( selectorMask << 1 );
+                    for ( var jt = i +1, k = this._planes.length; jt < k; ++jt, subSelectorMask <<= 1 )
+                    {
+                        normal2 = this.getNormal( this._planes[ jt ] );
+                        if ( Math.abs( Vec3.dot( normal1, normal2 ) ) > 1 - epsilon ) continue;
+                        Vec3.cross( normal1, normal2, lineDirection );
+                        Vec3.cross( lineDirection, normal1, searchDirection );
+                        //-plane2.distance(point1)/(searchDirection*normal2);
+                        var searchDist = -this.distance( point1 ) / Vec3.dot ( searchDirection, normal2 );
+                        if ( isNaN( searchDist ) ) continue;
+                        Vec3.mult ( searchDirection, searchDist, linePoint );
+                        Vec3.add ( point1, lineDirection, lineDirection );
+                        this._lines.push( new PlanesLine( selectorMask | subSelectorMask, linePoint, lineDirection ) );
+                    }
+                }
+                return this._lines;
+            };
+        })(),
         distance: function ( plane, v )
         {
             var d = plane[ 0 ] * v[ 0 ] + plane[ 1 ] * v[ 1 ] + plane[ 2 ] * v[ 2 ] + plane[ 3 ];
@@ -355,7 +415,7 @@ define( [
 
         getNormal: ( function ( ) {
             var normal = Vec3.create();
-            function ( plane ) {
+            return function ( plane ) {
                 normal[ 0 ] = plane[0];
                 normal[ 1 ] = plane[1];
                 normal[ 2 ] = plane[2];

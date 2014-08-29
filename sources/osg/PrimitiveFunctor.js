@@ -31,17 +31,57 @@ define( [
     };
 
     PrimitiveFunctor.prototype = {
-        applyDrawElementsPoints: function( count, indexes ) {
-            var cb = this._cb( );
+        applyDrawElementsPoints: ( function( ) {
             var v = Vec3.create();
-            for ( var i = 0; i < count; i ++ ) {
-                var j = i*3;
-                v[ 0 ] = this._vertices[ indexes[ j ] ];
-                v[ 1 ] = this._vertices[ indexes[ j ] +1 ];
-                v[ 2 ] = this._vertices[ indexes[ j ] +2 ];
-                cb.point( v );
-            }
-        },
+            return function( count, indexes ) {
+                var cb = this._cb( );
+                for ( var i = 0; i < count ; ++i ) {
+                    var j = indexes[ i ] * 3;
+                    v[ 0 ] = this._vertices[ j ];
+                    v[ 1 ] = this._vertices[ j +1 ];
+                    v[ 2 ] = this._vertices[ j +2 ];
+                    cb.point( v );
+                }
+            };
+        } )(),
+        applyDrawElementsLines: ( function() {
+            var v1 = Vec3.create();
+            var v2 = Vec3.create();
+            return function ( count, indexes ) {
+                var cb = this._cb();
+                for ( var i = 0; i < count - 1; i += 2 ) {
+                    var j = indexes[ i ] * 3 ;
+                    v1[ 0 ] = this._vertices[ j ];
+                    v1[ 1 ] = this._vertices[ j +1 ];
+                    v1[ 2 ] = this._vertices[ j +2 ];
+                    j = indexes[ i + 1 ] * 3 ;
+                    v2[ 0 ] = this._vertices[ j ];
+                    v2[ 1 ] = this._vertices[ j +1 ];
+                    v2[ 2 ] = this._vertices[ j +2 ];
+                    cb.line( v1, v2 );
+                }
+            };
+        })(),
+
+        applyDrawElementsLineStrip: ( function() {
+            var v1 = Vec3.create();
+            var v2 = Vec3.create();
+            return function ( count, indexes ) {
+                var cb = this._cb();
+                for ( var i = 0; i < count - 1; ++i ) {
+                    var j = indexes[ i ] * 3 ;
+                    v1[ 0 ] = this._vertices[ j ];
+                    v1[ 1 ] = this._vertices[ j +1 ];
+                    v1[ 2 ] = this._vertices[ j +2 ];
+                    j = indexes[ i + 1 ] * 3 ;
+                    v2[ 0 ] = this._vertices[ j ];
+                    v2[ 1 ] = this._vertices[ j +1 ];
+                    v2[ 2 ] = this._vertices[ j +2 ];
+                    cb.line( v1, v2 );
+                }
+            };
+        })(),
+
         applyDrawElementsTriangles: function( count, indexes ) {
             var cb = this._cb;
             for ( var i = 0; i < count; i += 3 ) {
@@ -114,6 +154,34 @@ define( [
                     v2[ 2 ] = this._vertices[ j +2 ];
                     cb.line( v1, v2 );
                 }
+            };
+        })(),
+        applyDrawArraysLineLoop: ( function() {
+            var v1 = Vec3.create();
+            var v2 = Vec3.create();
+            return function ( first, count ) {
+                var cb = this._cb();
+                var last = first + count -1;
+                for ( var i = first; i < last; ++i ) {
+                    var j = i * 3 ;
+                    v1[ 0 ] = this._vertices[ j ];
+                    v1[ 1 ] = this._vertices[ j +1 ];
+                    v1[ 2 ] = this._vertices[ j +2 ];
+                    j = ( i + 1 ) * 3 ;
+                    v2[ 0 ] = this._vertices[ j ];
+                    v2[ 1 ] = this._vertices[ j +1 ];
+                    v2[ 2 ] = this._vertices[ j +2 ];
+                    cb.line( v1, v2 );
+                }
+                last = last * 3;
+                v1[ 0 ] = this._vertices[ last ];
+                v1[ 1 ] = this._vertices[ last + 1 ];
+                v1[ 2 ] = this._vertices[ last + 2 ];
+                first = first * 3;
+                v2[ 0 ] = this._vertices[ first ];
+                v2[ 1 ] = this._vertices[ first + 1 ];
+                v2[ 2 ] = this._vertices[ first + 2 ];
+                cb.line( v1, v2 );
             };
         })(),
 
@@ -209,6 +277,15 @@ define( [
                         case PrimitiveSet.POINTS:
                             this.applyDrawElementsPoints( primitive.getCount(), indexes );
                             break;
+                        case PrimitiveSet.LINES:
+                            this.applyDrawElementsLines( primitive.getCount(), indexes );
+                            break;
+                        case PrimitiveSet.LINE_STRIP:
+                            this.applyDrawElementsLineStrip( primitive.getCount(), indexes );
+                            break;
+                        case PrimitiveSet.LINE_LOOP:
+                            this.applyDrawElementsLineLoop( primitive.getCount(), indexes );
+                            break;
                         case PrimitiveSet.TRIANGLES:
                             this.applyDrawElementsTriangles( primitive.getCount(), indexes );
                             break;
@@ -229,6 +306,9 @@ define( [
                             break;
                         case PrimitiveSet.LINE_STRIP:
                             this.applyDrawArraysLineStrip( primitive.getFirst(), primitive.getCount() );
+                            break;
+                        case PrimitiveSet.LINE_LOOP:
+                            this.applyDrawArraysLineLoop( primitive.getFirst(), primitive.getCount() );
                             break;
                         case PrimitiveSet.TRIANGLES:
                             this.applyDrawArraysTriangles( primitive.getFirst(), primitive.getCount() );

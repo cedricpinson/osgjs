@@ -64,7 +64,7 @@ define( [
             camera.accept( iv );
             ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
             ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
-            mockup.near(pi._intersections[ 0 ], [-0.06415, 0.06415, 0 ] );
+            mockup.near(pi._intersections[ 0 ]._center, [-0.06415, 0.06415, 0 ] );
         } );
 
         test( 'PolytopeIntersector intersectLineStrip', function () {
@@ -84,7 +84,8 @@ define( [
             camera.accept( iv );
             ok( pi._intersections.length === 2, 'Hits should be 2 and result is ' + pi._intersections.length );
             ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
-            mockup.near(pi._intersections[ 0 ], [-0.06415, 0.06415, 0 ] );
+            
+            mockup.near( pi._intersections[ 0 ]._center, [-0.06415, 0.06415, 0 ] );
         } );
 
 
@@ -118,22 +119,24 @@ define( [
         normal[ 7 ] = 0;
         normal[ 8 ] = 1;
 
-        // var indexes = new MACROUTILS.Uint16Array( 6 );
-        // indexes[ 0 ] = 0;
-        // indexes[ 1 ] = 1;
-        // indexes[ 2 ] = 2;
+        var indexes = new MACROUTILS.Uint16Array( 3 );
+        indexes[ 0 ] = 2;
+        indexes[ 1 ] = 0;
+        indexes[ 2 ] = 1;
+
 
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
         g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
 
-        var primitive = new DrawArrays( PrimitiveSet.POINTS , 0, vertexes.length/3 );
+        //var primitive = new DrawArrays( PrimitiveSet.POINTS , 0, vertexes.length/3 );
+        var primitive = new DrawElements( PrimitiveSet.POINTS, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
         g.getPrimitives().push( primitive );
         return g;
     };
 
     var createLines = function ( lineType ) {
         var g = new Geometry();
-        var vertexes = new MACROUTILS.Float32Array( 9 );
+        var vertexes = new MACROUTILS.Float32Array( 12 );
         vertexes[ 0 ] = -2.0;
         vertexes[ 1 ] = 2.0;
         vertexes[ 2 ] = 0.0;
@@ -146,11 +149,11 @@ define( [
         vertexes[ 7 ] = 2.0;
         vertexes[ 8 ] = 0.0;
 
-        vertexes[ 6 ] = 4.0;
-        vertexes[ 7 ] = 0.0;
-        vertexes[ 8 ] = 0.0;
+        vertexes[ 9 ] = 4.0;
+        vertexes[ 10 ] = 0.0;
+        vertexes[ 11 ] = 0.0;
 
-        var normal = new MACROUTILS.Float32Array( 9 );
+        var normal = new MACROUTILS.Float32Array( 12 );
         normal[ 0 ] = 0;
         normal[ 1 ] = 0;
         normal[ 2 ] = 1;
