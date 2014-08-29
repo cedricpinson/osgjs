@@ -548,16 +548,21 @@ var getSSAOShader = function ( stateSet ) {
 var CullCallback = function () {
     this._projection = undefined;
     this._modelview = undefined;
+    this._model = undefined;
+    this._view = undefined;
 };
 CullCallback.prototype = {
     cull: function ( node, nv ) {
         //osg.log('cull');
         var matrix = nv.getCurrentProjectionMatrix();
         this._projection = matrix;
-        matrix._projection = 'me';
-        matrix = nv.getCurrentModelWorldMatrix() * nv.getCurrentViewMatrix();
+
+        // quite strange thing, cannot fathom any sense there
+        // matrix._projection = 'me';
         //matrix = nv.getCurrentModelviewMatrix();
-        this._modelview = matrix;
+        this._modelview = nv.getCurrentModelviewMatrix();
+        this._view = nv.getCurrentViewMatrix();
+        this._model = nv.getCurrentModelWorldMatrix();
         return true;
     }
 };
@@ -1293,7 +1298,9 @@ function createSceneTestReconstructPosition() {
 
 
                     osg.Matrix.copy( this._ucb._projection, this._projection.get() );
-                    osg.Matrix.copy( this._ucb._modelview, this._matrix.get() );
+
+                    osg.Matrix.mult( this._ucb._view, this._ucb.model, this._matrix.get() );
+                    //osg.Matrix.copy( this._ucb._modelview, this._matrix.get() );
                     this._projection.dirty();
                     this._matrix.dirty();
 

@@ -213,14 +213,16 @@ define( [
             this._currentRenderBin = rg;
         },
         reset: function () {
-            //this._modelviewMatrixStack.length = 0;
-            this._modelviewMatrixStack.splice( 0, this._modelviewMatrixStack.length );
             //this._viewMatrixStack.length = 0;
             this._viewMatrixStack.splice( 0, this._viewMatrixStack.length );
             //this._modelWorldMatrixStack.length = 0;
             this._modelWorldMatrixStack.splice( 0, this._modelWorldMatrixStack.length );
             //this._projectionMatrixStack.length = 0;
             this._projectionMatrixStack.splice( 0, this._projectionMatrixStack.length );
+
+            // TODO remove
+            //this._modelviewMatrixStack.length = 0;
+            this._modelviewMatrixStack.splice( 0, this._modelviewMatrixStack.length );
 
             this._reserveMatrixStack.current = 0;
             this._reserveLeafStack.current = 0;

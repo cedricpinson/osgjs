@@ -1,13 +1,15 @@
 define( [], function () {
 
     var CullStack = function () {
-        this._modelviewMatrixStack = [];
         this._viewMatrixStack = [];
         this._modelWorldMatrixStack = [];
         this._projectionMatrixStack = [];
         this._viewportStack = [];
         this._bbCornerFar = 0;
         this._bbCornerNear = 0;
+
+        // TODO: remove that modelview stack, and all warning it will arise.
+        this._modelviewMatrixStack = [];
     };
 
     CullStack.prototype = {
