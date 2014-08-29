@@ -38,6 +38,7 @@ define( [
         this._lines = [];                    ///< all intersection lines of two polytope planes
         this._candidates = [];
         this._candidatesMasks = [];
+        this._lines = [];
         this._planesMask = 0;
     };
 
@@ -54,8 +55,6 @@ define( [
             for( var i = 0; i < this._planes.length; i++ )
             {
                 this._planesMask = ( this._planesMask << 1 ) | 1;
-                //_plane_mask <<= 1;
-                //_plane_mask |= 0x1;
             }
         },
 
@@ -86,10 +85,10 @@ define( [
         checkCandidatePoints : function ( insideMask ) {
             var selectorMask = 0x1;
             var numCands = this._candidates.length;
-            for ( var i = 0, j = this._planes.length; i < j && numCands > 0; i++, selectorMask <<= 1 )
+            for ( var i = 0, j = this._planes.length; i < j && numCands > 0; ++i, selectorMask <<= 1 )
             {
                 if ( insideMask & selectorMask ) continue;
-                for ( var c = 0; c < this._candidates.length; c++)
+                for ( var c = 0; c < this._candidates.length; ++c)
                 {
                     if ( this._candidatesMasks[ c ] === 0 ) continue;
                     if ( selectorMask & this._candidatesMasks[ c ] ) continue;
@@ -105,14 +104,13 @@ define( [
         },
 
         intersectPoint : function ( v ) {
-            // Use _limitOneIntersection?
+            // Might we use _limitOneIntersection ?
             //if (_limitOneIntersection && !intersections.empty()) return;
             this._index++;
             var d ;
-            for ( var i = 0, j = this._planes.length; i < j; i++ )
+            for ( var i = 0, j = this._planes.length; i < j; ++i )
             {
                 d = this.distance( this._planes[ i ], v );
-                //d = this._planes[ i ][ 0 ] * v[ 0 ] + this._planes[ i ][ 1 ] * v[ 1 ]+ this._planes[ i ][ 2 ] * v[ 2 ] + this._planes[ i ][ 3 ];
                 if ( d < 0.0 ){
                     // point is outside the polytope
                     return;
@@ -136,12 +134,12 @@ define( [
             this._candidates = [];
             this._candidatesMasks = [];
             var d1, d2, d1IsNegative, d2IsNegative;
-            for ( var i = 0, j = this._planes.length; i < j; i++, selectorMask <<= 1 )
+            for ( var i = 0, j = this._planes.length; i < j; ++i, selectorMask <<= 1 )
             {
                 d1 = this.distance( this._planes[ i ], v1 );
                 d2 = this.distance( this._planes[ i ], v2 );
-                d1IsNegative = (d1 <= 0.0);
-                d2IsNegative = (d2 <= 0.0);
+                d1IsNegative = ( d1 <= 0.0 );
+                d2IsNegative = ( d2 <= 0.0 );
                 var hit = Vec3.create();
                 if ( d1IsNegative && d2IsNegative ) return; // line outside
                 if ( !d1IsNegative && !d2IsNegative )
@@ -185,9 +183,9 @@ define( [
 
             if ( insideMask === this._planesMask )
             {
-                this._candidates.push( v1 );
+                this._candidates.push( Vec3.copy( v1, Vec3.create() ) );
                 this._candidatesMasks.push( this._planesMask );
-                this._candidates.push( v2 );
+                this._candidates.push( Vec3.copy( v2, Vec3.create() ) );
                 this._candidatesMasks.push( this._planesMask );
                 this._intersections.push( new PolytopeIntersection ( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ));
                 return;
@@ -208,17 +206,162 @@ define( [
                 }
                 this._intersections.push( new PolytopeIntersection ( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ));
             }
-
         },
+
         intersectTriangle : function () {
+            this._index++;
+            var selectorMask = 0x1;
+            var insideMask = 0x0;
+            this._candidates = [];
+            this._candidatesMasks = [];
+            var d1, d2, d3, d1IsNegative, d2IsNegative, d3IsNegative;
+            for ( var i = 0, j = this._planes.length; i < j; ++i, selectorMask <<= 1 )
+            {
+                d1 = this.distance( this._planes[ i ], v1 );
+                d2 = this.distance( this._planes[ i ], v2 );
+                d3 = this.distance( this._planes[ i ], v3 );
+                d1IsNegative = ( d1 <= 0.0 );
+                d2IsNegative = ( d2 <= 0.0 );
+                d3IsNegative = ( d3 <= 0.0 );
+                var hit = Vec3.create();
+                if ( d1IsNegative && d2IsNegative && d3IsNegative ) return; // Triangle outside
+                if ( !d1IsNegative && !d2IsNegative && !d3IsNegative )
+                {
+                    // completly inside this plane
+                    insideMask |= selectorMask;
+                    continue;
+                }
+                 // edge v1-v2 intersects
+                if ( d1 === 0.0 )
+                {
+                    Vec3.copy( v1, hit );
+                    this._candidates.push( hit );
+                    this._candidatesMasks.push( selectorMask );
+                }
+                else if ( d2 === 0.0 )
+                {
+                    Vec3.copy( v2, hit );
+                    this._candidates.push( hit );
+                    this._candidatesMasks.push ( selectorMask );
+                }
+                else if ( d1IsNegative && !d2IsNegative )
+                {
+                    //v1-(v2-v1)*(d1/(-d1+d2))) )
+                    Vec3.sub( v2, v1, hit );
+                    Vec3.mult( hit, d1 / ( -d1 + d2 ) , hit );
+                    Vec3.sub( v1, hit, hit );
+                    this._candidates.push( hit );
+                    this._candidatesMasks.push( selectorMask );
+                }
+                else if ( !d1IsNegative && d2IsNegative )
+                {
+                    //(v1+(v2-v1)*(d1/(d1-d2)))
+                    Vec3.sub( v2, v1, hit );
+                    Vec3.mult( hit, d1 / ( d1 - d2 ) , hit );
+                    Vec3.add( v1, hit, hit );
+                    this._candidates.push( hit );
+                    this._candidatesMasks.push( selectorMask );
+                }
+                // edge v1-v3 intersects
+                if ( d3 === 0.0 )
+                {
+                    Vec3.copy( v3, hit );
+                    this._candidates.push( hit );
+                    this._candidatesMasks.push ( selectorMask );
+                }
+                else if ( d1IsNegative && !d3IsNegative )
+                {
+                    // v1-(v3-v1)*(d1/(-d1+d3))
+                    Vec3.sub( v3, v1, hit );
+                    Vec3.mult( hit, d1 / ( -d1 + d3 ) , hit );
+                    Vec3.sub( v1, hit, hit );
+                    this._candidates.push( hit );
+                    this._candidatesMasks.push( selectorMask );
+                }
+                else if ( !d1IsNegative && d3IsNegative )
+                {
+                    // v1+(v3-v1)*(d1/(d1-d3))
+                    Vec3.sub( v3, v1, hit );
+                    Vec3.mult( hit, d1 / ( d1 - d3 ) , hit );
+                    Vec3.add( v1, hit, hit );
+                    this._candidates.push( hit );
+                    this._candidatesMasks.push( selectorMask );
+                }
+                // edge v2-v3 intersects
+                if ( d2IsNegative && !d3IsNegative )
+                {
+                    // v2-(v3-v2)*(d2/(-d2+d3))
+                    Vec3.sub( v3, v2, hit );
+                    Vec3.mult( hit, d2 / ( -d2 + d3 ) , hit );
+                    Vec3.sub( v2, hit, hit );
+                    this._candidates.push( hit );
+                    this._candidatesMasks.push( selectorMask );
+                }
+                else if ( !d2IsNegative && d3IsNegative )
+                {
+                    //v2+(v3-v2)*(d2/(d2-d3))
+                    Vec3.sub( v3, v2, hit );
+                    Vec3.mult( hit, d2 / ( d2 - d3 ) , hit );
+                    Vec3.add( v2, hit, hit );
+                    this._candidates.push( hit );
+                    this._candidatesMasks.push( selectorMask );
+                }
+            }
+            if ( insideMask === this._planesMask )
+            {
+                // triangle lies inside of all planes
+                this._candidates.push( Vec3.copy( v1, Vec3.create() ) );
+                this._candidatesMasks.push( this._planesMask );
+                this._candidates.push( Vec3.copy( v2, Vec3.create() ) );
+                this._candidatesMasks.push( this._planesMask );
+                this._candidates.push( Vec3.copy( v3, Vec3.create() ) );
+                this._candidatesMasks.push( this._planesMask );
+                this._intersections.push( new PolytopeIntersection ( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ));
+                return;
+            }
+            var numCands = this.checkCandidatePoints( insideMask );
+            if ( numCands > 0 )
+            {
+                this._intersections.push( new PolytopeIntersection ( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ));
+                return;
+            }
+            // handle case where the polytope goes through the triangle
+            // without containing any point of it
+            
+
 
         },
+        getPolytopeLines: function ()
+        {
+            if ( this._lines.length === 0 ) return; // Polytope lines already calculated
+            var selector_mask = 0x1;
+            for ( var i = 0, j = this._planes.length; i < j; i++, selectorMask <<= 1 )
+            {
+                var normal1 = this.getNormal ( this._planes[ i ] );
+                var point1 = Vec3.mult( normal, -this._planes[ i ][ 3 ]); // canonical point on plane[ i ]
+                var subSelectorMask = ( selector_mask << 1 );
+                for ( var jt = i +1, k = this._planes.length; jt < k; ++jt, subSelectorMask <<= 1 )
+                {
+                    var normal2 = this.getNormal( this._planes[ jt ] );
+                    if ( Math.abs( Vec3.dot( normal1, normal2 ) ) > (1.0 - 1e6 ) ) continue;
+                }
+            }
+        }
         distance: function ( plane, v )
         {
             var d = plane[ 0 ] * v[ 0 ] + plane[ 1 ] * v[ 1 ] + plane[ 2 ] * v[ 2 ] + plane[ 3 ];
             return d;
-        }
+        },
 
+        getNormal: ( function ( ) {
+            var normal = Vec3.create();
+            function ( plane ) {
+                normal[ 0 ] = plane[0];
+                normal[ 1 ] = plane[1];
+                normal[ 2 ] = plane[2];
+                return normal;
+            };
+        })()
     };
 
 
