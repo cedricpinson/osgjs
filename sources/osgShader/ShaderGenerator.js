@@ -6,14 +6,24 @@ define( [
     'osgShader/Compiler',
     'osgShader/ShaderProcessor'
 ], function ( Notify, Program, Shader, Map, Compiler, ShaderProcessor ) {
+    'use strict';
 
     var ShaderGenerator = function () {
         this._cache = {};
-        // one processor per shadergenerator
+
+        // ShaderProcessor singleton used by ShaderGenerator
+        // but user can replace it if needed
         this._shaderProcessor = new ShaderProcessor();
     };
 
     ShaderGenerator.prototype = {
+
+        getShaderProcessor: function () {
+            return this._shaderProcessor;
+        },
+        setShaderProcessor: function ( shaderProcessor ) {
+            this._shaderProcessor = shaderProcessor;
+        },
 
         // filter all attribute that comes from osgShader namespace
         getActiveAttributeList: function ( state, list ) {

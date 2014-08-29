@@ -4,39 +4,28 @@ define( [
 ], function ( Notify, shaderLib ) {
     'use strict';
 
-    var shaderPrefix = shaderLib.prefix;
-
     //     Shader as vert/frag/glsl files Using requirejs text plugin
     //     Preprocess features like:    //
     //     - Handle (recursive) include, avoiding code repeat and help code factorization
     //     - Handle per shader and global define/precision
-    /**
-     * @class ShaderLoader
-     */
-    var ShaderLoader = function ( opt ) {
-        var options = opt;
-        if ( !options ) {
-            options = {
-                callbacksingle: function ( file ) {
-                    window.dbg.viewer.log( file + 'is loaded' );
-                },
-                libs: [ {
-                    loadprefix: shaderPrefix,
-                    shaders: shaderLib
-                } ]
-            };
+
+
+    var ShaderProcessor = function ( createInstance ) {
+
+        if ( !createInstance ) {
+            if ( ShaderProcessor.instance ) {
+                return ShaderProcessor.instance;
+            }
+            ShaderProcessor.instance = this;
         }
-        this.init( options );
+
+        this.addShaders( shaderLib );
+        return this;
     };
 
-    /** @lends osg.ShaderLoader.prototype */
-    ShaderLoader.prototype = {
+    ShaderProcessor.prototype = {
         _shadersText: {},
         _shadersList: {},
-        _shaderLoaded: {},
-        _loaded: false,
-        _callbackSingle: false,
-        _numtoLoad: 0,
         _globalDefaultDefines: '',
         _globalDefaultprecision: '#ifdef GL_FRAGMENT_PRECISION_HIGH\n precision highp float;\n #else\n precision mediump float;\n#endif',
         _debugLines: false,
@@ -44,42 +33,23 @@ define( [
         _defineR: /#define\s+([a-zA-Z_0-9]+)\s+(.*)/,
         _precisionR: /precision\s+(high|low|medium)p\s+float/,
 
-        initShaderLib: function ( lib ) {
 
-            if ( !lib.loadprefix ) lib.loadprefix = '';
-            var i;
-            for ( i in lib.shaders ) {
-                if ( lib.shaders.hasOwnProperty( i ) ) {
-                    this._numtoLoad++;
-                }
-            }
-            for ( i in lib.shaders ) {
-                if ( lib.shaders.hasOwnProperty( i ) ) {
-                    this._shadersList[ i ] = i;
-                    this._shadersText[ i ] = lib.shaders[ i ];
-                    if ( this._callbackSingle ) this._callbackSingle( i );
-                    this._numtoLoad--;
-                }
-            }
-            this._loaded = true;
+        // {
+        //     'functions.glsl': textShaderFunctions,
+        //     'lights.glsl': textShaderFunctions,
+        //     'textures.glsl': textShaderFunctions
+        // };
+        addShaders: function( shaders ) {
 
-            Notify.assert( this._numtoLoad === 0 );
+            var keys = Object.keys( shaders );
 
+            keys.forEach( function( key ) {
 
-        },
+                this._shadersList[ key ] = key;
+                this._shadersText[ key ] = shaders[ key ];
 
-        init: function ( options ) {
+            }, this );
 
-            this._callbackSingle = options.callbackSingle;
-            this._numtoLoad = 0;
-
-            if ( options.libs ) {
-                options.libs.forEach( function ( lib ) {
-                    this.initShaderLib( lib );
-                }, this );
-            }
-
-            return this;
         },
 
 
@@ -107,23 +77,14 @@ define( [
         },
 
         getShaderTextPure: function ( shaderName ) {
-            var preShader;
 
-            if ( !( shaderName in this._shadersText ) ) {
-                // directory include/prefix problems.
-                for ( var name in this._shadersText ) {
-                    if ( name.indexOf( shaderName ) !== -1 ) {
-                        preShader = this._shadersText[ name ];
-                        break;
-                    }
-                }
-                if ( !preShader ) {
-                    window.dbg.viewer.error( 'shader file/text: ' + shaderName + ' not loaded' );
-                    return '';
-                }
-            } else {
-                preShader = this._shadersText[ shaderName ];
+            var preShader = this._shadersText[ shaderName ];
+
+            if ( ! preShader ) {
+                Notify.error( 'shader file/text: ' + shaderName + ' not registered' );
+                preShader = '';
             }
+
             return preShader;
         },
 
@@ -135,6 +96,7 @@ define( [
         // recursively  handle #include external glsl
         // files (for now in the same folder.)
         preprocess: function ( content, sourceID, includeList ) {
+
             return content.replace( this._includeR, function ( _, name ) {
                 // \#pragma include 'name';
                 // already included
@@ -151,6 +113,7 @@ define( [
                 txt = this.preprocess( txt, sourceID, includeList );
                 return txt;
             }.bind( this ) );
+
         },
 
         //  process a shader and define
@@ -159,6 +122,7 @@ define( [
         //  adding defines
         //  adding line instrumenting.
         processShader: function ( shader, defines ) {
+
             var includeList = [];
             var preShader = shader;
             var sourceID = 0;
@@ -169,6 +133,7 @@ define( [
             var postShader = this.preprocess( preShader, sourceID, includeList );
 
             var prePrend = '';
+
             if ( this._globalDefaultprecision ) {
                 if ( !this._precisionR.test( postShader ) ) {
                     // use the shaderhighprecision flag at shaderloader start
@@ -186,6 +151,6 @@ define( [
             return postShader;
         }
     };
-    return ShaderLoader;
+    return ShaderProcessor;
 
 } );
