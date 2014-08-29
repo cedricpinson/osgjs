@@ -28,6 +28,7 @@
         "asyncTest": false,
         "equal": false,
         "start": false,
-        "deepEqual": false
+        "deepEqual": false,
+        "__dirname": false
     }
 }

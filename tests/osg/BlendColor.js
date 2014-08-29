@@ -1,8 +1,9 @@
 define( [
     'tests/mockup/mockup',
     'osg/BlendColor',
-    'osg/State'
-], function ( mockup, BlendColor, State ) {
+    'osg/State',
+    'osgShader/ShaderGeneratorProxy'
+], function ( mockup, BlendColor, State, ShaderGeneratorProxy ) {
 
     return function () {
 
@@ -22,7 +23,7 @@ define( [
                 n.getConstantColor()[ 2 ] === 0.0 &&
                 n.getConstantColor()[ 3 ] === 0.5, 'Check set constant color' );
 
-            var state = new State();
+            var state = new State( new ShaderGeneratorProxy() );
             state.setGraphicContext( mockup.createFakeRenderer() );
 
             n.apply( state );

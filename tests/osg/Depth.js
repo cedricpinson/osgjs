@@ -1,8 +1,9 @@
 define( [
     'tests/mockup/mockup',
     'osg/Depth',
-    'osg/State'
-], function ( mockup, Depth, State ) {
+    'osg/State',
+    'osgShader/ShaderGeneratorProxy'
+], function ( mockup, Depth, State, ShaderGeneratorProxy ) {
 
     return function () {
 
@@ -16,7 +17,7 @@ define( [
             ok( n._func === Depth.LESS, 'Check function' );
             ok( n._writeMask === true, 'Check write mask' );
 
-            var state = new State();
+            var state = new State( new ShaderGeneratorProxy() );
             state.setGraphicContext( mockup.createFakeRenderer() );
 
             n.apply( state );
