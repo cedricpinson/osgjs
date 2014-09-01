@@ -18,7 +18,7 @@ define( [
         for ( var i = 0, j = candidates.length; i < j; i++ )
         {
             if ( candidatesMasks[ i ] === 0 ) continue;
-            this._points[ this._numPoints++ ] = candidates[ i ];
+            this._points[ this._numPoints++ ] = Vec3.copy( candidates[ i ], Vec3.create() );
             Vec3.add ( this._center ,candidates[ i ], this._center );
             var distance = referencePlane[ 0 ] * candidates[ i ][ 0 ] + referencePlane[ 1 ] * candidates[ i ][ 1 ] + referencePlane[ 2 ] * candidates[ i ][ 2 ] + referencePlane[ 3 ];
             if ( distance > this._maxDistance ) this._maxDistance = distance;
@@ -113,6 +113,7 @@ define( [
             // Might we use _limitOneIntersection ?
             this._index++;
             var d ;
+
             for ( var i = 0, j = this._planes.length; i < j; ++i )
             {
                 d = this.distance( this._planes[ i ], v );
@@ -121,6 +122,8 @@ define( [
                     return;
                 }
             }
+            this._candidates = [];
+            this._candidatesMasks = [];
             // Intersection found: Copy the value and push it
             var hit = Vec3.create();
             Vec3.copy( v,hit );
@@ -228,7 +231,9 @@ define( [
                 d1IsNegative = ( d1 <= 0.0 );
                 d2IsNegative = ( d2 <= 0.0 );
                 d3IsNegative = ( d3 <= 0.0 );
-                var hit = Vec3.create();
+                var tmpHit1 = Vec3.create();
+                var tmpHit2 = Vec3.create();
+                var tmpHit3 = Vec3.create();
                 if ( d1IsNegative && d2IsNegative && d3IsNegative ) return; // Triangle outside
                 if ( !d1IsNegative && !d2IsNegative && !d3IsNegative )
                 {
@@ -239,76 +244,76 @@ define( [
                  // edge v1-v2 intersects
                 if ( d1 === 0.0 )
                 {
-                    Vec3.copy( v1, hit );
-                    this._candidates.push( hit );
+                    Vec3.copy( v1, tmpHit1 );
+                    this._candidates.push( tmpHit1 );
                     this._candidatesMasks.push( selectorMask );
                 }
                 else if ( d2 === 0.0 )
                 {
-                    Vec3.copy( v2, hit );
-                    this._candidates.push( hit );
+                    Vec3.copy( v2, tmpHit1 );
+                    this._candidates.push( tmpHit1 );
                     this._candidatesMasks.push ( selectorMask );
                 }
                 else if ( d1IsNegative && !d2IsNegative )
                 {
                     //v1-(v2-v1)*(d1/(-d1+d2))) )
-                    Vec3.sub( v2, v1, hit );
-                    Vec3.mult( hit, d1 / ( -d1 + d2 ) , hit );
-                    Vec3.sub( v1, hit, hit );
-                    this._candidates.push( hit );
+                    Vec3.sub( v2, v1, tmpHit1 );
+                    Vec3.mult( tmpHit1, d1 / ( -d1 + d2 ) , tmpHit1 );
+                    Vec3.sub( v1, tmpHit1, tmpHit1 );
+                    this._candidates.push( tmpHit1 );
                     this._candidatesMasks.push( selectorMask );
                 }
                 else if ( !d1IsNegative && d2IsNegative )
                 {
                     //(v1+(v2-v1)*(d1/(d1-d2)))
-                    Vec3.sub( v2, v1, hit );
-                    Vec3.mult( hit, d1 / ( d1 - d2 ) , hit );
-                    Vec3.add( v1, hit, hit );
-                    this._candidates.push( hit );
+                    Vec3.sub( v2, v1, tmpHit1 );
+                    Vec3.mult( tmpHit1, d1 / ( d1 - d2 ) , tmpHit1 );
+                    Vec3.add( v1, tmpHit1, tmpHit1 );
+                    this._candidates.push( tmpHit1 );
                     this._candidatesMasks.push( selectorMask );
                 }
                 // edge v1-v3 intersects
                 if ( d3 === 0.0 )
                 {
-                    Vec3.copy( v3, hit );
-                    this._candidates.push( hit );
+                    Vec3.copy( v3, tmpHit2 );
+                    this._candidates.push( tmpHit2 );
                     this._candidatesMasks.push ( selectorMask );
                 }
                 else if ( d1IsNegative && !d3IsNegative )
                 {
                     // v1-(v3-v1)*(d1/(-d1+d3))
-                    Vec3.sub( v3, v1, hit );
-                    Vec3.mult( hit, d1 / ( -d1 + d3 ) , hit );
-                    Vec3.sub( v1, hit, hit );
-                    this._candidates.push( hit );
+                    Vec3.sub( v3, v1, tmpHit2 );
+                    Vec3.mult( tmpHit2, d1 / ( -d1 + d3 ) , tmpHit2 );
+                    Vec3.sub( v1, tmpHit2, tmpHit2 );
+                    this._candidates.push( tmpHit2 );
                     this._candidatesMasks.push( selectorMask );
                 }
                 else if ( !d1IsNegative && d3IsNegative )
                 {
                     // v1+(v3-v1)*(d1/(d1-d3))
-                    Vec3.sub( v3, v1, hit );
-                    Vec3.mult( hit, d1 / ( d1 - d3 ) , hit );
-                    Vec3.add( v1, hit, hit );
-                    this._candidates.push( hit );
+                    Vec3.sub( v3, v1, tmpHit2 );
+                    Vec3.mult( tmpHit2, d1 / ( d1 - d3 ) , tmpHit2 );
+                    Vec3.add( v1, tmpHit2, tmpHit2 );
+                    this._candidates.push( tmpHit2 );
                     this._candidatesMasks.push( selectorMask );
                 }
                 // edge v2-v3 intersects
                 if ( d2IsNegative && !d3IsNegative )
                 {
                     // v2-(v3-v2)*(d2/(-d2+d3))
-                    Vec3.sub( v3, v2, hit );
-                    Vec3.mult( hit, d2 / ( -d2 + d3 ) , hit );
-                    Vec3.sub( v2, hit, hit );
-                    this._candidates.push( hit );
+                    Vec3.sub( v3, v2, tmpHit3 );
+                    Vec3.mult( tmpHit3, d2 / ( -d2 + d3 ) , tmpHit3 );
+                    Vec3.sub( v2, tmpHit3, tmpHit3 );
+                    this._candidates.push( tmpHit3 );
                     this._candidatesMasks.push( selectorMask );
                 }
                 else if ( !d2IsNegative && d3IsNegative )
                 {
                     //v2+(v3-v2)*(d2/(d2-d3))
-                    Vec3.sub( v3, v2, hit );
-                    Vec3.mult( hit, d2 / ( d2 - d3 ) , hit );
-                    Vec3.add( v2, hit, hit );
-                    this._candidates.push( hit );
+                    Vec3.sub( v3, v2, tmpHit3 );
+                    Vec3.mult( tmpHit3, d2 / ( d2 - d3 ) , tmpHit3 );
+                    Vec3.add( v2, tmpHit3, tmpHit3 );
+                    this._candidates.push( tmpHit3 );
                     this._candidatesMasks.push( selectorMask );
                 }
             }
@@ -332,6 +337,7 @@ define( [
             }
             // handle case where the polytope goes through the triangle
             // without containing any point of it
+            // Probably it can be moved to other function and do the relevant closures.
             var lines = this.getPolytopeLines();
             this._candidates = [];
             // check all polytope lines against the triangle

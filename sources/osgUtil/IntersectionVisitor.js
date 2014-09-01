@@ -75,7 +75,7 @@ define( [
         },
         getTransformation: ( function() {
             // We should move this to the intersector when we need to use different coordinate frames
-            // Now we only support PROJECTION
+            // Now we only support WINDOW coordinate frame
             var mat = Matrix.create();
             return function( ) {
                 Matrix.copy(this.getWindowMatrix(), mat);
@@ -109,7 +109,7 @@ define( [
         },
 
         applyCamera: function( camera ) {
-            // We use an absolute reference frame for simlpicity
+            // We use an absolute reference frame for simplicity
             var vp = camera.getViewport();
             if ( vp !== undefined ) {
                 this.pushWindowMatrixUsingViewport( vp );

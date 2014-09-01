@@ -20,7 +20,9 @@ define( [
      *          triangle : function ( v1, v2, v3 ) { } // Do your triangle operations here
      *      }
      * };
-     *
+     * 
+     * Important Note: You should take into account that you are accesing the actual vertices of the primitive
+     * you might want to do a copy of these values in your callback to avoid to modify the primitive geometry
      *  @class PrimitiveFunctor
      */
 
@@ -82,28 +84,113 @@ define( [
             };
         })(),
 
-        applyDrawElementsTriangles: function( count, indexes ) {
-            var cb = this._cb;
-            for ( var i = 0; i < count; i += 3 ) {
-                cb( indexes[ i ], indexes[ i + 1 ], indexes[ i + 2 ] );
-            }
-        },
+        applyDrawElementsLineLoop: ( function() {
+            var v1 = Vec3.create();
+            var v2 = Vec3.create();
+            return function ( count, indexes ) {
+                var cb = this._cb();
+                var last = count -1;
+                for ( var i = 0; i < last; ++i ) {
+                    var j = indexes[ i ] * 3 ;
+                    v1[ 0 ] = this._vertices[ j ];
+                    v1[ 1 ] = this._vertices[ j +1 ];
+                    v1[ 2 ] = this._vertices[ j +2 ];
+                    j = indexes[ i + 1 ] * 3 ;
+                    v2[ 0 ] = this._vertices[ j ];
+                    v2[ 1 ] = this._vertices[ j +1 ];
+                    v2[ 2 ] = this._vertices[ j +2 ];
+                    cb.line( v1, v2 );
+                }
+                last = indexes [ last ] * 3;
+                v1[ 0 ] = this._vertices[ last ];
+                v1[ 1 ] = this._vertices[ last + 1 ];
+                v1[ 2 ] = this._vertices[ last + 2 ];
+                var first = indexes [ 0 ] * 3;
+                v2[ 0 ] = this._vertices[ first ];
+                v2[ 1 ] = this._vertices[ first + 1 ];
+                v2[ 2 ] = this._vertices[ first + 2 ];
+                cb.line( v1, v2 );
+            };
+        })(),
 
-        applyDrawElementsTriangleStrip: function( count, indexes ) {
-            var cb = this._cb;
-            for ( var i = 2, j = 0; i < count; ++i, ++j ) {
-                if ( i % 2 ) cb( indexes[ j ], indexes[ j + 2 ], indexes[ j + 1 ] );
-                else cb( indexes[ j ], indexes[ j + 1 ], indexes[ j + 2 ] );
-            }
-        },
+         applyDrawElementsTriangles: ( function() {
+            var v1 = Vec3.create();
+            var v2 = Vec3.create();
+            var v3 = Vec3.create();
+            return function ( count, indexes ) {
+                var cb = this._cb();
+                for ( var i = 0; i < count; i += 3 ) {
+                    var j = indexes[ i ]* 3;
+                    v1[ 0 ] = this._vertices[ j ];
+                    v1[ 1 ] = this._vertices[ j +1 ];
+                    v1[ 2 ] = this._vertices[ j +2 ];
+                    j = indexes[ i + 1 ] * 3 ;
+                    v2[ 0 ] = this._vertices[ j ];
+                    v2[ 1 ] = this._vertices[ j +1 ];
+                    v2[ 2 ] = this._vertices[ j +2 ];
+                    j = indexes[ i + 2 ] * 3 ;
+                    v3[ 0 ] = this._vertices[ j ];
+                    v3[ 1 ] = this._vertices[ j +1 ];
+                    v3[ 2 ] = this._vertices[ j +2 ];
+                    cb.triangle( v1, v2, v3 );
+                }
+            };
+        })(),
 
-        applyDrawElementsTriangleFan: function( count, indexes ) {
-            var cb = this._cb;
-            var first = indexes[ 0 ];
-            for ( var i = 2, j = 1; i < count; ++i, ++j ) {
-                cb( first, indexes[ j ], indexes[ j + 1 ] );
-            }
-        },
+         applyDrawElementsTriangleStrip: ( function() {
+            var v1 = Vec3.create();
+            var v2 = Vec3.create();
+            var v3 = Vec3.create();
+            return function ( count, indexes ) {
+                var cb = this._cb();
+                for ( var i = 2, pos = 0; i < count; ++i, ++pos )
+                {
+                    var j = indexes[ pos ] * 3;
+                    v1[ 0 ] = this._vertices[ j ];
+                    v1[ 1 ] = this._vertices[ j +1 ];
+                    v1[ 2 ] = this._vertices[ j +2 ];
+                    j = indexes[ pos + 1 ] * 3;
+                    v2[ 0 ] = this._vertices[ j ];
+                    v2[ 1 ] = this._vertices[ j +1 ];
+                    v2[ 2 ] = this._vertices[ j +2 ];
+                    j = indexes[ pos + 2 ] * 3;
+                    v3[ 0 ] = this._vertices[ j ];
+                    v3[ 1 ] = this._vertices[ j +1 ];
+                    v3[ 2 ] = this._vertices[ j +2 ];
+                    if ( i % 2 )
+                    {
+                        cb.triangle( v1, v3, v2);
+                    } else {
+                        cb.triangle( v1, v2, v3);
+                    }
+                }
+            };
+        })(),
+
+        applyDrawElementsTriangleFan: ( function() {
+            var v1 = Vec3.create();
+            var v2 = Vec3.create();
+            var v3 = Vec3.create();
+            return function ( count, indexes ) {
+                var cb = this._cb();
+                var first = indexes [ 0 ];
+                for ( var i = 2, pos = 1; i < count; ++i, ++pos )
+                {
+                    v1[ 0 ] = this._vertices[ first ];
+                    v1[ 1 ] = this._vertices[ first +1 ];
+                    v1[ 2 ] = this._vertices[ first +2 ];
+                    var j = indexes[ pos ] * 3;
+                    v2[ 0 ] = this._vertices[ j ];
+                    v2[ 1 ] = this._vertices[ j +1 ];
+                    v2[ 2 ] = this._vertices[ j +2 ];
+                    j = indexes[ pos + 1 ] * 3;
+                    v3[ 0 ] = this._vertices[ j ];
+                    v3[ 1 ] = this._vertices[ j +1 ];
+                    v3[ 2 ] = this._vertices[ j +2 ];
+                    cb.triangle( v1, v2, v3 );
+                }
+            };
+        })(),
 
         applyDrawArraysPoints: ( function() {
             var v = Vec3.create();
@@ -204,7 +291,7 @@ define( [
                     v3[ 0 ] = this._vertices[ j ];
                     v3[ 1 ] = this._vertices[ j +1 ];
                     v3[ 2 ] = this._vertices[ j +2 ];
-                    cb.triangles( v1, v2, v3 );
+                    cb.triangle( v1, v2, v3 );
                 }
             };
         })(),

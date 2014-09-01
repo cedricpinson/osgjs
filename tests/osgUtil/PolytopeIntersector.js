@@ -32,7 +32,6 @@ define( [
             camera.addChild( scene );
             var pi = new PolytopeIntersector();
 
-            //pi.setPolytope( [ [ 1.0 , 0.0, 0.0, -395 ], [-1.0, 0.0 , 0.0, 405 ], [ 0.0, 1.0, 0.0, -295 ], [ 0.0, -1.0, 0.0, 305 ] , [ 0.0, 0.0, 1.0, 0.0 ] ] );
             // xMin, yMin, xMax, yMax
             pi.setPolytopeFromWindowCoordinates( 395, 295, 405, 305 );
             var iv = new IntersectionVisitor();
@@ -40,11 +39,17 @@ define( [
             camera.accept( iv );
             ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
             ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
+            ok( pi._intersections[ 0 ]._numPoints === 1, 'numPoints should be 1 and result is ' + pi._intersections[ 0 ]._numPoints );
+            mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ 0.0, 0.0, 0.0 ] );
             pi.reset();
+            // Test also setPolytope method, we do a bigger polytope so all the points should be inside
             pi.setPolytope( [ [ 1.0 , 0.0, 0.0, -350 ], [-1.0, 0.0 , 0.0, 450 ], [ 0.0, 1.0, 0.0, -250 ], [ 0.0, -1.0, 0.0, 350 ] , [ 0.0, 0.0, 1.0, 0.0 ] ] );
             camera.accept( iv );
             ok( pi._intersections.length === 3, 'Hits should be 3 and result is ' + pi._intersections.length );
             ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
+            mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ -0.2, 0.2, 0 ] );
+            mockup.near( pi._intersections[ 1 ]._points[ 0 ], [ 0.0, 0.0, 0 ] );
+            mockup.near( pi._intersections[ 2 ]._points[ 0 ], [ 0.2, 0.2, 0 ] );
         } );
 
         test( 'PolytopeIntersector intersectLines', function () {
@@ -64,7 +69,11 @@ define( [
             camera.accept( iv );
             ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
             ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
+            ok( pi._intersections[ 0 ]._numPoints === 3, 'numPoints should be 3 and result is ' + pi._intersections[ 0 ]._numPoints );
             mockup.near(pi._intersections[ 0 ]._center, [-0.06415, 0.06415, 0 ] );
+            mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ -0.096225, 0.096225, 0 ] );
+            mockup.near( pi._intersections[ 0 ]._points[ 1 ], [ -0.096225, 0.096225, 0 ] );
+            mockup.near( pi._intersections[ 0 ]._points[ 2 ], [ 0.0, 0.0, 0.0 ] );
         } );
 
         test( 'PolytopeIntersector intersectLineStrip', function () {
@@ -84,10 +93,32 @@ define( [
             camera.accept( iv );
             ok( pi._intersections.length === 2, 'Hits should be 2 and result is ' + pi._intersections.length );
             ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
-            
             mockup.near( pi._intersections[ 0 ]._center, [-0.06415, 0.06415, 0 ] );
         } );
 
+        test( 'PolytopeIntersector intersectTriangle', function () {
+
+            var camera = new Camera();
+            camera.setViewport( new Viewport() );
+            camera.setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [] ) );
+            camera.setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
+
+            var scene = createTriangle( );
+            camera.addChild( scene );
+            var pi = new PolytopeIntersector();
+
+            pi.setPolytopeFromWindowCoordinates( 395, 295, 405, 305 );
+            var iv = new IntersectionVisitor();
+            iv.setIntersector( pi );
+            camera.accept( iv );
+            ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+            ok( pi._intersections[ 0 ].nodePath.length === 2, 'NodePath should be 2 and result is ' + pi._intersections[ 0 ].nodePath.length );
+            ok( pi._intersections[ 0 ]._numPoints === 4, 'numPoints should be 4 and result is ' + pi._intersections[ 0 ]._numPoints );
+            mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ 0.096225, 0.096225, 0 ] );
+            mockup.near( pi._intersections[ 0 ]._points[ 1 ], [ -0.096225, 0.096225, 0 ] );
+            mockup.near( pi._intersections[ 0 ]._points[ 2 ], [ -0.096225, 0.096225, 0 ] );
+            mockup.near( pi._intersections[ 0 ]._points[ 3 ], [ 0.096225, 0.096225, 0 ] );
+        } );
 
     var createPoints = function ( ) {
 
@@ -99,11 +130,11 @@ define( [
         vertexes[ 2 ] = 0;
 
         vertexes[ 3 ] = 0.2;
-        vertexes[ 4 ] = 0.0;
+        vertexes[ 4 ] = 0.2;
         vertexes[ 5 ] = 0.0;
 
         vertexes[ 6 ] = -0.2;
-        vertexes[ 7 ] =  0.0;
+        vertexes[ 7 ] = 0.2;
         vertexes[ 8 ] =  0.0;
 
         var normal = new MACROUTILS.Float32Array( 9 );
@@ -170,11 +201,6 @@ define( [
         normal[ 10 ] = 0;
         normal[ 11 ] = 1;
 
-        // var indexes = new MACROUTILS.Uint16Array( 6 );
-        // indexes[ 0 ] = 0;
-        // indexes[ 1 ] = 1;
-        // indexes[ 2 ] = 2;
-
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
         g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
 
@@ -182,5 +208,43 @@ define( [
         g.getPrimitives().push( primitive );
         return g;
     };
+
+    var createTriangle = function ( ) {
+        var g = new Geometry();
+        var vertexes = new MACROUTILS.Float32Array( 9 );
+        vertexes[ 0 ] = -2.0;
+        vertexes[ 1 ] = 2.0;
+        vertexes[ 2 ] = 0.0;
+
+        vertexes[ 3 ] = 0.0;
+        vertexes[ 4 ] = 0.0;
+        vertexes[ 5 ] = 0.0;
+
+        vertexes[ 6 ] = 2.0;
+        vertexes[ 7 ] = 2.0;
+        vertexes[ 8 ] = 0.0;
+
+
+        var normal = new MACROUTILS.Float32Array( 9 );
+        normal[ 0 ] = 0;
+        normal[ 1 ] = 0;
+        normal[ 2 ] = 1;
+
+        normal[ 3 ] = 0;
+        normal[ 4 ] = 0;
+        normal[ 5 ] = 1;
+
+        normal[ 6 ] = 0;
+        normal[ 7 ] = 0;
+        normal[ 8 ] = 1;
+
+        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
+        g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, normal, 3 );
+
+        var primitive = new DrawArrays( PrimitiveSet.TRIANGLES , 0, vertexes.length/3 );
+        g.getPrimitives().push( primitive );
+        return g;
+    };
+
     };
 } );

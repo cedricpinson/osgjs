@@ -118,7 +118,5 @@ define( [
         },
     };
 
-
-
     return PolytopeIntersector;
 } );
