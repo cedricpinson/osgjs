@@ -14,9 +14,9 @@ define( [], function () {
     /** Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
      */
     function getStackTrace( err ) {
-		if (Notify.console && Notify.console.trace){
-			Notify.console.trace();
-			return '';
+        if (Notify.console && Notify.console.trace){
+            Notify.console.trace();
+            return '';
         }
         var callstack = [];
         try {
@@ -79,8 +79,15 @@ define( [], function () {
             }
         };
 
+        var assert = function ( str ) {
+            if ( this.console !== undefined ) {
+                this.console.assert( str, getStackTrace() );
+            }
+        };
+
         var dummy = function () {};
 
+        Notify.assert = dummy;
         Notify.debug = dummy;
         Notify.info = dummy;
         Notify.log = Notify.notice = dummy;
@@ -89,6 +96,7 @@ define( [], function () {
 
         if ( level <= Notify.DEBUG ) {
             Notify.debug = debug;
+            Notify.assert = assert;
         }
         if ( level <= Notify.INFO ) {
             Notify.info = info;

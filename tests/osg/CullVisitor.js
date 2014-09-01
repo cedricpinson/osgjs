@@ -16,8 +16,9 @@ define( [
     'osg/Vec3',
     'osg/RenderBin',
     'osgViewer/Viewer',
-    'osgViewer/View'
-], function ( mockup, CullVisitor, Node, Camera, RenderStage, StateGraph, Matrix, MatrixTransform, State, StateSet, Viewport, Shape, CullSettings, BoundingBox, Vec3, RenderBin, Viewer, View ) {
+    'osgViewer/View',
+    'osgShader/ShaderGeneratorProxy'
+], function ( mockup, CullVisitor, Node, Camera, RenderStage, StateGraph, Matrix, MatrixTransform, State, StateSet, Viewport, Shape, CullSettings, BoundingBox, Vec3, RenderBin, Viewer, View, ShaderGeneratorProxy ) {
 
     return function () {
 
@@ -118,11 +119,17 @@ define( [
 
             // check render stage and render bin
             ( function () {
-                var state = new State();
+                var state = new State( new ShaderGeneratorProxy() );
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() { return true; };
-                fakeRenderer.getProgramParameter = function() { return true; };
-                fakeRenderer.isContextLost = function() { return false; };
+                fakeRenderer.validateProgram = function () {
+                    return true;
+                };
+                fakeRenderer.getProgramParameter = function () {
+                    return true;
+                };
+                fakeRenderer.isContextLost = function () {
+                    return false;
+                };
 
                 state.setGraphicContext( fakeRenderer );
                 var camera0 = new Camera();
@@ -208,7 +215,7 @@ define( [
                 var camera0 = new Camera();
 
                 var mt = new MatrixTransform();
-                Matrix.makeTranslate( 0, 0, 10, mt.getMatrix());
+                Matrix.makeTranslate( 0, 0, 10, mt.getMatrix() );
                 var geom = Shape.createTexturedQuadGeometry( -5.0, -5, 0,
                     10, 0, 0,
                     0, 10, 0,
@@ -217,7 +224,7 @@ define( [
                 camera0.addChild( mt );
 
                 Matrix.makeLookAt( [ 0, 0, 20 ], [ 0, 0, 10 ], [ 0, 1, 0 ], camera0.getViewMatrix() );
-                Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0, camera0.getProjectionMatrix() ) ;
+                Matrix.makePerspective( 60, 800 / 600, 1.0, 1000.0, camera0.getProjectionMatrix() );
 
                 var stack = [];
 
@@ -472,39 +479,45 @@ define( [
                 root.accept( cull );
                 rs.sort();
 
-                var state = new State();
+                var state = new State( new ShaderGeneratorProxy() );
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() { return true; };
-                fakeRenderer.getProgramParameter = function() { return true; };
-                fakeRenderer.isContextLost = function() { return false; };
+                fakeRenderer.validateProgram = function () {
+                    return true;
+                };
+                fakeRenderer.getProgramParameter = function () {
+                    return true;
+                };
+                fakeRenderer.isContextLost = function () {
+                    return false;
+                };
                 state.setGraphicContext( fakeRenderer );
 
                 rs.draw( state );
 
             } )();
 
-            ( function (){
+            ( function () {
                 var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 viewer.init();
 
                 viewer.frame();
                 var cull = viewer._cullVisitor;
-                var m =  cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
+                var m = cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
                 // Test for HeadLight, matrix should be identity
                 mockup.near( m, [ 1, 0, -0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1
                 ] );
                 // Test for Sky_Light, matrix != identity
                 viewer.setLightingMode( View.LightingMode.SKY_LIGHT );
                 viewer.frame();
-                m =  cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
+                m = cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
                 mockup.near( m, [ -1, 0, -0, 0,
-                0, 1, -0, 0,
-                0, -0, -1, 0,
-                0, 0, -10, 1
+                    0, 1, -0, 0,
+                    0, -0, -1, 0,
+                    0, 0, -10, 1
                 ] );
 
 

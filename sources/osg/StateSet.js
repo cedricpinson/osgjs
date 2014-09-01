@@ -22,7 +22,7 @@ define( [
         this._binName = undefined;
         this._binNumber = 0;
 
-        this._shaderGenerator = undefined;
+        this._shaderGeneratorName = undefined;
         this._updateCallbackList = [];
 
         this.uniforms = new Map();
@@ -183,11 +183,11 @@ define( [
             }
             return list;
         },
-        setShaderGenerator: function ( generator ) {
-            this._shaderGenerator = generator;
+        setShaderGeneratorName: function ( generatorName ) {
+            this._shaderGeneratorName = generatorName;
         },
-        getShaderGenerator: function () {
-            return this._shaderGenerator;
+        getShaderGeneratorName: function () {
+            return this._shaderGeneratorName;
         },
         _getUniformMap: function () {
             return this.uniforms;

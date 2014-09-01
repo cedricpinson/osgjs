@@ -737,7 +737,7 @@ define( [
                 '  vec4 rowx = -fac0*texel5 + fac0*texel1 +  -fac1*texel6 + fac1*texel0 + -fac1*texel4 + fac1*texel2;',
                 '  vec4 rowy = -fac0*texel3 + fac0*texel7 +  -fac1*texel4 + fac1*texel6 + -fac1*texel2 + fac1*texel0;',
                 '  float mag = sqrt(dot(rowy,rowy)+dot(rowx,rowx));',
-                '  if (mag < 1.0/255.0) { discard; return; }',
+                '  if (mag < 1.0/255.0) discard;',
                 '  mag *= factor;',
                 '  mag = min(1.0, mag);',
                 '  gl_FragColor = vec4(color*mag,mag);',

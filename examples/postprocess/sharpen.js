@@ -31,9 +31,9 @@ function getPostSceneSharpen() {
     function updateKernel() {
 
         if ( useDiagonal )
-            kernel.set( laplace( factor ) );
-        else
             kernel.set( laplaceDiagonal( factor ) );
+        else
+            kernel.set( laplace( factor ) );
     }
 
     // 3x3 tap, 9 textures fetches
@@ -54,27 +54,24 @@ function getPostSceneSharpen() {
             'uniform mat3 kernel;',
 
             'float stepX = 1.0/RenderSize.x;',
-            'float stepY = stepX;',
+            'float stepY = 1.0/RenderSize.y;',
 
             'void main() {',
 
-            'vec4 color = texture2D(inputTexture, FragTexCoord0);',
+            '	vec4 color = texture2D(inputTexture, FragTexCoord0);',
 
-            'vec2 uv = FragTexCoord0;',
-            'vec2 offset = vec2(0.0);',
+            '	vec2 uv = FragTexCoord0;',
+            '	vec2 offset = vec2(0.0);',
+            '',
+            '	for (int i=0; i < 3; i++) {',
+            '		offset.x = (1.0 - float(i)) * stepX;',
+            '		for (int j=0; j < 3; j++) {',
+            '			offset.y = (1.0 - float(j)) * stepY;',
+            '			color += kernel[i][j] * texture2D(inputTexture, FragTexCoord0 + offset);',
+            '		}',
+            '	}',
 
-            'for (int i=0; i < 3; i++)',
-            '{',
-            'offset.x = (1.0 - float(i)) * stepX;',
-            'for (int j = 0; j < 3; j++)',
-            '{',
-            'offset.y = (1.0 - float(j)) * stepY;',
-
-            'color += kernel[i][j] * texture2D(inputTexture, FragTexCoord0 + offset);',
-            '}',
-            '}',
-
-            'gl_FragColor = color;',
+            '	gl_FragColor = color;',
             '}',
         ].join( '\n' ), {
             'kernel': kernel,

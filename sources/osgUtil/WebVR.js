@@ -215,6 +215,23 @@ define( [
         if ( hmdDevice.getRecommendedRenderTargetSize )
             hmd.rttResolution = hmdDevice.getRecommendedRenderTargetSize();
 
+        // On Mac (FF+Chromium), the Left and Right angles of both eyes are inverted
+        // Left Eye must see more to the Left than to the Right (Left angle > Right angle)
+        // Right Eye must see more to the Right than to the Left (Right angle > Left angle)
+        // This is because of the nose blocking the view
+        var swapLeftAndRight = function ( fov ) {
+            var temp = fov.leftDegrees;
+            fov.leftDegrees = fov.rightDegrees;
+            fov.rightDegrees = temp;
+        };
+
+        if ( hmd.fovLeft.leftDegrees < hmd.fovLeft.rightDegrees ) {
+            swapLeftAndRight( hmd.fovLeft );
+        }
+        if ( hmd.fovRight.rightDegrees < hmd.fovRight.leftDegrees ) {
+            swapLeftAndRight( hmd.fovRight );
+        }
+        
         return hmd;
     }
 

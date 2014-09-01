@@ -6,7 +6,7 @@ define( [
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Image',
-    'osg/ShaderGenerator',
+    'osgShader/ShaderGeneratorProxy',
     'osgDB/ReaderParser',
     'osg/Map'
 ], function ( Q, Notify, MACROUTILS, TextureManager, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser, Map ) {
@@ -91,10 +91,23 @@ define( [
                 uniformMap.setMap( {
                     texture: uniform
                 } );
+                //gives uniformMap['texture'] = uniform;
                 uniform.dirty();
                 Texture.uniforms[ unit ] = uniformMap;
             }
-            // uniform for an texture attribute should directly in Texture.uniforms[unit] and not in Texture.uniforms[unit][Texture0]
+
+            // uniform for an texture attribute should directly in Texture.uniforms[unit]
+            // and not in Texture.uniforms[unit][Texture0]
+
+            // Why it's in Texture.uniforms[unit]['texture'] :
+            // a 'texture' is a texture attribute but you also have old texenv
+            //  that are texture attribute because  they are applied on a texture unit.
+            // I admit that currently we dont have this or we used to but we dont have it anymore.
+            // It's the same design than osg.
+            // We could imagine for example a TextureGreyScale texture attributes,
+            // that would transform the input texture
+            // on unit X into greyscale used in the shader.
+
             return Texture.uniforms[ unit ];
         },
         setDefaultParameters: function () {
@@ -107,6 +120,7 @@ define( [
             this._textureHeight = 0;
             this._unrefImageDataAfterApply = false;
             this._internalFormat = undefined;
+            this._mipmapDirty = false;
             this._textureTarget = Texture.TEXTURE_2D;
             this._type = Texture.UNSIGNED_BYTE;
         },
@@ -123,11 +137,11 @@ define( [
         init: function ( gl ) {
             if ( !this._textureObject ) {
                 this._textureObject = Texture.textureManager.generateTextureObject( gl,
-                                                                                    this,
-                                                                                    this._textureTarget,
-                                                                                    this._internalFormat,
-                                                                                    this._textureWidth,
-                                                                                    this._textureHeight );
+                    this,
+                    this._textureTarget,
+                    this._internalFormat,
+                    this._textureWidth,
+                    this._textureHeight );
                 this.dirty();
             }
         },
@@ -204,10 +218,10 @@ define( [
 
             var image = img;
             if ( img instanceof window.Image ||
-                 img instanceof HTMLCanvasElement ||
-                 img instanceof Uint8Array ) {
-                     image = new Image( img );
-                 }
+                img instanceof HTMLCanvasElement ||
+                img instanceof Uint8Array ) {
+                image = new Image( img );
+            }
 
             this._image = image;
             this.setImageFormat( imageFormat );
@@ -242,6 +256,14 @@ define( [
         getInternalFormat: function () {
             return this._internalFormat;
         },
+        isMipmapDirty: function () {
+            return this._mipmapDirty;
+        },
+        // Will cause the mipmaps to be regenerated on the next bind of the texture
+        // Nothing will be done if the minFilter is not of the form XXX_MIPMAP_XXX
+        mipmapDirty: function () {
+            this._mipmapDirty = true;
+        },
 
         applyFilterParameter: function ( gl, target ) {
 
@@ -251,9 +273,9 @@ define( [
                 this.setWrapS( Texture.CLAMP_TO_EDGE );
 
                 if ( this._minFilter === Texture.LINEAR_MIPMAP_LINEAR ||
-                     this._minFilter === Texture.LINEAR_MIPMAP_NEAREST ) {
-                         this.setMinFilter( Texture.LINEAR );
-                     }
+                    this._minFilter === Texture.LINEAR_MIPMAP_NEAREST ) {
+                    this.setMinFilter( Texture.LINEAR );
+                }
             }
 
             gl.texParameteri( target, gl.TEXTURE_MAG_FILTER, this._magFilter );
@@ -264,11 +286,12 @@ define( [
 
         generateMipmap: function ( gl, target ) {
             if ( this._minFilter === gl.NEAREST_MIPMAP_NEAREST ||
-                 this._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
-                 this._minFilter === gl.NEAREST_MIPMAP_LINEAR ||
-                 this._minFilter === gl.LINEAR_MIPMAP_LINEAR ) {
-                     gl.generateMipmap( target );
-                 }
+                this._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
+                this._minFilter === gl.NEAREST_MIPMAP_LINEAR ||
+                this._minFilter === gl.LINEAR_MIPMAP_LINEAR ) {
+                gl.generateMipmap( target );
+                this._mipmapDirty = false;
+            }
         },
         applyTexImage2D: function ( gl ) {
             var args = Array.prototype.slice.call( arguments, 1 );
@@ -283,7 +306,7 @@ define( [
                 }
             }
         },
-        computeTextureFormat: function() {
+        computeTextureFormat: function () {
             if ( !this._internalFormat ) {
                 this._internalFormat = this._imageFormat || Texture.RGBA;
                 this._imageFormat = this._internalFormat;
@@ -297,6 +320,12 @@ define( [
 
             if ( this._textureObject !== undefined && !this.isDirty() ) {
                 this._textureObject.bind( gl );
+                // If we have modified the texture via Rtt or texSubImage2D and _need_ updated mipmaps,
+                // then we must regenerate the mipmaps explicitely.
+                // In all other cases, don't set this flag because it can be costly
+                if ( this.isMipmapDirty() ) {
+                    this.generateMipmap( gl, this._textureTarget );
+                }
             } else if ( this.defaultType ) {
                 gl.bindTexture( this._textureTarget, null );
             } else {
@@ -323,23 +352,23 @@ define( [
 
                         if ( image.isTypedArray() ) {
                             this.applyTexImage2D( gl,
-                                                  this._textureTarget,
-                                                  0,
-                                                  this._internalFormat,
-                                                  this._textureWidth,
-                                                  this._textureHeight,
-                                                  0,
-                                                  this._internalFormat,
-                                                  this._type,
-                                                  this._image.getImage() );
+                                this._textureTarget,
+                                0,
+                                this._internalFormat,
+                                this._textureWidth,
+                                this._textureHeight,
+                                0,
+                                this._internalFormat,
+                                this._type,
+                                this._image.getImage() );
                         } else {
                             this.applyTexImage2D( gl,
-                                                  this._textureTarget,
-                                                  0,
-                                                  this._internalFormat,
-                                                  this._internalFormat,
-                                                  this._type,
-                                                  image.getImage() );
+                                this._textureTarget,
+                                0,
+                                this._internalFormat,
+                                this._internalFormat,
+                                this._type,
+                                image.getImage() );
                         }
 
                         this.applyFilterParameter( gl, this._textureTarget );
@@ -370,54 +399,10 @@ define( [
                 }
             }
         },
-
-
-        /**
-         set the injection code that will be used in the shader generation
-         for FragmentMain part we would write something like that
-         @example
-         var fragmentGenerator = function(unit) {
-         var str = 'texColor' + unit + ' = texture2D( Texture' + unit + ', FragTexCoord' + unit + '.xy );\n';
-         str += 'fragColor = fragColor * texColor' + unit + ';\n';
-         };
-         setShaderGeneratorFunction(fragmentGenerator, ShaderGenerator.Type.FragmentMain);
-
-         */
-        setShaderGeneratorFunction: function (
-            /**Function*/
-            injectionFunction,
-            /**ShaderGenerator.Type*/
-            mode ) {
-                this[ mode ] = injectionFunction;
-            },
-
-        generateShader: function ( unit, type ) {
-            if ( this[ type ] ) {
-                return this[ type ].call( this, unit );
-            }
-            return '';
+        getHash: function () {
+            return 'osgTexture';
         }
     } ), 'osg', 'Texture' );
-
-    Texture.prototype[ ShaderGenerator.Type.VertexInit ] = function ( unit ) {
-        var str = 'attribute vec2 TexCoord' + unit + ';\n';
-        str += 'varying vec2 FragTexCoord' + unit + ';\n';
-        return str;
-    };
-    Texture.prototype[ ShaderGenerator.Type.VertexMain ] = function ( unit ) {
-        return 'FragTexCoord' + unit + ' = TexCoord' + unit + ';\n';
-    };
-    Texture.prototype[ ShaderGenerator.Type.FragmentInit ] = function ( unit ) {
-        var str = 'varying vec2 FragTexCoord' + unit + ';\n';
-        str += 'uniform sampler2D Texture' + unit + ';\n';
-        str += 'vec4 texColor' + unit + ';\n';
-        return str;
-    };
-    Texture.prototype[ ShaderGenerator.Type.FragmentMain ] = function ( unit ) {
-        var str = 'texColor' + unit + ' = texture2D( Texture' + unit + ', FragTexCoord' + unit + '.xy );\n';
-        str += 'fragColor = fragColor * texColor' + unit + ';\n';
-        return str;
-    };
 
 
     Texture.createFromURL = function ( imageSource, format ) {
