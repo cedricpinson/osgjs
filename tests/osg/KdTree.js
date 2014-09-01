@@ -1,6 +1,5 @@
 define( [
     'tests/mockup/mockup',
-    'osgUtil/IntersectVisitor',
     'osg/Matrix',
     'osg/Vec3',
     'osg/Shape',
@@ -10,7 +9,7 @@ define( [
     'osg/BufferArray',
     'osg/Geometry',
     'osg/KdTree'
-], function ( mockup, IntersectVisitor, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry, KdTree ) {
+], function ( mockup, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry, KdTree ) {
 
     return function () {
 
