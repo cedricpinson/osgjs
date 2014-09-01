@@ -71,6 +71,7 @@ define( [
             var vertices = node.getAttributes().Vertex.getElements();
             var self = this;
             // The callback must be defined as a closure
+            /* jshint asi: true */
             var cb = function(  ) {
                     return {
                         point : function ( v ) {
