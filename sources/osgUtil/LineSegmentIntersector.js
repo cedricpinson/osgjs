@@ -7,9 +7,9 @@ define( [
     'osg/Vec3',
     'osgUtil/TriangleIntersector',
     'osg/Matrix'
-], function( Vec3, TriangleIntersector, Matrix ) {
+], function ( Vec3, TriangleIntersector, Matrix ) {
 
-    var LineSegmentIntersector = function() {
+    var LineSegmentIntersector = function () {
         this._start = [];
         this._end = [];
         this._iStart = [];
@@ -22,12 +22,12 @@ define( [
             this._start = start;
             this._end = end;
         },
-        setStart : function ( start ) {
+        setStart: function ( start ) {
             this._start = start;
         },
-        setEnd : function ( end ) {
+        setEnd: function ( end ) {
             this._end = end;
-        }, 
+        },
         reset: function () {
             // Clear the intersections vector
             this._intersections.length = 0;
@@ -38,12 +38,12 @@ define( [
             return this.intersects( node.getBound() );
         },
         // Intersection Segment/Sphere 
-        intersects: ( function ( ) {
+        intersects: ( function () {
             var sm = Vec3.create();
             var se = Vec3.create();
-            return function( bsphere ) {
+            return function ( bsphere ) {
                 // test for _start inside the bounding sphere
-                if ( !bsphere.valid()) return false;
+                if ( !bsphere.valid() ) return false;
                 Vec3.sub( this._iStart, bsphere.center(), sm );
                 var c = Vec3.length2( sm ) - bsphere.radius2();
                 if ( c < 0.0 ) {
@@ -76,28 +76,28 @@ define( [
             };
         } )(),
 
-        intersect : function ( iv, node ) {
-                var kdtree = node.getShape();
-                if ( kdtree ) {
+        intersect: function ( iv, node ) {
+            var kdtree = node.getShape();
+            if ( kdtree ) {
                 // Use KDTREES
-                    kdtree.intersect( this._iStart, this._iEnd, this._intersections, iv.nodePath );
-                } else {
-                    // Use the TriangleIntersector
-                    var ti = new TriangleIntersector();
-                    ti.setNodePath( iv.nodePath );
-                    ti.set( this._iStart, this._iEnd );
-                    ti.apply( node );
-                    var l = ti._intersections.length;
-                    if ( l > 0 ) {
-                        // Intersection/s exists
-                        for ( var i = 0; i < l; i++ ) {
-                            this._intersections.push( ti._intersections[ i ] );
-                        }
-                        return true;
+                kdtree.intersect( this._iStart, this._iEnd, this._intersections, iv.nodePath );
+            } else {
+                // Use the TriangleIntersector
+                var ti = new TriangleIntersector();
+                ti.setNodePath( iv.nodePath );
+                ti.set( this._iStart, this._iEnd );
+                ti.apply( node );
+                var l = ti._intersections.length;
+                if ( l > 0 ) {
+                    // Intersection/s exists
+                    for ( var i = 0; i < l; i++ ) {
+                        this._intersections.push( ti._intersections[ i ] );
                     }
-                    // No intersection found
-                    return false;
+                    return true;
                 }
+                // No intersection found
+                return false;
+            }
         },
         getIntersections: function () {
             return this._intersections;
@@ -107,7 +107,7 @@ define( [
             Matrix.transformVec3( matrix, this._start, this._iStart );
             Matrix.transformVec3( matrix, this._end, this._iEnd );
         },
-    }; 
+    };
 
 
 

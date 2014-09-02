@@ -1,9 +1,9 @@
 define( [
     'osg/Vec3',
     'osg/TriangleIndexFunctor'
-], function( Vec3, TriangleIndexFunctor ) {
+], function ( Vec3, TriangleIndexFunctor ) {
 
-    var TriangleIntersection = function( index, normal, r1, v1, r2, v2, r3, v3 ) {
+    var TriangleIntersection = function ( index, normal, r1, v1, r2, v2, r3, v3 ) {
         this.index = index;
         this.normal = normal;
         this.r1 = r1;
@@ -14,17 +14,17 @@ define( [
         this.v3 = v3;
     };
 
-    var TriangleIntersector = function() {
+    var TriangleIntersector = function () {
         this._intersections = [];
         this._nodePath = [];
         this._index = 0;
     };
 
     TriangleIntersector.prototype = {
-        setNodePath: function( np ) {
+        setNodePath: function ( np ) {
             this._nodePath = np;
         },
-        set: function( start, end ) {
+        set: function ( start, end ) {
             this._start = start;
             this._end = end;
             this._dir = Vec3.sub( end, start, [ 0.0, 0.0, 0.0 ] );
@@ -33,7 +33,7 @@ define( [
             Vec3.mult( this._dir, this._invLength, this._dir );
         },
 
-        apply: function( node ) {
+        apply: function ( node ) {
             if ( !node.getAttributes().Vertex ) {
                 return;
             }
@@ -42,7 +42,7 @@ define( [
             var v1 = [ 0.0, 0.0, 0.0 ];
             var v2 = [ 0.0, 0.0, 0.0 ];
             var v3 = [ 0.0, 0.0, 0.0 ];
-            var cb = function( i1, i2, i3 ) {
+            var cb = function ( i1, i2, i3 ) {
                 if ( i1 === i2 || i1 === i3 || i2 === i3 )
                     return;
                 var j = i1 * 3;
@@ -63,7 +63,7 @@ define( [
             tif.apply();
         },
 
-        intersect: ( function() {
+        intersect: ( function () {
             var normal = [ 0.0, 0.0, 0.0 ];
             var e2 = [ 0.0, 0.0, 0.0 ];
             var e1 = [ 0.0, 0.0, 0.0 ];
@@ -71,7 +71,7 @@ define( [
             var pvec = [ 0.0, 0.0, 0.0 ];
             var qvec = [ 0.0, 0.0, 0.0 ];
             var epsilon = 1E-20;
-            return function( v0, v1, v2 ) {
+            return function ( v0, v1, v2 ) {
                 this._index++;
                 var d = this._dir;
 

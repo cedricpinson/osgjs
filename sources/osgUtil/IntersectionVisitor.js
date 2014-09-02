@@ -6,9 +6,9 @@ define( [
     'osg/Utils',
     'osg/NodeVisitor',
     'osg/Matrix'
-], function( MACROUTILS, NodeVisitor, Matrix ) {
+], function ( MACROUTILS, NodeVisitor, Matrix ) {
 
-    var IntersectionVisitor = function() {
+    var IntersectionVisitor = function () {
         NodeVisitor.call( this );
         // We could need to use a stack of intersectors in case we want
         // to use several intersectors. Right now we use only one. 
@@ -23,69 +23,69 @@ define( [
         setIntersector: function ( intersector ) {
             this._intersector = intersector;
         },
-        getIntersector: function ( ) {
+        getIntersector: function () {
             return this._intersector;
         },
         // Model matrix
-        pushModelMatrix: function( matrix ) {
+        pushModelMatrix: function ( matrix ) {
             this._modelStack.push( matrix );
         },
-        getModelMatrix: function() {
-             return ( this._modelStack.length ) ? this._modelStack[ this._modelStack.length - 1 ] : undefined;
+        getModelMatrix: function () {
+            return ( this._modelStack.length ) ? this._modelStack[ this._modelStack.length - 1 ] : undefined;
 
         },
-        popModelMatrix: function() {
+        popModelMatrix: function () {
             return this._modelStack.pop();
         },
         // View Matrix
-        pushViewMatrix: function( matrix ) {
+        pushViewMatrix: function ( matrix ) {
             this._viewStack.push( matrix );
 
         },
-        getViewMatrix: function() {
+        getViewMatrix: function () {
             return ( this._viewStack.length ) ? this._viewStack[ this._viewStack.length - 1 ] : undefined;
 
         },
-        popViewMatrix: function() {
+        popViewMatrix: function () {
             return this._viewStack.pop();
         },
         // Projection Matrix
-        pushProjectionMatrix: function( matrix ) {
+        pushProjectionMatrix: function ( matrix ) {
             this._projectionStack.push( matrix );
         },
-        getProjectionMatrix: function() {
-             return ( this._projectionStack.length ) ? this._projectionStack[ this._projectionStack.length - 1 ] : undefined;
+        getProjectionMatrix: function () {
+            return ( this._projectionStack.length ) ? this._projectionStack[ this._projectionStack.length - 1 ] : undefined;
 
         },
-        popProjectionMatrix: function() {
+        popProjectionMatrix: function () {
             return this._projectionStack.pop();
         },
         // Window Matrix
-        pushWindowMatrix: function( matrix ) {
+        pushWindowMatrix: function ( matrix ) {
             this._windowStack.push( matrix );
         },
-        pushWindowMatrixUsingViewport: function( viewport ) {
-            this._windowStack.push( viewport.computeWindowMatrix ( ) ); 
+        pushWindowMatrixUsingViewport: function ( viewport ) {
+            this._windowStack.push( viewport.computeWindowMatrix() );
         },
-        getWindowMatrix: function() {
-             return ( this._windowStack.length ) ? this._windowStack[ this._windowStack.length - 1 ] : undefined;
+        getWindowMatrix: function () {
+            return ( this._windowStack.length ) ? this._windowStack[ this._windowStack.length - 1 ] : undefined;
         },
-        popWindowMatrix: function() {
+        popWindowMatrix: function () {
             return this._windowStack.pop();
         },
-        getTransformation: ( function() {
+        getTransformation: ( function () {
             // We should move this to the intersector when we need to use different coordinate frames
             // Now we only support WINDOW coordinate frame
             var mat = Matrix.create();
-            return function( ) {
-                Matrix.copy(this.getWindowMatrix(), mat);
-                Matrix.preMult(mat, this.getProjectionMatrix());
-                Matrix.preMult(mat, this.getViewMatrix());
-                Matrix.preMult(mat, this.getModelMatrix());
-               
+            return function () {
+                Matrix.copy( this.getWindowMatrix(), mat );
+                Matrix.preMult( mat, this.getProjectionMatrix() );
+                Matrix.preMult( mat, this.getViewMatrix() );
+                Matrix.preMult( mat, this.getModelMatrix() );
+
                 return mat;
             };
-        })(),
+        } )(),
 
         enter: function ( node ) {
             // Call to each intersector
@@ -94,7 +94,7 @@ define( [
 
         apply: function ( node ) {
             // Here we need to decide which apply method to use
-            if ( node.getViewMatrix ) { 
+            if ( node.getViewMatrix ) {
                 // It's a Camera
                 this.applyCamera( node );
             } else {
@@ -108,18 +108,18 @@ define( [
             }
         },
 
-        applyCamera: function( camera ) {
+        applyCamera: function ( camera ) {
             // We use an absolute reference frame for simplicity
             var vp = camera.getViewport();
             if ( vp !== undefined ) {
                 this.pushWindowMatrixUsingViewport( vp );
             }
-            this.pushProjectionMatrix( camera.getProjectionMatrix( ) );
-            this.pushViewMatrix( camera.getViewMatrix( ) );
-            this.pushModelMatrix( Matrix.create( ) );
+            this.pushProjectionMatrix( camera.getProjectionMatrix() );
+            this.pushViewMatrix( camera.getViewMatrix() );
+            this.pushModelMatrix( Matrix.create() );
             // In OSG a push_clone is done, 
             // here we update the current transform for simplicity
-            this._intersector.setCurrentTransformation( this.getTransformation( ) );
+            this._intersector.setCurrentTransformation( this.getTransformation() );
             this.traverse( camera );
             this.popModelMatrix();
             this.popViewMatrix();
@@ -129,8 +129,8 @@ define( [
             }
         },
 
-        applyNode: function( node ) {
-            if ( !this.enter ( node ) ) return;
+        applyNode: function ( node ) {
+            if ( !this.enter( node ) ) return;
             if ( node.primitives ) {
                 this._intersector.intersect( this, node );
                 // If it is a leaf (it has primitives) we can safely return
@@ -141,9 +141,9 @@ define( [
             }
         },
 
-        applyTransform: function( node ) {
+        applyTransform: function ( node ) {
             // Now only use PROJECTION coordinate frame
-            if ( !this.enter ( node ) ) return;
+            if ( !this.enter( node ) ) return;
             // Accumulate Transform 
             if ( this._modelStack.length > 0 ) {
                 var m = Matrix.copy( this.getModelMatrix(), Matrix.create() );
@@ -154,7 +154,7 @@ define( [
             }
             // In OSG a push_clone is done, 
             // here we update the current transform for simplicity
-            this._intersector.setCurrentTransformation( this.getTransformation( ) );
+            this._intersector.setCurrentTransformation( this.getTransformation() );
             this.traverse( node );
             this.popModelMatrix();
         },
