@@ -181,7 +181,6 @@ define( [
 
         applyDrawArraysPoints: ( function() {
             var v = Vec3.create();
-            var self = this;
             return function ( first, count ) {
                 for ( var i = first; i < first + count; ++i ) {
                     var j = i*3;
