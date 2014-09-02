@@ -674,7 +674,7 @@ define( [
         } )(),
 
         transformVec4: ( function () {
-            var tmpVec = [ 0.0, 0.0, 0.0, 0.0 ];
+            var tmpVec = Vec4.create();
 
             return function ( matrix, vector, result ) {
 
@@ -701,7 +701,7 @@ define( [
         } )(),
 
         transformVec4PostMult: ( function () {
-            var tmpVec = [ 0.0, 0.0, 0.0, 0.0 ];
+            var tmpVec = Vec4.create();
 
             return function ( matrix, vector, result ) {
 

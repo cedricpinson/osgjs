@@ -39,8 +39,8 @@ define( [
         },
         // Intersection Segment/Sphere 
         intersects: ( function ( ) {
-            var sm = [ 0.0, 0.0, 0.0 ];
-            var se = [ 0.0, 0.0, 0.0 ];
+            var sm = Vec3.create();
+            var se = Vec3.create();
             return function( bsphere ) {
                 // test for _start inside the bounding sphere
                 if ( !bsphere.valid()) return false;

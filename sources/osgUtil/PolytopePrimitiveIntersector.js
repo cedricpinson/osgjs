@@ -3,9 +3,10 @@
  */
 
 define( [
+    'osg/Utils',
     'osg/Vec3',
     'osg/PrimitiveFunctor'
-], function( Vec3, PrimitiveFunctor ) {
+], function( MACROUTILS, Vec3, PrimitiveFunctor ) {
 
     var PolytopeIntersection = function( index, candidates, candidatesMasks, referencePlane, nodePath ) {
         this._index = index -1;         ///< primitive index
@@ -47,7 +48,7 @@ define( [
         this._planesMask = 0;
     };
 
-    PolytopePrimitiveIntersector.prototype = {
+    PolytopePrimitiveIntersector.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( PrimitiveFunctor.prototype, {
 
         setNodePath: function( np ) {
             this._nodePath = np;
@@ -69,24 +70,9 @@ define( [
                 return;
             }
             var vertices = node.getAttributes().Vertex.getElements();
-            var self = this;
-            // The callback must be defined as a closure
-            /* jshint asi: true */
-            var cb = function(  ) {
-                    return {
-                        point : function ( v ) {
-                            self.intersectPoint( v );
-                        },
-                        line : function ( v1, v2 ) {
-                            self.intersectLine( v1, v2);
-                        },
-                        triangle : function ( v1, v2, v3 ) {
-                            self.intersectTriangle( v1, v2, v3 );
-                        }
-                    }
-            };
-            var pf = new PrimitiveFunctor( node, cb , vertices );
-            pf.apply();
+            this._geom = node;
+            this._vertices = vertices;
+            this.applyDraw();
         },
 
         checkCandidatePoints : function ( insideMask ) {
@@ -110,7 +96,7 @@ define( [
             return numCands;
         },
 
-        intersectPoint : function ( v ) {
+        operatorPoint : function ( v ) {
             // Might we use _limitOneIntersection ?
             this._index++;
             var d ;
@@ -133,7 +119,7 @@ define( [
             this._intersections.push( new PolytopeIntersection ( this._index, this._candidates, this._candidatesMasks, this._referencePlane, this._nodePath.slice( 0 ) ));
         },
 
-        intersectLine : function ( v1, v2 ) {
+        operatorLine : function ( v1, v2 ) {
 
             this._index++;
             var v1Inside = true;
@@ -217,7 +203,7 @@ define( [
             }
         },
 
-        intersectTriangle : function ( v1, v2, v3 ) {
+        operatorTriangle : function ( v1, v2, v3 ) {
             this._index++;
             var selectorMask = 0x1;
             var insideMask = 0x0;
@@ -356,7 +342,7 @@ define( [
                 var p = Vec3.create(); 
                 Vec3.cross( lines[i].dir , e2, p );
                 var a = Vec3.dot( e1, p );
-                if ( Math.abs( a ) < 1E6) continue;
+                if ( Math.abs( a ) < 1E-6) continue;
                 var f = 1.0 / a;
                 var s = Vec3.create();
                 Vec3.sub( lines[i].pos, v1, s);
@@ -388,7 +374,7 @@ define( [
             var point1 = Vec3.create();
             var normal2 = Vec3.create();
             var linePoint = Vec3.create();
-            var epsilon = 1E6;
+            var epsilon = 1E-6;
             return function () {
                 if ( this._lines.length === 0 ) return; // Polytope lines already calculated
                 var selectorMask = 0x1;
@@ -414,6 +400,7 @@ define( [
                 return this._lines;
             };
         })(),
+
         distance: function ( plane, v )
         {
             var d = plane[ 0 ] * v[ 0 ] + plane[ 1 ] * v[ 1 ] + plane[ 2 ] * v[ 2 ] + plane[ 3 ];
@@ -429,7 +416,7 @@ define( [
                 return normal;
             };
         })()
-    };
+    } ), 'osg', 'PolytopePrimitiveIntersector' );
 
 
     return PolytopePrimitiveIntersector;

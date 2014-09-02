@@ -21,23 +21,22 @@ define( [
             var vertices = node.getAttributes().Vertex.getElements();
             // The callback must be defined as a closure
             var vectors = [];
-            var cb = function(  ) {
-                    return {
-                        point : function ( v ) {
-                           vectors.push ( v[ 0 ] );
-                           vectors.push ( v[ 1 ] );
-                           vectors.push ( v[ 2 ] );
-                        }
-                    }
-            };
-            var pf = new PrimitiveFunctor( node, cb , vertices );
-            pf.apply();
+
+            var pf = new PrimitiveFunctor( node, vertices );
+            pf.operatorPoint = function( v ) {
+                vectors.push ( v[ 0 ] );
+                vectors.push ( v[ 1 ] );
+                vectors.push ( v[ 2 ] );
+            }
+            pf.applyDraw();
             mockup.near ( vertices, vectors , 0.00001);
             // Test DrawElements
             node = createGeometry( PrimitiveSet.POINTS, 1 );
-            pf = new PrimitiveFunctor( node, cb , vertices );
+            pf._geom = node;
+            pf._vertices = vertices;
+
             vectors = [];
-            pf.apply();
+            pf.applyDraw();
             ok( vectors[ 0 ] === -2.0, 'Vectors[ 0 ] should be -2 and result is ' + vectors[ 0 ] );
             ok( vectors[ 1 ] === 2.0, 'Vectors[ 1 ] should be 2 and result is ' + vectors[ 1 ] );
             ok( vectors[ 2 ] === 0.0, 'Vectors[ 2 ] should be 0 and result is ' + vectors[ 2 ] );
@@ -56,24 +55,22 @@ define( [
             var vertices = node.getAttributes().Vertex.getElements();
             // The callback must be defined as a closure
             var vectors = [];
-            var cb = function(  ) {
-                    return {
-                        line : function ( v1, v2 ) {
-                            vectors.push ( v1 );
-                            vectors.push ( v2 );
-                        }
-                    }
-            };
-            var pf = new PrimitiveFunctor( node, cb , vertices );
-            pf.apply();
+
+            var pf = new PrimitiveFunctor( node, vertices );
+            pf.operatorLine = function ( v1, v2) {
+                vectors.push ( Vec3.copy ( v1, Vec3.create() ) );
+                vectors.push ( Vec3.copy ( v2, Vec3.create() ) );
+            }
+            pf.applyDraw();
             mockup.near ( vectors[ 0 ], [ 0, 0 ,0 ] );
             mockup.near ( vectors[ 1 ], [ 2, 2 ,0 ] );
             // Test DrawElements
             node = createGeometry( PrimitiveSet.LINES, 1 );
-            pf = new PrimitiveFunctor( node, cb , vertices );
+            pf._geom = node;
+            pf._vertices = vertices;
 
             vectors = [];
-            pf.apply();
+            pf.applyDraw();
             mockup.near ( vectors[ 0 ], [ -2.0, 2.0 ,0 ] );
             mockup.near ( vectors[ 1 ], [ 0, 0 ,0 ] );
         } );
@@ -84,26 +81,25 @@ define( [
             var vertices = node.getAttributes().Vertex.getElements();
             // The callback must be defined as a closure
             var vectors = [];
-            var cb = function(  ) {
-                    return {
-                        line : function ( v1, v2 ) {
-                            vectors.push ( Vec3.copy ( v1, Vec3.create() ) );
-                            vectors.push ( Vec3.copy ( v2, Vec3.create() ) );
-                        }
-                    }
-            };
-            var pf = new PrimitiveFunctor( node, cb , vertices );
-            pf.apply();
+
+            var pf = new PrimitiveFunctor( node, vertices );
+            pf.operatorLine = function ( v1, v2 ) {
+                vectors.push ( Vec3.copy ( v1, Vec3.create() ) );
+                vectors.push ( Vec3.copy ( v2, Vec3.create() ) );
+            }
+
+            pf.applyDraw();
             mockup.near ( vectors[ 0 ], [ 0, 0 ,0 ] );
             mockup.near ( vectors[ 1 ], [ 2, 2 ,0 ] );
             mockup.near ( vectors[ 2 ], [ 2, 2 ,0 ] );
             mockup.near ( vectors[ 3 ], [ -2, 2 ,0 ] );
             // Test DrawElements
             node = createGeometry( PrimitiveSet.LINE_STRIP, 1 );
-            pf = new PrimitiveFunctor( node, cb , vertices );
+            pf._geom = node;
+            pf._vertices = vertices;
 
             vectors = [];
-            pf.apply();
+            pf.applyDraw();
             mockup.near ( vectors[ 0 ], [ -2.0, 2.0 ,0 ] );
             mockup.near ( vectors[ 1 ], [ 0, 0 ,0 ] );
             mockup.near ( vectors[ 2 ], [ 0, 0 ,0 ] );
@@ -116,16 +112,14 @@ define( [
             var vertices = node.getAttributes().Vertex.getElements();
             // The callback must be defined as a closure
             var vectors = [];
-            var cb = function(  ) {
-                    return {
-                        line : function ( v1, v2 ) {
-                            vectors.push ( Vec3.copy ( v1, Vec3.create() ) );
-                            vectors.push ( Vec3.copy ( v2, Vec3.create() ) );
-                        }
-                    }
-            };
-            var pf = new PrimitiveFunctor( node, cb , vertices );
-            pf.apply();
+            
+            var pf = new PrimitiveFunctor( node, vertices );
+            pf.operatorLine = function ( v1, v2 ) {
+                vectors.push ( Vec3.copy ( v1, Vec3.create() ) );
+                vectors.push ( Vec3.copy ( v2, Vec3.create() ) );
+            }
+
+            pf.applyDraw();
             mockup.near ( vectors[ 0 ], [ 0, 0 ,0 ] );
             mockup.near ( vectors[ 1 ], [ 2, 2 ,0 ] );
             mockup.near ( vectors[ 2 ], [ 2, 2 ,0 ] );
@@ -134,10 +128,11 @@ define( [
             mockup.near ( vectors[ 5 ], [ 0, 0 ,0 ] );
             // Test DrawElements
             node = createGeometry( PrimitiveSet.LINE_LOOP, 1 );
-            pf = new PrimitiveFunctor( node, cb , vertices );
+            pf._geom = node;
+            pf._vertices = vertices;
 
             vectors = [];
-            pf.apply();
+            pf.applyDraw();
             mockup.near ( vectors[ 0 ], [ -2.0, 2.0 ,0 ] );
             mockup.near ( vectors[ 1 ], [ 0, 0 ,0 ] );
             mockup.near ( vectors[ 2 ], [ 0, 0 ,0 ] );
@@ -152,26 +147,26 @@ define( [
             var vertices = node.getAttributes().Vertex.getElements();
             // The callback must be defined as a closure
             var vectors = [];
-            var cb = function(  ) {
-                    return {
-                        triangle : function ( v1, v2, v3 ) {
-                            vectors.push ( Vec3.copy ( v1, Vec3.create() ) );
-                            vectors.push ( Vec3.copy ( v2, Vec3.create() ) );
-                            vectors.push ( Vec3.copy ( v3, Vec3.create() ) );
-                        }
-                    }
-            };
-            var pf = new PrimitiveFunctor( node, cb , vertices );
-            pf.apply();
+
+            var pf = new PrimitiveFunctor( node, vertices );
+            pf.operatorTriangle = function ( v1, v2, v3 ) {
+                vectors.push ( Vec3.copy ( v1, Vec3.create() ) );
+                vectors.push ( Vec3.copy ( v2, Vec3.create() ) );
+                vectors.push ( Vec3.copy ( v3, Vec3.create() ) );
+            }
+
+            pf.applyDraw();
             mockup.near ( vectors[ 0 ], [ 0, 0 ,0 ] );
             mockup.near ( vectors[ 1 ], [ 2, 2 ,0 ] );
             mockup.near ( vectors[ 2 ], [ -2, 2 ,0 ] );
             // Test DrawElements
             node = createGeometry( PrimitiveSet.TRIANGLES, 1 );
-            pf = new PrimitiveFunctor( node, cb , vertices );
+            pf._geom = node;
+            pf._vertices = vertices;
+
 
             vectors = [];
-            pf.apply();
+            pf.applyDraw();
             mockup.near ( vectors[ 0 ], [ -2.0, 2.0 ,0 ] );
             mockup.near ( vectors[ 1 ], [ 0, 0 ,0 ] );
             mockup.near ( vectors[ 2 ], [ 2.0, 2.0 ,0 ] );

@@ -10,25 +10,19 @@ define( [
     /**
      * PrimitiveFunctor emulates the TemplatePrimitiveFunctor class in OSG and can
      * be used to get access to the vertices that compose the things drawn by osgjs. 
-     * Feed it with a callback that will be called for geometry. 
-     * The callback must be a closure and have the next structure:
+     * Derived classes should implement ( at least one of ) these methods:
      *
-     * var myCallback = function(  ) {
-     *     return {
-     *          point : function ( v ) { }, // Do your point operations here
-     *          line : function ( v1, v2 ){ }, // Do you line operations here
-     *          triangle : function ( v1, v2, v3 ) { } // Do your triangle operations here
-     *      }
-     * };
+     *          operatorPoint : function ( v ) { }, // Do your point operations here
+     *          operatorLine : function ( v1, v2 ) { }, // Do you line operations here
+     *          operatorTriangle : function ( v1, v2, v3 ) { } // Do your triangle operations here
      * 
      * Important Note: You should take into account that you are accesing the actual vertices of the primitive
      * you might want to do a copy of these values in your callback to avoid to modify the primitive geometry
      *  @class PrimitiveFunctor
      */
 
-    var PrimitiveFunctor = function( geom, cb, vertices ) {
+    var PrimitiveFunctor = function( geom, vertices ) {
         this._geom = geom;
-        this._cb = cb;
         this._vertices = vertices;
     };
 
@@ -36,13 +30,12 @@ define( [
         applyDrawElementsPoints: ( function( ) {
             var v = Vec3.create();
             return function( count, indexes ) {
-                var cb = this._cb( );
                 for ( var i = 0; i < count ; ++i ) {
                     var j = indexes[ i ] * 3;
                     v[ 0 ] = this._vertices[ j ];
                     v[ 1 ] = this._vertices[ j +1 ];
                     v[ 2 ] = this._vertices[ j +2 ];
-                    cb.point( v );
+                    this.operatorPoint( v );
                 }
             };
         } )(),
@@ -50,7 +43,6 @@ define( [
             var v1 = Vec3.create();
             var v2 = Vec3.create();
             return function ( count, indexes ) {
-                var cb = this._cb();
                 for ( var i = 0; i < count - 1; i += 2 ) {
                     var j = indexes[ i ] * 3 ;
                     v1[ 0 ] = this._vertices[ j ];
@@ -60,7 +52,7 @@ define( [
                     v2[ 0 ] = this._vertices[ j ];
                     v2[ 1 ] = this._vertices[ j +1 ];
                     v2[ 2 ] = this._vertices[ j +2 ];
-                    cb.line( v1, v2 );
+                    this.operatorLine( v1, v2 );
                 }
             };
         })(),
@@ -69,7 +61,6 @@ define( [
             var v1 = Vec3.create();
             var v2 = Vec3.create();
             return function ( count, indexes ) {
-                var cb = this._cb();
                 for ( var i = 0; i < count - 1; ++i ) {
                     var j = indexes[ i ] * 3 ;
                     v1[ 0 ] = this._vertices[ j ];
@@ -79,7 +70,7 @@ define( [
                     v2[ 0 ] = this._vertices[ j ];
                     v2[ 1 ] = this._vertices[ j +1 ];
                     v2[ 2 ] = this._vertices[ j +2 ];
-                    cb.line( v1, v2 );
+                    this.operatorLine( v1, v2 );
                 }
             };
         })(),
@@ -88,7 +79,6 @@ define( [
             var v1 = Vec3.create();
             var v2 = Vec3.create();
             return function ( count, indexes ) {
-                var cb = this._cb();
                 var last = count -1;
                 for ( var i = 0; i < last; ++i ) {
                     var j = indexes[ i ] * 3 ;
@@ -99,7 +89,7 @@ define( [
                     v2[ 0 ] = this._vertices[ j ];
                     v2[ 1 ] = this._vertices[ j +1 ];
                     v2[ 2 ] = this._vertices[ j +2 ];
-                    cb.line( v1, v2 );
+                    this.operatorLine( v1, v2 );
                 }
                 last = indexes [ last ] * 3;
                 v1[ 0 ] = this._vertices[ last ];
@@ -109,7 +99,7 @@ define( [
                 v2[ 0 ] = this._vertices[ first ];
                 v2[ 1 ] = this._vertices[ first + 1 ];
                 v2[ 2 ] = this._vertices[ first + 2 ];
-                cb.line( v1, v2 );
+                this.operatorLine( v1, v2 );
             };
         })(),
 
@@ -118,7 +108,6 @@ define( [
             var v2 = Vec3.create();
             var v3 = Vec3.create();
             return function ( count, indexes ) {
-                var cb = this._cb();
                 for ( var i = 0; i < count; i += 3 ) {
                     var j = indexes[ i ]* 3;
                     v1[ 0 ] = this._vertices[ j ];
@@ -132,7 +121,7 @@ define( [
                     v3[ 0 ] = this._vertices[ j ];
                     v3[ 1 ] = this._vertices[ j +1 ];
                     v3[ 2 ] = this._vertices[ j +2 ];
-                    cb.triangle( v1, v2, v3 );
+                    this.operatorTriangle( v1, v2, v3 );
                 }
             };
         })(),
@@ -142,7 +131,6 @@ define( [
             var v2 = Vec3.create();
             var v3 = Vec3.create();
             return function ( count, indexes ) {
-                var cb = this._cb();
                 for ( var i = 2, pos = 0; i < count; ++i, ++pos )
                 {
                     var j = indexes[ pos ] * 3;
@@ -159,9 +147,9 @@ define( [
                     v3[ 2 ] = this._vertices[ j +2 ];
                     if ( i % 2 )
                     {
-                        cb.triangle( v1, v3, v2);
+                        this.operatorTriangle( v1, v3, v2);
                     } else {
-                        cb.triangle( v1, v2, v3);
+                        this.operatorTriangle( v1, v2, v3);
                     }
                 }
             };
@@ -172,7 +160,6 @@ define( [
             var v2 = Vec3.create();
             var v3 = Vec3.create();
             return function ( count, indexes ) {
-                var cb = this._cb();
                 var first = indexes [ 0 ];
                 for ( var i = 2, pos = 1; i < count; ++i, ++pos )
                 {
@@ -187,21 +174,21 @@ define( [
                     v3[ 0 ] = this._vertices[ j ];
                     v3[ 1 ] = this._vertices[ j +1 ];
                     v3[ 2 ] = this._vertices[ j +2 ];
-                    cb.triangle( v1, v2, v3 );
+                    this.operatorTriangle( v1, v2, v3 );
                 }
             };
         })(),
 
         applyDrawArraysPoints: ( function() {
             var v = Vec3.create();
+            var self = this;
             return function ( first, count ) {
-                var cb = this._cb( );
                 for ( var i = first; i < first + count; ++i ) {
                     var j = i*3;
                     v[ 0 ] = this._vertices[ j ];
                     v[ 1 ] = this._vertices[ j +1 ];
                     v[ 2 ] = this._vertices[ j +2 ];
-                    cb.point( v );
+                    this.operatorPoint( v );
                 }
             };
         })(),
@@ -210,7 +197,6 @@ define( [
             var v1 = Vec3.create();
             var v2 = Vec3.create();
             return function ( first, count ) {
-                var cb = this._cb();
                 for ( var i = first; i < first + count - 1; i += 2 ) {
                     var j = i * 3 ;
                     v1[ 0 ] = this._vertices[ j ];
@@ -220,7 +206,7 @@ define( [
                     v2[ 0 ] = this._vertices[ j ];
                     v2[ 1 ] = this._vertices[ j +1 ];
                     v2[ 2 ] = this._vertices[ j +2 ];
-                    cb.line( v1, v2 );
+                    this.operatorLine( v1, v2 );
                 }
             };
         })(),
@@ -229,7 +215,6 @@ define( [
             var v1 = Vec3.create();
             var v2 = Vec3.create();
             return function ( first, count ) {
-                var cb = this._cb();
                 for ( var i = first; i < first + count - 1; ++i ) {
                     var j = i * 3 ;
                     v1[ 0 ] = this._vertices[ j ];
@@ -239,7 +224,7 @@ define( [
                     v2[ 0 ] = this._vertices[ j ];
                     v2[ 1 ] = this._vertices[ j +1 ];
                     v2[ 2 ] = this._vertices[ j +2 ];
-                    cb.line( v1, v2 );
+                    this.operatorLine( v1, v2 );
                 }
             };
         })(),
@@ -247,7 +232,6 @@ define( [
             var v1 = Vec3.create();
             var v2 = Vec3.create();
             return function ( first, count ) {
-                var cb = this._cb();
                 var last = first + count -1;
                 for ( var i = first; i < last; ++i ) {
                     var j = i * 3 ;
@@ -258,7 +242,7 @@ define( [
                     v2[ 0 ] = this._vertices[ j ];
                     v2[ 1 ] = this._vertices[ j +1 ];
                     v2[ 2 ] = this._vertices[ j +2 ];
-                    cb.line( v1, v2 );
+                    this.operatorLine( v1, v2 );
                 }
                 last = last * 3;
                 v1[ 0 ] = this._vertices[ last ];
@@ -268,7 +252,7 @@ define( [
                 v2[ 0 ] = this._vertices[ first ];
                 v2[ 1 ] = this._vertices[ first + 1 ];
                 v2[ 2 ] = this._vertices[ first + 2 ];
-                cb.line( v1, v2 );
+                this.operatorLine( v1, v2 );
             };
         })(),
 
@@ -277,7 +261,6 @@ define( [
             var v2 = Vec3.create();
             var v3 = Vec3.create();
             return function ( first, count ) {
-                var cb = this._cb();
                 for ( var i = first; i < first + count ; i +=3 ) {
                     var j = i * 3 ;
                     v1[ 0 ] = this._vertices[ j ];
@@ -291,7 +274,7 @@ define( [
                     v3[ 0 ] = this._vertices[ j ];
                     v3[ 1 ] = this._vertices[ j +1 ];
                     v3[ 2 ] = this._vertices[ j +2 ];
-                    cb.triangle( v1, v2, v3 );
+                    this.operatorTriangle( v1, v2, v3 );
                 }
             };
         })(),
@@ -301,7 +284,6 @@ define( [
             var v2 = Vec3.create();
             var v3 = Vec3.create();
             return function ( first, count ) {
-                var cb = this._cb();
                 for ( var i = 2, pos = first; i < count; ++i, ++pos )
                 {
                     var j = pos * 3 ;
@@ -318,9 +300,9 @@ define( [
                     v3[ 2 ] = this._vertices[ j +2 ];
                     if ( i % 2 )
                     {
-                        cb.triangles( v1, v3, v2);
+                        this.operatorTriangle( v1, v3, v2);
                     } else {
-                        cb.triangles( v1, v2, v3);
+                        this.operatorTriangle( v1, v2, v3);
                     }
                 }
             };
@@ -331,7 +313,6 @@ define( [
             var v2 = Vec3.create();
             var v3 = Vec3.create();
             return function ( first, count ) {
-                var cb = this._cb();
                 for ( var i = 2, pos = first + 1; i < count; ++i, ++pos )
                 {
                     v1[ 0 ] = this._vertices[ first ];
@@ -345,12 +326,12 @@ define( [
                     v3[ 0 ] = this._vertices[ j ];
                     v3[ 1 ] = this._vertices[ j +1 ];
                     v3[ 2 ] = this._vertices[ j +2 ];
-                    cb.triangles( v1, v2, v3 );
+                    this.operatorTriangle( v1, v2, v3 );
                 }
             };
         })(),
 
-        apply: function() {
+        applyDraw: function() {
             var geom = this._geom;
             var primitives = geom.primitives;
             if ( !primitives )
