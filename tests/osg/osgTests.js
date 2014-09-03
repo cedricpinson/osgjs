@@ -25,8 +25,9 @@ define( [
     'tests/osg/TextureManager',
     'tests/osg/UpdateVisitor',
     'tests/osg/Uniform',
-    'tests/osg/Vec2'
-], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2 ) {
+    'tests/osg/Vec2',
+    'tests/osg/PrimitiveFunctor'
+], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2, PrimitiveFunctor ) {
 
     'use strict';
 
@@ -58,5 +59,6 @@ define( [
         UpdateVisitor();
         Uniform();
         Vec2();
+        PrimitiveFunctor();
     };
 } );

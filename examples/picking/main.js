@@ -125,7 +125,8 @@ function projectToScreen( cam, hit ) {
     osg.Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix() : osg.Matrix.create() );
     osg.Matrix.preMult( mat, cam.getProjectionMatrix() );
     osg.Matrix.preMult( mat, cam.getViewMatrix() );
-    osg.Matrix.preMult( mat, osg.computeLocalToWorld( hit.nodepath ) );
+    // Node 0 in nodepath is the Camera of the Viewer, so we take next child
+    osg.Matrix.preMult( mat, osg.computeLocalToWorld( hit.nodepath.slice( 1 ) ) );
 
     var pt = [ 0.0, 0.0, 0.0 ];
     osg.Matrix.transformVec3( mat, hit.point, pt );

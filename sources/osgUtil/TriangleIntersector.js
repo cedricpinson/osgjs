@@ -1,9 +1,9 @@
 define( [
     'osg/Vec3',
     'osg/TriangleIndexFunctor'
-], function( Vec3, TriangleIndexFunctor ) {
+], function ( Vec3, TriangleIndexFunctor ) {
 
-    var TriangleHit = function( index, normal, r1, v1, r2, v2, r3, v3 ) {
+    var TriangleIntersection = function ( index, normal, r1, v1, r2, v2, r3, v3 ) {
         this.index = index;
         this.normal = normal;
         this.r1 = r1;
@@ -14,26 +14,26 @@ define( [
         this.v3 = v3;
     };
 
-    var TriangleIntersect = function() {
-        this.hits = [];
-        this.nodePath = [];
-        this.index = 0;
+    var TriangleIntersector = function () {
+        this._intersections = [];
+        this._nodePath = [];
+        this._index = 0;
     };
 
-    TriangleIntersect.prototype = {
-        setNodePath: function( np ) {
-            this.nodePath = np;
+    TriangleIntersector.prototype = {
+        setNodePath: function ( np ) {
+            this._nodePath = np;
         },
-        set: function( start, end ) {
-            this.start = start;
-            this.end = end;
-            this.dir = Vec3.sub( end, start, [ 0.0, 0.0, 0.0 ] );
-            this.length = Vec3.length( this.dir );
-            this.invLength = 1.0 / this.length;
-            Vec3.mult( this.dir, this.invLength, this.dir );
+        set: function ( start, end ) {
+            this._start = start;
+            this._end = end;
+            this._dir = Vec3.sub( end, start, [ 0.0, 0.0, 0.0 ] );
+            this._length = Vec3.length( this._dir );
+            this._invLength = 1.0 / this._length;
+            Vec3.mult( this._dir, this._invLength, this._dir );
         },
 
-        apply: function( node ) {
+        apply: function ( node ) {
             if ( !node.getAttributes().Vertex ) {
                 return;
             }
@@ -42,7 +42,7 @@ define( [
             var v1 = [ 0.0, 0.0, 0.0 ];
             var v2 = [ 0.0, 0.0, 0.0 ];
             var v3 = [ 0.0, 0.0, 0.0 ];
-            var cb = function( i1, i2, i3 ) {
+            var cb = function ( i1, i2, i3 ) {
                 if ( i1 === i2 || i1 === i3 || i2 === i3 )
                     return;
                 var j = i1 * 3;
@@ -63,7 +63,7 @@ define( [
             tif.apply();
         },
 
-        intersect: ( function() {
+        intersect: ( function () {
             var normal = [ 0.0, 0.0, 0.0 ];
             var e2 = [ 0.0, 0.0, 0.0 ];
             var e1 = [ 0.0, 0.0, 0.0 ];
@@ -71,9 +71,9 @@ define( [
             var pvec = [ 0.0, 0.0, 0.0 ];
             var qvec = [ 0.0, 0.0, 0.0 ];
             var epsilon = 1E-20;
-            return function( v0, v1, v2 ) {
-                this.index++;
-                var d = this.dir;
+            return function ( v0, v1, v2 ) {
+                this._index++;
+                var d = this._dir;
 
                 Vec3.sub( v2, v0, e2 );
                 Vec3.sub( v1, v0, e1 );
@@ -84,7 +84,7 @@ define( [
                     return;
                 var invDet = 1.0 / det;
 
-                Vec3.sub( this.start, v0, tvec );
+                Vec3.sub( this._start, v0, tvec );
 
                 var u = Vec3.dot( pvec, tvec ) * invDet;
                 if ( u < 0.0 || u > 1.0 )
@@ -98,13 +98,13 @@ define( [
 
                 var t = Vec3.dot( qvec, e2 ) * invDet;
 
-                if ( t < epsilon || t > this.length ) //no intersection
+                if ( t < epsilon || t > this._length ) //no intersection
                     return;
 
                 var r0 = 1.0 - u - v;
                 var r1 = u;
                 var r2 = v;
-                var r = t * this.invLength;
+                var r = t * this._invLength;
 
                 var interX = v0[ 0 ] * r0 + v1[ 0 ] * r1 + v2[ 0 ] * r2;
                 var interY = v0[ 1 ] * r0 + v1[ 1 ] * r1 + v2[ 1 ] * r2;
@@ -113,10 +113,10 @@ define( [
                 Vec3.cross( e1, e2, normal );
                 Vec3.normalize( normal, normal );
 
-                this.hits.push( {
+                this._intersections.push( {
                     'ratio': r,
-                    'nodepath': this.nodePath.slice( 0 ),
-                    'triangleHit': new TriangleHit( this.index - 1, normal.slice( 0 ), r0, v0.slice( 0 ), r1, v1.slice( 0 ), r2, v2.slice( 0 ) ),
+                    'nodepath': this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
+                    'TriangleIntersection': new TriangleIntersection( this._index - 1, normal.slice( 0 ), r0, v0.slice( 0 ), r1, v1.slice( 0 ), r2, v2.slice( 0 ) ),
                     'point': [ interX, interY, interZ ]
                 } );
                 this.hit = true;
@@ -124,5 +124,5 @@ define( [
         } )()
     };
 
-    return TriangleIntersect;
+    return TriangleIntersector;
 } );

@@ -1,6 +1,6 @@
 define( [
     'tests/mockup/mockup',
-    'osgUtil/TriangleIntersect',
+    'osgUtil/TriangleIntersector',
     'osg/Matrix',
     'osg/Vec3',
     'osg/Shape',
@@ -9,32 +9,32 @@ define( [
     'osg/PrimitiveSet',
     'osg/BufferArray',
     'osg/Geometry'
-], function ( mockup, TriangleIntersect, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry ) {
+], function ( mockup, TriangleIntersector, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry ) {
 
     return function () {
 
         module( 'osgUtil' );
 
-        test( 'TriangleIntersect', function () {
+        test( 'TriangleIntersector', function () {
 
             var checkPrimitive = function ( geom, msg ) {
-                var ti = new TriangleIntersect();
+                var ti = new TriangleIntersector();
                 var start = [ 0.4, 0.2, -2.0 ];
                 var end = [ 0.4, 0.2, 0.5 ];
                 var dir = Vec3.sub( end, start, [] );
                 ti.set( start, end );
 
                 ti.apply( geom );
-                ok( ti.hits.length === 1, msg + ' Hits should be 1 and result is ' + ti.hits.length );
+                ok( ti._intersections.length === 1, msg + ' Intersections should be 1 and result is ' + ti._intersections.length );
                 var result = [ 0.4, 0.2, 0 ];
                 var found = Vec3.add( start,
-                    Vec3.mult( dir, ti.hits[ 0 ].ratio, [] ), [] );
+                    Vec3.mult( dir, ti._intersections[ 0 ].ratio, [] ), [] );
                 mockup.near( found, result, 1e-4 );
 
-                var ti2 = new TriangleIntersect();
+                var ti2 = new TriangleIntersector();
                 ti2.set( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ] );
                 ti2.apply( geom );
-                ok( ti2.hits.length === 0, msg + ' Hits should be 0 ' + ti2.hits.length );
+                ok( ti2._intersections.length === 0, msg + ' Intersections should be 0 ' + ti2._intersections.length );
             };
 
             ( function () {

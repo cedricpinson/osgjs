@@ -35,6 +35,7 @@ define( [
     'osg/Notify',
     'osg/Object',
     'osg/PagedLOD',
+    'osg/PrimitiveFunctor',
     'osg/PrimitiveSet',
     'osg/Program',
     'osg/Projection',
@@ -112,6 +113,7 @@ define( [
     Notify,
     Object,
     PagedLOD,
+    PrimitiveFunctor,
     PrimitiveSet,
     Program,
     Projection,
@@ -194,6 +196,7 @@ define( [
     osg.Object = Object;
     osg.PagedLOD = PagedLOD;
     osg.PrimitiveSet = PrimitiveSet;
+    osg.PrimitiveFunctor = PrimitiveFunctor;
     osg.Program = Program;
     osg.Projection = Projection;
     osg.Quat = Quat;

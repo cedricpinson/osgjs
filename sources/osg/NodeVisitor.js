@@ -36,11 +36,11 @@ define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
     NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function ( node ) {
         node.traverse( this );
     };
-	NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function ( node ) {
+    NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function ( node ) {
         node.traverse( this );
     };
-	
-	
+
+
     NodeVisitor._pushOntoNodePath = {};
     NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_PARENTS ] = function ( node ) {
         this.nodePath.unshift( node );
@@ -48,7 +48,7 @@ define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
     NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function ( node ) {
         this.nodePath.push( node );
     };
-	NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function ( node ) {
+    NodeVisitor._pushOntoNodePath[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function ( node ) {
         this.nodePath.push( node );
     };
     NodeVisitor._popFromNodePath = {};
@@ -58,7 +58,7 @@ define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
     NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_ALL_CHILDREN ] = function () {
         this.nodePath.pop();
     };
-	NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function () {
+    NodeVisitor._popFromNodePath[ NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ] = function () {
         this.nodePath.pop();
     };
 
