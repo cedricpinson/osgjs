@@ -60,7 +60,7 @@ define( [
                 }
                 // compute two solutions of quadratic equation
                 d = Math.sqrt( d );
-                var div = 1.0 / ( 2.0 * a );
+                var div = 0.5 / a;
                 var r1 = ( -b - d ) * div;
                 var r2 = ( -b + d ) * div;
 
