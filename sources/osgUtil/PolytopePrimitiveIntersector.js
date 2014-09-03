@@ -24,7 +24,7 @@ define( [
             if ( distance > this._maxDistance ) this._maxDistance = distance;
             if ( this._numPoints === this._maxNumIntesections ) break;
         }
-        Vec3.div( this._center, this._numPoints, this._center );
+        Vec3.mult( this._center, 1/this._numPoints, this._center );
         this._distance = referencePlane[ 0 ] * this._center[ 0 ] + referencePlane[ 1 ] * this._center[ 1 ] + referencePlane[ 2 ] * this._center[ 2 ] + referencePlane[ 3 ];
         this.nodePath = nodePath;
     };
@@ -108,8 +108,7 @@ define( [
         },
 
         intersectPoint: ( function () {
-            // Might we use _limitOneIntersection ?
-            // Might we use _limitOneIntersection ?
+            // May we use _limitOneIntersection ?
             var hit = Vec3.create();
             return function ( v ) {
                 this._index++;
@@ -148,8 +147,8 @@ define( [
                 for ( var i = 0, j = this._planes.length; i < j; ++i, selectorMask <<= 1 ) {
                     d1 = this.distance( this._planes[ i ], v1 );
                     d2 = this.distance( this._planes[ i ], v2 );
-                    d1IsNegative = ( d1 <= 0.0 );
-                    d2IsNegative = ( d2 <= 0.0 );
+                    d1IsNegative = ( d1 < 0.0 );
+                    d2IsNegative = ( d2 < 0.0 );
                     if ( d1IsNegative && d2IsNegative ) return; // line outside
                     if ( !d1IsNegative && !d2IsNegative ) {
                         // completly inside this plane
@@ -209,9 +208,7 @@ define( [
 
         intersectTriangle: ( function () {
 
-            var tmpHit1 = Vec3.create();
-            var tmpHit2 = Vec3.create();
-            var tmpHit3 = Vec3.create();
+            var tmpHit = Vec3.create();
             // Only needed for special case, should we move it to a new function?
             var e1 = Vec3.create();
             var e2 = Vec3.create();
@@ -230,9 +227,9 @@ define( [
                     d1 = this.distance( this._planes[ i ], v1 );
                     d2 = this.distance( this._planes[ i ], v2 );
                     d3 = this.distance( this._planes[ i ], v3 );
-                    d1IsNegative = ( d1 <= 0.0 );
-                    d2IsNegative = ( d2 <= 0.0 );
-                    d3IsNegative = ( d3 <= 0.0 );
+                    d1IsNegative = ( d1 < 0.0 );
+                    d2IsNegative = ( d2 < 0.0 );
+                    d3IsNegative = ( d3 < 0.0 );
 
                     if ( d1IsNegative && d2IsNegative && d3IsNegative ) return; // Triangle outside
                     if ( !d1IsNegative && !d2IsNegative && !d3IsNegative ) {
@@ -242,62 +239,62 @@ define( [
                     }
                     // edge v1-v2 intersects
                     if ( d1 === 0.0 ) {
-                        Vec3.copy( v1, tmpHit1 );
-                        this._candidates.push( tmpHit1 );
+                        Vec3.copy( v1, tmpHit );
+                        this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
                         this._candidatesMasks.push( selectorMask );
                     } else if ( d2 === 0.0 ) {
-                        Vec3.copy( v2, tmpHit1 );
-                        this._candidates.push( tmpHit1 );
+                        Vec3.copy( v2, tmpHit );
+                        this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
                         this._candidatesMasks.push( selectorMask );
                     } else if ( d1IsNegative && !d2IsNegative ) {
                         //v1-(v2-v1)*(d1/(-d1+d2))) )
-                        Vec3.sub( v2, v1, tmpHit1 );
-                        Vec3.mult( tmpHit1, d1 / ( -d1 + d2 ), tmpHit1 );
-                        Vec3.sub( v1, tmpHit1, tmpHit1 );
-                        this._candidates.push( tmpHit1 );
+                        Vec3.sub( v2, v1, tmpHit );
+                        Vec3.mult( tmpHit, d1 / ( -d1 + d2 ), tmpHit );
+                        Vec3.sub( v1, tmpHit, tmpHit );
+                        this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
                         this._candidatesMasks.push( selectorMask );
                     } else if ( !d1IsNegative && d2IsNegative ) {
                         //(v1+(v2-v1)*(d1/(d1-d2)))
-                        Vec3.sub( v2, v1, tmpHit1 );
-                        Vec3.mult( tmpHit1, d1 / ( d1 - d2 ), tmpHit1 );
-                        Vec3.add( v1, tmpHit1, tmpHit1 );
-                        this._candidates.push( tmpHit1 );
+                        Vec3.sub( v2, v1, tmpHit );
+                        Vec3.mult( tmpHit, d1 / ( d1 - d2 ), tmpHit );
+                        Vec3.add( v1, tmpHit, tmpHit );
+                        this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
                         this._candidatesMasks.push( selectorMask );
                     }
                     // edge v1-v3 intersects
                     if ( d3 === 0.0 ) {
-                        Vec3.copy( v3, tmpHit2 );
-                        this._candidates.push( tmpHit2 );
+                        Vec3.copy( v3, tmpHit );
+                        this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
                         this._candidatesMasks.push( selectorMask );
                     } else if ( d1IsNegative && !d3IsNegative ) {
                         // v1-(v3-v1)*(d1/(-d1+d3))
-                        Vec3.sub( v3, v1, tmpHit2 );
-                        Vec3.mult( tmpHit2, d1 / ( -d1 + d3 ), tmpHit2 );
-                        Vec3.sub( v1, tmpHit2, tmpHit2 );
-                        this._candidates.push( tmpHit2 );
+                        Vec3.sub( v3, v1, tmpHit );
+                        Vec3.mult( tmpHit, d1 / ( -d1 + d3 ), tmpHit );
+                        Vec3.sub( v1, tmpHit, tmpHit );
+                        this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
                         this._candidatesMasks.push( selectorMask );
                     } else if ( !d1IsNegative && d3IsNegative ) {
                         // v1+(v3-v1)*(d1/(d1-d3))
-                        Vec3.sub( v3, v1, tmpHit2 );
-                        Vec3.mult( tmpHit2, d1 / ( d1 - d3 ), tmpHit2 );
-                        Vec3.add( v1, tmpHit2, tmpHit2 );
-                        this._candidates.push( tmpHit2 );
+                        Vec3.sub( v3, v1, tmpHit );
+                        Vec3.mult( tmpHit, d1 / ( d1 - d3 ), tmpHit );
+                        Vec3.add( v1, tmpHit, tmpHit );
+                        this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
                         this._candidatesMasks.push( selectorMask );
                     }
                     // edge v2-v3 intersects
                     if ( d2IsNegative && !d3IsNegative ) {
                         // v2-(v3-v2)*(d2/(-d2+d3))
-                        Vec3.sub( v3, v2, tmpHit3 );
-                        Vec3.mult( tmpHit3, d2 / ( -d2 + d3 ), tmpHit3 );
-                        Vec3.sub( v2, tmpHit3, tmpHit3 );
-                        this._candidates.push( tmpHit3 );
+                        Vec3.sub( v3, v2, tmpHit );
+                        Vec3.mult( tmpHit, d2 / ( -d2 + d3 ), tmpHit );
+                        Vec3.sub( v2, tmpHit, tmpHit );
+                        this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
                         this._candidatesMasks.push( selectorMask );
                     } else if ( !d2IsNegative && d3IsNegative ) {
                         //v2+(v3-v2)*(d2/(d2-d3))
-                        Vec3.sub( v3, v2, tmpHit3 );
-                        Vec3.mult( tmpHit3, d2 / ( d2 - d3 ), tmpHit3 );
-                        Vec3.add( v2, tmpHit3, tmpHit3 );
-                        this._candidates.push( tmpHit3 );
+                        Vec3.sub( v3, v2, tmpHit );
+                        Vec3.mult( tmpHit, d2 / ( d2 - d3 ), tmpHit );
+                        Vec3.add( v2, tmpHit, tmpHit );
+                        this._candidates.push( Vec3.copy( tmpHit, Vec3.create() ) );
                         this._candidatesMasks.push( selectorMask );
                     }
                 }
@@ -368,15 +365,15 @@ define( [
             var linePoint = Vec3.create();
             var epsilon = 1E-6;
             return function () {
-                if ( this._lines.length === 0 ) return; // Polytope lines already calculated
+                if ( this._lines.length > 0 ) return; // Polytope lines already calculated
                 var selectorMask = 0x1;
                 for ( var i = 0, j = this._planes.length; i < j; i++, selectorMask <<= 1 ) {
                     normal1 = this.getNormal( this._planes[ i ] );
-                    point1 = Vec3.mult( normal1, -this._planes[ i ][ 3 ] ); // canonical point on plane[ i ]
+                    Vec3.mult( normal1, -this._planes[ i ][ 3 ], point1 ); // canonical point on plane[ i ]
                     var subSelectorMask = ( selectorMask << 1 );
                     for ( var jt = i + 1, k = this._planes.length; jt < k; ++jt, subSelectorMask <<= 1 ) {
                         normal2 = this.getNormal( this._planes[ jt ] );
-                        if ( Math.abs( Vec3.dot( normal1, normal2 ) ) > 1 - epsilon ) continue;
+                        if ( Math.abs( Vec3.dot( normal1, normal2 ) ) >  ( 1 - epsilon ) ) continue;
                         Vec3.cross( normal1, normal2, lineDirection );
                         Vec3.cross( lineDirection, normal1, searchDirection );
                         //-plane2.distance(point1)/(searchDirection*normal2);

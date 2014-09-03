@@ -58,7 +58,7 @@ define( [
         intersects: ( function () {
             var position = Vec3.create();
             return function ( bsphere ) {
-                if ( !bsphere.valid() ) return;
+                if ( !bsphere.valid() ) return false;
                 var pos = bsphere.center();
                 var d;
                 Vec3.copy( pos, position );
