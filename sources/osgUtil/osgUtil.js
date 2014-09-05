@@ -5,8 +5,11 @@ define( [
     'osgUtil/WebVR',
     'osgUtil/IntersectionVisitor',
     'osgUtil/LineSegmentIntersector',
-    'osgUtil/PolytopeIntersector'
-], function( Composer, ParameterVisitor, Oculus, WebVR, IntersectionVisitor, LineSegmentIntersector, PolytopeIntersector ) {
+    'osgUtil/PolytopeIntersector',
+    'osgUtil/DisplayNormalVisitor'
+], function ( Composer, ParameterVisitor, Oculus, WebVR, IntersectionVisitor, LineSegmentIntersector, PolytopeIntersector, DisplayNormalVisitor ) {
+
+    'use strict';
 
     var osgUtil = {};
 
@@ -17,5 +20,6 @@ define( [
     osgUtil.IntersectionVisitor = IntersectionVisitor;
     osgUtil.PolytopeIntersector = PolytopeIntersector;
     osgUtil.LineSegmentIntersector = LineSegmentIntersector;
+    osgUtil.DisplayNormalVisitor = DisplayNormalVisitor;
     return osgUtil;
 } );
