@@ -127,8 +127,8 @@ define( [
             this._buttonup = true;
 
             this._scale = 10.0;
-            this._maxDistance = 0.0;
-            this._minDistance = 0.0;
+            this._maxDistance = Infinity;
+            this._minDistance = 1e-10;
             this._scaleMouseMotion = 1.0;
 
             this._inverseMatrix = Matrix.create();
