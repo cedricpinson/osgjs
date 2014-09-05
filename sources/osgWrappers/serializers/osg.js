@@ -81,28 +81,27 @@ define( [
         var queue = [];
         // For each url, create a function call and add it to the queue
         if ( jsonObj.Children ) {
-            for ( var i = 0, k = jsonObj.Children.length; i < k; i++ )
-            {
+            for ( var i = 0, k = jsonObj.Children.length; i < k; i++ ) {
                 queue.push( createChildren( jsonObj.Children[ i ] ) );
             }
         }
         // Resolve first updateCallbacks and stateset.
         var deferred = Q.defer();
-        Q.all( promiseArray ).then( function( ) {
-            deferred.resolve( );
+        Q.all( promiseArray ).then( function () {
+            deferred.resolve();
         } );
-        
+
         var defer = Q.defer();
         // Need to wait until the stateset and the all the callbacks are resolved
-        Q( deferred.promise ).then( function( ){
-            Q.all( queue ).then( function( ) {
+        Q( deferred.promise ).then( function () {
+            Q.all( queue ).then( function () {
                 // All the results from Q.all are on the argument as an array
                 // Now insert children in the right order
                 for ( var i = 0; i < queue.length; i++ )
                     node.addChild( queue[ i ] );
                 defer.resolve( node );
             } );
-        });
+        } );
         return defer.promise;
     };
 
@@ -452,5 +451,73 @@ define( [
         return defer.promise;
     };
 
+    osgWrapper.PagedLOD = function ( input, plod ) {
+        var jsonObj = input.getJSON();
+        var check = function ( /*o*/) {
+            return true;
+        };
+        if ( !check( jsonObj ) ) {
+            return undefined;
+        }
+
+        osgWrapper.Object( input, plod );
+        // Parse center Mode
+        if ( jsonObj.CenterMode === 'USE_BOUNDING_SPHERE_CENTER' )
+            plod.setCenterMode( 0 );
+        else if ( jsonObj.CenterMode === 'UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED' )
+            plod.setCenterMode( 2 );
+
+        // Parse center and radius
+        plod.setCenter( [ jsonObj.UserCenter[ 0 ], jsonObj.UserCenter[ 1 ], jsonObj.UserCenter[ 2 ] ] );
+        plod.setRadius( jsonObj.UserCenter[ 3 ] );
+
+        // Parse RangeMode
+        if ( jsonObj.RangeMode === 'PIXEL_SIZE_ON_SCREEN' )
+            plod.setRangeMode( 1 );
+
+        var str;
+
+        // Parse Ranges
+        var o = jsonObj.RangeList;
+
+        for ( var i = 0; i < Object.keys( o ).length; i++ ) {
+            str = 'Range ' + i;
+            var v = o[ str ];
+            plod.setRange( i, v[ 0 ], v[ 1 ] );
+        }
+        // Parse Files
+        o = jsonObj.RangeDataList;
+        for ( i = 0; i < Object.keys( o ).length; i++ ) {
+            str = 'File ' + i;
+            plod.setFileName( i, o[ str ] );
+        }
+
+        var createChildren = function ( jsonChildren ) {
+            var promise = input.setJSON( jsonChildren ).readObject();
+            var df = Q.defer();
+            Q.when( promise ).then( function ( obj ) {
+                df.resolve( obj );
+            } );
+            return df.promise;
+        };
+
+        var queue = [];
+        // For each url, create a function call and add it to the queue
+        if ( jsonObj.Children ) {
+            for ( var j = 0, k = jsonObj.Children.length; j < k; j++ ) {
+                queue.push( createChildren( jsonObj.Children[ j ] ) );
+            }
+        }
+
+        var defer = Q.defer();
+        Q.all( queue ).then( function () {
+            // All the results from Q.all are on the argument as an array
+            for ( i = 0; i < queue.length; i++ )
+                plod.addChildNode( queue[ i ] );
+            defer.resolve( plod );
+        } );
+
+        return defer.promise;
+    };
     return osgWrapper;
 } );
