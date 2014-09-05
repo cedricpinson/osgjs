@@ -14,6 +14,8 @@ define( [
     'osg/PrimitiveSet'
 ], function ( Q, require, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
+    'use strict';
+
     var Input = function ( json, identifier ) {
         this._json = json;
         var map = identifier;
@@ -29,7 +31,7 @@ define( [
         //     onload: undefined
         // } );
 
-        this.setOptions ( MACROUTILS.objectMix( {}, Options) );
+        this.setOptions( MACROUTILS.objectMix( {}, Options ) );
 
         // {
         //     prefixURL: '',
@@ -154,7 +156,7 @@ define( [
                 // call the original readImageURL, you will need to remove
                 // from options the readImageURL if you dont want an infinte
                 // recursion call
-                return options.readImageURL.call(this, url, options );
+                return options.readImageURL.call( this, url, options );
             }
 
             // if image is on inline image skip url computation
@@ -195,7 +197,7 @@ define( [
 
             var req = new XMLHttpRequest();
             req.open( 'GET', url, true );
-            req.onreadystatechange = function ( /*aEvt*/ ) {
+            req.onreadystatechange = function ( /*aEvt*/) {
                 if ( req.readyState === 4 ) {
                     if ( req.status === 200 ) {
                         var ReaderParser = require( 'osgDB/ReaderParser' );
@@ -247,7 +249,7 @@ define( [
             }, false );
 
             var self = this;
-            xhr.addEventListener( 'load', function ( /*oEvent */ ) {
+            xhr.addEventListener( 'load', function ( /*oEvent */) {
                 var arrayBuffer = xhr.response; // Note: not oReq.responseText
                 if ( arrayBuffer ) {
                     // var byteArray = new Uint8Array(arrayBuffer);
@@ -263,7 +265,64 @@ define( [
             return defer.promise;
         },
 
-        readBufferArray: function () {
+        initializeBufferArray: function ( vb, type, buf, options ) {
+            if ( options === undefined )
+                options = this.getOptions();
+            if ( options.initializeBufferArray )
+                return options.initializeBufferArray.call( this, vb, type, buf );
+
+            var url = vb.File;
+            var defer = Q.defer();
+            Q.when( this.readBinaryArrayURL( url ) ).then( function ( array ) {
+
+                var typedArray;
+                // manage endianness
+                var bigEndian;
+                ( function () {
+                    var a = new Uint8Array( [ 0x12, 0x34 ] );
+                    var b = new Uint16Array( a.buffer );
+                    bigEndian = ( ( b[ 0 ] ).toString( 16 ) === '1234' );
+                } )();
+
+                var offset = 0;
+                if ( vb.Offset !== undefined ) {
+                    offset = vb.Offset;
+                }
+
+                var bytesPerElement = MACROUTILS[ type ].BYTES_PER_ELEMENT;
+                var nbItems = vb.Size;
+                var nbCoords = buf.getItemSize();
+                var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
+
+                if ( bigEndian ) {
+                    Notify.log( 'big endian detected' );
+                    var TypedArray = MACROUTILS[ type ];
+                    var tmpArray = new TypedArray( nbItems * nbCoords );
+                    var data = new DataView( array, offset, totalSizeInBytes );
+                    var i = 0,
+                        l = tmpArray.length;
+                    if ( type === 'Uint16Array' ) {
+                        for ( ; i < l; i++ ) {
+                            tmpArray[ i ] = data.getUint16( i * bytesPerElement, true );
+                        }
+                    } else if ( type === 'Float32Array' ) {
+                        for ( ; i < l; i++ ) {
+                            tmpArray[ i ] = data.getFloat32( i * bytesPerElement, true );
+                        }
+                    }
+                    typedArray = tmpArray;
+                    data = null;
+                } else {
+                    typedArray = new MACROUTILS[ type ]( array, offset, nbCoords * nbItems );
+                }
+
+                buf.setElements( typedArray );
+                defer.resolve( buf );
+            } );
+            return defer;
+        },
+
+        readBufferArray: function ( options ) {
             var jsonObj = this.getJSON();
 
             var uniqueID = jsonObj.UniqueID;
@@ -274,6 +333,11 @@ define( [
                     return osgjsObject;
                 }
             }
+
+            if ( options === undefined )
+                options = this.getOptions();
+            if ( options.readBufferArray )
+                return options.readBufferArray.call( this );
 
             var check = function ( o ) {
                 if ( ( o.Elements !== undefined || o.Array !== undefined ) &&
@@ -306,6 +370,9 @@ define( [
                 } else if ( jsonObj.Array.Uint16Array !== undefined ) {
                     vb = jsonObj.Array.Uint16Array;
                     type = 'Uint16Array';
+                } else if ( jsonObj.Array.Uint8Array !== undefined ) {
+                    vb = jsonObj.Array.Uint8Array;
+                    type = 'Uint8Array';
                 } else {
                     Notify.warn( 'Typed Array ' + window.Object.keys( jsonObj.Array )[ 0 ] );
                     type = 'Float32Array';
@@ -313,58 +380,9 @@ define( [
 
                 if ( vb !== undefined ) {
                     if ( vb.File !== undefined ) {
-                        var url = vb.File;
-
-                        defer = Q.defer();
-                        Q.when( this.readBinaryArrayURL( url ) ).then( function ( array ) {
-
-                            var typedArray;
-                            // manage endianness
-                            var bigEndian;
-                            ( function () {
-                                var a = new Uint8Array( [ 0x12, 0x34 ] );
-                                var b = new Uint16Array( a.buffer );
-                                bigEndian = ( ( b[ 0 ] ).toString( 16 ) === '1234' );
-                            } )();
-
-                            var offset = 0;
-                            if ( vb.Offset !== undefined ) {
-                                offset = vb.Offset;
-                            }
-
-                            var bytesPerElement = MACROUTILS[ type ].BYTES_PER_ELEMENT;
-                            var nbItems = vb.Size;
-                            var nbCoords = buf.getItemSize();
-                            var totalSizeInBytes = nbItems * bytesPerElement * nbCoords;
-
-                            if ( bigEndian ) {
-                                Notify.log( 'big endian detected' );
-                                var TypedArray = MACROUTILS[ type ];
-                                var tmpArray = new TypedArray( nbItems * nbCoords );
-                                var data = new DataView( array, offset, totalSizeInBytes );
-                                var i = 0,
-                                    l = tmpArray.length;
-                                if ( type === 'Uint16Array' ) {
-                                    for ( ; i < l; i++ ) {
-                                        tmpArray[ i ] = data.getUint16( i * bytesPerElement, true );
-                                    }
-                                } else if ( type === 'Float32Array' ) {
-                                    for ( ; i < l; i++ ) {
-                                        tmpArray[ i ] = data.getFloat32( i * bytesPerElement, true );
-                                    }
-                                }
-                                typedArray = tmpArray;
-                                data = null;
-                            } else {
-                                typedArray = new MACROUTILS[ type ]( array, offset, nbCoords * nbItems );
-                            }
-
-                            buf.setElements( typedArray );
-                            defer.resolve( buf );
-                        } );
+                        defer = this.initializeBufferArray( vb, type, buf );
                     } else if ( vb.Elements !== undefined ) {
-                        var elements = new MACROUTILS[ type ]( vb.Elements );
-                        buf.setElements( elements );
+                        buf.setElements( new MACROUTILS[ type ]( vb.Elements ) );
                     }
                 }
                 obj = buf;
