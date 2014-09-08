@@ -1299,8 +1299,9 @@ function createSceneTestReconstructPosition() {
 
                     osg.Matrix.copy( this._ucb._projection, this._projection.get() );
 
-                    osg.Matrix.mult( this._ucb._view, this._ucb.model, this._matrix.get() );
+                    osg.Matrix.mult( this._ucb._view, this._ucb._model, this._matrix.get() );
                     //osg.Matrix.copy( this._ucb._modelview, this._matrix.get() );
+
                     this._projection.dirty();
                     this._matrix.dirty();
 
@@ -1687,7 +1688,8 @@ function createSceneOptimized( width, height ) {
                 //osg.log('znear ' + znear + ' zfar ' + zfar);
 
                 osg.Matrix.copy( this._ucb._projection, this._projection.get() );
-                osg.Matrix.copy( this._ucb._modelview, this._matrix.get() );
+                osg.Matrix.mult( this._ucb._view, this._ucb._model, this._matrix.get() );
+                //osg.Matrix.copy( this._ucb._modelview, this._matrix.get() );
                 this._projection.dirty();
                 this._matrix.dirty();
 
@@ -1731,5 +1733,7 @@ function createSceneOptimized( width, height ) {
     return root;
 }
 
-var createScene = createSceneOptimized; //createSceneTestReconstructPosition; //createSceneTestDepth;
+var createScene = createSceneOptimized;
+//var createScene = createSceneTestReconstructPosition;
+//var createScene = createSceneTestDepth;
 window.addEventListener( 'load', main, true );
