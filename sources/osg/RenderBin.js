@@ -208,11 +208,6 @@ define( [
                 if ( modelViewUniform !== undefined ) {
                     tempMatrice = Matrix.create();
                     Matrix.mult( leaf.view, leaf.modelWorld, tempMatrice );
-                    /// TODO remove when removing modelview
-                    //if ( tempMatrice.join( ',' ) !== leaf.modelview.join( ',' ) ) {
-                    //    Notify.warn( 'wrong modelview' );
-                    //}
-                    //state.modelViewMatrix.set( leaf.modelview );
                     state.modelViewMatrix.set( tempMatrice );
                     state.modelViewMatrix.apply( gl, modelViewUniform );
                     modelViewComputed = true;
@@ -238,13 +233,8 @@ define( [
                     if ( !modelViewComputed ) {
                         tempMatrice = Matrix.create();
                         Matrix.mult( leaf.view, leaf.modelWorld, tempMatrice );
-                        /// TODO remove when removing modelview
-                        //if ( tempMatrice.join( ',' ) !== leaf.modelview.join( ',' ) ) {
-                        //    Notify.warn( 'wrong modelview' );
-                        //}
                     }
                     var normal = tempMatrice;
-                    //Matrix.copy( leaf.modelview, normal );
                     normal[ 12 ] = 0.0;
                     normal[ 13 ] = 0.0;
                     normal[ 14 ] = 0.0;

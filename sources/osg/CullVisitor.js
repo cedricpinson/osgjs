@@ -220,10 +220,6 @@ define( [
             //this._projectionMatrixStack.length = 0;
             this._projectionMatrixStack.splice( 0, this._projectionMatrixStack.length );
 
-            // TODO remove
-            //this._modelviewMatrixStack.length = 0;
-            this._modelviewMatrixStack.splice( 0, this._modelviewMatrixStack.length );
-
             this._reserveMatrixStack.current = 0;
             this._reserveLeafStack.current = 0;
             this._reserveBoundingBoxStack.current = 0;
@@ -409,7 +405,6 @@ define( [
         }
 
         var modelWorld = this._getReservedMatrix();
-        var modelview = this._getReservedMatrix();
         var view = this._getReservedMatrix();
         var projection = this._getReservedMatrix();
 
@@ -418,25 +413,12 @@ define( [
             var lastProjectionMatrix = this.getCurrentProjectionMatrix();
             Matrix.mult( lastProjectionMatrix, camera.getProjectionMatrix(), projection );
 
-            var lastModelViewMatrix = this.getCurrentModelviewMatrix();
-            Matrix.mult( lastModelViewMatrix, camera.getViewMatrix(), modelview );
-
             var lastViewMatrix = this.getCurrentViewMatrix();
             var lastModelWorldMatrix = this.getCurrentModelWorldMatrix();
 
             Matrix.makeIdentity( modelWorld );
             Matrix.mult( lastViewMatrix, lastModelWorldMatrix, view );
             Matrix.mult( view, camera.getViewMatrix(), view );
-
-            /// TODO remove when removing modelview
-            ( function () {
-                var tempMatrice = Matrix.create();
-                Matrix.mult( view, modelWorld, tempMatrice );
-                /// TODO remove when removing modelview
-                if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
-                    Notify.warn( 'wrong modelview' );
-                }
-            } )();
 
 
         } else {
@@ -447,23 +429,12 @@ define( [
             // treenode changes after initialisations
             Matrix.makeIdentity( modelWorld );
 
-            /// TODO remove when removing modelview
-            Matrix.copy( camera.getViewMatrix(), modelview );
-            ( function () {
-                var tempMatrice = Matrix.create();
-                Matrix.mult( view, modelWorld, tempMatrice );
-                /// TODO remove when removing modelview
-                if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
-                    Notify.warn( 'wrong modelview' );
-                }
-            } )();
+
         }
         this.pushProjectionMatrix( projection );
         this.pushViewMatrix( view );
         this.pushModelWorldMatrix( modelWorld );
 
-        /// TODO remove when removing modelview
-        this.pushModelviewMatrix( modelview );
 
         if ( camera.getViewport() ) {
             this.pushViewport( camera.getViewport() );
@@ -526,9 +497,6 @@ define( [
         this.popModelWorldMatrix();
         this.popViewMatrix();
 
-        /// TODO remove when removing modelview
-        this.popModelviewMatrix();
-
         this.popProjectionMatrix();
 
         if ( camera.getViewport() ) {
@@ -548,47 +516,16 @@ define( [
 
 
     CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
-        var modelViewMatrix = this._getReservedMatrix();
         var modelWorldMatrix = this._getReservedMatrix();
 
         if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
-            var lastModelViewMatrix = this.getCurrentModelviewMatrix();
-            Matrix.mult( lastModelViewMatrix, node.getMatrix(), modelViewMatrix );
-
             var lastModelWorldMatrix = this.getCurrentModelWorldMatrix();
             Matrix.mult( lastModelWorldMatrix, node.getMatrix(), modelWorldMatrix );
-
-            /// TODO remove when removing modelview
-            var view = this.getCurrentViewMatrix();
-            ( function () {
-                var tempMatrice = Matrix.create();
-                Matrix.mult( view, modelWorldMatrix, tempMatrice );
-                /// TODO remove when removing modelview
-                if ( tempMatrice.join( ',' ) !== modelViewMatrix.join( ',' ) ) {
-                    Notify.warn( 'wrong modelview' );
-                }
-            } )();
-
         } else {
             // absolute
-            Matrix.copy( node.getMatrix(), modelViewMatrix );
             Matrix.copy( node.getMatrix(), modelWorldMatrix );
-
-            /// TODO remove when removing modelview
-            var view = this.getCurrentViewMatrix();
-            ( function () {
-                var tempMatrice = Matrix.create();
-                Matrix.mult( view, modelWorldMatrix, tempMatrice );
-                /// TODO remove when removing modelview
-                if ( tempMatrice.join( ',' ) !== modelViewMatrix.join( ',' ) ) {
-                    Notify.warn( 'wrong modelview' );
-                }
-            } )();
         }
         this.pushModelWorldMatrix( modelWorldMatrix );
-        /// TODO remove when removing modelview
-        this.pushModelviewMatrix( modelViewMatrix );
-
 
         var stateset = node.getStateSet();
         if ( stateset ) {
@@ -605,8 +542,6 @@ define( [
             this.popStateSet();
         }
 
-        /// TODO remove when removing modelview
-        this.popModelviewMatrix();
         this.popModelWorldMatrix();
 
     };
@@ -682,18 +617,6 @@ define( [
     CullVisitor.prototype[ Geometry.typeID ] = function ( node ) {
         var view = this.getCurrentViewMatrix();
         var modelWorld = this.getCurrentModelWorldMatrix();
-        var modelview = this.getCurrentModelviewMatrix();
-
-        /// TODO remove when removing modelview
-        ( function () {
-            var tempMatrice = Matrix.create();
-            Matrix.mult( view, modelWorld, tempMatrice );
-            /// TODO remove when removing modelview
-            if ( tempMatrice.join( ',' ) !== modelview.join( ',' ) ) {
-                Notify.warn( 'wrong modelview' );
-            }
-        } )();
-
 
         // could get parent Transform/camera bbox too
         // frustum culling does compile them...
@@ -733,14 +656,12 @@ define( [
             depth = this.distance( bb.center(), view );
         }
         if ( isNaN( depth ) ) {
-            Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + bb.center() );
+            Notify.warn( 'warning geometry has a NaN depth, ' + modelWorld + ' center ' + bb.center() );
         } else {
             //leaf.id = this._reserveLeafStack.current;
             leaf.parent = this._currentStateGraph;
             leaf.projection = this.getCurrentProjectionMatrix();
             leaf.geometry = node;
-            /// TODO remove when removing modelview
-            //leaf.modelview = modelview;
             leaf.view = view;
             leaf.modelWorld = modelWorld;
             leaf.depth = depth;

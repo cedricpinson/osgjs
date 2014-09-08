@@ -108,7 +108,6 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
                 cull.pushViewMatrix( Matrix.create() );
                 cull.pushModelWorldMatrix( Matrix.create() );
                 camera0.accept( cull );
@@ -152,7 +151,6 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
                 cull.pushViewMatrix( Matrix.create() );
                 cull.pushModelWorldMatrix( Matrix.create() );
                 cull.pushStateSet( new StateSet() );
@@ -204,7 +202,6 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
                 cull.pushViewMatrix( Matrix.create() );
                 cull.pushModelWorldMatrix( Matrix.create() );
 
@@ -257,7 +254,6 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
                 cull.pushViewMatrix( Matrix.create() );
                 cull.pushModelWorldMatrix( Matrix.create() );
 
@@ -343,7 +339,6 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
                 cull.pushViewMatrix( Matrix.create() );
                 cull.pushModelWorldMatrix( Matrix.create() );
 
@@ -390,7 +385,6 @@ define( [
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
                 cull.pushViewMatrix( Matrix.create() );
                 cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
@@ -437,7 +431,6 @@ define( [
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
                 cull.pushViewMatrix( Matrix.create() );
                 cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
@@ -484,7 +477,6 @@ define( [
                 var sg = new StateGraph();
                 rs.setViewport( new Viewport() );
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
                 cull.pushViewMatrix( Matrix.create() );
                 cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );

@@ -388,12 +388,10 @@ define( [
             // update bound
             camera.getBound();
             // Avoid node/geom without cam/transform parent fault
-            var identity = Matrix.makeIdentity( this._cullVisitor._getReservedMatrix() );
-            this._cullVisitor.pushModelviewMatrix( identity );
+            var identity1 = Matrix.makeIdentity( this._cullVisitor._getReservedMatrix() );
+            this._cullVisitor.pushModelWorldMatrix( identity1 );
             var identity2 = Matrix.makeIdentity( this._cullVisitor._getReservedMatrix() );
-            this._cullVisitor.pushModelWorldMatrix( identity2 );
-            var identity3 = Matrix.makeIdentity( this._cullVisitor._getReservedMatrix() );
-            this._cullVisitor.pushViewMatrix( identity3 );
+            this._cullVisitor.pushViewMatrix( identity2 );
 
             switch ( this.getLightingMode() ) {
             case View.LightingMode.HEADLIGHT:
@@ -409,7 +407,6 @@ define( [
             default:
                 break;
             }
-            this._cullVisitor.pushModelviewMatrix( camera.getViewMatrix() );
             this._cullVisitor.pushViewMatrix( camera.getViewMatrix() );
             this._cullVisitor.pushViewport( camera.getViewport() );
             this._cullVisitor.setCullSettings( camera );
@@ -430,7 +427,7 @@ define( [
             this.getScene().accept( this._cullVisitor );
 
             // fix projection matrix if camera has near/far auto compute
-            this._cullVisitor.popModelviewMatrix();
+            this._cullVisitor.popViewMatrix();
             this._cullVisitor.popProjectionMatrix();
             this._cullVisitor.popViewport();
             this._cullVisitor.popStateSet();
@@ -480,7 +477,6 @@ define( [
             if ( this.getManipulator() ) {
                 this.getManipulator().update( this._updateVisitor );
                 Matrix.copy( this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix() );
-                this.getCamera().updateMatrices();
             }
 
             if ( this._stats === undefined ) {

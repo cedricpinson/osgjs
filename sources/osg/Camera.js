@@ -2,9 +2,8 @@ define( [
     'osg/Utils',
     'osg/Transform',
     'osg/CullSettings',
-    'osg/Matrix',
-    'osg/TransformEnums'
-], function ( MACROUTILS, Transform, CullSettings, Matrix, TransformEnums ) {
+    'osg/Matrix'
+], function ( MACROUTILS, Transform, CullSettings, Matrix ) {
 
     /**
      * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
@@ -94,10 +93,6 @@ define( [
             },
             setModelMatrix: function ( matrix ) {
                 this.modelMatrix = matrix;
-            },
-            updateMatrices: function () {
-                this.modelviewMatrix = this.viewMatrix;
-                Matrix.inverse( this.viewMatrix, this.modelMatrix );
             },
 
             setProjectionMatrix: function ( matrix ) {
