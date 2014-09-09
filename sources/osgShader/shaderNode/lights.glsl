@@ -57,12 +57,25 @@ vec4 computeSpotLightShading(
 
     const in vec3  lightSpotDirection,
     const in vec4  lightAttenuation,
-    const in vec3  lightSpotPosition,
+    const in vec4  lightSpotPosition,
     const in float lightCosSpotCutoff,
-    const in float lightSpotBlend)
+    const in float lightSpotBlend,
+
+    const in mat4 lightMatrix,
+    const in mat4 lightInvMatrix)
 {
-    // compute dist
-    vec3 lightVector = - lightSpotPosition;
+vec3 lightEye = vec3(lightMatrix * vec4(lightSpotPosition.xyz, 1.0));
+vec3 lightDir;
+//if (LightSpotPosition[3] == 1.0) {
+//lightDir = lightEye - FragEyeVector;
+//else {
+lightDir = lightEye;
+//}
+vec3 lightSpotDirectionEye = normalize(mat3(vec3(lightInvMatrix[0]), vec3(lightInvMatrix[1]), vec3(lightInvMatrix[2]))*lightSpotDirection);
+lightDir = normalize(lightDir);
+
+     // compute dist
+    vec3 lightVector = - lightSpotPosition.xyz;
     float dist = length(lightVector);
     // compute attenuation
     float attenuation = getLightAttenuation(dist, lightAttenuation);
@@ -121,9 +134,22 @@ vec4 computePointLightShading(
                               const in vec4 lightDiffuse,
                               const in vec4 lightSpecular,
                               const in vec4 lightPosition,
-                              const in vec4 lightAttenuation
-                              )
+                              const in vec4 lightAttenuation,
+
+                              const in mat4 lightMatrix,
+                              const in mat4 lightInvMatrix)
 {
+
+  vec3 lightEye = vec3(lightMatrix * lightPosition);
+  vec3 lightDir;
+  //if (LightSpotPosition[3] == 1.0) {
+  lightDir = lightEye - FragEyeVector;
+    //else {
+  //     lightDir = lightEye;
+    //}
+    vec3 lightSpotDirectionEye = normalize(mat3(vec3(lightInvMatrix[0]), vec3(lightInvMatrix[1]), vec3(lightInvMatrix[2]))*lightDir);
+    lightDir = normalize(lightDir);
+
   // compute dist
   vec3 lightVector = - lightPosition.xyz;
   float dist = length(lightVector);

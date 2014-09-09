@@ -41,18 +41,42 @@ define( [
     } );
 
 
-
+    // specialiazed inline code node for func calls.
+    // ideally with debug caps
+    // like type check against called func params
+    // (need glsl ref for that...)
     var FunctionCall = function () {
         Node.apply( this, arguments );
     };
 
+
     FunctionCall.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'FunctionCall',
+        //compose function call
+        // second param null, it tries to infer params from node input
+        // avoiding long (%s,%s,%s....%s) and associated typing err
         setCall: function ( functionName, params, comment ) {
             var txt = '//' + comment + '\n';
             txt += this.getOutput().getVariable();
             txt += ' = ';
             txt += functionName;
+            if ( this._inputs.length !== 0 && ( params === undefined || ( params.length !== undefined && params.length === 0 ) ) ) {
+                params = '(';
+                var i = 0,
+                    l = this._inputs.length;
+                while ( true ) {
+                    params += '%s';
+                    // meanwhile type checking by printf...
+                    //console.log( this._inputs[ i ] );
+
+                    i++;
+
+                    if ( i === l )
+                        break;
+                    params += ', ';
+                }
+                params += ');';
+            }
             txt += sprintf( params, this._inputs );
             this._text = txt;
         },

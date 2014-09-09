@@ -76,7 +76,11 @@ define( [
 
                 'spotCutOff': 'createFloat1',
                 'spotBlend': 'createFloat1',
-                'distance': 'createFloat1'
+                'distance': 'createFloat1',
+
+                'enable': 'createInt1',
+                'matrix': 'createMatrix4',
+                'invMatrix': 'createMatrix4'
 
             };
 
@@ -242,6 +246,7 @@ define( [
 
             var uniformMap = this.getOrCreateUniforms();
 
+
             if ( this._type === 'SUN' || this._type === 'HEMI' ) {
                 Matrix.copy( matrix, this._invMatrix );
                 this._invMatrix[ 12 ] = 0.0;
@@ -262,6 +267,12 @@ define( [
                 Matrix.transpose( this._invMatrix, this._invMatrix );
                 Matrix.transformVec3( this._invMatrix, this._direction, uniformMap.direction.get() );
             }
+
+            Matrix.copy( matrix, uniformMap.matrix.get() );
+            uniformMap.matrix.dirty();
+
+            Matrix.copy( matrix, uniformMap.invMatrix.get() );
+            uniformMap.invMatrix.dirty();
 
             uniformMap.position.dirty();
             uniformMap.direction.dirty();

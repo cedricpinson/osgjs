@@ -824,7 +824,7 @@ define( [
 
             if ( this._lights.length > 0 ) {
                 var lightedOutput = this.getOrCreateVariable( 'vec4', 'lightOutput' );
-                var nodeLight = new ShaderNode.Lighting( this._lights, normal, diffuseColor, materialAmbientColor, materialSpecularColor, materialShininess, lightedOutput );
+                var nodeLight = new ShaderNode.Lighting( this._lights, normal, materialAmbientColor, diffuseColor, materialSpecularColor, materialShininess, lightedOutput );
                 nodeLight.createFragmentShaderGraph( this );
                 // get final color
                 finalColor = this.getFinalColor( materialEmissionColor, lightedOutput );
