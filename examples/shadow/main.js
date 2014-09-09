@@ -20,91 +20,89 @@
 OSG.globalify();
 
 // http://www.opengl.org/resources/code/samples/advanced/advanced97/notes/node100.html
-function createShadowMatrix(ground, light, shadowMat)
-{
+function createShadowMatrix( ground, light, shadowMat ) {
     var dot;
-    if (shadowMat === undefined) {
+    if ( shadowMat === undefined ) {
         shadowMat = [];
     }
 
-    dot = ground[0] * light[0] +
-          ground[1] * light[1] +
-          ground[2] * light[2] +
-          ground[3] * light[3];
+    dot = ground[ 0 ] * light[ 0 ] +
+        ground[ 1 ] * light[ 1 ] +
+        ground[ 2 ] * light[ 2 ] +
+        ground[ 3 ] * light[ 3 ];
 
-    shadowMat[0] = dot - light[0] * ground[0];
-    shadowMat[4] = 0.0 - light[0] * ground[1];
-    shadowMat[8] = 0.0 - light[0] * ground[2];
-    shadowMat[12] = 0.0 - light[0] * ground[3];
+    shadowMat[ 0 ] = dot - light[ 0 ] * ground[ 0 ];
+    shadowMat[ 4 ] = 0.0 - light[ 0 ] * ground[ 1 ];
+    shadowMat[ 8 ] = 0.0 - light[ 0 ] * ground[ 2 ];
+    shadowMat[ 12 ] = 0.0 - light[ 0 ] * ground[ 3 ];
 
-    shadowMat[1] = 0.0 - light[1] * ground[0];
-    shadowMat[5] = dot - light[1] * ground[1];
-    shadowMat[9] = 0.0 - light[1] * ground[2];
-    shadowMat[13] = 0.0 - light[1] * ground[3];
+    shadowMat[ 1 ] = 0.0 - light[ 1 ] * ground[ 0 ];
+    shadowMat[ 5 ] = dot - light[ 1 ] * ground[ 1 ];
+    shadowMat[ 9 ] = 0.0 - light[ 1 ] * ground[ 2 ];
+    shadowMat[ 13 ] = 0.0 - light[ 1 ] * ground[ 3 ];
 
-    shadowMat[2] = 0.0 - light[2] * ground[0];
-    shadowMat[6] = 0.0 - light[2] * ground[1];
-    shadowMat[10] = dot - light[2] * ground[2];
-    shadowMat[14] = 0.0 - light[2] * ground[3];
+    shadowMat[ 2 ] = 0.0 - light[ 2 ] * ground[ 0 ];
+    shadowMat[ 6 ] = 0.0 - light[ 2 ] * ground[ 1 ];
+    shadowMat[ 10 ] = dot - light[ 2 ] * ground[ 2 ];
+    shadowMat[ 14 ] = 0.0 - light[ 2 ] * ground[ 3 ];
 
-    shadowMat[3] = 0.0 - light[3] * ground[0];
-    shadowMat[7] = 0.0 - light[3] * ground[1];
-    shadowMat[11] = 0.0 - light[3] * ground[2];
-    shadowMat[15] = dot - light[3] * ground[3];
+    shadowMat[ 3 ] = 0.0 - light[ 3 ] * ground[ 0 ];
+    shadowMat[ 7 ] = 0.0 - light[ 3 ] * ground[ 1 ];
+    shadowMat[ 11 ] = 0.0 - light[ 3 ] * ground[ 2 ];
+    shadowMat[ 15 ] = dot - light[ 3 ] * ground[ 3 ];
 
     return shadowMat;
 }
 
-var LightUpdateCallback = function(matrix) { this.matrix = matrix;};
+var LightUpdateCallback = function ( matrix ) {
+    this.matrix = matrix;
+};
 LightUpdateCallback.prototype = {
-    update: function(node, nv) {
+    update: function ( node, nv ) {
         var currentTime = nv.getFrameStamp().getSimulationTime();
 
-        var x = 50 * Math.cos(currentTime);
-        var y = 50 * Math.sin(currentTime);
+        var x = 50 * Math.cos( currentTime );
+        var y = 50 * Math.sin( currentTime );
         var h = 80;
 
-        createShadowMatrix([0,0,1,5],
-                           [x,y,h,1],
-                           this.matrix);
-        node.lightShadow.setPosition([x,y,h,0]);
+        createShadowMatrix( [ 0, 0, 1, 5 ], [ x, y, h, 1 ],
+            this.matrix );
+        node.lightShadow.setPosition( [ x, y, h, 0 ] );
         node.lightShadow.dirty();
-        node.traverse(nv);
+        node.traverse( nv );
     }
 };
 
 
-function createProjectedShadowScene(model)
-{
+function createProjectedShadowScene( model ) {
     var root = new osg.MatrixTransform();
     var shadowNode = new osg.MatrixTransform();
-    shadowNode.addChild(model);
+    shadowNode.addChild( model );
     var bs = model.getBound();
 
     var light = new osg.MatrixTransform();
     light.lightShadow = new osg.Light();
-    light.setUpdateCallback(new LightUpdateCallback(shadowNode.getMatrix()));
-    light.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
+    light.setUpdateCallback( new LightUpdateCallback( shadowNode.getMatrix() ) );
+    light.getOrCreateStateSet().setAttributeAndMode( light.lightShadow );
 
-    shadowNode.getOrCreateStateSet().setTextureAttributeAndMode(0, new osg.Texture(), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE);
-    shadowNode.getOrCreateStateSet().setAttributeAndMode(new osg.CullFace('DISABLE'), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE);
+    shadowNode.getOrCreateStateSet().setTextureAttributeAndMode( 0, new osg.Texture(), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE );
+    shadowNode.getOrCreateStateSet().setAttributeAndMode( new osg.CullFace( 'DISABLE' ), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE );
     var materialDisabled = new osg.Material();
-    materialDisabled.setEmission([0,0,0,1]);
-    materialDisabled.setAmbient([0,0,0,1]);
-    materialDisabled.setDiffuse([0,0,0,1]);
-    materialDisabled.setSpecular([0,0,0,1]);
-    shadowNode.getOrCreateStateSet().setAttributeAndMode(materialDisabled, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    materialDisabled.setEmission( [ 0, 0, 0, 1 ] );
+    materialDisabled.setAmbient( [ 0, 0, 0, 1 ] );
+    materialDisabled.setDiffuse( [ 0, 0, 0, 1 ] );
+    materialDisabled.setSpecular( [ 0, 0, 0, 1 ] );
+    shadowNode.getOrCreateStateSet().setAttributeAndMode( materialDisabled, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
 
-    light.addChild(model);
-    root.addChild(light);
-    root.addChild(shadowNode);
+    light.addChild( model );
+    root.addChild( light );
+    root.addChild( shadowNode );
 
     return root;
 }
 
 
-function getTextureProjectedShadowShader()
-{
+function getTextureProjectedShadowShader() {
     var vertexshader = [
         "",
         "#ifdef GL_ES",
@@ -123,7 +121,7 @@ function getTextureProjectedShadowShader()
         "  ShadowUVProjected = uv;",
         "}",
         ""
-    ].join('\n');
+    ].join( '\n' );
 
     var fragmentshader = [
         "",
@@ -137,17 +135,16 @@ function getTextureProjectedShadowShader()
         "  gl_FragColor = texture2DProj( Texture0, ShadowUVProjected);",
         "}",
         ""
-    ].join('\n');
+    ].join( '\n' );
 
     var program = new osg.Program(
-        new osg.Shader('VERTEX_SHADER', vertexshader),
-        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
+        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
     return program;
 }
 
-function getBlurrShader()
-{
+function getBlurrShader() {
     var vertexshader = [
         "",
         "#ifdef GL_ES",
@@ -163,7 +160,7 @@ function getBlurrShader()
         "  uv0 = TexCoord0;",
         "}",
         ""
-    ].join('\n');
+    ].join( '\n' );
 
     var fragmentshader = [
         "",
@@ -189,149 +186,147 @@ function getBlurrShader()
         "   gl_FragColor = getSmoothTexelFilter( uv0);",
         "}",
         ""
-    ].join('\n');
+    ].join( '\n' );
 
     var program = new osg.Program(
-        new osg.Shader('VERTEX_SHADER', vertexshader),
-        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
+        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
     return program;
 }
 
 
-var LightUpdateCallbackProjectedTexture = function(options) {
+var LightUpdateCallbackProjectedTexture = function ( options ) {
     this.projectionShadow = options.projectionShadow;
     this.modelviewShadow = options.modelViewShadow;
     this.shadowScene = options.shadowScene;
     this.camera = options.camera;
 };
 LightUpdateCallbackProjectedTexture.prototype = {
-    update: function(node, nv) {
+    update: function ( node, nv ) {
         var currentTime = nv.getFrameStamp().getSimulationTime();
 
-        var x = 50 * Math.cos(currentTime);
-        var y = 50 * Math.sin(currentTime);
+        var x = 50 * Math.cos( currentTime );
+        var y = 50 * Math.sin( currentTime );
         var h = 80;
         //osg.Matrix.makeTranslate(x ,y,h, node.getMatrix());
 
-        var matrixList = node.parents[0].getWorldMatrices();
-        var worldMatrix = matrixList[0];
+        var matrixList = node.parents[ 0 ].getWorldMatrices();
+        var worldMatrix = matrixList[ 0 ];
 
-        var worldCameraPosition = osg.Matrix.transformVec3(worldMatrix, [x,y,80], []);
-        var worldCameraTarget = osg.Matrix.transformVec3(worldMatrix, [0,0,-5], []);
+        var worldCameraPosition = osg.Matrix.transformVec3( worldMatrix, [ x, y, 80 ], [] );
+        var worldCameraTarget = osg.Matrix.transformVec3( worldMatrix, [ 0, 0, -5 ], [] );
 
-        osg.Matrix.makeLookAt(worldCameraPosition,worldCameraTarget,[0,-1,0], this.camera.getViewMatrix());
+        osg.Matrix.makeLookAt( worldCameraPosition, worldCameraTarget, [ 0, -1, 0 ], this.camera.getViewMatrix() );
 
-        var biasScale = osg.Matrix.preMult(osg.Matrix.makeTranslate(0.5 , 0.5, 0.5, []), osg.Matrix.makeScale(0.5 , 0.5, 0.5, []));
-        var shadowProj = osg.Matrix.copy(this.camera.getProjectionMatrix(), []);
-        osg.Matrix.postMult(biasScale, shadowProj);
+        var biasScale = osg.Matrix.preMult( osg.Matrix.makeTranslate( 0.5, 0.5, 0.5, [] ), osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
+        var shadowProj = osg.Matrix.copy( this.camera.getProjectionMatrix(), [] );
+        osg.Matrix.postMult( biasScale, shadowProj );
 
-        this.shadowScene.setMatrix(worldMatrix);
-        var shadowView = osg.Matrix.mult(this.camera.getViewMatrix(), worldMatrix, []);
+        this.shadowScene.setMatrix( worldMatrix );
+        var shadowView = osg.Matrix.mult( this.camera.getViewMatrix(), worldMatrix, [] );
 
-        this.projectionShadow.set(shadowProj);
-        this.modelviewShadow.set(shadowView);
-        node.lightShadow.setPosition([x,y,h,0]);
+        this.projectionShadow.set( shadowProj );
+        this.modelviewShadow.set( shadowView );
+        node.lightShadow.setPosition( [ x, y, h, 0 ] );
         node.lightShadow.dirty();
-        node.traverse(nv);
+        node.traverse( nv );
     }
 };
 
-function createTextureProjectedShadowScene(model)
-{
+function createTextureProjectedShadowScene( model ) {
     var root = new osg.MatrixTransform();
     var shadowNode = new osg.MatrixTransform();
-    shadowNode.addChild(model);
+    shadowNode.addChild( model );
     var bs = model.getBound();
 
     var light = new osg.MatrixTransform();
     var rtt = new osg.Camera();
-    rtt.setName("rtt_camera");
-    rttSize = [512,512];
+    rtt.setName( "rtt_camera" );
+    rttSize = [ 512, 512 ];
 
-    osg.Matrix.makePerspective(15, 1, 1.0, 1000.0, rtt.getProjectionMatrix());
+    osg.Matrix.makePerspective( 15, 1, 1.0, 1000.0, rtt.getProjectionMatrix() );
     var lightMatrix = [];
-    osg.Matrix.makeLookAt([0,0,80],[0,0,0],[0,1,0],rtt.getViewMatrix());
-    rtt.setRenderOrder(osg.Camera.PRE_RENDER, 0);
-    rtt.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    rtt.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    rtt.setClearColor([0, 0, 0, 0]);
+    osg.Matrix.makeLookAt( [ 0, 0, 80 ], [ 0, 0, 0 ], [ 0, 1, 0 ], rtt.getViewMatrix() );
+    rtt.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
+    rtt.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+    rtt.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
+    rtt.setClearColor( [ 0, 0, 0, 0 ] );
 
     var matDark = new osg.Material();
-    var black = [0,0,0,1];
-    matDark.setEmission(black);
-    matDark.setAmbient(black);
-    matDark.setDiffuse(black);
-    matDark.setSpecular(black);
-    shadowNode.getOrCreateStateSet().setAttributeAndMode(matDark, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    var black = [ 0, 0, 0, 1 ];
+    matDark.setEmission( black );
+    matDark.setAmbient( black );
+    matDark.setDiffuse( black );
+    matDark.setSpecular( black );
+    shadowNode.getOrCreateStateSet().setAttributeAndMode( matDark, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
 
     var rttTexture = new osg.Texture();
-    rttTexture.setTextureSize(rttSize[0],rttSize[1]);
-    rttTexture.setMinFilter('LINEAR');
-    rttTexture.setMagFilter('LINEAR');
-    rtt.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTexture, 0);
-    rtt.addChild(shadowNode);
-    light.addChild(rtt);
+    rttTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
+    rttTexture.setMinFilter( 'LINEAR' );
+    rttTexture.setMagFilter( 'LINEAR' );
+    rtt.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTexture, 0 );
+    rtt.addChild( shadowNode );
+    light.addChild( rtt );
 
     var shadowMatrix = [];
     light.lightShadow = new osg.Light();
-    light.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
+    light.getOrCreateStateSet().setAttributeAndMode( light.lightShadow );
 
-    var q = osg.createTexturedQuadGeometry(-10,-10,-5.0,
-                                  20, 0 ,0,
-                                  0, 20 ,0);
-    q.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('ONE', 'ONE_MINUS_SRC_ALPHA'));
-    q.getOrCreateStateSet().setAttributeAndMode(new osg.Depth('LESS', 0.0, 1.0,false));
+    var q = osg.createTexturedQuadGeometry( -10, -10, -5.0,
+        20, 0, 0,
+        0, 20, 0 );
+    q.getOrCreateStateSet().setAttributeAndMode( new osg.BlendFunc( 'ONE', 'ONE_MINUS_SRC_ALPHA' ) );
+    q.getOrCreateStateSet().setAttributeAndMode( new osg.Depth( 'LESS', 0.0, 1.0, false ) );
 
-    q.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
-    q.getOrCreateStateSet().setAttributeAndMode(getTextureProjectedShadowShader());
-    var projectionShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ProjectionShadow");
-    var modelViewShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ModelViewShadow");
-    q.getOrCreateStateSet().addUniform(projectionShadow);
+    q.getOrCreateStateSet().setTextureAttributeAndMode( 0, rttTexture );
+    q.getOrCreateStateSet().setAttributeAndMode( getTextureProjectedShadowShader() );
+    var projectionShadow = new osg.Uniform.createMatrix4( osg.Matrix.create(), "ProjectionShadow" );
+    var modelViewShadow = new osg.Uniform.createMatrix4( osg.Matrix.create(), "ModelViewShadow" );
+    q.getOrCreateStateSet().addUniform( projectionShadow );
 
-    q.getOrCreateStateSet().addUniform(modelViewShadow);
-    light.setUpdateCallback(new LightUpdateCallbackProjectedTexture( {
+    q.getOrCreateStateSet().addUniform( modelViewShadow );
+    light.setUpdateCallback( new LightUpdateCallbackProjectedTexture( {
         'projectionShadow': projectionShadow,
-        'modelViewShadow' : modelViewShadow,
+        'modelViewShadow': modelViewShadow,
         'camera': rtt,
         'shadowScene': shadowNode
-    }));
+    } ) );
 
 
     var blurr = new osg.Camera();
-    osg.Matrix.makeOrtho(0, rttSize[0], 0, rttSize[1], -5, 5, blurr.getProjectionMatrix());
-    blurr.setRenderOrder(osg.Camera.PRE_RENDER, 0);
-    blurr.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    blurr.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    var quad = osg.createTexturedQuadGeometry(0,0,0,
-                                      rttSize[0], 0 ,0,
-                                      0, rttSize[1],0);
-    quad.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
-    quad.getOrCreateStateSet().setAttributeAndMode(getBlurrShader());
+    osg.Matrix.makeOrtho( 0, rttSize[ 0 ], 0, rttSize[ 1 ], -5, 5, blurr.getProjectionMatrix() );
+    blurr.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
+    blurr.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+    blurr.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
+    var quad = osg.createTexturedQuadGeometry( 0, 0, 0,
+        rttSize[ 0 ], 0, 0,
+        0, rttSize[ 1 ], 0 );
+    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, rttTexture );
+    quad.getOrCreateStateSet().setAttributeAndMode( getBlurrShader() );
     var blurredTexture = new osg.Texture();
-    blurredTexture.setTextureSize(rttSize[0],rttSize[1]);
-    blurredTexture.setMinFilter('LINEAR');
-    blurredTexture.setMagFilter('LINEAR');
-    blurr.setClearColor([0,0,0,0]);
-    blurr.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, blurredTexture, 0);
-    blurr.addChild(quad);
+    blurredTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
+    blurredTexture.setMinFilter( 'LINEAR' );
+    blurredTexture.setMagFilter( 'LINEAR' );
+    blurr.setClearColor( [ 0, 0, 0, 0 ] );
+    blurr.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, blurredTexture, 0 );
+    blurr.addChild( quad );
 
     // the one used for the final
-    q.getOrCreateStateSet().setTextureAttributeAndMode(0, blurredTexture);
+    q.getOrCreateStateSet().setTextureAttributeAndMode( 0, blurredTexture );
 
     //root.addChild(model);
-    root.addChild(light);
-    light.addChild(model);
-    root.addChild(blurr);
-    root.addChild(q);
+    root.addChild( light );
+    light.addChild( model );
+    root.addChild( blurr );
+    root.addChild( q );
 
     return root;
 }
 
 
 
-function getShadowMapShaderLight()
-{
+function getShadowMapShaderLight() {
     var vertexshader = [
         "",
         "#ifdef GL_ES",
@@ -346,7 +341,7 @@ function getShadowMapShaderLight()
         "  z = (ModelViewMatrix * vec4(Vertex,1.0)).z;",
         "}",
         ""
-    ].join('\n');
+    ].join( '\n' );
 
     var fragmentshader = [
         "",
@@ -376,18 +371,17 @@ function getShadowMapShaderLight()
         "  //gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);",
         "}",
         ""
-    ].join('\n');
+    ].join( '\n' );
 
     var program = new osg.Program(
-        new osg.Shader('VERTEX_SHADER', vertexshader),
-        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
+        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
     return program;
 }
 
 
-function getShadowMapShaderGround()
-{
+function getShadowMapShaderGround() {
     var vertexshader = [
         "",
         "#ifdef GL_ES",
@@ -416,7 +410,7 @@ function getShadowMapShaderGround()
         "  computeShadowElements();",
         "}",
         ""
-    ].join('\n');
+    ].join( '\n' );
 
     var fragmentshader = [
         "",
@@ -474,17 +468,16 @@ function getShadowMapShaderGround()
         "  //gl_FragColor = vec4(shadowCoord.x,shadowCoord.y,0,1);",
         "}",
         ""
-    ].join('\n');
+    ].join( '\n' );
 
     var program = new osg.Program(
-        new osg.Shader('VERTEX_SHADER', vertexshader),
-        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
+        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
     return program;
 }
 
-function getOgreShadowMapShader()
-{
+function getOgreShadowMapShader() {
     var vertexshader = [
         "#ifdef GL_ES",
         "precision highp float;",
@@ -605,34 +598,34 @@ function getOgreShadowMapShader()
         "FragTexCoord0 = TexCoord0;",
         "computeShadowElements();",
         "}",
-    ].join('\n');
+    ].join( '\n' );
 
     var fragmentshader = [
-    "#ifdef GL_ES",
-    "precision highp float;",
-    "#endif",
-    "vec4 fragColor;",
-    "varying vec4 LightColor;",
-    "uniform int ground;",
-    "uniform sampler2D Texture0;",
-    "uniform sampler2D Texture1;",
-    "varying vec4 shadowVertexProjected;",
-    "varying float shadowZ;",
-    "varying vec2 FragTexCoord0;",
-    "",
-    "float unpack2(vec4 depth) {",
-    "return depth[0] * 255.0 / 256.0 + depth[1] * 255.0 / (256.0 * 256.0) + depth[2] * 255.0 / (256.0 * 256.0 * 256.0);",
-    "}",
-    "",
-	"float getShadowedTerm(vec2 uv) {",
-    "   float d = shadowZ - unpack2(texture2D(Texture1, uv ));",
-    "   return (d >= 0.01 ) ? (1.0) : (0.0);",
-	"}",
-    "float computeShadowTerm() {",
-    "vec4 uv = shadowVertexProjected;",
-    "vec2 shadowUV = (uv.xy/uv.w).xy;",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "#endif",
+        "vec4 fragColor;",
+        "varying vec4 LightColor;",
+        "uniform int ground;",
+        "uniform sampler2D Texture0;",
+        "uniform sampler2D Texture1;",
+        "varying vec4 shadowVertexProjected;",
+        "varying float shadowZ;",
+        "varying vec2 FragTexCoord0;",
+        "",
+        "float unpack2(vec4 depth) {",
+        "return depth[0] * 255.0 / 256.0 + depth[1] * 255.0 / (256.0 * 256.0) + depth[2] * 255.0 / (256.0 * 256.0 * 256.0);",
+        "}",
+        "",
+        "float getShadowedTerm(vec2 uv) {",
+        "   float d = shadowZ - unpack2(texture2D(Texture1, uv ));",
+        "   return (d >= 0.01 ) ? (1.0) : (0.0);",
+        "}",
+        "float computeShadowTerm() {",
+        "vec4 uv = shadowVertexProjected;",
+        "vec2 shadowUV = (uv.xy/uv.w).xy;",
         "float shadowed = 0.0;",
-	"#if 1",
+        "#if 1",
         "vec2 fetch[16];",
         "fetch[0] = shadowUV.xy + vec2(-1.5, -1.5)/vec2(510.0, 510.0);",
         "fetch[1] = shadowUV.xy + vec2(-0.5, -1.5)/vec2(510.0, 510.0);",
@@ -651,261 +644,263 @@ function getOgreShadowMapShader()
         "fetch[14] = shadowUV.xy + vec2(0.5, 1.5)/vec2(510.0, 510.0);",
         "fetch[15] = shadowUV.xy + vec2(1.5, 1.5)/vec2(510.0, 510.0);",
         "#if 1 // inline",
-	"shadowed += getShadowedTerm(fetch[0]);",
-	"shadowed += getShadowedTerm(fetch[1]);",
-	"shadowed += getShadowedTerm(fetch[2]);",
-	"shadowed += getShadowedTerm(fetch[3]);",
-	"shadowed += getShadowedTerm(fetch[4]);",
-	"shadowed += getShadowedTerm(fetch[5]);",
-	"shadowed += getShadowedTerm(fetch[6]);",
-	"shadowed += getShadowedTerm(fetch[7]);",
-	"shadowed += getShadowedTerm(fetch[8]);",
-	"shadowed += getShadowedTerm(fetch[9]);",
-	"shadowed += getShadowedTerm(fetch[10]);",
-	"shadowed += getShadowedTerm(fetch[11]);",
-	"shadowed += getShadowedTerm(fetch[12]);",
-	"shadowed += getShadowedTerm(fetch[13]);",
-	"shadowed += getShadowedTerm(fetch[14]);",
-	"shadowed += getShadowedTerm(fetch[15]);",
+        "shadowed += getShadowedTerm(fetch[0]);",
+        "shadowed += getShadowedTerm(fetch[1]);",
+        "shadowed += getShadowedTerm(fetch[2]);",
+        "shadowed += getShadowedTerm(fetch[3]);",
+        "shadowed += getShadowedTerm(fetch[4]);",
+        "shadowed += getShadowedTerm(fetch[5]);",
+        "shadowed += getShadowedTerm(fetch[6]);",
+        "shadowed += getShadowedTerm(fetch[7]);",
+        "shadowed += getShadowedTerm(fetch[8]);",
+        "shadowed += getShadowedTerm(fetch[9]);",
+        "shadowed += getShadowedTerm(fetch[10]);",
+        "shadowed += getShadowedTerm(fetch[11]);",
+        "shadowed += getShadowedTerm(fetch[12]);",
+        "shadowed += getShadowedTerm(fetch[13]);",
+        "shadowed += getShadowedTerm(fetch[14]);",
+        "shadowed += getShadowedTerm(fetch[15]);",
         "shadowed /= 16.0;",
         "#else",
         "for (int i = 0; i < 16; i++)",
-	"   shadowed += getShadowedTerm(fetch[i]);",
+        "   shadowed += getShadowedTerm(fetch[i]);",
         "#endif",
-	"#else",
+        "#else",
         "       // only one fetch to debug",
-	"       shadowed += getShadowedTerm(shadowUV.xy);",
-	"#endif",
+        "       shadowed += getShadowedTerm(shadowUV.xy);",
+        "#endif",
 
         "return shadowed;",
-    "}",
-    "",
-    "void main(void) {",
-    "fragColor = texture2D( Texture0, FragTexCoord0.xy );",
-    "",
-    "fragColor *= LightColor;",
-    "//fragColor = vec4(1,1,1,1);",
-    "float dark = computeShadowTerm();",
-    "fragColor.xyz *= 0.5 + (0.5* (1.0-dark));",
-    "fragColor.w = 1.0;",
-        " if (ground == 1) {",
-    "fragColor.w = dark;",
         "}",
-    "//fragColor = vec4(unpack2(texture2D(Texture1, FragTexCoord0 )));",
-    "//gl_FragColor = vec4(1.0,0.0,1.0,1.0); //fragColor;",
-    "gl_FragColor = fragColor;",
-    "}",
-    ].join('\n');
+        "",
+        "void main(void) {",
+        "fragColor = texture2D( Texture0, FragTexCoord0.xy );",
+        "",
+        "fragColor *= LightColor;",
+        "//fragColor = vec4(1,1,1,1);",
+        "float dark = computeShadowTerm();",
+        "fragColor.xyz *= 0.5 + (0.5* (1.0-dark));",
+        "fragColor.w = 1.0;",
+        " if (ground == 1) {",
+        "fragColor.w = dark;",
+        "}",
+        "//fragColor = vec4(unpack2(texture2D(Texture1, FragTexCoord0 )));",
+        "//gl_FragColor = vec4(1.0,0.0,1.0,1.0); //fragColor;",
+        "gl_FragColor = fragColor;",
+        "}",
+    ].join( '\n' );
 
     var program = new osg.Program(
-        new osg.Shader('VERTEX_SHADER', vertexshader),
-        new osg.Shader('FRAGMENT_SHADER', fragmentshader));
+        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
     return program;
 }
 
 
-var LightUpdateCallbackShadowMap = function(options) {
+var LightUpdateCallbackShadowMap = function ( options ) {
     this.projectionShadow = options.projectionShadow;
     this.modelviewShadow = options.modelViewShadow;
     this.shadowScene = options.shadowScene;
     this.camera = options.camera;
 };
 LightUpdateCallbackShadowMap.prototype = {
-    update: function(node, nv) {
+    update: function ( node, nv ) {
         var currentTime = nv.getFrameStamp().getSimulationTime();
 
-        var x = 50 * Math.cos(currentTime);
-        var y = 50 * Math.sin(currentTime);
+        var x = 50 * Math.cos( currentTime );
+        var y = 50 * Math.sin( currentTime );
         var h = 80;
-        osg.Matrix.makeTranslate(x ,y,h, node.getMatrix());
+        osg.Matrix.makeTranslate( x, y, h, node.getMatrix() );
 
-        var matrixList = node.parents[0].getWorldMatrices();
-        var worldMatrix = matrixList[0];
+        var matrixList = node.parents[ 0 ].getWorldMatrices();
+        var worldMatrix = matrixList[ 0 ];
 
-        var worldCameraPosition = osg.Matrix.transformVec3(worldMatrix, [x,y,80], []);
-        var worldCameraTarget = osg.Matrix.transformVec3(worldMatrix, [0,0,-5], []);
+        var worldCameraPosition = osg.Matrix.transformVec3( worldMatrix, [ x, y, 80 ], [] );
+        var worldCameraTarget = osg.Matrix.transformVec3( worldMatrix, [ 0, 0, -5 ], [] );
 
-        osg.Matrix.makeLookAt(worldCameraPosition,worldCameraTarget,[0,-1,0], this.camera.getViewMatrix());
+        osg.Matrix.makeLookAt( worldCameraPosition, worldCameraTarget, [ 0, -1, 0 ], this.camera.getViewMatrix() );
 
-        var biasScale = osg.Matrix.preMult(osg.Matrix.makeTranslate(0.5 , 0.5, 0.5, []), osg.Matrix.makeScale(0.5 , 0.5, 0.5, []));
-        var shadowProj = osg.Matrix.copy(this.camera.getProjectionMatrix(), []);
-        osg.Matrix.postMult(biasScale, shadowProj);
+        var biasScale = osg.Matrix.preMult( osg.Matrix.makeTranslate( 0.5, 0.5, 0.5, [] ), osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
+        var shadowProj = osg.Matrix.copy( this.camera.getProjectionMatrix(), [] );
+        osg.Matrix.postMult( biasScale, shadowProj );
 
-        this.shadowScene.setMatrix(worldMatrix);
-        var shadowView = osg.Matrix.mult(this.camera.getViewMatrix(), worldMatrix, []);
+        this.shadowScene.setMatrix( worldMatrix );
+        var shadowView = osg.Matrix.mult( this.camera.getViewMatrix(), worldMatrix, [] );
 
-        this.projectionShadow.set(shadowProj);
-        this.modelviewShadow.set(shadowView);
-        node.lightShadow.setPosition([x,y,h,0]);
+        this.projectionShadow.set( shadowProj );
+        this.modelviewShadow.set( shadowView );
+        node.lightShadow.setPosition( [ x, y, h, 0 ] );
         node.lightShadow.dirty();
-        node.traverse(nv);
+        node.traverse( nv );
     }
 };
 
-function createShadowMapScene(model)
-{
+function createShadowMapScene( model ) {
     var root = new osg.MatrixTransform();
 
     var models = new osg.Node();
-    models.addChild(model);
+    models.addChild( model );
     var scene = new osg.Node();
-    scene.addChild(models);
+    scene.addChild( models );
 
     var shadowScene = new osg.MatrixTransform();
-    shadowScene.addChild(models);
+    shadowScene.addChild( models );
 
 
     var light = new osg.MatrixTransform();
 
     var rtt = new osg.Camera();
-    rtt.setName("rtt_camera");
-    rttSize = [512,512];
+    rtt.setName( "rtt_camera" );
+    rttSize = [ 512, 512 ];
 
-    scene.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('ONE','ONE_MINUS_SRC_ALPHA'));
+    scene.getOrCreateStateSet().setAttributeAndMode( new osg.BlendFunc( 'ONE', 'ONE_MINUS_SRC_ALPHA' ) );
 
     // important because we use linear zbuffer
     var near = 70.0;
     var far = 110.0;
 
-    var nearShadow = new osg.Uniform.createFloat1(near, "nearShadow");
-    var farShadow = new osg.Uniform.createFloat1(far, "farShadow" );
+    var nearShadow = new osg.Uniform.createFloat1( near, "nearShadow" );
+    var farShadow = new osg.Uniform.createFloat1( far, "farShadow" );
 
-    var projectionShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ProjectionShadow");
-    var modelViewShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ModelViewShadow");
+    var projectionShadow = new osg.Uniform.createMatrix4( osg.Matrix.create(), "ProjectionShadow" );
+    var modelViewShadow = new osg.Uniform.createMatrix4( osg.Matrix.create(), "ModelViewShadow" );
 
-    osg.Matrix.makePerspective(15, 1, near, far, rtt.getProjectionMatrix());
-    rtt.setRenderOrder(osg.Camera.PRE_RENDER, 0);
-    rtt.setReferenceFrame(osg.Transform.ABSOLUTE_RF);
-    rtt.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
-    rtt.setClearColor([1, 1, 1, 0.0]);
+    osg.Matrix.makePerspective( 15, 1, near, far, rtt.getProjectionMatrix() );
+    rtt.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
+    rtt.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+    rtt.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
+    rtt.setClearColor( [ 1, 1, 1, 0.0 ] );
 
-    shadowScene.getOrCreateStateSet().setAttributeAndMode(getShadowMapShaderLight(), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
-    shadowScene.getOrCreateStateSet().addUniform(nearShadow);
-    shadowScene.getOrCreateStateSet().addUniform(farShadow);
+    shadowScene.getOrCreateStateSet().setAttributeAndMode( getShadowMapShaderLight(), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
+    shadowScene.getOrCreateStateSet().addUniform( nearShadow );
+    shadowScene.getOrCreateStateSet().addUniform( farShadow );
 
     var rttTexture = new osg.Texture();
-    rttTexture.setTextureSize(rttSize[0],rttSize[1]);
-    rttTexture.setMinFilter('NEAREST');
-    rttTexture.setMagFilter('NEAREST');
-    rtt.attachTexture(osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTexture, 0);
-    rtt.attachRenderBuffer(osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16);
-    rtt.addChild(shadowScene);
-    light.addChild(rtt);
+    rttTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
+    rttTexture.setMinFilter( 'NEAREST' );
+    rttTexture.setMagFilter( 'NEAREST' );
+    rtt.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTexture, 0 );
+    //    rtt.attachRenderBuffer( osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16 );
+    rtt.addChild( shadowScene );
+    light.addChild( rtt );
 
     light.lightShadow = new osg.Light();
-    light.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
+    light.getOrCreateStateSet().setAttributeAndMode( light.lightShadow );
 
-    var q = osg.createTexturedQuadGeometry(-10,-10,-5.0,
-                                  20, 0 ,0,
-                                  0, 20 ,0);
+    var q = osg.createTexturedQuadGeometry( -10, -10, -5.0,
+        20, 0, 0,
+        0, 20, 0 );
     var stateSet = new osg.StateSet();
     var prg = getOgreShadowMapShader();
-    stateSet.setAttributeAndMode( prg, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
-    stateSet.setTextureAttributeAndMode(1, rttTexture, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    stateSet.setAttributeAndMode( prg, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
+    stateSet.setTextureAttributeAndMode( 1, rttTexture, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
 
     // tracking should be automatic
-    stateSet.addUniform(osg.Uniform.createInt1(1, "Texture1"));
-    stateSet.addUniform(osg.Uniform.createInt1(0, "Texture0"));
+    stateSet.addUniform( osg.Uniform.createInt1( 1, "Texture1" ) );
+    stateSet.addUniform( osg.Uniform.createInt1( 0, "Texture0" ) );
     prg.trackAttributes = {};
     prg.trackAttributes.attributeKeys = [];
-    prg.trackAttributes.attributeKeys.push('Material');
-    prg.trackAttributes.attributeKeys.push('Light0');
+    prg.trackAttributes.attributeKeys.push( 'Material' );
+    prg.trackAttributes.attributeKeys.push( 'Light0' );
 
-    stateSet.addUniform(projectionShadow);
-    stateSet.addUniform(modelViewShadow);
-    stateSet.addUniform(nearShadow);
-    stateSet.addUniform(farShadow);
+    stateSet.addUniform( projectionShadow );
+    stateSet.addUniform( modelViewShadow );
+    stateSet.addUniform( nearShadow );
+    stateSet.addUniform( farShadow );
 
-    var ungroundUniform = osg.Uniform.createInt1(0,'ground');
-    stateSet.addUniform(ungroundUniform);
+    var ungroundUniform = osg.Uniform.createInt1( 0, 'ground' );
+    stateSet.addUniform( ungroundUniform );
 
-    var groundUniform = osg.Uniform.createInt1(1,'ground');
-    q.getOrCreateStateSet().addUniform(groundUniform);
-//    q.getOrCreateStateSet().setAttributeAndMode(new osg.Depth('LESS', 0.0, 1.0, false));
-    q.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('ONE','ONE_MINUS_SRC_ALPHA'));
-    scene.setStateSet(stateSet);
+    var groundUniform = osg.Uniform.createInt1( 1, 'ground' );
+    q.getOrCreateStateSet().addUniform( groundUniform );
+    //    q.getOrCreateStateSet().setAttributeAndMode(new osg.Depth('LESS', 0.0, 1.0, false));
+    q.getOrCreateStateSet().setAttributeAndMode( new osg.BlendFunc( 'ONE', 'ONE_MINUS_SRC_ALPHA' ) );
+    scene.setStateSet( stateSet );
 
 
-    light.setUpdateCallback(new LightUpdateCallbackShadowMap( {
+    light.setUpdateCallback( new LightUpdateCallbackShadowMap( {
         'projectionShadow': projectionShadow,
-        'modelViewShadow' : modelViewShadow,
+        'modelViewShadow': modelViewShadow,
         'camera': rtt,
         'shadowScene': shadowScene
-    }));
+    } ) );
 
-    models.addChild(q);
+    models.addChild( q );
 
-    root.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
+    root.getOrCreateStateSet().setAttributeAndMode( light.lightShadow );
 
-    root.addChild(light);
-    root.addChild(scene);
+    root.addChild( light );
+    root.addChild( scene );
 
     return root;
 }
 
 function createScene() {
     var root = new osg.Camera();
-    root.setComputeNearFar(false);
+    root.setComputeNearFar( false );
 
-    if (true) {
-        (function() {
-            Q.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
-                var project = createProjectedShadowScene(model);
-                project.setMatrix(osg.Matrix.makeTranslate(-10,0,0.0,[]));
-                root.addChild(project);
-            });
-        })();
+    if ( false ) {
+        ( function () {
+            Q.when( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
+                var project = createProjectedShadowScene( model );
+                project.setMatrix( osg.Matrix.makeTranslate( -10, 0, 0.0, [] ) );
+                root.addChild( project );
+            } );
+        } )();
     }
 
-    if (true) {
-        (function() {
-            Q.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
-                var texproject = createTextureProjectedShadowScene(model);
-                texproject.setMatrix(osg.Matrix.makeTranslate(0,0,0.0,[]));
-                root.addChild(texproject);
-            });
-        })();
+    if ( false ) {
+        ( function () {
+            Q.when( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
+                var texproject = createTextureProjectedShadowScene( model );
+                texproject.setMatrix( osg.Matrix.makeTranslate( 0, 0, 0.0, [] ) );
+                root.addChild( texproject );
+            } );
+        } )();
     }
 
-    if (true) {
-        (function() {
-            Q.when(osgDB.parseSceneGraph(getOgre())).then(function(model) {
-                var shadowmap = createShadowMapScene(model);
-                shadowmap.setMatrix(osg.Matrix.makeTranslate(10,0,0.0,[]));
-                root.addChild(shadowmap);
-            });
-        })();
+    if ( true ) {
+        ( function () {
+            Q.when( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
+                var shadowmap = createShadowMapScene( model );
+                shadowmap.setMatrix( osg.Matrix.makeTranslate( 10, 0, 0.0, [] ) );
+                root.addChild( shadowmap );
+            } );
+        } )();
     }
 
     return root;
 }
 
 function createSceneBox() {
-    return osg.createTexturedBox(0,0,0,
-                                 2, 2, 2);
+    return osg.createTexturedBox( 0, 0, 0,
+        2, 2, 2 );
 }
 
 
-var start = function() {
+var start = function () {
 
-    var canvas = document.getElementById("View");
+    var canvas = document.getElementById( "View" );
 
     var viewer;
     try {
-        viewer = new osgViewer.Viewer(canvas, {antialias : true, premultipliedAlpha: true });
+        viewer = new osgViewer.Viewer( canvas, {
+            antialias: true,
+            premultipliedAlpha: true
+        } );
         viewer.init();
         viewer.setupManipulator();
         var rotate = new osg.MatrixTransform();
-        rotate.addChild(createScene());
-        viewer.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
-        viewer.setSceneData(rotate);
+        rotate.addChild( createScene() );
+        viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+        viewer.setSceneData( rotate );
         viewer.getManipulator().computeHomePosition();
         viewer.run();
 
-    } catch (er) {
-        osg.log("exception in osgViewer " + er);
+    } catch ( er ) {
+        osg.log( "exception in osgViewer " + er );
     }
 };
 
-window.addEventListener("load", start ,true);
+window.addEventListener( "load", start, true );

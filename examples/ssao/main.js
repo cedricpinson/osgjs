@@ -1724,5 +1724,13 @@ function createSceneOptimized( width, height ) {
     return root;
 }
 
-var createScene = createSceneOptimized; //createSceneTestReconstructPosition; //createSceneTestDepth;
+var createScene = createSceneOptimized;
+//var createScene = createSceneTestReconstructPosition;
+//var createScene = createSceneTestDepth;
+//var createScene = createSceneTestNormal;
+
+//var createScene = createSceneReal;
+//var createScene = createScene2;
+//var createScene = createBox;
+
 window.addEventListener( 'load', main, true );
