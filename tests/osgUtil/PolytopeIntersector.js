@@ -50,6 +50,12 @@ define( [
             mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ -0.2, 0.2, 0 ] );
             mockup.near( pi._intersections[ 1 ]._points[ 0 ], [ 0.0, 0.0, 0 ] );
             mockup.near( pi._intersections[ 2 ]._points[ 0 ], [ 0.2, 0.2, 0 ] );
+            pi.reset();
+            // Test also setPolytope method, we do a bigger polytope so all the points should be inside
+            pi.setPolytope( [ [ 1.0 , 0.0, 0.0, -350 ], [-1.0, 0.0 , 0.0, 450 ], [ 0.0, 1.0, 0.0, -250 ], [ 0.0, -1.0, 0.0, 350 ] , [ 0.0, 0.0, 1.0, 0.0 ] ] );
+            pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE );
+            camera.accept( iv );
+            ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
         } );
 
         test( 'PolytopeIntersector intersectLines', function () {
