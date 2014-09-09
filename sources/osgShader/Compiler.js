@@ -75,7 +75,9 @@ define( [
             return this._variables[ name ];
         },
 
-        getOrCreateVariable: function ( type, varname ) {
+        // if doesn't exist create a new on
+        // if name given and var already exist, create a varname +
+        getOrCreateVariable: function ( type, varname, deepness ) {
             var name = varname;
             if ( name === undefined ) {
                 var len = Object.keys( this._variables ).length;
@@ -88,7 +90,13 @@ define( [
                 // however for uniform, varying and sampler, we return
                 // the variable if it already exists, because they are
                 // meant to be read only
-                name += '1';
+                name = name + deepness;
+                if ( deepness === undefined ) {
+                    return this.getOrCreateVariable( type, varname, 1 );
+                } else if ( this._variables[ name ] ) {
+                    deepness++;
+                    return this.getOrCreateVariable( type, varname, deepness );
+                }
             }
             var v = new ShaderNode.Variable( type, name );
             this._variables[ name ] = v;
@@ -212,10 +220,13 @@ define( [
 
 
         getOrCreateLightNodes: function () {
+
             var lights = this._lights;
             var lightNodes = this._lightNodes;
+
             if ( lightNodes.length === lights.length )
                 return lightNodes;
+
             for ( var i = 0, l = lights.length; i < l; i++ ) {
                 var nodeLight = new ShaderNode.Light( lights[ i ] );
                 nodeLight.init( this );
@@ -263,12 +274,10 @@ define( [
             var normalizeNormalAndVector = new ShaderNode.NormalizeNormalAndEyeVector( frontNormal, inputPosition );
 
             // get or create normalized normal
-            var outputNormal = this._variables[ 'normal' ];
-            if ( outputNormal === undefined ) outputNormal = this.getOrCreateVariable( 'vec3', 'normal' );
+            var outputNormal = this.getOrCreateVariable( 'vec3', 'normal' );
 
             // get or create normalized position
-            var outputPosition = this._variables[ 'eyeVector' ];
-            if ( outputPosition === undefined ) outputPosition = this.getOrCreateVariable( 'vec3', 'eyeVector' );
+            var outputPosition = this.getOrCreateVariable( 'vec3', 'eyeVector' );
 
             normalizeNormalAndVector.connectOutputNormal( outputNormal );
             normalizeNormalAndVector.connectOutputEyeVector( outputPosition );
@@ -402,8 +411,31 @@ define( [
             var texColor = tex.variable;
             return texColor;
         },
+        getDiffuseColorFromTextures: function () {
 
-        declareTextures: function () {
+            var texturesInput = [];
+            var textures = this._texturesByName;
+            for ( var tex in textures ) {
+                if ( textures.hasOwnProperty( tex ) ) {
+                    var texture = textures[ tex ];
+                    if ( !texture ) {
+                        continue;
+                    }
+                    texturesInput.push( texture.variable );
+                }
+            }
+            if ( texturesInput.length > 1 ) {
+                var texAccum = this.getOrCreateVariable( 'vec3', 'texDiffuseAccum' );
+                var addNode = new ShaderNode.Mult( texturesInput );
+                addNode.connectOutput( texAccum );
+                return texAccum;
+            } else if ( texturesInput.length === 1 ) {
+                return texturesInput[ 0 ];
+            }
+            return undefined;
+        },
+
+        declareTextures: function ( sRGBConvert ) {
 
             var textures = this._textures;
             var nbTextures = textures.length;
@@ -434,10 +466,9 @@ define( [
                     }
                     var output;
 
-                    output = this.createTexturesDiffuseColor( texture, textureSampler, texCoord );
+                    output = this.createTexturesDiffuseColor( texture, textureSampler, texCoord, sRGBConvert );
 
                     // if the texture channel is valid we register it
-
                     if ( output !== undefined ) {
                         var textureUnit = texCoordUnit;
 
@@ -462,15 +493,19 @@ define( [
             }
         },
 
-        createTexturesDiffuseColor: function ( texture, textureSampler, texCoord ) {
-            var output, node, texel, srgb2linearTmp;
+        createTexturesDiffuseColor: function ( texture, textureSampler, texCoord, sRGBConvert ) {
+            var output, node, texel;
             texel = this.getOrCreateVariable( 'vec4' );
             var premult = this.getOrCreateVariable( 'vec3' );
             node = new ShaderNode.TextureRGBA( textureSampler, texCoord, texel );
-            srgb2linearTmp = this.getOrCreateVariable( 'vec4' );
             var gamma = this.getVariable( 'gamma' );
-            node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp, gamma );
-            node = new ShaderNode.PreMultAlpha( srgb2linearTmp, texel, premult );
+            if ( sRGBConvert ) {
+                var srgb2linearTmp = this.getOrCreateVariable( 'vec4' );
+                node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp, gamma );
+                node = new ShaderNode.PreMultAlpha( srgb2linearTmp, texel, premult );
+            } else {
+                node = new ShaderNode.PreMultAlpha( texel, texel, premult );
+            }
             output = premult;
             return output;
         },
@@ -775,11 +810,16 @@ define( [
             return fragColor;
         },
         createFragmentShaderGraph: function () {
+
+            // TODO: convert OSGJS samples AND users to sRGB...
+            // otherwise washed out color in samples (and users apps)
+            var sRGBConvert = false;
+
             var gamma = this.getOrCreateVariable( 'float', 'gamma' ); // initialize once, will be reused.
             gamma.setValue( ShaderNode.LinearTosRGB.defaultGamma );
 
             this.declareUniforms();
-            this.declareTextures();
+            this.declareTextures( sRGBConvert );
 
             if ( !this._material ) return this.createFragmentShaderGraphStateSet();
 
@@ -803,7 +843,7 @@ define( [
             normalizeNormalAndVector.connectOutputEyeVector( eyeVector );
 
             // diffuse color
-            var diffuseColor = this.getTexture();
+            var diffuseColor = this.getDiffuseColorFromTextures();
             diffuseColor = this.getVertexColor( diffuseColor );
             if ( diffuseColor === undefined ) {
                 diffuseColor = materialDiffuseColor;
@@ -824,7 +864,7 @@ define( [
 
             if ( this._lights.length > 0 ) {
                 var lightedOutput = this.getOrCreateVariable( 'vec4', 'lightOutput' );
-                var nodeLight = new ShaderNode.Lighting( this._lights, normal, diffuseColor, materialAmbientColor, materialSpecularColor, materialShininess, lightedOutput );
+                var nodeLight = new ShaderNode.Lighting( this._lights, normal, materialAmbientColor, diffuseColor, materialSpecularColor, materialShininess, lightedOutput );
                 nodeLight.createFragmentShaderGraph( this );
                 // get final color
                 finalColor = this.getFinalColor( materialEmissionColor, lightedOutput );
@@ -841,12 +881,15 @@ define( [
                 finalColor = premultAlpha;
             }
 
-            // get srgb color
-            var srgbColor = this.getColorsRGB( finalColor );
-
             var fragColor = new ShaderNode.FragColor();
-            new ShaderNode.SetAlpha( srgbColor, alpha, fragColor );
 
+            if ( sRGBConvert ) {
+                // get srgb color
+                var srgbColor = this.getColorsRGB( finalColor );
+                new ShaderNode.SetAlpha( srgbColor, alpha, fragColor );
+            } else {
+                new ShaderNode.SetAlpha( finalColor, alpha, fragColor );
+            }
             return fragColor;
         }
     };

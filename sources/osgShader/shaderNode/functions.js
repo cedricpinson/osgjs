@@ -41,7 +41,7 @@ define( [
         computeFragment: function () {
             var str = [ '',
                 this._outputNormal.getVariable() + ' = normalize(' + this._normal.getVariable() + ');',
-                this._outputEyeVector.getVariable() + ' = -normalize(' + this._position.getVariable() + ');'
+                this._outputEyeVector.getVariable() + ' = normalize(-' + this._position.getVariable() + ');'
             ].join( '\n' );
             return str;
         }
