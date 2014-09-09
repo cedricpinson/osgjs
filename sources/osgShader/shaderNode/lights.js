@@ -39,21 +39,20 @@ define( [
             var accumulator = new ShaderNode.Add();
 
             for ( var i = 0; i < this._lights.length; i++ ) {
-                var light = this._lights[ 0 ];
+                var light = this._lights[ i ];
                 var lightNode;
 
                 var lightedOutput = context.getOrCreateVariable( 'vec4', 'lightTempOutput' );
 
-                switch ( light.getType() ) {
-                case 'Sun':
-                case 'Directional':
+                switch ( light.getLightType() ) {
+                case 'DIRECTION':
                     lightNode = new SunLight( this, light, lightedOutput );
                     break;
-                case 'Spot':
+                case 'SPOT':
                     lightNode = new SpotLight( this, light, lightedOutput );
                     break;
                 default:
-                case 'Point':
+                case 'POINT':
                     lightNode = new PointLight( this, light, lightedOutput );
                     break;
                 }
@@ -117,10 +116,15 @@ define( [
             var lightAmbientColor = context.getOrCreateUniform( lightUniforms.ambient );
             var lightSpecularColor = context.getOrCreateUniform( lightUniforms.specular );
 
+            var lightMatrix = context.getOrCreateUniform( lightUniforms.matrix );
+            var lightInvMatrix = context.getOrCreateUniform( lightUniforms.invMatrix );
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightPosition, lightAttenuation );
+            var funcOp = new operations.FunctionCall( normal, eyeVector,
+                this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess,
+                lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightPosition, lightAttenuation,
+                lightMatrix, lightInvMatrix );
             funcOp.connectOutput( this.getOutput() );
-            funcOp.setCall( 'computePointLightShading', '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', 'woo PointLight' );
+            funcOp.setCall( 'computePointLightShading', '', 'woo PointLight' );
 
         }
 
@@ -154,10 +158,18 @@ define( [
             var lightAmbientColor = context.getOrCreateUniform( lightUniforms.ambient );
             var lightSpecularColor = context.getOrCreateUniform( lightUniforms.specular );
 
+            var lightMatrix = context.getOrCreateUniform( lightUniforms.matrix );
+            var lightInvMatrix = context.getOrCreateUniform( lightUniforms.invMatrix );
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection, lightAttenuation, lightPosition, lightSpotCutOff, lightSpotBlend );
+
+            var funcOp = new operations.FunctionCall( normal, eyeVector,
+                this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess,
+                lightAmbientColor, lightDiffuseColor, lightSpecularColor,
+                lightDirection, lightAttenuation, lightPosition,
+                lightSpotCutOff, lightSpotBlend,
+                lightMatrix, lightInvMatrix );
             funcOp.connectOutput( this.getOutput() );
-            funcOp.setCall( 'computeSpotLightShading', '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', 'woo SpotLight' );
+            funcOp.setCall( 'computeSpotLightShading', '', 'woo SpotLight' );
         }
     } );
 
@@ -178,15 +190,18 @@ define( [
             var lightUniforms = nodeLight.getOrCreateUniforms();
 
             // connect variable to light node
-            var lightDirection = context.getOrCreateUniform( lightUniforms.direction );
+            var lightDirection = context.getOrCreateUniform( lightUniforms.position );
             var lightDiffuseColor = context.getOrCreateUniform( lightUniforms.diffuse );
             var lightAmbientColor = context.getOrCreateUniform( lightUniforms.ambient );
             var lightSpecularColor = context.getOrCreateUniform( lightUniforms.specular );
 
+            var lightMatrix = context.getOrCreateUniform( lightUniforms.matrix );
+            var lightInvMatrix = context.getOrCreateUniform( lightUniforms.invMatrix );
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection );
+            var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection,
+                lightMatrix, lightInvMatrix );
             funcOp.connectOutput( this.getOutput() );
-            funcOp.setCall( 'computeSunLightShading', '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', 'waa SunLight' );
+            funcOp.setCall( 'computeSunLightShading', '', 'waa SunLight' );
         }
     } );
 

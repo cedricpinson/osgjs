@@ -9,12 +9,45 @@ define( [
     'osg/StateGraph',
     'osg/Matrix'
 ], function ( mockup, Light, Viewer, Shape, Node, CullVisitor, RenderStage, StateGraph, Matrix ) {
+    'use strict';
 
     return function () {
 
         module( 'osg' );
 
         test( 'Light', function () {
+
+            ( function () {
+
+                var l0 = new Light();
+                l0.setLightNumber( 0 );
+
+                l0.setLightAsPoint();
+                deepEqual( l0.getPosition(), [ 0, 0, 0, 1 ] );
+                equal( l0.getSpotCutoff(), 180);
+                equal( l0.getLightType(), Light.POINT );
+
+                l0.setLightAsDirection();
+                deepEqual( l0.getPosition(), [ 0, 0, 1, 0 ] );
+                equal( l0.getLightType(), Light.DIRECTION );
+
+                l0.setLightAsSpot();
+                deepEqual( l0.getPosition(), [ 0, 0, 0, 1 ] );
+                deepEqual( l0.getDirection(), [ 0, 0, -1 ] );
+                equal( l0.getSpotCutoff(), 90);
+                equal( l0.getLightType(), Light.SPOT );
+
+                deepEqual( l0.getAmbient(), [ 0.2, 0.2, 0.2, 1 ] );
+                deepEqual( l0.getDiffuse(), [ 0.8, 0.8, 0.8, 1 ] );
+                deepEqual( l0.getSpecular(), [ 0.2, 0.2, 0.2, 1 ] );
+
+
+                equal( l0.getConstantAttenuation(), 1);
+                equal( l0.getLinearAttenuation(), 0);
+                equal( l0.getQuadraticAttenuation(), 0);
+
+
+            } )();
 
             ( function () {
                 var canvas = mockup.createCanvas();
