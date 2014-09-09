@@ -45,6 +45,7 @@ define( [
         this._candidatesMasks = [];
         this._lines = [];
         this._planesMask = 0;
+        this._limitOneIntersection = false;
     };
 
     PolytopePrimitiveIntersector.prototype = {
@@ -108,10 +109,10 @@ define( [
         },
 
         intersectPoint: ( function () {
-            // May we use _limitOneIntersection ?
             var hit = Vec3.create();
             return function ( v ) {
                 this._index++;
+                if ( this._limitOneIntersection && this._intersections.length > 0 ) return;
                 var d;
 
                 for ( var i = 0, j = this._planes.length; i < j; ++i ) {
@@ -137,6 +138,7 @@ define( [
             var hit = Vec3.create();
             return function ( v1, v2 ) {
                 this._index++;
+                if ( this._limitOneIntersection && this._intersections.length > 0 ) return;
                 var v1Inside = true;
                 var v2Inside = true;
                 var selectorMask = 0x1;
@@ -218,6 +220,7 @@ define( [
             var q = Vec3.create();
             return function ( v1, v2, v3 ) {
                 this._index++;
+                if ( this._limitOneIntersection && this._intersections.length > 0 ) return;
                 var selectorMask = 0x1;
                 var insideMask = 0x0;
                 this._candidates = [];
@@ -387,6 +390,10 @@ define( [
                 return this._lines;
             };
         } )(),
+
+        setLimitOneIntersection: function ( limit ) {
+            this._limitOneIntersection = limit;
+        },
 
         distance: function ( plane, v ) {
             var d = plane[ 0 ] * v[ 0 ] + plane[ 1 ] * v[ 1 ] + plane[ 2 ] * v[ 2 ] + plane[ 3 ];

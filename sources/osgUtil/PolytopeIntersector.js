@@ -18,7 +18,14 @@ define( [
         this._iPolytope = [];
         this._referencePlane = Vec4.create();
         this._iReferencePlane = Vec4.create();
+        this._intersectionLimit = PolytopeIntersector.NO_LIMIT;
     };
+
+
+    PolytopeIntersector.NO_LIMIT = 0;
+    PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE = 1;
+    PolytopeIntersector.LIMIT_ONE = 2;
+
 
     PolytopeIntersector.prototype = {
 
@@ -49,9 +56,13 @@ define( [
         },
 
         enter: function ( node ) {
-            // Not working if culling disabled
-            // !node.isCullingActive() || 
-            return this.intersects( node.getBound() );
+            if ( this.reachedLimit() ) return false;
+            return ( this.intersects( node.getBound() ) );
+        },
+
+        reachedLimit: function ()
+        {
+            return this._intersectionLimit === PolytopeIntersector.LIMIT_ONE && this._intersections.length > 0; 
         },
 
         // Intersection Polytope/Sphere 
@@ -75,9 +86,11 @@ define( [
 
         // Intersection Polytope/Geometry
         intersect: function ( iv, node ) {
+            if ( this.reachedLimit() ) return false;
             var ppi = new PolytopePrimitiveIntersector();
             ppi.setNodePath( iv.nodePath );
             ppi.set( this._iPolytope, this._iReferencePlane );
+            ppi.setLimitOneIntersection ( this._intersectionLimit === PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE || this._intersectionLimit === PolytopeIntersector.LIMIT_ONE );
             ppi.apply( node );
             var l = ppi._intersections.length;
             if ( l > 0 ) {
@@ -93,6 +106,11 @@ define( [
 
         getIntersections: function () {
             return this._intersections;
+        },
+
+        setIntersectionLimit: function ( limit ) 
+        {
+            this._intersectionLimit = limit; 
         },
 
         setCurrentTransformation: function ( matrix ) {
