@@ -117,8 +117,13 @@ define( [
             var lightAmbientColor = context.getOrCreateUniform( lightUniforms.ambient );
             var lightSpecularColor = context.getOrCreateUniform( lightUniforms.specular );
 
+            var lightMatrix = context.getOrCreateUniform( lightUniforms.matrix );
+            var lightInvMatrix = context.getOrCreateUniform( lightUniforms.invMatrix );
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightPosition, lightAttenuation );
+            var funcOp = new operations.FunctionCall( normal, eyeVector,
+                this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess,
+                lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightPosition, lightAttenuation,
+                lightMatrix, lightInvMatrix );
             funcOp.connectOutput( this.getOutput() );
             funcOp.setCall( 'computePointLightShading', '', 'woo PointLight' );
 

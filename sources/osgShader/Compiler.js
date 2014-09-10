@@ -263,12 +263,10 @@ define( [
             var normalizeNormalAndVector = new ShaderNode.NormalizeNormalAndEyeVector( frontNormal, inputPosition );
 
             // get or create normalized normal
-            var outputNormal = this._variables[ 'normal' ];
-            if ( outputNormal === undefined ) outputNormal = this.getOrCreateVariable( 'vec3', 'normal' );
+            var outputNormal = this.getOrCreateVariable( 'vec3', 'normal' );
 
             // get or create normalized position
-            var outputPosition = this._variables[ 'eyeVector' ];
-            if ( outputPosition === undefined ) outputPosition = this.getOrCreateVariable( 'vec3', 'eyeVector' );
+            var outputPosition = this.getOrCreateVariable( 'vec3', 'eyeVector' );
 
             normalizeNormalAndVector.connectOutputNormal( outputNormal );
             normalizeNormalAndVector.connectOutputEyeVector( outputPosition );
