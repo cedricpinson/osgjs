@@ -5,8 +5,11 @@
 define( [
     'osg/Utils',
     'osg/NodeVisitor',
-    'osg/Matrix'
-], function ( MACROUTILS, NodeVisitor, Matrix ) {
+    'osg/Matrix',
+    'osg/TransformEnums'
+], function ( MACROUTILS, NodeVisitor, Matrix, TransformEnums ) {
+
+    'use strict';
 
     var IntersectionVisitor = function () {
         NodeVisitor.call( this );
@@ -114,13 +117,29 @@ define( [
             if ( vp !== undefined ) {
                 this.pushWindowMatrixUsingViewport( vp );
             }
-            this.pushProjectionMatrix( camera.getProjectionMatrix() );
-            this.pushViewMatrix( camera.getViewMatrix() );
-            this.pushModelMatrix( Matrix.create() );
+
+            var projection, view, model;
+            if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF && this.getViewMatrix() && this.getProjectionMatrix() ) {
+                // relative
+                projection = Matrix.mult( camera.getProjectionMatrix(), this.getProjectionMatrix(), Matrix.create() );
+                view = this.getViewMatrix();
+                model = Matrix.mult( camera.getViewMatrix(), this.getModelMatrix(), Matrix.create() );
+            } else {
+                // absolute
+                projection = camera.getProjectionMatrix();
+                view = camera.getViewMatrix();
+                model = Matrix.create();
+            }
+
+            this.pushProjectionMatrix( projection );
+            this.pushViewMatrix( view );
+            this.pushModelMatrix( model );
+
             // In OSG a push_clone is done, 
             // here we update the current transform for simplicity
             this._intersector.setCurrentTransformation( this.getTransformation() );
             this.traverse( camera );
+
             this.popModelMatrix();
             this.popViewMatrix();
             this.popProjectionMatrix();
