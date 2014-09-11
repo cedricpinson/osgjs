@@ -30,6 +30,16 @@ void specularCookTorrance(const in vec3 n, const in vec3 l, const in vec3 v, con
     }
     specularContrib = specfac*materialSpecular*lightSpecular;
 }
+void specularCustom(const in vec3 n, const in vec3 l, const in vec3 v, const in float hard, const in vec3 materialSpecular, const in vec3 lightSpecular, out vec3 specularContrib)
+{
+    vec3 r = reflect(-l, n);
+    float nh = dot(r, v);
+    float specfac = 0.0;
+    if(nh >= 0.0){
+      specfac = pow(nh, hard);
+      specularContrib = specfac*materialSpecular*lightSpecular;
+    }
+}
 
 void lambert(const in float ndl,  const in vec3 materialDiffuse, const in vec3 lightDiffuse, out vec3 diffuseContrib)
 {
@@ -208,7 +218,7 @@ vec4 computeSunLightShading(
           vec3 diffuseContrib;
           lambert(NdotL, materialDiffuse.rgb, lightDiffuse.rgb, diffuseContrib);
           vec3 specularContrib;
-          specularCookTorrance(normal, lightDirection, eyeVector, materialShininess, materialSpecular.rgb, lightSpecular.rgb, specularContrib.rgb);
+          specularCustom(normal, lightDirection, eyeVector, materialShininess, materialSpecular.rgb, lightSpecular.rgb, specularContrib.rgb);
           return vec4(lightAmbient.rgb*materialAmbient.rgb + shadowContrib*(diffuseContrib.rgb+specularContrib.rgb), 1.0);
         }
     }

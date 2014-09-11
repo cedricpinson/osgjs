@@ -33,9 +33,10 @@ define( [
                 if ( material !== undefined ) Notify.warn( 'Multiple Material attributes latest Chosen ' );
                 material = attributes[ i ];
 
-            } else {
-                Notify.warn( 'Compiler, does not know type ' + type );
             }
+            //else {
+            //    Notify.warn( 'Compiler, does not know type ' + type );
+            //}
         }
 
         var texturesNum = textureAttributes.length;
@@ -424,7 +425,7 @@ define( [
             return undefined;
         },
 
-        declareTextures: function () {
+        declareTextures: function ( sRGBConvert ) {
 
             var textures = this._textures;
             var nbTextures = textures.length;
@@ -455,7 +456,7 @@ define( [
                     }
                     var output;
 
-                    output = this.createTexturesDiffuseColor( texture, textureSampler, texCoord );
+                    output = this.createTexturesDiffuseColor( texture, textureSampler, texCoord, sRGBConvert );
 
                     // if the texture channel is valid we register it
                     if ( output !== undefined ) {
@@ -482,15 +483,19 @@ define( [
             }
         },
 
-        createTexturesDiffuseColor: function ( texture, textureSampler, texCoord ) {
-            var output, node, texel, srgb2linearTmp;
+        createTexturesDiffuseColor: function ( texture, textureSampler, texCoord, sRGBConvert ) {
+            var output, node, texel;
             texel = this.getOrCreateVariable( 'vec4' );
             var premult = this.getOrCreateVariable( 'vec3' );
             node = new ShaderNode.TextureRGBA( textureSampler, texCoord, texel );
-            srgb2linearTmp = this.getOrCreateVariable( 'vec4' );
             var gamma = this.getVariable( 'gamma' );
-            node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp, gamma );
-            node = new ShaderNode.PreMultAlpha( srgb2linearTmp, texel, premult );
+            if ( sRGBConvert ) {
+                var srgb2linearTmp = this.getOrCreateVariable( 'vec4' );
+                node = new ShaderNode.sRGBToLinear( texel, srgb2linearTmp, gamma );
+                node = new ShaderNode.PreMultAlpha( srgb2linearTmp, texel, premult );
+            } else {
+                node = new ShaderNode.PreMultAlpha( texel, texel, premult );
+            }
             output = premult;
             return output;
         },
@@ -795,11 +800,16 @@ define( [
             return fragColor;
         },
         createFragmentShaderGraph: function () {
+
+            // TODO: convert OSGJS samples AND users to sRGB...
+            // otherwise washed out color in samples (and users apps)
+            var sRGBConvert = false;
+
             var gamma = this.getOrCreateVariable( 'float', 'gamma' ); // initialize once, will be reused.
             gamma.setValue( ShaderNode.LinearTosRGB.defaultGamma );
 
             this.declareUniforms();
-            this.declareTextures();
+            this.declareTextures( sRGBConvert );
 
             if ( !this._material ) return this.createFragmentShaderGraphStateSet();
 
@@ -863,11 +873,13 @@ define( [
 
             var fragColor = new ShaderNode.FragColor();
 
-            // get srgb color
-            var srgbColor = this.getColorsRGB( finalColor );
-            new ShaderNode.SetAlpha( srgbColor, alpha, fragColor );
-
-
+            if ( sRGBConvert ) {
+                // get srgb color
+                var srgbColor = this.getColorsRGB( finalColor );
+                new ShaderNode.SetAlpha( srgbColor, alpha, fragColor );
+            } else {
+                new ShaderNode.SetAlpha( finalColor, alpha, fragColor );
+            }
             return fragColor;
         }
     };
