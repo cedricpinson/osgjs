@@ -16,7 +16,7 @@ float getLightAttenuation(const in float dist, const in vec4 lightAttenuation)
 void specularCookTorrance(const in vec3 n, const in vec3 l, const in vec3 v, const in float hard, const in vec3 materialSpecular, const in vec3 lightSpecular, out vec3 specularContrib)
 {
     vec3 h = normalize(v + l);
-    float nh = dot(n, h);
+    float nh = dot(n, -h);
     float specfac = 0.0;
 
     if(nh > 0.0)
@@ -67,10 +67,10 @@ vec4 computeSpotLightShading(
   vec3 lightEye = vec3(lightMatrix * lightSpotPosition);
   vec3 lightDir;
   if (lightSpotPosition[3] == 1.0) {
-    lightDir = -lightEye - FragEyeVector;
+    lightDir = lightEye - FragEyeVector;
   }
   else {
-    lightDir = -lightEye;
+    lightDir = lightEye;
   }
   // compute dist
   float dist = length(lightDir);
@@ -141,13 +141,13 @@ vec4 computePointLightShading(
                               const in mat4 lightInvMatrix)
 {
 
-  vec3 lightEye = vec3(lightMatrix * lightPosition);
+  vec3 lightEye =  vec3(lightMatrix * lightPosition);
   vec3 lightDir;
   if (lightPosition[3] == 1.0) {
-    lightDir = - lightEye - FragEyeVector;
+    lightDir = lightEye - FragEyeVector;
   }
   else {
-      lightDir = - lightEye;
+    lightDir = lightEye;
   }
   float dist = length(lightDir);
   // compute dist

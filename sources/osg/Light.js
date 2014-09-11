@@ -264,9 +264,9 @@ define( [
                 Matrix.inverse( this._invMatrix, this._invMatrix );
                 Matrix.transpose( this._invMatrix, this._invMatrix );
 
-                Matrix.transformVec3( this._invMatrix, this._position, uniformMap.position.get() );
+                //Matrix.transformVec3( this._invMatrix, this._position, uniformMap.position.get() );
             } else {
-                Matrix.transformVec3( matrix, this._position, uniformMap.position.get() );
+                //Matrix.transformVec3( matrix, this._position, uniformMap.position.get() );
             }
 
             if ( this._type === 'SPOT' || this._type === 'POINT' ) {
@@ -277,7 +277,7 @@ define( [
                 Matrix.inverse( this._invMatrix, this._invMatrix );
                 Matrix.transpose( this._invMatrix, this._invMatrix );
 
-                Matrix.transformVec3( this._invMatrix, this._direction, uniformMap.direction.get() );
+                //Matrix.transformVec3( this._invMatrix, this._direction, uniformMap.direction.get() );
             }
 
             Matrix.copy( matrix, uniformMap.matrix.get() );

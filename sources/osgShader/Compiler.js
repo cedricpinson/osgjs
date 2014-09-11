@@ -400,6 +400,29 @@ define( [
             var texColor = tex.variable;
             return texColor;
         },
+        getDiffuseColorFromTextures: function () {
+
+            var texturesInput = [];
+            var textures = this._texturesByName;
+            for ( var tex in textures ) {
+                if ( textures.hasOwnProperty( tex ) ) {
+                    var texture = textures[ tex ];
+                    if ( !texture ) {
+                        continue;
+                    }
+                    texturesInput.push( texture.variable );
+                }
+            }
+            if ( texturesInput.length > 1 ) {
+                var texAccum = this.getOrCreateVariable( 'vec3', 'texDiffuseAccum' );
+                var addNode = new ShaderNode.Mult( texturesInput );
+                addNode.connectOutput( texAccum );
+                return texAccum;
+            } else if ( texturesInput.length === 1 ) {
+                return texturesInput[ 0 ];
+            }
+            return undefined;
+        },
 
         declareTextures: function () {
 
@@ -435,7 +458,6 @@ define( [
                     output = this.createTexturesDiffuseColor( texture, textureSampler, texCoord );
 
                     // if the texture channel is valid we register it
-
                     if ( output !== undefined ) {
                         var textureUnit = texCoordUnit;
 
@@ -801,7 +823,7 @@ define( [
             normalizeNormalAndVector.connectOutputEyeVector( eyeVector );
 
             // diffuse color
-            var diffuseColor = this.getTexture();
+            var diffuseColor = this.getDiffuseColorFromTextures();
             diffuseColor = this.getVertexColor( diffuseColor );
             if ( diffuseColor === undefined ) {
                 diffuseColor = materialDiffuseColor;
@@ -839,11 +861,12 @@ define( [
                 finalColor = premultAlpha;
             }
 
+            var fragColor = new ShaderNode.FragColor();
+
             // get srgb color
             var srgbColor = this.getColorsRGB( finalColor );
-
-            var fragColor = new ShaderNode.FragColor();
             new ShaderNode.SetAlpha( srgbColor, alpha, fragColor );
+
 
             return fragColor;
         }
