@@ -46,6 +46,7 @@ define( [
         this._lines = [];
         this._planesMask = 0;
         this._limitOneIntersection = false;
+        this._dimensionMask = undefined;
     };
 
     PolytopePrimitiveIntersector.prototype = {
@@ -62,6 +63,11 @@ define( [
             for ( var i = 0; i < this._planes.length; i++ ) {
                 this._planesMask = ( this._planesMask << 1 ) | 1;
             }
+        },
+
+        setDimensionMask: function ( mask )
+        {
+            this._dimensionMask = mask;
         },
 
         apply: function ( node ) {
@@ -112,6 +118,7 @@ define( [
             var hit = Vec3.create();
             return function ( v ) {
                 this._index++;
+                if ( ( this._dimensionMask & ( 1 << 0 ) ) === 0 ) return;
                 if ( this._limitOneIntersection && this._intersections.length > 0 ) return;
                 var d;
 
@@ -138,6 +145,7 @@ define( [
             var hit = Vec3.create();
             return function ( v1, v2 ) {
                 this._index++;
+                if ( ( this._dimensionMask & ( 1 << 1 ) ) === 0 ) return;
                 if ( this._limitOneIntersection && this._intersections.length > 0 ) return;
                 var v1Inside = true;
                 var v2Inside = true;
@@ -220,6 +228,7 @@ define( [
             var q = Vec3.create();
             return function ( v1, v2, v3 ) {
                 this._index++;
+                if ( ( this._dimensionMask & ( 1 << 2 ) ) === 0 ) return;
                 if ( this._limitOneIntersection && this._intersections.length > 0 ) return;
                 var selectorMask = 0x1;
                 var insideMask = 0x0;

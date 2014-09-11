@@ -19,12 +19,19 @@ define( [
         this._referencePlane = Vec4.create();
         this._iReferencePlane = Vec4.create();
         this._intersectionLimit = PolytopeIntersector.NO_LIMIT;
+        this._dimensionMask = PolytopeIntersector.AllDims;
     };
 
 
     PolytopeIntersector.NO_LIMIT = 0;
     PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE = 1;
     PolytopeIntersector.LIMIT_ONE = 2;
+
+
+    PolytopeIntersector.DimZero = ( 1 << 0 );
+    PolytopeIntersector.DimOne = ( 1 << 1 );
+    PolytopeIntersector.DimTwo = ( 1 << 2 );
+    PolytopeIntersector.AllDims = ( PolytopeIntersector.DimZero | PolytopeIntersector.DimOne | PolytopeIntersector.DimTwo );
 
 
     PolytopeIntersector.prototype = {
@@ -48,6 +55,14 @@ define( [
                 [ 0.0, -1.0, 0.0, yMax ],
                 [ 0.0, 0.0, 1.0, 0.0 ]
             ] );
+        },
+
+        /** Set the dimension mask.
+         * As polytope-triangle and polytope-quad intersections are expensive to compute
+         * it is possible to turn them off by calling setDimensionMask( DimZero | DimOne )
+         */
+        setDimensionMask: function ( mask ) {
+            this._dimensionMask = mask;
         },
 
         reset: function () {
@@ -91,6 +106,7 @@ define( [
             ppi.setNodePath( iv.nodePath );
             ppi.set( this._iPolytope, this._iReferencePlane );
             ppi.setLimitOneIntersection ( this._intersectionLimit === PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE || this._intersectionLimit === PolytopeIntersector.LIMIT_ONE );
+            ppi.setDimensionMask( this._dimensionMask );
             ppi.apply( node );
             var l = ppi._intersections.length;
             if ( l > 0 ) {
