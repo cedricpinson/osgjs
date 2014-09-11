@@ -2,6 +2,10 @@ define( [], function () {
 
     /** @class Vec2 Operations */
     var Vec2 = {
+        create: function () {
+            return [ 0.0, 0.0 ];
+        },
+
         copy: function ( a, r ) {
             r[ 0 ] = a[ 0 ];
             r[ 1 ] = a[ 1 ];

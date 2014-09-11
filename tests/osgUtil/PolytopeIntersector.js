@@ -56,6 +56,19 @@ define( [
             pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE );
             camera.accept( iv );
             ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+            // Test dimension mask
+            pi.reset();
+            pi.setDimensionMask( PolytopeIntersector.DimOne );
+            pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE );
+            camera.accept( iv );
+            ok( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
+
+            pi.reset();
+            pi.setDimensionMask( PolytopeIntersector.DimZero );
+            pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE );
+            camera.accept( iv );
+            ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
+
         } );
 
         test( 'PolytopeIntersector intersectLines', function () {
@@ -80,6 +93,15 @@ define( [
             mockup.near( pi._intersections[ 0 ]._points[ 0 ], [ -0.096225, 0.096225, 0 ] );
             mockup.near( pi._intersections[ 0 ]._points[ 1 ], [ -0.096225, 0.096225, 0 ] );
             mockup.near( pi._intersections[ 0 ]._points[ 2 ], [ 0.0, 0.0, 0.0 ] );
+            // Test dimension masks
+            pi.reset();
+            pi.setDimensionMask( PolytopeIntersector.DimZero );
+            camera.accept( iv );
+            ok( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
+            pi.reset();
+            pi.setDimensionMask( PolytopeIntersector.DimOne );
+            camera.accept( iv );
+            ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
         } );
 
         test( 'PolytopeIntersector intersectLineStrip', function () {
@@ -124,6 +146,11 @@ define( [
             mockup.near( pi._intersections[ 0 ]._points[ 1 ], [ -0.096225, 0.096225, 0 ] );
             mockup.near( pi._intersections[ 0 ]._points[ 2 ], [ -0.096225, 0.096225, 0 ] );
             mockup.near( pi._intersections[ 0 ]._points[ 3 ], [ 0.096225, 0.096225, 0 ] );
+            // Test dimension mask
+            pi.reset();
+            pi.setDimensionMask( PolytopeIntersector.DimZero );
+            camera.accept( iv );
+            ok( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
         } );
 
     var createPoints = function ( ) {
