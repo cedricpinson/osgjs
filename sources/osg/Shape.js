@@ -651,12 +651,68 @@ define( [
         return g;
     };
 
+    var createGridGeometry = function ( cx, cy, cz, wx, wy, wz, hx, hy, hz, res1, res2 ) {
+        cx = cx !== undefined ? cx : -0.5;
+        cy = cy !== undefined ? cy : -0.5;
+        cz = cz !== undefined ? cz : 0.0;
+
+        wx = wx !== undefined ? wx : 1.0;
+        wy = wy !== undefined ? wy : 0.0;
+        wz = wz !== undefined ? wz : 0.0;
+
+        hx = hx !== undefined ? hx : 0.0;
+        hy = hy !== undefined ? hy : 1.0;
+        hz = hz !== undefined ? hz : 0.0;
+
+        res1 = res1 !== undefined ? res1 : 5;
+        res2 = res2 !== undefined ? res2 : 5;
+        res1 += 2;
+        res2 += 2;
+
+        var g = new Geometry();
+        var vertices = new Float32Array( ( res1 + res2 ) * 2 * 3 );
+        var i = 0;
+        var j = 0;
+        var sx = wx / ( res1 - 1 );
+        var sy = wy / ( res1 - 1 );
+        var sz = wz / ( res1 - 1 );
+        var ux = cx + wx + hx;
+        var uy = cy + wy + hy;
+        var uz = cz + wz + hz;
+        for ( i = 0; i < res1; ++i ) {
+            j = i * 6;
+            vertices[ j ] = cx + sx * i;
+            vertices[ j + 1 ] = cy + sy * i;
+            vertices[ j + 2 ] = cz + sz * i;
+            vertices[ j + 3 ] = ux - sx * ( res1 - i - 1 );
+            vertices[ j + 4 ] = uy - sy * ( res1 - i - 1 );
+            vertices[ j + 5 ] = uz - sz * ( res1 - i - 1 );
+        }
+        sx = hx / ( res2 - 1 );
+        sy = hy / ( res2 - 1 );
+        sz = hz / ( res2 - 1 );
+        for ( i = 0; i < res2; ++i ) {
+            j = ( res1 + i ) * 6;
+            vertices[ j ] = cx + sx * i;
+            vertices[ j + 1 ] = cy + sy * i;
+            vertices[ j + 2 ] = cz + sz * i;
+            vertices[ j + 3 ] = ux - sx * ( res2 - i - 1 );
+            vertices[ j + 4 ] = uy - sy * ( res2 - i - 1 );
+            vertices[ j + 5 ] = uz - sz * ( res2 - i - 1 );
+        }
+        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
+        var primitive = new DrawArrays( PrimitiveSet.LINES, 0, ( res1 + res2 ) * 2 );
+        g.getPrimitives().push( primitive );
+        return g;
+    };
+
     return {
         createTexturedBoxGeometry: createTexturedBoxGeometry,
         createTexturedQuadGeometry: createTexturedQuadGeometry,
         createTexturedBox: createTexturedBox,
         createTexturedQuad: createTexturedQuad,
         createAxisGeometry: createAxisGeometry,
-        createTexturedSphere: createTexturedSphere
+        createTexturedSphere: createTexturedSphere,
+        createGridGeometry: createGridGeometry
     };
 } );
