@@ -665,7 +665,7 @@ define( [
         hz = hz !== undefined ? hz : 0.0;
 
         res1 = res1 !== undefined ? res1 : 5;
-        res2 = res2 !== undefined ? res2 : 5;
+        res2 = res2 !== undefined ? res2 : res1;
         res1 += 2;
         res2 += 2;
 
