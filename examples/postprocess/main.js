@@ -89,6 +89,7 @@ function createScene( width, height, gui ) {
     quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
     var postScenes = [
+        getPostSceneBlur( sceneTexture ),
         getPostSceneVignette( sceneTexture ),
         getPostSceneBloom( sceneTexture ),
         getPostSceneSharpen( sceneTexture ),
@@ -110,7 +111,7 @@ function createScene( width, height, gui ) {
         } );
     }
 
-    var currentComposer = postScenes[ 0 ].buildComposer( finalTexture );
+    var currentComposer = postScenes[ 0 ].buildComposer( finalTexture, quad, scene );
     addSceneController();
     postScenes[ 0 ].buildGui( gui );
 
@@ -121,7 +122,7 @@ function createScene( width, height, gui ) {
 
         // Put the composer in cache at first utilisation
         if ( cachedComposers[ effectName ] === undefined ) {
-            cachedComposers[ effectName ] = effects[ effectName ].buildComposer( finalTexture );
+            cachedComposers[ effectName ] = effects[ effectName ].buildComposer( finalTexture, quad, scene );
         }
 
         // Recreate the whole gui
