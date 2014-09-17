@@ -46,7 +46,7 @@ function getPostSceneBlur( sceneTexture ) {
     var effect = {
 
         name: 'Blur',
-        type: 'Gauss',
+        type: 'LinearGauss',
         kernelSize: 6,
         currentTexture: 'Budapest.jpg',
         needCommonCube: false,
@@ -74,15 +74,27 @@ function getPostSceneBlur( sceneTexture ) {
             inputTex = new osgUtil.Composer.Filter.InputTexture( getSceneTexture( 'Budapest.jpg' ) );
             this.composer.addPass( inputTex );
             switch ( this.type ) {
-            case 'Gauss':
+            case 'LinearGauss':
                 hBlur = new osgUtil.Composer.Filter.HBlur( this.kernelSize );
                 vBlur = new osgUtil.Composer.Filter.VBlur( this.kernelSize );
                 this.composer.addPass( hBlur );
                 this.composer.addPass( vBlur, finalTexture );
                 break;
-            case 'Average':
+            case 'Gauss':
+                hBlur = new osgUtil.Composer.Filter.HBlur( this.kernelSize, false );
+                vBlur = new osgUtil.Composer.Filter.VBlur( this.kernelSize, false );
+                this.composer.addPass( hBlur );
+                this.composer.addPass( vBlur, finalTexture );
+                break;
+            case 'LinearAverage':
                 hBlur = new osgUtil.Composer.Filter.AverageHBlur( this.kernelSize );
                 vBlur = new osgUtil.Composer.Filter.AverageVBlur( this.kernelSize );
+                this.composer.addPass( hBlur );
+                this.composer.addPass( vBlur, finalTexture );
+                break;
+            case 'Average':
+                hBlur = new osgUtil.Composer.Filter.AverageHBlur( this.kernelSize, false );
+                vBlur = new osgUtil.Composer.Filter.AverageVBlur( this.kernelSize, false );
                 this.composer.addPass( hBlur );
                 this.composer.addPass( vBlur, finalTexture );
                 break;
@@ -123,14 +135,14 @@ function getPostSceneBlur( sceneTexture ) {
             folder.open();
 
             var blur = {
-                type: [ 'Gauss', 'Average', 'Bilateral' ],
+                type: [ 'LinearGauss', 'Gauss', 'LinearAverage', 'Average', 'Bilateral' ],
                 scene: [ 'Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg' ],
                 kernelSize: this.kernelSize
             };
 
             var sceneCtrl = folder.add( blur, 'scene', blur.scene );
             var typeCtrl = folder.add( blur, 'type', blur.type );
-            var kernelSizeCtrl = folder.add( blur, 'kernelSize', 0, 64, 1 ).step( 1 );
+            var kernelSizeCtrl = folder.add( blur, 'kernelSize', 4, 63, 1 ).step( 1 );
 
             var _self = this;
 
