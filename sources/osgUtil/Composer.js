@@ -16,7 +16,7 @@ define( [
     'osg/TransformEnums',
     'osg/Vec2',
     'osg/Vec3'
-], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix,  Uniform, StateSet, Program, Shader, Shape, TransformEnums, Vec2, Vec3 ) {
+], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix, Uniform, StateSet, Program, Shader, Shape, TransformEnums, Vec2, Vec3 ) {
 
     /*
      Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
@@ -295,12 +295,14 @@ define( [
     ].join( '\n' );
 
     Composer.Filter.Helper = {
+        cache: {},
         getOrCreatePascalCoefficients: function () {
             var cache = Composer.Filter.Helper.getOrCreatePascalCoefficients.cache;
-            if ( cache !== undefined ) {
+            if ( cache ) {
                 return cache;
             }
 
+            Composer.Filter.Helper.getOrCreatePascalCoefficients.max = 65;
             cache = ( function ( kernelSize ) {
                 var pascalTriangle = [
                     [ 1 ]
@@ -339,7 +341,7 @@ define( [
                 } )();
 
                 return pascalTriangle;
-            } )( 20 );
+            } )( Composer.Filter.Helper.getOrCreatePascalCoefficients.max );
             Composer.Filter.Helper.getOrCreatePascalCoefficients.cache = cache;
             return cache;
         }
@@ -396,8 +398,9 @@ define( [
 
 
 
-    Composer.Filter.AverageHBlur = function ( nbSamplesOpt ) {
+    Composer.Filter.AverageHBlur = function ( nbSamplesOpt, linear ) {
         Composer.Filter.call( this );
+        this._noLinear = linear !== undefined && linear === false;
         if ( nbSamplesOpt === undefined ) {
             this.setBlurSize( 5 );
         } else {
@@ -418,24 +421,64 @@ define( [
             this._pixelSize = value;
             this.dirty();
         },
+
         getUVOffset: function ( value ) {
-            return 'vec2(float(' + value + '), 0.0)/RenderSize[0];';
+            return 'vec2(float(' + value + ')/RenderSize[0], 0.0);';
         },
         getShaderBlurKernel: function () {
             var nbSamples = this._nbSamples;
+
+
             var kernel = [];
+
             kernel.push( ' pixel = texture2D(Texture0, FragTexCoord0 );' );
             kernel.push( ' if (pixel.w == 0.0) { gl_FragColor = pixel; return; }' );
             kernel.push( ' vec2 offset;' );
-            for ( var i = 1; i < Math.ceil( nbSamples / 2 ); i++ ) {
-                kernel.push( ' offset = ' + this.getUVOffset( i * this._pixelSize ) );
-                kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 + offset);' );
-                kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 - offset);' );
+            var i;
+            var numTexBlurStep = Math.ceil( nbSamples / 2 );
+            var numFinalSample = numTexBlurStep * 2.0 + 1.0;
+            var weight = 1.0 / numFinalSample;
+            if ( this._noLinear ) {
+                for ( i = 1; i < numTexBlurStep; i++ ) {
+                    kernel.push( ' offset = ' + this.getUVOffset( i * this._pixelSize ) );
+                    kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 + offset);' );
+                    kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 - offset);' );
+                }
+                kernel.push( ' pixel *= float(' + weight + ');' );
+            } else {
+                // using bilinear HW to divide texfetch by 2
+                var offset, offsetIdx;
+                var idx = 1;
+                var weightTwo = weight * 2.0;
+                // first pixel not same weight as others
+                kernel.push( ' pixel *= float(' + weight + ');' );
+                kernel.push( ' vec4 pixelLin = vec4(0.0);' );
+
+                for ( i = 1; i < numTexBlurStep; i += 2 ) {
+
+                    offsetIdx = idx + 0.5; //  ((i*weight + (i+1)*weight)/(weight+weight)) ===  (2i + 1) / 2 = i + 0.5
+                    idx += 2;
+                    offset = this.getUVOffset( offsetIdx * this._pixelSize );
+
+                    kernel.push( ' offset = ' + offset );
+
+                    kernel.push( ' pixelLin += texture2D(Texture0, FragTexCoord0 + offset);' );
+                    kernel.push( ' pixelLin += texture2D(Texture0, FragTexCoord0 - offset);' );
+                }
+                kernel.push( ' pixel += pixelLin * float(' + weightTwo + ');' );
             }
-            kernel.push( ' pixel /= float(' + nbSamples + ');' );
             return kernel;
         },
         build: function () {
+
+            var tex = this._stateSet.getTextureAttribute( 0, 'Texture' );
+            if ( tex ) {
+                tex.setMinFilter( 'LINEAR' );
+                tex.setMagFilter( 'LINEAR' );
+            } else {
+                this._noLinear = true;
+            }
+
             //var nbSamples = this._nbSamples;
             var vtx = Composer.Filter.defaultVertexShader;
             var fgt = [
@@ -458,18 +501,20 @@ define( [
             if ( this._stateSet.getUniform( 'Texture0' ) === undefined ) {
                 this._stateSet.addUniform( Uniform.createInt1( 0, 'Texture0' ) );
             }
+
+
             this._stateSet.setAttributeAndModes( program );
             this._dirty = false;
         }
     } );
 
 
-    Composer.Filter.AverageVBlur = function ( nbSamplesOpt ) {
-        Composer.Filter.AverageHBlur.call( this, nbSamplesOpt );
+    Composer.Filter.AverageVBlur = function ( nbSamplesOpt, linear ) {
+        Composer.Filter.AverageHBlur.call( this, nbSamplesOpt, linear );
     };
     Composer.Filter.AverageVBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.AverageHBlur.prototype, {
         getUVOffset: function ( value ) {
-            return 'vec2(0.0, float(' + value + '))/RenderSize[1];';
+            return 'vec2(0.0, float(' + value + ')/RenderSize[1]);';
         }
     } );
 
@@ -602,7 +647,7 @@ define( [
 
     Composer.Filter.BilateralVBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.BilateralHBlur.prototype, {
         getUVOffset: function ( value ) {
-            return 'vec2(float(' + value + ')*pixelSize,0.0)/RenderSize[0];';
+            return 'vec2(float(' + value + ')*pixelSize/RenderSize[0],0.0);';
         }
     } );
 
@@ -619,8 +664,9 @@ define( [
     } );
 
     // Operate a Gaussian horizontal blur
-    Composer.Filter.HBlur = function ( nbSamplesOpt ) {
+    Composer.Filter.HBlur = function ( nbSamplesOpt, linear ) {
         Composer.Filter.call( this );
+        this._noLinear = linear !== undefined && linear === false;
         if ( nbSamplesOpt === undefined ) {
             this.setBlurSize( 5 );
         } else {
@@ -637,26 +683,79 @@ define( [
             this.dirty();
         },
         getUVOffset: function ( value ) {
-            return 'vec2(float(' + value + '), 0.0)/RenderSize[0];';
+            // TODO: could compute that in JS and remove 1 div per kernel step
+            return 'vec2(float(' + value + ')/ RenderSize[0], 0.0) ;';
         },
         build: function () {
             var nbSamples = this._nbSamples;
-            var vtx = Composer.Filter.defaultVertexShader;
-            var pascal = Composer.Filter.Helper.getOrCreatePascalCoefficients();
-            var weights = pascal[ nbSamples - 1 ];
-            var start = Math.floor( nbSamples / 2.0 );
-            var kernel = [];
-            kernel.push( ' pixel += float(' + weights[ start ] + ')*texture2D(Texture0, FragTexCoord0 ).rgb;' );
-            var offset = 1;
-            kernel.push( ' vec2 offset;' );
-            for ( var i = start + 1; i < nbSamples; i++ ) {
-                var weight = weights[ i ];
-                kernel.push( ' offset = ' + this.getUVOffset( i ) );
-                offset++;
-                kernel.push( ' pixel += ' + weight + '*texture2D(Texture0, FragTexCoord0 + offset).rgb;' );
-                kernel.push( ' pixel += ' + weight + '*texture2D(Texture0, FragTexCoord0 - offset).rgb;' );
+
+            // TODO: get rendersize from that and precompute
+            // offset when possible
+            var tex = this._stateSet.getTextureAttribute( 0, 'Texture' );
+            if ( tex ) {
+                tex.setMinFilter( 'LINEAR' );
+                tex.setMagFilter( 'LINEAR' );
+            } else {
+                this._noLinear = true;
             }
 
+            var vtx = Composer.Filter.defaultVertexShader;
+
+            var pascal = Composer.Filter.Helper.getOrCreatePascalCoefficients();
+
+            // http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
+            // outermost are near 0, so unless float buffer...
+            // at samples = 6 already it's 1/32 = 0.03
+            // so we lessen texFetch (allow higher kernel size with less texfetch)
+            var weightMin = 0.005 / nbSamples;
+            var coeffIdx = nbSamples;
+            var weights = pascal[ coeffIdx ];
+            var start = Math.floor( coeffIdx / 2.0 );
+
+            var kernel = [];
+            kernel.push( ' pixel = float(' + weights[ start ] + ')*texture2D(Texture0, FragTexCoord0 ).rgb;' );
+
+            kernel.push( ' vec2 offset;' );
+            var idx, i, weight, offset, offsetIdx;
+            if ( this._noLinear ) {
+                idx = 1;
+                for ( i = start + 1; i < nbSamples; i++ ) {
+                    weight = weights[ i ];
+
+                    if ( weight < weightMin ) break;
+
+                    offsetIdx = idx++;
+                    offset = this.getUVOffset( offsetIdx );
+
+                    kernel.push( ' offset = ' + offset );
+                    kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
+                    kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
+                }
+            } else {
+
+                // using bilinear HW to divide texfetch by 2
+                // http://www.rastergrid.com/blog/wp-content/uploads/2010/09/equation.png
+                idx = 1;
+                for ( i = start + 1; i < nbSamples; i += 2 ) {
+                    var weightT1 = weights[ i ];
+                    var weightT2 = weights[ i + 1 ];
+
+                    weight = weightT1 + weightT2;
+
+                    if ( weight < weightMin ) break;
+
+                    var offsetT1 = idx;
+                    var offsetT2 = idx + 1;
+                    idx += 2;
+
+                    offsetIdx = ( offsetT1 * weightT1 + offsetT2 * weightT2 ) / weight;
+                    offset = this.getUVOffset( offsetIdx );
+
+                    kernel.push( ' offset = ' + offset );
+                    kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
+                    kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
+                }
+            }
             var fgt = [
                 Composer.Filter.defaultFragmentShaderHeader,
                 'uniform float width;',
@@ -683,13 +782,13 @@ define( [
     } );
 
     // Operate a Gaussian vertical blur
-    Composer.Filter.VBlur = function ( /*nbSamplesOpt*/ ) {
-        Composer.Filter.HBlur.call( this );
+    Composer.Filter.VBlur = function ( nbSamplesOpt, linear ) {
+        Composer.Filter.HBlur.call( this, nbSamplesOpt, linear );
     };
 
     Composer.Filter.VBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.HBlur.prototype, {
         getUVOffset: function ( value ) {
-            return 'vec2(0.0, float(' + value + '))/RenderSize[1];';
+            return 'vec2(0.0, float(' + value + ')/RenderSize[1]) ;';
         }
     } );
 
