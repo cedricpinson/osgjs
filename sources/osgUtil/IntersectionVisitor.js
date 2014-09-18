@@ -80,11 +80,12 @@ define( [
             // We should move this to the intersector when we need to use different coordinate frames
             // Now we only support WINDOW coordinate frame
             var mat = Matrix.create();
+            var matid = Matrix.create();
             return function () {
-                Matrix.copy( this.getWindowMatrix(), mat );
-                Matrix.preMult( mat, this.getProjectionMatrix() );
-                Matrix.preMult( mat, this.getViewMatrix() );
-                Matrix.preMult( mat, this.getModelMatrix() );
+                Matrix.copy( this.getWindowMatrix() || matid, mat );
+                Matrix.preMult( mat, this.getProjectionMatrix() || matid );
+                Matrix.preMult( mat, this.getViewMatrix() || matid );
+                Matrix.preMult( mat, this.getModelMatrix() || matid );
 
                 return mat;
             };
@@ -135,8 +136,8 @@ define( [
             this.pushViewMatrix( view );
             this.pushModelMatrix( model );
 
-            // In OSG a push_clone is done, 
-            // here we update the current transform for simplicity
+            // TODO maybe we should do something like OSG for the transformation given
+            // to the intersector (having a stack)
             this._intersector.setCurrentTransformation( this.getTransformation() );
             this.traverse( camera );
 
@@ -146,6 +147,7 @@ define( [
             if ( vp !== undefined ) {
                 this.popWindowMatrix();
             }
+            this._intersector.setCurrentTransformation( this.getTransformation() );
         },
 
         applyNode: function ( node ) {
@@ -171,11 +173,13 @@ define( [
             } else {
                 this.pushModelMatrix( node.getMatrix() );
             }
-            // In OSG a push_clone is done, 
-            // here we update the current transform for simplicity
+
+            // TODO see above
             this._intersector.setCurrentTransformation( this.getTransformation() );
             this.traverse( node );
+
             this.popModelMatrix();
+            this._intersector.setCurrentTransformation( this.getTransformation() );
         },
     } );
 
