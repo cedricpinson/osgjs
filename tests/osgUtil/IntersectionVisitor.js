@@ -16,7 +16,7 @@ define( [
 
         var DummyIntersector = function () {
             this.point = [ 0.5, 0.5, 0.5 ];
-            this.pointTransform = [ 0.0, 0.0, 0.0 ];
+            this.stackTransforms = [];
         };
 
         DummyIntersector.prototype = {
@@ -25,7 +25,7 @@ define( [
             },
             setCurrentTransformation: function ( matrix ) {
                 Matrix.inverse( matrix, matrix );
-                Matrix.transformVec3( matrix, this.point, this.pointTransform );
+                this.stackTransforms.push( Matrix.transformVec3( matrix, this.point, [ 0.0, 0.0, 0.0 ] ) );
             },
             intersect: function () {
                 return true;
@@ -45,7 +45,7 @@ define( [
             iv.setIntersector( di );
             camera.accept( iv );
 
-            ok( mockup[ 'check_near' ]( di.pointTransform, [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
+            ok( mockup[ 'check_near' ]( di.stackTransforms[ 0 ], [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
         } );
 
         test( 'IntersectionVisitor with second relative camera', function () {
@@ -68,7 +68,7 @@ define( [
             iv.setIntersector( di );
             camera.accept( iv );
 
-            ok( mockup[ 'check_near' ]( di.pointTransform, [ -0.0197, -0.0111, -0.1666 ], 0.001 ), 'check end transform point' );
+            ok( mockup[ 'check_near' ]( di.stackTransforms[ 1 ], [ -0.0197, -0.0111, -0.1666 ], 0.001 ), 'check end transform point' );
         } );
 
         test( 'IntersectionVisitor with second absolute camera', function () {
@@ -92,7 +92,7 @@ define( [
             iv.setIntersector( di );
             camera.accept( iv );
 
-            ok( mockup[ 'check_near' ]( di.pointTransform, [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
+            ok( mockup[ 'check_near' ]( di.stackTransforms[ 1 ], [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
         } );
 
     };
