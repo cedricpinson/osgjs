@@ -131,8 +131,8 @@ define( [
             return this._textureObject;
         },
         setTextureSize: function ( w, h ) {
-            this._textureWidth = w;
-            this._textureHeight = h;
+            if ( w !== undefined ) this._textureWidth = w;
+            if ( h !== undefined ) this._textureHeight = h;
         },
         init: function ( gl ) {
             if ( !this._textureObject ) {
@@ -225,6 +225,13 @@ define( [
 
             this._image = image;
             this.setImageFormat( imageFormat );
+            if ( image ) {
+                if ( image.getWidth && image.getHeight ) {
+                    this.setTextureSize( image.getWidth(), image.getHeight() );
+                } else if ( image.width && image.height ) {
+                    this.setTextureSize( image.width, image.height );
+                }
+            }
             this.dirty();
         },
         getImage: function () {
