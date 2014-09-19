@@ -26,6 +26,14 @@ First, clone a copy of the main git repo by running:
 
 The built version of osgjs will be put in the `build/` subdirectory.
 
+Running the examples
+--------------------
+
+Simply type in the command-line:
+
+    grunt serve
+
+It should open a browser pointing to the examples directory.
 
 OpenSceneGraph osgjs plugin
 ----------------------------

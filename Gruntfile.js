@@ -286,6 +286,13 @@ var gruntTasks = {};
                 port: 9001,
                 base: '.'
             }
+        },
+        dist: {
+            options: {
+                port: 9000,
+                base: ['.','examples'],
+                open: true
+            }
         }
     };
 
@@ -489,7 +496,8 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build', [ 'symlink', 'build:dist' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
-
+    grunt.registerTask( 'serve', [ 'build', 'connect:dist:keepalive'] );
     grunt.registerTask( 'website_only', [ 'clean:staticWeb', 'gitclone:staticWeb', 'copy:staticWeb', 'wintersmith_compile:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb' ] );
     grunt.registerTask( 'website', [ 'default', 'docs', 'website_only' ] );
+
 };
