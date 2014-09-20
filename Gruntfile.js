@@ -72,7 +72,7 @@ var gruntTasks = {};
             //optimize: 'uglify2',
             optimize: 'none',
             generateSourceMaps: true,
-            useSourceUrl: true,
+            useSourceUrl: false,
 
             preserveLicenseComments: false,
             findNestedDependencies: true,
@@ -290,7 +290,7 @@ var gruntTasks = {};
         dist: {
             options: {
                 port: 9000,
-                base: ['.','examples'],
+                base: ['.','examples','tutorials'],
                 open: true
             }
         }
