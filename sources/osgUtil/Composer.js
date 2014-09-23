@@ -18,6 +18,8 @@ define( [
     'osg/Vec3'
 ], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix, Uniform, StateSet, Program, Shader, Shape, TransformEnums, Vec2, Vec3 ) {
 
+    'use strict';
+
     /*
      Composer is an helper to create post fx. The idea is to push one or more textures into a pipe of shader filter.
 
@@ -295,57 +297,33 @@ define( [
     ].join( '\n' );
 
     Composer.Filter.Helper = {
-        cache: {},
-        getOrCreatePascalCoefficients: function () {
-            var cache = Composer.Filter.Helper.getOrCreatePascalCoefficients.cache;
-            if ( cache ) {
-                return cache;
+        pascalCache: [
+            [ 1 ]
+        ],
+        getOrCreatePascalCoefficients: function ( kernelSize ) {
+            kernelSize = kernelSize === undefined ? 5 : Math.min( kernelSize, 128 );
+            var cache = Composer.Filter.Helper.pascalCache;
+            if ( cache[ kernelSize ] )
+                return cache[ kernelSize ];
+            for ( var j = cache.length - 1; j < kernelSize; j++ ) {
+                var currentRow = cache[ j ];
+                var currentRowSize = currentRow.length;
+
+                var nextRow = new Array( currentRowSize );
+                nextRow[ 0 ] = 1.0;
+                nextRow[ currentRowSize ] = 1.0;
+
+                // unnormalized pascal
+                var sum = j === cache.length - 1 ? Math.pow( 2, j ) : 1.0;
+                for ( var p = 0; p < currentRowSize - 1; p++ )
+                    nextRow[ p + 1 ] = ( currentRow[ p ] + currentRow[ p + 1 ] ) * sum;
+                // normalized array
+                sum = Math.pow( 2, j + 1 );
+                for ( var k = 0; k < currentRowSize + 1; k++ )
+                    nextRow[ k ] /= sum;
+                cache.push( nextRow );
             }
-
-            Composer.Filter.Helper.getOrCreatePascalCoefficients.max = 128;
-            cache = ( function ( kernelSize ) {
-                var pascalTriangle = [
-                    [ 1 ]
-                ];
-                for ( var j = 0; j < ( kernelSize - 1 ); j++ ) {
-                    //var sum = Math.pow( 2, j );
-                    var currentRow = pascalTriangle[ j ];
-                    var currentRowSize = currentRow.length;
-
-                    var nextRowSize = currentRowSize + 1;
-                    var nextRow = new Array( currentRowSize );
-                    nextRow[ 0 ] = 1.0;
-                    nextRow[ nextRowSize - 1 ] = 1.0;
-
-                    var idx = 1;
-                    for ( var p = 0; p < currentRowSize - 1; p++ ) {
-                        var val = ( currentRow[ p ] + currentRow[ p + 1 ] );
-                        nextRow[ idx++ ] = val;
-                    }
-                    pascalTriangle.push( nextRow );
-                }
-
-                // compute real coef dividing by sum
-                ( function () {
-                    for ( var a = 0; a < pascalTriangle.length; a++ ) {
-                        var row = pascalTriangle[ a ];
-                        //var str = '';
-                        var sum = Math.pow( 2, a );
-                        //str += 'sum = ' + sum + ' => ';
-                        var sumAcc = 0;
-                        for ( var i = 0; i < row.length; i++ ) {
-                            row[ i ] = row[ i ] / sum;
-                            sumAcc += row[ i ];
-                            //str += row[ i ].toString() + ' ';
-                        }
-                        //Notify.log( str + ' sumACC= ' + sumAcc );
-                    }
-                } )();
-
-                return pascalTriangle;
-            } )( Composer.Filter.Helper.getOrCreatePascalCoefficients.max );
-            Composer.Filter.Helper.getOrCreatePascalCoefficients.cache = cache;
-            return cache;
+            return cache[ kernelSize ];
         }
     };
 
@@ -447,8 +425,6 @@ define( [
                     kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 - offset);' );
                 }
                 kernel.push( ' pixel *= float(' + weight + ');' );
-
-                Notify.log( 'Sum =' + weight * numFinalSample );
             } else {
                 // using bilinear HW to divide texfetch by 2
                 var offset, offsetIdx;
@@ -470,8 +446,6 @@ define( [
                     kernel.push( ' pixelLin += texture2D(Texture0, FragTexCoord0 - offset);' );
                 }
                 kernel.push( ' pixel += pixelLin * float(' + weightTwo + ');' );
-
-                Notify.log( 'Sum =' + ( weightTwo * numTexBlurStep + weight ) );
             }
             return kernel;
         },
@@ -707,7 +681,6 @@ define( [
 
             var vtx = Composer.Filter.defaultVertexShader;
 
-            var pascal = Composer.Filter.Helper.getOrCreatePascalCoefficients();
 
             // http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
             // outermost are near 0, so unless float buffer...
@@ -715,20 +688,14 @@ define( [
             // so we lessen texFetch (allow higher kernel size with less texfetch)
             var weightMin = 0.005 / nbSamples;
             var coeffIdx = nbSamples;
-            var weights = pascal[ coeffIdx ];
+            var weights = Composer.Filter.Helper.getOrCreatePascalCoefficients( coeffIdx );
             var start = Math.floor( coeffIdx / 2.0 );
 
             var kernel = [];
-
-            var sumWeightAcc = 0.0;
-            sumWeightAcc += weights[ start ];
-
             kernel.push( ' pixel = float(' + weights[ start ] + ')*texture2D(Texture0, FragTexCoord0 ).rgb;' );
 
             kernel.push( ' vec2 offset;' );
             var idx, i, weight, offset, offsetIdx;
-
-
             if ( this._noLinear ) {
                 idx = 1;
                 for ( i = start + 1; i < nbSamples; i++ ) {
@@ -742,8 +709,6 @@ define( [
                     kernel.push( ' offset = ' + offset );
                     kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
                     kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
-
-                    sumWeightAcc += weight + weight;
                 }
             } else {
 
@@ -768,12 +733,8 @@ define( [
                     kernel.push( ' offset = ' + offset );
                     kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
                     kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
-
-                    sumWeightAcc += weight + weight;
                 }
             }
-            Notify.log( 'Sum = ' + sumWeightAcc );
-
             var fgt = [
                 Composer.Filter.defaultFragmentShaderHeader,
                 'uniform float width;',
