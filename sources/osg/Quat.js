@@ -183,21 +183,21 @@ define( [
         // we suppose to have unit quaternion
         // multiply 2 quaternions
         mult: function ( a, b, result ) {
-            var ax = a[ 0 ];
-            var ay = a[ 1 ];
-            var az = a[ 2 ];
-            var aw = a[ 3 ];
+            var ax = a[ 0 ];
+            var ay = a[ 1 ];
+            var az = a[ 2 ];
+            var aw = a[ 3 ];
+            var bx = b[ 0 ];
+            var by = b[ 1 ];
+            var bz = b[ 2 ];
+            var bw = b[ 3 ];
 
-            var bx = b[ 0 ];
-            var by = b[ 1 ];
-            var bz = b[ 2 ];
-            var bw = b[ 3 ];
 
-            result[ 0 ] = ax * bw + ay * bz - az * by + aw * bx;
-            result[ 1 ] = -ax * bz + ay * bw + az * bx + aw * by;
-            result[ 2 ] = ax * by - ay * bx + az * bw + aw * bz;
-            result[ 3 ] = -ax * bx - ay * by - az * bz + aw * bw;
-            return result;
+            result[ 0 ] = ax * bw + ay * bz - az * by + aw * bx;
+            result[ 1 ] = -ax * bz + ay * bw + az * bx + aw * by;
+            result[ 2 ] = ax * by - ay * bx + az * bw + aw * bz;
+            result[ 3 ] = -ax * bx - ay * by - az * bz + aw * bw;
+            return result;
         },
         div: function ( a, b, result ) {
             var d = 1.0 / b;

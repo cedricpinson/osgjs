@@ -36,9 +36,15 @@ define( [
                 var state = viewer.getState();
 
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() { return true; };
-                fakeRenderer.getProgramParameter = function() { return true; };
-                fakeRenderer.isContextLost = function() { return false; };
+                fakeRenderer.validateProgram = function () {
+                    return true;
+                };
+                fakeRenderer.getProgramParameter = function () {
+                    return true;
+                };
+                fakeRenderer.isContextLost = function () {
+                    return false;
+                };
                 state.setGraphicContext( fakeRenderer );
 
                 viewer.setSceneData( q );
@@ -87,12 +93,13 @@ define( [
                 node1.addChild( q );
                 node1.getOrCreateStateSet().setAttributeAndMode( ld0 );
                 viewer.frame();
-               
+
                 var cull = viewer._cullVisitor;
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushViewMatrix( Matrix.create() );
+                cull.pushModelWorldMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
 
