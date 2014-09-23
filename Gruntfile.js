@@ -72,7 +72,7 @@ var gruntTasks = {};
             //optimize: 'uglify2',
             optimize: 'none',
             generateSourceMaps: true,
-            useSourceUrl: true,
+            useSourceUrl: false,
 
             preserveLicenseComments: false,
             findNestedDependencies: true,
