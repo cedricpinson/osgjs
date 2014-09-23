@@ -330,13 +330,15 @@ define( [
                     for ( var a = 0; a < pascalTriangle.length; a++ ) {
                         var row = pascalTriangle[ a ];
                         //var str = '';
-
                         var sum = Math.pow( 2, a );
+                        //str += 'sum = ' + sum + ' => ';
+                        var sumAcc = 0;
                         for ( var i = 0; i < row.length; i++ ) {
                             row[ i ] = row[ i ] / sum;
-                            //str += row[i].toString() + ' ';
+                            sumAcc += row[ i ];
+                            //str += row[ i ].toString() + ' ';
                         }
-                        //Notify.log(str);
+                        //Notify.log( str + ' sumACC= ' + sumAcc );
                     }
                 } )();
 
@@ -400,7 +402,7 @@ define( [
 
     Composer.Filter.AverageHBlur = function ( nbSamplesOpt, linear ) {
         Composer.Filter.call( this );
-        this._noLinear = linear !== undefined && linear === false;
+        this._noLinear = linear === false;
         if ( nbSamplesOpt === undefined ) {
             this.setBlurSize( 5 );
         } else {
@@ -445,6 +447,8 @@ define( [
                     kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 - offset);' );
                 }
                 kernel.push( ' pixel *= float(' + weight + ');' );
+
+                Notify.log( 'Sum =' + weight * numFinalSample );
             } else {
                 // using bilinear HW to divide texfetch by 2
                 var offset, offsetIdx;
@@ -466,6 +470,8 @@ define( [
                     kernel.push( ' pixelLin += texture2D(Texture0, FragTexCoord0 - offset);' );
                 }
                 kernel.push( ' pixel += pixelLin * float(' + weightTwo + ');' );
+
+                Notify.log( 'Sum =' + ( weightTwo * numTexBlurStep + weight ) );
             }
             return kernel;
         },
@@ -666,7 +672,7 @@ define( [
     // Operate a Gaussian horizontal blur
     Composer.Filter.HBlur = function ( nbSamplesOpt, linear ) {
         Composer.Filter.call( this );
-        this._noLinear = linear !== undefined && linear === false;
+        this._noLinear = linear === false;
         if ( nbSamplesOpt === undefined ) {
             this.setBlurSize( 5 );
         } else {
@@ -676,7 +682,7 @@ define( [
 
     Composer.Filter.HBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
         setBlurSize: function ( nbSamples ) {
-            if ( nbSamples % 2 !== 1 ) {
+            if ( nbSamples % 2 !== 0 ) {
                 nbSamples += 1;
             }
             this._nbSamples = nbSamples;
@@ -713,10 +719,16 @@ define( [
             var start = Math.floor( coeffIdx / 2.0 );
 
             var kernel = [];
+
+            var sumWeightAcc = 0.0;
+            sumWeightAcc += weights[ start ];
+
             kernel.push( ' pixel = float(' + weights[ start ] + ')*texture2D(Texture0, FragTexCoord0 ).rgb;' );
 
             kernel.push( ' vec2 offset;' );
             var idx, i, weight, offset, offsetIdx;
+
+
             if ( this._noLinear ) {
                 idx = 1;
                 for ( i = start + 1; i < nbSamples; i++ ) {
@@ -730,6 +742,8 @@ define( [
                     kernel.push( ' offset = ' + offset );
                     kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
                     kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
+
+                    sumWeightAcc += weight + weight;
                 }
             } else {
 
@@ -754,8 +768,12 @@ define( [
                     kernel.push( ' offset = ' + offset );
                     kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
                     kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
+
+                    sumWeightAcc += weight + weight;
                 }
             }
+            Notify.log( 'Sum = ' + sumWeightAcc );
+
             var fgt = [
                 Composer.Filter.defaultFragmentShaderHeader,
                 'uniform float width;',
