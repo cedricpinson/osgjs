@@ -20,54 +20,21 @@ define( [
     };
 
     Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
-        setEmission: function ( a ) {
-            Vec4.copy( a, this._emission );
-            this._dirty = true;
-        },
-        setAmbient: function ( a ) {
-            Vec4.copy( a, this._ambient );
-            this._dirty = true;
-        },
-        setSpecular: function ( a ) {
-            Vec4.copy( a, this._specular );
-            this._dirty = true;
-        },
-        setDiffuse: function ( a ) {
-            Vec4.copy( a, this._diffuse );
-            this._dirty = true;
-        },
-        setShininess: function ( a ) {
-            this._shininess = a;
-            this._dirty = true;
-        },
-
-        getEmission: function () {
-            return this._emission;
-        },
-        getAmbient: function () {
-            return this._ambient;
-        },
-        getSpecular: function () {
-            return this._specular;
-        },
-        getDiffuse: function () {
-            return this._diffuse;
-        },
-        getShininess: function () {
-            return this._shininess;
-        },
 
         attributeType: 'Material',
 
         cloneType: function () {
             return new Material();
         },
+
         getType: function () {
             return this.attributeType;
         },
+
         getTypeMember: function () {
             return this.attributeType;
         },
+
         getParameterName: function ( name ) {
             return this.getType() + '_uniform_' + name;
         },
@@ -99,6 +66,57 @@ define( [
         },
 
 
+        setEmission: function ( a ) {
+            Vec4.copy( a, this._emission );
+            this._dirty = true;
+        },
+
+        getEmission: function () {
+            return this._emission;
+        },
+
+
+        setAmbient: function ( a ) {
+            Vec4.copy( a, this._ambient );
+            this._dirty = true;
+        },
+
+        getAmbient: function () {
+            return this._ambient;
+        },
+
+
+        setSpecular: function ( a ) {
+            Vec4.copy( a, this._specular );
+            this._dirty = true;
+        },
+
+        getSpecular: function () {
+            return this._specular;
+        },
+
+
+        setDiffuse: function ( a ) {
+            Vec4.copy( a, this._diffuse );
+            this._dirty = true;
+        },
+
+        getDiffuse: function () {
+            return this._diffuse;
+        },
+
+
+        setShininess: function ( a ) {
+            this._shininess = a;
+            this._dirty = true;
+        },
+
+        getShininess: function () {
+            return this._shininess;
+        },
+
+
+
         apply: function ( /*state*/) {
             var uniforms = this.getOrCreateUniforms();
 
@@ -112,7 +130,7 @@ define( [
         },
 
         getHash: function () {
-            return this.attributeType + this._ambient.toString() + this._diffuse.toString() + this._specular.toString() + this._emission.toString() + this._shadeless.toString();
+            return this.attributeType;
         }
 
 

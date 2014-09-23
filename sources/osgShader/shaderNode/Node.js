@@ -20,7 +20,9 @@ define( [
             return this._name + ' : { input: ' + this._inputs.toString() + ' }, output: { ' + this._output.toString() + ' } ';
         },
 
-        getOutput: function() { return this._outputs[0]; },
+        getOutput: function () {
+            return this._outputs[ 0 ];
+        },
 
         getInputs: function () {
             return this._inputs;
@@ -46,6 +48,9 @@ define( [
                 // make it possible to use inline constant for input
                 if ( typeof input === 'string' ) {
                     input = new InlineConstant( input );
+                } else if ( input instanceof Array ) {
+                    this.connectInputs.apply( this, input );
+                    continue;
                 }
 
                 this._inputs.push( input );

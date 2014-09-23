@@ -75,12 +75,11 @@ define( [
             return ( this.intersects( node.getBound() ) );
         },
 
-        reachedLimit: function ()
-        {
-            return this._intersectionLimit === PolytopeIntersector.LIMIT_ONE && this._intersections.length > 0; 
+        reachedLimit: function () {
+            return this._intersectionLimit === PolytopeIntersector.LIMIT_ONE && this._intersections.length > 0;
         },
 
-        // Intersection Polytope/Sphere 
+        // Intersection Polytope/Sphere
         intersects: ( function () {
             var position = Vec3.create();
             return function ( bsphere ) {
@@ -105,7 +104,7 @@ define( [
             var ppi = new PolytopePrimitiveIntersector();
             ppi.setNodePath( iv.nodePath );
             ppi.set( this._iPolytope, this._iReferencePlane );
-            ppi.setLimitOneIntersection ( this._intersectionLimit === PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE || this._intersectionLimit === PolytopeIntersector.LIMIT_ONE );
+            ppi.setLimitOneIntersection( this._intersectionLimit === PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE || this._intersectionLimit === PolytopeIntersector.LIMIT_ONE );
             ppi.setDimensionMask( this._dimensionMask );
             ppi.apply( node );
             var l = ppi._intersections.length;
@@ -124,9 +123,8 @@ define( [
             return this._intersections;
         },
 
-        setIntersectionLimit: function ( limit ) 
-        {
-            this._intersectionLimit = limit; 
+        setIntersectionLimit: function ( limit ) {
+            this._intersectionLimit = limit;
         },
 
         setCurrentTransformation: function ( matrix ) {
@@ -137,7 +135,7 @@ define( [
                 var plane = this._polytope[ i ];
                 // PostMult
                 Matrix.transformVec4PostMult( matrix, plane, iplane );
-                // multiply the coefficients of the plane equation with a constant factor so that the equation a^2+b^2+c^2 = 1 holds. 
+                // multiply the coefficients of the plane equation with a constant factor so that the equation a^2+b^2+c^2 = 1 holds.
                 inv = 1.0 / Math.sqrt( iplane[ 0 ] * iplane[ 0 ] + iplane[ 1 ] * iplane[ 1 ] + iplane[ 2 ] * iplane[ 2 ] );
                 iplane[ 0 ] *= inv;
                 iplane[ 1 ] *= inv;
@@ -147,13 +145,13 @@ define( [
             }
             //Post Mult
             Matrix.transformVec4PostMult( matrix, this._referencePlane, this._iReferencePlane );
-            // multiply the coefficients of the plane equation with a constant factor so that the equation a^2+b^2+c^2 = 1 holds. 
+            // multiply the coefficients of the plane equation with a constant factor so that the equation a^2+b^2+c^2 = 1 holds.
             inv = 1.0 / Math.sqrt( this._iReferencePlane[ 0 ] * this._iReferencePlane[ 0 ] + this._iReferencePlane[ 1 ] * this._iReferencePlane[ 1 ] + this._iReferencePlane[ 2 ] * this._iReferencePlane[ 2 ] );
             this._iReferencePlane[ 0 ] *= inv;
             this._iReferencePlane[ 1 ] *= inv;
             this._iReferencePlane[ 2 ] *= inv;
             this._iReferencePlane[ 3 ] *= inv;
-        },
+        }
     };
 
     return PolytopeIntersector;
