@@ -290,7 +290,7 @@ var gruntTasks = {};
         dist: {
             options: {
                 port: 9000,
-                base: ['.','examples'],
+                base: ['.','examples','tutorials'],
                 open: true
             }
         }
