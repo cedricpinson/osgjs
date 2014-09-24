@@ -9,7 +9,6 @@ define( [
         this._viewportStack = [];
         this._bbCornerFar = 0;
         this._bbCornerNear = 0;
-
     };
 
     CullStack.prototype = {
@@ -72,6 +71,7 @@ define( [
             this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
             this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
             /*jshint bitwise: true */
+
         },
         popViewMatrix: function () {
 
