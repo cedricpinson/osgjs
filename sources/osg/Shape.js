@@ -709,6 +709,7 @@ define( [
     return {
         createTexturedBoxGeometry: createTexturedBoxGeometry,
         createTexturedQuadGeometry: createTexturedQuadGeometry,
+        createTexturedSphereGeometry: createTexturedSphere,
         createTexturedBox: createTexturedBox,
         createTexturedQuad: createTexturedQuad,
         createAxisGeometry: createAxisGeometry,
