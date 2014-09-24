@@ -415,26 +415,35 @@ define( [
             kernel.push( ' if (pixel.w == 0.0) { gl_FragColor = pixel; return; }' );
             kernel.push( ' vec2 offset;' );
             var i;
-            var numTexBlurStep = Math.ceil( nbSamples / 2 );
+            var numTexBlurStep = Math.floor( nbSamples / 2 );
+            if ( numTexBlurStep % 2 !== 0 ) {
+                nbSamples += 1;
+                numTexBlurStep = Math.floor( nbSamples / 2 );
+            }
             var numFinalSample = numTexBlurStep * 2.0 + 1.0;
             var weight = 1.0 / numFinalSample;
             if ( this._noLinear ) {
-                for ( i = 1; i < numTexBlurStep; i++ ) {
-                    kernel.push( ' offset = ' + this.getUVOffset( i * this._pixelSize ) );
+                for ( i = 0; i < numTexBlurStep; i++ ) {
+                    kernel.push( ' offset = ' + this.getUVOffset( ( i + 1 ) * this._pixelSize ) );
                     kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 + offset);' );
                     kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 - offset);' );
                 }
                 kernel.push( ' pixel *= float(' + weight + ');' );
+
+                //console.log( 'N: Sum = ' + ( weight + numTexBlurStep * weight * 2 ) );
+                //console.log( 'N: nbSample = ' + nbSamples + ' texBlurStep= ' + numTexBlurStep + ' finalSample= ' + numFinalSample );
+                //console.log( 'N: w = ' + weight );
+
             } else {
                 // using bilinear HW to divide texfetch by 2
                 var offset, offsetIdx;
                 var idx = 1;
-                var weightTwo = weight * 2.0;
+                var weightTwo = ( 1.0 - weight ) / ( numTexBlurStep * 2.0 );
                 // first pixel not same weight as others
                 kernel.push( ' pixel *= float(' + weight + ');' );
                 kernel.push( ' vec4 pixelLin = vec4(0.0);' );
 
-                for ( i = 1; i < numTexBlurStep; i += 2 ) {
+                for ( i = 0; i < numTexBlurStep; i += 2 ) {
 
                     offsetIdx = idx + 0.5; //  ((i*weight + (i+1)*weight)/(weight+weight)) ===  (2i + 1) / 2 = i + 0.5
                     idx += 2;
@@ -445,7 +454,12 @@ define( [
                     kernel.push( ' pixelLin += texture2D(Texture0, FragTexCoord0 + offset);' );
                     kernel.push( ' pixelLin += texture2D(Texture0, FragTexCoord0 - offset);' );
                 }
-                kernel.push( ' pixel += pixelLin * float(' + weightTwo + ');' );
+                kernel.push( ' pixel += pixelLin * float(' + weightTwo * 2 + ');' );
+
+                //console.log( 'L: Sum = ' + ( weight + numTexBlurStep * weightTwo * 2 ) );
+                //console.log( 'L: nbSample = ' + nbSamples + ' texBlurStep= ' + numTexBlurStep + ' finalSample= ' + numFinalSample );
+                //console.log( 'N: w = ' + weight + ' numTexBlurStep  ' + numTexBlurStep + ' * w2 = ' + weightTwo );
+
             }
             return kernel;
         },
