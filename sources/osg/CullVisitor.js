@@ -54,11 +54,6 @@ define( [
         ];
         this._reserveMatrixStack.current = 0;
 
-        this._reserveBoundingBoxStack = [
-            new BoundingBox()
-        ];
-        this._reserveBoundingBoxStack.current = 0;
-
         this._reserveLeafStack = [ {} ];
         this._reserveLeafStack.current = 0;
 
@@ -81,14 +76,15 @@ define( [
             }
             this.traverse( node );
         },
-        setCamera: function ( camera ) {
+        setCamera: function(camera){
             this._camera = camera;
         },
-        getCurrentCamera: function () {
+        getCurrentCamera: function (){
             return this._camera;
         },
-        updateCalculatedNearFar: function ( matrix, bb ) {
+        updateCalculatedNearFar: function ( matrix, drawable ) {
 
+            var bb = drawable.getBoundingBox();
             var dNear, dFar;
 
             // efficient computation of near and far, only taking into account the nearest and furthest
@@ -213,16 +209,12 @@ define( [
             this._currentRenderBin = rg;
         },
         reset: function () {
-            //this._viewMatrixStack.length = 0;
-            this._viewMatrixStack.splice( 0, this._viewMatrixStack.length );
-            //this._modelWorldMatrixStack.length = 0;
-            this._modelWorldMatrixStack.splice( 0, this._modelWorldMatrixStack.length );
-            //this._projectionMatrixStack.length = 0;
-            this._projectionMatrixStack.splice( 0, this._projectionMatrixStack.length );
+            this._viewMatrixStack.length = 0;
+            this._modelWorldMatrixStack.length = 0;
+            this._projectionMatrixStack.length = 0;
 
             this._reserveMatrixStack.current = 0;
             this._reserveLeafStack.current = 0;
-            this._reserveBoundingBoxStack.current = 0;
 
             this._computedNear = Number.POSITIVE_INFINITY;
             this._computedFar = Number.NEGATIVE_INFINITY;
@@ -235,7 +227,7 @@ define( [
         },
         addPositionedAttribute: function ( attribute, matrix ) {
             if ( matrix === undefined ) {
-                matrix = this.getCurrentViewMatrix();
+                matrix = this.getCurrentModelViewMatrix();
 
             }
             this._currentRenderBin.getStage().positionedAttribute.push( [ matrix, attribute ] );
@@ -296,14 +288,6 @@ define( [
             return l;
         },
 
-        _getReservedBoundingBox: function () {
-            var m = this._reserveBoundingBoxStack[ this._reserveBoundingBoxStack.current++ ];
-            if ( this._reserveBoundingBoxStack.current === this._reserveBoundingBoxStack.length ) {
-                this._reserveBoundingBoxStack.push( new BoundingBox() );
-            }
-            return m;
-        },
-
         setEnableFrustumCulling: function ( value ) {
             this._enableFrustumCulling = value;
         },
@@ -345,7 +329,7 @@ define( [
                 top[ 3 ] = matrix[ 15 ] - matrix[ 13 ];
                 result[ 3 ] = top;
 
-                if ( withNearFar ) {
+                if( withNearFar ) {
                     // Far clipping plane.
                     far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
                     far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
@@ -377,20 +361,21 @@ define( [
             return function ( node ) {
                 var pos = node.getBound().center();
                 Vec3.copy( pos, position );
-                var radius = -node.getBound().radius();
+                var radius = - node.getBound().radius();
                 var d;
                 var m = ComputeMatrixFromNodePath.computeLocalToWorld( this.nodePath );
-                Matrix.transformVec3( m, position, position );
+                Matrix.transformVec3( m, position, position);
 
                 for ( var i = 0, j = this._frustum.length; i < j; i++ ) {
                     d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
-                    if ( d <= radius ) {
+                    if ( d <= radius )
+                    {
                         return true;
                     }
                 }
                 return false;
-            };
-        } )()
+        };
+    } )()
     } ) ) );
 
     CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
@@ -615,26 +600,12 @@ define( [
     };
 
     CullVisitor.prototype[ Geometry.typeID ] = function ( node ) {
-        var view = this.getCurrentViewMatrix();
-        var modelWorld = this.getCurrentModelWorldMatrix();
 
-        // could get parent Transform/camera bbox too
-        // frustum culling does compile them...
-        var localbb = node.getBoundingBox();
-        var bb = this._getReservedBoundingBox();
-        var validBB = localbb.valid();
-        if ( validBB ) {
-            // to World BBox
-            if ( modelWorld === undefined ) {
-                localbb = bb;
-            } else {
-                Matrix.transformBoundingbox( modelWorld, localbb, bb );
-                validBB = bb.valid();
-            }
-            if ( this._computeNearFar && validBB ) {
-                if ( !this.updateCalculatedNearFar( view, bb ) ) {
-                    return;
-                }
+        var modelview = this.getCurrentModelViewMatrix();
+        var bb = node.getBoundingBox();
+        if ( this._computeNearFar && bb.valid() ) {
+            if ( !this.updateCalculatedNearFar( modelview, node ) ) {
+                return;
             }
         }
 
@@ -643,6 +614,9 @@ define( [
             this.pushStateSet( stateset );
         }
 
+        // using modelview is not a pb because geometry
+        // is a leaf node, else traversing the graph would be an
+        // issue because we use modelview after
         this.handleCullCallbacksAndTraverse( node );
 
         var leafs = this._currentStateGraph.leafs;
@@ -652,18 +626,18 @@ define( [
 
         var leaf = this._getReservedLeaf();
         var depth = 0;
-        if ( validBB ) {
-            depth = this.distance( bb.center(), view );
+        if ( bb.valid() ) {
+            depth = this.distance( bb.center(), modelview );
         }
         if ( isNaN( depth ) ) {
-            Notify.warn( 'warning geometry has a NaN depth, ' + modelWorld + ' center ' + bb.center() );
+            Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + bb.center() );
         } else {
             //leaf.id = this._reserveLeafStack.current;
             leaf.parent = this._currentStateGraph;
             leaf.projection = this.getCurrentProjectionMatrix();
             leaf.geometry = node;
-            leaf.view = view;
-            leaf.modelWorld = modelWorld;
+            leaf.view = this.getCurrentViewMatrix();
+            leaf.modelWorld = this.getCurrentModelWorldMatrix();
             leaf.depth = depth;
             leafs.push( leaf );
         }
