@@ -6,4 +6,4 @@ before_script:
   - npm install -g grunt
   - npm install -g grunt-cli
 
-script: grunt check build test --verbose
+script: grunt check --verbose && grunt build  --verbose && grunt test --verbose
