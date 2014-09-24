@@ -1,4 +1,6 @@
-define( [], function () {
+define( [
+    'osg/Matrix',
+], function ( Matrix ) {
 
     var CullStack = function () {
         this._viewMatrixStack = [];
@@ -29,6 +31,15 @@ define( [], function () {
         getCurrentViewMatrix: function () {
             return this._viewMatrixStack[ this._viewMatrixStack.length - 1 ];
         },
+
+        // for backward compatibility
+        getCurrentModelViewMatrix: ( function() {
+            var tmp = Matrix.create();
+            return function () {
+                return Matrix.mult( this.getCurrentViewMatrix(), this.getCurrentModelWorldMatrix() ,tmp );
+            };
+        })(),
+
         getViewport: function () {
             if ( this._viewportStack.length === 0 ) {
                 return undefined;
