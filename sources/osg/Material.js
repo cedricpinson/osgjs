@@ -40,28 +40,18 @@ define( [
         },
 
         getOrCreateUniforms: function () {
-
             var obj = Material;
             if ( obj.uniforms ) return obj.uniforms;
 
             var uniformList = {
-                'ambient': 'createFloat4',
-                'diffuse': 'createFloat4',
-                'specular': 'createFloat4',
-                'emission': 'createFloat4',
-                'shininess': 'createFloat1'
+                'ambient': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialAmbient' ),
+                'diffuse': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialDiffuse' ),
+                'specular': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialSpecular' ),
+                'emission': Uniform.createFloat4( [ 0, 0, 0, 0 ], 'MaterialEmission' ),
+                'shininess': Uniform.createFloat1( [ 0 ], 'MaterialShininess' )
             };
 
-            var uniforms = {};
-            Object.keys( uniformList ).forEach( function ( key ) {
-
-                var type = uniformList[ key ];
-                var func = Uniform[ type ];
-                uniforms[ key ] = func( this.getParameterName( key ) );
-
-            }.bind( this ) );
-
-            obj.uniforms = new Map( uniforms );
+            obj.uniforms = new Map( uniformList );
             return obj.uniforms;
         },
 

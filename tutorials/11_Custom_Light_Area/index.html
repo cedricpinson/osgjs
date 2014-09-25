@@ -8,7 +8,9 @@
 
 <p>Equation and demo of an area light using WestLangley approx</p>
 
-<canvas id="3DView" width="100%" height="100%"></canvas>
+<div id="ViewContainer" width="100%" height="100%">
+<canvas id="3DView" style="width:100%;height:80%;display: block;" ></canvas>
+</div>
 
 
 <script id="vertex-vs" type="x-shader/x-vertex">
@@ -174,4 +176,4 @@ vec3 cornerContrib(vec3 v0, vec3 v1)
 </script>
 
 <script type="text/javascript" src="main.js"></script>
-</body><html>
+</body></html>
