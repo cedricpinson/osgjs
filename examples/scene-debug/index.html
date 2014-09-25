@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Scene debug</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
+    <link rel="stylesheet" href="tipsy.css">
+
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/dat.gui.js"></script>
+    <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
+    <script type="text/javascript" src="../vendors/Hammer-1.0.5.js"></script>
+    <script type="text/javascript" src="../vendors/Leap.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script src="jquery.js"></script>
+    <script type="text/javascript" src="debugVisitor.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script src="tipsy.js"></script>
+
+    <script src="d3.v3.min.js" charset="utf-8"></script>
+    <script src="dagre-d3.js"></script>
+
+    <style id="css">
+        text {
+          text-align: center;
+
+          font-weight: 300;
+          font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+          font-size: 14px;
+        }
+
+        .node {
+          text-align: center;;
+          
+          cursor: pointer;
+        }
+
+        .node rect {
+          stroke: #FFF;
+        }
+
+        .edgePath path {
+          stroke: #FFF;
+          fill: none;
+        }
+
+        .node text {
+          pointer-events: none;
+        }
+
+        /* This styles the title of the tooltip */
+        .tipsy .name {
+          font-size: 1.7em;
+          font-weight: bold;
+          color: #60b1fc;
+          margin: 0;
+        }
+
+        /* This styles the body of the tooltip */
+        .tipsy .description {
+          font-size: 1.5em;
+        }
+    </style>
+
+</head>
+
+
+
+<body class="osgjs-theme-dark">
+
+  <svg width=100% height=500></svg>
+
+  <div id="ViewContainer" class="osgjs-fullpage">
+    <!-- very important change the size of the parent element instead-->
+    <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
+  </div>
+
+  <div class="osgjs-info osgjs-info-dark">
+
+    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+      <strong>OSG.JS</strong>
+    </a>
+
+    <div class="osgjs-description">
+      Scene debug is a graph visualisator of the scene.
+    </div>
+
+  </div>
+
+</body>
+
+</html>
