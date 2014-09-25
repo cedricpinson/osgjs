@@ -188,10 +188,12 @@ define( [
             eventsBackend.StandardMouseKeyboard.mouseEventNode = mouseEventNode;
             eventsBackend.StandardMouseKeyboard.keyboardEventNode = eventsBackend.StandardMouseKeyboard.keyboardEventNode || document;
 
-            // hammer
-            eventsBackend.Hammer = eventsBackend.Hammer || {};
-            eventsBackend.Hammer.eventNode = eventsBackend.Hammer.eventNode || defaultMouseEventNode;
-
+            // hammer, detect if we are in a touch device
+            if ( 'ontouchstart' in window )
+            {
+                eventsBackend.Hammer = eventsBackend.Hammer || {};
+                eventsBackend.Hammer.eventNode = eventsBackend.Hammer.eventNode || defaultMouseEventNode;
+            }
             // gamepade
             eventsBackend.GamePad = eventsBackend.GamePad || {};
 
