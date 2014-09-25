@@ -809,6 +809,7 @@ define( [
 
             return fragColor;
         },
+
         createFragmentShaderGraph: function () {
 
             // TODO: convert OSGJS samples AND users to sRGB...
@@ -844,10 +845,13 @@ define( [
 
             // diffuse color
             var diffuseColor = this.getDiffuseColorFromTextures();
-            diffuseColor = this.getVertexColor( diffuseColor );
+
             if ( diffuseColor === undefined ) {
+
                 diffuseColor = materialDiffuseColor;
+
             } else {
+
                 var str = sprintf( '%s.rgb *= %s.rgb;', [ diffuseColor.getVariable(), materialDiffuseColor.getVariable() ] );
                 var operator = new ShaderNode.InlineCode( materialDiffuseColor );
                 operator.connectOutput( diffuseColor );
@@ -857,6 +861,10 @@ define( [
                 //var diffMult = new ShaderNode.Mult( diffuseColor, materialDiffuseColor );
                 //diffMult.connectOutput( diffuseColor );
             }
+
+            // vertex color needs to be computed to diffuse
+            diffuseColor = this.getVertexColor( diffuseColor );
+
             //var alpha =  materialOpacity || new shaderNode.InlineConstant( '1.0' );
             var alpha = new ShaderNode.InlineConstant( '1.0' );
 
