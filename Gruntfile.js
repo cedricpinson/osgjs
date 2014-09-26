@@ -307,7 +307,7 @@ var gruntTasks = {};
             overwrite: false
         },
         Hammer: {
-            src: 'examples/vendors/Hammer-1.0.5.js',
+            src: 'examples/vendors/Hammer-2.0.3.js',
             dest: 'examples/vendors/Hammer.js'
         },
         RequireTextBuild: {
