@@ -1,19 +1,19 @@
 define( [
     'osg/Utils'
-], function ( MACROUTILS ) {
+], function( MACROUTILS ) {
 
-    var BoundingBox = function () {
+    var BoundingBox = function() {
         this.init();
     };
     BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
         _cacheRadius2: [ 0.0, 0.0, 0.0 ],
 
-        init: function () {
+        init: function() {
             this._min = [ Infinity, Infinity, Infinity ];
             this._max = [ -Infinity, -Infinity, -Infinity ];
         },
 
-        copy: function ( bbox ) {
+        copy: function( bbox ) {
             var min = this._min;
             var bmin = bbox._min;
             min[ 0 ] = bmin[ 0 ];
@@ -27,11 +27,11 @@ define( [
             max[ 2 ] = bmax[ 2 ];
         },
 
-        valid: function () {
+        valid: function() {
             return ( this._max[ 0 ] >= this._min[ 0 ] && this._max[ 1 ] >= this._min[ 1 ] && this._max[ 2 ] >= this._min[ 2 ] );
         },
 
-        expandBySphere: function ( sh ) {
+        expandBySphere: function( sh ) {
             if ( !sh.valid() ) {
                 return;
             }
@@ -46,7 +46,7 @@ define( [
             max[ 2 ] = Math.max( max[ 2 ], sh._center[ 2 ] + sh._radius );
         },
 
-        expandByVec3: function ( v ) {
+        expandByVec3: function( v ) {
             var min = this._min;
             var max = this._max;
             min[ 0 ] = Math.min( min[ 0 ], v[ 0 ] );
@@ -58,7 +58,7 @@ define( [
             max[ 2 ] = Math.max( max[ 2 ], v[ 2 ] );
         },
 
-        expandByBoundingBox: function ( bb ) {
+        expandByBoundingBox: function( bb ) {
             if ( !bb.valid() )
                 return;
 
@@ -77,17 +77,36 @@ define( [
             if ( bbmax[ 2 ] > max[ 2 ] ) max[ 2 ] = bbmax[ 2 ];
         },
 
-        center: function () {
+        intersectingBoundingBox: function( bb, bbResult ) {
+            if ( !bb.valid() )
+                return;
+
+            var min = this._min;
+            var max = this._max;
+            var bbmin = bb._min;
+            var bbmax = bb._max;
+
+            bbResult._min[ 0 ] = Math.max( bbmin[ 0 ], min[ 0 ] );
+            bbResult._min[ 1 ] = Math.max( bbmin[ 1 ], min[ 1 ] );
+            bbResult._min[ 2 ] = Math.max( bbmin[ 2 ], min[ 2 ] );
+
+            bbResult._max[ 0 ] = Math.min( bbmax[ 0 ], max[ 0 ] );
+            bbResult._max[ 1 ] = Math.min( bbmax[ 1 ], max[ 1 ] );
+            bbResult._max[ 2 ] = Math.min( bbmax[ 2 ], max[ 2 ] );
+
+        },
+
+        center: function() {
             var min = this._min;
             var max = this._max;
             return [ ( min[ 0 ] + max[ 0 ] ) * 0.5, ( min[ 1 ] + max[ 1 ] ) * 0.5, ( min[ 2 ] + max[ 2 ] ) * 0.5 ];
         },
 
-        radius: function () {
+        radius: function() {
             return Math.sqrt( this.radius2() );
         },
 
-        radius2: function () {
+        radius2: function() {
             var min = this._min;
             var max = this._max;
             var cache = this._cacheRadius2;
@@ -96,9 +115,9 @@ define( [
             cache[ 2 ] = max[ 2 ] - min[ 2 ];
             return 0.25 * ( cache[ 0 ] * cache[ 0 ] + cache[ 1 ] * cache[ 1 ] + cache[ 2 ] * cache[ 2 ] );
         },
-        corner: function ( pos ) {
+        corner: function( pos, res ) {
             /*jshint bitwise: false */
-            var ret = [ 0.0, 0.0, 0.0 ];
+            var ret = res || [ 0.0, 0.0, 0.0 ];
             if ( pos & 1 ) {
                 ret[ 0 ] = this._max[ 0 ];
             } else {

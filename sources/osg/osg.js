@@ -77,7 +77,7 @@ define( [
     'osg/TransformEnums',
     'osg/WebGLCaps'
 
-], function ( BlendColor,
+], function( BlendColor,
     BlendFunc,
     BoundingBox,
     BoundingSphere,
