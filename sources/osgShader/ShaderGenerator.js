@@ -142,6 +142,7 @@ define( [
             // TODO: double check GC impact of this stack
             var textureAttributes = [];
             var attributes = [];
+
             return function ( state ) {
                 // extract valid attributes
                 var hash = '';
@@ -153,7 +154,7 @@ define( [
                 if ( this._cache[ hash ] !== undefined ) {
                     return this._cache[ hash ];
                 }
-                var shaderGen = new Compiler( state, attributes, textureAttributes, this._scene, this._shaderProcessor );
+                var shaderGen = new Compiler( state, attributes, textureAttributes, this._shaderProcessor );
                 var vertexshader = shaderGen.createVertexShader();
                 var fragmentshader = shaderGen.createFragmentShader();
 
