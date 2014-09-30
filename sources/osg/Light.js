@@ -30,6 +30,8 @@ define( [
 
         this._spotCutoff = 180.0;
         this._spotBlend = 0.01;
+
+        // the array contains constant, linear, quadratic factor
         this._attenuation = [ 1.0, 0.0, 0.0, 0.0 ];
 
         this._lightUnit = lightNumber;
