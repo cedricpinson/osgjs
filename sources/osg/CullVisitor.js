@@ -213,6 +213,8 @@ define( [
             //this._projectionMatrixStack.length = 0;
             this._projectionMatrixStack.splice( 0, this._projectionMatrixStack.length );
             this._reserveMatrixStack.current = 0;
+            // Reset the stack before the current leaf index.
+            this._resetRenderLeafStack();
             this._reserveLeafStack.current = 0;
 
             this._computedNear = Number.POSITIVE_INFINITY;
@@ -283,6 +285,16 @@ define( [
                 this._reserveLeafStack.push( {} );
             }
             return l;
+        },
+        _resetRenderLeafStack: function () {
+            for ( var i = 0, j = this._reserveLeafStack.current; i <= j; i++ )
+            {
+                this._reserveLeafStack[ i ].parent = undefined ;
+                this._reserveLeafStack[ i ].projection = undefined;
+                this._reserveLeafStack[ i ].geometry = undefined;
+                this._reserveLeafStack[ i ].modelview = undefined;
+                this._reserveLeafStack[ i ].depth = undefined;
+            }
         },
 
         setEnableFrustumCulling: function ( value ) {
