@@ -213,7 +213,9 @@ define( [
             //this._projectionMatrixStack.length = 0;
             this._projectionMatrixStack.splice( 0, this._projectionMatrixStack.length );
             this._reserveMatrixStack.current = 0;
-            // Reset the stack before the current leaf index.
+            // Reset the stack before reseting the current leaf index.
+            // Reseting elements and refilling them later is faster than create new elements
+            // That's the reason to have a leafStack, see http://jsperf.com/refill/2
             this._resetRenderLeafStack();
             this._reserveLeafStack.current = 0;
 
