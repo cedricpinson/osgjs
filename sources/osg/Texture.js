@@ -63,6 +63,7 @@ define( [
 
     Texture.UNSIGNED_BYTE = 0x1401;
     Texture.FLOAT = 0x1406;
+    Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
 
     Texture.textureManager = new TextureManager();
 
