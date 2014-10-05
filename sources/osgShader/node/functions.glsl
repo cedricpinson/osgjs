@@ -62,3 +62,10 @@ vec3 sRGBToLinear(const in vec3 c, const in float gamma)
     }
     return v;
 }
+
+
+void normalizeNormalAndEyeVector( const in vec3 inputNormal, const in vec3 inputEye, out vec3 normal, out vec3 eye )
+{
+    normal = normalize( inputNormal );
+    eye = normalize( -inputEye );
+}

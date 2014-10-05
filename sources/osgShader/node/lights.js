@@ -1,44 +1,43 @@
 define( [
     'osg/Utils',
-    'osgShader/utils/sprintf',
-    'osgShader/ShaderNode',
-    'osgShader/shaderNode/Node',
-    'osgShader/shaderNode/textures',
-    'osgShader/shaderNode/operations'
+    'osgShader/utils',
+    'osgShader/node',
+    'osgShader/node/Node'
 
-], function ( MACROUTILS, sprintf, ShaderNode, Node, textures, operations ) {
+], function ( MACROUTILS, shaderUtils, shaderNode, Node ) {
     'use strict';
 
 
     // maybe we will need a struct later for the material
-    var Lighting = function ( lights, normal, ambient, diffuse, specular, shininess, output ) {
+    var Lighting = function ( output, lights, normal, eyeVector, ambient, diffuse, specular, shininess ) {
 
         Node.call( this, ambient, diffuse, specular, shininess );
 
         this._lights = lights || [];
         this._normal = normal;
+        this._eyeVector = eyeVector;
         this._ambientColor = ambient;
         this._diffuseColor = diffuse;
         this._specularColor = specular;
         this._shininess = shininess;
 
-        this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, this._normal );
+        this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, this._normal, this._eyeVector );
 
-        if ( output !== undefined ) {
-            this.connectOutput( output );
-        }
+        this.connectOutput( output );
     };
 
-
     Lighting.prototype = MACROUTILS.objectInherit( Node.prototype, {
+
         type: 'Light',
+
         createFragmentShaderGraph: function ( context ) {
 
-            ShaderNode = require( 'osgShader/ShaderNode' );
+            shaderNode = require( 'osgShader/node' );
 
-            var accumulator = new ShaderNode.Add();
+            var lightInputs = [];
 
             for ( var i = 0; i < this._lights.length; i++ ) {
+
                 var light = this._lights[ i ];
                 var lightNode;
 
@@ -46,64 +45,78 @@ define( [
 
                 switch ( light.getLightType() ) {
                 case 'DIRECTION':
-                    lightNode = new SunLight( this, light, lightedOutput );
+                    lightNode = new SunLight( lightedOutput, this, light );
                     break;
                 case 'SPOT':
-                    lightNode = new SpotLight( this, light, lightedOutput );
+                    lightNode = new SpotLight( lightedOutput, this, light );
                     break;
                 default:
                 case 'POINT':
-                    lightNode = new PointLight( this, light, lightedOutput );
+                    lightNode = new PointLight( lightedOutput, this, light );
                     break;
                 }
 
                 lightNode.createFragmentShaderGraph( context );
-                accumulator.connectInputs( lightedOutput );
+                lightInputs.push( lightedOutput );
             }
 
-            accumulator.connectOutput( this.getOutput() );
+            new shaderNode.Add( this.getOutput(), lightInputs );
+
         }
     } );
+
 
 
     // base class for all point based light: Point/Directional/Spot/Hemi
     // avoid duplicate code
-    var NodeLightsPointBased = function ( lighting, light, output ) {
+    var NodeLightsPointBased = function ( output, lighting, light ) {
 
         Node.call( this );
 
-        if ( output !== undefined ) {
-            this.connectOutput( output );
-        }
+        this.connectOutput( output );
 
-        this._normal = lighting._normal;
         this._lighting = lighting;
         this._light = light;
 
-        this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, this._normal );
-
+        this.connectInputs( this._ambientColor, this._diffuseColor, this.specularColor, this.shininess, lighting._normal, lighting._eyeVector );
     };
 
     NodeLightsPointBased.prototype = MACROUTILS.objectInherit( Node.prototype, {
+
         globalFunctionDeclaration: function () {
             return '#pragma include "lights.glsl"';
+        },
+
+        connectInputsAndCallFunction: function ( name, output, inputs ) {
+            // connects all inputs
+            if ( inputs )
+                this.connectInputs( inputs );
+            this._text = shaderUtils.callFunction( name, output, inputs );
+        },
+
+        computeFragment: function () {
+            return this._text;
         }
 
     } );
 
 
 
-    var PointLight = function ( lighting, light, output ) {
-        NodeLightsPointBased.call( this, lighting, light, output );
+    var PointLight = function ( output, lighting, light ) {
+
+        NodeLightsPointBased.call( this, output, lighting, light );
+
     };
 
     PointLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
+
         type: 'PointLight',
+
         createFragmentShaderGraph: function ( context ) {
 
             // Common
-            var normal = this._normal;
-            var eyeVector = context.getVariable( 'eyeVector' );
+            var normal = this._lighting._normal;
+            var eyeVector = this._lighting._eyeVector;
 
             // light specifics
             var nodeLight = this._light;
@@ -119,29 +132,36 @@ define( [
             var lightMatrix = context.getOrCreateUniform( lightUniforms.matrix );
             var lightInvMatrix = context.getOrCreateUniform( lightUniforms.invMatrix );
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector,
+            var inputs = [
+                normal, eyeVector,
+                // materials data
                 this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess,
+                // light data
                 lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightPosition, lightAttenuation,
-                lightMatrix, lightInvMatrix );
-            funcOp.connectOutput( this.getOutput() );
-            funcOp.setCall( 'computePointLightShading', '', 'woo PointLight' );
+                lightMatrix, lightInvMatrix // light matrix
+            ];
 
+            this.connectInputsAndCallFunction( 'computePointLightShading', this.getOutput(), inputs );
         }
 
     } );
 
 
 
-    var SpotLight = function ( lighting, light, output ) {
-        NodeLightsPointBased.call( this, lighting, light, output );
+    var SpotLight = function ( output, lighting, light ) {
+
+        NodeLightsPointBased.call( this, output, lighting, light );
+
     };
 
     SpotLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
+
         type: 'SpotLight',
+
         createFragmentShaderGraph: function ( context ) {
             // Common
-            var normal = this._normal;
-            var eyeVector = context.getVariable( 'eyeVector' );
+            var normal = this._lighting._normal;
+            var eyeVector = this._lighting._eyeVector;
 
             // light specifics
             var nodeLight = this._light;
@@ -162,28 +182,38 @@ define( [
             var lightInvMatrix = context.getOrCreateUniform( lightUniforms.invMatrix );
 
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector,
+            var inputs = [
+                normal, eyeVector,
+                // materials data
                 this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess,
+                // common lights data
                 lightAmbientColor, lightDiffuseColor, lightSpecularColor,
+                // specific lights data
                 lightDirection, lightAttenuation, lightPosition,
                 lightSpotCutOff, lightSpotBlend,
-                lightMatrix, lightInvMatrix );
-            funcOp.connectOutput( this.getOutput() );
-            funcOp.setCall( 'computeSpotLightShading', '', 'woo SpotLight' );
+                lightMatrix, lightInvMatrix
+            ];
+
+            this.connectInputsAndCallFunction( 'computeSpotLightShading', this.getOutput(), inputs );
         }
+
     } );
 
 
-    var SunLight = function ( lighting, light, output ) {
-        NodeLightsPointBased.call( this, lighting, light, output );
+    var SunLight = function ( output, lighting, light ) {
+
+        NodeLightsPointBased.call( this, output, lighting, light );
+
     };
 
     SunLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
+
         type: 'SunLight',
+
         createFragmentShaderGraph: function ( context ) {
             // Common
-            var normal = this._normal;
-            var eyeVector = context.getVariable( 'eyeVector' );
+            var normal = this._lighting._normal;
+            var eyeVector = this._lighting._eyeVector;
 
             // light specifics
             var nodeLight = this._light;
@@ -198,10 +228,17 @@ define( [
             var lightMatrix = context.getOrCreateUniform( lightUniforms.matrix );
             var lightInvMatrix = context.getOrCreateUniform( lightUniforms.invMatrix );
 
-            var funcOp = new operations.FunctionCall( normal, eyeVector, this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess, lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection,
-                lightMatrix, lightInvMatrix );
-            funcOp.connectOutput( this.getOutput() );
-            funcOp.setCall( 'computeSunLightShading', '', 'waa SunLight' );
+
+            var inputs = [
+                normal, eyeVector,
+                // materials data
+                this._lighting._ambientColor, this._lighting._diffuseColor, this._lighting._specularColor, this._lighting._shininess,
+                // lights data
+                lightAmbientColor, lightDiffuseColor, lightSpecularColor, lightDirection,
+                lightMatrix, lightInvMatrix
+            ];
+
+            this.connectInputsAndCallFunction( 'computeSunLightShading', this.getOutput(), inputs );
         }
     } );
 

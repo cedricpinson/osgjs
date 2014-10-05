@@ -10,6 +10,7 @@ define( [
         this._inputs = [];
         this._outputs = [];
         this._id = instance++;
+        this._text = undefined;
 
         this.connectInputs.apply( this, arguments );
     };
@@ -32,10 +33,12 @@ define( [
             return this._outputs;
         },
 
+        // accept   inputs0, inputs1, ... or
+        //          [inputs]
         connectInputs: function () {
 
             // circular denpendency
-            var data = require( 'osgShader/shaderNode/data' );
+            var data = require( 'osgShader/node/data' );
             var InlineConstant = data.InlineConstant;
 
             for ( var i = 0, l = arguments.length; i < l; i++ ) {
@@ -48,6 +51,7 @@ define( [
                 // make it possible to use inline constant for input
                 if ( typeof input === 'string' ) {
                     input = new InlineConstant( input );
+
                 } else if ( input instanceof Array ) {
                     this.connectInputs.apply( this, input );
                     continue;
@@ -91,7 +95,7 @@ define( [
         },
 
         computeFragment: function () {
-            return undefined;
+            return this._text;
         },
 
         computeVertex: function () {

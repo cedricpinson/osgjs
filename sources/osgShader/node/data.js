@@ -1,10 +1,12 @@
 define([
     'osg/Utils',
-    'osgShader/utils/sprintf',
-    'osgShader/shaderNode/Node'
+    'osgShader/utils',
+    'osgShader/node/Node'
 
-], function(MACROUTILS, sprintf, Node) {
+], function(MACROUTILS, utils, Node) {
     'use strict';
+
+    var sprintf = utils.sprintf;
 
     var Variable = function(type, prefix) {
         Node.call(this);

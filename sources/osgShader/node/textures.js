@@ -1,11 +1,10 @@
 define( [
     'osg/Utils',
-    'osgShader/utils/sprintf',
-    'osgShader/shaderNode/Node'
+    'osgShader/utils',
+    'osgShader/node/Node'
 
-], function ( MACROUTILS, sprintf, Node ) {
+], function ( MACROUTILS, utils, Node ) {
     'use strict';
-
 
     var NodeTextures = function ( sampler, uv, output ) {
 
@@ -31,12 +30,12 @@ define( [
         functionName: 'noTextureFunction',
 
         computeFragment: function () {
-            return sprintf( '%s = %s( %s, %s.xy );', [
-                this.getOutput().getVariable(),
-                this.functionName,
-                this._sampler.getVariable(),
-                this._uv.getVariable()
-            ] );
+            return utils.callFunction( this.functionName,
+                                       this.getOutput(),
+                                       [ this._sampler,
+                                         this._uv.getVariable() + '.xy'
+                                       ]
+                                     );
         },
 
         globalFunctionDeclaration: function () {

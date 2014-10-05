@@ -1,6 +1,7 @@
 define( [
     'osg/Notify',
-    'osgShader/ShaderLib'
+    'osgShader/shaderLib'
+
 ], function ( Notify, shaderLib ) {
     'use strict';
 

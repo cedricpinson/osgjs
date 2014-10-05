@@ -43,19 +43,6 @@ define( [
     'osg/RenderBin',
     'osg/RenderStage',
     'osg/Shader',
-    'osgShader/ShaderGeneratorProxy',
-    'osgShader/ShaderGenerator',
-    'osgShader/Compiler',
-    'osgShader/ShaderProcessor',
-    'osgShader/ShaderLib',
-    'osgShader/ShaderNode',
-    'osgShader/shaderNode/data',
-    'osgShader/shaderNode/functions',
-    'osgShader/shaderNode/lights',
-    'osgShader/shaderNode/operations',
-    'osgShader/shaderNode/shadows',
-    'osgShader/shaderNode/textures',
-    'osgShader/utils/sprintf',
     'osg/Shape',
     'osg/Stack',
     'osg/State',
@@ -121,19 +108,6 @@ define( [
     RenderBin,
     RenderStage,
     Shader,
-    ShaderGeneratorProxy,
-    ShaderGenerator,
-    Compiler,
-    ShaderProcessor,
-    ShaderLib,
-    ShaderNode,
-    data,
-    functions,
-    lights,
-    operations,
-    shadows,
-    textures,
-    sprintf,
     Shape,
     Stack,
     State,
@@ -203,11 +177,6 @@ define( [
     osg.RenderBin = RenderBin;
     osg.RenderStage = RenderStage;
     osg.Shader = Shader;
-    osg.ShaderGenerator = ShaderGenerator;
-    osg.ShaderGeneratorType = ShaderGenerator.Type;
-    osg.ShaderGeneratorProxy = ShaderGeneratorProxy;
-    osg.ShaderLib = ShaderLib;
-    osg.ShaderProcessor = ShaderProcessor;
     MACROUTILS.objectMix( osg, Shape );
     osg.Stack = Stack;
     osg.State = State;

@@ -1,6 +1,6 @@
 define ( [
     'osg/Utils',
-    'osgShader/shaderNode/Node'
+    'osgShader/node/Node'
 
 ], function ( MACROUTILS, Node ) {
     'use strict';

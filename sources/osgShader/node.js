@@ -1,10 +1,10 @@
 define( [
 
-    'osgShader/shaderNode/data',
-    'osgShader/shaderNode/textures',
-    'osgShader/shaderNode/functions',
-    'osgShader/shaderNode/lights',
-    'osgShader/shaderNode/operations'
+    'osgShader/node/data',
+    'osgShader/node/textures',
+    'osgShader/node/functions',
+    'osgShader/node/lights',
+    'osgShader/node/operations'
 
 ], function ( /*data, textures, functions, lights, operations */) {
     'use strict';
@@ -22,7 +22,7 @@ define( [
             var element = component[ key ];
 
             if ( this[ key ] !== undefined ) { // if exist throw exception
-                throw 'duplicate entry in ShaderNode library';
+                throw 'duplicate entry in node library';
             }
 
             this[ key ] = element;
