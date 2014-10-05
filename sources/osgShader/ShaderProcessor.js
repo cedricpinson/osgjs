@@ -40,11 +40,11 @@ define( [
         //     'lights.glsl': textShaderFunctions,
         //     'textures.glsl': textShaderFunctions
         // };
-        addShaders: function( shaders ) {
+        addShaders: function ( shaders ) {
 
             var keys = Object.keys( shaders );
 
-            keys.forEach( function( key ) {
+            keys.forEach( function ( key ) {
 
                 this._shadersList[ key ] = key;
                 this._shadersText[ key ] = shaders[ key ];
@@ -81,7 +81,7 @@ define( [
 
             var preShader = this._shadersText[ shaderName ];
 
-            if ( ! preShader ) {
+            if ( !preShader ) {
                 Notify.error( 'shader file/text: ' + shaderName + ' not registered' );
                 preShader = '';
             }

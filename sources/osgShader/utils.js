@@ -1,5 +1,4 @@
-define( [
-], function() {
+define( [], function () {
 
 
     var sprintf = function ( string, args ) {
@@ -32,7 +31,7 @@ define( [
     };
 
 
-    var checkVariableType = function( vars, optionalPrefix ) {
+    var checkVariableType = function ( vars, optionalPrefix ) {
 
         var inputs = vars;
         var varsList = [];
@@ -43,9 +42,9 @@ define( [
 
         if ( inputs.length !== 0 ) {
 
-            for ( var i = 0, l = inputs.length; i < l; i++) {
+            for ( var i = 0, l = inputs.length; i < l; i++ ) {
 
-                var variable = inputs[i];
+                var variable = inputs[ i ];
                 var output;
 
                 if ( variable === undefined ) {
@@ -72,7 +71,7 @@ define( [
     // generate a string with output = funcName ( inputs )
     // useful when debuging to print inputs / outputs
     // TODO check type of arguments with regexp in glsl
-    var callFunction = function( funcName, output, inputs ) {
+    var callFunction = function ( funcName, output, inputs ) {
 
         var osgShader = require( 'osgShader/osgShader' );
 
@@ -82,8 +81,8 @@ define( [
 
         // debug
         if ( osgShader.debugShaderNode ) {
-            debug.push( '\n// output');
-            Array.prototype.push.apply(debug, checkVariableType( [output], '// ' ) );
+            debug.push( '\n// output' );
+            Array.prototype.push.apply( debug, checkVariableType( [ output ], '// ' ) );
         }
 
         if ( output ) {
@@ -96,17 +95,17 @@ define( [
 
             // debug
             if ( osgShader.debugShaderNode ) {
-                debug.push( '// inputs');
-                Array.prototype.push.apply(debug, checkVariableType( inputs, '// ' ) );
+                debug.push( '// inputs' );
+                Array.prototype.push.apply( debug, checkVariableType( inputs, '// ' ) );
             }
 
             for ( var i = 0, l = inputs.length; i < l; i++ ) {
 
                 // check if it's a variable and not a constant
-                if ( inputs[i].getVariable )
-                    callString += inputs[i].getVariable();
+                if ( inputs[ i ].getVariable )
+                    callString += inputs[ i ].getVariable();
                 else
-                    callString += inputs[i];
+                    callString += inputs[ i ];
 
                 if ( i !== l - 1 )
                     callString += ', ';
@@ -116,7 +115,7 @@ define( [
         callString += ' );\n';
 
         if ( osgShader.debugShaderNode )
-            return debug.join('\n') + '\n' + callString;
+            return debug.join( '\n' ) + '\n' + callString;
 
         return callString;
     };
@@ -128,4 +127,4 @@ define( [
         sprintf: sprintf
     };
 
-});
+} );

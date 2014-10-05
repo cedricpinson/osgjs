@@ -46,7 +46,7 @@ define( [
                 this._position,
                 this._outputNormal,
                 this._outputEyeVector
-            ]);
+            ] );
         }
     } );
 
@@ -63,10 +63,9 @@ define( [
 
         computeFragment: function () {
             return utils.callFunction( 'sRGBToLinear',
-                                       this.getOutput().getVariable() + '.rgb',
-                                       [ this._inputs[ 0 ].getVariable() + '.rgb',
-                                         this._gamma
-                                       ] );
+                this.getOutput().getVariable() + '.rgb', [ this._inputs[ 0 ].getVariable() + '.rgb',
+                    this._gamma
+                ] );
         }
 
     } );
@@ -85,10 +84,9 @@ define( [
 
         computeFragment: function () {
             return utils.callFunction( 'linearTosRGB',
-                                       this.getOutput().getVariable() + '.rgb',
-                                       [ this._inputs[ 0 ].getVariable() + '.rgb',
-                                         this._gamma
-                                       ] );
+                this.getOutput().getVariable() + '.rgb', [ this._inputs[ 0 ].getVariable() + '.rgb',
+                    this._gamma
+                ] );
         }
 
     } );

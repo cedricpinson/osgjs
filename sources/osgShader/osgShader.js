@@ -6,7 +6,7 @@ define( [
     'osgShader/node',
     'osgShader/utils'
 
-], function ( Compiler,ShaderGenerator, ShaderGeneratorProxy,ShaderProcessor,node,utils  ) {
+], function ( Compiler, ShaderGenerator, ShaderGeneratorProxy, ShaderProcessor, node, utils ) {
 
     'use strict';
 

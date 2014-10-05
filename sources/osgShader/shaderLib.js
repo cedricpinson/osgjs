@@ -10,4 +10,4 @@ define( [
         'lights.glsl': lights,
         'textures.glsl': textures
     };
-});
+} );

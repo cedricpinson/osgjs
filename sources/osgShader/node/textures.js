@@ -31,11 +31,10 @@ define( [
 
         computeFragment: function () {
             return utils.callFunction( this.functionName,
-                                       this.getOutput(),
-                                       [ this._sampler,
-                                         this._uv.getVariable() + '.xy'
-                                       ]
-                                     );
+                this.getOutput(), [ this._sampler,
+                    this._uv.getVariable() + '.xy'
+                ]
+            );
         },
 
         globalFunctionDeclaration: function () {

@@ -249,7 +249,7 @@ define( [
 
             var finalColor = this.getOrCreateVariable( 'vec4' );
 
-            var opFinalColor = new shaderNode.Add( finalColor, Array.prototype.slice.call( arguments, 0 ));
+            var opFinalColor = new shaderNode.Add( finalColor, Array.prototype.slice.call( arguments, 0 ) );
 
             // DEBUG COLOR if no inputs
             if ( opFinalColor.getInputs().length === 0 ) {
@@ -328,7 +328,7 @@ define( [
             // get or create normalized position
             var outputPosition = this.getOrCreateVariable( 'vec3', 'eyeVector' );
 
-            new shaderNode.NormalizeNormalAndEyeVector( outputNormal,  outputPosition, frontNormal, inputPosition );
+            new shaderNode.NormalizeNormalAndEyeVector( outputNormal, outputPosition, frontNormal, inputPosition );
         },
 
 

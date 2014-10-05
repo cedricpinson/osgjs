@@ -14,17 +14,17 @@ define( [
     // arg1 = input0 or [ inputs ]
     // arg2 = input1
     // ...
-    var BaseOperator = function() {
+    var BaseOperator = function () {
 
         Node.apply( this );
-        var out = arguments[0];
+        var out = arguments[ 0 ];
 
         this.connectOutput( out );
 
-        var ins = arguments[1];
+        var ins = arguments[ 1 ];
 
         // if second argument is not an array
-        if ( !Array.isArray( arguments[1] ) ) {
+        if ( !Array.isArray( arguments[ 1 ] ) ) {
             ins = Array.prototype.slice.call( arguments, 1 );
         }
 
@@ -81,7 +81,7 @@ define( [
 
 
     // output = vec4( color.rgb, alpha )
-    var SetAlpha = function ( /*output, color, alpha*/ ) {
+    var SetAlpha = function ( /*output, color, alpha*/) {
         BaseOperator.apply( this, arguments );
     };
 
@@ -91,7 +91,8 @@ define( [
             return sprintf( '%s = vec4( %s.rgb, %s );', [
                 this.getOutput().getVariable(),
                 this._inputs[ 0 ].getVariable(),
-                this._inputs[ 1 ].getVariable() ] );
+                this._inputs[ 1 ].getVariable()
+            ] );
         }
     } );
 
@@ -121,7 +122,8 @@ define( [
             return sprintf( '%s.rgb = %s.rgb * %s;', [
                 this.getOutput().getVariable(),
                 this._inputs[ 0 ].getVariable(),
-                srcAlpha ] );
+                srcAlpha
+            ] );
         }
     } );
 

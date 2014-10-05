@@ -1,4 +1,4 @@
-define ( [
+define( [
     'osg/Utils',
     'osgShader/node/Node'
 
@@ -33,13 +33,15 @@ define ( [
 
         computeVertex: function () {
             var str = [ '',
-                        '' ].join( '\n' );
+                ''
+            ].join( '\n' );
             return str;
         },
 
         computeFragment: function () {
             var str = [ '',
-                        '' ].join( '\n' );
+                ''
+            ].join( '\n' );
             return str;
         }
     } );
