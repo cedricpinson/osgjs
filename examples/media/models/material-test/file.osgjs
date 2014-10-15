@@ -5,7 +5,7 @@
     "Children": [ {
       "osg.Node": {
         "UniqueID": 0,
-        "Name": "/sketchfab-data/processing/ee5990d74e6b4c09a09aec1e8f3f60f1/preprocess/MatTester.obj.meta",
+        "Name": "MaterialTester.obj",
         "Children": [ {
           "osg.Node": {
             "UniqueID": 1,
@@ -19,49 +19,13 @@
                     "AttributeList": [ {
                       "osg.Material": {
                         "UniqueID": 5,
-                        "Name": "wire_153228214",
-                        "Ambient": [ 0.6, 0.8941, 0.8392, 1],
-                        "Diffuse": [ 0.6, 0.8941, 0.8392, 1],
+                        "Ambient": [ 0.2, 0.2, 0.2, 1],
+                        "Diffuse": [ 0.8, 0.8, 0.8, 1],
                         "Emission": [ 0, 0, 0, 1],
                         "Shininess": 4.096,
                         "Specular": [ 0.35, 0.35, 0.35, 1]
                       }
-                    } ],
-                    "UserDataContainer": {
-                      "UniqueID": 4,
-                      "Values": [ {
-                        "Name": "source",
-                        "Value": "wavefront"
-                      },
-                      {
-                        "Name": "ka",
-                        "Value": "[ 0.6, 0.8941, 0.8392]"
-                      },
-                      {
-                        "Name": "kd",
-                        "Value": "[ 0.6, 0.8941, 0.8392]"
-                      },
-                      {
-                        "Name": "ks",
-                        "Value": "[ 0.35, 0.35, 0.35]"
-                      },
-                      {
-                        "Name": "ns",
-                        "Value": "32"
-                      },
-                      {
-                        "Name": "sharpness",
-                        "Value": "0"
-                      },
-                      {
-                        "Name": "emissive",
-                        "Value": "[ 0, 0, 0]"
-                      },
-                      {
-                        "Name": "tr",
-                        "Value": "1"
-                      } ]
-                    }
+                    } ]
                   }
                 },
                 "PrimitiveSetList": [ {
