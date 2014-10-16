@@ -13,21 +13,6 @@
             "Children": [ {
               "osg.Geometry": {
                 "UniqueID": 2,
-                "StateSet": {
-                  "osg.StateSet": {
-                    "UniqueID": 3,
-                    "AttributeList": [ {
-                      "osg.Material": {
-                        "UniqueID": 5,
-                        "Ambient": [ 0.2, 0.2, 0.2, 1],
-                        "Diffuse": [ 0.8, 0.8, 0.8, 1],
-                        "Emission": [ 0, 0, 0, 1],
-                        "Shininess": 4.096,
-                        "Specular": [ 0.35, 0.35, 0.35, 1]
-                      }
-                    } ]
-                  }
-                },
                 "PrimitiveSetList": [ {
                   "DrawElementsUShort": {
                     "UniqueID": 10,
@@ -117,11 +102,6 @@
             {
               "osg.Geometry": {
                 "UniqueID": 12,
-                "StateSet": {
-                  "osg.StateSet": {
-                    "UniqueID": 3
-                  }
-                },
                 "PrimitiveSetList": [ {
                   "DrawElementsUShort": {
                     "UniqueID": 17,
