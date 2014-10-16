@@ -368,15 +368,14 @@ define( [
 
         isCulled: ( function () {
             var position = Vec3.create();
-
+            var scale = Vec3.create();
             return function ( node ) {
                 var pos = node.getBound().center();
                 Vec3.copy( pos, position );
-                var radius = - node.getBound().radius();
-                var d;
                 var m = ComputeMatrixFromNodePath.computeLocalToWorld( this.nodePath );
+                var radius = - node.getBound().radius() * Vec3.length( Matrix.getScale ( m , scale ) );
                 Matrix.transformVec3( m, position, position);
-
+                var d;
                 for ( var i = 0, j = this._frustum.length; i < j; i++ ) {
                     d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
                     if ( d <= radius )
