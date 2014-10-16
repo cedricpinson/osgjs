@@ -1139,6 +1139,21 @@ define( [
                 return result;
             };
         } )(),
+        getScale2: ( function () {
+            var sx = Vec3.create();
+            var sy = Vec3.create();
+            var sz = Vec3.create();
+            return function ( matrix, result ) {
+                sx[ 0 ] = matrix[ 0 ]; sx[ 1 ] = matrix[ 4 ]; sx[ 2 ] = matrix[ 8 ];
+                sy[ 0 ] = matrix[ 1 ]; sy[ 1 ] = matrix[ 5 ]; sy[ 2 ] = matrix[ 9 ];
+                sz[ 0 ] = matrix[ 2 ]; sz[ 1 ] = matrix[ 6 ]; sz[ 2 ] = matrix[ 10 ];
+
+                result[ 0 ] = Vec3.length2( sx );
+                result[ 1 ] = Vec3.length2( sy );
+                result[ 2 ] = Vec3.length2( sz );
+                return result;
+            };
+        } )(),
 
         // compute the 4 corners vector of the frustrum
         computeFrustrumCornersVectors: function ( projectionMatrix, vectorsArray ) {
