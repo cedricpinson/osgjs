@@ -92,6 +92,7 @@ define( [
             if ( inputs )
                 this.connectInputs( inputs );
             this._text = shaderUtils.callFunction( name, output, inputs );
+            return this;
         },
 
         computeFragment: function () {
@@ -142,6 +143,7 @@ define( [
             ];
 
             this.connectInputsAndCallFunction( 'computePointLightShading', this.getOutput(), inputs );
+            return this;
         }
 
     } );
@@ -195,6 +197,7 @@ define( [
             ];
 
             this.connectInputsAndCallFunction( 'computeSpotLightShading', this.getOutput(), inputs );
+            return this;
         }
 
     } );
@@ -239,6 +242,7 @@ define( [
             ];
 
             this.connectInputsAndCallFunction( 'computeSunLightShading', this.getOutput(), inputs );
+            return this;
         }
     } );
 

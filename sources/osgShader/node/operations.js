@@ -73,6 +73,7 @@ define( [
         type: 'InlineCode',
         setCode: function ( txt ) {
             this._text = txt;
+            return this;
         },
         computeFragment: function () {
             return this._text;
@@ -135,7 +136,9 @@ define( [
     };
     FragColor.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'gl_FragColor',
-        connectOutput: function () { /* do nothing for variable */ },
+        connectOutput: function () { /* do nothing for variable */
+            return this;
+        },
         getVariable: function () {
             return this._prefix;
         }
