@@ -19,6 +19,15 @@ define( [
     };
 
 
+    var checkAndFixEnum = function ( mode, fallback ) {
+        var value = Texture[ mode ];
+        if ( value === undefined ) {
+            Notify.warn( 'bad Texture enum argument ' + mode + '\n' + 'fallback to ' + fallback );
+            return fallback;
+        }
+        return value;
+    };
+
     /**
      * Texture encapsulate webgl texture object
      * @class Texture
@@ -172,20 +181,7 @@ define( [
                 this._image = undefined;
             }
         },
-        setWrapS: function ( value ) {
-            if ( typeof ( value ) === 'string' ) {
-                this._wrapS = Texture[ value ];
-            } else {
-                this._wrapS = value;
-            }
-        },
-        setWrapT: function ( value ) {
-            if ( typeof ( value ) === 'string' ) {
-                this._wrapT = Texture[ value ];
-            } else {
-                this._wrapT = value;
-            }
-        },
+
 
         getWrapT: function () {
             return this._wrapT;
@@ -200,18 +196,58 @@ define( [
             return this._magFilter;
         },
 
-        setMinFilter: function ( value ) {
+
+        setWrapS: function ( value ) {
+
             if ( typeof ( value ) === 'string' ) {
-                this._minFilter = Texture[ value ];
+
+                this._wrapS = checkAndFixEnum( value, Texture.CLAMP_TO_EDGE );
+
             } else {
-                this._minFilter = value;
+
+                this._wrapS = value;
+
             }
         },
-        setMagFilter: function ( value ) {
+
+
+        setWrapT: function ( value ) {
+
             if ( typeof ( value ) === 'string' ) {
-                this._magFilter = Texture[ value ];
+
+                this._wrapT = checkAndFixEnum( value, Texture.CLAMP_TO_EDGE );
+
             } else {
+
+                this._wrapT = value;
+
+            }
+        },
+
+
+        setMinFilter: function ( value ) {
+
+            if ( typeof ( value ) === 'string' ) {
+
+                this._minFilter = checkAndFixEnum( value, Texture.LINEAR );
+
+            } else {
+
+                this._minFilter = value;
+
+            }
+        },
+
+        setMagFilter: function ( value ) {
+
+            if ( typeof ( value ) === 'string' ) {
+
+                this._magFilter = checkAndFixEnum( value, Texture.LINEAR );
+
+            } else {
+
                 this._magFilter = value;
+
             }
         },
 
