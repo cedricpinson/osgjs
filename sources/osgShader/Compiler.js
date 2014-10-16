@@ -837,9 +837,11 @@ define( [
             // vertex color needs to be computed to diffuse
             diffuseColor = this.getVertexColor( diffuseColor );
 
-            //var alpha =  materialOpacity || new shaderNode.InlineConstant( '1.0' );
-            // TODO fix transparency
-            var alpha = new shaderNode.InlineConstant( '1.0' );
+            //var alpha =  materialDiffuseColor.a
+            var alpha = this.getOrCreateVariable( 'float' );
+            (new shaderNode.InlineCode( materialDiffuseColor ))
+                .connectOutput( alpha )
+                .setCode( sprintf( '%s = %s.a;', [ alpha.getVariable(), materialDiffuseColor.getVariable() ] ) );
 
             var finalColor;
 
