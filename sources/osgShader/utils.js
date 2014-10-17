@@ -11,6 +11,9 @@ define( [], function () {
         for ( var index in args ) {
             arg = args[ index ];
 
+            if ( arg === undefined )
+                continue;
+
             if ( arg.getVariable ) {
                 arg = arg.getVariable();
             }
