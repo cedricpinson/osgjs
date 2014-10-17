@@ -450,6 +450,15 @@ define( [
         },
 
 
+        // return the first texture valid in texture unit
+        getFirstValidTexture: function () {
+            if ( !this._textures.length )
+                return undefined;
+
+            return this._textures[0].variable;
+        },
+
+
         // check for all textures found in the State
         // and reference sampler associated to texture and uv channels
         //
@@ -837,11 +846,20 @@ define( [
             // vertex color needs to be computed to diffuse
             diffuseColor = this.getVertexColor( diffuseColor );
 
-            //var alpha =  materialDiffuseColor.a
+
+            // compute alpha
             var alpha = this.getOrCreateVariable( 'float' );
-            (new shaderNode.InlineCode( materialDiffuseColor ))
-                .connectOutput( alpha )
-                .setCode( sprintf( '%s = %s.a;', [ alpha.getVariable(), materialDiffuseColor.getVariable() ] ) );
+
+
+            var textureTexel = this.getFirstValidTexture();
+            var operatorAlpha = new shaderNode.InlineCode( materialDiffuseColor, textureTexel );
+
+            var alphaCompute = '%s = %s.a;';
+            if ( textureTexel ) { // use alpha of the first valid texture if has texture
+                alphaCompute = '%s = %s.a * %s.a;';
+            }
+            operatorAlpha.connectOutput( alpha ).setCode( sprintf( alphaCompute, [ alpha.getVariable(), materialDiffuseColor.getVariable(), textureTexel ] ) );
+
 
             var finalColor;
 
