@@ -12,14 +12,15 @@
 
 
         this._textureNames = [
-            'fabric1.jpg',
-            'fabric2.jpg',
-            'bricks1.jpg',
-            'grunge1.jpg',
-            'grunge2.jpg',
-            'leather1.jpg',
-            'wood1.jpg',
-            'wood2.jpg'
+            'seamless/fabric1.jpg',
+            'seamless/fabric2.jpg',
+            'seamless/bricks1.jpg',
+            'seamless/grunge1.jpg',
+            'seamless/grunge2.jpg',
+            'seamless/leather1.jpg',
+            'seamless/wood1.jpg',
+            'seamless/wood2.jpg',
+            'alpha/alpha.png'
         ];
 
 
@@ -52,7 +53,17 @@
             materialSpecular4: '#505050',
             materialShininess4: 0.3,
             materialTransparency4: 0.5,
-            texture4Unit0: this._textureNames[6]
+            texture4Unit0: this._textureNames[6],
+
+
+            materialEmission5: '#050505',
+            materialAmbient5: '#050505',
+            materialDiffuse5: '#f0f0f0',
+            materialSpecular5: '#505050',
+            materialShininess5: 0.4,
+            materialTransparency5: 0.5,
+            texture5Unit0: this._textureNames[this._textureNames.length -1 ],
+            texture5Unit1: this._textureNames[1]
 
         };
 
@@ -66,7 +77,7 @@
 
         initDatGUI: function () {
 
-            var path = '../media/textures/seamless/';
+            var path = '../media/textures/';
 
             // generate array of paths
             var paths = this._textureNames.map( function ( name ) {
@@ -156,6 +167,26 @@
             controller.onChange( this.updateMaterial4.bind( this ) );
 
 
+            var material5 = gui.addFolder('material5');
+            controller = material5.addColor( this._config, 'materialEmission5' );
+            controller.onChange( this.updateMaterial5.bind( this ) );
+
+            controller = material5.addColor( this._config, 'materialAmbient5' );
+            controller.onChange( this.updateMaterial5.bind( this ) );
+
+            controller = material5.addColor( this._config, 'materialDiffuse5' );
+            controller.onChange( this.updateMaterial5.bind( this ) );
+
+            controller = material5.addColor( this._config, 'materialSpecular5' );
+            controller.onChange( this.updateMaterial5.bind( this ) );
+
+            controller = material5.add( this._config, 'materialShininess5', 0.01, 1.0 );
+            controller.onChange( this.updateMaterial5.bind( this ) );
+
+            controller = material5.add( this._config, 'materialTransparency5', 0.01, 1.0 );
+            controller.onChange( this.updateMaterial5.bind( this ) );
+
+
             Q.all( images ).then( function ( args ) {
 
                 this._textures = args.map( function ( image ) {
@@ -182,6 +213,13 @@
                 controller = material3.add( this._config, 'texture3Unit1', this._textureNames );
                 controller.onChange( this.updateMaterial3.bind( this ) );
                 this.updateMaterial3();
+
+                controller = material5.add( this._config, 'texture5Unit0', this._textureNames );
+                controller.onChange( this.updateMaterial5.bind( this ) );
+
+                controller = material5.add( this._config, 'texture5Unit1', this._textureNames );
+                controller.onChange( this.updateMaterial5.bind( this ) );
+                this.updateMaterial5();
 
 
             }.bind( this ) );
@@ -233,6 +271,12 @@
             return result;
         },
 
+
+        setStateSetTransparent: function( ss ) {
+            ss.setRenderingHint('TRANSPARENT_BIN');
+            ss.setAttributeAndModes( new osg.BlendFunc('ONE', 'ONE_MINUS_SRC_ALPHA' ));
+        },
+
         updateMaterial1: function () {
             if ( !this._stateSet1 )
                 return;
@@ -276,37 +320,6 @@
         },
 
 
-        updateMaterial4: function () {
-            if ( !this._stateSet4 )
-                return;
-            var material = this._stateSet4.getAttribute( 'Material' );
-            if ( !material )
-                material = new osg.Material();
-
-            this._stateSet4.setRenderingHint('TRANSPARENT_BIN');
-
-            this._stateSet4.setAttributeAndModes( material );
-            this._stateSet4.setAttributeAndModes( new osg.BlendFunc('ONE', 'ONE_MINUS_SRC_ALPHA' ));
-
-            material.setEmission( this.convertColor( this._config.materialEmission4 ) );
-            material.setDiffuse( this.convertColor( this._config.materialDiffuse4 ) );
-            material.setSpecular( this.convertColor( this._config.materialSpecular4 ) );
-            material.setAmbient( this.convertColor( this._config.materialAmbient4 ) );
-
-            material.setTransparency( this._config.materialTransparency4 );
-
-            material.setShininess( Math.exp( this._config.materialShininess4*13.0 -4.0 ) );
-
-            if ( !this._textures )
-                return;
-
-            var idx = this._textureNames.indexOf( this._config.texture4Unit0 );
-            if ( idx < 0 ) idx = 1;
-            var texture = this._textures[ idx ];
-            this._stateSet4.setTextureAttributeAndModes( 0, texture );
-
-        },
-
         updateMaterial3: function () {
             if ( !this._stateSet3 )
                 return;
@@ -338,6 +351,73 @@
 
         },
 
+
+        updateMaterial4: function () {
+            if ( !this._stateSet4 )
+                return;
+            var material = this._stateSet4.getAttribute( 'Material' );
+            if ( !material )
+                material = new osg.Material();
+
+            this.setStateSetTransparent( this._stateSet4 );
+
+            this._stateSet4.setAttributeAndModes( material );
+
+            material.setEmission( this.convertColor( this._config.materialEmission4 ) );
+            material.setDiffuse( this.convertColor( this._config.materialDiffuse4 ) );
+            material.setSpecular( this.convertColor( this._config.materialSpecular4 ) );
+            material.setAmbient( this.convertColor( this._config.materialAmbient4 ) );
+
+            material.setTransparency( this._config.materialTransparency4 );
+
+            material.setShininess( Math.exp( this._config.materialShininess4*13.0 -4.0 ) );
+
+            if ( !this._textures )
+                return;
+
+            var idx = this._textureNames.indexOf( this._config.texture4Unit0 );
+            if ( idx < 0 ) idx = 1;
+            var texture = this._textures[ idx ];
+            this._stateSet4.setTextureAttributeAndModes( 0, texture );
+
+        },
+
+
+        updateMaterial5: function () {
+            if ( !this._stateSet5 )
+                return;
+            var material = this._stateSet5.getAttribute( 'Material' );
+            if ( !material )
+                material = new osg.Material();
+
+            this.setStateSetTransparent( this._stateSet5 );
+
+            this._stateSet5.setAttributeAndModes( material );
+            material.setEmission( this.convertColor( this._config.materialEmission5 ) );
+            material.setDiffuse( this.convertColor( this._config.materialDiffuse5 ) );
+            material.setSpecular( this.convertColor( this._config.materialSpecular5 ) );
+            material.setAmbient( this.convertColor( this._config.materialAmbient5 ) );
+
+            material.setTransparency( this._config.materialTransparency5 );
+            material.setShininess( Math.exp( this._config.materialShininess5*15.0 -4.0 ) );
+
+            var idx, texture;
+            if ( !this._textures )
+                return;
+
+            idx = this._textureNames.indexOf( this._config.texture5Unit0 );
+            if ( idx < 0 ) idx = 0;
+            texture = this._textures[ idx ];
+            this._stateSet5.setTextureAttributeAndModes( 0, texture );
+
+            idx = this._textureNames.indexOf( this._config.texture5Unit1 );
+            if ( idx < 0 ) idx = 5;
+            texture = this._textures[ idx ];
+            this._stateSet5.setTextureAttributeAndModes( 1, texture );
+
+
+        },
+
         createScene: function () {
             var group = new osg.Node();
 
@@ -352,22 +432,29 @@
             this.updateMaterial2();
 
 
-            var model4 = this.createModelInstance();
-            this._stateSet4 = model4.getOrCreateStateSet();
-            osg.Matrix.makeTranslate( 90, 0, 0, model4.getMatrix() );
-            this.updateMaterial4();
-
-
             var model3 = this.createModelInstance();
             this._stateSet3 = model3.getOrCreateStateSet();
             osg.Matrix.makeTranslate( 60, 0, 0, model3.getMatrix() );
             this.updateMaterial3();
 
 
+            var model4 = this.createModelInstance();
+            this._stateSet4 = model4.getOrCreateStateSet();
+            osg.Matrix.makeTranslate( 90, 0, 0, model4.getMatrix() );
+            this.updateMaterial4();
+
+            var model5 = this.createModelInstance();
+            this._stateSet5 = model5.getOrCreateStateSet();
+            osg.Matrix.makeTranslate( 120, 0, 0, model5.getMatrix() );
+            this.updateMaterial5();
+
+
+
             group.addChild( model1 );
             group.addChild( model2 );
             group.addChild( model3 );
             group.addChild( model4 );
+            group.addChild( model5 );
 
             return group;
         },
