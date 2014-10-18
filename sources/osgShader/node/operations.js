@@ -45,9 +45,19 @@ define( [
         type: 'Add',
         operator: '+',
         computeFragment: function () {
-            var str = this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable();
+            // force inputs type to be all the same from the output
+            var outputType = this.getOutput().getType();
+            var addType = '';
+            if ( outputType === 'vec4' )
+                addType = '.rgba';
+            else if (outputType === 'vec3' )
+                addType = '.rgb';
+            else if (outputType === 'vec2' )
+                addType = '.rg';
+
+            var str = this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + addType;
             for ( var i = 1, l = this._inputs.length; i < l; i++ ) {
-                str += this.operator + this._inputs[ i ].getVariable();
+                str += this.operator + this._inputs[ i ].getVariable() + addType;
             }
             str += ';';
             return str;
