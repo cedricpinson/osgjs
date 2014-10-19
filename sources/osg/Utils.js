@@ -154,7 +154,9 @@ define( [
     Utils.setTypeID = function ( classObject ) {
         var className = classObject.prototype.className();
         var typeID = Utils.objectType.generate( className );
+        var getTypeID = function() { return typeID; };
         classObject.typeID = classObject.prototype.typeID = typeID;
+        classObject.getTypeID = classObject.prototype.getTypeID = getTypeID;
     };
 
     Utils.Float32Array = typeof Float32Array !== 'undefined' ? Float32Array : null;
