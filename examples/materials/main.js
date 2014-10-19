@@ -8,6 +8,23 @@
     var $ = window.$;
 
 
+
+    // we use this visitor to copy TexCoord0 to TexCoord1
+    // for multi texture purpose
+    var VisitorCopyTexCoord = function() {
+        osg.NodeVisitor.call(this);
+    };
+
+    VisitorCopyTexCoord.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+        apply: function( node ) {
+            if ( node.getTypeID() === osg.Geometry.getTypeID() ) {
+                // copy tex coord 0 to 1 for multi texture
+                node.getAttributes()[ 'TexCoord1' ] = node.getAttributes()[ 'TexCoord0' ];
+            }
+            this.traverse( node );
+        }
+    });
+
     var Example = function () {
 
 
@@ -20,7 +37,7 @@
             'seamless/leather1.jpg',
             'seamless/wood1.jpg',
             'seamless/wood2.jpg',
-            'alpha/alpha.png'
+            'alpha/basic.png'
         ];
 
 
@@ -37,15 +54,15 @@
             materialDiffuse2: '#f0f0f0',
             materialSpecular2: '#505050',
             materialShininess2: 0.3,
-            texture2Unit0: this._textureNames[5],
+            texture2Unit0: this._textureNames[ 5 ],
 
             materialEmission3: '#050505',
             materialAmbient3: '#050505',
             materialDiffuse3: '#f0f0f0',
             materialSpecular3: '#505050',
             materialShininess3: 0.4,
-            texture3Unit0: this._textureNames[2],
-            texture3Unit1: this._textureNames[1],
+            texture3Unit0: this._textureNames[ 2 ],
+            texture3Unit1: this._textureNames[ 1 ],
 
             materialEmission4: '#050505',
             materialAmbient4: '#050505',
@@ -53,7 +70,7 @@
             materialSpecular4: '#505050',
             materialShininess4: 0.3,
             materialTransparency4: 0.5,
-            texture4Unit0: this._textureNames[6],
+            texture4Unit0: this._textureNames[ 6 ],
 
 
             materialEmission5: '#050505',
@@ -61,9 +78,9 @@
             materialDiffuse5: '#f0f0f0',
             materialSpecular5: '#505050',
             materialShininess5: 0.4,
-            materialTransparency5: 0.5,
-            texture5Unit0: this._textureNames[this._textureNames.length -1 ],
-            texture5Unit1: this._textureNames[1]
+            materialTransparency5: 0.01,
+            texture5Unit0: this._textureNames[ this._textureNames.length - 1 ],
+            texture5Unit1: this._textureNames[ 1 ]
 
         };
 
@@ -95,7 +112,7 @@
 
             var controller;
 
-            var material1 = gui.addFolder('material1');
+            var material1 = gui.addFolder( 'material1' );
             controller = material1.addColor( this._config, 'materialEmission1' );
             controller.onChange( this.updateMaterial1.bind( this ) );
 
@@ -113,7 +130,7 @@
 
 
 
-            var material2 = gui.addFolder('material2');
+            var material2 = gui.addFolder( 'material2' );
             controller = material2.addColor( this._config, 'materialEmission2' );
             controller.onChange( this.updateMaterial2.bind( this ) );
 
@@ -130,7 +147,7 @@
             controller.onChange( this.updateMaterial2.bind( this ) );
 
 
-            var material3 = gui.addFolder('material3');
+            var material3 = gui.addFolder( 'material3' );
             controller = material3.addColor( this._config, 'materialEmission3' );
             controller.onChange( this.updateMaterial3.bind( this ) );
 
@@ -147,7 +164,7 @@
             controller.onChange( this.updateMaterial3.bind( this ) );
 
 
-            var material4 = gui.addFolder('material4');
+            var material4 = gui.addFolder( 'material4' );
             controller = material4.addColor( this._config, 'materialEmission4' );
             controller.onChange( this.updateMaterial4.bind( this ) );
 
@@ -167,7 +184,7 @@
             controller.onChange( this.updateMaterial4.bind( this ) );
 
 
-            var material5 = gui.addFolder('material5');
+            var material5 = gui.addFolder( 'material5' );
             controller = material5.addColor( this._config, 'materialEmission5' );
             controller.onChange( this.updateMaterial5.bind( this ) );
 
@@ -197,6 +214,11 @@
                     texture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
                     return texture;
                 } );
+
+
+                // last texture 'basics' will have a clamp wrap setting
+                this._textures[ this._textures.length - 1 ].setWrapS( 'CLAMP_TO_EDGE' );
+                this._textures[ this._textures.length - 1 ].setWrapT( 'CLAMP_TO_EDGE' );
 
                 controller = material2.add( this._config, 'texture2Unit0', this._textureNames );
                 controller.onChange( this.updateMaterial2.bind( this ) );
@@ -232,10 +254,12 @@
             if ( !this._model ) {
 
                 this._model = new osg.MatrixTransform();
-                osg.Matrix.makeRotate( Math.PI, 0,0,1, this._model.getMatrix());
+                osg.Matrix.makeRotate( Math.PI, 0, 0, 1, this._model.getMatrix() );
                 var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
 
                 request.then( function ( model ) {
+                    var copyTexCoord = new VisitorCopyTexCoord();
+                    model.accept( copyTexCoord );
                     this._model.addChild( model );
                     this._viewer.getManipulator().computeHomePosition();
                 }.bind( this ) );
@@ -245,6 +269,28 @@
             var node = new osg.MatrixTransform();
             node.addChild( this._model );
             return node;
+        },
+
+        createSphereInstance: function () {
+
+            if ( !this._sphere ) {
+
+                this._sphere = new osg.MatrixTransform();
+                osg.Matrix.makeTranslate( 0, 0, 15, this._sphere.getMatrix() );
+
+                var sphere = osg.createTexturedSphere( 10, 30, 30 );
+
+                var copyTexCoord = new VisitorCopyTexCoord();
+                sphere.accept( copyTexCoord );
+
+                this._sphere.addChild( sphere );
+
+            }
+
+            var node = new osg.MatrixTransform();
+            node.addChild( this._sphere );
+            return node;
+
         },
 
         convertColor: function ( color ) {
@@ -272,9 +318,9 @@
         },
 
 
-        setStateSetTransparent: function( ss ) {
-            ss.setRenderingHint('TRANSPARENT_BIN');
-            ss.setAttributeAndModes( new osg.BlendFunc('ONE', 'ONE_MINUS_SRC_ALPHA' ));
+        setStateSetTransparent: function ( ss ) {
+            ss.setRenderingHint( 'TRANSPARENT_BIN' );
+            ss.setAttributeAndModes( new osg.BlendFunc( 'ONE', 'ONE_MINUS_SRC_ALPHA' ) );
         },
 
         updateMaterial1: function () {
@@ -289,7 +335,7 @@
             material.setSpecular( this.convertColor( this._config.materialSpecular1 ) );
             material.setAmbient( this.convertColor( this._config.materialAmbient1 ) );
 
-            material.setShininess( Math.exp( this._config.materialShininess1*13.0 -4.0 ) );
+            material.setShininess( Math.exp( this._config.materialShininess1 * 13.0 - 4.0 ) );
 
         },
 
@@ -307,7 +353,7 @@
             material.setAmbient( this.convertColor( this._config.materialAmbient2 ) );
 
 
-            material.setShininess( Math.exp( this._config.materialShininess2*13.0 -4.0 ) );
+            material.setShininess( Math.exp( this._config.materialShininess2 * 13.0 - 4.0 ) );
 
             if ( !this._textures )
                 return;
@@ -332,7 +378,7 @@
             material.setSpecular( this.convertColor( this._config.materialSpecular3 ) );
             material.setAmbient( this.convertColor( this._config.materialAmbient3 ) );
 
-            material.setShininess( Math.exp( this._config.materialShininess3*13.0 -4.0 ) );
+            material.setShininess( Math.exp( this._config.materialShininess3 * 13.0 - 4.0 ) );
 
             var idx, texture;
             if ( !this._textures )
@@ -370,7 +416,7 @@
 
             material.setTransparency( this._config.materialTransparency4 );
 
-            material.setShininess( Math.exp( this._config.materialShininess4*13.0 -4.0 ) );
+            material.setShininess( Math.exp( this._config.materialShininess4 * 13.0 - 4.0 ) );
 
             if ( !this._textures )
                 return;
@@ -399,7 +445,7 @@
             material.setAmbient( this.convertColor( this._config.materialAmbient5 ) );
 
             material.setTransparency( this._config.materialTransparency5 );
-            material.setShininess( Math.exp( this._config.materialShininess5*15.0 -4.0 ) );
+            material.setShininess( Math.exp( this._config.materialShininess5 * 15.0 - 4.0 ) );
 
             var idx, texture;
             if ( !this._textures )
@@ -443,7 +489,7 @@
             osg.Matrix.makeTranslate( 90, 0, 0, model4.getMatrix() );
             this.updateMaterial4();
 
-            var model5 = this.createModelInstance();
+            var model5 = this.createSphereInstance();
             this._stateSet5 = model5.getOrCreateStateSet();
             osg.Matrix.makeTranslate( 120, 0, 0, model5.getMatrix() );
             this.updateMaterial5();
