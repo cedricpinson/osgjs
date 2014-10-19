@@ -25,8 +25,10 @@
         }
     });
 
-    var Example = function () {
 
+
+
+    var Example = function () {
 
         this._textureNames = [
             'seamless/fabric1.jpg',
@@ -112,6 +114,7 @@
 
             var controller;
 
+            // ui material 1
             var material1 = gui.addFolder( 'material1' );
             controller = material1.addColor( this._config, 'materialEmission1' );
             controller.onChange( this.updateMaterial1.bind( this ) );
@@ -130,6 +133,7 @@
 
 
 
+            // ui material 2
             var material2 = gui.addFolder( 'material2' );
             controller = material2.addColor( this._config, 'materialEmission2' );
             controller.onChange( this.updateMaterial2.bind( this ) );
@@ -147,6 +151,7 @@
             controller.onChange( this.updateMaterial2.bind( this ) );
 
 
+            // ui material 3
             var material3 = gui.addFolder( 'material3' );
             controller = material3.addColor( this._config, 'materialEmission3' );
             controller.onChange( this.updateMaterial3.bind( this ) );
@@ -164,6 +169,7 @@
             controller.onChange( this.updateMaterial3.bind( this ) );
 
 
+            // ui material 4
             var material4 = gui.addFolder( 'material4' );
             controller = material4.addColor( this._config, 'materialEmission4' );
             controller.onChange( this.updateMaterial4.bind( this ) );
@@ -184,6 +190,7 @@
             controller.onChange( this.updateMaterial4.bind( this ) );
 
 
+            // ui material 5
             var material5 = gui.addFolder( 'material5' );
             controller = material5.addColor( this._config, 'materialEmission5' );
             controller.onChange( this.updateMaterial5.bind( this ) );
@@ -204,6 +211,7 @@
             controller.onChange( this.updateMaterial5.bind( this ) );
 
 
+            // wait for all images
             Q.all( images ).then( function ( args ) {
 
                 this._textures = args.map( function ( image ) {
@@ -249,6 +257,8 @@
 
         },
 
+
+        // init a model
         createModelInstance: function () {
 
             if ( !this._model ) {
@@ -257,6 +267,7 @@
                 osg.Matrix.makeRotate( Math.PI, 0, 0, 1, this._model.getMatrix() );
                 var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
 
+                // copy tex coord 0 to tex coord1 for multi texture
                 request.then( function ( model ) {
                     var copyTexCoord = new VisitorCopyTexCoord();
                     model.accept( copyTexCoord );
@@ -271,6 +282,7 @@
             return node;
         },
 
+        // init a sphere model
         createSphereInstance: function () {
 
             if ( !this._sphere ) {
@@ -280,6 +292,7 @@
 
                 var sphere = osg.createTexturedSphere( 10, 30, 30 );
 
+                // copy tex coord 0 to tex coord1 for multi texture
                 var copyTexCoord = new VisitorCopyTexCoord();
                 sphere.accept( copyTexCoord );
 
