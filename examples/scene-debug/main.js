@@ -25,6 +25,17 @@ var main = function () {
     } catch ( er ) {
         osg.log( 'exception in osgViewer ' + er );
     }
+
+    $( '.button' ).click( function () {
+        if ( $( 'svg' ).css( 'zIndex' ) === '-1' ) {
+            $( '.button' ).text( 'Access to the scene' );
+            $( 'svg' ).css( 'zIndex', '1' );
+        } else {
+            $( '.button' ).text( 'Access to the graph' );
+            $( 'svg' ).css( 'zIndex', '-1' );
+        }
+    } );
+
 };
 
 function createGraph() {
@@ -83,7 +94,7 @@ function createGraph() {
 
         // Set the title on each of the nodes and use tipsy to display the tooltip on hover
         svgNodes.attr( 'title', function ( d ) {
-            return styleTooltip( d, g.node( d ).description )
+            return styleTooltip( d, g.node( d ).description );
         } )
             .each( function ( d ) {
                 $( this ).tipsy( {
@@ -102,149 +113,72 @@ function createGraph() {
     $( '.node' ).click( function () {
         var identifier = $( this ).attr( 'original-title' ).split( '<' )[ 1 ].split( '>' )[ 1 ];
         if ( identifier.search( 'StateSet' ) === -1 ) {
+            window.activeNode = fullNodeList[ identifier ];
+            console.log( 'window.activeNode is set.' );
             console.log( fullNodeList[ identifier ] );
         } else {
-            console.log( fullNodeList[ identifier.split( ' ' )[ 2 ] ].stateset );
+            var stateset = fullNodeList[ identifier.split( ' ' )[ 2 ] ].stateset;
+            window.activeStateset = stateset;
+            console.log( 'window.activeStateset is set.' );
+            console.log( stateset );
+
         }
 
     } );
 
 }
 
-var createTexturedBox = function ( centerx, centery, centerz,
-    sizex, sizey, sizez,
-    l, r, b, t ) {
-    var model = osg.createTexturedBoxGeometry( centerx,
-        centery,
-        centerz,
-        sizex,
-        sizey,
-        sizez );
-
-    var uvs = model.getAttributes().TexCoord0;
-    var array = uvs.getElements();
-
-    array[ 0 ] = l;
-    array[ 1 ] = t;
-    array[ 2 ] = l;
-    array[ 3 ] = b;
-    array[ 4 ] = r;
-    array[ 5 ] = b;
-    array[ 6 ] = r;
-    array[ 7 ] = t;
-
-    array[ 8 ] = l;
-    array[ 9 ] = t;
-    array[ 10 ] = l;
-    array[ 11 ] = b;
-    array[ 12 ] = r;
-    array[ 13 ] = b;
-    array[ 14 ] = r;
-    array[ 15 ] = t;
-
-
-    array[ 16 ] = 0;
-    array[ 17 ] = 0;
-    array[ 18 ] = 0;
-    array[ 19 ] = 0;
-    array[ 20 ] = 0;
-    array[ 21 ] = 0;
-    array[ 22 ] = 0;
-    array[ 23 ] = 0;
-
-    array[ 24 ] = 0;
-    array[ 25 ] = 0;
-    array[ 26 ] = 0;
-    array[ 27 ] = 0;
-    array[ 28 ] = 0;
-    array[ 29 ] = 0;
-    array[ 30 ] = 0;
-    array[ 31 ] = 0;
-
-
-    array[ 32 ] = 0;
-    array[ 33 ] = 0;
-    array[ 34 ] = 0;
-    array[ 35 ] = 0;
-    array[ 36 ] = 0;
-    array[ 37 ] = 0;
-    array[ 38 ] = 0;
-    array[ 39 ] = 0;
-
-    array[ 40 ] = 0;
-    array[ 41 ] = 0;
-    array[ 42 ] = 0;
-    array[ 43 ] = 0;
-    array[ 44 ] = 0;
-    array[ 45 ] = 0;
-    array[ 46 ] = 0;
-    array[ 47 ] = 0;
-
-    return model;
-};
-
-var createEffect = function ( texture, target, center ) {
-
-    var totalSizeX = 20;
-    var maxx = 20;
-
-    var sizex = totalSizeX / maxx;
-    var maxy = maxx / 4;
-
-    var size = [ sizex, sizex, sizex ];
-
-    var group = new osg.MatrixTransform();
-
-    for ( var y = 0; y < maxy; y++ ) {
-        for ( var x = 0; x < maxx; x++ ) {
-            var mtr = new osg.MatrixTransform();
-            var rx = x * size[ 0 ] - maxx * size[ 0 ] * 0.5 + center[ 0 ];
-            var ry = 0 + center[ 1 ];
-            var rz = y * size[ 2 ] - maxy * size[ 2 ] * 0.5 + center[ 2 ];
-            mtr.setMatrix( osg.Matrix.makeTranslate( rx, ry, rz, [] ) );
-
-            var model = createTexturedBox( 0, 0, 0,
-                size[ 0 ], size[ 1 ], size[ 2 ],
-                x / ( maxx + 1 ), ( x + 1 ) / ( maxx + 1 ),
-                y / ( maxy + 1 ), ( y + 1 ) / ( maxy + 1 ) );
-            model.getOrCreateStateSet().setTextureAttributeAndMode( 0, texture );
-
-            mtr.addChild( model );
-            group.addChild( mtr );
-            var t = ( x * maxy + y ) * 0.1;
-            mtr._lastUpdate = t;
-            mtr._start = t;
-            mtr._axis = [ Math.random(), Math.random(), Math.random() ];
-            osg.Vec3.normalize( mtr._axis, mtr._axis );
-        }
-    }
-    return group;
-};
-
 function createScene() {
 
     var root = new osg.Node();
 
-    var texture = osg.Texture.createFromURL( 'image.png' );
-    var target = new osg.MatrixTransform();
-    var targetModel = osg.createTexturedBoxGeometry( 0,
-        0,
-        0,
-        2,
-        2,
-        2 );
-    target.addChild( targetModel );
-    var material = new osg.Material();
-    material.setDiffuse( [ 1, 0, 0, 1 ] );
-    target.getOrCreateStateSet().setAttributeAndMode( material );
+    var group1 = new osg.MatrixTransform();
+    var group21 = new osg.MatrixTransform();
+    var group22 = new osg.MatrixTransform();
+    var group3 = new osg.MatrixTransform();
+    var group31 = new osg.MatrixTransform();
+    var group32 = new osg.MatrixTransform();
+    var group4 = new osg.MatrixTransform();
 
-    var targetPos = [ 0, 0, 0 ];
-    var centerPos = [ 20, 8, 30 ];
+    group1.setMatrix( osg.Matrix.makeTranslate( +5, 10, -5 ) );
+    group21.setMatrix( osg.Matrix.makeTranslate( 0, 10, 0 ) );
+    group22.setMatrix( osg.Matrix.makeTranslate( 10, 0, 0 ) );
+    group3.setMatrix( osg.Matrix.makeTranslate( 0, 0, -5 ) );
+    group31.setMatrix( osg.Matrix.makeTranslate( 0, -5, 0 ) );
+    group32.setMatrix( osg.Matrix.makeTranslate( -5, 0, 0 ) );
 
-    var group = createEffect( texture, targetPos, centerPos );
+    var ground1 = osg.createTexturedBox( 0, 0, 0, 6, 5, 4 );
+    var ground2 = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
+    var ground3 = osg.createTexturedBox( 0, 0, 0, 1, 1, 1 );
+    var ground31 = osg.createTexturedBox( 0, 0, 0, 1, 1, 1 );
+    var ground32 = osg.createTexturedBox( 0, 0, 0, 1, 1, 1 );
+    var ground4 = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
 
-    root.addChild( group );
-    root.addChild( target );
+    var material2 = new osg.Material();
+    var material3 = new osg.Material();
+    var material4 = new osg.Material();
+    material2.setDiffuse( [ 0, 0, 1, 1 ] );
+    material3.setDiffuse( [ 0, 1, 0, 1 ] );
+    material4.setDiffuse( [ 1, 0, 0, 1 ] );
+    ground2.getOrCreateStateSet().setAttributeAndMode( material2 );
+    group3.getOrCreateStateSet().setAttributeAndMode( material3 );
+    group4.getOrCreateStateSet().setAttributeAndMode( material4 );
+
+    group1.addChild( ground1 );
+    group21.addChild( ground2 );
+    group22.addChild( ground2 );
+    group3.addChild( ground3 );
+    group3.addChild( group31 );
+    group3.addChild( group32 );
+    group31.addChild( ground31 );
+    group32.addChild( ground32 );
+    group4.addChild( ground4 );
+
+    root.addChild( group1 );
+    root.addChild( group21 );
+    root.addChild( group22 );
+    root.addChild( group3 );
+    root.addChild( group4 );
 
     var visitor = new DebugVisitor;
     root.accept( visitor );

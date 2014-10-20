@@ -4,71 +4,28 @@
     <meta charset="utf-8">
     <title>Scene debug</title>
     <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
-    <link rel="stylesheet" href="tipsy.css">
+    <link rel="stylesheet" href="graph.css">
 
     <!-- Javascript -->
     <script type="text/javascript" src="../vendors/dat.gui.js"></script>
     <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
     <script type="text/javascript" src="../vendors/Hammer-1.0.5.js"></script>
     <script type="text/javascript" src="../vendors/Leap.js"></script>
+    <script type="text/javascript" src="../vendors/jquery-2.1.1.js"></script>
+    <script type="text/javascript" src="../vendors/tipsy.js"></script>
+
+    <script type="text/javascript" src="../vendors/d3.v3.min.js"></script>
+    <script type="text/javascript" src="../vendors/dagre-d3.js"></script>
     <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
-    <script src="jquery.js"></script>
+
     <script type="text/javascript" src="debugVisitor.js"></script>
     <script type="text/javascript" src="main.js"></script>
-    <script src="tipsy.js"></script>
-
-    <script src="d3.v3.min.js" charset="utf-8"></script>
-    <script src="dagre-d3.js"></script>
-
-    <style id="css">
-        text {
-          text-align: center;
-
-          font-weight: 300;
-          font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
-          font-size: 14px;
-        }
-
-        .node {
-          text-align: center;;
-          
-          cursor: pointer;
-        }
-
-        .node rect {
-          stroke: #FFF;
-        }
-
-        .edgePath path {
-          stroke: #FFF;
-          fill: none;
-        }
-
-        .node text {
-          pointer-events: none;
-        }
-
-        /* This styles the title of the tooltip */
-        .tipsy .name {
-          font-size: 1.7em;
-          font-weight: bold;
-          color: #60b1fc;
-          margin: 0;
-        }
-
-        /* This styles the body of the tooltip */
-        .tipsy .description {
-          font-size: 1.5em;
-        }
-    </style>
 
 </head>
 
 
 
 <body class="osgjs-theme-dark">
-
-  <svg width=100% height=500></svg>
 
   <div id="ViewContainer" class="osgjs-fullpage">
     <!-- very important change the size of the parent element instead-->
@@ -87,6 +44,10 @@
     </div>
 
   </div>
+
+  <svg width=100% height=100%></svg>
+
+  <button class="button">Access to the scene</button>
 
 </body>
 

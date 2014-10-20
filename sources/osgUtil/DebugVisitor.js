@@ -1,8 +1,8 @@
 define( [
-	'vendors/JQuery',
-	'vendors/D3',
-	'vendors/Dagre',
-	'vendors/Tipsy',
+    'vendors/JQuery',
+    'vendors/D3',
+    'vendors/Dagre',
+    'vendors/Tipsy',
 
     'osg/Utils',
     'osg/NodeVisitor'
@@ -158,18 +158,23 @@ define( [
             } );
 
             // Run the renderer. This is what draws the final graph.
-            var layout = renderer.run( g, svgGroup );
+            renderer.run( g, svgGroup );
 
             $( '.node' ).click( function () {
                 var identifier = $( this ).attr( 'original-title' ).split( '<' )[ 1 ].split( '>' )[ 1 ];
                 if ( identifier.search( 'StateSet' ) === -1 ) {
+                    window.activeNode = this.fullNodeList[ identifier ];
+                    console.log( 'window.activeNode is set.' );
                     console.log( this.fullNodeList[ identifier ] );
                 } else {
-                    console.log( this.fullNodeList[ identifier.split( ' ' )[ 2 ] ].stateset );
+                    var stateset = this.fullNodeList[ identifier.split( ' ' )[ 2 ] ].stateset;
+                    window.activeStateset = stateset;
+                    console.log( 'window.activeStateset is set.' );
+                    console.log( stateset );
+
                 }
 
             } );
-
         }
 
     } );
