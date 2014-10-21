@@ -52,7 +52,7 @@ define( [
     };
     DisplayNormalVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
         apply: function ( node ) {
-            if ( node instanceof Geometry && node.isDebugDisplay !== true ) {
+            if ( node instanceof Geometry && !node._isVisitedNormalDebugDisplay ) {
                 var dispVec = this.displayTangent ? node.getAttributes().Tangent : node.getAttributes().Normal;
                 var vertices = node.getAttributes().Vertex;
 
@@ -93,7 +93,7 @@ define( [
                     g.getPrimitives().push( primitive );
                     g.getOrCreateStateSet().setAttributeAndMode( getShader() );
                     node.addChild( g );
-                    g.isDebugDisplay = true;
+                    g._isVisitedNormalDebugDisplay = true;
                 }
             }
             this.traverse( node );
