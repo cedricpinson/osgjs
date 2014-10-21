@@ -21,14 +21,14 @@ define( [
                 bb.expandByVec3( bb2 );
                 bb.expandByVec3( bb3 );
 
-                var bb_test_ok = ( bb._max[ 0 ] === 1 && bb._max[ 1 ] === 2 && bb._max[ 2 ] === -0.5 && bb._min[ 0 ] === -0.5 && bb._min[ 1 ] === 0 && bb._min[ 2 ] === -2 );
-                ok( bb_test_ok, 'Expanding by BoundingBox ->  bounding box test' );
+                var bbTestOk = ( bb._max[ 0 ] === 1 && bb._max[ 1 ] === 2 && bb._max[ 2 ] === -0.5 && bb._min[ 0 ] === -0.5 && bb._min[ 1 ] === 0 && bb._min[ 2 ] === -2 );
+                ok( bbTestOk, 'Expanding by BoundingBox ->  bounding box test' );
 
 
                 var o = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
                 o.getBound();
-                var bb_test_scene_graph_test = ( mockup.check_near( o.boundingSphere.radius(), 2.41421, 0.00001 ) );
-                ok( bb_test_scene_graph_test, 'Box.js tested  ->  bounding sphere scene graph test' );
+                var bbTestSceneGraphTest = ( mockup.check_near( o.boundingSphere.radius(), 2.41421, 0.00001 ) );
+                ok( bbTestSceneGraphTest, 'Box.js tested  ->  bounding sphere scene graph test' );
             } )();
 
             ( function () {
