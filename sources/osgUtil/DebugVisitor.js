@@ -28,6 +28,8 @@ define( [
             if ( node.matrix ) {
                 var maxSize = 0;
                 var firstRowMaxSize = 0;
+                var i;
+                var j;
                 for ( i = 0; i < 16; i++ ) {
                     if ( ( node.matrix[ i ] + '' ).length > maxSize ) {
                         maxSize = ( node.matrix[ i ] + '' ).length;
@@ -91,6 +93,7 @@ define( [
         createGraph: function () {
 
             var g = new Dagre.Digraph();
+            var i;
 
             for ( i = 0; i < this.nodeListSize; i++ ) {
                 g.addNode( this.nodeList[ i ].instanceID, {
@@ -146,7 +149,7 @@ define( [
                 svgNodes.attr( 'title', function ( d ) {
                     return styleTooltip( d, g.node( d ).description );
                 } )
-                    .each( function ( d ) {
+                    .each( function () {
                         $( this ).tipsy( {
                             gravity: 'w',
                             opacity: 1,

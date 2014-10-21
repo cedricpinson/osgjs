@@ -18,6 +18,7 @@ DebugVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
             if ( node.matrix ) {
                 var maxSize = 0;
                 var firstRowMaxSize = 0;
+                var i;
                 for ( i = 0; i < 16; i++ ) {
                     if ( ( node.matrix[ i ] + '' ).length > maxSize ) {
                         maxSize = ( node.matrix[ i ] + '' ).length;

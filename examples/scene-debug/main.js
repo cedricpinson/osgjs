@@ -3,6 +3,58 @@ OSG.globalify();
 var osg = window.osg;
 var osgViewer = window.osgViewer;
 
+// Simple tooltips
+function SimpleTooltips( options ) {
+
+    this.options = options;
+
+    var css = document.createElement("style");
+    css.type = "text/css";
+    css.innerHTML = [
+        ".simple-tooltip {",
+            "display: none;",
+            "position: absolute;",
+            "margin-left: 10px;",
+            "border-radius: 4px;",
+            "padding: 10px;",
+            "background: rgba(0,0,0,.9);",
+            "color: #ffffff;",
+        "}",
+        ".simple-tooltip:before {",
+            "content: ' ';",
+            "position: absolute;",
+            "left: -10px;",
+            "top: 8px;",
+            "border: 10px solid transparent;",
+            "border-width: 10px 10px 10px 0;",
+            "border-right-color: rgba(0,0,0,.9);",
+        "}"
+    ].join('\n');
+    document.getElementsByTagName("head")[0].appendChild(css);
+
+    this.el = document.createElement('div');
+    this.el.className = 'simple-tooltip';
+    document.body.appendChild(this.el);
+
+    function showTooltip(e) {
+        var target = e.currentTarget;
+        this.el.innerHTML = target.getAttribute('title');
+        this.el.style.display = 'block';
+        this.el.style.left = ($(target).position().left + $(target).get(0).getBoundingClientRect().width) + 'px';
+        this.el.style.top = $(target).position().top + 'px';
+    }
+
+    function hideTooltip(e) {
+        this.el.style.display = 'none';
+    }
+
+    var nodes = document.querySelectorAll( this.options.selector );
+    for (var i=0; i<nodes.length; i++) {
+        nodes[i].addEventListener('mouseover', showTooltip.bind(this), false);
+        nodes[i].addEventListener('mouseout', hideTooltip.bind(this), false);
+    }
+}
+
 var main = function () {
     var canvas = document.getElementById( 'View' );
 
@@ -95,14 +147,7 @@ function createGraph() {
         // Set the title on each of the nodes and use tipsy to display the tooltip on hover
         svgNodes.attr( 'title', function ( d ) {
             return styleTooltip( d, g.node( d ).description );
-        } )
-            .each( function ( d ) {
-                $( this ).tipsy( {
-                    gravity: 'w',
-                    opacity: 1,
-                    html: true
-                } );
-            } );
+        } );
 
         return svgNodes;
     } );
@@ -110,8 +155,12 @@ function createGraph() {
     // Run the renderer. This is what draws the final graph.
     var layout = renderer.run( g, svgGroup );
 
+    new SimpleTooltips({
+        selector: '.node'
+    });
+
     $( '.node' ).click( function () {
-        var identifier = $( this ).attr( 'original-title' ).split( '<' )[ 1 ].split( '>' )[ 1 ];
+        var identifier = $( this ).attr( 'title' ).split( '<' )[ 1 ].split( '>' )[ 1 ];
         if ( identifier.search( 'StateSet' ) === -1 ) {
             window.activeNode = fullNodeList[ identifier ];
             console.log( 'window.activeNode is set.' );
