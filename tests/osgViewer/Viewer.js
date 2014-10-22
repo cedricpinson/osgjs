@@ -39,9 +39,8 @@ define( [
                 viewer.frame();
 
                 // with auto compute near far
-                var projection = viewer.getCamera().getProjectionMatrix();
-                equal( projection[14] , -86.03523882425281, 'check far');
-                equal( projection[10] , -3.6948013697711914, 'check near');
+                equal( viewer._cullVisitor._computedFar , 31.30036755335051, 'check far');
+                equal( viewer._cullVisitor._computedNear , 18.699632446649503, 'check near');
 
                 viewer._cullVisitor.reset();
                 equal( viewer._cullVisitor._computedNear, Number.POSITIVE_INFINITY, 'Check near after reset' );

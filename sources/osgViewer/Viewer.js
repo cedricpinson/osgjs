@@ -386,7 +386,7 @@ define( [
             this._cullVisitor.setRenderStage( this._renderStage );
             var camera = this.getCamera();
             this._cullVisitor.pushStateSet( camera.getStateSet() );
-            this._cullVisitor.pushProjectionMatrix( camera.getProjectionMatrix() );
+            this._cullVisitor.pushProjectionMatrix( Matrix.copy( camera.getProjectionMatrix(), Matrix.create() ) );
 
             // update bound
             camera.getBound();
