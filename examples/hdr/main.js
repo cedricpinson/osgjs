@@ -50,7 +50,7 @@ function decodeHDRHeader(buf) {
     if (lines[0] !== '#?RADIANCE') {
         console.error('Invalid HDR image.');
         return false;
-    }  
+    }
 
     var line;
     var matches;
@@ -213,8 +213,8 @@ function getEnvSphere(size, scene)
     var CullCallback = function() {
         this.cull = function(node, nv) {
             // overwrite matrix, remove translate so environment is always at camera origin
-            osg.Matrix.setTrans(nv.getCurrentModelviewMatrix(), 0,0,0);
-            var m = nv.getCurrentModelviewMatrix();
+            osg.Matrix.setTrans(nv.getCurrentModelViewMatrix(), 0,0,0);
+            var m = nv.getCurrentModelViewMatrix();
             osg.Matrix.copy(m, cubemapTransform.get());
             cubemapTransform.dirty();
             return true;
