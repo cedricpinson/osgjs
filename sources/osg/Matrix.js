@@ -1139,6 +1139,7 @@ define( [
                 return result;
             };
         } )(),
+
         getScale2: ( function () {
             var sx = Vec3.create();
             var sy = Vec3.create();
