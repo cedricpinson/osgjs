@@ -392,7 +392,7 @@ define( [
             camera.getBound();
 
             var identity = Matrix.create();
-            this._cullVisitor.pushModelviewMatrix( identity );
+            this._cullVisitor.pushModelViewMatrix( identity );
             switch ( this.getLightingMode() ) {
             case View.LightingMode.HEADLIGHT:
                 if ( this._light ) {
@@ -407,7 +407,7 @@ define( [
             default:
                 break;
             }
-            this._cullVisitor.pushModelviewMatrix( camera.getViewMatrix() );
+            this._cullVisitor.pushModelViewMatrix( camera.getViewMatrix() );
             this._cullVisitor.pushViewport( camera.getViewport() );
             this._cullVisitor.setCullSettings( camera );
 
@@ -427,7 +427,7 @@ define( [
             this.getScene().accept( this._cullVisitor );
 
             // fix projection matrix if camera has near/far auto compute
-            this._cullVisitor.popModelviewMatrix();
+            this._cullVisitor.popModelViewMatrix();
             this._cullVisitor.popProjectionMatrix();
             this._cullVisitor.popViewport();
             this._cullVisitor.popStateSet();

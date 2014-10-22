@@ -28,7 +28,7 @@ define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
     NodeVisitor.UPDATE_VISITOR = 1;
     NodeVisitor.CULL_VISITOR = 2;
 
-    
+
     NodeVisitor._traversalFunctions = {};
     NodeVisitor._traversalFunctions[ NodeVisitor.TRAVERSE_PARENTS ] = function ( node ) {
         node.ascend( this );
@@ -75,6 +75,10 @@ define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
         },
         getTraversalMask: function () {
             return this.traversalMask;
+        },
+
+        getNodePath: function() {
+            return this.nodePath;
         },
 
         pushOntoNodePath: function ( node ) {

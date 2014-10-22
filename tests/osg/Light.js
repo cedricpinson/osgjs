@@ -125,7 +125,7 @@ define( [
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
-                cull.pushModelviewMatrix( Matrix.create() );
+                cull.pushModelViewMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
 

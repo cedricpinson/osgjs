@@ -26,7 +26,7 @@ define( [
      * @class CullVisitor
      */
     var CullVisitor = function () {
-        NodeVisitor.call( this, NodeVisitor.TRAVERSE_ACTIVE_CHILDREN);
+        NodeVisitor.call( this, NodeVisitor.TRAVERSE_ACTIVE_CHILDREN );
         CullSettings.call( this );
         CullStack.call( this );
 
@@ -45,13 +45,6 @@ define( [
         this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
         this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
         /*jshint bitwise: true */
-
-
-        // keep a matrix in memory to avoid to create matrix
-        this._reserveMatrixStack = [
-            []
-        ];
-        this._reserveMatrixStack.current = 0;
 
         this._reserveLeafStack = [ {} ];
         this._reserveLeafStack.current = 0;
@@ -75,10 +68,10 @@ define( [
             }
             this.traverse( node );
         },
-        setCamera: function(camera){
+        setCamera: function ( camera ) {
             this._camera = camera;
         },
-        getCurrentCamera: function (){
+        getCurrentCamera: function () {
             return this._camera;
         },
         updateCalculatedNearFar: function ( matrix, drawable ) {
@@ -208,11 +201,7 @@ define( [
             this._currentRenderBin = rg;
         },
         reset: function () {
-            //this._modelviewMatrixStack.length = 0;
-            this._modelviewMatrixStack.splice( 0, this._modelviewMatrixStack.length );
-            //this._projectionMatrixStack.length = 0;
-            this._projectionMatrixStack.splice( 0, this._projectionMatrixStack.length );
-            this._reserveMatrixStack.current = 0;
+            CullStack.prototype.reset.call( this );
             // Reset the stack before reseting the current leaf index.
             // Reseting elements and refilling them later is faster than create new elements
             // That's the reason to have a leafStack, see http://jsperf.com/refill/2
@@ -229,8 +218,9 @@ define( [
             this._currentRenderBin = rb;
         },
         addPositionedAttribute: function ( attribute, matrix ) {
-            if ( matrix === undefined )
-                matrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+            if ( matrix === undefined ) {
+                matrix = this.getCurrentModelViewMatrix();
+            }
             this._currentRenderBin.getStage().positionedAttribute.push( [ matrix, attribute ] );
         },
 
@@ -264,7 +254,7 @@ define( [
 
         popProjectionMatrix: function () {
             if ( this._computeNearFar === true && this._computedFar >= this._computedNear ) {
-                var m = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
+                var m = this.getCurrentProjectionMatrix();
                 this.clampProjectionMatrix( m, this._computedNear, this._computedFar, this._nearFarRatio );
             }
             CullStack.prototype.popProjectionMatrix.call( this );
@@ -274,13 +264,6 @@ define( [
             this[ node.typeID ].call( this, node );
         },
 
-        _getReservedMatrix: function () {
-            var m = this._reserveMatrixStack[ this._reserveMatrixStack.current++ ];
-            if ( this._reserveMatrixStack.current === this._reserveMatrixStack.length ) {
-                this._reserveMatrixStack.push( Matrix.create() );
-            }
-            return m;
-        },
         _getReservedLeaf: function () {
             var l = this._reserveLeafStack[ this._reserveLeafStack.current++ ];
             if ( this._reserveLeafStack.current === this._reserveLeafStack.length ) {
@@ -289,9 +272,8 @@ define( [
             return l;
         },
         _resetRenderLeafStack: function () {
-            for ( var i = 0, j = this._reserveLeafStack.current; i <= j; i++ )
-            {
-                this._reserveLeafStack[ i ].parent = undefined ;
+            for ( var i = 0, j = this._reserveLeafStack.current; i <= j; i++ ) {
+                this._reserveLeafStack[ i ].parent = undefined;
                 this._reserveLeafStack[ i ].projection = undefined;
                 this._reserveLeafStack[ i ].geometry = undefined;
                 this._reserveLeafStack[ i ].modelview = undefined;
@@ -340,7 +322,7 @@ define( [
                 top[ 3 ] = matrix[ 15 ] - matrix[ 13 ];
                 result[ 3 ] = top;
 
-                if( withNearFar ) {
+                if ( withNearFar ) {
                     // Far clipping plane.
                     far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
                     far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
@@ -372,21 +354,20 @@ define( [
             return function ( node ) {
                 var pos = node.getBound().center();
                 Vec3.copy( pos, position );
-                var radius = - node.getBound().radius();
+                var radius = -node.getBound().radius();
                 var d;
                 var m = ComputeMatrixFromNodePath.computeLocalToWorld( this.nodePath );
-                Matrix.transformVec3( m, position, position);
+                Matrix.transformVec3( m, position, position );
 
                 for ( var i = 0, j = this._frustum.length; i < j; i++ ) {
                     d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
-                    if ( d <= radius )
-                    {
+                    if ( d <= radius ) {
                         return true;
                     }
                 }
                 return false;
-        };
-    } )()
+            };
+        } )()
     } ) ) );
 
     CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
@@ -400,24 +381,28 @@ define( [
             this.addPositionedAttribute( camera.light );
         }
 
-        // never used
-        //var originalModelView = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
-
         var modelview = this._getReservedMatrix();
         var projection = this._getReservedMatrix();
 
         if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
-            var lastProjectionMatrix = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
+
+            var lastProjectionMatrix = this.getCurrentProjectionMatrix();
             Matrix.mult( lastProjectionMatrix, camera.getProjectionMatrix(), projection );
-            var lastViewMatrix = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+
+            var lastViewMatrix = this.getCurrentViewMatrix();
             Matrix.mult( lastViewMatrix, camera.getViewMatrix(), modelview );
+
         } else {
+
             // absolute
             Matrix.copy( camera.getViewMatrix(), modelview );
             Matrix.copy( camera.getProjectionMatrix(), projection );
+
         }
+
         this.pushProjectionMatrix( projection );
-        this.pushModelviewMatrix( modelview );
+        this.pushModelViewMatrix( modelview );
+
 
         if ( camera.getViewport() ) {
             this.pushViewport( camera.getViewport() );
@@ -477,7 +462,7 @@ define( [
             }
         }
 
-        this.popModelviewMatrix();
+        this.popModelViewMatrix();
         this.popProjectionMatrix();
 
         if ( camera.getViewport() ) {
@@ -497,17 +482,19 @@ define( [
 
 
     CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
+
         var matrix = this._getReservedMatrix();
 
         if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
-            var lastMatrixStack = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+
+            var lastMatrixStack = this.getCurrentModelViewMatrix();
             Matrix.mult( lastMatrixStack, node.getMatrix(), matrix );
+
         } else {
             // absolute
             Matrix.copy( node.getMatrix(), matrix );
         }
-        this.pushModelviewMatrix( matrix );
-
+        this.pushModelViewMatrix( matrix );
 
         var stateset = node.getStateSet();
         if ( stateset ) {
@@ -524,12 +511,12 @@ define( [
             this.popStateSet();
         }
 
-        this.popModelviewMatrix();
+        this.popModelViewMatrix();
 
     };
 
     CullVisitor.prototype[ Projection.typeID ] = function ( node ) {
-        var lastMatrixStack = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
+        var lastMatrixStack = this.getCurrentProjectionMatrix();
         var matrix = this._getReservedMatrix();
         Matrix.mult( lastMatrixStack, node.getProjectionMatrix(), matrix );
         this.pushProjectionMatrix( matrix );
@@ -552,7 +539,9 @@ define( [
     CullVisitor.prototype[ Node.typeID ] = function ( node ) {
 
         // We need the frame stamp > 0 to do the frustum culling, otherwise the projection matrix is not correct
-        if ( this._enableFrustumCulling === true && node.isCullingActive() && this.getFrameStamp().getFrameNumber() !== 0 && this.isCulled ( node ) ) return;
+        // Camera and lights must enlarge node parent bounding boxes for this not to cull
+        // camera/lights/shadows
+        if ( this._enableFrustumCulling === true && node.isCullingActive() && this.getFrameStamp().getFrameNumber() !== 0 && this.isCulled( node ) ) return;
 
         var stateset = node.getStateSet();
         if ( stateset ) {
@@ -595,7 +584,8 @@ define( [
     };
 
     CullVisitor.prototype[ Geometry.typeID ] = function ( node ) {
-        var modelview = this._modelviewMatrixStack[ this._modelviewMatrixStack.length - 1 ];
+
+        var modelview = this.getCurrentModelViewMatrix();
         var bb = node.getBoundingBox();
         if ( this._computeNearFar && bb.valid() ) {
             if ( !this.updateCalculatedNearFar( modelview, node ) ) {
@@ -608,6 +598,9 @@ define( [
             this.pushStateSet( stateset );
         }
 
+        // using modelview is not a pb because geometry
+        // is a leaf node, else traversing the graph would be an
+        // issue because we use modelview after
         this.handleCullCallbacksAndTraverse( node );
 
         var leafs = this._currentStateGraph.leafs;
@@ -625,9 +618,11 @@ define( [
         } else {
             //leaf.id = this._reserveLeafStack.current;
             leaf.parent = this._currentStateGraph;
-            leaf.projection = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
+            leaf.projection = this.getCurrentProjectionMatrix();
             leaf.geometry = node;
-            leaf.modelview = modelview;
+            leaf.view = this.getCurrentViewMatrix();
+            leaf.modelWorld = this.getCurrentModelWorldMatrix();
+            leaf.modelView = this.getCurrentModelViewMatrix();
             leaf.depth = depth;
             leafs.push( leaf );
         }
