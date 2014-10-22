@@ -34,7 +34,7 @@ define( [
             return m;
         },
 
-        reset: function() {
+        reset: function () {
             this._modelViewMatrixStack.length = 0;
             this._projectionMatrixStack.length = 0;
             this._reserveMatrixStack.current = 0;
@@ -52,7 +52,7 @@ define( [
         },
 
         getCurrentModelviewMatrix: function () {
-            Notify.warn('deprecated switch to getCurrentModelViewMatrix');
+            Notify.warn( 'deprecated switch to getCurrentModelViewMatrix' );
             return this.getCurrentModelViewMatrix();
         },
 

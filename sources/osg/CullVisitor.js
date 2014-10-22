@@ -68,10 +68,10 @@ define( [
             }
             this.traverse( node );
         },
-        setCamera: function(camera){
+        setCamera: function ( camera ) {
             this._camera = camera;
         },
-        getCurrentCamera: function (){
+        getCurrentCamera: function () {
             return this._camera;
         },
         updateCalculatedNearFar: function ( matrix, drawable ) {
@@ -272,9 +272,8 @@ define( [
             return l;
         },
         _resetRenderLeafStack: function () {
-            for ( var i = 0, j = this._reserveLeafStack.current; i <= j; i++ )
-            {
-                this._reserveLeafStack[ i ].parent = undefined ;
+            for ( var i = 0, j = this._reserveLeafStack.current; i <= j; i++ ) {
+                this._reserveLeafStack[ i ].parent = undefined;
                 this._reserveLeafStack[ i ].projection = undefined;
                 this._reserveLeafStack[ i ].geometry = undefined;
                 this._reserveLeafStack[ i ].modelview = undefined;
@@ -323,7 +322,7 @@ define( [
                 top[ 3 ] = matrix[ 15 ] - matrix[ 13 ];
                 result[ 3 ] = top;
 
-                if( withNearFar ) {
+                if ( withNearFar ) {
                     // Far clipping plane.
                     far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
                     far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
@@ -355,21 +354,20 @@ define( [
             return function ( node ) {
                 var pos = node.getBound().center();
                 Vec3.copy( pos, position );
-                var radius = - node.getBound().radius();
+                var radius = -node.getBound().radius();
                 var d;
                 var m = ComputeMatrixFromNodePath.computeLocalToWorld( this.nodePath );
-                Matrix.transformVec3( m, position, position);
+                Matrix.transformVec3( m, position, position );
 
                 for ( var i = 0, j = this._frustum.length; i < j; i++ ) {
                     d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
-                    if ( d <= radius )
-                    {
+                    if ( d <= radius ) {
                         return true;
                     }
                 }
                 return false;
-        };
-    } )()
+            };
+        } )()
     } ) ) );
 
     CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
@@ -487,10 +485,10 @@ define( [
 
         var matrix = this._getReservedMatrix();
 
-       if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
+        if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
 
-           var lastMatrixStack = this.getCurrentModelViewMatrix();
-           Matrix.mult( lastMatrixStack, node.getMatrix(), matrix );
+            var lastMatrixStack = this.getCurrentModelViewMatrix();
+            Matrix.mult( lastMatrixStack, node.getMatrix(), matrix );
 
         } else {
             // absolute
