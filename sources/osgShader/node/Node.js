@@ -59,18 +59,24 @@ define( [
 
                 this._inputs.push( input );
             }
+
+            return this;
         },
 
         connectOutput: function ( i ) {
             this._outputs.push( i );
             this.autoLink( i );
+
+            return this;
         },
 
         autoLink: function ( output ) {
             if ( output === undefined ) {
-                return;
+                return this;
             }
             output.connectInputs( this );
+
+            return this;
         },
 
         connectUniforms: function ( context, attribute ) {
@@ -92,6 +98,7 @@ define( [
                 // connect uniform to this node
                 this.connectInputs( uniform );
             }
+            return this;
         },
 
         computeFragment: function () {

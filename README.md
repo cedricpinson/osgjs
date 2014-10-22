@@ -1,3 +1,6 @@
+### Status
+[![Build Status](https://travis-ci.org/cedricpinson/osgjs.png)](https://travis-ci.org/cedricpinson/osgjs)
+
 OSG.JS WebGL framework
 ----------------------------
 

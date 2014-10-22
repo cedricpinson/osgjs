@@ -450,6 +450,16 @@ define( [
         },
 
 
+        // return the first texture valid in texture unit
+        getFirstValidTexture: function () {
+            var keys = Object.keys(this._texturesByName);
+            if ( !keys.length )
+                return undefined;
+
+            return this._texturesByName[ keys[0] ].variable;
+        },
+
+
         // check for all textures found in the State
         // and reference sampler associated to texture and uv channels
         //
@@ -515,28 +525,14 @@ define( [
         },
 
 
-        // texture is not used yet
         // but we could later implement srgb inside and read differents flag
         // as read only in the texture
         createTextureRGBA: function ( texture, textureSampler, texCoord ) {
 
             var texel = this.getOrCreateVariable( 'vec4' );
-            var premult = this.getOrCreateVariable( 'vec3' );
-
-            // write to texel
             new shaderNode.TextureRGBA( textureSampler, texCoord, texel );
 
-            // later we should maybe implement a srgb flag in osg.Texture
-            // if ( texture.getSRGB() ) {
-            //   srgb2linearTmp = this.Variable( 'vec4' );
-            //   node = new shaderNode.sRGB2Linear( texel, srgb2linearTmp );
-            //   node = new shaderNode.PreMultAlpha( srgb2linearTmp, premult );
-            // } else {
-            // write to premult
-            new shaderNode.PreMultAlpha( premult, texel, texel );
-            // }
-
-            return premult;
+            return texel;
         },
 
 
@@ -837,9 +833,19 @@ define( [
             // vertex color needs to be computed to diffuse
             diffuseColor = this.getVertexColor( diffuseColor );
 
-            //var alpha =  materialOpacity || new shaderNode.InlineConstant( '1.0' );
-            // TODO fix transparency
-            var alpha = new shaderNode.InlineConstant( '1.0' );
+
+            // compute alpha
+            var alpha = this.getOrCreateVariable( 'float' );
+
+            var textureTexel = this.getFirstValidTexture();
+            var operatorAlpha = new shaderNode.InlineCode( materialDiffuseColor, textureTexel );
+
+            var alphaCompute = '%s = %s.a;';
+            if ( textureTexel ) { // use alpha of the first valid texture if has texture
+                alphaCompute = '%s = %s.a * %s.a;';
+            }
+            operatorAlpha.connectOutput( alpha ).setCode( sprintf( alphaCompute, [ alpha.getVariable(), materialDiffuseColor.getVariable(), textureTexel ] ) );
+
 
             var finalColor;
 

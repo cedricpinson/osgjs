@@ -106,6 +106,16 @@ define( [
         },
 
 
+        setTransparency: function ( a ) {
+            this._diffuse[3] = 1.0-a;
+            this._dirty = true;
+        },
+
+        getTransparency: function () {
+            return this._diffuse[3];
+        },
+
+
 
         apply: function ( /*state*/) {
             var uniforms = this.getOrCreateUniforms();
