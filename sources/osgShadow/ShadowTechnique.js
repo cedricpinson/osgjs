@@ -96,10 +96,10 @@ define( [
                     if ( cullVisitor instanceof CullVisitor ) { // TODO: Have to find how to get if cull or node
                         this.cull( cullVisitor );
                     } else {
-                        this.getShadowedScene().nodeTraverse( nv );
+                        this.getShadowedScene().nodeTraverse( nodeVisitor );
                     }
                 } else {
-                    this.getShadowedScene().nodeTraverse( nv );
+                    this.getShadowedScene().nodeTraverse( nodeVisitor );
                 }
             },
 

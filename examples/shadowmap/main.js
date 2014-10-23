@@ -157,7 +157,7 @@
              'lightrotate': true,
              'frustumTest': 'free',
              'texture': true,
-             'debugRtt': false,
+             'debugRtt': true,
 
              '_spotCutoff': 25,
              '_spotBlend': 0.3,
@@ -965,10 +965,10 @@
              var cubeSubNode = new osg.MatrixTransform();
              cubeSubNode.setName( 'cubeSubNode' );
 
-             //cubeSubNode.setMatrix( osg.Matrix.makeTranslate( -dist, -dist, dist / 2, [] ) );
+             cubeSubNode.setMatrix( osg.Matrix.makeTranslate( -dist, -dist, dist / 2, [] ) );
              cubeSubNode.addChild( cube );
              cubeNode.addChild( cubeSubNode );
-             if ( 0 || window.location.href.indexOf( 'cubes' ) !== -1 ) {
+             if ( 1 || window.location.href.indexOf( 'cubes' ) !== -1 ) {
                  cubeSubNode = new osg.MatrixTransform();
                  cubeSubNode.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
                  cubeSubNode.addChild( cube );
@@ -1022,9 +1022,9 @@
                  }
              }
 
-             //ShadowScene.addChild( groundNode );
+             ShadowScene.addChild( groundNode );
              ShadowScene.addChild( cubeNode );
-             //ShadowScene.addChild( modelNode );
+             ShadowScene.addChild( modelNode );
 
              this._groundNode = groundNode;
              this._cubeNode = cubeNode;
@@ -1040,7 +1040,7 @@
 
 
              this._shadowScene = this.createSceneCasterReceiver();
-
+             /*
              var lightSource0 = new osg.LightSource();
              var lightNode0 = new osg.MatrixTransform();
              var light0 = new osg.Light( 0 );
@@ -1058,7 +1058,7 @@
 
              group.addChild( lightNode0 );
              return group;
-
+*/
 
              var shadowedScene = new osgShadow.ShadowedScene();
 

@@ -44,21 +44,21 @@ define( [
         },
         /** Clean scene graph from any shadow technique specific nodes, state and drawables.*/
         cleanSceneGraph: function() {
-            if ( this._shadowTechnique.valid() ) {
+            if ( this._shadowTechnique && this._shadowTechnique.valid() ) {
                 this._shadowTechnique.cleanSceneGraph();
             }
         },
         /** Dirty any cache data structures held in the attached ShadowTechnqiue.*/
         dirty: function() {
-            if ( this._shadowTechnique.valid() ) {
+            if ( this._shadowTechnique && this._shadowTechnique.valid() ) {
                 this._shadowTechnique.dirty();
             }
         },
-        nodeTraverse: function( nv ) {
+        nodeTraverse: function( /*nv*/) {
             Node.prototype.traverse.apply( this, arguments );
         },
         traverse: function( nv ) {
-            if ( this._shadowTechnique.valid() ) {
+            if ( this._shadowTechnique && this._shadowTechnique.valid() ) {
                 this._shadowTechnique.traverse( nv );
             } else {
                 this.nodeTraverse( nv );
