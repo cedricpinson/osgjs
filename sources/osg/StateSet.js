@@ -60,6 +60,12 @@ define( [
             this.uniforms[ name ] = this.getAttributePair( uniform, mode );
             this.uniforms.dirty();
         },
+        removeUniform: function ( uniform ) {
+            this.uniforms.remove( uniform.getName() );
+        },
+        removeUniformByName: function ( uniformName ) {
+            this.uniforms.remove( uniformName );
+        },
         getUniform: function ( uniform ) {
             var uniformMap = this.uniforms;
             if ( uniformMap[ uniform ] ) return uniformMap[ uniform ].getAttribute();
@@ -95,7 +101,7 @@ define( [
             if ( textureAttributeMap[ attributeName ] === undefined ) return;
 
 
-            delete textureAttributeMap[ attributeName ];
+            textureAttributeMap.remove( attributeName );
             this.textureAttributeMapList[ unit ].dirty();
         },
 
@@ -189,11 +195,12 @@ define( [
         getShaderGeneratorName: function () {
             return this._shaderGeneratorName;
         },
-        releaseGLObjects: function ( /*gl*/ ) {
+        releaseGLObjects: function ( /*gl*/) {
             // TODO: We should release Program/Shader attributes too
-            for ( var i = 0, j = this.textureAttributeMapList.length; i < j; i++ )
-            {
-                this.getTextureAttribute( i , 'Texture' ).releaseGLObjects();
+            for ( var i = 0, j = this.textureAttributeMapList.length; i < j; i++ ) {
+                var tu = this.getTextureAttribute( i, 'Texture' );
+                if ( !tu ) tu = this.getTextureAttribute( i, 'ShadowTexture' );
+                if ( tu ) tu.releaseGLObjects();
             }
         },
         _getUniformMap: function () {

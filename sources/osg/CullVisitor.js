@@ -13,12 +13,13 @@ define( [
     'osg/Node',
     'osg/Lod',
     'osg/PagedLOD',
+    'osgShadow/ShadowedScene',
     'osg/Camera',
     'osg/TransformEnums',
     'osg/Vec4',
     'osg/Vec3',
     'osg/ComputeMatrixFromNodePath'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath ) {
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, ShadowedScene, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath ) {
 
 
     /**
@@ -303,7 +304,7 @@ define( [
             var far = Vec4.create();
             var near = Vec4.create();
 
-            return function ( matrix, result, withNearFar ) {
+            return function ( matrix, result, withNearFar, normalize ) {
                 if ( withNearFar === undefined )
                     withNearFar = false;
                 // Right clipping plane.
@@ -345,18 +346,20 @@ define( [
                     near[ 3 ] = matrix[ 15 ] + matrix[ 14 ];
                     result[ 5 ] = near;
                 }
-                //Normalize the planes
-                for ( var i = 0, j = result.length; i < j; i++ ) {
-                    var norm = result[ i ][ 0 ] * result[ i ][ 0 ] + result[ i ][ 1 ] * result[ i ][ 1 ] + result[ i ][ 2 ] * result[ i ][ 2 ];
-                    var inv = 1.0 / Math.sqrt( norm );
-                    result[ i ][ 0 ] = result[ i ][ 0 ] * inv;
-                    result[ i ][ 1 ] = result[ i ][ 1 ] * inv;
-                    result[ i ][ 2 ] = result[ i ][ 2 ] * inv;
-                    result[ i ][ 3 ] = result[ i ][ 3 ] * inv;
+                if ( normalize === undefined || normalize ) {
+                    //Normalize the planes
+                    var j = withNearFar ? 6 : 4;
+                    for ( var i = 0; i < j; i++ ) {
+                        var norm = result[ i ][ 0 ] * result[ i ][ 0 ] + result[ i ][ 1 ] * result[ i ][ 1 ] + result[ i ][ 2 ] * result[ i ][ 2 ];
+                        var inv = 1.0 / Math.sqrt( norm );
+                        result[ i ][ 0 ] = result[ i ][ 0 ] * inv;
+                        result[ i ][ 1 ] = result[ i ][ 1 ] * inv;
+                        result[ i ][ 2 ] = result[ i ][ 2 ] * inv;
+                        result[ i ][ 3 ] = result[ i ][ 3 ] * inv;
+                    }
                 }
             };
         } )(),
-
         isCulled: ( function () {
             var position = Vec3.create();
             var scaleVec = Vec3.create();
@@ -573,6 +576,9 @@ define( [
 
     // same code like Node
     CullVisitor.prototype[ PagedLOD.typeID ] = CullVisitor.prototype[ Node.typeID ];
+
+    // same code like Node
+    CullVisitor.prototype[ ShadowedScene.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
     CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
 

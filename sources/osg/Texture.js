@@ -31,6 +31,10 @@ define( [
     /**
      * Texture encapsulate webgl texture object
      * @class Texture
+     * Not that dirty here is mainly for texture binding
+     * any dirty will cause re-bind
+     * hint: don't dirty a texture attached to a camera/framebuffer
+     * it will end blank
      * @inherits StateAttribute
      */
     var Texture = function () {
@@ -85,6 +89,10 @@ define( [
     /** @lends Texture.prototype */
     Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'Texture',
+
+        // clone a default instance
+        // of that attribute type
+        // (useful for default)
         cloneType: function () {
             var t = new Texture();
             t.defaultType = true;
@@ -462,6 +470,7 @@ define( [
         }
     } ), 'osg', 'Texture' );
 
+    MACROUTILS.setTypeID( Texture );
 
     Texture.createFromURL = function ( imageSource, format ) {
         var texture = new Texture();
