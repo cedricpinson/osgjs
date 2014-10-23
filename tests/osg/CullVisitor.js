@@ -525,6 +525,44 @@ define( [
                 mockup.removeCanvas( canvas );
 
             } )();
+
+            ( function () {
+                var canvas = mockup.createCanvas();
+                var viewer = new Viewer( canvas , { 'enableFrustumCulling': true } );
+                var scene = new Node();
+                var mat = Matrix.create();
+                var mt = new MatrixTransform();
+                var quad = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0, 1, 1 );
+                mt.setMatrix( mat );
+                mt.addChild ( quad );
+                scene.addChild( mt );
+                viewer.setSceneData( scene );
+                viewer.init();
+                viewer.update();
+                // Build the frustum planes to check against them
+                viewer.cull();
+
+                // Get the cullVisitor and push the nodepath, simulating a scene traversal.
+                var cull = viewer._cullVisitor; 
+                cull.nodePath = [];
+                cull.nodePath.push( scene );
+                cull.nodePath.push( mt );
+                var culled = cull.isCulled( quad );
+                ok( culled === false, 'scene should not be culled' );
+
+                // Translate outside of the frustum, scene should not be culled now
+                Matrix.setTrans( mat, 200, 0, 0 );
+                culled = cull.isCulled( quad );
+                ok( culled === true, 'scene should be culled' );
+
+                // Translate outside of the frustum and scale, node should not be culled now
+                Matrix.makeScale( 500, 0, 0, mat );
+                Matrix.setTrans( mat, 200, 0, 0 );
+                culled = cull.isCulled( quad );
+                ok( culled === false, 'scene should not be culled' );
+                mockup.removeCanvas( canvas );
+            } )();
+
         } );
 
 
@@ -589,6 +627,7 @@ define( [
             }
 
         });
+
 
     };
 
