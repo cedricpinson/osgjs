@@ -12,6 +12,8 @@ define( [
     // if you need to adjust for your need provide or modify this list
     // if you still need more fine tuning to the filter, override the filterAttributeTypes
     var DefaultsAcceptAttributeTypes = [
+        'ShadowAttribute',
+        'ShadowTexture',
         'Texture',
         'Light',
         'Material'
@@ -212,7 +214,7 @@ define( [
                 program.activeUniforms = this.getActiveUniforms( state, attributes, textureAttributes );
                 program.generated = true;
 
-                this._cache.set( hash, program);
+                this._cache.set( hash, program );
                 return program;
             };
         } )()
