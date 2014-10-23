@@ -148,7 +148,7 @@ define( [
 
                 case ( NodeVisitor.TRAVERSE_ACTIVE_CHILDREN ):
                     var requiredRange = 0;
-                    var matrix = visitor.getCurrentModelviewMatrix();
+                    var matrix = visitor.getCurrentModelViewMatrix();
                     Matrix.inverse( matrix, viewModel );
                     // Calculate distance from viewpoint
                     if ( this._rangeMode === Lod.DISTANCE_FROM_EYE_POINT ) {

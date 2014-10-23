@@ -181,7 +181,7 @@ define( [
                     var requiredRange = 0;
 
                     // Calculate distance from viewpoint
-                    var matrix = visitor.getCurrentModelviewMatrix();
+                    var matrix = visitor.getCurrentModelViewMatrix();
                     Matrix.inverse( matrix, viewModel );
                     if ( this._rangeMode === Lod.DISTANCE_FROM_EYE_POINT ) {
                         Matrix.transformVec3( viewModel, zeroVector, eye );
@@ -190,7 +190,7 @@ define( [
                     } else {
                         // Calculate pixels on screen
                         var projmatrix = visitor.getCurrentProjectionMatrix();
-                        // focal lenght is the value stored in projmatrix[0] 
+                        // focal lenght is the value stored in projmatrix[0]
                         requiredRange = this.projectBoundingSphere( this.getBound(), matrix, projmatrix[ 0 ] );
                         // Get the real area value
                         requiredRange = ( requiredRange * visitor.getViewport().width() * visitor.getViewport().width() ) * 0.25;
