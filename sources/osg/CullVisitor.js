@@ -283,7 +283,9 @@ define( [
                 this._reserveLeafStack[ i ].parent = undefined;
                 this._reserveLeafStack[ i ].projection = undefined;
                 this._reserveLeafStack[ i ].geometry = undefined;
-                this._reserveLeafStack[ i ].modelview = undefined;
+                this._reserveLeafStack[ i ].modelView = undefined;
+                this._reserveLeafStack[ i ].modelWorld = undefined;
+                this._reserveLeafStack[ i ].view = undefined;
                 this._reserveLeafStack[ i ].depth = undefined;
             }
         },
