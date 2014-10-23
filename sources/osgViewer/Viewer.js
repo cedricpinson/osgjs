@@ -387,27 +387,27 @@ define( [
             var camera = this.getCamera();
             this._cullVisitor.pushStateSet( camera.getStateSet() );
             this._cullVisitor.pushProjectionMatrix( Matrix.copy( camera.getProjectionMatrix(), Matrix.create() ) );
+            this._cullVisitor.pushModelViewMatrix( camera.getViewMatrix() );
+
 
             // update bound
             camera.getBound();
 
-            var identity = Matrix.create();
-            this._cullVisitor.pushModelViewMatrix( identity );
             switch ( this.getLightingMode() ) {
             case View.LightingMode.HEADLIGHT:
                 if ( this._light ) {
-                    this._cullVisitor.addPositionedAttribute( this._light );
+                    this._cullVisitor.addPositionedAttribute( null, this._light );
                 }
                 break;
             case View.LightingMode.SKY_LIGHT:
                 if ( this._light ) {
-                    this._cullVisitor.addPositionedAttribute( this._light, camera.getViewMatrix() );
+                    this._cullVisitor.addPositionedAttribute( camera.getViewMatrix(), this._light );
                 }
                 break;
             default:
                 break;
             }
-            this._cullVisitor.pushModelViewMatrix( camera.getViewMatrix() );
+
             this._cullVisitor.pushViewport( camera.getViewport() );
             this._cullVisitor.setCullSettings( camera );
 

@@ -51,6 +51,8 @@ define( [
 
         this._renderBinStack = [];
         this.visitorType = NodeVisitor.CULL_VISITOR;
+
+        this._identityMatrix = Matrix.create();
     };
 
     /** @lends CullVisitor.prototype */
@@ -211,17 +213,22 @@ define( [
             this._computedNear = Number.POSITIVE_INFINITY;
             this._computedFar = Number.NEGATIVE_INFINITY;
         },
+
         getCurrentRenderBin: function () {
             return this._currentRenderBin;
         },
+
         setCurrentRenderBin: function ( rb ) {
             this._currentRenderBin = rb;
         },
-        addPositionedAttribute: function ( attribute, matrix ) {
-            if ( matrix === undefined ) {
-                matrix = this.getCurrentModelViewMatrix();
-            }
-            this._currentRenderBin.getStage().positionedAttribute.push( [ matrix, attribute ] );
+
+        // mimic the osg implementation
+        // in osg you can push 0, in this case an identity matrix will be loaded
+        addPositionedAttribute: function ( matrix, attribute ) {
+
+            var m = matrix ? matrix : this._identityMatrix;
+            this._currentRenderBin.getStage().positionedAttribute.push( [ m, attribute ] );
+
         },
 
         pushStateSet: function ( stateset ) {
@@ -348,22 +355,21 @@ define( [
             };
         } )(),
 
-     isCulled: ( function () {
+        isCulled: ( function () {
             var position = Vec3.create();
             var scaleVec = Vec3.create();
             return function ( node ) {
                 var pos = node.getBound().center();
                 Vec3.copy( pos, position );
                 var m = ComputeMatrixFromNodePath.computeLocalToWorld( this.nodePath );
-                scaleVec = Matrix.getScale2( m , scaleVec );
+                scaleVec = Matrix.getScale2( m, scaleVec );
                 var scale = Math.sqrt( Math.max( Math.max( scaleVec[ 0 ], scaleVec[ 1 ] ), scaleVec[ 2 ] ) );
-                var radius = - node.getBound().radius() * scale;
-                Matrix.transformVec3( m, position, position);
+                var radius = -node.getBound().radius() * scale;
+                Matrix.transformVec3( m, position, position );
                 var d;
                 for ( var i = 0, j = this._frustum.length; i < j; i++ ) {
                     d = this._frustum[ i ][ 0 ] * position[ 0 ] + this._frustum[ i ][ 1 ] * position[ 1 ] + this._frustum[ i ][ 2 ] * position[ 2 ] + this._frustum[ i ][ 3 ];
-                    if ( d <= radius )
-                    {
+                    if ( d <= radius ) {
                         return true;
                     }
                 }
@@ -380,7 +386,7 @@ define( [
         }
 
         if ( camera.light ) {
-            this.addPositionedAttribute( camera.light );
+            this.addPositionedAttribute( this.getCurrentModelViewMatrix(), camera.light );
         }
 
         var modelview = this._getReservedMatrix();
@@ -504,7 +510,7 @@ define( [
         }
 
         if ( node.light ) {
-            this.addPositionedAttribute( node.light );
+            this.addPositionedAttribute( this.getCurrentModelViewMatrix(), node.light );
         }
 
         this.handleCullCallbacksAndTraverse( node );
@@ -550,7 +556,7 @@ define( [
             this.pushStateSet( stateset );
         }
         if ( node.light ) {
-            this.addPositionedAttribute( node.light );
+            this.addPositionedAttribute( this.getCurrentModelViewMatrix(), node.light );
         }
 
         this.handleCullCallbacksAndTraverse( node );
@@ -575,7 +581,7 @@ define( [
 
         var light = node.getLight();
         if ( light ) {
-            this.addPositionedAttribute( light );
+            this.addPositionedAttribute( this.getCurrentModelViewMatrix(), light );
         }
 
         this.handleCullCallbacksAndTraverse( node );
