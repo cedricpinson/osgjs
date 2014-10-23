@@ -52,11 +52,11 @@ define( [
             return this._webGLCaps;
         },
         initWebGLCaps: function ( gl ) {
-            this._webGLCaps = new WebGLCaps();
-            this._webGLCaps.init( gl );
+            this._webGLCaps = new WebGLCaps( gl );
+            this._webGLCaps.init();
         },
 
-        computeCanvasSize: ( function() {
+        computeCanvasSize: ( function () {
             var canvasWidth = 0;
             var canvasHeight = 0;
 
@@ -87,14 +87,15 @@ define( [
                     canvasHeight = heightPixel;
                 }
 
-            }; })(),
+            };
+        } )(),
 
         setUpView: function ( canvas ) {
             this.computeCanvasSize( canvas );
 
             var ratio = canvas.clientWidth / canvas.clientHeight;
 
-            var width  = canvas.width;
+            var width = canvas.width;
             var height = canvas.height;
 
             this._camera.setViewport( new Viewport( 0, 0, width, height ) );
@@ -115,7 +116,7 @@ define( [
             }
             /*jshint bitwise: true */
             var lsi = new LineSegmentIntersector();
-            lsi.set ( [ x, y, 0.0 ], [ x, y, 1.0 ] );
+            lsi.set( [ x, y, 0.0 ], [ x, y, 1.0 ] );
             var iv = new IntersectionVisitor();
             iv.setTraversalMask( traversalMask );
             iv.setIntersector( lsi );
