@@ -391,7 +391,7 @@ define( [
             var lastProjectionMatrix = this.getCurrentProjectionMatrix();
             Matrix.mult( lastProjectionMatrix, camera.getProjectionMatrix(), projection );
 
-            var lastViewMatrix = this.getCurrentViewMatrix();
+            var lastViewMatrix = this.getCurrentModelViewMatrix();
             Matrix.mult( lastViewMatrix, camera.getViewMatrix(), modelview );
 
         } else {

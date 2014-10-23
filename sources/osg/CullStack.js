@@ -12,8 +12,6 @@ define( [
         this._bbCornerFar = 0;
         this._bbCornerNear = 0;
 
-        this._cameraIndexStack = [];
-        this._cameraIdMatrixInverse = {};
 
 
         // keep a matrix in memory to avoid to create matrix
@@ -21,6 +19,16 @@ define( [
             Matrix.create()
         ];
         this._reserveMatrixStack.current = 0;
+
+
+        // data for caching camera matrix inverse for computation of world/view
+        // contains index of the camera node in the nodepath
+        this._cameraIndexStack = [];
+        // contains index of the camera modelview matrix in the modelViewMatrixStack
+        this._cameraModelViewIndexStack = [];
+
+        // contains the id has a key to computed Inverse Matrix
+        this._cameraMatrixInverse = {};
 
     };
 
@@ -38,6 +46,10 @@ define( [
             this._modelViewMatrixStack.length = 0;
             this._projectionMatrixStack.length = 0;
             this._reserveMatrixStack.current = 0;
+
+            this._cameraModelViewIndexStack.length = 0;
+            this._cameraIndexStack.length = 0;
+            this._cameraMatrixInverse = {};
         },
 
         getProjectionMatrixStack: function () {
@@ -63,7 +75,7 @@ define( [
 
             // if no index the camera inverse is the root with an fake id
             if ( !this._cameraIndexStack.length )
-                return this._cameraIdMatrixInverse[ -1 ];
+                return this._cameraMatrixInverse[ -1 ];
 
             var idx = this._cameraIndexStack[ this._cameraIndexStack.length - 1 ];
 
@@ -71,13 +83,14 @@ define( [
             var camera = this.getNodePath()[ idx ];
             var id = camera.getInstanceID();
 
-            if ( this._cameraIdMatrixInverse[ id ] === undefined ) {
-                var mat = this._modelViewMatrixStack[ idx ];
+            if ( this._cameraMatrixInverse[ id ] === undefined ) {
+                var indexInModelViewMatrixStack = this._cameraModelViewIndexStack[ this._cameraModelViewIndexStack.length - 1 ];
+                var mat = this._modelViewMatrixStack[ indexInModelViewMatrixStack ];
                 var matInverse = this._getReservedMatrix();
                 Matrix.inverse( mat, matInverse );
-                this._cameraIdMatrixInverse[ id ] = matInverse;
+                this._cameraMatrixInverse[ id ] = matInverse;
             }
-            return this._cameraIdMatrixInverse[ id ];
+            return this._cameraMatrixInverse[ id ];
         },
 
         getCurrentModelWorldMatrix: function () {
@@ -98,7 +111,7 @@ define( [
             // also we could keep the index of the current to avoid lenght-1 at each access
             // it's implemented in osg like that:
             // https://github.com/openscenegraph/osg/blob/master/include/osg/fast_back_stack
-            var idx = this._cameraIndexStack[ this._cameraIndexStack.length - 1 ];
+            var idx = this._cameraModelViewIndexStack[ this._cameraModelViewIndexStack.length - 1 ];
             return this._modelViewMatrixStack[ idx ];
         },
 
@@ -139,11 +152,12 @@ define( [
             if ( !length ) { // root
                 var matInverse = this._getReservedMatrix();
                 Matrix.inverse( matrix, matInverse );
-                this._cameraIdMatrixInverse[ -1 ] = matInverse;
+                this._cameraMatrixInverse[ -1 ] = matInverse;
             } else {
                 var index = length - 1;
                 if ( np[ index ].getTypeID() === Camera.getTypeID() && np[ index ].getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
                     this._cameraIndexStack.push( index );
+                    this._cameraModelViewIndexStack.push( this._modelViewMatrixStack.length );
                 }
             }
 
@@ -161,8 +175,10 @@ define( [
             // if same index it's a camera and we have to pop it
             var np = this.getNodePath();
             var index = np.length - 1;
-            if ( this._cameraIndexStack.length && index === this._cameraIndexStack[ this._cameraIndexStack.length - 1 ] )
+            if ( this._cameraIndexStack.length && index === this._cameraIndexStack[ this._cameraIndexStack.length - 1 ] ) {
                 this._cameraIndexStack.pop();
+                this._cameraModelViewIndexStack.pop();
+            }
 
             this._modelViewMatrixStack.pop();
             var lookVector;

@@ -568,7 +568,7 @@ define( [
 
         test( 'CullVisitor World/View matrix', function () {
 
-            var checkLeaf = function( leaf ) {
+            var checkLeaf = function ( leaf ) {
                 var tmp = Matrix.create();
                 Matrix.mult( leaf.view, leaf.modelWorld, tmp );
 
@@ -577,6 +577,18 @@ define( [
             };
 
             var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
+
+            var node4 = new Node();
+            var node5 = new Node();
+            node4.addChild( node5 );
+            var camera4 = new Camera();
+            camera4.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
+            Matrix.makeLookAt( [ 0, 20, 10 ], [ 0, 2, 0 ], [ 0, 0, 1 ], camera4.getViewMatrix() );
+            node5.addChild( camera4 );
+            var node6 = new MatrixTransform();
+            Matrix.makeTranslate( 0, 0, -10, node6.getMatrix() );
+            camera4.addChild( node6 );
+            node6.addChild( q );
 
             var node0 = new MatrixTransform();
             Matrix.makeTranslate( 0, 0, -10, node0.getMatrix() );
@@ -597,13 +609,14 @@ define( [
 
             var camera1 = new Camera();
             camera1.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
-            Matrix.makeLookAt( [0,0,0], [0,2,0], [0,0,1] ,camera1.getViewMatrix() );
+            Matrix.makeLookAt( [ 0, 0, 0 ], [ 0, 2, 0 ], [ 0, 0, 1 ], camera1.getViewMatrix() );
             var node3 = new MatrixTransform();
             Matrix.makeTranslate( 0, 0, 5, node3.getMatrix() );
             camera1.addChild( node3 );
             node3.addChild( q );
 
             var root = new Node();
+            root.addChild( node4 );
             root.addChild( node1 );
             root.addChild( camera0 );
             root.addChild( node0 );
@@ -621,12 +634,12 @@ define( [
 
             root.accept( cull );
 
-            ok ( cull._reserveLeafStack.length > 1, 'check we have leaf to validate this test' );
-            for ( var i = 0; i < cull._reserveLeafStack.length - 1; i ++ ) {
-                checkLeaf( cull._reserveLeafStack[i] );
+            ok( cull._reserveLeafStack.length > 1, 'check we have leaf to validate this test' );
+            for ( var i = 0; i < cull._reserveLeafStack.length - 1; i++ ) {
+                checkLeaf( cull._reserveLeafStack[ i ] );
             }
 
-        });
+        } );
 
 
     };
