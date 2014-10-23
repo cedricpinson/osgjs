@@ -48,8 +48,10 @@ define( [
     'tests/osgDB/osgDBTests',
     'tests/osgGA/osgGATests',
     'tests/osgUtil/osgUtilTests',
-    'tests/osgViewer/osgViewerTests'
-], function ( OSG, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer ) {
+    'tests/osgViewer/osgViewerTests',
+    'tests/osgShadow/osgShadowTests',
+
+], function ( OSG, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer, osgShadow ) {
 
     // hack because of osgPool
     OSG.osg.init();
@@ -60,7 +62,7 @@ define( [
     osgGA();
     osgUtil();
     osgViewer();
-
+    osgShadow();
     // start test when require finished its job
     QUnit.load();
     QUnit.start();

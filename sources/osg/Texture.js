@@ -9,8 +9,6 @@ define( [
     'osg/Map'
 ], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ReaderParser, Map ) {
 
-    'use strict';
-
     // helper
     var isPowerOf2 = function ( x ) {
         /*jshint bitwise: false */
@@ -28,9 +26,14 @@ define( [
         return value;
     };
 
-
     /**
      * Texture encapsulate webgl texture object
+     * @class Texture
+     * Not that dirty here is mainly for texture binding
+     * any dirty will cause re-bind
+     * hint: don't dirty a texture attached to a camera/framebuffer
+     * it will end blank
+     * @inherits StateAttribute
      */
     var Texture = function () {
         StateAttribute.call( this );

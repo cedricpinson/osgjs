@@ -3,10 +3,11 @@ define( [
     'osgShader/node/data',
     'osgShader/node/functions',
     'osgShader/node/lights',
+    'osgShader/node/shadows',
     'osgShader/node/operations',
     'osgShader/node/textures',
 
-], function ( Notify, data, functions, lights, operations, textures ) {
+], function ( Notify, data, functions, lights, shadows, operations, textures ) {
     'use strict';
 
     var Factory = function () {
@@ -17,6 +18,7 @@ define( [
         this.registerNodes( textures );
         this.registerNodes( functions );
         this.registerNodes( lights );
+        this.registerNodes( shadows );
         this.registerNodes( operations );
     };
 

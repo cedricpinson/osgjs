@@ -118,7 +118,7 @@ define( [
             }
         },
 
-        expandBy: function( bs ) {
+        expandBy: function ( bs ) {
             Notify.log( 'BoundingSphere.expandBy is deprecated, use instead BoundingSphere.expandByBoundingSphere' );
             this.expandByBoundingSphere( bs );
         },

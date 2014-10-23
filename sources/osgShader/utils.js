@@ -60,10 +60,37 @@ define( [], function () {
     // generate a string with output = funcName ( inputs )
     // useful when debuging to print inputs / outputs
     // TODO check type of arguments with regexp in glsl
+    // shader function regex
+    // [\r\n]\s[(vec4)|(vec3)|(vec2)|(float)|(bool)|(int)].*\(.*[.|\r\n]*\).*[\r\n]*{
+    // doesn't handle multiline
+    // then split(',')
+    // then substring (out,in)
+    // then type matching
+    // (works by hand here.)
+    // for instance, gather types from input and compare themt to glsl decl
+    // var inputTypes = [
+    //             'vec4',
+    //             'vec4',
+    //             'sampler2D',
+    //             'vec4',
+    //             'vec4',
+    //             'vec3',
+    //             'float',
+    //             'vec3',
+    //             'float',
+    //             'float',
+    //             'float',
+    //             'float',
+    //             'float'
+    //         ];
+    //         console.assert( inputs.length === inputTypes.length );
+    //         var i = inputs.length;
+    //         while ( i-- ) {
+    //             console.assert( inputs[ i ]._type === inputTypes[ i ], inputs[ i ]._prefix );
+    //         }
     var callFunction = function ( funcName, output, inputs ) {
 
         var osgShader = require( 'osgShader/osgShader' );
-
 
         var debug = [];
         var callString = '';
