@@ -117,11 +117,9 @@
          'light.frag': 'shaders/light.frag',
          'interpolation.frag': 'shaders/interpolation.frag',
          'floatrgbacodec.glsl': 'shaders/floatrgbacodec.glsl',
-         'fastblur.frag': 'shaders/fastblur.frag',
          'downsize.frag': 'shaders/downsize.frag',
          'common.vert': 'shaders/common.vert',
          'common.frag': 'shaders/common.frag',
-         'blur.frag': 'shaders/blur.frag',
          'basic.vert': 'shaders/basic.vert',
          'basic.frag': 'shaders/basic.frag'
      };
@@ -159,7 +157,7 @@
              'lightrotate': true,
              'frustumTest': 'free',
              'texture': true,
-             'debugRtt': true,
+             'debugRtt': false,
 
              '_spotCutoff': 25,
              '_spotBlend': 0.3,
@@ -967,10 +965,10 @@
              var cubeSubNode = new osg.MatrixTransform();
              cubeSubNode.setName( 'cubeSubNode' );
 
-             cubeSubNode.setMatrix( osg.Matrix.makeTranslate( -dist, -dist, dist / 2, [] ) );
+             //cubeSubNode.setMatrix( osg.Matrix.makeTranslate( -dist, -dist, dist / 2, [] ) );
              cubeSubNode.addChild( cube );
              cubeNode.addChild( cubeSubNode );
-             if ( 1 || window.location.href.indexOf( 'cubes' ) !== -1 ) {
+             if ( 0 || window.location.href.indexOf( 'cubes' ) !== -1 ) {
                  cubeSubNode = new osg.MatrixTransform();
                  cubeSubNode.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
                  cubeSubNode.addChild( cube );
@@ -994,8 +992,6 @@
              }
 
              var cubeTex = osg.Texture.createFromURL( '../camera/textures/sol_trauma_periph.png' );
-             //cubeTex.setMinFilter( 'LINEAR_MIPMAP_LINEAR', 16 );
-             //cubeTex.setMagFilter( 'LINEAR_MIPMAP_LINEAR', 16 );
              cubeTex.setWrapT( 'MIRRORED_REPEAT' );
              cubeTex.setWrapS( 'MIRRORED_REPEAT' );
              cubeNode.getOrCreateStateSet().setTextureAttributeAndMode( 0, cubeTex );
@@ -1007,8 +1003,6 @@
              var groundSize = 40;
              var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
              var groundTex = osg.Texture.createFromURL( '../camera/textures/sol_trauma_periph.png' );
-             //groundTex.setMinFilter( 'LINEAR_MIPMAP_LINEAR', 16 );
-             //groundTex.setMagFilter( 'LINEAR_MIPMAP_LINEAR', 16 );
              groundTex.setWrapT( 'MIRRORED_REPEAT' );
              groundTex.setWrapS( 'MIRRORED_REPEAT' );
              ground.getOrCreateStateSet().setTextureAttributeAndMode( 0, groundTex );
@@ -1028,9 +1022,9 @@
                  }
              }
 
-             ShadowScene.addChild( groundNode );
+             //ShadowScene.addChild( groundNode );
              ShadowScene.addChild( cubeNode );
-             ShadowScene.addChild( modelNode );
+             //ShadowScene.addChild( modelNode );
 
              this._groundNode = groundNode;
              this._cubeNode = cubeNode;
@@ -1046,6 +1040,24 @@
 
 
              this._shadowScene = this.createSceneCasterReceiver();
+
+             var lightSource0 = new osg.LightSource();
+             var lightNode0 = new osg.MatrixTransform();
+             var light0 = new osg.Light( 0 );
+             this._light0 = light0;
+             lightSource0.setLight( light0 );
+             lightNode0.addChild( lightSource0 );
+
+             this._lights.push( light0 );
+             this._lightsMatrix.push( lightNode0 );
+             this._lightsSource.push( lightSource0 );
+
+             var prg = this.getShadowReceiverShaderProgram();
+             this._shadowScene.getOrCreateStateSet().setAttributeAndMode( prg, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
+             group.addChild( this._shadowScene );
+
+             group.addChild( lightNode0 );
+             return group;
 
 
              var shadowedScene = new osgShadow.ShadowedScene();

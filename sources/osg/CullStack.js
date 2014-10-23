@@ -3,9 +3,9 @@ define( [
     'osg/Notify',
     'osg/Camera',
     'osg/TransformEnums',
-], function ( Matrix, Notify, Camera, TransformEnums ) {
+], function( Matrix, Notify, Camera, TransformEnums ) {
 
-    var CullStack = function () {
+    var CullStack = function() {
         this._modelViewMatrixStack = [];
         this._projectionMatrixStack = [];
         this._viewportStack = [];
@@ -34,7 +34,7 @@ define( [
 
     CullStack.prototype = {
 
-        _getReservedMatrix: function () {
+        _getReservedMatrix: function() {
             var m = this._reserveMatrixStack[ this._reserveMatrixStack.current++ ];
             if ( this._reserveMatrixStack.current === this._reserveMatrixStack.length ) {
                 this._reserveMatrixStack.push( Matrix.create() );
@@ -42,7 +42,7 @@ define( [
             return m;
         },
 
-        reset: function () {
+        reset: function() {
             this._modelViewMatrixStack.length = 0;
             this._projectionMatrixStack.length = 0;
             this._reserveMatrixStack.current = 0;
@@ -52,23 +52,23 @@ define( [
             this._cameraMatrixInverse = {};
         },
 
-        getProjectionMatrixStack: function () {
+        getProjectionMatrixStack: function() {
             return this._projectionMatrixStack;
         },
-        getCurrentProjectionMatrix: function () {
+        getCurrentProjectionMatrix: function() {
             return this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
         },
 
-        getCurrentModelViewMatrix: function () {
+        getCurrentModelViewMatrix: function() {
             return this._modelViewMatrixStack[ this._modelViewMatrixStack.length - 1 ];
         },
 
-        getCurrentModelviewMatrix: function () {
+        getCurrentModelviewMatrix: function() {
             Notify.warn( 'deprecated switch to getCurrentModelViewMatrix' );
             return this.getCurrentModelViewMatrix();
         },
 
-        getCameraInverseMatrix: function () {
+        getCameraInverseMatrix: function() {
 
             // Return or compute and cache the MatrixInverse of the last
             // active camera in absolute reference
@@ -93,7 +93,7 @@ define( [
             return this._cameraMatrixInverse[ id ];
         },
 
-        getCurrentModelWorldMatrix: function () {
+        getCurrentModelWorldMatrix: function() {
             // Improvment could be to cache more things
             // and / or use this method only if the shader use it
             var invMatrix = this.getCameraInverseMatrix();
@@ -102,11 +102,11 @@ define( [
             return world;
         },
 
-        getCurrentViewMatrix: function () {
+        getCurrentViewMatrix: function() {
             // Improvment could be to cache more things
             // and / or use this method only if the shader use it
             if ( !this._cameraIndexStack.length )
-                return this._modelViewMatrixStack[ 0 ];
+                return this._modelViewMatrixStack[ 1 ];
 
             // also we could keep the index of the current to avoid lenght-1 at each access
             // it's implemented in osg like that:
@@ -115,24 +115,24 @@ define( [
             return this._modelViewMatrixStack[ idx ];
         },
 
-        getViewport: function () {
+        getViewport: function() {
             if ( this._viewportStack.length === 0 ) {
                 return undefined;
             }
             return this._viewportStack[ this._viewportStack.length - 1 ];
         },
-        getLookVectorLocal: function () {
+        getLookVectorLocal: function() {
             var m = this.getCurrentModelViewMatrix();
             return [ -m[ 2 ], -m[ 6 ], -m[ 10 ] ];
         },
-        pushViewport: function ( vp ) {
+        pushViewport: function( vp ) {
             this._viewportStack.push( vp );
         },
-        popViewport: function () {
+        popViewport: function() {
             this._viewportStack.pop();
         },
 
-        pushModelViewMatrix: function ( matrix ) {
+        pushModelViewMatrix: function( matrix ) {
 
             // When pushing a matrix, it can be a transform or camera. To compute
             // differents matrix type in shader ( ViewMatrix/ModelWorldMatrix/ModelViewMatrix )
@@ -149,17 +149,18 @@ define( [
             // the special id '-1'
             var np = this.getNodePath();
             var length = np.length;
-            if ( !length ) { // root
-                var matInverse = this._getReservedMatrix();
-                Matrix.inverse( matrix, matInverse );
-                this._cameraMatrixInverse[ -1 ] = matInverse;
-            } else {
-                var index = length - 1;
-                if ( np[ index ].getTypeID() === Camera.getTypeID() && np[ index ].getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
-                    this._cameraIndexStack.push( index );
-                    this._cameraModelViewIndexStack.push( this._modelViewMatrixStack.length );
+            if ( this._modelViewMatrixStack.length > 0 )
+                if ( !length ) { // root
+                    var matInverse = this._getReservedMatrix();
+                    Matrix.inverse( matrix, matInverse );
+                    this._cameraMatrixInverse[ -1 ] = matInverse;
+                } else {
+                    var index = length - 1;
+                    if ( np[ index ].getTypeID() === Camera.getTypeID() && np[ index ].getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
+                        this._cameraIndexStack.push( index );
+                        this._cameraModelViewIndexStack.push( this._modelViewMatrixStack.length );
+                    }
                 }
-            }
 
             this._modelViewMatrixStack.push( matrix );
             var lookVector = this.getLookVectorLocal();
@@ -170,7 +171,7 @@ define( [
             /*jshint bitwise: true */
 
         },
-        popModelViewMatrix: function () {
+        popModelViewMatrix: function() {
 
             // if same index it's a camera and we have to pop it
             var np = this.getNodePath();
@@ -194,10 +195,10 @@ define( [
             /*jshint bitwise: true */
 
         },
-        pushProjectionMatrix: function ( matrix ) {
+        pushProjectionMatrix: function( matrix ) {
             this._projectionMatrixStack.push( matrix );
         },
-        popProjectionMatrix: function () {
+        popProjectionMatrix: function() {
             this._projectionMatrixStack.pop();
         }
     };
