@@ -55,6 +55,8 @@ define( [
         };
         this._textureType = Texture.UNSIGNED_BYTE;
         this._textureFormat = Texture.RGBA;
+        this._textureFilterMin = Texture.NEAREST;
+        this._textureFilterMax = Texture.NEAREST;
         // if url options override url options
         MACROUTILS.objectMix( this._config, options );
     };
@@ -119,6 +121,16 @@ define( [
         },
         getTextureType: function() {
             return this._textureType;
+        },
+        setTextureFilter: function( tfMin, tfMax /* level af*/ ) {
+            this._textureFilterMin = tfMin;
+            this._textureFilterMax = tfMax;
+        },
+        getTextureFilterMax: function() {
+            return this._textureFilterMax;
+        },
+        getTextureFilterMin: function() {
+            return this._textureFilterMin;
         },
         setTextureFormat: function( tf ) {
             this._textureFormat = tf;
