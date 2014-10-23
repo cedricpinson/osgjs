@@ -1,143 +1,29 @@
  ( function() {
      'use strict';
+     var Q = window.Q;
      var OSG = window.OSG;
      var osg = OSG.osg;
      var osgDB = OSG.osgDB;
      var osgViewer = OSG.osgViewer;
      var osgUtil = OSG.osgUtil;
      var osgShadow = OSG.osgShadow;
-     var shaderLoader;
+     var osgShader = OSG.osgShader;
+     var $ = window.$;
 
-     //////////////////////
-     /// facility obj to load/reload/cache shader from xhr
-     ///
-     var MyShaderLoader = function( glContext ) {
-         this._globalDefaultprecision = '#ifdef GL_FRAGMENT_PRECISION_HIGH\n precision highp float;\n #else\n precision mediump float;\n#endif';
-         this._precisionR = /precision\s+(high|low|medium)p\s+float/;
-         this._includeR = /#pragma include "([^"]+)"/g;
-         this._shadersList = {};
-         this._shadersText = {};
-         this._glContext = glContext;
-         this._cacheProgram = {};
-         return this;
-     };
 
-     MyShaderLoader.prototype.loadCallBack = function( e ) {
-         if ( e.target.status === 200 ) {
-             this._shadersText[ e.target.shaderName ] = e.target.responseText;
-         }
-     };
-     MyShaderLoader.prototype.load = function( shaderFilename, shaderName ) {
-         if ( !this._shadersList[ shaderName ] ) this._shadersList[ shaderName ] = shaderFilename;
-         var req = new XMLHttpRequest();
-         req.shaderName = shaderName;
-         req.overrideMimeType( 'text/plain; charset=x-user-defined' );
-         req.open( 'GET', shaderFilename + '?id=' + Math.random(), false ); // no async
-         req.addEventListener( 'load', this.loadCallBack.bind( this ), false );
-         req.send( null );
-         return this;
-     };
-     MyShaderLoader.prototype.preprocess = function( content, includeList ) {
-         return content.replace( this._includeR, function( _, name ) {
-             // \#pragma include "name";
-             if ( includeList.indexOf( name ) !== -1 ) return '';
-             var txt = this.getShaderTextPure( name );
-             includeList.push( name );
-             txt = this.preprocess( txt, includeList );
-             return txt;
-         }.bind( this ) );
-     };
-     MyShaderLoader.prototype.getShaderTextPure = function( shaderName ) {
-         var preShader;
-         if ( !( shaderName in this._shadersText ) ) {
-             console.error( 'shader file/text: ' + shaderName + ' not loaded' );
-             return '';
-         } else {
-             preShader = this._shadersText[ shaderName ];
-         }
-         return preShader;
-     };
-     MyShaderLoader.prototype.getShaderText = function( shaderName, defines ) {
-         // useful for
-         var includeList = [];
-         var preShader = this.getShaderTextPure( shaderName );
-         includeList.push( shaderName );
-         var postShader = this.preprocess( preShader, includeList );
-         var prePrend = '';
-         if ( !this._precisionR.test( postShader ) ) prePrend += this._globalDefaultprecision + '\n';
-         if ( !defines ) defines = [];
-         prePrend += defines.join( '\n' ) + '\n';
-         postShader = prePrend + postShader;
-         return postShader;
-     };
 
-     MyShaderLoader.prototype.loadAll = function( shadersList ) {
-         for ( var shader in shadersList ) {
-             if ( shadersList.hasOwnProperty( shader ) ) {
-                 this.load( shadersList[ shader ], shader );
-             }
-         }
-         return this;
-     };
-
-     MyShaderLoader.prototype.getShaderProgram = function( vs, ps, defines ) {
-         if ( this._cacheProgram[ vs + ps + defines ] !== undefined )
-             return this._cacheProgram[ vs + ps + defines ];
-
-         var vertexshader = this.getShaderText( vs, defines );
-         var fragmentshader = this.getShaderText( ps, defines );
-
-         var program = new osg.Program(
-             new osg.Shader( this._glContext.VERTEX_SHADER, vertexshader ), new osg.Shader( this._glContext.FRAGMENT_SHADER, fragmentshader ) );
-
-         this._cacheProgram[ vs + ps + defines ] = program;
-         return program;
-     };
-
-     //////////////////////
-     /// shaders to load. Lots of them, but small and including each other
-     /// DRY
-     ///
-     var shaderLists = {
-         'shadowmap_vsm_receive.vert': 'shaders/shadowmap_vsm_receive.vert',
-         'shadowmap_vsm_receive.frag': 'shaders/shadowmap_vsm_receive.frag',
-         'shadowmap_vsm_cast.vert': 'shaders/shadowmap_vsm_cast.vert',
-         'shadowmap_vsm_cast.frag': 'shaders/shadowmap_vsm_cast.frag',
-         'shadowmap_evsm_receive.vert': 'shaders/shadowmap_evsm_receive.vert',
-         'shadowmap_evsm_receive.frag': 'shaders/shadowmap_evsm_receive.frag',
-         'shadowmap_evsm_cast.vert': 'shaders/shadowmap_evsm_cast.vert',
-         'shadowmap_evsm_cast.frag': 'shaders/shadowmap_evsm_cast.frag',
-         'shadowmap_receive.vert': 'shaders/shadowmap_receive.vert',
-         'shadowmap_receive.frag': 'shaders/shadowmap_receive.frag',
-         'shadowmap_cast.vert': 'shaders/shadowmap_cast.vert',
-         'shadowmap_cast.frag': 'shaders/shadowmap_cast.frag',
-         'shadow.glsl': 'shaders/shadow.glsl',
-         'object.vert': 'shaders/object.vert',
-         'object.frag': 'shaders/object.frag',
-         'light.frag': 'shaders/light.frag',
-         'interpolation.frag': 'shaders/interpolation.frag',
-         'floatrgbacodec.glsl': 'shaders/floatrgbacodec.glsl',
-         'downsize.frag': 'shaders/downsize.frag',
-         'common.vert': 'shaders/common.vert',
-         'common.frag': 'shaders/common.frag',
-         'basic.vert': 'shaders/basic.vert',
-         'basic.frag': 'shaders/basic.frag'
-     };
 
      //////////////////////
      /// The sample itself is in this object.
      ///
      var Example = function() {
-         this._textureNames = [
-             'seamless/bricks1.jpg'
-         ];
          // sample default parameters
          // at start
          // most can be changed by the UI
          this._config = {
              'texturesize': 1024,
              'shadow': 'ESM',
-             'texturetype': 'Force8bits',
+             'texturetype': 'BYTE',
              'lightnum': 1,
              'lightType': 'Spot',
              'bias': 0.005,
@@ -154,7 +40,9 @@
              'exponent': 80.0,
              'exponent1': 0.33,
 
-             'lightrotate': true,
+             'lightMovement': 'Rotate',
+             'lightSpeed': 1.0,
+             'lightAmbient': false,
              'frustumTest': 'free',
              'texture': true,
              'debugRtt': true,
@@ -168,7 +56,7 @@
              logCamLight: function() {
                  var example = this[ 'exampleObj' ];
                  var cam = example._viewer._manipulator;
-                 console.groupCollapsed( "Cam & Light" );
+                 console.groupCollapsed( 'Cam & Light' );
                  console.log( 'Camera' );
                  var eye = [ 0, 0, 0, 0 ];
                  cam.getEyePosition( eye );
@@ -247,31 +135,12 @@
          this._previousRtt = this._config[ 'debugRtt' ];
          this._previousFrustumTest = this._config[ 'frustumTest' ];
 
+
+         this._shaderProcessor = new osgShader.ShaderProcessor();
+         this._cacheProgram = {};
+
          this.floatTextureSupport = false;
 
-         var path = '../media/textures/';
-
-         // generate array of paths
-         var paths = this._textureNames.map( function( name ) {
-             return path + name;
-         } );
-
-         // generate array of promise
-         this._images = paths.map( function( path ) {
-             return osgDB.readImageURL( path );
-         } );
-
-         Q.all( this._images ).then( function( args ) {
-
-             this._textures = args.map( function( image ) {
-                 var texture = new osg.Texture();
-                 texture.setImage( image );
-                 texture.setWrapT( 'REPEAT' );
-                 texture.setWrapS( 'REPEAT' );
-                 texture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
-                 return texture;
-             } );
-         }.bind( this ) );
 
      };
 
@@ -296,12 +165,13 @@
              var lightPos = l.getPosition();
              var lightDir = l.getDirection();
              // is user didn't prevent animation
-             if ( this._example._config[ 'lightrotate' ] && this._example._config[ 'frustumTest' ] === 'free' ) {
+             if ( this._example._config[ 'lightMovement' ] !== 'Fixed' && this._example._config[ 'frustumTest' ] === 'free' ) {
 
                  var delta = 0;
                  var t = currentTime - this._last;
                  if ( t < 0.5 ) {
                      delta = t;
+                     delta = delta * parseFloat( this._example._config[ 'lightSpeed' ] );
                      this._accum += delta;
                      delta = this._accum;
                  }
@@ -316,17 +186,30 @@
 
                  //  GENERIC Code getting direction
                  //  50 50 15
-                 lightPos[ 0 ] = x * this._position_x;
-                 //lightPos[ 1 ] = y * this._position_y;
-                 //lightPos[ 2 ] = this._position_z;
-
-                 //lightPos[ 3 ] = 1.0;
                  var lightTarget = [ 0.0, 0.0, 0.0 ];
-                 var lightDir = osg.Vec3.sub( lightTarget, lightPos, [] );
-                 osg.Vec3.normalize( lightDir, lightDir );
+                 switch ( this._example._config[ 'lightMovement' ] ) {
+                     case 'Rotate':
+                         lightPos[ 0 ] = x * this._position_x;
+                         lightPos[ 1 ] = y * this._position_y;
+                         //lightPos[ 2 ] = this._position_z;
+                         // lightDir = [ 0.0, -15.0, -1.0 ];
+                         lightDir = osg.Vec3.sub( lightTarget, lightPos, [] );
+                         osg.Vec3.normalize( lightDir, lightDir );
+                         break;
+                     case 'Translate':
+                         lightPos[ 0 ] = x * this._position_x;
+                         //lightPos[ 1 ] = y * this._position_y;
+                         //lightPos[ 2 ] = this._position_z;
+                         lightDir = [ 0.0, -15.0, -1.0 ];
+                         break;
+                     case 'Nod':
+                         lightTarget[ 1 ] = y * 180.0;
+                         lightDir = osg.Vec3.sub( lightTarget, lightPos, [] );
+                         osg.Vec3.normalize( lightDir, lightDir );
+                         //lightDir = [ 1.0 * x, -5.0 * x, -1.0 ];
+                         break;
+                 }
 
-                 //lightDir = [ 1.0 * x, -5.0 * x, -1.0 ];
-                 lightDir = [ 0.0, -15.0, -1.0 ];
                  osg.Vec3.normalize( lightDir, lightDir );
                  // that's where we actually update the light
                  // TODO: why not target in light ? as it's like a camera
@@ -373,6 +256,13 @@
 
              var gui = new window.dat.GUI();
 
+             var textureTypes = [ 'BYTE' ];
+             if ( this._halfFloatTexSupport ) textureTypes.push( 'HALF_FLOAT' );
+             if ( this._halfFloatLinearTexSupport ) textureTypes.push( 'HALF_FLOAT_LINEAR' );
+             if ( this._floatTexSupport ) textureTypes.push( 'FLOAT' );
+             if ( this._floatLinearTexSupport ) textureTypes.push( 'FLOAT_LINEAR' );
+
+
              var controller;
 
              controller = gui.add( this._config, 'shadow', {
@@ -384,7 +274,7 @@
              } );
              controller.onChange( this.updateShadow.bind( this ) );
 
-             controller = gui.add( this._config, 'texturetype', [ 'Force8bits', 'Autodetect' ] );
+             controller = gui.add( this._config, 'texturetype', textureTypes );
              controller.onChange( this.updateShadow.bind( this ) );
              controller = gui.add( this._config, 'texturesize', [ 32, 64, 128, 256, 512, 1024, 2048, 4096, 8144 ] );
              controller.onChange( this.updateShadow.bind( this ) );
@@ -393,7 +283,7 @@
              controller.onChange( this.updateShadow.bind( this ) );
 
              controller = gui.add( this._config, 'lightType', [ 'Spot',
-                 'Point',
+                 /*'Point',*/
                  'Directional'
              ] );
              controller.onChange( this.updateShadow.bind( this ) );
@@ -402,9 +292,14 @@
              controller = gui.add( this._config, 'frustumTest', [ 'free', 'no shadowed', 'no caster', 'no caster but shadowed', 'no shadowed but caster', 'left', 'right', 'front', 'back', 'top', 'bottom', 'face2face', 'back2back', 'samePosition&Direction' ] );
              controller.onChange( this.updateShadow.bind( this ) );
 
-             controller = gui.add( this._config, 'lightrotate' );
+             controller = gui.add( this._config, 'lightMovement', [ 'Rotate', 'Translate', 'Fixed', 'Nod' ] );
              controller.onChange( this.updateShadow.bind( this ) );
 
+             controller = gui.add( this._config, 'lightAmbient' );
+             controller.onChange( this.updateShadow.bind( this ) );
+
+             controller = gui.add( this._config, 'lightSpeed', 0.0, 2.0 );
+             controller.onChange( this.updateShadow.bind( this ) );
 
              controller = gui.add( this._config, 'bias', 0.0001, 0.05 );
              controller.onChange( this.updateShadow.bind( this ) );
@@ -451,14 +346,7 @@
 
 
          },
-         /*
-          * try to minimize update cost and code size
-          * with a single callback for all ui user changes
-          */
-         updateShadow: function() {
-             var l, numLights = ~~ ( this._config[ 'lightnum' ] );
-
-
+         testFrustumIntersections: function() {
              if ( this._config[ 'frustumTest' ] !== this._previousFrustumTest ) {
                  var manip = this._viewer._manipulator;
                  var light = this._lights[ 0 ];
@@ -568,6 +456,9 @@
                  this._previousFrustumTest = this._config[ 'frustumTest' ];
              }
 
+         },
+         updateLightsEnable: function() {
+             var l, numLights = ~~ ( this._config[ 'lightnum' ] );
 
              l = this._lights.length;
              while ( l-- ) {
@@ -578,16 +469,18 @@
                  this._lights[ l ]._enable = true;
              }
 
-
-             if ( this._previousFov !== this._config[ 'fov' ] ) {
-                 this._config[ '_spotCutoff' ] = this._config[ 'fov' ] * 0.5;
-                 l = this._lights.length;
-                 while ( l-- ) {
-                     this._lights[ l ].setSpotCutoff( this._config[ '_spotCutoff' ] );
-                 }
-                 this._previousFov = this._config[ 'fov' ];
+         },
+         updateLightsAmbient: function() {
+             var l = this._lights.length;
+             var val = this._config[ 'lightAmbient' ] ? 0.6 : 0.0;
+             while ( l-- ) {
+                 this._lights[ l ]._ambient = [ val, val, val, 1.0 ];
+                 this._lights[ l ].dirty();
              }
 
+         },
+         updateLightType: function() {
+             var l;
              switch ( this._config[ 'lightType' ] ) {
                  case 'Spot':
                      {
@@ -617,54 +510,44 @@
                          break;
                      }
              }
+         },
+         updateShadowFormat: function() {
 
-             // update
-
-
-             if ( this._previousTech !== this._config[ 'technique' ] ) {
-                 // technique change.
-                 switch ( this._config[ 'technique' ] ) {
-                     case 'ESM':
-                         this._config[ 'exponent' ] = 200.0;
-                         break;
-                     case 'EVSM':
-                         this._config[ 'exponent' ] = 0.001;
-                         this._config[ 'exponent1' ] = 0.001;
-                         break;
-                     case 'VSM':
-                         this._config[ 'exponent' ] = 0.001;
-                         this._config[ 'exponent1' ] = 0.001;
-                         break;
-                     default:
-                         break;
-                 }
-                 this._previousTech = this._config[ 'technique' ];
-             }
-             var mapsize = ~~ ( this._config[ 'texturesize' ] );
-             var shadowSizeFinal = [ mapsize, mapsize, 1.0 / mapsize, 1.0 / mapsize ];
              var shadowMap;
-
-             if ( this._previousTextureSize !== mapsize ) {
-
-                 l = numLights;
-                 while ( l-- ) {
-                     shadowMap = this._shadowTechnique[ l ];
-                     shadowMap.resize( shadowSizeFinal );
-
-                     shadowMap.getReceivingStateSet().getUniformList()[ 'Shadow_MapSize' + l ].getUniform().set( shadowSizeFinal );
-                 }
-                 this._previousTextureSize = mapsize;
-             }
-
-
              var texType = this._config[ 'texturetype' ];
              if ( this._previousTextureType !== texType ) {
-                 var textureType, textureFormat;
-                 var floatTexSupp = this.floatTexSupport && this._config[ 'texturetype' ] !== 'Force8bits';
-                 if ( floatTexSupp ) {
-                     textureType = osg.Texture.FLOAT;
-                 } else {
-                     textureType = osg.Texture.UNSIGNED_BYTE;
+                 var l, numLights = ~~ ( this._config[ 'lightnum' ] );
+                 var textureType, textureFormat, texFilterMin, texFilterMax;
+                 switch ( this._config[ 'texturetype' ] ) {
+                     case 'HALF_FLOAT':
+                         textureType = osg.Texture.HALF_FLOAT;
+                         texFilterMin = osg.Texture.NEAREST;
+                         texFilterMax = osg.Texture.NEAREST;
+                         break;
+                     case 'HALF_FLOAT_LINEAR':
+                         textureType = osg.Texture.HALF_FLOAT;
+                         texFilterMin = osg.Texture.LINEAR;
+                         texFilterMax = osg.Texture.LINEAR;
+                         break;
+                     case 'FLOAT':
+                         textureType = osg.Texture.FLOAT;
+                         texFilterMin = osg.Texture.NEAREST;
+                         texFilterMax = osg.Texture.NEAREST;
+                         break;
+                     case 'FLOAT_LINEAR':
+                         break;
+                     case 'BYTE':
+                         textureType = osg.Texture.UNSIGNED_BYTE;
+                         texFilterMin = osg.Texture.LINEAR;
+                         texFilterMax = osg.Texture.LINEAR;
+                         break;
+
+                     default:
+                         textureType = osg.Texture.UNSIGNED_BYTE;
+                         texFilterMin = osg.Texture.LINEAR;
+                         texFilterMax = osg.Texture.LINEAR;
+                         break;
+
                  }
 
                  textureFormat = osg.Texture.RGBA;
@@ -685,16 +568,84 @@
                  }
 */
                  l = numLights;
+                 var shadowSettings = this._lightAndShadowScene.getShadowSettings();
                  while ( l-- ) {
+
                      shadowMap = this._shadowTechnique[ l ];
+
+                     shadowSettings.setTextureType( textureType );
+                     shadowSettings.setTextureFilter( texFilterMin, texFilterMax );
+
                      shadowMap.getTexture().setType( textureType );
+                     shadowMap.getTexture().setMinFilter( texFilterMin );
+                     shadowMap.getTexture().setMaxFilter( texFilterMax );
+
                      //shadowMap.getTexture().setInternalFormat( textureFormat );
                      //shadowMap.getTexture().dirty();
                      //shadowMap.resize( shadowSizeFinal );
                  }
                  this._previousTextureType = this._config[ 'texturetype' ];
              }
+         },
+         updateFov: function() {
 
+             if ( this._previousFov !== this._config[ 'fov' ] ) {
+                 this._config[ '_spotCutoff' ] = this._config[ 'fov' ] * 0.5;
+                 var l = this._lights.length;
+                 while ( l-- ) {
+                     this._lights[ l ].setSpotCutoff( this._config[ '_spotCutoff' ] );
+                 }
+                 this._previousFov = this._config[ 'fov' ];
+             }
+
+         },
+         updateShadowMapSize: function() {
+
+             var l, numLights = ~~ ( this._config[ 'lightnum' ] );
+
+             var mapsize = ~~ ( this._config[ 'texturesize' ] );
+             var shadowSizeFinal = [ mapsize, mapsize, 1.0 / mapsize, 1.0 / mapsize ];
+             var shadowMap;
+
+             if ( this._previousTextureSize !== mapsize ) {
+
+                 l = numLights;
+                 while ( l-- ) {
+                     shadowMap = this._shadowTechnique[ l ];
+                     shadowMap.resize( shadowSizeFinal );
+
+                     shadowMap.getReceivingStateSet().getUniformList()[ 'Shadow_MapSize' + l ].getUniform().set( shadowSizeFinal );
+                 }
+                 this._previousTextureSize = mapsize;
+             }
+
+         },
+         updateShadowTechniqueMode: function() {
+
+             if ( this._previousTech !== this._config[ 'technique' ] ) {
+                 // technique change.
+                 switch ( this._config[ 'technique' ] ) {
+                     case 'ESM':
+                         this._config[ 'exponent' ] = 200.0;
+                         break;
+                     case 'EVSM':
+                         this._config[ 'exponent' ] = 0.001;
+                         this._config[ 'exponent1' ] = 0.001;
+                         break;
+                     case 'VSM':
+                         this._config[ 'exponent' ] = 0.001;
+                         this._config[ 'exponent1' ] = 0.001;
+                         break;
+                     default:
+                         break;
+                 }
+                 this._previousTech = this._config[ 'technique' ];
+             }
+
+         },
+         updateShaders: function() {
+             var l, numLights = ~~ ( this._config[ 'lightnum' ] );
+             var shadowMap;
 
              var prg = this.getShadowCasterShaderProgram();
              l = numLights;
@@ -709,24 +660,52 @@
                  shadowMap = this._shadowTechnique[ l ];
                  shadowMap.setShadowReceiverShaderProgram( prg );
              }
-
-
+         },
+         updateDebugRtt: function() {
              // show the shadowmap as ui quad on left bottom screen
              if ( this._previousRtt === true && this._config[ 'debugRtt' ] === false ) {
                  this._rttdebugNode.removeChildren();
              }
              if ( this._previousRtt === false && this._config[ 'debugRtt' ] ) {
 
+                 var l, numLights = ~~ ( this._config[ 'lightnum' ] );
+
                  // make sure we have latest one
                  this._rtt = [];
-                 this._rtt.push( shadowMap.getTexture() );
-
+                 l = numLights;
+                 while ( l-- ) {
+                     var shadowMap = this._shadowTechnique[ l ];
+                     this._rtt.push( shadowMap.getTexture() );
+                 }
                  this.showFrameBuffers( {
                      screenW: this._canvas.width,
                      screenH: this._canvas.height
                  } );
              }
              this._previousRtt = this._config[ 'debugRtt' ];
+         },
+         /*
+          * try to minimize update cost and code size
+          * with a single callback for all ui user changes
+          */
+         updateShadow: function() {
+
+
+             this.updateLightsAmbient();
+             this.updateLightsEnable();
+
+             this.testFrustumIntersections();
+
+             this.updateFov();
+             this.updateLightType();
+             this.updateShadowTechniqueMode();
+
+             this.updateShadowFormat();
+             this.updateShadowMapSize();
+             this.updateShaders();
+
+             this.updateDebugRtt();
+
          },
 
          // show the shadowmap as ui quad on left bottom screen
@@ -803,6 +782,76 @@
              }
              return this._ComposerdebugCamera;
          },
+         readShaders: function() {
+
+             var defer = Q.defer();
+
+             var shaderNames = [
+                 'shadowmap_vsm_receive.vert',
+                 'shadowmap_vsm_receive.frag',
+                 'shadowmap_vsm_cast.vert',
+                 'shadowmap_vsm_cast.frag',
+                 'shadowmap_evsm_receive.vert',
+                 'shadowmap_evsm_receive.frag',
+                 'shadowmap_evsm_cast.vert',
+                 'shadowmap_evsm_cast.frag',
+                 'shadowmap_receive.vert',
+                 'shadowmap_receive.frag',
+                 'shadowmap_cast.vert',
+                 'shadowmap_cast.frag',
+                 'shadow.glsl',
+                 'object.vert',
+                 'object.frag',
+                 'light.frag',
+                 'interpolation.frag',
+                 'floatrgbacodec.glsl',
+                 'downsize.frag',
+                 'common.vert',
+                 'common.frag',
+                 'basic.vert',
+                 'basic.frag'
+             ];
+             this._shaderPath = 'shaders/';
+
+             var shaders = shaderNames.map( function( arg ) {
+                 return this._shaderPath + arg;
+             }.bind( this ) );
+
+
+             var promises = [];
+             shaders.forEach( function( shader ) {
+                 promises.push( Q( $.get( shader ) ) );
+             }.bind( this ) );
+
+
+             Q.all( promises ).then( function( args ) {
+
+                 var shaderNameContent = {};
+                 shaderNames.forEach( function( name, idx ) {
+                     shaderNameContent[ name ] = args[ idx ];
+                 } );
+
+                 this._shaderProcessor.addShaders( shaderNameContent );
+
+                 defer.resolve();
+
+             }.bind( this ) );
+
+             return defer.promise;
+         },
+         getShaderProgram: function( vs, ps, defines ) {
+             if ( this._cacheProgram[ vs + ps + defines ] !== undefined )
+                 return this._cacheProgram[ vs + ps + defines ];
+
+             var vertexshader = this._shaderProcessor.getShader( vs, defines );
+             var fragmentshader = this._shaderProcessor.getShader( ps, defines );
+
+             var program = new osg.Program(
+                 new osg.Shader( this._glContext.VERTEX_SHADER, vertexshader ), new osg.Shader( this._glContext.FRAGMENT_SHADER, fragmentshader ) );
+
+             this._cacheProgram[ vs + ps + defines ] = program;
+             return program;
+         },
          // computes a shader upon user choice
          // of shadow algorithms
          // shader file, define but texture type/format
@@ -850,7 +899,7 @@
                  textureFormat = osg.Texture.RGBA;
              }
 
-             var prg = shaderLoader.getShaderProgram( shadowmapCasterVertex, shadowmapCasterFragment, defines );
+             var prg = this.getShaderProgram( shadowmapCasterVertex, shadowmapCasterFragment, defines );
              this.textureType = textureType;
              this.textureFormat = textureFormat;
              return prg;
@@ -895,7 +944,7 @@
                  shadowmapReceiverVertex = 'shadowmap_receive.vert';
                  shadowmapReceiverFragment = 'shadowmap_receive.frag';
              }
-             var prg = shaderLoader.getShaderProgram( shadowmapReceiverVertex, shadowmapReceiverFragment, defines );
+             var prg = this.getShaderProgram( shadowmapReceiverVertex, shadowmapReceiverFragment, defines );
 
              prg.trackAttributes = {};
              prg.trackAttributes.attributeKeys = [];
@@ -1040,25 +1089,6 @@
 
 
              this._shadowScene = this.createSceneCasterReceiver();
-             /*
-             var lightSource0 = new osg.LightSource();
-             var lightNode0 = new osg.MatrixTransform();
-             var light0 = new osg.Light( 0 );
-             this._light0 = light0;
-             lightSource0.setLight( light0 );
-             lightNode0.addChild( lightSource0 );
-
-             this._lights.push( light0 );
-             this._lightsMatrix.push( lightNode0 );
-             this._lightsSource.push( lightSource0 );
-
-             var prg = this.getShadowReceiverShaderProgram();
-             this._shadowScene.getOrCreateStateSet().setAttributeAndMode( prg, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
-             group.addChild( this._shadowScene );
-
-             group.addChild( lightNode0 );
-             return group;
-*/
 
              var shadowedScene = new osgShadow.ShadowedScene();
 
@@ -1202,6 +1232,7 @@
           */
          run: function( canvas ) {
 
+
              var viewer;
              viewer = new osgViewer.Viewer( canvas, this._osgOptions );
              this._canvas = canvas;
@@ -1212,18 +1243,24 @@
              viewer.init();
 
              this._glContext = viewer.getGraphicContext();
-             this.floatTexSupport = this._viewer._webGLCaps.getWebGLExtension( 'OES_texture_float' );
-             shaderLoader = new MyShaderLoader( this._glContext ).loadAll( shaderLists );
-             var scene = this.createScene();
 
-             viewer.setSceneData( scene );
-             viewer.setupManipulator();
-             viewer.getManipulator().computeHomePosition();
-             viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+             this._floatLinearTexSupport = this._viewer._webGLCaps.hasRTTLinearFloat();
+             this._floatTexSupport = this._viewer._webGLCaps.hasRTTLinearFloat();
+             this._halfFloatLinearTexSupport = this._viewer._webGLCaps.hasRTTHalfFloat();
+             this._halfFloatTexSupport = this._viewer._webGLCaps.hasRTTLinearHalfFloat();
 
-             viewer.run();
+             this.readShaders().then( function() {
+                 var scene = this.createScene();
 
-             this.initDatGUI();
+                 viewer.setSceneData( scene );
+                 viewer.setupManipulator();
+                 viewer.getManipulator().computeHomePosition();
+                 viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+
+                 viewer.run();
+
+                 this.initDatGUI();
+             }.bind( this ) );
          }
      };
      // execute loaded code when ready

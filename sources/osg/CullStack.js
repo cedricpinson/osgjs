@@ -106,7 +106,7 @@ define( [
             // Improvment could be to cache more things
             // and / or use this method only if the shader use it
             if ( !this._cameraIndexStack.length )
-                return this._modelViewMatrixStack[ 1 ];
+                return this._modelViewMatrixStack[ 0 ];
 
             // also we could keep the index of the current to avoid lenght-1 at each access
             // it's implemented in osg like that:
@@ -149,18 +149,17 @@ define( [
             // the special id '-1'
             var np = this.getNodePath();
             var length = np.length;
-            if ( this._modelViewMatrixStack.length > 0 )
-                if ( !length ) { // root
-                    var matInverse = this._getReservedMatrix();
-                    Matrix.inverse( matrix, matInverse );
-                    this._cameraMatrixInverse[ -1 ] = matInverse;
-                } else {
-                    var index = length - 1;
-                    if ( np[ index ].getTypeID() === Camera.getTypeID() && np[ index ].getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
-                        this._cameraIndexStack.push( index );
-                        this._cameraModelViewIndexStack.push( this._modelViewMatrixStack.length );
-                    }
+            if ( !length ) { // root
+                var matInverse = this._getReservedMatrix();
+                Matrix.inverse( matrix, matInverse );
+                this._cameraMatrixInverse[ -1 ] = matInverse;
+            } else {
+                var index = length - 1;
+                if ( np[ index ].getTypeID() === Camera.getTypeID() && np[ index ].getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
+                    this._cameraIndexStack.push( index );
+                    this._cameraModelViewIndexStack.push( this._modelViewMatrixStack.length );
                 }
+            }
 
             this._modelViewMatrixStack.push( matrix );
             var lookVector = this.getLookVectorLocal();
