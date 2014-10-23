@@ -4,8 +4,9 @@ define( [
     'osg/Geometry',
     'osg/Program',
     'osg/Uniform',
-    'osg/Shader'
-], function ( MACROUTILS, NodeVisitor, Geometry, Program, Uniform, Shader ) {
+    'osg/Shader',
+    'osg/StateSet'
+], function ( MACROUTILS, NodeVisitor, Geometry, Program, Uniform, Shader, StateSet ) {
 
     'use strict';
 
@@ -45,7 +46,8 @@ define( [
     GeometryColorDebugVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
         apply: function ( node ) {
             if ( node instanceof Geometry && !node._isVisitedGeometryDebugDisplay ) {
-                var st = node.getOrCreateStateSet();
+                var st = new StateSet();
+                node.setStateSet( st );
                 st.addUniform( Uniform.createFloat3( [ Math.random(), Math.random(), Math.random() ], 'uColorDebug' ) );
                 st.setAttributeAndMode( this.shader );
                 node._isVisitedGeometryDebugDisplay = true;
