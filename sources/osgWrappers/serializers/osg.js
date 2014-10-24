@@ -2,6 +2,8 @@ define( [
     'Q'
 ], function ( Q ) {
 
+    'use strict';
+
     var osgWrapper = {};
 
     osgWrapper.Object = function ( input, obj ) {
@@ -398,14 +400,12 @@ define( [
     osgWrapper.Geometry = function ( input, node ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
-            if ( o.PrimitiveSetList !== undefined && o.VertexAttributeList !== undefined ) {
-                return true;
-            }
-            return false;
+            return o.VertexAttributeList !== undefined;
         };
         if ( !check( jsonObj ) ) {
             return;
         }
+        jsonObj.PrimitiveSetList = jsonObj.PrimitiveSetList || [];
 
         var arraysPromise = [];
         arraysPromise.push( osgWrapper.Node( input, node ) );
