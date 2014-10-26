@@ -9,6 +9,7 @@ define( [
     'osg/Projection',
     'osg/LightSource',
     'osg/Geometry',
+    'osg/RenderLeaf',
     'osg/RenderStage',
     'osg/Node',
     'osg/Lod',
@@ -18,7 +19,7 @@ define( [
     'osg/Vec4',
     'osg/Vec3',
     'osg/ComputeMatrixFromNodePath'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath ) {
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderLeaf, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath ) {
 
 
     /**
@@ -46,7 +47,7 @@ define( [
         this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
         /*jshint bitwise: true */
 
-        this._reserveLeafStack = [ {} ];
+        this._reserveLeafStack = [ new RenderLeaf() ];
         this._reserveLeafStack.current = 0;
 
         this._renderBinStack = [];
@@ -207,7 +208,7 @@ define( [
             // Reset the stack before reseting the current leaf index.
             // Reseting elements and refilling them later is faster than create new elements
             // That's the reason to have a leafStack, see http://jsperf.com/refill/2
-            this._resetRenderLeafStack();
+            this.resetRenderLeafStack();
             this._reserveLeafStack.current = 0;
 
             this._computedNear = Number.POSITIVE_INFINITY;
@@ -271,22 +272,17 @@ define( [
             this[ node.typeID ].call( this, node );
         },
 
-        _getReservedLeaf: function () {
+        createOrReuseRenderLeaf: function () {
             var l = this._reserveLeafStack[ this._reserveLeafStack.current++ ];
             if ( this._reserveLeafStack.current === this._reserveLeafStack.length ) {
-                this._reserveLeafStack.push( {} );
+                this._reserveLeafStack.push( new RenderLeaf() );
             }
             return l;
         },
-        _resetRenderLeafStack: function () {
+
+        resetRenderLeafStack: function () {
             for ( var i = 0, j = this._reserveLeafStack.current; i <= j; i++ ) {
-                this._reserveLeafStack[ i ].parent = undefined;
-                this._reserveLeafStack[ i ].projection = undefined;
-                this._reserveLeafStack[ i ].geometry = undefined;
-                this._reserveLeafStack[ i ].modelView = undefined;
-                this._reserveLeafStack[ i ].modelWorld = undefined;
-                this._reserveLeafStack[ i ].view = undefined;
-                this._reserveLeafStack[ i ].depth = undefined;
+                this._reserveLeafStack[ i ].reset();
             }
         },
 
@@ -618,7 +614,7 @@ define( [
             this._currentRenderBin.addStateGraph( this._currentStateGraph );
         }
 
-        var leaf = this._getReservedLeaf();
+        var leaf = this.createOrReuseRenderLeaf();
         var depth = 0;
         if ( bb.valid() ) {
             depth = this.distance( bb.center(), modelview );
@@ -626,14 +622,15 @@ define( [
         if ( isNaN( depth ) ) {
             Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + bb.center() );
         } else {
-            //leaf.id = this._reserveLeafStack.current;
-            leaf.parent = this._currentStateGraph;
-            leaf.projection = this.getCurrentProjectionMatrix();
-            leaf.geometry = node;
-            leaf.view = this.getCurrentViewMatrix();
-            leaf.modelWorld = this.getCurrentModelWorldMatrix();
-            leaf.modelView = this.getCurrentModelViewMatrix();
-            leaf.depth = depth;
+
+            leaf.init( this._currentStateGraph,
+                       node,
+                       this.getCurrentProjectionMatrix(),
+                       this.getCurrentViewMatrix(),
+                       this.getCurrentModelViewMatrix(),
+                       this.getCurrentModelWorldMatrix(),
+                       depth );
+
             leafs.push( leaf );
         }
 

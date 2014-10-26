@@ -442,7 +442,7 @@ define( [
 
             // noticed that we accumulate lot of stack, maybe because of the stateGraph
             state.popAllStateSets();
-            state.applyWithoutProgram(); //state.apply(); // apply default state (global)
+            state.apply();
         },
 
         frame: function () {

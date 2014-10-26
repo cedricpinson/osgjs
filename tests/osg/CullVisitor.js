@@ -390,9 +390,9 @@ define( [
                 node3.accept( cull );
                 rs.sort();
 
-                ok( rs._bins[ '0' ]._leafs[ 2 ].depth === -15, 'Check depth of leaf 0' );
-                ok( rs._bins[ '0' ]._leafs[ 1 ].depth === -10, 'Check depth of leaf 1' );
-                ok( rs._bins[ '0' ]._leafs[ 0 ].depth === 5, 'Check depth of leaf 2' );
+                ok( rs._bins[ '0' ]._leafs[ 2 ]._depth === -15, 'Check depth of leaf 0' );
+                ok( rs._bins[ '0' ]._leafs[ 1 ]._depth === -10, 'Check depth of leaf 1' );
+                ok( rs._bins[ '0' ]._leafs[ 0 ]._depth === 5, 'Check depth of leaf 2' );
                 ok( rs._bins[ '0' ]._sortMode === RenderBin.SORT_BACK_TO_FRONT, 'Check RenderBin sort mode' );
 
             } )();
@@ -435,7 +435,7 @@ define( [
                 root.accept( cull );
                 rs.sort();
 
-                ok( rs._bins[ '10' ]._leafs[ 0 ].depth === 10, 'Check transparent bin' );
+                ok( rs._bins[ '10' ]._leafs[ 0 ]._depth === 10, 'Check transparent bin' );
                 ok( rs._bins[ '10' ].getStateGraphList().length === 0, 'Check transparent bin StateGraphList' );
                 ok( rs._leafs.length === 0, 'Check leafs for normal rendering bin' );
                 ok( rs.getStateGraphList().length === 1, 'Check StateGraphList for normal rendering bin' );
@@ -543,7 +543,7 @@ define( [
                 viewer.cull();
 
                 // Get the cullVisitor and push the nodepath, simulating a scene traversal.
-                var cull = viewer._cullVisitor; 
+                var cull = viewer._cullVisitor;
                 cull.nodePath = [];
                 cull.nodePath.push( scene );
                 cull.nodePath.push( mt );
@@ -570,9 +570,9 @@ define( [
 
             var checkLeaf = function ( leaf ) {
                 var tmp = Matrix.create();
-                Matrix.mult( leaf.view, leaf.modelWorld, tmp );
+                Matrix.mult( leaf._view, leaf._modelWorld, tmp );
 
-                mockup.near( tmp, leaf.modelView );
+                mockup.near( tmp, leaf._modelView );
                 //ok( mockup.check_near( tmp, leaf.modelview ), 'View * World === ModelView' );
             };
 

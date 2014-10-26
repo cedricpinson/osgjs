@@ -5,6 +5,7 @@ define( [
     'osg/BoundingSphere',
     'osg/BufferArray',
     'osg/Camera',
+    'osg/ColorMask',
     'osg/ComputeMatrixFromNodePath',
     'osg/CullFace',
     'osg/CullSettings',
@@ -41,6 +42,7 @@ define( [
     'osg/Projection',
     'osg/Quat',
     'osg/RenderBin',
+    'osg/RenderLeaf',
     'osg/RenderStage',
     'osg/Shader',
     'osg/Shape',
@@ -70,6 +72,7 @@ define( [
     BoundingSphere,
     BufferArray,
     Camera,
+    ColorMask,
     ComputeMatrixFromNodePath,
     CullFace,
     CullSettings,
@@ -106,6 +109,7 @@ define( [
     Projection,
     Quat,
     RenderBin,
+    RenderLeaf,
     RenderStage,
     Shader,
     Shape,
@@ -137,6 +141,7 @@ define( [
     osg.BoundingSphere = BoundingSphere;
     osg.BufferArray = BufferArray;
     osg.Camera = Camera;
+    osg.ColorMask = ColorMask;
     MACROUTILS.objectMix( osg, ComputeMatrixFromNodePath );
     osg.CullFace = CullFace;
     osg.CullSettings = CullSettings;
@@ -175,6 +180,7 @@ define( [
     osg.Projection = Projection;
     osg.Quat = Quat;
     osg.RenderBin = RenderBin;
+    osg.RenderLeaf = RenderLeaf;
     osg.RenderStage = RenderStage;
     osg.Shader = Shader;
     MACROUTILS.objectMix( osg, Shape );
