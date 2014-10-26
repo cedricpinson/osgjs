@@ -2,6 +2,7 @@ define( [
     'osg/Map',
     'osg/Matrix',
     'osg/Notify',
+
     'osg/Object',
     'osg/StateAttribute',
     'osg/Stack',

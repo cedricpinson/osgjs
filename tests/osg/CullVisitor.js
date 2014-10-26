@@ -554,7 +554,6 @@ define( [
 
                 // Get the cullVisitor and push the nodepath, simulating a scene traversal.
                 var cull = viewer.getCamera().getRenderer().getCullVisitor();
-
                 cull.nodePath = [];
                 cull.nodePath.push( scene );
                 cull.nodePath.push( mt );
