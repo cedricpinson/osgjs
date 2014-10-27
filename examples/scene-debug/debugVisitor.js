@@ -61,36 +61,29 @@ DebugVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
         this._linkList = [];
     },
 
-    // Create a good sized array to display the matrix
+    // Create an array to display the matrix
     createMatrixGrid: function ( node, nodeMatrix ) {
-        var maxSize = 0;
-        var firstRowMaxSize = 0;
-        var i;
-        for ( i = 0; i < 16; i++ ) {
-            if ( ( node.matrix[ i ] + '' ).length > maxSize ) {
-                maxSize = ( node.matrix[ i ] + '' ).length;
-            }
-            if ( i % 4 === 0 && ( node.matrix[ i ] + '' ).length > firstRowMaxSize ) {
-                firstRowMaxSize = ( node.matrix[ i ] + '' ).length;
-            }
-        }
-        maxSize++;
-        for ( i = 0; i < 16; i++ ) {
-            var j;
-            if ( i % 4 === 0 ) {
-                for ( j = ( node.matrix[ i ] + '' ).length; j < firstRowMaxSize; j++ ) {
-                    nodeMatrix += ' ';
-                }
-            } else {
-                for ( j = ( node.matrix[ i ] + '' ).length; j < maxSize; j++ ) {
-                    nodeMatrix += ' ';
-                }
-            }
-            nodeMatrix += node.matrix[ i ];
-            if ( ( i + 1 ) % 4 === 0 ) {
-                nodeMatrix += '<br />';
-            }
-        }
+
+        nodeMatrix += '<table><tr><td>' + node.matrix[ 0 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 1 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 2 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 3 ] + '</td></tr>';
+
+        nodeMatrix += '<tr><td>' + node.matrix[ 4 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 5 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 6 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 7 ] + '</td></tr>';
+
+        nodeMatrix += '<tr><td>' + node.matrix[ 8 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 9 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 10 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 11 ] + '</td></tr>';
+
+        nodeMatrix += '<tr><td>' + node.matrix[ 12 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 13 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 14 ] + '</td>';
+        nodeMatrix += '<td>' + node.matrix[ 15 ] + '</td></tr></table>';
+
         return nodeMatrix;
     },
 

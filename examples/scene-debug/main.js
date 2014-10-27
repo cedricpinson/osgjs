@@ -6,6 +6,7 @@
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
+    var focusedElement = 'scene';
 
     var Example = function () {};
 
@@ -240,12 +241,14 @@
             viewer.run();
 
             $( '.button' ).click( function () {
-                if ( $( 'svg' ).css( 'zIndex' ) === '-1' ) {
-                    $( '.button' ).text( 'Access to the scene' );
-                    $( 'svg' ).css( 'zIndex', '1' );
-                } else {
+                if ( focusedElement === 'scene' ) {
                     $( '.button' ).text( 'Access to the graph' );
                     $( 'svg' ).css( 'zIndex', '-1' );
+                    focusedElement = 'graph';
+                } else {
+                    $( '.button' ).text( 'Access to the scene' );
+                    $( 'svg' ).css( 'zIndex', '1' );
+                    focusedElement = 'scene';
                 }
             } );
         }

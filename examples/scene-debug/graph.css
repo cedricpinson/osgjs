@@ -1,11 +1,3 @@
-text {
-  text-align: center;
-
-  font-weight: 300;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
-  font-size: 14px;
-}
-
 .node {
   text-align: center;
   
@@ -19,10 +11,6 @@ text {
 .edgePath path {
   stroke: #FFF;
   fill: none;
-}
-
-.node text {
-  pointer-events: none;
 }
 
 /* This styles the title of the tooltip */
@@ -69,12 +57,18 @@ svg {
   text-decoration: none;
   vertical-align: middle;
 }
+
 .button:hover {
   border-top-color: #28597a;
   background: #28597a;
   color: #ccc;
 }
+
 .button:active {
   border-top-color: #1b435e;
   background: #1b435e;
+}
+
+table {
+  text-align: right;
 }
