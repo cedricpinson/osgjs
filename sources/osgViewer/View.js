@@ -10,9 +10,10 @@ define( [
     'osg/Matrix',
     'osg/Light',
     'osg/WebGLCaps',
+    'osg/Texture',
     'osgUtil/IntersectionVisitor',
     'osgUtil/LineSegmentIntersector'
-], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, WebGLCaps, IntersectionVisitor, LineSegmentIntersector ) {
+], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, WebGLCaps, Texture, IntersectionVisitor, LineSegmentIntersector ) {
 
     'use strict';
 
@@ -181,6 +182,12 @@ define( [
                     this._light = undefined;
                 }
             }
+        },
+        flushDeletedGLObjects: function ( /*currentTime,*/ availableTime )
+        {
+            // Flush all deleted OpenGL objects within the specified availableTime 
+            Texture.textureManager.flushDeletedTextureObjects( this.getGraphicContext(), availableTime );
+            // More GL Objects.... 
         }
 
     };

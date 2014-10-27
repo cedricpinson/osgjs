@@ -323,6 +323,10 @@ define( [
 
         getNumChildrenWithCullingDisabled: function () {
             return this._numChildrenWithCullingDisabled;
+        },
+
+        releaseGLObjects: function () {
+            if ( this.stateset!== undefined ) this.stateset.releaseGLObjects();
         }
 
     } ), 'osg', 'Node' );

@@ -22,7 +22,7 @@ define( [
         Lod.call( this );
         this._perRangeDataList = [];
         this._loading = false;
-        this._expiryTime = 10.0;
+        this._expiryTime = 5.0;
         this._centerMode = Lod.USER_DEFINED_CENTER;
     };
 

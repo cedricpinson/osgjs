@@ -90,7 +90,7 @@ define( [
             var textureObject;
             if ( this._orphanedTextureObjects.length > 0 ) {
                 textureObject = this.takeFromOrphans();
-                textureObject.setTexture( texture );
+                textureObject._texture= texture;
                 this._usedTextureObjects.push( textureObject );
                 return textureObject;
             }
@@ -120,13 +120,34 @@ define( [
                 this._usedTextureObjects.splice( index, 1 );
             }
         },
+
+        flushDeletedTextureObjects: function( gl , availableTime ) {
+            var nbTextures = this._orphanedTextureObjects.length;
+
+            // Should we use a maxSizeTexturePool value?
+            //var size = this.getProfile().getSize();
+
+            // if no time available don't try to flush objects.
+            if ( availableTime<= 0.0 ) return;
+            // We need to test if we have time to flush
+            for ( var i = 0, j = nbTextures; i < j ; ++i )
+            {
+                gl.deleteTexture( this._orphanedTextureObjects[ i ].id() );
+                this._orphanedTextureObjects[ i ].reset();
+                this._orphanedTextureObjects.splice( i, 1 );
+            }
+            // TODO: Update available time
+            //Notify.info( 'TextureManager: released ' + nbTextures + ' with ' + (nbTextures*size/(1024*1024)) + ' MB' );
+        },
+
         flushAllDeletedTextureObjects: function( gl ) {
             var nbTextures = this._orphanedTextureObjects.length;
             var size = this.getProfile().getSize();
-            this._orphanedTextureObjects.forEach( function( textureObject ) {
-                gl.deleteTexture( textureObject.id() );
-                textureObject.reset();
-            });
+            for ( var i = 0, j = nbTextures; i < j; ++i )
+            {
+                gl.deleteTexture( this._orphanedTextureObjects[ i ].id() );
+                this._orphanedTextureObjects[ i ].reset();
+            }
             this._orphanedTextureObjects.length = 0;
             Notify.info( 'TextureManager: released ' + nbTextures + ' with ' + (nbTextures*size/(1024*1024)) + ' MB' );
         }
@@ -167,13 +188,21 @@ define( [
                 Notify.notice( ''+ size + ' MB with ' + nb + ' texture of ' + profile._width +'x' + profile._height + ' ' + profile._internalFormat);
             }, this );
             Notify.notice( ''+ total + ' MB in total');
-
         },
 
         flushAllDeletedTextureObjects: function( gl ) {
             Object.keys( this._textureSetMap ).forEach( function( key ) {
                 this._textureSetMap[ key ].flushAllDeletedTextureObjects( gl );
             }, this );
+        },
+
+        flushDeletedTextureObjects: function( gl, availableTime ) {
+            var key;
+            for ( var i = 0, j = Object.keys( this._textureSetMap ).length; i < j; i++)
+            {
+                key = Object.keys( this._textureSetMap )[ i ];
+                this._textureSetMap[ key ].flushDeletedTextureObjects( gl, availableTime );
+            }
         },
 
         releaseTextureObject: function( textureObject ) {
