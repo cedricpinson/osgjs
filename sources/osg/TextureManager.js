@@ -1,7 +1,8 @@
 define( [
-    'osg/Notify'
+    'osg/Notify',
+    'osg/Utils'
 
-], function ( Notify ) {
+], function ( Notify, MACROUTILS ) {
 
     var TextureProfile = function( target, internalFormat, width, height ) {
         this._target = target;
@@ -130,13 +131,18 @@ define( [
             // if no time available don't try to flush objects.
             if ( availableTime<= 0.0 ) return;
             // We need to test if we have time to flush
-            for ( var i = 0, j = nbTextures; i < j ; ++i )
+            var elapsedTime = 0.0;
+            var beginTime = MACROUTILS.performance.now();
+
+            for ( var i = 0, j = nbTextures; i < j && elapsedTime < availableTime; ++i )
             {
                 gl.deleteTexture( this._orphanedTextureObjects[ i ].id() );
                 this._orphanedTextureObjects[ i ].reset();
                 this._orphanedTextureObjects.splice( i, 1 );
+                elapsedTime = MACROUTILS.performance.now() - beginTime;
             }
-            // TODO: Update available time
+
+            availableTime -= elapsedTime;
             //Notify.info( 'TextureManager: released ' + nbTextures + ' with ' + (nbTextures*size/(1024*1024)) + ' MB' );
         },
 
@@ -198,7 +204,7 @@ define( [
 
         flushDeletedTextureObjects: function( gl, availableTime ) {
             var key;
-            for ( var i = 0, j = Object.keys( this._textureSetMap ).length; i < j; i++)
+            for ( var i = 0, j = Object.keys( this._textureSetMap ).length; i < j && availableTime > 0.0; i++)
             {
                 key = Object.keys( this._textureSetMap )[ i ];
                 this._textureSetMap[ key ].flushDeletedTextureObjects( gl, availableTime );
