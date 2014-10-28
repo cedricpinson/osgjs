@@ -173,10 +173,9 @@ define( [
         getHeight: function () {
             return this._textureHeight;
         },
-        releaseGLObjects: function ( gl ) {
-
+        releaseGLObjects: function ( ) {
             if ( this._textureObject !== undefined && this._textureObject !== null ) {
-                this._textureObject.releaseTextureObject( gl );
+                Texture.textureManager.releaseTextureObject( this._textureObject );
                 this._textureObject = undefined;
                 this._image = undefined;
             }

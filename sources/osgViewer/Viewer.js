@@ -374,6 +374,9 @@ define( [
 
         update: function () {
             this.getScene().accept( this._updateVisitor );
+            // We do the flushDeletedGLObjects in the udpate phase because we can only have one context
+            // In OSG that is deferred until the draw traversal, to handle multiple contexts
+            this.flushDeletedGLObjects( 0.005 );
         },
         cull: function () {
             // this part of code should be called for each view

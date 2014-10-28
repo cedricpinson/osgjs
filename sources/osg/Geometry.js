@@ -22,6 +22,7 @@ define( [
     /** @lends Geometry.prototype */
     Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
         releaseGLObjects: function ( gl ) {
+            if ( this.stateset !== undefined ) this.stateset.releaseGLObjects();
             var i;
             for ( i in this.attributes ) {
                 this.attributes[ i ].releaseGLObjects( gl );
