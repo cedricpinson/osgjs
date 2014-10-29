@@ -6,160 +6,10 @@
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
-    var focusedElement = 'scene';
 
     var Example = function () {};
 
     Example.prototype = {
-
-        // Simple tooltips implementation
-        SimpleTooltips: function ( options ) {
-            this.options = options;
-
-            var css = document.createElement( "style" );
-            css.type = "text/css";
-            css.innerHTML = [
-                ".simple-tooltip {",
-                "display: none;",
-                "position: absolute;",
-                "margin-left: 10px;",
-                "border-radius: 4px;",
-                "padding: 10px;",
-                "background: rgba(0,0,0,.9);",
-                "color: #ffffff;",
-                "}",
-                ".simple-tooltip:before {",
-                "content: ' ';",
-                "position: absolute;",
-                "left: -10px;",
-                "top: 8px;",
-                "border: 10px solid transparent;",
-                "border-width: 10px 10px 10px 0;",
-                "border-right-color: rgba(0,0,0,.9);",
-                "}"
-            ].join( '\n' );
-            document.getElementsByTagName( "head" )[ 0 ].appendChild( css );
-
-            this.el = document.createElement( 'div' );
-            this.el.className = 'simple-tooltip';
-            document.body.appendChild( this.el );
-
-            function showTooltip( e ) {
-                var target = e.currentTarget;
-                this.el.innerHTML = target.getAttribute( 'title' );
-                this.el.style.display = 'block';
-                this.el.style.left = ( $( target ).position().left + $( target ).get( 0 ).getBoundingClientRect().width ) + 'px';
-                this.el.style.top = $( target ).position().top + 'px';
-            }
-
-            function hideTooltip( e ) {
-                this.el.style.display = 'none';
-            }
-
-            var nodes = document.querySelectorAll( this.options.selector );
-            for ( var i = 0; i < nodes.length; i++ ) {
-                nodes[ i ].addEventListener( 'mouseover', showTooltip.bind( this ), false );
-                nodes[ i ].addEventListener( 'mouseout', hideTooltip.bind( this ), false );
-            }
-        },
-
-        // Create and display a dagre d3 graph
-        createGraph: function ( visitor ) {
-
-            var g = new dagreD3.Digraph();
-
-            g = this.generateNodeAndLink( visitor, g );
-
-            // Create the renderer
-            var renderer = new dagreD3.Renderer();
-
-            // Set up an SVG group so that we can translate the final graph.
-            var svg = d3.select( 'svg' ),
-                svgGroup = svg.append( 'g' );
-
-            // Set initial zoom to 75%
-            var initialScale = 0.75;
-            var oldZoom = renderer.zoom();
-            renderer.zoom( function ( graph, svg ) {
-                var zoom = oldZoom( graph, svg );
-
-                zoom.scale( initialScale ).event( svg );
-                return zoom;
-            } );
-
-            // Simple function to style the tooltip for the given node.
-            var styleTooltip = function ( name, description ) {
-                return '<p class="name">' + name + '</p><pre class="description">' + description + '</pre>';
-            };
-
-            // Override drawNodes to set up the hover.
-            var oldDrawNodes = renderer.drawNodes();
-            renderer.drawNodes( function ( g, svg ) {
-                var svgNodes = oldDrawNodes( g, svg );
-
-                // Set the title on each of the nodes and use tipsy to display the tooltip on hover
-                svgNodes.attr( 'title', function ( d ) {
-                    return styleTooltip( d, g.node( d ).description );
-                } );
-
-                return svgNodes;
-            } );
-
-            // Run the renderer. This is what draws the final graph.
-            var layout = renderer.run( g, svgGroup );
-
-            new this.SimpleTooltips( {
-                selector: '.node'
-            } );
-
-            // Do a console log of the node (or stateset) and save it in Window.*
-            $( '.node' ).click( function () {
-                var identifier = $( this ).attr( 'title' ).split( '<' )[ 1 ].split( '>' )[ 1 ];
-                if ( identifier.search( 'StateSet' ) === -1 ) {
-                    window.activeNode = visitor.getFullNodeList()[ identifier ];
-                    console.log( 'window.activeNode is set.' );
-                    console.log( visitor.getFullNodeList()[ identifier ] );
-                } else {
-                    var stateset = visitor.getFullNodeList()[ identifier.split( ' ' )[ 2 ] ].stateset;
-                    window.activeStateset = stateset;
-                    console.log( 'window.activeStateset is set.' );
-                    console.log( stateset );
-
-                }
-
-            } );
-        },
-
-        // Subfunction of createGraph, will iterate to create all the node and link in dagre
-        generateNodeAndLink: function ( visitor, g ) {
-            for ( var i = 0; i < visitor.getNodeListSize(); i++ ) {
-                var element = visitor.getNodeList()[ i ];
-
-                g.addNode( element.instanceID, {
-                    label: element.className + ( element.name ? '\n' + element.name : '' ),
-                    description: ( element.stateset != null ? 'StateSetID : ' + element.stateset.statesetID : '' ) + ( element.stateset != null && element.matrix !== '' ? '<br /><br />' : '' ) + element.matrix
-                } );
-
-                if ( element.stateset != null ) {
-
-                    g.addNode( element.stateset.name, {
-                        label: 'StateSet',
-                        description: 'numTexture : ' + element.stateset.numTexture,
-                        style: 'fill: #0099FF;stroke-width: 0px;'
-                    } );
-
-                    g.addEdge( null, element.instanceID, element.stateset.name, {
-                        style: 'stroke: #0099FF;'
-                    } );
-                }
-            }
-
-            for ( i = 0; i < visitor.getLinkListSize(); i++ ) {
-                g.addEdge( null, visitor.getLinkList()[ i ].parentNode, visitor.getLinkList()[ i ].childrenNode );
-            }
-
-            return g;
-        },
 
         // This function will create a basic scene with some cubes
         createScene: function () {
@@ -213,11 +63,6 @@
             root.addChild( group3 );
             root.addChild( group4 );
 
-            var visitor = new DebugVisitor;
-            root.accept( visitor );
-
-            this.createGraph( visitor );
-
             return root;
         },
 
@@ -231,7 +76,14 @@
             viewer.init();
 
             var rotate = new osg.MatrixTransform();
-            rotate.addChild( this.createScene() );
+            var root = this.createScene();
+
+            var visitor = new DebugVisitor;
+            root.accept( visitor );
+
+            visitor.createGraph();
+
+            rotate.addChild( root );
 
             viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
             viewer.setSceneData( rotate );
@@ -239,18 +91,6 @@
             viewer.getManipulator().computeHomePosition();
 
             viewer.run();
-
-            $( '.button' ).click( function () {
-                if ( focusedElement === 'scene' ) {
-                    $( '.button' ).text( 'Access to the graph' );
-                    $( 'svg' ).css( 'zIndex', '-1' );
-                    focusedElement = 'graph';
-                } else {
-                    $( '.button' ).text( 'Access to the scene' );
-                    $( 'svg' ).css( 'zIndex', '1' );
-                    focusedElement = 'scene';
-                }
-            } );
         }
 
     };
