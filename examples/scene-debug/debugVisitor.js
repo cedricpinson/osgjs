@@ -1,5 +1,58 @@
 var osg = window.OSG.osg;
 
+// Simple tooltips implementation
+var SimpleTooltips = function ( options ) {
+
+    this.options = options;
+
+    var css = document.createElement( "style" );
+    css.type = "text/css";
+    css.innerHTML = [
+        ".simple-tooltip {",
+        "display: none;",
+        "position: absolute;",
+        "margin-left: 10px;",
+        "border-radius: 4px;",
+        "padding: 10px;",
+        "background: rgba(0,0,0,.9);",
+        "color: #ffffff;",
+        "}",
+        ".simple-tooltip:before {",
+        "content: ' ';",
+        "position: absolute;",
+        "left: -10px;",
+        "top: 8px;",
+        "border: 10px solid transparent;",
+        "border-width: 10px 10px 10px 0;",
+        "border-right-color: rgba(0,0,0,.9);",
+        "}"
+    ].join( '\n' );
+    document.getElementsByTagName( "head" )[ 0 ].appendChild( css );
+
+    this.el = document.createElement( 'div' );
+    this.el.className = 'simple-tooltip';
+    document.body.appendChild( this.el );
+
+    function showTooltip( e ) {
+        var target = e.currentTarget;
+        this.el.innerHTML = target.getAttribute( 'title' );
+        this.el.style.display = 'block';
+        this.el.style.left = ( $( target ).position().left + $( target ).get( 0 ).getBoundingClientRect().width ) + 'px';
+        this.el.style.top = $( target ).position().top + 'px';
+    }
+
+    function hideTooltip( e ) {
+        this.el.style.display = 'none';
+    }
+
+    var nodes = document.querySelectorAll( this.options.selector );
+    for ( var i = 0; i < nodes.length; i++ ) {
+        nodes[ i ].addEventListener( 'mouseover', showTooltip.bind( this ), false );
+        nodes[ i ].addEventListener( 'mouseout', hideTooltip.bind( this ), false );
+    }
+}
+
+
 var DebugVisitor = function () {
     osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
 
@@ -11,6 +64,8 @@ var DebugVisitor = function () {
     this._focusedElement = 'scene';
 
     $( "body" ).append( '<svg width=100% height=100%></svg>' );
+
+    this._css = ".node {text-align: center;cursor: pointer;}.node rect {stroke: #FFF;}.edgePath path {stroke: #FFF;fill: none;}table {text-align: right;}svg {position: absolute;left: 0px;top: 0px;}.button {position: absolute;left: 15px;top: 15px;z-index: 5;border: 0;background: #65a9d7;background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));background: -webkit-linear-gradient(top, #3e779d, #65a9d7);background: -moz-linear-gradient(top, #3e779d, #65a9d7);background: -ms-linear-gradient(top, #3e779d, #65a9d7);background: -o-linear-gradient(top, #3e779d, #65a9d7);padding: 5px 10px;-webkit-border-radius: 7px;-moz-border-radius: 7px;border-radius: 7px;-webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;-moz-box-shadow: rgba(0,0,0,1) 0 1px 0;box-shadow: rgba(0,0,0,1) 0 1px 0;text-shadow: rgba(0,0,0,.4) 0 1px 0;color: white;font-size: 15px;font-family: Helvetica, Arial, Sans-Serif;text-decoration: none;vertical-align: middle;}.button:hover {border-top-color: #28597a;background: #28597a;color: #ccc;}.button:active {border-top-color: #1b435e;background: #1b435e;}.simple-tooltip .name {font-weight: bold;color: #60b1fc;margin: 0;}.simple-tooltip .description {margin: 0;}"
 };
 
 DebugVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
@@ -83,122 +138,8 @@ DebugVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
 
         var css = document.createElement( "style" );
         css.type = "text/css";
-        css.innerHTML = [
-            ".node {",
-            "text-align: center;",
-            "cursor: pointer;",
-            "}",
-            ".node rect {",
-            "stroke: #FFF;",
-            "}",
-            ".edgePath path {",
-            "stroke: #FFF;",
-            "fill: none;",
-            "}",
-            "table {",
-            "text-align: right;",
-            "}",
-            "svg {",
-            "position: absolute;",
-            "left: 0px;",
-            "top: 0px;",
-            "}",
-            ".button {",
-            "position: absolute;",
-            "left: 15px;",
-            "top: 15px;",
-            "z-index: 5;",
-            "border: 0;",
-            "background: #65a9d7;",
-            "background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));",
-            "background: -webkit-linear-gradient(top, #3e779d, #65a9d7);",
-            "background: -moz-linear-gradient(top, #3e779d, #65a9d7);",
-            "background: -ms-linear-gradient(top, #3e779d, #65a9d7);",
-            "background: -o-linear-gradient(top, #3e779d, #65a9d7);",
-            "padding: 5px 10px;",
-            "-webkit-border-radius: 7px;",
-            "-moz-border-radius: 7px;",
-            "border-radius: 7px;",
-            "-webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;",
-            "-moz-box-shadow: rgba(0,0,0,1) 0 1px 0;",
-            "box-shadow: rgba(0,0,0,1) 0 1px 0;",
-            "text-shadow: rgba(0,0,0,.4) 0 1px 0;",
-            "color: white;",
-            "font-size: 15px;",
-            "font-family: Helvetica, Arial, Sans-Serif;",
-            "text-decoration: none;",
-            "vertical-align: middle;",
-            "}",
-            ".button:hover {",
-            "border-top-color: #28597a;",
-            "background: #28597a;",
-            "color: #ccc;",
-            "}",
-            ".button:active {",
-            "border-top-color: #1b435e;",
-            "background: #1b435e;",
-            "}"
-        ].join( '\n' );
+        css.innerHTML = this._css;
         document.getElementsByTagName( "head" )[ 0 ].appendChild( css );
-    },
-
-    // Simple tooltips implementation
-    SimpleTooltips: function ( options ) {
-        this.options = options;
-
-        var css = document.createElement( "style" );
-        css.type = "text/css";
-        css.innerHTML = [
-            ".simple-tooltip {",
-            "display: none;",
-            "position: absolute;",
-            "margin-left: 10px;",
-            "border-radius: 4px;",
-            "padding: 10px;",
-            "background: rgba(0,0,0,.9);",
-            "color: #ffffff;",
-            "}",
-            ".simple-tooltip:before {",
-            "content: ' ';",
-            "position: absolute;",
-            "left: -10px;",
-            "top: 8px;",
-            "border: 10px solid transparent;",
-            "border-width: 10px 10px 10px 0;",
-            "border-right-color: rgba(0,0,0,.9);",
-            "}",
-            ".simple-tooltip .name {",
-            "font-weight: bold;",
-            "color: #60b1fc;",
-            "margin: 0;",
-            "}",
-            ".simple-tooltip .description {",
-            "margin: 0;",
-            "}"
-        ].join( '\n' );
-        document.getElementsByTagName( "head" )[ 0 ].appendChild( css );
-
-        this.el = document.createElement( 'div' );
-        this.el.className = 'simple-tooltip';
-        document.body.appendChild( this.el );
-
-        function showTooltip( e ) {
-            var target = e.currentTarget;
-            this.el.innerHTML = target.getAttribute( 'title' );
-            this.el.style.display = 'block';
-            this.el.style.left = ( $( target ).position().left + $( target ).get( 0 ).getBoundingClientRect().width ) + 'px';
-            this.el.style.top = $( target ).position().top + 'px';
-        }
-
-        function hideTooltip( e ) {
-            this.el.style.display = 'none';
-        }
-
-        var nodes = document.querySelectorAll( this.options.selector );
-        for ( var i = 0; i < nodes.length; i++ ) {
-            nodes[ i ].addEventListener( 'mouseover', showTooltip.bind( this ), false );
-            nodes[ i ].addEventListener( 'mouseout', hideTooltip.bind( this ), false );
-        }
     },
 
     // Create and display a dagre d3 graph
@@ -253,7 +194,7 @@ DebugVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
                 // Run the renderer. This is what draws the final graph.
                 var layout = renderer.run( g, svgGroup );
 
-                new this.SimpleTooltips( {
+                new SimpleTooltips( {
                     selector: '.node'
                 } );
 
