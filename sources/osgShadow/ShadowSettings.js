@@ -2,13 +2,13 @@ define( [
     'osg/Utils',
     'osg/Object',
     'osg/Texture'
-], function ( MACROUTILS, Object, Texture ) {
+], function( MACROUTILS, Object, Texture ) {
     'use strict';
     /**
      *  ShadowSettings provides the parameters that the ShadowTechnique should use as a guide for setting up shadowing
      *  @class ShadowSettings
      */
-    var ShadowSettings = function ( options ) {
+    var ShadowSettings = function( options ) {
         Object.call( this );
 
         this._receivesShadowTraversalMask = 0xffffffff;
@@ -64,101 +64,101 @@ define( [
     /** @lends ShadowSettings.prototype */
     ShadowSettings.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Object.prototype, {
 
-        setReceivesShadowTraversalMask: function ( mask ) {
+        setReceivesShadowTraversalMask: function( mask ) {
             this._receivesShadowTraversalMask = mask;
         },
-        getReceivesShadowTraversalMask: function () {
+        getReceivesShadowTraversalMask: function() {
             return this._receivesShadowTraversalMask;
         },
 
-        setCastsShadowTraversalMask: function ( mask ) {
+        setCastsShadowTraversalMask: function( mask ) {
             this._castsShadowTraversalMask = mask;
         },
-        getCastsShadowTraversalMask: function () {
+        getCastsShadowTraversalMask: function() {
             return this._castsShadowTraversalMask;
         },
 
-        setComputeNearFarModeOverride: function ( cnfn ) {
+        setComputeNearFarModeOverride: function( cnfn ) {
             this._computeNearFearModeOverride = cnfn;
         },
-        getComputeNearFarModeOverride: function () {
+        getComputeNearFarModeOverride: function() {
             return this._computeNearFearModeOverride;
         },
 
-        setLight: function ( light ) {
+        setLight: function( light ) {
             this._light = light;
         },
-        getLight: function () {
+        getLight: function() {
             return this._light;
         },
 
-        setBaseShadowTextureUnit: function ( unit ) {
+        setBaseShadowTextureUnit: function( unit ) {
             this._baseShadowTextureUnit = unit;
         },
-        getBaseShadowTextureUnit: function () {
+        getBaseShadowTextureUnit: function() {
             return this._baseShadowTextureUnit;
         },
 
         /** Set whether to use osg::StateAttribute::OVERRIDE for the shadow map texture.
          * Enabling override will force the shadow map texture to override any texture set on the shadow maps texture unit.*/
-        setUseOverrideForShadowMapTexture: function ( useOverride ) {
+        setUseOverrideForShadowMapTexture: function( useOverride ) {
             this._useShadowMapTextureOverride = useOverride;
         },
 
         /** Get whether to use osg::StateAttribute::OVERRIDE for the shadow map texture. */
-        getUseOverrideForShadowMapTexture: function () {
+        getUseOverrideForShadowMapTexture: function() {
             return this._useShadowMapTextureOverride;
         },
 
-        setTextureSize: function ( textureSize ) {
+        setTextureSize: function( textureSize ) {
             this._textureSize = textureSize;
         },
-        getTextureSize: function () {
+        getTextureSize: function() {
             return this._textureSize;
         },
-        setTextureType: function ( tt ) {
+        setTextureType: function( tt ) {
             this._textureType = tt;
         },
-        getTextureType: function () {
+        getTextureType: function() {
             return this._textureType;
         },
-        setTextureFilter: function ( tfMin, tfMax /* level af*/ ) {
+        setTextureFilter: function( tfMin, tfMax /* level af*/ ) {
             this._textureFilterMin = tfMin;
             this._textureFilterMax = tfMax;
         },
-        getTextureFilterMax: function () {
+        getTextureFilterMax: function() {
             return this._textureFilterMax;
         },
-        getTextureFilterMin: function () {
+        getTextureFilterMin: function() {
             return this._textureFilterMin;
         },
-        setTextureFormat: function ( tf ) {
+        setTextureFormat: function( tf ) {
             this._textureFormat = tf;
         },
-        getTextureFormat: function () {
+        getTextureFormat: function() {
             return this._textureFormat;
         },
 
 
-        setMinimumShadowMapNearFarRatio: function ( ratio ) {
+        setMinimumShadowMapNearFarRatio: function( ratio ) {
             this._minimumShadowMapNearFarRatio = ratio;
         },
-        getMinimumShadowMapNearFarRatio: function () {
+        getMinimumShadowMapNearFarRatio: function() {
             return this._minimumShadowMapNearFarRatio;
         },
 
-        setMaximumShadowMapDistance: function ( distance ) {
+        setMaximumShadowMapDistance: function( distance ) {
             this._maximumShadowMapDistance = distance;
         },
-        getMaximumShadowMapDistance: function () {
+        getMaximumShadowMapDistance: function() {
             return this._maximumShadowMapDistance;
         },
 
 
-        setShadowMapProjectionHint: function ( h ) {
+        setShadowMapProjectionHint: function( h ) {
             this._shadowMapProjectionHint = h;
         },
-        getShadowMapProjectionHint: function () {
+        getShadowMapProjectionHint: function() {
             return this._shadowMapProjectionHint;
         },
 
@@ -170,47 +170,47 @@ define( [
          * will be used.  Note, if ShadowMapProjectionH is set to ORTHOGRAPHICthis._SHADOWthis._MAP then an
          * orthographic shadow map will always be used.
          */
-        setPerspectiveShadowMapCutOffAngle: function ( angle ) {
+        setPerspectiveShadowMapCutOffAngle: function( angle ) {
             this._perspectiveShadowMapCutOffAngle = angle;
         },
-        getPerspectiveShadowMapCutOffAngle: function () {
+        getPerspectiveShadowMapCutOffAngle: function() {
             return this._perspectiveShadowMapCutOffAngle;
         },
 
 
-        setNumShadowMapsPerLight: function ( numShadowMaps ) {
+        setNumShadowMapsPerLight: function( numShadowMaps ) {
             this._numShadowMapsPerLight = numShadowMaps;
         },
-        getNumShadowMapsPerLight: function () {
+        getNumShadowMapsPerLight: function() {
             return this._numShadowMapsPerLight;
         },
 
 
-        setMultipleShadowMapHint: function ( h ) {
+        setMultipleShadowMapHint: function( h ) {
             this._multipleShadowMapHint = h;
         },
-        getMultipleShadowMapHint: function () {
+        getMultipleShadowMapHint: function() {
             return this._multipleShadowMapHint;
         },
 
 
 
-        setShaderHint: function ( shaderHint ) {
+        setShaderHint: function( shaderHint ) {
             this._shaderHint = shaderHint;
         },
-        getShaderHint: function () {
+        getShaderHint: function() {
             return this._shaderHint;
         },
 
-        setDebugDraw: function ( debugDraw ) {
+        setDebugDraw: function( debugDraw ) {
             this._debugDraw = debugDraw;
         },
-        getDebugDraw: function () {
+        getDebugDraw: function() {
             return this._debugDraw;
         },
 
 
-        getConfig: function ( idx ) {
+        getConfig: function( idx ) {
             return this._config[ idx ];
         }
 

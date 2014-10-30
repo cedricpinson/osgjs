@@ -42,6 +42,7 @@
 
              'lightMovement': 'Rotate',
              'lightSpeed': 1.0,
+             'lightDistance': 1.0,
              'lightAmbient': false,
              'frustumTest': 'free',
              'texture': true,
@@ -150,9 +151,9 @@
      var LightUpdateCallback = function ( myExample, debugNode ) {
          this._example = myExample;
          var position = this._example._lights[ 0 ].getPosition();
-         this._position_x = position[ 0 ];
-         this._position_y = position[ 1 ];
-         this._position_z = position[ 2 ];
+         this._positionX = position[ 0 ];
+         this._positionY = position[ 1 ];
+         this._positionZ = position[ 2 ];
          this._accum = 0;
          this._last = 0;
          this._debugNode = debugNode;
@@ -178,10 +179,11 @@
 
                  //var nodeParent = node.getParents()[ 0 ]; // transform parent node
 
-                 var fac = 1.0;
+                 var lightDist = parseFloat( this._example._config[ 'lightDistance' ] );
+                 var fac = 1.0 * lightDist;
                  var x = fac * Math.cos( delta );
                  var y = fac * Math.sin( delta );
-                 var z = fac * Math.sin( delta );
+                 //var z = fac * Math.sin( delta );
 
 
                  //  GENERIC Code getting direction
@@ -189,15 +191,15 @@
                  var lightTarget = [ 0.0, 0.0, 0.0 ];
                  switch ( this._example._config[ 'lightMovement' ] ) {
                  case 'Rotate':
-                     lightPos[ 0 ] = x * this._position_x;
-                     lightPos[ 1 ] = y * this._position_y;
+                     lightPos[ 0 ] = x * this._positionX;
+                     lightPos[ 1 ] = y * this._positionY;
                      //lightPos[ 2 ] = this._position_z;
                      // lightDir = [ 0.0, -15.0, -1.0 ];
                      lightDir = osg.Vec3.sub( lightTarget, lightPos, [] );
                      osg.Vec3.normalize( lightDir, lightDir );
                      break;
                  case 'Translate':
-                     lightPos[ 0 ] = x * this._position_x;
+                     lightPos[ 0 ] = x * this._positionZ;
                      //lightPos[ 1 ] = y * this._position_y;
                      //lightPos[ 2 ] = this._position_z;
                      lightDir = [ 0.0, -15.0, -1.0 ];
@@ -299,6 +301,9 @@
              controller.onChange( this.updateShadow.bind( this ) );
 
              controller = gui.add( this._config, 'lightSpeed', 0.0, 2.0 );
+             controller.onChange( this.updateShadow.bind( this ) );
+
+             controller = gui.add( this._config, 'lightDistance', 0.0, 5.0 );
              controller.onChange( this.updateShadow.bind( this ) );
 
              controller = gui.add( this._config, 'bias', 0.0001, 0.05 );
@@ -714,6 +719,8 @@
 
              if ( !this._rttdebugNode ) this._rttdebugNode = new osg.Node();
              if ( !this._ComposerdebugNode ) this._ComposerdebugNode = new osg.Node();
+             this._ComposerdebugNode._name = 'debugComposerNode';
+             this._ComposerdebugNode.setCullingActive( false );
              if ( !this._ComposerdebugCamera ) this._ComposerdebugCamera = new osg.Camera();
              this._rttdebugNode.addChild( this._ComposerdebugCamera );
 
@@ -963,41 +970,55 @@
              var ShadowScene = new osg.Node();
              ShadowScene.setName( 'ShadowScene' );
 
-             var _self = this;
              var modelNode = new osg.Node();
-             modelNode.setName( 'cubeSubNode' );
+             modelNode.setName( 'modelSubNode' );
 
              var modelName;
              modelName = this._config[ 'model' ];
-             var node = new osg.MatrixTransform();
-             if ( !modelName ) return node;
 
              var request = osgDB.readNodeURL( '../media/models/' + modelName + '/file.osgjs' );
 
              request.then( function ( model ) {
 
-                 node.addChild( model );
+                 model._name = 'material-test_model_0';
+                 modelNode.addChild( model );
 
                  var dist = 25;
 
-                 var modelSubNode = new osg.MatrixTransform();
-                 modelSubNode.setMatrix( osg.Matrix.makeTranslate( 0, 0, 0, [] ) );
-                 modelSubNode.setMatrix( osg.Matrix.makeScale( 0.1, 0.1, 0.1, [] ) );
-                 modelSubNode.addChild( model );
-                 modelNode.addChild( modelSubNode );
-                 modelSubNode = new osg.MatrixTransform();
-                 modelSubNode.setMatrix( osg.Matrix.makeTranslate( 0, dist, 0, [] ) );
-                 modelSubNode.addChild( model );
-                 modelNode.addChild( modelSubNode );
-
-                 modelSubNode = new osg.MatrixTransform();
-                 modelSubNode.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
-                 modelSubNode.addChild( model );
+                 var modelSubNodeTrans = new osg.MatrixTransform();
+                 var modelSubNode = new osg.Node();
+                 modelSubNode._name = 'material-test_model_1';
+                 modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.1, 0.1, 0.1, [] ) );
+                 osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), 0, 0, 0 );
+                 modelSubNodeTrans.addChild( model );
+                 modelSubNode.addChild( modelSubNodeTrans );
                  modelNode.addChild( modelSubNode );
 
-                 modelSubNode = new osg.MatrixTransform();
-                 modelSubNode.setMatrix( osg.Matrix.makeTranslate( -dist, 0, -5, [] ) );
-                 modelSubNode.addChild( model );
+                 modelSubNode = new osg.Node();
+                 modelSubNode._name = 'material-test_model_2';
+                 modelSubNodeTrans = new osg.MatrixTransform();
+                 modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.7, 0.7, 0.7, [] ) );
+                 osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), 0.7, 0.7, 0.7 );
+                 modelSubNodeTrans.addChild( model );
+                 modelSubNode.addChild( modelSubNodeTrans );
+                 modelNode.addChild( modelSubNode );
+
+                 modelSubNode = new osg.Node();
+                 modelSubNodeTrans = new osg.MatrixTransform();
+                 modelSubNode._name = 'material-test_model_3';
+                 modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.3, 0.3, 0.3, [] ) );
+                 osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), dist, 0, 0 );
+                 modelSubNodeTrans.addChild( model );
+                 modelSubNode.addChild( modelSubNodeTrans );
+                 modelNode.addChild( modelSubNode );
+
+                 modelSubNode = new osg.Node();
+                 modelSubNodeTrans = new osg.MatrixTransform();
+                 modelSubNode._name = 'material-test_model_3';
+                 modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
+                 osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), -dist, 0, -5 );
+                 modelSubNodeTrans.addChild( model );
+                 modelSubNode.addChild( modelSubNodeTrans );
                  modelNode.addChild( modelSubNode );
 
              }.bind( this ) );
@@ -1006,36 +1027,52 @@
              // testing light artifacts
              // peter panning, light streaks, etc.
              var cubeNode = new osg.Node();
+             cubeNode.setName( 'cubeNode' );
              //if ( window.location.href.indexOf( 'cube' ) !== -1 )
 
              var size = 2;
              var dist = 15;
              var cube = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size * 10 );
-             var cubeSubNode = new osg.MatrixTransform();
-             cubeSubNode.setName( 'cubeSubNode' );
+             var cubeSubNodeTrans = new osg.MatrixTransform();
+             cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( -dist, -dist, dist / 2, [] ) );
+             var cubeSubNode = new osg.Node();
+             cubeSubNode.addChild( cubeSubNodeTrans );
+             cubeSubNodeTrans.addChild( cube );
+             cubeSubNode.setName( 'cubeSubNode_0' );
+             cubeNode.addChild( cubeSubNode );
 
-             cubeSubNode.setMatrix( osg.Matrix.makeTranslate( -dist, -dist, dist / 2, [] ) );
-             cubeSubNode.addChild( cube );
              cubeNode.addChild( cubeSubNode );
              if ( 1 || window.location.href.indexOf( 'cubes' ) !== -1 ) {
-                 cubeSubNode = new osg.MatrixTransform();
-                 cubeSubNode.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
-                 cubeSubNode.addChild( cube );
+                 cubeSubNodeTrans = new osg.MatrixTransform();
+                 cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
+                 cubeSubNode = new osg.Node();
+                 cubeSubNode.addChild( cubeSubNodeTrans );
+                 cubeSubNodeTrans.addChild( cube );
+                 cubeSubNode.setName( 'cubeSubNode_1' );
                  cubeNode.addChild( cubeSubNode );
 
-                 cubeSubNode = new osg.MatrixTransform();
-                 cubeSubNode.setMatrix( osg.Matrix.makeTranslate( dist, dist, 0, [] ) );
-                 cubeSubNode.addChild( cube );
+                 cubeSubNodeTrans = new osg.MatrixTransform();
+                 cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( dist, dist, 0, [] ) );
+                 cubeSubNode = new osg.Node();
+                 cubeSubNode.addChild( cubeSubNodeTrans );
+                 cubeSubNodeTrans.addChild( cube );
+                 cubeSubNode.setName( 'cubeSubNode_2' );
                  cubeNode.addChild( cubeSubNode );
 
-                 cubeSubNode = new osg.MatrixTransform();
-                 cubeSubNode.setMatrix( osg.Matrix.makeTranslate( 0, dist, 0, [] ) );
-                 cubeSubNode.addChild( cube );
+                 cubeSubNodeTrans = new osg.MatrixTransform();
+                 cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( 0, dist, 0, [] ) );
+                 cubeSubNode = new osg.Node();
+                 cubeSubNode.addChild( cubeSubNodeTrans );
+                 cubeSubNodeTrans.addChild( cube );
+                 cubeSubNode.setName( 'cubeSubNode_3' );
                  cubeNode.addChild( cubeSubNode );
 
-                 cubeSubNode = new osg.MatrixTransform();
-                 cubeSubNode.setMatrix( osg.Matrix.makeTranslate( -dist, dist, -dist / 2, [] ) );
-                 cubeSubNode.addChild( cube );
+                 cubeSubNodeTrans = new osg.MatrixTransform();
+                 cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( -dist, dist, -dist / 2, [] ) );
+                 cubeSubNode = new osg.Node();
+                 cubeSubNode.addChild( cubeSubNodeTrans );
+                 cubeSubNodeTrans.addChild( cube );
+                 cubeSubNode.setName( 'cubeSubNode_4' );
                  cubeNode.addChild( cubeSubNode );
 
              }
@@ -1063,10 +1100,13 @@
              // to mimick real scene with many nodes
              for ( var wG = 0; wG < 5; wG++ ) {
                  for ( var wH = 0; wH < 5; wH++ ) {
-                     groundSubNode = new osg.MatrixTransform();
-                     groundSubNode.setMatrix( osg.Matrix.makeTranslate( wG * groundSize - 100, wH * groundSize - 100, -5.0, [] ) );
-                     groundSubNode.setName( 'groundSubNode' );
-                     groundSubNode.addChild( ground );
+                     var groundSubNodeTrans = new osg.MatrixTransform();
+                     groundSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( wG * groundSize - 100, wH * groundSize - 100, -5.0, [] ) );
+                     // only node are culled in CullVisitor frustum culling
+                     groundSubNode = new osg.Node();
+                     groundSubNode.setName( 'groundSubNode_' + wG + '_' + wH );
+                     groundSubNodeTrans.addChild( ground );
+                     groundSubNode.addChild( groundSubNodeTrans );
                      groundNode.addChild( groundSubNode );
                  }
              }
@@ -1115,37 +1155,23 @@
 
              //this._shadowScene.setNodeMask( CastsShadowTraversalMask );
              //this._shadowScene.setNodeMask( ReceivesShadowTraversalMask );
-             this._groundNode.setNodeMask( CastsShadowTraversalMask );
+             this._groundNode.setNodeMask( ~CastsShadowTraversalMask );
 
-             var lightScale = 1.0; // at three light you might burn...
+             var lightScale = 1.0;
+             // at three light you might burn...
              ////////////////// Light 0
              /////////////////////////////
-             var lightPos0 = [ 50, 50, 15, 0 ];
              var lightSource0 = new osg.LightSource();
              var lightNode0 = new osg.MatrixTransform();
-
-             //var destMatrix = lightNode0.getMatrix();
-             //osg.Matrix.makeLookAt( lightPos0, [ 0, 0, 0 ], [ 0, 0, 1 ], destMatrix );
-             //osg.Matrix.inverse( destMatrix, destMatrix );
-
              lightNode0.setName( 'lightNode0' );
              var light0 = new osg.Light( 0 );
              this._light0 = light0;
-
-
-             // spot light
-             //light0.setPosition( [ 0, 0, 0, 1 ] );
 
              light0.setPosition( [ 50, 50, 15, 1 ] );
              var dir = [ 0, 0, 0, 0 ];
              osg.Vec3.sub( [ 0, 0, 0.0 ], light0._position, dir );
              osg.Vec3.normalize( dir, dir );
              light0.setDirection( dir );
-
-             //light0.setDirection( [ 0, 1, 0 ] );
-
-             this.up = [ 0, 1, 0 ]; //   camera up
-
 
              light0.setName( 'light0' );
 
@@ -1166,7 +1192,7 @@
              this._lightsMatrix.push( lightNode0 );
              this._lightsSource.push( lightSource0 );
              // how to give light link to ancestor ?
-             // TODO: use positionned data ? to make sure it set before
+             // TODO: use positioned data ? to make sure it set before
              light0.setUserData( lightNode0 );
 
 
@@ -1184,10 +1210,15 @@
              lightSource0.setUpdateCallback( new LightUpdateCallback( this, lightNodemodelNode0 ) );
 
              shadowSettings.setLight( light0 );
-             ///
+             ///////////////////////////////
 
              var shadowMap = new osgShadow.ShadowMap();
              shadowedScene.setShadowTechnique( shadowMap );
+
+             /////////////////////////////
+             //light0.setShadowTechnique( shadowMap );
+             light0._shadowTechnique = shadowMap;
+             ///////////////////////////////////
 
              this._shadowTechnique[ 0 ] = shadowMap;
 
@@ -1211,9 +1242,9 @@
              this._rtt.push( shadowMap.getTexture() );
 
              this._rttdebugNode = new osg.Node();
+             this._rttdebugNode._name = 'debugFBNode';
              group.addChild( this._rttdebugNode );
 
-             this._rttdebugNode.setCullingActive( false );
              if ( this._config[ 'debugRtt' ] ) {
                  this.showFrameBuffers( {
                      screenW: this._canvas.width,

@@ -11,7 +11,7 @@ define( [
     'osg/BoundingBox',
     'osg/BoundingSphere',
     'osg/ComputeMatrixFromNodePath'
-], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath ) {
+], function( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath ) {
     'use strict';
     /**
      * [ComputeFrustumBoundsVisitor get a scene bounds limited by a light and camera frustum]
@@ -19,13 +19,16 @@ define( [
      * @param {[Array of Vec4]} camera frustum planes
      * @param {[Array of Vec4]} light frustum planes
      */
-    var ComputeFrustumBoundsVisitor = function ( traversalMode, cameraFrustum, lightFrustum ) {
+    var ComputeFrustumBoundsVisitor = function( traversalMode, cameraFrustum, lightFrustum ) {
         NodeVisitor.call( this, traversalMode );
         this._matrixStack = [];
         this._bb = new BoundingBox();
         this._bs = new BoundingSphere();
         this._tmpbb = new BoundingBox();
         this._cameraShadowFrustum = cameraFrustum;
+        this._lightFrustum = lightFrustum;
+        this._cameraShadowFrustumNormalized = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
+        this._lightFrustumNormalized = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
         this._lightFrustum = lightFrustum;
         this._tmpPos = Vec3.create();
         this._reserveCamMaskStack = [ 0 ];
@@ -42,7 +45,7 @@ define( [
      *  skeletal transform is done before (in node update callback)
      */
     ComputeFrustumBoundsVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
-        reset: function ( worldLightPos, frustumReceivers, frustumReceiversLength ) {
+        reset: function( worldLightPos, frustumReceivers, frustumReceiversLength ) {
             this._matrixStack.length = 0;
             this._bb.init();
             this._bs.init();
@@ -53,21 +56,36 @@ define( [
             this._reserveCamMaskStack.current = 0;
             this._reserveLightMaskStack[ 0 ] = 0;
             this._reserveLightMaskStack.current = 0;
-            // exclude planes that would exlude object between light and shadowed zone
+
+            this.normalizeFrustum( this._cameraShadowFrustum, this._cameraShadowFrustumNormalized );
+            this.normalizeFrustum( this._lightFrustum, this._lightFrustumNormalized );
+
+            // exclude planes that would exclude object between light and shadowed zone
             // so that casting object can cast from outside shadowed zone
             this.getCameraPlaneMaskForLightNear( worldLightPos, frustumReceivers, frustumReceiversLength );
         },
-        getBoundingBox: function () {
+        normalizeFrustum: function( input, output, len ) {
+            //Normalize the planes
+            for ( var i = 0; i < len; i++ ) {
+                var norm = input[ i ][ 0 ] * input[ i ][ 0 ] + input[ i ][ 1 ] * input[ i ][ 1 ] + input[ i ][ 2 ] * input[ i ][ 2 ];
+                var inv = 1.0 / Math.sqrt( norm );
+                output[ i ][ 0 ] = input[ i ][ 0 ] * inv;
+                output[ i ][ 1 ] = input[ i ][ 1 ] * inv;
+                output[ i ][ 2 ] = input[ i ][ 2 ] * inv;
+                output[ i ][ 3 ] = input[ i ][ 3 ] * inv;
+            }
+        },
+        getBoundingBox: function() {
             return this._bb;
         },
-        getReservedMaskStack: function ( maskStack ) {
+        getReservedMaskStack: function( maskStack ) {
             maskStack.current++;
             if ( maskStack.current === maskStack.length ) {
                 maskStack.push( 0 );
             }
             return 0;
         },
-        getCameraPlaneMaskForLightNear: function ( p, fArr, len ) {
+        getCameraPlaneMaskForLightNear: function( p, fArr, len ) {
             var d, f, i = len;
             while ( i-- ) {
                 f = fArr[ i ];
@@ -77,13 +95,13 @@ define( [
                 }
             }
         },
-        pushMatrix: function ( matrix ) {
+        pushMatrix: function( matrix ) {
             this._matrixStack.push( matrix );
         },
-        popMatrix: function () {
+        popMatrix: function() {
             return this._matrixStack.pop();
         },
-        isSphereCulled: function ( r, p, fArr, len, maskStack, lightMask ) {
+        isSphereCulled: function( r, p, fArr, fBox, len, maskStack, lightMask ) {
             var maskIn = this.getReservedMaskStack( maskStack );
             var maskOutidx = maskStack.current;
 
@@ -96,42 +114,53 @@ define( [
                     d = f[ 0 ] * p[ 0 ] + f[ 1 ] * p[ 1 ] + f[ 2 ] * p[ 2 ] + f[ 3 ];
                     if ( d <= -r ) {
                         return true; // totally outside
-                    }
-                    if ( d < r ) {
-                        // intersect with this plane
+                    } else if ( d >= r ) {
+                        // totally inside
                         this._maskStack[ maskOutidx ] |= i;
-                    }
+                    } // else if ( d < r && d > -r) {
+                    // intersect with this plane
+                    // can intersect
+                    //}
                 }
             }
+            /*
             // check frustum totally outside/inside sphere
             // but intersecting all planes
             // aabbox frustum against sphere
             i = len;
             while ( i-- ) {
                 f = fArr[ i ];
-                if ( f[ 0 ] > p[ 0 ] + r ) return true; // totally outside
-                if ( f[ 0 ] < p[ 0 ] - r ) return true; // totally outside
-                if ( f[ 1 ] > p[ 1 ] + r ) return true; // totally outside
-                if ( f[ 1 ] < p[ 1 ] - r ) return true; // totally outside
-                if ( f[ 2 ] > p[ 2 ] + r ) return true; // totally outside
-                if ( f[ 2 ] < p[ 2 ] - r ) return true; // totally outside
+                if ( fBox[ 0 ] > p[ 0 ] + r ) return true; // totally outside
+                if ( fBox[ 0 ] < p[ 0 ] - r ) return true; // totally outside
+                if ( fBox[ 1 ] > p[ 1 ] + r ) return true; // totally outside
+                if ( fBox[ 1 ] < p[ 1 ] - r ) return true; // totally outside
+                if ( fBox[ 2 ] > p[ 2 ] + r ) return true; // totally outside
+                if ( fBox[ 2 ] < p[ 2 ] - r ) return true; // totally outside
             }
             return false; //totally inside
+            */
         },
-        apply: function ( node ) {
+        apply: function( node ) {
             var didTest = false;
             if ( node.getMatrix ) {
                 // It's a Transform Node: hierarchical culling FTW.
                 var bs = this._bs;
                 node.computeBound( bs );
-                if ( this.isSphereCulled( bs.radius(), bs.center(), this._cameraShadowFrustum, this._cameraShadowFrustum.length, this._reserveCamMaskStack, this._cameraPlaneMaskedByLightNear ) ) {
+
+                // camera cull
+                if ( this.isSphereCulled( bs.radius(), bs.center(), this._cameraShadowFrustum, this._cameraShadowFrustumNormalized, this._cameraShadowFrustum.length, this._reserveCamMaskStack, this._cameraPlaneMaskedByLightNear ) ) {
                     // outside, end of the line.
                     this._reserveCamMaskStack.current--;
                     return;
                 }
+
+                // keep only casters between near and camera bbox ?
+                // using caster Traversal Mask
+
+                // light cull
                 // exclude frustum plane 5 & 6 which is far/near which we do not know
                 // as that's what we seek
-                if ( this.isSphereCulled( bs.radius(), bs.center(), this._lightFrustum, 5, this._reserveLightMaskStack, 0 ) ) {
+                if ( this.isSphereCulled( bs.radius(), bs.center(), this._lightFrustum, this._lightFrustumNormalized, 4, this._reserveLightMaskStack, 0 ) ) {
                     this._reserveCamMaskStack.current--;
                     this._reserveLightMaskStack.current--;
                     return;
@@ -141,21 +170,28 @@ define( [
             } else if ( node.getBoundingBox ) {
                 // local to world bounding sphere
                 var position = this._tmpPos;
-                var pos = node.getBound().center();
-                Vec3.copy( pos, position );
-                // TODO fix scale transform the radius
-                var radius = node.getBound().radius();
+
                 var m = ComputeMatrixFromNodePath.computeLocalToWorld( this.nodePath );
+                var scaleVec = Matrix.getScale2( m, position );
+                var scale = Math.sqrt( Math.max( Math.max( scaleVec[ 0 ], scaleVec[ 1 ] ), scaleVec[ 2 ] ) );
+                var radius = node.getBound().radius() * scale;
+
+                Vec3.copy( node.getBound().center(), position );
                 Matrix.transformVec3( m, position, position );
 
-                if ( this.isSphereCulled( radius, position, this._cameraShadowFrustum, this._cameraShadowFrustum.length, this._reserveCamMaskStack, this._cameraPlaneMaskedByLightNear ) ) {
+                // camera cull
+                if ( this.isSphereCulled( radius, position, this._cameraShadowFrustum, this._cameraShadowFrustumNormalized, this._cameraShadowFrustum.length, this._reserveCamMaskStack, this._cameraPlaneMaskedByLightNear ) ) {
                     this._reserveCamMaskStack.current--;
                     return;
                 }
 
-                // exclude frustum plane 5 & 6 which is far/near which we do not know
+                // keep only casters between near and camera bbox ?
+                // using caster Traversal Mask
+
+                // light cull
+                // exclude light frustum plane 5 & 6 which is far/near which we do not know
                 // as that's what we seek
-                if ( this.isSphereCulled( radius, position, this._lightFrustum, 4, this._reserveLightMaskStack, 0 ) ) {
+                if ( this.isSphereCulled( radius, position, this._lightFrustum, this._lightFrustumNormalized, 4, this._reserveLightMaskStack, 0 ) ) {
                     this._reserveCamMaskStack.current--;
                     this._reserveLightMaskStack.current--;
                     return;
@@ -170,7 +206,7 @@ define( [
                 this._reserveLightMaskStack.current--;
             }
         },
-        applyTransform: function ( transform ) {
+        applyTransform: function( transform ) {
             var matrix;
             if ( this._matrixStack.length !== 0 ) {
                 matrix = this._matrixStack[ this._matrixStack.length - 1 ];
@@ -190,7 +226,7 @@ define( [
         //  http://users.soe.ucsc.edu/~pang/160/f98/Gems/Gems/TransBox.c
         //  Transforms a 3D axis-aligned box via a 4x4 matrix
         // vector and returns an axis-aligned box enclosing the result.
-        transformBoundingbox: function ( matrix, bboxIn, bboxOut ) {
+        transformBoundingbox: function( matrix, bboxIn, bboxOut ) {
             var av, bv;
             var i, j, k;
 
@@ -218,7 +254,7 @@ define( [
             }
             return bboxOut;
         },
-        applyBoundingBox: function ( bbox ) {
+        applyBoundingBox: function( bbox ) {
             if ( this._matrixStack.length === 0 ) {
                 this._bb.expandByBoundingBox( bbox );
             } else if ( bbox.valid() ) {

@@ -110,7 +110,7 @@ define( [
             }
         },
         expandBy: function ( sh ) {
-            // ignore operation if incomming BoundingSphere is invalid.
+            // ignore operation if incoming BoundingSphere is invalid.
             if ( !sh.valid() ) {
                 return;
             }

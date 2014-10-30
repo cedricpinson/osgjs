@@ -60,6 +60,7 @@ define( [
             prg.trackAttributes.attributeKeys = [];
             prg.trackAttributes.attributeKeys.push( 'Material' );
             prg.trackAttributes.attributeKeys.push( 'Light' + this._lightNum );
+
             if ( this._receivingStateset ) this._receivingStateset.setAttributeAndMode( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
 
             this._receiverShaderProgram = prg;
@@ -188,7 +189,7 @@ define( [
             receiverStateSet.addUniform( Uniform.createInt1( num + 1, 'Texture' + ( num + 1 ) ) );
 
             var depthRangeNum = new Uniform.createFloat4( [ near, far, far - near, 1.0 / ( far - near ) ], 'Shadow_DepthRange' + num );
-            var shadowMapSizeNum = new Uniform.createFloat4( shadowSize, 'Shadow_MapSize' + num );
+            var shadowMapSizeNum = new Uniform.createFloat4( shadowSize, 'Shadow_MapSize_' + num );
             var projectionShadowNum = new Uniform.createMatrix4( Matrix.makeIdentity( [] ), 'Shadow_Projection' + num );
             var viewShadowNum = new Uniform.createMatrix4( Matrix.makeIdentity( [] ), 'Shadow_View' + num );
             var enabledLight = new Uniform.createFloat1( 1.0, 'Light' + num + '_uniform_enable' );
@@ -319,13 +320,13 @@ define( [
             //var traversalMask = cullVisitor.getTraversalMask();
             //cullVisitor.setTraversalMask( this.getShadowedScene().getShadowSettings().getReceivesShadowTraversalMask() );
 
-            var frustumCulling = this._enableFrustumCulling;
-            cullVisitor.setEnableFrustumCulling( false );
+            var frustumCulling = cullVisitor._enableFrustumCulling;
+            cullVisitor.setEnableFrustumCulling( true );
 
             // compute frustum prior to culling, without near/far
             var mvp = this._tmpMat;
             Matrix.mult( this._cameraShadowed.getProjectionMatrix(), this._cameraShadowed.getViewMatrix(), mvp );
-            cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, false, true );
+            cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, true );
 
             cullVisitor.pushStateSet( this._receivingStateset );
             this.getShadowedScene().nodeTraverse( cullVisitor );
@@ -336,9 +337,10 @@ define( [
             if ( cullVisitor._computedFar < cullVisitor._computedNear - epsilon ) {
                 Notify.log( 'empty shadowed scene' );
                 for ( var l = 0; l < 6; l++ ) {
-                    for ( var k = 0; k < 4; k++ ) {
-                        this._frustumReceivers[ l ][ k ] = 0.0;
-                    }
+                    this._frustumReceivers[ l ][ 0 ] = -1.0;
+                    this._frustumReceivers[ l ][ 1 ] = 1.01;
+                    this._frustumReceivers[ l ][ 2 ] = -1.0;
+                    this._frustumReceivers[ l ][ 3 ] = 1.01;
                 }
                 this._farReceivers = 1;
                 this._nearReceivers = 0.001;
@@ -348,7 +350,7 @@ define( [
                 var m = cullVisitor.getCurrentProjectionMatrix();
                 cullVisitor.clampProjectionMatrix( m, cullVisitor._computedNear, cullVisitor._computedFar, cullVisitor._nearFarRatio );
                 Matrix.mult( m, this._cameraShadowed.getViewMatrix(), mvp );
-                cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, true );
+                cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, false );
                 for ( var i = 0; i < 6; i++ ) {
                     Vec4.copy( cullVisitor._frustum[ i ], this._frustumReceivers[ i ] );
                 }
@@ -361,7 +363,7 @@ define( [
 
             // reapply the original traversal mask
             // cullVisitor.setTraversalMask( traversalMask );
-            if ( frustumCulling === false ) {
+            if ( frustumCulling === false || frustumCulling === undefined ) {
                 cullVisitor.setEnableFrustumCulling( false );
             }
         },
@@ -559,7 +561,7 @@ define( [
             cullVisitor.clampProjectionMatrix( m, this._nearCaster, this._farCaster, cullVisitor._nearFarRatio );
             var mvp = this._tmpMat;
             Matrix.mult( this._cameraShadow.getProjectionMatrix(), this._cameraShadow.getViewMatrix(), mvp );
-            cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, true );
+            cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, false );
             for ( var i = 0; i < 6; i++ ) {
                 Vec4.copy( cullVisitor._frustum[ i ], this._frustumCasters[ i ] );
             }

@@ -4,7 +4,7 @@ define( [
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowFrustumIntersection',
     'osgShadow/ShadowMap'
-], function ( ShadowedScene, ShadowSettings, ShadowTechnique, ShadowFrustumIntersection, ShadowMap ) {
+], function( ShadowedScene, ShadowSettings, ShadowTechnique, ShadowFrustumIntersection, ShadowMap ) {
 
     var osgShadow = {};
 
