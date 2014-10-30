@@ -75,11 +75,12 @@ DebugVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
         if ( this._fullNodeList[ node.getInstanceID() ] !== node ) {
 
             var nodeMatrix = '';
-            if ( node.matrix ) {
+            window.test = node;
+            if ( node.getWorldMatrices() ) {
                 nodeMatrix = this.createMatrixGrid( node, nodeMatrix );
             }
             var stateset = null;
-            if ( node.stateset ) {
+            if ( node.getStateSet() ) {
                 stateset = this.createStateset( node, stateset );
             }
 
@@ -208,7 +209,7 @@ DebugVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
                         console.log( 'window.activeNode is set.' );
                         console.log( self._fullNodeList[ identifier ] );
                     } else {
-                        var stateset = self._fullNodeList[ identifier.split( ' ' )[ 2 ] ].stateset;
+                        var stateset = self._fullNodeList[ identifier.split( ' ' )[ 2 ] ].getStateSet();
                         window.activeStateset = stateset;
                         console.log( 'window.activeStateset is set.' );
                         console.log( stateset );
@@ -254,25 +255,27 @@ DebugVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
     // Create an array to display the matrix
     createMatrixGrid: function ( node, nodeMatrix ) {
 
-        nodeMatrix += '<table><tr><td>' + node.matrix[ 0 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 1 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 2 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 3 ] + '</td></tr>';
+        matrixArray = node.getWorldMatrices()[0];
 
-        nodeMatrix += '<tr><td>' + node.matrix[ 4 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 5 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 6 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 7 ] + '</td></tr>';
+        nodeMatrix += '<table><tr><td>' + matrixArray[0] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[1] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[2] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[3] + '</td></tr>';
 
-        nodeMatrix += '<tr><td>' + node.matrix[ 8 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 9 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 10 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 11 ] + '</td></tr>';
+        nodeMatrix += '<tr><td>' + matrixArray[4] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[5] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[6] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[7] + '</td></tr>';
 
-        nodeMatrix += '<tr><td>' + node.matrix[ 12 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 13 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 14 ] + '</td>';
-        nodeMatrix += '<td>' + node.matrix[ 15 ] + '</td></tr></table>';
+        nodeMatrix += '<tr><td>' + matrixArray[8] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[9] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[10] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[11] + '</td></tr>';
+
+        nodeMatrix += '<tr><td>' + matrixArray[12] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[13] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[14] + '</td>';
+        nodeMatrix += '<td>' + matrixArray[15] + '</td></tr></table>';
 
         return nodeMatrix;
     },
@@ -281,10 +284,10 @@ DebugVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
     createStateset: function ( node, stateset ) {
         stateset = {
             name: 'StateSet - ' + node.getInstanceID(),
-            statesetID: node.stateset.getInstanceID(),
+            statesetID: node.getStateSet().getInstanceID(),
             parentID: node.getInstanceID(),
-            stateset: node.stateset,
-            numTexture: node.stateset.getNumTextureAttributeLists()
+            stateset: node.getStateSet(),
+            numTexture: node.getStateSet().getNumTextureAttributeLists()
         };
         return stateset;
     },
