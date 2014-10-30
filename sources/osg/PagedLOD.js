@@ -128,9 +128,7 @@ define( [
             };
             ReleaseVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
                 apply: function ( node ) {
-                    if ( node instanceof Geometry ) {
-                        node.releaseGLObjects( this.gl );
-                    }
+                    node.releaseGLObjects( this.gl );
                     this.traverse( node );
                 }
             } );

@@ -133,15 +133,14 @@ define( [
             // We need to test if we have time to flush
             var elapsedTime = 0.0;
             var beginTime = MACROUTILS.performance.now();
-
-            for ( var i = 0, j = nbTextures; i < j && elapsedTime < availableTime; ++i )
+            var i;
+            for ( i = 0; i < nbTextures && elapsedTime < availableTime; i++ )
             {
                 gl.deleteTexture( this._orphanedTextureObjects[ i ].id() );
                 this._orphanedTextureObjects[ i ].reset();
-                this._orphanedTextureObjects.splice( i, 1 );
                 elapsedTime = MACROUTILS.performance.now() - beginTime;
             }
-
+            this._orphanedTextureObjects.splice( 0, i );
             availableTime -= elapsedTime;
             //Notify.info( 'TextureManager: released ' + nbTextures + ' with ' + (nbTextures*size/(1024*1024)) + ' MB' );
         },
