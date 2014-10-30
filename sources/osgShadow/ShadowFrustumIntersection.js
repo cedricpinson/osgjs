@@ -11,7 +11,7 @@ define( [
     'osg/BoundingBox',
     'osg/BoundingSphere',
     'osg/ComputeMatrixFromNodePath'
-], function( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath ) {
+], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath ) {
     'use strict';
     /**
      * [ComputeFrustumBoundsVisitor get a scene bounds limited by a light and camera frustum]
@@ -19,7 +19,7 @@ define( [
      * @param {[Array of Vec4]} camera frustum planes
      * @param {[Array of Vec4]} light frustum planes
      */
-    var ComputeFrustumBoundsVisitor = function( traversalMode, cameraFrustum, lightFrustum ) {
+    var ComputeFrustumBoundsVisitor = function ( traversalMode, cameraFrustum, lightFrustum ) {
         NodeVisitor.call( this, traversalMode );
         this._matrixStack = [];
         this._bb = new BoundingBox();
@@ -42,7 +42,7 @@ define( [
      *  skeletal transform is done before (in node update callback)
      */
     ComputeFrustumBoundsVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
-        reset: function( worldLightPos, frustumReceivers, frustumReceiversLength ) {
+        reset: function ( worldLightPos, frustumReceivers, frustumReceiversLength ) {
             this._matrixStack.length = 0;
             this._bb.init();
             this._bs.init();
@@ -57,17 +57,17 @@ define( [
             // so that casting object can cast from outside shadowed zone
             this.getCameraPlaneMaskForLightNear( worldLightPos, frustumReceivers, frustumReceiversLength );
         },
-        getBoundingBox: function() {
+        getBoundingBox: function () {
             return this._bb;
         },
-        getReservedMaskStack: function( maskStack ) {
+        getReservedMaskStack: function ( maskStack ) {
             maskStack.current++;
             if ( maskStack.current === maskStack.length ) {
                 maskStack.push( 0 );
             }
             return 0;
         },
-        getCameraPlaneMaskForLightNear: function( p, fArr, len ) {
+        getCameraPlaneMaskForLightNear: function ( p, fArr, len ) {
             var d, f, i = len;
             while ( i-- ) {
                 f = fArr[ i ];
@@ -77,13 +77,13 @@ define( [
                 }
             }
         },
-        pushMatrix: function( matrix ) {
+        pushMatrix: function ( matrix ) {
             this._matrixStack.push( matrix );
         },
-        popMatrix: function() {
+        popMatrix: function () {
             return this._matrixStack.pop();
         },
-        isSphereCulled: function( r, p, fArr, len, maskStack, lightMask ) {
+        isSphereCulled: function ( r, p, fArr, len, maskStack, lightMask ) {
             var maskIn = this.getReservedMaskStack( maskStack );
             var maskOutidx = maskStack.current;
 
@@ -118,7 +118,7 @@ define( [
             }
             return false; //totally inside
         },
-        apply: function( node ) {
+        apply: function ( node ) {
             var didTest = false;
             if ( node.getMatrix ) {
                 // It's a Transform Node: hierarchical culling FTW.
@@ -170,7 +170,7 @@ define( [
                 this._reserveLightMaskStack.current--;
             }
         },
-        applyTransform: function( transform ) {
+        applyTransform: function ( transform ) {
             var matrix;
             if ( this._matrixStack.length !== 0 ) {
                 matrix = this._matrixStack[ this._matrixStack.length - 1 ];
@@ -190,7 +190,7 @@ define( [
         //  http://users.soe.ucsc.edu/~pang/160/f98/Gems/Gems/TransBox.c
         //  Transforms a 3D axis-aligned box via a 4x4 matrix
         // vector and returns an axis-aligned box enclosing the result.
-        transformBoundingbox: function( matrix, bboxIn, bboxOut ) {
+        transformBoundingbox: function ( matrix, bboxIn, bboxOut ) {
             var av, bv;
             var i, j, k;
 
@@ -218,7 +218,7 @@ define( [
             }
             return bboxOut;
         },
-        applyBoundingBox: function( bbox ) {
+        applyBoundingBox: function ( bbox ) {
             if ( this._matrixStack.length === 0 ) {
                 this._bb.expandByBoundingBox( bbox );
             } else if ( bbox.valid() ) {

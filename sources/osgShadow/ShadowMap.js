@@ -21,14 +21,14 @@ define( [
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowFrustumIntersection',
     'osg/CullFace'
-], function( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath, Transform, Camera, Texture, Viewport, StateSet, StateAttribute, Uniform, ShadowTechnique, ShadowFrustumIntersection, CullFace ) {
+], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath, Transform, Camera, Texture, Viewport, StateSet, StateAttribute, Uniform, ShadowTechnique, ShadowFrustumIntersection, CullFace ) {
     'use strict';
 
     /**
      *  ShadowMap provides an implementation of shadow textures.
      *  @class ShadowMap
      */
-    var ShadowMap = function() {
+    var ShadowMap = function () {
         ShadowTechnique.call( this );
 
         // uniforms, shaders ?
@@ -46,16 +46,16 @@ define( [
 
     /** @lends ShadowMap.prototype */
     ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( ShadowTechnique.prototype, {
-        dirty: function() {
+        dirty: function () {
             this._dirty = true;
         },
-        getCamera: function() {
+        getCamera: function () {
             return this._cameraShadow;
         },
-        getTexture: function() {
+        getTexture: function () {
             return this._texture;
         },
-        setShadowReceiverShaderProgram: function( prg ) {
+        setShadowReceiverShaderProgram: function ( prg ) {
             prg.trackAttributes = {};
             prg.trackAttributes.attributeKeys = [];
             prg.trackAttributes.attributeKeys.push( 'Material' );
@@ -64,33 +64,33 @@ define( [
 
             this._receiverShaderProgram = prg;
         },
-        getShadowReceiverShaderProgram: function() {
+        getShadowReceiverShaderProgram: function () {
             return this._receiverShaderProgram;
         },
 
-        setShadowCasterShaderProgram: function( prg ) {
+        setShadowCasterShaderProgram: function ( prg ) {
             if ( this._castingStateset ) this._castingStateset.setAttributeAndMode( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
             this._castsShaderProgram = prg;
         },
-        getShadowCasterShaderProgram: function() {
+        getShadowCasterShaderProgram: function () {
             return this._castsShaderProgram;
         },
 
-        setCastingStateset: function( st ) {
+        setCastingStateset: function ( st ) {
             this._castingStateset = st;
         },
-        getCastingStateset: function() {
+        getCastingStateset: function () {
             return this._castingStateset;
         },
-        setReceivingStateSet: function( st ) {
+        setReceivingStateSet: function ( st ) {
             this._receivingStateset = st;
         },
-        getReceivingStateSet: function() {
+        getReceivingStateSet: function () {
             return this._receivingStateset;
         },
 
         /** initialize the ShadowedScene and local cached data structures.*/
-        init: function() {
+        init: function () {
             if ( !this._shadowedScene ) return;
 
             var shadowSettings = this.getShadowedScene().getShadowSettings();
@@ -238,12 +238,12 @@ define( [
             this._dirty = false;
         },
 
-        valid: function() {
+        valid: function () {
             // checks
             return true;
         },
 
-        updateShadowParams: function() {
+        updateShadowParams: function () {
             // could do some light/scene change check here and skip it
             var shadowSettings = this.getShadowedScene().getShadowSettings();
             var light = shadowSettings.getLight();
@@ -277,7 +277,7 @@ define( [
             this._dirty = false;
         },
 
-        resize: function( shadowSizeFinal ) {
+        resize: function ( shadowSizeFinal ) {
 
             var glContext = this.getShadowedScene().getGLContext();
 
@@ -305,12 +305,12 @@ define( [
         },
 
         /** run the update traversal of the ShadowedScene and update any local cached data structures.*/
-        update: function( nv ) {
+        update: function ( nv ) {
             this.getShadowedScene().nodeTraverse( nv );
         },
 
         /*receiving shadows, cull normally, but with receiving shader/state set/texture*/
-        cullShadowReceivingScene: function( cullVisitor ) {
+        cullShadowReceivingScene: function ( cullVisitor ) {
 
             // WARNING: only works if camera is a direct ancestor
 
@@ -369,7 +369,7 @@ define( [
         /*
          * compute  scene bounding box and bounding sphere
          */
-        getBoundsCaster: function( worldLightPos ) {
+        getBoundsCaster: function ( worldLightPos ) {
             var bs;
             // get the bounds of the scene
 
@@ -400,7 +400,7 @@ define( [
          * @param { Vec3  } lightDir
          * @param { Vec3  } lightUp - by default = osg::Vec3( 0, 1 0 )
          */
-        aimShadowCastingCamera: function( light, lightPos, lightDir, lightUp ) {
+        aimShadowCastingCamera: function ( light, lightPos, lightDir, lightUp ) {
             var view = this._cameraShadow.getViewMatrix();
             var projection = this._cameraShadow.getProjectionMatrix();
 
@@ -504,7 +504,7 @@ define( [
 
         },
 
-        cullShadowCastingScene: function( cullVisitor ) {
+        cullShadowCastingScene: function ( cullVisitor ) {
             // record the traversal mask on entry so we can reapply it later.
             var traversalMask = cullVisitor.getTraversalMask();
 
@@ -527,7 +527,7 @@ define( [
             cullVisitor.setTraversalMask( traversalMask );
         },
 
-        enterCullCaster: function( cullVisitor ) {
+        enterCullCaster: function ( cullVisitor ) {
             // well shouldn't be called
             cullVisitor.setEnableFrustumCulling( true );
             //var m = cullVisitor.getCurrentProjectionMatrix();
@@ -537,7 +537,7 @@ define( [
             cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, false, true );
         },
 
-        exitCullCaster: function( cullVisitor ) {
+        exitCullCaster: function ( cullVisitor ) {
 
             this._nearCaster = cullVisitor._computedNear;
             this._farCaster = cullVisitor._computedFar;
@@ -567,7 +567,7 @@ define( [
 
 
         /** run the cull traversal of the ShadowedScene and set up the rendering for this ShadowTechnique.*/
-        cull: function( cullVisitor ) {
+        cull: function ( cullVisitor ) {
             // make sure positioned data is done for light,
             // do it first
             this.cullShadowReceivingScene( cullVisitor );
@@ -580,7 +580,7 @@ define( [
             return false;
         },
 
-        cleanSceneGraph: function() {
+        cleanSceneGraph: function () {
             // well release a lot of thing we it works
         },
 

@@ -2,7 +2,7 @@ define( [
     'osg/Notify',
     'osgShader/shaderLib'
 
-], function( Notify, shaderLib ) {
+], function ( Notify, shaderLib ) {
     'use strict';
 
     //     Shader as vert/frag/glsl files Using requirejs text plugin
@@ -11,7 +11,7 @@ define( [
     //     - Handle per shader and global define/precision
 
 
-    var ShaderProcessor = function( createInstance ) {
+    var ShaderProcessor = function ( createInstance ) {
 
         if ( !createInstance ) {
             if ( ShaderProcessor.instance ) {
@@ -40,11 +40,11 @@ define( [
         //     'lights.glsl': textShaderFunctions,
         //     'textures.glsl': textShaderFunctions
         // };
-        addShaders: function( shaders ) {
+        addShaders: function ( shaders ) {
 
             var keys = Object.keys( shaders );
 
-            keys.forEach( function( key ) {
+            keys.forEach( function ( key ) {
 
                 this._shadersList[ key ] = key;
                 this._shadersText[ key ] = shaders[ key ];
@@ -54,7 +54,7 @@ define( [
         },
 
 
-        instrumentShaderlines: function( content, sourceID ) {
+        instrumentShaderlines: function ( content, sourceID ) {
             // TODO instrumentShaderlines
             // http://immersedcode.org/2012/1/12/random-notes-on-webgl/
             // one ID per "file"
@@ -77,7 +77,7 @@ define( [
             return '\n#line ' + 0 + ' ' + sourceID + '\n' + content;
         },
 
-        getShaderTextPure: function( shaderName ) {
+        getShaderTextPure: function ( shaderName ) {
 
             var preShader = this._shadersText[ shaderName ];
 
@@ -89,16 +89,16 @@ define( [
             return preShader;
         },
 
-        getShader: function( shaderName, defines ) {
+        getShader: function ( shaderName, defines ) {
             var shader = this.getShaderTextPure( shaderName );
             return this.processShader( shader, defines );
         },
 
         // recursively  handle #include external glsl
         // files (for now in the same folder.)
-        preprocess: function( content, sourceID, includeList ) {
+        preprocess: function ( content, sourceID, includeList ) {
 
-            return content.replace( this._includeR, function( _, name ) {
+            return content.replace( this._includeR, function ( _, name ) {
                 // \#pragma include 'name';
                 // already included
                 if ( includeList.indexOf( name ) !== -1 ) return '';
@@ -122,7 +122,7 @@ define( [
         //  resolving include dependencies
         //  adding defines
         //  adding line instrumenting.
-        processShader: function( shader, defines ) {
+        processShader: function ( shader, defines ) {
 
             var includeList = [];
             var preShader = shader;
