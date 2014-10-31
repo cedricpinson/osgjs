@@ -53,25 +53,39 @@ define( [
                 if ( this.defaultProgram === true ) {
                     return;
                 }
-
+                var compileClean;
                 if ( !this.vertex.shader ) {
-                    this.vertex.compile( gl );
+                    compileClean = this.vertex.compile( gl );
                 }
                 if ( !this.fragment.shader ) {
-                    this.fragment.compile( gl );
+                    compileClean = this.fragment.compile( gl );
                 }
-                this.program = gl.createProgram();
-                gl.attachShader( this.program, this.vertex.shader );
-                gl.attachShader( this.program, this.fragment.shader );
-                MACROUTILS.timeStamp( 'osgjs.metrics:linkShader' );
-                gl.linkProgram( this.program );
-                gl.validateProgram( this.program );
-                if ( !gl.getProgramParameter( this.program, gl.LINK_STATUS ) && !gl.isContextLost() ) {
-                    Notify.error( gl.getProgramInfoLog( this.program ) );
-                    Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this.vertex.text + '\n fragment shader:\n' + this.fragment.text, true );
-                    this.setDirty( false );
-                    //debugger;
-                    return;
+                if ( compileClean ) {
+                    this.program = gl.createProgram();
+                    gl.attachShader( this.program, this.vertex.shader );
+                    gl.attachShader( this.program, this.fragment.shader );
+                    MACROUTILS.timeStamp( 'osgjs.metrics:linkShader' );
+                    gl.linkProgram( this.program );
+                    gl.validateProgram( this.program );
+                    if ( !gl.getProgramParameter( this.program, gl.LINK_STATUS ) && !gl.isContextLost() ) {
+                        Notify.error( gl.getProgramInfoLog( this.program ) );
+                        Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this.vertex.text + '\n fragment shader:\n' + this.fragment.text, true );
+                        compileClean = false;
+                        //debugger;
+                    }
+                }
+                if ( !compileClean ) {
+                    // Any error, Any
+                    // Pink must die.
+                    this.vertex.failSafe( gl );
+                    this.fragment.failSafe( gl );
+                    this.program = gl.createProgram();
+                    gl.attachShader( this.program, this.vertex.shader );
+                    gl.attachShader( this.program, this.fragment.shader );
+                    gl.linkProgram( this.program );
+                    gl.validateProgram( this.program );
+                    Notify.warn( 'FailSafe shader Activated ' );
+
                 }
 
                 this.uniformsCache = new Map();
