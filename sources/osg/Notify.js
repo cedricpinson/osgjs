@@ -1,4 +1,4 @@
-define( [], function () {
+define( [], function() {
 
     var Notify = {};
 
@@ -14,8 +14,10 @@ define( [], function () {
     /** Obtain a stacktrace from the current stack http://eriwen.com/javascript/js-stack-trace/
      */
     function getStackTrace( err ) {
-        if (Notify.console && Notify.console.trace){
+        if ( Notify.console && Notify.console.trace ) {
+            if ( Notify.console.groupCollapsed ) Notify.console.groupCollapsed();
             Notify.console.trace();
+            if ( Notify.console.groupEnd ) Notify.console.groupEnd();
             return '';
         }
         var callstack = [];
@@ -47,45 +49,47 @@ define( [], function () {
         return callstack;
     }
 
-    Notify.setNotifyLevel = function ( level ) {
+    Notify.setNotifyLevel = function( level ) {
 
-        var log = function ( str ) {
+        var log = function( str, fold ) {
             if ( this.console !== undefined ) {
+                if ( fold && Notify.console.groupCollapsed ) Notify.console.groupCollapsed();
                 this.console.log( str, getStackTrace() );
+                if ( fold && Notify.console.groupEnd ) Notify.console.groupEnd();
             }
         };
 
-        var info = function ( str ) {
+        var info = function( str ) {
             if ( this.console !== undefined ) {
                 this.console.info( str, getStackTrace() );
             }
         };
 
-        var warn = function ( str ) {
+        var warn = function( str ) {
             if ( this.console !== undefined ) {
                 this.console.warn( str, getStackTrace() );
             }
         };
 
-        var error = function ( str ) {
+        var error = function( str ) {
             if ( this.console !== undefined ) {
                 this.console.error( str, getStackTrace() );
             }
         };
 
-        var debug = function ( str ) {
+        var debug = function( str ) {
             if ( this.console !== undefined ) {
                 this.console.debug( str, getStackTrace() );
             }
         };
 
-        var assert = function ( str ) {
+        var assert = function( str ) {
             if ( this.console !== undefined ) {
                 this.console.assert( str, getStackTrace() );
             }
         };
 
-        var dummy = function () {};
+        var dummy = function() {};
 
         Notify.assert = dummy;
         Notify.debug = dummy;

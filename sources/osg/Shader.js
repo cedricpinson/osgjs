@@ -1,16 +1,16 @@
 define( [
     'osg/Notify',
     'osg/Utils'
-], function ( Notify, Utils ) {
+], function( Notify, Utils ) {
 
     /**
      * Shader manage shader for vertex and fragment, you need both to create a glsl program.
      * @class Shader
      */
-    var Shader = function ( type, text ) {
+    var Shader = function( type, text ) {
 
         var t = type;
-        if ( typeof ( type ) === 'string' ) {
+        if ( typeof( type ) === 'string' ) {
             t = Shader[ type ];
         }
         this.type = t;
@@ -22,32 +22,31 @@ define( [
 
     /** @lends Shader.prototype */
     Shader.prototype = {
-        setText: function ( text ) {
+        setText: function( text ) {
             this.text = text;
         },
-        getText: function () {
+        getText: function() {
             return this.text;
         },
-        compile: function ( gl ) {
+        compile: function( gl ) {
             this.shader = gl.createShader( this.type );
             gl.shaderSource( this.shader, this.text );
             Utils.timeStamp( 'osgjs.metrics:compileShader' );
             gl.compileShader( this.shader );
             if ( !gl.getShaderParameter( this.shader, gl.COMPILE_STATUS ) && !gl.isContextLost() ) {
-                Notify.log( 'can\'t compile shader:\n' + this.text + '\n' );
+                Notify.error( gl.getShaderInfoLog( this.shader ) );
                 var tmpText = '\n' + this.text;
                 var splittedText = tmpText.split( '\n' );
                 var newText = '\n';
                 for ( var i = 0, l = splittedText.length; i < l; ++i ) {
                     newText += i + ' ' + splittedText[ i ] + '\n';
                 }
-                Notify.log( newText );
-                Notify.log( gl.getShaderInfoLog( this.shader ) );
+                Notify.log( 'can\'t compile shader:\n' + newText, true );
             }
         }
     };
 
-    Shader.create = function ( type, text ) {
+    Shader.create = function( type, text ) {
         Notify.log( 'Shader.create is deprecated, use new Shader with the same arguments instead' );
         return new Shader( type, text );
     };
