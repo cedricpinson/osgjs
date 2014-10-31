@@ -452,11 +452,11 @@ define( [
 
         // return the first texture valid in texture unit
         getFirstValidTexture: function () {
-            var keys = Object.keys(this._texturesByName);
+            var keys = Object.keys( this._texturesByName );
             if ( !keys.length )
                 return undefined;
 
-            return this._texturesByName[ keys[0] ].variable;
+            return this._texturesByName[ keys[ 0 ] ].variable;
         },
 
 
