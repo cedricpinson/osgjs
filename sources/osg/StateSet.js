@@ -189,6 +189,13 @@ define( [
         getShaderGeneratorName: function () {
             return this._shaderGeneratorName;
         },
+        releaseGLObjects: function ( /*gl*/ ) {
+            // TODO: We should release Program/Shader attributes too
+            for ( var i = 0, j = this.textureAttributeMapList.length; i < j; i++ )
+            {
+                this.getTextureAttribute( i , 'Texture' ).releaseGLObjects();
+            }
+        },
         _getUniformMap: function () {
             return this.uniforms;
         },

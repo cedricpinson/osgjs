@@ -22,7 +22,7 @@ define( [
         Lod.call( this );
         this._perRangeDataList = [];
         this._loading = false;
-        this._expiryTime = 10.0;
+        this._expiryTime = 5.0;
         this._centerMode = Lod.USER_DEFINED_CENTER;
     };
 
@@ -128,9 +128,7 @@ define( [
             };
             ReleaseVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
                 apply: function ( node ) {
-                    if ( node instanceof Geometry ) {
-                        node.releaseGLObjects( this.gl );
-                    }
+                    node.releaseGLObjects( this.gl );
                     this.traverse( node );
                 }
             } );
