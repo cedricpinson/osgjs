@@ -219,7 +219,6 @@ define( [
 
             var gl = this.getGraphicContext();
             this._state.setGraphicContext( gl );
-            gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, true );
 
             this._updateVisitor = new osgUtil.UpdateVisitor();
             this._cullVisitor = new osgUtil.CullVisitor();

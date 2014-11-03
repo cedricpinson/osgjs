@@ -20,6 +20,8 @@ define( [
         setDefaultParameters: function () {
             Texture.prototype.setDefaultParameters.call( this );
             this._textureTarget = Texture.TEXTURE_CUBE_MAP;
+
+            this._flipY = false;
         },
         cloneType: function () {
             var t = new TextureCubeMap();

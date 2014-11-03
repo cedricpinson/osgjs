@@ -38,6 +38,12 @@ define( [
         this.setDefaultParameters();
         this._applyTexImage2DCallbacks = [];
     };
+
+    Texture.UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
+    Texture.UNPACK_FLIP_Y_WEBGL = 0x9240;
+    Texture.BROWSER_DEFAULT_WEBGL = 0x9244;
+    Texture.NONE = 0x0;
+
     Texture.DEPTH_COMPONENT = 0x1902;
     Texture.ALPHA = 0x1906;
     Texture.RGB = 0x1907;
@@ -133,7 +139,20 @@ define( [
             this._mipmapDirty = false;
             this._textureTarget = Texture.TEXTURE_2D;
             this._type = Texture.UNSIGNED_BYTE;
+
+            this._flipY = true;
+            this._colorSpaceConversion = Texture.NONE; //Texture.BROWSER_DEFAULT_WEBGL;
         },
+
+        // check https://www.khronos.org/registry/webgl/specs/latest/1.0/#PIXEL_STORAGE_PARAMETERS
+        setColorSpaceConversion: function( enumValue ) {
+            this._colorSpaceConversion = enumValue;
+        },
+        setFlipY: function( bool ) {
+            this._flipY = bool;
+        },
+
+
         getTextureTarget: function () {
             return this._textureTarget;
         },
@@ -339,6 +358,11 @@ define( [
         applyTexImage2D: function ( gl ) {
             var args = Array.prototype.slice.call( arguments, 1 );
             MACROUTILS.timeStamp( 'osgjs.metrics:Texture.texImage2d' );
+
+            // use parameters of pixel store
+            gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, this._flipY );
+            gl.pixelStorei( gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, this._colorSpaceConversion );
+
             gl.texImage2D.apply( gl, args );
 
             // call a callback when upload is done if there is one
