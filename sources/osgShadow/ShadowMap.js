@@ -55,19 +55,6 @@ define( [
         getTexture: function () {
             return this._texture;
         },
-        setShadowReceiverShaderProgram: function ( prg ) {
-            prg.trackAttributes = {};
-            prg.trackAttributes.attributeKeys = [];
-            prg.trackAttributes.attributeKeys.push( 'Material' );
-            prg.trackAttributes.attributeKeys.push( 'Light' + this._lightNum );
-
-            if ( this._receivingStateset ) this._receivingStateset.setAttributeAndMode( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
-
-            this._receiverShaderProgram = prg;
-        },
-        getShadowReceiverShaderProgram: function () {
-            return this._receiverShaderProgram;
-        },
 
         setShadowCasterShaderProgram: function ( prg ) {
             if ( this._castingStateset ) this._castingStateset.setAttributeAndMode( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
@@ -83,16 +70,12 @@ define( [
         getCastingStateset: function () {
             return this._castingStateset;
         },
-        setReceivingStateSet: function ( st ) {
-            this._receivingStateset = st;
-        },
-        getReceivingStateSet: function () {
-            return this._receivingStateset;
-        },
 
         /** initialize the ShadowedScene and local cached data structures.*/
         init: function () {
             if ( !this._shadowedScene ) return;
+
+            this._receivingStateset = this._shadowedScene.getReceivingStateSet();
 
             var shadowSettings = this.getShadowedScene().getShadowSettings();
             var light = shadowSettings.getLight();
@@ -172,21 +155,10 @@ define( [
             // TODO: handle texture num
             var num = this._lightNum;
 
-            ////////////////
-            // RECEIVERS stateset
-            var receiverStateSet = new StateSet();
-            prg = this.getShadowReceiverShaderProgram();
-            prg.trackAttributes = {};
-            prg.trackAttributes.attributeKeys = [];
-            prg.trackAttributes.attributeKeys.push( 'Material' );
-            prg.trackAttributes.attributeKeys.push( 'Light' + num );
-            receiverStateSet.setAttributeAndMode( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
-            this._receivingStateset = receiverStateSet;
+            //this._receivingStateset.addUniform( Uniform.createInt1( 0, 'Texture0' ) );
 
-            //receiverStateSet.addUniform( Uniform.createInt1( 0, 'Texture0' ) );
-
-            receiverStateSet.setTextureAttributeAndMode( num + 1, shadowTexture, StateAttribute.ON | StateAttribute.OVERRIDE );
-            receiverStateSet.addUniform( Uniform.createInt1( num + 1, 'Texture' + ( num + 1 ) ) );
+            this._receivingStateset.setTextureAttributeAndMode( num + 1, shadowTexture, StateAttribute.ON | StateAttribute.OVERRIDE );
+            this._receivingStateset.addUniform( Uniform.createInt1( num + 1, 'Texture' + ( num + 1 ) ) );
 
             var depthRangeNum = new Uniform.createFloat4( [ near, far, far - near, 1.0 / ( far - near ) ], 'Shadow_DepthRange' + num );
             var shadowMapSizeNum = new Uniform.createFloat4( shadowSize, 'Shadow_MapSize_' + num );
@@ -194,42 +166,13 @@ define( [
             var viewShadowNum = new Uniform.createMatrix4( Matrix.makeIdentity( [] ), 'Shadow_View' + num );
             var enabledLight = new Uniform.createFloat1( 1.0, 'Light' + num + '_uniform_enable' );
 
-            receiverStateSet.addUniform( enabledLight );
-            receiverStateSet.addUniform( projectionShadowNum );
-            receiverStateSet.addUniform( viewShadowNum );
-            receiverStateSet.addUniform( depthRangeNum );
-            receiverStateSet.addUniform( shadowMapSizeNum );
+            this._receivingStateset.addUniform( enabledLight );
+            this._receivingStateset.addUniform( projectionShadowNum );
+            this._receivingStateset.addUniform( viewShadowNum );
+            this._receivingStateset.addUniform( depthRangeNum );
+            this._receivingStateset.addUniform( shadowMapSizeNum );
 
 
-            // draw only shadow&light, not texure
-            var texturedebug = shadowSettings._config[ 'texture' ] ? 1.0 : 0.0;
-            var myuniform = Uniform.createFloat1( texturedebug, 'debug' );
-            receiverStateSet.addUniform( myuniform );
-            // Shadow bias /acne/ peterpannin
-            var bias = shadowSettings._config[ 'bias' ];
-            myuniform = Uniform.createFloat1( bias, 'bias' );
-            receiverStateSet.addUniform( myuniform );
-
-            // ESM & EVSM
-            var exponent = shadowSettings._config[ 'exponent' ];
-            myuniform = Uniform.createFloat1( exponent, 'exponent' );
-            receiverStateSet.addUniform( myuniform );
-            casterStateSet.addUniform( myuniform );
-
-            var exponent1 = shadowSettings._config[ 'exponent1' ];
-            myuniform = Uniform.createFloat1( exponent1, 'exponent1' );
-            receiverStateSet.addUniform( myuniform );
-            casterStateSet.addUniform( myuniform );
-
-            // VSM
-            var VsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
-            myuniform = Uniform.createFloat1( VsmEpsilon, 'VsmEpsilon' );
-            receiverStateSet.addUniform( myuniform );
-
-            // Camera/Eye Position
-            // TODO: add positioned uniform
-            myuniform = Uniform.createFloat4( [ 0.0, 0.0, 0.0, 0.0 ], 'Camera_uniform_position' );
-            receiverStateSet.addUniform( myuniform );
 
             var camera = shadowSettings._config[ 'camera' ];
             this._cameraShadowed = camera;
@@ -252,22 +195,7 @@ define( [
             this.aimShadowCastingCamera( light, light.getPosition(), light.getDirection() );
 
 
-            //var castUniforms = this._castingStateset.getUniformList();
-            var receivingUniforms = this._receivingStateset.getUniformList();
 
-            // udpate shader Parameters
-            receivingUniforms[ 'debug' ].getUniform().set( shadowSettings._config[ 'texture' ] ? 1.0 : 0.0 );
-            receivingUniforms[ 'bias' ].getUniform().set( shadowSettings._config[ 'bias' ] );
-            receivingUniforms[ 'exponent' ].getUniform().set( shadowSettings._config[ 'exponent' ] );
-            receivingUniforms[ 'exponent1' ].getUniform().set( shadowSettings._config[ 'exponent1' ] );
-            receivingUniforms[ 'VsmEpsilon' ].getUniform().set( shadowSettings._config[ 'VsmEpsilon' ] );
-
-            // Todo: get camera position as positioned uniform ?
-            var pos = this._camPos || Vec4.create();
-            this._camPos = pos;
-            var camera = this._cameraShadowed;
-            Matrix.getTrans( camera.getViewMatrix(), pos );
-            receivingUniforms[ 'Camera_uniform_position' ].getUniform().set( pos );
 
 
             // update accordingly
@@ -303,69 +231,6 @@ define( [
 
             this._receivingStateset.getUniformList()[ 'Shadow_MapSize' + this._lightNum ].getUniform().set( shadowSizeFinal );
 
-        },
-
-        /** run the update traversal of the ShadowedScene and update any local cached data structures.*/
-        update: function ( nv ) {
-            this.getShadowedScene().nodeTraverse( nv );
-        },
-
-        /*receiving shadows, cull normally, but with receiving shader/state set/texture*/
-        cullShadowReceivingScene: function ( cullVisitor ) {
-
-            // WARNING: only works if camera is a direct ancestor
-
-            // What to do here... we want to draw all scene object, not only receivers ?
-            // so no mask for now
-            //var traversalMask = cullVisitor.getTraversalMask();
-            //cullVisitor.setTraversalMask( this.getShadowedScene().getShadowSettings().getReceivesShadowTraversalMask() );
-
-            var frustumCulling = cullVisitor._enableFrustumCulling;
-            cullVisitor.setEnableFrustumCulling( true );
-
-            // compute frustum prior to culling, without near/far
-            var mvp = this._tmpMat;
-            Matrix.mult( this._cameraShadowed.getProjectionMatrix(), this._cameraShadowed.getViewMatrix(), mvp );
-            cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, true );
-
-            cullVisitor.pushStateSet( this._receivingStateset );
-            this.getShadowedScene().nodeTraverse( cullVisitor );
-            cullVisitor.popStateSet();
-
-
-            var epsilon = 1e-6;
-            if ( cullVisitor._computedFar < cullVisitor._computedNear - epsilon ) {
-                Notify.log( 'empty shadowed scene' );
-                for ( var l = 0; l < 6; l++ ) {
-                    this._frustumReceivers[ l ][ 0 ] = -1.0;
-                    this._frustumReceivers[ l ][ 1 ] = 1.01;
-                    this._frustumReceivers[ l ][ 2 ] = -1.0;
-                    this._frustumReceivers[ l ][ 3 ] = 1.01;
-                }
-                this._farReceivers = 1;
-                this._nearReceivers = 0.001;
-                return;
-            } else {
-                // VFC with computed near / far from scene
-                var m = cullVisitor.getCurrentProjectionMatrix();
-                cullVisitor.clampProjectionMatrix( m, cullVisitor._computedNear, cullVisitor._computedFar, cullVisitor._nearFarRatio );
-                Matrix.mult( m, this._cameraShadowed.getViewMatrix(), mvp );
-                cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, false );
-                for ( var i = 0; i < 6; i++ ) {
-                    Vec4.copy( cullVisitor._frustum[ i ], this._frustumReceivers[ i ] );
-                }
-            }
-
-
-            this._nearReceivers = cullVisitor._computedNear;
-            this._farReceivers = cullVisitor._computedFar;
-
-
-            // reapply the original traversal mask
-            // cullVisitor.setTraversalMask( traversalMask );
-            if ( frustumCulling === false || frustumCulling === undefined ) {
-                cullVisitor.setEnableFrustumCulling( false );
-            }
         },
 
         /*
@@ -572,7 +437,7 @@ define( [
         cull: function ( cullVisitor ) {
             // make sure positioned data is done for light,
             // do it first
-            this.cullShadowReceivingScene( cullVisitor );
+            //this.cullShadowReceivingScene( cullVisitor );
 
             // now we can update camera from light accordingly
             this.updateShadowParams();

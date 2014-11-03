@@ -663,7 +663,9 @@
              l = numLights;
              while ( l-- ) {
                  shadowMap = this._shadowTechnique[ l ];
-                 shadowMap.setShadowReceiverShaderProgram( prg );
+                 // handled by shadow compiler
+                 //
+                 //shadowMap.setShadowReceiverShaderProgram( prg );
              }
          },
          updateDebugRtt: function () {
@@ -1135,6 +1137,7 @@
              /////////////////////////
              shadowedScene.setGLContext( this._glContext );
              shadowedScene.addChild( this._shadowScene );
+             // TODO: Better (Multi)Camera detection handling
              group.addChild( shadowedScene );
 
              // Camera as StateAttribute, positioned uniform ?
@@ -1223,16 +1226,17 @@
              this._shadowTechnique[ 0 ] = shadowMap;
 
              // set shadow shaders
-             // TODO: enable Material using shader Compiler support
-             shadowMap.setShadowReceiverShaderProgram( this.getShadowReceiverShaderProgram() );
              shadowMap.setShadowCasterShaderProgram( this.getShadowCasterShaderProgram() );
-             shadowMap.init();
+
+
+             shadowedScene.init();
+             //shadowMap.init();
 
              this._lightAndShadowScene = shadowedScene;
 
              // while only 1 light possible
              {
-                 var st = shadowMap.getReceivingStateSet();
+                 var st = shadowedScene.getReceivingStateSet();
                  var enabledLight = new osg.Uniform.createFloat1( 0.0, 'Light' + 1 + '_uniform_enable' );
                  st.addUniform( enabledLight );
                  enabledLight = new osg.Uniform.createFloat1( 0.0, 'Light' + 2 + '_uniform_enable' );
