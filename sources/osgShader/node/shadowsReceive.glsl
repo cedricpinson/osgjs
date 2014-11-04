@@ -1,34 +1,7 @@
 
-////////////////////////////////////////////////
- /// Float codec
-float DecodeFloatRGBA( vec4 rgba ) {
-	return dot( rgba, vec4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/160581375.0) );
-}
+#pragma include "floatrgbacodec.glsl"
 
-vec4 EncodeFloatRGBA( float v ) {
-	vec4 enc = vec4(1.0, 255.0, 65025.0, 160581375.0) * v;
-	enc = fract(enc);
-	enc -= enc.yzww * vec4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);
-	return enc;
-}
-
-vec2 DecodeHalfFloatRGBA( vec4 rgba ) {
-	return vec2(rgba.x + (rgba.y / 255.0), rgba.z + (rgba.w / 255.0));
-}
-
-vec4 EncodeHalfFloatRGBA( vec2 v ) {
-	const vec2 bias = vec2(1.0 / 255.0, 0.0);
-	vec4 enc;
-	enc.xy = vec2(v.x, fract(v.x * 255.0));
-	enc.xy = enc.xy - (enc.yy * bias);
-
-	enc.zw = vec2(v.y, fract(v.y * 255.0));
-	enc.zw = enc.zw - (enc.ww * bias);
-	return enc;
-}
-
-
- float getSingleFloatFromTex(sampler2D depths, vec2 uv){
+float getSingleFloatFromTex(sampler2D depths, vec2 uv){
       #ifndef _FLOATTEX
        return  DecodeFloatRGBA(texture2D(depths, uv));
       #else
@@ -278,7 +251,22 @@ float ESM_Fetch(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ,
 }
 // end ESM
 ////////////////////////////////////////////////
+//EVSM
 
+#ifdef _EVSM
+// Convert depth to EVSM coefficients
+// Input depth should be in [0, 1]
+vec2 WarpDepth(float depth, vec2 exponents)
+{
+    // Rescale depth into [-1, 1]
+    depth = 2.0  * depth - 1.0;
+    float pos =  exp( exponents.x * depth);
+    float neg = -exp(-exponents.y * depth);
+    return vec2(pos, neg);
+}
+
+#endif // _EVSM
+// end EVSM
 
 ////////////////////////////////////////////////
 // SHADOWS
@@ -290,12 +278,6 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
 
   // Calculate shadow amount
   float shadow = 1.0;
-
- //#define _VSM
-//#define  _ESM
-//#define  _PCF
-#define _NONE
-
 
     #ifdef _NONE
 
@@ -328,14 +310,15 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
     #elif  defined( _EVSM )
 
       vec4 occluder = getQuadFloatFromTex(tex, shadowUV.xy);
+      vec2 exponents = vec2(exponent, exponent1);
       vec2 warpedDepth = WarpDepth(shadowZ, exponents);
 
-      float g_EVSM_Derivation = vsmEpsilon;
+      float g_EVSM_Derivation = VsmEpsilon;
       // Derivative of warping at depth
       vec2 depthScale = g_EVSM_Derivation * exponents * warpedDepth;
       vec2 minVariance = depthScale * depthScale;
 
-      evsmEpsilon = -vsmEpsilon;
+      float evsmEpsilon = -VsmEpsilon;
       float shadowBias = myBias;
 
       // Compute the upper bounds of the visibility function both for x and y

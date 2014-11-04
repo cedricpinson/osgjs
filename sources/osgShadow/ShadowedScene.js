@@ -20,7 +20,9 @@ define( [
         Node.call( this );
 
         // TODO: all  techniques
-        this._shadowTechnique = undefined;
+        this._shadowTechniques = [];
+
+        this._dirty = true;
 
         this._shadowSettings = undefined;
 
@@ -31,47 +33,63 @@ define( [
 
     /** @lends ShadowedScene.prototype */
     ShadowedScene.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
-        getShadowTechnique: function () {
-            // TODO: all  techniques
-            return this._shadowTechnique;
-        },
-        // TODO: all  techniques
-        setShadowTechnique: function ( technique ) {
-            // TODO: all  techniques
-            if ( this._shadowTechnique ) {
-                if ( this._shadowTechnique === technique ) return;
 
-                if ( this._shadowTechnique.valid() ) {
-                    this._shadowTechnique.cleanSceneGraph();
-                    this._shadowTechnique._shadowedScene = 0;
+        getShadowTechniques: function () {
+            return this._shadowTechniques;
+        },
+        addShadowTechnique: function ( technique ) {
+            if ( this._shadowTechniques.length > 0 ) {
+                if ( this._shadowTechniques.indexOf( technique ) !== -1 ) return;
+            }
+
+            this._shadowTechniques.push( technique );
+
+            if ( technique.valid() ) {
+                technique._shadowedScene = this;
+                technique.dirty();
+            }
+        },
+        removeShadowTechnique: function ( technique ) {
+            if ( this._shadowTechniques.length > 0 ) {
+                var idx = this._shadowTechniques.indexOf( technique );
+                if ( idx !== -1 ) {
+                    if ( this._shadowTechniques[ idx ].valid() ) {
+                        this._shadowTechniques[ idx ].cleanSceneGraph();
+                        this._shadowTechniques[ idx ]._shadowedScene = 0;
+                    }
+                    this._shadowTechniques.splice( idx, 1 );
                 }
             }
-            this._shadowTechnique = technique;
-
-            if ( this._shadowTechnique.valid() ) {
-                this._shadowTechnique._shadowedScene = this;
-                this._shadowTechnique.dirty();
-            }
         },
+        /* Gets Default shadowSettings
+         * if it's shared between techniques
+         */
         getShadowSettings: function () {
             return this._shadowSettings;
         },
+        /* Sets Default shadowSettings
+         * if it's shared between techniques
+         */
         setShadowSettings: function ( ss ) {
             this._shadowSettings = ss;
         },
         /** Clean scene graph from any shadow technique specific nodes, state and drawables.*/
         cleanSceneGraph: function () {
-            // TODO: all  techniques
-            if ( this._shadowTechnique && this._shadowTechnique.valid() ) {
-                this._shadowTechnique.cleanSceneGraph();
+            for ( var i = 0, lt = this._shadowTechniques.length; i < lt; i++ ) {
+                if ( this._shadowTechniques[ i ] && this._shadowTechniques[ i ].valid() ) {
+                    this._shadowTechniques[ i ].cleanSceneGraph();
+                }
             }
         },
         /** Dirty any cache data structures held in the attached ShadowTechnqiue.*/
         dirty: function () {
-            // TODO: all  techniques
-            if ( this._shadowTechnique && this._shadowTechnique.valid() ) {
-                this._shadowTechnique.dirty();
+            this._dirty = false;
+            for ( var i = 0, lt = this._shadowTechniques.length; i < lt; i++ ) {
+                if ( this._shadowTechniques[ i ] && this._shadowTechniques[ i ].valid() ) {
+                    this._shadowTechniques[ i ].dirty();
+                }
             }
+
         },
         nodeTraverse: function ( /*nv*/) {
             Node.prototype.traverse.apply( this, arguments );
@@ -79,13 +97,22 @@ define( [
         traverse: function ( nodeVisitor ) {
 
             CullVisitor = CullVisitor || require( 'osg/CullVisitor' );
+            var i, lt = this._shadowTechniques.length;
 
             if ( nodeVisitor.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
 
                 // init
                 // TODO: all  techniques
-                if ( this._shadowTechnique && this._shadowTechnique.valid() && this._shadowTechnique._dirty ) {
-                    this._shadowTechnique.init();
+                var allDirty = this._dirty || ( this.getShadowSettings() && this.getShadowSettings()._dirty );
+                if ( allDirty ) {
+                    this.init();
+                } else {
+                    for ( i = 0; i < lt; i++ ) {
+                        var st = this._shadowTechniques[ i ];
+                        if ( st && st.valid() && ( st._dirty || st.getShadowSettings()._dirty ) ) {
+                            this._shadowTechniques[ i ].init();
+                        }
+                    }
                 }
 
                 this.nodeTraverse( nodeVisitor );
@@ -99,10 +126,12 @@ define( [
                     this.cullShadowReceivingScene( nodeVisitor );
 
                     // cull Casters
-                    // TODO: all  techniques
-                    if ( this._shadowTechnique && this._shadowTechnique.valid() ) {
-                        this._shadowTechnique.cullShadowCastingScene( cullVisitor );
+                    for ( i = 0; i < lt; i++ ) {
+                        if ( this._shadowTechniques[ i ] && this._shadowTechniques[ i ].valid() ) {
+                            this._shadowTechniques[ i ].cullShadowCastingScene( cullVisitor );
+                        }
                     }
+
                 }
             } else {
                 this.nodeTraverse( nodeVisitor );
@@ -121,48 +150,42 @@ define( [
 
             ////////////////
             // RECEIVERS stateSet
-            var receiverStateSet = new StateSet();
+            if ( this._receivingStateset ) {
+                this._receivingStateset.releaseGLObjects();
+            }
+            var receiverStateSet = new StateSet(); //this.getReceivingStateSet();
+
             // NOW USING NODE SHADERS
             this._receivingStateset = receiverStateSet;
 
-            var shadowSettings = this.getShadowSettings();
-            //
-            // draw only shadow & light, not texture
-            var texturedebug = shadowSettings._config[ 'texture' ] ? 1.0 : 0.0;
-            var myuniform = Uniform.createFloat1( texturedebug, 'debug' );
-            this._receivingStateset.addUniform( myuniform );
-            // Shadow bias /acne/ peter panning
-            var bias = shadowSettings._config[ 'bias' ];
-            myuniform = Uniform.createFloat1( bias, 'bias' );
-            this._receivingStateset.addUniform( myuniform );
-            // ESM & EVSM
-            var exponent = shadowSettings._config[ 'exponent' ];
-            myuniform = Uniform.createFloat1( exponent, 'exponent' );
-            this._receivingStateset.addUniform( myuniform );
-            var exponent1 = shadowSettings._config[ 'exponent1' ];
-            myuniform = Uniform.createFloat1( exponent1, 'exponent1' );
-            this._receivingStateset.addUniform( myuniform );
-            // VSM
-            var VsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
-            myuniform = Uniform.createFloat1( VsmEpsilon, 'VsmEpsilon' );
-            this._receivingStateset.addUniform( myuniform );
             // Camera/Eye Position
             // TODO: add positioned uniform
-            myuniform = Uniform.createFloat4( [ 0.0, 0.0, 0.0, 0.0 ], 'Camera_uniform_position' );
+            var myuniform = Uniform.createFloat4( [ 0.0, 0.0, 0.0, 0.0 ], 'Camera_uniform_position' );
             this._receivingStateset.addUniform( myuniform );
 
-
-
-            // TODO: all  techniques
-            if ( this._shadowTechnique && this._shadowTechnique.valid() ) {
-                this._shadowTechnique.init( receiverStateSet );
+            for ( var i = 0, lt = this._shadowTechniques.length; i < lt; i++ ) {
+                if ( this._shadowTechniques[ i ] && this._shadowTechniques[ i ].valid() ) {
+                    this._shadowTechniques[ i ].init();
+                }
             }
+            if ( this.getShadowSettings() ) this.getShadowSettings()._dirty = false;
+            this._dirty = false;
         },
-        setReceivingStateSet: function ( st ) {
-            this._receivingStateset = st;
+
+        setReceivesShadowTraversalMask: function ( mask ) {
+            this._receivesShadowTraversalMask = mask;
+        },
+        getReceivesShadowTraversalMask: function () {
+            return this._receivesShadowTraversalMask;
         },
         getReceivingStateSet: function () {
+            if ( !this._receivingStateset ) {
+                this._receivingStateset = new StateSet(); //this.getOrCreateStateSet();
+            }
             return this._receivingStateset;
+        },
+        setReceivingStateSet: function ( rs ) {
+            this._receivingStateset = rs;
         },
         /*receiving shadows, cull normally, but with receiving shader/state set/texture*/
         cullShadowReceivingScene: function ( cullVisitor ) {
@@ -172,14 +195,7 @@ define( [
             this._cameraShadowed = cullVisitor.getCurrentCamera();
 
 
-            var receivingUniforms = this._receivingStateset.getUniformList();
-
-            // update shader Parameters
-            receivingUniforms[ 'debug' ].getUniform().set( this._shadowSettings._config[ 'texture' ] ? 1.0 : 0.0 );
-            receivingUniforms[ 'bias' ].getUniform().set( this._shadowSettings._config[ 'bias' ] );
-            receivingUniforms[ 'exponent' ].getUniform().set( this._shadowSettings._config[ 'exponent' ] );
-            receivingUniforms[ 'exponent1' ].getUniform().set( this._shadowSettings._config[ 'exponent1' ] );
-            receivingUniforms[ 'VsmEpsilon' ].getUniform().set( this._shadowSettings._config[ 'VsmEpsilon' ] );
+            var receivingUniforms = this.getReceivingStateSet().getUniformList();
 
             // TODO: get camera position as positioned uniform ?
             var pos = this._camPos || Vec4.create();
@@ -190,8 +206,8 @@ define( [
 
             // What to do here... we want to draw all scene object, not only receivers ?
             // so no mask for now
-            //var traversalMask = cullVisitor.getTraversalMask();
-            //cullVisitor.setTraversalMask( this.getShadowSettings().getReceivesShadowTraversalMask() );
+            var traversalMask = cullVisitor.getTraversalMask();
+            //cullVisitor.setTraversalMask( this.getReceivesShadowTraversalMask() );
 
             var frustumCulling = cullVisitor._enableFrustumCulling;
             cullVisitor.setEnableFrustumCulling( true );
@@ -235,7 +251,7 @@ define( [
 
 
             // reapply the original traversal mask
-            // cullVisitor.setTraversalMask( traversalMask );
+            cullVisitor.setTraversalMask( traversalMask );
             if ( frustumCulling === false || frustumCulling === undefined ) {
                 cullVisitor.setEnableFrustumCulling( false );
             }

@@ -22,7 +22,7 @@
          // most can be changed by the UI
          this._config = {
              'texturesize': 1024,
-             'shadow': 'ESM',
+             'shadow': 'PCF',
              'texturetype': 'BYTE',
              'lightnum': 1,
              'lightType': 'Spot',
@@ -114,21 +114,22 @@
          this._lights = [];
          this._lightsMatrix = [];
          this._lightsSource = [];
+         this._debugLights = [];
          this._lightsUniform = [];
-         this._casterStateSet = [ undefined, undefined, undefined ]; // one statset per light casting shadow
-         this._shadowTexture = [ undefined, undefined, undefined ];
-         this._shadowCamera = [ undefined, undefined, undefined ];
+         this._casterStateSet = []; // one statset per light casting shadow
+         this._shadowTexture = [];
+         this._shadowCamera = [];
 
-         this._shadowTechnique = [ undefined, undefined, undefined ];
+         this._shadowTechnique = [];
 
-         this._blurPass = [ undefined, undefined, undefined ];
-         this._downPass = [ undefined, undefined, undefined ];
+         this._blurPass = [];
+         this._downPass = [];
 
          // shared
          this._receiverStateSet = undefined;
          this.textureType = undefined;
 
-         this._previousTech = this._config[ 'technique' ];
+         this._previousTech = this._config[ 'shadow' ];
          this._previousTextureSize = this._config[ 'texturesize' ];
          this._previousTextureType = this._config[ 'texturetype' ];
          this._previousBlur = this._config[ 'blur' ];
@@ -148,12 +149,13 @@
 
      // That's where we update lights position/direction at each frame
      // so that the sample is not too much static
-     var LightUpdateCallback = function ( myExample, debugNode ) {
+     var LightUpdateCallback = function ( light, myExample, debugNode ) {
          this._example = myExample;
-         var position = this._example._lights[ 0 ].getPosition();
+         var position = light.getPosition();
          this._positionX = position[ 0 ];
          this._positionY = position[ 1 ];
          this._positionZ = position[ 2 ];
+
          this._accum = 0;
          this._last = 0;
          this._debugNode = debugNode;
@@ -259,10 +261,12 @@
              var gui = new window.dat.GUI();
 
              var textureTypes = [ 'BYTE' ];
-             if ( this._halfFloatTexSupport ) textureTypes.push( 'HALF_FLOAT' );
-             if ( this._halfFloatLinearTexSupport ) textureTypes.push( 'HALF_FLOAT_LINEAR' );
-             if ( this._floatTexSupport ) textureTypes.push( 'FLOAT' );
-             if ( this._floatLinearTexSupport ) textureTypes.push( 'FLOAT_LINEAR' );
+             if ( this._hasAnyFloatTexSupport ) {
+                 if ( this._halfFloatTexSupport ) textureTypes.push( 'HALF_FLOAT' );
+                 if ( this._halfFloatLinearTexSupport ) textureTypes.push( 'HALF_FLOAT_LINEAR' );
+                 if ( this._floatLinearTexSupport ) textureTypes.push( 'FLOAT_LINEAR' );
+                 if ( this._floatTexSupport ) textureTypes.push( 'FLOAT' );
+             }
 
 
              var controller;
@@ -320,13 +324,13 @@
 
              controller = VSMFolder.add( this._config, 'VsmEpsilon' ).min( 0.0001 ).max( 0.01 );
              controller.onChange( this.updateShadow.bind( this ) );
-
+             /*
              controller = VSMFolder.add( this._config, 'supersample' ).step( 1 ).min( 0.0 ).max( 8 );
              controller.onChange( this.updateShadow.bind( this ) );
 
              controller = VSMFolder.add( this._config, 'blur' );
              controller.onChange( this.updateShadow.bind( this ) );
-
+*/
              //controller = VSMFolder.add( this._config, 'blurKernelSize' ).min( 3.0 ).max( 128.0 );
              //controller.onChange( this.updateShadow.bind( this ) );
 
@@ -462,8 +466,54 @@
              }
 
          },
+
          updateLightsEnable: function () {
              var l, numLights = ~~ ( this._config[ 'lightnum' ] );
+
+             while ( this._maxVaryings < ( numLights * 2 + 2 ) ) {
+                 numLights--;
+             }
+             this._config[ 'lightnum' ] = numLights;
+
+             if ( this._lights.length !== numLights ) {
+
+                 var lightScale = 1.0 / numLights;
+
+                 var group = this._viewer.getSceneData();
+
+                 l = this._lights.length;
+
+                 while ( l-- ) {
+                     // remove light
+                     this._lightAndShadowScene.removeShadowTechnique( this._shadowTechnique[ l ] );
+
+                     group.removeChild( this._lightsMatrix[ l ] );
+                     group.removeChild( this._debugLights[ l ] );
+                 }
+
+                 this._lights = [];
+                 this._lightsMatrix = [];
+                 this._lightsSource = [];
+                 this._shadowTechnique = [];
+                 this._debugLights = [];
+
+                 if ( numLights > 0 ) {
+                     this.addShadowedLight( this._viewer.getSceneData(), 0, [ 50, 50, 15, 1 ], [ 0, 0, 0, 0 ], lightScale );
+                     // this._shadowTechnique[ 0 ].init();
+                 }
+                 if ( numLights > 1 ) {
+                     this.addShadowedLight( this._viewer.getSceneData(), 1, [ -150, 150, 50, 1 ], [ 0, 0, 0, 0 ], lightScale );
+                     // this._shadowTechnique[ 1 ].init();
+                 }
+                 if ( numLights > 2 ) {
+                     this.addShadowedLight( this._viewer.getSceneData(), 2, [ 50, -75, 35, 1 ], [ 0, 0, 0, 0 ], lightScale );
+                     //  this._shadowTechnique[ 2 ].init();
+                 }
+                 this._lightAndShadowScene.init();
+                 this._updateRtt = true;
+             }
+
+
 
              l = this._lights.length;
              while ( l-- ) {
@@ -521,76 +571,33 @@
              var shadowMap;
              var texType = this._config[ 'texturetype' ];
              if ( this._previousTextureType !== texType ) {
-                 var l, numLights = ~~ ( this._config[ 'lightnum' ] );
-                 var textureType, textureFormat, texFilterMin, texFilterMax;
-                 switch ( this._config[ 'texturetype' ] ) {
-                 case 'HALF_FLOAT':
-                     textureType = osg.Texture.HALF_FLOAT;
-                     texFilterMin = osg.Texture.NEAREST;
-                     texFilterMax = osg.Texture.NEAREST;
-                     break;
-                 case 'HALF_FLOAT_LINEAR':
-                     textureType = osg.Texture.HALF_FLOAT;
-                     texFilterMin = osg.Texture.LINEAR;
-                     texFilterMax = osg.Texture.LINEAR;
-                     break;
-                 case 'FLOAT':
-                     textureType = osg.Texture.FLOAT;
-                     texFilterMin = osg.Texture.NEAREST;
-                     texFilterMax = osg.Texture.NEAREST;
-                     break;
-                 case 'FLOAT_LINEAR':
-                     break;
-                 case 'BYTE':
-                     textureType = osg.Texture.UNSIGNED_BYTE;
-                     texFilterMin = osg.Texture.LINEAR;
-                     texFilterMax = osg.Texture.LINEAR;
-                     break;
-
-                 default:
-                     textureType = osg.Texture.UNSIGNED_BYTE;
-                     texFilterMin = osg.Texture.LINEAR;
-                     texFilterMax = osg.Texture.LINEAR;
-                     break;
-
-                 }
-
-                 textureFormat = osg.Texture.RGBA;
-                 /*
-                 FLOAT luminance webgl bug or unsupported by spec
-                  */
-                 /*
-                 if ( this._config[ 'shadow' ] === 'ESM' ) {
-                     textureFormat = osg.Texture.LUMINANCE;
-                 } else if ( this._config[ 'shadow' ] === 'NONE' ) {
-                     textureFormat = osg.Texture.LUMINANCE;
-                 } else if ( this._config[ 'shadow' ] === 'PCF' ) {
-                     textureFormat = osg.Texture.LUMINANCE;
-                 } else if ( this._config[ 'shadow' ] === 'VSM' ) {
-                     textureFormat = osg.Texture.RGBA;
-                 } else if ( this._config[ 'shadow' ] === 'EVSM' ) {
-                     textureFormat = osg.Texture.RGBA;
-                 }
-*/
-                 l = numLights;
-                 var shadowSettings = this._lightAndShadowScene.getShadowSettings();
+                 var l = this._lights.length;
                  while ( l-- ) {
 
                      shadowMap = this._shadowTechnique[ l ];
+                     var shadowSettings = shadowMap.getShadowSettings();
+                     shadowSettings.setTextureType( texType );
 
-                     shadowSettings.setTextureType( textureType );
-                     shadowSettings.setTextureFilter( texFilterMin, texFilterMax );
-
-                     shadowMap.getTexture().setType( textureType );
-                     shadowMap.getTexture().setMinFilter( texFilterMin );
-                     shadowMap.getTexture().setMaxFilter( texFilterMax );
-
-                     //shadowMap.getTexture().setInternalFormat( textureFormat );
-                     //shadowMap.getTexture().dirty();
-                     //shadowMap.resize( shadowSizeFinal );
                  }
                  this._previousTextureType = this._config[ 'texturetype' ];
              }
+             this._updateRtt = true;
+         },
+         updateShadowMapSize: function () {
+
+             var shadowMap;
+             var mapsize = ~~ ( this._config[ 'texturesize' ] );
+             if ( this._previousTextureSize !== mapsize ) {
+
+                 var l = this._lights.length;
+                 while ( l-- ) {
+                     shadowMap = this._shadowTechnique[ l ];
+                     shadowMap.getShadowSettings().setTextureSize( mapsize );
+                 }
+                 this._previousTextureSize = mapsize;
+             }
+             this._updateRtt = true;
+
          },
          updateFov: function () {
 
@@ -604,38 +611,18 @@
              }
 
          },
-         updateShadowMapSize: function () {
-
-             var l, numLights = ~~ ( this._config[ 'lightnum' ] );
-
-             var mapsize = ~~ ( this._config[ 'texturesize' ] );
-             var shadowSizeFinal = [ mapsize, mapsize, 1.0 / mapsize, 1.0 / mapsize ];
-             var shadowMap;
-
-             if ( this._previousTextureSize !== mapsize ) {
-
-                 l = numLights;
-                 while ( l-- ) {
-                     shadowMap = this._shadowTechnique[ l ];
-                     shadowMap.resize( shadowSizeFinal );
-
-                     shadowMap.getReceivingStateSet().getUniformList()[ 'Shadow_MapSize' + l ].getUniform().set( shadowSizeFinal );
-                 }
-                 this._previousTextureSize = mapsize;
-             }
-
-         },
          updateShadowTechniqueMode: function () {
 
-             if ( this._previousTech !== this._config[ 'technique' ] ) {
+             if ( this._previousTech !== this._config[ 'shadow' ] ) {
                  // technique change.
-                 switch ( this._config[ 'technique' ] ) {
+                 switch ( this._config[ 'shadow' ] ) {
                  case 'ESM':
                      this._config[ 'exponent' ] = 200.0;
                      break;
                  case 'EVSM':
                      this._config[ 'exponent' ] = 0.001;
                      this._config[ 'exponent1' ] = 0.001;
+                     this._config[ 'texturetype' ] = 'FLOAT';
                      break;
                  case 'VSM':
                      this._config[ 'exponent' ] = 0.001;
@@ -644,36 +631,44 @@
                  default:
                      break;
                  }
-                 this._previousTech = this._config[ 'technique' ];
+                 var l, numLights = ~~ ( this._config[ 'lightnum' ] );
+                 var shadowMap;
+
+                 l = numLights;
+                 while ( l-- ) {
+                     shadowMap = this._shadowTechnique[ l ];
+                     shadowMap.getShadowSettings().setAlgorithm( this._config[ 'shadow' ] );
+                 }
+
+
+                 this._previousTech = this._config[ 'shadow' ];
              }
 
          },
          updateShaders: function () {
+             // TODO: check if still needed
+             // should be inside the init of shadowscene or shadowmap
+
+             return;
+
              var l, numLights = ~~ ( this._config[ 'lightnum' ] );
              var shadowMap;
 
-             var prg = this.getShadowCasterShaderProgram();
              l = numLights;
              while ( l-- ) {
                  shadowMap = this._shadowTechnique[ l ];
-                 shadowMap.setShadowCasterShaderProgram( prg );
-             }
 
-             prg = this.getShadowReceiverShaderProgram();
-             l = numLights;
-             while ( l-- ) {
-                 shadowMap = this._shadowTechnique[ l ];
-                 // handled by shadow compiler
-                 //
-                 //shadowMap.setShadowReceiverShaderProgram( prg );
+                 shadowMap.dirty();
+
              }
+             this._lightAndShadowScene.getReceivingStateSet().attributeMap.dirty();
          },
          updateDebugRtt: function () {
              // show the shadowmap as ui quad on left bottom screen
-             if ( this._previousRtt === true && this._config[ 'debugRtt' ] === false ) {
+             if ( this._updateRtt || ( this._previousRtt === true && this._config[ 'debugRtt' ] === false ) ) {
                  this._rttdebugNode.removeChildren();
              }
-             if ( this._previousRtt === false && this._config[ 'debugRtt' ] ) {
+             if ( this._updateRtt || ( this._previousRtt === false && this._config[ 'debugRtt' ] ) ) {
 
                  var l, numLights = ~~ ( this._config[ 'lightnum' ] );
 
@@ -690,6 +685,7 @@
                  } );
              }
              this._previousRtt = this._config[ 'debugRtt' ];
+             this._updateRtt = false;
          },
          /*
           * try to minimize update cost and code size
@@ -762,7 +758,7 @@
                  osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0,FragTexCoord0);', '}', ''
              ].join( '\n' );
              var program = new osg.Program(
-                 new osg.Shader( this._glContext.VERTEX_SHADER, osgUtil.Composer.Filter.defaultVertexShader ), new osg.Shader( this._glContext.FRAGMENT_SHADER, fgt ) );
+                 new osg.Shader( 'VERTEX_SHADER', osgUtil.Composer.Filter.defaultVertexShader ), new osg.Shader( 'FRAGMENT_SHADER', fgt ) );
 
              stateset = this._ComposerdebugNode.getOrCreateStateSet();
              if ( !optionsDebug.fullscreen )
@@ -777,7 +773,7 @@
 
                      stateset = quad.getOrCreateStateSet();
 
-                     quad.setName( "debugCompoQuadGeom" );
+                     quad.setName( 'debugCompoQuadGeom' );
 
                      stateset.setTextureAttributeAndMode( 0, texture );
                      stateset.setAttributeAndModes( program );
@@ -848,124 +844,6 @@
 
              return defer.promise;
          },
-         getShaderProgram: function ( vs, ps, defines ) {
-             if ( this._cacheProgram[ vs + ps + defines ] !== undefined )
-                 return this._cacheProgram[ vs + ps + defines ];
-
-             var vertexshader = this._shaderProcessor.getShader( vs, defines );
-             var fragmentshader = this._shaderProcessor.getShader( ps, defines );
-
-             var program = new osg.Program(
-                 new osg.Shader( this._glContext.VERTEX_SHADER, vertexshader ), new osg.Shader( this._glContext.FRAGMENT_SHADER, fragmentshader ) );
-
-             this._cacheProgram[ vs + ps + defines ] = program;
-             return program;
-         },
-         // computes a shader upon user choice
-         // of shadow algorithms
-         // shader file, define but texture type/format
-         // associated too
-         getShadowCasterShaderProgram: function () {
-             var textureType, textureFormat, defines = [];
-
-             var shadowmapCasterVertex;
-             var shadowmapCasterFragment;
-             var floatTexSupp = this.floatTexSupport && this._config[ 'texturetype' ] !== 'Force8bits';
-             if ( floatTexSupp ) {
-                 textureType = osg.Texture.FLOAT;
-                 defines.push( '#define _FLOATTEX' );
-             } else {
-                 textureType = osg.Texture.UNSIGNED_BYTE;
-             }
-             if ( this._config[ 'shadowstable' ] === 'World Position' )
-                 defines.push( '#define NUM_STABLE' );
-             if ( floatTexSupp && this._config[ 'shadow' ] === 'EVSM' ) {
-                 shadowmapCasterVertex = 'shadowmap_evsm_cast.vert';
-                 shadowmapCasterFragment = 'shadowmap_evsm_cast.frag';
-                 textureFormat = osg.Texture.RGBA;
-             } else if ( floatTexSupp && this._config[ 'shadow' ] === 'VSM' ) {
-                 shadowmapCasterVertex = 'shadowmap_vsm_cast.vert';
-                 shadowmapCasterFragment = 'shadowmap_vsm_cast.frag';
-                 textureFormat = osg.Texture.RGBA;
-             } else {
-                 if ( this._config[ 'shadow' ] === 'ESM' ) {
-                     defines.push( '#define _ESM' );
-                     textureFormat = osg.Texture.LUMINANCE;
-                 } else if ( this._config[ 'shadow' ] === 'NONE' ) {
-                     defines.push( '#define _NONE' );
-                     if ( floatTexSupp )
-                         textureFormat = osg.Texture.LUMINANCE;
-                 } else if ( this._config[ 'shadow' ] === 'PCF' ) {
-                     defines.push( '#define _PCF' );
-                     if ( floatTexSupp )
-                         textureFormat = osg.Texture.LUMINANCE;
-                 } else if ( this._config[ 'shadow' ] === 'VSM' ) {
-                     defines.push( '#define _VSM' );
-                     textureFormat = osg.Texture.RGBA;
-                 }
-                 shadowmapCasterVertex = 'shadowmap_cast.vert';
-                 shadowmapCasterFragment = 'shadowmap_cast.frag';
-                 textureFormat = osg.Texture.RGBA;
-             }
-
-             var prg = this.getShaderProgram( shadowmapCasterVertex, shadowmapCasterFragment, defines );
-             this.textureType = textureType;
-             this.textureFormat = textureFormat;
-             return prg;
-         },
-         // computes a shader upon user choice
-         // of shadow algorithms
-         // shader file, define but texture type/format
-         // associated too
-         getShadowReceiverShaderProgram: function () {
-
-             var shadowmapReceiverVertex;
-             var shadowmapReceiverFragment;
-             var defines = [];
-
-             if ( this._config[ 'shadowstable' ] === 'World Position' )
-                 defines.push( '#define NUM_STABLE' );
-
-             var floatTexSupp = this._config[ 'texturetype' ] !== 'Force8bits' && this.floatTexSupport;
-             if ( floatTexSupp ) {
-                 defines.push( '#define _FLOATTEX' );
-             }
-
-
-             if ( floatTexSupp && this._config[ 'shadow' ] === 'EVSM' ) {
-                 // NEED float
-                 // add alert if not ?
-                 shadowmapReceiverVertex = 'shadowmap_evsm_receive.vert';
-                 shadowmapReceiverFragment = 'shadowmap_evsm_receive.frag';
-             } else if ( floatTexSupp && this._config[ 'shadow' ] === 'VSM' ) {
-                 shadowmapReceiverVertex = 'shadowmap_vsm_receive.vert';
-                 shadowmapReceiverFragment = 'shadowmap_vsm_receive.frag';
-             } else {
-                 if ( this._config[ 'shadow' ] === 'ESM' ) {
-                     defines.push( '#define _ESM' );
-                 } else if ( this._config[ 'shadow' ] === 'NONE' ) {
-                     defines.push( '#define _NONE' );
-                 } else if ( this._config[ 'shadow' ] === 'PCF' ) {
-                     defines.push( '#define _PCF' );
-                 } else if ( this._config[ 'shadow' ] === 'VSM' ) {
-                     defines.push( '#define _VSM' ); // VSM 8 bits
-                 }
-                 shadowmapReceiverVertex = 'shadowmap_receive.vert';
-                 shadowmapReceiverFragment = 'shadowmap_receive.frag';
-             }
-             var prg = this.getShaderProgram( shadowmapReceiverVertex, shadowmapReceiverFragment, defines );
-
-             prg.trackAttributes = {};
-             prg.trackAttributes.attributeKeys = [];
-             prg.trackAttributes.attributeKeys.push( 'Material' );
-
-             if ( this._lights[ 0 ]._enable ) prg.trackAttributes.attributeKeys.push( 'Light0' );
-             //if ( this._lights[ 1 ]._enable ) prg.trackAttributes.attributeKeys.push( 'Light1' );
-             //if ( this._lights[ 2 ]._enable ) prg.trackAttributes.attributeKeys.push( 'Light2' );
-
-             return prg;
-         },
-
          // Scene to be shadowed,  and to cast  shadow from
          // Multiple parents...
          createSceneCasterReceiver: function () {
@@ -1123,16 +1001,105 @@
 
              return ShadowScene;
          },
+         addShadowedLight: function ( group, num, position, target, lightScale ) {
+
+             var shadowSettings = new osgShadow.ShadowSettings( this._config );
+             //this._lightAndShadowScene.setShadowSettings( shadowSettings );
+
+             var mapres = parseInt( this._config[ 'texturesize' ] );
+             shadowSettings.setTextureSize( mapres );
+
+             shadowSettings.setCastsShadowTraversalMask( this._castsShadowTraversalMask );
+
+             shadowSettings.setAlgorithm( this._config[ 'shadow' ] );
+
+             // at three light you might burn...
+             ////////////////// Light 0
+             /////////////////////////////
+             var lightSource = new osg.LightSource();
+             var lightNode = new osg.MatrixTransform();
+             lightNode.setName( 'lightNode0' );
+             var light = new osg.Light( num );
+
+             light.setPosition( position );
+             var dir = [ 0, 0, 0, 0 ];
+             osg.Vec3.sub( target, light._position, dir );
+             osg.Vec3.normalize( dir, dir );
+             light.setDirection( dir );
+
+             light.setName( 'light' + num );
+
+             light.setSpotCutoff( this._config[ '_spotCutoff' ] );
+             light.setSpotBlend( this._config[ '_spotBlend' ] );
+             light.setConstantAttenuation( this._config[ '_constantAttenuation' ] );
+             light.setLinearAttenuation( this._config[ '_linearAttenuation' ] );
+             light.setQuadraticAttenuation( this._config[ '_quadraticAttenuation' ] );
+
+             light._ambient = [ 0.0, 0.0, 0.0, 1.0 ];
+             light._diffuse = [ lightScale, lightScale, lightScale, 1.0 ];
+             light._specular = [ lightScale, lightScale, lightScale, 1.0 ];
+
+             lightSource.setLight( light );
+             lightNode.addChild( lightSource );
+
+             this._lights.push( light );
+             this._lightsMatrix.push( lightNode );
+             this._lightsSource.push( lightSource );
+             // how to give light link to ancestor ?
+             // TODO: use positioned data ? to make sure it set before
+             light.setUserData( lightNode );
+
+
+             /////////////////////////////
+             group.addChild( lightNode );
+             /////////////////////////////
+
+             var lightNodemodel = osg.createAxisGeometry();
+             var lightNodemodelNode = new osg.MatrixTransform();
+             lightNodemodelNode.addChild( lightNodemodel );
+             this._debugLights.push( lightNodemodelNode );
+             // light debug axis view
+             group.addChild( lightNodemodelNode );
+
+             ////////////
+             lightSource.setUpdateCallback( new LightUpdateCallback( light, this, lightNodemodelNode ) );
+
+             shadowSettings.setLight( light );
+             ///////////////////////////////
+
+             var shadowMap = new osgShadow.ShadowMap( shadowSettings );
+             this._lightAndShadowScene.addShadowTechnique( shadowMap );
+
+             /////////////////////////////
+             //light0.setShadowTechnique( shadowMap );
+             light._shadowTechnique = shadowMap;
+             ///////////////////////////////////
+             // set shadow shaders
+             //shadowMap.setShadowCasterShaderProgram( this.getShadowCasterShaderProgram() );
+             //shadowMap.getShadowCasterShaderProgram() ;
+
+             this._shadowTechnique.push( shadowMap );
+             //shadowMap.init();
+
+         },
          /*
           * main sample scene shadow code using OSG interface
           */
          createScene: function () {
              var group = new osg.Node();
 
+             this._receivesShadowTraversalMask = 0x1;
+             this._castsShadowTraversalMask = 0x2;
 
              this._shadowScene = this.createSceneCasterReceiver();
 
              var shadowedScene = new osgShadow.ShadowedScene();
+             this._lightAndShadowScene = shadowedScene;
+             shadowedScene.setReceivesShadowTraversalMask( this._receivesShadowTraversalMask );
+
+             //this._shadowScene.setNodeMask( this._castsShadowTraversalMask );
+             //this._shadowScene.setNodeMask( this._receivesShadowTraversalMask );
+             //this._groundNode.setNodeMask( ~this._castsShadowTraversalMask );
 
              /////////////////////////
              shadowedScene.setGLContext( this._glContext );
@@ -1145,105 +1112,21 @@
              // need camera position in world too
              this._config[ 'camera' ] = this._viewer.getCamera();
 
-             var shadowSettings = new osgShadow.ShadowSettings( this._config );
-             shadowedScene.setShadowSettings( shadowSettings );
+             var numLights = ~~ ( this._config[ 'lightnum' ] );
+             var lightScale = 1.0 / numLights;
 
-             var mapres = 1024;
-             shadowSettings.setTextureSize( [ mapres, mapres ] );
-             var ReceivesShadowTraversalMask = 0x1;
-             var CastsShadowTraversalMask = 0x2;
-
-             shadowSettings.setReceivesShadowTraversalMask( ReceivesShadowTraversalMask );
-             shadowSettings.setCastsShadowTraversalMask( CastsShadowTraversalMask );
-
-             //this._shadowScene.setNodeMask( CastsShadowTraversalMask );
-             //this._shadowScene.setNodeMask( ReceivesShadowTraversalMask );
-             this._groundNode.setNodeMask( ~CastsShadowTraversalMask );
-
-             var lightScale = 1.0;
-             // at three light you might burn...
-             ////////////////// Light 0
-             /////////////////////////////
-             var lightSource0 = new osg.LightSource();
-             var lightNode0 = new osg.MatrixTransform();
-             lightNode0.setName( 'lightNode0' );
-             var light0 = new osg.Light( 0 );
-             this._light0 = light0;
-
-             light0.setPosition( [ 50, 50, 15, 1 ] );
-             var dir = [ 0, 0, 0, 0 ];
-             osg.Vec3.sub( [ 0, 0, 0.0 ], light0._position, dir );
-             osg.Vec3.normalize( dir, dir );
-             light0.setDirection( dir );
-
-             light0.setName( 'light0' );
-
-             light0.setSpotCutoff( this._config[ '_spotCutoff' ] );
-             light0.setSpotBlend( this._config[ '_spotBlend' ] );
-             light0.setConstantAttenuation( this._config[ '_constantAttenuation' ] );
-             light0.setLinearAttenuation( this._config[ '_linearAttenuation' ] );
-             light0.setQuadraticAttenuation( this._config[ '_quadraticAttenuation' ] );
-
-             light0._ambient = [ 0.0, 0.0, 0.0, 1.0 ];
-             light0._diffuse = [ lightScale, lightScale, lightScale, 1.0 ];
-             light0._specular = [ lightScale, lightScale, lightScale, 1.0 ];
-
-             lightSource0.setLight( light0 );
-             lightNode0.addChild( lightSource0 );
-
-             this._lights.push( light0 );
-             this._lightsMatrix.push( lightNode0 );
-             this._lightsSource.push( lightSource0 );
-             // how to give light link to ancestor ?
-             // TODO: use positioned data ? to make sure it set before
-             light0.setUserData( lightNode0 );
-
-
-             /////////////////////////////
-             group.addChild( lightNode0 );
-             /////////////////////////////
-
-             var lightNodemodel0 = osg.createAxisGeometry();
-             var lightNodemodelNode0 = new osg.MatrixTransform();
-             lightNodemodelNode0.addChild( lightNodemodel0 );
-             // light debug axis view
-             group.addChild( lightNodemodelNode0 );
-
-             ////////////
-             lightSource0.setUpdateCallback( new LightUpdateCallback( this, lightNodemodelNode0 ) );
-
-             shadowSettings.setLight( light0 );
-             ///////////////////////////////
-
-             var shadowMap = new osgShadow.ShadowMap();
-             shadowedScene.setShadowTechnique( shadowMap );
-
-             /////////////////////////////
-             //light0.setShadowTechnique( shadowMap );
-             light0._shadowTechnique = shadowMap;
-             ///////////////////////////////////
-
-             this._shadowTechnique[ 0 ] = shadowMap;
-
-             // set shadow shaders
-             shadowMap.setShadowCasterShaderProgram( this.getShadowCasterShaderProgram() );
-
-
+             if ( numLights > 0 ) this.addShadowedLight( group, 0, [ 50, 50, 15, 1 ], [ 0, 0, 0, 0 ], lightScale );
+             if ( numLights > 1 ) this.addShadowedLight( group, 1, [ -150, 150, 50, 1 ], [ 0, 0, 0, 0 ], lightScale );
+             if ( numLights > 2 ) this.addShadowedLight( group, 2, [ 50, -75, 35, 1 ], [ 0, 0, 0, 0 ], lightScale );
+             /*
              shadowedScene.init();
-             //shadowMap.init();
-
-             this._lightAndShadowScene = shadowedScene;
-
-             // while only 1 light possible
-             {
-                 var st = shadowedScene.getReceivingStateSet();
-                 var enabledLight = new osg.Uniform.createFloat1( 0.0, 'Light' + 1 + '_uniform_enable' );
-                 st.addUniform( enabledLight );
-                 enabledLight = new osg.Uniform.createFloat1( 0.0, 'Light' + 2 + '_uniform_enable' );
-                 st.addUniform( enabledLight );
+*/
+             var l = numLights;
+             while ( l-- ) {
+                 var shadowMap = this._shadowTechnique[ l ];
+                 this._rtt.push( shadowMap.getTexture() );
              }
 
-             this._rtt.push( shadowMap.getTexture() );
 
              this._rttdebugNode = new osg.Node();
              this._rttdebugNode._name = 'debugFBNode';
@@ -1257,7 +1140,7 @@
              }
 
              // one config to rule them all
-             this._config = shadowedScene.getShadowSettings()._config;
+             //this._config = shadowedScene.getShadowSettings()._config;
 
              return group;
          },
@@ -1279,10 +1162,13 @@
 
              this._glContext = viewer.getGraphicContext();
 
+             this._maxVaryings = this._viewer._webGLCaps.getWebGLParameter( 'MAX_VARYING_VECTORS' );
+
              this._floatLinearTexSupport = this._viewer._webGLCaps.hasRTTLinearFloat();
              this._floatTexSupport = this._viewer._webGLCaps.hasRTTLinearFloat();
              this._halfFloatLinearTexSupport = this._viewer._webGLCaps.hasRTTHalfFloat();
              this._halfFloatTexSupport = this._viewer._webGLCaps.hasRTTLinearHalfFloat();
+             this._hasAnyFloatTexSupport = this._floatLinearTexSupport || this._floatTexSupport || this._halfFloatLinearTexSupport || this._halfFloatTexSupport;
 
              this.readShaders().then( function () {
                  var scene = this.createScene();

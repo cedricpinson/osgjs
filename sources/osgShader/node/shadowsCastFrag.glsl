@@ -1,6 +1,9 @@
-#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
+#else
+precision mediump float;
 #endif
+
 
 uniform float exponent;
 uniform float exponent1;
@@ -35,7 +38,6 @@ vec4 ShadowDepthToEVSM(float depth)
 void main(void) {
     float depth;
     // linearize (aka map z to near..far to 0..1)
- //#define NUM_STABLE
     #ifndef NUM_STABLE
         depth =  - WorldPos.z;
         // linearize (aka map z to near..far to 0..1)
@@ -50,36 +52,35 @@ void main(void) {
 
     #endif
 
- // #define _VSM
-    #ifndef _FLOATTEX
+    #ifdef _FLOATTEX
         #ifdef _EVSM
             gl_FragColor = ShadowDepthToEVSM(depth);
         #else
-    	    #ifdef _VSM
-    	    	gl_FragColor = EncodeHalfFloatRGBA(vec2(depth, depth*depth));
-    	    #else
-    	    	// _ESM, _PCF, _NONE
+           #ifdef _VSM
+               gl_FragColor = EncodeHalfFloatRGBA(vec2(depth, depth*depth));
+          #else
+                // _ESM, _PCF, _NONE
                 #ifdef _ESM
                     float depthScale = exponent1;//40.0;
                     //depth = exp(exponent*depth*depthScale), 0.0, 1.0;
                     depth = depth*depthScale;
                     //depth = clamp(depth, 0.0, 1.0);
                 #endif
-    	    	  gl_FragColor = EncodeFloatRGBA(depth);
-    	    #endif
+                gl_FragColor = EncodeFloatRGBA(depth);
+           #endif
         #endif
-	#else
-	    #ifdef _VSM
-	    	gl_FragColor = vec4(depth, depth*depth, 0.0, 1.0);
-	    #else
-	    	// _ESM, _PCF, _NONE
+   #else
+        #ifdef _VSM
+            gl_FragColor = vec4(depth, depth*depth, 0.0, 1.0);
+        #else
+           // _ESM, _PCF, _NONE
             #ifdef _ESM
             float depthScale = exponent1;//40.0;
             //depth = exp(exponent*depth*depthScale);
             depth = depth*depthScale;
             //depth = clamp(depth, 0.0, 1.0);
             #endif
-	    	gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
-	    #endif
-	#endif
+            gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
+        #endif
+    #endif
 }

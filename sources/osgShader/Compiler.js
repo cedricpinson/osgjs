@@ -47,6 +47,9 @@ define( [
         var texturesNum = textureAttributes.length;
         var textures = new Array( texturesNum );
 
+        // TODO: Have to handle better textures
+        // 4 separate loop over texture list: one here, one for declareTexture, 2 for vertexShader (varying decl + varying store)
+        // (not counting loops done above in shader generator)
         for ( var j = 0; j < texturesNum; j++ ) {
 
             var tu = textureAttributes[ j ];
@@ -61,10 +64,14 @@ define( [
                     if ( tType === 'Texture' ) {
 
                         var texUnit = j;
-                        var tName = tType + texUnit;
-                        tuTarget.setName( tName );
-
+                        var tName = tuTarget.getName();
+                        if ( tuTarget.getName() === undefined ) {
+                            tName = tType + texUnit;
+                            tuTarget.setName( tName );
+                        }
                         textures[ texUnit ] = tuTarget;
+
+
                         this._texturesByName[ tName ] = {
                             variable: undefined,
                             textureUnit: texUnit
@@ -386,9 +393,15 @@ define( [
 
                 if ( textures.hasOwnProperty( tex ) ) {
                     var texture = textures[ tex ];
+
                     if ( !texture ) {
                         continue;
                     }
+
+                    if ( tex.indexOf( 'shadow_light' ) !== -1 ) {
+                        continue;
+                    }
+
                     texturesInput.push( texture.variable );
                 }
 
@@ -441,6 +454,7 @@ define( [
                     textureSampler = this.getOrCreateSampler( 'samplerCube', samplerName );
                 }
 
+
             }
 
             // texture coordinates are automatically mapped to unit texture number
@@ -492,6 +506,10 @@ define( [
                 var texture = textures[ t ];
                 if ( !texture )
                     continue;
+
+                if ( texture.getName().indexOf( 'shadow_light' ) !== -1 ) {
+                    return;
+                }
 
                 if ( texture.getType() === 'Texture' )
                     this.declareTexture( t, texture );
@@ -591,6 +609,27 @@ define( [
                 }
             }
             functor.call( functor, node );
+        },
+        evaluateDefines: function ( node ) {
+
+            var func = function ( node ) {
+
+                if ( node.defines &&
+                    this._map[ node.id ] === undefined ) {
+
+                    this._map[ node.id ] = true;
+                    var c = node.defines();
+                    this._text.push( c );
+
+                }
+
+            };
+
+            func._map = {};
+            func._text = [];
+            this.traverse( func, node );
+
+            return func._text.join( '\n' );
         },
 
         evaluateGlobalFunctionDeclaration: function ( node ) {
@@ -704,6 +743,10 @@ define( [
                     if ( !textureMaterial && !textureMaterial.textureUnit )
                         continue;
 
+                    if ( hasShadow && texture.getName().indexOf( 'shadow_light' ) !== -1 ) {
+                        continue;
+                    }
+
                     var texCoordUnit = textureMaterial.textureUnit;
                     if ( texCoordUnit === undefined ) {
                         texCoordUnit = t; // = t;
@@ -750,6 +793,9 @@ define( [
                         if ( !textureMaterial && !textureMaterial.textureUnit )
                             continue;
 
+                        if ( hasShadow && texture.getName().indexOf( 'shadow_light' ) !== -1 ) {
+                            continue;
+                        }
                         var texCoordUnit = texture.textureUnit;
                         if ( texCoordUnit === undefined ) {
                             texCoordUnit = tt;
@@ -791,6 +837,8 @@ define( [
 
             var vars = Object.keys( this._variables );
 
+            this._fragmentShader.push( this.evaluateDefines( root ) );
+            this._fragmentShader.push( '\n' );
             this._fragmentShader.push( this.evaluateGlobalVariableDeclaration( root ) );
             this._fragmentShader.push( '\n' );
             this._fragmentShader.push( this.evaluateGlobalFunctionDeclaration( root ) );

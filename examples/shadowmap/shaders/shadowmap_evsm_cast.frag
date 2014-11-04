@@ -36,7 +36,7 @@ void main(void) {
 // #define NUM_STABLE
     #ifndef NUM_STABLE
         depth =  - WorldPos.z;
-        // linerarize (aka map z to near..far to 0..1) 
+        // linearize (aka map z to near..far to 0..1)
         depth = (depth - Shadow_DepthRange.x )* Shadow_DepthRange.w;
         //depth = WorldPos.z / WorldPos.w;
          depth = clamp(depth, 0.0, 1.0);
