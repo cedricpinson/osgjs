@@ -5,6 +5,7 @@
     OSG.globalify();
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
+    var osgUtil = OSG.osgUtil;
     var $ = window.$;
 
     var Example = function () {};
@@ -23,18 +24,18 @@
             var group32 = new osg.MatrixTransform();
             var group4 = new osg.MatrixTransform();
 
-            group1.setMatrix( osg.Matrix.makeTranslate( +5, 10, -5 ) );
-            group21.setMatrix( osg.Matrix.makeTranslate( 0, 10, 0 ) );
-            group22.setMatrix( osg.Matrix.makeTranslate( 10, 0, 0 ) );
-            group3.setMatrix( osg.Matrix.makeTranslate( 0, 0, -5 ) );
-            group31.setMatrix( osg.Matrix.makeTranslate( 0, -5, 0 ) );
-            group32.setMatrix( osg.Matrix.makeTranslate( -5, 0, 0 ) );
+            osg.Matrix.makeTranslate( +5, 10, -5, group1.getMatrix() );
+            osg.Matrix.makeTranslate( 0, 10, 0, group21.getMatrix() );
+            osg.Matrix.makeTranslate( 10, 0, 0, group22.getMatrix() );
+            osg.Matrix.makeTranslate( 0, 0, -5, group3.getMatrix() );
+            osg.Matrix.makeTranslate( 0, -5, 0, group31.getMatrix() );
+            osg.Matrix.makeTranslate( -5, 0, 0, group32.getMatrix() );
 
-            var ground1 = osg.createTexturedBox( 0, 0, 0, 6, 5, 4 );
+            var ground1 = osg.createTexturedBoxGeometry( 0, 0, 0, 6, 5, 4 );
             var ground2 = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
-            var ground3 = osg.createTexturedBox( 0, 0, 0, 1, 1, 1 );
-            var ground31 = osg.createTexturedBox( 0, 0, 0, 1, 1, 1 );
-            var ground32 = osg.createTexturedBox( 0, 0, 0, 1, 1, 1 );
+            var ground3 = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
+            var ground31 = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
+            var ground32 = osg.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
             var ground4 = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
 
             var material2 = new osg.Material();
@@ -78,7 +79,7 @@
             var rotate = new osg.MatrixTransform();
             var root = this.createScene();
 
-            var visitor = new DebugVisitor;
+            var visitor = new osgUtil.DisplayNodeGraphVisitor();
             root.accept( visitor );
 
             visitor.createGraph();

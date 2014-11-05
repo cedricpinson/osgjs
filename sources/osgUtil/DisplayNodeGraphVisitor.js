@@ -25,7 +25,7 @@ define( [
             'color: #ffffff;',
             '}',
             '.simple-tooltip:before {',
-            'content: '
+            'content: ',
             ';',
             'position: absolute;',
             'left: -10px;',
@@ -41,17 +41,17 @@ define( [
         this.el.className = 'simple-tooltip';
         document.body.appendChild( this.el );
 
-        function showTooltip( e ) {
+        var showTooltip = function ( e ) {
             var target = e.currentTarget;
             this.el.innerHTML = target.getAttribute( 'title' );
             this.el.style.display = 'block';
             this.el.style.left = ( $( target ).position().left + $( target ).get( 0 ).getBoundingClientRect().width ) + 'px';
             this.el.style.top = $( target ).position().top + 'px';
-        }
+        };
 
-        function hideTooltip( e ) {
+        var hideTooltip = function ( /* e */) {
             this.el.style.display = 'none';
-        }
+        };
 
         var nodes = document.querySelectorAll( this.options.selector );
         for ( var i = 0; i < nodes.length; i++ ) {
@@ -80,14 +80,16 @@ define( [
 
         apply: function ( node ) {
 
+            window.test = node;
+
             if ( this._fullNodeList[ node.getInstanceID() ] !== node ) {
 
                 var nodeMatrix = '';
-                if ( node.matrix ) {
+                if ( node.getWorldMatrices() ) {
                     nodeMatrix = this.createMatrixGrid( node, nodeMatrix );
                 }
-                var stateset = null;
-                if ( node.stateset ) {
+                var stateset = '';
+                if ( node.getStateSet() ) {
                     stateset = this.createStateset( node, stateset );
                 }
 
@@ -155,7 +157,7 @@ define( [
 
             // Include dagre and d3 script
             $.getScript( '../vendors/d3.js', function () {
-                $.getScript( '../vendors/dagre-d3.js', function () {
+                $.getScript( '../vendors/dagre.js', function () {
 
                     var g = new dagreD3.Digraph();
 
@@ -216,7 +218,7 @@ define( [
                             console.log( 'window.activeNode is set.' );
                             console.log( self._fullNodeList[ identifier ] );
                         } else {
-                            var stateset = self._fullNodeList[ identifier.split( ' ' )[ 2 ] ].stateset;
+                            var stateset = self._fullNodeList[ identifier.split( ' ' )[ 2 ] ].getStateSet();
                             window.activeStateset = stateset;
                             console.log( 'window.activeStateset is set.' );
                             console.log( stateset );
@@ -235,10 +237,10 @@ define( [
 
                 g.addNode( element.instanceID, {
                     label: element.className + ( element.name ? '\n' + element.name : '' ),
-                    description: ( element.stateset != null ? 'StateSetID : ' + element.stateset.statesetID : '' ) + ( element.stateset != null && element.matrix !== '' ? '<br /><br />' : '' ) + element.matrix
+                    description: ( element.stateset ? 'StateSetID : ' + element.stateset.statesetID : '' ) + ( element.stateset && element.matrix !== '' ? '<br /><br />' : '' ) + element.matrix
                 } );
 
-                if ( element.stateset != null ) {
+                if ( element.stateset ) {
 
                     g.addNode( element.stateset.name, {
                         label: 'StateSet',
@@ -262,25 +264,27 @@ define( [
         // Create an array to display the matrix
         createMatrixGrid: function ( node, nodeMatrix ) {
 
-            nodeMatrix += '<table><tr><td>' + node.matrix[ 0 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 1 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 2 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 3 ] + '</td></tr>';
+            var matrixArray = node.getWorldMatrices()[ 0 ];
 
-            nodeMatrix += '<tr><td>' + node.matrix[ 4 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 5 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 6 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 7 ] + '</td></tr>';
+            nodeMatrix += '<table><tr><td>' + matrixArray[ 0 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 1 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 2 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 3 ] + '</td></tr>';
 
-            nodeMatrix += '<tr><td>' + node.matrix[ 8 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 9 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 10 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 11 ] + '</td></tr>';
+            nodeMatrix += '<tr><td>' + matrixArray[ 4 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 5 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 6 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 7 ] + '</td></tr>';
 
-            nodeMatrix += '<tr><td>' + node.matrix[ 12 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 13 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 14 ] + '</td>';
-            nodeMatrix += '<td>' + node.matrix[ 15 ] + '</td></tr></table>';
+            nodeMatrix += '<tr><td>' + matrixArray[ 8 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 9 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 10 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 11 ] + '</td></tr>';
+
+            nodeMatrix += '<tr><td>' + matrixArray[ 12 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 13 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 14 ] + '</td>';
+            nodeMatrix += '<td>' + matrixArray[ 15 ] + '</td></tr></table>';
 
             return nodeMatrix;
         },
@@ -289,10 +293,10 @@ define( [
         createStateset: function ( node, stateset ) {
             stateset = {
                 name: 'StateSet - ' + node.getInstanceID(),
-                statesetID: node.stateset.getInstanceID(),
+                statesetID: node.getStateSet().getInstanceID(),
                 parentID: node.getInstanceID(),
-                stateset: node.stateset,
-                numTexture: node.stateset.getNumTextureAttributeLists()
+                stateset: node.getStateSet(),
+                numTexture: node.getStateSet().getNumTextureAttributeLists()
             };
             return stateset;
         },
