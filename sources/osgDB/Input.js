@@ -178,11 +178,22 @@ define( [
 
 
         readNodeURL: function ( url, options ) {
+
+            options = options || {};
+            // hook reader
+            if ( options.readNodeURL ) {
+                // be carefull if you plan to call hook the call and after
+                // call the original readNodeURL, you will need to remove
+                // from options the readNodeURL if you dont want an infinte
+                // recursion call
+                return options.readNodeURL.call( this, url, options );
+            }
+
             url = this.computeURL( url );
 
             var defer = Q.defer();
 
-            options = options || {};
+
             var opt = MACROUTILS.objectMix( {}, options );
 
             // automatic prefix if non specfied

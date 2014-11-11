@@ -9,6 +9,10 @@ define( [
         // callback used when loading data
         progressXHRCallback: undefined,
 
+        // replacement of readImageURL to use your own code to load Nodes
+        // the function will be execute in the context of Input, see Input:readNodeURL
+        readNodeURL: undefined,
+
         // replacement of readImageURL to use your own code to load osg.Image
         // the function will be execute in the context of Input, see Input:readImageURL
         readImageURL: undefined,
