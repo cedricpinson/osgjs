@@ -1,4 +1,4 @@
-define( [], function() {
+define( [], function () {
 
     var Notify = {};
 
@@ -48,48 +48,54 @@ define( [], function() {
 
         return callstack;
     }
+    /** logging with readability in mind.
+     * @param { str } actual log text
+     * @param { fold  }  sometimes you want to hide looooong text
+     * @param { noTrace  } where that log came from ?
+     * @param { level  } what severity is that log (gives text color too )
+     */
+    function logSub( str, level, fold, noTrace ) {
+        if ( Notify.console !== undefined ) {
+            if ( fold && Notify.console.groupCollapsed ) Notify.console.groupCollapsed();
+            if ( noTrace ) {
+                Notify.console[ level ]( str );
+            } else {
+                Notify.console[ level ]( str, getStackTrace() );
+            }
+            if ( fold && Notify.console.groupEnd ) Notify.console.groupEnd();
+        }
+    }
 
-    Notify.setNotifyLevel = function( level ) {
+    Notify.setNotifyLevel = function ( level ) {
 
-        var log = function( str, fold ) {
+
+        var log = function ( str, fold, noTrace ) {
+            logSub( str, 'log', fold, noTrace );
+        };
+
+        var info = function ( str, fold, noTrace ) {
+            logSub( str, 'info', fold, noTrace );
+        };
+
+        var warn = function ( str, fold, noTrace ) {
+            logSub( str, 'warn', fold, noTrace );
+        };
+
+        var error = function ( str, fold ) {
+            logSub( str, 'error', fold, true ); // error does trace auto
+        };
+
+        var debug = function ( str, fold, noTrace ) {
+            logSub( str, 'debug', fold, noTrace );
+        };
+
+        var assert = function ( test, str ) {
             if ( this.console !== undefined ) {
-                if ( fold && Notify.console.groupCollapsed ) Notify.console.groupCollapsed();
-                this.console.log( str, getStackTrace() );
-                if ( fold && Notify.console.groupEnd ) Notify.console.groupEnd();
+                this.console.assert( test, str, getStackTrace() );
             }
         };
 
-        var info = function( str ) {
-            if ( this.console !== undefined ) {
-                this.console.info( str, getStackTrace() );
-            }
-        };
-
-        var warn = function( str ) {
-            if ( this.console !== undefined ) {
-                this.console.warn( str, getStackTrace() );
-            }
-        };
-
-        var error = function( str ) {
-            if ( this.console !== undefined ) {
-                this.console.error( str, getStackTrace() );
-            }
-        };
-
-        var debug = function( str ) {
-            if ( this.console !== undefined ) {
-                this.console.debug( str, getStackTrace() );
-            }
-        };
-
-        var assert = function( str ) {
-            if ( this.console !== undefined ) {
-                this.console.assert( str, getStackTrace() );
-            }
-        };
-
-        var dummy = function() {};
+        var dummy = function () {};
 
         Notify.assert = dummy;
         Notify.debug = dummy;
@@ -120,7 +126,7 @@ define( [], function() {
 
     Notify.reportWebGLError = false;
 
-    Notify.setConsole = function( replacement ) {
+    Notify.setConsole = function ( replacement ) {
         Notify.console = replacement;
     };
 
