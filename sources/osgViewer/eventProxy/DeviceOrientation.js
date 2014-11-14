@@ -63,6 +63,16 @@ define( [], function () {
             if ( manipulatorAdapter.update ) {
                 manipulatorAdapter.update( this._deviceOrientation, this._screenOrientation );
             }
+        },
+
+        dispose: function () {
+            window.removeEventListener( 'deviceorientation' );
+            window.removeEventListener( 'orientationchange' );
+            this._viewer = null;
+            //, function ( rawEvtData ) {
+                //if ( rawEvtData.alpha !== null && rawEvtData.alpha !== undefined )
+            //        self._deviceOrientation = rawEvtData;
+            //}, false );
         }
 
     };
