@@ -119,6 +119,20 @@ define( [
 
         } );
 
+        asyncTest( 'Input.readNodeURL with replacement option', function () {
+            var calledNodeURL = false;
+            var readNodeURL = function( url, options ) {
+                calledNodeURL = true;
+                return true;
+            };
+            var input = new Input( );
+            Q.when( input.readNodeURL('toto', { readNodeURL: readNodeURL } ) ).then( function ( value ) {
+                ok ( calledNodeURL, true, "readNodeURL replacement has been called");
+                start();
+            } );
+
+        } );
+
         test( 'Input.getObjectWrapper', function () {
             ( function () {
                 var input = new Input();

@@ -63,7 +63,10 @@ define( [
         setProgressXHRCallback: function ( func ) {
             this._defaultOptions.progressXHRCallback = func;
         },
-
+        setReadNodeURLCallback: function ( func )
+        {
+            this._defaultOptions.readNodeURL = func;
+        },
         // used to override the type from pathname
         // typically if you want to create proxy object
         registerObject: function ( fullyQualifiedObjectname, constructor ) {
@@ -82,6 +85,7 @@ define( [
         setPrefixURL: function ( prefix ) {
             this._defaultOptions.prefixURL = prefix;
         },
+
         getPrefixURL: function () {
             return this._defaultOptions.prefixURL;
         },
@@ -178,6 +182,19 @@ define( [
 
 
         readNodeURL: function ( url, options ) {
+
+            if ( options === undefined ) {
+                options = this._defaultOptions;
+            }
+            // hook reader
+            if ( options.readNodeURL ) {
+                // be carefull if you plan to call hook the call and after
+                // call the original readNodeURL, you will need to remove
+                // from options the readNodeURL if you dont want an infinte
+                // recursion call
+                return options.readNodeURL.call( this, url, options );
+            }
+
             url = this.computeURL( url );
 
             var defer = Q.defer();

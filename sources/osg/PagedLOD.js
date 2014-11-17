@@ -94,23 +94,15 @@ define( [
 
         loadNodeFromURL: function ( perRangeData, node ) {
             // TODO:
-            // we should ask to the Cache if the data is in the IndexedDB first
-            var ReaderParser = require( 'osgDB/ReaderParser' );
+            // we could implement a IndexedDB layer here
             Notify.log( 'loading ' + perRangeData.filename );
-            var req = new XMLHttpRequest();
-            req.open( 'GET', perRangeData.filename, true );
-            req.onload = function ( aEvt ) {
-                var promise = ReaderParser.parseSceneGraph( JSON.parse( req.responseText ) );
-                Q.when( promise ).then( function ( child ) {
-                    node.addChildNode( child );
-                } );
-                Notify.log( 'success ' + perRangeData.filename, aEvt );
-            };
+            var ReaderParser = require( 'osgDB/ReaderParser' );
+            // Call to ReaderParser just in case there is a custom readNodeURL Callback
+            // See osgDB/Options.js and/or osgDB/Input.js
+            Q.when ( ReaderParser.readNodeURL( perRangeData.filename ) ).then( function ( child ) {
+                node.addChildNode( child );
+            } );
 
-            req.onerror = function ( aEvt ) {
-                Notify.error( 'error ' + perRangeData.filename, aEvt );
-            };
-            req.send( null );
         },
 
         loadNodeFromFunction: function ( perRangeData, node ) {
