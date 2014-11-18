@@ -156,6 +156,7 @@ define( [
 
 
     return {
+        'BaseOperator': BaseOperator,
         'Mult': Mult,
         'Add': Add,
         'InlineCode': InlineCode,

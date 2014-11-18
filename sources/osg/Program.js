@@ -28,12 +28,6 @@ define( [
             p.defaultProgram = true;
             return p;
         },
-        getType: function () {
-            return this.attributeType;
-        },
-        getTypeMember: function () {
-            return this.attributeType;
-        },
         setVertexShader: function ( vs ) {
             this.vertex = vs;
         },

@@ -23,12 +23,6 @@ define( [
         cloneType: function () {
             return new BlendColor();
         },
-        getType: function () {
-            return this.attributeType;
-        },
-        getTypeMember: function () {
-            return this.attributeType;
-        },
         setConstantColor: function ( color ) {
             Vec4.copy( color, this._constantColor );
         },

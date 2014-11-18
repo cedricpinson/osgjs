@@ -56,10 +56,6 @@ define( [
             return new Light( this._lightUnit );
         },
 
-        getType: function () {
-            return this.attributeType;
-        },
-
         getTypeMember: function () {
             return this.attributeType + this._lightUnit;
         },

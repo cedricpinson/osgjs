@@ -25,12 +25,6 @@ define( [
         cloneType: function () {
             return new FrameBufferObject();
         },
-        getType: function () {
-            return this.attributeType;
-        },
-        getTypeMember: function () {
-            return this.attributeType;
-        },
         setAttachment: function ( attachment ) {
             this.attachments.push( attachment );
         },

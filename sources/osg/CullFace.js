@@ -26,12 +26,6 @@ define( [
         cloneType: function () {
             return new CullFace();
         },
-        getType: function () {
-            return this.attributeType;
-        },
-        getTypeMember: function () {
-            return this.attributeType;
-        },
         setMode: function ( mode ) {
             if ( typeof mode === 'string' ) {
                 mode = CullFace[ mode ];

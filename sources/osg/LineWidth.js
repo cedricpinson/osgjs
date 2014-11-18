@@ -15,12 +15,6 @@ define( [
         cloneType: function () {
             return new LineWidth();
         },
-        getType: function () {
-            return this.attributeType;
-        },
-        getTypeMember: function () {
-            return this.attributeType;
-        },
         apply: function ( state ) {
             state.getGraphicContext().lineWidth( this.lineWidth );
         }
