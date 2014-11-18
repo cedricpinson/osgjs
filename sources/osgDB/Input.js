@@ -63,8 +63,7 @@ define( [
         setProgressXHRCallback: function ( func ) {
             this._defaultOptions.progressXHRCallback = func;
         },
-        setReadNodeURLCallback: function ( func )
-        {
+        setReadNodeURLCallback: function ( func ) {
             this._defaultOptions.readNodeURL = func;
         },
         // used to override the type from pathname
@@ -89,12 +88,18 @@ define( [
         getPrefixURL: function () {
             return this._defaultOptions.prefixURL;
         },
+
         computeURL: function ( url ) {
-            if ( this._defaultOptions.prefixURL === undefined ) {
-                return url;
+
+            if ( typeof this._defaultOptions.prefixURL === 'string' &&
+                this._defaultOptions.prefixURL.length > 0 ) {
+
+                return this._defaultOptions.prefixURL + url;
             }
-            return this._defaultOptions.prefixURL + url;
+
+            return url;
         },
+
         getObjectWrapper: function ( path ) {
             if ( this._objectRegistry[ path ] !== undefined ) {
                 return new( this._objectRegistry[ path ] )();
@@ -181,11 +186,13 @@ define( [
         },
 
 
-        readNodeURL: function ( url, options ) {
+        readNodeURL: function ( url, opt ) {
 
+            var options = opt;
             if ( options === undefined ) {
                 options = this._defaultOptions;
             }
+
             // hook reader
             if ( options.readNodeURL ) {
                 // be carefull if you plan to call hook the call and after
@@ -199,17 +206,17 @@ define( [
 
             var defer = Q.defer();
 
-            options = options || {};
-            var opt = MACROUTILS.objectMix( {}, options );
+            // copy because we are going to modify it to have relative prefix to load assets
+            options = MACROUTILS.objectMix( {}, options );
 
             // automatic prefix if non specfied
-            if ( opt.prefixURL === undefined ) {
+            if ( !!!options.prefixURL ) {
                 var prefix = this.getPrefixURL();
                 var index = url.lastIndexOf( '/' );
                 if ( index !== -1 ) {
                     prefix = url.substring( 0, index + 1 );
                 }
-                opt.prefixURL = prefix;
+                options.prefixURL = prefix;
             }
 
             var req = new XMLHttpRequest();
@@ -219,7 +226,7 @@ define( [
                     if ( req.status === 200 ) {
                         var ReaderParser = require( 'osgDB/ReaderParser' );
                         Q.when( ReaderParser.parseSceneGraph( JSON.parse( req.responseText ),
-                                opt ),
+                                options ),
                             function ( child ) {
                                 defer.resolve( child );
                                 Notify.log( 'loaded ' + url );
