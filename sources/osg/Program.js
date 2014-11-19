@@ -3,14 +3,14 @@ define( [
     'osg/Notify',
     'osg/StateAttribute',
     'osg/Map'
-], function( MACROUTILS, Notify, StateAttribute, Map ) {
+], function ( MACROUTILS, Notify, StateAttribute, Map ) {
     'use strict';
 
     /**
      * Program encapsulate an vertex and fragment shader
      * @class Program
      */
-    var Program = function( vShader, fShader ) {
+    var Program = function ( vShader, fShader ) {
         StateAttribute.call( this );
 
         this.program = null;
@@ -23,30 +23,30 @@ define( [
     Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
 
         attributeType: 'Program',
-        cloneType: function() {
+        cloneType: function () {
             var p = new Program();
             p.defaultProgram = true;
             return p;
         },
-        getType: function() {
+        getType: function () {
             return this.attributeType;
         },
-        getTypeMember: function() {
+        getTypeMember: function () {
             return this.attributeType;
         },
-        setVertexShader: function( vs ) {
+        setVertexShader: function ( vs ) {
             this.vertex = vs;
         },
-        setFragmentShader: function( fs ) {
+        setFragmentShader: function ( fs ) {
             this.fragment = fs;
         },
-        getVertexShader: function() {
+        getVertexShader: function () {
             return this.vertex;
         },
-        getFragmentShader: function() {
+        getFragmentShader: function () {
             return this.fragment;
         },
-        apply: function( state ) {
+        apply: function ( state ) {
             var gl = state.getGraphicContext();
             if ( !this.program || this.isDirty() ) {
 
@@ -69,7 +69,7 @@ define( [
                     gl.validateProgram( this.program );
                     if ( !gl.getProgramParameter( this.program, gl.LINK_STATUS ) && !gl.isContextLost() ) {
                         Notify.error( gl.getProgramInfoLog( this.program ) );
-                        Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this.vertex.text + '\n fragment shader:\n' + this.fragment.text, true );
+                        Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this.vertex.text + '\n fragment shader:\n' + this.fragment.text, true, false );
                         compileClean = false;
                         //debugger;
                     }
@@ -77,15 +77,21 @@ define( [
                 if ( !compileClean ) {
                     // Any error, Any
                     // Pink must die.
-                    this.vertex.failSafe( gl );
-                    this.fragment.failSafe( gl );
-                    this.program = gl.createProgram();
-                    gl.attachShader( this.program, this.vertex.shader );
-                    gl.attachShader( this.program, this.fragment.shader );
-                    gl.linkProgram( this.program );
-                    gl.validateProgram( this.program );
-                    Notify.warn( 'FailSafe shader Activated ' );
+                    if ( !Program.prototype._failSafeCache ) {
+                        this.vertex.failSafe( gl );
+                        this.fragment.failSafe( gl );
+                        this.program = gl.createProgram();
+                        gl.attachShader( this.program, this.vertex.shader );
+                        gl.attachShader( this.program, this.fragment.shader );
+                        gl.linkProgram( this.program );
+                        gl.validateProgram( this.program );
 
+                        // cache to compile and allocate only once
+                        // not polluting the inspector
+                        Program.prototype._failSafeCache = this.program;
+                    }
+                    Notify.warn( 'FailSafe shader Activated ' );
+                    this.program = this._failSafeCache;
                 }
 
                 this.uniformsCache = new Map();
@@ -102,7 +108,7 @@ define( [
             gl.useProgram( this.program );
         },
 
-        cacheUniformList: function( gl, str ) {
+        cacheUniformList: function ( gl, str ) {
             var r = str.match( /uniform\s+\w+\s+\w+/g );
             var map = this.uniformsCache;
             if ( r !== null ) {
@@ -119,7 +125,7 @@ define( [
             }
         },
 
-        cacheAttributeList: function( gl, str ) {
+        cacheAttributeList: function ( gl, str ) {
             var r = str.match( /attribute\s+\w+\s+\w+/g );
             var map = this.attributesCache;
             if ( r !== null ) {
@@ -137,7 +143,7 @@ define( [
         }
     } ), 'osg', 'Program' );
 
-    Program.create = function( vShader, fShader ) {
+    Program.create = function ( vShader, fShader ) {
         Notify.log( 'Program.create is deprecated use new Program(vertex, fragment) instead' );
         var program = new Program( vShader, fShader );
         return program;
