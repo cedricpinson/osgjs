@@ -83,7 +83,21 @@ define( [
                 break;
             }
         },
-
+        dispose: function () {
+            this._leafs = null;
+            for ( var i = this.positionedAttribute.length - 1; i >=0; i-- )
+            {
+                var pa = this.positionedAttribute[ i ];
+                pa[ 1 ].dispose();
+                pa[ 0 ] = null;
+                pa = null;
+            }
+            this.positionedAttribute = null;
+            this._renderStage = null;
+            this._bins = null;
+            this.stateGraphList = null;
+            this._parent = null;
+        },
         sort: function () {
             if ( this._sorted ) {
                 return;

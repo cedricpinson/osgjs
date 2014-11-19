@@ -311,6 +311,9 @@ define( [
 
 
             this.setDirty( false );
+        },
+        dispose: function () {
+            Light.uniforms = null;
         }
 
     } ), 'osg', 'Light' );

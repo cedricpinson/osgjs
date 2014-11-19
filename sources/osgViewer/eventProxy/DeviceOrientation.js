@@ -28,11 +28,12 @@ define( [], function () {
                     self._deviceOrientation = rawEvtData;
             }, false );
 
-            window.addEventListener( 'orientationchange', function () {
-                if ( window.orientation !== null && window.orientation !== undefined )
-                    self._screenOrientation = window.orientation;
-            }, false );
+            window.addEventListener( 'orientationchange', this.setOrientation(), false );
 
+        },
+        setOrientation: function () {
+            if ( window.orientation !== null && window.orientation !== undefined )
+                    this._screenOrientation = window.orientation;
         },
 
         getManipulatorController: function () {
@@ -66,13 +67,11 @@ define( [], function () {
         },
 
         dispose: function () {
-            window.removeEventListener( 'deviceorientation' );
-            window.removeEventListener( 'orientationchange' );
+            if (this._deviceOrientation !== undefined)
+                window.removeEventListener( 'deviceorientation', this._deviceOrientation );
+            if (this._screenOrientation !== undefined) 
+                window.removeEventListener( 'orientationchange', this.setOrientation() );
             this._viewer = null;
-            //, function ( rawEvtData ) {
-                //if ( rawEvtData.alpha !== null && rawEvtData.alpha !== undefined )
-            //        self._deviceOrientation = rawEvtData;
-            //}, false );
         }
 
     };

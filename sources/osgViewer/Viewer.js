@@ -626,8 +626,10 @@ define( [
             this._options = null;
             this._light = null;
             this._canvas = null;
+            this._cullVisitor.dispose();
             this._cullVisitor = null;
             this._camera = null;
+            this._state.dispose();
             this._state = null;
             this._sceneData = null;
             this._scene = null;
@@ -642,10 +644,7 @@ define( [
             this._updateVisitor = null;
             osgPool.memoryPools.stateGraph = null;
             osgPool.memoryPools = null;
-            osgPool = null;;
-            ShaderGeneratorProxy._current = null;
-            ShaderGeneratorProxy.instance = null;
-
+            osgPool = null;
         }
 
     } );

@@ -150,6 +150,11 @@ define( [
             prePrend += defines.join( '\n' ) + '\n';
             postShader = prePrend + postShader;
             return postShader;
+        },
+        dispose: function () {
+            // delete _shadersText;
+            // delete _shadersList;
+            ShaderProcessor.instance = null;
         }
     };
     return ShaderProcessor;
