@@ -56,6 +56,10 @@ define( [
             return a[ 0 ] * a[ 0 ] + a[ 1 ] * a[ 1 ] + a[ 2 ] * a[ 2 ] + a[ 3 ] * a[ 3 ];
         },
 
+        length: function ( a ) {
+            return Math.sqrt( a[ 0 ] * a[ 0 ] + a[ 1 ] * a[ 1 ] + a[ 2 ] * a[ 2 ] + a[ 3 ] * a[ 3 ] );
+        },
+
         neg: function ( a, result ) {
             result[ 0 ] = -a[ 0 ];
             result[ 1 ] = -a[ 1 ];
@@ -153,7 +157,7 @@ define( [
         },
 
         normalize: function ( q, qr ) {
-            var div = 1.0 / this.length2( q );
+            var div = 1.0 / this.length( q );
             qr[ 0 ] = q[ 0 ] * div;
             qr[ 1 ] = q[ 1 ] * div;
             qr[ 2 ] = q[ 2 ] * div;
