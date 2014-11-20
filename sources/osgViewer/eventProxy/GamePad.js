@@ -83,6 +83,9 @@ define( [
             if ( manipulatorAdapter.update ) {
                 manipulatorAdapter.update( this );
             }
+        },
+        dispose: function () {
+            this._viewer = null;
         }
     };
     return GamePad;

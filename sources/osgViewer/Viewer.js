@@ -4,6 +4,7 @@ define( [
     'osg/UpdateVisitor',
     'osg/CullVisitor',
     'osgUtil/osgUtil',
+    'osgUtil/osgPool',
     'osgViewer/View',
     'osg/RenderStage',
     'osg/StateGraph',
@@ -15,7 +16,7 @@ define( [
     'osgViewer/webgl-utils',
     'osgViewer/webgl-debug',
     'osgViewer/stats'
-], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, View, RenderStage, StateGraph, Matrix, State, ShaderGeneratorProxy, OrbitManipulator, EventProxy, WebGLUtils, WebGLDebugUtils, Stats ) {
+], function ( Notify, MACROUTILS, UpdateVisitor, CullVisitor, osgUtil, osgPool, View, RenderStage, StateGraph, Matrix, State, ShaderGeneratorProxy, OrbitManipulator, EventProxy, WebGLUtils, WebGLDebugUtils, Stats ) {
 
 
     var OptionsDefault = {
@@ -607,6 +608,43 @@ define( [
                 if ( device.update )
                     device.update( frameStamp );
             } );
+        },
+        removeEventProxy: function ( list ) {
+            var keys = window.Object.keys( list );
+            keys.forEach( function ( key ) {
+                var device = list[ key ];
+                if ( device.dispose )
+                    device.dispose();
+                    //list.slice( key );
+            } );
+        },
+        dispose: function () {
+            this.setDone( true );
+            this.removeEventProxy( this._eventProxy );
+            //EventProxy = null;
+            this._stats = null;
+            this._options = null;
+            this._light = null;
+            this._canvas = null;
+            this._cullVisitor.dispose();
+            this._cullVisitor = null;
+            this._camera = null;
+            this._state.dispose();
+            this._state = null;
+            this._sceneData = null;
+            this._scene = null;
+            this._eventProxy = null;
+            this._manipulator = null;
+            this._renderStage = null;
+            this._stateGraph.clean();
+            this._stateGraph= null;
+            this._webGLCaps = null;
+            WebGLDebugUtils.resetToInitialState( this.getGraphicContext() );
+            this._graphicContext = null;
+            this._updateVisitor = null;
+            osgPool.memoryPools.stateGraph = null;
+            osgPool.memoryPools = null;
+            osgPool = null;
         }
 
     } );

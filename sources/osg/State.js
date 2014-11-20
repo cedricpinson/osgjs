@@ -774,6 +774,24 @@ define( [
                 vertexAttribMap[ attrib ] = array;
                 gl.vertexAttribPointer( attrib, array._itemSize, gl.FLOAT, normalize, 0, 0 );
             }
+        },
+        dispose: function () {
+            this._graphicContext = null;
+            this._shaderGeneratorProxy.dispose();
+            this.currentVBO = null;
+            this.vertexAttribList.length = 0;
+            this.programs = null;
+            this.stateSets = null;
+            this.uniforms = null;
+
+            this.textureAttributeMapList.length = 0;
+            this.attributeMap = null;
+
+            this.modelWorldMatrix = null;
+            this.viewMatrix = null;
+            this.modelViewMatrix = null;
+            this.projectionMatrix = null;
+            this.normalMatrix = null;
         }
 
     };

@@ -138,6 +138,12 @@ define( [
             return new Map( uniforms );
         },
 
+        dispose: function () {
+            this._cache = null;
+            this._shaderProcessor.dispose();
+            this._shaderProcessor = null;
+        },
+
         getOrCreateProgram: ( function () {
             // TODO: double check GC impact of this stack
             var textureAttributes = [];

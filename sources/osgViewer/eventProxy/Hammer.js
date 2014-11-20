@@ -6,7 +6,7 @@ define( [
         this._enable = true;
         this._viewer = viewer;
         this._type = 'Hammer';
-
+        this._hammer = undefined;
         this._eventNode = undefined;
 
     };
@@ -51,6 +51,11 @@ define( [
 
             // we pass directly hammer object
             this.getManipulatorController().setEventProxy( this._hammer );
+        },
+        dispose: function () {
+            this._viewer = null;
+            this._hammer = null;
+            this._eventNode = undefined;
         }
 
     };

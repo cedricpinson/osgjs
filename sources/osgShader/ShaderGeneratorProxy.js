@@ -41,6 +41,12 @@ define( [
         },
         getOrCreateProgram: function ( state ) {
             return this._current.getOrCreateProgram( state );
+        },
+        dispose: function () {
+            this._generators = null;
+            this._current.dispose();
+            this._current = null;
+            ShaderGeneratorProxy.instance = null;
         }
     };
 

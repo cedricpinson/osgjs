@@ -131,8 +131,10 @@ define( [
 
         getHash: function () {
             return this.attributeType;
+        },
+        dispose: function () {
+            Material.uniforms = null;
         }
-
 
     } ), 'osg', 'Material' );
 

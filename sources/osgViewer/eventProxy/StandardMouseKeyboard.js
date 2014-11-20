@@ -48,23 +48,23 @@ define( [], function () {
             }
         },
 
-        removeEventListeners: function ( mouse, mousewheel, keyboard ) {
-            if ( mouse ) {
+        removeEventListeners: function ( ) {
+            if ( this._mouseEventNode ) {
                 for ( var i = 0, l = this._eventList.length; i < l; i++ ) {
                     var ev = this._eventList[ i ];
                     if ( this[ ev ] ) {
-                        mouse.removeEventListener( ev, this[ ev ] );
+                        this._mouseEventNode.removeEventListener( ev, this[ ev ] );
                     }
                 }
             }
-            if ( mousewheel ) {
-                mousewheel.removeEventListener( 'DOMMouseScroll', this.mousewheel );
-                mousewheel.removeEventListener( 'mousewheel', this.mousewheel );
-                mousewheel.removeEventListener( 'MozMousePixelScroll', this.preventDefault );
+            if ( this._wheelEventNode ) {
+                this._wheelEventNode.removeEventListener( 'DOMMouseScroll', this.mousewheel );
+                this._wheelEventNode.removeEventListener( 'mousewheel', this.mousewheel );
+                this._wheelEventNode.removeEventListener( 'MozMousePixelScroll', this.preventDefault );
             }
-            if ( keyboard ) {
-                keyboard.removeEventListener( 'keydown', this.keydown );
-                keyboard.removeEventListener( 'keyup', this.keyup );
+            if ( this._keyboardEventNode ) {
+                this._keyboardEventNode.removeEventListener( 'keydown', this.keydown );
+                this._keyboardEventNode.removeEventListener( 'keyup', this.keyup );
             }
         },
 
@@ -232,6 +232,13 @@ define( [], function () {
                 return;
 
             this.getManipulatorController().setEventProxy( this );
+        },
+        dispose: function () {
+            this._viewer = null;
+            this.removeEventListeners();
+            this._mouseEventNode = undefined;
+            this._wheelEventNode = undefined;
+            this._keyboardEventNode = undefined;
         }
 
     };

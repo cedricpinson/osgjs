@@ -10,20 +10,20 @@ define( [
 
     'use strict';
 
-    var lib = {};
+    var osgShader = {};
 
-    lib.Compiler = Compiler;
-    lib.ShaderGenerator = ShaderGenerator;
-    lib.ShaderGeneratorProxy = ShaderGeneratorProxy;
-    lib.ShaderProcessor = ShaderProcessor;
+    osgShader.Compiler = Compiler;
+    osgShader.ShaderGenerator = ShaderGenerator;
+    osgShader.ShaderGeneratorProxy = ShaderGeneratorProxy;
+    osgShader.ShaderProcessor = ShaderProcessor;
 
-    lib.node = node;
-    lib.utils = utils;
+    osgShader.node = node;
+    osgShader.utils = utils;
 
 
     // set it to one to have verbose in shaders
-    lib.debugShaderNode = true;
+    osgShader.debugShaderNode = true;
 
 
-    return lib;
+    return osgShader;
 } );

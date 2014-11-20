@@ -18,7 +18,8 @@ define( [
      */
     var RenderStage = function () {
         RenderBin.call( this );
-        this.positionedAttribute = [];
+		// Its in the base class, why it's here?        
+		//this.positionedAttribute = [];
         this.clearDepth = 1.0;
         this.clearColor = [ 0.0, 0.0, 0.0, 1.0 ];
         /*jshint bitwise: false */
@@ -35,6 +36,13 @@ define( [
             RenderBin.prototype.reset.call( this );
             this.preRenderList.length = 0;
             this.postRenderList.length = 0;
+        },
+        dispose: function () {
+            RenderBin.prototype.dispose.call( this );
+            this.viewport = null;
+            this.preRenderList.length = 0;
+            this.postRenderList.length = 0;
+            //this.positionedAttribute.length = 0;
         },
         setClearDepth: function ( depth ) {
             this.clearDepth = depth;

@@ -48,7 +48,9 @@ define( [
         getManipulatorController: function () {
             return this._viewer.getManipulator().getControllerList()[ this._type ];
         },
-
+        dispose: function () {
+            this._viewer = null;
+        },
         // this is binded
         _update: function ( frame ) {
             if ( !frame.valid || !this.isValid() ) {

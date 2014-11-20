@@ -213,7 +213,16 @@ define( [
             this._computedNear = Number.POSITIVE_INFINITY;
             this._computedFar = Number.NEGATIVE_INFINITY;
         },
-
+        dispose: function (){
+            this._rootStateGraph = null;
+            this._currentStateGraph = null;
+            this._currentRenderBin.dispose();
+            this._currentRenderBin = null;
+            this._currentRenderStage = null;
+            this._rootRenderStage = null;
+            this._renderBinStack = null;
+            this._reserveLeafStack = null;
+        },
         getCurrentRenderBin: function () {
             return this._currentRenderBin;
         },
