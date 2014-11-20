@@ -90,12 +90,6 @@ define( [
             t.defaultType = true;
             return t;
         },
-        getType: function () {
-            return this.attributeType;
-        },
-        getTypeMember: function () {
-            return this.attributeType;
-        },
         getOrCreateUniforms: function ( unit ) {
             if ( Texture.uniforms === undefined ) {
                 Texture.uniforms = [];
@@ -145,10 +139,10 @@ define( [
         },
 
         // check https://www.khronos.org/registry/webgl/specs/latest/1.0/#PIXEL_STORAGE_PARAMETERS
-        setColorSpaceConversion: function( enumValue ) {
+        setColorSpaceConversion: function ( enumValue ) {
             this._colorSpaceConversion = enumValue;
         },
-        setFlipY: function( bool ) {
+        setFlipY: function ( bool ) {
             this._flipY = bool;
         },
 
@@ -192,7 +186,7 @@ define( [
         getHeight: function () {
             return this._textureHeight;
         },
-        releaseGLObjects: function ( ) {
+        releaseGLObjects: function () {
             if ( this._textureObject !== undefined && this._textureObject !== null ) {
                 Texture.textureManager.releaseTextureObject( this._textureObject );
                 this._textureObject = undefined;
@@ -465,9 +459,6 @@ define( [
                     this.setDirty( false );
                 }
             }
-        },
-        getHash: function () {
-            return 'osgTexture';
         }
     } ), 'osg', 'Texture' );
 

@@ -32,12 +32,6 @@ define( [
         cloneType: function () {
             return new Viewport();
         },
-        getType: function () {
-            return this.attributeType;
-        },
-        getTypeMember: function () {
-            return this.attributeType;
-        },
         apply: function ( state ) {
             var gl = state.getGraphicContext();
             gl.viewport( this._x, this._y, this._width, this._height );

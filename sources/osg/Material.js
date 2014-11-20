@@ -27,14 +27,6 @@ define( [
             return new Material();
         },
 
-        getType: function () {
-            return this.attributeType;
-        },
-
-        getTypeMember: function () {
-            return this.attributeType;
-        },
-
         getParameterName: function ( name ) {
             return this.getType() + '_uniform_' + name;
         },
@@ -107,12 +99,12 @@ define( [
 
 
         setTransparency: function ( a ) {
-            this._diffuse[3] = 1.0-a;
+            this._diffuse[ 3 ] = 1.0 - a;
             this._dirty = true;
         },
 
         getTransparency: function () {
-            return this._diffuse[3];
+            return this._diffuse[ 3 ];
         },
 
 
@@ -127,10 +119,6 @@ define( [
             uniforms.shininess.set( [ this._shininess ] );
 
             this.setDirty( false );
-        },
-
-        getHash: function () {
-            return this.attributeType;
         }
 
 

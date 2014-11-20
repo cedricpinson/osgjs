@@ -25,6 +25,16 @@ define( [
             this._dirty = dirty;
         },
 
+        getType: function () {
+            return this.attributeType;
+        },
+
+        getTypeMember: function () {
+            return this.attributeType;
+        },
+
+        apply: function () {},
+
         // getHash is used by the compiler to know if a change in a StateAttribute
         // must trigger a shader build
         // If you create your own attribute you will have to customize this function
@@ -33,7 +43,7 @@ define( [
         // if it impact the rendering.
         // check other attributes for examples
         getHash: function () {
-            return this.attributeType;
+            return this.getTypeMember();
         }
 
     } ), 'osg', 'StateAttribute' );

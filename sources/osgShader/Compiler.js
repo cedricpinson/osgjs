@@ -10,9 +10,11 @@ define( [
 
     var sprintf = utils.sprintf;
 
-    var Compiler = function ( state, attributes, textureAttributes, shaderProcessor ) {
+    var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
 
-        this._state = state;
+        this._attributes = attributes;
+        this._textureAttributes = textureAttributes;
+
         this._variables = {};
         this._vertexShader = [];
         this._fragmentShader = [];
@@ -41,8 +43,6 @@ define( [
                 if ( material !== undefined ) Notify.warn( 'Multiple Material attributes latest Chosen ' );
                 material = attributes[ i ];
 
-            } else {
-                Notify.warn( 'Compiler, does not know type ' + type );
             }
 
         }
@@ -82,8 +82,6 @@ define( [
         this._lights = lights;
         this._material = material;
         this._textures = textures;
-        this._state = state;
-
     };
 
     Compiler.prototype = {
@@ -202,43 +200,31 @@ define( [
             return v;
         },
 
+        declareAttributeUniforms: function( attribute ) {
+
+            var uniformMap = attribute.getOrCreateUniforms();
+            var uniformMapKeys = uniformMap.getKeys();
+
+            for ( var m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
+
+                var kk = uniformMapKeys[ m ];
+                var kkey = uniformMap[ kk ];
+                this.getOrCreateUniform( kkey.type, kkey.name );
+
+            }
+
+        },
+
         declareUniforms: function () {
 
-            var uniformMap;
-            var uniformMapKeys;
-            var kk;
-            var kkey;
-            var m, ml;
-
             if ( this._material ) {
-
-                uniformMap = this._material.getOrCreateUniforms();
-                uniformMapKeys = uniformMap.getKeys();
-
-                for ( m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
-
-                    kk = uniformMapKeys[ m ];
-                    kkey = uniformMap[ kk ];
-                    this.getOrCreateUniform( kkey.type, kkey.name );
-
-                }
-
+                this.declareAttributeUniforms( this._material );
             }
 
-            var l = this._lights;
-            for ( var t = 0, tl = l.length; t < tl; t++ ) {
-
-                uniformMap = l[ t ].getOrCreateUniforms();
-                uniformMapKeys = uniformMap.getKeys();
-
-                for ( m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
-
-                    kk = uniformMapKeys[ m ];
-                    kkey = uniformMap[ kk ];
-                    this.getOrCreateUniform( kkey.type, kkey.name );
-
-                }
+            for ( var t = 0; t < this._lights.length; t++ ) {
+                this.declareAttributeUniforms( this._lights[ t ] );
             }
+
         },
 
 
@@ -435,6 +421,8 @@ define( [
 
             }
 
+            // if multi texture multiply them all with diffuse
+            // but if only one, return the first
             if ( texturesInput.length > 1 ) {
 
                 var texAccum = this.getOrCreateVariable( 'vec3', 'texDiffuseAccum' );
@@ -452,18 +440,74 @@ define( [
 
         // return the first texture valid in texture unit
         getFirstValidTexture: function () {
+
             var keys = Object.keys( this._texturesByName );
             if ( !keys.length )
                 return undefined;
 
             return this._texturesByName[ keys[ 0 ] ].variable;
+
         },
 
 
+
+        // declare sampler2D or samplerCube
+        // declare varying FragTexCoordX corresponding to the texture unit
+        // create a textureNode that could be referenced later by the compiler
+        declareTexture: function( unit, texture ) {
+
+            var samplerName = 'Texture' + unit.toString();
+            var textureSampler = this.getVariable( samplerName );
+
+            if ( textureSampler === undefined ) {
+
+                if ( texture.className() === 'Texture' ) {
+                    textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
+                } else if ( texture.className() === 'TextureCubeMap' ) {
+                    textureSampler = this.getOrCreateSampler( 'samplerCube', samplerName );
+                }
+
+            }
+
+            // texture coordinates are automatically mapped to unit texture number
+            // it means that for Texture0 we will search for FragTexCoord0,
+            // Texture1 -> FragTexCoord1 ...
+            var texCoordUnit = unit;
+            var texCoord = this.getVariable( 'FragTexCoord' + texCoordUnit );
+            if ( texCoord === undefined ) {
+                texCoord = this.getOrCreateVarying( 'vec2', 'FragTexCoord' + texCoordUnit );
+            }
+
+            // instanciate and reference a texture node
+            var output = this.createTextureRGBA( texture, textureSampler, texCoord );
+
+            // this part would need to be checked/updated
+            // not sure texturesByName makes sense
+            var name = texture.getName();
+            if ( name === undefined ) {
+                name = 'Texture' + texCoordUnit;
+            }
+
+            // create/update texture entry (texture, textureUnit)
+            var textureMaterial = this._texturesByName[ name ];
+            if ( textureMaterial === undefined ) {
+
+                this._texturesByName[ name ] = {
+                    'variable': output,
+                    'textureUnit': unit
+                };
+
+            } else {
+
+                textureMaterial.variable = output;
+                textureMaterial.textureUnit = unit;
+
+            }
+
+        },
+
         // check for all textures found in the State
         // and reference sampler associated to texture and uv channels
-        //
-        // TODO: this function is too big we should split it
         declareTextures: function () {
 
             var textures = this._textures;
@@ -472,55 +516,12 @@ define( [
             for ( var t = 0, tl = nbTextures; t < tl; t++ ) {
 
                 var texture = textures[ t ];
-                if ( !texture ) {
+                if ( !texture )
                     continue;
-                }
 
-                var textureClassName = texture.className();
-                if ( textureClassName === 'Texture' ) {
+                if ( texture.getType() === 'Texture' )
+                    this.declareTexture( t, texture );
 
-                    var samplerName = 'Texture' + t.toString();
-                    var textureSampler = this.getVariable( samplerName );
-                    if ( textureSampler === undefined ) {
-                        if ( texture.className() === 'Texture' ) {
-                            textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
-                        } else if ( texture.className() === 'TextureCubeMap' ) {
-                            textureSampler = this.getOrCreateSampler( 'samplerCube', samplerName );
-                        }
-                    }
-
-
-                    // texture coordinates are automatically mapped to unit texture number
-                    // it means that on for Texture0 we will search for FragTexCoord0,
-                    // Texture1 -> FragTexCoord1 ...
-                    var texCoordUnit = t;
-                    var texCoord = this.getVariable( 'FragTexCoord' + texCoordUnit );
-                    if ( texCoord === undefined ) {
-                        texCoord = this.getOrCreateVarying( 'vec2', 'FragTexCoord' + texCoordUnit );
-                    }
-
-                    var output = this.createTextureRGBA( texture, textureSampler, texCoord );
-                    var textureUnit = texCoordUnit;
-
-                    var name = texture.getName();
-                    if ( name === undefined ) {
-                        name = 'Texture' + texCoordUnit;
-                    }
-
-                    var textureMaterial = this._texturesByName[ name ];
-                    if ( textureMaterial === undefined ) {
-
-                        this._texturesByName[ name ] = {
-                            'variable': output,
-                            'textureUnit': textureUnit
-                        };
-
-                    } else {
-                        textureMaterial.variable = output;
-                        textureMaterial.textureUnit = textureUnit;
-                    }
-
-                }
             }
         },
 
@@ -727,13 +728,16 @@ define( [
             // Call to specialised inhenrited shader Compiler
             this.createVertexShaderGraph();
             var shader = this._vertexShader.join( '\n' );
-            //osg.log('Vertex Shader');
-            //osg.log(shader);
+
             shader = this._shaderProcessor.processShader( shader );
             return shader;
         },
 
         createFragmentShader: function () {
+
+            this.declareUniforms();
+            this.declareTextures();
+
             // Call to specialised inhenrited shader Compiler
             var root = this.createFragmentShaderGraph();
 
@@ -796,9 +800,6 @@ define( [
         // fragment shader. If you need to improve / add your own
         // you could inherit and override this function
         createFragmentShaderGraph: function () {
-
-            this.declareUniforms();
-            this.declareTextures();
 
             // no material then return a default shader
             if ( !this._material )

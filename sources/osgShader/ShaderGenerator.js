@@ -8,42 +8,89 @@ define( [
 ], function ( Notify, Program, Shader, Map, Compiler, ShaderProcessor ) {
     'use strict';
 
+    // this is the list of attributes type we support by default to generate shader
+    // if you need to adjust for your need provide or modify this list
+    // if you still need more fine tuning to the filter, override the filterAttributeTypes
+    var DefaultsAcceptAttributeTypes = [
+        'Texture',
+        'Light',
+        'Material'
+    ];
+
     var ShaderGenerator = function () {
-        this._cache = {};
+        this._cache = new window.Map();
 
         // ShaderProcessor singleton used by ShaderGenerator
         // but user can replace it if needed
         this._shaderProcessor = new ShaderProcessor();
+        this._acceptAttributeTypes = new window.Set( DefaultsAcceptAttributeTypes );
+
+        // ShaderCompiler Object to instanciate
+        this._ShaderCompiler = Compiler;
     };
 
     ShaderGenerator.prototype = {
 
+        // setShaderCompiler that will be used to createShader
+        setShaderCompiler: function ( compiler ) {
+            this._ShaderCompiler = compiler;
+        },
+
+        getShaderCompiler: function () {
+            return this._ShaderCompiler;
+        },
+
+
+        // return a Set of accepted attribtues to generate shader
+        getAcceptAttributeTypes: function () {
+            return this._acceptAttributeTypes;
+        },
+
+
         getShaderProcessor: function () {
             return this._shaderProcessor;
         },
+
         setShaderProcessor: function ( shaderProcessor ) {
             this._shaderProcessor = shaderProcessor;
         },
 
-        // filter all attribute that comes from osgShader namespace
-        getActiveAttributeList: function ( state, list ) {
+        // filter input types and write the result in the outputs array
+        filterAttributeTypes: function ( attribute ) {
+
+            if ( attribute.libraryName() !== 'osg' )
+                return true;
+
+            var attributeType = attribute.getType();
+
+            // accept only attribute listed in the container
+            if ( !this._acceptAttributeTypes.has( attributeType ) )
+                return true;
+
+            // if it's a light and it's not enable we filter it
             var Light = require( 'osg/Light' );
+            if ( attribute.typeID === Light.typeID && !attribute.isEnable() ) {
+                return true;
+            }
+
+            return false;
+        },
+
+        // get actives attribute that comes from state
+        getActiveAttributeList: function ( state, list ) {
+
             var hash = '';
             var attributeMap = state.attributeMap;
             var attributeMapKeys = attributeMap.getKeys();
 
             for ( var j = 0, k = attributeMapKeys.length; j < k; j++ ) {
+
                 var keya = attributeMapKeys[ j ];
                 var attributeStack = attributeMap[ keya ];
                 var attr = attributeStack.lastApplied;
-                if ( attr.libraryName() !== 'osg' ) {
-                    continue;
-                }
 
-                // if it's a light and it's not enable we filter it
-                if ( attr.typeID === Light.typeID && !attr.isEnable() ) {
+                if ( this.filterAttributeTypes( attr ) )
                     continue;
-                }
 
                 if ( attr.getHash ) {
                     hash += attr.getHash();
@@ -55,7 +102,7 @@ define( [
             return hash;
         },
 
-        // filter all texture attribute that comes from osgShader namespace
+        // get actives texture attribute that comes from state
         getActiveTextureAttributeList: function ( state, list ) {
             var hash = '';
             var attributeMapList = state.textureAttributeMapList;
@@ -73,19 +120,14 @@ define( [
                 for ( var j = 0, m = attributeMapForUnitKeys.length; j < m; j++ ) {
 
                     var key = attributeMapForUnitKeys[ j ];
-                    if ( key !== 'Texture' ) {
-                        continue;
-                    }
-
                     var attributeStack = attributeMapForUnit[ key ];
                     if ( attributeStack.length === 0 ) {
                         continue;
                     }
 
                     var attr = attributeStack.lastApplied;
-                    if ( attr.libraryName() !== 'osg' ) {
+                    if ( this.filterAttributeTypes( attr ) )
                         continue;
-                    }
 
                     if ( attr.getHash ) {
                         hash += attr.getHash();
@@ -151,10 +193,14 @@ define( [
                 hash += this.getActiveAttributeList( state, attributes );
                 hash += this.getActiveTextureAttributeList( state, textureAttributes );
 
-                if ( this._cache[ hash ] !== undefined ) {
-                    return this._cache[ hash ];
+                var cache = this._cache.get( hash );
+                if ( cache !== undefined ) {
+                    return cache;
                 }
-                var shaderGen = new Compiler( state, attributes, textureAttributes, this._shaderProcessor );
+
+                // use ShaderCompiler, it can be overrided by a custom one
+                var ShaderCompiler = this._ShaderCompiler;
+                var shaderGen = new ShaderCompiler( attributes, textureAttributes, this._shaderProcessor );
                 var vertexshader = shaderGen.createVertexShader();
                 var fragmentshader = shaderGen.createFragmentShader();
 
@@ -166,7 +212,7 @@ define( [
                 program.activeUniforms = this.getActiveUniforms( state, attributes, textureAttributes );
                 program.generated = true;
 
-                this._cache[ hash ] = program;
+                this._cache.set( hash, program);
                 return program;
             };
         } )()

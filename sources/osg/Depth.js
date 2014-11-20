@@ -44,12 +44,6 @@ define( [
         cloneType: function () {
             return new Depth();
         },
-        getType: function () {
-            return this.attributeType;
-        },
-        getTypeMember: function () {
-            return this.attributeType;
-        },
         setRange: function ( near, far ) {
             this._near = near;
             this._far = far;
