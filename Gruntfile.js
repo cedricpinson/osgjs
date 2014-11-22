@@ -71,8 +71,8 @@ var gruntTasks = {};
         options: {
             //optimize: 'uglify2',
             optimize: 'none',
-//            generateSourceMaps: true,
-//            useSourceUrl: true,
+            //            generateSourceMaps: true,
+            //            useSourceUrl: true,
             preserveLicenseComments: false,
             findNestedDependencies: true,
             optimizeAllPluginResources: true,
@@ -277,22 +277,43 @@ var gruntTasks = {};
         }
     };
 
+
     // will start a server on port 9001 with root directory at the same level of
     // the grunt file
+    var currentDirectory = path.dirname( path.resolve( './Gruntfile.js', './' ) );
+    console.log( 'serving ' + currentDirectory );
     gruntTasks.connect = {
         server: {
             options: {
                 port: 9001,
-                base: '.'
+                hostname: '127.0.0.1'
             }
         },
         dist: {
             options: {
                 port: 9000,
-                base: ['.','examples'],
-                open: true
+                directory: currentDirectory,
+                hostname: '127.0.0.1',
+                open: true,
+                middleware: function ( connect, options, middlewares ) {
+
+                    // inject a custom middleware into the array of default middlewares
+                    middlewares.unshift( function ( req, res, next ) {
+
+                        var ext = path.extname( req.url );
+                        if ( ext === '.gz' ) {
+                            res.setHeader( 'Content-Type', 'text/plain' );
+                            res.setHeader( 'Content-Encoding', 'gzip' );
+                        }
+
+                        return next();
+                    } );
+
+                    return middlewares;
+                }
             }
         }
+
     };
 
 } )();
@@ -495,7 +516,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build', [ 'symlink', 'build:dist' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
-    grunt.registerTask( 'serve', [ 'build', 'connect:dist:keepalive'] );
+    grunt.registerTask( 'serve', [ 'build', 'connect:dist:keepalive' ] );
     grunt.registerTask( 'website_only', [ 'clean:staticWeb', 'gitclone:staticWeb', 'copy:staticWeb', 'wintersmith_compile:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb' ] );
     grunt.registerTask( 'website', [ 'default', 'docs', 'website_only' ] );
 
