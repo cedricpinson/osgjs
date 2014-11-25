@@ -342,23 +342,23 @@ define( [
                 for ( i = 0; i < lines.length; ++i ) {
                     //var point = Vec3.create();
                     //var p = Vec3.create(); 
-                    Vec3.cross( lines[ i ].dir, e2, p );
+                    Vec3.cross( lines[ i ]._dir, e2, p );
                     var a = Vec3.dot( e1, p );
                     if ( Math.abs( a ) < 1E-6 ) continue;
                     var f = 1.0 / a;
                     //var s = Vec3.create();
-                    Vec3.sub( lines[ i ].pos, v1, s );
+                    Vec3.sub( lines[ i ]._pos, v1, s );
                     var u = f * ( Vec3.dot( s, p ) );
                     if ( u < 0.0 || u > 1.0 ) continue;
                     //var q = Vec3.create();
                     Vec3.cross( s, e1, q );
-                    var v = f * ( Vec3.dot( lines[ i ].dir, q ) );
+                    var v = f * ( Vec3.dot( lines[ i ]._dir, q ) );
                     if ( v < 0.0 || u + v > 1.0 ) continue;
                     var t = f * ( Vec3.dot( e2, q ) );
-                    Vec3.mult( lines.dir, t, point );
-                    Vec3.add( lines[ i ].pos, point, point );
-                    this._candidates.push( point );
-                    this._candidatesMasks.push( lines[ i ].mask );
+                    Vec3.mult( lines[ i ]._dir, t, point );
+                    Vec3.add( lines[ i ]._pos, point, point );
+                    this._candidates.push( Vec3.copy( point, Vec3.create() ) );
+                    this._candidatesMasks.push( lines[ i ]._planeMask );
                 }
                 numCands = this.checkCandidatePoints( insideMask );
                 if ( numCands > 0 ) {
@@ -377,23 +377,23 @@ define( [
             var linePoint = Vec3.create();
             var epsilon = 1E-6;
             return function () {
-                if ( this._lines.length > 0 ) return; // Polytope lines already calculated
+                if ( this._lines.length > 0 ) return this._lines; // Polytope lines already calculated
                 var selectorMask = 0x1;
                 for ( var i = 0, j = this._planes.length; i < j; i++, selectorMask <<= 1 ) {
-                    normal1 = this.getNormal( this._planes[ i ] );
+                    Vec3.copy( this.getNormal( this._planes[ i ] ) ,normal1 );
                     Vec3.mult( normal1, -this._planes[ i ][ 3 ], point1 ); // canonical point on plane[ i ]
                     var subSelectorMask = ( selectorMask << 1 );
                     for ( var jt = i + 1, k = this._planes.length; jt < k; ++jt, subSelectorMask <<= 1 ) {
-                        normal2 = this.getNormal( this._planes[ jt ] );
-                        if ( Math.abs( Vec3.dot( normal1, normal2 ) ) >  ( 1 - epsilon ) ) continue;
+                        Vec3.copy( this.getNormal( this._planes[ jt ] ) , normal2 );
+                        if ( Math.abs( Vec3.dot( normal1, normal2 ) ) >  ( 1.0 - epsilon ) ) continue;
                         Vec3.cross( normal1, normal2, lineDirection );
                         Vec3.cross( lineDirection, normal1, searchDirection );
                         //-plane2.distance(point1)/(searchDirection*normal2);
-                        var searchDist = -this.distance( point1 ) / Vec3.dot( searchDirection, normal2 );
+                        var searchDist = -this.distance( this._planes[ jt ], point1 ) / Vec3.dot( searchDirection, normal2 );
                         if ( isNaN( searchDist ) ) continue;
                         Vec3.mult( searchDirection, searchDist, linePoint );
                         Vec3.add( point1, lineDirection, lineDirection );
-                        this._lines.push( new PlanesLine( selectorMask | subSelectorMask, linePoint, lineDirection ) );
+                        this._lines.push( new PlanesLine( selectorMask | subSelectorMask, Vec3.copy( linePoint, Vec3.create() ), Vec3.copy( lineDirection, Vec3.create() ) ) );
                     }
                 }
                 return this._lines;
