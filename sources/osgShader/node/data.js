@@ -9,7 +9,7 @@ define( [
     var sprintf = utils.sprintf;
 
     var Variable = function ( type, prefix ) {
-        Node.call( this );
+        Node.apply( this, arguments );
         this._name = 'Variable';
         this._prefix = prefix;
         this._type = type;
@@ -52,7 +52,7 @@ define( [
 
 
     var InlineConstant = function ( content ) {
-        Node.call( this );
+        Node.apply( this, arguments );
         this._value = content;
     };
 
@@ -67,6 +67,7 @@ define( [
         }
 
     } );
+
 
     var Uniform = function ( type, prefix ) {
         Variable.call( this, type, prefix );

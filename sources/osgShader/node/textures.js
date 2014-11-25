@@ -6,22 +6,13 @@ define( [
 ], function ( MACROUTILS, utils, Node ) {
     'use strict';
 
-    var NodeTextures = function ( sampler, uv, output ) {
-
-        Node.call( this );
-
-        this._sampler = sampler;
-        this.connectInputs( sampler );
-        this.connectInputs( uv );
-
-        if ( output !== undefined ) {
-            this.connectOutput( output );
-        }
-
-        this._uv = uv;
+    var NodeTextures = function () {
+        Node.apply( this, arguments );
     };
 
     NodeTextures.prototype = MACROUTILS.objectInherit( Node.prototype, {
+
+        type: 'TextureAbstractNode',
 
         // functionName is here to simplify all texture base functions
         // it's possible later it will have to move into another class
@@ -29,12 +20,17 @@ define( [
         // all simple class to fetch texture ( seed above )
         functionName: 'noTextureFunction',
 
+        validInputs: [ 'sampler',
+            'uv'
+        ],
+
         computeFragment: function () {
+
             return utils.callFunction( this.functionName,
-                this.getOutput(), [ this._sampler,
-                    this._uv.getVariable() + '.xy'
-                ]
-            );
+                this.getOutputs(), [
+                    this._inputs.sampler,
+                    this._inputs.uv.getVariable() + '.xy'
+                ] );
         },
 
         globalFunctionDeclaration: function () {
@@ -45,7 +41,7 @@ define( [
 
 
 
-    var TextureRGB = function ( /*sampler, uv, output*/) {
+    var TextureRGB = function () {
         NodeTextures.apply( this, arguments );
     };
 
@@ -58,7 +54,7 @@ define( [
 
 
 
-    var TextureRGBA = function ( /*sampler, uv, output*/) {
+    var TextureRGBA = function () {
         TextureRGB.apply( this, arguments );
     };
 
@@ -70,7 +66,7 @@ define( [
     } );
 
 
-    var TextureAlpha = function ( /*sampler, uv, output*/) {
+    var TextureAlpha = function () {
         TextureRGB.apply( this, arguments );
     };
 
@@ -83,7 +79,7 @@ define( [
 
 
 
-    var TextureIntensity = function ( /*sampler, uv, output*/) {
+    var TextureIntensity = function () {
         TextureRGB.apply( this, arguments );
     };
 

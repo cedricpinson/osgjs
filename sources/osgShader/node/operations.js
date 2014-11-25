@@ -1,9 +1,10 @@
 define( [
+    'osg/Notify',
     'osg/Utils',
     'osgShader/node/Node',
     'osgShader/utils'
 
-], function ( MACROUTILS, Node, utils ) {
+], function ( Notify, MACROUTILS, Node, utils ) {
     'use strict';
 
     var sprintf = utils.sprintf;
@@ -15,20 +16,7 @@ define( [
     // arg2 = input1
     // ...
     var BaseOperator = function () {
-
-        Node.apply( this );
-        var out = arguments[ 0 ];
-
-        this.connectOutput( out );
-
-        var ins = arguments[ 1 ];
-
-        // if second argument is not an array
-        if ( !Array.isArray( arguments[ 1 ] ) ) {
-            ins = Array.prototype.slice.call( arguments, 1 );
-        }
-
-        this.connectInputs( ins );
+        Node.apply( this, arguments );
     };
 
     BaseOperator.prototype = Node.prototype;
@@ -42,20 +30,23 @@ define( [
     };
 
     Add.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
+
         type: 'Add',
+
         operator: '+',
+
         computeFragment: function () {
             // force inputs type to be all the same from the output
-            var outputType = this.getOutput().getType();
+            var outputType = this._outputs.getType();
             var addType = '';
             if ( outputType === 'vec4' )
                 addType = '.rgba';
-            else if (outputType === 'vec3' )
+            else if ( outputType === 'vec3' )
                 addType = '.rgb';
-            else if (outputType === 'vec2' )
+            else if ( outputType === 'vec2' )
                 addType = '.rg';
 
-            var str = this.getOutput().getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + addType;
+            var str = this._outputs.getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + addType;
             for ( var i = 1, l = this._inputs.length; i < l; i++ ) {
                 str += this.operator + this._inputs[ i ].getVariable() + addType;
             }
@@ -64,11 +55,11 @@ define( [
         }
     } );
 
-
     // Mult works like Add
     var Mult = function () {
         Add.apply( this, arguments );
     };
+
     Mult.prototype = MACROUTILS.objectInherit( Add.prototype, {
         type: 'Mult',
         operator: '*'
@@ -79,20 +70,46 @@ define( [
     var InlineCode = function () {
         Node.apply( this, arguments );
     };
+
     InlineCode.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'InlineCode',
-        setCode: function ( txt ) {
+        code: function ( txt ) {
             this._text = txt;
             return this;
         },
         computeFragment: function () {
-            return this._text;
+
+            // merge inputs and outputs dict to search in both
+            var replaceVariables = MACROUTILS.objectMix( {}, this._inputs );
+            replaceVariables = MACROUTILS.objectMix( replaceVariables, this._outputs );
+
+            // find all %string
+            var r = new RegExp( '%[A-Za-z0-9_]+', 'g' );
+            var text = this._text;
+            var result = this._text.match( r );
+
+            var done = new Set(); // keep trace of replaced string
+
+            for ( var i = 0; i < result.length; i++ ) {
+
+                var str = result[ i ].substr( 1 );
+                if ( !done.has( str ) ) {
+                    if ( !replaceVariables[ str ] ) {
+                        Notify.error( 'error with inline code\n' + this._text );
+                        Notify.error( 'input ' + str + ' not provided for ' + result[ i ] );
+                    }
+                    text = text.replace( result[ i ], replaceVariables[ str ].getVariable() );
+                    done.add( str );
+                }
+            }
+
+            return text;
         }
     } );
 
 
     // output = vec4( color.rgb, alpha )
-    var SetAlpha = function ( /*output, color, alpha*/) {
+    var SetAlpha = function () {
         BaseOperator.apply( this, arguments );
     };
 
@@ -100,7 +117,7 @@ define( [
         type: 'SetAlpha',
         computeFragment: function () {
             return sprintf( '%s = vec4( %s.rgb, %s );', [
-                this.getOutput().getVariable(),
+                this._outputs.getVariable(),
                 this._inputs[ 0 ].getVariable(),
                 this._inputs[ 1 ].getVariable()
             ] );
@@ -111,18 +128,18 @@ define( [
 
     // alpha is optional, if not provided the following operation is generated:
     // output.rgb = color.rgb * color.a;
-    var PreMultAlpha = function ( output, color, alpha ) {
-
-        this._alpha = alpha;
+    var PreMultAlpha = function () {
         BaseOperator.apply( this, arguments );
-
     };
 
     // TODO put the code in glsl
     PreMultAlpha.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
+
         type: 'PreMultAlpha',
+        validInputs: [ 'color' ],
+
         computeFragment: function () {
-            var variable = this._alpha !== undefined ? this._alpha : this._inputs[ 0 ];
+            var variable = this._inputs.alpha !== undefined ? this._inputs.alpha : this._inputs.color;
 
             var srcAlpha;
             if ( variable.getType && variable.getType() !== 'float' )
@@ -131,8 +148,8 @@ define( [
                 srcAlpha = variable.getVariable();
 
             return sprintf( '%s.rgb = %s.rgb * %s;', [
-                this.getOutput().getVariable(),
-                this._inputs[ 0 ].getVariable(),
+                this._outputs.getVariable(),
+                this._inputs.color.getVariable(),
                 srcAlpha
             ] );
         }
@@ -141,12 +158,14 @@ define( [
 
 
     var FragColor = function () {
-        Node.call( this );
+        Node.apply( this, arguments );
         this._prefix = 'gl_FragColor';
     };
     FragColor.prototype = MACROUTILS.objectInherit( Node.prototype, {
+
         type: 'gl_FragColor',
-        connectOutput: function () { /* do nothing for variable */
+
+        outputs: function () { /* do nothing for variable */
             return this;
         },
         getVariable: function () {
