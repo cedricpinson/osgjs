@@ -146,51 +146,15 @@
         return program;
     }
 
-    var nbLoading = 0;
-    var loaded = [];
-    var removeLoading = function ( node, child ) {
-        nbLoading -= 1;
-        loaded.push( child );
-        if ( nbLoading === 0 ) {
-            //document.getElementById( 'loading' ).style.display = 'None';
-            Viewer.getManipulator().computeHomePosition();
-        }
-    };
-    var addLoading = function () {
-        nbLoading += 1;
-        //document.getElementById( 'loading' ).style.display = 'Block';
-    };
-
-    var getModel = function ( scene ) {
+    var getModel = function () {
         var node = new osg.MatrixTransform();
-        node.setMatrix( osg.Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, [] ) );
+        node.setMatrix( osg.Matrix.makeRotate( - 0 *Math.PI / 2, 1, 0, 0, [] ) );
 
-        var loadModel = function ( url, cbfunc ) {
-            osg.log( 'loading ' + url );
-            var req = new XMLHttpRequest();
-            req.open( 'GET', url, true );
-            req.onreadystatechange = function ( aEvt ) {
-                if ( req.readyState == 4 ) {
-                    if ( req.status == 200 ) {
-                        Q.when( osgDB.parseSceneGraph( JSON.parse( req.responseText ) ) ).then( function ( child ) {
-                            if ( cbfunc ) {
-                                cbfunc( child );
-                            }
-                            node.addChild( child );
-                            removeLoading( node, child );
-                            osg.log( 'success ' + url );
-                        } );
-                    } else {
-                        removeLoading( node, child );
-                        osg.log( 'error ' + url );
-                    }
-                }
-            };
-            req.send( null );
-            addLoading();
-        };
+        osgDB.readNodeURL( '../media/models/material-test/file.osgjs' ).then( function( model ) {
+            node.addChild( model );
+            Viewer.getManipulator().computeHomePosition();
+        } );
 
-        loadModel( 'monkey.osgjs' );
         return node;
     };
 
@@ -204,7 +168,7 @@
         var cubemapTransform = osg.Uniform.createMatrix4( osg.Matrix.create(), 'CubemapTransform' );
 
         var mt = new osg.MatrixTransform();
-        mt.setMatrix( osg.Matrix.makeRotate( -Math.PI / 2.0, 1, 0, 0, [] ) );
+        mt.setMatrix( osg.Matrix.makeRotate( Math.PI / 2.0, 1, 0, 0, [] ) );
         mt.addChild( geom );
 
         var CullCallback = function () {
@@ -226,7 +190,6 @@
         cam.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
         cam.addChild( mt );
 
-        var self = this;
         // the update callback get exactly the same view of the camera
         // but configure the projection matrix to always be in a short znear/zfar range to not vary depend on the scene size
         var UpdateCallback = function () {
@@ -258,7 +221,7 @@
         background.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
         background.getOrCreateStateSet().setAttributeAndModes( getShaderBackground() );
 
-        var ground = getModel( group );
+        var ground = getModel();
 
         ground.getOrCreateStateSet().setAttributeAndMode( getShader() );
 
@@ -278,8 +241,8 @@
             texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_X', images[ 0 ] );
             texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_X', images[ 1 ] );
 
-            texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_Y', images[ 3 ] );
-            texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_Y', images[ 2 ] );
+            texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_Y', images[ 2 ] );
+            texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_Y', images[ 3 ] );
 
             texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_Z', images[ 4 ] );
             texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_Z', images[ 5 ] );
