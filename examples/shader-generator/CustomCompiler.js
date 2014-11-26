@@ -16,30 +16,6 @@ var CustomCompiler;
     CustomCompiler.prototype = osg.objectInherit( osgShader.Compiler.prototype, {
 
 
-        // check if there is a attribute ramp
-        getRamp: function () {
-
-            for ( var i = 0; i < this._attributes.length; i++ ) {
-                if ( this._attributes[ i ].getType() === 'Ramp' )
-                    return this._attributes[ i ];
-            }
-            return undefined;
-
-        },
-
-
-        // check if there is a attribute negatif
-        getNegatif: function () {
-
-            for ( var i = 0; i < this._attributes.length; i++ ) {
-                if ( this._attributes[ i ].getType() === 'Negatif' )
-                    return this._attributes[ i ];
-            }
-            return undefined;
-
-        },
-
-
         // this is the main code that instanciate and link nodes together
         // it's a simplified version of the curent osgjs compiler
         // it could also be simpler
@@ -95,8 +71,8 @@ var CustomCompiler;
                 // my custom attribute ramp
                 // it's here I connect ouput of light result with my ramp
                 // ======================================================
-                var rampAttribute = this.getRamp();
                 var rampResult = this.getOrCreateVariable( 'vec4' );
+                var rampAttribute = this.getAttributeType( 'Ramp' );
                 if ( rampAttribute && rampAttribute.getAttributeEnable() ) {
 
                     factory.getNode( 'Ramp' )
@@ -114,7 +90,7 @@ var CustomCompiler;
                 // it's here I connect ouput of light result with my ramp
                 // ======================================================
                 var negatifResult = this.getOrCreateVariable( 'vec4' );
-                var negatifAttribute = this.getNegatif();
+                var negatifAttribute = this.getAttributeType( 'Negatif' );
                 if ( negatifAttribute ) {
 
                     factory.getNode( 'Negatif' )
