@@ -84,7 +84,7 @@ define( [
             replaceVariables = MACROUTILS.objectMix( replaceVariables, this._outputs );
 
             // find all %string
-            var r = new RegExp( '%[A-Za-z0-9_]+', 'g' );
+            var r = new RegExp( '%[A-Za-z0-9_]+', 'gm' );
             var text = this._text;
             var result = this._text.match( r );
 
@@ -98,7 +98,8 @@ define( [
                         Notify.error( 'error with inline code\n' + this._text );
                         Notify.error( 'input ' + str + ' not provided for ' + result[ i ] );
                     }
-                    text = text.replace( result[ i ], replaceVariables[ str ].getVariable() );
+                    var reg = new RegExp( result[i].toString(), 'gm' );
+                    text = text.replace( reg, replaceVariables[ str ].getVariable() );
                     done.add( str );
                 }
             }

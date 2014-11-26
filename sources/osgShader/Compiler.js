@@ -89,6 +89,17 @@ define( [
             return this._variables[ name ];
         },
 
+        getAttributeType: function( type ) {
+
+            for ( var i = 0; i < this._attributes.length; i++ ) {
+                if ( this._attributes[ i ].getType() === type )
+                    return this._attributes[ i ];
+            }
+            return undefined;
+
+        },
+
+
         // if doesn't exist create a new on
         // if name given and var already exist, create a varname +
         getOrCreateVariable: function ( type, varname, deepness ) {
@@ -499,7 +510,7 @@ define( [
         },
 
 
-        createLighting: function() {
+        createLighting: function( diffuseColor ) {
 
             var output = this.getOrCreateVariable( 'vec4' );
             var lightList = [];
@@ -529,6 +540,8 @@ define( [
 
                 inputs.normal = this.getOrCreateNormalizedNormal();
                 inputs.eyeVector = this.getOrCreateNormalizedPosition();
+
+                inputs.materialdiffuse = diffuseColor; // use the color by the input
 
                 factory.getNode( nodeName )
                     .inputs( inputs )
@@ -899,7 +912,7 @@ define( [
             if ( this._lights.length > 0 ) {
 
                 // creates lights nodes
-                var lightedOutput = this.createLighting();
+                var lightedOutput = this.createLighting( diffuseColor );
                 finalColor = lightedOutput;
 
             } else {
