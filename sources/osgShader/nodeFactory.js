@@ -37,7 +37,7 @@ define( [
             if ( this._nodes.has( name ) ) {
                 Notify.warning( 'Node ' + name + ' already registered' );
             }
-            this._nodes.add( name, constructor );
+            this._nodes.set( name, constructor );
 
         },
 

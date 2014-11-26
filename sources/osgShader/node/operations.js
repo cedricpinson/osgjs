@@ -157,31 +157,13 @@ define( [
 
 
 
-    var FragColor = function () {
-        Node.apply( this, arguments );
-        this._prefix = 'gl_FragColor';
-    };
-    FragColor.prototype = MACROUTILS.objectInherit( Node.prototype, {
-
-        type: 'gl_FragColor',
-
-        outputs: function () { /* do nothing for variable */
-            return this;
-        },
-        getVariable: function () {
-            return this._prefix;
-        }
-    } );
-
-
     return {
         'BaseOperator': BaseOperator,
         'Mult': Mult,
         'Add': Add,
         'InlineCode': InlineCode,
         'SetAlpha': SetAlpha,
-        'PreMultAlpha': PreMultAlpha,
-        'FragColor': FragColor
+        'PreMultAlpha': PreMultAlpha
     };
 
 } );

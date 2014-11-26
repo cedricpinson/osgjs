@@ -123,7 +123,23 @@ define( [
     } );
 
 
+    var FragColor = function () {
+        Variable.call( this, 'vec4', 'gl_FragColor' );
+    };
+    FragColor.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+
+        outputs: function () { /* do nothing for variable */
+            return this;
+        },
+        getVariable: function () {
+            return this._prefix;
+        }
+    } );
+
+
+
     return {
+        'FragColor': FragColor,
         'Sampler': Sampler,
         'Variable': Variable,
         'Varying': Varying,

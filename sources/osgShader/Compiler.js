@@ -3,12 +3,11 @@ define( [
     'osg/utils',
     'osg/Uniform',
     'osgShader/nodeFactory',
-    'osgShader/node/functions',
-    'osgShader/utils'
-], function ( Notify, MACROUTILS, Uniform, factory, functions, utils ) {
+    'osgShader/node/functions'
+
+], function ( Notify, MACROUTILS, Uniform, factory, functions ) {
     'use strict';
 
-    var sprintf = utils.sprintf;
     var defaultGamma = functions.LinearTosRGB.defaultGamma;
 
     var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
