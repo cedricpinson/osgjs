@@ -6,6 +6,7 @@ var NegatifNode;
     var osgShader = window.OSG.osgShader;
     var osg = window.OSG.osg;
     var shaderNode = osgShader.node;
+    var factory = osgShader.nodeFactory;
 
     NegatifAttribute = function () {
         osg.StateAttribute.call( this );
@@ -53,11 +54,8 @@ var NegatifNode;
 
 
     // this node will call a function negatif in the shader
-    NegatifNode = function ( output, input, enable ) {
+    NegatifNode = function () {
         shaderNode.BaseOperator.apply( this, arguments );
-        this._input = input;
-        this._enable = enable;
-        this._output = output;
     };
 
     NegatifNode.prototype = osg.objectInherit( shaderNode.BaseOperator.prototype, {
@@ -72,11 +70,14 @@ var NegatifNode;
         // call the glsl function with input/output of the node
         computeFragment: function () {
             return osgShader.utils.callFunction( 'negatif', undefined, [
-                this._enable,
-                this._input,
-                this._output
+                this._inputs.enable,
+                this._inputs.input,
+                this._outputs
             ] );
         }
     } );
+
+    factory.registerNode( 'Negatif', NegatifNode );
+
 
 } )();
