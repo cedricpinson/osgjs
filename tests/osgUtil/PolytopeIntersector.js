@@ -151,6 +151,12 @@ define( [
             pi.setDimensionMask( PolytopeIntersector.DimZero );
             camera.accept( iv );
             ok( pi._intersections.length === 0, 'Hits should be 0 and result is ' + pi._intersections.length );
+            // Test polytope going trough the triangle without containing any point of it
+            pi.reset();
+            pi.setDimensionMask( PolytopeIntersector.AllDims );  
+            pi.setPolytopeFromWindowCoordinates( 415, 305, 416, 306 );
+            camera.accept( iv );
+            ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
         } );
 
     var createPoints = function ( ) {
