@@ -249,12 +249,46 @@ define( [
 
                 // reproj
                 if ( prevModelViewUniform !== undefined ) {
-                    state.prevModelViewMatrix.set( leaf.previousModelView );
+
+                    if ( window.doAnimate ) {
+                        state.prevModelViewMatrix.set( leaf.previousModelView );
+                    } else {
+                        state.prevModelViewMatrix.set( leaf.view );
+                    }
                     state.prevModelViewMatrix.apply( gl, prevModelViewUniform );
+
+
+                    if ( 1 ) {
+                        var iji = 16;
+                        while ( iji-- ) {
+                            if ( leaf.projection[ iji ] !== leaf.previousProjection[ iji ] ) {
+                                break;
+                            }
+                        }
+
+                        if ( iji === -1 ) {
+                            iji = 16;
+                            while ( iji-- ) {
+                                if ( leaf.view[ iji ] !== leaf.previousModelView[ iji ] ) {
+                                    break;
+                                }
+                            }
+                        }
+                        if ( iji === -1 ) {
+                            console.log( 'same' );
+
+                        }
+                    }
+
                 }
 
                 if ( prevProjectionUniform !== undefined ) {
-                    state.prevProjectionMatrix.set( leaf.previousProjection );
+
+                    if ( window.doAnimate ) {
+                        state.prevProjectionMatrix.set( leaf.previousProjection );
+                    } else {
+                        state.prevProjectionMatrix.set( leaf.projection );
+                    }
                     state.prevProjectionMatrix.apply( gl, prevProjectionUniform );
                 }
 

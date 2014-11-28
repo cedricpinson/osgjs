@@ -327,11 +327,11 @@ define( [
         }
     };
 
-    Composer.Filter.Custom = function ( fragmentShader, uniforms ) {
+    Composer.Filter.Custom = function ( fragmentShader, uniforms, vertexShader ) {
         Composer.Filter.call( this );
         this._fragmentShader = fragmentShader;
         this._uniforms = uniforms;
-        this._vertexShader = Composer.Filter.defaultVertexShader;
+        this._vertexShader = vertexShader ? vertexShader : Composer.Filter.defaultVertexShader;
     };
 
     Composer.Filter.Custom.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
