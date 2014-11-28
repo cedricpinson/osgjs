@@ -630,9 +630,32 @@ define( [
             leaf.parent = this._currentStateGraph;
             leaf.projection = this.getCurrentProjectionMatrix();
             leaf.geometry = node;
+
+
             leaf.view = this.getCurrentViewMatrix();
             leaf.modelWorld = this.getCurrentModelWorldMatrix();
             leaf.modelView = this.getCurrentModelViewMatrix();
+
+            ////////// Reprojection /////////////////////
+            // Obviously not multi Father Proof
+            if ( !node.currentModelView ) {
+                node.currentModelView = Matrix.create();
+                node.currentProjection = Matrix.create();
+
+                node.previousModelView = Matrix.create();
+                node.previousProjection = Matrix.create();
+            }
+            Matrix.copy( node.currentModelView, node.previousModelView );
+            Matrix.copy( leaf.modelView, node.currentModelView );
+
+            Matrix.copy( node.currentProjection, node.previousProjection );
+            Matrix.copy( leaf.projection, node.currentProjection );
+
+            leaf.previousModelView = node.previousModelView;
+            leaf.previousProjection = node.previousProjection;
+
+            ////////// Reprojection /////////////////////
+
             leaf.depth = depth;
             leafs.push( leaf );
         }

@@ -187,7 +187,8 @@ define( [
         drawGeometry: ( function () {
             var tempMatrice = Matrix.create();
             var modelViewUniform, viewUniform, modelWorldUniform, projectionUniform, normalUniform, program;
-
+            // reproj
+            var prevModelViewUniform, prevProjectionUniform;
             return function ( state, leaf, push ) {
 
                 var gl = state.getGraphicContext();
@@ -202,12 +203,18 @@ define( [
                     viewUniform = program.uniformsCache[ state.viewMatrix.name ];
                     projectionUniform = program.uniformsCache[ state.projectionMatrix.name ];
                     normalUniform = program.uniformsCache[ state.normalMatrix.name ];
+
+                    // reproj
+                    prevModelViewUniform = program.uniformsCache[ state.prevModelViewMatrix.name ];
+                    prevProjectionUniform = program.uniformsCache[ state.prevProjectionMatrix.name ];
+
                 }
 
                 if ( modelViewUniform !== undefined ) {
                     state.modelViewMatrix.set( leaf.modelView );
                     state.modelViewMatrix.apply( gl, modelViewUniform );
                 }
+
 
                 if ( modelWorldUniform !== undefined ) {
                     state.modelWorldMatrix.set( leaf.modelWorld );
@@ -228,7 +235,7 @@ define( [
 
                     // TODO: optimize the uniform scaling case
                     // where inversion is simpler/faster/shared
-                    Matrix.copy( leaf.modelView, tempMatrice);
+                    Matrix.copy( leaf.modelView, tempMatrice );
                     var normal = tempMatrice;
                     normal[ 12 ] = 0.0;
                     normal[ 13 ] = 0.0;
@@ -238,6 +245,17 @@ define( [
                     Matrix.transpose( normal, normal );
                     state.normalMatrix.set( normal );
                     state.normalMatrix.apply( gl, normalUniform );
+                }
+
+                // reproj
+                if ( prevModelViewUniform !== undefined ) {
+                    state.prevModelViewMatrix.set( leaf.previousModelView );
+                    state.prevModelViewMatrix.apply( gl, prevModelViewUniform );
+                }
+
+                if ( prevProjectionUniform !== undefined ) {
+                    state.prevProjectionMatrix.set( leaf.previousProjection );
+                    state.prevProjectionMatrix.apply( gl, prevProjectionUniform );
                 }
 
                 leaf.geometry.drawImplementation( state );
