@@ -561,9 +561,42 @@ CullVisitor.prototype[ Geometry.typeID ] = ( function () {
                 this.getCurrentModelWorldMatrix(),
                 depth );
 
+
+
             leafs.push( leaf );
         }
 
+        ////////// Reprojection /////////////////////
+        //  multi-Father Proofness by hashing node path traversal
+        var hash = '';
+        this.getNodePath().forEach( function ( a ) {
+            hash += a.getInstanceID() + '_'; // without the _ you get hash collisions
+        } );
+        if ( !node._history ) {
+            node._history = {};
+        }
+        var history = node._history[ hash ];
+        if ( !history ) {
+            history = {};
+            node._history[ hash ] = history;
+            history[ 'view' ] = Matrix.create();
+            history[ 'prevView' ] = Matrix.create();
+            history[ 'proj' ] = Matrix.create();
+            history[ 'prevProj' ] = Matrix.create();
+        }
+        var view = history[ 'view' ];
+        var prevView = history[ 'prevView' ];
+        var proj = history[ 'proj' ];
+        var prevProj = history[ 'prevProj' ];
+
+        Matrix.copy( view, prevView );
+        Matrix.copy( leaf._modelView, view );
+        Matrix.copy( proj, prevProj );
+        Matrix.copy( leaf._projection, proj );
+
+        leaf._previousModelView = prevView;
+        leaf._previousProjection = prevProj;
+        ////////// Reprojection /////////////////////
         prePopGeometry( this, node );
         if ( stateset ) this.popStateSet();
     };

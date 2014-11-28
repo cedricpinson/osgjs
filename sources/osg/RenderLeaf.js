@@ -105,6 +105,17 @@ RenderLeaf.prototype = {
 
             obj.apply( state, this._modelView, this._modelWorld, this._view, this._projection, this._normal );
 
+            // reproj
+            if ( prevModelViewUniform !== undefined ) {
+                state.prevModelViewMatrix.set( this._previousModelView );
+                state.prevModelViewMatrix.apply( gl, prevModelViewUniform );
+            }
+
+            if ( prevProjectionUniform !== undefined ) {
+                state.prevProjectionMatrix.set( this._previousProjection );
+                state.prevProjectionMatrix.apply( gl, prevProjectionUniform );
+            }
+
             this._geometry.drawImplementation( state );
 
         };
