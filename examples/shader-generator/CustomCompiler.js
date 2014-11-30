@@ -65,7 +65,7 @@ var CustomCompiler;
             if ( this._lights.length > 0 ) {
 
                 // creates lights nodes
-                var lightedOutput = this.createLighting();
+                var lightedOutput = this.createLighting( diffuseColor );
 
                 // ======================================================
                 // my custom attribute ramp
