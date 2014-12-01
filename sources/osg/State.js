@@ -30,6 +30,10 @@ define( [
         this.projectionMatrix = Uniform.createMatrix4( Matrix.create(), 'ProjectionMatrix' );
         this.normalMatrix = Uniform.createMatrix4( Matrix.create(), 'NormalMatrix' );
 
+        //reproj
+        this.prevModelViewMatrix = Uniform.createMatrix4( Matrix.create(), 'PrevModelViewMatrix' );
+        this.prevProjectionMatrix = Uniform.createMatrix4( Matrix.create(), 'PrevProjectionMatrix' );
+
         // track uniform for color array enabled
 
         // Stoped HERE color array does not work
@@ -228,9 +232,11 @@ define( [
                 if ( location !== undefined && activeUniformMap[ name ] === undefined ) {
                     // filter 'standard' uniform matrix that will be applied for all shader
                     if ( name !== this.modelViewMatrix.name &&
+                        name !== this.prevModelViewMatrix.name &&
                         name !== this.modelWorldMatrix.name &&
                         name !== this.viewMatrix.name &&
                         name !== this.projectionMatrix.name &&
+                        name !== this.prevProjectionMatrix.name &&
                         name !== this.normalMatrix.name &&
                         name !== 'ArrayColorEnabled' ) {
                         foreignUniforms.push( name );

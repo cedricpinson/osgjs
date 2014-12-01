@@ -52,6 +52,7 @@ define( [
         this._renderBinStack = [];
         this.visitorType = NodeVisitor.CULL_VISITOR;
 
+        this.nodePathIDHash = '';
         this._identityMatrix = Matrix.create();
     };
 
@@ -595,6 +596,7 @@ define( [
 
     CullVisitor.prototype[ Geometry.typeID ] = function ( node ) {
 
+
         var modelview = this.getCurrentModelViewMatrix();
         var bb = node.getBoundingBox();
         if ( this._computeNearFar && bb.valid() ) {
@@ -630,9 +632,73 @@ define( [
             leaf.parent = this._currentStateGraph;
             leaf.projection = this.getCurrentProjectionMatrix();
             leaf.geometry = node;
+
+
             leaf.view = this.getCurrentViewMatrix();
             leaf.modelWorld = this.getCurrentModelWorldMatrix();
             leaf.modelView = this.getCurrentModelViewMatrix();
+
+            ////////// Reprojection /////////////////////
+            //  multi Father Proofness
+            var hash = '';
+            this.getNodePath().forEach( function ( a ) {
+                hash += a.getInstanceID() + '';
+            } );
+            if ( !node._history ) {
+                node._history = {};
+            }
+            if ( !node._history[ hash ] ) {
+                node._history[ hash ] = {};
+                node._history[ hash ][ 'view' ] = Matrix.create();
+                node._history[ hash ][ 'prevView' ] = Matrix.create();
+                node._history[ hash ][ 'proj' ] = Matrix.create();
+                node._history[ hash ][ 'prevProj' ] = Matrix.create();
+            }
+            var view = node._history[ hash ][ 'view' ];
+            var prevView = node._history[ hash ][ 'prevView' ];
+            var proj = node._history[ hash ][ 'proj' ];
+            var prevProj = node._history[ hash ][ 'prevProj' ];
+
+            Matrix.copy( view, prevView );
+            Matrix.copy( leaf.modelView, view );
+            Matrix.copy( proj, prevProj );
+            Matrix.copy( leaf.projection, proj );
+
+            leaf.previousModelView = prevView;
+            leaf.previousProjection = prevProj;
+
+            //debug facility
+            if ( node._name === 'quad' ) {
+                if ( 0 ) {
+                    // works here
+                    view = leaf.modelView;
+                    prevView = leaf.previousModelView;
+                    proj = leaf.projection;
+                    prevProj = leaf.previousProjection;
+
+                    var i = 16;
+
+                    while ( i-- ) {
+                        if ( view[ i ] !== prevView[ i ] ) {
+                            break;
+                        }
+                    }
+
+                    if ( i === -1 ) {
+                        i = 16;
+                        while ( i-- ) {
+                            if ( proj[ i ] !== prevProj[ i ] ) {
+                                break;
+                            }
+                        }
+                    }
+                    if ( i === -1 ) {
+                        console.log( 'same' );
+                    }
+                }
+            }
+            ////////// Reprojection /////////////////////
+
             leaf.depth = depth;
             leafs.push( leaf );
         }
