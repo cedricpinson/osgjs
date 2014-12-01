@@ -1,11 +1,9 @@
 define( [
-    'vendors/d3',
-    'vendors/dagre',
     'vendors/jQuery',
     'osg/Utils',
     'osg/NodeVisitor',
 
-], function ( d3, dagreD3, $, MACROUTILS, NodeVisitor ) {
+], function ( $, MACROUTILS, NodeVisitor ) {
 
     'use strict';
 
@@ -156,81 +154,82 @@ define( [
 
         // Create and display a dagre d3 graph
         createGraph: function () {
+            if ( window.d3 && window.dagreD3 ) {
+                this.createGraphApply();
+                return;
+            }
+            var d3url = '//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js';
+            var dagreurl = '//cdn.jsdelivr.net/dagre-d3/0.2.9/dagre-d3.min.js';
+            $.when( $.getScript( d3url ), $.getScript( dagreurl ) ).done( this.createGraphApply.bind( this ) );
+        },
 
-            // Include dagre and d3 script
-            // TODO: it should be handled correctly...
-            //       - dont need to load them if it's already defined
-            //       - if the files are not local maybe we should try on cdn
-            $.when( $.getScript( '../vendors/d3.js' ), $.getScript( '../vendors/dagre.js' ) ).done( function () {
+        createGraphApply: function () {
+            var g = new window.dagreD3.Digraph();
 
-                var g = new dagreD3.Digraph();
+            g = this.generateNodeAndLink( g );
 
-                g = this.generateNodeAndLink( g );
+            // Add the style of the graph
+            this.injectStyleElement();
 
-                // Add the style of the graph
-                this.injectStyleElement();
+            // Create the renderer
+            var renderer = new window.dagreD3.Renderer();
 
-                // Create the renderer
-                var renderer = new dagreD3.Renderer();
+            // Set up an SVG group so that we can translate the final graph.
+            var svg = window.d3.select( 'svg' ),
+                svgGroup = svg.append( 'g' );
 
-                // Set up an SVG group so that we can translate the final graph.
-                var svg = d3.select( 'svg' ),
-                    svgGroup = svg.append( 'g' );
+            // Set initial zoom to 75%
+            var initialScale = 0.75;
+            var oldZoom = renderer.zoom();
+            renderer.zoom( function ( graph, svg ) {
+                var zoom = oldZoom( graph, svg );
 
-                // Set initial zoom to 75%
-                var initialScale = 0.75;
-                var oldZoom = renderer.zoom();
-                renderer.zoom( function ( graph, svg ) {
-                    var zoom = oldZoom( graph, svg );
+                zoom.scale( initialScale ).event( svg );
+                return zoom;
+            } );
 
-                    zoom.scale( initialScale ).event( svg );
-                    return zoom;
+            // Simple function to style the tooltip for the given node.
+            var styleTooltip = function ( name, description ) {
+                return '<p class="name">' + name + '</p><pre class="description">' + description + '</pre>';
+            };
+
+            // Override drawNodes to set up the hover.
+            var oldDrawNodes = renderer.drawNodes();
+            renderer.drawNodes( function ( g, svg ) {
+                var svgNodes = oldDrawNodes( g, svg );
+
+                // Set the title on each of the nodes and use tipsy to display the tooltip on hover
+                svgNodes.attr( 'title', function ( d ) {
+                    return styleTooltip( d, g.node( d ).description );
                 } );
 
-                // Simple function to style the tooltip for the given node.
-                var styleTooltip = function ( name, description ) {
-                    return '<p class="name">' + name + '</p><pre class="description">' + description + '</pre>';
-                };
+                return svgNodes;
+            } );
 
-                // Override drawNodes to set up the hover.
-                var oldDrawNodes = renderer.drawNodes();
-                renderer.drawNodes( function ( g, svg ) {
-                    var svgNodes = oldDrawNodes( g, svg );
+            // Run the renderer. This is what draws the final graph.
+            renderer.run( g, svgGroup );
 
-                    // Set the title on each of the nodes and use tipsy to display the tooltip on hover
-                    svgNodes.attr( 'title', function ( d ) {
-                        return styleTooltip( d, g.node( d ).description );
-                    } );
+            new SimpleTooltips( {
+                selector: '.node'
+            } );
 
-                    return svgNodes;
-                } );
+            var self = this;
 
-                // Run the renderer. This is what draws the final graph.
-                renderer.run( g, svgGroup );
+            // Do a console log of the node (or stateset) and save it in Window.*
+            $( '.node' ).click( function () {
+                var identifier = $( this ).attr( 'title' ).split( '<' )[ 1 ].split( '>' )[ 1 ];
+                if ( identifier.search( 'StateSet' ) === -1 ) {
+                    window.activeNode = self._fullNodeList[ identifier ];
+                    console.log( 'window.activeNode is set.' );
+                    console.log( self._fullNodeList[ identifier ] );
+                } else {
+                    var stateset = self._fullNodeList[ identifier.split( ' ' )[ 2 ] ].getStateSet();
+                    window.activeStateset = stateset;
+                    console.log( 'window.activeStateset is set.' );
+                    console.log( stateset );
+                }
 
-                new SimpleTooltips( {
-                    selector: '.node'
-                } );
-
-                var self = this;
-
-                // Do a console log of the node (or stateset) and save it in Window.*
-                $( '.node' ).click( function () {
-                    var identifier = $( this ).attr( 'title' ).split( '<' )[ 1 ].split( '>' )[ 1 ];
-                    if ( identifier.search( 'StateSet' ) === -1 ) {
-                        window.activeNode = self._fullNodeList[ identifier ];
-                        console.log( 'window.activeNode is set.' );
-                        console.log( self._fullNodeList[ identifier ] );
-                    } else {
-                        var stateset = self._fullNodeList[ identifier.split( ' ' )[ 2 ] ].getStateSet();
-                        window.activeStateset = stateset;
-                        console.log( 'window.activeStateset is set.' );
-                        console.log( stateset );
-                    }
-
-                } );
-
-            }.bind( this ) );
+            } );
         },
 
         // Subfunction of createGraph, will iterate to create all the node and link in dagre
