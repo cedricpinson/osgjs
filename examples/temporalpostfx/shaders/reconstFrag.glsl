@@ -79,6 +79,7 @@ void main(void) {
   //gl_FragColor = vec4( (screenPos.xy - screenPosGL.xy) * 0.5 + vec2(0.5), 0.0 ,1.0);
   //gl_FragColor = vec4( (prevScreenPos.xy - screenPosGL.xy)* 0.5 + vec2(0.5) , 0.0 ,1.0);
 
-   gl_FragColor = vec4( (screenPos.xy - prevScreenPos.xy) , 0.0,1.0);
-  // gl_FragColor = vec4( (prevScreenPos.xy - screenPos.xy)* 0.5 + vec2(0.5) , 0.0,1.0);
+ // show screen pos diff (sort of velocity)
+  // gl_FragColor = vec4( (screenPos.xy - prevScreenPos.xy) , 0.0,1.0);
+   gl_FragColor = vec4( (prevScreenPos.xy - screenPos.xy)* 0.5 + vec2(0.5) , 0.0,1.0);
 }

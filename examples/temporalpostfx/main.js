@@ -31,7 +31,7 @@ var addScene = function () {
                 QuadSizeX, 0, 0,
                 0, QuadSizeY, 0 );
 
-            rq._name = 'quad';
+            rq.setName( 'quad' );
             Item = rq;
         }
         return Item;
@@ -42,6 +42,7 @@ var addScene = function () {
         var scale = Math.pow( 2, deep - 1 );
 
         var root = new osg.MatrixTransform();
+        root.setName( 'rootItems' );
         var nbx = NbItems;
         var nby = Math.floor( nbx * 9 / 16.0 );
         if ( deep === 0 ) {
@@ -52,6 +53,7 @@ var addScene = function () {
         for ( var i = 0, l = nbx; i < l; i++ ) {
             for ( var j = 0, m = nby; j < m; j++ ) {
                 var mt = new osg.MatrixTransform();
+                mt.setName( 'rootItemsTransform' );
                 var x, y, m2;
                 if ( deep === 0 ) {
                     x = ( -nbx * 0.5 + 0.5 + i ) * 1.1;
@@ -77,7 +79,7 @@ var addScene = function () {
                 root.addChild( mt );
             }
         }
-        root._name = 'model quads';
+        root.setName( 'model quads' );
         return root;
     }
 
@@ -89,7 +91,6 @@ var addScene = function () {
         material.setDiffuse( [ 0, 1, 1, 1 ] );
         material.setAmbient( [ 0, 0, 1, 1 ] );
         ss.setAttributeAndMode( material );
-        root._name = 'root of model quads';
         return root;
     }
     var newScene = createAliasedScene();
@@ -105,6 +106,7 @@ function addModel() {
 
     // add a node to animate the scene
     var rootModel = new osg.MatrixTransform();
+    rootModel.setName( 'rootModel' );
     rootModel.addChild( model );
 
 
@@ -146,6 +148,7 @@ function commonScene( rttSize, order, rootModel ) {
 
     // attach camera to root
     var root = new osg.MatrixTransform();
+    root.setName( 'CameraRTTFather' );
     root.addChild( camera );
 
     return [ root, sceneTexture, camera, rootModel ];
@@ -213,9 +216,10 @@ var _rtt = [];
 function showFrameBuffers( optionalArgs ) {
 
     var _ComposerdebugNode = new osg.Node();
-    _ComposerdebugNode._name = 'debugComposerNode';
+    _ComposerdebugNode.setName( 'debugComposerNode' );
     _ComposerdebugNode.setCullingActive( false );
     var _ComposerdebugCamera = new osg.Camera();
+    _ComposerdebugCamera.setName( '_ComposerdebugCamera' );
     _rttDebugNode.addChild( _ComposerdebugCamera );
 
     var optionsDebug = {
@@ -261,7 +265,7 @@ function showFrameBuffers( optionalArgs ) {
 
             stateset = quad.getOrCreateStateSet();
 
-            quad.setName( 'debugCompoQuadGeom' );
+            quad.setName( 'debugCompoGeom' );
 
             stateset.setTextureAttributeAndMode( 0, texture );
             stateset.setAttributeAndModes( program );
@@ -282,6 +286,7 @@ function updateDebugRtt() {
         _rttDebugNode.removeChildren();
     } else {
         _rttDebugNode = new osg.Node();
+        _rttDebugNode.setName( '_rttDebugNode' );
     }
 
     showFrameBuffers( {
@@ -296,8 +301,8 @@ function createScene( width, height, gui ) {
     // cannot add same model multiple in same grap
     // it would break previousframe matrix saves
 
-    var model = addModel(); // "current frame model"
-    //   var model2 = addModel(  ); // "previous frame model"
+    var model = addModel(); // "current frame model" added twise if no model2
+    //   var model2 = addModel(  ); // "previous frame model", making it different
     //////////////////////////////
     // store depth for next frame
     var result2 = commonScene( rttSize, osg.Camera.POST_RENDER, model );
@@ -319,6 +324,7 @@ function createScene( width, height, gui ) {
     var cameraRTT = result[ 2 ];
 
     var root = new osg.Node();
+    root.setName( 'rootcreateScene' );
 
     var texW = osg.Uniform.createFloat1( rttSize[ 0 ], 'tex_w' );
     var texH = osg.Uniform.createFloat1( rttSize[ 1 ], 'tex_h' );
@@ -332,8 +338,9 @@ function createScene( width, height, gui ) {
         quadSize[ 0 ], 0, 0,
         0, 0, quadSize[ 1 ] );
     quad.getOrCreateStateSet().setAttributeAndMode( getShaderProgram( 'baseVert', 'baseFrag' ) );
-
+    quad.setName( 'TextureFinalTV' );
     var scene = new osg.MatrixTransform();
+    scene.setName( 'sceneFinalTV' );
 
     // create a texture to render the effect to
     var finalTexture = new osg.Texture();
