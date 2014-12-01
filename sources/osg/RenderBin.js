@@ -248,50 +248,52 @@ define( [
                 }
 
                 // reproj
+                //debug facility
                 if ( prevModelViewUniform !== undefined ) {
-
-                    if ( window.doAnimate ) {
-                        state.prevModelViewMatrix.set( leaf.previousModelView );
-                    } else {
-                        state.prevModelViewMatrix.set( leaf.view );
-                    }
+                    state.prevModelViewMatrix.set( leaf.previousModelView );
                     state.prevModelViewMatrix.apply( gl, prevModelViewUniform );
+                }
 
+                if ( prevProjectionUniform !== undefined ) {
+                    state.prevProjectionMatrix.set( leaf.previousProjection );
+                    state.prevProjectionMatrix.apply( gl, prevProjectionUniform );
+                }
 
+                //debug facility
+                if ( leaf.geometry._name === 'quad' ) {
+                    var view = leaf.modelView;
+                    var prevView = leaf.previousModelView;
+                    var proj = leaf.projection;
+                    var prevProj = leaf.previousProjection;
                     if ( 1 ) {
-                        var iji = 16;
-                        while ( iji-- ) {
-                            if ( leaf.projection[ iji ] !== leaf.previousProjection[ iji ] ) {
+                        view = leaf.modelView;
+                        prevView = leaf.previousModelView;
+                        proj = leaf.projection;
+                        prevProj = leaf.previousProjection;
+
+                        var i = 16;
+
+                        while ( i-- ) {
+                            if ( view[ i ] !== prevView[ i ] ) {
                                 break;
                             }
                         }
 
-                        if ( iji === -1 ) {
-                            iji = 16;
-                            while ( iji-- ) {
-                                if ( leaf.view[ iji ] !== leaf.previousModelView[ iji ] ) {
+                        if ( i === -1 ) {
+                            i = 16;
+                            while ( i-- ) {
+                                if ( proj[ i ] !== prevProj[ i ] ) {
                                     break;
                                 }
                             }
                         }
-                        if ( iji === -1 ) {
+                        if ( i === -1 ) {
                             console.log( 'same' );
-
                         }
+
                     }
-
                 }
-
-                if ( prevProjectionUniform !== undefined ) {
-
-                    if ( window.doAnimate ) {
-                        state.prevProjectionMatrix.set( leaf.previousProjection );
-                    } else {
-                        state.prevProjectionMatrix.set( leaf.projection );
-                    }
-                    state.prevProjectionMatrix.apply( gl, prevProjectionUniform );
-                }
-
+                /////reproj
                 leaf.geometry.drawImplementation( state );
 
                 if ( push === true ) {
