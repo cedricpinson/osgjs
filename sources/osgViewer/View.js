@@ -58,11 +58,9 @@ define( [
         },
 
         computeCanvasSize: ( function () {
-            var canvasWidth = 0;
-            var canvasHeight = 0;
-
             return function ( canvas ) {
-
+                var canvasWidth = 0;
+                var canvasHeight = 0;
                 var clientWidth, clientHeight;
                 clientWidth = canvas.clientWidth;
                 clientHeight = canvas.clientHeight;

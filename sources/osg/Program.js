@@ -16,7 +16,6 @@ define( [
         this.program = null;
         this.setVertexShader( vShader );
         this.setFragmentShader( fShader );
-        this.dirty = true;
     };
 
     /** @lends Program.prototype */
