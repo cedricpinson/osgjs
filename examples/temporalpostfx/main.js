@@ -165,11 +165,11 @@ function readShaders() {
         'depthVert',
         'depthFrag',
         'reconstVert',
-        'reconstFrag',
-        'temporalDiffVert',
-        'temporalDiffFrag',
-        'temporalReprojectVert',
-        'temporalReprojectFrag'
+        'reconstFrag'
+        //'temporalDiffVert',
+        //'temporalDiffFrag',
+        //'temporalReprojectVert',
+        //'temporalReprojectFrag'
     ];
 
     var promises = [];
