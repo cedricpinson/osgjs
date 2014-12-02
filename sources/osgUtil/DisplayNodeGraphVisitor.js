@@ -14,7 +14,7 @@ define( [
         var css = document.createElement( 'style' );
         css.type = 'text/css';
         css.innerHTML = [
-            '.simple-tooltip {',
+            '.osgDebugSimpleTooltip {',
             'display: none;',
             'position: absolute;',
             'margin-left: 10px;',
@@ -23,7 +23,7 @@ define( [
             'background: rgba(0,0,0,.9);',
             'color: #ffffff;',
             '}',
-            '.simple-tooltip:before {',
+            '.osgDebugSimpleTooltip:before {',
             'content: ',
             ';',
             'position: absolute;',
@@ -37,7 +37,7 @@ define( [
         document.getElementsByTagName( 'head' )[ 0 ].appendChild( css );
 
         this.el = document.createElement( 'div' );
-        this.el.className = 'simple-tooltip';
+        this.el.className = 'osgDebugSimpleTooltip';
         document.body.appendChild( this.el );
 
         var showTooltip = function ( e ) {
@@ -70,16 +70,15 @@ define( [
 
         this._uniqueEdges = new window.Set();
 
-        $( 'body' ).append( '<svg width=100% height=100%></svg>' );
+        this._$svg = $( '<svg width=100% height=100%></svg>' );
+        $( 'body' ).append( this._$svg );
 
-        this._css = '.node {text-align: center;cursor: pointer;}.node rect {stroke: #FFF;}.edgePath path {stroke: #FFF;fill: none;}table {text-align: right;}svg {position: absolute;left: 0px;top: 0px;}.button {position: absolute;left: 15px;top: 15px;z-index: 5;border: 0;background: #65a9d7;background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));background: -webkit-linear-gradient(top, #3e779d, #65a9d7);background: -moz-linear-gradient(top, #3e779d, #65a9d7);background: -ms-linear-gradient(top, #3e779d, #65a9d7);background: -o-linear-gradient(top, #3e779d, #65a9d7);padding: 5px 10px;-webkit-border-radius: 7px;-moz-border-radius: 7px;border-radius: 7px;-webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;-moz-box-shadow: rgba(0,0,0,1) 0 1px 0;box-shadow: rgba(0,0,0,1) 0 1px 0;text-shadow: rgba(0,0,0,.4) 0 1px 0;color: white;font-size: 15px;font-family: Helvetica, Arial, Sans-Serif;text-decoration: none;vertical-align: middle;}.button:hover {border-top-color: #28597a;background: #28597a;color: #ccc;}.button:active {border-top-color: #1b435e;background: #1b435e;}.simple-tooltip .name {font-weight: bold;color: #60b1fc;margin: 0;}.simple-tooltip .description {margin: 0;}';
+        this._css = '.node {text-align: center;cursor: pointer;}.node rect {stroke: #FFF;}.edgePath path {stroke: #FFF;fill: none;}table {text-align: right;}svg {position: absolute;left: 0px;top: 0px;}.osgDebugButton {position: absolute;left: 15px;top: 15px;z-index: 5;border: 0;background: #65a9d7;background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));background: -webkit-linear-gradient(top, #3e779d, #65a9d7);background: -moz-linear-gradient(top, #3e779d, #65a9d7);background: -ms-linear-gradient(top, #3e779d, #65a9d7);background: -o-linear-gradient(top, #3e779d, #65a9d7);padding: 5px 10px;-webkit-border-radius: 7px;-moz-border-radius: 7px;border-radius: 7px;-webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;-moz-box-shadow: rgba(0,0,0,1) 0 1px 0;box-shadow: rgba(0,0,0,1) 0 1px 0;text-shadow: rgba(0,0,0,.4) 0 1px 0;color: white;font-size: 15px;font-family: Helvetica, Arial, Sans-Serif;text-decoration: none;vertical-align: middle;}.osgDebugButton:hover {border-top-color: #28597a;background: #28597a;color: #ccc;}.osgDebugButton:active {border-top-color: #1b435e;background: #1b435e;}.osgDebugSimpleTooltip .osgDebugName {font-weight: bold;color: #60b1fc;margin: 0;}.osgDebugSimpleTooltip .osgDebugDescription {margin: 0;}';
     };
 
     DisplayNodeGraphVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
         apply: function ( node ) {
-
-            window.test = node;
 
             if ( this._fullNodeList[ node.getInstanceID() ] !== node ) {
 
@@ -122,24 +121,30 @@ define( [
         },
 
         reset: function () {
-            this._fullNodeList = [];
-            this._nodeList = [];
-            this._linkList = [];
+            this._$svg.empty();
+            this._fullNodeList.length = 0;
+            this._nodeList.length = 0;
+            this._linkList.length = 0;
+            this._uniqueEdges.clear();
+            this._focusedElement = 'scene';
         },
 
         // Apply all the style
         injectStyleElement: function () {
-            $( 'body' ).append( '<button class="button">Access to the scene</button>' );
+            if ( this._cssInjected )
+                return;
+            this._cssInjected = true;
 
-            $( '.button' ).click( function () {
+            $( 'body' ).append( '<button class="osgDebugButton">Access to the scene</button>' );
+            $( '.osgDebugButton' ).click( function () {
                 if ( this._focusedElement === 'scene' ) {
-                    $( '.button' ).text( 'Access to the graph' );
-                    $( 'svg' ).css( 'zIndex', '-2' );
+                    $( '.osgDebugButton' ).text( 'Access to the graph' );
+                    this._$svg.css( 'zIndex', '-2' );
                     this._focusedElement = 'graph';
                 } else {
-                    $( '.button' ).text( 'Access to the scene' );
-                    $( 'svg' ).css( 'zIndex', '2' );
-                    $( '.simple-tooltip' ).css( 'zIndex', '3' );
+                    $( '.osgDebugButton' ).text( 'Access to the scene' );
+                    this._$svg.css( 'zIndex', '2' );
+                    $( '.osgDebugSimpleTooltip' ).css( 'zIndex', '3' );
                     this._focusedElement = 'scene';
                 }
             }.bind( this ) );
@@ -158,7 +163,9 @@ define( [
             }
             var d3url = '//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js';
             var dagreurl = '//cdn.jsdelivr.net/dagre-d3/0.2.9/dagre-d3.min.js';
-            $.when( $.getScript( d3url ), $.getScript( dagreurl ) ).done( this.createGraphApply.bind( this ) );
+            $.getScript( d3url ).done( function () {
+                $.getScript( dagreurl ).done( this.createGraphApply.bind( this ) );
+            }.bind( this ) );
         },
 
         createGraphApply: function () {
@@ -173,8 +180,8 @@ define( [
             var renderer = new window.dagreD3.Renderer();
 
             // Set up an SVG group so that we can translate the final graph.
-            var svg = window.d3.select( 'svg' ),
-                svgGroup = svg.append( 'g' );
+            var svg = window.d3.select( this._$svg.get( 0 ) );
+            var svgGroup = svg.append( 'g' );
 
             // Set initial zoom to 75%
             var initialScale = 0.75;
@@ -188,7 +195,7 @@ define( [
 
             // Simple function to style the tooltip for the given node.
             var styleTooltip = function ( name, description ) {
-                return '<p class="name">' + name + '</p><pre class="description">' + description + '</pre>';
+                return '<p class="osgDebugName">' + name + '</p><pre class="osgDebugDescription">' + description + '</pre>';
             };
 
             // Override drawNodes to set up the hover.

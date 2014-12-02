@@ -81,7 +81,6 @@
 
             var visitor = new osgUtil.DisplayNodeGraphVisitor();
             root.accept( visitor );
-
             visitor.createGraph();
 
             rotate.addChild( root );
