@@ -10,6 +10,7 @@ uniform mat4 PrevProjectionMatrix;
 
 // something to draw
 varying float FragDepth;
+varying vec3 FragPos;
 varying vec4  FragScreenPos;
 varying vec2 FragTexCoord0;
 
@@ -21,6 +22,7 @@ varying float FragPrevDepth;
 void main(void) {
 
   vec4 pos = ModelViewMatrix * vec4(Vertex,1.0);
+  FragPos = pos.xyz;
   vec4 position = ProjectionMatrix * pos;
   gl_Position = position;
   FragTexCoord0.xy = TexCoord0.xy;
@@ -29,8 +31,16 @@ void main(void) {
 
   // => NDC (-1, 1) then 0,1
   //FragDepth = (position.z/position.w) * 0.5 + 0.5;
-  // View space Z
-  FragDepth = pos.z;
+  //
+  //View Space
+  //FragDepth= pos.z;
+  //Linear view space
+   float znear = ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]-1.0);
+   float zfar = ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]+1.0);
+   float depth = (-pos.z - znear)/(zfar-znear);
+  FragDepth= depth;
+
+
    // compute prev clip space position
   vec4 prevPos = PrevModelViewMatrix * vec4(Vertex,1.0);
   // get previous screen space position:
@@ -40,11 +50,20 @@ void main(void) {
   // ndc (-1, 1) then 0,1
   //FragPrevDepth = (prevPosition.z / prevPosition.w) * 0.5 + 0.5;;
   // View space Z
-  FragPrevDepth = prevPos.z;
+  //FragPrevDepth = prevPos.z;
 
-  //clip space
+   float znearPrev = PrevProjectionMatrix[3][2] / (PrevProjectionMatrix[2][2]-1.0);
+    float zfarPrev = PrevProjectionMatrix[3][2] / (PrevProjectionMatrix[2][2]+1.0);
+    float depthPrev = (-prevPos.z - znearPrev)/(zfarPrev-znearPrev);
+   //linear view Z
+   FragDepth = depthPrev;
+
+
+  //clip space, done in fragment, allow better single pixel result,
+  // otherwise it interpole at against clipped tri instead of whole tri
   //prevPosition.xyz /= prevPosition.w;
   //prevPosition.xy = prevPosition.xy * 0.5 + 0.5;
+  //
   // projection space
   FragPreScreenPos = prevPosition;
 }

@@ -16,7 +16,6 @@
     var shaderProcessor;
 
     var doAnimate = true;
-    var doSync = true;
 
     var addScene = function () {
 
@@ -135,6 +134,10 @@
         camera.setViewport( new osg.Viewport( 0, 0, rttSize[ 0 ], rttSize[ 1 ] ) );
         camera.setClearColor( [ 0.5, 0.5, 0.5, 1 ] );
 
+        // prevent projection matrix changes
+        // after store in node
+        camera.setComputeNearFar( false );
+
         // attach a texture to the camera to render the scene on
         var sceneTexture = new osg.Texture();
         sceneTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
@@ -198,15 +201,26 @@
         return defer.promise;
     }
 
-    var shaderProcessor;
 
-    var getShaderProgram = function ( vs, ps, defines ) {
+    var cache = {};
+    var getShaderProgram = function ( vs, ps, defines, useCache ) {
+
+        var hash;
+        if ( useCache ) {
+            hash = vs + ps + defines.join( '' );
+            if ( cache[ hash ] )
+                return cache[ hash ];
+        }
 
         var vertexshader = shaderProcessor.getShader( vs, defines );
         var fragmentshader = shaderProcessor.getShader( ps, defines );
 
         var program = new osg.Program(
             new osg.Shader( 'VERTEX_SHADER', vertexshader ), new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+
+        if ( useCache ) {
+            cache[ hash ] = program;
+        }
 
         return program;
     };
@@ -256,7 +270,7 @@
         _ComposerdebugNode.removeChildren();
 
         var stateset;
-        var program = getShaderProgram( 'baseVert', 'baseFrag' );
+        var program = getShaderProgram( 'baseVert', 'baseFrag', [], true );
         stateset = _ComposerdebugNode.getOrCreateStateSet();
         if ( !optionsDebug.fullscreen )
             stateset.setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
@@ -340,7 +354,7 @@
         var quad = osg.createTexturedQuadGeometry( -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
             quadSize[ 0 ], 0, 0,
             0, 0, quadSize[ 1 ] );
-        quad.getOrCreateStateSet().setAttributeAndMode( getShaderProgram( 'baseVert', 'baseFrag' ) );
+        quad.getOrCreateStateSet().setAttributeAndMode( getShaderProgram( 'baseVert', 'baseFrag', [], true ) );
         quad.setName( 'TextureFinalTV' );
         var scene = new osg.MatrixTransform();
         scene.setName( 'sceneFinalTV' );
@@ -369,9 +383,6 @@
             'animate': function () {
                 doAnimate = !doAnimate;
             },
-            'sync': function () {
-                doSync = !doSync;
-            },
             'reload': function () {
                 readShaders().then( function () {
                     if ( console.clear ) console.clear();
@@ -389,7 +400,6 @@
             } );
 
             gui.add( globalGui, 'animate' );
-            gui.add( globalGui, 'sync' );
 
             gui.add( globalGui, 'reload' );
         }
@@ -500,7 +510,7 @@
                 if ( doAnimate ) {
                     currentTime = nv.getFrameStamp().getSimulationTime();
                     var x = Math.cos( currentTime );
-                    osg.Matrix.makeRotate( x, 0, 0, 1, model.getMatrix() );
+                    osg.Matrix.makeRotate( x, 0, 1, 1, model.getMatrix() );
                 }
 
                 // making sure here.
