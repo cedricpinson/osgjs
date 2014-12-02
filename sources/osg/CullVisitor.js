@@ -666,37 +666,6 @@ define( [
 
             leaf.previousModelView = prevView;
             leaf.previousProjection = prevProj;
-
-            //debug facility
-            if ( node._name === 'quad' ) {
-                if ( 0 ) {
-                    // works here
-                    view = leaf.modelView;
-                    prevView = leaf.previousModelView;
-                    proj = leaf.projection;
-                    prevProj = leaf.previousProjection;
-
-                    var i = 16;
-
-                    while ( i-- ) {
-                        if ( view[ i ] !== prevView[ i ] ) {
-                            break;
-                        }
-                    }
-
-                    if ( i === -1 ) {
-                        i = 16;
-                        while ( i-- ) {
-                            if ( proj[ i ] !== prevProj[ i ] ) {
-                                break;
-                            }
-                        }
-                    }
-                    if ( i === -1 ) {
-                        console.log( 'same' );
-                    }
-                }
-            }
             ////////// Reprojection /////////////////////
 
             leaf.depth = depth;

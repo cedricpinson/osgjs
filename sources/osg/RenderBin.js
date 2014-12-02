@@ -253,47 +253,12 @@ define( [
                     state.prevModelViewMatrix.set( leaf.previousModelView );
                     state.prevModelViewMatrix.apply( gl, prevModelViewUniform );
                 }
-
                 if ( prevProjectionUniform !== undefined ) {
                     state.prevProjectionMatrix.set( leaf.previousProjection );
                     state.prevProjectionMatrix.apply( gl, prevProjectionUniform );
                 }
-
-                //debug facility
-                if ( leaf.geometry._name === 'quad' ) {
-                    var view = leaf.modelView;
-                    var prevView = leaf.previousModelView;
-                    var proj = leaf.projection;
-                    var prevProj = leaf.previousProjection;
-                    if ( 1 ) {
-                        view = leaf.modelView;
-                        prevView = leaf.previousModelView;
-                        proj = leaf.projection;
-                        prevProj = leaf.previousProjection;
-
-                        var i = 16;
-
-                        while ( i-- ) {
-                            if ( view[ i ] !== prevView[ i ] ) {
-                                break;
-                            }
-                        }
-
-                        if ( i === -1 ) {
-                            i = 16;
-                            while ( i-- ) {
-                                if ( proj[ i ] !== prevProj[ i ] ) {
-                                    break;
-                                }
-                            }
-                        }
-                        if ( i === -1 ) {
-                            console.log( 'same' );
-                        }
-
-                    }
-                }
                 /////reproj
+
                 leaf.geometry.drawImplementation( state );
 
                 if ( push === true ) {
