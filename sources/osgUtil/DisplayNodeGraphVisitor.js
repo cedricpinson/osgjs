@@ -1,7 +1,7 @@
 define( [
     'vendors/jQuery',
     'osg/Utils',
-    'osg/NodeVisitor',
+    'osg/NodeVisitor'
 
 ], function ( $, MACROUTILS, NodeVisitor ) {
 
@@ -63,12 +63,12 @@ define( [
     var DisplayNodeGraphVisitor = function () {
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
 
-        this._nodeListSize = 0;
         this._fullNodeList = [];
         this._nodeList = [];
-        this._linkListSize = 0;
         this._linkList = [];
         this._focusedElement = 'scene';
+
+        this._uniqueEdges = new window.Set();
 
         $( 'body' ).append( '<svg width=100% height=100%></svg>' );
 
@@ -95,26 +95,26 @@ define( [
 
                 this._fullNodeList[ node.getInstanceID() ] = node;
 
-                this._nodeList[ this._nodeListSize ] = {
+                this._nodeList.push( {
                     name: node.getName(),
                     className: node.className(),
                     instanceID: node.getInstanceID(),
                     stateset: stateset,
                     matrix: nodeMatrix
-                };
-                this._nodeListSize++;
+                } );
 
             }
 
-            if ( node.getChildren ) {
-
-                var children = node.getChildren();
-                for ( var i = 0, l = children.length; i < l; i++ ) {
-                    this._linkList[ this._linkListSize ] = {
-                        parentNode: node.getInstanceID(),
-                        childrenNode: children[ i ].getInstanceID()
-                    };
-                    this._linkListSize++;
+            if ( this.nodePath.length >= 2 ) {
+                var parentID = this.nodePath[ this.nodePath.length - 2 ].getInstanceID();
+                var childID = node.getInstanceID();
+                var key = parentID + '+' + childID;
+                if ( !this._uniqueEdges.has( key ) ) {
+                    this._linkList.push( {
+                        parentNode: parentID,
+                        childrenNode: childID
+                    } );
+                    this._uniqueEdges.add( key );
                 }
             }
 
@@ -122,10 +122,8 @@ define( [
         },
 
         reset: function () {
-            this._nodeListSize = 0;
             this._fullNodeList = [];
             this._nodeList = [];
-            this._linkListSize = 0;
             this._linkList = [];
         },
 
@@ -234,7 +232,8 @@ define( [
 
         // Subfunction of createGraph, will iterate to create all the node and link in dagre
         generateNodeAndLink: function ( g ) {
-            for ( var i = 0; i < this._nodeListSize; i++ ) {
+            var nodeLength = this._nodeList.length;
+            for ( var i = 0; i < nodeLength; i++ ) {
                 var element = this._nodeList[ i ];
 
                 g.addNode( element.instanceID, {
@@ -256,7 +255,8 @@ define( [
                 }
             }
 
-            for ( i = 0; i < this._linkListSize; i++ ) {
+            var linkLength = this._linkList.length;
+            for ( i = 0; i < linkLength; i++ ) {
                 g.addEdge( null, this._linkList[ i ].parentNode, this._linkList[ i ].childrenNode );
             }
 
@@ -301,20 +301,12 @@ define( [
             return stateset;
         },
 
-        getNodeListSize: function () {
-            return this._nodeListSize;
-        },
-
         getFullNodeList: function () {
             return this._fullNodeList;
         },
 
         getNodeList: function () {
             return this._nodeList;
-        },
-
-        getLinkListSize: function () {
-            return this._linkListSize;
         },
 
         getLinkList: function () {
