@@ -106,7 +106,7 @@
             shaderGenerator.getAcceptAttributeTypes().add( 'Ramp' ).add( 'Negatif' );
 
             // get or create instance of ShaderGeneratorProxy
-            var shaderGeneratorProxy = new osgShader.ShaderGeneratorProxy();
+            var shaderGeneratorProxy = this._viewer.getState().getShaderGeneratorProxy();
             shaderGeneratorProxy.addShaderGenerator( 'custom', shaderGenerator );
 
             // now we can use 'custom' in StateSet to access our shader generator
