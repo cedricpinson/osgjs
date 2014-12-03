@@ -7,37 +7,50 @@
     var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
     var Example = function () {
+        this._viewer1 = undefined;
+        this._viewer2 = undefined;
     };
 
     Example.prototype = {
 
         createScene1: function () {
-            var size = 10;
-            return osg.createTexturedQuadGeometry( -size / 2, 0, -size / 2,
-                                                              size, 0, 0,
-                                                              0, 0, size );
+            var node = new osg.MatrixTransform();
+            var request = osgDB.readNodeURL( '../ssao/raceship.osgjs' );
+            request.then( function ( model ) {
+
+                    node.addChild( model );
+                    this._viewer1.getManipulator().computeHomePosition();
+                }.bind( this ) )
+            return node;
         },
         createScene2: function () {
-            var size = 10;
-            return osg.createTexturedQuadGeometry( -size / 2, 0, -size / 2,
-                                                              size, 0, 0,
-                                                              0, 0, size );
+            var node = new osg.MatrixTransform();
+            osg.Matrix.makeRotate( Math.PI, 0, 0, 1, node.getMatrix() );
+
+            var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
+            request.then( function ( model ) {
+                    model.getOrCreateStateSet().setTextureAttributeAndMode( 0, osg.Texture.createFromURL( '../media/textures/seamless/grunge1.jpg' ) );
+                    node.addChild( model );
+                    this._viewer2.getManipulator().computeHomePosition();
+                }.bind( this ) )
+            return node;
+
         },
         run: function ( canvas1, canvas2 ) {
-            var viewer1 = new osgViewer.Viewer( canvas1 );
-            var viewer2 = new osgViewer.Viewer( canvas2 );
-            viewer1.init();
-            viewer2.init();
+            this._viewer1 = new osgViewer.Viewer( canvas1 );
+            this._viewer2 = new osgViewer.Viewer( canvas2 );
+            this._viewer1.init();
+            this._viewer2.init();
             var scene1 = this.createScene1();
             var scene2 = this.createScene2();
-            viewer1.setSceneData( scene1 );
-            viewer1.setupManipulator();
-            viewer1.getManipulator().computeHomePosition();
-            viewer1.run();
-            viewer2.setSceneData( scene2 );
-            viewer2.setupManipulator();
-            viewer2.getManipulator().computeHomePosition();
-            viewer2.run();
+            this._viewer1.setSceneData( scene1 );
+            this._viewer1.setupManipulator();
+            this._viewer1.getManipulator().computeHomePosition();
+            this._viewer1.run();
+            this._viewer2.setSceneData( scene2 );
+            this._viewer2.setupManipulator();
+            this._viewer2.getManipulator().computeHomePosition();
+            this._viewer2.run();
         }
     };
 
