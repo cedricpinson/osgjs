@@ -27,6 +27,16 @@ define( [
             mockup.near( q2, [ 0, 0, 0.382683, 0.92388 ] );
         } );
 
+        test( 'Quat.makeRotateFromTo', function () {
+            var q1 = Quat.makeRotateFromTo( [ 1, 0, 0 ], [ 0, 1, 0 ], [] );
+            mockup.near( q1, [ 0, 0, 0.707107, 0.707107 ], 1e-5 );
+
+            // it test both makeRotate and makeRotateFromTo
+            var qyrot = Quat.makeRotate( Math.PI / 2, 0, 1, 0, [] );
+            var q2 = Quat.makeRotateFromTo( [ 0, 0, 1 ], [ 1, 0, 0 ], [] );
+            mockup.near( q2, qyrot, 1e-5 );
+        } );
+
         // test('Quat.rotateVec3', function() {
         //     var q0 = Quat.makeRotate(Math.PI, 1, 0, 0);
         //     var result = Quat.rotateVec3(q0, [10, 0,0], []);
