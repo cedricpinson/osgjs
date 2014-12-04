@@ -104,6 +104,8 @@ define( [
         this._translateNode = new MatrixTransform();
         this._planeNode = new MatrixTransform();
 
+        this._rotateInLocal = true; // local vs static space 
+
         //for realtime picking
         this._hoverNode = null; // the hovered x/y/z MT node
         this._keepHoverColor = null;
@@ -117,6 +119,7 @@ define( [
 
         this._editLocal = Matrix.create();
         this._editWorldTrans = Matrix.create();
+        this._editWorldScaleRot = Matrix.create();
         this._editInvWorldScaleRot = Matrix.create();
 
         this._debugNode = new Node();
@@ -435,10 +438,6 @@ define( [
                     return;
                 var worldMat = this._attachedNode.getWorldMatrices()[ 0 ];
 
-                // world scale
-                Matrix.getScale( worldMat, tmpVec );
-                Matrix.makeScale( tmpVec[ 0 ], tmpVec[ 1 ], tmpVec[ 2 ], invScale );
-                Matrix.inverse( invScale, invScale );
                 // world trans
                 Matrix.getTrans( worldMat, trVec );
                 Matrix.makeTranslate( trVec[ 0 ], trVec[ 1 ], trVec[ 2 ], trWorld );
@@ -452,16 +451,24 @@ define( [
                 // gizmo node
                 Matrix.mult( trWorld, scGiz, this.getMatrix() );
 
-                // rotate node
-                Matrix.mult( worldMat, invScale, temp );
-                temp[ 12 ] = temp[ 13 ] = temp[ 14 ] = 0.0;
-                Matrix.copy( temp, this._rotateNode.getMatrix() );
-
                 Vec3.sub( eye, trVec, eye );
                 Vec3.normalize( eye, eye );
 
-                Matrix.inverse( temp, temp );
-                Matrix.transformVec3( temp, eye, eye );
+                // rotate node
+                if ( this._rotateInLocal ) {
+                    // world scale
+                    Matrix.getScale( worldMat, tmpVec );
+                    Matrix.makeScale( tmpVec[ 0 ], tmpVec[ 1 ], tmpVec[ 2 ], invScale );
+                    Matrix.inverse( invScale, invScale );
+
+                    Matrix.mult( worldMat, invScale, temp );
+                    temp[ 12 ] = temp[ 13 ] = temp[ 14 ] = 0.0;
+                    Matrix.copy( temp, this._rotateNode.getMatrix() );
+                    Matrix.inverse( temp, temp );
+                    Matrix.transformVec3( temp, eye, eye );
+                } else {
+                    Matrix.makeIdentity( this._rotateNode.getMatrix() );
+                }
                 this.updateArcRotation( eye );
 
                 this._rotateNode.dirtyBound();
@@ -538,7 +545,7 @@ define( [
                 return;
             this._viewer._eventProxy.StandardMouseKeyboard._enable = false;
 
-            Matrix.copy( this._attachedNode.getMatrix(), this._editLocal );
+            this.saveEditMatrices();
             var nm = this._hoverNode.getParents()[ 0 ].getNodeMask();
             this._isEditing = true;
 
@@ -556,15 +563,16 @@ define( [
                 this.startPlaneEdit( e );
             }
         },
-        saveTranslationMatrices: function () {
+        saveEditMatrices: function () {
+            Matrix.copy( this._attachedNode.getMatrix(), this._editLocal );
             // save the world translation
             var wm = this._attachedNode.getWorldMatrices()[ 0 ];
             Matrix.makeTranslate( wm[ 12 ], wm[ 13 ], wm[ 14 ], this._editWorldTrans );
             // save the inv of world rotation + scale
-            Matrix.copy( wm, this._editInvWorldScaleRot );
+            Matrix.copy( wm, this._editWorldScaleRot );
             // removes translation
-            this._editInvWorldScaleRot[ 12 ] = this._editInvWorldScaleRot[ 13 ] = this._editInvWorldScaleRot[ 14 ] = 0.0;
-            Matrix.inverse( this._editInvWorldScaleRot, this._editInvWorldScaleRot );
+            this._editWorldScaleRot[ 12 ] = this._editWorldScaleRot[ 13 ] = this._editWorldScaleRot[ 14 ] = 0.0;
+            Matrix.inverse( this._editWorldScaleRot, this._editInvWorldScaleRot );
         },
         startRotateEdit: function ( e ) {
             var gizmoMat = this._rotateNode.getWorldMatrices()[ 0 ];
@@ -600,8 +608,6 @@ define( [
             this._editLineOrigin[ 1 ] = y;
         },
         startTranslateEdit: function ( e ) {
-            this.saveTranslationMatrices();
-
             var origin = this._editLineOrigin;
             var dir = this._editLineDirection;
 
@@ -627,7 +633,6 @@ define( [
             Vec2.sub( offset, origin, offset );
         },
         startPlaneEdit: function ( e ) {
-            this.saveTranslationMatrices();
             var origin = this._editLineOrigin; // just used to determine the 2d offset
 
             // 3d origin (center of gizmo)
@@ -709,6 +714,11 @@ define( [
                     Matrix.makeRotate( angle, 0.0, 1.0, 0.0, mrot );
                 else if ( this._hoverNode._nbAxis === 2 )
                     Matrix.makeRotate( angle, 0.0, 0.0, 1.0, mrot );
+
+                if ( !this._rotateInLocal ) {
+                    Matrix.postMult( this._editInvWorldScaleRot, mrot );
+                    Matrix.preMult( mrot, this._editWorldScaleRot );
+                }
 
                 Matrix.mult( this._editLocal, mrot, this._attachedNode.getMatrix() );
 
