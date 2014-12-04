@@ -24,6 +24,8 @@ define( [
         }
     };
 
+    var blendAttribute = new BlendFunc( BlendFunc.SRC_ALPHA, BlendFunc.ONE_MINUS_SRC_ALPHA );
+
     var LineCustomIntersector = function ( testPlane ) {
         this._testPlane = testPlane; // intersection plane or line
         this._inter = Vec3.create(); // translate distance
@@ -105,6 +107,7 @@ define( [
         this._planeNode = new MatrixTransform();
 
         this._rotateInLocal = true; // local vs static space 
+        this._showAngle = new MatrixTransform();
 
         //for realtime picking
         this._hoverNode = null; // the hovered x/y/z MT node
@@ -284,12 +287,20 @@ define( [
             mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 0.0, 1.0, 0.0, 1.0 ], 'uColor' ) );
             mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 0.0, 0.0, 1.0, 1.0 ], 'uColor' ) );
 
+            var showAngle = this._showAngle;
+            showAngle.getOrCreateStateSet().setAttributeAndModes( blendAttribute );
+            showAngle.setNodeMask( 0x0 );
+            showAngle.getOrCreateStateSet().addUniform( Uniform.createFloat3( [ 1.0, 0.0, 0.0 ], 'uBase' ) );
+            showAngle.getOrCreateStateSet().addUniform( Uniform.createFloat( 0.0, 'uAngle' ) );
+            showAngle.addChild( GizmoGeometry.createQuadCircleGeometry() );
+
             var rotate = this._rotateNode;
             rotate.setNodeMask( NodeGizmo.PICK_ARC );
             rotate.addChild( mtXYZ );
             rotate.addChild( mtX );
             rotate.addChild( mtY );
             rotate.addChild( mtZ );
+            rotate.addChild( showAngle );
             return rotate;
         },
         initNodeTranslate: function () {
@@ -386,7 +397,7 @@ define( [
 
             var plane = this._planeNode;
             plane.setNodeMask( NodeGizmo.PICK_PLANE );
-            plane.getOrCreateStateSet().setAttributeAndModes( new BlendFunc( BlendFunc.SRC_ALPHA, BlendFunc.ONE_MINUS_SRC_ALPHA ) );
+            plane.getOrCreateStateSet().setAttributeAndModes( blendAttribute );
             plane.addChild( mtX );
             plane.addChild( mtY );
             plane.addChild( mtZ );
@@ -469,11 +480,15 @@ define( [
                 } else {
                     Matrix.makeIdentity( this._rotateNode.getMatrix() );
                 }
+
                 this.updateArcRotation( eye );
 
                 this._rotateNode.dirtyBound();
                 this._translateNode.dirtyBound();
                 this._planeNode.dirtyBound();
+
+                if ( this._isEditing )
+                    Matrix.copy( this._hoverNode.getMatrix(), this._showAngle.getMatrix() );
             };
         } )(),
         computeNearestIntersection: ( function () {
@@ -602,6 +617,13 @@ define( [
             Vec2.sub( projArc, projCenter, dir );
             Vec2.normalize( dir, dir );
 
+            // show angle
+            this._showAngle.setNodeMask( NodeGizmo.NO_PICK );
+            hit.point[ 2 ] = 0.0;
+            var stateAngle = this._showAngle.getStateSet();
+            stateAngle.getUniform( 'uAngle' ).set( 0.0 );
+            stateAngle.getUniform( 'uBase' ).set( Vec3.normalize( hit.point, hit.point ) );
+
             var x = e.offsetX === undefined ? e.layerX : e.offsetX;
             var y = e.offsetY === undefined ? e.layerY : e.offsetY;
             this._editLineOrigin[ 0 ] = x;
@@ -665,6 +687,7 @@ define( [
             if ( this._debugNode )
                 this._debugNode.setNodeMask( 0x0 );
 
+            this._showAngle.setNodeMask( 0x0 );
             this._isEditing = false;
             if ( !this._hoverNode )
                 return;
@@ -707,13 +730,17 @@ define( [
                 if ( this._debugNode )
                     this.drawLineCanvasDebug( origin[ 0 ], origin[ 1 ], origin[ 0 ] + dir[ 0 ] * dist, origin[ 1 ] + dir[ 1 ] * dist );
 
-                var angle = 4 * dist / Math.min( this._canvas.clientWidth, this._canvas.clientHeight );
-                if ( this._hoverNode._nbAxis === 0 )
+                var angle = 7 * dist / Math.min( this._canvas.clientWidth, this._canvas.clientHeight );
+                angle %= ( Math.PI * 2 );
+                var nbAxis = this._hoverNode._nbAxis;
+                if ( nbAxis === 0 )
                     Matrix.makeRotate( angle, 1.0, 0.0, 0.0, mrot );
-                else if ( this._hoverNode._nbAxis === 1 )
+                else if ( nbAxis === 1 )
                     Matrix.makeRotate( angle, 0.0, 1.0, 0.0, mrot );
-                else if ( this._hoverNode._nbAxis === 2 )
+                else if ( nbAxis === 2 )
                     Matrix.makeRotate( angle, 0.0, 0.0, 1.0, mrot );
+
+                this._showAngle.getOrCreateStateSet().getUniform( 'uAngle' ).set( nbAxis === 0 ? -angle : angle );
 
                 if ( !this._rotateInLocal ) {
                     Matrix.postMult( this._editInvWorldScaleRot, mrot );
