@@ -73,8 +73,8 @@ define( [
                     devicePixelRatio = window.devicePixelRatio || 1;
                 }
 
-                var widthPixel = clientWidth * devicePixelRatio;
-                var heightPixel = clientHeight * devicePixelRatio;
+                var widthPixel = Math.max( clientWidth * devicePixelRatio, 1 );
+                var heightPixel = Math.max( clientHeight * devicePixelRatio, 1 );
 
                 if ( this._canvasWidth !== widthPixel ) {
                     canvas.width = widthPixel;
