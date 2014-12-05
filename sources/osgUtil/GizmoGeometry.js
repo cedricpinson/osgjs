@@ -69,6 +69,55 @@ define( [
         return program2D;
     };
 
+    var programQC;
+    var getOrCreateShaderQuadCircle = function () {
+        if ( programQC )
+            return programQC;
+        var vertexshader = [
+            glPrecision,
+            'attribute vec3 Vertex;',
+            'uniform mat4 ModelViewMatrix;',
+            'uniform mat4 ProjectionMatrix;',
+            'varying vec3 vVertex;',
+            '',
+            'void main(void) {',
+            '  vVertex = Vertex;',
+            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
+            '}'
+        ].join( '\n' );
+
+        var fragmentshader = [
+            glPrecision,
+            'uniform float uAngle;',
+            'uniform vec3 uBase;',
+            'varying vec3 vVertex;',
+            'const float PI = 3.14159265358979323846264;',
+            'const float PI2 = PI * 2.0;',
+            '',
+            'void main(void) {',
+            '  if(length(vVertex) > 0.5)',
+            '    discard;',
+            '  vec3 vn = normalize(vVertex);',
+            '  float angle = atan(uBase.y * vn.x - uBase.x * vn.y, dot(uBase, vn));',
+            '  if(angle > 0.0) {',
+            '    if(uAngle >= 0.0 && angle > uAngle) discard;',
+            '    if(uAngle < -PI && angle < uAngle + PI2) discard;',
+            '    if(uAngle < 0.0 && uAngle > -PI) discard;',
+            '  }',
+            '  if(angle < 0.0) {',
+            '    if(uAngle <= 0.0 && angle < uAngle) discard;',
+            '    if(uAngle > PI && angle > uAngle - PI2) discard;',
+            '    if(uAngle > 0.0 && uAngle < PI) discard;',
+            '  }',
+            '  gl_FragColor = vec4(1.0, 1.0, 0.0, 0.5);',
+            '}'
+        ].join( '\n' );
+
+        programQC = new Program( new Shader( Shader.VERTEX_SHADER, vertexshader ),
+            new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
+        return programQC;
+    };
+
     var createDebugLineGeometry = function () {
         var g = new Geometry();
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, new Float32Array( 4 ), 2 );
@@ -253,12 +302,19 @@ define( [
         return g;
     };
 
+    var createQuadCircleGeometry = function () {
+        var g = createPlaneGeometry();
+        g.getOrCreateStateSet().setAttributeAndMode( getOrCreateShaderQuadCircle() );
+        return g;
+    };
+
     var GizmoGeometry = {};
     GizmoGeometry.createCircleGeometry = createCircleGeometry;
     GizmoGeometry.createCylinderGeometry = createCylinderGeometry;
     GizmoGeometry.createTorusGeometry = createTorusGeometry;
     GizmoGeometry.createDebugLineGeometry = createDebugLineGeometry;
     GizmoGeometry.createPlaneGeometry = createPlaneGeometry;
+    GizmoGeometry.createQuadCircleGeometry = createQuadCircleGeometry;
 
     return GizmoGeometry;
 } );
