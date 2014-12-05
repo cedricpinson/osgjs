@@ -39,23 +39,22 @@ define( [
         this.el = document.createElement( 'div' );
         this.el.className = 'osgDebugSimpleTooltip';
         document.body.appendChild( this.el );
-
-        var showTooltip = function ( e ) {
+        var nodes = document.querySelectorAll( this.options.selector );
+        for ( var i = 0; i < nodes.length; i++ ) {
+            nodes[ i ].addEventListener( 'mouseover', this.showTooltip.bind( this ), false );
+            nodes[ i ].addEventListener( 'mouseout', this.hideTooltip.bind( this ), false );
+        }
+    };
+    SimpleTooltips.prototype = {
+        showTooltip: function ( e ) {
             var target = e.currentTarget;
             this.el.innerHTML = target.getAttribute( 'title' );
             this.el.style.display = 'block';
             this.el.style.left = ( $( target ).position().left + $( target ).get( 0 ).getBoundingClientRect().width ) + 'px';
             this.el.style.top = $( target ).position().top + 'px';
-        };
-
-        var hideTooltip = function ( /* e */) {
+        },
+        hideTooltip: function ( /* e */) {
             this.el.style.display = 'none';
-        };
-
-        var nodes = document.querySelectorAll( this.options.selector );
-        for ( var i = 0; i < nodes.length; i++ ) {
-            nodes[ i ].addEventListener( 'mouseover', showTooltip.bind( this ), false );
-            nodes[ i ].addEventListener( 'mouseout', hideTooltip.bind( this ), false );
         }
     };
 
@@ -68,7 +67,10 @@ define( [
         this._linkList = [];
         this._focusedElement = 'scene';
 
+        this._idToDomElement = new window.Map();
         this._uniqueEdges = new window.Set();
+
+        this._cbSelect = undefined; // callback when selecting a node
 
         this._$svg = $( '<svg width=100% height=100%></svg>' );
         $( 'body' ).append( this._$svg );
@@ -77,7 +79,9 @@ define( [
     };
 
     DisplayNodeGraphVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
-
+        setCallbackSelect: function ( cb ) {
+            this._cbSelect = cb;
+        },
         apply: function ( node ) {
 
             if ( this._fullNodeList[ node.getInstanceID() ] !== node ) {
@@ -89,7 +93,8 @@ define( [
 
                 var stateset = '';
                 if ( node.getStateSet() ) {
-                    stateset = this.createStateset( node, stateset );
+                    stateset = this.createStateset( node );
+                    this._fullNodeList[ stateset.name ] = node.getStateSet();
                 }
 
                 this._fullNodeList[ node.getInstanceID() ] = node;
@@ -171,13 +176,13 @@ define( [
         createGraphApply: function () {
             var g = new window.dagreD3.Digraph();
 
-            g = this.generateNodeAndLink( g );
+            g = this.g = this.generateNodeAndLink( g );
 
             // Add the style of the graph
             this.injectStyleElement();
 
             // Create the renderer
-            var renderer = new window.dagreD3.Renderer();
+            var renderer = this.renderer = new window.dagreD3.Renderer();
 
             // Set up an SVG group so that we can translate the final graph.
             var svg = window.d3.select( this._$svg.get( 0 ) );
@@ -198,6 +203,7 @@ define( [
                 return '<p class="osgDebugName">' + name + '</p><pre class="osgDebugDescription">' + description + '</pre>';
             };
 
+            var idToDom = this._idToDomElement;
             // Override drawNodes to set up the hover.
             var oldDrawNodes = renderer.drawNodes();
             renderer.drawNodes( function ( g, svg ) {
@@ -205,6 +211,7 @@ define( [
 
                 // Set the title on each of the nodes and use tipsy to display the tooltip on hover
                 svgNodes.attr( 'title', function ( d ) {
+                    idToDom.set( d, this );
                     return styleTooltip( d, g.node( d ).description );
                 } );
 
@@ -214,29 +221,47 @@ define( [
             // Run the renderer. This is what draws the final graph.
             renderer.run( g, svgGroup );
 
-            new SimpleTooltips( {
+            this.tooltip = new SimpleTooltips( {
                 selector: '.node'
             } );
 
-            var self = this;
-
-            // Do a console log of the node (or stateset) and save it in Window.*
-            $( '.node' ).click( function () {
-                var identifier = $( this ).attr( 'title' ).split( '<' )[ 1 ].split( '>' )[ 1 ];
-                if ( identifier.search( 'StateSet' ) === -1 ) {
-                    window.activeNode = self._fullNodeList[ identifier ];
-                    console.log( 'window.activeNode is set.' );
-                    console.log( self._fullNodeList[ identifier ] );
-                } else {
-                    var stateset = self._fullNodeList[ identifier.split( ' ' )[ 2 ] ].getStateSet();
-                    window.activeStateset = stateset;
-                    console.log( 'window.activeStateset is set.' );
-                    console.log( stateset );
-                }
-
-            } );
+            // Do a console log of the node (or stateset) and save it in window.*
+            $( '.node' ).click( this.onNodeSelect.bind( this ) );
         },
+        selectNode: function ( node ) {
+            var id = node.getInstanceID();
+            var dom = this._idToDomElement.get( id );
+            if ( dom )
+                $( dom ).click();
+        },
+        onNodeSelect: function ( e ) {
+            var target = e.currentTarget;
+            var identifier = $( target.getAttribute( 'title' ) )[ 0 ].innerHTML;
+            var fnl = this._fullNodeList;
 
+            if ( this.lastStateSet )
+                this.lastStateSet.childNodes[ 0 ].style.fill = '#09f';
+            if ( this.lastNode )
+                this.lastNode.childNodes[ 0 ].style.fill = '#fff';
+            this.lastStateSet = this.lastNode = null;
+            target.childNodes[ 0 ].style.fill = '#f00';
+
+            var elt = fnl[ identifier ];
+
+            if ( elt.className() !== 'StateSet' ) {
+                this.lastNode = target;
+                window.activeNode = elt;
+                console.log( 'window.activeNode is set.' );
+                console.log( window.activeNode );
+            } else {
+                this.lastStateSet = target;
+                window.activeStateset = elt;
+                console.log( 'window.activeStateset is set.' );
+                console.log( window.activeStateset );
+            }
+            if ( this._cbSelect )
+                this._cbSelect( elt );
+        },
         // Subfunction of createGraph, will iterate to create all the node and link in dagre
         generateNodeAndLink: function ( g ) {
             var nodeLength = this._nodeList.length;
@@ -245,16 +270,18 @@ define( [
 
                 g.addNode( element.instanceID, {
                     label: element.className + ( element.name ? '\n' + element.name : '' ),
-                    description: ( element.stateset ? 'StateSetID : ' + element.stateset.statesetID : '' ) + ( element.stateset && element.matrix !== '' ? '<br /><br />' : '' ) + element.matrix
+                    description: ( element.matrix !== '' ? '<br /><br />' : '' ) + element.matrix
                 } );
 
                 if ( element.stateset ) {
 
-                    g.addNode( element.stateset.name, {
-                        label: 'StateSet',
-                        description: 'numTexture : ' + element.stateset.numTexture,
-                        style: 'fill: #0099FF;stroke-width: 0px;'
-                    } );
+                    if ( !g.hasNode( element.stateset.name ) ) {
+                        g.addNode( element.stateset.name, {
+                            label: 'StateSet',
+                            description: 'numTexture : ' + element.stateset.numTexture,
+                            style: 'fill: #0099FF;stroke-width: 0px;'
+                        } );
+                    }
 
                     g.addEdge( null, element.instanceID, element.stateset.name, {
                         style: 'stroke: #0099FF;'
@@ -297,15 +324,13 @@ define( [
         },
 
         // Get the stateset and create the stateset display structure
-        createStateset: function ( node, stateset ) {
-            stateset = {
-                name: 'StateSet - ' + node.getInstanceID(),
-                statesetID: node.getStateSet().getInstanceID(),
+        createStateset: function ( node ) {
+            return {
+                name: node.getStateSet().getInstanceID(),
                 parentID: node.getInstanceID(),
                 stateset: node.getStateSet(),
                 numTexture: node.getStateSet().getNumTextureAttributeLists()
             };
-            return stateset;
         },
 
         getFullNodeList: function () {
