@@ -44,6 +44,9 @@ varying float FragPrevDepth;
 uniform mat4 PrevProjectionMatrix;
 
 uniform sampler2D Texture0;
+uniform sampler2D Texture1;
+uniform sampler2D Texture2;
+
 uniform vec2 RenderSize;
 
 /** Morgan McGuire Deep G-buffer
@@ -75,7 +78,17 @@ void main(void) {
   //non linear perspective divide
   vec2 prevScreenPos =   (FragPreScreenPos.xy / FragPreScreenPos.w) * 0.5 + vec2(0.5);
 
+  // supposed to be uniform moving around the clock
+  float sampleX = 1.0;
+  float sampleY = 1.0;
+
+   vec2 prevScreenPosJitter = prevScreenPos;
+   prevScreenPosJitter.x += sampleX / RenderSize.x;
+   prevScreenPosJitter.y += sampleY / RenderSize.y;
+
   float prevFragDepth = unpack4x8ToFloat(texture2D(Texture0, prevScreenPos.xy));
+  //vec4 prevTexPixel = texture2D(Texture0, prevScreenPos.xy);
+  //float prevFragDepth = prevTexPixel.a;
 
   // compare current reprojected vertex with old matrix
   // with value in previous depth buffer
@@ -93,7 +106,25 @@ void main(void) {
   //float diffDepth = abs(prevFragPos.z - FragPrevDepth);
   // 0.01 arbitrary, should come from "[AS06] Minimum triangle separation for correct z-buffer occlusion"
   bool previousFramePixelOk = diffDepth < 0.1;
-  gl_FragColor = vec4((previousFramePixelOk ? vec3(0.0,1.0,0.0) : vec3(1.0,0.0,0.0)), 1.0);
+
+
+  if (previousFramePixelOk){
+    //temporalAA
+    float prevFragDepthJit = unpack4x8ToFloat(texture2D(Texture0, prevScreenPos.xy));
+    //vec3 prevFragRgb = texture2D(Texture0, prevScreenPosJitter.xy).rgb;
+    //gl_FragColor.rgb = (texture2D(Texture1, FragTexCoord0.xy).rgb + prevFragRgb.rgb) * 0.5;
+    gl_FragColor.rgb = vec3(((FragDepth + prevFragDepthJit) * 0.5) * 0.15 );
+    //gl_FragColor.rgb = vec3(0.0,1.0,0.0);
+  }
+  else{
+    // no TemporalAA
+    gl_FragColor.rgb = vec3(FragDepth * 0.15);
+    //gl_FragColor = texture2D(Texture1, FragTexCoord0.xy);
+    //gl_FragColor.rgb = vec3(1.0,0.0,0.0);
+  }
+  gl_FragColor.a = 1.0;
+
+  //gl_FragColor = vec4((previousFramePixelOk ? vec3(0.0,1.0,0.0) : vec3(1.0,0.0,0.0)), 1.0);
   //gl_FragColor = vec4( vec3(diffDepth), 1.0);
 
    /*

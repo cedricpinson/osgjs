@@ -116,7 +116,7 @@
         return rootModel;
     }
 
-    function commonScene( rttSize, order, rootModel ) {
+    function commonScene( rttSize, order, rootModel, doFloat ) {
 
         var near = 0.1;
         var far = 100;
@@ -143,6 +143,10 @@
         sceneTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
         sceneTexture.setMinFilter( 'LINEAR' );
         sceneTexture.setMagFilter( 'LINEAR' );
+        if ( doFloat ) {
+            sceneTexture.setType( osg.Texture.FLOAT );
+            sceneTexture.setInternalFormat( osg.Texture.RGBA );
+        }
         camera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, sceneTexture, 0 );
         camera.attachRenderBuffer( osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16 );
         // add the scene to the camera
@@ -171,11 +175,9 @@
             'depthVert',
             'depthFrag',
             'reconstVert',
-            'reconstFrag'
-            //'temporalDiffVert',
-            //'temporalDiffFrag',
-            //'temporalReprojectVert',
-            //'temporalReprojectFrag'
+            'reconstFrag',
+            'temporalAAVert',
+            'temporalAAFrag'
         ];
 
         var promises = [];
@@ -231,6 +233,7 @@
     // show the shadowmap as ui quad on left bottom screen
     // in fact show all texture inside this._rtt
     function showFrameBuffers( optionalArgs ) {
+
 
         var _ComposerdebugNode = new osg.Node();
         _ComposerdebugNode.setName( 'debugComposerNode' );
@@ -314,15 +317,30 @@
 
     function createScene( width, height, gui ) {
 
+        var sampleXTime;
+        var sampleYTime;
+        var sampleX = osg.Uniform.createFloat1( 0.0, 'SampleX' );
+        var sampleY = osg.Uniform.createFloat1( 0.0, 'SampleY' );
+
         var rttSize = [ width, height ];
         // cannot add same model multiple in same grap
         // it would break previousframe matrix saves
 
         var model = addModel(); // "current frame model" added twise if no model2
+
+        var groundTex = osg.Texture.createFromURL( '../media/textures/seamless/bricks1.jpg' );
+        groundTex.setWrapT( 'MIRRORED_REPEAT' );
+        groundTex.setWrapS( 'MIRRORED_REPEAT' );
+
+        model.getOrCreateStateSet().setTextureAttributeAndMode( 2, groundTex, osg.StateAttribute.OVERRIDE );
+        model.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 2, 'Texture2' ) );
+
+
+
         //   var model2 = addModel(  ); // "previous frame model", making it different
         //////////////////////////////
         // store depth for next frame
-        var result2 = commonScene( rttSize, osg.Camera.POST_RENDER, model );
+        var result2 = commonScene( rttSize, osg.Camera.POST_RENDER, model, false );
         var commonNode2 = result2[ 0 ];
         var sceneTexture2 = result2[ 1 ];
         var cameraRTT2 = result2[ 2 ];
@@ -369,6 +387,7 @@
         quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
 
         var postScenes = [
+            getTemporalAA(),
             getTemporalReproject(),
             getFxaa()
         ];
@@ -386,7 +405,20 @@
             'reload': function () {
                 readShaders().then( function () {
                     if ( console.clear ) console.clear();
+                    var st = cameraRTT2.getOrCreateStateSet();
+                    var prg = getShaderProgram( 'depthVert', 'depthFrag' );
+                    st.setAttributeAndMode( prg, osg.StateAttribute.ON || osg.StateAttribute.OVERRIDE );
+
+
+                    var groundTex = osg.Texture.createFromURL( '../media/textures/seamless/bricks1.jpg' );
+                    groundTex.setWrapT( 'MIRRORED_REPEAT' );
+                    groundTex.setWrapS( 'MIRRORED_REPEAT' );
+                    st.setTextureAttributeAndMode( 2, groundTex, osg.StateAttribute.OVERRIDE );
+
+                    st.addUniform( osg.Uniform.createInt1( 2, 'Texture2' ) );
+
                     setComposer( globalGui.filter, parseFloat( globalGui.factor ) );
+
                 } );
             }
         };
@@ -499,7 +531,6 @@
 
         scene.addChild( _rttDebugNode );
 
-
         root.addChild( scene );
         root.addChild( commonNode );
         root.addChild( commonNode2 );
@@ -510,7 +541,7 @@
                 if ( doAnimate ) {
                     currentTime = nv.getFrameStamp().getSimulationTime();
                     var x = Math.cos( currentTime );
-                    osg.Matrix.makeRotate( x, 0, 1, 1, model.getMatrix() );
+                    osg.Matrix.makeRotate( x, 0, 0, 1, model.getMatrix() );
                 }
 
                 // making sure here.

@@ -4,6 +4,11 @@ precision highp float;
 
 uniform mat4 ProjectionMatrix;
 
+uniform sampler2D Texture0;
+uniform sampler2D Texture1;
+uniform sampler2D Texture2;
+varying vec2 FragTexCoord0;
+
 varying float FragDepth;
 
 vec4 packFloatTo4x8(in float v) {
@@ -36,4 +41,9 @@ vec2 unrpack4x8To2Float(in vec4 val) {
 
 void main(void) {
   gl_FragColor = packFloatTo4x8(FragDepth);
+
+  /*
+  gl_FragColor.rgb = texture2D(Texture2, FragTexCoord0.xy).rgb;
+  gl_FragColor.a = 1.0;//FragDepth;
+  */
 }

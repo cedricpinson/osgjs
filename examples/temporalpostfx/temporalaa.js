@@ -6,11 +6,11 @@ var osg = window.osg;
 var osgUtil = window.osgUtil;
 var osgShader = window.osgShader;
 
-function getTemporalReproject() {
+function getTemporalAA() {
 
     var effect = {
 
-        name: 'Temporal Reproject',
+        name: 'Temporal Anti-Aliasing',
         needCommonCube: true,
 
         getShaderProgram: function ( vs, ps, defines ) {
@@ -28,7 +28,7 @@ function getTemporalReproject() {
         },
 
         getSceneProgram: function () {
-            return this.getShaderProgram( 'reconstVert', 'reconstFrag' );
+            return this.getShaderProgram( 'temporalAAVert', 'temporalAAFrag' );
         },
 
         buildComposer: function ( sceneTexture, finalTexture ) {
