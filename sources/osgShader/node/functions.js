@@ -11,7 +11,7 @@ define( [
     // base to avoid redundant global declarations
     // it's to keep node more readable
     var NodeFunctions = function () {
-        Node.apply( this, arguments );
+        Node.apply( this );
     };
 
     NodeFunctions.prototype = MACROUTILS.objectInherit( Node.prototype, {
@@ -52,75 +52,67 @@ define( [
 
 
     var sRGBToLinear = function () {
-        NodeFunctions.apply( this, arguments );
+        NodeFunctions.apply( this );
     };
 
     sRGBToLinear.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
 
         type: 'sRGBToLinear',
 
-        validInputs: [
-            'gamma',
-            'color'
-        ],
-
+        validInputs: [ 'color' /*, 'gamma'*/ ],
         validOuputs: [ 'color' ],
 
         computeFragment: function () {
-            return utils.callFunction( 'sRGBToLinear',
-                this._outputs.color.getVariable() + '.rgb', [ this._inputs.color.getVariable() + '.rgb',
-                    this._inputs.gamma
-                ] );
+            return this.computeConversion( 'sRGBToLinear' );
+        },
+        computeConversion: function ( funcName ) {
+            var gamma = this._inputs.gamma ? this._inputs.gamma : 'DefaultGamma';
+            var out = this._outputs.color;
+            var color = this._inputs.color;
+            var rgb = out.getType() !== color.getType() ? '.rgb' : '';
+
+            return utils.callFunction( funcName, out.getVariable() + rgb, [ color.getVariable() + rgb, gamma ] );
         }
 
     } );
-
-
 
     var LinearTosRGB = function () {
-        sRGBToLinear.apply( this, arguments );
+        sRGBToLinear.apply( this );
     };
 
-    LinearTosRGB.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
-
+    LinearTosRGB.prototype = MACROUTILS.objectInherit( sRGBToLinear.prototype, {
         type: 'LinearTosRGB',
-
         computeFragment: function () {
-            return utils.callFunction( 'linearTosRGB',
-                this._outputs.color.getVariable() + '.rgb', [ this._inputs.color.getVariable() + '.rgb',
-                    this._inputs.gamma
-                ] );
+            return this.computeConversion( 'linearTosRGB' );
         }
-
     } );
 
-    LinearTosRGB.defaultGamma = 2.2;
-
-
-
     var FrontNormal = function () {
-        NodeFunctions.apply( this, arguments );
+        NodeFunctions.apply( this );
     };
 
     FrontNormal.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
 
         type: 'FrontNormal',
+        validInputs: [ 'normal' ],
+        validOuputs: [ 'normal' ],
 
         computeFragment: function () {
             return sprintf( '%s = gl_FrontFacing ? %s : -%s ;', [
-                this._outputs.getVariable(),
-                this._inputs[0].getVariable(),
-                this._inputs[0].getVariable()
+                this._outputs.normal.getVariable(),
+                this._inputs.normal.getVariable(),
+                this._inputs.normal.getVariable()
             ] );
         }
     } );
 
 
     return {
-        'NormalizeNormalAndEyeVector': NormalizeNormalAndEyeVector,
-        'sRGBToLinear': sRGBToLinear,
-        'LinearTosRGB': LinearTosRGB,
-        'FrontNormal': FrontNormal
+        NodeFunctions: NodeFunctions,
+        NormalizeNormalAndEyeVector: NormalizeNormalAndEyeVector,
+        sRGBToLinear: sRGBToLinear,
+        LinearTosRGB: LinearTosRGB,
+        FrontNormal: FrontNormal
     };
 
 } );

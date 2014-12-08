@@ -16,7 +16,7 @@ define( [
     // arg2 = input1
     // ...
     var BaseOperator = function () {
-        Node.apply( this, arguments );
+        Node.apply( this );
     };
 
     BaseOperator.prototype = Node.prototype;
@@ -26,7 +26,7 @@ define( [
     // new Add( output, input0, input1, ... )
     // new Add( output, [ inputs ] )
     var Add = function () {
-        BaseOperator.apply( this, arguments );
+        BaseOperator.apply( this );
     };
 
     Add.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
@@ -48,7 +48,10 @@ define( [
 
             var str = this._outputs.getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + addType;
             for ( var i = 1, l = this._inputs.length; i < l; i++ ) {
-                str += this.operator + this._inputs[ i ].getVariable() + addType;
+                var input = this._inputs[ i ];
+                str += this.operator + input.getVariable();
+                if ( input.getType() !== 'float' )
+                    str += addType;
             }
             str += ';';
             return str;
@@ -57,7 +60,7 @@ define( [
 
     // Mult works like Add
     var Mult = function () {
-        Add.apply( this, arguments );
+        Add.apply( this );
     };
 
     Mult.prototype = MACROUTILS.objectInherit( Add.prototype, {
@@ -68,7 +71,7 @@ define( [
 
 
     var InlineCode = function () {
-        Node.apply( this, arguments );
+        Node.apply( this );
     };
 
     InlineCode.prototype = MACROUTILS.objectInherit( Node.prototype, {
@@ -98,7 +101,7 @@ define( [
                         Notify.error( 'error with inline code\n' + this._text );
                         Notify.error( 'input ' + str + ' not provided for ' + result[ i ] );
                     }
-                    var reg = new RegExp( result[i].toString(), 'gm' );
+                    var reg = new RegExp( result[ i ].toString(), 'gm' );
                     text = text.replace( reg, replaceVariables[ str ].getVariable() );
                     done.add( str );
                 }
@@ -111,16 +114,18 @@ define( [
 
     // output = vec4( color.rgb, alpha )
     var SetAlpha = function () {
-        BaseOperator.apply( this, arguments );
+        BaseOperator.apply( this );
     };
 
     SetAlpha.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
         type: 'SetAlpha',
+        validInputs: [ 'color', 'alpha' ],
+        validOuputs: [ 'color' ],
         computeFragment: function () {
             return sprintf( '%s = vec4( %s.rgb, %s );', [
-                this._outputs.getVariable(),
-                this._inputs[ 0 ].getVariable(),
-                this._inputs[ 1 ].getVariable()
+                this._outputs.color.getVariable(),
+                this._inputs.color.getVariable(),
+                this._inputs.alpha.getVariable()
             ] );
         }
     } );
@@ -130,41 +135,40 @@ define( [
     // alpha is optional, if not provided the following operation is generated:
     // output.rgb = color.rgb * color.a;
     var PreMultAlpha = function () {
-        BaseOperator.apply( this, arguments );
+        BaseOperator.apply( this );
     };
 
     // TODO put the code in glsl
     PreMultAlpha.prototype = MACROUTILS.objectInherit( BaseOperator.prototype, {
 
         type: 'PreMultAlpha',
-        validInputs: [ 'color' ],
+        validInputs: [ 'color' /*,'alpha'*/ ],
+        validOuputs: [ 'color' ],
 
         computeFragment: function () {
             var variable = this._inputs.alpha !== undefined ? this._inputs.alpha : this._inputs.color;
 
             var srcAlpha;
-            if ( variable.getType && variable.getType() !== 'float' )
+            if ( variable.getType() !== 'float' )
                 srcAlpha = variable.getVariable() + '.a';
             else
                 srcAlpha = variable.getVariable();
 
             return sprintf( '%s.rgb = %s.rgb * %s;', [
-                this._outputs.getVariable(),
+                this._outputs.color.getVariable(),
                 this._inputs.color.getVariable(),
                 srcAlpha
             ] );
         }
     } );
 
-
-
     return {
-        'BaseOperator': BaseOperator,
-        'Mult': Mult,
-        'Add': Add,
-        'InlineCode': InlineCode,
-        'SetAlpha': SetAlpha,
-        'PreMultAlpha': PreMultAlpha
+        BaseOperator: BaseOperator,
+        Mult: Mult,
+        Add: Add,
+        InlineCode: InlineCode,
+        SetAlpha: SetAlpha,
+        PreMultAlpha: PreMultAlpha
     };
 
 } );

@@ -1,8 +1,7 @@
 define( [
-    'osg/Notify',
-    'require'
+    'osg/Notify'
 
-], function ( Notify, require ) {
+], function ( Notify ) {
     'use strict';
 
     var instance = 0;
@@ -61,11 +60,6 @@ define( [
         // inputs( { a: x, b: y } )
         // inputs( a, b, c, d )
         inputs: function () {
-
-            // circular denpendency
-            var data = require( 'osgShader/node/data' );
-            var InlineConstant = data.InlineConstant;
-
             // handle inputs ( a, b, c, d)
             for ( var i = 0, l = arguments.length; i < l; i++ ) {
 
@@ -74,13 +68,8 @@ define( [
                     break;
                 }
 
-                // make it possible to use inline constant for input
-                if ( typeof input === 'string' ) {
-
-                    input = new InlineConstant( input );
-
-                    // handle inputs( [a, b, c ,d] )
-                } else if ( Array.isArray( input ) ) {
+                // handle inputs( [a, b, c ,d] )
+                if ( Array.isArray( input ) ) {
 
                     this.inputs.apply( this, input );
                     return this;

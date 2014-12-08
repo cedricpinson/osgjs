@@ -1,3 +1,4 @@
+'use strict';
 var NegatifAttribute;
 var NegatifNode;
 
@@ -60,6 +61,8 @@ var NegatifNode;
 
     NegatifNode.prototype = osg.objectInherit( shaderNode.BaseOperator.prototype, {
         type: 'Negatif',
+        validInputs: [ 'enable', 'color' ],
+        validOutputs: [ 'color' ],
 
         // it's a global declaration
         // you can make your include here or your global variable
@@ -71,8 +74,8 @@ var NegatifNode;
         computeFragment: function () {
             return osgShader.utils.callFunction( 'negatif', undefined, [
                 this._inputs.enable,
-                this._inputs.input,
-                this._outputs
+                this._inputs.color,
+                this._outputs.color
             ] );
         }
     } );

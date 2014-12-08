@@ -9,12 +9,10 @@ define( [
     var sprintf = utils.sprintf;
 
     var Variable = function ( type, prefix ) {
-        Node.apply( this, arguments );
+        Node.apply( this );
         this._name = 'Variable';
         this._prefix = prefix;
         this._type = type;
-        this._defaultValue = 10;
-        this._disabledValue = 0;
         this._value = undefined;
     };
 
@@ -30,44 +28,17 @@ define( [
 
         setValue: function ( value ) {
             this._value = value;
+            return this;
         },
 
         declare: function () {
-
             if ( this._value !== undefined ) {
-                // TODO: tricky here.
-                if ( this._type === 'float' ) {
-                    return sprintf( '%s %s = %f;', [ this._type, this.getVariable(), this._value ] );
-                } else if ( this._type === 'int' ) {
-                    return sprintf( '%s %s = %d;', [ this._type, this.getVariable(), this._value ] );
-                } else {
-                    return sprintf( '%s %s = %s;', [ this._type, this.getVariable(), this._value.toString() ] );
-                }
-
+                return sprintf( '%s %s = %s;', [ this._type, this.getVariable(), this._value ] );
             } else {
                 return sprintf( '%s %s;', [ this._type, this.getVariable() ] );
             }
         }
     } );
-
-
-    var InlineConstant = function ( content ) {
-        Node.apply( this, arguments );
-        this._value = content;
-    };
-
-    InlineConstant.prototype = MACROUTILS.objectInherit( Node.prototype, {
-
-        getVariable: function () {
-            return this._value;
-        },
-
-        setValue: function ( value ) {
-            this._value = value;
-        }
-
-    } );
-
 
     var Uniform = function ( type, prefix ) {
         Variable.call( this, type, prefix );
@@ -139,12 +110,11 @@ define( [
 
 
     return {
-        'FragColor': FragColor,
-        'Sampler': Sampler,
-        'Variable': Variable,
-        'Varying': Varying,
-        'Uniform': Uniform,
-        'InlineConstant': InlineConstant
+        FragColor: FragColor,
+        Sampler: Sampler,
+        Variable: Variable,
+        Varying: Varying,
+        Uniform: Uniform
     };
 
 } );

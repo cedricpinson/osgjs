@@ -9,33 +9,30 @@ define( [
 ], function ( Notify, data, functions, lights, operations, textures ) {
     'use strict';
 
-    var registerNodes = function ( objects, map ) {
-
-        Object.keys( objects ).forEach( function ( key ) {
-
-            map.set( key, objects[ key ] );
-
-        } );
-
-    };
-
     var Factory = function () {
 
         this._nodes = new Map();
 
-        registerNodes( data, this._nodes );
-        registerNodes( textures, this._nodes );
-        registerNodes( functions, this._nodes );
-        registerNodes( lights, this._nodes );
-        registerNodes( operations, this._nodes );
+        this.registerNodes( data );
+        this.registerNodes( textures );
+        this.registerNodes( functions );
+        this.registerNodes( lights );
+        this.registerNodes( operations );
     };
 
     Factory.prototype = {
 
+        registerNodes: function ( obj ) {
+            var self = this;
+            Object.keys( obj ).forEach( function ( key ) {
+                self.registerNode( key, obj[ key ] );
+            } );
+        },
+
         registerNode: function ( name, constructor ) {
 
             if ( this._nodes.has( name ) ) {
-                Notify.warning( 'Node ' + name + ' already registered' );
+                Notify.warn( 'Node ' + name + ' already registered' );
             }
             this._nodes.set( name, constructor );
 

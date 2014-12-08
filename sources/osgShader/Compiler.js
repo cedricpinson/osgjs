@@ -1,14 +1,11 @@
 define( [
     'osg/Notify',
-    'osg/utils',
+    'osg/Utils',
     'osg/Uniform',
-    'osgShader/nodeFactory',
-    'osgShader/node/functions'
+    'osgShader/nodeFactory'
 
-], function ( Notify, MACROUTILS, Uniform, factory, functions ) {
+], function ( Notify, MACROUTILS, Uniform, factory ) {
     'use strict';
-
-    var defaultGamma = functions.LinearTosRGB.defaultGamma;
 
     var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
 
@@ -69,8 +66,8 @@ define( [
 
                         textures[ texUnit ] = tuTarget;
                         this._texturesByName[ tName ] = {
-                            'variable': undefined,
-                            'textureUnit': texUnit
+                            variable: undefined,
+                            textureUnit: texUnit
                         };
 
                     }
@@ -89,7 +86,7 @@ define( [
             return this._variables[ name ];
         },
 
-        getAttributeType: function( type ) {
+        getAttributeType: function ( type ) {
 
             for ( var i = 0; i < this._attributes.length; i++ ) {
                 if ( this._attributes[ i ].getType() === type )
@@ -102,7 +99,7 @@ define( [
 
         // if doesn't exist create a new on
         // if name given and var already exist, create a varname +
-        getOrCreateVariable: function ( type, varname, deepness ) {
+        createVariable: function ( type, varname, deepness ) {
 
             var name = varname;
 
@@ -121,15 +118,15 @@ define( [
                 // meant to be read only
                 name = name + deepness;
                 if ( deepness === undefined ) {
-                    return this.getOrCreateVariable( type, varname, 1 );
+                    return this.createVariable( type, varname, 1 );
                 } else if ( this._variables[ name ] ) {
                     deepness++;
-                    return this.getOrCreateVariable( type, varname, deepness );
+                    return this.createVariable( type, varname, deepness );
                 }
 
             }
 
-            var v = factory.getNode( 'Variable' , type, name );
+            var v = factory.getNode( 'Variable', type, name );
             this._variables[ name ] = v;
             return v;
         },
@@ -143,8 +140,8 @@ define( [
             var prefixUniform = prefix ? prefix : '';
 
             for ( var i = 0; i < keys.length; i++ ) {
-                var k = prefixUniform + keys[i];
-                object[ k ] = this.getOrCreateUniform( uniforms[ keys[i] ] );
+                var k = prefixUniform + keys[ i ];
+                object[ k ] = this.getOrCreateUniform( uniforms[ keys[ i ] ] );
             }
 
             return object;
@@ -174,7 +171,7 @@ define( [
                 return exist;
             }
 
-            var v = factory.getNode( 'Uniform' , type, name );
+            var v = factory.getNode( 'Uniform', type, name );
             this._variables[ name ] = v;
             return v;
         },
@@ -197,7 +194,7 @@ define( [
                 }
 
             }
-            var v = factory.getNode( 'Varying',  type, name );
+            var v = factory.getNode( 'Varying', type, name );
             this._variables[ name ] = v;
             return v;
         },
@@ -220,12 +217,12 @@ define( [
                 }
 
             }
-            var v = factory.getNode( 'Sampler', type, name  );
+            var v = factory.getNode( 'Sampler', type, name );
             this._variables[ name ] = v;
             return v;
         },
 
-        declareAttributeUniforms: function( attribute ) {
+        declareAttributeUniforms: function ( attribute ) {
 
             var uniformMap = attribute.getOrCreateUniforms();
             var uniformMapKeys = uniformMap.getKeys();
@@ -260,11 +257,13 @@ define( [
 
         getOrCreateFrontNormal: function () {
             var inputNormal = this.getOrCreateInputNormal();
-            var frontNormal = this.getOrCreateVariable( 'vec3', 'frontNormal' );
+            var frontNormal = this.createVariable( 'vec3', 'frontNormal' );
 
-            factory.getNode( 'FrontNormal' )
-                .inputs( inputNormal )
-                .outputs( frontNormal );
+            factory.getNode( 'FrontNormal' ).inputs( {
+                normal: inputNormal
+            } ).outputs( {
+                normal: frontNormal
+            } );
 
             return frontNormal;
         },
@@ -300,21 +299,19 @@ define( [
             var inputPosition = this.getOrCreateInputPosition();
 
             // get or create normalized normal
-            var outputNormal = this.getOrCreateVariable( 'vec3', 'normal' );
+            var outputNormal = this.createVariable( 'vec3', 'normal' );
 
             // get or create normalized position
-            var outputPosition = this.getOrCreateVariable( 'vec3', 'eyeVector' );
+            var outputPosition = this.createVariable( 'vec3', 'eyeVector' );
 
             //
-            factory.getNode( 'NormalizeNormalAndEyeVector' )
-                .inputs( {
-                    'normal' : frontNormal,
-                    'position': inputPosition
-                } )
-                .outputs( {
-                    'normal' : outputNormal,
-                    'eyeVector' : outputPosition
-                } );
+            factory.getNode( 'NormalizeNormalAndEyeVector' ).inputs( {
+                normal: frontNormal,
+                position: inputPosition
+            } ).outputs( {
+                normal: outputNormal,
+                eyeVector: outputPosition
+            } );
 
         },
 
@@ -324,27 +321,26 @@ define( [
             if ( alpha === undefined )
                 return finalColor;
 
-            var premultAlpha = this.getOrCreateVariable( 'vec4' );
+            var premultAlpha = this.createVariable( 'vec4' );
 
-            factory.getNode( 'PreMultAlpha' )
-                .inputs( {
-                    color: finalColor,
-                    alpha: alpha
-                })
-                .outputs( premultAlpha );
+            factory.getNode( 'PreMultAlpha' ).inputs( {
+                color: finalColor,
+                alpha: alpha
+            } ).outputs( {
+                color: premultAlpha
+            } );
 
             return premultAlpha;
         },
 
 
         getColorsRGB: function ( finalColor ) {
-            var finalSrgbColor = this.getOrCreateVariable( 'vec3' );
-            factory.getNode( 'LinearTosRGB' )
-                .inputs( {
-                    'color': finalColor,
-                    'gamma': defaultGamma.defaultGamma.toString()
-                } )
-                .outputs( finalSrgbColor );
+            var finalSrgbColor = this.createVariable( 'vec3' );
+            factory.getNode( 'LinearTosRGB' ).inputs( {
+                color: finalColor
+            } ).outputs( {
+                color: finalSrgbColor
+            } );
 
             return finalSrgbColor;
         },
@@ -361,25 +357,21 @@ define( [
 
             var vertexColor = this.getOrCreateVarying( 'vec4', 'VertexColor' );
             var vertexColorUniform = this.getOrCreateUniform( 'float', 'ArrayColorEnabled' );
-            var tmp = this.getOrCreateVariable( 'vec4' );
+            var tmp = this.createVariable( 'vec4' );
 
-            factory.getNode( 'InlineCode' )
-                .code([ '',
+            var str = [ '',
+                '%color.rgb = %diffuse.rgb;',
+                'if ( %hasVertexColor == 1.0)',
+                '  %color *= %vertexColor.rgba;'
+            ].join( '\n' );
 
-                        '%color.rgb = %diffuse.rgb;',
-                        'if ( %hasVertexColor == 1.0)',
-                        '  %color *= %vertexColor.rgba;',
-
-                      ].join('\n') )
-                .inputs( {
-                    diffuse: diffuseColor,
-                    hasVertexColor: vertexColorUniform,
-                    vertexColor: vertexColor
-                } )
-                .outputs( {
-                    color: tmp
-                })
-                .comment('diffuse color = diffuse color * vertex color');
+            factory.getNode( 'InlineCode' ).code( str ).inputs( {
+                diffuse: diffuseColor,
+                hasVertexColor: vertexColorUniform,
+                vertexColor: vertexColor
+            } ).outputs( {
+                color: tmp
+            } ).comment( 'diffuse color = diffuse color * vertex color' );
 
             return tmp;
         },
@@ -406,11 +398,9 @@ define( [
             // but if only one, return the first
             if ( texturesInput.length > 1 ) {
 
-                var texAccum = this.getOrCreateVariable( 'vec3', 'texDiffuseAccum' );
+                var texAccum = this.createVariable( 'vec3', 'texDiffuseAccum' );
 
-                factory.getNode( 'Mult' )
-                .inputs( texturesInput )
-                .outputs( texAccum );
+                factory.getNode( 'Mult' ).inputs( texturesInput ).outputs( texAccum );
                 return texAccum;
 
             } else if ( texturesInput.length === 1 ) {
@@ -438,7 +428,7 @@ define( [
         // declare sampler2D or samplerCube
         // declare varying FragTexCoordX corresponding to the texture unit
         // create a textureNode that could be referenced later by the compiler
-        declareTexture: function( unit, texture ) {
+        declareTexture: function ( unit, texture ) {
 
             var samplerName = 'Texture' + unit.toString();
             var textureSampler = this.getVariable( samplerName );
@@ -477,8 +467,8 @@ define( [
             if ( textureMaterial === undefined ) {
 
                 this._texturesByName[ name ] = {
-                    'variable': output,
-                    'textureUnit': unit
+                    variable: output,
+                    textureUnit: unit
                 };
 
             } else {
@@ -509,17 +499,15 @@ define( [
             }
         },
 
+        createLighting: function ( materials ) {
 
-        createLighting: function( diffuseColor ) {
-
-            var output = this.getOrCreateVariable( 'vec4' );
+            var output = this.createVariable( 'vec3' );
             var lightList = [];
 
-
             var enumToNodeName = {
-                'DIRECTION' : 'SunLight',
-                'SPOT' : 'SpotLight',
-                'POINT' : 'PointLight'
+                DIRECTION: 'SunLight',
+                SPOT: 'SpotLight',
+                POINT: 'PointLight'
             };
 
             var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material, 'material' );
@@ -527,36 +515,46 @@ define( [
 
                 var light = this._lights[ i ];
 
-                var lightedOutput = this.getOrCreateVariable( 'vec4' );
-                var nodeName = enumToNodeName [  light.getLightType() ] ;
+                var lightedOutput = this.createVariable( 'vec3' );
+                var nodeName = enumToNodeName[ light.getLightType() ];
 
 
                 // create uniforms from stateAttribute and mix them with materials
                 // to pass the result as input for light node
-                var lightUniforms = this.getOrCreateStateAttributeUniforms( this._lights[i], 'light' );
+                var lightUniforms = this.getOrCreateStateAttributeUniforms( this._lights[ i ], 'light' );
 
                 var inputs = MACROUTILS.objectMix( {}, lightUniforms );
                 inputs = MACROUTILS.objectMix( inputs, materialUniforms );
+                inputs = MACROUTILS.objectMix( inputs, materials );
 
-                inputs.normal = this.getOrCreateNormalizedNormal();
-                inputs.eyeVector = this.getOrCreateNormalizedPosition();
+                if ( !inputs.normal )
+                    inputs.normal = this.getOrCreateNormalizedNormal();
+                if ( !inputs.eyeVector )
+                    inputs.eyeVector = this.getOrCreateNormalizedPosition();
 
-                inputs.materialdiffuse = diffuseColor; // use the color by the input
-
-                factory.getNode( nodeName )
-                    .inputs( inputs )
-                    .outputs( lightedOutput );
+                factory.getNode( nodeName ).inputs( inputs ).outputs( {
+                    color: lightedOutput
+                } );
 
                 lightList.push( lightedOutput );
             }
 
             // add emission too
-            lightList.push( materialUniforms.emission );
+            if ( materialUniforms.emission )
+                lightList.push( materialUniforms.emission );
+
+            if ( lightList.length === 0 ) {
+                if ( materials.materialdiffuse )
+                    lightList.push( materials.materialdiffuse );
+                else if ( materialUniforms.materialdiffuse )
+                    lightList.push( materialUniforms.materialdiffuse );
+                else
+                    lightList.push( factory.getNode( 'InlineConstant', 'vec3(1.0, 0.0, 0.0)', 'vec3' ) );
+            }
 
             factory.getNode( 'Add' ).inputs( lightList ).outputs( output );
 
             return output;
-
         },
 
 
@@ -564,13 +562,13 @@ define( [
         // as read only in the texture
         createTextureRGBA: function ( texture, textureSampler, texCoord ) {
 
-            var texel = this.getOrCreateVariable( 'vec4' );
-            factory.getNode( 'TextureRGBA' )
-            .inputs( {
-                'sampler': textureSampler,
-                'uv': texCoord
-            })
-            .outputs( texel );
+            var texel = this.createVariable( 'vec4' );
+            factory.getNode( 'TextureRGBA' ).inputs( {
+                sampler: textureSampler,
+                uv: texCoord
+            } ).outputs( {
+                color: texel
+            } );
 
             return texel;
         },
@@ -584,14 +582,14 @@ define( [
                 var keys = Object.keys( inputs );
                 var objectToArray = [];
                 for ( var j = 0; j < keys.length; j++ )
-                    objectToArray.push( inputs[keys[j] ] );
+                    objectToArray.push( inputs[ keys[ j ] ] );
                 inputs = objectToArray;
             }
 
             for ( var i = 0, l = inputs.length; i < l; i++ ) {
                 node.checkInputsOutputs();
 
-                var child = inputs[i];
+                var child = inputs[ i ];
 
                 if ( child !== undefined &&
                     child !== node ) {
@@ -838,9 +836,8 @@ define( [
         // is present. If you inherit from this Compiler
         // you could change the default behavior
         createDefaultFragmentShaderGraph: function () {
-
-            return factory.getNode( 'FragColor' ).inputs( 'vec4( 1.0, 0.0, 1.0, 0.7 )' );
-
+            var colorDefault = factory.getNode( 'InlineConstant', 'vec3(1.0, 0.0, 1.0, 0.7)', 'vec4' );
+            return factory.getNode( 'FragColor' ).inputs( colorDefault );
         },
 
 
@@ -865,14 +862,11 @@ define( [
 
             } else {
 
-                factory.getNode( 'InlineCode' )
-                    .code('%color.rgb *= %diffuse.rgb;')
-                    .inputs( {
-                        diffuse: materialUniforms.diffuse
-                    } )
-                    .outputs( {
-                        'color': diffuseColor
-                    });
+                factory.getNode( 'InlineCode' ).code( '%color.rgb *= %diffuse.rgb;' ).inputs( {
+                    diffuse: materialUniforms.diffuse
+                } ).outputs( {
+                    color: diffuseColor
+                } );
             }
 
             // vertex color needs to be computed to diffuse
@@ -880,7 +874,7 @@ define( [
 
 
             // compute alpha
-            var alpha = this.getOrCreateVariable( 'float' );
+            var alpha = this.createVariable( 'float' );
 
             var textureTexel = this.getFirstValidTexture();
 
@@ -890,17 +884,12 @@ define( [
             else
                 alphaCompute = '%alpha = %color.a;';
 
-            factory.getNode( 'InlineCode' )
-                .code( alphaCompute )
-                .inputs( {
-                    color: materialUniforms.diffuse,
-                    texelAlpha: textureTexel
-                } )
-                .outputs( {
-                    'alpha': alpha
-                });
-
-
+            factory.getNode( 'InlineCode' ).code( alphaCompute ).inputs( {
+                color: materialUniforms.diffuse,
+                texelAlpha: textureTexel
+            } ).outputs( {
+                alpha: alpha
+            } );
 
             // 2 codes path
             // if we have light we compute a subgraph that will generate
@@ -912,7 +901,9 @@ define( [
             if ( this._lights.length > 0 ) {
 
                 // creates lights nodes
-                var lightedOutput = this.createLighting( diffuseColor );
+                var lightedOutput = this.createLighting( {
+                    materialdiffuse: diffuseColor
+                } );
                 finalColor = lightedOutput;
 
             } else {
@@ -930,9 +921,12 @@ define( [
             // todo add gamma corrected color, but it would also
             // mean to handle correctly srgb texture. So it should be done
             // at the same time. see osg.Tetxure to implement srgb
-            factory.getNode( 'SetAlpha' )
-                .inputs( finalColor, alpha )
-                .outputs( fragColor );
+            factory.getNode( 'SetAlpha' ).inputs( {
+                color: finalColor,
+                alpha: alpha
+            } ).outputs( {
+                color: fragColor
+            } );
 
             return fragColor;
         }

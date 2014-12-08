@@ -11,7 +11,7 @@ float getLightAttenuation(const in float dist, const in vec4 lightAttenuation)
     return 1.0 / ( constant + linear + quadratic );
 }
 //
-// LIGTHING EQUATION TERMS
+// LIGHTING EQUATION TERMS
 ///
 void specularCookTorrance(const in vec3 n, const in vec3 l, const in vec3 v, const in float hard, const in vec3 materialSpecular, const in vec3 lightSpecular, out vec3 specularContrib)
 {
@@ -39,18 +39,18 @@ void lambert(const in float ndl,  const in vec3 materialDiffuse, const in vec3 l
 /// for each light
 //direction, dist, NDL, attenuation, compute diffuse, compute specular
 
-vec4 computeSpotLightShading(
+vec3 computeSpotLightShading(
     const in vec3 normal,
     const in vec3 eyeVector,
 
-    const in vec4 materialAmbient,
-    const in vec4 materialDiffuse,
-    const in vec4 materialSpecular,
+    const in vec3 materialAmbient,
+    const in vec3 materialDiffuse,
+    const in vec3 materialSpecular,
     const in float materialShininess,
 
-    const in vec4 lightAmbient,
-    const in vec4 lightDiffuse,
-    const in vec4 lightSpecular,
+    const in vec3 lightAmbient,
+    const in vec3 lightDiffuse,
+    const in vec3 lightSpecular,
 
     const in vec3  lightSpotDirection,
     const in vec4  lightAttenuation,
@@ -95,32 +95,30 @@ vec4 computeSpotLightShading(
                 {
 
                     vec3 diffuseContrib;
-                    lambert(NdotL, materialDiffuse.rgb, lightDiffuse.rgb, diffuseContrib);
+                    lambert(NdotL, materialDiffuse, lightDiffuse, diffuseContrib);
                     vec3 specularContrib;
-                    specularCookTorrance(normal, lightDir, eyeVector, materialShininess, materialSpecular.rgb, lightSpecular.rgb, specularContrib.rgb);
-                    return vec4(lightAmbient.rgb*materialAmbient.rgb + spot*attenuation*(diffuseContrib.rgb+specularContrib.rgb), 1.0);
+                    specularCookTorrance(normal, lightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
+                    return lightAmbient * materialAmbient + spot * attenuation * (diffuseContrib + specularContrib);
 
                 }
             }
         }
     }
-    return vec4(lightAmbient.rgb*materialAmbient.rgb, 1.0);
+    return lightAmbient * materialAmbient;
 }
 
-
-
-vec4 computePointLightShading(
+vec3 computePointLightShading(
     const in vec3 normal,
     const in vec3 eyeVector,
 
-    const in vec4 materialAmbient,
-    const in vec4 materialDiffuse,
-    const in vec4 materialSpecular,
+    const in vec3 materialAmbient,
+    const in vec3 materialDiffuse,
+    const in vec3 materialSpecular,
     const in float materialShininess,
 
-    const in vec4 lightAmbient,
-    const in vec4 lightDiffuse,
-    const in vec4 lightSpecular,
+    const in vec3 lightAmbient,
+    const in vec3 lightDiffuse,
+    const in vec3 lightSpecular,
 
     const in vec4 lightPosition,
     const in vec4 lightAttenuation,
@@ -151,29 +149,29 @@ vec4 computePointLightShading(
             if (!isShadowed)
             {
                 vec3 diffuseContrib;
-                lambert(NdotL, materialDiffuse.rgb, lightDiffuse.rgb, diffuseContrib);
+                lambert(NdotL, materialDiffuse, lightDiffuse, diffuseContrib);
                 vec3 specularContrib;
-                specularCookTorrance(normal, lightDir, eyeVector, materialShininess, materialSpecular.rgb, lightSpecular.rgb, specularContrib.rgb);
-                return vec4(lightAmbient.rgb*materialAmbient.rgb + attenuation*shadowContrib*(diffuseContrib.rgb+specularContrib.rgb), 1.0);
+                specularCookTorrance(normal, lightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
+                return lightAmbient * materialAmbient + attenuation * shadowContrib * (diffuseContrib + specularContrib);
             }
         }
     }
-    return vec4(lightAmbient.rgb*materialAmbient.rgb, 1.0);
+    return lightAmbient * materialAmbient;
 }
 
-vec4 computeSunLightShading(
+vec3 computeSunLightShading(
 
     const in vec3 normal,
     const in vec3 eyeVector,
 
-    const in vec4 materialAmbient,
-    const in vec4 materialDiffuse,
-    const in vec4 materialSpecular,
+    const in vec3 materialAmbient,
+    const in vec3 materialDiffuse,
+    const in vec3 materialSpecular,
     const in float materialShininess,
 
-    const in vec4 lightAmbient,
-    const in vec4 lightDiffuse,
-    const in vec4 lightSpecular,
+    const in vec3 lightAmbient,
+    const in vec3 lightDiffuse,
+    const in vec3 lightSpecular,
 
     const in vec4 lightPosition,
 
@@ -194,11 +192,11 @@ vec4 computeSunLightShading(
         if (!isShadowed)
         {
             vec3 diffuseContrib;
-            lambert(NdotL, materialDiffuse.rgb, lightDiffuse.rgb, diffuseContrib);
+            lambert(NdotL, materialDiffuse, lightDiffuse, diffuseContrib);
             vec3 specularContrib;
-            specularCookTorrance(normal, lightDir, eyeVector, materialShininess, materialSpecular.rgb, lightSpecular.rgb, specularContrib.rgb);
-            return vec4(lightAmbient.rgb*materialAmbient.rgb + shadowContrib*(diffuseContrib.rgb+specularContrib.rgb), 1.0);
+            specularCookTorrance(normal, lightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
+            return lightAmbient * materialAmbient + shadowContrib * (diffuseContrib + specularContrib);
         }
     }
-    return vec4(lightAmbient.rgb*materialAmbient.rgb, 1.0);
+    return lightAmbient * materialAmbient;
 }

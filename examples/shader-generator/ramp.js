@@ -1,3 +1,4 @@
+'use strict';
 var RampAttribute;
 var RampNode;
 
@@ -50,6 +51,8 @@ var RampNode;
 
     RampNode.prototype = osg.objectInherit( shaderNode.BaseOperator.prototype, {
         type: 'Ramp',
+        validInputs: [ 'color' ],
+        validOutputs: [ 'color' ],
 
         // it's a global declaration
         // you can make your include here or your global variable
@@ -60,8 +63,8 @@ var RampNode;
         // call the glsl function with input/output of the node
         computeFragment: function () {
             return osgShader.utils.callFunction( 'ramp', undefined, [
-                this._inputs[0],
-                this._outputs
+                this._inputs.color,
+                this._outputs.color
             ] );
         }
     } );

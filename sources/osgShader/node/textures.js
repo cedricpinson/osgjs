@@ -7,7 +7,7 @@ define( [
     'use strict';
 
     var NodeTextures = function () {
-        Node.apply( this, arguments );
+        Node.apply( this );
     };
 
     NodeTextures.prototype = MACROUTILS.objectInherit( Node.prototype, {
@@ -20,14 +20,13 @@ define( [
         // all simple class to fetch texture ( seed above )
         functionName: 'noTextureFunction',
 
-        validInputs: [ 'sampler',
-            'uv'
-        ],
+        validInputs: [ 'sampler', 'uv' ],
+        validOutputs: [ 'color' ],
 
         computeFragment: function () {
 
             return utils.callFunction( this.functionName,
-                this.getOutputs(), [
+                this._outputs.color, [
                     this._inputs.sampler,
                     this._inputs.uv.getVariable() + '.xy'
                 ] );
@@ -42,7 +41,7 @@ define( [
 
 
     var TextureRGB = function () {
-        NodeTextures.apply( this, arguments );
+        NodeTextures.apply( this );
     };
 
     TextureRGB.prototype = MACROUTILS.objectInherit( NodeTextures.prototype, {
@@ -55,7 +54,7 @@ define( [
 
 
     var TextureRGBA = function () {
-        TextureRGB.apply( this, arguments );
+        TextureRGB.apply( this );
     };
 
     TextureRGBA.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
@@ -67,7 +66,7 @@ define( [
 
 
     var TextureAlpha = function () {
-        TextureRGB.apply( this, arguments );
+        TextureRGB.apply( this );
     };
 
     TextureAlpha.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
@@ -80,7 +79,7 @@ define( [
 
 
     var TextureIntensity = function () {
-        TextureRGB.apply( this, arguments );
+        TextureRGB.apply( this );
     };
 
     TextureIntensity.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
@@ -91,10 +90,11 @@ define( [
     } );
 
     return {
-        'TextureRGB': TextureRGB,
-        'TextureRGBA': TextureRGBA,
-        'TextureAlpha': TextureAlpha,
-        'TextureIntensity': TextureIntensity
+        NodeTextures: NodeTextures,
+        TextureRGB: TextureRGB,
+        TextureRGBA: TextureRGBA,
+        TextureAlpha: TextureAlpha,
+        TextureIntensity: TextureIntensity
     };
 
 } );

@@ -11,21 +11,24 @@ define( [
     // base class for all point based light: Point/Directional/Spot/Hemi
     // avoid duplicate code
     var NodeLightsPointBased = function () {
-        Node.apply( this, arguments );
+        Node.apply( this );
     };
 
     NodeLightsPointBased.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
+        validOutputs: [ 'color' ],
         globalFunctionDeclaration: function () {
             return '#pragma include "lights.glsl"';
         }
 
     } );
 
-
+    var getVec3 = function ( vec ) {
+        return vec.getType() === 'vec4' ? vec.getVariable() + '.rgb' : vec;
+    };
 
     var PointLight = function () {
-        NodeLightsPointBased.apply( this, arguments );
+        NodeLightsPointBased.apply( this );
     };
 
     PointLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
@@ -55,17 +58,17 @@ define( [
 
             return shaderUtils.callFunction(
                 'computePointLightShading',
-                this._outputs, [ this._inputs.normal,
+                this._outputs.color, [ this._inputs.normal,
                     this._inputs.eyeVector,
 
-                    this._inputs.materialambient,
-                    this._inputs.materialdiffuse,
-                    this._inputs.materialspecular,
+                    getVec3( this._inputs.materialambient ),
+                    getVec3( this._inputs.materialdiffuse ),
+                    getVec3( this._inputs.materialspecular ),
                     this._inputs.materialshininess,
 
-                    this._inputs.lightambient,
-                    this._inputs.lightdiffuse,
-                    this._inputs.lightspecular,
+                    getVec3( this._inputs.lightambient ),
+                    getVec3( this._inputs.lightdiffuse ),
+                    getVec3( this._inputs.lightspecular ),
 
                     this._inputs.lightposition,
                     this._inputs.lightattenuation,
@@ -80,7 +83,7 @@ define( [
 
 
     var SpotLight = function () {
-        NodeLightsPointBased.apply( this, arguments );
+        NodeLightsPointBased.apply( this );
     };
 
     SpotLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
@@ -114,17 +117,17 @@ define( [
 
             return shaderUtils.callFunction(
                 'computeSpotLightShading',
-                this._outputs, [ this._inputs.normal,
+                this._outputs.color, [ this._inputs.normal,
                     this._inputs.eyeVector,
 
-                    this._inputs.materialambient,
-                    this._inputs.materialdiffuse,
-                    this._inputs.materialspecular,
+                    getVec3( this._inputs.materialambient ),
+                    getVec3( this._inputs.materialdiffuse ),
+                    getVec3( this._inputs.materialspecular ),
                     this._inputs.materialshininess,
 
-                    this._inputs.lightambient,
-                    this._inputs.lightdiffuse,
-                    this._inputs.lightspecular,
+                    getVec3( this._inputs.lightambient ),
+                    getVec3( this._inputs.lightdiffuse ),
+                    getVec3( this._inputs.lightspecular ),
 
                     this._inputs.lightdirection,
                     this._inputs.lightattenuation,
@@ -141,7 +144,7 @@ define( [
 
 
     var SunLight = function () {
-        NodeLightsPointBased.apply( this, arguments );
+        NodeLightsPointBased.apply( this );
     };
 
     SunLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
@@ -170,17 +173,17 @@ define( [
 
             return shaderUtils.callFunction(
                 'computeSunLightShading',
-                this._outputs, [ this._inputs.normal,
+                this._outputs.color, [ this._inputs.normal,
                     this._inputs.eyeVector,
 
-                    this._inputs.materialambient,
-                    this._inputs.materialdiffuse,
-                    this._inputs.materialspecular,
+                    getVec3( this._inputs.materialambient ),
+                    getVec3( this._inputs.materialdiffuse ),
+                    getVec3( this._inputs.materialspecular ),
                     this._inputs.materialshininess,
 
-                    this._inputs.lightambient,
-                    this._inputs.lightdiffuse,
-                    this._inputs.lightspecular,
+                    getVec3( this._inputs.lightambient ),
+                    getVec3( this._inputs.lightdiffuse ),
+                    getVec3( this._inputs.lightspecular ),
 
                     this._inputs.lightposition,
 
@@ -190,11 +193,10 @@ define( [
         }
     } );
 
-
     return {
-        'PointLight': PointLight,
-        'SpotLight': SpotLight,
-        'SunLight': SunLight
+        PointLight: PointLight,
+        SpotLight: SpotLight,
+        SunLight: SunLight
     };
 
 } );

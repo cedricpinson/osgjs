@@ -1,12 +1,13 @@
 define( [], function () {
 
+    'use strict';
 
     var sprintf = function ( string, args ) {
         if ( !string || !args ) {
             return '';
         }
 
-        var arg, reg;
+        var arg;
 
         for ( var index in args ) {
             arg = args[ index ];
@@ -17,18 +18,7 @@ define( [], function () {
             if ( arg.getVariable ) {
                 arg = arg.getVariable();
             }
-
-            if ( typeof arg === 'string' ) {
-                reg = '%s';
-            } else if ( typeof arg === 'number' && /\./.test( arg.toString() ) ) {
-                //regexp check for float separator, the dot character '.'
-                reg = '%f';
-            } else if ( typeof arg === 'number' ) {
-                reg = '%d';
-            } else {
-                continue;
-            }
-            string = string.replace( reg, arg );
+            string = string.replace( '%s', arg );
         }
         return string;
     };
@@ -43,26 +33,22 @@ define( [], function () {
             prefix = '';
         }
 
-        if ( inputs.length !== 0 ) {
+        for ( var i = 0, l = inputs.length; i < l; i++ ) {
 
-            for ( var i = 0, l = inputs.length; i < l; i++ ) {
+            var variable = inputs[ i ];
+            var output;
 
-                var variable = inputs[ i ];
-                var output;
-
-                if ( variable === undefined ) {
-                    output = 'undefined';
-                } else if ( typeof variable === 'string' ) {
-                    output = variable;
-                } else if ( variable.getType ) {
-                    output = variable.getType() + ' ' + variable.getVariable();
-                } else {
-                    output = variable.getVariable();
-                }
-
-                varsList.push( prefix + output );
+            if ( variable === undefined ) {
+                output = 'undefined';
+            } else if ( typeof variable === 'string' ) {
+                output = variable;
+            } else if ( variable.getType ) {
+                output = variable.getType() + ' ' + variable.getVariable();
+            } else {
+                output = variable.getVariable();
             }
 
+            varsList.push( prefix + output );
         }
 
         return varsList;
@@ -89,7 +75,9 @@ define( [], function () {
         }
 
         if ( output ) {
-            callString = output.getVariable() + ' = ';
+            if ( output.getVariable )
+                output = output.getVariable();
+            callString = output + ' = ';
         }
 
         callString = callString + funcName + '( ';
