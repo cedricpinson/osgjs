@@ -26,7 +26,8 @@ define( [
         this._lightingMode = undefined;
         this._manipulator = undefined;
         this._webGLCaps = undefined;
-
+        this._canvasWidth = 0;
+        this._canvasHeight = 0;
 
         this.setLightingMode( View.LightingMode.HEADLIGHT );
 
@@ -58,9 +59,6 @@ define( [
         },
 
         computeCanvasSize: ( function () {
-            var canvasWidth = 0;
-            var canvasHeight = 0;
-
             return function ( canvas ) {
 
                 var clientWidth, clientHeight;
@@ -75,17 +73,17 @@ define( [
                     devicePixelRatio = window.devicePixelRatio || 1;
                 }
 
-                var widthPixel = clientWidth * devicePixelRatio;
-                var heightPixel = clientHeight * devicePixelRatio;
+                var widthPixel = Math.max( clientWidth * devicePixelRatio, 1 );
+                var heightPixel = Math.max( clientHeight * devicePixelRatio, 1 );
 
-                if ( canvasWidth !== widthPixel ) {
+                if ( this._canvasWidth !== widthPixel ) {
                     canvas.width = widthPixel;
-                    canvasWidth = widthPixel;
+                    this._canvasWidth = widthPixel;
                 }
 
-                if ( canvasHeight !== heightPixel ) {
+                if ( this._canvasHeight !== heightPixel ) {
                     canvas.height = heightPixel;
-                    canvasHeight = heightPixel;
+                    this._canvasHeight = heightPixel;
                 }
 
             };

@@ -214,7 +214,7 @@ define( [
 
         init: function () {
             this._done = false;
-            this._state = new State( new ShaderGeneratorProxy() );
+            this._state = new State( new ShaderGeneratorProxy( true ) );
 
 
             var gl = this.getGraphicContext();
