@@ -15,12 +15,14 @@
     </style>
 
     <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/es5-shim.js"></script>
+    <script type="text/javascript" src="../vendors/es6-shim.js"></script>
     <script type="text/javascript" src="../vendors/jquery-2.1.1.js"></script>
     <script type="text/javascript" src="../vendors/Q.js"></script>
     <script type="text/javascript" src="../vendors/Hammer.js"></script>
     <script type="text/javascript" src="../vendors/Leap.js"></script>
     <script type="text/javascript" src="../vendors/dat.gui.js"></script>
-    <script type="text/javascript" src="../../builds/active/OSG.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
     <script type="text/javascript" src="main.js"></script>
 
 </head>
@@ -42,7 +44,7 @@
     </a>
 
     <div class="osgjs-description">
-     Frustum Culling
+     Frustum Culling: Objects outside of Main camera will disappear from bottom right debug view, showing effectiveness of frustum culling real-time
     </div>
 
   </div>

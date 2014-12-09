@@ -85,7 +85,7 @@ define( [
     //   |     \ | /                \ | /                     \ | /
     // FullArc  \|/                  \|/                       \|/
     //       ____|_____            ___|________              ___|________
-    //      |          |          |            |            |            | 
+    //      |          |          |            |            |            |
     //   DrawArc   HideNode   DrawArrow    HideNode     DrawPlane    HideNode
     //                 |                       |                         |
     //              PickArc                PickArrow                  PickPlane
@@ -106,7 +106,7 @@ define( [
         this._translateNode = new MatrixTransform();
         this._planeNode = new MatrixTransform();
 
-        this._rotateInLocal = true; // local vs static space 
+        this._rotateInLocal = true; // local vs static space
         this._showAngle = new MatrixTransform();
 
         //for realtime picking
@@ -556,7 +556,11 @@ define( [
                 this.attachToNodePath( hit ? hit.nodepath : hit );
         },
         onMouseDown: function ( e ) {
-            if ( !this._hoverNode || !this._attachedNode )
+            if ( !this._attachedNode ) {
+                this.onDblClick( e );
+                return;
+            }
+            if ( !this._hoverNode )
                 return;
             this._viewer._eventProxy.StandardMouseKeyboard._enable = false;
 
