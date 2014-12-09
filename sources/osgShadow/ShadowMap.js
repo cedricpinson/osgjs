@@ -20,11 +20,13 @@ define( [
     'osg/Uniform',
     'osg/Shader',
     'osg/Program',
+    'osgShadow/ShadowAttribute',
+    'osgShadow/ShadowTexture',
     'osgShader/ShaderProcessor',
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowFrustumIntersection',
     'osg/CullFace'
-], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath, Transform, Camera, Texture, Viewport, StateSet, StateAttribute, Uniform, Shader, Program, ShaderProcessor, ShadowTechnique, ShadowFrustumIntersection, CullFace ) {
+], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath, Transform, Camera, Texture, Viewport, StateSet, StateAttribute, Uniform, Shader, Program, ShadowAttribute, ShadowTexture, ShaderProcessor, ShadowTechnique, ShadowFrustumIntersection, CullFace ) {
     'use strict';
 
     /**
@@ -34,9 +36,8 @@ define( [
     var ShadowMap = function ( settings ) {
         ShadowTechnique.call( this );
 
+
         // uniforms, shaders ?
-        this._lightNum = settings.getLight().getLightNumber();
-        this._shadowTextureUnit = this._lightNum + 1;
         // this._texture
         // shadowSettings._cameraShadow
         this._frustumCasters = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
@@ -52,6 +53,10 @@ define( [
         this._textureSize = 256;
         this._texturePrecisionFormat = 'BYTE';
         this._algorithm = 'ESM';
+        this._depthRange = new Array( 4 );
+        this._shadowAttribute = new ShadowAttribute( settings.getLight(), this._algorithm, this._bias, this._exponent0, this._exponent1, this.vsmEpsilon );
+
+
     };
 
     /** @lends ShadowMap.prototype */
@@ -205,10 +210,8 @@ define( [
 
             var shadowSettings = this.getShadowSettings();
             this._dirty = true;
-            var light = shadowSettings.getLight();
-            var num = this._lightNum;
-            // TODO: handle texture num
 
+            var light = shadowSettings.getLight();
 
             // TODO: sort mess between shadowsettings and shadomap
             // handling dirty dirty shadowmpa and dirty shadowsettings
@@ -220,56 +223,23 @@ define( [
             this._algorithm = shadowSettings.getAlgorithm();
 
 
+            var bias = shadowSettings._config[ 'bias' ];
+            var exponent0 = shadowSettings._config[ 'exponent' ];
+            var exponent1 = shadowSettings._config[ 'exponent1' ];
+            var vsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
+
+            this._shadowAttribute = new ShadowAttribute( light, this._algorithm, bias, exponent0, exponent1, vsmEpsilon, this._texturePrecisionFormat );
+
+
             this._receivingStateset = this._shadowedScene.getReceivingStateSet();
 
             // First init
             if ( !this._texture ) {
-                var shadowTexture = new Texture();
+                var shadowTexture = new ShadowTexture();
+                // TODO: LIGHT NUMBER in shadowTexture ...
+                shadowTexture.setLightUnit( light.getLightNumber() );
                 shadowTexture.setName( 'shadow_' + light.getName() );
                 this._texture = shadowTexture;
-
-                var near = 0.001;
-                var far = 1000;
-                var depthRangeNum = new Uniform.createFloat4( [ near, far, far - near, 1.0 / ( far - near ) ], 'Shadow_DepthRange' + num );
-                var shadowMapSizeNum = new Uniform.createFloat4( this._textureSize, 'Shadow_MapSize_' + num );
-                var projectionShadowNum = new Uniform.createMatrix4( Matrix.makeIdentity( [] ), 'Shadow_Projection' + num );
-                var viewShadowNum = new Uniform.createMatrix4( Matrix.makeIdentity( [] ), 'Shadow_View' + num );
-                var enabledLight = new Uniform.createFloat1( 1.0, 'Light' + num + '_uniform_enable' );
-
-
-                this._receivingStateset.addUniform( enabledLight );
-                this._receivingStateset.addUniform( projectionShadowNum );
-                this._receivingStateset.addUniform( viewShadowNum );
-                this._receivingStateset.addUniform( depthRangeNum );
-                this._receivingStateset.addUniform( shadowMapSizeNum );
-
-
-                // draw only shadow & light, not texture
-                var texturedebug = shadowSettings._config[ 'texture' ] ? 1.0 : 0.0;
-                var myuniform = Uniform.createFloat1( texturedebug, 'debug_' + num );
-                this._receivingStateset.addUniform( myuniform );
-                // Shadow bias /acne/ peter panning
-                var bias = shadowSettings._config[ 'bias' ];
-                myuniform = Uniform.createFloat1( bias, 'bias_' + num );
-                this._receivingStateset.addUniform( myuniform );
-                // ESM & EVSM
-                var exponent = shadowSettings._config[ 'exponent' ];
-                myuniform = Uniform.createFloat1( exponent, 'exponent_' + num );
-                this._receivingStateset.addUniform( myuniform );
-                var exponent1 = shadowSettings._config[ 'exponent1' ];
-                myuniform = Uniform.createFloat1( exponent1, 'exponent1_' + num );
-                this._receivingStateset.addUniform( myuniform );
-                // VSM
-                var VsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
-                myuniform = Uniform.createFloat1( VsmEpsilon, 'VsmEpsilon_' + num );
-                this._receivingStateset.addUniform( myuniform );
-
-                //this._receivingStateset.addUniform( Uniform.createInt1( 0, 'Texture0' ) );
-
-                this._receivingStateset.setTextureAttributeAndMode( this._lightNum + 1, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
-                //this._receivingStateset.addUniform( Uniform.createInt1( num + 1, 'Texture' + ( num + 1 ) ) );
-                this._receivingStateset.addUniform( Uniform.createInt1( this._lightNum + 1, 'shadow_light' + this._lightNum ) );
-
 
                 // init camera
                 var shadowCamera = new Camera();
@@ -279,7 +249,7 @@ define( [
                 shadowCamera.setRenderOrder( Camera.PRE_RENDER, 0 );
                 shadowCamera.setReferenceFrame( Transform.ABSOLUTE_RF );
                 shadowCamera.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
-
+                shadowCamera.setComputeNearFar( true );
                 shadowCamera.setName( 'light_shadow_camera' + light.getName() );
                 shadowSettings._cameraShadow = shadowCamera;
 
@@ -296,15 +266,16 @@ define( [
                 // prevent unnecessary texture bindings, could loop over max texture unit
                 // TODO: optimize: have a "don't touch current Texture stateAttribute"
                 // deduce from shader compil ?
-                /*
+                var blankTexture = new Texture();
+                blankTexture.defaulType = true;
+                casterStateSet.setTextureAttributeAndMode( 0, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
+                casterStateSet.setTextureAttributeAndMode( 1, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
+                casterStateSet.setTextureAttributeAndMode( 2, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
+                casterStateSet.setTextureAttributeAndMode( 3, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
 
-                 casterStateSet.setTextureAttributeAndMode( 0, new Texture(), StateAttribute.OFF | StateAttribute.PROTECTED );
-                 casterStateSet.setTextureAttributeAndMode( 1, new Texture(), StateAttribute.OFF | StateAttribute.PROTECTED );
-                 casterStateSet.setTextureAttributeAndMode( 2, new Texture(), StateAttribute.OFF | StateAttribute.PROTECTED );
-                 casterStateSet.setTextureAttributeAndMode( 3, new Texture(), StateAttribute.OFF | StateAttribute.PROTECTED );
 
-                */
-
+                var near = 0.001;
+                var far = 1000;
                 var depthRange = new Uniform.createFloat4( [ near, far, far - near, 1.0 / ( far - near ) ], 'Shadow_DepthRange' );
                 casterStateSet.addUniform( depthRange );
 
@@ -315,14 +286,16 @@ define( [
 
             this._textureAllocate();
 
-            // TODO:  shader split devencfloat.glsl
             var casterProgram = this.getShadowCasterShaderProgram();
             this.setShadowCasterShaderProgram( casterProgram );
             shadowSettings._castingStateset.setAttributeAndMode( casterProgram, StateAttribute.ON | StateAttribute.OVERRIDE );
 
 
-            // TODO:  shader compiler force recompile ?
-            this._receivingStateset.attributeMap.dirty();
+            this._receivingStateset.setAttributeAndMode( this._shadowAttribute, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
+
+            this._receivingStateset.setTextureAttributeAndMode( shadowSettings.getLight().getLightNumber() + 4, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
+
+            // TODO:  double sure shader compiler force recompile ?
             this._dirty = false;
             shadowSettings._dirty = false;
         },
@@ -421,7 +394,7 @@ define( [
              } else if ( this._config[ 'shadow' ] === 'EVSM' ) {
                  textureFormat = Texture.RGBA;
              }
-        */
+             */
 
             /*
             var doBlur = shadowSettings.getConfig( 'blur' );
@@ -434,10 +407,11 @@ define( [
                 texFilterMin 'NEAREST' ;
                 texFilterMax 'NEAREST' ;
             }
-*/
-
+             */
 
             this._texture.setType( textureType );
+            this._shadowAttribute.setPrecision( textureType );
+
             this._texture.setMinFilter( texFilterMin );
             this._texture.setMagFilter( texFilterMax );
             this._texture.setInternalFormat( textureFormat );
@@ -463,20 +437,20 @@ define( [
             camera.attachRenderBuffer( glCtxt.DEPTH_ATTACHMENT, glCtxt.DEPTH_COMPONENT16 );
 
             shadowSettings._cameraShadow.setViewport( new Viewport( 0, 0, shadowSizeFinal[ 0 ], shadowSizeFinal[ 1 ] ) );
-            this._receivingStateset.getUniformList()[ 'Shadow_MapSize_' + this._lightNum ].getUniform().set( shadowSizeFinal );
 
         },
         setTexturePrecision: function ( fmt ) {
             this._texturePrecisionFormat = fmt;
+            this._shadowAttribute.setPrecision( fmt );
             this.dirty();
         },
         setTextureSize: function ( mapSize ) {
             this._textureSize = mapSize;
             this.dirty();
         },
-
         setAlgorithm: function ( algo ) {
             this._algorithm = algo;
+            this._shadowAttribute.setAlgorithm( algo );
             this.dirty();
         },
 
@@ -549,6 +523,7 @@ define( [
             //var bx = shadowSettings._cbbv.getBoundingBox();
             //var bs = this.getBoundsCaster( worldLightPos );
             var bs = camera.getBound();
+            //bs.expandBySphere( bsCamera );
 
             if ( lightPos[ 3 ] === 0.0 ) { // infinite directional light
 
@@ -610,25 +585,17 @@ define( [
                 Matrix.makeLookAt( position, bs.center(), up, view );
             }
 
-
-            var num = this._lightNum;
+            this._depthRange[ 0 ] = zNear;
+            this._depthRange[ 1 ] = zFar;
+            this._depthRange[ 2 ] = zFar - zNear;
+            this._depthRange[ 3 ] = 1.0 / ( zFar - zNear );
 
             var castUniforms = shadowSettings._castingStateset.getUniformList();
-            var receivingUniforms = this._receivingStateset.getUniformList();
-            // udpate shader Parameters
-            receivingUniforms[ 'Shadow_Projection' + num ].getUniform().set( projection );
-            receivingUniforms[ 'Shadow_View' + num ].getUniform().set( view );
-            // those help improving shadow depth precision
-            // with "quantization" of depth value in this range.
-            var depthRange = [ zNear, zFar, zFar - zNear, 1.0 / ( zFar - zNear ) ];
-            receivingUniforms[ 'Shadow_DepthRange' + num ].getUniform().set( depthRange );
-            castUniforms[ 'Shadow_DepthRange' ].getUniform().set( depthRange );
+            castUniforms[ 'Shadow_DepthRange' ].getUniform().set( this._depthRange );
 
-            receivingUniforms[ 'debug_' + num ].getUniform().set( this._shadowSettings._config[ 'texture' ] ? 1.0 : 0.0 );
-            receivingUniforms[ 'bias_' + num ].getUniform().set( this._shadowSettings._config[ 'bias' ] );
-            receivingUniforms[ 'exponent_' + num ].getUniform().set( this._shadowSettings._config[ 'exponent' ] );
-            receivingUniforms[ 'exponent1_' + num ].getUniform().set( this._shadowSettings._config[ 'exponent1' ] );
-            receivingUniforms[ 'VsmEpsilon_' + num ].getUniform().set( this._shadowSettings._config[ 'VsmEpsilon' ] );
+            this._texture.setViewMatrix( view );
+            this._texture.setProjectionMatrix( projection );
+            this._texture.setDepthRange( this._depthRange );
 
         },
 
@@ -658,7 +625,7 @@ define( [
         enterCullCaster: function ( cullVisitor ) {
 
             // well shouldn't be called
-            //cullVisitor.setEnableFrustumCulling( true );
+            cullVisitor.setEnableFrustumCulling( true );
 
             //var m = cullVisitor.getCurrentProjectionMatrix();
             //cullVisitor.clampProjectionMatrix( m, cullVisitor._computedNear, cullVisitor._computedFar, cullVisitor._nearFarRatio );
@@ -713,34 +680,20 @@ define( [
         },
 
         cleanSceneGraph: function () {
-            // well release a lot of thing when it works
-            //
-            var num = this._lightNum;
+            // well release a lot more things when it works
+            var shadowSettings = this._shadowSettings;
 
-            this._receivingStateset.removeTextureAttribute( num + 1, 'Texture' );
-
-            //this._receivingStateset.removeUniformByName( 'Texture' + ( num + 1 ) );
-            this._receivingStateset.removeUniformByName( 'shadow_light' + this._lightNum );
-
-            this._receivingStateset.removeUniformByName( 'Shadow_Projection' + num );
-            this._receivingStateset.removeUniformByName( 'Shadow_View' + num );
-            this._receivingStateset.removeUniformByName( 'Shadow_DepthRange' + num );
-            this._receivingStateset.removeUniformByName( 'Shadow_MapSize_' + num );
-
-            this._receivingStateset.removeUniformByName( 'Light' + num + '_uniform_enable' );
-
-            this._receivingStateset.removeUniformByName( 'debug_' + num );
-            this._receivingStateset.removeUniformByName( 'bias_' + num );
-            this._receivingStateset.removeUniformByName( 'exponent_' + num );
-            this._receivingStateset.removeUniformByName( 'exponent1_' + num );
-            this._receivingStateset.removeUniformByName( 'VsmEpsilon_' + num );
+            if ( shadowSettings._castingStateset ) {
+                shadowSettings._cameraShadow = 0;
+                shadowSettings._castingStateset.releaseGLObjects();
+                shadowSettings._castingStateset = undefined;
+            }
 
 
-            this._texture.releaseGLObjects();
-
-            this._texture = 0;
-            var shadowSettings = this.getShadowSettings();
-            shadowSettings._cameraShadow = 0;
+            if ( this._texture ) {
+                this._texture.releaseGLObjects();
+                this._texture = undefined;
+            }
         },
 
     } ), 'osg', 'ShadowMap' );

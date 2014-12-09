@@ -345,14 +345,13 @@ vec4 computeShadow(in vec4 shadowVertexProjected,
   in float bias,
   in float VsmEpsilon,
   in float exponent,
-  in float exponent1,
-  in float debug) {
+  in float exponent1) {
 
 
 
     vec4 shadowUV;
 
-	//normal offset aka Exploding Shadow Receivers
+    //normal offset aka Exploding Shadow Receivers
     float shadowMapTexelSize = shadowVertexProjected.z * 2.0*texSize.z;
     shadowVertexProjected -= vec4(Normal.xyz*bias*shadowMapTexelSize,0);
 
@@ -360,7 +359,7 @@ vec4 computeShadow(in vec4 shadowVertexProjected,
     shadowUV.xy = shadowUV.xy* 0.5 + 0.5;
 
     if (shadowUV.x > 1.0 || shadowUV.y > 1.0 || shadowUV.x < 0.0 || shadowUV.y < 0.0)
-     return vec4(vec3((debug == 0.0) ? 0.0 : 1.0), 1.0);// 0.0 to show limits of light frustum
+     return vec4(vec3(1.0), 1.0);// 0.0 to show limits of light frustum
 
     float objDepth;
  //#define NUM_STABLE

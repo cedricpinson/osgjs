@@ -66,8 +66,7 @@ define( [
         },
 
         getHash: function () {
-            var hash = ( this._shadowTechnique ) ? this._shadowTechnique.getShadowSettings().getAlgorithm() + this._shadowTechnique.getShadowSettings().getTextureType() : '';
-            return this.getType() + this._lightUnit + this.getLightType() + this.isEnable().toString() + hash;
+            return this.getTypeMember() + this.getLightType() + this.isEnable().toString();
         },
 
         getOrCreateUniforms: function () {

@@ -462,6 +462,7 @@ define( [
         }
     } ), 'osg', 'Texture' );
 
+    MACROUTILS.setTypeID( Texture );
 
     Texture.createFromURL = function ( imageSource, format ) {
         var texture = new Texture();

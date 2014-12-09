@@ -23,6 +23,7 @@ define( [
         // separate Material / Light / Texture
         // because this shader generator is specific for this
         var lights = [];
+        var shadows;
         var material;
 
         for ( var i = 0, l = attributes.length; i < l; i++ ) {
@@ -39,6 +40,8 @@ define( [
                 if ( material !== undefined ) Notify.warn( 'Multiple Material attributes latest Chosen ' );
                 material = attributes[ i ];
 
+            } else if ( type === 'ShadowTexture' ) {
+                shadows.push( attributes[ i ] );
             }
 
         }
@@ -46,6 +49,7 @@ define( [
 
         var texturesNum = textureAttributes.length;
         var textures = new Array( texturesNum );
+        var shadowTextures = new Array( texturesNum );
 
         // TODO: Have to handle better textures
         // 4 separate loop over texture list: one here, one for declareTexture, 2 for vertexShader (varying decl + varying store)
@@ -61,10 +65,12 @@ define( [
 
                     var tType = tuTarget.className();
 
+                    var texUnit;
+                    var tName;
                     if ( tType === 'Texture' ) {
 
-                        var texUnit = j;
-                        var tName = tuTarget.getName();
+                        texUnit = j;
+                        tName = tuTarget.getName();
                         if ( tuTarget.getName() === undefined ) {
                             tName = tType + texUnit;
                             tuTarget.setName( tName );
@@ -77,14 +83,31 @@ define( [
                             textureUnit: texUnit
                         };
 
+                    } else if ( tType === 'ShadowTexture' ) {
+
+                        texUnit = j;
+                        tName = tuTarget.getName();
+                        if ( tuTarget.getName() === undefined ) {
+                            tName = tType + texUnit;
+                            tuTarget.setName( tName );
+                        }
+                        shadowTextures[ texUnit ] = tuTarget;
+
+                        this._texturesByName[ tName ] = {
+                            'variable': undefined,
+                            'textureUnit': texUnit
+                        };
                     }
+
                 }
             }
         }
 
         this._lights = lights;
+        this._shadows = shadows;
         this._material = material;
         this._textures = textures;
+        this._shadowsTextures = shadowTextures;
     };
 
     Compiler.prototype = {
@@ -507,10 +530,6 @@ define( [
                 if ( !texture )
                     continue;
 
-                if ( texture.getName().indexOf( 'shadow_light' ) !== -1 ) {
-                    return;
-                }
-
                 if ( texture.getType() === 'Texture' )
                     this.declareTexture( t, texture );
 
@@ -732,6 +751,26 @@ define( [
                 ''
             ].join( '\n' ) );
 
+            for ( i = 0, ll = this._shadows.length; i < ll; i++ ) {
+                // TODO better link between the two
+                // better uniform, node, input, output, raaaaaaaaaaaaa
+                var shadowTexture = this.shadowsTextures[ i ];
+                var shadowTextureUniforms = shadowTexture.getOrCreateUniforms();
+                var viewMat = shadowTextureUniforms.ViewMatrix;
+                var projMat = shadowTextureUniforms.ProjectionMatrix;
+                var depthRange = shadowTextureUniforms.DepthRange;
+                var mapSize = shadowTextureUniforms.MapSize;
+                //
+                this._vertexShader.push( 'uniform mat4 ' + projMat.getName() + ';' );
+                this._vertexShader.push( 'uniform mat4 ' + viewMat.getName() + ';' );
+                this._vertexShader.push( 'uniform vec4 ' + depthRange.getName() + ';' );
+                this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
+                // varyings
+                this._vertexShader.push( 'varying vec4 Shadow_VertexProjected' + i + ';' );
+                this._vertexShader.push( 'varying vec4 Shadow_Z' + i + ';' );
+                hasShadow = true;
+
+
             for ( var t = 0, tl = textures.length; t < tl; t++ ) {
 
                 var texture = textures[ t ];
@@ -743,9 +782,6 @@ define( [
                     if ( !textureMaterial && !textureMaterial.textureUnit )
                         continue;
 
-                    if ( hasShadow && texture.getName().indexOf( 'shadow_light' ) !== -1 ) {
-                        continue;
-                    }
 
                     var texCoordUnit = textureMaterial.textureUnit;
                     if ( texCoordUnit === undefined ) {
@@ -793,9 +829,6 @@ define( [
                         if ( !textureMaterial && !textureMaterial.textureUnit )
                             continue;
 
-                        if ( hasShadow && texture.getName().indexOf( 'shadow_light' ) !== -1 ) {
-                            continue;
-                        }
                         var texCoordUnit = texture.textureUnit;
                         if ( texCoordUnit === undefined ) {
                             texCoordUnit = tt;
@@ -809,6 +842,8 @@ define( [
                     }
                 }
             } )();
+                for ( i = 0, ll = this._shadows.length; i < ll; i++ ) {
+                    if ( this._shadows[ i ]._shadowTechnique ) {
             this._vertexShader.push( '}' );
         },
 
@@ -942,7 +977,7 @@ define( [
             if ( this._lights.length > 0 ) {
 
                 // creates lights nodes
-                var lightedOutput = this.createLighting( {
+                var nodeLight = new shaderNode.Lighting( lightedOutput, this._lights, this._shadows, this._shadowsTextures, normal, eyeVector, materialAmbientColor, diffuseColor, materialSpecularColor, materialShininess );
                     materialdiffuse: diffuseColor
                 } );
                 finalColor = lightedOutput;

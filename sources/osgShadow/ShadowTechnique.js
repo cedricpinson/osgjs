@@ -5,15 +5,15 @@ define( [
     'osg/Node',
     'osg/NodeVisitor',
     'osg/CullVisitor'
-], function( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor ) {
+], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor ) {
     'use strict';
 
     // cull callback interception
-    var CameraCullCallback = function( shadowTechnique ) {
+    var CameraCullCallback = function ( shadowTechnique ) {
         this._shadowTechnique = shadowTechnique;
     };
     CameraCullCallback.prototype = {
-        cull: function( node, nodeVisitor ) {
+        cull: function ( node, nodeVisitor ) {
             this._shadowTechnique.enterCullCaster( nodeVisitor );
             this._shadowTechnique.getShadowedScene().nodeTraverse( nodeVisitor );
             this._shadowTechnique.exitCullCaster( nodeVisitor );
@@ -25,7 +25,7 @@ define( [
      *  ShadowTechnique provides an implementation interface of shadow techniques.
      *  @class ShadowTechnique
      */
-    var ShadowTechnique = function() {
+    var ShadowTechnique = function () {
         Object.call( this );
 
 
@@ -36,55 +36,55 @@ define( [
 
     /** @lends ShadowTechnique.prototype */
     ShadowTechnique.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Object.prototype, {
-        dirty: function() {
+        dirty: function () {
             this._dirty = true;
         },
 
-        setCameraCullCallback: function( camera ) {
+        setCameraCullCallback: function ( camera ) {
             camera.setCullCallback( new CameraCullCallback( this ) );
         },
-        getShadowedScene: function() {
+        getShadowedScene: function () {
             return this._shadowedScene;
         },
 
-        setShadowedScene: function( shadowedScene ) {
+        setShadowedScene: function ( shadowedScene ) {
             this._shadowedScene = shadowedScene;
         },
 
 
-        init: function() {
+        init: function () {
             // well shouldn't be called
             Notify.log( 'No ShadowTechnique activated: normal rendering activated' );
 
         },
 
-        valid: function() {
+        valid: function () {
             // make sure abstract class not used.
             return false;
         },
 
-        update: function( nodeVisitor ) {
+        update: function ( nodeVisitor ) {
             this.getShadowedScene().nodeTraverse( nodeVisitor );
         },
 
-        cull: function( cullVisitor ) {
+        cull: function ( cullVisitor ) {
             this.getShadowedScene().nodeTraverse( cullVisitor );
             return false;
         },
 
-        cleanSceneGraph: function() {
+        cleanSceneGraph: function () {
             // well shouldn't be called
             Notify.log( 'No ShadowTechnique activated: normal rendering activated' );
         },
 
-        enterCullCaster: function( /*cullVisitor*/) {
+        enterCullCaster: function ( /*cullVisitor*/) {
             // well shouldn't be called
         },
 
-        exitCullCaster: function( /*cullVisitor*/) {
+        exitCullCaster: function ( /*cullVisitor*/) {
             // well shouldn't be called
         },
-        traverse: function( nodeVisitor ) {
+        traverse: function ( nodeVisitor ) {
             if ( !this._shadowedScene ) return;
             if ( nodeVisitor.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
                 if ( this._dirty ) this.init();

@@ -7,7 +7,7 @@ define( [
     'use strict';
 
     // TODO : use GLSL libraries shadow.glsl
-    var ShadowNode = function ( shadowOutput, lightedOutput, lighted, lightPos, lightDir, lightNDL, lighting, light ) {
+    var ShadowNode = function ( shadowOutput, lightedOutput, lighted, lightPos, lightDir, lightNDL, lighting, light, shadow, shadowTexture ) {
         Node.call( this );
 
         this._lighting = lighting;
@@ -18,6 +18,8 @@ define( [
         this._lightDir = lightDir;
         this._lightNDL = lightNDL;
 
+        this._shadow = shadow;
+        this._shadowTexture = shadowTexture;
 
         //
         //texture
@@ -58,20 +60,26 @@ define( [
             var lightNum = this._light.getLightNumber();
             // Common
             var normal = this._lighting._normal;
-            var shadowDepthRange = context.getOrCreateUniform( 'vec4', 'Shadow_DepthRange' + lightNum );
-            var shadowMapSize = context.getOrCreateUniform( 'vec4', 'Shadow_MapSize' + lightNum );
+
+            var shadowUniforms = this._shadow.getOrCreateUniforms();
+            var shadowTextureUniforms = this._shadowTexture.getOrCreateUniforms();
+
+            var shadowDepthRange = context.getOrCreateUniform( 'vec4', shadowTextureUniforms.DepthRange );
+            var shadowMapSize = context.getOrCreateUniform( 'vec4', shadowTextureUniforms.MapSize );
+
+            var viewMat = context.getOrCreateUniform( 'mat4', shadowTextureUniforms.ViewMatrix );
+            var projMat = context.getOrCreateUniform( 'mat4', shadowTextureUniforms.ProjectionMatrix );
 
 
-            var bias = context.getOrCreateUniform( 'float', 'bias_' + lightNum );
-            var VsmEpsilon = context.getOrCreateUniform( 'float', 'VsmEpsilon_' + lightNum );
-            var exponent = context.getOrCreateUniform( 'float', 'exponent_' + lightNum );
-            var exponent1 = context.getOrCreateUniform( 'float', 'exponent1_' + lightNum );
-            var debug = context.getOrCreateUniform( 'float', 'debug_' + lightNum );
+            var bias = context.getOrCreateUniform( 'float', shadowUniforms.bias );
+            var VsmEpsilon = context.getOrCreateUniform( 'float', shadowUniforms.bias.vsmEpsilon );
+            var exponent0 = context.getOrCreateUniform( 'float', shadowUniforms.bias.exponent0 );
+            var exponent1 = context.getOrCreateUniform( 'float', shadowUniforms.bias.exponent1 );
 
             //var tex = context.getOrCreateSampler( 'sampler2D', 'Texture' + ( lightNum + 1 ) );
             var tex = context.getOrCreateSampler( 'sampler2D', 'shadow_light' + lightNum );
 
-            //
+            // Varyings
             var shadowVertexProjected = context.getOrCreateVarying( 'vec4', 'Shadow_VertexProjected' + lightNum );
             var shadowZ = context.getOrCreateVarying( 'vec4', 'Shadow_Z' + lightNum );
 
