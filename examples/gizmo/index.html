@@ -2,8 +2,18 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Performance</title>
+    <title>Picking</title>
     <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
+    <style>
+     #picking {
+       position: absolute;
+       pointer-events: none;
+     }
+     #ViewContainer {
+       position: absolute;
+       transform: translateZ(0);
+     }
+     </style>
 
     <!-- Javascript -->
     <script type="text/javascript" src="../vendors/es5-shim.js"></script>
@@ -32,7 +42,7 @@
     </a>
 
     <div class="osgjs-description">
-      Performance scene to stress test the framework with a lot of entities
+      Demonstrate gizmo editing:  click on model, select gizmo axis by clicking and moving while still mouse button pushed.
     </div>
 
   </div>

@@ -1,10 +1,13 @@
 <html><body>
 
 
+<script type="text/javascript" src="../../examples/vendors/es5-shim.js"></script>
+<script type="text/javascript" src="../../examples/vendors/es6-shim.js"></script>
 <script type="text/javascript" src="../../examples/vendors/Q.js"></script>
 <script type="text/javascript" src="../../examples/vendors/Hammer.js"></script>
 <script type="text/javascript" src="../../examples/vendors/Leap.js"></script>
-<script type="text/javascript" src="../../builds/active/OSG.js"></script>
+<script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+
 
 <p>Equation and demo of an area light using WestLangley approx</p>
 
@@ -17,7 +20,7 @@
 
 #define NVERTS 4
 
-// just state all defaults 
+// just state all defaults
 // http://www.khronos.org/registry/gles/specs/2.0/GLSL_ES_Specification_1.0.17.pdf
 // 4.5.2
 precision highp float;
@@ -169,7 +172,7 @@ vec3 cornerContrib(vec3 v0, vec3 v1)
 	diffuse = diffuse * lightColor;
   vec3 color =  ambient + diffuse;
 
-  //color =  vec3(factor);   
+  //color =  vec3(factor);
 	gl_FragColor = vec4( color, 1.0 );
 }
 

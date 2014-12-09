@@ -8,8 +8,9 @@ define( [
     'osgUtil/PolytopeIntersector',
     'osgUtil/DisplayNodeGraphVisitor',
     'osgUtil/DisplayNormalVisitor',
-    'osgUtil/DisplayGeometryVisitor'
-], function ( Composer, ParameterVisitor, Oculus, WebVR, IntersectionVisitor, LineSegmentIntersector, PolytopeIntersector, DisplayNodeGraphVisitor, DisplayNormalVisitor, DisplayGeometryVisitor ) {
+    'osgUtil/DisplayGeometryVisitor',
+    'osgUtil/NodeGizmo'
+], function ( Composer, ParameterVisitor, Oculus, WebVR, IntersectionVisitor, LineSegmentIntersector, PolytopeIntersector, DisplayNodeGraphVisitor, DisplayNormalVisitor, DisplayGeometryVisitor, NodeGizmo ) {
 
     'use strict';
 
@@ -25,5 +26,7 @@ define( [
     osgUtil.DisplayNodeGraphVisitor = DisplayNodeGraphVisitor;
     osgUtil.DisplayNormalVisitor = DisplayNormalVisitor;
     osgUtil.DisplayGeometryVisitor = DisplayGeometryVisitor;
+    osgUtil.NodeGizmo = NodeGizmo;
+
     return osgUtil;
 } );

@@ -283,8 +283,54 @@ define( [
             this.div( qa, -4.0, qa );
             this.exp( qa, qb );
             return this.mult( qb, qcur, r );
-        }
+        },
 
+        makeRotateFromTo: function ( from, to, out ) {
+            // Now let's get into the real stuff
+            // Use "dot product plus one" as test as it can be re-used later on
+            var dotProdPlus1 = 1.0 + Vec3.dot( from, to );
+
+            // Check for degenerate case of full u-turn. Use epsilon for detection
+            if ( dotProdPlus1 < 1e-7 ) {
+
+                // Get an orthogonal vector of the given vector
+                // in a plane with maximum vector coordinates.
+                // Then use it as quaternion axis with pi angle
+                // Trick is to realize one value at least is >0.6 for a normalized vector.
+                var x = from[ 0 ];
+                var y = from[ 1 ];
+                var z = from[ 2 ];
+                var norm;
+                if ( Math.abs( x ) < 0.6 ) {
+                    norm = Math.sqrt( 1.0 - x * x );
+                    out[ 1 ] = z / norm;
+                    out[ 2 ] = -y / norm;
+                    out[ 0 ] = out[ 3 ] = 0.0;
+                } else if ( Math.abs( y ) < 0.6 ) {
+                    norm = Math.sqrt( 1.0 - y * y );
+                    out[ 0 ] = -z / norm;
+                    out[ 2 ] = x / norm;
+                    out[ 1 ] = out[ 3 ] = 0.0;
+                } else {
+                    norm = Math.sqrt( 1.0 - z * z );
+                    out[ 0 ] = y / norm;
+                    out[ 1 ] = -x / norm;
+                    out[ 2 ] = out[ 3 ] = 0.0;
+                }
+            } else {
+                // Find the shortest angle quaternion that transforms normalized vectors
+                // into one other. Formula is still valid when vectors are colinear
+
+                var s = Math.sqrt( 0.5 * dotProdPlus1 );
+                Vec3.cross( from, to, out );
+                var f = 0.5 / s;
+                out[ 0 ] *= f;
+                out[ 1 ] *= f;
+                out[ 2 ] *= f;
+                out[ 3 ] = s;
+            }
+            return out;
+        }
     };
 
     return Quat;

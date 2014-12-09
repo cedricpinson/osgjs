@@ -281,7 +281,6 @@ var gruntTasks = {};
     // will start a server on port 9001 with root directory at the same level of
     // the grunt file
     var currentDirectory = path.dirname( path.resolve( './Gruntfile.js', './' ) );
-    console.log( 'serving ' + currentDirectory );
     gruntTasks.connect = {
         server: {
             options: {
@@ -317,31 +316,45 @@ var gruntTasks = {};
     };
 
 } )();
-
-// ## Symlinks
-// (explicit because windows)
+// ## Copy
+// (explicit because windows doesn't support symlinks)
 ( function () {
 
-    gruntTasks.symlink = {
-        // Enable overwrite to delete symlinks before recreating them
-        options: {
-            overwrite: false
-        },
-        Hammer: {
-            src: 'examples/vendors/Hammer-1.0.5.js',
-            dest: 'examples/vendors/Hammer.js'
-        },
-        RequireTextBuild: {
-            src: 'sources/vendors/require/Text-2.0.12.js',
-            dest: 'sources/vendors/require/text.js'
-        },
-        Q: {
-            src: 'examples/vendors/Q-0.9.7.js',
-            dest: 'examples/vendors/Q.js'
-        },
-        active: {
-            src: DIST_PATH,
-            dest: path.join( BUILD_PATH, 'active' )
+    gruntTasks.copyto = {
+
+        main: {
+            files: [
+                //Hammer:
+                {
+                    cwd: './',
+                    src: 'examples/vendors/Hammer-1.0.5.js',
+                    dest: 'examples/vendors/Hammer.js'
+                },
+                //RequireTextBuild:
+                {
+                    cwd: './',
+                    src: 'sources/vendors/require/Text-2.0.12.js',
+                    dest: 'sources/vendors/require/text.js'
+                },
+                //Q:
+                {
+                    cwd: './',
+                    src: 'examples/vendors/Q-0.9.7.js',
+                    dest: 'examples/vendors/Q.js'
+                },
+                //es5-shim:
+                {
+                    cwd: './',
+                    src: 'tests/vendors/es5-shim.js',
+                    dest: 'examples/vendors/es5-shim.js'
+                },
+                //es6-shim:
+                {
+                    cwd: './',
+                    src: 'tests/vendors/es6-shim.js',
+                    dest: 'examples/vendors/es6-shim.js'
+                }
+            ]
         }
     };
 
@@ -496,8 +509,9 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-requirejs' );
     grunt.loadNpmTasks( 'grunt-contrib-clean' );
     grunt.loadNpmTasks( 'grunt-contrib-watch' );
-    // windows
-    grunt.loadNpmTasks( 'grunt-contrib-symlink' );
+
+    // windows not supporting link in git repo
+    grunt.loadNpmTasks( 'grunt-copy-to' );
     //static site
     grunt.loadNpmTasks( 'grunt-wintersmith-compile' );
     grunt.loadNpmTasks( 'grunt-git' );
@@ -513,7 +527,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build:sources', [ 'build:sources:dist' ] );
 
     grunt.registerTask( 'build:dist', [ 'build:sources:dist' ] );
-    grunt.registerTask( 'build', [ 'symlink', 'build:dist' ] );
+    grunt.registerTask( 'build', [ 'copyto', 'build:dist' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
     grunt.registerTask( 'serve', [ 'build', 'connect:dist:keepalive' ] );

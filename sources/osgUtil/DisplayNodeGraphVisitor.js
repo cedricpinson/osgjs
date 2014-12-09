@@ -1,7 +1,7 @@
 define( [
     'vendors/jQuery',
     'osg/Utils',
-    'osg/NodeVisitor',
+    'osg/NodeVisitor'
 
 ], function ( $, MACROUTILS, NodeVisitor ) {
 
@@ -14,7 +14,7 @@ define( [
         var css = document.createElement( 'style' );
         css.type = 'text/css';
         css.innerHTML = [
-            '.simple-tooltip {',
+            '.osgDebugSimpleTooltip {',
             'display: none;',
             'position: absolute;',
             'margin-left: 10px;',
@@ -23,7 +23,7 @@ define( [
             'background: rgba(0,0,0,.9);',
             'color: #ffffff;',
             '}',
-            '.simple-tooltip:before {',
+            '.osgDebugSimpleTooltip:before {',
             'content: ',
             ';',
             'position: absolute;',
@@ -37,25 +37,24 @@ define( [
         document.getElementsByTagName( 'head' )[ 0 ].appendChild( css );
 
         this.el = document.createElement( 'div' );
-        this.el.className = 'simple-tooltip';
+        this.el.className = 'osgDebugSimpleTooltip';
         document.body.appendChild( this.el );
-
-        var showTooltip = function ( e ) {
+        var nodes = document.querySelectorAll( this.options.selector );
+        for ( var i = 0; i < nodes.length; i++ ) {
+            nodes[ i ].addEventListener( 'mouseover', this.showTooltip.bind( this ), false );
+            nodes[ i ].addEventListener( 'mouseout', this.hideTooltip.bind( this ), false );
+        }
+    };
+    SimpleTooltips.prototype = {
+        showTooltip: function ( e ) {
             var target = e.currentTarget;
             this.el.innerHTML = target.getAttribute( 'title' );
             this.el.style.display = 'block';
             this.el.style.left = ( $( target ).position().left + $( target ).get( 0 ).getBoundingClientRect().width ) + 'px';
             this.el.style.top = $( target ).position().top + 'px';
-        };
-
-        var hideTooltip = function ( /* e */) {
+        },
+        hideTooltip: function ( /* e */) {
             this.el.style.display = 'none';
-        };
-
-        var nodes = document.querySelectorAll( this.options.selector );
-        for ( var i = 0; i < nodes.length; i++ ) {
-            nodes[ i ].addEventListener( 'mouseover', showTooltip.bind( this ), false );
-            nodes[ i ].addEventListener( 'mouseout', hideTooltip.bind( this ), false );
         }
     };
 
@@ -63,23 +62,27 @@ define( [
     var DisplayNodeGraphVisitor = function () {
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
 
-        this._nodeListSize = 0;
         this._fullNodeList = [];
         this._nodeList = [];
-        this._linkListSize = 0;
         this._linkList = [];
         this._focusedElement = 'scene';
 
-        $( 'body' ).append( '<svg width=100% height=100%></svg>' );
+        this._idToDomElement = new window.Map();
+        this._uniqueEdges = new window.Set();
 
-        this._css = '.node {text-align: center;cursor: pointer;}.node rect {stroke: #FFF;}.edgePath path {stroke: #FFF;fill: none;}table {text-align: right;}svg {position: absolute;left: 0px;top: 0px;}.button {position: absolute;left: 15px;top: 15px;z-index: 5;border: 0;background: #65a9d7;background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));background: -webkit-linear-gradient(top, #3e779d, #65a9d7);background: -moz-linear-gradient(top, #3e779d, #65a9d7);background: -ms-linear-gradient(top, #3e779d, #65a9d7);background: -o-linear-gradient(top, #3e779d, #65a9d7);padding: 5px 10px;-webkit-border-radius: 7px;-moz-border-radius: 7px;border-radius: 7px;-webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;-moz-box-shadow: rgba(0,0,0,1) 0 1px 0;box-shadow: rgba(0,0,0,1) 0 1px 0;text-shadow: rgba(0,0,0,.4) 0 1px 0;color: white;font-size: 15px;font-family: Helvetica, Arial, Sans-Serif;text-decoration: none;vertical-align: middle;}.button:hover {border-top-color: #28597a;background: #28597a;color: #ccc;}.button:active {border-top-color: #1b435e;background: #1b435e;}.simple-tooltip .name {font-weight: bold;color: #60b1fc;margin: 0;}.simple-tooltip .description {margin: 0;}';
+        this._cbSelect = undefined; // callback when selecting a node
+
+        this._$svg = $( '<svg width=100% height=100%></svg>' );
+        $( 'body' ).append( this._$svg );
+
+        this._css = '.node {text-align: center;cursor: pointer;}.node rect {stroke: #FFF;}.edgePath path {stroke: #FFF;fill: none;}table {text-align: right;}svg {position: absolute;left: 0px;top: 0px;}.osgDebugButton {position: absolute;left: 15px;top: 15px;z-index: 5;border: 0;background: #65a9d7;background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));background: -webkit-linear-gradient(top, #3e779d, #65a9d7);background: -moz-linear-gradient(top, #3e779d, #65a9d7);background: -ms-linear-gradient(top, #3e779d, #65a9d7);background: -o-linear-gradient(top, #3e779d, #65a9d7);padding: 5px 10px;-webkit-border-radius: 7px;-moz-border-radius: 7px;border-radius: 7px;-webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;-moz-box-shadow: rgba(0,0,0,1) 0 1px 0;box-shadow: rgba(0,0,0,1) 0 1px 0;text-shadow: rgba(0,0,0,.4) 0 1px 0;color: white;font-size: 15px;font-family: Helvetica, Arial, Sans-Serif;text-decoration: none;vertical-align: middle;}.osgDebugButton:hover {border-top-color: #28597a;background: #28597a;color: #ccc;}.osgDebugButton:active {border-top-color: #1b435e;background: #1b435e;}.osgDebugSimpleTooltip .osgDebugName {font-weight: bold;color: #60b1fc;margin: 0;}.osgDebugSimpleTooltip .osgDebugDescription {margin: 0;}';
     };
 
     DisplayNodeGraphVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
-
+        setCallbackSelect: function ( cb ) {
+            this._cbSelect = cb;
+        },
         apply: function ( node ) {
-
-            window.test = node;
 
             if ( this._fullNodeList[ node.getInstanceID() ] !== node ) {
 
@@ -90,31 +93,32 @@ define( [
 
                 var stateset = '';
                 if ( node.getStateSet() ) {
-                    stateset = this.createStateset( node, stateset );
+                    stateset = this.createStateset( node );
+                    this._fullNodeList[ stateset.name ] = node.getStateSet();
                 }
 
                 this._fullNodeList[ node.getInstanceID() ] = node;
 
-                this._nodeList[ this._nodeListSize ] = {
+                this._nodeList.push( {
                     name: node.getName(),
                     className: node.className(),
                     instanceID: node.getInstanceID(),
                     stateset: stateset,
                     matrix: nodeMatrix
-                };
-                this._nodeListSize++;
+                } );
 
             }
 
-            if ( node.getChildren ) {
-
-                var children = node.getChildren();
-                for ( var i = 0, l = children.length; i < l; i++ ) {
-                    this._linkList[ this._linkListSize ] = {
-                        parentNode: node.getInstanceID(),
-                        childrenNode: children[ i ].getInstanceID()
-                    };
-                    this._linkListSize++;
+            if ( this.nodePath.length >= 2 ) {
+                var parentID = this.nodePath[ this.nodePath.length - 2 ].getInstanceID();
+                var childID = node.getInstanceID();
+                var key = parentID + '+' + childID;
+                if ( !this._uniqueEdges.has( key ) ) {
+                    this._linkList.push( {
+                        parentNode: parentID,
+                        childrenNode: childID
+                    } );
+                    this._uniqueEdges.add( key );
                 }
             }
 
@@ -122,26 +126,30 @@ define( [
         },
 
         reset: function () {
-            this._nodeListSize = 0;
-            this._fullNodeList = [];
-            this._nodeList = [];
-            this._linkListSize = 0;
-            this._linkList = [];
+            this._$svg.empty();
+            this._fullNodeList.length = 0;
+            this._nodeList.length = 0;
+            this._linkList.length = 0;
+            this._uniqueEdges.clear();
+            this._focusedElement = 'scene';
         },
 
         // Apply all the style
         injectStyleElement: function () {
-            $( 'body' ).append( '<button class="button">Access to the scene</button>' );
+            if ( this._cssInjected )
+                return;
+            this._cssInjected = true;
 
-            $( '.button' ).click( function () {
+            $( 'body' ).append( '<button class="osgDebugButton">Access to the scene</button>' );
+            $( '.osgDebugButton' ).click( function () {
                 if ( this._focusedElement === 'scene' ) {
-                    $( '.button' ).text( 'Access to the graph' );
-                    $( 'svg' ).css( 'zIndex', '-2' );
+                    $( '.osgDebugButton' ).text( 'Access to the graph' );
+                    this._$svg.css( 'zIndex', '-2' );
                     this._focusedElement = 'graph';
                 } else {
-                    $( '.button' ).text( 'Access to the scene' );
-                    $( 'svg' ).css( 'zIndex', '2' );
-                    $( '.simple-tooltip' ).css( 'zIndex', '3' );
+                    $( '.osgDebugButton' ).text( 'Access to the scene' );
+                    this._$svg.css( 'zIndex', '2' );
+                    $( '.osgDebugSimpleTooltip' ).css( 'zIndex', '3' );
                     this._focusedElement = 'scene';
                 }
             }.bind( this ) );
@@ -160,23 +168,25 @@ define( [
             }
             var d3url = '//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js';
             var dagreurl = '//cdn.jsdelivr.net/dagre-d3/0.2.9/dagre-d3.min.js';
-            $.when( $.getScript( d3url ), $.getScript( dagreurl ) ).done( this.createGraphApply.bind( this ) );
+            $.getScript( d3url ).done( function () {
+                $.getScript( dagreurl ).done( this.createGraphApply.bind( this ) );
+            }.bind( this ) );
         },
 
         createGraphApply: function () {
             var g = new window.dagreD3.Digraph();
 
-            g = this.generateNodeAndLink( g );
+            g = this.g = this.generateNodeAndLink( g );
 
             // Add the style of the graph
             this.injectStyleElement();
 
             // Create the renderer
-            var renderer = new window.dagreD3.Renderer();
+            var renderer = this.renderer = new window.dagreD3.Renderer();
 
             // Set up an SVG group so that we can translate the final graph.
-            var svg = window.d3.select( 'svg' ),
-                svgGroup = svg.append( 'g' );
+            var svg = window.d3.select( this._$svg.get( 0 ) );
+            var svgGroup = svg.append( 'g' );
 
             // Set initial zoom to 75%
             var initialScale = 0.75;
@@ -190,9 +200,10 @@ define( [
 
             // Simple function to style the tooltip for the given node.
             var styleTooltip = function ( name, description ) {
-                return '<p class="name">' + name + '</p><pre class="description">' + description + '</pre>';
+                return '<p class="osgDebugName">' + name + '</p><pre class="osgDebugDescription">' + description + '</pre>';
             };
 
+            var idToDom = this._idToDomElement;
             // Override drawNodes to set up the hover.
             var oldDrawNodes = renderer.drawNodes();
             renderer.drawNodes( function ( g, svg ) {
@@ -200,6 +211,7 @@ define( [
 
                 // Set the title on each of the nodes and use tipsy to display the tooltip on hover
                 svgNodes.attr( 'title', function ( d ) {
+                    idToDom.set( d, this );
                     return styleTooltip( d, g.node( d ).description );
                 } );
 
@@ -209,46 +221,67 @@ define( [
             // Run the renderer. This is what draws the final graph.
             renderer.run( g, svgGroup );
 
-            new SimpleTooltips( {
+            this.tooltip = new SimpleTooltips( {
                 selector: '.node'
             } );
 
-            var self = this;
-
-            // Do a console log of the node (or stateset) and save it in Window.*
-            $( '.node' ).click( function () {
-                var identifier = $( this ).attr( 'title' ).split( '<' )[ 1 ].split( '>' )[ 1 ];
-                if ( identifier.search( 'StateSet' ) === -1 ) {
-                    window.activeNode = self._fullNodeList[ identifier ];
-                    console.log( 'window.activeNode is set.' );
-                    console.log( self._fullNodeList[ identifier ] );
-                } else {
-                    var stateset = self._fullNodeList[ identifier.split( ' ' )[ 2 ] ].getStateSet();
-                    window.activeStateset = stateset;
-                    console.log( 'window.activeStateset is set.' );
-                    console.log( stateset );
-                }
-
-            } );
+            // Do a console log of the node (or stateset) and save it in window.*
+            $( '.node' ).click( this.onNodeSelect.bind( this ) );
         },
+        selectNode: function ( node ) {
+            var id = node.getInstanceID();
+            var dom = this._idToDomElement.get( id );
+            if ( dom )
+                $( dom ).click();
+        },
+        onNodeSelect: function ( e ) {
+            var target = e.currentTarget;
+            var identifier = $( target.getAttribute( 'title' ) )[ 0 ].innerHTML;
+            var fnl = this._fullNodeList;
 
+            if ( this.lastStateSet )
+                this.lastStateSet.childNodes[ 0 ].style.fill = '#09f';
+            if ( this.lastNode )
+                this.lastNode.childNodes[ 0 ].style.fill = '#fff';
+            this.lastStateSet = this.lastNode = null;
+            target.childNodes[ 0 ].style.fill = '#f00';
+
+            var elt = fnl[ identifier ];
+
+            if ( elt.className() !== 'StateSet' ) {
+                this.lastNode = target;
+                window.activeNode = elt;
+                console.log( 'window.activeNode is set.' );
+                console.log( window.activeNode );
+            } else {
+                this.lastStateSet = target;
+                window.activeStateset = elt;
+                console.log( 'window.activeStateset is set.' );
+                console.log( window.activeStateset );
+            }
+            if ( this._cbSelect )
+                this._cbSelect( elt );
+        },
         // Subfunction of createGraph, will iterate to create all the node and link in dagre
         generateNodeAndLink: function ( g ) {
-            for ( var i = 0; i < this._nodeListSize; i++ ) {
+            var nodeLength = this._nodeList.length;
+            for ( var i = 0; i < nodeLength; i++ ) {
                 var element = this._nodeList[ i ];
 
                 g.addNode( element.instanceID, {
                     label: element.className + ( element.name ? '\n' + element.name : '' ),
-                    description: ( element.stateset ? 'StateSetID : ' + element.stateset.statesetID : '' ) + ( element.stateset && element.matrix !== '' ? '<br /><br />' : '' ) + element.matrix
+                    description: ( element.matrix !== '' ? '<br /><br />' : '' ) + element.matrix
                 } );
 
                 if ( element.stateset ) {
 
-                    g.addNode( element.stateset.name, {
-                        label: 'StateSet',
-                        description: 'numTexture : ' + element.stateset.numTexture,
-                        style: 'fill: #0099FF;stroke-width: 0px;'
-                    } );
+                    if ( !g.hasNode( element.stateset.name ) ) {
+                        g.addNode( element.stateset.name, {
+                            label: 'StateSet',
+                            description: 'numTexture : ' + element.stateset.numTexture,
+                            style: 'fill: #0099FF;stroke-width: 0px;'
+                        } );
+                    }
 
                     g.addEdge( null, element.instanceID, element.stateset.name, {
                         style: 'stroke: #0099FF;'
@@ -256,7 +289,8 @@ define( [
                 }
             }
 
-            for ( i = 0; i < this._linkListSize; i++ ) {
+            var linkLength = this._linkList.length;
+            for ( i = 0; i < linkLength; i++ ) {
                 g.addEdge( null, this._linkList[ i ].parentNode, this._linkList[ i ].childrenNode );
             }
 
@@ -290,19 +324,13 @@ define( [
         },
 
         // Get the stateset and create the stateset display structure
-        createStateset: function ( node, stateset ) {
-            stateset = {
-                name: 'StateSet - ' + node.getInstanceID(),
-                statesetID: node.getStateSet().getInstanceID(),
+        createStateset: function ( node ) {
+            return {
+                name: node.getStateSet().getInstanceID(),
                 parentID: node.getInstanceID(),
                 stateset: node.getStateSet(),
                 numTexture: node.getStateSet().getNumTextureAttributeLists()
             };
-            return stateset;
-        },
-
-        getNodeListSize: function () {
-            return this._nodeListSize;
         },
 
         getFullNodeList: function () {
@@ -311,10 +339,6 @@ define( [
 
         getNodeList: function () {
             return this._nodeList;
-        },
-
-        getLinkListSize: function () {
-            return this._linkListSize;
         },
 
         getLinkList: function () {

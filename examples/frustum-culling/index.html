@@ -1,20 +1,32 @@
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Performance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Frustum Computations example</title>
     <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
+
+    <style type="text/css">
+    /* Custom CSS goes here */
+    #loading {
+    position: absolute;
+    }
+    </style>
 
     <!-- Javascript -->
     <script type="text/javascript" src="../vendors/es5-shim.js"></script>
     <script type="text/javascript" src="../vendors/es6-shim.js"></script>
-    <script type="text/javascript" src="../vendors/Q-0.9.7.js"></script>
-    <script type="text/javascript" src="../vendors/Hammer-1.0.5.js"></script>
+    <script type="text/javascript" src="../vendors/jquery-2.1.1.js"></script>
+    <script type="text/javascript" src="../vendors/Q.js"></script>
+    <script type="text/javascript" src="../vendors/Hammer.js"></script>
     <script type="text/javascript" src="../vendors/Leap.js"></script>
+    <script type="text/javascript" src="../vendors/dat.gui.js"></script>
     <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
     <script type="text/javascript" src="main.js"></script>
 
 </head>
+
 
 
 <body class="osgjs-theme-dark">
@@ -32,7 +44,7 @@
     </a>
 
     <div class="osgjs-description">
-      Performance scene to stress test the framework with a lot of entities
+     Frustum Culling: Objects outside of Main camera will disappear from bottom right debug view, showing effectiveness of frustum culling real-time
     </div>
 
   </div>
