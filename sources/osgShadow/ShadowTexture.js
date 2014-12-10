@@ -22,17 +22,17 @@ define( [
         Texture.call( this );
         this._uniforms = {};
         this._mapSize = new Array( 4 );
-        this._lightUnit = 0;
+        this._lightUnit = 0; // default for a valid cloneType
     };
 
     /** @lends Texture.prototype */
     ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Texture.prototype, {
         attributeType: 'ShadowTexture',
 
+
         cloneType: function () {
             var t = new ShadowTexture();
             t.defaultType = true;
-            t.setLightUnit( this.getLightUnit() );
             return t;
         },
 

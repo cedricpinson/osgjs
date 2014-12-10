@@ -85,6 +85,10 @@ define( [
     /** @lends Texture.prototype */
     Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
         attributeType: 'Texture',
+
+        // clone a default instance
+        // of that attribute type
+        // (useful for default)
         cloneType: function () {
             var t = new Texture();
             t.defaultType = true;

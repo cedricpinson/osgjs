@@ -28,24 +28,27 @@ define( [
         // well it's not supposed to be a problem, but yeah the ordering is an issue, so maybe it's better to link to
         // the light attribute, in this case we dont need anymore the _lightNumber
         // but re ordering light seems to not be a good practice in osg, it's still a risk
-        this._light = light; // that could be more generic to have the unit instead of the object
+        this._light = light;
+        // that could be more generic to have the unit instead of the object
 
 
         // hash change var
-        this._algoType = algoType;
+        this._algoType = algoType || 'NONE';
 
         // shadow depth bias as projected in shadow camera space texture
         // and viewer camera space projection introduce its bias
-        this._bias = bias;
+        this._bias = bias !== undefined ? bias : 0.001;
         // algo dependant
         // Exponential shadow maps use exponentials
         // to allows fuzzy depth
-        this._exponent0 = exponent0;
-        this._exponent1 = exponent1;
+        this._exponent0 = exponent0 !== undefined ? exponent0 : 0.001;
+        this._exponent1 = exponent1 !== undefined ? exponent1 : 0.001;
         // Variance Shadow mapping use One more epsilon
-        this._vsmEpsilon = vsmEpsilon;
+        this._vsmEpsilon = vsmEpsilon !== undefined ? vsmEpsilon : 0.001;
         // shader compilation differnet upon texture precision
-        this._precision = precision;
+        this._precision = precision !== undefined ? precision : 'BYTE';
+
+
     };
 
     ShadowAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
@@ -53,22 +56,18 @@ define( [
         attributeType: 'ShadowAttribute',
 
         cloneType: function () {
-            return new ShadowAttribute( this._light,
-                this._algoType,
-                this._bias,
-                this._exponent0,
-                this._exponent1,
-                this._vsmEpsilon,
-                this._precision );
+            return new ShadowAttribute();
         },
 
         getTypeMember: function () {
-            return this.attributeType + this._light.getLightNumber();
+            return this.attributeType + this.getLightNumber();
+        },
+        getLightNumber: function () {
+            return this.getLight() ? this.getLight().getLightNumber() : 0;
         },
 
-
         getUniformName: function ( name ) {
-            var prefix = this.getType() + this._light.getLightNumber().toString();
+            var prefix = this.getType() + this.getLightNumber().toString();
             return prefix + '_uniform_' + name;
         },
 
@@ -98,6 +97,9 @@ define( [
         setPrecision: function ( precision ) {
             this._precision = precision;
             this.setDirty( true );
+        },
+        getPrecision: function () {
+            return this._precision;
         },
         getLight: function () {
             return this._light;
