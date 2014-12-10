@@ -11,8 +11,6 @@
      var $ = window.$;
 
 
-
-
      //////////////////////
      /// The sample itself is in this object.
      ///
@@ -285,7 +283,13 @@
              controller = gui.add( this._config, 'texturesize', [ 32, 64, 128, 256, 512, 1024, 2048, 4096, 8144 ] );
              controller.onChange( this.updateShadow.bind( this ) );
 
-             controller = gui.add( this._config, 'lightnum', 1, 3 ).step( 1 );
+             // shaders has to have under max varying decl
+             // max = this._maxVaryings -1
+             // usual shader is already 4 vertexColor, FragNormal, FragEye, FragTexcoord.
+             // each shadow is 2 more.
+             var maxLights = ~~ ( ( this._maxVaryings - 1 ) - 4 ) / 2.0;
+
+             controller = gui.add( this._config, 'lightnum', 1, maxLights ).step( 1 );
              controller.onChange( this.updateShadow.bind( this ) );
 
              controller = gui.add( this._config, 'lightType', [ 'Spot',
@@ -470,7 +474,7 @@
          updateLightsEnable: function () {
              var l, numLights = ~~ ( this._config[ 'lightnum' ] );
 
-             while ( this._maxVaryings < ( numLights * 2 + 2 ) ) {
+             while ( this._maxVaryings < ( numLights * 2 + 4 ) ) {
                  numLights--;
              }
              this._config[ 'lightnum' ] = numLights;
@@ -497,18 +501,10 @@
                  this._shadowTechnique = [];
                  this._debugLights = [];
 
-                 if ( numLights > 0 ) {
-                     this.addShadowedLight( this._viewer.getSceneData(), 0, [ 50, 50, 15, 1 ], [ 0, 0, 0, 0 ], lightScale );
-                     // this._shadowTechnique[ 0 ].init();
+                 for ( var k = 0; k < numLights; k++ ) {
+                     this.addShadowedLight( group, k, lightScale );
                  }
-                 if ( numLights > 1 ) {
-                     this.addShadowedLight( this._viewer.getSceneData(), 1, [ -150, 150, 50, 1 ], [ 0, 0, 0, 0 ], lightScale );
-                     // this._shadowTechnique[ 1 ].init();
-                 }
-                 if ( numLights > 2 ) {
-                     this.addShadowedLight( this._viewer.getSceneData(), 2, [ 50, -75, 35, 1 ], [ 0, 0, 0, 0 ], lightScale );
-                     //  this._shadowTechnique[ 2 ].init();
-                 }
+
                  this._lightAndShadowScene.init();
                  this._updateRtt = true;
              }
@@ -787,63 +783,6 @@
              }
              return this._ComposerdebugCamera;
          },
-         readShaders: function () {
-
-             var defer = Q.defer();
-
-             var shaderNames = [
-                 'shadowmap_vsm_receive.vert',
-                 'shadowmap_vsm_receive.frag',
-                 'shadowmap_vsm_cast.vert',
-                 'shadowmap_vsm_cast.frag',
-                 'shadowmap_evsm_receive.vert',
-                 'shadowmap_evsm_receive.frag',
-                 'shadowmap_evsm_cast.vert',
-                 'shadowmap_evsm_cast.frag',
-                 'shadowmap_receive.vert',
-                 'shadowmap_receive.frag',
-                 'shadowmap_cast.vert',
-                 'shadowmap_cast.frag',
-                 'shadow.glsl',
-                 'object.vert',
-                 'object.frag',
-                 'light.frag',
-                 'interpolation.frag',
-                 'floatrgbacodec.glsl',
-                 'downsize.frag',
-                 'common.vert',
-                 'common.frag',
-                 'basic.vert',
-                 'basic.frag'
-             ];
-             this._shaderPath = 'shaders/';
-
-             var shaders = shaderNames.map( function ( arg ) {
-                 return this._shaderPath + arg;
-             }.bind( this ) );
-
-
-             var promises = [];
-             shaders.forEach( function ( shader ) {
-                 promises.push( Q( $.get( shader ) ) );
-             }.bind( this ) );
-
-
-             Q.all( promises ).then( function ( args ) {
-
-                 var shaderNameContent = {};
-                 shaderNames.forEach( function ( name, idx ) {
-                     shaderNameContent[ name ] = args[ idx ];
-                 } );
-
-                 this._shaderProcessor.addShaders( shaderNameContent );
-
-                 defer.resolve();
-
-             }.bind( this ) );
-
-             return defer.promise;
-         },
          // Scene to be shadowed,  and to cast  shadow from
          // Multiple parents...
          createSceneCasterReceiver: function () {
@@ -913,16 +852,17 @@
              var size = 2;
              var dist = 15;
              var cube = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size * 10 );
+
              var cubeSubNodeTrans = new osg.MatrixTransform();
-             cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( -dist, -dist, dist / 2, [] ) );
+             cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( 0, 0, dist / 2, [] ) );
              var cubeSubNode = new osg.Node();
              cubeSubNode.addChild( cubeSubNodeTrans );
              cubeSubNodeTrans.addChild( cube );
              cubeSubNode.setName( 'cubeSubNode_0' );
              cubeNode.addChild( cubeSubNode );
 
-             cubeNode.addChild( cubeSubNode );
-             if ( 1 || window.location.href.indexOf( 'cubes' ) !== -1 ) {
+             //cubeNode.addChild( cubeSubNode );
+             if ( window.location.href.indexOf( 'cubes' ) !== -1 ) {
                  cubeSubNodeTrans = new osg.MatrixTransform();
                  cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
                  cubeSubNode = new osg.Node();
@@ -966,7 +906,9 @@
              var groundNode = new osg.Node();
              groundNode.setName( 'groundNode' );
 
-             var groundSize = 40;
+             //  var numPlanes = 5;
+             var numPlanes = 1;
+             var groundSize = 200 / numPlanes;
              var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
              var groundTex = osg.Texture.createFromURL( '../camera/textures/sol_trauma_periph.png' );
              groundTex.setWrapT( 'MIRRORED_REPEAT' );
@@ -978,8 +920,8 @@
              var groundSubNode;
              // intentionally create many node/transform
              // to mimick real scene with many nodes
-             for ( var wG = 0; wG < 5; wG++ ) {
-                 for ( var wH = 0; wH < 5; wH++ ) {
+             for ( var wG = 0; wG < numPlanes; wG++ ) {
+                 for ( var wH = 0; wH < numPlanes; wH++ ) {
                      var groundSubNodeTrans = new osg.MatrixTransform();
                      groundSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( wG * groundSize - 100, wH * groundSize - 100, -5.0, [] ) );
                      // only node are culled in CullVisitor frustum culling
@@ -993,16 +935,20 @@
 
              ShadowScene.addChild( groundNode );
              ShadowScene.addChild( cubeNode );
-             ShadowScene.addChild( modelNode );
+             //ShadowScene.addChild( modelNode );
 
              this._groundNode = groundNode;
              this._cubeNode = cubeNode;
-             this._modelNode = modelNode;
+             //             this._modelNode = modelNode;
 
              return ShadowScene;
          },
-         addShadowedLight: function ( group, num, position, target, lightScale ) {
-
+         addShadowedLight: function ( group, num, lightScale, position, target ) {
+             if ( !target ) target = [ 0, 0, 0 ];
+             if ( !position ) position = [ -25 + -15 * num + -25 * ( num % 2 ),
+                 25 + 15 * num - 25 * ( num % 2 ),
+                 15 + 35 * num, 1
+             ];
              var shadowSettings = new osgShadow.ShadowSettings( this._config );
              //this._lightAndShadowScene.setShadowSettings( shadowSettings );
 
@@ -1099,7 +1045,7 @@
 
              //this._shadowScene.setNodeMask( this._castsShadowTraversalMask );
              //this._shadowScene.setNodeMask( this._receivesShadowTraversalMask );
-             //this._groundNode.setNodeMask( ~this._castsShadowTraversalMask );
+             this._groundNode.setNodeMask( ~this._castsShadowTraversalMask );
 
              /////////////////////////
              shadowedScene.setGLContext( this._glContext );
@@ -1115,9 +1061,9 @@
              var numLights = ~~ ( this._config[ 'lightnum' ] );
              var lightScale = 1.0 / numLights;
 
-             if ( numLights > 0 ) this.addShadowedLight( group, 0, [ 50, 50, 15, 1 ], [ 0, 0, 0, 0 ], lightScale );
-             if ( numLights > 1 ) this.addShadowedLight( group, 1, [ -150, 150, 50, 1 ], [ 0, 0, 0, 0 ], lightScale );
-             if ( numLights > 2 ) this.addShadowedLight( group, 2, [ 50, -75, 35, 1 ], [ 0, 0, 0, 0 ], lightScale );
+             for ( var k = 0; k < numLights; k++ ) {
+                 this.addShadowedLight( group, k, lightScale );
+             }
              /*
              shadowedScene.init();
 */
@@ -1160,9 +1106,12 @@
              viewer.setLightingMode( osgViewer.View.LightingMode.NO_LIGHT );
              viewer.init();
 
+             viewer.getCamera().setComputeNearFar( false );
+
              this._glContext = viewer.getGraphicContext();
 
              this._maxVaryings = this._viewer._webGLCaps.getWebGLParameter( 'MAX_VARYING_VECTORS' );
+
 
              this._floatLinearTexSupport = this._viewer._webGLCaps.hasRTTLinearFloat();
              this._floatTexSupport = this._viewer._webGLCaps.hasRTTLinearFloat();
@@ -1170,18 +1119,16 @@
              this._halfFloatTexSupport = this._viewer._webGLCaps.hasRTTLinearHalfFloat();
              this._hasAnyFloatTexSupport = this._floatLinearTexSupport || this._floatTexSupport || this._halfFloatLinearTexSupport || this._halfFloatTexSupport;
 
-             this.readShaders().then( function () {
-                 var scene = this.createScene();
+             var scene = this.createScene();
 
-                 viewer.setSceneData( scene );
-                 viewer.setupManipulator();
-                 viewer.getManipulator().computeHomePosition();
-                 viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+             viewer.setSceneData( scene );
+             viewer.setupManipulator();
+             viewer.getManipulator().computeHomePosition();
+             viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
 
-                 viewer.run();
+             viewer.run();
 
-                 this.initDatGUI();
-             }.bind( this ) );
+             this.initDatGUI();
          }
      };
      // execute loaded code when ready

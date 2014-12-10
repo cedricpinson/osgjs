@@ -28,25 +28,25 @@ vec4 getQuadFloatFromTex(sampler2D depths, vec2 uv){
 // VSM
 float ChebychevInequality (vec2 moments, float t)
 {
-	// No shadow if depth of fragment is in front
-	if ( t <= moments.x )
-		return 1.0;
+  // No shadow if depth of fragment is in front
+  if ( t <= moments.x )
+      return 1.0;
 
-	// Calculate variance, which is actually the amount of
-	// error due to precision loss from fp32 to RG/BA
-	// (moment1 / moment2)
-	float variance = moments.y - (moments.x * moments.x);
-	variance = max(variance, 0.02);
+    // Calculate variance, which is actually the amount of
+    // error due to precision loss from fp32 to RG/BA
+    // (moment1 / moment2)
+    float variance = moments.y - (moments.x * moments.x);
+    variance = max(variance, 0.02);
 
-	// Calculate the upper bound
-	float d = t - moments.x;
-	return variance / (variance + d * d);
+    // Calculate the upper bound
+    float d = t - moments.x;
+    return variance / (variance + d * d);
 }
 
 float ChebyshevUpperBound(vec2 moments, float mean, float bias, float minVariance)
 {
     float d = mean - moments.x;
-	if ( d <= 0.0 )
+    if ( d <= 0.0 )
         return 1.0;
     // Compute variance
     float variance = moments.y - (moments.x * moments.x);
@@ -352,8 +352,8 @@ vec4 computeShadow(in vec4 shadowVertexProjected,
     vec4 shadowUV;
 
     //normal offset aka Exploding Shadow Receivers
-    float shadowMapTexelSize = shadowVertexProjected.z * 2.0*texSize.z;
-    shadowVertexProjected -= vec4(Normal.xyz*bias*shadowMapTexelSize,0);
+    //float shadowMapTexelSize = shadowVertexProjected.z * 2.0*texSize.z;
+    //shadowVertexProjected -= vec4(Normal.xyz*bias*shadowMapTexelSize,0);
 
     shadowUV = shadowVertexProjected / shadowVertexProjected.w;
     shadowUV.xy = shadowUV.xy* 0.5 + 0.5;
@@ -362,17 +362,11 @@ vec4 computeShadow(in vec4 shadowVertexProjected,
      return vec4(vec3(1.0), 1.0);// 0.0 to show limits of light frustum
 
     float objDepth;
- //#define NUM_STABLE
-    #ifndef NUM_STABLE
-      objDepth = -shadowZ.z;
-      objDepth =  (objDepth - depthRange.x)* depthRange.w;// linearize (aka map z to near..far to 0..1)
-      objDepth =   clamp(objDepth, 0.0, 1.0);
-    #else
-      objDepth =  length(LightPosition.xyz - shadowZ.xyz );
-      objDepth =  (objDepth - depthRange.x)* depthRange.w;// linearize (aka map z to near..far to 0..1)
-      objDepth =   clamp(objDepth, 0.0, 1.0);
 
-    #endif
+    objDepth =  -  shadowZ.z;
+    objDepth =  (objDepth - depthRange.x)* depthRange.w;// linearize (aka map z to near..far to 0..1)
+
+
 
    float shadowBias = 0.005*tan(acos(N_Dot_L)); // cosTheta is dot( n, l ), clamped between 0 and 1
     shadowBias = clamp(shadowBias, 0.0, bias);

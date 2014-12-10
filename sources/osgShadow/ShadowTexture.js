@@ -1,5 +1,6 @@
 define( [
     'osg/Utils',
+    'osg/Notify',
     'osg/StateAttribute',
     'osg/Texture',
     'osg/Uniform',
@@ -7,7 +8,7 @@ define( [
     'osg/Vec3',
     'osg/Vec4',
     'osg/Map'
-], function ( MACROUTILS, StateAttribute, Texture, Uniform, Matrix, Vec3, Vec4, Map ) {
+], function ( MACROUTILS, Notify, StateAttribute, Texture, Uniform, Matrix, Vec3, Vec4, Map ) {
     'use strict';
 
 
@@ -22,9 +23,10 @@ define( [
         Texture.call( this );
         this._uniforms = {};
         this._mapSize = new Array( 4 );
-        this._lightUnit = 0; // default for a valid cloneType
+        this._lightUnit = -1; // default for a valid cloneType
     };
 
+    ShadowTexture.uniforms = {};
     /** @lends Texture.prototype */
     ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Texture.prototype, {
         attributeType: 'ShadowTexture',
@@ -47,7 +49,14 @@ define( [
             return prefix + '_uniform_' + name;
         },
 
-        getOrCreateUniforms: function () {
+        getOrCreateUniforms: function ( unit ) {
+            // uniform are once per CLASS attribute, not per instance
+            var obj = ShadowTexture;
+
+            Notify.assert( unit !== undefined );
+
+            if ( obj.uniforms[ unit ] !== undefined ) return obj.uniforms[ unit ];
+
             var uniformList = {
                 'ViewMatrix': 'createMat4',
                 'ProjectionMatrix': 'createMat4',
@@ -65,43 +74,46 @@ define( [
 
             }.bind( this ) );
 
-            this._uniforms = new Map( uniforms );
 
-            return this._uniforms;
+            var name = 'ShadowTexture' + unit;
+            var uniform = Uniform.createInt1( unit, name );
+            uniforms[ 'ShadowTexture' + unit ] = uniform;
+
+            obj.uniforms[ unit ] = new Map( uniforms );
+
+            this.latestUnit = unit;
+            return obj.uniforms[ unit ];
         },
 
         setViewMatrix: function ( viewMatrix ) {
             this._viewMatrix = viewMatrix;
-            this.setDirty( true );
+
         },
         setProjectionMatrix: function ( projectionMatrix ) {
             this._projectionMatrix = projectionMatrix;
-            this.setDirty( true );
+
         },
         setDepthRange: function ( depthRange ) {
             this._depthRange = depthRange;
-            this.setDirty( true );
+
         },
-        apply: function ( state ) {
+        apply: function ( state, texUnit ) {
 
             // Texture stuff: call parent class method
-            Texture.prototype.apply.call( this, state );
+            Texture.prototype.apply.call( this, state, texUnit );
 
             // update Uniforms
-            var uniformMap = this.getOrCreateUniforms();
-
+            var uniformMap = this.getOrCreateUniforms( texUnit );
             uniformMap.ViewMatrix.set( this._viewMatrix );
-
             uniformMap.ProjectionMatrix.set( this._projectionMatrix );
-
             uniformMap.DepthRange.set( this._depthRange );
 
             // get that from texture size
             // TODO: handle Dirty Size change using apply tex2D callback?
             this._mapSize[ 0 ] = this._textureWidth;
             this._mapSize[ 1 ] = this._textureHeight;
-            this._mapSize[ 3 ] = 1.0 / this._textureWidth;
-            this._mapSize[ 4 ] = 1.0 / this._textureHeight;
+            this._mapSize[ 2 ] = 1.0 / this._mapSize[ 0 ];
+            this._mapSize[ 3 ] = 1.0 / this._mapSize[ 1 ];
             uniformMap.MapSize.set( this._mapSize );
 
             this.setDirty( false );

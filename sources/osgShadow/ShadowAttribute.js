@@ -51,6 +51,7 @@ define( [
 
     };
 
+    ShadowAttribute.uniforms = {};
     ShadowAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
 
         attributeType: 'ShadowAttribute',
@@ -63,7 +64,7 @@ define( [
             return this.attributeType + this.getLightNumber();
         },
         getLightNumber: function () {
-            return this.getLight() ? this.getLight().getLightNumber() : 0;
+            return this.getLight() ? this.getLight().getLightNumber() : -1;
         },
 
         getUniformName: function ( name ) {
@@ -106,6 +107,13 @@ define( [
         },
 
         getOrCreateUniforms: function () {
+            // uniform are once per CLASS attribute, not per instance
+            var obj = ShadowAttribute;
+
+            var typeMember = this.getTypeMember();
+
+            if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
+
             // Variance Shadow mapping use One more epsilon
             var uniformList = {
                 'bias': 'createFloat',
@@ -124,9 +132,9 @@ define( [
 
             }.bind( this ) );
 
-            this._uniforms = new Map( uniforms );
+            obj.uniforms[ typeMember ] = new Map( uniforms );
 
-            return this._uniforms;
+            return obj.uniforms[ typeMember ];
         },
 
         apply: function ( /*state*/) {

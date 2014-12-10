@@ -36,18 +36,31 @@ define( [
     var ShadowMap = function ( settings ) {
         ShadowTechnique.call( this );
 
+        // optimized frustum
+        // is tighest possible
+        // light frustum
+        // with non in receive camera parts removed.
+        this._optimizedFrustum = false;
 
-        // uniforms, shaders ?
-        // this._texture
-        // shadowSettings._cameraShadow
-        this._frustumCasters = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
-        this._frustumReceivers = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
+        if ( this._optimizedFrustum ) {
 
-        settings._cbbv = new ShadowFrustumIntersection( NodeVisitor.TRAVERSE_ACTIVE_CHILDREN, this._frustumReceivers, this._frustumCasters );
+            this._frustumCasters = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
+            this._frustumReceivers = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
+
+            settings._cbbv = new ShadowFrustumIntersection( NodeVisitor.TRAVERSE_ACTIVE_CHILDREN, this._frustumReceivers, this._frustumCasters );
+
+            this._bs = new BoundingSphere();
+
+        }
+
+        this._projectionMatrix = Matrix.create();
+        this._viewMatrix = Matrix.create();
 
         this._tmpMat = Matrix.create();
-        this._bs = new BoundingSphere();
+        this._tmpVec = Vec3.create();
+        this._tmpVecBis = Vec3.create();
 
+        this._lightUp = [ 0.0, 0.0, 1.0 ];
         this._shadowSettings = settings;
 
         this._textureSize = 256;
@@ -65,7 +78,7 @@ define( [
             this._dirty = true;
         },
         getCamera: function () {
-            return this.getShadowSettings()._cameraShadow;
+            return this._cameraShadow;
         },
         getTexture: function () {
             return this._texture;
@@ -101,6 +114,7 @@ define( [
             return program;
         },
 
+        // TODO: remove, deprecated
         getDefines: function () {
 
             var shadowSettings = this._shadowSettings || this.getShadowedScene().getShadowSettings();
@@ -234,11 +248,14 @@ define( [
             this._receivingStateset = this._shadowedScene.getReceivingStateSet();
 
             // First init
+            var texUnit = light.getLightNumber() + 4;
             if ( !this._texture ) {
+
                 var shadowTexture = new ShadowTexture();
+                // TODO texUnit choice: 4 shift ... is abitrary and wrong
                 // TODO: LIGHT NUMBER in shadowTexture ...
                 shadowTexture.setLightUnit( light.getLightNumber() );
-                shadowTexture.setName( 'shadow_' + light.getName() );
+                shadowTexture.setName( 'ShadowTexture' + texUnit );
                 this._texture = shadowTexture;
 
                 // init camera
@@ -249,9 +266,11 @@ define( [
                 shadowCamera.setRenderOrder( Camera.PRE_RENDER, 0 );
                 shadowCamera.setReferenceFrame( Transform.ABSOLUTE_RF );
                 shadowCamera.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
-                shadowCamera.setComputeNearFar( true );
+
+
                 shadowCamera.setName( 'light_shadow_camera' + light.getName() );
                 shadowSettings._cameraShadow = shadowCamera;
+                this._cameraShadow = shadowCamera;
 
 
                 // init StateSets
@@ -267,7 +286,9 @@ define( [
                 // TODO: optimize: have a "don't touch current Texture stateAttribute"
                 // deduce from shader compil ?
                 var blankTexture = new Texture();
-                blankTexture.defaulType = true;
+                blankTexture.defaultType = true;
+                blankTexture.setName( 'emptyTex' );
+
                 casterStateSet.setTextureAttributeAndMode( 0, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
                 casterStateSet.setTextureAttributeAndMode( 1, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
                 casterStateSet.setTextureAttributeAndMode( 2, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
@@ -293,7 +314,7 @@ define( [
 
             this._receivingStateset.setAttributeAndMode( this._shadowAttribute, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
 
-            this._receivingStateset.setTextureAttributeAndMode( shadowSettings.getLight().getLightNumber() + 4, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
+            this._receivingStateset.setTextureAttributeAndMode( texUnit, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
 
             // TODO:  double sure shader compiler force recompile ?
             this._dirty = false;
@@ -426,7 +447,7 @@ define( [
             //this._texture.init( glCtxt );
 
             // force reattach
-            var camera = shadowSettings._cameraShadow;
+            var camera = this._cameraShadow;
             var frameBuffer = camera.frameBufferObject;
             camera.attachments = undefined;
             if ( frameBuffer ) {
@@ -493,10 +514,22 @@ define( [
         aimShadowCastingCamera: function ( light, lightPos, lightDir, lightUp ) {
 
             var shadowSettings = this.getShadowSettings();
-            var camera = shadowSettings._cameraShadow;
-            var view = camera.getViewMatrix();
-            var projection = camera.getProjectionMatrix();
+            var camera = this._cameraShadow;
 
+
+            // Some strange async things here to check
+            // related to world change in proj/view mattrics
+            // afterward changes ?
+
+            Matrix.copy( camera.getProjectionMatrix(), this._projectionMatrix );
+            Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
+            var projection = this._projectionMatrix;
+            var view = this._viewMatrix;
+
+            /*
+            var projection = camera.getProjectionMatrix();
+            var view = camera.getViewMatrix();
+*/
             // lightSource can has only 1 parent and it is matrix transform.
             var parentNode = light.getUserData();
             // inject
@@ -516,42 +549,117 @@ define( [
             var position = worldLightPos;
 
 
-            ////////////////////////////////////////
-            /// start  computations OPTIMIZED NEAR FAR
-            ////////////////////////////////////////
+            var zFar, zNear, radius, center, centerDistance, frustumBound;
+            var zFix = false;
 
-            // clip against camera frustum + cast "margin  between light near and scene"
-            //var bx = shadowSettings._cbbv.getBoundingBox();
-            //var bs = this.getBoundsCaster( worldLightPos );
-            var bs = camera.getBound();
-            //bs.expandBySphere( bsCamera );
+            if ( this._optimizedFrustum ) {
+
+                ////////////////////////////////////////
+                /// start  computations OPTIMIZED NEAR FAR
+                ////////////////////////////////////////
+
+                // clip against camera frustum + cast "margin  between light near and scene"
+                //var bx = shadowSettings._cbbv.getBoundingBox();
+                frustumBound = this.getBoundsCaster( worldLightPos );
+                //bs.expandBySphere( bsCamera );
+                center = frustumBound.center();
+                radius = frustumBound.radius();
+
+                centerDistance = Vec3.distance( position, center );
+                zNear = centerDistance - radius;
+                zFar = centerDistance + radius;
+                /////////////////////////////////////////////////////////
+            } else {
+                // use camera auto near/far
+                zFar = this._farCaster;
+                zNear = this._nearCaster;
+                zFix = true;
+
+                if ( 1 || zNear === undefined || zFar === undefined ) {
+                    // didn't get near/far auto computed
+                    // first frame, off, etc.
+                    frustumBound = this.getShadowedScene().getBound();
+                    center = frustumBound.center();
+                    radius = frustumBound.radius();
+
+                    centerDistance = Vec3.distance( position, center );
+                    zNear = centerDistance - radius;
+                    zFar = centerDistance + radius;
+                    zFix = false;
+                }
+            }
+
+            // Empty or Bad Frustums
+            // No objects, handle it gracefully
+            var epsilon = 1e-6;
+            if ( zFar < zNear - epsilon ) {
+
+                // TODO: clear shadow texture and return wihtout any further ops
+                // with a early out
+                Notify.log( 'empty shadowMap' );
+                // for now just prevent NaN errors
+
+                if ( this._optimizedFrustum ) {
+                    for ( var l = 0; l < 6; l++ ) {
+                        for ( var k = 0; k < 4; k++ ) {
+                            this._frustumCasters[ l ][ k ] = 0.0;
+                        }
+                    }
+                }
+
+                zFar = 1;
+                zNear = 0.001;
+                zFix = true;
+            }
+
+            // Check div by zero or NaN cases
+            if ( zNear === Number.POSITIVE_INFINITY || zNear < epsilon ) {
+                zNear = epsilon;
+                zFix = true;
+            }
+            if ( zNear === Number.NEGATIVE_INFINITY || zFar < epsilon ) {
+                zFar = 1.0;
+                zFix = true;
+            }
+
+            var zNearRatio = 0.001;
+            if ( zNear < zFar * zNearRatio ) {
+                zNear = zFar * zNearRatio;
+                zFix = true;
+            }
+
+            if ( zFix ) {
+                radius = ( zFar - zNear ) * 0.5;
+
+
+                // move from camera to near
+                // first compute a ray along light dir of length near
+                Vec3.mult( worldLightDir, zNear, this._tmpVec );
+                // then
+                Vec3.add( position, this._tmpVec, this._tmpVec );
+
+                // move from near to center
+                // first compute a ray along light dir of length radius
+                Vec3.mult( worldLightDir, radius, this._tmpVecBis );
+                Vec3.add( this._tmpVec, this._tmpVecBis, this._tmpVec );
+
+                center = this._tmpVec;
+                centerDistance = Vec3.distance( position, center );
+
+                zNear = centerDistance - radius;
+                zFar = centerDistance + radius;
+
+            }
+
+            Notify.assert( zNear > epsilon );
+            Notify.assert( zFar > zNear + epsilon );
 
             if ( lightPos[ 3 ] === 0.0 ) { // infinite directional light
 
                 // make an orthographic projection
-                // set the position far away along the light direction
-                position = Vec3.add( bs.center(), Vec3.mult( worldLightDir, bs.radius() * 2.0, position ), position );
+                // set the position far away along the light direction (inverse)
+                position = Vec3.add( center, Vec3.mult( worldLightDir, radius * 2.0, position ), position );
             }
-
-            var centerDistance = Vec3.distance( position, bs.center() );
-            var zNear = centerDistance - bs.radius();
-            var zFar = centerDistance + bs.radius();
-
-            // from crude bbox
-            if ( this._nearCaster && ( this._nearCaster !== Number.POSITIVE_INFINITY && this._nearCaster !== Number.NEGATIVE_INFINITY ) ) {
-                zNear = this._nearCaster;
-            }
-            var zNearRatio = 0.001;
-            if ( zNear < 0.00001 )
-                zNear = 0.00001;
-
-            if ( zNear < zFar * zNearRatio )
-                zNear = zFar * zNearRatio;
-
-
-            ////////////////////////////////////////
-            /// End computations OPTIMIZED NEAR FAR
-            ////////////////////////////////////////
 
             var top, right;
             var up = lightUp;
@@ -573,17 +681,17 @@ define( [
                     Vec3.add( position, worldTarget, worldTarget );
                     Matrix.makeLookAt( position, worldTarget, up, view );
                 } else { // standard omni-directional positional light
-                    top = ( bs.radius() / centerDistance ) * zNear;
+                    top = ( radius / centerDistance ) * zNear;
                     right = top;
 
                     Matrix.makeFrustum( -right, right, -top, top, zNear, zFar, projection );
-                    Matrix.makeLookAt( position, bs.center(), up, view );
+                    Matrix.makeLookAt( position, center, up, view );
                 }
             } else { // directional light
-                top = bs.radius();
+                top = radius;
                 right = top;
                 Matrix.makeOrtho( -right, right, -top, top, zNear, zFar, projection );
-                Matrix.makeLookAt( position, bs.center(), up, view );
+                Matrix.makeLookAt( position, center, up, view );
             }
 
             this._depthRange[ 0 ] = zNear;
@@ -594,9 +702,34 @@ define( [
             var castUniforms = shadowSettings._castingStateset.getUniformList();
             castUniforms[ 'Shadow_DepthRange' ].getUniform().set( this._depthRange );
 
+            Matrix.copy( this._projectionMatrix, camera.getProjectionMatrix() );
+            Matrix.copy( this._viewMatrix, camera.getViewMatrix() );
+
+            // change each frame
+            // don't set dirty
+            // otherwise will
+            // make texture reupload
+            // (therefore emptyiing it each frame)
             this._texture.setViewMatrix( view );
             this._texture.setProjectionMatrix( projection );
             this._texture.setDepthRange( this._depthRange );
+
+
+            // too late, it's latest frame
+            // shadowCamera.setComputeNearFar( true );
+            this._cameraShadow.setComputeNearFar( false );
+
+            /*
+          var bias = shadowSettings._config[ 'bias' ];
+            var exponent0 = shadowSettings._config[ 'exponent' ];
+            var exponent1 = shadowSettings._config[ 'exponent1' ];
+            var vsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
+
+             this._shadowAttribute.setBias( bias );
+            this._shadowAttribute.setExponent0( exponent0 );
+            this._shadowAttribute.setExponent1( exponent1 );
+            this._shadowAttribute.setVsmEpsilon( vsmEpsilon );
+*/
 
         },
 
@@ -612,10 +745,10 @@ define( [
 
             var light = shadowSettings.getLight();
 
-            this.aimShadowCastingCamera( light, light.getPosition(), light.getDirection() );
+            this.aimShadowCastingCamera( light, light.getPosition(), light.getDirection(), this._lightUp );
 
             // do RTT from the camera traversal mimicking light pos/orient
-            shadowSettings._cameraShadow.accept( cullVisitor );
+            this._cameraShadow.accept( cullVisitor );
 
             cullVisitor.popStateSet();
 
@@ -625,15 +758,22 @@ define( [
 
         enterCullCaster: function ( cullVisitor ) {
 
-            // well shouldn't be called
-            cullVisitor.setEnableFrustumCulling( true );
 
-            //var m = cullVisitor.getCurrentProjectionMatrix();
-            //cullVisitor.clampProjectionMatrix( m, cullVisitor._computedNear, cullVisitor._computedFar, cullVisitor._nearFarRatio );
-            var mvp = this._tmpMat;
-            var shadowSettings = this.getShadowSettings();
-            Matrix.mult( shadowSettings._cameraShadow.getProjectionMatrix(), shadowSettings._cameraShadow.getViewMatrix(), mvp );
-            cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, false, true );
+
+            if ( this._optimizedFrustum ) {
+                // well shouldn't be called
+                cullVisitor.setEnableFrustumCulling( true );
+
+                var camera = this._cameraShadow;
+
+
+                var m = cullVisitor.getCurrentProjectionMatrix();
+                cullVisitor.clampProjectionMatrix( m, cullVisitor._computedNear, cullVisitor._computedFar, cullVisitor._nearFarRatio );
+                var mvp = this._tmpMat;
+                Matrix.mult( camera.getProjectionMatrix(), camera.getViewMatrix(), mvp );
+                cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, false, true );
+            }
+
         },
 
         exitCullCaster: function ( cullVisitor ) {
@@ -641,33 +781,23 @@ define( [
             this._nearCaster = cullVisitor._computedNear;
             this._farCaster = cullVisitor._computedFar;
 
-            // No objects, handle it gracefully
-            var epsilon = 1e-6;
-            if ( this._farCaster < this._nearCaster - epsilon ) {
-                Notify.log( 'empty shadowMap' );
-                for ( var l = 0; l < 6; l++ ) {
-                    for ( var k = 0; k < 4; k++ ) {
-                        this._frustumCasters[ l ][ k ] = 0.0;
-                    }
+
+            if ( this._optimizedFrustum ) {
+                var m = cullVisitor.getCurrentProjectionMatrix();
+                cullVisitor.clampProjectionMatrix( m, this._nearCaster, this._farCaster, cullVisitor._nearFarRatio );
+                var mvp = this._tmpMat;
+                Matrix.mult( this._cameraShadow.getProjectionMatrix(), this._cameraShadow.getViewMatrix(), mvp );
+                cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, false );
+                for ( var i = 0; i < 6; i++ ) {
+                    Vec4.copy( cullVisitor._frustum[ i ], this._frustumCasters[ i ] );
                 }
-                this._farCaster = 1;
-                this._nearCaster = 0.001;
-                return;
-            }
-            var m = cullVisitor.getCurrentProjectionMatrix();
-            cullVisitor.clampProjectionMatrix( m, this._nearCaster, this._farCaster, cullVisitor._nearFarRatio );
-            var mvp = this._tmpMat;
-            var shadowSettings = this.getShadowSettings();
-            Matrix.mult( shadowSettings._cameraShadow.getProjectionMatrix(), shadowSettings._cameraShadow.getViewMatrix(), mvp );
-            cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, false );
-            for ( var i = 0; i < 6; i++ ) {
-                Vec4.copy( cullVisitor._frustum[ i ], this._frustumCasters[ i ] );
             }
         },
 
 
         /** run the cull traversal of the ShadowedScene and set up the rendering for this ShadowTechnique.*/
         cull: function ( cullVisitor ) {
+
             // make sure positioned data is done for light,
             // do it first
             //this.cullShadowReceivingScene( cullVisitor );
@@ -685,17 +815,19 @@ define( [
             var shadowSettings = this._shadowSettings;
 
             if ( shadowSettings._castingStateset ) {
-                shadowSettings._cameraShadow = 0;
+                shadowSettings._cameraShadow = undefined;
                 shadowSettings._castingStateset.releaseGLObjects();
                 shadowSettings._castingStateset = undefined;
             }
+
+            this._cameraShadow = undefined;
 
 
             if ( this._texture ) {
                 this._texture.releaseGLObjects();
                 this._texture = undefined;
             }
-        },
+        }
 
     } ), 'osg', 'ShadowMap' );
 

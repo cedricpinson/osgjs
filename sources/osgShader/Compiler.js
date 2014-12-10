@@ -95,7 +95,8 @@ define( [
 
                         this._texturesByName[ tName ] = {
                             'variable': undefined,
-                            'textureUnit': texUnit
+                            'textureUnit': texUnit,
+                            'shadow': true
                         };
                     }
                     // TODO: cubemap
@@ -273,10 +274,20 @@ define( [
             if ( this._material ) {
                 this.declareAttributeUniforms( this._material );
             }
-
-            for ( var t = 0; t < this._lights.length; t++ ) {
+            var t;
+            for ( t = 0; t < this._lights.length; t++ ) {
                 this.declareAttributeUniforms( this._lights[ t ] );
             }
+            for ( t = 0; t < this._shadows.length; t++ ) {
+                this.declareAttributeUniforms( this._shadows[ t ] );
+            }
+            /*
+            for ( t = 0; t < this._shadowsTextures.length; t++ ) {
+                if ( this._shadowsTextures[ t ] !== undefined ) {
+                    this.declareAttributeUniforms( this._shadowsTextures[ t ] );
+                }
+            }
+*/
 
         },
 
@@ -422,10 +433,9 @@ define( [
                         continue;
                     }
 
-                    if ( tex.indexOf( 'shadow_light' ) !== -1 ) {
+                    if ( texture.shadow ) {
                         continue;
                     }
-
                     texturesInput.push( texture.variable );
                 }
 
@@ -477,7 +487,8 @@ define( [
                 } else if ( texture.className() === 'TextureCubeMap' ) {
                     textureSampler = this.getOrCreateSampler( 'samplerCube', samplerName );
                 } else if ( texture.className() === 'ShadowTexture' ) {
-                    textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
+                    return;
+                    //textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
                 }
 
 
@@ -733,6 +744,9 @@ define( [
             this._fragmentShader.push( func._text.join( '\n' ) );
         },
 
+        //
+        // TODO: change into node based graph shader system.
+        // Meanwhile, here it is.
         createVertexShaderGraph: function () {
 
             var texCoordMap = {};
@@ -743,10 +757,12 @@ define( [
                 'attribute vec3 Vertex;',
                 'attribute vec4 Color;',
                 'attribute vec3 Normal;',
+                '',
                 'uniform float ArrayColorEnabled;',
                 'uniform mat4 ModelViewMatrix;',
                 'uniform mat4 ProjectionMatrix;',
                 'uniform mat4 NormalMatrix;',
+                '',
                 'varying vec4 VertexColor;',
                 'varying vec3 FragNormal;',
                 'varying vec3 FragEyeVector;',
@@ -754,23 +770,25 @@ define( [
                 ''
             ].join( '\n' ) );
 
+            var shadowTexture;
+            var shadowTextureUniforms;
             for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
 
-                var shadowTexture = this._shadowsTextures[ i ];
+                shadowTexture = this._shadowsTextures[ i ];
                 if ( shadowTexture !== undefined ) {
-                    var shadowTextureUniforms = shadowTexture.getOrCreateUniforms();
+                    shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
                     var viewMat = shadowTextureUniforms.ViewMatrix;
                     var projMat = shadowTextureUniforms.ProjectionMatrix;
                     var depthRange = shadowTextureUniforms.DepthRange;
                     var mapSize = shadowTextureUniforms.MapSize;
-                    //
+                    // uniforms
                     this._vertexShader.push( 'uniform mat4 ' + projMat.getName() + ';' );
                     this._vertexShader.push( 'uniform mat4 ' + viewMat.getName() + ';' );
                     this._vertexShader.push( 'uniform vec4 ' + depthRange.getName() + ';' );
                     this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
                     // varyings
-                    this._vertexShader.push( 'varying vec4 Shadow_VertexProjected' + i + ';' );
-                    this._vertexShader.push( 'varying vec4 Shadow_Z' + i + ';' );
+                    this._vertexShader.push( 'varying vec4 ' + shadowTexture.getUniformName( 'VertexProjected' ) + ';' );
+                    this._vertexShader.push( 'varying vec4 ' + shadowTexture.getUniformName( 'Z' ) + ';' );
                     hasShadow = true;
                 }
 
@@ -845,8 +863,21 @@ define( [
                     }
                 }
             } )();
-                for ( i = 0, ll = this._shadows.length; i < ll; i++ ) {
-                    if ( this._shadows[ i ]._shadowTechnique ) {
+                for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
+                    shadowTexture = this._shadowsTextures[ i ];
+                    if ( shadowTexture ) {
+
+                        // uniforms
+                        shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
+                        var shadowView = shadowTextureUniforms.ViewMatrix.getName();
+                        var shadowProj = shadowTextureUniforms.ProjectionMatrix.getName();
+
+                        // varying
+                        var shadowVertProj = shadowTexture.getUniformName( 'VertexProjected' );
+                        var shadowZ = shadowTexture.getUniformName( 'Z' );
+
+                        this._vertexShader.push( ' ' + shadowZ + ' = ' + shadowView + ' *  worldPosition;' );
+                        this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * ' + shadowZ + ';' );
             this._vertexShader.push( '}' );
         },
 

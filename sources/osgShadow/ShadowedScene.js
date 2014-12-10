@@ -26,6 +26,8 @@ define( [
 
         this._shadowSettings = undefined;
 
+        this._optimizedFrustum = false;
+
         this._frustumReceivers = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
 
         this._tmpMat = Matrix.create();
@@ -45,7 +47,7 @@ define( [
             this._shadowTechniques.push( technique );
 
             if ( technique.valid() ) {
-                technique._shadowedScene = this;
+                technique.setShadowedScene( this );
                 technique.dirty();
             }
         },
@@ -81,7 +83,7 @@ define( [
                 }
             }
         },
-        /** Dirty any cache data structures held in the attached ShadowTechnqiue.*/
+        /** Dirty any cache data structures held in the attached ShadowTechnique.*/
         dirty: function () {
             this._dirty = false;
             for ( var i = 0, lt = this._shadowTechniques.length; i < lt; i++ ) {
@@ -195,66 +197,71 @@ define( [
             this._cameraShadowed = cullVisitor.getCurrentCamera();
 
 
-            var receivingUniforms = this.getReceivingStateSet().getUniformList();
+            //var receivingUniforms = this.getReceivingStateSet().getUniformList();
 
             // TODO: get camera position as positioned uniform ?
             var pos = this._camPos || Vec4.create();
             this._camPos = pos;
-            Matrix.getTrans( this._cameraShadowed.getViewMatrix(), pos );
-            receivingUniforms[ 'Camera_uniform_position' ].getUniform().set( pos );
-
-
+            //Matrix.getTrans( this._cameraShadowed.getViewMatrix(), pos );
+            //receivingUniforms[ 'Camera_uniform_position' ].getUniform().set( pos );
             // What to do here... we want to draw all scene object, not only receivers ?
             // so no mask for now
             var traversalMask = cullVisitor.getTraversalMask();
             //cullVisitor.setTraversalMask( this.getReceivesShadowTraversalMask() );
 
-            var frustumCulling = cullVisitor._enableFrustumCulling;
-            cullVisitor.setEnableFrustumCulling( true );
+            if ( !this._optimizedFrustum ) {
 
-            // compute frustum prior to culling, without near/far
-            var mvp = this._tmpMat;
-            Matrix.mult( this._cameraShadowed.getProjectionMatrix(), this._cameraShadowed.getViewMatrix(), mvp );
-            cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, true );
+                cullVisitor.pushStateSet( this._receivingStateset );
+                this.nodeTraverse( cullVisitor );
+                cullVisitor.popStateSet();
 
-            cullVisitor.pushStateSet( this._receivingStateset );
-            this.nodeTraverse( cullVisitor );
-            cullVisitor.popStateSet();
-
-
-            var epsilon = 1e-6;
-            if ( cullVisitor._computedFar < cullVisitor._computedNear - epsilon ) {
-                Notify.log( 'empty shadowed scene' );
-                for ( var l = 0; l < 6; l++ ) {
-                    this._frustumReceivers[ l ][ 0 ] = -1.0;
-                    this._frustumReceivers[ l ][ 1 ] = 1.01;
-                    this._frustumReceivers[ l ][ 2 ] = -1.0;
-                    this._frustumReceivers[ l ][ 3 ] = 1.01;
-                }
-                this._farReceivers = 1;
-                this._nearReceivers = 0.001;
-                return;
             } else {
-                // VFC with computed near / far from scene
-                var m = cullVisitor.getCurrentProjectionMatrix();
-                cullVisitor.clampProjectionMatrix( m, cullVisitor._computedNear, cullVisitor._computedFar, cullVisitor._nearFarRatio );
-                Matrix.mult( m, this._cameraShadowed.getViewMatrix(), mvp );
-                cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, false );
-                for ( var i = 0; i < 6; i++ ) {
-                    Vec4.copy( cullVisitor._frustum[ i ], this._frustumReceivers[ i ] );
+                var frustumCulling = cullVisitor._enableFrustumCulling;
+                cullVisitor.setEnableFrustumCulling( true );
+
+                // compute frustum prior to culling, without near/far
+                var mvp = this._tmpMat;
+                Matrix.mult( this._cameraShadowed.getProjectionMatrix(), this._cameraShadowed.getViewMatrix(), mvp );
+                cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, true );
+
+                cullVisitor.pushStateSet( this._receivingStateset );
+                this.nodeTraverse( cullVisitor );
+                cullVisitor.popStateSet();
+
+
+                var epsilon = 1e-6;
+                if ( cullVisitor._computedFar < cullVisitor._computedNear - epsilon ) {
+                    Notify.log( 'empty shadowed scene' );
+                    for ( var l = 0; l < 6; l++ ) {
+                        this._frustumReceivers[ l ][ 0 ] = -1.0;
+                        this._frustumReceivers[ l ][ 1 ] = 1.01;
+                        this._frustumReceivers[ l ][ 2 ] = -1.0;
+                        this._frustumReceivers[ l ][ 3 ] = 1.01;
+                    }
+                    this._farReceivers = 1;
+                    this._nearReceivers = 0.001;
+                    return;
+                } else {
+                    // VFC with computed near / far from scene
+                    var m = cullVisitor.getCurrentProjectionMatrix();
+                    cullVisitor.clampProjectionMatrix( m, cullVisitor._computedNear, cullVisitor._computedFar, cullVisitor._nearFarRatio );
+                    Matrix.mult( m, this._cameraShadowed.getViewMatrix(), mvp );
+                    cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, false );
+                    for ( var i = 0; i < 6; i++ ) {
+                        Vec4.copy( cullVisitor._frustum[ i ], this._frustumReceivers[ i ] );
+                    }
+                }
+                this._nearReceivers = cullVisitor._computedNear;
+                this._farReceivers = cullVisitor._computedFar;
+
+
+                // reapply the original traversal mask
+                cullVisitor.setTraversalMask( traversalMask );
+                if ( frustumCulling === false || frustumCulling === undefined ) {
+                    cullVisitor.setEnableFrustumCulling( false );
                 }
             }
 
-
-            this._nearReceivers = cullVisitor._computedNear;
-            this._farReceivers = cullVisitor._computedFar;
-
-
-            // reapply the original traversal mask
-            cullVisitor.setTraversalMask( traversalMask );
-            if ( frustumCulling === false || frustumCulling === undefined ) {
-                cullVisitor.setEnableFrustumCulling( false );
-            }
         },
 
 

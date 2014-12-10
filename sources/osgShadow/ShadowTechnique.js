@@ -15,7 +15,15 @@ define( [
     CameraCullCallback.prototype = {
         cull: function ( node, nodeVisitor ) {
             this._shadowTechnique.enterCullCaster( nodeVisitor );
+
+            // tricky, as when cullvisitor goes through it
+            // it gives a "detached" cyclic graph !
+            // shadowedScene -> cameraLightCaster -> shadowedScene
+            // but only "nodeTraversing it" so just really
+            // skipping to children in fact.
             this._shadowTechnique.getShadowedScene().nodeTraverse( nodeVisitor );
+
+
             this._shadowTechnique.exitCullCaster( nodeVisitor );
             return false;
         }
@@ -46,6 +54,7 @@ define( [
         getShadowedScene: function () {
             return this._shadowedScene;
         },
+
 
         setShadowedScene: function ( shadowedScene ) {
             this._shadowedScene = shadowedScene;

@@ -1,13 +1,13 @@
 define( [
     'osg/Utils',
+    'osg/Texture',
     'osgShader/utils',
     'osgShader/node/Node'
-
-], function ( MACROUTILS, ShaderUtils, Node ) {
+], function ( MACROUTILS, Texture, ShaderUtils, Node ) {
     'use strict';
 
     // TODO : use GLSL libraries shadow.glsl
-    var ShadowNode = function ( shadowOutput, lightedOutput, lighted, lightPos, lightDir, lightNDL, lighting, light, shadow, shadowTexture ) {
+    var ShadowNode = function ( shadowOutput, lightedOutput, lighted, lightPos, lightDir, lightNDL, lighting, light, shadow, shadowTextures ) {
         Node.call( this );
 
         this._lighting = lighting;
@@ -19,7 +19,7 @@ define( [
         this._lightNDL = lightNDL;
 
         this._shadow = shadow;
-        this._shadowTexture = shadowTexture;
+        this._shadowTextures = shadowTextures;
 
         //
         //texture
@@ -33,7 +33,28 @@ define( [
         type: 'ShadowBasic',
 
         defines: function () {
-            var defines = this._light._shadowTechnique.getDefines();
+            var defines = [];
+
+            var floatTex = this._shadow.getPrecision();
+            var isFloat = false;
+            if ( floatTex !== 'BYTE' && floatTex !== Texture.UNSIGNED_BYTE ) {
+                isFloat = true;
+            }
+
+            var algo = this._shadow.getAlgorithm();
+            if ( algo === 'ESM' ) {
+                defines.push( '#define _ESM' );
+            } else if ( algo === 'PCF' ) {
+                defines.push( '#define _PCF' );
+            } else if ( algo === 'VSM' ) {
+                defines.push( '#define _VSM' );
+            } else if ( algo === 'EVSM' && isFloat ) {
+                defines.push( '#define _EVSM' );
+            } else { //
+                defines.push( '#define _NONE' );
+            }
+
+            if ( isFloat ) defines.push( '#define _FLOATTEX' );
 
             return defines.join( '\n' );
         },
@@ -57,32 +78,38 @@ define( [
 
         createFragmentShaderGraph: function ( context ) {
 
-            var lightNum = this._light.getLightNumber();
+            //var lightNum = this._light.getLightNumber();
             // Common
             var normal = this._lighting._normal;
 
             var shadowUniforms = this._shadow.getOrCreateUniforms();
-            var shadowTextureUniforms = this._shadowTexture.getOrCreateUniforms();
 
-            var shadowDepthRange = context.getOrCreateUniform( 'vec4', shadowTextureUniforms.DepthRange );
-            var shadowMapSize = context.getOrCreateUniform( 'vec4', shadowTextureUniforms.MapSize );
+            // per shadow uniforms
+            var bias = context.getOrCreateUniform( shadowUniforms.bias );
+            var VsmEpsilon = context.getOrCreateUniform( shadowUniforms.vsmEpsilon );
+            var exponent0 = context.getOrCreateUniform( shadowUniforms.exponent0 );
+            var exponent1 = context.getOrCreateUniform( shadowUniforms.exponent1 );
 
-            var viewMat = context.getOrCreateUniform( 'mat4', shadowTextureUniforms.ViewMatrix );
-            var projMat = context.getOrCreateUniform( 'mat4', shadowTextureUniforms.ProjectionMatrix );
+            // use this._shadowTextures.
+            var tex, shadowDepthRange, shadowMapSize, shadowVertexProjected, shadowZ;
+            // TODO: better handle multi tex.
+            for ( var k = 0; k < this._shadowTextures.length; k++ ) {
 
+                var shadowTexture = this._shadowTextures[ k ];
+                if ( shadowTexture ) {
+                    tex = context.getOrCreateSampler( 'sampler2D', shadowTexture.getName() );
 
-            var bias = context.getOrCreateUniform( 'float', shadowUniforms.bias );
-            var VsmEpsilon = context.getOrCreateUniform( 'float', shadowUniforms.bias.vsmEpsilon );
-            var exponent0 = context.getOrCreateUniform( 'float', shadowUniforms.bias.exponent0 );
-            var exponent1 = context.getOrCreateUniform( 'float', shadowUniforms.bias.exponent1 );
+                    // per texture uniforms
+                    var shadowTextureUniforms = shadowTexture.getOrCreateUniforms( k );
+                    shadowDepthRange = context.getOrCreateUniform( shadowTextureUniforms.DepthRange );
+                    shadowMapSize = context.getOrCreateUniform( shadowTextureUniforms.MapSize );
 
-            //var tex = context.getOrCreateSampler( 'sampler2D', 'Texture' + ( lightNum + 1 ) );
-            var tex = context.getOrCreateSampler( 'sampler2D', 'shadow_light' + lightNum );
+                    // Varyings
+                    shadowVertexProjected = context.getOrCreateVarying( 'vec4', shadowTexture.getUniformName( 'VertexProjected' ) );
+                    shadowZ = context.getOrCreateVarying( 'vec4', shadowTexture.getUniformName( 'Z' ) );
+                }
 
-            // Varyings
-            var shadowVertexProjected = context.getOrCreateVarying( 'vec4', 'Shadow_VertexProjected' + lightNum );
-            var shadowZ = context.getOrCreateVarying( 'vec4', 'Shadow_Z' + lightNum );
-
+            }
 
 
             var inputs = [
@@ -96,9 +123,8 @@ define( [
                 normal,
                 bias,
                 VsmEpsilon,
-                exponent1,
-                exponent,
-                debug
+                exponent0,
+                exponent1
             ];
             // TODO:
             // shader function regex
