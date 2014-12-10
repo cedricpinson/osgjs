@@ -423,6 +423,7 @@ define( [
             this._texture.setWrapT( Texture.CLAMP_TO_EDGE );
 
             // force recreation
+            //this._texture.init( glCtxt );
 
             // force reattach
             var camera = shadowSettings._cameraShadow;

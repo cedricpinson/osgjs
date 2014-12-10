@@ -199,6 +199,7 @@ define( [
             // TODO: We should release Program/Shader attributes too
             for ( var i = 0, j = this.textureAttributeMapList.length; i < j; i++ ) {
                 var tu = this.getTextureAttribute( i, 'Texture' );
+                if ( !tu ) tu = this.getTextureAttribute( i, 'ShadowTexture' );
                 if ( tu ) tu.releaseGLObjects();
             }
         },

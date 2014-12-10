@@ -43,7 +43,7 @@ define( [
         this._exponent0 = exponent0;
         this._exponent1 = exponent1;
         // Variance Shadow mapping use One more epsilon
-        this._VsmEpsilon = vsmEpsilon;
+        this._vsmEpsilon = vsmEpsilon;
         // shader compilation differnet upon texture precision
         this._precision = precision;
     };
@@ -53,7 +53,13 @@ define( [
         attributeType: 'ShadowAttribute',
 
         cloneType: function () {
-            return new ShadowAttribute( this._light, this._algoType, this._bias, this._exponent0, this._exponent1, this._vsmEpsilon );
+            return new ShadowAttribute( this._light,
+                this._algoType,
+                this._bias,
+                this._exponent0,
+                this._exponent1,
+                this._vsmEpsilon,
+                this._precision );
         },
 
         getTypeMember: function () {
@@ -69,20 +75,29 @@ define( [
         setAlgorithm: function ( algo ) {
             this._algoType = algo;
         },
+        getAlgorithm: function () {
+            return this._algoType;
+        },
+
         setBias: function ( bias ) {
             this._bias = bias;
+            this.setDirty( true );
         },
         setExponent0: function ( exp ) {
             this._exponent0 = exp;
+            this.setDirty( true );
         },
         setExponent1: function ( exp ) {
             this._exponent1 = exp;
+            this.setDirty( true );
         },
         setVsmEpsilon: function ( vsmEpsilon ) {
             this._vsmEpsilon = vsmEpsilon;
+            this.setDirty( true );
         },
         setPrecision: function ( precision ) {
             this._precision = precision;
+            this.setDirty( true );
         },
         getLight: function () {
             return this._light;
@@ -92,7 +107,7 @@ define( [
             // Variance Shadow mapping use One more epsilon
             var uniformList = {
                 'bias': 'createFloat',
-                'exponent0': 'createMat',
+                'exponent0': 'createFloat',
                 'exponent1': 'createFloat',
                 'vsmEpsilon': 'createFloat'
             };
@@ -116,24 +131,16 @@ define( [
 
             var uniformMap = this.getOrCreateUniforms();
 
-            uniformMap.ViewMatrix.set( this._viewMatrix );
-
-            uniformMap.ProjectionMatrix.set( this._projectionMatrix );
-
-            uniformMap.DepthRange.set( this._depthRange );
-
-            // get that from texture size
-            this._mapSize[ 0 ] = this._textureWidth;
-            this._mapSize[ 1 ] = this._textureHeight;
-            this._mapSize[ 3 ] = 1.0 / this._textureWidth;
-            this._mapSize[ 4 ] = 1.0 / this._textureHeight;
-            uniformMap.MapSize.set( this._mapSize );
+            uniformMap.bias.set( this._bias );
+            uniformMap.exponent0.set( this._exponent0 );
+            uniformMap.exponent1.set( this._exponent1 );
+            uniformMap.vsmEpsilon.set( this._vsmEpsilon );
 
             this.setDirty( false );
         },
 
         getHash: function () {
-            return this.getTypeMember() + this.getAlgoType();
+            return this.getTypeMember() + this.getAlgorithm();
         }
 
     } ), 'osg', 'ShadowAttribute' );

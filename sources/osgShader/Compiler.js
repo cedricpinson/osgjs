@@ -23,7 +23,7 @@ define( [
         // separate Material / Light / Texture
         // because this shader generator is specific for this
         var lights = [];
-        var shadows;
+        var shadows = [];
         var material;
 
         for ( var i = 0, l = attributes.length; i < l; i++ ) {
@@ -40,7 +40,7 @@ define( [
                 if ( material !== undefined ) Notify.warn( 'Multiple Material attributes latest Chosen ' );
                 material = attributes[ i ];
 
-            } else if ( type === 'ShadowTexture' ) {
+            } else if ( type === 'ShadowAttribute' ) {
                 shadows.push( attributes[ i ] );
             }
 
@@ -98,6 +98,7 @@ define( [
                             'textureUnit': texUnit
                         };
                     }
+                    // TODO: cubemap
 
                 }
             }
@@ -475,6 +476,8 @@ define( [
                     textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
                 } else if ( texture.className() === 'TextureCubeMap' ) {
                     textureSampler = this.getOrCreateSampler( 'samplerCube', samplerName );
+                } else if ( texture.className() === 'ShadowTexture' ) {
+                    textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
                 }
 
 
@@ -751,25 +754,25 @@ define( [
                 ''
             ].join( '\n' ) );
 
-            for ( i = 0, ll = this._shadows.length; i < ll; i++ ) {
-                // TODO better link between the two
-                // better uniform, node, input, output, raaaaaaaaaaaaa
-                var shadowTexture = this.shadowsTextures[ i ];
-                var shadowTextureUniforms = shadowTexture.getOrCreateUniforms();
-                var viewMat = shadowTextureUniforms.ViewMatrix;
-                var projMat = shadowTextureUniforms.ProjectionMatrix;
-                var depthRange = shadowTextureUniforms.DepthRange;
-                var mapSize = shadowTextureUniforms.MapSize;
-                //
-                this._vertexShader.push( 'uniform mat4 ' + projMat.getName() + ';' );
-                this._vertexShader.push( 'uniform mat4 ' + viewMat.getName() + ';' );
-                this._vertexShader.push( 'uniform vec4 ' + depthRange.getName() + ';' );
-                this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
-                // varyings
-                this._vertexShader.push( 'varying vec4 Shadow_VertexProjected' + i + ';' );
-                this._vertexShader.push( 'varying vec4 Shadow_Z' + i + ';' );
-                hasShadow = true;
+            for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
 
+                var shadowTexture = this._shadowsTextures[ i ];
+                if ( shadowTexture !== undefined ) {
+                    var shadowTextureUniforms = shadowTexture.getOrCreateUniforms();
+                    var viewMat = shadowTextureUniforms.ViewMatrix;
+                    var projMat = shadowTextureUniforms.ProjectionMatrix;
+                    var depthRange = shadowTextureUniforms.DepthRange;
+                    var mapSize = shadowTextureUniforms.MapSize;
+                    //
+                    this._vertexShader.push( 'uniform mat4 ' + projMat.getName() + ';' );
+                    this._vertexShader.push( 'uniform mat4 ' + viewMat.getName() + ';' );
+                    this._vertexShader.push( 'uniform vec4 ' + depthRange.getName() + ';' );
+                    this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
+                    // varyings
+                    this._vertexShader.push( 'varying vec4 Shadow_VertexProjected' + i + ';' );
+                    this._vertexShader.push( 'varying vec4 Shadow_Z' + i + ';' );
+                    hasShadow = true;
+                }
 
             for ( var t = 0, tl = textures.length; t < tl; t++ ) {
 

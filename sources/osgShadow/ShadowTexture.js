@@ -22,6 +22,7 @@ define( [
         Texture.call( this );
         this._uniforms = {};
         this._mapSize = new Array( 4 );
+        this._lightUnit = 0;
     };
 
     /** @lends Texture.prototype */
@@ -31,11 +32,15 @@ define( [
         cloneType: function () {
             var t = new ShadowTexture();
             t.defaultType = true;
+            t.setLightUnit( this.getLightUnit() );
             return t;
         },
 
         setLightUnit: function ( lun ) {
             this._lightUnit = lun;
+        },
+        getLightUnit: function () {
+            return this._lightUnit;
         },
         getUniformName: function ( name ) {
             var prefix = this.getType() + this._lightUnit.toString();
@@ -77,8 +82,12 @@ define( [
             this._depthRange = depthRange;
             this.setDirty( true );
         },
-        apply: function ( /*state*/) {
+        apply: function ( state ) {
 
+            // Texture stuff: call parent class method
+            Texture.prototype.apply.call( this, state );
+
+            // update Uniforms
             var uniformMap = this.getOrCreateUniforms();
 
             uniformMap.ViewMatrix.set( this._viewMatrix );
