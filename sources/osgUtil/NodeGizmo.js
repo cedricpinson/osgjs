@@ -17,6 +17,11 @@ define( [
 
     'use strict';
 
+    var getCanvasCoord = function ( vec, e ) {
+        vec[ 0 ] = e.offsetX === undefined ? e.layerX : e.offsetX;
+        vec[ 1 ] = e.offsetY === undefined ? e.layerY : e.offsetY;
+    };
+
     var HideCullCallback = function () {};
     HideCullCallback.prototype = {
         cull: function () {
@@ -110,6 +115,7 @@ define( [
         this._showAngle = new MatrixTransform();
 
         //for realtime picking
+        this._downCanvasCoord = Vec2.create();
         this._hoverNode = null; // the hovered x/y/z MT node
         this._keepHoverColor = null;
 
@@ -166,7 +172,6 @@ define( [
             }
 
             var canvas = this._canvas;
-            canvas.addEventListener( 'dblclick', this.onDblClick.bind( this ) );
             canvas.addEventListener( 'mousemove', this.onMouseMove.bind( this ) );
             canvas.addEventListener( 'mousedown', this.onMouseDown.bind( this ) );
             canvas.addEventListener( 'mouseup', this.onMouseUp.bind( this ) );
@@ -495,17 +500,17 @@ define( [
             var sortByRatio = function ( a, b ) {
                 return a.ratio - b.ratio;
             };
+            var coord = Vec2.create();
 
             return function ( e, tmask ) {
-                var coordx = e.offsetX === undefined ? e.layerX : e.offsetX;
-                var coordy = e.offsetY === undefined ? e.layerY : e.offsetY;
+                getCanvasCoord( coord, e );
 
                 // canvas to webgl coord
                 var canvas = this._canvas;
-                coordx = coordx * ( canvas.width / canvas.clientWidth );
-                coordy = ( canvas.clientHeight - coordy ) * ( canvas.height / canvas.clientHeight );
+                var x = coord[ 0 ] * ( canvas.width / canvas.clientWidth );
+                var y = ( canvas.clientHeight - coord[ 1 ] ) * ( canvas.height / canvas.clientHeight );
 
-                var hits = this._viewer.computeIntersections( coordx, coordy, tmask || 1 );
+                var hits = this._viewer.computeIntersections( x, y, tmask || 1 );
 
                 if ( hits.length === 0 )
                     return;
@@ -546,21 +551,9 @@ define( [
             out[ 1 ] = canvas.clientHeight - out[ 1 ] / ( canvas.height / canvas.clientHeight );
             return out;
         },
-        onDblClick: function ( e ) {
-            this.setNodeMask( 0x0 );
-            var hit = this.computeNearestIntersection( e );
-            this.setNodeMask( NodeGizmo.NO_PICK );
-            if ( this._autoInsertMT )
-                this.attachToNode( hit ? hit.nodepath[ hit.nodepath.length - 1 ] : hit );
-            else
-                this.attachToNodePath( hit ? hit.nodepath : hit );
-        },
         onMouseDown: function ( e ) {
-            if ( !this._attachedNode ) {
-                this.onDblClick( e );
-                return;
-            }
-            if ( !this._hoverNode )
+            getCanvasCoord( this._downCanvasCoord, e );
+            if ( !this._hoverNode || !this._attachedNode )
                 return;
             this._viewer._eventProxy.StandardMouseKeyboard._enable = false;
 
@@ -628,10 +621,7 @@ define( [
             stateAngle.getUniform( 'uAngle' ).set( 0.0 );
             stateAngle.getUniform( 'uBase' ).set( Vec3.normalize( hit.point, hit.point ) );
 
-            var x = e.offsetX === undefined ? e.layerX : e.offsetX;
-            var y = e.offsetY === undefined ? e.layerY : e.offsetY;
-            this._editLineOrigin[ 0 ] = x;
-            this._editLineOrigin[ 1 ] = y;
+            getCanvasCoord( this._editLineOrigin, e );
         },
         startTranslateEdit: function ( e ) {
             var origin = this._editLineOrigin;
@@ -654,8 +644,7 @@ define( [
             Vec2.normalize( dir, dir );
 
             var offset = this._editOffset;
-            offset[ 0 ] = e.offsetX === undefined ? e.layerX : e.offsetX;
-            offset[ 1 ] = e.offsetY === undefined ? e.layerY : e.offsetY;
+            getCanvasCoord( offset, e );
             Vec2.sub( offset, origin, offset );
         },
         startPlaneEdit: function ( e ) {
@@ -669,8 +658,7 @@ define( [
             this.getCanvasPositionFromWorldPoint( origin, origin );
 
             var offset = this._editOffset;
-            offset[ 0 ] = e.offsetX === undefined ? e.layerX : e.offsetX;
-            offset[ 1 ] = e.offsetY === undefined ? e.layerY : e.offsetY;
+            getCanvasCoord( offset, e );
             Vec2.sub( offset, origin, offset );
         },
         drawLineCanvasDebug: function ( x1, y1, x2, y2 ) {
@@ -682,6 +670,15 @@ define( [
             buffer.getElements()[ 3 ] = ( ( ( this._canvas.clientHeight - y2 ) / this._canvas.clientHeight ) ) * 2 - 1.0;
             buffer.dirty();
         },
+        pickAndSelect: function ( e ) {
+            this.setNodeMask( 0x0 );
+            var hit = this.computeNearestIntersection( e );
+            this.setNodeMask( NodeGizmo.NO_PICK );
+            if ( this._autoInsertMT )
+                this.attachToNode( hit ? hit.nodepath[ hit.nodepath.length - 1 ] : hit );
+            else
+                this.attachToNodePath( hit ? hit.nodepath : hit );
+        },
         onMouseUp: function ( e ) {
             var smk = this._viewer._eventProxy.StandardMouseKeyboard;
             if ( smk._enable === false ) {
@@ -690,6 +687,11 @@ define( [
             }
             if ( this._debugNode )
                 this._debugNode.setNodeMask( 0x0 );
+
+            var v = Vec2.create();
+            getCanvasCoord( v, e );
+            if ( Vec2.distance( this._downCanvasCoord, v ) === 0.0 )
+                this.pickAndSelect( e );
 
             this._showAngle.setNodeMask( 0x0 );
             this._isEditing = false;
@@ -721,14 +723,12 @@ define( [
             var vec = Vec2.create();
 
             return function ( e ) {
-                var x = e.offsetX === undefined ? e.layerX : e.offsetX;
-                var y = e.offsetY === undefined ? e.layerY : e.offsetY;
 
                 var origin = this._editLineOrigin;
                 var dir = this._editLineDirection;
 
-                vec[ 0 ] = x - origin[ 0 ];
-                vec[ 1 ] = y - origin[ 1 ];
+                getCanvasCoord( vec, e );
+                Vec2.sub( vec, origin, vec );
                 var dist = Vec2.dot( vec, dir );
 
                 if ( this._debugNode )
@@ -761,14 +761,13 @@ define( [
             var tra = Vec2.create();
 
             return function ( e ) {
-                var x = e.offsetX === undefined ? e.layerX : e.offsetX;
-                var y = e.offsetY === undefined ? e.layerY : e.offsetY;
 
                 var origin = this._editLineOrigin;
                 var dir = this._editLineDirection;
 
-                vec[ 0 ] = x - origin[ 0 ] - this._editOffset[ 0 ];
-                vec[ 1 ] = y - origin[ 1 ] - this._editOffset[ 1 ];
+                getCanvasCoord( vec, e );
+                Vec2.sub( vec, origin, vec );
+                Vec2.sub( vec, this._editOffset, vec );
 
                 var dist = Vec2.dot( vec, dir );
                 vec[ 0 ] = origin[ 0 ] + dir[ 0 ] * dist;
@@ -803,12 +802,8 @@ define( [
         } )(),
         updatePlaneEdit: function ( e ) {
             var vec = Vec3.create();
-
-            vec[ 0 ] = e.offsetX === undefined ? e.layerX : e.offsetX;
-            vec[ 1 ] = e.offsetY === undefined ? e.layerY : e.offsetY;
-
-            vec[ 0 ] -= this._editOffset[ 0 ];
-            vec[ 1 ] -= this._editOffset[ 1 ];
+            getCanvasCoord( vec, e );
+            Vec2.sub( vec, this._editOffset, vec );
 
             // canvas to webgl coord
             var canvas = this._canvas;
