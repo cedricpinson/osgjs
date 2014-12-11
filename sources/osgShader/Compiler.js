@@ -549,7 +549,7 @@ define( [
                 else if ( materialUniforms.materialdiffuse )
                     lightList.push( materialUniforms.materialdiffuse );
                 else
-                    lightList.push( factory.getNode( 'InlineConstant', 'vec3(1.0, 0.0, 0.0)', 'vec3' ) );
+                    lightList.push( this.createVariable( 'vec3' ).setValue( 'vec3(1.0, 0.0, 0.0)' ) );
             }
 
             factory.getNode( 'Add' ).inputs( lightList ).outputs( output );
@@ -836,8 +836,7 @@ define( [
         // is present. If you inherit from this Compiler
         // you could change the default behavior
         createDefaultFragmentShaderGraph: function () {
-            var colorDefault = factory.getNode( 'InlineConstant', 'vec3(1.0, 0.0, 1.0, 0.7)', 'vec4' );
-            return factory.getNode( 'FragColor' ).inputs( colorDefault );
+            return factory.getNode( 'FragColor' ).inputs( this.createVariable( 'vec4' ).setValue( 'vec4(1.0, 0.0, 1.0, 0.7)' ) );
         },
 
 
