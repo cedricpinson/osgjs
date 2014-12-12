@@ -543,14 +543,8 @@ define( [
             if ( materialUniforms.emission )
                 lightList.push( materialUniforms.emission );
 
-            if ( lightList.length === 0 ) {
-                if ( materials.materialdiffuse )
-                    lightList.push( materials.materialdiffuse );
-                else if ( materialUniforms.materialdiffuse )
-                    lightList.push( materialUniforms.materialdiffuse );
-                else
-                    lightList.push( this.createVariable( 'vec3' ).setValue( 'vec3(1.0, 0.0, 0.0)' ) );
-            }
+            if ( lightList.length === 0 )
+                lightList.push( this.createVariable( 'vec3' ).setValue( 'vec3(0.0)' ) );
 
             factory.getNode( 'Add' ).inputs( lightList ).outputs( output );
 
