@@ -56,7 +56,7 @@ void main(void) {
   float zfarPrev = 2.0;//PrevProjectionMatrix[3][2] / (PrevProjectionMatrix[2][2]+1.0);
     float depthPrev = (-prevPos.z - znearPrev)/(zfarPrev-znearPrev);
    //linear view Z
-   FragDepth = depthPrev;
+   FragPrevDepth = depthPrev;
 
 
   //clip space, done in fragment, allow better single pixel result,

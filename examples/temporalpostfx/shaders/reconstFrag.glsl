@@ -99,6 +99,7 @@ void main(void) {
    /*
    vec2 screenPosGL = gl_FragCoord.xy / RenderSize.xy;
    // show screen pos diff (sort of velocity, rgb(0.5,0.5,0.0) is middle)
-   gl_FragColor = vec4( (prevScreenPos.xy - screenPos.xy)* 0.5 + vec2(0.5) , 0.0,1.0);
    */
+   gl_FragColor = vec4( (prevScreenPos.xy - screenPos.xy)* 0.5 + vec2(0.5) , 0.0,1.0);
+
 }

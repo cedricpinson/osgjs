@@ -37,8 +37,8 @@ void main(void) {
   //Linear view space
   float znear = 1.0;//ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]-1.0);
   float zfar = 2.0;//ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]+1.0);
-   float depth = (-pos.z - znear)/(zfar-znear);
-  FragDepth= depth;
+  float depth = (-pos.z - znear)/(zfar-znear);
+  FragDepth = depth;
 
 
    // compute prev clip space position
@@ -56,7 +56,7 @@ void main(void) {
   float zfarPrev = 2.0;//PrevProjectionMatrix[3][2] / (PrevProjectionMatrix[2][2]+1.0);
     float depthPrev = (-prevPos.z - znearPrev)/(zfarPrev-znearPrev);
    //linear view Z
-   FragDepth = depthPrev;
+   FragPrevDepth = depthPrev;
 
 
   //clip space, done in fragment, allow better single pixel result,

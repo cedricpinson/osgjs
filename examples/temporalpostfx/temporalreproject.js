@@ -13,6 +13,7 @@ function getTemporalReproject() {
         name: 'Temporal Reproject',
         needCommonCube: true,
 
+        needPreviousDepth: true,
         getShaderProgram: function ( vs, ps, defines ) {
 
             if ( !this._shaderProcessor ) {

@@ -6,13 +6,13 @@ var osg = window.osg;
 var osgUtil = window.osgUtil;
 var osgShader = window.osgShader;
 
-function getTemporalAA() {
+function getTemporalStaticAA() {
 
     var effect = {
 
-        name: 'Temporal Anti-Aliasing',
+        name: 'Temporal Static Anti-Aliasing :)',
         needCommonCube: true,
-        needPreviousDepth: true,
+
         getShaderProgram: function ( vs, ps, defines ) {
 
             if ( !this._shaderProcessor ) {
@@ -28,7 +28,7 @@ function getTemporalAA() {
         },
 
         getSceneProgram: function () {
-            return this.getShaderProgram( 'temporalAAVert', 'temporalAAFrag' );
+            return this.getShaderProgram( 'temporalStaticAAVert', 'temporalStaticAAFrag' );
         },
 
         buildComposer: function ( sceneTexture, finalTexture ) {

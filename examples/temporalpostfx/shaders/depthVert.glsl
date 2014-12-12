@@ -21,10 +21,10 @@ void main(void) {
   // => NDC (-1, 1) then 0,1
   //FragDepth = (gl_Position.z / gl_Position.w) * 0.5 + 0.5;
 
-  // view space Z
-  //FragDepth = pos.z;
-  float znear = 1.0;//ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]-1.0);
-  float zfar = 2.0;//ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]+1.0);
+   // view space Z
+   //FragDepth = pos.z;
+   float znear = 1.0;//ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]-1.0);
+   float zfar = 2.0;//ProjectionMatrix[3][2] / (ProjectionMatrix[2][2]+1.0);
    float depth = ((-pos.z - znear)/(zfar-znear)) ;
 
    //linear view Z
