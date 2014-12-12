@@ -65,7 +65,7 @@ define( [
         this._fullNodeList = [];
         this._nodeList = [];
         this._linkList = [];
-        this._focusedElement = 'scene';
+        this._focusedElement = 'graph';
 
         this._idToDomElement = new window.Map();
         this._uniqueEdges = new window.Set();
@@ -134,6 +134,19 @@ define( [
             this._focusedElement = 'scene';
         },
 
+        focusOnScene: function () {
+            $( '.osgDebugButton' ).text( 'Access to the graph' );
+            this._$svg.css( 'zIndex', '-2' );
+            this._focusedElement = 'scene';
+        },
+
+        focusOnGraph: function () {
+            $( '.osgDebugButton' ).text( 'Access to the scene' );
+            this._$svg.css( 'zIndex', '2' );
+            $( '.osgDebugSimpleTooltip' ).css( 'zIndex', '3' );
+            this._focusedElement = 'graph';
+        },
+
         // Apply all the style
         injectStyleElement: function () {
             if ( this._cssInjected )
@@ -142,16 +155,10 @@ define( [
 
             $( 'body' ).append( '<button class="osgDebugButton">Access to the scene</button>' );
             $( '.osgDebugButton' ).click( function () {
-                if ( this._focusedElement === 'scene' ) {
-                    $( '.osgDebugButton' ).text( 'Access to the graph' );
-                    this._$svg.css( 'zIndex', '-2' );
-                    this._focusedElement = 'graph';
-                } else {
-                    $( '.osgDebugButton' ).text( 'Access to the scene' );
-                    this._$svg.css( 'zIndex', '2' );
-                    $( '.osgDebugSimpleTooltip' ).css( 'zIndex', '3' );
-                    this._focusedElement = 'scene';
-                }
+                if ( this._focusedElement === 'scene' )
+                    this.focusOnGraph();
+                else
+                    this.focusOnScene();
             }.bind( this ) );
 
             var css = document.createElement( 'style' );
@@ -227,6 +234,7 @@ define( [
 
             // Do a console log of the node (or stateset) and save it in window.*
             $( '.node' ).click( this.onNodeSelect.bind( this ) );
+            this.focusOnGraph();
         },
         selectNode: function ( node ) {
             var id = node.getInstanceID();
