@@ -129,7 +129,8 @@
                     osg.Matrix.mult( osg.Matrix.makeTranslate( 0, -bb.radius() / 2, 0, osg.Matrix.create() ), mt.getMatrix(), mt.getMatrix() );
                     mt.addChild( model );
                     this._model.addChild( model );
-
+                    // Create a new stateset to prove that CustomCompiler is applied to child nodes.
+                    this._model.getOrCreateStateSet();
                     this._viewer.getManipulator().computeHomePosition();
 
                 }.bind( this ) );

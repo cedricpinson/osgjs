@@ -18,6 +18,7 @@ define( [
         this.vertexAttribList = [];
         this.programs = Stack.create();
         this.stateSets = Stack.create();
+        this._shaderGeneratorNames = Stack.create();
         this.uniforms = new Map();
 
         this.textureAttributeMapList = [];
@@ -80,6 +81,10 @@ define( [
             if ( stateset.uniforms ) {
                 this.pushUniformsList( this.uniforms, stateset.uniforms );
             }
+            var generatorName = stateset.getShaderGeneratorName();
+            if ( generatorName !== undefined ) {
+                this._shaderGeneratorNames.push( generatorName );
+            }
         },
 
         applyStateSet: function ( stateset ) {
@@ -113,6 +118,10 @@ define( [
 
             if ( stateset.uniforms ) {
                 this.popUniformsList( this.uniforms, stateset.uniforms );
+            }
+
+            if ( stateset.getShaderGeneratorName() === this._shaderGeneratorNames.back() ) {
+                this._shaderGeneratorNames.pop();
             }
         },
 
@@ -200,7 +209,7 @@ define( [
             // };
 
             // get shader generator name from stateset if any
-            var generatorName = this.stateSets.back().getShaderGeneratorName();
+            var generatorName = this._shaderGeneratorNames.back();
             var shaderGenerator = this._shaderGeneratorProxy.getShaderGenerator( generatorName );
             //program = shaderGenerator.getOrCreateProgram( attributes );
             program = shaderGenerator.getOrCreateProgram( this );
