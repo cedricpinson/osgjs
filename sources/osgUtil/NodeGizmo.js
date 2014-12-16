@@ -120,7 +120,7 @@ define( [
         this._keepHoverColor = null;
 
         // for editing
-        this._isEditing = true;
+        this._isEditing = false;
 
         this._editLineOrigin = Vec3.create();
         this._editLineDirection = Vec3.create();
