@@ -35,6 +35,8 @@ define( [
             return this.mode;
         },
         draw: function ( state ) {
+            if ( this.count === 0 )
+                return;
             state.setIndexArray( this.indices );
             var gl = state.getGraphicContext();
             gl.drawElements( this.mode, this.count, this.uType, this.offset );
