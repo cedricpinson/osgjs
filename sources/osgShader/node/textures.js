@@ -6,22 +6,13 @@ define( [
 ], function ( MACROUTILS, utils, Node ) {
     'use strict';
 
-    var NodeTextures = function ( sampler, uv, output ) {
-
-        Node.call( this );
-
-        this._sampler = sampler;
-        this.connectInputs( sampler );
-        this.connectInputs( uv );
-
-        if ( output !== undefined ) {
-            this.connectOutput( output );
-        }
-
-        this._uv = uv;
+    var NodeTextures = function () {
+        Node.apply( this );
     };
 
     NodeTextures.prototype = MACROUTILS.objectInherit( Node.prototype, {
+
+        type: 'TextureAbstractNode',
 
         // functionName is here to simplify all texture base functions
         // it's possible later it will have to move into another class
@@ -29,12 +20,16 @@ define( [
         // all simple class to fetch texture ( seed above )
         functionName: 'noTextureFunction',
 
+        validInputs: [ 'sampler', 'uv' ],
+        validOutputs: [ 'color' ],
+
         computeFragment: function () {
+
             return utils.callFunction( this.functionName,
-                this.getOutput(), [ this._sampler,
-                    this._uv.getVariable() + '.xy'
-                ]
-            );
+                this._outputs.color, [
+                    this._inputs.sampler,
+                    this._inputs.uv.getVariable() + '.xy'
+                ] );
         },
 
         globalFunctionDeclaration: function () {
@@ -45,8 +40,8 @@ define( [
 
 
 
-    var TextureRGB = function ( /*sampler, uv, output*/) {
-        NodeTextures.apply( this, arguments );
+    var TextureRGB = function () {
+        NodeTextures.apply( this );
     };
 
     TextureRGB.prototype = MACROUTILS.objectInherit( NodeTextures.prototype, {
@@ -58,8 +53,8 @@ define( [
 
 
 
-    var TextureRGBA = function ( /*sampler, uv, output*/) {
-        TextureRGB.apply( this, arguments );
+    var TextureRGBA = function () {
+        TextureRGB.apply( this );
     };
 
     TextureRGBA.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
@@ -70,8 +65,8 @@ define( [
     } );
 
 
-    var TextureAlpha = function ( /*sampler, uv, output*/) {
-        TextureRGB.apply( this, arguments );
+    var TextureAlpha = function () {
+        TextureRGB.apply( this );
     };
 
     TextureAlpha.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
@@ -83,8 +78,8 @@ define( [
 
 
 
-    var TextureIntensity = function ( /*sampler, uv, output*/) {
-        TextureRGB.apply( this, arguments );
+    var TextureIntensity = function () {
+        TextureRGB.apply( this );
     };
 
     TextureIntensity.prototype = MACROUTILS.objectInherit( TextureRGB.prototype, {
@@ -95,10 +90,11 @@ define( [
     } );
 
     return {
-        'TextureRGB': TextureRGB,
-        'TextureRGBA': TextureRGBA,
-        'TextureAlpha': TextureAlpha,
-        'TextureIntensity': TextureIntensity
+        NodeTextures: NodeTextures,
+        TextureRGB: TextureRGB,
+        TextureRGBA: TextureRGBA,
+        TextureAlpha: TextureAlpha,
+        TextureIntensity: TextureIntensity
     };
 
 } );

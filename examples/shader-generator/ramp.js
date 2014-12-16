@@ -1,3 +1,4 @@
+'use strict';
 var RampAttribute;
 var RampNode;
 
@@ -6,6 +7,7 @@ var RampNode;
     var osgShader = window.OSG.osgShader;
     var osg = window.OSG.osg;
     var shaderNode = osgShader.node;
+    var factory = osgShader.nodeFactory;
 
     RampAttribute = function () {
         osg.StateAttribute.call( this );
@@ -43,14 +45,14 @@ var RampNode;
 
     // this node will call a function ramp in the shader
     // it will do a very basic operation like ramping the lighting
-    RampNode = function ( output, input ) {
+    RampNode = function () {
         shaderNode.BaseOperator.apply( this, arguments );
-        this._input = input;
-        this._output = output;
     };
 
     RampNode.prototype = osg.objectInherit( shaderNode.BaseOperator.prototype, {
         type: 'Ramp',
+        validInputs: [ 'color' ],
+        validOutputs: [ 'color' ],
 
         // it's a global declaration
         // you can make your include here or your global variable
@@ -61,10 +63,13 @@ var RampNode;
         // call the glsl function with input/output of the node
         computeFragment: function () {
             return osgShader.utils.callFunction( 'ramp', undefined, [
-                this._input,
-                this._output
+                this._inputs.color,
+                this._outputs.color
             ] );
         }
     } );
+
+    factory.registerNode( 'Ramp', RampNode );
+
 
 } )();

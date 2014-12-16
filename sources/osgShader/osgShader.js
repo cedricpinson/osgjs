@@ -3,10 +3,11 @@ define( [
     'osgShader/ShaderGenerator',
     'osgShader/ShaderGeneratorProxy',
     'osgShader/ShaderProcessor',
+    'osgShader/nodeFactory',
     'osgShader/node',
     'osgShader/utils'
 
-], function ( Compiler, ShaderGenerator, ShaderGeneratorProxy, ShaderProcessor, node, utils ) {
+], function ( Compiler, ShaderGenerator, ShaderGeneratorProxy, ShaderProcessor, nodeFactory, node, utils ) {
 
     'use strict';
 
@@ -16,8 +17,9 @@ define( [
     lib.ShaderGenerator = ShaderGenerator;
     lib.ShaderGeneratorProxy = ShaderGeneratorProxy;
     lib.ShaderProcessor = ShaderProcessor;
-
+    lib.nodeFactory = nodeFactory;
     lib.node = node;
+
     lib.utils = utils;
 
 

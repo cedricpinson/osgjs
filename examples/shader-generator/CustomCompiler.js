@@ -1,47 +1,20 @@
+'use strict';
 var CustomCompiler;
-(function() {
+( function () {
 
     var osgShader = window.OSG.osgShader;
     var osg = window.OSG.osg;
-    var RampNode = window.RampNode;
-    var NegatifNode = window.NegatifNode;
-
-
-
-    var sprintf = osgShader.utils.sprintf;
-    var shaderNode = osgShader.node;
+    var factory = osgShader.nodeFactory;
 
 
     // this compiler use basic lighting and add a node to demonstrate how to
     // customize the shader compiler
-    CustomCompiler = function() {
-        osgShader.Compiler.apply(this, arguments);
+    CustomCompiler = function () {
+        osgShader.Compiler.apply( this, arguments );
     };
 
 
     CustomCompiler.prototype = osg.objectInherit( osgShader.Compiler.prototype, {
-
-
-        getRamp: function() {
-
-            for ( var i = 0; i < this._attributes.length; i ++ ) {
-                if ( this._attributes[i].getType() === 'Ramp' )
-                    return this._attributes[i];
-            }
-            return undefined;
-
-        },
-
-
-        getNegatif: function() {
-
-            for ( var i = 0; i < this._attributes.length; i ++ ) {
-                if ( this._attributes[i].getType() === 'Negatif' )
-                    return this._attributes[i];
-            }
-            return undefined;
-
-        },
 
 
         // this is the main code that instanciate and link nodes together
@@ -58,15 +31,11 @@ var CustomCompiler;
             // if ( !this._material )
             //     return this.createDefaultFragmentShaderGraph();
 
-            var uniforms = this._material.getOrCreateUniforms();
-            var materialDiffuseColor = this.getOrCreateUniform( uniforms.diffuse );
-            var materialAmbientColor = this.getOrCreateUniform( uniforms.ambient );
-            var materialEmissionColor = this.getOrCreateUniform( uniforms.emission );
-            var materialSpecularColor = this.getOrCreateUniform( uniforms.specular );
-            var materialShininess = this.getOrCreateUniform( uniforms.shininess );
+            var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material );
 
-            var normal = this.getOrCreateNormalizedNormal();
-            var eyeVector = this.getOrCreateNormalizedPosition();
+
+            // that's the final result of the shader graph
+            var fragColor = factory.getNode( 'FragColor' );
 
 
             // diffuse color
@@ -78,37 +47,40 @@ var CustomCompiler;
             // no texture then we use the material diffuse value
             if ( diffuseColor === undefined ) {
 
-                diffuseColor = materialDiffuseColor;
+                diffuseColor = materialUniforms.diffuse;
 
             } else {
 
-                // if texture we multiply materialDiffuse * texture
-                var str = sprintf( '%s.rgb *= %s.rgb;', [ diffuseColor.getVariable(), materialDiffuseColor.getVariable() ] );
-                var operator = new shaderNode.InlineCode( materialDiffuseColor );
-                operator.connectOutput( diffuseColor );
-                operator.setCode( str );
+                factory.getNode( 'InlineCode' ).code( '%color.rgb *= %diffuse.rgb;' ).inputs( {
+                    diffuse: materialUniforms.diffuse
+                } ).outputs( {
+                    color: diffuseColor
+                } );
 
             }
 
 
-            // default behavior if no light
-            var finalColor = this.getFinalColor( diffuseColor );
-
             if ( this._lights.length > 0 ) {
 
-                var lightedOutput = this.getOrCreateVariable( 'vec4', 'lightOutput' );
-                var nodeLight = new shaderNode.Lighting( lightedOutput, this._lights, normal, eyeVector, materialAmbientColor, diffuseColor, materialSpecularColor, materialShininess );
-                nodeLight.createFragmentShaderGraph( this );
-
+                // creates lights nodes
+                var lightedOutput = this.createLighting( {
+                    materialdiffuse: diffuseColor
+                } );
 
                 // ======================================================
                 // my custom attribute ramp
                 // it's here I connect ouput of light result with my ramp
                 // ======================================================
-                var rampAttribute = this.getRamp();
-                var rampResult = this.getOrCreateVariable( 'vec4');
+                var rampResult = this.createVariable( 'vec3' );
+                var rampAttribute = this.getAttributeType( 'Ramp' );
                 if ( rampAttribute && rampAttribute.getAttributeEnable() ) {
-                    new RampNode( rampResult, lightedOutput );
+
+                    factory.getNode( 'Ramp' ).inputs( {
+                        color: lightedOutput
+                    } ).outputs( {
+                        color: rampResult
+                    } );
+
                 } else {
                     rampResult = lightedOutput;
                 }
@@ -119,10 +91,17 @@ var CustomCompiler;
                 // my custom attribute negatif
                 // it's here I connect ouput of light result with my ramp
                 // ======================================================
-                var negatifResult = this.getOrCreateVariable( 'vec4');
-                var negatifAttribute = this.getNegatif();
+                var negatifResult = this.createVariable( 'vec3' );
+                var negatifAttribute = this.getAttributeType( 'Negatif' );
                 if ( negatifAttribute ) {
-                    new NegatifNode( negatifResult, rampResult, this.getOrCreateUniform( negatifAttribute.getOrCreateUniforms().enable ) );
+
+                    factory.getNode( 'Negatif' ).inputs( {
+                        color: rampResult,
+                        enable: this.getOrCreateUniform( negatifAttribute.getOrCreateUniforms().enable )
+                    } ).outputs( {
+                        color: negatifResult
+                    } );
+
                 } else {
                     negatifResult = rampResult;
                 }
@@ -131,22 +110,28 @@ var CustomCompiler;
 
                 // get final color
                 // use the rampResult from previous node
-                finalColor = this.getFinalColor( materialEmissionColor, negatifResult );
+                factory.getNode( 'InlineCode' ).code( '%color = vec4(%emit.rgb + %negatif, 1.0);' ).inputs( {
+                    emit: materialUniforms.emission,
+                    negatif: negatifResult
+                } ).outputs( {
+                    color: fragColor
+                } );
+
+            } else {
+
+                // no lights use a default behaviour
+                factory.getNode( 'InlineCode' ).code( '%color = vec4(%diffuse, 1.0);' ).inputs( {
+                    diffuse: diffuseColor
+                } ).outputs( {
+                    color: fragColor
+                } );
+
 
             }
-
-            // create the output of the shader
-            var fragColor = new shaderNode.FragColor();
-
-            // make a copy from final color
-            // it should be simplified
-            var fragFinal = new shaderNode.InlineCode( finalColor );
-            fragFinal.connectOutput( fragColor );
-            fragFinal.setCode( sprintf('%s = %s;', [fragColor, finalColor] ));
 
             return fragColor;
         }
 
-    });
+    } );
 
-})();
+} )();

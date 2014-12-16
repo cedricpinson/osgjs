@@ -206,6 +206,14 @@ define( [
             return this._attenuation[ 2 ];
         },
 
+        setLightType: function ( type ) {
+            if ( type === Light.DIRECTION )
+                return this.setLightAsDirection();
+            else if ( type === Light.SPOT )
+                return this.setLightAsSpot();
+
+            return this.setLightAsPoint();
+        },
 
         getLightType: function () {
 

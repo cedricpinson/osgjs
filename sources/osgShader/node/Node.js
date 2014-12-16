@@ -1,28 +1,22 @@
 define( [
-    'require'
+    'osg/Notify'
 
-], function ( require ) {
+], function ( Notify ) {
     'use strict';
 
     var instance = 0;
     var Node = function () {
         this._name = 'AbstractNode';
         this._inputs = [];
-        this._outputs = [];
+        this._outputs = null;
         this._id = instance++;
         this._text = undefined;
-
-        this.connectInputs.apply( this, arguments );
     };
 
     Node.prototype = {
 
         toString: function () {
             return this._name + ' : { input: ' + this._inputs.toString() + ' }, output: { ' + this._output.toString() + ' } ';
-        },
-
-        getOutput: function () {
-            return this._outputs[ 0 ];
         },
 
         getInputs: function () {
@@ -33,14 +27,40 @@ define( [
             return this._outputs;
         },
 
-        // accept   inputs0, inputs1, ... or
-        //          [inputs]
-        connectInputs: function () {
+        checkInputsOutputs: function () {
 
-            // circular denpendency
-            var data = require( 'osgShader/node/data' );
-            var InlineConstant = data.InlineConstant;
+            var i, key;
+            if ( this.validInputs ) {
 
+                for ( i = 0; i < this.validInputs.length; i++ ) {
+                    key = this.validInputs[ i ];
+                    if ( !this._inputs[ key ] ) {
+                        Notify.error( 'Shader node ' + this.type + ' validation error input ' + key + ' is missing' );
+                        return false;
+                    }
+                }
+            }
+
+            if ( this.validOutputs ) {
+
+                for ( i = 0; i < this.validOutputs.length; i++ ) {
+                    key = this.validOutputs[ i ];
+                    if ( !this._outputs[ key ] ) {
+                        Notify.error( 'Shader node ' + this.type + ' validation error output ' + key + ' is missing' );
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        },
+
+        // accepts inputs like that:
+        // inputs( [ a, b, c , d] )
+        // inputs( { a: x, b: y } )
+        // inputs( a, b, c, d )
+        inputs: function () {
+            // handle inputs ( a, b, c, d)
             for ( var i = 0, l = arguments.length; i < l; i++ ) {
 
                 var input = arguments[ i ];
@@ -48,65 +68,62 @@ define( [
                     break;
                 }
 
-                // make it possible to use inline constant for input
-                if ( typeof input === 'string' ) {
-                    input = new InlineConstant( input );
+                // handle inputs( [a, b, c ,d] )
+                if ( Array.isArray( input ) ) {
 
-                } else if ( input instanceof Array ) {
-                    this.connectInputs.apply( this, input );
-                    continue;
+                    this.inputs.apply( this, input );
+                    return this;
+
+                    // check for an object {} and not something from base class Node
+                } else if ( typeof input === 'object' && input !== null && ( input instanceof Node === false ) ) {
+                    this._inputs = input;
+                    return this;
+
+                } else { // add argument to the array
+                    this._inputs.push( input );
                 }
-
-                this._inputs.push( input );
             }
 
             return this;
         },
 
-        connectOutput: function ( i ) {
-            this._outputs.push( i );
-            this.autoLink( i );
+        // accepts inputs like that:
+        // outputs( { a: x, b: y } )
+        // outputs( a )
+        outputs: function ( outputs ) {
+
+            this._outputs = outputs;
+
+            // single output
+            if ( this._outputs instanceof Node === true ) {
+
+                this.autoLink( this._outputs );
+
+            } else {
+
+                // iterate on objects keys
+                var keys = Object.keys( this._outputs );
+                for ( var i = 0; i < keys.length; i++ ) {
+                    var key = keys[ i ];
+                    this.autoLink( this._outputs[ key ] );
+                }
+            }
 
             return this;
         },
 
         autoLink: function ( output ) {
-            if ( output === undefined ) {
+
+            if ( output === undefined )
                 return this;
-            }
-            output.connectInputs( this );
 
-            return this;
-        },
+            output.inputs( this );
 
-        connectUniforms: function ( context, attribute ) {
-
-            var uniformMap = attribute.getOrCreateUniforms();
-            var uniformMapKeys = uniformMap.getKeys();
-
-            for ( var m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
-
-                var kk = uniformMapKeys[ m ];
-
-                var kkey = uniformMap[ kk ];
-                // check if uniform is already declared
-
-                var uniform = context.getVariable( kkey.name );
-                if ( uniform === undefined ) {
-                    uniform = context.Uniform( kkey.type, kkey.name );
-                }
-                // connect uniform to this node
-                this.connectInputs( uniform );
-            }
             return this;
         },
 
         computeFragment: function () {
             return this._text;
-        },
-
-        computeVertex: function () {
-            return undefined;
         },
 
         comment: function ( txt ) {
