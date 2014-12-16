@@ -22,6 +22,8 @@ define( [
     /** @lends DrawArrays.prototype */
     DrawArrays.prototype = {
         draw: function ( state ) {
+            if ( this.count === 0 )
+                return;
             var gl = state.getGraphicContext();
             gl.drawArrays( this.mode, this.first, this.count );
         },
