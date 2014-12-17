@@ -334,7 +334,8 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
 }
 
 
-vec4 computeShadow(in vec4 shadowVertexProjected,
+float computeShadow(in bool lighted,
+                   in vec4 shadowVertexProjected,
   in vec4 shadowZ,
   in sampler2D tex,
   in vec4 texSize,
@@ -348,6 +349,8 @@ vec4 computeShadow(in vec4 shadowVertexProjected,
   in float exponent1) {
 
 
+  if (!lighted)
+    return 1.0;
 
     vec4 shadowUV;
 
@@ -359,7 +362,7 @@ vec4 computeShadow(in vec4 shadowVertexProjected,
     shadowUV.xy = shadowUV.xy* 0.5 + 0.5;
 
     if (shadowUV.x > 1.0 || shadowUV.y > 1.0 || shadowUV.x < 0.0 || shadowUV.y < 0.0)
-     return vec4(vec3(1.0), 1.0);// 0.0 to show limits of light frustum
+     return 1.0;// 0.0 to show limits of light frustum
 
     float objDepth;
 
@@ -372,7 +375,7 @@ vec4 computeShadow(in vec4 shadowVertexProjected,
     shadowBias = clamp(shadowBias, 0.0, bias);
 
     //return vec4(vec3(getShadowedTermUnified(shadowUV.xy, objDepth, tex, texSize, bias)), 1.0);
-    return vec4(vec3(getShadowedTermUnified(shadowUV.xy, objDepth, tex, texSize, bias, VsmEpsilon, exponent, exponent1)), 1.0);
+    return getShadowedTermUnified(shadowUV.xy, objDepth, tex, texSize, bias, VsmEpsilon, exponent, exponent1);
 
 }
 // end shadows

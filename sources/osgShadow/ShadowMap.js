@@ -218,6 +218,32 @@ define( [
             this._shadowSettings = ss;
         },
 
+        getBias: function () {
+            return this._shadowAttribute.getBias();
+
+        },
+        setBias: function ( value ) {
+            this._shadowAttribute.setBias( value );
+        },
+        getExponent0: function () {
+            return this._shadowAttribute.getExponent0();
+        },
+        setExponent0: function ( value ) {
+            this._shadowAttribute.setExponent0( value );
+        },
+        getExponent1: function () {
+            return this._shadowAttribute.getExponent1();
+        },
+        setExponent1: function ( value ) {
+            this._shadowAttribute.setExponent1( value );
+        },
+        getVsmEpsilon: function () {
+            return this._shadowAttribute.getVsmEpsilon();
+        },
+        setVsmEpsilon: function ( value ) {
+            this._shadowAttribute.setVsmEpsilon( value );
+        },
+
         /** initialize the ShadowedScene and local cached data structures.*/
         init: function () {
             if ( !this._shadowedScene ) return;
@@ -656,9 +682,6 @@ define( [
 
             if ( lightPos[ 3 ] === 0.0 ) { // infinite directional light
 
-                // make an orthographic projection
-                // set the position far away along the light direction (inverse)
-                position = Vec3.add( center, Vec3.mult( worldLightDir, radius * 2.0, position ), position );
             }
 
             var top, right;
@@ -670,7 +693,8 @@ define( [
                 up = [ 1.0, 0.0, 0.0 ];
             }
 
-            if ( lightPos[ 3 ] !== 0.0 ) { // positional light
+            if ( lightPos[ 3 ] !== 0.0 ) {
+                // positional light: spot, point, area
                 var spotAngle = light.getSpotCutoff();
                 if ( spotAngle < 180.0 ) { // also needs zNear zFar estimates
 
@@ -680,14 +704,22 @@ define( [
                     Vec3.mult( worldLightDir, zFar, worldTarget );
                     Vec3.add( position, worldTarget, worldTarget );
                     Matrix.makeLookAt( position, worldTarget, up, view );
-                } else { // standard omni-directional positional light
+                } else {
+                    // point light/sortof
+                    // standard omni-directional positional light
                     top = ( radius / centerDistance ) * zNear;
                     right = top;
 
                     Matrix.makeFrustum( -right, right, -top, top, zNear, zFar, projection );
                     Matrix.makeLookAt( position, center, up, view );
                 }
-            } else { // directional light
+            } else {
+                // directional light
+                // make an orthographic projection
+                // set the position *far* away along the light direction (inverse)
+                Vec3.mult( worldLightDir, -radius * 2.0, this._tmpVecBis );
+                position = Vec3.add( center, this._tmpVecBis, position );
+
                 top = radius;
                 right = top;
                 Matrix.makeOrtho( -right, right, -top, top, zNear, zFar, projection );
@@ -714,22 +746,18 @@ define( [
             this._texture.setProjectionMatrix( projection );
             this._texture.setDepthRange( this._depthRange );
 
-
             // too late, it's latest frame
             // shadowCamera.setComputeNearFar( true );
             this._cameraShadow.setComputeNearFar( false );
 
-            /*
-          var bias = shadowSettings._config[ 'bias' ];
+            var bias = shadowSettings._config[ 'bias' ];
+            if ( bias ) this._shadowAttribute.setBias( bias );
             var exponent0 = shadowSettings._config[ 'exponent' ];
+            if ( exponent0 ) this._shadowAttribute.setExponent0( exponent0 );
             var exponent1 = shadowSettings._config[ 'exponent1' ];
+            if ( exponent1 ) this._shadowAttribute.setExponent1( exponent1 );
             var vsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
-
-             this._shadowAttribute.setBias( bias );
-            this._shadowAttribute.setExponent0( exponent0 );
-            this._shadowAttribute.setExponent1( exponent1 );
-            this._shadowAttribute.setVsmEpsilon( vsmEpsilon );
-*/
+            if ( vsmEpsilon ) this._shadowAttribute.setVsmEpsilon( vsmEpsilon );
 
         },
 

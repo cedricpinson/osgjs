@@ -6,26 +6,6 @@ define( [
 ], function ( MACROUTILS, shaderUtils, Node ) {
     'use strict';
 
-
-        this._shadows = shadows || [];
-        this._shadowsTextures = shadowsTextures || [];
-                var shadowTextures = new Array( this._shadowsTextures.length );
-                        shadow = this._shadows[ k ];
-                    if ( shadow.getLight() === light ) {
-
-                        for ( var p = 0; p < this._shadowsTextures.length; p++ ) {
-                            var shadowTexture = this._shadowsTextures[ p ];
-                            if ( shadowTexture && shadowTexture.getLightUnit() === light.getLightNumber() ) {
-                                shadowTextures[ p ] = shadowTexture;
-                                hasShadows = true;
-                            }
-                        }
-                    }
-
-                }
-                // TODO Link shadowTexture and shadowAttribute ?
-                    shadowNode = new ShadowNode( shadowTempOutput, lightedOutput, lighted, lightPos, lightDir, lightDNL, this, light, shadow, shadowTexture );
-
     // base class for all point based light: Point/Directional/Spot/Hemi
     // avoid duplicate code
     var NodeLightsPointBased = function () {
@@ -70,6 +50,12 @@ define( [
 
             'lightmatrix',
             'lightinvMatrix',
+
+            'lighted',
+            'lightEyePos',
+            'lightEyeDir',
+            'lightNDL'
+
         ],
 
         computeFragment: function () {
@@ -93,6 +79,11 @@ define( [
 
                     this._inputs.lightmatrix,
                     this._inputs.lightinvMatrix,
+
+                    this._inputs.lightEyePos,
+                    this._inputs.lightEyeDir,
+                    this._inputs.lightNDL,
+                    this._inputs.lighted
                 ] );
         }
 
@@ -128,7 +119,13 @@ define( [
             'lightspotBlend',
 
             'lightmatrix',
-            'lightinvMatrix'
+            'lightinvMatrix',
+
+            'lighted',
+            'lightEyePos',
+            'lightEyeDir',
+            'lightNDL'
+
         ],
 
         computeFragment: function () {
@@ -155,6 +152,11 @@ define( [
 
                     this._inputs.lightmatrix,
                     this._inputs.lightinvMatrix,
+
+                    this._inputs.lightEyePos,
+                    this._inputs.lightEyeDir,
+                    this._inputs.lightNDL,
+                    this._inputs.lighted
                 ] );
         }
 
@@ -184,7 +186,13 @@ define( [
             'lightposition',
 
             'lightmatrix',
-            'lightinvMatrix'
+            'lightinvMatrix',
+
+            'lighted',
+            'lightEyePos',
+            'lightEyeDir',
+            'lightNDL'
+
         ],
 
         computeFragment: function () {
@@ -207,6 +215,11 @@ define( [
 
                     this._inputs.lightmatrix,
                     this._inputs.lightinvMatrix,
+
+                    this._inputs.lightEyePos,
+                    this._inputs.lightEyeDir,
+                    this._inputs.lightNDL,
+                    this._inputs.lighted
                 ] );
         }
     } );
