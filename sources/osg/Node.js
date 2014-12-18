@@ -260,7 +260,7 @@ define( [
             };
             CollectParentPaths.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
                 apply: function ( node ) {
-                    if ( node.parents.length === 0 || node === this.halt ) {
+                    if ( node.parents.length === 0 || node === this.halt || ( node.referenceFrame !== undefined && node.referenceFrame === TransformEnums.ABSOLUTE_RF ) ) {
                         // copy
                         this.nodePaths.push( this.nodePath.slice( 0 ) );
                     } else {
@@ -287,8 +287,8 @@ define( [
             if ( this._cullingActive === value ) return;
             if ( this._numChildrenWithCullingDisabled === 0 && this.parents.length > 0 ) {
                 var delta = 0;
-                if ( !this._cullingActive )--delta;
-                if ( !value )++delta;
+                if ( !this._cullingActive ) --delta;
+                if ( !value ) ++delta;
                 if ( delta !== 0 ) {
                     for ( var i = 0, k = this.parents.length; i < k; i++ ) {
                         this.parents[ i ].setNumChildrenWithCullingDisabled( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
@@ -310,8 +310,8 @@ define( [
             if ( this._numChildrenWithCullingDisabled === num ) return;
             if ( this._cullingActive && this.parents.length > 0 ) {
                 var delta = 0;
-                if ( this._numChildrenWithCullingDisabled > 0 )--delta;
-                if ( num > 0 )++delta;
+                if ( this._numChildrenWithCullingDisabled > 0 ) --delta;
+                if ( num > 0 ) ++delta;
                 if ( delta !== 0 ) {
                     for ( var i = 0, k = this.parents.length; i < k; i++ ) {
                         this.parents[ i ].setNumChildrenWithCullingDisabled( this.parents[ i ].getNumChildrenWithCullingDisabled() + delta );
@@ -325,8 +325,8 @@ define( [
             return this._numChildrenWithCullingDisabled;
         },
 
-        releaseGLObjects: function ( /*gl*/ ) {
-            if ( this.stateset!== undefined ) this.stateset.releaseGLObjects();
+        releaseGLObjects: function ( /*gl*/) {
+            if ( this.stateset !== undefined ) this.stateset.releaseGLObjects();
         }
 
     } ), 'osg', 'Node' );

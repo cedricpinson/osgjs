@@ -6,6 +6,8 @@ define( [
     'osg/TransformEnums'
 ], function ( MACROUTILS, Transform, CullSettings, Matrix, TransformEnums ) {
 
+    'use strict';
+
     /**
      * Camera - is a subclass of Transform which represents encapsulates the settings of a Camera.
      * @class Camera
@@ -140,18 +142,19 @@ define( [
                 if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                     Matrix.preMult( matrix, this.modelviewMatrix );
                 } else { // absolute
-                    matrix = this.modelviewMatrix;
+                    Matrix.copy( this.modelviewMatrix, matrix );
                 }
                 return true;
             },
 
-            computeWorldToLocalMatrix: ( function ( matrix /*, nodeVisitor */ ) {
-                var inverse = Matrix.create();
-                return function () {
+            computeWorldToLocalMatrix: ( function () {
+                var minverse = Matrix.create();
+                return function ( matrix /*, nodeVisitor */ ) {
+                    Matrix.inverse( this.modelviewMatrix, minverse );
                     if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                        Matrix.postMult( Matrix.inverse( this.modelviewMatrix, inverse ), matrix );
+                        Matrix.postMult( minverse, matrix );
                     } else {
-                        Matrix.inverse( this.modelviewMatrix, matrix );
+                        Matrix.copy( minverse, matrix );
                     }
                     return true;
                 };

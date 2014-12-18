@@ -98,6 +98,8 @@ define( [
     var NodeGizmo = function ( viewer ) {
         MatrixTransform.call( this );
 
+        this._tmask = 1; // traversal mask when picking the scene
+
         // We can set this boolean to true if we want to insert a MatrixTransform just
         // before the picked geometry.
         // Otherwise, we simply select the first MatrixTransform with an 'editMask' property
@@ -134,7 +136,7 @@ define( [
         this._debugNode = new Node();
 
         this._attachedNode = null;
-        this.attachToNode( null );
+        this.attachToGeometry( null );
 
         this.init();
     };
@@ -153,6 +155,9 @@ define( [
     NodeGizmo.PICK_GIZMO = NodeGizmo.PICK_ARC | NodeGizmo.PICK_ARROW | NodeGizmo.PICK_PLANE;
 
     NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
+        setTraversalMask: function ( tmask ) {
+            this._tmask = tmask;
+        },
         init: function () {
             this.getOrCreateStateSet().setAttributeAndModes( new Depth( Depth.DISABLE ) );
             this.getOrCreateStateSet().setAttributeAndModes( new CullFace( CullFace.DISABLE ) );
@@ -197,7 +202,19 @@ define( [
             this._attachedNode = node;
             this.updateGizmoMask();
         },
-        attachToNode: function ( node ) {
+        attachToMatrixTransform: function ( node ) {
+            if ( !node ) {
+                this._attachedNode = null;
+                this.setNodeMask( 0x0 );
+                return;
+            }
+            if ( node.editMask === undefined )
+                node.editMask = NodeGizmo.PICK_GIZMO;
+
+            this._attachedNode = node;
+            this.updateGizmoMask();
+        },
+        attachToGeometry: function ( node ) {
             if ( !node ) {
                 this._attachedNode = null;
                 this.setNodeMask( 0x0 );
@@ -222,10 +239,12 @@ define( [
             this.updateGizmoMask();
         },
         updateGizmoMask: function () {
-            if ( !this._attachedNode )
+            if ( !this._attachedNode ) {
+                this.setNodeMask( 0x0 );
                 return;
+            }
             var mask = this._attachedNode.editMask;
-            this.setNodeMask( NodeGizmo.NO_PICK );
+            this.setNodeMask( mask & NodeGizmo.PICK_GIZMO ? NodeGizmo.NO_PICK : 0x0 );
             this._translateNode.setNodeMask( mask & NodeGizmo.PICK_ARROW ? NodeGizmo.PICK_ARROW : 0x0 );
             this._rotateNode.setNodeMask( mask & NodeGizmo.PICK_ARC ? NodeGizmo.PICK_ARC : 0x0 );
             this._planeNode.setNodeMask( mask & NodeGizmo.PICK_PLANE ? NodeGizmo.PICK_PLANE : 0x0 );
@@ -510,7 +529,7 @@ define( [
                 var x = coord[ 0 ] * ( canvas.width / canvas.clientWidth );
                 var y = ( canvas.clientHeight - coord[ 1 ] ) * ( canvas.height / canvas.clientHeight );
 
-                var hits = this._viewer.computeIntersections( x, y, tmask || 1 );
+                var hits = this._viewer.computeIntersections( x, y, tmask );
 
                 if ( hits.length === 0 )
                     return;
@@ -672,10 +691,9 @@ define( [
         },
         pickAndSelect: function ( e ) {
             this.setNodeMask( 0x0 );
-            var hit = this.computeNearestIntersection( e );
-            this.setNodeMask( NodeGizmo.NO_PICK );
+            var hit = this.computeNearestIntersection( e, this._tmask );
             if ( this._autoInsertMT )
-                this.attachToNode( hit ? hit.nodepath[ hit.nodepath.length - 1 ] : hit );
+                this.attachToGeometry( hit ? hit.nodepath[ hit.nodepath.length - 1 ] : hit );
             else
                 this.attachToNodePath( hit ? hit.nodepath : hit );
         },
