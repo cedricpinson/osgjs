@@ -1,14 +1,11 @@
  ( function () {
      'use strict';
-     var Q = window.Q;
      var OSG = window.OSG;
      var osg = OSG.osg;
      var osgDB = OSG.osgDB;
      var osgViewer = OSG.osgViewer;
      var osgUtil = OSG.osgUtil;
      var osgShadow = OSG.osgShadow;
-     var osgShader = OSG.osgShader;
-     var $ = window.$;
 
 
      //////////////////////
@@ -124,22 +121,14 @@
          this._downPass = [];
 
          // shared
-         this._receiverStateSet = undefined;
-         this.textureType = undefined;
-
          this._previousTech = this._config[ 'shadow' ];
          this._previousTextureSize = this._config[ 'texturesize' ];
          this._previousTextureType = this._config[ 'texturetype' ];
          this._previousBlur = this._config[ 'blur' ];
          this._previousFov = this._config[ 'fov' ];
+         this._previousLightType = this._config[ 'lightType' ];
          this._previousRtt = this._config[ 'debugRtt' ];
          this._previousFrustumTest = this._config[ 'frustumTest' ];
-
-
-         this._shaderProcessor = new osgShader.ShaderProcessor();
-         this._cacheProgram = {};
-
-         this.floatTextureSupport = false;
 
 
      };
@@ -147,9 +136,9 @@
 
      // That's where we update lights position/direction at each frame
      // so that the sample is not too much static
-     var LightUpdateCallback = function ( light, myExample, debugNode ) {
+     var LightUpdateCallback = function ( light, myExample, debugNode, position, dir ) {
          this._example = myExample;
-         var position = light.getPosition();
+
          this._positionX = position[ 0 ];
          this._positionY = position[ 1 ];
          this._positionZ = position[ 2 ];
@@ -157,14 +146,22 @@
          this._accum = 0;
          this._last = 0;
          this._debugNode = debugNode;
+         this.lightPos = position;
+         this.lightDir = dir;
+
+         this.up = [ 0.0, 0.0, 1.0 ];
+         this.lightTarget = [ 0.0, 0.0, 0.0 ];
+
+         this._directLightChange = false; // GUI change, mmm
+
      };
      LightUpdateCallback.prototype = {
          update: function ( node, nv ) {
              var currentTime = nv.getFrameStamp().getSimulationTime();
-             var lightSource = node;
-             var l = lightSource.getLight();
-             var lightPos = l.getPosition();
-             var lightDir = l.getDirection();
+             //
+             var lightPos = this.lightPos;
+             var lightDir = this.lightDir;
+
              // is user didn't prevent animation
              if ( this._example._config[ 'lightMovement' ] !== 'Fixed' && this._example._config[ 'frustumTest' ] === 'free' ) {
 
@@ -188,7 +185,7 @@
 
                  //  GENERIC Code getting direction
                  //  50 50 15
-                 var lightTarget = [ 0.0, 0.0, 0.0 ];
+                 var lightTarget = this.lightTarget;
                  switch ( this._example._config[ 'lightMovement' ] ) {
                  case 'Rotate':
                      lightPos[ 0 ] = x * this._positionX;
@@ -213,34 +210,44 @@
                  }
 
                  osg.Vec3.normalize( lightDir, lightDir );
-                 // that's where we actually update the light
-                 // TODO: why not target in light ? as it's like a camera
-                 // TODO: why not a stateAttribtue
-                 // TODO: cumbersome light pos/dir and matrix update/sync
-                 l.setDirection( lightDir );
-                 l.setPosition( lightPos );
-                 l.dirty();
+
+                 if ( this._directLightChange ) {
+                     var lightSource = node;
+                     var l = lightSource.getLight();
+                     l.setDirection( lightDir );
+
+                     //best don't overwrite the direction bit on pos[3]
+                     // l.setPosition( lightPos );
+                     osg.Vec3.copy( lightPos, l.getPosition() );
+
+                     l.dirty();
+                 }
              }
 
+             // begin light debug
              // what follows,
              // .. just allow the debug node (AXIS) to be updated here.
              //
-             var up = this.up || [ 0.0, 1.0, 0.0 ]; //   camera up
+             var up = this.up; //   camera up
              // Check it's not coincident with lightDir
              if ( Math.abs( osg.Vec3.dot( up, lightDir ) ) >= 1.0 ) {
                  // another camera up
-                 this.up = [ 1.0, 0.0, 0.0 ];
-             } else {
-                 this.up = up;
+                 up = [ 1.0, 0.0, 0.0 ];
              }
 
-             var lightTargetDebug = [ 0.0, 0.0, 0.0 ];
-             osg.Vec3.mult( lightDir, 50, lightTargetDebug );
-             osg.Vec3.add( lightPos, lightTargetDebug, lightTargetDebug );
+             var lightTargetDebug = this.lightTarget;
+             //osg.Vec3.mult( lightDir, 50, lightTargetDebug );
+             //osg.Vec3.add( lightPos, lightTargetDebug, lightTargetDebug );
 
              var lightMatrix = this._debugNode.getMatrix();
              osg.Matrix.makeLookAt( lightPos, lightTargetDebug, up, lightMatrix );
              osg.Matrix.inverse( lightMatrix, lightMatrix );
+             //
+
+             if ( !this._directLightChange ) {
+                 var lightNode = node.getParents()[ 0 ];
+                 osg.Matrix.copy( lightMatrix, lightNode.getMatrix() );
+             }
              // end light debug
 
 
@@ -280,7 +287,15 @@
 
              controller = gui.add( this._config, 'texturetype', textureTypes );
              controller.onChange( this.updateShadow.bind( this ) );
-             controller = gui.add( this._config, 'texturesize', [ 32, 64, 128, 256, 512, 1024, 2048, 4096, 8144 ] );
+
+             var texSizes = [];
+             var maxTexSize = this._maxTexSize;
+             var texSize = 16;
+             while ( texSize <= maxTexSize ) {
+                 texSizes.push( texSize );
+                 texSize *= 2;
+             }
+             controller = gui.add( this._config, 'texturesize', texSizes );
              controller.onChange( this.updateShadow.bind( this ) );
 
              // shaders has to have under max varying decl
@@ -487,8 +502,8 @@
 
                  l = this._lights.length;
 
+                 // remove all lights
                  while ( l-- ) {
-                     // remove light
                      this._lightAndShadowScene.removeShadowTechnique( this._shadowTechnique[ l ] );
 
                      group.removeChild( this._lightsMatrix[ l ] );
@@ -501,6 +516,7 @@
                  this._shadowTechnique = [];
                  this._debugLights = [];
 
+                 // re-add lights if any
                  for ( var k = 0; k < numLights; k++ ) {
                      this.addShadowedLight( group, k, lightScale );
                  }
@@ -532,34 +548,42 @@
          },
          updateLightType: function () {
              var l;
-             switch ( this._config[ 'lightType' ] ) {
-             case 'Spot':
-                 {
-                     this._config[ 'fov' ] = this._previousFov;
-                     l = this._lights.length;
-                     while ( l-- ) {
-                         this._lights[ l ].getPosition()[ 3 ] = 1.0;
+             if ( this._previousLightType !== this._config[ 'lightType' ] ) {
+                 switch ( this._config[ 'lightType' ] ) {
+                 case 'Spot':
+                     {
+                         if ( this._previousSpotFov )
+                             this._config[ 'fov' ] = this._previousSpotFov;
+
+                         l = this._lights.length;
+                         while ( l-- ) {
+                             this._lights[ l ].setLightAsSpot();
+                         }
+                         break;
                      }
-                     break;
-                 }
-             case 'Point':
-                 {
-                     this._config[ 'fov' ] = 181;
-                     l = this._lights.length;
-                     while ( l-- ) {
-                         this._lights[ l ].getPosition()[ 3 ] = 1.0;
+                 case 'Point':
+                     {
+
+                         if ( this._previousLightType === 'Spot' ) this._previousSpotFov = this._config[ 'fov' ];
+                         this._config[ 'fov' ] = 181;
+                         l = this._lights.length;
+                         while ( l-- ) {
+                             this._lights[ l ].setLightAsPoint();
+                         }
+                         break;
                      }
-                     break;
-                 }
-             case 'Directional':
-                 {
-                     this._config[ 'fov' ] = 181;
-                     l = this._lights.length;
-                     while ( l-- ) {
-                         this._lights[ l ].getPosition()[ 3 ] = 0.0;
+                 case 'Directional':
+                     {
+                         if ( this._previousLightType === 'Spot' ) this._previousSpotFov = this._config[ 'fov' ];
+                         this._config[ 'fov' ] = 181;
+                         l = this._lights.length;
+                         while ( l-- ) {
+                             this._lights[ l ].setLightAsDirection();
+                         }
+                         break;
                      }
-                     break;
                  }
+                 this._previousLightType = this._config[ 'lightType' ];
              }
          },
          updateShadowFormat: function () {
@@ -609,6 +633,9 @@
          },
          updateShadowTechniqueMode: function () {
 
+             var l, numLights = ~~ ( this._config[ 'lightnum' ] );
+             var shadowMap;
+
              if ( this._previousTech !== this._config[ 'shadow' ] ) {
                  // technique change.
                  switch ( this._config[ 'shadow' ] ) {
@@ -627,37 +654,28 @@
                  default:
                      break;
                  }
-                 var l, numLights = ~~ ( this._config[ 'lightnum' ] );
-                 var shadowMap;
-
                  l = numLights;
                  while ( l-- ) {
                      shadowMap = this._shadowTechnique[ l ];
                      shadowMap.getShadowSettings().setAlgorithm( this._config[ 'shadow' ] );
                  }
 
-
                  this._previousTech = this._config[ 'shadow' ];
              }
-
-         },
-         updateShaders: function () {
-             // TODO: check if still needed
-             // should be inside the init of shadowscene or shadowmap
-
-             return;
-
-             var l, numLights = ~~ ( this._config[ 'lightnum' ] );
-             var shadowMap;
 
              l = numLights;
              while ( l-- ) {
                  shadowMap = this._shadowTechnique[ l ];
 
-                 shadowMap.dirty();
+                 var shadowSettings = shadowMap.getShadowSettings();
+
+                 shadowSettings._config[ 'bias' ] = this._config[ 'bias' ];
+                 shadowSettings._config[ 'exponent' ] = this._config[ 'exponent' ];
+                 shadowSettings._config[ 'exponent1' ] = this._config[ 'exponent1' ];
+                 shadowSettings._config[ 'VsmEpsilon' ] = this._config[ 'VsmEpsilon' ];
 
              }
-             this._lightAndShadowScene.getReceivingStateSet().attributeMap.dirty();
+
          },
          updateDebugRtt: function () {
              // show the shadowmap as ui quad on left bottom screen
@@ -695,13 +713,12 @@
 
              this.testFrustumIntersections();
 
-             this.updateFov();
              this.updateLightType();
+             this.updateFov();
              this.updateShadowTechniqueMode();
 
              this.updateShadowFormat();
              this.updateShadowMapSize();
-             this.updateShaders();
 
              this.updateDebugRtt();
 
@@ -947,7 +964,7 @@
              if ( !target ) target = [ 0, 0, 0 ];
              if ( !position ) position = [ -25 + -15 * num + -25 * ( num % 2 ),
                  25 + 15 * num - 25 * ( num % 2 ),
-                 15 + 35 * num, 1
+                 15 + 35 * num
              ];
              var shadowSettings = new osgShadow.ShadowSettings( this._config );
              //this._lightAndShadowScene.setShadowSettings( shadowSettings );
@@ -964,16 +981,24 @@
              /////////////////////////////
              var lightSource = new osg.LightSource();
              var lightNode = new osg.MatrixTransform();
-             lightNode.setName( 'lightNode0' );
+             lightNode.setName( 'lightNode' + num );
              var light = new osg.Light( num );
 
-             light.setPosition( position );
-             var dir = [ 0, 0, 0, 0 ];
-             osg.Vec3.sub( target, light._position, dir );
-             osg.Vec3.normalize( dir, dir );
-             light.setDirection( dir );
-
              light.setName( 'light' + num );
+
+             switch ( this._config[ 'lightType' ] ) {
+             case 'Directional':
+                 light.setLightAsDirection();
+                 break;
+             case 'point':
+                 light.setLightAsPoint();
+                 break;
+             default:
+             case 'Spot':
+                 light.setLightAsSpot();
+
+             }
+
 
              light.setSpotCutoff( this._config[ '_spotCutoff' ] );
              light.setSpotBlend( this._config[ '_spotBlend' ] );
@@ -991,12 +1016,9 @@
              this._lights.push( light );
              this._lightsMatrix.push( lightNode );
              this._lightsSource.push( lightSource );
-             // how to give light link to ancestor ?
-             // TODO: use positioned data ? to make sure it set before
-             light.setUserData( lightNode );
-
 
              /////////////////////////////
+             // add light to scene
              group.addChild( lightNode );
              /////////////////////////////
 
@@ -1005,26 +1027,30 @@
              lightNodemodelNode.addChild( lightNodemodel );
              this._debugLights.push( lightNodemodelNode );
              // light debug axis view
+             // totally indepedant scene tree than light
+             /////////
              group.addChild( lightNodemodelNode );
+             ///////////////////
 
              ////////////
-             lightSource.setUpdateCallback( new LightUpdateCallback( light, this, lightNodemodelNode ) );
+             //light.setPosition( position );
+             var dir = [ 0, 0, 0 ];
+             osg.Vec3.sub( position, target, dir );
+             osg.Vec3.normalize( dir, dir );
+             //light.setDirection( dir );
+             lightSource.setUpdateCallback( new LightUpdateCallback( light, this, lightNodemodelNode, position, dir ) );
 
-             shadowSettings.setLight( light );
+             // need to set lightSource rather than light pos
+             // as there is no link in Light to get current Matrix.
+             shadowSettings.setLightSource( lightSource );
              ///////////////////////////////
 
              var shadowMap = new osgShadow.ShadowMap( shadowSettings );
              this._lightAndShadowScene.addShadowTechnique( shadowMap );
 
-             /////////////////////////////
-             //light0.setShadowTechnique( shadowMap );
-             light._shadowTechnique = shadowMap;
-             ///////////////////////////////////
-             // set shadow shaders
-             //shadowMap.setShadowCasterShaderProgram( this.getShadowCasterShaderProgram() );
-             //shadowMap.getShadowCasterShaderProgram() ;
-
              this._shadowTechnique.push( shadowMap );
+
+             // init is done by shadowscene, at first render
              //shadowMap.init();
 
          },
@@ -1061,16 +1087,9 @@
              var numLights = ~~ ( this._config[ 'lightnum' ] );
              var lightScale = 1.0 / numLights;
 
+
              for ( var k = 0; k < numLights; k++ ) {
                  this.addShadowedLight( group, k, lightScale );
-             }
-             /*
-             shadowedScene.init();
-*/
-             var l = numLights;
-             while ( l-- ) {
-                 var shadowMap = this._shadowTechnique[ l ];
-                 this._rtt.push( shadowMap.getTexture() );
              }
 
 
@@ -1078,6 +1097,8 @@
              this._rttdebugNode._name = 'debugFBNode';
              group.addChild( this._rttdebugNode );
 
+             // doesn't show anything as shadow text and scene
+             // isn't init until first frame
              if ( this._config[ 'debugRtt' ] ) {
                  this.showFrameBuffers( {
                      screenW: this._canvas.width,
@@ -1111,7 +1132,7 @@
              this._glContext = viewer.getGraphicContext();
 
              this._maxVaryings = this._viewer._webGLCaps.getWebGLParameter( 'MAX_VARYING_VECTORS' );
-
+             this._maxTexSize = this._viewer._webGLCaps.getWebGLParameter( 'MAX_TEXTURE_SIZE' );
 
              this._floatLinearTexSupport = this._viewer._webGLCaps.hasRTTLinearFloat();
              this._floatTexSupport = this._viewer._webGLCaps.hasRTTLinearFloat();
@@ -1121,6 +1142,12 @@
 
              var scene = this.createScene();
 
+             var wantToSeeAShadowSceneGraph = false;
+             if ( wantToSeeAShadowSceneGraph ) {
+                 var visitor = new osgUtil.DisplayNodeGraphVisitor();
+                 scene.accept( visitor );
+                 visitor.createGraph();
+             }
              viewer.setSceneData( scene );
              viewer.setupManipulator();
              viewer.getManipulator().computeHomePosition();

@@ -67,8 +67,15 @@ define( [
         this._texturePrecisionFormat = 'BYTE';
         this._algorithm = 'ESM';
         this._depthRange = new Array( 4 );
-        this._shadowAttribute = new ShadowAttribute( settings.getLight(), this._algorithm, this._bias, this._exponent0, this._exponent1, this.vsmEpsilon );
 
+        var lightSource = settings.getLightSource();
+        var light = lightSource.getLight();
+        this._shadowAttribute = new ShadowAttribute( light, this._algorithm, this._bias, this._exponent0, this._exponent1, this.vsmEpsilon );
+
+        this._worldLightPos = Vec4.create();
+        this._worldLightPos[ 3 ] = 0;
+        this._worldLightDir = Vec4.create();
+        this._worldLightDir[ 3 ] = 1;
 
     };
 
@@ -251,7 +258,8 @@ define( [
             var shadowSettings = this.getShadowSettings();
             this._dirty = true;
 
-            var light = shadowSettings.getLight();
+            var lightSource = shadowSettings.getLightSource();
+            var light = lightSource.getLight();
 
             // TODO: sort mess between shadowsettings and shadomap
             // handling dirty dirty shadowmpa and dirty shadowsettings
@@ -353,11 +361,8 @@ define( [
         },
 
         updateShadowParams: function () {
-            // could do some light/scene change check here and skip it
-            var shadowSettings = this.getShadowSettings();
-            var light = shadowSettings.getLight();
 
-            this.aimShadowCastingCamera( light, light.getPosition(), light.getDirection() );
+            this.aimShadowCastingCamera();
 
             /*
             // update accordingly
@@ -532,48 +537,40 @@ define( [
          * shadow map render using a camera whom
          * settings come from the light
          * and the scene being shadowed
-         * @param { Light } light
-         * @param { Vec4  } lightPos - w is 0 for directional
-         * @param { Vec3  } lightDir
-         * @param { Vec3  } lightUp - by default = osg::Vec3( 0, 1 0 )
          */
-        aimShadowCastingCamera: function ( light, lightPos, lightDir, lightUp ) {
+        aimShadowCastingCamera: function () {
 
             var shadowSettings = this.getShadowSettings();
+            var lightSource = shadowSettings.getLightSource();
+            var light = lightSource.getLight();
             var camera = this._cameraShadow;
-
-
-            // Some strange async things here to check
-            // related to world change in proj/view mattrics
-            // afterward changes ?
 
             Matrix.copy( camera.getProjectionMatrix(), this._projectionMatrix );
             Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
             var projection = this._projectionMatrix;
             var view = this._viewMatrix;
+            //var projection = camera.getProjectionMatrix();
+            //var view = camera.getViewMatrix();
 
-            /*
-            var projection = camera.getProjectionMatrix();
-            var view = camera.getViewMatrix();
-*/
-            // lightSource can has only 1 parent and it is matrix transform.
-            var parentNode = light.getUserData();
-            // inject
-            // camera world matrix.
-            // from light current position
-            var matrixList = parentNode.getWorldMatrices();
-            var worldMatrix = matrixList[ 0 ];
+            // inject camera world matrix.
+            // from light current world/pos
 
-            this._worldLightPos = this._worldLightPos || Vec3.create();
-            this._worldLightDir = this._worldLightDir || Vec3.create();
+            // (those you could get during "light addpositionedAttributes" cull pass.. ?)
+            // TODO: clever code share between light and shadow attributes
+            // try reusing light matrix uniform.
+            var matrixList = lightSource.getWorldMatrices();
+            var worldMatrix = matrixList[ 0 ]; // world
+            //var worldMatrix = matrixList[ 1 ]; // scene camera space
+
             var worldLightPos = this._worldLightPos;
             var worldLightDir = this._worldLightDir;
-            //  light pos & lightTarget in World Space
-            Matrix.transformVec3( worldMatrix, lightPos, worldLightPos );
-            Matrix.transformVec3( worldMatrix, lightDir, worldLightDir );
-            Vec3.normalize( worldLightDir, worldLightDir );
-            var position = worldLightPos;
 
+            //  light pos & lightTarget in World Space
+            Matrix.transformVec3( worldMatrix, light.getPosition(), worldLightPos );
+            Vec4.copy( light.getDirection(), worldLightDir );
+            worldLightDir[ 3 ] = 0;
+            Matrix.transformVec4( worldMatrix, worldLightDir, worldLightDir );
+            //Vec3.normalize( worldLightDir, worldLightDir );
 
             var zFar, zNear, radius, center, centerDistance, frustumBound;
             var zFix = false;
@@ -591,7 +588,7 @@ define( [
                 center = frustumBound.center();
                 radius = frustumBound.radius();
 
-                centerDistance = Vec3.distance( position, center );
+                centerDistance = Vec3.distance( worldLightPos, center );
                 zNear = centerDistance - radius;
                 zFar = centerDistance + radius;
                 /////////////////////////////////////////////////////////
@@ -601,14 +598,14 @@ define( [
                 zNear = this._nearCaster;
                 zFix = true;
 
-                if ( 1 || zNear === undefined || zFar === undefined ) {
+                if ( camera.getComputeNearFar() === false || zNear === undefined || zFar === undefined ) {
                     // didn't get near/far auto computed
                     // first frame, off, etc.
                     frustumBound = this.getShadowedScene().getBound();
                     center = frustumBound.center();
                     radius = frustumBound.radius();
 
-                    centerDistance = Vec3.distance( position, center );
+                    centerDistance = Vec3.distance( worldLightPos, center );
                     zNear = centerDistance - radius;
                     zFar = centerDistance + radius;
                     zFix = false;
@@ -662,7 +659,7 @@ define( [
                 // first compute a ray along light dir of length near
                 Vec3.mult( worldLightDir, zNear, this._tmpVec );
                 // then
-                Vec3.add( position, this._tmpVec, this._tmpVec );
+                Vec3.add( worldLightPos, this._tmpVec, this._tmpVec );
 
                 // move from near to center
                 // first compute a ray along light dir of length radius
@@ -670,7 +667,7 @@ define( [
                 Vec3.add( this._tmpVec, this._tmpVecBis, this._tmpVec );
 
                 center = this._tmpVec;
-                centerDistance = Vec3.distance( position, center );
+                centerDistance = Vec3.distance( worldLightPos, center );
 
                 zNear = centerDistance - radius;
                 zFar = centerDistance + radius;
@@ -680,30 +677,31 @@ define( [
             Notify.assert( zNear > epsilon );
             Notify.assert( zFar > zNear + epsilon );
 
-            if ( lightPos[ 3 ] === 0.0 ) { // infinite directional light
-
-            }
-
             var top, right;
-            var up = lightUp;
-            if ( up === undefined /*|| Vec3.length2( up ) <= 0.0*/ ) up = [ 0.0, 0.0, 1.0 ];
+            var up = this._lightUp;
 
-            if ( Math.abs( Vec3.dot( up, lightDir ) ) >= 1.0 ) {
+            if ( Math.abs( Vec3.dot( up, worldLightDir ) ) >= 1.0 ) {
                 // another camera up
                 up = [ 1.0, 0.0, 0.0 ];
             }
 
-            if ( lightPos[ 3 ] !== 0.0 ) {
+            if ( light.getPosition()[ 3 ] !== 0.0 ) {
                 // positional light: spot, point, area
                 var spotAngle = light.getSpotCutoff();
-                if ( spotAngle < 180.0 ) { // also needs zNear zFar estimates
-
+                if ( spotAngle < 180.0 ) {
+                    // statically defined by spot, only needs zNear zFar estimates
+                    // or moste precise possible to tighten and enhance precision
                     Matrix.makePerspective( spotAngle * 2.0, 1.0, zNear, zFar, projection );
+
+                    // now compute view
                     var worldTarget = this._worldTarget || Vec3.create();
-                    this._worldTarget = worldTarget;
+                    this._worldTarget = this.tmpVecBis;
+                    // ray along direction
                     Vec3.mult( worldLightDir, zFar, worldTarget );
-                    Vec3.add( position, worldTarget, worldTarget );
-                    Matrix.makeLookAt( position, worldTarget, up, view );
+                    //Vec3.mult( worldLightDir, centerDistance, worldTarget );
+                    // do go far a way adding that scaled ray on ligth pos
+                    Vec3.add( worldLightPos, worldTarget, worldTarget );
+                    Matrix.makeLookAt( worldLightPos, center, up, view );
                 } else {
                     // point light/sortof
                     // standard omni-directional positional light
@@ -711,19 +709,19 @@ define( [
                     right = top;
 
                     Matrix.makeFrustum( -right, right, -top, top, zNear, zFar, projection );
-                    Matrix.makeLookAt( position, center, up, view );
+                    Matrix.makeLookAt( worldLightPos, center, up, view );
                 }
             } else {
                 // directional light
                 // make an orthographic projection
                 // set the position *far* away along the light direction (inverse)
-                Vec3.mult( worldLightDir, -radius * 2.0, this._tmpVecBis );
-                position = Vec3.add( center, this._tmpVecBis, position );
+                Vec3.mult( worldLightDir, -radius * 1.5, this._tmpVecBis );
+                worldLightPos = Vec3.add( center, this._tmpVecBis, worldLightPos );
 
                 top = radius;
                 right = top;
                 Matrix.makeOrtho( -right, right, -top, top, zNear, zFar, projection );
-                Matrix.makeLookAt( position, center, up, view );
+                Matrix.makeLookAt( worldLightPos, center, up, view );
             }
 
             this._depthRange[ 0 ] = zNear;
@@ -751,13 +749,13 @@ define( [
             this._cameraShadow.setComputeNearFar( false );
 
             var bias = shadowSettings._config[ 'bias' ];
-            if ( bias ) this._shadowAttribute.setBias( bias );
+            if ( bias ) this.setBias( bias );
             var exponent0 = shadowSettings._config[ 'exponent' ];
-            if ( exponent0 ) this._shadowAttribute.setExponent0( exponent0 );
+            if ( exponent0 ) this.setExponent0( exponent0 );
             var exponent1 = shadowSettings._config[ 'exponent1' ];
-            if ( exponent1 ) this._shadowAttribute.setExponent1( exponent1 );
+            if ( exponent1 ) this.setExponent1( exponent1 );
             var vsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
-            if ( vsmEpsilon ) this._shadowAttribute.setVsmEpsilon( vsmEpsilon );
+            if ( vsmEpsilon ) this.setVsmEpsilon( vsmEpsilon );
 
         },
 
@@ -771,9 +769,7 @@ define( [
             // cast geometries into depth shadow map
             cullVisitor.pushStateSet( shadowSettings._castingStateset );
 
-            var light = shadowSettings.getLight();
-
-            this.aimShadowCastingCamera( light, light.getPosition(), light.getDirection(), this._lightUp );
+            this.aimShadowCastingCamera();
 
             // do RTT from the camera traversal mimicking light pos/orient
             this._cameraShadow.accept( cullVisitor );

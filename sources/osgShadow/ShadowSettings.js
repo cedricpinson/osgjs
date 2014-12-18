@@ -16,7 +16,7 @@ define( [
 
         this._computeNearFearModeOverride = true;
 
-        //this._light = undefined;
+
         this._baseShadowTextureUnit = 1;
         this._useShadowMapTextureOverride = true;
         this._textureSize = 1024;
@@ -80,11 +80,11 @@ define( [
             return this._computeNearFearModeOverride;
         },
 
-        setLight: function ( light ) {
-            this._light = light;
+        setLightSource: function ( lightSource ) {
+            this._lightSource = lightSource;
         },
-        getLight: function () {
-            return this._light;
+        getLightSource: function () {
+            return this._lightSource;
         },
 
         setBaseShadowTextureUnit: function ( unit ) {
@@ -136,16 +136,16 @@ define( [
         getTextureFormat: function () {
             return this._textureFormat;
         },
-		setAlgorithm: function (alg){
-			this._algorithm = alg;
-	  		this._dirty = true;
-		},
-		getAlgorithm: function (){
-			return this._algorithm;
-		},
+        setAlgorithm: function ( alg ) {
+            this._algorithm = alg;
+            this._dirty = true;
+        },
+        getAlgorithm: function () {
+            return this._algorithm;
+        },
         setMinimumShadowMapNearFarRatio: function ( ratio ) {
             this._minimumShadowMapNearFarRatio = ratio;
-        
+
             this._dirty = true;
         },
         getMinimumShadowMapNearFarRatio: function () {
@@ -154,7 +154,7 @@ define( [
 
         setMaximumShadowMapDistance: function ( distance ) {
             this._maximumShadowMapDistance = distance;
-        
+
             this._dirty = true;
         },
         getMaximumShadowMapDistance: function () {

@@ -160,11 +160,6 @@ define( [
             // NOW USING NODE SHADERS
             this._receivingStateset = receiverStateSet;
 
-            // Camera/Eye Position
-            // TODO: add positioned uniform
-            var myuniform = Uniform.createFloat4( [ 0.0, 0.0, 0.0, 0.0 ], 'Camera_uniform_position' );
-            this._receivingStateset.addUniform( myuniform );
-
             for ( var i = 0, lt = this._shadowTechniques.length; i < lt; i++ ) {
                 if ( this._shadowTechniques[ i ] && this._shadowTechniques[ i ].valid() ) {
                     this._shadowTechniques[ i ].init();

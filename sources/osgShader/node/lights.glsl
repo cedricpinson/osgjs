@@ -188,7 +188,6 @@ vec3 computeSunLightShading(
 
     lighted = false;
     eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
-    // compute dist
     // compute NdL   // compute NdL
     NdotL = dot(eyeLightDir, normal);
     if (NdotL > 0.0)

@@ -81,19 +81,19 @@ define( [
 
         setBias: function ( bias ) {
             this._bias = bias;
-            this.setDirty( true );
+            //this.setDirty( true );
         },
         setExponent0: function ( exp ) {
             this._exponent0 = exp;
-            this.setDirty( true );
+            //this.setDirty( true );
         },
         setExponent1: function ( exp ) {
             this._exponent1 = exp;
-            this.setDirty( true );
+            //this.setDirty( true );
         },
         setVsmEpsilon: function ( vsmEpsilon ) {
             this._vsmEpsilon = vsmEpsilon;
-            this.setDirty( true );
+            //this.setDirty( true );
         },
         setPrecision: function ( precision ) {
             this._precision = precision;
