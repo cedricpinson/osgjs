@@ -34,7 +34,7 @@ define( [
 
                 var child0 = new Camera();
                 child0.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
-                Matrix.makeTranslate( 0, 10, 0, child0.getViewMatrix() );
+                Matrix.makeTranslate( 0, 5, 0, child0.getViewMatrix() );
 
                 var child1 = new MatrixTransform();
                 Matrix.makeTranslate( 0, -10, 0, child1.getMatrix() );
@@ -49,7 +49,7 @@ define( [
                 path = [ root, child0, child1, child2 ];
                 var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
                 var trans = Matrix.getTrans( matrix, [0, 0, 0] );
-                var result = [ 0, -10, 10 ];
+                var result = [ 0, -5, 10 ];
                 ok( mockup.check_near( trans, result ), 'Translation of matrix should be ' + result );
             } )();
         } );

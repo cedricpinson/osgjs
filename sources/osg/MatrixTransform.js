@@ -5,6 +5,8 @@ define( [
     'osg/TransformEnums'
 ], function ( MACROUTILS, Matrix, Transform, TransformEnums ) {
 
+    'use strict';
+
     /**
      *  MatrixTransform is a Transform Node that can be customized with user matrix
      *  @class MatrixTransform
@@ -22,25 +24,26 @@ define( [
         setMatrix: function ( m ) {
             this.matrix = m;
         },
-        computeLocalToWorldMatrix: function ( matrix /*, nodeVisitor */) {
+        computeLocalToWorldMatrix: function ( matrix /*, nodeVisitor */ ) {
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                 Matrix.preMult( matrix, this.matrix );
             } else {
-                matrix = this.matrix;
+                Matrix.copy( this.matrix, matrix );
             }
             return true;
         },
-        computeWorldToLocalMatrix: function ( matrix /*, nodeVisitor */ ) {
+        computeWorldToLocalMatrix: ( function () {
             var minverse = Matrix.create();
-            Matrix.inverse( this.matrix, minverse );
-
-            if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                Matrix.postMult( minverse, matrix );
-            } else { // absolute
-                matrix = minverse;
-            }
-            return true;
-        }
+            return function ( matrix /*, nodeVisitor */ ) {
+                Matrix.inverse( this.matrix, minverse );
+                if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
+                    Matrix.postMult( minverse, matrix );
+                } else { // absolute
+                    Matrix.copy( minverse, matrix );
+                }
+                return true;
+            };
+        } )()
     } ), 'osg', 'MatrixTransform' );
     MACROUTILS.setTypeID( MatrixTransform );
 
