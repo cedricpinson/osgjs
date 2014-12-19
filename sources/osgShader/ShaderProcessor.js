@@ -89,9 +89,9 @@ define( [
             return preShader;
         },
 
-        getShader: function ( shaderName ) {
+        getShader: function ( shaderName, defines ) {
             var shader = this.getShaderTextPure( shaderName );
-            return this.processShader( shader );
+            return this.processShader( shader, defines );
         },
 
         // recursively  handle #include external glsl
