@@ -65,7 +65,7 @@ define( [
 
         this._textureSize = 256;
         this._texturePrecisionFormat = 'BYTE';
-        this._algorithm = 'ESM';
+        this._algorithm = 'PCF';
         this._depthRange = new Array( 4 );
 
         var lightSource = settings.getLightSource();
@@ -121,23 +121,26 @@ define( [
             return program;
         },
 
-        // TODO: remove, deprecated
+        // TODO: remove either here or in node shadow: code repetition ?
+        // ... otherwise caster and receiver doesn't get same defines
+        // if any change done here and not overthere
         getDefines: function () {
 
-            var shadowSettings = this._shadowSettings || this.getShadowedScene().getShadowSettings();
-
-            var textureType = shadowSettings.getTextureType();
-            var algo = shadowSettings.getAlgorithm();
+            var textureType = this._shadowAttribute.getPrecision();
+            var algo = this._shadowAttribute.getAlgorithm();
             var defines = [];
 
-            var floatTexSupp = textureType !== 'BYTE';
-            if ( floatTexSupp ) {
-                defines.push( '#define  _FLOATTEX' );
+            var isFloat = false;
+            var isLinearFloat = false;
+
+            if ( ( typeof textureType === 'string' && textureType !== 'BYTE' ) || textureType !== Texture.UNSIGNED_BYTE ) {
+                isFloat = true;
             }
 
-            if ( shadowSettings._config[ 'shadowstable' ] === 'World Position' ) {
-                defines.push( '#define NUM_STABLE' );
+            if ( isFloat && ( ( typeof textureType === 'string' && textureType.indexOf( 'LINEAR' ) !== -1 ) || textureType === Texture.HALF_FLOAT_LINEAR || textureType === Texture.FLOAT_LINEAR ) ) {
+                isLinearFloat = true;
             }
+
 
             if ( algo === 'ESM' ) {
                 defines.push( '#define _ESM' );
@@ -150,6 +153,14 @@ define( [
             } else if ( algo === 'EVSM' ) {
                 defines.push( '#define _EVSM' );
             }
+
+            if ( isFloat ) {
+                defines.push( '#define  _FLOATTEX' );
+            }
+            if ( isLinearFloat ) {
+                defines.push( '#define  _FLOATLINEAR' );
+            }
+
             return defines;
         },
         // computes a shader upon user choice
@@ -237,12 +248,16 @@ define( [
         },
         setExponent0: function ( value ) {
             this._shadowAttribute.setExponent0( value );
+            var casterStateSet = this.getShadowSettings()._castingStateset;
+            casterStateSet.getUniformList()[ 'exponent0' ].getUniform().set( value );
         },
         getExponent1: function () {
             return this._shadowAttribute.getExponent1();
         },
         setExponent1: function ( value ) {
             this._shadowAttribute.setExponent1( value );
+            var casterStateSet = this.getShadowSettings()._castingStateset;
+            casterStateSet.getUniformList()[ 'exponent1' ].getUniform().set( value );
         },
         getVsmEpsilon: function () {
             return this._shadowAttribute.getVsmEpsilon();
@@ -277,8 +292,6 @@ define( [
             var vsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
 
             this._shadowAttribute = new ShadowAttribute( light, this._algorithm, bias, exponent0, exponent1, vsmEpsilon, this._texturePrecisionFormat );
-
-
             this._receivingStateset = this._shadowedScene.getReceivingStateSet();
 
             // First init
@@ -315,6 +328,13 @@ define( [
                 // just keep same as render
                 //casterStateSet.setAttributeAndMode(new CullFace(CullFace.DISABLE), StateAttribute.ON | StateAttribute.OVERRIDE);
                 casterStateSet.setAttributeAndMode( new CullFace( CullFace.BACK ), StateAttribute.ON | StateAttribute.OVERRIDE );
+
+                var myuniform;
+                myuniform = Uniform.createFloat1( exponent0, 'exponent0' );
+                casterStateSet.addUniform( myuniform );
+                myuniform = Uniform.createFloat1( exponent1, 'exponent1' );
+                casterStateSet.addUniform( myuniform );
+
 
                 // prevent unnecessary texture bindings, could loop over max texture unit
                 // TODO: optimize: have a "don't touch current Texture stateAttribute"
@@ -502,7 +522,9 @@ define( [
             this.dirty();
         },
         setAlgorithm: function ( algo ) {
+            this._previousAlgorithm = this._algorithm;
             this._algorithm = algo;
+
             this._shadowAttribute.setAlgorithm( algo );
             this.dirty();
         },

@@ -162,7 +162,7 @@ float PCFLerp(sampler2D depths, vec4 size, vec2 uv, float compare, float gbias){
 
 }
 
-float PCF(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float gbias, float exponent, float exponent1) {
+float PCF(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float gbias, float exponent0, float exponent1) {
 
     vec2 o = shadowMapSize.zw;
     float shadowed = 0.0;
@@ -188,7 +188,7 @@ float PCF(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float
       #if defined( _ESM )
         //http://research.edm.uhasselt.be/tmertens/papers/gi_08_esm.pdf
          float depthScale = exponent1;
-         float over_darkening_factor = exponent;
+         float over_darkening_factor = exponent0;
          float receiver = depthScale*shadowZ- gbias;
       #endif
 
@@ -215,14 +215,13 @@ float PCF(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float
 
 ////////////////////////////////////////////////
 // ESM
-float ESM_Fetch(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float gbias, float exponent, float exponent1) {
+float ESM_Fetch(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float gbias, float exponent0, float exponent1) {
 
     //http://research.edm.uhasselt.be/tmertens/papers/gi_08_esm.pdf
     //http://pixelstoomany.wordpress.com/2008/06/12/a-conceptually-simpler-way-to-derive-exponential-shadow-maps-sample-code/
     //
-    vec2 o = shadowMapSize.zw;
-    float shadowed = 0.0;
-
+#if defined(_FLOATTEX) && (!defined(_FLOATLINEAR))
+    // emulate bilinear filtering (not needed if webgm/GPU support filtering FP32/FP16 textures)
     vec2 unnormalized = shadowUV * shadowMapSize.xy;
     vec2 fractional = fract(unnormalized);
     unnormalized = floor(unnormalized);
@@ -233,22 +232,21 @@ float ESM_Fetch(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ,
     occluder4.z = getSingleFloatFromTex(tex, (unnormalized + vec2( 0.5,  -0.5 ))* shadowMapSize.zw );
     occluder4.w = getSingleFloatFromTex(tex, (unnormalized + vec2( -0.5, -0.5 ))* shadowMapSize.zw );
 
-    vec2 fetch[5];;
-    fetch[1] = shadowUV.xy + vec2(-1.5, -1.5)*o;
-    fetch[2] = shadowUV.xy + vec2(-0.5, -1.5)*o;
-    fetch[3] = shadowUV.xy + vec2(0.5, -1.5)*o;
-    fetch[4] = shadowUV.xy + vec2(1.5, -1.5)*o;
-
-    float depthScale = exponent1;
-    float over_darkening_factor = exponent;
-    float receiver = depthScale*shadowZ- gbias;
-
-
     float occluder = (occluder4.w + (occluder4.x - occluder4.w) * fractional.y);
     occluder = occluder + ((occluder4.z + (occluder4.y - occluder4.z) * fractional.y) - occluder)*fractional.x;
 
+#else
+    float occluder = getSingleFloatFromTex(tex, shadowUV );
+#endif
+
+    float depthScale = exponent1;
+    float over_darkening_factor = exponent0;
+    float receiver = depthScale * (shadowZ - gbias);
+
+
     return exp(over_darkening_factor * ( occluder - receiver ));
 }
+
 // end ESM
 ////////////////////////////////////////////////
 //EVSM
@@ -273,7 +271,7 @@ vec2 WarpDepth(float depth, vec2 exponents)
 float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
   in sampler2D tex, in vec4 shadowMapSize,
   in float myBias, in float VsmEpsilon,
-  in float exponent, in float exponent1) {
+  in float exponent0, in float exponent1) {
 
 
   // Calculate shadow amount
@@ -286,14 +284,14 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
 
     #elif defined( _PCF ) || (defined(_ESM ) && defined(_PCF ))
 
-      shadow = PCF(tex, shadowMapSize, shadowUV, shadowZ, myBias, exponent, exponent1);
+      shadow = PCF(tex, shadowMapSize, shadowUV, shadowZ, myBias, exponent0, exponent1);
       //shadow = PCFLerp(tex, shadowMapSize, shadowUV, shadowZ, myBias);
       //shadow = (shadowZ -myBias > bicubicInterpolationFast(shadowUV, tex, shadowMapSize)) ? 0.0 : 1.0;
       //
       //
     #elif defined( _ESM )
       //http://research.edm.uhasselt.be/tmertens/papers/gi_08_esm.pdf
-      shadow = ESM_Fetch(tex, shadowMapSize, shadowUV, shadowZ, myBias, exponent, exponent1);
+      shadow = ESM_Fetch(tex, shadowMapSize, shadowUV, shadowZ, myBias, exponent0, exponent1);
 
     #elif  defined( _VSM )
 
@@ -310,7 +308,7 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
     #elif  defined( _EVSM )
 
       vec4 occluder = getQuadFloatFromTex(tex, shadowUV.xy);
-      vec2 exponents = vec2(exponent, exponent1);
+      vec2 exponents = vec2(exponent0, exponent1);
       vec2 warpedDepth = WarpDepth(shadowZ, exponents);
 
       float g_EVSM_Derivation = VsmEpsilon;
@@ -355,8 +353,8 @@ float computeShadow(in bool lighted,
     vec4 shadowUV;
 
     //normal offset aka Exploding Shadow Receivers
-    //float shadowMapTexelSize = shadowVertexProjected.z * 2.0*texSize.z;
-    //shadowVertexProjected -= vec4(Normal.xyz*bias*shadowMapTexelSize,0);
+    float shadowMapTexelSize = shadowVertexProjected.z * 2.0*texSize.z;
+    shadowVertexProjected -= vec4(Normal.xyz*bias*shadowMapTexelSize,0);
 
     shadowUV = shadowVertexProjected / shadowVertexProjected.w;
     shadowUV.xy = shadowUV.xy* 0.5 + 0.5;

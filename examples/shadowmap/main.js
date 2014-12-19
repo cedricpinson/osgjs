@@ -277,9 +277,9 @@
              var controller;
 
              controller = gui.add( this._config, 'shadow', {
-                 'Variance Shadow Map (VSM)': 'VSM',
-                 'Exponential Variance Shadow Map (EVSM)': 'EVSM',
-                 'Exponential Shadow Map (ESM)': 'ESM',
+                 //'Variance Shadow Map (VSM)': 'VSM',
+                 //'Exponential Variance Shadow Map (EVSM)': 'EVSM',
+                 //'Exponential Shadow Map (ESM)': 'ESM',
                  'Shadow Map': 'NONE',
                  'Shadow Map Percentage Close Filtering (PCF)': 'PCF'
              } );
@@ -312,10 +312,12 @@
                  'Directional'
              ] );
              controller.onChange( this.updateShadow.bind( this ) );
-
+             /*
 
              controller = gui.add( this._config, 'frustumTest', [ 'free', 'no shadowed', 'no caster', 'no caster but shadowed', 'no shadowed but caster', 'left', 'right', 'front', 'back', 'top', 'bottom', 'face2face', 'back2back', 'samePosition&Direction' ] );
+
              controller.onChange( this.updateShadow.bind( this ) );
+ */
 
              controller = gui.add( this._config, 'lightMovement', [ 'Rotate', 'Translate', 'Fixed', 'Nod' ] );
              controller.onChange( this.updateShadow.bind( this ) );
@@ -335,27 +337,32 @@
              controller = gui.add( this._config, 'fov' ).min( 0.0 ).max( 180.0 );
              controller.onChange( this.updateShadow.bind( this ) );
 
-             controller = gui.add( this._config, 'logCamLight' );
+             // controller = gui.add( this._config, 'logCamLight' );
 
 
-
+             /*
              var VSMFolder = gui.addFolder( 'Variance (VSM, EVSM)' );
 
              controller = VSMFolder.add( this._config, 'VsmEpsilon' ).min( 0.0001 ).max( 0.01 );
              controller.onChange( this.updateShadow.bind( this ) );
+
              /*
              controller = VSMFolder.add( this._config, 'supersample' ).step( 1 ).min( 0.0 ).max( 8 );
              controller.onChange( this.updateShadow.bind( this ) );
 
              controller = VSMFolder.add( this._config, 'blur' );
              controller.onChange( this.updateShadow.bind( this ) );
-*/
+              */
+
+
              //controller = VSMFolder.add( this._config, 'blurKernelSize' ).min( 3.0 ).max( 128.0 );
              //controller.onChange( this.updateShadow.bind( this ) );
 
              //controller = VSMFolder.add( this._config, 'blurTextureSize', [ 32, 64, 128, 256, 512, 1024, 2048, 4096, 8144 ] );
              //controller.onChange( this.updateShadow.bind( this ) );
 
+
+             /*
 
              var ExpFolder = gui.addFolder( 'Exponent (ESM, EVSM)' );
 
@@ -371,7 +378,7 @@
              controller.onChange( this.updateShadow.bind( this ) );
              controller = debugFolder.add( this._config, 'texture' );
              controller.onChange( this.updateShadow.bind( this ) );
-
+*/
 
          },
          testFrustumIntersections: function () {
@@ -638,14 +645,18 @@
 
              if ( this._previousTech !== this._config[ 'shadow' ] ) {
                  // technique change.
+
+                 this._groundNode.setNodeMask( ~this._castsShadowTraversalMask );
                  switch ( this._config[ 'shadow' ] ) {
                  case 'ESM':
                      this._config[ 'exponent' ] = 200.0;
+                     this._groundNode.setNodeMask( this._castsShadowTraversalMask );
                      break;
                  case 'EVSM':
                      this._config[ 'exponent' ] = 0.001;
                      this._config[ 'exponent1' ] = 0.001;
                      this._config[ 'texturetype' ] = 'FLOAT';
+                     this._groundNode.setNodeMask( this._castsShadowTraversalMask );
                      break;
                  case 'VSM':
                      this._config[ 'exponent' ] = 0.001;
@@ -653,6 +664,7 @@
                      break;
                  default:
                      break;
+
                  }
                  l = numLights;
                  while ( l-- ) {
@@ -767,16 +779,20 @@
 
              var stateset;
 
-             var fgt = [
-                 osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0,FragTexCoord0);', '}', ''
-             ].join( '\n' );
-             var program = new osg.Program(
-                 new osg.Shader( 'VERTEX_SHADER', osgUtil.Composer.Filter.defaultVertexShader ), new osg.Shader( 'FRAGMENT_SHADER', fgt ) );
+             if ( !this._programRTT ) {
+                 var fgt = [
+                     osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0,FragTexCoord0);', '}', ''
+                 ].join( '\n' );
+                 var program = new osg.Program(
+                     new osg.Shader( 'VERTEX_SHADER', osgUtil.Composer.Filter.defaultVertexShader ), new osg.Shader( 'FRAGMENT_SHADER', fgt ) );
+
+                 this._programRTT = program;
+             }
 
              stateset = this._ComposerdebugNode.getOrCreateStateSet();
              if ( !optionsDebug.fullscreen )
                  stateset.setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
-             stateset.setAttributeAndModes( program );
+             stateset.setAttributeAndModes( this._programRTT );
 
 
              for ( var i = 0, l = this._rtt.length; i < l; i++ ) {
@@ -789,7 +805,7 @@
                      quad.setName( 'debugCompoQuadGeom' );
 
                      stateset.setTextureAttributeAndMode( 0, texture );
-                     stateset.setAttributeAndModes( program );
+                     stateset.setAttributeAndModes( this._programRTT );
                      // stateset.setAttributeAndModes(new osg.Depth('DISABLE'));
 
                      this._ComposerdebugNode.addChild( quad );
@@ -879,7 +895,7 @@
              cubeNode.addChild( cubeSubNode );
 
              //cubeNode.addChild( cubeSubNode );
-             if ( window.location.href.indexOf( 'cubes' ) !== -1 ) {
+             if ( 1 || window.location.href.indexOf( 'cubes' ) !== -1 ) {
                  cubeSubNodeTrans = new osg.MatrixTransform();
                  cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
                  cubeSubNode = new osg.Node();
@@ -924,7 +940,7 @@
              groundNode.setName( 'groundNode' );
 
              //  var numPlanes = 5;
-             var numPlanes = 1;
+             var numPlanes = 5;
              var groundSize = 200 / numPlanes;
              var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
              var groundTex = osg.Texture.createFromURL( '../camera/textures/sol_trauma_periph.png' );
@@ -952,11 +968,11 @@
 
              ShadowScene.addChild( groundNode );
              ShadowScene.addChild( cubeNode );
-             //ShadowScene.addChild( modelNode );
+             ShadowScene.addChild( modelNode );
 
              this._groundNode = groundNode;
              this._cubeNode = cubeNode;
-             //             this._modelNode = modelNode;
+             this._modelNode = modelNode;
 
              return ShadowScene;
          },
