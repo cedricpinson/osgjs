@@ -210,6 +210,8 @@
             var defer = Q.defer();
 
             var shaderNames = [
+                'vertexEarlyZ.glsl',
+                'fragmentEarlyZ.glsl' ,
                 'vertex.glsl',
                 'fragment.glsl',
             ];
