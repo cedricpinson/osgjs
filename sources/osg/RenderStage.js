@@ -1,10 +1,14 @@
 define( [
-    'osg/Notify',
     'osg/Utils',
-    'osg/RenderBin',
+
     'osg/Camera',
-    'osg/FrameBufferObject'
-], function ( Notify, MACROUTILS, RenderBin, Camera, FrameBufferObject ) {
+    'osg/FrameBufferObject',
+    'osg/Notify',
+    'osg/RenderBin',
+
+], function ( MACROUTILS, Camera, FrameBufferObject, Notify, RenderBin ) {
+
+    'use strict';
 
     /**
      * From OpenSceneGraph http://www.openscenegraph.org
@@ -30,7 +34,8 @@ define( [
         this.postRenderList = [];
         this._renderStage = this;
     };
-    RenderStage.prototype = MACROUTILS.objectInehrit( RenderBin.prototype, {
+
+    RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( RenderBin.prototype, {
         reset: function () {
             RenderBin.prototype.reset.call( this );
             this.preRenderList.length = 0;
@@ -214,7 +219,7 @@ define( [
 
             return previous;
         }
-    } );
+    } ), 'osg', 'RenderStage' );
 
     return RenderStage;
 } );
