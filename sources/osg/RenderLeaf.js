@@ -104,7 +104,6 @@ define( [
 
         render: function ( state, previousLeaf ) {
 
-            var push = false;
             var prevRenderGraph;
             var prevRenderGraphParent;
             var rg;
@@ -138,7 +137,7 @@ define( [
 
             }
 
-            this.drawGeometry( state, push );
+            this.drawGeometry( state );
 
         }
 
