@@ -1,27 +1,56 @@
 define( [
-    'osg/Camera',
-    'osg/Node',
-    'osg/FrameStamp',
-    'osg/Material',
-    'osg/Depth',
     'osg/BlendFunc',
+    'osg/Camera',
     'osg/CullFace',
-    'osg/Viewport',
-    'osg/Matrix',
+    'osg/Depth',
+    'osg/FrameStamp',
     'osg/Light',
-    'osg/WebGLCaps',
+    'osg/Material',
+    'osg/Matrix',
+    'osg/Node',
+    'osg/Options',
     'osg/Texture',
+    'osg/Viewport',
+    'osg/WebGLCaps',
+
     'osgUtil/IntersectionVisitor',
-    'osgUtil/LineSegmentIntersector'
-], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, WebGLCaps, Texture, IntersectionVisitor, LineSegmentIntersector ) {
+    'osgUtil/LineSegmentIntersector',
+
+    'osgViewer/Renderer',
+    'osgViewer/Scene'
+
+], function (
+    BlendFunc,
+    Camera,
+    CullFace,
+    Depth,
+    FrameStamp,
+    Light,
+    Material,
+    Matrix,
+    Node,
+    Options,
+    Texture,
+    Viewport,
+    WebGLCaps,
+
+    IntersectionVisitor,
+    LineSegmentIntersector,
+
+    Renderer,
+    Scene ) {
 
     'use strict';
 
+
+    // View is normally inherited from osg/View. In osgjs we dont need it yet
+    // this split, so everything is in osgViewer/View
+
     var View = function () {
-        this._graphicContext = undefined;
+
         this._camera = new Camera();
-        this._scene = new Node();
-        this._sceneData = undefined;
+        this._scene = new Scene();
+
         this._frameStamp = new FrameStamp();
         this._lightingMode = undefined;
         this._manipulator = undefined;
@@ -30,11 +59,12 @@ define( [
         this._canvasHeight = 0;
 
         this.setLightingMode( View.LightingMode.HEADLIGHT );
+        // assign a renderer to the camera
+        var renderer = this.createRenderer( this.getCamera() );
+        renderer.setFrameStamp( this._frameStamp );
+        this.getCamera().setRenderer( renderer );
+        this.getCamera().setView( this );
 
-        this._scene.getOrCreateStateSet().setAttributeAndMode( new Material() );
-        this._scene.getOrCreateStateSet().setAttributeAndMode( new Depth() );
-        this._scene.getOrCreateStateSet().setAttributeAndMode( new BlendFunc() );
-        this._scene.getOrCreateStateSet().setAttributeAndMode( new CullFace() );
     };
 
     View.LightingMode = {
@@ -44,15 +74,25 @@ define( [
     };
 
     View.prototype = {
+
+        createRenderer: function ( camera ) {
+            var render = new Renderer( camera );
+            //camera->setStats(new osg::Stats("Camera"));
+            return render;
+        },
+
         setGraphicContext: function ( gc ) {
-            this._graphicContext = gc;
+            this.getCamera().getRenderer().getState().setGraphicContext( gc );
         },
+
         getGraphicContext: function () {
-            return this._graphicContext;
+            return this.getCamera().getRenderer().getState().getGraphicContext();
         },
+
         getWebGLCaps: function () {
             return this._webGLCaps;
         },
+
         initWebGLCaps: function ( gl ) {
             this._webGLCaps = new WebGLCaps( gl );
             this._webGLCaps.init();
@@ -69,7 +109,7 @@ define( [
                 if ( clientHeight < 1 ) clientHeight = 1;
 
                 var devicePixelRatio = 1;
-                if ( this._options.getBoolean( 'useDevicePixelRatio' ) ) {
+                if ( Options.getOrCreateInstance().getBoolean( 'useDevicePixelRatio' ) ) {
                     devicePixelRatio = window.devicePixelRatio || 1;
                 }
 
@@ -89,7 +129,7 @@ define( [
             };
         } )(),
 
-        setUpView: function ( canvas ) {
+        setUpView: function ( canvas, options ) {
             this.computeCanvasSize( canvas );
 
             var ratio = canvas.clientWidth / canvas.clientHeight;
@@ -99,9 +139,14 @@ define( [
 
             this._camera.setViewport( new Viewport( 0, 0, width, height ) );
 
-            this._camera.setGraphicContext( this._graphicContext );
+            this._camera.setGraphicContext( this.getGraphicContext() );
             Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], this._camera.getViewMatrix() );
             Matrix.makePerspective( 55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix() );
+
+
+            if ( options && options.enableFrustumCulling )
+                this.getCamera().getRenderer().getCullVisitor().setEnableFrustumCulling( true );
+
         },
 
         /**
@@ -137,14 +182,21 @@ define( [
         },
 
         setSceneData: function ( node ) {
-            this._scene.removeChildren();
-            this._scene.addChild( node );
-            this._sceneData = node;
-            this._camera.addChild( this._sceneData );
+
+            if ( node === this._scene.getSceneData() )
+                return;
+
+            this._scene.setSceneData( node );
+
+            this._camera.removeChildren();
+            this._camera.addChild( node );
+
         },
+
         getSceneData: function () {
-            return this._sceneData;
+            return this._scene.getSceneData();
         },
+
         getScene: function () {
             return this._scene;
         },
@@ -159,6 +211,7 @@ define( [
         getLight: function () {
             return this._light;
         },
+
         setLight: function ( light ) {
             this._light = light;
             if ( this._lightingMode !== View.LightingMode.NO_LIGHT ) {
@@ -181,11 +234,12 @@ define( [
                 }
             }
         },
-        flushDeletedGLObjects: function ( /*currentTime,*/ availableTime )
-        {
-            // Flush all deleted OpenGL objects within the specified availableTime 
+
+        // CP: I guess it should move into Scene in something like an ImagePager things ?
+        flushDeletedGLObjects: function ( /*currentTime,*/ availableTime ) {
+            // Flush all deleted OpenGL objects within the specified availableTime
             Texture.textureManager.flushDeletedTextureObjects( this.getGraphicContext(), availableTime );
-            // More GL Objects.... 
+            // More GL Objects....
         }
 
     };

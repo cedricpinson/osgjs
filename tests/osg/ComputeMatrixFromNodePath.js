@@ -6,8 +6,9 @@ define( [
     'osg/MatrixTransform',
     'osg/Matrix',
     'osg/Camera',
+    'osg/Vec3',
     'osg/TransformEnums'
-], function ( mockup, ComputeMatrixFromNodePath, NodeVisitor, MACROUTILS, MatrixTransform, Matrix, Camera, TransformEnums ) {
+], function ( mockup, ComputeMatrixFromNodePath, NodeVisitor, MACROUTILS, MatrixTransform, Matrix, Camera, Vec3, TransformEnums ) {
 
     return function () {
 
@@ -46,12 +47,34 @@ define( [
                 child0.addChild( child1 );
                 child1.addChild( child2 );
 
-                path = [ root, child0, child1, child2 ];
+                var path = [ root, child0, child1, child2 ];
                 var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
                 var trans = Matrix.getTrans( matrix, [0, 0, 0] );
                 var result = [ 0, -5, 10 ];
-                ok( mockup.check_near( trans, result ), 'Translation of matrix should be ' + result );
+                mockup.near( trans, result , 'Check translation of matrix' );
             } )();
+
+
+            (function() {
+                var root = new Camera();
+                root.setName( 'root' );
+                root.setViewMatrix( Matrix.makeTranslate(0,0,1000, Matrix.create() ) );
+
+                var child1 = new MatrixTransform();
+                Matrix.makeTranslate( 0, -10, 0, child1.getMatrix() );
+
+                var child2 = new MatrixTransform();
+                Matrix.makeTranslate( 0, 0, 10, child2.getMatrix() );
+
+                var path = [ root, child1, child2 ];
+                var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
+                var result = Vec3.create();
+                Matrix.getTrans( matrix, result );
+                mockup.near( result, [0,0,0] , 'Check we dont use the camera on top' );
+            } )();
+
         } );
+
+
     };
 } );

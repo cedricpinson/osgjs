@@ -121,7 +121,7 @@ define( [
                 node1.getOrCreateStateSet().setAttributeAndMode( ld0 );
                 viewer.frame();
 
-                var cull = viewer._cullVisitor;
+                var cull = viewer.getCamera().getRenderer()._cullVisitor;
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );

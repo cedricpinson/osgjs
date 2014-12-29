@@ -34,9 +34,10 @@
                 console.log( 'autoNearFar: ' + viewer.getCamera().getComputeNearFar() );
             },
             frustumculling: function () {
+                var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
+                cullVisitor.setEnableFrustumCulling( !cullVisitor._enableFrustumCulling );
 
-                viewer._cullVisitor.setEnableFrustumCulling( !viewer._cullVisitor._enableFrustumCulling );
-                console.log( 'frustumCull ' + viewer._cullVisitor._enableFrustumCulling );
+                console.log( 'frustumCull ' + cullVisitor._enableFrustumCulling );
             },
             near: '0',
             far: '0',
@@ -432,7 +433,8 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             // not working for now
             // will when fix current culling attachable
             // only to main cam et setted only globally once
-            viewer._cullVisitor.setEnableFrustumCulling( true );
+            var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
+            cullVisitor.setEnableFrustumCulling( true );
 
             viewer.getCamera().setComputeNearFar( true );
             viewer.getCamera().setName( 'main' );

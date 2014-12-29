@@ -30,6 +30,9 @@ define( [
         this.setProjectionMatrix( Matrix.create() );
         this.renderOrder = Camera.NESTED_RENDER;
         this.renderOrderNum = 0;
+
+        this._view = undefined;
+        this._renderer = undefined;
     };
 
     Camera.PRE_RENDER = 0;
@@ -44,6 +47,24 @@ define( [
     Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit(
         CullSettings.prototype,
         MACROUTILS.objectInehrit( Transform.prototype, {
+
+            // at which view this camera is attached
+            getView: function() {
+                return this._view;
+            },
+
+            setView: function( view ) {
+                this._view = view;
+            },
+
+            getRenderer: function() {
+                return this._renderer;
+            },
+
+            setRenderer: function( renderer ) {
+                this._renderer = renderer;
+            },
+
 
             setGraphicContext: function ( gc ) {
                 this._graphicContext = gc;

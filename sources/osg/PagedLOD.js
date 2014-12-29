@@ -226,6 +226,8 @@ define( [
                         }
                     }
                     // Remove the expired childs if any
+                    // CP: issue here, no gl context should be used here
+                    // it should be deferred in another part, check in osg to see how it's done
                     this.removeExpiredChildren( visitor.getFrameStamp(), visitor.getCurrentCamera().getGraphicContext() );
                     break;
 

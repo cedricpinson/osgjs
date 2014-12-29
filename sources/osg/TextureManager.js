@@ -1,8 +1,8 @@
 define( [
     'osg/Notify',
-    'osg/Utils'
+    'osg/Timer'
 
-], function ( Notify, MACROUTILS ) {
+], function ( Notify, Timer ) {
 
     var TextureProfile = function( target, internalFormat, width, height ) {
         this._target = target;
@@ -132,13 +132,13 @@ define( [
             if ( availableTime<= 0.0 ) return;
             // We need to test if we have time to flush
             var elapsedTime = 0.0;
-            var beginTime = MACROUTILS.performance.now();
+            var beginTime = Timer.instance().tick();
             var i;
             for ( i = 0; i < nbTextures && elapsedTime < availableTime; i++ )
             {
                 gl.deleteTexture( this._orphanedTextureObjects[ i ].id() );
                 this._orphanedTextureObjects[ i ].reset();
-                elapsedTime = MACROUTILS.performance.now() - beginTime;
+                elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
             }
             this._orphanedTextureObjects.splice( 0, i );
             availableTime -= elapsedTime;
