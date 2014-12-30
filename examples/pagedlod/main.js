@@ -24,12 +24,12 @@ var main = function () {
     var node = osg.createTexturedQuadGeometry( minExtent[ 0 ], minExtent[ 1 ], 0, maxExtent[ 0 ] - minExtent[ 0 ], 0, 0, 0, maxExtent[ 1 ] - minExtent[ 1 ], 0 );
 
     function createTileForGeometry( i, x, y, width, height ) {
-        
+
         var node = osg.createTexturedQuadGeometry( x, y, 0, width, 0, 0, 0, height, 0 );
         var materialGround = new osg.Material();
         materialGround.setAmbient( [ 1 * i / 8, 1 * i / 2 , 1 * i / 2, 1 ] );
         materialGround.setDiffuse( [ 0, 0, 0, 1 ] );
-        node.getOrCreateStateSet().setAttributeAndMode( materialGround );
+        node.getOrCreateStateSet().setAttributeAndModes( materialGround );
         return node;
     }
 

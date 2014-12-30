@@ -113,9 +113,9 @@ define( [
         var samplerLeft = Uniform.createInt1( 0, 'leftEyeTexture' );
         var samplerRight = Uniform.createInt1( 1, 'rightEyeTexture' );
 
-        stateSet.setTextureAttributeAndMode( 0, leftEyeTexture );
-        stateSet.setTextureAttributeAndMode( 1, rightEyeTexture );
-        stateSet.setAttributeAndMode( getAssembleShader() );
+        stateSet.setTextureAttributeAndModes( 0, leftEyeTexture );
+        stateSet.setTextureAttributeAndModes( 1, rightEyeTexture );
+        stateSet.setAttributeAndModes( getAssembleShader() );
         stateSet.addUniform( samplerLeft );
         stateSet.addUniform( samplerRight );
 
@@ -124,7 +124,7 @@ define( [
         return orthoCamera;
     };
 
-    // This camera will render the scene on a texture for an eye 
+    // This camera will render the scene on a texture for an eye
     var createCameraRtt = function ( texture, projection ) {
         var camera = new Camera();
         camera.setName( 'rtt camera' );
@@ -187,7 +187,7 @@ define( [
     function getHMDOptions( hmdDevice ) {
 
         /* WebVR API state as of 22/07/2014
-        Firefox { 
+        Firefox {
             getCurrentEyeFieldOfView()
             getMaximumEyeFieldOfView()
             getRecommendedEyeFieldOfView()
@@ -231,7 +231,7 @@ define( [
         if ( hmd.fovRight.rightDegrees < hmd.fovRight.leftDegrees ) {
             swapLeftAndRight( hmd.fovRight );
         }
-        
+
         return hmd;
     }
 

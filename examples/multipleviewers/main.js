@@ -18,9 +18,9 @@
             var request = osgDB.readNodeURL( '../ssao/raceship.osgjs' );
             request.then( function ( model ) {
 
-                    node.addChild( model );
-                    this._viewer1.getManipulator().computeHomePosition();
-                }.bind( this ) )
+                node.addChild( model );
+                this._viewer1.getManipulator().computeHomePosition();
+            }.bind( this ) );
             return node;
         },
         createScene2: function () {
@@ -29,10 +29,10 @@
 
             var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
             request.then( function ( model ) {
-                    model.getOrCreateStateSet().setTextureAttributeAndMode( 0, osg.Texture.createFromURL( '../media/textures/seamless/grunge1.jpg' ) );
-                    node.addChild( model );
-                    this._viewer2.getManipulator().computeHomePosition();
-                }.bind( this ) )
+                model.getOrCreateStateSet().setTextureAttributeAndModes( 0, osg.Texture.createFromURL( '../media/textures/seamless/grunge1.jpg' ) );
+                node.addChild( model );
+                this._viewer2.getManipulator().computeHomePosition();
+            }.bind( this ) );
             return node;
 
         },

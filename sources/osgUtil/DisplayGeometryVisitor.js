@@ -49,7 +49,7 @@ define( [
                 var st = new StateSet();
                 node.setStateSet( st );
                 st.addUniform( Uniform.createFloat3( [ Math.random(), Math.random(), Math.random() ], 'uColorDebug' ) );
-                st.setAttributeAndMode( this.shader );
+                st.setAttributeAndModes( this.shader );
                 node._isVisitedGeometryDebugDisplay = true;
             }
             this.traverse( node );

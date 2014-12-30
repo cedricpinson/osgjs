@@ -174,9 +174,9 @@
                 var groundTex = osg.Texture.createFromURL( '../media/textures/seamless/bricks1.jpg' );
                 groundTex.setWrapT( 'MIRRORED_REPEAT' );
                 groundTex.setWrapS( 'MIRRORED_REPEAT' );
-                ground.getOrCreateStateSet().setTextureAttributeAndMode( 0, groundTex );
+                ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, groundTex );
 
-                ground.getOrCreateStateSet().setAttributeAndMode( new osg.CullFace( osg.CullFace.DISABLE ), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
+                ground.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
 
                 var emptyTex = new osg.Texture();
                 emptyTex.defaultType = true;
@@ -377,7 +377,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
 
                     quad.setName( 'debugCompoQuadGeom' );
 
-                    stateset.setTextureAttributeAndMode( 0, texture );
+                    stateset.setTextureAttributeAndModes( 0, texture );
                     stateset.setAttributeAndModes( program );
                     stateset.setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
 

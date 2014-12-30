@@ -83,7 +83,7 @@ function loadModel( data, viewer, node, unifs ) {
         node.addChild( child );
         viewer.getManipulator().computeHomePosition();
 
-        child.getOrCreateStateSet().setAttributeAndMode( getShader() );
+        child.getOrCreateStateSet().setAttributeAndModes( getShader() );
         child.getOrCreateStateSet().addUniform( unifs.center );
         child.getOrCreateStateSet().addUniform( unifs.radius2 );
         child.getOrCreateStateSet().addUniform( unifs.time );
@@ -105,7 +105,7 @@ function createScene( viewer, unifs ) {
     var root = new osg.Node();
 
     loadUrl( '../ssao/raceship.osgjs', viewer, root, unifs );
-    root.getOrCreateStateSet().setAttributeAndMode( new osg.CullFace( osg.CullFace.DISABLE ) );
+    root.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ) );
 
     var UpdateCallback = function( base ) {
         this.baseTime_ = ( new Date ).getTime();

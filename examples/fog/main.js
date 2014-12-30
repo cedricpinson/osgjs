@@ -103,8 +103,8 @@ function createScene() {
     var materialGround = new osg.Material();
     materialGround.setAmbient( [ 1, 0, 0, 1 ] );
     materialGround.setDiffuse( [ 0, 0, 0, 1 ] );
-    ground.getOrCreateStateSet().setAttributeAndMode( materialGround );
-    ground.getOrCreateStateSet().setAttributeAndMode( getShader() );
+    ground.getOrCreateStateSet().setAttributeAndModes( materialGround );
+    ground.getOrCreateStateSet().setAttributeAndModes( getShader() );
 
     var density = osg.Uniform.createFloat1( 0.002, 'density' );
 
@@ -121,7 +121,7 @@ function createScene() {
     ground.getOrCreateStateSet().addUniform( density );
 
     group.addChild( ground );
-    group.getOrCreateStateSet().setAttributeAndMode( new osg.CullFace( 'DISABLE' ) );
+    group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
     return group;
 }

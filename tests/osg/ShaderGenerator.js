@@ -31,10 +31,10 @@ define( [
                 state.setGraphicContext( fakeRenderer );
 
                 var stateSet0 = new StateSet();
-                stateSet0.setAttributeAndMode( new Material() );
+                stateSet0.setAttributeAndModes( new Material() );
 
                 var stateSet1 = new StateSet();
-                stateSet1.setTextureAttributeAndMode( 0, new Texture( undefined ) );
+                stateSet1.setTextureAttributeAndModes( 0, new Texture( undefined ) );
 
                 state.pushStateSet( stateSet0 );
                 state.pushStateSet( stateSet1 );
@@ -88,7 +88,7 @@ define( [
 
                     return program;
                 }
-                stateSet.setAttributeAndMode( getShader() );
+                stateSet.setAttributeAndModes( getShader() );
 
 
                 state.pushStateSet( stateSet );

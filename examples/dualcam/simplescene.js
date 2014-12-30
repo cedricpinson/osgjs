@@ -15,11 +15,11 @@ function getSimpleScene() {
     boiteTexture.setMinFilter(osg.Texture.LINEAR_MIPMAP_LINEAR);
     solTexture.setMinFilter(osg.Texture.LINEAR_MIPMAP_LINEAR);
 
-    cube.getOrCreateStateSet().setTextureAttributeAndMode(0, boiteTexture);
-    sol.getOrCreateStateSet().setTextureAttributeAndMode(0, solTexture);
-    home.getOrCreateStateSet().setTextureAttributeAndMode(0, skyboxTexture);
+    cube.getOrCreateStateSet().setTextureAttributeAndModes(0, boiteTexture);
+    sol.getOrCreateStateSet().setTextureAttributeAndModes(0, solTexture);
+    home.getOrCreateStateSet().setTextureAttributeAndModes(0, skyboxTexture);
     var node = new osg.Node();
-    
+
     node.addChild(sol);
     node.addChild(cube);
     node.addChild(home);
@@ -27,4 +27,4 @@ function getSimpleScene() {
     root.addChild(node);
 
     return root;
-}       
+}

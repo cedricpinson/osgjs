@@ -20,9 +20,9 @@ define( [
                 var stateSet0 = new StateSet();
                 var stateSet1 = new StateSet();
                 var stateSet2 = new StateSet();
-                stateSet0.setAttributeAndMode( new Material() );
-                stateSet1.setAttributeAndMode( new Material(), StateAttribute.OVERRIDE );
-                stateSet2.setAttributeAndMode( new Material(), StateAttribute.OFF );
+                stateSet0.setAttributeAndModes( new Material() );
+                stateSet1.setAttributeAndModes( new Material(), StateAttribute.OVERRIDE );
+                stateSet2.setAttributeAndModes( new Material(), StateAttribute.OFF );
 
                 state.pushStateSet( stateSet0 );
                 state.pushStateSet( stateSet1 );

@@ -44,9 +44,9 @@
             material2.setDiffuse( [ 0, 0, 1, 1 ] );
             material3.setDiffuse( [ 0, 1, 0, 1 ] );
             material4.setDiffuse( [ 1, 0, 0, 1 ] );
-            ground2.getOrCreateStateSet().setAttributeAndMode( material2 );
-            group3.getOrCreateStateSet().setAttributeAndMode( material3 );
-            group4.getOrCreateStateSet().setAttributeAndMode( material4 );
+            ground2.getOrCreateStateSet().setAttributeAndModes( material2 );
+            group3.getOrCreateStateSet().setAttributeAndModes( material3 );
+            group4.getOrCreateStateSet().setAttributeAndModes( material4 );
 
             group1.addChild( ground1 );
             group21.addChild( ground2 );

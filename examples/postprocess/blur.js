@@ -40,7 +40,7 @@ function getPostSceneBlur( sceneTexture ) {
     };
 
     var setSceneTexture = function ( sceneFile ) {
-        inputTex.getStateSet().setTextureAttributeAndMode( 0, getSceneTexture( sceneFile ) );
+        inputTex.getStateSet().setTextureAttributeAndModes( 0, getSceneTexture( sceneFile ) );
         inputTex.dirty();
     };
 
@@ -70,7 +70,7 @@ function getPostSceneBlur( sceneTexture ) {
             finalTexture.setMagFilter( osg.Texture.LINEAR );
 
             // Set the final texture on the quad
-            quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
+            quad.getOrCreateStateSet().setTextureAttributeAndModes( 0, finalTexture );
 */
             inputTex = new osgUtil.Composer.Filter.InputTexture( getSceneTexture( 'Budapest.jpg' ) );
             this.composer.addPass( inputTex );

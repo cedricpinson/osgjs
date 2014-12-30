@@ -27,8 +27,8 @@ function getPostSceneBloom( sceneTexture, bloomTextureFactor ) {
             cachedScenes[ sceneFile ] = osg.Texture.createFromURL( sceneFile );
 
         currentSceneTexture = cachedScenes[ sceneFile ];
-        additiveFilter.getStateSet().setTextureAttributeAndMode( 0, currentSceneTexture );
-        brightFilter.getStateSet().setTextureAttributeAndMode( 0, currentSceneTexture );
+        additiveFilter.getStateSet().setTextureAttributeAndModes( 0, currentSceneTexture );
+        brightFilter.getStateSet().setTextureAttributeAndModes( 0, currentSceneTexture );
     };
 
     // create a downsized texture to render the bloom to

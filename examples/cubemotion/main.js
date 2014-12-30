@@ -171,7 +171,7 @@ var createEffect = function ( texture, target, center ) {
                 size[ 0 ], size[ 1 ], size[ 2 ],
                 x / ( maxx + 1 ), ( x + 1 ) / ( maxx + 1 ),
                 y / ( maxy + 1 ), ( y + 1 ) / ( maxy + 1 ) );
-            model.getOrCreateStateSet().setTextureAttributeAndMode( 0, texture );
+            model.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
 
             mtr.addChild( model );
             group.addChild( mtr );
@@ -201,7 +201,7 @@ function createScene() {
     target.addChild( targetModel );
     var material = new osg.Material();
     material.setDiffuse( [ 1, 0, 0, 1 ] );
-    target.getOrCreateStateSet().setAttributeAndMode( material );
+    target.getOrCreateStateSet().setAttributeAndModes( material );
 
     var targetPos = [ 0, 0, 0 ];
     var centerPos = [ 20, 8, 30 ];

@@ -215,8 +215,8 @@ function getPostSceneToneMapping() {
             console.log( 'sceneTexture loaded' );
         }
         currentSceneTexture = cachedScenes[ sceneFile ];
-        toneMappingFilter.getStateSet().setTextureAttributeAndMode( 0, currentSceneTexture );
-        luminanceComputeFilter.getStateSet().setTextureAttributeAndMode( 0, currentSceneTexture );
+        toneMappingFilter.getStateSet().setTextureAttributeAndModes( 0, currentSceneTexture );
+        luminanceComputeFilter.getStateSet().setTextureAttributeAndModes( 0, currentSceneTexture );
     }
 
     var effect = {

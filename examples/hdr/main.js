@@ -540,7 +540,7 @@ function setEnvironment(name, background, ground) {
                     textureHigh.setTextureSize(images[0].width, images[0].height);
                     textureHigh.setImage(images[0].data, osg.Texture.RGBA);
                 }
-                background.getOrCreateStateSet().setTextureAttributeAndMode(0, textureHigh);
+                background.getOrCreateStateSet().setTextureAttributeAndModes(0, textureHigh);
                 background.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
 
                 var textureEnv = new osg.Texture();
@@ -549,9 +549,9 @@ function setEnvironment(name, background, ground) {
                     textureEnv.setTextureSize(images[0].width, images[0].height);
                     textureEnv.setImage(images[0].data, osg.Texture.RGBA);
                 }
-                ground.getOrCreateStateSet().setTextureAttributeAndMode(0, textureHigh);
+                ground.getOrCreateStateSet().setTextureAttributeAndModes(0, textureHigh);
                 ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(0,'Texture0'));
-                ground.getOrCreateStateSet().setTextureAttributeAndMode(1, textureEnv);
+                ground.getOrCreateStateSet().setTextureAttributeAndModes(1, textureEnv);
                 ground.getOrCreateStateSet().addUniform(osg.Uniform.createInt1(1,'Texture1'));
             });
 }
@@ -570,7 +570,7 @@ function createScene()
     background.getOrCreateStateSet().addUniform(uniformGamma);
 
     var ground = getModel();
-    ground.getOrCreateStateSet().setAttributeAndMode(getShader());
+    ground.getOrCreateStateSet().setAttributeAndModes(getShader());
     ground.getOrCreateStateSet().addUniform(uniformCenter);
     ground.getOrCreateStateSet().addUniform(uniformGamma);
 

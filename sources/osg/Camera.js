@@ -95,7 +95,7 @@ define( [
 
             setViewport: function ( vp ) {
                 this.viewport = vp;
-                this.getOrCreateStateSet().setAttributeAndMode( vp );
+                this.getOrCreateStateSet().setAttributeAndModes( vp );
             },
             getViewport: function () {
                 return this.viewport;

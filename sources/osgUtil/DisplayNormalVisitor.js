@@ -91,7 +91,7 @@ define( [
                     g.getAttributes().Color = new BufferArray( BufferArray.ARRAY_BUFFER, lineColors, 3 );
                     var primitive = new DrawArrays( PrimitiveSet.LINES, 0, nbVertices * 2 );
                     g.getPrimitives().push( primitive );
-                    g.getOrCreateStateSet().setAttributeAndMode( getShader() );
+                    g.getOrCreateStateSet().setAttributeAndModes( getShader() );
                     node.addChild( g );
                     g._isVisitedNormalDebugDisplay = true;
                 }
