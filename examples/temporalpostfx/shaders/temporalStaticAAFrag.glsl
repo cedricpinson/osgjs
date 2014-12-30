@@ -8,10 +8,6 @@ uniform mat4 PrevProjectionMatrix;
 
 varying vec2  FragTexCoord0;
 
-// current frame screen Pos
-varying vec4  FragScreenPos;
-// previous frame screenpos
-varying vec4  FragPreScreenPos;
 
 uniform sampler2D Texture0;
 uniform sampler2D Texture1;
@@ -21,6 +17,10 @@ uniform vec2 RenderSize;
 uniform float SampleX;
 uniform float SampleY;
 uniform float FrameNum;
+// current frame screen Pos
+varying vec4  FragScreenPos;
+// previous frame screenpos
+varying vec4  FragPrevScreenPos;
 
 
 /////////////////////
@@ -49,23 +49,26 @@ vec4 motionBlur(sampler2D tex, vec2 texCoord, vec2 velocityFact)
 }
 
 void main(void) {
-  if (FrameNum < 100.0){
+
+  // => NDC (-1, 1) then (0, 1)
+  //non linear perspective divide
+  // could use gl_FragCoord if FS
+  vec2 screenTexPos =   (FragScreenPos.xy / FragScreenPos.w ) * 0.5 + vec2(0.5) ;
+  vec2 screenPos =   (FragScreenPos.xy ) ;
+  //non linear perspective divide
+  vec2 prevScreenTexPos =   (FragPrevScreenPos.xy/ FragPrevScreenPos.w) * 0.5 + vec2(0.5);
+  vec2 prevScreenPos =   (FragPrevScreenPos.xy);
+
+  vec2 velocity = screenPos - prevScreenPos;
+
+  if (false && FrameNum < 100.0){
       // first Frames
       gl_FragColor =  texture2D(Texture0, FragTexCoord0.xy);
   }
   else
   {
 
-  // => NDC (-1, 1) then (0, 1)
-  //non linear perspective divide
-  // could use gl_FragCoord if FS
-  vec2 screenPos =   (FragScreenPos.xy / FragScreenPos.w) * 0.5 + vec2(0.5) ;
-  //non linear perspective divide
-  vec2 prevScreenPos =   (FragPreScreenPos.xy / FragPreScreenPos.w) * 0.5 + vec2(0.5);
-
-
-  vec2 velocity = (screenPos - prevScreenPos)/2.0;
-    if (true || ((abs(velocity.x) < 0.001 && abs(velocity.y) < 0.001)))
+    if ( ((abs(velocity.x) < 0.001 && abs(velocity.y) < 0.001)))
     {
       // add jittering
       // should use Randomized halton
@@ -78,19 +81,19 @@ void main(void) {
       //prevScreenPosJitter.x += SampleX / RenderSize.x;
       //prevScreenPosJitter.y += SampleY / RenderSize.y;
 
-      vec4 currentColor = texture2D(Texture0, FragTexCoord0.xy);
-      vec4 prevFragAccumColor = texture2D(Texture2, prevScreenPos.xy);
-      //vec4 prevFragAccumColor = texture2D(Texture2, prevScreenPosJitter.xy);
+        vec4 currentColor = texture2D(Texture0, FragTexCoord0.xy);
+        vec4 prevFragAccumColor = texture2D(Texture2, prevScreenTexPos.xy);
+        //vec4 prevFragAccumColor = texture2D(Texture2, prevScreenPosJitter.xy);
 
         // http://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
         // cumulative moving average over frameNum (which starts at 100)
         // Accum(n+1) = Accum(n) + ((x(n+1) - Accum(n)) / (n + 1)))
-        // here n = FrameNum - 100
 
-       vec4 accum = prevFragAccumColor + ((currentColor - prevFragAccumColor) / ( FrameNum - 99.0));
-       //  vec4 accum = prevFragAccumColor + ((currentColor - prevFragAccumColor) / (2.0));
+        vec4 accum = prevFragAccumColor + ((currentColor - prevFragAccumColor) / ( FrameNum - 99.0));
+        // vec4 accum = prevFragAccumColor + ((currentColor - prevFragAccumColor) / (2.0));
+
         gl_FragColor = accum;
-        //gl_FragColor = (currentColor + accum) * 0.5;
+        // gl_FragColor = (currentColor + accum) * 0.5;
         // gl_FragColor.a = 1.0;
 
 
@@ -100,8 +103,8 @@ void main(void) {
       if (true){
         // motion blur
         // http://http.developer.nvidia.com/GPUGems3/gpugems3_ch27.html
-        gl_FragColor = motionBlur(Texture0, FragTexCoord0.xy, velocity.xy);
-        //gl_FragColor = motionBlur(Texture2, screenPos.xy, velocity.xy);
+                gl_FragColor = motionBlur(Texture0, FragTexCoord0.xy, velocity.xy);
+                //gl_FragColor = motionBlur(Texture2, screenTexPos.xy, velocity.xy);
       }
       else{
         // nothing
@@ -109,7 +112,8 @@ void main(void) {
       }
     }
 
-    // gl_FragColor = vec4((velocity.xy+0.5)*2.0, 0.0, 1.0);
   }
 
+  //gl_FragColor = gl_FragColor*0.5 + 0.5*vec4(abs(screenPos.x - prevScreenPos.x), abs(screenPos.y - prevScreenPos.y), 0.0, 1.0);
+  //gl_FragColor = vec4(screenPos.x,screenPos.y, distance(screenPos, prevScreenPos), 1.0);
 }

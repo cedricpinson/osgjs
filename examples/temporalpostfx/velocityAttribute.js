@@ -1,7 +1,7 @@
 'use strict';
 
-var TemporalAttribute;
-var TemporalNode;
+var VelocityAttribute;
+var VelocityNode;
 
 ( function () {
 
@@ -10,24 +10,24 @@ var TemporalNode;
     var shaderNode = osgShader.node;
     var factory = osgShader.nodeFactory;
 
-    TemporalAttribute = function () {
+    VelocityAttribute = function () {
         osg.StateAttribute.call( this );
         this._attributeEnable = false;
     };
-    TemporalAttribute.prototype = osg.objectLibraryClass( osg.objectInherit( osg.StateAttribute.prototype, {
-        attributeType: 'Temporal',
+    VelocityAttribute.prototype = osg.objectLibraryClass( osg.objectInherit( osg.StateAttribute.prototype, {
+        attributeType: 'Velocity',
 
         cloneType: function () {
-            return new TemporalAttribute();
+            return new VelocityAttribute();
         },
 
         // uniforms list are per ClassType
         getOrCreateUniforms: function () {
-            var obj = TemporalAttribute;
+            var obj = VelocityAttribute;
             if ( obj.uniforms ) return obj.uniforms;
 
             obj.uniforms = new osg.Map( {
-                'enable': osg.Uniform.createInt1( 0, 'temporalEnable' )
+                'enable': osg.Uniform.createInt1( 0, 'velocityEnable' )
             } );
 
             return obj.uniforms;
@@ -50,38 +50,37 @@ var TemporalNode;
             this.setDirty( false );
         }
 
-    } ), 'osg', 'Temporal' );
+    } ), 'osg', 'Velocity' );
 
 
 
-    // this node will call a function temporal in the shader
-    TemporalNode = function () {
+    // this node will call a function velocity in the shader
+    VelocityNode = function () {
         shaderNode.BaseOperator.apply( this, arguments );
     };
 
-    TemporalNode.prototype = osg.objectInherit( shaderNode.BaseOperator.prototype, {
+    VelocityNode.prototype = osg.objectInherit( shaderNode.BaseOperator.prototype, {
 
-        type: 'Temporal',
-        validInputs: [ 'enable', 'color' ],
+        type: 'Velocity',
+        validInputs: [ 'enable' ],
         validOutputs: [ 'color' ],
 
         // it's a global declaration
         // you can make your include here or your global variable
         globalFunctionDeclaration: function () {
-            return '#pragma include "ssaa_node"';
+            return '#pragma include "velocity_node"';
         },
 
         // call the glsl function with input/output of the node
         computeFragment: function () {
-            return osgShader.utils.callFunction( 'temporal', undefined, [
+            return osgShader.utils.callFunction( 'velocity', undefined, [
                 this._inputs.enable,
-                this._inputs.color,
                 this._outputs.color
             ] );
         }
 
     } );
 
-    factory.registerNode( 'Temporal', TemporalNode );
+    factory.registerNode( 'Velocity', VelocityNode );
 
 } )();

@@ -7,10 +7,10 @@
     var osgUtil = window.osgUtil;
     var osgShader = window.osgShader;
 
-    function getFxaa() {
+    function getSMAA() {
 
         var effect = {
-            name: 'FXAA',
+            name: 'SMAA',
 
             getInputTexture: function () {
                 return this._sceneTexture;
@@ -52,20 +52,36 @@
                 this._helper = helper;
                 this.createScene();
 
-                var FXAAFilter = new osgUtil.Composer.Filter.Custom(
-                    osgShader.ShaderProcessor.instance.getShader( 'fxaa' ), {
-                        'Texture0': this._sceneTexture,
-                        'subpixel_aa': 0.75,
-                        'contrast_treshold': 0.1,
-                        'edge_treshold': 0.0
-                    }
-                );
+                // check/test SMAA_DIRECTX9_LINEAR_BLEND
+                // check/test Lod
 
+                var smaaVS1 = osgShader.ShaderProcessor.instance.getShader( 'smaa', [ '#define _EDGE_VS 1' ] );
+                var smaaFS1 = osgShader.ShaderProcessor.instance.getShader( 'smaa', [ '#define _EDGE_FS 1' ] );
+                var SMAAFilter1 = new osgUtil.Composer.Filter.Custom( smaaFS1, {
+                        'Texture0': this._sceneTexture
+                    },
+                    smaaVS1
+                );
+                /*
+                var smaaVS2 = osgShader.ShaderProcessor.instance.getShader( 'smaa', [ '_BLEND_VS', '#define SMAA_ONLY_COMPILE_VS 1' ] );
+                var smaaFS2 = osgShader.ShaderProcessor.instance.getShader( 'smaa', [ '#define _BLEND_FS', '#define SMAA_ONLY_COMPILE_FS 1' ] );
+                var SMAAFilter2 = new osgUtil.Composer.Filter.Custom( smaaFS2, {}, smaaVS2 );
+
+                var smaaVS3 = osgShader.ShaderProcessor.instance.getShader( 'smaa', [ '#define _NEIGH_VS 1', '#define SMAA_ONLY_COMPILE_VS 1' ] );
+                var smaaFS3 = osgShader.ShaderProcessor.instance.getShader( 'smaa', [ '#define _NEIGH_FS 1', '#define SMAA_ONLY_COMPILE_FS 1' ] );
+                var SMAAFilter3 = new osgUtil.Composer.Filter.Custom( smaaFS3, {}, smaaVS3 );
+*/
                 this.createFinalTexture();
 
 
                 this._composer = new osgUtil.Composer();
-                this._composer.addPass( FXAAFilter, this._finalTexture );
+                this._composer.addPass( SMAAFilter1, this._finalTexture );
+                /*
+                this._composer.addPass( SMAAFilter1, this._sceneTexture );
+
+      this._composer.addPass( SMAAFilter2 );
+                this._composer.addPass( SMAAFilter3, this._finalTexture );
+*/
                 this._composer.build();
 
 
@@ -85,5 +101,5 @@
         return effect;
     };
 
-    window.postScenes.push( getFxaa() );
+    window.postScenes.push( getSMAA() );
 } )();
