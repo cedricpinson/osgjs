@@ -45,7 +45,7 @@ function getOrCreateItem() {
         var rq = osg.createTexturedQuadGeometry( -QuadSizeX / 2.0, -QuadSizeY / 2.0, 0,
             QuadSizeX, 0, 0,
             0, QuadSizeY, 0 );
-        rq.getOrCreateStateSet().setTextureAttributeAndMode( 0, Texture );
+        rq.getOrCreateStateSet().setTextureAttributeAndModes( 0, Texture );
         Item = rq;
     }
     return Item;

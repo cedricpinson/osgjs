@@ -123,7 +123,7 @@ define( [
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, new Float32Array( 4 ), 2 );
         var primitive = new DrawArrays( PrimitiveSet.LINES, 0, 2 );
         g.getPrimitives().push( primitive );
-        g.getOrCreateStateSet().setAttributeAndMode( getOrCreateShader2D() );
+        g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader2D() );
         return g;
     };
 
@@ -167,7 +167,7 @@ define( [
             }
         }
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
-        g.getOrCreateStateSet().setAttributeAndMode( getOrCreateShader() );
+        g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader() );
         g.getPrimitives().push( new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indices, 1 ) ) );
         return g;
     };
@@ -255,7 +255,7 @@ define( [
         }
 
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
-        g.getOrCreateStateSet().setAttributeAndMode( getOrCreateShader() );
+        g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader() );
         g.getPrimitives().push( new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indices, 1 ) ) );
         return g;
     };
@@ -272,7 +272,7 @@ define( [
         }
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
         var primitive = new DrawArrays( PrimitiveSet.LINE_STRIP, 0, nbVertices );
-        g.getOrCreateStateSet().setAttributeAndMode( getOrCreateShader() );
+        g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader() );
         g.getPrimitives().push( primitive );
         return g;
     };
@@ -297,14 +297,14 @@ define( [
 
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertices, 3 );
         var primitive = new DrawArrays( PrimitiveSet.TRIANGLE_STRIP, 0, 4 );
-        g.getOrCreateStateSet().setAttributeAndMode( getOrCreateShader() );
+        g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShader() );
         g.getPrimitives().push( primitive );
         return g;
     };
 
     var createQuadCircleGeometry = function () {
         var g = createPlaneGeometry();
-        g.getOrCreateStateSet().setAttributeAndMode( getOrCreateShaderQuadCircle() );
+        g.getOrCreateStateSet().setAttributeAndModes( getOrCreateShaderQuadCircle() );
         return g;
     };
 

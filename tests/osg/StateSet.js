@@ -27,7 +27,7 @@ define( [
             ( function () {
                 var ss = new StateSet();
                 var t = new Texture();
-                ss.setTextureAttributeAndMode( 1, t );
+                ss.setTextureAttributeAndModes( 1, t );
 
                 ok( ss.getTextureAttribute( 1, 'Texture' ) === t, 'Check texture attribute accessors' );
 
@@ -70,7 +70,7 @@ define( [
                 }
 
                 var s = getShader();
-                ss.setAttributeAndMode( s );
+                ss.setAttributeAndModes( s );
 
                 ok( ss.getAttribute( 'Program' ) === s, 'Check stateset program' );
 

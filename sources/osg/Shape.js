@@ -493,7 +493,7 @@ define( [
 
         var primitive = new DrawArrays( PrimitiveSet.LINES, 0, 6 );
         g.getPrimitives().push( primitive );
-        g.getOrCreateStateSet().setAttributeAndMode( createAxisGeometry.getShader() );
+        g.getOrCreateStateSet().setAttributeAndModes( createAxisGeometry.getShader() );
 
         return g;
     };

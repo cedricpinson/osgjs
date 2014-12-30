@@ -215,7 +215,7 @@ define( [
         setLight: function ( light ) {
             this._light = light;
             if ( this._lightingMode !== View.LightingMode.NO_LIGHT ) {
-                this._scene.getOrCreateStateSet().setAttributeAndMode( this._light );
+                this._scene.getOrCreateStateSet().setAttributeAndModes( this._light );
             }
         },
         getLightingMode: function () {
