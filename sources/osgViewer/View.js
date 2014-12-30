@@ -96,6 +96,11 @@ define( [
         initWebGLCaps: function ( gl ) {
             this._webGLCaps = new WebGLCaps( gl );
             this._webGLCaps.init();
+            var anisoExt = this._webGLCaps.getWebGLExtension( 'EXT_texture_filter_anisotropic' );
+            if ( anisoExt ) {
+                Texture.ANISOTROPIC_SUPPORT_EXT = true;
+                Texture.ANISOTROPIC_SUPPORT_MAX = gl.getParameter( anisoExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT );
+            }
         },
 
         computeCanvasSize: ( function () {

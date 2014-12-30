@@ -58,6 +58,9 @@ define( [
     Texture.LINEAR_MIPMAP_NEAREST = 0x2701;
     Texture.NEAREST_MIPMAP_LINEAR = 0x2702;
     Texture.LINEAR_MIPMAP_LINEAR = 0x2703;
+    // filter anisotropy
+    Texture.TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
+    Texture.MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 
     // wrap mode
     Texture.CLAMP_TO_EDGE = 0x812F;
@@ -124,6 +127,7 @@ define( [
             this._image = undefined;
             this._magFilter = Texture.LINEAR;
             this._minFilter = Texture.LINEAR;
+            this._maxAnisotropy = 1.0;
             this._wrapS = Texture.CLAMP_TO_EDGE;
             this._wrapT = Texture.CLAMP_TO_EDGE;
             this._textureWidth = 0;
@@ -190,7 +194,8 @@ define( [
             if ( this._textureObject !== undefined && this._textureObject !== null ) {
                 Texture.textureManager.releaseTextureObject( this._textureObject );
                 this._textureObject = undefined;
-                this._image = undefined;
+                if ( this._unrefImageDataAfterApply )
+                    this._image = undefined;
             }
         },
 
@@ -201,14 +206,6 @@ define( [
         getWrapS: function () {
             return this._wrapS;
         },
-        getMinFilter: function () {
-            return this._minFilter;
-        },
-        getMagFilter: function () {
-            return this._magFilter;
-        },
-
-
         setWrapS: function ( value ) {
 
             if ( typeof ( value ) === 'string' ) {
@@ -218,10 +215,8 @@ define( [
             } else {
 
                 this._wrapS = value;
-
             }
         },
-
 
         setWrapT: function ( value ) {
 
@@ -232,35 +227,51 @@ define( [
             } else {
 
                 this._wrapT = value;
-
             }
         },
 
+        getMinFilter: function () {
+            return this._minFilter;
+        },
+        getMagFilter: function () {
+            return this._magFilter;
+        },
 
+        // https://www.opengl.org/registry/specs/EXT/texture_filter_anisotropic.txt
+        setMaxAnisotropy: function ( multiplier ) {
+            var anisoExt = Texture.ANISOTROPIC_SUPPORT_EXT;
+            if ( anisoExt && multiplier && multiplier > 1.0 ) {
+                var max = Texture.ANISOTROPIC_SUPPORT_MAX;
+                multiplier = multiplier > max ? max : multiplier;
+                if ( multiplier !== this._maxAnisotropy ) {
+                    this._maxAnisotropy = multiplier;
+                    this.dirty();
+                }
+            }
+        },
+        getMaxAnisotropy: function () {
+            return this._maxAnisotropy;
+        },
+
+        // some value enable mipmapping
         setMinFilter: function ( value ) {
-
             if ( typeof ( value ) === 'string' ) {
-
                 this._minFilter = checkAndFixEnum( value, Texture.LINEAR );
-
             } else {
-
                 this._minFilter = value;
-
             }
+            this.dirty();
         },
 
+        // Either Linear or nearest.
         setMagFilter: function ( value ) {
 
             if ( typeof ( value ) === 'string' ) {
-
                 this._magFilter = checkAndFixEnum( value, Texture.LINEAR );
-
             } else {
-
                 this._magFilter = value;
-
             }
+            this.dirty();
         },
 
         setImage: function ( img, imageFormat ) {
@@ -323,8 +334,12 @@ define( [
 
         applyFilterParameter: function ( gl, target ) {
 
+
             var powerOfTwo = isPowerOf2( this._textureWidth ) && isPowerOf2( this._textureHeight );
             if ( !powerOfTwo ) {
+                // NPOT non support in webGL explained here
+                // https://www.khronos.org/webgl/wiki/WebGL_and_OpenGL_Differences#Non-Power_of_Two_Texture_Support
+                // so disabling mipmap...
                 this.setWrapT( Texture.CLAMP_TO_EDGE );
                 this.setWrapS( Texture.CLAMP_TO_EDGE );
 
@@ -333,9 +348,13 @@ define( [
                     this.setMinFilter( Texture.LINEAR );
                 }
             }
-
             gl.texParameteri( target, gl.TEXTURE_MAG_FILTER, this._magFilter );
             gl.texParameteri( target, gl.TEXTURE_MIN_FILTER, this._minFilter );
+
+            if ( this._maxAnisotropy > 1.0 ) {
+                gl.texParameterf( target, Texture.TEXTURE_MAX_ANISOTROPY_EXT, this._maxAnisotropy );
+            }
+
             gl.texParameteri( target, gl.TEXTURE_WRAP_S, this._wrapS );
             gl.texParameteri( target, gl.TEXTURE_WRAP_T, this._wrapT );
         },

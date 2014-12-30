@@ -11,19 +11,19 @@
 
     // we use this visitor to copy TexCoord0 to TexCoord1
     // for multi texture purpose
-    var VisitorCopyTexCoord = function() {
-        osg.NodeVisitor.call(this);
+    var VisitorCopyTexCoord = function () {
+        osg.NodeVisitor.call( this );
     };
 
     VisitorCopyTexCoord.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
-        apply: function( node ) {
+        apply: function ( node ) {
             if ( node.getTypeID() === osg.Geometry.getTypeID() ) {
                 // copy tex coord 0 to 1 for multi texture
                 node.getAttributes()[ 'TexCoord1' ] = node.getAttributes()[ 'TexCoord0' ];
             }
             this.traverse( node );
         }
-    });
+    } );
 
 
 
@@ -42,6 +42,18 @@
             'alpha/basic.png'
         ];
 
+        this._textureMinFilters = [
+            'LINEAR',
+            'NEAREST',
+            'NEAREST_MIPMAP_NEAREST',
+            'LINEAR_MIPMAP_NEAREST',
+            'NEAREST_MIPMAP_LINEAR',
+            'LINEAR_MIPMAP_LINEAR'
+        ];
+        this._textureMagFilters = [
+            'LINEAR',
+            'NEAREST'
+        ];
 
         this._config = {
 
@@ -65,6 +77,9 @@
             materialShininess3: 0.4,
             texture3Unit0: this._textureNames[ 2 ],
             texture3Unit1: this._textureNames[ 1 ],
+            texture3UnitMinFilter: 'LINEAR_MIPMAP_LINEAR',
+            texture3UnitMagFilter: 'LINEAR',
+            texture3UnitAnisotropy: 1,
 
             materialEmission4: '#050505',
             materialAmbient4: '#050505',
@@ -220,6 +235,7 @@
                     texture.setWrapT( 'REPEAT' );
                     texture.setWrapS( 'REPEAT' );
                     texture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
+                    texture.setMagFilter( 'LINEAR' );
                     return texture;
                 } );
 
@@ -242,7 +258,17 @@
 
                 controller = material3.add( this._config, 'texture3Unit1', this._textureNames );
                 controller.onChange( this.updateMaterial3.bind( this ) );
+
+                controller = material3.add( this._config, 'texture3UnitMinFilter', this._textureMinFilters );
+                controller.onChange( this.updateMaterial3.bind( this ) );
+                controller = material3.add( this._config, 'texture3UnitMagFilter', this._textureMagFilters );
+                controller.onChange( this.updateMaterial3.bind( this ) );
+                controller = material3.add( this._config, 'texture3UnitAnisotropy', 1, 16 ).step( 1 );
+                controller.onChange( this.updateMaterial3.bind( this ) );
+
                 this.updateMaterial3();
+
+
 
                 controller = material5.add( this._config, 'texture5Unit0', this._textureNames );
                 controller.onChange( this.updateMaterial5.bind( this ) );
@@ -400,13 +426,22 @@
             idx = this._textureNames.indexOf( this._config.texture3Unit0 );
             if ( idx < 0 ) idx = 0;
             texture = this._textures[ idx ];
+            texture.setMinFilter( this._config.texture3UnitMinFilter );
+            texture.setMagFilter( this._config.texture3UnitMagFilter );
+            texture.setMaxAnisotropy( this._config.texture3UnitAnisotropy );
+            //TODO: better dirty when setting dynamically a filter
+            texture.releaseGLObjects();
             this._stateSet3.setTextureAttributeAndModes( 0, texture );
 
             idx = this._textureNames.indexOf( this._config.texture3Unit1 );
             if ( idx < 0 ) idx = 3;
             texture = this._textures[ idx ];
+            texture.setMinFilter( this._config.texture3UnitMinFilter );
+            texture.setMagFilter( this._config.texture3UnitMagFilter );
+            texture.setMaxAnisotropy( this._config.texture3UnitAnisotropy );
+            //TODO: better dirty when setting dynamically a filter
+            texture.releaseGLObjects();
             this._stateSet3.setTextureAttributeAndModes( 1, texture );
-
 
         },
 
