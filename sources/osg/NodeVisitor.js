@@ -1,4 +1,6 @@
-define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
+define( [], function () {
+
+    'use strict';
 
     var NodeVisitor = function ( traversalMode ) {
         /*jshint bitwise: false */
@@ -12,14 +14,9 @@ define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
         this.nodePath = [];
         this.visitorType = NodeVisitor.NODE_VISITOR;
 
-        var framestamp = new FrameStamp();
-        this.getFrameStamp = function () {
-            return framestamp;
-        };
-        this.setFrameStamp = function ( s ) {
-            framestamp = s;
-        };
+        this._frameStamp = undefined;
     };
+
     //NodeVisitor.TRAVERSE_NONE = 0;
     NodeVisitor.TRAVERSE_PARENTS = 1;
     NodeVisitor.TRAVERSE_ALL_CHILDREN = 2;
@@ -63,6 +60,16 @@ define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
     };
 
     NodeVisitor.prototype = {
+
+        setFrameStamp: function ( frameStamp ) {
+            this._frameStamp = frameStamp;
+        },
+
+        getFrameStamp: function () {
+            return this._frameStamp;
+        },
+
+
         setNodeMaskOverride: function ( m ) {
             this.nodeMaskOverride = m;
         },
@@ -77,7 +84,7 @@ define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
             return this.traversalMask;
         },
 
-        getNodePath: function() {
+        getNodePath: function () {
             return this.nodePath;
         },
 
@@ -99,7 +106,7 @@ define( [ 'osg/FrameStamp' ], function ( FrameStamp ) {
         traverse: function ( node ) {
             NodeVisitor._traversalFunctions[ this.traversalMode ].call( this, node );
         },
-        getVisitorType: function ( ) {
+        getVisitorType: function () {
             return this.visitorType;
         }
     };
