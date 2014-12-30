@@ -15,11 +15,10 @@ define( [
                 var viewer = new Viewer( canvas );
                 ok( viewer.getCamera() !== undefined, 'Check camera creation' );
                 ok( viewer.getCamera().getViewport() !== undefined, 'Check camera viewport' );
+                ok( viewer.getCamera().getRenderer() !== undefined, 'Check camera Renderer' );
 
                 viewer.init();
                 ok( viewer._updateVisitor !== undefined, 'Check update visitor' );
-                ok( viewer._cullVisitor !== undefined, 'Check cull visitor' );
-                ok( viewer._state !== undefined, 'Check state' );
                 ok( viewer.getState().getGraphicContext() !== undefined, 'Check state graphic context' );
                 mockup.removeCanvas( canvas );
             } )();
@@ -35,16 +34,17 @@ define( [
                 viewer.setupManipulator();
 
                 viewer.setSceneData( createScene() );
-                viewer.draw = function() {}; // do nothing
+                viewer.getCamera().getRenderer().draw = function() {}; // do nothing
                 viewer.frame();
 
+                var cullvisitor = viewer.getCamera().getRenderer().getCullVisitor();
                 // with auto compute near far
-                equal( viewer._cullVisitor._computedFar , 31.30036755335051, 'check far');
-                equal( viewer._cullVisitor._computedNear , 18.699632446649503, 'check near');
+                equal( cullvisitor._computedFar , 31.30036755335051, 'check far');
+                equal( cullvisitor._computedNear , 18.699632446649503, 'check near');
 
-                viewer._cullVisitor.reset();
-                equal( viewer._cullVisitor._computedNear, Number.POSITIVE_INFINITY, 'Check near after reset' );
-                equal( viewer._cullVisitor._computedFar, Number.NEGATIVE_INFINITY, 'Check far after reset' );
+                cullvisitor.reset();
+                equal( cullvisitor._computedNear, Number.POSITIVE_INFINITY, 'Check near after reset' );
+                equal( cullvisitor._computedFar, Number.NEGATIVE_INFINITY, 'Check far after reset' );
 
                 mockup.removeCanvas( canvas );
 

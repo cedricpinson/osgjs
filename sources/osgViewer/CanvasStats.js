@@ -1,10 +1,11 @@
 define( [
-    'osg/Utils'
-], function ( MACROUTILS ) {
+    'osg/Timer'
 
-    var Stats = {};
+], function ( Timer ) {
 
-    Stats.Stats = function ( canvas, textCanvas ) {
+    'use strict';
+
+    var CanvasStats = function ( canvas, textCanvas ) {
         this.layers = [];
         this.lastUpdate = undefined;
         this.canvas = canvas;
@@ -12,7 +13,8 @@ define( [
         this.numberUpdate = 0;
     };
 
-    Stats.Stats.prototype = {
+    CanvasStats.prototype = {
+
         addLayer: function ( color, maxVal, getter, texter ) {
             if ( color === undefined ) {
                 color = 'rgb(255,255,255)';
@@ -27,36 +29,26 @@ define( [
             } );
         },
 
-        update: function () {
 
-            var delta, i, l, layer, value, c, ctx, height, myImageData, t = MACROUTILS.performance.now();
-            if ( this.lastUpdate === undefined ) {
-                this.lastUpdate = t;
-            }
-            this.numberUpdate++;
-            for ( i = 0, l = this.layers.length; i < l; i++ ) {
-                layer = this.layers[ i ];
-                value = layer.getValue( t );
-                layer.average += value;
-            }
-            //i = 2.0 * 60.0 / 1000.0;
-            i = 0.12; //4.0 * 60.0 / 1000.0;
-            delta = ( t - this.lastUpdate ) * i;
+        updateGraph: function ( t ) {
+            //4.0 * 60.0 / 1000.0;
+            var constStep = 0.12;
+            var delta = Timer.instance().deltaM( this.lastUpdate, t ) * constStep;
             if ( delta >= 1.0 ) {
 
-                t -= ( delta - Math.floor( delta ) ) / i;
+                t -= ( delta - Math.floor( delta ) ) / constStep;
                 delta = Math.floor( delta );
 
-                c = this.canvas;
-                ctx = c.getContext( '2d' );
+                var c = this.canvas;
+                var ctx = c.getContext( '2d' );
 
-                myImageData = ctx.getImageData( delta, 0, c.width - delta, c.height );
+                var myImageData = ctx.getImageData( delta, 0, c.width - delta, c.height );
                 ctx.putImageData( myImageData, 0, 0 );
                 ctx.clearRect( c.width - delta, 0, delta, c.height );
 
-                for ( i = 0, l = this.layers.length; i < l; i++ ) {
-                    layer = this.layers[ i ];
-                    value = layer.getValue( t );
+                for ( var i = 0, l = this.layers.length; i < l; i++ ) {
+                    var layer = this.layers[ i ];
+                    var value = layer.getValue( t );
                     value *= c.height / layer.max;
                     if ( value > c.height ) value = c.height;
                     ctx.lineWidth = 1.0;
@@ -68,17 +60,21 @@ define( [
                     layer.previous = value;
                 }
             }
+        },
+
+
+        updateText: function () {
 
             if ( this.numberUpdate % 60 === 0 ) {
-                c = this.textCanvas;
-                ctx = c.getContext( '2d' );
+                var c = this.textCanvas;
+                var ctx = c.getContext( '2d' );
                 ctx.font = '14px Sans';
-                height = 17;
-                delta = height;
+                var height = 17;
+                var delta = height;
                 ctx.clearRect( 0, 0, c.width, c.height );
-                for ( i = 0, l = this.layers.length; i < l; i++ ) {
-                    layer = this.layers[ i ];
-                    value = layer.getText( layer.average / this.numberUpdate );
+                for ( var i = 0, l = this.layers.length; i < l; i++ ) {
+                    var layer = this.layers[ i ];
+                    var value = layer.getText( layer.average / this.numberUpdate );
                     layer.average = 0;
                     ctx.fillStyle = layer.color;
                     ctx.fillText( value, 0, delta );
@@ -86,9 +82,28 @@ define( [
                 }
                 this.numberUpdate = 0;
             }
+        },
+
+        update: function () {
+
+            var t = Timer.instance().tick();
+            if ( this.lastUpdate === undefined ) {
+                this.lastUpdate = t;
+            }
+
+            this.numberUpdate++;
+            for ( var j = 0; j < this.layers.length; j++ ) {
+                var layer = this.layers[ j ];
+                var value = layer.getValue( t );
+                layer.average += value;
+            }
+
+            this.updateGraph( t );
+            this.updateText( t );
+
             this.lastUpdate = t;
         }
     };
 
-    return Stats;
+    return CanvasStats;
 } );

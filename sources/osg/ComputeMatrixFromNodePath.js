@@ -3,22 +3,30 @@ define( [
     'osg/TransformEnums'
 ], function ( Matrix, TransformEnums ) {
 
+    'use strict';
+
     var computeLocalToWorld = function ( nodePath, ignoreCameras ) {
+
         var ignoreCamera = ignoreCameras;
-        if ( ignoreCamera === undefined ) {
-            ignoreCamera = true;
-        }
+        if ( ignoreCamera === undefined ) ignoreCamera = true;
+
         var matrix = Matrix.create();
 
         var j = 0;
         if ( ignoreCamera ) {
-            for ( j = nodePath.length - 1; j > 0; j-- ) {
+
+            for ( j = nodePath.length - 1; j >= 0; j-- ) {
                 var camera = nodePath[ j ];
                 if ( camera.className() === 'Camera' &&
-                    ( camera.getReferenceFrame !== TransformEnums.RELATIVE_RF || camera.getParents().length === 0 ) ) {
+                    ( camera.getReferenceFrame() !== TransformEnums.RELATIVE_RF || camera.getParents().length === 0 ) ) {
                     break;
                 }
             }
+
+            // because when we break it's to an index - 1
+            // it works because if nothing camera found j == -1 at the end of the loop
+            // and if we found a camera we want to start at the camera index + 1
+            j += 1;
         }
 
         for ( var i = j, l = nodePath.length; i < l; i++ ) {
@@ -27,6 +35,7 @@ define( [
                 node.computeLocalToWorldMatrix( matrix );
             }
         }
+
         return matrix;
     };
 
