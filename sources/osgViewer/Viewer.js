@@ -273,8 +273,8 @@ define( [
 
             canvasStats.addLayer( '#ff0fff', 65,
                 function ( /*t*/) {
-                    var fn = this.getFrameStamp().getFrameNumber()-1;
-                    var value = this.getViewerStats().getAveragedAttribute( fn-25, fn, 'Frame rate' );
+                    var fn = this.getFrameStamp().getFrameNumber() - 1;
+                    var value = this.getViewerStats().getAveragedAttribute( fn - 25, fn, 'Frame rate' );
                     return value;
                 }.bind( this ),
                 function ( a ) {
@@ -283,7 +283,7 @@ define( [
 
             canvasStats.addLayer( '#ffff00', maxMS,
                 function ( /*t*/) {
-                    var fn = this.getFrameStamp().getFrameNumber()-1;
+                    var fn = this.getFrameStamp().getFrameNumber() - 1;
                     var value = this.getViewerStats().getAttribute( fn, 'Frame duration' );
                     return value * 1000.0;
                 }.bind( this ),
@@ -293,7 +293,7 @@ define( [
 
             canvasStats.addLayer( '#d07b1f', maxMS,
                 function ( /*t*/) {
-                    var fn = this.getFrameStamp().getFrameNumber()-1;
+                    var fn = this.getFrameStamp().getFrameNumber() - 1;
                     var value = this.getViewerStats().getAttribute( fn, 'Update duration' );
                     return value * 1000.0;
                 }.bind( this ),
@@ -303,7 +303,7 @@ define( [
 
             canvasStats.addLayer( '#73e0ff', maxMS,
                 function ( /*t*/) {
-                    var fn = this.getFrameStamp().getFrameNumber()-1;
+                    var fn = this.getFrameStamp().getFrameNumber() - 1;
                     var value = this.getViewerStats().getAttribute( fn, 'Cull duration' );
                     return value * 1000.0;
                 }.bind( this ),
@@ -313,7 +313,7 @@ define( [
 
             canvasStats.addLayer( '#ff0000', maxMS,
                 function ( /*t*/) {
-                    var fn = this.getFrameStamp().getFrameNumber()-1;
+                    var fn = this.getFrameStamp().getFrameNumber() - 1;
                     var value = this.getViewerStats().getAttribute( fn, 'Draw duration' );
                     return value * 1000.0;
                 }.bind( this ),
@@ -325,12 +325,12 @@ define( [
                 canvasStats.addLayer( '#00ff00',
                     window.performance.memory.totalJSHeapSize,
                     function ( /*t*/) {
-                        var fn = this.getFrameStamp().getFrameNumber()-1;
+                        var fn = this.getFrameStamp().getFrameNumber() - 1;
                         var value = this.getViewerStats().getAttribute( fn, 'Heap size' );
                         return value;
                     }.bind( this ),
                     function ( a ) {
-                        var v = a / ( 1024*1024);
+                        var v = a / ( 1024 * 1024 );
                         return 'Memory : ' + v.toFixed( 2 ) + ' Mb';
                     } );
             }
@@ -372,6 +372,14 @@ define( [
             // setup framestamp
             this._updateVisitor.setFrameStamp( this.getFrameStamp() );
 
+
+            // Update Manipulator/Event
+            if ( this.getManipulator() ) {
+                this.getManipulator().update( this._updateVisitor );
+                Matrix.copy( this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix() );
+            }
+
+            // update the scene
             this.getScene().updateSceneGraph( this._updateVisitor );
 
             // In OSG this.is deferred until the draw traversal, to handle multiple contexts
@@ -440,13 +448,6 @@ define( [
 
             // update inputs devices
             this.updateEventProxy( this._eventProxy, this.getFrameStamp() );
-
-            // Update Manipulator/Event
-            // should be merged with the update of game pad below
-            if ( this.getManipulator() ) {
-                this.getManipulator().update( this._updateVisitor );
-                Matrix.copy( this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix() );
-            }
 
             this.updateTraversal();
             this.renderingTraversal();
