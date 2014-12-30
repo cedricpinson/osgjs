@@ -2,6 +2,8 @@ define( [
     'osgUtil/osgPool'
 ], function ( osgPool ) {
 
+    'use strict';
+
     var StateGraph = function () {
         this.depth = 0;
         this.children = {};
@@ -30,9 +32,11 @@ define( [
         getStateSet: function () {
             return this.stateset;
         },
+
         findOrInsert: function ( stateset ) {
             var sg;
-            if ( !this.children[ stateset.id ] ) {
+            var stateSetID = stateset.getInstanceID();
+            if ( !this.children[ stateSetID ] ) {
 
                 //sg = new StateGraph();
                 sg = osgPool.memoryPools.stateGraph.get();
@@ -40,10 +44,10 @@ define( [
                 sg.parent = this;
                 sg.depth = this.depth + 1;
                 sg.stateset = stateset;
-                this.children[ stateset.id ] = sg;
-                this.children.keys.push( stateset.id );
+                this.children[ stateSetID ] = sg;
+                this.children.keys.push( stateSetID );
             } else {
-                sg = this.children[ stateset.id ];
+                sg = this.children[ stateSetID ];
             }
             return sg;
         },
