@@ -9,11 +9,8 @@ define( [
     'osg/Lod',
     'osg/NodeVisitor',
     'osg/Matrix',
-    'osg/Vec3',
-    'osg/Node',
-    'osg/Geometry',
-    'osg/Notify'
-], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Node, Geometry, Notify ) {
+    'osg/Vec3'
+], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3 ) {
     /**
      *  PagedLOD that can contains paged child nodes
      *  @class PagedLod
@@ -37,6 +34,7 @@ define( [
         this.timeStamp = 0.0;
         this.frameNumber = 0;
         this.frameNumberOfLastTraversal = 0;
+        this.dbrequest = undefined;
     };
 
     /** @lends PagedLOD.prototype */
@@ -86,32 +84,6 @@ define( [
             // this.perRangeDataList.push ( null );
         },
 
-        loadNode: function ( perRangeData, node ) {
-            if ( perRangeData.function === undefined )
-                this.loadNodeFromURL( perRangeData, node );
-            else this.loadNodeFromFunction( perRangeData, node );
-        },
-
-        loadNodeFromURL: function ( perRangeData, node ) {
-            // TODO:
-            // we could implement a IndexedDB layer here
-            Notify.log( 'loading ' + perRangeData.filename );
-            var ReaderParser = require( 'osgDB/ReaderParser' );
-            // Call to ReaderParser just in case there is a custom readNodeURL Callback
-            // See osgDB/Options.js and/or osgDB/Input.js
-            Q.when ( ReaderParser.readNodeURL( perRangeData.filename ) ).then( function ( child ) {
-                node.addChildNode( child );
-            } );
-
-        },
-
-        loadNodeFromFunction: function ( perRangeData, node ) {
-            // Need to call with this paged lod as parent
-            Q.when( ( perRangeData.function )( this ) ).then( function ( child ) {
-                node.addChildNode( child );
-            } );
-        },
-
         removeExpiredChildren: function ( frameStamp, gl ) {
 
             var ReleaseVisitor = function ( gl ) {
@@ -135,6 +107,7 @@ define( [
                         this.children[ i ].accept( new ReleaseVisitor( gl ) );
                         this.removeChild( this.children[ i ] );
                         this._perRangeDataList[ i ].loaded = false;
+                        this._perRangeDataList[ i ].dbrequest = undefined;
                         numChildren--;
                     }
                 } else {
@@ -221,7 +194,16 @@ define( [
                             var group = visitor.nodePath[ visitor.nodePath.length - 1 ];
                             if ( this._perRangeDataList[ numChildren ].loaded === false ) {
                                 this._perRangeDataList[ numChildren ].loaded = true;
-                                this.loadNode( this._perRangeDataList[ numChildren ], group );
+                                // if ( !this._perRangeDataList[ numChildren ].filename.length )
+                                //     // Load from function
+                                //     this.loadNode( this._perRangeDataList[ numChildren ], group, visitor.databasePager );
+                                // else
+                                //     // Load from file
+                                    this._perRangeDataList[ numChildren ].dbrequest = visitor.databasePager.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime() );
+                            } else {
+                                // Update timestamp of the request.
+                                if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined)
+                                    this._perRangeDataList[ numChildren ].dbrequest._timeStamp = visitor.getFrameStamp().getSimulationTime();
                             }
                         }
                     }

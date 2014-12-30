@@ -372,6 +372,7 @@ define( [
         },
 
         update: function () {
+            this.getDatabasePager().updateSceneGraph( this._updateVisitor.getFrameStamp() );
             this.getScene().accept( this._updateVisitor );
             // We do the flushDeletedGLObjects in the udpate phase because we can only have one context
             // In OSG that is deferred until the draw traversal, to handle multiple contexts
@@ -418,6 +419,9 @@ define( [
             this._renderStage.setClearMask( camera.getClearMask() );
             this._renderStage.setViewport( camera.getViewport() );
 
+            // pass de dbpager to the visitor, so plod's can do the requests
+            this._cullVisitor.databasePager = this.getDatabasePager();
+
             // Check if Frustum culling is enabled to calculate the clip planes
             if ( this._options.getBoolean( 'enableFrustumCulling' ) === true ) {
                 this._cullVisitor.setEnableFrustumCulling( true );
@@ -437,6 +441,7 @@ define( [
             this._renderStage.sort();
         },
         draw: function () {
+            //this.flushDeletedGLObjects( 0.005 );
             var state = this.getState();
             this._renderStage.draw( state );
 

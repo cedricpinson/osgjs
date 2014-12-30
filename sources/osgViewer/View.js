@@ -12,8 +12,9 @@ define( [
     'osg/WebGLCaps',
     'osg/Texture',
     'osgUtil/IntersectionVisitor',
-    'osgUtil/LineSegmentIntersector'
-], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, WebGLCaps, Texture, IntersectionVisitor, LineSegmentIntersector ) {
+    'osgUtil/LineSegmentIntersector',
+    'osgDB/DatabasePager'
+], function ( Camera, Node, FrameStamp, Material, Depth, BlendFunc, CullFace, Viewport, Matrix, Light, WebGLCaps, Texture, IntersectionVisitor, LineSegmentIntersector, DatabasePager ) {
 
     'use strict';
 
@@ -21,6 +22,7 @@ define( [
         this._graphicContext = undefined;
         this._camera = new Camera();
         this._scene = new Node();
+        this._databasePager = new DatabasePager();
         this._sceneData = undefined;
         this._frameStamp = new FrameStamp();
         this._lightingMode = undefined;
@@ -148,7 +150,9 @@ define( [
         getScene: function () {
             return this._scene;
         },
-
+        getDatabasePager: function () {
+            return this._databasePager;
+        },
         getManipulator: function () {
             return this._manipulator;
         },
