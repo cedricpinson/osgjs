@@ -238,8 +238,7 @@ define( [
         // CP: I guess it should move into Scene in something like an ImagePager things ?
         flushDeletedGLObjects: function ( /*currentTime,*/ availableTime ) {
             // Flush all deleted OpenGL objects within the specified availableTime
-            Texture.textureManager.flushDeletedTextureObjects( this.getGraphicContext(), availableTime );
-            // More GL Objects....
+            this.getCamera().getRenderer().getState().getTextureManager().flushDeletedTextureObjects( this.getGraphicContext(), availableTime );
         }
 
     };

@@ -2,14 +2,18 @@ define( [
     'osg/Map',
     'osg/Matrix',
     'osg/Notify',
+    'osg/Object',
     'osg/StateAttribute',
     'osg/Stack',
-    'osg/Uniform'
-], function ( Map, Matrix, Notify, StateAttribute, Stack, Uniform ) {
+    'osg/TextureManager',
+    'osg/Uniform',
+    'osg/Utils'
+], function ( Map, Matrix, Notify, Object, StateAttribute, Stack, TextureManager, Uniform, MACROUTILS ) {
 
     'use strict';
 
     var State = function ( shaderGeneratorProxy ) {
+        Object.call( this );
 
         this._graphicContext = undefined;
         this._shaderGeneratorProxy = shaderGeneratorProxy;
@@ -47,9 +51,17 @@ define( [
         this.vertexAttribMap._keys = [];
 
         this._frameStamp = undefined;
+
+        // texture manager is referenced here because it's associated with gl object
+        // of the gl context intialized with State
+        this._textureManager = new TextureManager();
     };
 
-    State.prototype = {
+    State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+
+        getTextureManager: function() {
+            return this._textureManager;
+        },
 
         setGraphicContext: function ( graphicContext ) {
             this._graphicContext = graphicContext;
@@ -832,10 +844,7 @@ define( [
         }
 
 
-
-
-
-    };
+    } ), 'osg', 'State' );
 
     return State;
 } );
