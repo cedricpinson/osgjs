@@ -242,7 +242,7 @@ define( [
         // dirty parameters only regenarate parameter
         // dirty texture object needs to release a texture and
         // re allocate one
-        dirtyTextureParameters: function() {
+        dirtyTextureParameters: function () {
             this.dirty(); // it's a workaround right now
         },
 
@@ -320,11 +320,19 @@ define( [
         },
 
         setType: function ( value ) {
+            Notify.log( 'Texture.setType is deprecated, use instead Texture.setInternalFormatType' );
+            this.setInternalFormatType( value );
+        },
+
+        setInternalFormatType: function ( value ) {
             if ( typeof ( value ) === 'string' ) {
                 this._type = Texture[ value ];
             } else {
                 this._type = value;
             }
+        },
+        getInternalFormatType: function () {
+            return this._type;
         },
 
         setUnrefImageDataAfterApply: function ( bool ) {
@@ -515,7 +523,7 @@ define( [
     };
 
     Texture.createFromURL = function ( imageSource, format ) {
-        Notify.log('Texture.createFromURL is deprecated, use instead osgDB.readImageURL' );
+        Notify.log( 'Texture.createFromURL is deprecated, use instead osgDB.readImageURL' );
         var texture = new Texture();
         Q.when( ReaderParser.readImage( imageSource ) ).then(
             function ( img ) {
