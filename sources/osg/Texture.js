@@ -320,11 +320,19 @@ define( [
         },
 
         setType: function ( value ) {
+            Notify.log('Texture.setType is deprecated, use instead Texture.setInternalFormatType');
+            this.setInternalFormatType( value );
+        },
+
+        setInternalFormatType: function ( value ) {
             if ( typeof ( value ) === 'string' ) {
                 this._type = Texture[ value ];
             } else {
                 this._type = value;
             }
+        },
+        getInternalFormatType: function() {
+            return this._type;
         },
 
         setUnrefImageDataAfterApply: function ( bool ) {

@@ -601,7 +601,7 @@ function createSceneReal() {
         var texture = new osg.Texture();
         if ( extension ) {
             osg.log( extension );
-            texture.setType( 'FLOAT' );
+            texture.setInternalFormatType( 'FLOAT' );
         }
         texture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
         texture.setMinFilter( 'LINEAR' );
@@ -612,7 +612,7 @@ function createSceneReal() {
 
         var positionTexture = new osg.Texture();
         if ( extension ) {
-            positionTexture.setType( 'FLOAT' );
+            positionTexture.setInternalFormatType( 'FLOAT' );
         }
         positionTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
         positionTexture.setMinFilter( 'LINEAR' );
@@ -1057,7 +1057,7 @@ function createSceneTestNormal() {
             var texture = new osg.Texture();
             if ( extension ) {
                 osg.log( extension );
-                texture.setType( 'FLOAT' );
+                texture.setInternalFormatType( 'FLOAT' );
             }
             texture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
             texture.setMinFilter( 'NEAREST' );
@@ -1160,7 +1160,7 @@ function createSceneTestReconstructPosition() {
             var positionTexture = new osg.Texture();
             var extension = Viewer.getState().getGraphicContext().getExtension( 'OES_texture_float' );
             if ( extension ) {
-                positionTexture.setType( 'FLOAT' );
+                positionTexture.setInternalFormatType( 'FLOAT' );
             }
             positionTexture.setTextureSize( textureSize[ 0 ], textureSize[ 1 ] );
             positionTexture.setMinFilter( 'NEAREST' );
