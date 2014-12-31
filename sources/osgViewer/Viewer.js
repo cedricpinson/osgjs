@@ -101,6 +101,7 @@ define( [
         this._startTick = Timer.instance().tick();
         this._stats = new Stats( 'Viewer' );
         this._canvasStats = undefined;
+        this._done = false;
 
         var options = this.initOptions( userOptions );
         var gl = this.initWebGLContext( canvas, options, error );
@@ -112,8 +113,10 @@ define( [
         // more natural
         MACROUTILS.init();
 
-
         this.initDeviceEvents( options, canvas );
+        this.initStats( options, canvas );
+
+        this._updateVisitor = new UpdateVisitor();
 
         this.setUpView( gl.canvas, options );
     };
@@ -139,11 +142,13 @@ define( [
 
             // gamepade
             eventsBackend.GamePad = eventsBackend.GamePad || {};
+
+            this._eventProxy = this.initEventProxy( options );
         },
 
         initOptions: function ( userOptions ) {
             // use default options
-            var options = Options.getOrCreateInstance();
+            var options = new Options();
 
             if ( userOptions ) {
                 // user options override by user options
@@ -152,6 +157,12 @@ define( [
 
             // if url options override url options
             options.extend( OptionsURL );
+
+
+            // Check if Frustum culling is enabled to calculate the clip planes
+            if ( options.getBoolean( 'enableFrustumCulling' ) === true )
+                this.getCamera().getRenderer().getCullVisitor().setEnableFrustumCulling( true );
+
 
             return options;
         },
@@ -194,20 +205,14 @@ define( [
         },
 
         init: function () {
-            this._done = false;
-
-            this._updateVisitor = new UpdateVisitor();
-
-            this.initStats( Options.getOrCreateInstance() );
-
-            this._eventProxy = this.initEventProxy( Options.getOrCreateInstance() );
+            //this._done = false;
         },
 
         getState: function () {
             return this.getCamera().getRenderer().getState();
         },
 
-        initStats: function ( options ) {
+        initStats: function ( options, canvas ) {
 
             if ( !options.stats )
                 return;
@@ -234,7 +239,7 @@ define( [
                     '<div style="top: 0; position: absolute; width: 300px; height: 150px; z-index: 10;">',
                     '<div style="position: relative;">',
                     '<canvas id="' + gridID + '" width="300" height="150" style="z-index:-1; position: absolute; background: rgba(14,14,14,0.8); " ></canvas>',
-                    '<canvas id="' +statsCanvasID+ '" width="300" height="150" style="z-index:8; position: absolute;" ></canvas>',
+                    '<canvas id="' + statsCanvasID + '" width="300" height="150" style="z-index:8; position: absolute;" ></canvas>',
                     '<canvas id="' + statsCanvasTextID + '" width="300" height="150" style="z-index:9; position: absolute;" ></canvas>',
                     '</div>',
 

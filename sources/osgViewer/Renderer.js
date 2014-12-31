@@ -4,14 +4,13 @@ define( [
     'osg/CullVisitor',
     'osg/Matrix',
     'osg/Object',
-    'osg/Options',
     'osg/RenderStage',
     'osg/State',
     'osg/StateGraph',
 
     'osgShader/osgShader',
 
-], function ( MACROUTILS, CullVisitor, Matrix, Object, Options, RenderStage, State, StateGraph, osgShader ) {
+], function ( MACROUTILS, CullVisitor, Matrix, Object, RenderStage, State, StateGraph, osgShader ) {
 
     'use strict';
 
@@ -48,10 +47,6 @@ define( [
             stateSet.setAttributeAndModes( new osg.BlendFunc() );
             stateSet.setAttributeAndModes( new osg.CullFace() );
 
-            // Check if Frustum culling is enabled to calculate the clip planes
-            var options = Options.getOrCreateInstance();
-            if ( options.getBoolean( 'enableFrustumCulling' ) === true )
-                this._cullVisitor.setEnableFrustumCulling( true );
         },
 
         getCullVisitor: function() {

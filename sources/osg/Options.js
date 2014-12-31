@@ -19,18 +19,6 @@ define( [
     };
 
 
-    // singleton
-    Options.getOrCreateInstance = function( create ) {
-
-        if ( create )
-            return new Options();
-
-        if ( !Options.instance )
-            Options.instance = new Options();
-
-        return Options.instance;
-    };
-
     Options.prototype = {
 
         extend: function( options ) {

@@ -32,7 +32,7 @@ define( [
             viewer.setupManipulator();
             viewer.init();
             viewer.frame();
-            var uv = viewer.getCamera().getRenderer()._cullVisitor;
+            var uv = viewer.getCamera().getRenderer().getCullVisitor();
             var root = new Node();
             root.setName( 'a' );
             var b = new Node();
