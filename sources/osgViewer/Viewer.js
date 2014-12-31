@@ -101,6 +101,7 @@ define( [
         this._startTick = Timer.instance().tick();
         this._stats = new Stats( 'Viewer' );
         this._canvasStats = undefined;
+        this._done = false;
 
         var options = this.initOptions( userOptions );
         var gl = this.initWebGLContext( canvas, options, error );
@@ -112,8 +113,10 @@ define( [
         // more natural
         MACROUTILS.init();
 
-
         this.initDeviceEvents( options, canvas );
+        this.initStats( options, canvas );
+
+        this._updateVisitor = new UpdateVisitor();
 
         this.setUpView( gl.canvas, options );
     };
@@ -139,11 +142,13 @@ define( [
 
             // gamepade
             eventsBackend.GamePad = eventsBackend.GamePad || {};
+
+            this._eventProxy = this.initEventProxy( options );
         },
 
         initOptions: function ( userOptions ) {
             // use default options
-            var options = Options.getOrCreateInstance();
+            var options = new Options();
 
             if ( userOptions ) {
                 // user options override by user options
@@ -152,6 +157,12 @@ define( [
 
             // if url options override url options
             options.extend( OptionsURL );
+
+
+            // Check if Frustum culling is enabled to calculate the clip planes
+            if ( options.getBoolean( 'enableFrustumCulling' ) === true )
+                this.getCamera().getRenderer().getCullVisitor().setEnableFrustumCulling( true );
+
 
             return options;
         },
@@ -194,20 +205,14 @@ define( [
         },
 
         init: function () {
-            this._done = false;
-
-            this._updateVisitor = new UpdateVisitor();
-
-            this.initStats( Options.getOrCreateInstance() );
-
-            this._eventProxy = this.initEventProxy( Options.getOrCreateInstance() );
+            //this._done = false;
         },
 
         getState: function () {
             return this.getCamera().getRenderer().getState();
         },
 
-        initStats: function ( options ) {
+        initStats: function ( options, canvas ) {
 
             if ( !options.stats )
                 return;
@@ -224,31 +229,36 @@ define( [
             }
 
             var createDomElements = function ( elementToAppend ) {
-                var dom = [
-                    '<div id="StatsDiv" style="top: 0; position: absolute; width: 300px; height: 150px; z-index: 10;">',
+                var id = Math.floor( Math.random() * 1000 );
 
-                    '<div id="StatsCanvasDiv" style="position: relative;">',
-                    '<canvas id="StatsCanvasGrid" width="300" height="150" style="z-index:-1; position: absolute; background: rgba(14,14,14,0.8); " ></canvas>',
-                    '<canvas id="StatsCanvas" width="300" height="150" style="z-index:8; position: absolute;" ></canvas>',
-                    '<canvas id="StatsCanvasText" width="300" height="150" style="z-index:9; position: absolute;" ></canvas>',
+                var gridID = 'StatsCanvasGrid' + id.toString();
+                var statsCanvasID = 'StatsCanvas' + id.toString();
+                var statsCanvasTextID = 'StatsCanvasText' + id.toString();
+
+                var dom = [
+                    '<div style="top: 0; position: absolute; width: 300px; height: 150px; z-index: 10;">',
+                    '<div style="position: relative;">',
+                    '<canvas id="' + gridID + '" width="300" height="150" style="z-index:-1; position: absolute; background: rgba(14,14,14,0.8); " ></canvas>',
+                    '<canvas id="' + statsCanvasID + '" width="300" height="150" style="z-index:8; position: absolute;" ></canvas>',
+                    '<canvas id="' + statsCanvasTextID + '" width="300" height="150" style="z-index:9; position: absolute;" ></canvas>',
                     '</div>',
 
                     '</div>'
                 ].join( '\n' );
+
                 var parent;
+
                 if ( elementToAppend === undefined ) {
                     parent = document.body;
-                    //elementToAppend = 'body';
                 } else {
-                    parent = document.getElementById( elementToAppend );
+                    parent = elementToAppend;
                 }
 
-                //jQuery(dom).appendTo(elementToAppend);
                 var mydiv = document.createElement( 'div' );
                 mydiv.innerHTML = dom;
                 parent.appendChild( mydiv );
 
-                var grid = document.getElementById( 'StatsCanvasGrid' );
+                var grid = document.getElementById( gridID );
                 var ctx = grid.getContext( '2d' );
                 ctx.clearRect( 0, 0, grid.width, grid.height );
 
@@ -263,12 +273,13 @@ define( [
                 }
 
                 return {
-                    graph: document.getElementById( 'StatsCanvas' ),
-                    text: document.getElementById( 'StatsCanvasText' )
+                    graph: document.getElementById( statsCanvasID ),
+                    text: document.getElementById( statsCanvasTextID )
                 };
             };
 
-            var domStats = createDomElements();
+            var elementToAttach = canvas.parentNode;
+            var domStats = createDomElements( elementToAttach );
             var canvasStats = new CanvasStats( domStats.graph, domStats.text );
 
             canvasStats.addLayer( '#ff0fff', 65,
@@ -319,6 +330,28 @@ define( [
                 }.bind( this ),
                 function ( a ) {
                     return 'DrawTime: ' + a.toFixed( 2 ) + ' ms';
+                } );
+
+            canvasStats.addLayer( '#f0f000', 256,
+                function ( /*t*/) {
+                    var fn = this.getFrameStamp().getFrameNumber() - 1;
+                    var stats = this.getCamera().getRenderer().getState().getTextureManager().getStats();
+                    var value = stats.getAttribute( fn, 'Texture used' );
+                    return value / ( 1024 * 1024 );
+                }.bind( this ),
+                function ( a ) {
+                    return 'Texture used: ' + a.toFixed( 2 ) + ' MB';
+                } );
+
+            canvasStats.addLayer( '#f00f00', 256,
+                function ( /*t*/) {
+                    var fn = this.getFrameStamp().getFrameNumber() - 1;
+                    var stats = this.getCamera().getRenderer().getState().getTextureManager().getStats();
+                    var value = stats.getAttribute( fn, 'Texture total' );
+                    return value / ( 1024 * 1024 );
+                }.bind( this ),
+                function ( a ) {
+                    return 'Texture total: ' + a.toFixed( 2 ) + ' MB';
                 } );
 
             if ( window.performance && window.performance.memory && window.performance.memory.totalJSHeapSize ) {
@@ -433,8 +466,10 @@ define( [
 
             this.getViewerStats().setAttribute( frameNumber, 'Frame duration', Timer.instance().deltaS( this._startFrameTick, Timer.instance().tick() ) );
 
-            if ( this._canvasStats ) // update ui stats
+            if ( this._canvasStats ) { // update ui stats
+                this.getCamera().getRenderer().getState().getTextureManager().updateStats( frameNumber );
                 this._canvasStats.update();
+            }
         },
 
         frame: function () {

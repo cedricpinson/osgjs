@@ -17,17 +17,18 @@ define( [
 
     /** @lends TextureCubeMap.prototype */
     TextureCubeMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Texture.prototype, {
+
         setDefaultParameters: function () {
             Texture.prototype.setDefaultParameters.call( this );
             this._textureTarget = Texture.TEXTURE_CUBE_MAP;
 
             this._flipY = false;
         },
+
         cloneType: function () {
-            var t = new TextureCubeMap();
-            t.defaultType = true;
-            return t;
+            return new TextureCubeMap();
         },
+
         setImage: function ( face, img, imageFormat ) {
 
             if ( typeof ( face ) === 'string' ) {
@@ -53,8 +54,12 @@ define( [
             this._images[ face ].image = image;
             this._images[ face ].format = imageFormat;
             this._images[ face ].dirty = true;
+
+            this._textureNull = false;
+
             this.dirty();
         },
+
         getImage: function ( face ) {
             return this._images[ face ].image;
         },
@@ -103,21 +108,28 @@ define( [
         },
 
         apply: function ( state ) {
+
+            // if need to release the texture
+            if ( this._dirtyTextureObject )
+                this.releaseGLObjects( state );
+
             var gl = state.getGraphicContext();
 
             if ( this._textureObject !== undefined && !this.isDirty() ) {
                 this._textureObject.bind( gl );
 
-            } else if ( this.defaultType ) {
+            } else if ( this._textureNull ) {
+
                 gl.bindTexture( this._textureTarget, null );
 
             } else {
+
                 if ( !this._textureObject ) {
 
                     // must be called before init
                     this.computeTextureFormat();
 
-                    this.init( gl );
+                    this.init( state );
                 }
                 this._textureObject.bind( gl );
 
@@ -139,7 +151,10 @@ define( [
                 }
             } // render to cubemap not yet implemented
         }
+
     } ), 'osg', 'TextureCubeMap' );
+
+    MACROUTILS.setTypeID( TextureCubeMap );
 
     return TextureCubeMap;
 } );

@@ -1,8 +1,9 @@
 define( [
     'osg/Notify',
+    'osg/Stats',
     'osg/Timer'
 
-], function ( Notify, Timer ) {
+], function ( Notify, Stats, Timer ) {
 
     var TextureProfile = function( target, internalFormat, width, height ) {
         this._target = target;
@@ -86,6 +87,7 @@ define( [
         getProfile: function() { return this._profile; },
         getUsedTextureObjects: function() { return this._usedTextureObjects; },
         getOrphanedTextureObjects: function() { return this._orphanedTextureObjects; },
+
         takeOrGenerate: function( gl, texture ) {
 
             var textureObject;
@@ -105,18 +107,17 @@ define( [
 
         // get texture object from pool
         takeFromOrphans: function() {
-            if ( this._orphanedTextureObjects.length ) {
-                var textureObject = this._orphanedTextureObjects.pop();
-                this._usedTextureObjects.push( textureObject );
-                return textureObject;
-            }
+
+            if ( this._orphanedTextureObjects.length )
+                return this._orphanedTextureObjects.pop();
+
             return undefined;
         },
 
         // release texture object
         orphan: function( textureObject ) {
             var index = this._usedTextureObjects.indexOf( textureObject );
-            if ( index > -1 ) {
+            if ( index !== -1 ) {
                 this._orphanedTextureObjects.push( this._usedTextureObjects[ index ] );
                 this._usedTextureObjects.splice( index, 1 );
             }
@@ -161,6 +162,7 @@ define( [
 
     var TextureManager = function() {
         this._textureSetMap = {};
+        this._stats = new Stats( 'Texture' );
     };
 
     TextureManager.prototype = {
@@ -182,6 +184,28 @@ define( [
             var textureObject = textureSet.takeOrGenerate( gl, texture );
             return textureObject;
         },
+
+        updateStats: function( frameNumber ) {
+            var totalUsed = 0;
+            var totalUnused = 0;
+            Object.keys( this._textureSetMap ).forEach( function( key ) {
+                var profile = this._textureSetMap[ key ].getProfile();
+                var size = profile.getSize();
+                var nbUsed = this._textureSetMap[ key ].getUsedTextureObjects().length;
+                var nbUnused = this._textureSetMap[ key ].getOrphanedTextureObjects().length;
+                totalUsed += nbUsed * size;
+                totalUnused += nbUnused * size;
+            }, this );
+
+            this._stats.setAttribute( frameNumber, 'Texture used', totalUsed );
+            this._stats.setAttribute( frameNumber, 'Texture allocated', totalUnused );
+            this._stats.setAttribute( frameNumber, 'Texture total', totalUsed + totalUnused );
+        },
+
+        getStats: function() {
+            return this._stats;
+        },
+
         reportStats: function() {
             var total = 0;
             Object.keys( this._textureSetMap ).forEach( function( key ) {

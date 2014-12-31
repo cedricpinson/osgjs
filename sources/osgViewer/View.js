@@ -108,10 +108,7 @@ define( [
                 if ( clientWidth < 1 ) clientWidth = 1;
                 if ( clientHeight < 1 ) clientHeight = 1;
 
-                var devicePixelRatio = 1;
-                if ( Options.getOrCreateInstance().getBoolean( 'useDevicePixelRatio' ) ) {
-                    devicePixelRatio = window.devicePixelRatio || 1;
-                }
+                var devicePixelRatio = this._devicePixelRatio;
 
                 var widthPixel = Math.max( clientWidth * devicePixelRatio, 1 );
                 var heightPixel = Math.max( clientHeight * devicePixelRatio, 1 );
@@ -130,6 +127,11 @@ define( [
         } )(),
 
         setUpView: function ( canvas, options ) {
+
+            if ( options.getBoolean( 'useDevicePixelRatio' ) ) {
+                this._devicePixelRatio = window.devicePixelRatio || 1;
+            }
+
             this.computeCanvasSize( canvas );
 
             var ratio = canvas.clientWidth / canvas.clientHeight;
@@ -238,8 +240,7 @@ define( [
         // CP: I guess it should move into Scene in something like an ImagePager things ?
         flushDeletedGLObjects: function ( /*currentTime,*/ availableTime ) {
             // Flush all deleted OpenGL objects within the specified availableTime
-            Texture.textureManager.flushDeletedTextureObjects( this.getGraphicContext(), availableTime );
-            // More GL Objects....
+            this.getCamera().getRenderer().getState().getTextureManager().flushDeletedTextureObjects( this.getGraphicContext(), availableTime );
         }
 
     };

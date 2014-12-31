@@ -430,7 +430,7 @@
             texture.setMagFilter( this._config.texture3UnitMagFilter );
             texture.setMaxAnisotropy( this._config.texture3UnitAnisotropy );
             //TODO: better dirty when setting dynamically a filter
-            texture.releaseGLObjects();
+            texture.dirtyTextureParameters();
             this._stateSet3.setTextureAttributeAndModes( 0, texture );
 
             idx = this._textureNames.indexOf( this._config.texture3Unit1 );
@@ -440,7 +440,7 @@
             texture.setMagFilter( this._config.texture3UnitMagFilter );
             texture.setMaxAnisotropy( this._config.texture3UnitAnisotropy );
             //TODO: better dirty when setting dynamically a filter
-            texture.releaseGLObjects();
+            texture.dirtyTextureParameters();
             this._stateSet3.setTextureAttributeAndModes( 1, texture );
 
         },
