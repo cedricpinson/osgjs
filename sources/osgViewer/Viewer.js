@@ -340,12 +340,12 @@ define( [
 
         getViewerStats: function () {
             return this._stats;
-
         },
 
         renderingTraversal: function () {
 
             var frameNumber = this.getFrameStamp().getFrameNumber();
+
             if ( this.getScene().getSceneData() )
                 this.getScene().getSceneData().getBound();
 

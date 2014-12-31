@@ -9,6 +9,9 @@ define( [
     'osg/Matrix',
     'osg/Vec3'
 ], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3 ) {
+
+    'use strict';
+
     /**
      *  PagedLOD that can contains paged child nodes
      *  @class PagedLod
@@ -79,7 +82,6 @@ define( [
 
         addChildNode: function ( node ) {
             Lod.prototype.addChildNode.call( this, node );
-            // this.perRangeDataList.push ( null );
         },
 
         removeExpiredChildren: function ( frameStamp, gl ) {
@@ -189,8 +191,7 @@ define( [
                         }
                         // now request the loading of the next unloaded child.
                         if ( numChildren < this._range.length ) {
-
-                            // Here we should do the request
+                            // Here we do the request
                             var group = visitor.nodePath[ visitor.nodePath.length - 1 ];
                             if ( this._perRangeDataList[ numChildren ].loaded === false ) {
                                 this._perRangeDataList[ numChildren ].loaded = true;

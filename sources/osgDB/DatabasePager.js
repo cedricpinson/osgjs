@@ -7,6 +7,8 @@ define( [
     'Q',
     'osg/Utils'
 ], function ( Q, MACROUTILS ) {
+
+    'use strict';
     /**
      * Database paging class which manages the loading of files 
      * and synchronizing of loaded models with the main scene graph.
@@ -46,7 +48,6 @@ define( [
             if ( this._progressCallback !== undefined )
             {
                 // Maybe we should encapsulate this in a promise. 
-                
                 if ( this._pendingRequests.length > 0 || this._pendingNodes.length > 0 )
                 {
                     this._progressCallback( this._pendingRequests.length + this._downloadingRequestsNumber, this._pendingNodes.length );
@@ -66,25 +67,27 @@ define( [
             
             if (!this._loading )
             {
+                // Now taking one request per frame. Should be changed.
                 this.takeRequests ( 1 );
             }
             this.addLoadedDataToSceneGraph( frameStamp );
         },
 
         removeExpiredSubgraphs : function (/* frameStamp */) {
-         //   console.log( 'frameStamp:' , frameStamp.getFrameNumber( ) );
+            // TODO:
+            // First traverse and remove inactive PagedLODs, as their children will
+            // certainly have expired. Then traverse active nodes if we still
+            // need to prune.
         },
 
         setProgressCallback: function ( cb ) {
             this._progressCallback = cb;
         },
 
-        addLoadedDataToSceneGraph : function ( /*frameStamp*/) {
+        addLoadedDataToSceneGraph : function ( /*frameStamp*/ ) {
             // Prune the list of database requests.
             // TODO: control the time using frameStamp to not use too much time
             if ( this._pendingNodes.length ) {
-                // Take the first element of the array. We are adding the nodes LIFO
-                // Could it be better to add the nodes FIFO?
                 var request = this._pendingNodes.shift( );
                 request._group.addChildNode( request._loadedModel );
             }
@@ -106,14 +109,14 @@ define( [
             if ( this._pendingRequests.length )
             {
                 // Sort requests depending on timestamp
-                this._pendingRequests.sort(function (r1, r2) { return r1.timestamp - r2.timestamp; } );
+                this._pendingRequests.sort( function( r1, r2 ){ return r1.timestamp - r2.timestamp; } );
                 // TODO: Purge old requests depending on timestamp or if we have more than a specific number
                 if( this._pendingRequests.length < number )
                     number = this._pendingRequests.length;
-                for ( var i =0; i < number ; i++)
+                for ( var i = 0; i < number ; i++ )
                 {
-                    this.processRequest ( this._pendingRequests.shift() );
-                    this._downloadingRequestsNumber ++;
+                    this.processRequest( this._pendingRequests.shift() );
+                    this._downloadingRequestsNumber++;
                 }
             }
         },
@@ -130,9 +133,7 @@ define( [
                     that._loading = false;
                 } );
             } else { // Load from URL
-                Q.when( this.loadURL( dbrequest._url ) ).then( function( child ) {
-                    // All the results from Q.all are on the argument as an array
-                    // Now insert children in the right order
+                Q.when( this.loadNodeFromURL( dbrequest._url ) ).then( function( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
                     that._pendingNodes.push( dbrequest );
@@ -143,7 +144,7 @@ define( [
         },
 
         loadNodeFromFunction: function ( func, plod ) {
-            // Need to call with this paged lod as parent
+            // Need to call with pagedLOD as parent, to be able to have multiresolution structures.
             var defer = Q.defer();
             Q.when( ( func )( plod ) ).then( function ( child ) {
                 defer.resolve( child );
@@ -151,7 +152,7 @@ define( [
             return defer.promise;
         },
 
-        loadURL: function ( url ) {
+        loadNodeFromURL: function ( url ) {
             var ReaderParser = require( 'osgDB/ReaderParser' );
             var defer = Q.defer();
             // Call to ReaderParser just in case there is a custom readNodeURL Callback
