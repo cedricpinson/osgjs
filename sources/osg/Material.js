@@ -3,9 +3,8 @@ define( [
     'osg/StateAttribute',
     'osg/Vec4',
     'osg/Uniform',
-    'osgShader/ShaderGeneratorProxy',
     'osg/Map'
-], function ( MACROUTILS, StateAttribute, Vec4, Uniform, ShaderGenerator, Map ) {
+], function ( MACROUTILS, StateAttribute, Vec4, Uniform, Map ) {
     'use strict';
 
     // Define a material attribute

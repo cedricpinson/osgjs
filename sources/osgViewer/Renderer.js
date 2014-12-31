@@ -14,7 +14,7 @@ define( [
 
     'use strict';
 
-    var Renderer = function( camera ) {
+    var Renderer = function ( camera ) {
         Object.call( this );
 
         this._state = undefined;
@@ -29,9 +29,9 @@ define( [
 
     Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
 
-        setDefaults: function() {
+        setDefaults: function () {
 
-            this._state = new State( new osgShader.ShaderGeneratorProxy( true ) );
+            this._state = new State( new osgShader.ShaderGeneratorProxy() );
 
             this._cullVisitor = new CullVisitor();
             this._renderStage = new RenderStage();
@@ -40,7 +40,7 @@ define( [
             this.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
 
 
-            var osg = require('osg/osg');
+            var osg = require( 'osg/osg' );
             var stateSet = this.getCamera().getOrCreateStateSet(); //new osg.StateSet();
             stateSet.setAttributeAndModes( new osg.Material() );
             stateSet.setAttributeAndModes( new osg.Depth() );
@@ -49,49 +49,49 @@ define( [
 
         },
 
-        getCullVisitor: function() {
+        getCullVisitor: function () {
             return this._cullVisitor;
         },
 
-        getCamera: function() {
+        getCamera: function () {
             return this._camera;
         },
 
-        setFrameStamp: function( fs ) {
+        setFrameStamp: function ( fs ) {
             this._frameStamp = fs;
         },
 
-        getFrameStamp: function( ) {
+        getFrameStamp: function () {
             return this._frameStamp;
         },
 
-        getState: function() {
+        getState: function () {
             return this._state;
         },
 
-        setState: function( state ) {
+        setState: function ( state ) {
             this._state = state;
         },
 
-        setGraphicContext: function( gc ) {
+        setGraphicContext: function ( gc ) {
             this._state.setGraphicContext( gc );
         },
 
-        getGraphicContext: function() {
+        getGraphicContext: function () {
             return this._state.getGraphicContext();
         },
 
-        cullAndDraw: function() {
+        cullAndDraw: function () {
             this.cull();
             this.draw();
         },
 
-        cull: ( function() {
+        cull: ( function () {
 
             var projectionMatrixTmp = Matrix.create();
             var viewMatrixTmp = Matrix.create();
 
-            return function() {
+            return function () {
 
                 var camera = this.getCamera();
                 var view = camera.getView();
@@ -120,7 +120,7 @@ define( [
                 camera.getBound();
 
                 var light = view.getLight();
-                var View = require('osgViewer/View');
+                var View = require( 'osgViewer/View' );
 
                 if ( light ) {
 
@@ -162,9 +162,9 @@ define( [
                 this._renderStage.sort();
 
             };
-        })(),
+        } )(),
 
-        draw: function() {
+        draw: function () {
 
             var state = this.getState();
             this._renderStage.draw( state );
@@ -181,4 +181,4 @@ define( [
 
     return Renderer;
 
-});
+} );

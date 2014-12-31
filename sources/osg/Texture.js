@@ -5,10 +5,9 @@ define( [
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Image',
-    'osgShader/ShaderGeneratorProxy',
     'osgDB/ReaderParser',
     'osg/Map'
-], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ShaderGenerator, ReaderParser, Map ) {
+], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ReaderParser, Map ) {
 
     'use strict';
 
