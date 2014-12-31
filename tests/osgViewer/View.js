@@ -16,7 +16,6 @@ define( [
 
             ok( view.getScene() !== undefined, 'Check scene' );
             ok( view.getSceneData() === undefined, 'Check scene data' );
-            ok( view.getScene().getStateSet() !== undefined, 'Check scene stateset' );
         } );
     };
 } );

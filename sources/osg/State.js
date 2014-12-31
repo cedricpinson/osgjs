@@ -45,6 +45,8 @@ define( [
         this.vertexAttribMap = {};
         this.vertexAttribMap._disable = [];
         this.vertexAttribMap._keys = [];
+
+        this._frameStamp = undefined;
     };
 
     State.prototype = {

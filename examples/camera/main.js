@@ -23,7 +23,7 @@
         var textureQuad = osg.createTexturedQuadGeometry( 0, 0, 0,
                                                   rttSize[ 0 ], 0, 0,
                                                   0, rttSize[ 1 ], 0 );
-        textureQuad.getOrCreateStateSet().setTextureAttributeAndMode( 0, osg.Texture.createFromURL( 'textures/sol_trauma_periph.png' ) );
+        textureQuad.getOrCreateStateSet().setTextureAttributeAndModes( 0, osg.Texture.createFromURL( 'textures/sol_trauma_periph.png' ) );
         rttCamera.addChild( textureQuad );
 
         // we attach the target texture to our camera
@@ -41,7 +41,7 @@
         var texturedQuadUsingTargetTexture = osg.createTexturedQuadGeometry( -25, -25, 0,
                                                                      50, 0, 0,
                                                                      0, 50, 0 );
-        texturedQuadUsingTargetTexture.getOrCreateStateSet().setTextureAttributeAndMode( 0, rttTargetTexture );
+        texturedQuadUsingTargetTexture.getOrCreateStateSet().setTextureAttributeAndModes( 0, rttTargetTexture );
 
         var root = new osg.Node();
 

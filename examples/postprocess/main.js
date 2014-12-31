@@ -75,7 +75,7 @@ function createScene( width, height, gui ) {
     var quad = osg.createTexturedQuadGeometry( -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
         quadSize[ 0 ], 0, 0,
         0, 0, quadSize[ 1 ] );
-    quad.getOrCreateStateSet().setAttributeAndMode( getTextureShader() );
+    quad.getOrCreateStateSet().setAttributeAndModes( getTextureShader() );
 
     var scene = new osg.MatrixTransform();
 
@@ -86,7 +86,7 @@ function createScene( width, height, gui ) {
     finalTexture.setMagFilter( osg.Texture.LINEAR );
 
     // Set the final texture on the quad
-    quad.getOrCreateStateSet().setTextureAttributeAndMode( 0, finalTexture );
+    quad.getOrCreateStateSet().setTextureAttributeAndModes( 0, finalTexture );
 
     var postScenes = [
         getPostSceneToneMapping(),
@@ -164,7 +164,7 @@ var main = function () {
 
     var rotate = new osg.MatrixTransform();
     rotate.addChild( createScene( canvas.width, canvas.height, gui ) );
-    rotate.getOrCreateStateSet().setAttributeAndMode( new osg.CullFace( 'DISABLE' ) );
+    rotate.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
     var viewer = new osgViewer.Viewer( canvas );
     viewer.init();

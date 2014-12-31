@@ -84,16 +84,16 @@ function createProjectedShadowScene(model)
     var light = new osg.MatrixTransform();
     light.lightShadow = new osg.Light();
     light.setUpdateCallback(new LightUpdateCallback(shadowNode.getMatrix()));
-    light.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
+    light.getOrCreateStateSet().setAttributeAndModes(light.lightShadow);
 
-    shadowNode.getOrCreateStateSet().setTextureAttributeAndMode(0, new osg.Texture(), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE);
-    shadowNode.getOrCreateStateSet().setAttributeAndMode(new osg.CullFace('DISABLE'), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE);
+    shadowNode.getOrCreateStateSet().setTextureAttributeAndModes(0, new osg.Texture(), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE);
+    shadowNode.getOrCreateStateSet().setAttributeAndModes(new osg.CullFace('DISABLE'), osg.StateAttribute.OFF | osg.StateAttribute.OVERRIDE);
     var materialDisabled = new osg.Material();
     materialDisabled.setEmission([0,0,0,1]);
     materialDisabled.setAmbient([0,0,0,1]);
     materialDisabled.setDiffuse([0,0,0,1]);
     materialDisabled.setSpecular([0,0,0,1]);
-    shadowNode.getOrCreateStateSet().setAttributeAndMode(materialDisabled, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    shadowNode.getOrCreateStateSet().setAttributeAndModes(materialDisabled, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
 
     light.addChild(model);
     root.addChild(light);
@@ -263,7 +263,7 @@ function createTextureProjectedShadowScene(model)
     matDark.setAmbient(black);
     matDark.setDiffuse(black);
     matDark.setSpecular(black);
-    shadowNode.getOrCreateStateSet().setAttributeAndMode(matDark, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    shadowNode.getOrCreateStateSet().setAttributeAndModes(matDark, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
 
     var rttTexture = new osg.Texture();
     rttTexture.setTextureSize(rttSize[0],rttSize[1]);
@@ -275,16 +275,16 @@ function createTextureProjectedShadowScene(model)
 
     var shadowMatrix = [];
     light.lightShadow = new osg.Light();
-    light.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
+    light.getOrCreateStateSet().setAttributeAndModes(light.lightShadow);
 
     var q = osg.createTexturedQuadGeometry(-10,-10,-5.0,
                                   20, 0 ,0,
                                   0, 20 ,0);
-    q.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('ONE', 'ONE_MINUS_SRC_ALPHA'));
-    q.getOrCreateStateSet().setAttributeAndMode(new osg.Depth('LESS', 0.0, 1.0,false));
+    q.getOrCreateStateSet().setAttributeAndModes(new osg.BlendFunc('ONE', 'ONE_MINUS_SRC_ALPHA'));
+    q.getOrCreateStateSet().setAttributeAndModes(new osg.Depth('LESS', 0.0, 1.0,false));
 
-    q.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
-    q.getOrCreateStateSet().setAttributeAndMode(getTextureProjectedShadowShader());
+    q.getOrCreateStateSet().setTextureAttributeAndModes(0, rttTexture);
+    q.getOrCreateStateSet().setAttributeAndModes(getTextureProjectedShadowShader());
     var projectionShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ProjectionShadow");
     var modelViewShadow = new osg.Uniform.createMatrix4(osg.Matrix.create(), "ModelViewShadow");
     q.getOrCreateStateSet().addUniform(projectionShadow);
@@ -306,8 +306,8 @@ function createTextureProjectedShadowScene(model)
     var quad = osg.createTexturedQuadGeometry(0,0,0,
                                       rttSize[0], 0 ,0,
                                       0, rttSize[1],0);
-    quad.getOrCreateStateSet().setTextureAttributeAndMode(0, rttTexture);
-    quad.getOrCreateStateSet().setAttributeAndMode(getBlurrShader());
+    quad.getOrCreateStateSet().setTextureAttributeAndModes(0, rttTexture);
+    quad.getOrCreateStateSet().setAttributeAndModes(getBlurrShader());
     var blurredTexture = new osg.Texture();
     blurredTexture.setTextureSize(rttSize[0],rttSize[1]);
     blurredTexture.setMinFilter('LINEAR');
@@ -317,7 +317,7 @@ function createTextureProjectedShadowScene(model)
     blurr.addChild(quad);
 
     // the one used for the final
-    q.getOrCreateStateSet().setTextureAttributeAndMode(0, blurredTexture);
+    q.getOrCreateStateSet().setTextureAttributeAndModes(0, blurredTexture);
 
     //root.addChild(model);
     root.addChild(light);
@@ -762,7 +762,7 @@ function createShadowMapScene(model)
     rtt.setName("rtt_camera");
     rttSize = [512,512];
 
-    scene.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('ONE','ONE_MINUS_SRC_ALPHA'));
+    scene.getOrCreateStateSet().setAttributeAndModes(new osg.BlendFunc('ONE','ONE_MINUS_SRC_ALPHA'));
 
     // important because we use linear zbuffer
     var near = 70.0;
@@ -780,7 +780,7 @@ function createShadowMapScene(model)
     rtt.setViewport(new osg.Viewport(0,0,rttSize[0],rttSize[1]));
     rtt.setClearColor([1, 1, 1, 0.0]);
 
-    shadowScene.getOrCreateStateSet().setAttributeAndMode(getShadowMapShaderLight(), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    shadowScene.getOrCreateStateSet().setAttributeAndModes(getShadowMapShaderLight(), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
     shadowScene.getOrCreateStateSet().addUniform(nearShadow);
     shadowScene.getOrCreateStateSet().addUniform(farShadow);
 
@@ -794,15 +794,15 @@ function createShadowMapScene(model)
     light.addChild(rtt);
 
     light.lightShadow = new osg.Light();
-    light.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
+    light.getOrCreateStateSet().setAttributeAndModes(light.lightShadow);
 
     var q = osg.createTexturedQuadGeometry(-10,-10,-5.0,
                                   20, 0 ,0,
                                   0, 20 ,0);
     var stateSet = new osg.StateSet();
     var prg = getOgreShadowMapShader();
-    stateSet.setAttributeAndMode( prg, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
-    stateSet.setTextureAttributeAndMode(1, rttTexture, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    stateSet.setAttributeAndModes( prg, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
+    stateSet.setTextureAttributeAndModes(1, rttTexture, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE);
 
     // tracking should be automatic
     stateSet.addUniform(osg.Uniform.createInt1(1, "Texture1"));
@@ -822,8 +822,8 @@ function createShadowMapScene(model)
 
     var groundUniform = osg.Uniform.createInt1(1,'ground');
     q.getOrCreateStateSet().addUniform(groundUniform);
-//    q.getOrCreateStateSet().setAttributeAndMode(new osg.Depth('LESS', 0.0, 1.0, false));
-    q.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('ONE','ONE_MINUS_SRC_ALPHA'));
+//    q.getOrCreateStateSet().setAttributeAndModes(new osg.Depth('LESS', 0.0, 1.0, false));
+    q.getOrCreateStateSet().setAttributeAndModes(new osg.BlendFunc('ONE','ONE_MINUS_SRC_ALPHA'));
     scene.setStateSet(stateSet);
 
 
@@ -836,7 +836,7 @@ function createShadowMapScene(model)
 
     models.addChild(q);
 
-    root.getOrCreateStateSet().setAttributeAndMode(light.lightShadow);
+    root.getOrCreateStateSet().setAttributeAndModes(light.lightShadow);
 
     root.addChild(light);
     root.addChild(scene);

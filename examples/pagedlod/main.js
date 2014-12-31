@@ -28,7 +28,7 @@ var main = function () {
         var materialGround = new osg.Material();
         materialGround.setAmbient( [ 1 * i / 8, 1 * i / 2 , 1 * i / 2, 1 ] );
         materialGround.setDiffuse( [ 0, 0, 0, 1 ] );
-        node.getOrCreateStateSet().setAttributeAndMode( materialGround );
+        node.getOrCreateStateSet().setAttributeAndModes( materialGround );
         return node;
     }
 

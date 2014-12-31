@@ -58,6 +58,9 @@ define( [
     Texture.LINEAR_MIPMAP_NEAREST = 0x2701;
     Texture.NEAREST_MIPMAP_LINEAR = 0x2702;
     Texture.LINEAR_MIPMAP_LINEAR = 0x2703;
+    // filter anisotropy
+    Texture.TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
+    Texture.MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 
     // wrap mode
     Texture.CLAMP_TO_EDGE = 0x812F;
@@ -120,10 +123,12 @@ define( [
 
             return Texture.uniforms[ unit ];
         },
+
         setDefaultParameters: function () {
             this._image = undefined;
             this._magFilter = Texture.LINEAR;
             this._minFilter = Texture.LINEAR;
+            this._maxAnisotropy = 1.0;
             this._wrapS = Texture.CLAMP_TO_EDGE;
             this._wrapT = Texture.CLAMP_TO_EDGE;
             this._textureWidth = 0;
@@ -142,6 +147,7 @@ define( [
         setColorSpaceConversion: function ( enumValue ) {
             this._colorSpaceConversion = enumValue;
         },
+
         setFlipY: function ( bool ) {
             this._flipY = bool;
         },
@@ -190,7 +196,8 @@ define( [
             if ( this._textureObject !== undefined && this._textureObject !== null ) {
                 Texture.textureManager.releaseTextureObject( this._textureObject );
                 this._textureObject = undefined;
-                this._image = undefined;
+                if ( this._unrefImageDataAfterApply )
+                    this._image = undefined;
             }
         },
 
@@ -201,14 +208,6 @@ define( [
         getWrapS: function () {
             return this._wrapS;
         },
-        getMinFilter: function () {
-            return this._minFilter;
-        },
-        getMagFilter: function () {
-            return this._magFilter;
-        },
-
-
         setWrapS: function ( value ) {
 
             if ( typeof ( value ) === 'string' ) {
@@ -218,10 +217,11 @@ define( [
             } else {
 
                 this._wrapS = value;
-
             }
-        },
 
+            this.dirtyTextureParameters();
+
+        },
 
         setWrapT: function ( value ) {
 
@@ -232,35 +232,56 @@ define( [
             } else {
 
                 this._wrapT = value;
-
             }
+
+            this.dirtyTextureParameters();
         },
 
+        // TODO CP:
+        // we should split dirty texture object of parameters
+        // dirty parameters only regenarate parameter
+        // dirty texture object needs to release a texture and
+        // re allocate one
+        dirtyTextureParameters: function () {
+            this.dirty(); // it's a workaround right now
+        },
 
+        getMinFilter: function () {
+            return this._minFilter;
+        },
+        getMagFilter: function () {
+            return this._magFilter;
+        },
+
+        // https://www.opengl.org/registry/specs/EXT/texture_filter_anisotropic.txt
+        setMaxAnisotropy: function ( multiplier ) {
+            this._maxAnisotropy = multiplier;
+            this.dirtyTextureParameters();
+        },
+
+        getMaxAnisotropy: function () {
+            return this._maxAnisotropy;
+        },
+
+        // some value enable mipmapping
         setMinFilter: function ( value ) {
-
             if ( typeof ( value ) === 'string' ) {
-
                 this._minFilter = checkAndFixEnum( value, Texture.LINEAR );
-
             } else {
-
                 this._minFilter = value;
-
             }
+            this.dirtyTextureParameters();
         },
 
+        // Either Linear or nearest.
         setMagFilter: function ( value ) {
 
             if ( typeof ( value ) === 'string' ) {
-
                 this._magFilter = checkAndFixEnum( value, Texture.LINEAR );
-
             } else {
-
                 this._magFilter = value;
-
             }
+            this.dirtyTextureParameters();
         },
 
         setImage: function ( img, imageFormat ) {
@@ -286,6 +307,7 @@ define( [
         getImage: function () {
             return this._image;
         },
+
         setImageFormat: function ( imageFormat ) {
             if ( imageFormat ) {
                 if ( typeof ( imageFormat ) === 'string' ) {
@@ -296,13 +318,23 @@ define( [
                 this._imageFormat = Texture.RGBA;
             }
         },
+
         setType: function ( value ) {
+            Notify.log( 'Texture.setType is deprecated, use instead Texture.setInternalFormatType' );
+            this.setInternalFormatType( value );
+        },
+
+        setInternalFormatType: function ( value ) {
             if ( typeof ( value ) === 'string' ) {
                 this._type = Texture[ value ];
             } else {
                 this._type = value;
             }
         },
+        getInternalFormatType: function () {
+            return this._type;
+        },
+
         setUnrefImageDataAfterApply: function ( bool ) {
             this._unrefImageDataAfterApply = bool;
         },
@@ -323,8 +355,12 @@ define( [
 
         applyFilterParameter: function ( gl, target ) {
 
+
             var powerOfTwo = isPowerOf2( this._textureWidth ) && isPowerOf2( this._textureHeight );
             if ( !powerOfTwo ) {
+                // NPOT non support in webGL explained here
+                // https://www.khronos.org/webgl/wiki/WebGL_and_OpenGL_Differences#Non-Power_of_Two_Texture_Support
+                // so disabling mipmap...
                 this.setWrapT( Texture.CLAMP_TO_EDGE );
                 this.setWrapS( Texture.CLAMP_TO_EDGE );
 
@@ -333,9 +369,16 @@ define( [
                     this.setMinFilter( Texture.LINEAR );
                 }
             }
-
             gl.texParameteri( target, gl.TEXTURE_MAG_FILTER, this._magFilter );
             gl.texParameteri( target, gl.TEXTURE_MIN_FILTER, this._minFilter );
+
+
+            // handle extension EXT_texture_filter_anisotropic
+            if ( this._maxAnisotropy > 1.0 && Texture.ANISOTROPIC_SUPPORT_EXT ) {
+                var multiplier = this._maxAnisotropy < Texture.ANISOTROPIC_SUPPORT_MAX ? this._maxAnisotropy : Texture.ANISOTROPIC_SUPPORT_MAX;
+                gl.texParameterf( target, Texture.TEXTURE_MAX_ANISOTROPY_EXT, multiplier );
+            }
+
             gl.texParameteri( target, gl.TEXTURE_WRAP_S, this._wrapS );
             gl.texParameteri( target, gl.TEXTURE_WRAP_T, this._wrapT );
         },
@@ -408,7 +451,6 @@ define( [
                             this.init( gl );
                         }
 
-                        this.setDirty( false );
                         this._textureObject.bind( gl );
 
                         if ( image.isTypedArray() ) {
@@ -439,6 +481,8 @@ define( [
                             this._image = undefined;
                         }
 
+                        this.setDirty( false );
+
                     } else {
                         gl.bindTexture( this._textureTarget, null );
                     }
@@ -463,16 +507,6 @@ define( [
     } ), 'osg', 'Texture' );
 
 
-    Texture.createFromURL = function ( imageSource, format ) {
-        var texture = new Texture();
-        Q.when( ReaderParser.readImage( imageSource ) ).then(
-            function ( img ) {
-                texture.setImage( img, format );
-            }
-        );
-        return texture;
-    };
-
     Texture.createFromImage = function ( image, format ) {
         var a = new Texture();
         a.setImage( image, format );
@@ -487,6 +521,18 @@ define( [
         Notify.log( 'Texture.create is deprecated, use Texture.createFromURL instead' );
         return Texture.createFromURL( url );
     };
+
+    Texture.createFromURL = function ( imageSource, format ) {
+        Notify.log( 'Texture.createFromURL is deprecated, use instead osgDB.readImageURL' );
+        var texture = new Texture();
+        Q.when( ReaderParser.readImage( imageSource ) ).then(
+            function ( img ) {
+                texture.setImage( img, format );
+            }
+        );
+        return texture;
+    };
+
 
     return Texture;
 } );

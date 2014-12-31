@@ -97,7 +97,7 @@
             var ground = osg.createTexturedBox( 0, 0, 0, size, size, size );
 
             group.addChild( ground );
-            group.getOrCreateStateSet().setAttributeAndMode( new osg.CullFace( 'DISABLE' ) );
+            group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
             return group;
         }

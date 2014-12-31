@@ -34,9 +34,10 @@
                 console.log( 'autoNearFar: ' + viewer.getCamera().getComputeNearFar() );
             },
             frustumculling: function () {
+                var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
+                cullVisitor.setEnableFrustumCulling( !cullVisitor._enableFrustumCulling );
 
-                viewer._cullVisitor.setEnableFrustumCulling( !viewer._cullVisitor._enableFrustumCulling );
-                console.log( 'frustumCull ' + viewer._cullVisitor._enableFrustumCulling );
+                console.log( 'frustumCull ' + cullVisitor._enableFrustumCulling );
             },
             near: '0',
             far: '0',
@@ -173,9 +174,9 @@
                 var groundTex = osg.Texture.createFromURL( '../media/textures/seamless/bricks1.jpg' );
                 groundTex.setWrapT( 'MIRRORED_REPEAT' );
                 groundTex.setWrapS( 'MIRRORED_REPEAT' );
-                ground.getOrCreateStateSet().setTextureAttributeAndMode( 0, groundTex );
+                ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, groundTex );
 
-                ground.getOrCreateStateSet().setAttributeAndMode( new osg.CullFace( osg.CullFace.DISABLE ), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
+                ground.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
 
                 var emptyTex = new osg.Texture();
                 emptyTex.defaultType = true;
@@ -376,7 +377,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
 
                     quad.setName( 'debugCompoQuadGeom' );
 
-                    stateset.setTextureAttributeAndMode( 0, texture );
+                    stateset.setTextureAttributeAndModes( 0, texture );
                     stateset.setAttributeAndModes( program );
                     stateset.setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
 
@@ -432,7 +433,8 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             // not working for now
             // will when fix current culling attachable
             // only to main cam et setted only globally once
-            viewer._cullVisitor.setEnableFrustumCulling( true );
+            var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
+            cullVisitor.setEnableFrustumCulling( true );
 
             viewer.getCamera().setComputeNearFar( true );
             viewer.getCamera().setName( 'main' );

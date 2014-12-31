@@ -286,6 +286,18 @@ define( [
             }
         },
 
+        initFrustrumPlanes: ( function() {
+
+            var mvp = Matrix.create();
+
+            return function ( camera ) {
+                if ( this._enableFrustumCulling === true ) {
+                    Matrix.mult( camera.getProjectionMatrix(), camera.getViewMatrix(), mvp );
+                    this.getFrustumPlanes( mvp, this._frustum );
+                }
+            };
+        })(),
+
         setEnableFrustumCulling: function ( value ) {
             this._enableFrustumCulling = value;
         },

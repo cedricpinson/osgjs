@@ -223,7 +223,7 @@
 
         var ground = getModel();
 
-        ground.getOrCreateStateSet().setAttributeAndMode( getShader() );
+        ground.getOrCreateStateSet().setAttributeAndModes( getShader() );
 
         Q.all( [
             osgDB.readImage( 'textures/posx.jpg' ),
@@ -249,10 +249,10 @@
 
             texture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
 
-            ground.getOrCreateStateSet().setTextureAttributeAndMode( 0, texture );
+            ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
             ground.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
 
-            background.getOrCreateStateSet().setTextureAttributeAndMode( 0, texture );
+            background.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
             background.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
         } );
 

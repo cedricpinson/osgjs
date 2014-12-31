@@ -129,7 +129,7 @@ define( [
             promiseArray.push( df.promise );
             Q.when( promise ).then( function ( attribute ) {
                 if ( attribute !== undefined ) {
-                    stateSet.setAttributeAndMode( attribute );
+                    stateSet.setAttributeAndModes( attribute );
                 }
                 df.resolve();
             } );
@@ -149,7 +149,7 @@ define( [
             promiseArray.push( df.promise );
             Q.when( promise ).then( function ( attribute ) {
                 if ( attribute )
-                    stateSet.setTextureAttributeAndMode( unit, attribute );
+                    stateSet.setTextureAttributeAndModes( unit, attribute );
                 df.resolve();
             } );
         };

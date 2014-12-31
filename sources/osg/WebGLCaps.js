@@ -152,6 +152,13 @@ define( [
                 var sup = supported[ i ];
                 ext[ sup ] = gl.getExtension( sup );
             }
+
+            var anisoExt = this.getWebGLExtension( 'EXT_texture_filter_anisotropic' );
+            if ( anisoExt ) {
+                Texture.ANISOTROPIC_SUPPORT_EXT = true;
+                Texture.ANISOTROPIC_SUPPORT_MAX = gl.getParameter( anisoExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT );
+            }
+
         }
     };
 

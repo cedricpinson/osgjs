@@ -144,8 +144,8 @@ define( [
     var createQuadRtt = function ( isLeftCam, texture, ocUnifs ) {
         var quad = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0 );
         var orStateSet = quad.getOrCreateStateSet();
-        orStateSet.setTextureAttributeAndMode( 0, texture );
-        orStateSet.setAttributeAndMode( getOculusShader() );
+        orStateSet.setTextureAttributeAndModes( 0, texture );
+        orStateSet.setAttributeAndModes( getOculusShader() );
         orStateSet.addUniform( new Uniform.createFloat2( ocUnifs.scale, 'uScale' ) );
         orStateSet.addUniform( new Uniform.createFloat2( ocUnifs.scaleIn, 'uScaleIn' ) );
         orStateSet.addUniform( new Uniform.createFloat2( isLeftCam ? ocUnifs.lensCenterLeft : ocUnifs.lensCenterRight, 'uLensCenter' ) );

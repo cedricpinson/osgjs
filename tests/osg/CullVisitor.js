@@ -32,7 +32,7 @@ define( [
             viewer.setupManipulator();
             viewer.init();
             viewer.frame();
-            var uv = viewer._cullVisitor;
+            var uv = viewer.getCamera().getRenderer()._cullVisitor;
             var root = new Node();
             root.setName( 'a' );
             var b = new Node();
@@ -85,7 +85,7 @@ define( [
                 viewer.setupManipulator();
                 viewer.init();
                 viewer.frame();
-                var cull = viewer._cullVisitor;
+                var cull = viewer.getCamera().getRenderer()._cullVisitor;
 
                 var camera0 = new Camera();
                 camera0.setRenderOrder( Camera.NESTED_RENDER );
@@ -422,7 +422,7 @@ define( [
                 var viewer = new Viewer( canvas );
                 viewer.init();
                 viewer.frame();
-                var cull = viewer._cullVisitor;
+                var cull = viewer.getCamera().getRenderer()._cullVisitor;
                 //var cull = new CullVisitor();
                 var rs = new RenderStage();
                 var sg = new StateGraph();
@@ -448,7 +448,7 @@ define( [
                 var viewer = new Viewer( canvas );
                 viewer.init();
                 viewer.frame();
-                var cull = viewer._cullVisitor;
+                var cull = viewer.getCamera().getRenderer()._cullVisitor;
                 var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
                 var node0 = new MatrixTransform();
@@ -503,7 +503,7 @@ define( [
                 viewer.init();
 
                 viewer.frame();
-                var cull = viewer._cullVisitor;
+                var cull = viewer.getCamera().getRenderer()._cullVisitor;
                 var m = cull._currentRenderBin.getStage().positionedAttribute[ 0 ][ 0 ];
                 // Test for HeadLight, matrix should be identity
                 mockup.near( m, [ 1, 0, -0, 0,
@@ -538,19 +538,19 @@ define( [
                 scene.addChild( mt );
                 viewer.setSceneData( scene );
                 viewer.init();
-                viewer.update();
+                viewer.updateTraversal();
                 // Build the frustum planes to check against them
-                viewer.cull();
+                viewer.renderingTraversal();
 
                 // Get the cullVisitor and push the nodepath, simulating a scene traversal.
-                var cull = viewer._cullVisitor;
+                var cull = viewer.getCamera().getRenderer().getCullVisitor();
                 cull.nodePath = [];
                 cull.nodePath.push( scene );
                 cull.nodePath.push( mt );
                 var culled = cull.isCulled( quad );
                 ok( culled === false, 'scene should not be culled' );
 
-                // Translate outside of the frustum, scene should not be culled now
+                // Translate outside of the frustum, scene should be culled now
                 Matrix.setTrans( mat, 200, 0, 0 );
                 culled = cull.isCulled( quad );
                 ok( culled === true, 'scene should be culled' );

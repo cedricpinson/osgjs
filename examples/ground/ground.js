@@ -7,7 +7,7 @@ var Ground = function () {
     osg.MatrixTransform.call( this );
 
     // Height position of the ground, applied with the translateMatrix
-    // This value is normalized for all models and is scaled by the model scale factor 
+    // This value is normalized for all models and is scaled by the model scale factor
     // 0: center, -1: under, 1: above
     this._normalizedHeight = 0.0;
 
@@ -32,8 +32,8 @@ var Ground = function () {
     );
     this._color = osg.Uniform.createFloat3( [ 0.7, 0.7, 0.7 ], 'groundColor' );
 
-    quad.getOrCreateStateSet().setAttributeAndMode( getShader() );
-    quad.getOrCreateStateSet().setAttributeAndMode( new osg.BlendFunc( 'SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA' ) );
+    quad.getOrCreateStateSet().setAttributeAndModes( getShader() );
+    quad.getOrCreateStateSet().setAttributeAndModes( new osg.BlendFunc( 'SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA' ) );
     quad.getOrCreateStateSet().addUniform( this._color );
 
     this.addChild( quad );

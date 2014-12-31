@@ -151,7 +151,7 @@ define( [
                     var tex = new Texture();
                     setTexture( tex, textures[ t ] );
 
-                    osgjs.setTextureAttributeAndMode( t, tex );
+                    osgjs.setTextureAttributeAndModes( t, tex );
                     osgjs.addUniform( Uniform.createInt1( t, 'Texture' + t ) );
                 }
             }
@@ -160,7 +160,7 @@ define( [
             if ( blendfunc ) {
                 var newblendfunc = new BlendFunc();
                 setBlendFunc( newblendfunc, blendfunc );
-                osgjs.setAttributeAndMode( newblendfunc );
+                osgjs.setAttributeAndModes( newblendfunc );
             }
 
             var material = getFieldBackwardCompatible( 'Material', json );
@@ -168,7 +168,7 @@ define( [
                 var Material = require(  'osg/Material' );
                 var newmaterial = new Material();
                 setMaterial( newmaterial, material );
-                osgjs.setAttributeAndMode( newmaterial );
+                osgjs.setAttributeAndModes( newmaterial );
             }
         };
 

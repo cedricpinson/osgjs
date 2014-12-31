@@ -1,8 +1,6 @@
 /**
  * @author Jordi Torres
  */
-
-
 define( [
     'Q',
     'osg/Utils',
@@ -102,7 +100,7 @@ define( [
                 //First children never expires, also children added with addChild method should not be deleted
                 var timed = frameStamp.getSimulationTime() - this._perRangeDataList[ i ].timeStamp;
                 if ( ( timed > this._expiryTime ) && ( this._perRangeDataList[ i ].filename.length > 0 ||
-                                                    this._perRangeDataList[ i ].function !== undefined ) ){
+                    this._perRangeDataList[ i ].function !== undefined ) ) {
                     if ( i === this.children.length - 1 ) {
                         this.children[ i ].accept( new ReleaseVisitor( gl ) );
                         this.removeChild( this.children[ i ] );
@@ -123,12 +121,14 @@ define( [
             var zeroVector = Vec3.create();
             var eye = Vec3.create();
             var viewModel = Matrix.create();
+
             return function ( visitor ) {
+
                 var traversalMode = visitor.traversalMode;
                 var updateTimeStamp = false;
+
                 if ( visitor.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
                     updateTimeStamp = true;
-                    //this._frameNumberOfLastTraversal = visitor.getFrameStamp().getFrameNumber();
                 }
 
                 switch ( traversalMode ) {
@@ -157,7 +157,7 @@ define( [
                         requiredRange = this.projectBoundingSphere( this.getBound(), matrix, projmatrix[ 0 ] );
                         // Get the real area value
                         requiredRange = ( requiredRange * visitor.getViewport().width() * visitor.getViewport().width() ) * 0.25;
-                        if ( requiredRange < 0 ) requiredRange = this._range[ this._range.length -1 ][ 0 ];
+                        if ( requiredRange < 0 ) requiredRange = this._range[ this._range.length - 1 ][ 0 ];
                     }
 
                     var needToLoadChild = false;
@@ -165,10 +165,11 @@ define( [
                     for ( var j = 0; j < this._range.length; ++j ) {
                         if ( this._range[ j ][ 0 ] <= requiredRange && requiredRange < this._range[ j ][ 1 ] ) {
                             if ( j < this.children.length ) {
+
                                 if ( updateTimeStamp ) {
                                     this._perRangeDataList[ j ].timeStamp = visitor.getFrameStamp().getSimulationTime();
-                                    //this.perRangeDataList[j].frameNumber = visitor.getFrameStamp().getFrameNumber();
                                 }
+
                                 this.children[ j ].accept( visitor );
                                 lastChildTraversed = j;
                             } else {
@@ -182,7 +183,6 @@ define( [
 
                             if ( updateTimeStamp ) {
                                 this._perRangeDataList[ numChildren - 1 ].timeStamp = visitor.getFrameStamp().getSimulationTime();
-                                //this.perRangeDataList[numChildren -1].frameNumber = visitor.getFrameStamp().getFrameNumber();
                             }
 
                             this.children[ numChildren - 1 ].accept( visitor );
@@ -194,12 +194,8 @@ define( [
                             var group = visitor.nodePath[ visitor.nodePath.length - 1 ];
                             if ( this._perRangeDataList[ numChildren ].loaded === false ) {
                                 this._perRangeDataList[ numChildren ].loaded = true;
-                                // if ( !this._perRangeDataList[ numChildren ].filename.length )
-                                //     // Load from function
-                                //     this.loadNode( this._perRangeDataList[ numChildren ], group, visitor.databasePager );
-                                // else
-                                //     // Load from file
-                                    this._perRangeDataList[ numChildren ].dbrequest = visitor.databasePager.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime() );
+                                var dbhandler = visitor.getDatabaseRequestHandler();
+                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime() );
                             } else {
                                 // Update timestamp of the request.
                                 if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined)
@@ -207,8 +203,12 @@ define( [
                             }
                         }
                     }
+
                     // Remove the expired childs if any
+                    // CP: issue here, no gl context should be used here
+                    // it should be deferred in another part, check in osg to see how it's done
                     this.removeExpiredChildren( visitor.getFrameStamp(), visitor.getCurrentCamera().getGraphicContext() );
+
                     break;
 
                 default:
@@ -216,7 +216,6 @@ define( [
                 }
             };
         } )()
-
 
 
     } ), 'osg', 'PagedLOD' );
