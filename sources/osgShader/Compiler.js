@@ -23,6 +23,7 @@ define( [
         // separate Material / Light / Texture
         // because this shader generator is specific for this
         var lights = [];
+        var shadows = [];
         var material;
 
         for ( var i = 0, l = attributes.length; i < l; i++ ) {
@@ -39,6 +40,8 @@ define( [
                 if ( material !== undefined ) Notify.warn( 'Multiple Material attributes latest Chosen ' );
                 material = attributes[ i ];
 
+            } else if ( type === 'ShadowAttribute' ) {
+                shadows.push( attributes[ i ] );
             }
 
         }
@@ -46,7 +49,11 @@ define( [
 
         var texturesNum = textureAttributes.length;
         var textures = new Array( texturesNum );
+        var shadowTextures = new Array( texturesNum );
 
+        // TODO: Have to handle better textures
+        // 4 separate loop over texture list: one here, one for declareTexture, 2 for vertexShader (varying decl + varying store)
+        // (not counting loops done above in shader generator)
         for ( var j = 0; j < texturesNum; j++ ) {
 
             var tu = textureAttributes[ j ];
@@ -58,26 +65,51 @@ define( [
 
                     var tType = tuTarget.className();
 
+                    var texUnit;
+                    var tName;
                     if ( tType === 'Texture' ) {
 
-                        var texUnit = j;
-                        var tName = tType + texUnit;
-                        tuTarget.setName( tName );
-
+                        texUnit = j;
+                        tName = tuTarget.getName();
+                        if ( tuTarget.getName() === undefined ) {
+                            tName = tType + texUnit;
+                            tuTarget.setName( tName );
+                        }
                         textures[ texUnit ] = tuTarget;
+
+
                         this._texturesByName[ tName ] = {
                             variable: undefined,
                             textureUnit: texUnit
                         };
 
+                    } else if ( tType === 'ShadowTexture' ) {
+
+                        texUnit = j;
+                        tName = tuTarget.getName();
+                        if ( tuTarget.getName() === undefined ) {
+                            tName = tType + texUnit;
+                            tuTarget.setName( tName );
+                        }
+                        shadowTextures[ texUnit ] = tuTarget;
+
+                        this._texturesByName[ tName ] = {
+                            'variable': undefined,
+                            'textureUnit': texUnit,
+                            'shadow': true
+                        };
                     }
+                    // TODO: cubemap
+
                 }
             }
         }
 
         this._lights = lights;
+        this._shadows = shadows;
         this._material = material;
         this._textures = textures;
+        this._shadowsTextures = shadowTextures;
     };
 
     Compiler.prototype = {
@@ -242,10 +274,20 @@ define( [
             if ( this._material ) {
                 this.declareAttributeUniforms( this._material );
             }
-
-            for ( var t = 0; t < this._lights.length; t++ ) {
+            var t;
+            for ( t = 0; t < this._lights.length; t++ ) {
                 this.declareAttributeUniforms( this._lights[ t ] );
             }
+            for ( t = 0; t < this._shadows.length; t++ ) {
+                this.declareAttributeUniforms( this._shadows[ t ] );
+            }
+            /*
+            for ( t = 0; t < this._shadowsTextures.length; t++ ) {
+                if ( this._shadowsTextures[ t ] !== undefined ) {
+                    this.declareAttributeUniforms( this._shadowsTextures[ t ] );
+                }
+            }
+*/
 
         },
 
@@ -386,7 +428,12 @@ define( [
 
                 if ( textures.hasOwnProperty( tex ) ) {
                     var texture = textures[ tex ];
+
                     if ( !texture ) {
+                        continue;
+                    }
+
+                    if ( texture.shadow ) {
                         continue;
                     }
                     texturesInput.push( texture.variable );
@@ -439,7 +486,11 @@ define( [
                     textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
                 } else if ( texture.className() === 'TextureCubeMap' ) {
                     textureSampler = this.getOrCreateSampler( 'samplerCube', samplerName );
+                } else if ( texture.className() === 'ShadowTexture' ) {
+                    return;
+                    //textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
                 }
+
 
             }
 
@@ -498,6 +549,82 @@ define( [
 
             }
         },
+        createShadowingLight: function ( light, inputs, lightedOutput ) {
+
+            var k;
+            var shadow;
+            var shadowTexture;
+            var hasShadows = false;
+            var shadowTextures = new Array( this._shadowsTextures.length );
+            var lightIndex = -1;
+
+            // seach current light its corresponding shadow and shadowTextures.
+            // if none, no shadow, hop we go.
+            // TODO Link shadowTexture and shadowAttribute ?
+            for ( k = 0; k < this._shadows.length; k++ ) {
+                shadow = this._shadows[ k ];
+                if ( shadow.getLight() === light ) {
+                    lightIndex = k;
+                    for ( var p = 0; p < this._shadowsTextures.length; p++ ) {
+                        shadowTexture = this._shadowsTextures[ p ];
+                        if ( shadowTexture && shadowTexture.getLightUnit() === light.getLightNumber() ) {
+                            shadowTextures[ p ] = shadowTexture;
+                            hasShadows = true;
+                        }
+                    }
+                }
+
+            }
+            if ( !hasShadows ) return undefined;
+
+            // asserted we have a shadow we do the shadow node allocation
+            // and mult with lighted output
+
+
+            var shadowedOutput = this.createVariable( 'float' );
+
+            // shadow Attribute uniforms
+            var shadowUniforms = this.getOrCreateStateAttributeUniforms( this._shadows[ lightIndex ], 'shadow' );
+            inputs = MACROUTILS.objectMix( inputs, shadowUniforms );
+
+            // shadowTexture  Attribute uniforms AND varying
+            var tex, shadowVertexProjected, shadowZ;
+            // TODO: better handle multi texture shadow (CSM/PSM/etc.)
+            for ( k = 0; k < shadowTextures.length; k++ ) {
+
+                shadowTexture = shadowTextures[ k ];
+                if ( shadowTexture ) {
+                    tex = this.getOrCreateSampler( 'sampler2D', shadowTexture.getName() );
+                    inputs.shadowTexture = tex;
+                    // per texture uniforms
+                    var shadowTextureUniforms = this.getOrCreateStateAttributeUniforms( shadowTexture, 'shadowTexture' );
+
+                    inputs = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
+
+                    // Varyings
+                    // TODO: using getUniform name ? (varying ends with _uniform_)
+                    shadowVertexProjected = this.getOrCreateVarying( 'vec4', shadowTexture.getUniformName( 'VertexProjected' ) );
+                    shadowZ = this.getOrCreateVarying( 'vec4', shadowTexture.getUniformName( 'Z' ) );
+                    var shadowVarying = {
+                        shadowVertexProjected: shadowVertexProjected,
+                        shadowZ: shadowZ,
+                        lightEyeDir: inputs.lightEyeDir,
+                        lightNDL: inputs.lightNDL
+                    };
+                    inputs = MACROUTILS.objectMix( inputs, shadowVarying );
+                }
+
+            }
+            // TODO: shadow Attributes in node, is this the legit way
+            factory.getNode( 'Shadow' ).inputs( inputs ).outputs( {
+                float: shadowedOutput
+            } ).setShadowAttribute( shadow );
+
+            var lightAndShadowTempOutput = this.createVariable( 'vec3', 'lightAndShadowTempOutput' );
+            factory.getNode( 'Mult' ).inputs( lightedOutput, shadowedOutput ).outputs( lightAndShadowTempOutput );
+            return lightAndShadowTempOutput;
+
+        },
 
         createLighting: function ( materials ) {
 
@@ -510,6 +637,18 @@ define( [
                 POINT: 'PointLight'
             };
 
+
+            var lighted = this.createVariable( 'bool', 'lighted' );
+            var lightPos = this.createVariable( 'vec3', 'lightEyePos' );
+            var lightDir = this.createVariable( 'vec3', 'lightEyeDir' );
+            var lightNDL = this.createVariable( 'float', 'lightNDL' );
+            var lightOutShadowIn = {
+                lighted: lighted,
+                lightEyePos: lightPos,
+                lightEyeDir: lightDir,
+                lightNDL: lightNDL
+            };
+
             var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material, 'material' );
             for ( var i = 0; i < this._lights.length; i++ ) {
 
@@ -518,7 +657,6 @@ define( [
                 var lightedOutput = this.createVariable( 'vec3' );
                 var nodeName = enumToNodeName[ light.getLightType() ];
 
-
                 // create uniforms from stateAttribute and mix them with materials
                 // to pass the result as input for light node
                 var lightUniforms = this.getOrCreateStateAttributeUniforms( this._lights[ i ], 'light' );
@@ -526,6 +664,7 @@ define( [
                 var inputs = MACROUTILS.objectMix( {}, lightUniforms );
                 inputs = MACROUTILS.objectMix( inputs, materialUniforms );
                 inputs = MACROUTILS.objectMix( inputs, materials );
+                inputs = MACROUTILS.objectMix( inputs, lightOutShadowIn );
 
                 if ( !inputs.normal )
                     inputs.normal = this.getOrCreateNormalizedNormal();
@@ -536,9 +675,20 @@ define( [
                     color: lightedOutput
                 } );
 
-                lightList.push( lightedOutput );
-            }
+                var shadowedOutput = this.createShadowingLight( light, inputs, lightedOutput );
+                if ( shadowedOutput ) {
+                    lightList.push( shadowedOutput );
+                } else {
+                    lightList.push( lightedOutput );
+                }
 
+                var lightMatAmbientOutput = this.createVariable( 'vec3', 'lightMatAmbientOutput' );
+
+                factory.getNode( 'Mult' ).inputs( materialUniforms.materialambient, lightUniforms.lightambient ).outputs( lightMatAmbientOutput );
+
+
+                lightList.push( lightMatAmbientOutput );
+            }
             // add emission too
             if ( materialUniforms.emission )
                 lightList.push( materialUniforms.emission );
@@ -591,6 +741,28 @@ define( [
                 }
             }
             functor.call( functor, node );
+        },
+
+        evaluateDefines: function ( node ) {
+
+            var func = function ( node ) {
+
+                if ( node.defines &&
+                    this._map[ node.id ] === undefined ) {
+
+                    this._map[ node.id ] = true;
+                    var c = node.defines();
+                    this._text.push( c );
+
+                }
+
+            };
+
+            func._map = {};
+            func._text = [];
+            this.traverse( func, node );
+
+            return func._text.join( '\n' );
         },
 
         evaluateGlobalFunctionDeclaration: function ( node ) {
@@ -672,6 +844,9 @@ define( [
             this._fragmentShader.push( func._text.join( '\n' ) );
         },
 
+        //
+        // TODO: change into node based graph shader system.
+        // Meanwhile, here it is.
         createVertexShaderGraph: function () {
 
             var texCoordMap = {};
@@ -682,16 +857,47 @@ define( [
                 'attribute vec3 Vertex;',
                 'attribute vec4 Color;',
                 'attribute vec3 Normal;',
+                '',
                 'uniform float ArrayColorEnabled;',
                 'uniform mat4 ModelViewMatrix;',
                 'uniform mat4 ProjectionMatrix;',
                 'uniform mat4 NormalMatrix;',
+                '',
                 'varying vec4 VertexColor;',
                 'varying vec3 FragNormal;',
                 'varying vec3 FragEyeVector;',
                 '',
                 ''
             ].join( '\n' ) );
+
+            var i, ll;
+            var hasShadows = false;
+            var shadowTexture;
+            var shadowTextureUniforms;
+            for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
+
+                shadowTexture = this._shadowsTextures[ i ];
+                if ( shadowTexture !== undefined ) {
+                    shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
+                    var viewMat = shadowTextureUniforms.ViewMatrix;
+                    var projMat = shadowTextureUniforms.ProjectionMatrix;
+                    var depthRange = shadowTextureUniforms.DepthRange;
+                    var mapSize = shadowTextureUniforms.MapSize;
+                    // uniforms
+                    this._vertexShader.push( 'uniform mat4 ' + projMat.getName() + ';' );
+                    this._vertexShader.push( 'uniform mat4 ' + viewMat.getName() + ';' );
+                    this._vertexShader.push( 'uniform vec4 ' + depthRange.getName() + ';' );
+                    this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
+                    // varyings
+                    this._vertexShader.push( 'varying vec4 ' + shadowTexture.getUniformName( 'VertexProjected' ) + ';' );
+                    this._vertexShader.push( 'varying vec4 ' + shadowTexture.getUniformName( 'Z' ) + ';' );
+                    hasShadows = true;
+                }
+            }
+
+            if ( hasShadows ) {
+                this._vertexShader.push( 'uniform mat4 ModelWorldMatrix;' );
+            }
 
             for ( var t = 0, tl = textures.length; t < tl; t++ ) {
 
@@ -703,6 +909,7 @@ define( [
                     var textureMaterial = texturesMaterial[ texture.getName() ];
                     if ( !textureMaterial && !textureMaterial.textureUnit )
                         continue;
+
 
                     var texCoordUnit = textureMaterial.textureUnit;
                     if ( texCoordUnit === undefined ) {
@@ -763,6 +970,29 @@ define( [
                     }
                 }
             } )();
+            if ( hasShadows ) {
+
+                this._vertexShader.push( 'vec4 worldPosition = ModelWorldMatrix * vec4(Vertex,1.0);' );
+
+                for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
+                    shadowTexture = this._shadowsTextures[ i ];
+                    if ( shadowTexture ) {
+
+                        // uniforms
+                        shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
+                        var shadowView = shadowTextureUniforms.ViewMatrix.getName();
+                        var shadowProj = shadowTextureUniforms.ProjectionMatrix.getName();
+
+                        // varying TODO: using getUniform name ? (varying ends with _uniform_)
+                        var shadowVertProj = shadowTexture.getUniformName( 'VertexProjected' );
+                        var shadowZ = shadowTexture.getUniformName( 'Z' );
+
+
+                        this._vertexShader.push( ' ' + shadowZ + ' = ' + shadowView + ' *  worldPosition;' );
+                        this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * ' + shadowZ + ';' );
+                    }
+                }
+            }
             this._vertexShader.push( '}' );
         },
 
@@ -791,6 +1021,8 @@ define( [
 
             var vars = Object.keys( this._variables );
 
+            this._fragmentShader.push( this.evaluateDefines( root ) );
+            this._fragmentShader.push( '\n' );
             this._fragmentShader.push( this.evaluateGlobalVariableDeclaration( root ) );
             this._fragmentShader.push( '\n' );
             this._fragmentShader.push( this.evaluateGlobalFunctionDeclaration( root ) );
@@ -905,6 +1137,7 @@ define( [
                 finalColor = diffuseColor;
 
             }
+
 
             // premult alpha
             finalColor = this.getPremultAlpha( finalColor, alpha );

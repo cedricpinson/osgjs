@@ -6,8 +6,6 @@ define( [
 ], function ( MACROUTILS, shaderUtils, Node ) {
     'use strict';
 
-
-
     // base class for all point based light: Point/Directional/Spot/Hemi
     // avoid duplicate code
     var NodeLightsPointBased = function () {
@@ -52,6 +50,12 @@ define( [
 
             'lightmatrix',
             'lightinvMatrix',
+
+            'lighted',
+            'lightEyePos',
+            'lightEyeDir',
+            'lightNDL'
+
         ],
 
         computeFragment: function () {
@@ -75,6 +79,11 @@ define( [
 
                     this._inputs.lightmatrix,
                     this._inputs.lightinvMatrix,
+
+                    this._inputs.lightEyePos,
+                    this._inputs.lightEyeDir,
+                    this._inputs.lightNDL,
+                    this._inputs.lighted
                 ] );
         }
 
@@ -110,7 +119,13 @@ define( [
             'lightspotBlend',
 
             'lightmatrix',
-            'lightinvMatrix'
+            'lightinvMatrix',
+
+            'lighted',
+            'lightEyePos',
+            'lightEyeDir',
+            'lightNDL'
+
         ],
 
         computeFragment: function () {
@@ -137,6 +152,11 @@ define( [
 
                     this._inputs.lightmatrix,
                     this._inputs.lightinvMatrix,
+
+                    this._inputs.lightEyePos,
+                    this._inputs.lightEyeDir,
+                    this._inputs.lightNDL,
+                    this._inputs.lighted
                 ] );
         }
 
@@ -166,7 +186,13 @@ define( [
             'lightposition',
 
             'lightmatrix',
-            'lightinvMatrix'
+            'lightinvMatrix',
+
+            'lighted',
+            'lightEyePos',
+            'lightEyeDir',
+            'lightNDL'
+
         ],
 
         computeFragment: function () {
@@ -189,6 +215,11 @@ define( [
 
                     this._inputs.lightmatrix,
                     this._inputs.lightinvMatrix,
+
+                    this._inputs.lightEyePos,
+                    this._inputs.lightEyeDir,
+                    this._inputs.lightNDL,
+                    this._inputs.lighted
                 ] );
         }
     } );

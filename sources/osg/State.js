@@ -2,6 +2,7 @@ define( [
     'osg/Map',
     'osg/Matrix',
     'osg/Notify',
+
     'osg/Object',
     'osg/StateAttribute',
     'osg/Stack',
@@ -253,7 +254,7 @@ define( [
             if ( attributeStack.lastApplied !== attribute ) {
 
                 if ( attribute.apply ) {
-                    attribute.apply( this );
+                    attribute.apply( this, unit );
                 }
                 attributeStack.lastApplied = attribute;
                 attributeStack.asChanged = true;
