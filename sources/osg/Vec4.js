@@ -1,5 +1,7 @@
 define( [], function () {
 
+    'use strict';
+
     /** @class Vec4 Operations */
     var Vec4 = {
 
@@ -13,6 +15,14 @@ define( [], function () {
             a[ 2 ] = 0.0;
             a[ 3 ] = 0.0;
             return a;
+        },
+
+        set: function ( a, b, c, d, r ) {
+            r[ 0 ] = a;
+            r[ 1 ] = b;
+            r[ 2 ] = c;
+            r[ 3 ] = d;
+            return r;
         },
 
         dot: function ( a, b ) {
