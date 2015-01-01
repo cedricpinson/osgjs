@@ -61,7 +61,14 @@ define( [
         },
         getCount: function () {
             return this.count;
+        },
+        getNumIndices: function () {
+            return this.indices.getElements().length;
+        },
+        index: function ( i ) {
+            return this.indices.getElements()[ i ];
         }
+
 
     };
 

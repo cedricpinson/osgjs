@@ -110,8 +110,8 @@ define( [
 
                 var devicePixelRatio = this._devicePixelRatio;
 
-                var widthPixel = Math.max( clientWidth * devicePixelRatio, 1 );
-                var heightPixel = Math.max( clientHeight * devicePixelRatio, 1 );
+                var widthPixel = Math.floor( clientWidth * devicePixelRatio );
+                var heightPixel = Math.floor( clientHeight * devicePixelRatio );
 
                 if ( this._canvasWidth !== widthPixel ) {
                     canvas.width = widthPixel;
@@ -128,9 +128,14 @@ define( [
 
         setUpView: function ( canvas, options ) {
 
-            if ( options.getBoolean( 'useDevicePixelRatio' ) ) {
-                this._devicePixelRatio = window.devicePixelRatio || 1;
-            }
+
+            var devicePixelRatio = window.devicePixelRatio || 1;
+            var overrideDevicePixelRatio = options.getNumber( 'overrideDevicePixelRatio' );
+
+            // override the pixel ratio, used to save pixel on mobile
+            if ( typeof overrideDevicePixelRatio === 'number' )
+                devicePixelRatio = overrideDevicePixelRatio;
+            this._devicePixelRatio = devicePixelRatio;
 
             this.computeCanvasSize( canvas );
 

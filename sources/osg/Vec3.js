@@ -1,5 +1,7 @@
 define( [], function () {
 
+    'use strict';
+
     /** @class Vec3 Operations */
     var Vec3 = {
 
@@ -12,6 +14,13 @@ define( [], function () {
             a[ 1 ] = 0.0;
             a[ 2 ] = 0.0;
             return a;
+        },
+
+        set: function ( a, b, c, r ) {
+            r[ 0 ] = a;
+            r[ 1 ] = b;
+            r[ 2 ] = c;
+            return r;
         },
 
         copy: function ( a, r ) {

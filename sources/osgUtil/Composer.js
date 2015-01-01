@@ -80,21 +80,32 @@ define( [
         // addPass(filter, textureWidth, textureHeight) -> the filter will be done on a texture width and height
         // addPass(filter, texture) -> the filter will be done on the giver texture using its width and height
         addPass: function ( filter, arg0, arg1 ) {
+
+            // when arg0 is a texture
+            // arg1 is the target, can be TEXTURE_2D ( by default ) or
+            // a cubemape's face like TEXTURE_CUBE_MAP_POSITIVE_X, ...
             if ( arg0 instanceof Texture ) {
+
                 this._stack.push( {
                     filter: filter,
-                    texture: arg0
+                    texture: arg0,
+                    textureTarget: arg1 || Texture.TEXTURE_2D
                 } );
+
             } else if ( arg0 !== undefined && arg1 !== undefined ) {
+
                 this._stack.push( {
                     filter: filter,
                     width: Math.floor( arg0 ),
                     height: Math.floor( arg1 )
                 } );
+
             } else {
+
                 this._stack.push( {
                     filter: filter
                 } );
+
             }
         },
         renderToScreen: function ( w, h ) {
@@ -113,23 +124,33 @@ define( [
         },
 
         build: function () {
+
             var root = this;
             this.removeChildren();
             var lastTextureResult;
             var self = this;
+
             this._stack.forEach( function ( element, i, array ) {
+
                 if ( element.filter.isDirty() ) {
                     element.filter.build();
                 }
+
                 var stateSet = element.filter.getStateSet();
                 var w, h;
+
                 if ( element.texture !== undefined ) {
+
                     w = element.texture.getWidth();
                     h = element.texture.getHeight();
+
                 } else if ( element.width !== undefined && element.height !== undefined ) {
+
                     w = element.width;
                     h = element.height;
+
                 } else {
+
                     // get width from Texture0
                     var inputTexture = stateSet.getTextureAttribute( 0, 'Texture' );
                     if ( inputTexture === undefined ) {
@@ -165,11 +186,13 @@ define( [
                 } else {
                     camera.setRenderOrder( Camera.PRE_RENDER, 0 );
                     texture = element.texture;
+                    var textureTarget = element.textureTarget;
                     if ( texture === undefined ) {
                         texture = new Texture();
                         texture.setTextureSize( w, h );
+                        textureTarget = Texture.TEXTURE_2D;
                     }
-                    camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture, 0 );
+                    camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture, textureTarget );
                 }
 
                 var vp = new Viewport( 0, 0, w, h );

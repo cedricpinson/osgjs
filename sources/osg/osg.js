@@ -66,7 +66,8 @@ define( [
     'osg/TransformEnums',
     'osg/WebGLCaps'
 
-], function ( BlendColor,
+], function (
+    BlendColor,
     BlendFunc,
     BoundingBox,
     BoundingSphere,
@@ -133,6 +134,8 @@ define( [
     TransformEnums,
     WebGLCaps ) {
 
+    'use strict';
+
     var osg = {};
 
     osg.BlendColor = BlendColor;
@@ -140,6 +143,7 @@ define( [
     osg.BoundingBox = BoundingBox;
     osg.BoundingSphere = BoundingSphere;
     osg.BufferArray = BufferArray;
+    osg.ColorMask = ColorMask;
     osg.Camera = Camera;
     osg.ColorMask = ColorMask;
     MACROUTILS.objectMix( osg, ComputeMatrixFromNodePath );

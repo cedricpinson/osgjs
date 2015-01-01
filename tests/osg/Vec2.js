@@ -2,6 +2,8 @@ define( [
     'osg/Vec2'
 ], function ( Vec2 ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -18,6 +20,10 @@ define( [
                 ok( Vec2.valid( [ 'a', 0 ] ) === false, 'is invalid' );
                 ok( Vec2.valid( [ 0, 'a' ] ) === false, 'is invalid' );
                 ok( Vec2.valid( [ 0, 2 ] ) === true, 'is invalid' );
+            } )();
+
+            ( function () {
+                deepEqual( Vec2.set( 2, 4, [] ), [ 2, 4 ], 'test set' );
             } )();
 
             ( function () {

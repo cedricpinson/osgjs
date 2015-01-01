@@ -160,27 +160,38 @@ define( [
             }
 
             if ( fbo.isDirty() ) {
-                if ( this.camera.attachments !== undefined ) {
-                    for ( var key in this.camera.attachments ) {
-                        var a = this.camera.attachments[ key ];
-                        var attach;
+
+                var attachments = this.camera.getAttachments();
+                // we should use a map in camera to avoid to regenerate the keys
+                // each time. But because we dont have a lot of camera I guess
+                // it does not change a lot
+                var keys = Object.keys( attachments );
+
+                if ( keys.length ) {
+
+                    for ( var i = 0, l = keys.length; i < l; i++ ) {
+                        var key = keys[ i ];
+                        var a = attachments[ key ];
+
+                        var attach = {};
+                        attach.attachment = key;
+
                         if ( a.texture === undefined ) { //renderbuffer
-                            attach = {
-                                attachment: key,
-                                format: a.format,
-                                width: viewport.width(),
-                                height: viewport.height()
-                            };
+
+                            attach.format = a.format;
+                            attach.width = viewport.width();
+                            attach.height = viewport.height();
+
                         } else if ( a.texture !== undefined ) {
-                            attach = {
-                                attachment: key,
-                                texture: a.texture,
-                                level: a.level
-                            };
+
+                            attach.texture = a.texture;
+                            attach.textureTarget = a.textureTarget;
+
                             if ( a.format ) {
                                 attach.format = a.format;
                             }
                         }
+
                         fbo.setAttachment( attach );
                     }
                 }
