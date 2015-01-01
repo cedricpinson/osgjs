@@ -3,6 +3,8 @@ define( [
     'osg/Object'
 ], function ( MACROUTILS, Object ) {
 
+    'use strict';
+
     var Image = function ( image ) {
         Object.call( this );
 
@@ -46,7 +48,7 @@ define( [
             return this._imageObject instanceof window.Image;
         },
         isTypedArray: function () {
-            return this._imageObject instanceof Uint8Array;
+            return this._imageObject instanceof Uint8Array || this._imageObject instanceof Float32Array;
         },
         setWidth: function ( w ) {
             this._width = w;
@@ -98,14 +100,14 @@ define( [
                 }
 
                 var isGreyscale = true;
-                var xFactor = canvas.width / (sampleX );
-                var yFactor = canvas.height / (sampleY );
+                var xFactor = canvas.width / ( sampleX );
+                var yFactor = canvas.height / ( sampleY );
                 for ( var i = 0; i < sampleX; i++ ) {
                     for ( var j = 0; j < sampleY; j++ ) {
                         var x = Math.floor( xFactor * ( i + 0.5 ) ),
                             y = Math.floor( yFactor * ( j + 0.5 ) );
                         var data = ctx.getImageData( x, y, 1, 1 ).data;
-                        if ( !( data[ 0 ] === data[ 1 ] && data[ 0 ] === data[ 2 ]) ) {
+                        if ( !( data[ 0 ] === data[ 1 ] && data[ 0 ] === data[ 2 ] ) ) {
                             isGreyscale = false;
                             break;
                         }

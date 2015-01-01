@@ -1,4 +1,4 @@
-(function() {
+( function () {
     'use strict';
 
     window.OSG.globalify();
@@ -31,7 +31,7 @@
         rttTargetTexture.setTextureSize( rttSize[ 0 ], rttSize[ 1 ] );
         rttTargetTexture.setMinFilter( 'LINEAR' );
         rttTargetTexture.setMagFilter( 'LINEAR' );
-        rttCamera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTargetTexture, 0 );
+        rttCamera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, rttTargetTexture );
 
 
 
@@ -111,4 +111,4 @@
     //   appendScript ('../../builds/active/OSG.js');
     //   window.addEventListener('load', main, true);
     // }
-})();
+} )();

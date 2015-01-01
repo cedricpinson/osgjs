@@ -28,13 +28,14 @@ define( [
         return value;
     };
 
+
     /**
      * Texture encapsulate webgl texture object
      */
     var Texture = function () {
         StateAttribute.call( this );
         this.setDefaultParameters();
-
+        this._dirtyMipmap = true;
         this._applyTexImage2DCallbacks = [];
         this._textureObject = undefined;
 
@@ -134,7 +135,7 @@ define( [
             this._textureHeight = 0;
             this._unrefImageDataAfterApply = false;
             this._internalFormat = undefined;
-            this._dirtyMipmap = false;
+            this._dirtyMipmap = true;
             this._textureTarget = Texture.TEXTURE_2D;
             this._type = Texture.UNSIGNED_BYTE;
 
@@ -173,7 +174,9 @@ define( [
                     this._internalFormat,
                     this._textureWidth,
                     this._textureHeight );
+
                 this.dirty();
+                this._dirtyTextureObject = false;
                 this._textureNull = false;
             }
         },
@@ -318,6 +321,7 @@ define( [
             this._textureNull = false;
             this.dirty();
         },
+
         getImage: function () {
             return this._image;
         },
@@ -352,12 +356,24 @@ define( [
         setUnrefImageDataAfterApply: function ( bool ) {
             this._unrefImageDataAfterApply = bool;
         },
-        setInternalFormat: function ( internalFormat ) {
-            this._internalFormat = internalFormat;
+
+        setInternalFormat: function ( formatSource ) {
+            var format = formatSource;
+            if ( format ) {
+                if ( typeof ( format ) === 'string' ) {
+                    format = Texture[ format ];
+                }
+            } else {
+                format = Texture.RGBA;
+            }
+
+            this._internalFormat = format;
         },
+
         getInternalFormat: function () {
             return this._internalFormat;
         },
+
         isDirtyMipmap: function () {
             return this._dirtyMipmap;
         },
@@ -399,13 +415,19 @@ define( [
         },
 
         generateMipmap: function ( gl, target ) {
-            if ( this._minFilter === gl.NEAREST_MIPMAP_NEAREST ||
-                this._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
-                this._minFilter === gl.NEAREST_MIPMAP_LINEAR ||
-                this._minFilter === gl.LINEAR_MIPMAP_LINEAR ) {
+
+            if ( this.hasMipmapFilter() ) {
                 gl.generateMipmap( target );
                 this._dirtyMipmap = false;
             }
+        },
+
+        // return true if contains a mipmap filter
+        hasMipmapFilter: function () {
+            return ( this._minFilter === Texture.NEAREST_MIPMAP_NEAREST ||
+                this._minFilter === Texture.LINEAR_MIPMAP_NEAREST ||
+                this._minFilter === Texture.NEAREST_MIPMAP_LINEAR ||
+                this._minFilter === Texture.LINEAR_MIPMAP_LINEAR );
         },
 
         applyTexImage2D: function ( gl ) {
@@ -435,8 +457,6 @@ define( [
             }
 
         },
-
-
         apply: function ( state ) {
 
             // if need to release the texture
