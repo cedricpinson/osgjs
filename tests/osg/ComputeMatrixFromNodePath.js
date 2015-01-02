@@ -50,8 +50,7 @@ define( [
                 var path = [ root, child0, child1, child2 ];
                 var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
                 var trans = Matrix.getTrans( matrix, [0, 0, 0] );
-                var result = [ 0, -5, 10 ];
-                mockup.near( trans, result , 'Check translation of matrix' );
+                mockup.near( trans, [ 0, -10, 10 ] , 'Check translation of matrix' );
             } )();
 
 
@@ -70,7 +69,7 @@ define( [
                 var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
                 var result = Vec3.create();
                 Matrix.getTrans( matrix, result );
-                mockup.near( result, [0,0,0] , 'Check we dont use the camera on top' );
+                mockup.near( result, [0,-10,10] , 'Check we dont use the camera on top' );
             } )();
 
         } );

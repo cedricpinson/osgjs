@@ -5,6 +5,8 @@ define( [
     'osg/BoundingBox'
 ], function ( MACROUTILS, Vec3, Node, BoundingBox ) {
 
+    'use strict';
+
     /**
      * Geometry manage array and primitives to draw a geometry.
      * @class Geometry
@@ -13,8 +15,8 @@ define( [
         Node.call( this );
         this.primitives = [];
         this.attributes = {};
-        this.boundingBox = new BoundingBox();
-        this.boundingBoxComputed = false;
+        this._boundingBox = new BoundingBox();
+        this._boundingBoxComputed = false;
         this.cacheAttributeList = {};
         this._shape = null;
     };
@@ -37,8 +39,8 @@ define( [
             }
         },
         dirtyBound: function () {
-            if ( this.boundingBoxComputed === true ) {
-                this.boundingBoxComputed = false;
+            if ( this._boundingBoxComputed === true ) {
+                this._boundingBoxComputed = false;
             }
             Node.prototype.dirtyBound.call( this );
         },
@@ -126,11 +128,16 @@ define( [
         },
 
         getBoundingBox: function () {
-            if ( !this.boundingBoxComputed ) {
-                this.computeBoundingBox( this.boundingBox );
-                this.boundingBoxComputed = true;
+            if ( !this._boundingBoxComputed ) {
+                this.computeBoundingBox( this._boundingBox );
+                this._boundingBoxComputed = true;
             }
-            return this.boundingBox;
+            return this._boundingBox;
+        },
+
+        setBound: function ( bb ) {
+            this._boundingBox = bb;
+            this._boundingBoxComputed = true;
         },
 
         computeBoundingBox: function ( boundingBox ) {
@@ -155,7 +162,7 @@ define( [
         computeBound: function ( boundingSphere ) {
             boundingSphere.init();
             var bb = this.getBoundingBox();
-            boundingSphere.expandByBox( bb );
+            boundingSphere.expandByBoundingBox( bb );
             return boundingSphere;
         }
     } ), 'osg', 'Geometry' );

@@ -234,7 +234,7 @@ define( [
             for ( var i = 0, l = this.children.length; i < l; i++ ) {
                 var child = this.children[ i ];
                 if ( child.referenceFrame === undefined || child.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                    bb.expandBySphere( child.getBound() );
+                    bb.expandByBoundingSphere( child.getBound() );
                 }
             }
             if ( !bb.valid() ) {

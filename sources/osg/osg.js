@@ -6,6 +6,7 @@ define( [
     'osg/BufferArray',
     'osg/Camera',
     'osg/ColorMask',
+    'osg/ComputeBoundsVisitor',
     'osg/ComputeMatrixFromNodePath',
     'osg/CullFace',
     'osg/CullSettings',
@@ -74,6 +75,7 @@ define( [
     BufferArray,
     Camera,
     ColorMask,
+    ComputeBoundsVisitor,
     ComputeMatrixFromNodePath,
     CullFace,
     CullSettings,
@@ -146,6 +148,7 @@ define( [
     osg.ColorMask = ColorMask;
     osg.Camera = Camera;
     osg.ColorMask = ColorMask;
+    osg.ComputeBoundsVisitor = ComputeBoundsVisitor;
     MACROUTILS.objectMix( osg, ComputeMatrixFromNodePath );
     osg.CullFace = CullFace;
     osg.CullSettings = CullSettings;

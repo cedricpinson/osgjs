@@ -2,21 +2,23 @@ define( [
     'osg/Matrix'
 ], function ( Matrix ) {
 
-    /**
-     *  Manipulator
-     *  @class
-     */
-    var Manipulator = function () {
+    'use strict';
+
+    // Base class for Camera / User manipulator
+    // flags is a bitfield use to enable options
+    var Manipulator = function ( flags ) {
+        this._flags = flags;
+        if ( this._flags === undefined )
+            this._flags = Manipulator.DEFAULT_SETTINGS;
+
         this._controllerList = {};
-        this._inverseMatrix = new Array( 16 );
-        Matrix.makeIdentity( this._inverseMatrix );
+        this._inverseMatrix = Matrix.create();
     };
 
-    /** @lends Manipulator.prototype */
     Manipulator.prototype = {
 
         // eg: var currentTime = nv.getFrameStamp().getSimulationTime();
-        update: function ( /*nv*/ ) {},
+        update: function ( /*nv*/) {},
 
         getInverseMatrix: function () {
             return this._inverseMatrix;
@@ -26,6 +28,9 @@ define( [
             return this._controllerList;
         }
     };
+
+    Manipulator.COMPUTE_HOME_USING_BBOX = 0x02;
+    Manipulator.DEFAULT_SETTINGS = 0;
 
     return Manipulator;
 } );
