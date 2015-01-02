@@ -76,7 +76,11 @@
 
 
     var formatList = [ 'FLOAT', 'RGBE', 'RGBM', 'LUV' ];
-    var modelList = [ 'sphere', 'model', 'cerberus' ];
+
+    var modelsPBR = [ 'cerberus', 'c3po', 'devastator' ];
+
+    var modelList = [ 'sphere', 'model' ].concat( modelsPBR );
+
 
     var Environment = function () {
         this._promises = [];
@@ -184,6 +188,9 @@
         this._materialDefines = [];
         this._shaderDefines = [];
         this._modelDefines = [];
+
+        this._modelsPBR = [];
+        this._modelPBRConfig = [];
 
         this._environmentTransformUniform = osg.Uniform.createMatrix4( osg.Matrix.makeIdentity( [] ), 'uEnvironmentTransform' );
 
@@ -409,6 +416,7 @@
             var ss = geom.getOrCreateStateSet();
             geom.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
             geom.getOrCreateStateSet().setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
+            geom.setBound(new osg.BoundingBox() );
 
             ss.setRenderBinDetails( -1, 'RenderBin' );
 
@@ -506,16 +514,45 @@
                 node = this._modelSphere;
             } else if ( this._config.model === 'model' ) {
                 node = this._modelMaterial;
-            } else if ( this._config.model === 'cerberus' ) {
-                node = this._proxyRealModel;
+            } else {
+
+                var index = modelsPBR.indexOf( this._config.model );
+                if ( index !== -1 ) {
+                    var modelPBR = this._modelsPBR[ index ];
+                    if ( modelPBR ) {
+                        this._proxyRealModel.removeChildren();
+                        this._proxyRealModel.addChild( modelPBR.getNode() );
+
+                        if ( !this._modelPBRConfig[ index ] ) {
+                            this._modelPBRConfig[ index ] = this.registerModel( modelPBR );
+                        }
+                        node = this._proxyRealModel;
+                    }
+                }
             }
 
             if ( node ) {
                 node.setNodeMask( ~0x0 );
                 node.dirtyBound();
-                this._viewer.getManipulator().computeHomePosition();
+                this._viewer.getManipulator().computeHomePosition( true);
             }
         },
+
+
+        registerModel: function ( model ) {
+
+            var modelNode = model.getNode();
+
+            var config = {
+                stateSet: modelNode.getOrCreateStateSet(),
+                config: model.getConfig()
+            };
+
+            this._shaders.push( config );
+            this.updateShaderPBR();
+            return config;
+        },
+
 
         getModelTestInstance: function () {
             var mt = new osg.MatrixTransform();
@@ -929,23 +966,6 @@
             return d.promise;
         },
 
-        addModel: function ( model ) {
-
-            var modelNode = model.getNode();
-
-            var config = {
-                stateSet: modelNode.getOrCreateStateSet(),
-                config: model.getConfig()
-            };
-
-            this._proxyRealModel.removeChildren();
-            this._proxyRealModel.addChild( modelNode );
-
-            this._shaders.push( config );
-            this.updateShaderPBR();
-
-        },
-
         run: function ( canvas ) {
 
             var viewer = this._viewer = new osgViewer.Viewer( canvas );
@@ -966,8 +986,19 @@
             var environment = 'textures/field/';
             //var environment = 'textures/tmp/';
 
-            var model = new ModelLoader( 'models/cerberus/' );
+            //var model = new ModelLoader( 'models/cerberus/' );
 
+            var modelPromises = [];
+            modelsPBR.forEach( function ( modelString, index ) {
+
+                var model = new ModelLoader( 'models/' + modelString + '/' );
+                var promise = model.load();
+                modelPromises.push( promise );
+                promise.then( function () {
+                    this._modelsPBR[ index ] = model;
+                }.bind( this ) );
+
+            }.bind( this ) );
 
             var promise = this.readEnvConfig( environment + 'config.json' );
             promise.then( function ( config ) {
@@ -978,7 +1009,7 @@
                 ready.push( this.readShaders() );
                 ready.push( this._currentEnvironment.getPromise() );
                 ready.push( this.createModelMaterialSample() );
-                ready.push( model.load() );
+                ready.push( Q.all( modelPromises ) );
 
                 return Q.all( ready );
 
@@ -987,7 +1018,7 @@
                 var root = this.createScene();
                 viewer.setSceneData( root );
 
-                this.addModel( model );
+                // this.addModel( model );
 
                 viewer.setupManipulator();
                 viewer.getManipulator().computeHomePosition();
