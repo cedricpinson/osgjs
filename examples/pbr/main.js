@@ -534,7 +534,7 @@
             if ( node ) {
                 node.setNodeMask( ~0x0 );
                 node.dirtyBound();
-                this._viewer.getManipulator().computeHomePosition( true);
+                this._viewer.getManipulator().computeHomePosition( true );
             }
         },
 
@@ -940,7 +940,7 @@
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.ALBEDO_TEXTURE_UNIT, 'albedoMap' ) );
 
 
-                this._viewer.getManipulator().computeHomePosition();
+                this._viewer.getManipulator().computeHomePosition(true);
 
             }.bind( this ) );
 
@@ -968,6 +968,7 @@
 
         run: function ( canvas ) {
 
+            //osgGA.Manipulator.DEFAULT_SETTINGS = osgGA.Manipulator.DEFAULT_SETTINGS | osgGA.Manipulator.COMPUTE_HOME_USING_BBOX;
             var viewer = this._viewer = new osgViewer.Viewer( canvas );
             viewer.init();
 
@@ -1021,7 +1022,7 @@
                 // this.addModel( model );
 
                 viewer.setupManipulator();
-                viewer.getManipulator().computeHomePosition();
+                viewer.getManipulator().computeHomePosition( true );
 
                 viewer.run();
 
