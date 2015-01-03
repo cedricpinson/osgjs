@@ -167,6 +167,7 @@
         this._shaderPath = 'shaders/';
 
         this._config = {
+            envRotation: 0.01,
             lod: 0.01,
             albedo: '#bdaaeb',
             nbSamples: 8,
@@ -202,6 +203,9 @@
 
         // node that will contains models
         this._proxyRealModel = new osg.Node();
+
+        // rotation of the environment geometry
+        this._environmentTransformMatrix = undefined;
     };
 
     Example.prototype = {
@@ -405,6 +409,13 @@
             return this._shaderCache[ hash ];
         },
 
+        updateEnvironmentRotation: function() {
+            if (!this._environmentTransformMatrix)
+                return;
+            var rotation = this._config.envRotation;
+            osg.Matrix.makeRotate( rotation, 0,0,1, this._environmentTransformMatrix );
+        },
+
         createEnvironmentNode: function () {
 
             var scene = new osg.Node();
@@ -433,6 +444,7 @@
 
                     // add a rotation, because environment has the convention y up
                     var rotateYtoZ = osg.Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, osg.Matrix.create() );
+
                     osg.Matrix.mult( m, rotateYtoZ, environmentTransform.get() );
                     //osg.Matrix.copy( m, environmentTransform.get() );
                     environmentTransform.dirty();
@@ -440,6 +452,7 @@
                 };
             };
             mt.setCullCallback( new CullCallback() );
+            this._environmentTransformMatrix = mt.getMatrix();
 
             var cam = new osg.Camera();
             cam.setClearMask( 0x0 );
@@ -1029,7 +1042,12 @@
                 osg.Matrix.makePerspective( 30, canvas.width / canvas.height, 0.1, 1000, viewer.getCamera().getProjectionMatrix() );
 
                 var gui = new window.dat.GUI();
-                var controller = gui.add( this._config, 'lod', 0.0, 15.01 ).step( 0.1 );
+                var controller;
+
+                controller = gui.add( this._config, 'envRotation', -Math.PI, Math.PI  ).step(0.1);
+                controller.onChange( this.updateEnvironmentRotation.bind( this ) );
+
+                controller = gui.add( this._config, 'lod', 0.0, 15.01 ).step( 0.1 );
                 controller.onChange( function ( value ) {
                     this._lod.get()[ 0 ] = value;
                     this._lod.dirty();
