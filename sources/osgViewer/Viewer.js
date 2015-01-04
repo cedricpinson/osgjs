@@ -214,7 +214,7 @@ define( [
 
         initStats: function ( options, canvas ) {
 
-            if ( !options.stats )
+            if ( !options.getBoolean( 'stats' ) )
                 return;
 
             var maxMS = 20;
@@ -238,13 +238,14 @@ define( [
                 var dom = [
                     '<div style="top: 0; position: absolute; width: 300px; height: 150px; z-index: 10;">',
                     '<div style="position: relative;">',
-                    '<canvas id="' + gridID + '" width="300" height="150" style="z-index:-1; position: absolute; background: rgba(14,14,14,0.8); " ></canvas>',
-                    '<canvas id="' + statsCanvasID + '" width="300" height="150" style="z-index:8; position: absolute;" ></canvas>',
+                    options.getBoolean( 'statsNoGraph' ) ? '' : '<canvas id="' + gridID + '" width="300" height="150" style="z-index:-1; position: absolute; background: rgba(14,14,14,0.8); " ></canvas>',
+                    options.getBoolean( 'statsNoGraph' ) ? '' : '<canvas id="' + statsCanvasID + '" width="300" height="150" style="z-index:8; position: absolute;" ></canvas>',
                     '<canvas id="' + statsCanvasTextID + '" width="300" height="150" style="z-index:9; position: absolute;" ></canvas>',
                     '</div>',
 
                     '</div>'
                 ].join( '\n' );
+
 
                 var parent;
 
@@ -257,6 +258,12 @@ define( [
                 var mydiv = document.createElement( 'div' );
                 mydiv.innerHTML = dom;
                 parent.appendChild( mydiv );
+
+                if ( options.getBoolean( 'statsNoGraph' ) ) {
+                    return {
+                        text: document.getElementById( statsCanvasTextID )
+                    };
+                }
 
                 var grid = document.getElementById( gridID );
                 var ctx = grid.getContext( '2d' );
