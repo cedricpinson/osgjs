@@ -9,6 +9,8 @@ define( [
     'osg/Matrix'
 ], function ( Vec3, TriangleIntersector, Matrix ) {
 
+    'use strict';
+
     var LineSegmentIntersector = function () {
         this._start = [];
         this._end = [];
@@ -33,9 +35,8 @@ define( [
             this._intersections.length = 0;
         },
         enter: function ( node ) {
-            // Not working if culling disabled
-            //!node.isCullingActive() || 
-            return this.intersects( node.getBound() );
+            // Not working if culling disabled ??
+            return !node.isCullingActive() || this.intersects( node.getBound() );
         },
         // Intersection Segment/Sphere 
         intersects: ( function () {

@@ -483,6 +483,7 @@ define( [
                     return;
                 var ttype = this.getTransformType( this._attachedNode );
                 this.setReferenceFrame( ttype );
+                this.setCullingActive( ttype === TransformEnums.RELATIVE_RF );
                 var worldMat = this._attachedNode.getWorldMatrices()[ 0 ];
 
                 // world trans
@@ -577,7 +578,8 @@ define( [
             var mat = Matrix.create();
             Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix() : Matrix.create() );
             Matrix.preMult( mat, cam.getProjectionMatrix() );
-            Matrix.preMult( mat, cam.getViewMatrix() );
+            if ( this.getReferenceFrame() === TransformEnums.RELATIVE_RF )
+                Matrix.preMult( mat, cam.getViewMatrix() );
 
             var screenPoint = out || Vec3.create();
             Matrix.transformVec3( mat, worldPoint, screenPoint );

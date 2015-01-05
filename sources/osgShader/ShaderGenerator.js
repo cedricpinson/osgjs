@@ -1,11 +1,12 @@
 define( [
     'osg/Notify',
+    'osg/Light',
     'osg/Program',
     'osg/Shader',
     'osg/Map',
     'osgShader/Compiler',
     'osgShader/ShaderProcessor'
-], function ( Notify, Program, Shader, Map, Compiler, ShaderProcessor ) {
+], function ( Notify, Light, Program, Shader, Map, Compiler, ShaderProcessor ) {
     'use strict';
 
     // this is the list of attributes type we support by default to generate shader
@@ -68,7 +69,6 @@ define( [
                 return true;
 
             // if it's a light and it's not enable we filter it
-            var Light = require( 'osg/Light' );
             if ( attribute.typeID === Light.typeID && !attribute.isEnable() ) {
                 return true;
             }
@@ -212,7 +212,7 @@ define( [
                 program.activeUniforms = this.getActiveUniforms( state, attributes, textureAttributes );
                 program.generated = true;
 
-                this._cache.set( hash, program);
+                this._cache.set( hash, program );
                 return program;
             };
         } )()
