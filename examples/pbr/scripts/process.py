@@ -5,6 +5,8 @@ import time
 import math
 import json
 
+DEBUG=False
+
 envIrradiance_cmd="~/dev/envtools/release/envIrradiance"
 envPrefilter_cmd="~/dev/envtools/release/envPrefilter"
 envIntegrateBRDF_cmd="~/dev/envtools/release/envBRDF"
@@ -107,16 +109,20 @@ class ProcessEnvironment(object):
                     f.write(self.sh_coef)
                 break
 
-        self.create_cubemap(tmp, os.path.join(self.output_directory, "cubemap_irradiance"))
 
-        # compute the panorama version of irradiance
-        panorama_size = self.irradiance_size * 2
-        panorama_irradiance = "/tmp/panorama_irradiance.tif"
+        # generate texture for irrandiance
+        # since we use spherical harmonics we dont need textures anymore except for debugging
+        if DEBUG is True:
+            self.create_cubemap(tmp, os.path.join(self.output_directory, "cubemap_irradiance"))
 
-        cmd = "{} -n {} -i cube -o rect {} {}".format( envremap_cmd, panorama_size, tmp, panorama_irradiance)
-        execute_command(cmd)
+            # compute the panorama version of irradiance
+            panorama_size = self.irradiance_size * 2
+            panorama_irradiance = "/tmp/panorama_irradiance.tif"
 
-        self.encode_texture(panorama_irradiance, self.output_directory)
+            cmd = "{} -n {} -i cube -o rect {} {}".format( envremap_cmd, panorama_size, tmp, panorama_irradiance)
+            execute_command(cmd)
+
+            self.encode_texture(panorama_irradiance, self.output_directory)
 
     def cubemap_fix_border(self, input, output):
         cmd = "{} {} {}".format(seamlessCubemap_cmd, input, output)
@@ -146,6 +152,7 @@ class ProcessEnvironment(object):
 
         for i in range(1, max_level + 1):
             size = int(math.pow(2, max_level - i))
+            level = i;
             outout_filename = "/tmp/specular_{}.tif".format(i)
             cmd = "{} -p {} -n {} -i cube -o cube {} {}".format(envremap_cmd, self.pattern_filter, size, previous_file, outout_filename)
             previous_file = outout_filename
@@ -155,25 +162,26 @@ class ProcessEnvironment(object):
         self.cubemap_packer("/tmp/fixup_%d.tif", max_level, os.path.join(self.output_directory, "cubemap_mipmap") )
 
 
-    def cubemap_specular_create_prefilter(self, input):
+
+    def cubemap_specular_create_prefilter(self, input ):
+        import shutil
 
         max_level = int(math.log(self.specular_size) / math.log(2))
 
+        # compute it one time for panorama
         outout_filename = "/tmp/prefilter_specular"
-        cmd = "{} -s {} -e {} -n {} {} {}".format(envPrefilter_cmd, self.specular_size, self.prefilter_stop_size, self.nb_samples, self.cubemap_generic, outout_filename)
+        cmd = "{} -s {} -e {} -n {} {} {}".format(envPrefilter_cmd, self.specular_size, self.prefilter_stop_size, self.nb_samples, self.cubemap_generic , outout_filename)
         execute_command(cmd)
 
-        previous_file = outout_filename + "_{}.tif".format( self.specular_size )
-        self.cubemap_fix_border( previous_file, "/tmp/prefilter_fixup_0.tif")
-
-        for i in range(1, max_level + 1):
-            size = pow(2, max_level - i )
-            outout_filename = "/tmp/prefilter_specular_{}.tif".format(size)
-            self.cubemap_fix_border(outout_filename, "/tmp/prefilter_fixup_{}.tif".format(i) )
+        # compute it seamless for cubemap
+        outout_filename = "/tmp/prefilter_fixup"
+        cmd = "{} -s {} -e {} -n {} -f {} {}".format(envPrefilter_cmd, self.specular_size, self.prefilter_stop_size, self.nb_samples, self.cubemap_generic , outout_filename)
+        execute_command(cmd)
 
         self.cubemap_packer("/tmp/prefilter_fixup_%d.tif", max_level, os.path.join(self.output_directory, "cubemap_prefilter"))
 
         # create the integrateBRDF texture
+        # we dont need to recreate it each time
         outout_filename = os.path.join(self.output_directory, "brdf.bin" )
         cmd = "{} -s {} -n {} {}".format(envIntegrateBRDF_cmd, self.integrate_BRDF_size, self.nb_samples, outout_filename)
         execute_command(cmd)
@@ -193,10 +201,10 @@ class ProcessEnvironment(object):
         max_level = int(math.log(self.specular_size*4) / math.log(2)) + 1
 
         for i in range(1, max_cubemap_level):
-            size_cubemap = pow(2, max_cubemap_level - i )
+            level = i - 1
             size = pow(2, max_level - i )
-            input_filename = "/tmp/prefilter_specular_{}.tif".format(size_cubemap)
-            output_filename = "/tmp/panorama_prefilter_specular_{}.tif".format(size)
+            input_filename = "/tmp/prefilter_specular_{}.tif".format(level)
+            output_filename = "/tmp/panorama_prefilter_specular_{}.tif".format(level)
             cmd = "{} -p {} -n {} -i cube -o rect {} {}".format(envremap_cmd, self.pattern_filter, size/2, input_filename, output_filename)
             execute_command(cmd)
 
@@ -229,9 +237,9 @@ class ProcessEnvironment(object):
         self.cubemap_generic = cubemap_generic
         execute_command(cmd)
 
-        # create cubemap original
-        # we could remove this later
-        self.create_cubemap(cubemap_generic, os.path.join(self.output_directory, 'cubemap'))
+        # create cubemap original for debug
+        if DEBUG is True:
+            self.create_cubemap(cubemap_generic, os.path.join(self.output_directory, 'cubemap'))
 
         # generate irradiance*PI panorama/cubemap/sph
         self.compute_irradiance(cubemap_generic)
@@ -267,7 +275,7 @@ output_directory = argv[2]
 #process = ProcessEnvironment(input_file, output_directory, specular_size = 256, nb_samples = 65536)
 #process = ProcessEnvironment(input_file, output_directory, specular_size = 256, nb_samples = 1024)
 #process = ProcessEnvironment( input_file, output_directory, specular_size = 512, nb_samples = 65536, prefilter_stop_size = 8 )
-process = ProcessEnvironment( input_file, output_directory, specular_size = 256, nb_samples = 65536, prefilter_stop_size = 8 )
+process = ProcessEnvironment( input_file, output_directory, specular_size = 256, nb_samples = 32, prefilter_stop_size = 65536 )
 #process = ProcessEnvironment(input_file, output_directory, nb_samples = 1024)
 process.run()
 
