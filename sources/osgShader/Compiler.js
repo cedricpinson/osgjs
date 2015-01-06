@@ -424,21 +424,17 @@ define( [
             var texturesInput = [];
             var textures = this._texturesByName;
 
-            for ( var tex in textures ) {
+            var keys = Object.keys(textures);
+            for ( var i = 0; i < keys.length; i++) {
+                var texture = textures[ keys[i] ];
 
-                if ( textures.hasOwnProperty( tex ) ) {
-                    var texture = textures[ tex ];
+                if ( !texture )
+                    continue;
 
-                    if ( !texture ) {
-                        continue;
-                    }
+                if ( texture.shadow )
+                    continue;
 
-                    if ( texture.shadow ) {
-                        continue;
-                    }
-                    texturesInput.push( texture.variable );
-                }
-
+                texturesInput.push( texture.variable );
             }
 
             // if multi texture multiply them all with diffuse

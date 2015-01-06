@@ -9,6 +9,8 @@ define( [
     'osg/Map'
 ], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ReaderParser, Map ) {
 
+    'use strict';
+
     // helper
     var isPowerOf2 = function ( x ) {
         /*jshint bitwise: false */
