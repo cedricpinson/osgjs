@@ -112,12 +112,12 @@ define( [
             return this._camera;
         },
         setTextureSize: function ( w, h ) {
-            if ( w !== undefined ) this._textureWidth = w;
-            if ( h !== undefined ) this._textureHeight = h;
-            this._mapSize[ 0 ] = this._textureWidth;
-            this._mapSize[ 1 ] = this._textureHeight;
-            this._mapSize[ 2 ] = 1.0 / this._mapSize[ 0 ];
-            this._mapSize[ 3 ] = 1.0 / this._mapSize[ 1 ];
+            Texture.prototype.setTextureSize.call( this, w, h );
+
+            this._mapSize[ 0 ] = w;
+            this._mapSize[ 1 ] = h;
+            this._mapSize[ 2 ] = 1.0 / w;
+            this._mapSize[ 3 ] = 1.0 / h;
             this._cameraDirty = true; // have to resize framebuffers
         },
         apply: function ( state, texUnit ) {
@@ -132,7 +132,7 @@ define( [
                     frameBuffer.dirty();
                 }
 
-                this._camera.attachTexture( gl.COLOR_ATTACHMENT0, this, 0 );
+                this._camera.attachTexture( gl.COLOR_ATTACHMENT0, this );
                 this._camera.attachRenderBuffer( gl.DEPTH_ATTACHMENT, gl.DEPTH_COMPONENT16 );
 
                 this._camera.setViewport( new Viewport( 0, 0, this._textureWidth, this._textureHeight ) );
