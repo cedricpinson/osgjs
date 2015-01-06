@@ -83,6 +83,8 @@ define( [
             this._cbSelect = cb;
         },
         apply: function ( node ) {
+            if ( node._isNormalDebug )
+                return;
 
             if ( this._fullNodeList[ node.getInstanceID() ] !== node ) {
 
@@ -132,6 +134,7 @@ define( [
             this._linkList.length = 0;
             this._uniqueEdges.clear();
             this._focusedElement = 'scene';
+            $( '.osgDebugButton' ).hide();
         },
 
         focusOnScene: function () {
@@ -187,6 +190,7 @@ define( [
 
             // Add the style of the graph
             this.injectStyleElement();
+            $( '.osgDebugButton' ).show();
 
             // Create the renderer
             var renderer = this.renderer = new window.dagreD3.Renderer();
