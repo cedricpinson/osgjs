@@ -56,9 +56,9 @@ define( [
                 state.applyStateSet( stateSet1 );
                 state.applyStateSet( stateSet2 );
 
-                equal( state.stateSets.length, 1, 'check stateSet stack length' );
+                equal( state.getStateSetStackSize(), 1, 'check stateSet stack length' );
                 notEqual( state.getLastProgramApplied(), undefined, 'check last program applied' );
-                equal( state.attributeMap.Program.length, 0, 'check program stack length' );
+                equal( state.attributeMap.Program.values().length, 0, 'check program stack length' );
             } )();
         } );
 
