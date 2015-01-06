@@ -174,7 +174,7 @@ define( [
                         var a = attachments[ key ];
 
                         var attach = {};
-                        attach.attachment = key;
+                        attach.attachment = a.attachment;
 
                         if ( a.texture === undefined ) { //renderbuffer
 

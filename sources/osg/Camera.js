@@ -150,6 +150,7 @@ define( [
                 }
 
                 this._attachments[ bufferComponent ] = {
+                    'attachment': bufferComponent,
                     'texture': texture,
                     'textureTarget': textureTarget
                 };
@@ -160,7 +161,8 @@ define( [
                     this.frameBufferObject.dirty();
                 }
                 this._attachments[ bufferComponent ] = {
-                    'format': internalFormat
+                    'format': internalFormat,
+                    'attachment': bufferComponent
                 };
             },
 
