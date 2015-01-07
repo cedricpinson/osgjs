@@ -916,9 +916,11 @@
             group.getOrCreateStateSet().addUniform( this._lod );
             group.getOrCreateStateSet().addUniform( flipNormalY );
 
-            var integrateBRDFUniform = osg.Uniform.createInt1( this._integrateBRDFTextureUnit, 'uIntegrateBRDF' );
-            group.getOrCreateStateSet().addUniform( integrateBRDFUniform );
-            group.getOrCreateStateSet().setTextureAttributeAndModes( this._integrateBRDFTextureUnit, this._currentEnvironment.getIntegrateBRDF().getTexture() );
+            if ( !isMobileDevice() ) {
+                var integrateBRDFUniform = osg.Uniform.createInt1( this._integrateBRDFTextureUnit, 'uIntegrateBRDF' );
+                group.getOrCreateStateSet().addUniform( integrateBRDFUniform );
+                group.getOrCreateStateSet().setTextureAttributeAndModes( this._integrateBRDFTextureUnit, this._currentEnvironment.getIntegrateBRDF().getTexture() );
+            }
 
             var promises = [];
 
