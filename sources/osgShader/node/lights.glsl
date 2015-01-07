@@ -42,31 +42,31 @@ void lambert(const in float ndl,  const in vec3 materialDiffuse, const in vec3 l
 //direction, dist, NDL, attenuation, compute diffuse, compute specular
 
 vec3 computeSpotLightShading(
-    const in vec3 normal,
-    const in vec3 eyeVector,
+                             const in vec3 normal,
+                             const in vec3 eyeVector,
 
-    const in vec3 materialAmbient,
-    const in vec3 materialDiffuse,
-    const in vec3 materialSpecular,
-    const in float materialShininess,
+                             const in vec3 materialAmbient,
+                             const in vec3 materialDiffuse,
+                             const in vec3 materialSpecular,
+                             const in float materialShininess,
 
-    const in vec3 lightAmbient,
-    const in vec3 lightDiffuse,
-    const in vec3 lightSpecular,
+                             const in vec3 lightAmbient,
+                             const in vec3 lightDiffuse,
+                             const in vec3 lightSpecular,
 
-    const in vec3  lightSpotDirection,
-    const in vec4  lightAttenuation,
-    const in vec4  lightSpotPosition,
-    const in float lightCosSpotCutoff,
-    const in float lightSpotBlend,
+                             const in vec3  lightSpotDirection,
+                             const in vec4  lightAttenuation,
+                             const in vec4  lightSpotPosition,
+                             const in float lightCosSpotCutoff,
+                             const in float lightSpotBlend,
 
-    const in mat4 lightMatrix,
-    const in mat4 lightInvMatrix,
+                             const in mat4 lightMatrix,
+                             const in mat4 lightInvMatrix,
 
-    out vec3 eyeLightPos,
-    out vec3 eyeLightDir,
-    out float NdotL,
-    out bool lighted)
+                             out vec3 eyeLightPos,
+                             out vec3 eyeLightDir,
+                             out float NdotL,
+                             out bool lighted)
 {
     lighted = false;
     eyeLightPos = vec3(lightMatrix * lightSpotPosition);
@@ -76,66 +76,66 @@ vec3 computeSpotLightShading(
     // compute attenuation
     float attenuation = getLightAttenuation(dist, lightAttenuation);
     if (attenuation != 0.0)
-    {
-        // compute direction
-        eyeLightDir = dist > 0.0 ? eyeLightDir / dist :  vec3( 0.0, 1.0, 0.0 );
-        if (lightCosSpotCutoff > 0.0)
         {
-            //compute lightSpotBlend
-            vec3 lightSpotDirectionEye = normalize(mat3(vec3(lightInvMatrix[0]), vec3(lightInvMatrix[1]), vec3(lightInvMatrix[2]))*lightSpotDirection);
-
-            float cosCurAngle = dot(-eyeLightDir, lightSpotDirectionEye);
-            float diffAngle = cosCurAngle - lightCosSpotCutoff;
-            float spot = 1.0;
-            if ( diffAngle < 0.0 ) {
-                spot = 0.0;
-            } else {
-                if ( lightSpotBlend > 0.0 )
-                    spot = cosCurAngle * smoothstep(0.0, 1.0, (cosCurAngle - lightCosSpotCutoff) / (lightSpotBlend));
-            }
-
-            if (spot > 0.0)
-            {
-                // compute NdL
-                NdotL = dot(eyeLightDir, normal);
-                if (NdotL > 0.0)
+            // compute direction
+            eyeLightDir = dist > 0.0 ? eyeLightDir / dist :  vec3( 0.0, 1.0, 0.0 );
+            if (lightCosSpotCutoff > 0.0)
                 {
-                    lighted = true;
-                    vec3 diffuseContrib;
-                    lambert(NdotL, materialDiffuse, lightDiffuse, diffuseContrib);
-                    vec3 specularContrib;
-                    specularCookTorrance(normal, eyeLightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
-                    return spot * attenuation * (diffuseContrib + specularContrib);
+                    //compute lightSpotBlend
+                    vec3 lightSpotDirectionEye = normalize(mat3(vec3(lightInvMatrix[0]), vec3(lightInvMatrix[1]), vec3(lightInvMatrix[2]))*lightSpotDirection);
+
+                    float cosCurAngle = dot(-eyeLightDir, lightSpotDirectionEye);
+                    float diffAngle = cosCurAngle - lightCosSpotCutoff;
+                    float spot = 1.0;
+                    if ( diffAngle < 0.0 ) {
+                        spot = 0.0;
+                    } else {
+                        if ( lightSpotBlend > 0.0 )
+                            spot = cosCurAngle * smoothstep(0.0, 1.0, (cosCurAngle - lightCosSpotCutoff) / (lightSpotBlend));
+                    }
+
+                    if (spot > 0.0)
+                        {
+                            // compute NdL
+                            NdotL = dot(eyeLightDir, normal);
+                            if (NdotL > 0.0)
+                                {
+                                    lighted = true;
+                                    vec3 diffuseContrib;
+                                    lambert(NdotL, materialDiffuse, lightDiffuse, diffuseContrib);
+                                    vec3 specularContrib;
+                                    specularCookTorrance(normal, eyeLightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
+                                    return spot * attenuation * (diffuseContrib + specularContrib);
+                                }
+                        }
                 }
-            }
         }
-    }
     return vec3(0.0);
 }
 
 vec3 computePointLightShading(
-    const in vec3 normal,
-    const in vec3 eyeVector,
+                              const in vec3 normal,
+                              const in vec3 eyeVector,
 
-    const in vec3 materialAmbient,
-    const in vec3 materialDiffuse,
-    const in vec3 materialSpecular,
-    const in float materialShininess,
+                              const in vec3 materialAmbient,
+                              const in vec3 materialDiffuse,
+                              const in vec3 materialSpecular,
+                              const in float materialShininess,
 
-    const in vec3 lightAmbient,
-    const in vec3 lightDiffuse,
-    const in vec3 lightSpecular,
+                              const in vec3 lightAmbient,
+                              const in vec3 lightDiffuse,
+                              const in vec3 lightSpecular,
 
-    const in vec4 lightPosition,
-    const in vec4 lightAttenuation,
+                              const in vec4 lightPosition,
+                              const in vec4 lightAttenuation,
 
-    const in mat4 lightMatrix,
-    const in mat4 lightInvMatrix,
+                              const in mat4 lightMatrix,
+                              const in mat4 lightInvMatrix,
 
-    out vec3 eyeLightPos,
-    out vec3 eyeLightDir,
-    out float NdotL,
-    out bool lighted)
+                              out vec3 eyeLightPos,
+                              out vec3 eyeLightDir,
+                              out float NdotL,
+                              out bool lighted)
 {
 
     eyeLightPos =  vec3(lightMatrix * lightPosition);
@@ -145,47 +145,47 @@ vec3 computePointLightShading(
     // compute attenuation
     float attenuation = getLightAttenuation(dist, lightAttenuation);
     if (attenuation != 0.0)
-    {
-        // compute direction
-        eyeLightDir = dist > 0.0 ? eyeLightDir / dist :  vec3( 0.0, 1.0, 0.0 );
-        // compute NdL
-        NdotL = dot(eyeLightDir, normal);
-        if (NdotL > 0.0)
         {
-          lighted = true;
-          vec3 diffuseContrib;
-          lambert(NdotL, materialDiffuse, lightDiffuse, diffuseContrib);
-          vec3 specularContrib;
-          specularCookTorrance(normal, eyeLightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
-          return attenuation * (diffuseContrib + specularContrib);
+            // compute direction
+            eyeLightDir = dist > 0.0 ? eyeLightDir / dist :  vec3( 0.0, 1.0, 0.0 );
+            // compute NdL
+            NdotL = dot(eyeLightDir, normal);
+            if (NdotL > 0.0)
+                {
+                    lighted = true;
+                    vec3 diffuseContrib;
+                    lambert(NdotL, materialDiffuse, lightDiffuse, diffuseContrib);
+                    vec3 specularContrib;
+                    specularCookTorrance(normal, eyeLightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
+                    return attenuation * (diffuseContrib + specularContrib);
+                }
         }
-    }
     return vec3(0.0);
 }
 
 vec3 computeSunLightShading(
 
-    const in vec3 normal,
-    const in vec3 eyeVector,
+                            const in vec3 normal,
+                            const in vec3 eyeVector,
 
-    const in vec3 materialAmbient,
-    const in vec3 materialDiffuse,
-    const in vec3 materialSpecular,
-    const in float materialShininess,
+                            const in vec3 materialAmbient,
+                            const in vec3 materialDiffuse,
+                            const in vec3 materialSpecular,
+                            const in float materialShininess,
 
-    const in vec3 lightAmbient,
-    const in vec3 lightDiffuse,
-    const in vec3 lightSpecular,
+                            const in vec3 lightAmbient,
+                            const in vec3 lightDiffuse,
+                            const in vec3 lightSpecular,
 
-    const in vec4 lightPosition,
+                            const in vec4 lightPosition,
 
-    const in mat4 lightMatrix,
-    const in mat4 lightInvMatrix,
+                            const in mat4 lightMatrix,
+                            const in mat4 lightInvMatrix,
 
-    out vec3 eyeLightPos,
-    out vec3 eyeLightDir,
-    out float NdotL,
-    out bool lighted)
+                            out vec3 eyeLightPos,
+                            out vec3 eyeLightDir,
+                            out float NdotL,
+                            out bool lighted)
 {
 
     lighted = false;
@@ -193,13 +193,13 @@ vec3 computeSunLightShading(
     // compute NdL   // compute NdL
     NdotL = dot(eyeLightDir, normal);
     if (NdotL > 0.0)
-    {
-       lighted = true;
-       vec3 diffuseContrib;
-       lambert(NdotL, materialDiffuse, lightDiffuse, diffuseContrib);
-       vec3 specularContrib;
-       specularCookTorrance(normal, eyeLightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
-       return (diffuseContrib + specularContrib);
-    }
+        {
+            lighted = true;
+            vec3 diffuseContrib;
+            lambert(NdotL, materialDiffuse, lightDiffuse, diffuseContrib);
+            vec3 specularContrib;
+            specularCookTorrance(normal, eyeLightDir, eyeVector, materialShininess, materialSpecular, lightSpecular, specularContrib);
+            return (diffuseContrib + specularContrib);
+        }
     return vec3(0.0);
 }

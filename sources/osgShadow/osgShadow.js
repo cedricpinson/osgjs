@@ -6,6 +6,7 @@ define( [
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowMap'
 ], function ( ShadowAttribute, ShadowTexture, ShadowedScene, ShadowSettings, ShadowTechnique, ShadowMap ) {
+    'use strict';
 
     var osgShadow = {};
 

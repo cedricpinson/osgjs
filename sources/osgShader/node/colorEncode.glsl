@@ -11,7 +11,7 @@ vec4 encodeFloatRGBA( float v ) {
 }
 
 vec2 decodeHalfFloatRGBA( vec4 rgba ) {
-  return vec2(rgba.x + (rgba.y / 255.0), rgba.z + (rgba.w / 255.0));
+    return vec2(rgba.x + (rgba.y / 255.0), rgba.z + (rgba.w / 255.0));
 }
 
 vec4 encodeHalfFloatRGBA( vec2 v ) {

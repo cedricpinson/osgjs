@@ -111,7 +111,7 @@ define( [
             }
         },
 
-    } ), 'osg', 'ShadowTechnique' );
+    } ), 'osgShadow', 'ShadowTechnique' );
 
 
     MACROUTILS.setTypeID( ShadowTechnique );

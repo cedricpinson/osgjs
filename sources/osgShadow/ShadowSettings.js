@@ -14,50 +14,70 @@ define( [
         this._receivesShadowTraversalMask = 0xffffffff;
         this._castsShadowTraversalMask = 0xffffffff;
 
-        this._computeNearFearModeOverride = true;
-
-
-        this._baseShadowTextureUnit = 1;
-        this._useShadowMapTextureOverride = true;
         this._textureSize = 1024;
 
-        this._minimumShadowMapNearFarRatio = 0.05;
-        this._maximumShadowMapDistance = Number.MAX_VALUE;
-        //this._shadowMapProjectionHint = PERSPECTIVE_SHADOW_MAP;
-        this._perspectiveShadowMapCutOffAngle = 2.0;
-
-        this._numShadowMapsPerLight = 1;
-        //this._multipleShadowMapHint = PARALLEL_SPLIT;
-
-        //this._shaderHint = PROVIDE_FRAGMENT_SHADER;
-        this._debugDraw = false;
-
-        this._glContext = undefined;
-
+        // important note:
+        // comparison shadow is: DepthShadow > DephFragment => shadowed
+        // which is d<z
+        // and
+        // Average( (d < z) ) != (Average( z ) < d)
+        // so PCF/NONE technique cannot be prefiltered (bilinear, etc..) with HW filter
+        // on gl/dx desktop there is a sampler2DShadow that allows that taking z in third param
+        // we emulate that with texture2DShadowLerp
+        // which is why some techniques have more texfetch than advertized.
+        // http://http.developer.nvidia.com/GPUGems/gpugems_ch11.html
 
         this._config = {
+            // Impact on shadow aliasing by better coverage
             'texturesize': 1024,
-            'shadow': 'ESM',
-            'texturetype': 'Force8bits',
+            // algo for shadow
+            //'Variance Shadow Map (VSM)': 'VSM',
+            //'Exponential Variance Shadow Map (EVSM)': 'EVSM',
+            //'Exponential Shadow Map (ESM)': 'ESM',
+            //'Shadow Map': 'NONE',
+            //'Shadow Map Percentage Close Filtering (PCF)': 'PCF'
+            // nice overview here
+            // http://developer.download.nvidia.com/presentations/2008/GDC/GDC08_SoftShadowMapping.pdf
+            // ALGO alllowing filtering
+            //
+            // ESM http://research.edm.uhasselt.be/tmertens/papers/gi_08_esm.pdf
+            // http://pixelstoomany.wordpress.com/2008/06/12/a-conceptually-simpler-way-to-derive-exponential-shadow-maps-sample-code/
+            // VSM: http://www.punkuser.net/vsm/
+            // http://lousodrome.net/blog/light/tag/evsm
+            'shadow': 'PCF',
+            // texture precision. (and bandwith implication)
+            'texturetype': 'UNSIGNED_BYTE',
             'lightnum': 1,
+            // depth offset (shadow acne / peter panning)
             'bias': 0.005,
+            // VSM bias
             'VsmEpsilon': 0.0008,
+            // PCF algo and kernel size
+            // Band kernelsize gives nxn texFetch
+            // others a n*n*4 (emulating the HW shadowSampler)
+            // '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)', '64Poisson(256texFetch)'
+            'pcfKernelSize': '4Tap(4texFetch)', //'4Tap', '9Tap', '16Tap', '16Band'
+            // for prefilterable technique (ESM/VSM/EVSM)
             'supersample': 0,
             'blur': false,
             'blurKernelSize': 4.0,
             'blurTextureSize': 256,
-            'model': 'ogre',
-            'shadowstable': 'World Position',
+            // either orthogonal (non-fov) or perpsective (fov)
             'shadowproj': 'fov',
+            // fov size: can be infered from spotlight angle
             'fov': 50,
+            // Exponential techniques variales
             'exponent': 40,
-            'exponent1': 10.0,
+            'exponent1': 10.0
         };
-        this._textureType = 'BYTE';
+
+        this._textureType = 'UNSIGNED_BYTE';
         this._textureFormat = Texture.RGBA;
         this._textureFilterMin = Texture.NEAREST;
         this._textureFilterMax = Texture.NEAREST;
-        this._algorithm = 'ESM';
+
+        this._algorithm = 'PCF';
+
         // if url options override url options
         MACROUTILS.objectMix( this._config, options );
     };
@@ -73,13 +93,6 @@ define( [
             return this._castsShadowTraversalMask;
         },
 
-        setComputeNearFarModeOverride: function ( cnfn ) {
-            this._computeNearFearModeOverride = cnfn;
-        },
-        getComputeNearFarModeOverride: function () {
-            return this._computeNearFearModeOverride;
-        },
-
         setLightSource: function ( lightSource ) {
             this._lightSource = lightSource;
         },
@@ -87,23 +100,6 @@ define( [
             return this._lightSource;
         },
 
-        setBaseShadowTextureUnit: function ( unit ) {
-            this._baseShadowTextureUnit = unit;
-        },
-        getBaseShadowTextureUnit: function () {
-            return this._baseShadowTextureUnit;
-        },
-
-        /** Set whether to use osg::StateAttribute::OVERRIDE for the shadow map texture.
-         * Enabling override will force the shadow map texture to override any texture set on the shadow maps texture unit.*/
-        setUseOverrideForShadowMapTexture: function ( useOverride ) {
-            this._useShadowMapTextureOverride = useOverride;
-        },
-
-        /** Get whether to use osg::StateAttribute::OVERRIDE for the shadow map texture. */
-        getUseOverrideForShadowMapTexture: function () {
-            return this._useShadowMapTextureOverride;
-        },
 
         setTextureSize: function ( textureSize ) {
             this._textureSize = textureSize;
@@ -143,91 +139,12 @@ define( [
         getAlgorithm: function () {
             return this._algorithm;
         },
-        setMinimumShadowMapNearFarRatio: function ( ratio ) {
-            this._minimumShadowMapNearFarRatio = ratio;
-
-            this._dirty = true;
-        },
-        getMinimumShadowMapNearFarRatio: function () {
-            return this._minimumShadowMapNearFarRatio;
-        },
-
-        setMaximumShadowMapDistance: function ( distance ) {
-            this._maximumShadowMapDistance = distance;
-
-            this._dirty = true;
-        },
-        getMaximumShadowMapDistance: function () {
-            return this._maximumShadowMapDistance;
-        },
-
-
-        setShadowMapProjectionHint: function ( h ) {
-            this._shadowMapProjectionHint = h;
-            this._dirty = true;
-        },
-        getShadowMapProjectionHint: function () {
-            return this._shadowMapProjectionHint;
-        },
-
-
-        /** Set the cut off angle, in degrees, between the light direction and the view direction
-         * that determines whether perspective shadow mapping is appropriate, or thar orthographic shadow
-         * map should be used instead.  Default is 2 degrees so that for any angle greater than 2 degrees
-         * perspective shadow map will be used, and any angle less than 2 degrees orthographic shadow map
-         * will be used.  Note, if ShadowMapProjectionH is set to ORTHOGRAPHICthis._SHADOWthis._MAP then an
-         * orthographic shadow map will always be used.
-         */
-        setPerspectiveShadowMapCutOffAngle: function ( angle ) {
-            this._perspectiveShadowMapCutOffAngle = angle;
-            this._dirty = true;
-        },
-        getPerspectiveShadowMapCutOffAngle: function () {
-            return this._perspectiveShadowMapCutOffAngle;
-        },
-
-
-        setNumShadowMapsPerLight: function ( numShadowMaps ) {
-            this._numShadowMapsPerLight = numShadowMaps;
-            this._dirty = true;
-        },
-        getNumShadowMapsPerLight: function () {
-            return this._numShadowMapsPerLight;
-        },
-
-
-        setMultipleShadowMapHint: function ( h ) {
-            this._multipleShadowMapHint = h;
-            this._dirty = true;
-        },
-        getMultipleShadowMapHint: function () {
-            return this._multipleShadowMapHint;
-        },
-
-
-
-        setShaderHint: function ( shaderHint ) {
-            this._shaderHint = shaderHint;
-            this._dirty = true;
-        },
-        getShaderHint: function () {
-            return this._shaderHint;
-        },
-
-        setDebugDraw: function ( debugDraw ) {
-            this._debugDraw = debugDraw;
-            this._dirty = true;
-        },
-        getDebugDraw: function () {
-            return this._debugDraw;
-        },
-
 
         getConfig: function ( idx ) {
             return this._config[ idx ];
         }
 
-    } ), 'osg', 'ShadowSettings' );
+    } ), 'osgShadow', 'ShadowSettings' );
     MACROUTILS.setTypeID( ShadowSettings );
 
     return ShadowSettings;

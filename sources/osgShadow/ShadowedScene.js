@@ -19,7 +19,7 @@ define( [
     var ShadowedScene = function () {
         Node.call( this );
 
-        // TODO: all  techniques
+        // TODO: all  techniques (stencil/projTex/map/vol)
         this._shadowTechniques = [];
 
         this._dirty = true;
@@ -153,7 +153,8 @@ define( [
             ////////////////
             // RECEIVERS stateSet
             if ( this._receivingStateset ) {
-                this._receivingStateset.releaseGLObjects();
+                //TODO: need state
+                //this._receivingStateset.releaseGLObjects();
             }
             var receiverStateSet = new StateSet(); //this.getReceivingStateSet();
 
@@ -260,8 +261,11 @@ define( [
         },
 
 
-    } ), 'osg', 'ShadowedScene' );
+    } ), 'osgShadow', 'ShadowedScene' );
     MACROUTILS.setTypeID( ShadowedScene );
+
+    // same code like Node
+    CullVisitor.prototype[ ShadowedScene.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
     return ShadowedScene;
 } );

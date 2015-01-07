@@ -14,13 +14,12 @@ define( [
     'osg/Node',
     'osg/Lod',
     'osg/PagedLOD',
-    'osgShadow/ShadowedScene',
     'osg/Camera',
     'osg/TransformEnums',
     'osg/Vec4',
     'osg/Vec3',
     'osg/ComputeMatrixFromNodePath'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderLeaf, RenderStage, Node, Lod, PagedLOD, ShadowedScene, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath ) {
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderLeaf, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec4, Vec3, ComputeMatrixFromNodePath ) {
 
 
 
@@ -586,8 +585,6 @@ define( [
     // same code like Node
     CullVisitor.prototype[ PagedLOD.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
-    // same code like Node
-    CullVisitor.prototype[ ShadowedScene.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
     CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
 

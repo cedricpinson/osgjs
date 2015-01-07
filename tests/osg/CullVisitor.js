@@ -19,13 +19,13 @@ define( [
     'osgViewer/View',
     'osgViewer/Viewer',
     'osgShader/ShaderGeneratorProxy'
-], function( mockup, BoundingBox, Camera, CullSettings, CullVisitor, Matrix, MatrixTransform, Node, RenderBin, RenderStage, Shape, StateGraph, State, StateSet, TransformEnums, Vec3, Viewport, View, Viewer, ShaderGeneratorProxy ) {
+], function ( mockup, BoundingBox, Camera, CullSettings, CullVisitor, Matrix, MatrixTransform, Node, RenderBin, RenderStage, Shape, StateGraph, State, StateSet, TransformEnums, Vec3, Viewport, View, Viewer, ShaderGeneratorProxy ) {
 
-    return function() {
+    return function () {
 
         module( 'osg' );
 
-        test( 'CullVisitor', function() {
+        test( 'CullVisitor', function () {
 
             var canvas = mockup.createCanvas();
             var viewer = new Viewer( canvas );
@@ -45,17 +45,17 @@ define( [
             var callb = 0;
             var callc = 0;
 
-            var fb = function() {};
+            var fb = function () {};
             fb.prototype = {
-                cull: function( node, nv ) {
+                cull: function ( node, nv ) {
                     callb = 1;
                     return false;
                 }
             };
 
-            var fc = function() {};
+            var fc = function () {};
             fc.prototype = {
-                cull: function( node, nv ) {
+                cull: function ( node, nv ) {
                     callc = 1;
                     return true;
                 }
@@ -76,10 +76,10 @@ define( [
         } );
 
 
-        test( 'CullVisitor 2', function() {
+        test( 'CullVisitor 2', function () {
 
             // check render stage and render bin
-            ( function() {
+            ( function () {
                 var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 viewer.setupManipulator();
@@ -120,16 +120,16 @@ define( [
 
 
             // check render stage and render bin
-            ( function() {
+            ( function () {
                 var state = new State( new ShaderGeneratorProxy() );
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() {
+                fakeRenderer.validateProgram = function () {
                     return true;
                 };
-                fakeRenderer.getProgramParameter = function() {
+                fakeRenderer.getProgramParameter = function () {
                     return true;
                 };
-                fakeRenderer.isContextLost = function() {
+                fakeRenderer.isContextLost = function () {
                     return false;
                 };
 
@@ -166,7 +166,7 @@ define( [
 
 
             // check the computation of nearfar
-            ( function() {
+            ( function () {
                 var camera0 = new Camera();
 
                 var mt = new MatrixTransform();
@@ -215,7 +215,7 @@ define( [
             } )();
 
             // check the computation of nearfar with camera in position that it reverses near far
-            ( function() {
+            ( function () {
                 var camera0 = new Camera();
 
                 var mt = new MatrixTransform();
@@ -267,14 +267,14 @@ define( [
             } )();
 
 
-            ( function() {
+            ( function () {
                 var camera0 = new Camera();
 
                 var geom = Shape.createTexturedQuadGeometry( -5.0, -5, 0,
                     10, 0, 0,
                     0, 10, 0,
                     1, 1 );
-                geom.getBoundingBox = function() {
+                geom.getBoundingBox = function () {
                     var bb = new BoundingBox();
                     bb._min = [ -6131940, -6297390, -6356750 ];
                     bb._max = [ 6353000, 6326310, 6317430 ];
@@ -352,7 +352,7 @@ define( [
             } )();
 
 
-            ( function() {
+            ( function () {
 
                 var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
@@ -404,7 +404,7 @@ define( [
             } )();
 
 
-            ( function() {
+            ( function () {
 
                 var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
 
@@ -450,7 +450,7 @@ define( [
             } )();
 
 
-            ( function() {
+            ( function () {
                 var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 viewer.init();
@@ -490,13 +490,13 @@ define( [
 
                 var state = new State( new ShaderGeneratorProxy() );
                 var fakeRenderer = mockup.createFakeRenderer();
-                fakeRenderer.validateProgram = function() {
+                fakeRenderer.validateProgram = function () {
                     return true;
                 };
-                fakeRenderer.getProgramParameter = function() {
+                fakeRenderer.getProgramParameter = function () {
                     return true;
                 };
-                fakeRenderer.isContextLost = function() {
+                fakeRenderer.isContextLost = function () {
                     return false;
                 };
                 state.setGraphicContext( fakeRenderer );
@@ -505,7 +505,7 @@ define( [
 
             } )();
 
-            ( function() {
+            ( function () {
                 var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );
                 viewer.init();
@@ -534,7 +534,7 @@ define( [
 
             } )();
 
-            ( function() {
+            ( function () {
                 var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas, {
                     'enableFrustumCulling': true
@@ -577,9 +577,9 @@ define( [
         } );
 
 
-        test( 'CullVisitor World/View matrix', function() {
+        test( 'CullVisitor World/View matrix', function () {
 
-            var checkLeaf = function( leaf ) {
+            var checkLeaf = function ( leaf ) {
                 var tmp = Matrix.create();
                 Matrix.mult( leaf._view, leaf._modelWorld, tmp );
 

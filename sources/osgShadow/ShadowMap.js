@@ -23,9 +23,8 @@ define( [
     'osgShadow/ShadowAttribute',
     'osgShadow/ShadowTexture',
     'osgShader/ShaderProcessor',
-    'osgShadow/ShadowTechnique',
-    'osg/CullFace'
-], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath, Transform, Camera, Texture, Viewport, StateSet, StateAttribute, Uniform, Shader, Program, ShadowAttribute, ShadowTexture, ShaderProcessor, ShadowTechnique, CullFace ) {
+    'osgShadow/ShadowTechnique'
+], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath, Transform, Camera, Texture, Viewport, StateSet, StateAttribute, Uniform, Shader, Program, ShadowAttribute, ShadowTexture, ShaderProcessor, ShadowTechnique ) {
     'use strict';
 
     /**
@@ -45,8 +44,10 @@ define( [
         this._lightUp = [ 0.0, 0.0, 1.0 ];
         this._shadowSettings = settings;
 
+
+        // see shadowSettings.js header for param explanations
         this._textureSize = 256;
-        this._texturePrecisionFormat = 'BYTE';
+        this._texturePrecisionFormat = 'UNSIGNED_BYTE';
         this._algorithm = 'PCF';
         this._depthRange = new Array( 4 );
 
@@ -102,49 +103,6 @@ define( [
             cache[ hash ] = program;
             return program;
         },
-
-        // TODO: remove either here or in node shadow: code repetition ?
-        // ... otherwise caster and receiver doesn't get same defines
-        // if any change done here and not overthere
-        getDefines: function () {
-
-            var textureType = this._shadowAttribute.getPrecision();
-            var algo = this._shadowAttribute.getAlgorithm();
-            var defines = [];
-
-            var isFloat = false;
-            var isLinearFloat = false;
-
-            if ( ( typeof textureType === 'string' && textureType !== 'BYTE' ) || textureType !== Texture.UNSIGNED_BYTE ) {
-                isFloat = true;
-            }
-
-            if ( isFloat && ( ( typeof textureType === 'string' && textureType.indexOf( 'LINEAR' ) !== -1 ) || textureType === Texture.HALF_FLOAT_LINEAR || textureType === Texture.FLOAT_LINEAR ) ) {
-                isLinearFloat = true;
-            }
-
-
-            if ( algo === 'ESM' ) {
-                defines.push( '#define _ESM' );
-            } else if ( algo === 'NONE' ) {
-                defines.push( '#define _NONE' );
-            } else if ( algo === 'PCF' ) {
-                defines.push( '#define _PCF' );
-            } else if ( algo === 'VSM' ) {
-                defines.push( '#define _VSM' );
-            } else if ( algo === 'EVSM' ) {
-                defines.push( '#define _EVSM' );
-            }
-
-            if ( isFloat ) {
-                defines.push( '#define  _FLOATTEX' );
-            }
-            if ( isLinearFloat ) {
-                defines.push( '#define  _FLOATLINEAR' );
-            }
-
-            return defines;
-        },
         // computes a shader upon user choice
         // of shadow algorithms
         // shader file, define but texture type/format
@@ -154,39 +112,16 @@ define( [
             var shadowSettings = this._shadowSettings || this.getShadowedScene().getShadowSettings();
 
             var textureFormat = shadowSettings.getTextureFormat();
-            var defines = this.getDefines();
+            var defines = this._shadowAttribute.getDefines();
 
-            /*
-            var floatTexSupp = textureType !== 'BYTE';
-            if ( floatTexSupp && algo === 'EVSM' ) {
-                textureFormat = Texture.RGBA;
-            } else if ( floatTexSupp && algo === 'VSM' ) {
-                textureFormat = Texture.RGBA;
-            } else {
-                if ( algo === 'ESM' ) {
-                    textureFormat = Texture.LUMINANCE;
-                } else if ( algo === 'NONE' ) {
-                    if ( floatTexSupp )
-                        textureFormat = Texture.LUMINANCE;
-                } else if ( algo === 'PCF' ) {
-                    if ( floatTexSupp )
-                        textureFormat = Texture.LUMINANCE;
-                } else if ( algo === 'VSM' ) {
-                    textureFormat = Texture.RGBA;
-                }
-                textureFormat = Texture.RGBA;
-            }*/
-            // BASE FORMAT, unfortunately LUMINANCe isn't well supported on safari ?
-            // TODO: LUMINANCE framebuffer render texture support ?
+            // BASE FORMAT, unfortunately LUMINANCE isn't well supported on safari ?
+            // TODO: LUMINANCE framebuffer float render texture support
+            // save BW on float texture when using single float
             textureFormat = Texture.RGBA;
 
             var shadowmapCasterVertex = 'shadowsCastVert.glsl';
             var shadowmapCasterFragment = 'shadowsCastFrag.glsl';
             var prg = this.getShaderProgram( shadowmapCasterVertex, shadowmapCasterFragment, defines );
-
-            //this._texturePrecisionFormat
-            //= textureType;
-            //this.textureFormat = textureFormat;
 
             return prg;
         },
@@ -247,6 +182,12 @@ define( [
         setVsmEpsilon: function ( value ) {
             this._shadowAttribute.setVsmEpsilon( value );
         },
+        getPCFKernelSize: function () {
+            return this._shadowAttribute.getPCFKernelSize();
+        },
+        setPCFKernelSize: function ( value ) {
+            this._shadowAttribute.setPCFKernelSize( value );
+        },
 
         /** initialize the ShadowedScene and local cached data structures.*/
         init: function () {
@@ -272,17 +213,18 @@ define( [
             var exponent0 = shadowSettings._config[ 'exponent' ];
             var exponent1 = shadowSettings._config[ 'exponent1' ];
             var vsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
+            var pcfKernelSize = shadowSettings._config[ 'pcfKernelSize' ];
 
-            this._shadowAttribute = new ShadowAttribute( light, this._algorithm, bias, exponent0, exponent1, vsmEpsilon, this._texturePrecisionFormat );
+            this._shadowAttribute = new ShadowAttribute( light, this._algorithm, bias, exponent0, exponent1, vsmEpsilon, pcfKernelSize, this._texturePrecisionFormat );
             this._receivingStateset = this._shadowedScene.getReceivingStateSet();
 
-            // First init
+            // First init-
+
+            // TODO: TexUnit choice reservation
             var texUnit = light.getLightNumber() + 4;
             if ( !this._texture ) {
 
                 var shadowTexture = new ShadowTexture();
-                // TODO texUnit choice: 4 shift ... is abitrary and wrong
-                // TODO: LIGHT NUMBER in shadowTexture ...
                 shadowTexture.setLightUnit( light.getLightNumber() );
                 shadowTexture.setName( 'ShadowTexture' + texUnit );
                 this._texture = shadowTexture;
@@ -306,10 +248,6 @@ define( [
                 //////////////
                 var casterStateSet = new StateSet();
                 shadowSettings._castingStateset = casterStateSet;
-
-                // just keep same as render
-                //casterStateSet.setAttributeAndModes(new CullFace(CullFace.DISABLE), StateAttribute.ON | StateAttribute.OVERRIDE);
-                casterStateSet.setAttributeAndModes( new CullFace( CullFace.BACK ), StateAttribute.ON | StateAttribute.OVERRIDE );
 
                 var myuniform;
                 myuniform = Uniform.createFloat1( exponent0, 'exponent0' );
@@ -379,6 +317,7 @@ define( [
             var texType = this._texturePrecisionFormat;
             var textureType, textureFormat, texFilterMin, texFilterMax;
 
+            // see shadowSettings.js header
             switch ( this._algorithm ) {
             case 'ESM':
             case 'VSM':
@@ -460,31 +399,6 @@ define( [
         },
 
         /*
-         * compute  scene bounding box and bounding sphere
-         */
-        getBoundsCaster: function ( worldLightPos ) {
-            var bs;
-            // get the bounds of the scene
-
-            var shadowSettings = this.getShadowSettings();
-            shadowSettings._cbbv.reset( worldLightPos, this._frustumReceivers, this._frustumReceivers.length );
-            // Why would we restrict the bbox further used for computation to just the
-            // caster bbox ?
-            // we'll need both caster+receiver to determine shadow map view/projection
-            //shadowSettings._cbbv.setTraversalMask( shadowSettings.getCastsShadowTraversalMask() );
-            //shadowSettings._cbbv.setTraversalMask( shadowSettings.getReceivesShadowTraversalMask() );
-
-
-            this.getShadowedScene().nodeTraverse( shadowSettings._cbbv );
-            bs = this._bs;
-            bs.init();
-            bs.expandByBox( shadowSettings._cbbv.getBoundingBox() );
-
-            this._boundsCaster = bs;
-            return this._boundsCaster;
-        },
-
-        /*
          * Sync camera and light vision so that
          * shadow map render using a camera whom
          * settings come from the light
@@ -501,18 +415,14 @@ define( [
             Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
             var projection = this._projectionMatrix;
             var view = this._viewMatrix;
-            //var projection = camera.getProjectionMatrix();
-            //var view = camera.getViewMatrix();
 
             // inject camera world matrix.
             // from light current world/pos
 
-            // (those you could get during "light addpositionedAttributes" cull pass.. ?)
             // TODO: clever code share between light and shadow attributes
             // try reusing light matrix uniform.
             var matrixList = lightSource.getWorldMatrices();
             var worldMatrix = matrixList[ 0 ]; // world
-            //var worldMatrix = matrixList[ 1 ]; // scene camera space
 
             var worldLightPos = this._worldLightPos;
             var worldLightDir = this._worldLightDir;
@@ -554,7 +464,6 @@ define( [
                 // with a early out
                 Notify.log( 'empty shadowMap' );
                 // for now just prevent NaN errors
-
 
                 zFar = 1;
                 zNear = 0.001;
@@ -618,15 +527,6 @@ define( [
                     // statically defined by spot, only needs zNear zFar estimates
                     // or moste precise possible to tighten and enhance precision
                     Matrix.makePerspective( spotAngle * 2.0, 1.0, zNear, zFar, projection );
-
-                    // now compute view
-                    var worldTarget = this._worldTarget || Vec3.create();
-                    this._worldTarget = this.tmpVecBis;
-                    // ray along direction
-                    Vec3.mult( worldLightDir, zFar, worldTarget );
-                    //Vec3.mult( worldLightDir, centerDistance, worldTarget );
-                    // do go far a way adding that scaled ray on ligth pos
-                    Vec3.add( worldLightPos, worldTarget, worldTarget );
                     Matrix.makeLookAt( worldLightPos, center, up, view );
                 } else {
                     // point light/sortof
@@ -682,7 +582,8 @@ define( [
             if ( exponent1 ) this.setExponent1( exponent1 );
             var vsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
             if ( vsmEpsilon ) this.setVsmEpsilon( vsmEpsilon );
-
+            var pcfKernelSize = shadowSettings._config[ 'pcfKernelSize' ];
+            if ( pcfKernelSize ) this.setPCFKernelSize( pcfKernelSize );
         },
 
         cullShadowCastingScene: function ( cullVisitor ) {
@@ -737,7 +638,8 @@ define( [
 
             if ( shadowSettings._castingStateset ) {
                 shadowSettings._cameraShadow = undefined;
-                shadowSettings._castingStateset.releaseGLObjects();
+                // TODO: need state
+                //shadowSettings._castingStateset.releaseGLObjects();
                 shadowSettings._castingStateset = undefined;
             }
 
@@ -745,12 +647,13 @@ define( [
 
 
             if ( this._texture ) {
-                this._texture.releaseGLObjects();
+                // TODO: need state
+                //this._texture.releaseGLObjects();
                 this._texture = undefined;
             }
         }
 
-    } ), 'osg', 'ShadowMap' );
+    } ), 'osgShadow', 'ShadowMap' );
 
     MACROUTILS.setTypeID( ShadowMap );
 

@@ -424,9 +424,9 @@ define( [
             var texturesInput = [];
             var textures = this._texturesByName;
 
-            var keys = Object.keys(textures);
-            for ( var i = 0; i < keys.length; i++) {
-                var texture = textures[ keys[i] ];
+            var keys = Object.keys( textures );
+            for ( var i = 0; i < keys.length; i++ ) {
+                var texture = textures[ keys[ i ] ];
 
                 if ( !texture )
                     continue;
@@ -483,8 +483,10 @@ define( [
                 } else if ( texture.className() === 'TextureCubeMap' ) {
                     textureSampler = this.getOrCreateSampler( 'samplerCube', samplerName );
                 } else if ( texture.className() === 'ShadowTexture' ) {
+                    textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
+                    // return now to prevent creation of useless FragTexCoord
+                    //( shadow creates its own texcoord)
                     return;
-                    //textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
                 }
 
 

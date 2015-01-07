@@ -23,44 +23,8 @@ define( [
             this._shadow = shadowAttr;
         },
 
-        // TODO: remove either here or in node shadow: code repetition ?
-        // ... otherwise caster and receiver doesn't get same defines
-        // if any change done here and not overthere
         defines: function () {
-            var defines = [];
-
-            var textureType = this._shadow.getPrecision();
-            var algo = this._shadow.getAlgorithm();
-
-            var isFloat = false;
-            var isLinearFloat = false;
-
-            if ( ( typeof textureType === 'string' && textureType !== 'BYTE' ) || textureType !== Texture.UNSIGNED_BYTE ) {
-                isFloat = true;
-            }
-
-            if ( isFloat && ( ( typeof textureType === 'string' && textureType.indexOf( 'LINEAR' ) !== -1 ) || textureType === Texture.HALF_FLOAT_LINEAR || textureType === Texture.FLOAT_LINEAR ) ) {
-                isLinearFloat = true;
-            }
-            if ( algo === 'ESM' ) {
-                defines.push( '#define _ESM' );
-            } else if ( algo === 'NONE' ) {
-                defines.push( '#define _NONE' );
-            } else if ( algo === 'PCF' ) {
-                defines.push( '#define _PCF' );
-            } else if ( algo === 'VSM' ) {
-                defines.push( '#define _VSM' );
-            } else if ( algo === 'EVSM' ) {
-                defines.push( '#define _EVSM' );
-            }
-
-            if ( isFloat ) {
-                defines.push( '#define  _FLOATTEX' );
-            }
-            if ( isLinearFloat ) {
-                defines.push( '#define  _FLOATLINEAR' );
-            }
-
+            var defines = this._shadow.getDefines();
             return defines.join( '\n' );
         },
 

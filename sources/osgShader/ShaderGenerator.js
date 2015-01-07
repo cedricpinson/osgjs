@@ -61,7 +61,7 @@ define( [
         // filter input types and write the result in the outputs array
         filterAttributeTypes: function ( attribute ) {
 
-            if ( attribute.libraryName() !== 'osg' )
+            if ( attribute.libraryName() !== 'osg' && attribute.libraryName() !== 'osgShadow' )
                 return true;
 
             var attributeType = attribute.getType();

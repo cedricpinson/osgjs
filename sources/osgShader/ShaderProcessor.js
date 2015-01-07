@@ -1,8 +1,9 @@
 define( [
     'osg/Notify',
-    'osgShader/shaderLib'
+    'osgShader/shaderLib',
+    'osgShadow/shaderLib'
 
-], function ( Notify, shaderLib ) {
+], function ( Notify, shaderLib, shadowShaderLib ) {
 
     'use strict';
 
@@ -22,6 +23,7 @@ define( [
         }
 
         this.addShaders( shaderLib );
+        this.addShaders( shadowShaderLib );
         return this;
     };
 

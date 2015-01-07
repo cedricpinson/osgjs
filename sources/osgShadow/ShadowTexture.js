@@ -17,6 +17,7 @@ define( [
      * ShadowTexture Attribute encapsulate Texture webgl object
      * with Shadow specificities (no need of texcoord,fragtexcoord)
      * trigger hash change when changing texture precision from float to byt
+     * shadowSettings.js header for param explanations
      * @class ShadowTexture
      * @inherits StateAttribute
      */
@@ -155,7 +156,7 @@ define( [
             return this.getTypeMember() + this._type;
         }
 
-    } ), 'osg', 'ShadowTexture' );
+    } ), 'osgShadow', 'ShadowTexture' );
 
     MACROUTILS.setTypeID( ShadowTexture );
 

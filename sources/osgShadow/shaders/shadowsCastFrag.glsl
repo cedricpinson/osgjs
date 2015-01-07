@@ -12,6 +12,8 @@ varying vec4 FragEyePos;
 
 #pragma include "colorEncode.glsl"
 
+// see shadowSettings.js header for shadow algo param explanations
+
 #ifdef _EVSM
 // Convert depth to EVSM coefficients
 // Input depth should be in [0, 1]
@@ -40,31 +42,30 @@ void main(void) {
     // linearize (aka map z to near..far to 0..1)
     depth = (depth - Shadow_DepthRange.x )* Shadow_DepthRange.w;
 
-    #ifndef _FLOATTEX
-        #ifdef _EVSM
-            gl_FragColor = shadowDepthToEVSM(depth);
-        #else
-           #ifdef _VSM
-               gl_FragColor = encodeHalfFloatRGBA(vec2(depth, depth*depth));
-          #else
-                // _ESM, _PCF, _NONE
-                #ifdef _ESM
-                    float depthScale = exponent1;
-                    depth = depth*depthScale;
-                #endif
-                gl_FragColor = encodeFloatRGBA(depth);
-           #endif
-        #endif
-   #else
-        #ifdef _VSM
-                gl_FragColor = vec4(depth, depth*depth, 0.0, 1.0);
-        #else
-           // _ESM, _PCF, _NONE
-            #ifdef _ESM
-                  float depthScale = exponent1;
-                  depth = depth*depthScale;
-            #endif
-            gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
-        #endif
-    #endif
+#if defined (_FLOATTEX) && defined(_PCF)
+    gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
+#elif defined (_FLOATTEX)  && defined(_ESM)
+    float depthScale = exponent1;
+    depth = depth*depthScale;
+    gl_FragColor = shadowDepthToEVSM(depth);
+#elif defined (_FLOATTEX)  && defined(_VSM)
+    gl_FragColor = vec4(depth, depth*depth, 0.0, 1.0);
+#elif defined (_FLOATTEX)  && defined(_EVSM)
+    gl_FragColor = shadowDepthToEVSM(depth);
+#elif defined (_FLOATTEX) // && defined(_NONE)
+    gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
+#elif defined(_PCF)
+    gl_FragColor = encodeFloatRGBA(depth);
+#elif defined(_ESM)
+    float depthScale = exponent1;
+    depth = depth*depthScale;
+    gl_FragColor = encodeFloatRGBA(depth);
+#elif defined(_VSM)
+    gl_FragColor = encodeHalfFloatRGBA(vec2(depth, depth*depth));
+#else // NONE
+    gl_FragColor = encodeFloatRGBA(depth);
+#endif
+
+
+
 }
