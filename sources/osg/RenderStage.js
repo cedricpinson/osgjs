@@ -108,20 +108,20 @@ define( [
         },
 
         drawPreRenderStages: function ( state, previousRenderLeaf ) {
-            var previous = previousRenderLeaf;
+            var previousLeaf = previousRenderLeaf;
             for ( var i = 0, l = this.preRenderList.length; i < l; ++i ) {
                 var sg = this.preRenderList[ i ].renderStage;
-                previous = sg.draw( state, previous );
+                previousLeaf = sg.draw( state, previousLeaf );
             }
-            return previous;
+            return previousLeaf;
         },
 
         draw: function ( state, previousRenderLeaf ) {
-            var previous = this.drawPreRenderStages( state, previousRenderLeaf );
-            previous = this.drawImplementation( state, previous );
+            var previousLeaf = this.drawPreRenderStages( state, previousRenderLeaf );
+            previousLeaf = this.drawImplementation( state, previousLeaf );
 
-            previous = this.drawPostRenderStages( state, previous );
-            return previous;
+            previousLeaf = this.drawPostRenderStages( state, previousLeaf );
+            return previousLeaf;
         },
 
         sort: function () {
@@ -137,12 +137,12 @@ define( [
         },
 
         drawPostRenderStages: function ( state, previousRenderLeaf ) {
-            var previous = previousRenderLeaf;
+            var previousLeaf = previousRenderLeaf;
             for ( var i = 0, l = this.postRenderList.length; i < l; ++i ) {
                 var sg = this.postRenderList[ i ].renderStage;
-                previous = sg.draw( state, previous );
+                previousLeaf = sg.draw( state, previousLeaf );
             }
-            return previous;
+            return previousLeaf;
         },
 
         applyCamera: function ( state ) {
@@ -226,11 +226,12 @@ define( [
                 this.applyPositionedAttribute( state, this.positionedAttribute );
             }
 
-            var previous = RenderBin.prototype.drawImplementation.call( this, state, previousRenderLeaf );
+            var previousLeaf = RenderBin.prototype.drawImplementation.call( this, state, previousRenderLeaf );
 
-            return previous;
+            return previousLeaf;
         }
     } ), 'osg', 'RenderStage' );
 
     return RenderStage;
+
 } );

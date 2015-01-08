@@ -57,7 +57,7 @@ define( [
                 if ( sgCurrent.stateSet ) {
                     state.popStateSet();
                 }
-                sgCurrent = sgCurrent._parent;
+                sgCurrent = sgCurrent.parent;
             }
         },
         moveStateGraph: function ( state, sgCurrent, sgNew ) {
