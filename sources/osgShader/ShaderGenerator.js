@@ -212,7 +212,7 @@ define( [
                 program.activeUniforms = this.getActiveUniforms( state, attributes, textureAttributes );
                 program.generated = true;
 
-                this._cache.set( hash, program);
+                this._cache.set( hash, program );
                 return program;
             };
         } )()
