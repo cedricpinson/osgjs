@@ -25,7 +25,9 @@ void specularCookTorrance(const in vec3 n, const in vec3 l, const in vec3 v, con
         i = i / (0.1 + nv);
         specfac = i;
     }
-    specularContrib = specfac*materialSpecular*lightSpecular;
+    // ugly way to fake an energy conservation (mainly to avoid super bright stuffs with low glossiness)
+    float att = hard > 100.0 ? 1.0 : smoothstep(0.0, 1.0, hard * 0.01);
+    specularContrib = specfac*materialSpecular*lightSpecular*att;
 }
 
 void lambert(const in float ndl,  const in vec3 materialDiffuse, const in vec3 lightDiffuse, out vec3 diffuseContrib)
