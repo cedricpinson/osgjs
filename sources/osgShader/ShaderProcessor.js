@@ -34,7 +34,8 @@ define( [
         _globalDefaultprecision: '#ifdef GL_FRAGMENT_PRECISION_HIGH\n precision highp float;\n #else\n precision mediump float;\n#endif',
         _debugLines: false,
         _includeR: /#pragma include "([^"]+)"/g,
-        _defineR: /#define\s+([a-zA-Z_0-9]+)\s+(.*)/,
+        _includeCondR: /#pragma include (["^+"]?["\ "[a-zA-Z_0-9](.*)"]*?)/g,
+        _defineR: /\#define\s+([a-zA-Z_0-9]+)/,
         _precisionR: /precision\s+(high|low|medium)p\s+float/,
 
 
@@ -68,7 +69,7 @@ define( [
             /*
               var allLines = content.split('\n');
               var i = 0;
-              for (var k = 0; k < allLines.length; k++) {
+              for (var k = 0; k _< allLines.length; k++) {
               if (!this._includeR.test(allLines[k])) {
               allLines[k] = "#line " + (i++) + " " + sourceID + '\n' + allLines[k] ;
               }
@@ -93,6 +94,7 @@ define( [
         },
 
         getShader: function ( shaderName, defines ) {
+            this._currentDefines = defines;
             var shader = this.getShaderTextPure( shaderName );
             return this.processShader( shader, defines );
         },
@@ -100,15 +102,41 @@ define( [
         // recursively  handle #include external glsl
         // files (for now in the same folder.)
         preprocess: function ( content, sourceID, includeList ) {
+            var _self = this;
+            return content.replace( this._includeCondR, function ( _, name ) {
+                var includeOpt = name.split( ' ' );
+                var includeName = includeOpt[ 0 ].replace( /"/g, '' );
 
-            return content.replace( this._includeR, function ( _, name ) {
-                // \#pragma include 'name';
+                // pure include is
+                // \#pragma include "name";
+
+                // conditionnal include is name included if _PCF defined
+                // \#pragma include "name" "_PCF";
+                if ( includeOpt.length > 1 && _self._currentDefines ) {
+                    // some conditions here.
+                    // if not defined we do not include
+                    var found = false;
+                    var defines = _self._currentDefines.map( function ( defineString ) {
+                        return _self._defineR.test( defineString ) && defineString.split( ' ' )[ 1 ];
+                    } );
+                    for ( var i = 1; i < includeOpt.length && !found; i++ ) {
+                        var key = includeOpt[ i ].replace( /"/g, '' );
+                        for ( var k = 0; k < defines.length && !found; k++ ) {
+                            if ( defines[ k ] !== false && defines[ k ] === key ) {
+                                found = true;
+                            }
+                        }
+                    }
+                    if ( !found )
+                        return '';
+                }
+
                 // already included
-                if ( includeList.indexOf( name ) !== -1 ) return '';
+                if ( includeList.indexOf( includeName ) !== -1 ) return '';
                 // avoid endless loop, not calling the impure
-                var txt = this.getShaderTextPure( name );
+                var txt = this.getShaderTextPure( includeName );
                 // make sure it's not included twice
-                includeList.push( name );
+                includeList.push( includeName );
                 if ( this._debugLines ) {
                     txt = this.instrumentShaderlines( txt, sourceID );
                 }
