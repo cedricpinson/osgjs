@@ -30,7 +30,7 @@
             'model': 'material-test',
             'shadowproj': 'fov',
             'fov': 50,
-            'pcfKernelSize': '4Band',
+            'pcfKernelSize': '4Band(4texFetch)',
             'exponent': 80.0,
             'exponent1': 0.33,
 
@@ -49,6 +49,7 @@
             '_quadraticAttenuation': 0.0,
             'exampleObj': this,
             'shadowStatic': false,
+            'disableShadows': false,
             logCamLight: function () {
                 var example = this[ 'exampleObj' ];
                 var cam = example._viewer._manipulator;
@@ -131,7 +132,7 @@
         this._previousRtt = this._config[ 'debugRtt' ];
         this._previousFrustumTest = this._config[ 'frustumTest' ];
         this._previousPcfKernelSize = this._config[ 'pcfKernelSize' ];
-
+        this._previousDisable = this._config[ 'disableShadows' ];
         this._debugOtherTechniques = false;
         this._debugFrustum = false;
         this._debugPrefilter = false;
@@ -349,10 +350,14 @@
             controller = gui.add( this._config, 'shadowStatic' );
             controller.onChange( this.updateShadow.bind( this ) );
 
+            controller = gui.add( this._config, 'disableShadows' );
+            controller.onChange( this.updateShadow.bind( this ) );
+
+
             controller = gui.add( this._config, 'lightAmbient' );
             controller.onChange( this.updateShadow.bind( this ) );
 
-            controller = gui.add( this._config, 'lightSpeed', 0.0, 2.0 );
+            controller = gui.add( this._config, 'lightSpeed', 0.0, 2.0 ).listen();
             controller.onChange( this.updateShadow.bind( this ) );
 
             controller = gui.add( this._config, 'lightDistance', 0.0, 5.0 );
@@ -365,7 +370,7 @@
             controller.onChange( this.updateShadow.bind( this ) );
 
             // controller = gui.add( this._config, 'logCamLight' );
-            controller = gui.add( this._config, 'shadowStatic' );
+
 
             var pcfFolder = gui.addFolder( 'PCF' );
             controller = pcfFolder.add( this._config, 'pcfKernelSize', [ '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)', '64Poisson(256texFetch)' ] );
@@ -765,6 +770,19 @@
          */
         updateShadow: function () {
 
+            if ( this._config[ 'disableShadows' ] !== this._previousDisable ) {
+                if ( this._config[ 'disableShadows' ] ) {
+                    this._rootNode.removeChild( this._lightAndShadowScene );
+                    this._rootNode.addChild( this._shadowScene );
+                } else {
+                    this._rootNode.removeChild( this._shadowScene );
+                    this._rootNode.addChild( this._lightAndShadowScene );
+                }
+                this._previousDisable = this._config[ 'disableShadows' ];
+            }
+            //            if ( !this._config[ 'disableShadows' ]){
+            //                return;
+            //            }
             this.updateShadowStatic();
             this.updateLightsAmbient();
             this.updateLightsEnable();
@@ -1037,7 +1055,6 @@
                 15 + 35 * num
             ];
             var shadowSettings = new osgShadow.ShadowSettings( this._config );
-            //this._lightAndShadowScene.setShadowSettings( shadowSettings );
 
             var mapres = parseInt( this._config[ 'texturesize' ] );
             shadowSettings.setTextureSize( mapres );
@@ -1181,7 +1198,7 @@
 
             // one config to rule them all
             //this._config = shadowedScene.getShadowSettings()._config;
-
+            this._rootNode = group;
             return group;
         },
 

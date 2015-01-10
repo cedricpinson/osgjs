@@ -98,14 +98,10 @@ define( [
         },
         traverse: function ( nodeVisitor ) {
 
-            CullVisitor = CullVisitor || require( 'osg/CullVisitor' );
-
             var i, st, lt = this._shadowTechniques.length;
 
             if ( nodeVisitor.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
-
                 // init
-                // TODO: all  techniques
                 var allDirty = this._dirty || ( this.getShadowSettings() && this.getShadowSettings()._dirty );
                 if ( allDirty ) {
                     this.init();
@@ -117,7 +113,6 @@ define( [
                         }
                     }
                 }
-
                 this.nodeTraverse( nodeVisitor );
 
             } else if ( nodeVisitor.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
@@ -140,29 +135,8 @@ define( [
             } else {
                 this.nodeTraverse( nodeVisitor );
             }
-
-
-
-        },
-        setGLContext: function ( gl ) {
-            this._glContext = gl;
-        },
-        getGLContext: function () {
-            return this._glContext;
         },
         init: function () {
-
-            ////////////////
-            // RECEIVERS stateSet
-            if ( this._receivingStateset ) {
-                //TODO: need state
-                //this._receivingStateset.releaseGLObjects();
-            }
-            var receiverStateSet = new StateSet(); //this.getReceivingStateSet();
-
-            // NOW USING NODE SHADERS
-            this._receivingStateset = receiverStateSet;
-
             for ( var i = 0, lt = this._shadowTechniques.length; i < lt; i++ ) {
                 if ( this._shadowTechniques[ i ] && this._shadowTechniques[ i ].valid() ) {
                     this._shadowTechniques[ i ].init();
@@ -178,15 +152,6 @@ define( [
         getReceivesShadowTraversalMask: function () {
             return this._receivesShadowTraversalMask;
         },
-        getReceivingStateSet: function () {
-            if ( !this._receivingStateset ) {
-                this._receivingStateset = new StateSet(); //this.getOrCreateStateSet();
-            }
-            return this._receivingStateset;
-        },
-        setReceivingStateSet: function ( rs ) {
-            this._receivingStateset = rs;
-        },
         /*receiving shadows, cull normally, but with receiving shader/state set/texture*/
         cullShadowReceivingScene: function ( cullVisitor ) {
 
@@ -194,71 +159,15 @@ define( [
             // TODO: Better (Multi)Camera detection handling
             this._cameraShadowed = cullVisitor.getCurrentCamera();
 
-
-            //var receivingUniforms = this.getReceivingStateSet().getUniformList();
-
-            // TODO: get camera position as positioned uniform ?
-            var pos = this._camPos || Vec4.create();
-            this._camPos = pos;
-            //Matrix.getTrans( this._cameraShadowed.getViewMatrix(), pos );
-            //receivingUniforms[ 'Camera_uniform_position' ].getUniform().set( pos );
             // What to do here... we want to draw all scene object, not only receivers ?
             // so no mask for now
-            var traversalMask = cullVisitor.getTraversalMask();
+            //var traversalMask = cullVisitor.getTraversalMask();
             //cullVisitor.setTraversalMask( this.getReceivesShadowTraversalMask() );
 
-            if ( !this._optimizedFrustum ) {
+            if ( this.stateset ) cullVisitor.pushStateSet( this.stateset );
+            this.nodeTraverse( cullVisitor );
+            if ( this.stateset ) cullVisitor.popStateSet();
 
-                cullVisitor.pushStateSet( this._receivingStateset );
-                this.nodeTraverse( cullVisitor );
-                cullVisitor.popStateSet();
-
-            } else {
-                var frustumCulling = cullVisitor._enableFrustumCulling;
-                cullVisitor.setEnableFrustumCulling( true );
-
-                // compute frustum prior to culling, without near/far
-                var mvp = this._tmpMat;
-                Matrix.mult( this._cameraShadowed.getProjectionMatrix(), this._cameraShadowed.getViewMatrix(), mvp );
-                cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, true );
-
-                cullVisitor.pushStateSet( this._receivingStateset );
-                this.nodeTraverse( cullVisitor );
-                cullVisitor.popStateSet();
-
-
-                var epsilon = 1e-6;
-                if ( cullVisitor._computedFar < cullVisitor._computedNear - epsilon ) {
-                    Notify.log( 'empty shadowed scene' );
-                    for ( var l = 0; l < 6; l++ ) {
-                        this._frustumReceivers[ l ][ 0 ] = -1.0;
-                        this._frustumReceivers[ l ][ 1 ] = 1.01;
-                        this._frustumReceivers[ l ][ 2 ] = -1.0;
-                        this._frustumReceivers[ l ][ 3 ] = 1.01;
-                    }
-                    this._farReceivers = 1;
-                    this._nearReceivers = 0.001;
-                    return;
-                } else {
-                    // VFC with computed near / far from scene
-                    var m = cullVisitor.getCurrentProjectionMatrix();
-                    cullVisitor.clampProjectionMatrix( m, cullVisitor._computedNear, cullVisitor._computedFar, cullVisitor._nearFarRatio );
-                    Matrix.mult( m, this._cameraShadowed.getViewMatrix(), mvp );
-                    cullVisitor.getFrustumPlanes( mvp, cullVisitor._frustum, true, false );
-                    for ( var i = 0; i < 6; i++ ) {
-                        Vec4.copy( cullVisitor._frustum[ i ], this._frustumReceivers[ i ] );
-                    }
-                }
-                this._nearReceivers = cullVisitor._computedNear;
-                this._farReceivers = cullVisitor._computedFar;
-
-
-                // reapply the original traversal mask
-                cullVisitor.setTraversalMask( traversalMask );
-                if ( frustumCulling === false || frustumCulling === undefined ) {
-                    cullVisitor.setEnableFrustumCulling( false );
-                }
-            }
 
         },
 

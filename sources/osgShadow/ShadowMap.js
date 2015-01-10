@@ -216,7 +216,7 @@ define( [
             var pcfKernelSize = shadowSettings._config[ 'pcfKernelSize' ];
 
             this._shadowAttribute = new ShadowAttribute( light, this._algorithm, bias, exponent0, exponent1, vsmEpsilon, pcfKernelSize, this._texturePrecisionFormat );
-            this._receivingStateset = this._shadowedScene.getReceivingStateSet();
+            this._receivingStateset = this._shadowedScene.getOrCreateStateSet();
 
             // First init-
 
@@ -255,7 +255,7 @@ define( [
                 myuniform = Uniform.createFloat1( exponent1, 'exponent1' );
                 casterStateSet.addUniform( myuniform );
 
-
+                /*
                 // prevent unnecessary texture bindings, could loop over max texture unit
                 var blankTexture = new Texture();
                 blankTexture.setName( 'emptyTex' );
@@ -264,7 +264,7 @@ define( [
                 casterStateSet.setTextureAttributeAndModes( 1, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
                 casterStateSet.setTextureAttributeAndModes( 2, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
                 casterStateSet.setTextureAttributeAndModes( 3, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
-
+*/
 
                 var near = 0.001;
                 var far = 1000;
@@ -282,12 +282,9 @@ define( [
             this.setShadowCasterShaderProgram( casterProgram );
             shadowSettings._castingStateset.setAttributeAndModes( casterProgram, StateAttribute.ON | StateAttribute.OVERRIDE );
 
-
             this._receivingStateset.setAttributeAndModes( this._shadowAttribute, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
-
             this._receivingStateset.setTextureAttributeAndModes( texUnit, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
 
-            // TODO:  double sure shader compiler force recompile ?
             this._dirty = false;
             shadowSettings._dirty = false;
         },
