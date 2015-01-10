@@ -423,8 +423,8 @@ define( [
 
             if ( this.hasMipmapFilter() ) {
                 gl.generateMipmap( target );
-                this._dirtyMipmap = false;
             }
+            this._dirtyMipmap = false;
         },
 
         // return true if contains a mipmap filter
