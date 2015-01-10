@@ -99,7 +99,8 @@ define( [
         traverse: function ( nodeVisitor ) {
 
             CullVisitor = CullVisitor || require( 'osg/CullVisitor' );
-            var i, lt = this._shadowTechniques.length;
+
+            var i, st, lt = this._shadowTechniques.length;
 
             if ( nodeVisitor.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
 
@@ -110,7 +111,7 @@ define( [
                     this.init();
                 } else {
                     for ( i = 0; i < lt; i++ ) {
-                        var st = this._shadowTechniques[ i ];
+                        st = this._shadowTechniques[ i ];
                         if ( st && st.valid() && ( st._dirty || st.getShadowSettings()._dirty ) ) {
                             this._shadowTechniques[ i ].init();
                         }
@@ -129,8 +130,9 @@ define( [
 
                     // cull Casters
                     for ( i = 0; i < lt; i++ ) {
-                        if ( this._shadowTechniques[ i ] && this._shadowTechniques[ i ].valid() ) {
-                            this._shadowTechniques[ i ].cullShadowCastingScene( cullVisitor );
+                        st = this._shadowTechniques[ i ];
+                        if ( st && st.getEnabled() && st.valid() ) {
+                            st.cullShadowCastingScene( cullVisitor );
                         }
                     }
 

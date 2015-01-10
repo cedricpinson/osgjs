@@ -12,6 +12,7 @@
     /// The sample itself is in this object.
     ///
     var Example = function () {
+
         // sample default parameters
         // at start most can be changed by the UI
         this._config = {
@@ -47,6 +48,7 @@
             '_linearAttenuation': 0.005,
             '_quadraticAttenuation': 0.0,
             'exampleObj': this,
+            'shadowStatic': false,
             logCamLight: function () {
                 var example = this[ 'exampleObj' ];
                 var cam = example._viewer._manipulator;
@@ -134,15 +136,18 @@
         this._debugFrustum = false;
         this._debugPrefilter = false;
 
+        // default & change debug
         var queryDict = {};
-        window.location.search.substr( 1 ).split( "&" ).forEach( function ( item ) {
-            queryDict[ item.split( "=" )[ 0 ] ] = item.split( "=" )[ 1 ];
+        window.location.search.substr( 1 ).split( '&' ).forEach( function ( item ) {
+            queryDict[ item.split( '=' )[ 0 ] ] = item.split( '=' )[ 1 ];
         } );
         if ( queryDict[ 'debug' ] ) {
             this._debugOtherTechniques = true;
             this._debugFrustum = true;
             this._debugPrefilter = true;
         }
+        for ( var property in queryDict )
+            this._config[ property ] = queryDict[ property ];
     };
 
 
@@ -340,6 +345,10 @@
             controller = gui.add( this._config, 'lightMovement', [ 'Rotate', 'Translate', 'Fixed', 'Nod' ] );
             controller.onChange( this.updateShadow.bind( this ) );
 
+
+            controller = gui.add( this._config, 'shadowStatic' );
+            controller.onChange( this.updateShadow.bind( this ) );
+
             controller = gui.add( this._config, 'lightAmbient' );
             controller.onChange( this.updateShadow.bind( this ) );
 
@@ -356,7 +365,7 @@
             controller.onChange( this.updateShadow.bind( this ) );
 
             // controller = gui.add( this._config, 'logCamLight' );
-
+            controller = gui.add( this._config, 'shadowStatic' );
 
             var pcfFolder = gui.addFolder( 'PCF' );
             controller = pcfFolder.add( this._config, 'pcfKernelSize', [ '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)', '64Poisson(256texFetch)' ] );
@@ -566,6 +575,20 @@
             }
 
         },
+
+        updateShadowStatic: function () {
+            var l = this._lights.length;
+            // remove all lights
+            while ( l-- ) {
+                var st = this._shadowTechnique[ l ];
+                st.setEnabled( !this._config[ 'shadowStatic' ] );
+            }
+            if ( this._config[ 'shadowStatic' ] ) {
+                this._config[ 'lightSpeed' ] = '0.0';
+            }
+
+        },
+
         updateLightsAmbient: function () {
             var l = this._lights.length;
             var val = this._config[ 'lightAmbient' ] ? 0.6 : 0.0;
@@ -742,7 +765,7 @@
          */
         updateShadow: function () {
 
-
+            this.updateShadowStatic();
             this.updateLightsAmbient();
             this.updateLightsEnable();
 
@@ -918,7 +941,7 @@
             cubeNode.addChild( cubeSubNode );
 
             //cubeNode.addChild( cubeSubNode );
-            if ( 1 || window.location.href.indexOf( 'cubes' ) !== -1 ) {
+            if ( 1 && window.location.href.indexOf( 'cubes' ) !== -1 ) {
                 cubeSubNodeTrans = new osg.MatrixTransform();
                 cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
                 cubeSubNode = new osg.Node();
@@ -965,8 +988,8 @@
             var groundNode = new osg.Node();
             groundNode.setName( 'groundNode' );
 
-            //  var numPlanes = 5;
             var numPlanes = 5;
+            //var numPlanes = 1;
             var groundSize = 600 / numPlanes;
             var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
 

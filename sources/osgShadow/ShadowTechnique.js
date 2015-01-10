@@ -37,6 +37,7 @@ define( [
         Object.call( this );
 
 
+        this._enabled = true;
         this._shadowedScene = undefined;
         this._dirty = false;
 
@@ -55,6 +56,13 @@ define( [
             return this._shadowedScene;
         },
 
+
+        setEnabled: function ( enabled ) {
+            this._enabled = enabled;
+        },
+        getEnabled: function () {
+            return this._enabled;
+        },
 
         setShadowedScene: function ( shadowedScene ) {
             this._shadowedScene = shadowedScene;
