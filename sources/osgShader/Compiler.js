@@ -631,7 +631,8 @@ define( [
             var enumToNodeName = {
                 DIRECTION: 'SunLight',
                 SPOT: 'SpotLight',
-                POINT: 'PointLight'
+                POINT: 'PointLight',
+                HEMI: 'HemiLight'
             };
 
 

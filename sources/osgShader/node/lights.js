@@ -8,11 +8,11 @@ define( [
 
     // base class for all point based light: Point/Directional/Spot/Hemi
     // avoid duplicate code
-    var NodeLightsPointBased = function () {
+    var NodeLights = function () {
         Node.apply( this );
     };
 
-    NodeLightsPointBased.prototype = MACROUTILS.objectInherit( Node.prototype, {
+    NodeLights.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
         validOutputs: [ 'color' ],
         globalFunctionDeclaration: function () {
@@ -26,10 +26,10 @@ define( [
     };
 
     var PointLight = function () {
-        NodeLightsPointBased.apply( this );
+        NodeLights.apply( this );
     };
 
-    PointLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
+    PointLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 
         type: 'PointLight',
 
@@ -92,10 +92,10 @@ define( [
 
 
     var SpotLight = function () {
-        NodeLightsPointBased.apply( this );
+        NodeLights.apply( this );
     };
 
-    SpotLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
+    SpotLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 
         type: 'SpotLight',
 
@@ -164,10 +164,10 @@ define( [
 
 
     var SunLight = function () {
-        NodeLightsPointBased.apply( this );
+        NodeLights.apply( this );
     };
 
-    SunLight.prototype = MACROUTILS.objectInherit( NodeLightsPointBased.prototype, {
+    SunLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
 
         type: 'SunLight',
 
@@ -224,10 +224,57 @@ define( [
         }
     } );
 
+    var HemiLight = function () {
+        NodeLights.apply( this );
+    };
+
+    HemiLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
+
+        type: 'HemiLight',
+
+        validInputs: [
+            'normal',
+            'eyeVector',
+            'materialdiffuse',
+            'materialspecular',
+            'materialshininess',
+
+            'lightdiffuse',
+            'lightground',
+
+            'lightposition',
+
+            'lightmatrix',
+            'lightinvMatrix'
+        ],
+
+        computeFragment: function () {
+
+            return shaderUtils.callFunction(
+                'computeHemiLightShading',
+                this._outputs.color, [ this._inputs.normal,
+                    this._inputs.eyeVector,
+
+                    getVec3( this._inputs.materialdiffuse ),
+                    getVec3( this._inputs.materialspecular ),
+                    this._inputs.materialshininess,
+
+                    getVec3( this._inputs.lightdiffuse ),
+                    getVec3( this._inputs.lightground ),
+
+                    this._inputs.lightposition,
+
+                    this._inputs.lightmatrix,
+                    this._inputs.lightinvMatrix,
+                ] );
+        }
+    } );
+
     return {
         PointLight: PointLight,
         SpotLight: SpotLight,
-        SunLight: SunLight
+        SunLight: SunLight,
+        HemiLight: HemiLight
     };
 
 } );

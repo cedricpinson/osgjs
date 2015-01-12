@@ -203,3 +203,37 @@ vec3 computeSunLightShading(
         }
     return vec3(0.0);
 }
+
+vec3 computeHemiLightShading(
+
+    const in vec3 normal,
+    const in vec3 eyeVector,
+
+    const in vec3 materialDiffuse,
+    const in vec3 materialSpecular,
+    const in float materialShininess,
+
+    const in vec3 lightDiffuse,
+    const in vec3 lightGround,
+
+    const in vec4 lightPosition,
+
+    const in mat4 lightMatrix,
+    const in mat4 lightInvMatrix)
+{
+
+    vec3 lightDir = normalize( vec3(lightMatrix * lightPosition ) );
+    float NdotL = dot(lightDir, normal);
+    float weight = 0.5 * NdotL + 0.5;
+    vec3 diffuseContrib = materialDiffuse * mix(lightGround, lightDiffuse, weight);
+
+    // same cook-torrance as above for sky/ground
+    float skyWeight = 0.5 * dot(normal, normalize(eyeVector + lightDir)) + 0.5;
+    float gndWeight = 0.5 * dot(normal, normalize(eyeVector - lightDir)) + 0.5;
+    float skySpec = pow(skyWeight, materialShininess) / (0.1 + max( dot(normal, eyeVector), 0.0 ));
+    float skyGround = pow(skyWeight, materialShininess) / (0.1 + max( dot(normal, eyeVector), 0.0 ));
+    float att = materialShininess > 100.0 ? 1.0 : smoothstep(0.0, 1.0, materialShininess * 0.01);
+    vec3 specularContrib = lightDiffuse * materialSpecular * weight * att * (skySpec + skyGround);
+
+    return diffuseContrib + specularContrib;
+}
