@@ -1,7 +1,10 @@
 define( [
-    'osg/Vec3',
-    'osg/BoundingBox'
-], function ( Vec3, BoundingBox ) {
+    'osg/BoundingBox',
+    'osg/Notify',
+    'osg/Vec3'
+], function ( BoundingBox, Notify, Vec3 ) {
+
+    'use strict';
 
     var BoundingSphere = function () {
         this._center = [ 0.0, 0.0, 0.0 ];
@@ -30,7 +33,7 @@ define( [
             return this._radius * this._radius;
         },
 
-        expandByBox: ( function () {
+        expandByBoundingBox: ( function () {
             var v = [ 0.0, 0.0, 0.0 ];
             var newbb = new BoundingBox();
             return function ( bb ) {
@@ -55,7 +58,7 @@ define( [
                         v[ 0 ] += this._center[ 0 ]; // move to absolute position.
                         v[ 1 ] += this._center[ 1 ]; // move to absolute position.
                         v[ 2 ] += this._center[ 2 ]; // move to absolute position.
-                        newbb.expandBy( v ); // add it into the new bounding box.
+                        newbb.expandByVec3( v ); // add it into the new bounding box.
                     }
 
                     c = newbb.center();
@@ -72,6 +75,11 @@ define( [
                 }
             };
         } )(),
+
+        expandByBox: function ( bb ) {
+            Notify.log( 'BoundingSphere.expandByBox is deprecated, use instead BoundingSphere.expandByBoundingBox' );
+            return this.expandByBoundingBox( bb );
+        },
 
         expandByVec3: ( function () {
             var dv = [ 0.0, 0.0, 0.0 ];
@@ -109,7 +117,13 @@ define( [
                 }
             }
         },
-        expandBy: function ( sh ) {
+
+        expandBy: function( bs ) {
+            Notify.log( 'BoundingSphere.expandBy is deprecated, use instead BoundingSphere.expandByBoundingSphere' );
+            this.expandByBoundingSphere( bs );
+        },
+
+        expandByBoundingSphere: function ( sh ) {
             // ignore operation if incomming BoundingSphere is invalid.
             if ( !sh.valid() ) {
                 return;

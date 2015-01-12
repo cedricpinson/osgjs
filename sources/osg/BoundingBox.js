@@ -1,6 +1,9 @@
 define( [
+    'osg/Notify',
     'osg/Utils'
-], function ( MACROUTILS ) {
+], function ( Notify, MACROUTILS ) {
+
+    'use strict';
 
     var BoundingBox = function () {
         this.init();
@@ -31,19 +34,24 @@ define( [
             return ( this._max[ 0 ] >= this._min[ 0 ] && this._max[ 1 ] >= this._min[ 1 ] && this._max[ 2 ] >= this._min[ 2 ] );
         },
 
-        expandBySphere: function ( sh ) {
-            if ( !sh.valid() ) {
+        expandByBoundingSphere: function ( bs ) {
+            if ( !bs.valid() ) {
                 return;
             }
             var max = this._max;
             var min = this._min;
-            min[ 0 ] = Math.min( min[ 0 ], sh._center[ 0 ] - sh._radius );
-            min[ 1 ] = Math.min( min[ 1 ], sh._center[ 1 ] - sh._radius );
-            min[ 2 ] = Math.min( min[ 2 ], sh._center[ 2 ] - sh._radius );
+            min[ 0 ] = Math.min( min[ 0 ], bs._center[ 0 ] - bs._radius );
+            min[ 1 ] = Math.min( min[ 1 ], bs._center[ 1 ] - bs._radius );
+            min[ 2 ] = Math.min( min[ 2 ], bs._center[ 2 ] - bs._radius );
 
-            max[ 0 ] = Math.max( max[ 0 ], sh._center[ 0 ] + sh._radius );
-            max[ 1 ] = Math.max( max[ 1 ], sh._center[ 1 ] + sh._radius );
-            max[ 2 ] = Math.max( max[ 2 ], sh._center[ 2 ] + sh._radius );
+            max[ 0 ] = Math.max( max[ 0 ], bs._center[ 0 ] + bs._radius );
+            max[ 1 ] = Math.max( max[ 1 ], bs._center[ 1 ] + bs._radius );
+            max[ 2 ] = Math.max( max[ 2 ], bs._center[ 2 ] + bs._radius );
+        },
+
+        expandBySphere: function ( bs ) {
+            Notify.log( 'BoundingBox.expandBySphere is deprecated, use instead BoundBox.expandByBoundingSphere' );
+            return this.expandByBoundingSphere( bs );
         },
 
         expandByVec3: function ( v ) {
@@ -96,9 +104,13 @@ define( [
             cache[ 2 ] = max[ 2 ] - min[ 2 ];
             return 0.25 * ( cache[ 0 ] * cache[ 0 ] + cache[ 1 ] * cache[ 1 ] + cache[ 2 ] * cache[ 2 ] );
         },
-        corner: function ( pos ) {
+
+        corner: function ( pos, resultVec ) {
             /*jshint bitwise: false */
-            var ret = [ 0.0, 0.0, 0.0 ];
+            var ret = resultVec;
+            if ( ret === undefined )
+                ret = [ 0.0, 0.0, 0.0 ];
+
             if ( pos & 1 ) {
                 ret[ 0 ] = this._max[ 0 ];
             } else {

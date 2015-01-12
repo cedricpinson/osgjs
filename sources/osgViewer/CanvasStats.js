@@ -98,8 +98,11 @@ define( [
                 layer.average += value;
             }
 
-            this.updateGraph( t );
-            this.updateText( t );
+            if ( this.canvas )
+                this.updateGraph( t );
+
+            if ( this.textCanvas )
+                this.updateText( t );
 
             this.lastUpdate = t;
         }

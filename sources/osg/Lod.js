@@ -70,7 +70,7 @@ define( [
             {
                 bsphere.set( this._userDefinedCenter, this._radius);
                 var bs = new BoundingSphere();
-                bsphere.expandBy( Node.prototype.computeBound.call( this, bs ) );
+                bsphere.expandByBoundingSphere( Node.prototype.computeBound.call( this, bs ) );
                 return bsphere;
             }
             else

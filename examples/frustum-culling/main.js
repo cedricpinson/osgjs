@@ -231,14 +231,16 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
                             groundSubNode.addChild( transformSphere );
                             transformSphere.addChild( bs );
 
-                            bs.boundingboxComputed = true;
-                            bs.boundingsphereComputed = true;
-                            bs.boundingBox.valid = function () {
-                                return false;
-                            };
-                            bs.boundingSphere.valid = function () {
-                                return false;
-                            };
+                            bs.setBound(  new osg.BoundingBox() );
+
+                            // bs.boundingboxComputed = true;
+                            // bs.boundingsphereComputed = true;
+                            // bs.boundingBox.valid = function () {
+                            //     return false;
+                            // };
+                            // bs.boundingSphere.valid = function () {
+                            //     return false;
+                            // };
                         }
                     }
                 }
@@ -256,20 +258,23 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
                     bs.setUpdateCallback( callbackUpdateCull );
                     bs.setCullCallback( callbackUpdateCull );
 
+                    // CP: vv redeclaration
                     var transformSphere = new osg.MatrixTransform();
                     transformSphere.setMatrix(
                         osg.Matrix.makeTranslate( count * groundSize * 0.5 - 100, count * groundSize * 0.5 - 100, -5.0, [] ) );
                     this._groundNode.addChild( transformSphere );
                     transformSphere.addChild( bs );
 
-                    bs.boundingboxComputed = true;
-                    bs.boundingsphereComputed = true;
-                    bs.boundingBox.valid = function () {
-                        return false;
-                    };
-                    bs.boundingSphere.valid = function () {
-                        return false;
-                    };
+                    bs.setBound(  new osg.BoundingBox() );
+
+                    // bs.boundingboxComputed = true;
+                    // bs.boundingsphereComputed = true;
+                    // bs.boundingBox.valid = function () {
+                    //     return false;
+                    // };
+                    // bs.boundingSphere.valid = function () {
+                    //     return false;
+                    // };
                 }
                 this._groundNode.setCullingActive( true );
 

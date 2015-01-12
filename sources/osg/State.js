@@ -2,14 +2,18 @@ define( [
     'osg/Map',
     'osg/Matrix',
     'osg/Notify',
+    'osg/Object',
     'osg/StateAttribute',
     'osg/Stack',
-    'osg/Uniform'
-], function ( Map, Matrix, Notify, StateAttribute, Stack, Uniform ) {
+    'osg/TextureManager',
+    'osg/Uniform',
+    'osg/Utils'
+], function ( Map, Matrix, Notify, Object, StateAttribute, Stack, TextureManager, Uniform, MACROUTILS ) {
 
     'use strict';
 
     var State = function ( shaderGeneratorProxy ) {
+        Object.call( this );
 
         this._graphicContext = undefined;
         this._shaderGeneratorProxy = shaderGeneratorProxy;
@@ -19,8 +23,8 @@ define( [
 
         this.currentVBO = null;
         this.vertexAttribList = [];
-        this.stateSets = Stack.create();
-        this._shaderGeneratorNames = Stack.create();
+        this.stateSets = new Stack();
+        this._shaderGeneratorNames = new Stack();
         this.uniforms = new Map();
 
         this.textureAttributeMapList = [];
@@ -34,7 +38,7 @@ define( [
         this.normalMatrix = Uniform.createMatrix4( Matrix.create(), 'NormalMatrix' );
 
         // track uniform for color array enabled
-        var arrayColorEnable = Stack.create();
+        var arrayColorEnable = new Stack();
         arrayColorEnable.globalDefault = Uniform.createFloat1( 0.0, 'ArrayColorEnabled' );
 
         this.uniforms.setMap( {
@@ -47,9 +51,17 @@ define( [
         this.vertexAttribMap._keys = [];
 
         this._frameStamp = undefined;
+
+        // texture manager is referenced here because it's associated with gl object
+        // of the gl context intialized with State
+        this._textureManager = new TextureManager();
     };
 
-    State.prototype = {
+    State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+
+        getTextureManager: function() {
+            return this._textureManager;
+        },
 
         setGraphicContext: function ( graphicContext ) {
             this._graphicContext = graphicContext;
@@ -72,7 +84,7 @@ define( [
             if ( stateset.textureAttributeMapList ) {
                 var list = stateset.textureAttributeMapList;
                 for ( var textureUnit = 0, l = list.length; textureUnit < l; textureUnit++ ) {
-                    if ( list[ textureUnit ] === undefined ) {
+                    if ( !list[ textureUnit ] ) {
                         continue;
                     }
                     if ( !this.textureAttributeMapList[ textureUnit ] ) {
@@ -92,7 +104,7 @@ define( [
         },
 
         getStateSetStackSize: function() {
-            return this.stateSets.length;
+            return this.stateSets.values().length;
         },
 
         insertStateSet: ( function () {
@@ -101,10 +113,11 @@ define( [
             return function ( pos, stateSet ) {
 
                 tmpStack.length = 0;
-
-                while ( this.stateSets.length > pos ) {
+                var length = this.getStateSetStackSize();
+                while ( length > pos ) {
                     tmpStack.push( this.stateSets.back() );
                     this.popStateSet();
+                    length--;
                 }
 
                 this.pushStateSet( stateSet );
@@ -121,7 +134,8 @@ define( [
 
             return function ( pos ) {
 
-                if ( pos >= this.stateSets.length ) {
+                var length = this.getStateSetStackSize();
+                if ( pos >= length ) {
                     Notify.warn( 'Warning State:removeStateSet ', pos, ' out of range' );
                     return;
                 }
@@ -129,9 +143,10 @@ define( [
                 tmpStack.length = 0;
 
                 // record the StateSet above the one we intend to remove
-                while ( this.stateSets.length - 1 > pos ) {
+                while ( length - 1 > pos ) {
                     tmpStack.push( this.stateSets.back() );
                     this.popStateSet();
+                    length--;
                 }
 
                 // remove the intended StateSet as well
@@ -152,7 +167,7 @@ define( [
         },
 
         popAllStateSets: function () {
-            while ( this.stateSets.length ) {
+            while ( this.stateSets.values().length ) {
                 this.popStateSet();
             }
         },
@@ -168,7 +183,7 @@ define( [
             if ( stateset.textureAttributeMapList ) {
                 var list = stateset.textureAttributeMapList;
                 for ( var textureUnit = 0, l = list.length; textureUnit < l; textureUnit++ ) {
-                    if ( list[ textureUnit ] === undefined ) {
+                    if ( !list[ textureUnit ] ) {
                         continue;
                     }
                     this.popAttributeMap( this.textureAttributeMapList[ textureUnit ], list[ textureUnit ] );
@@ -200,8 +215,8 @@ define( [
             var attributeMap = this.attributeMap;
             var attributeStack = attributeMap[ key ];
 
-            if ( attributeStack === undefined ) {
-                attributeStack = Stack.create();
+            if ( !attributeStack ) {
+                attributeStack = new Stack();
                 attributeMap[ key ] = attributeStack;
                 attributeMap[ key ].globalDefault = attribute.cloneType();
                 this.attributeMap.dirty();
@@ -229,9 +244,9 @@ define( [
             var textureUnitAttributeMap = this.textureAttributeMapList[ unit ];
             var attributeStack = textureUnitAttributeMap[ key ];
 
-            if ( attributeStack === undefined ) {
+            if ( !attributeStack ) {
 
-                attributeStack = Stack.create();
+                attributeStack = new Stack();
                 textureUnitAttributeMap[ key ] = attributeStack;
                 textureUnitAttributeMap.dirty();
                 attributeStack.globalDefault = attribute.cloneType();
@@ -284,12 +299,12 @@ define( [
                 var key = attributeMapKeys[ i ];
 
                 attributeStack = attributeMap[ key ];
-                if ( attributeStack === undefined || !attributeStack.asChanged ) {
+                if ( !attributeStack || !attributeStack.asChanged ) {
                     continue;
                 }
 
                 var attribute;
-                if ( attributeStack.length === 0 ) {
+                if ( attributeStack.values().length === 0 ) {
                     attribute = attributeStack.globalDefault;
                 } else {
                     attribute = attributeStack.back().object;
@@ -328,16 +343,17 @@ define( [
                 uniform = uniformPair.getUniform();
                 name = uniform.name;
                 if ( uniformMap[ name ] === undefined ) {
-                    uniformMap[ name ] = Stack.create();
+                    uniformMap[ name ] = new Stack();
                     uniformMap[ name ].globalDefault = uniform;
                     uniformMap.dirty();
                 }
                 var value = uniformPair.getValue();
                 var stack = uniformMap[ name ];
-                if ( stack.length === 0 ) {
+                var length = stack.values().length;
+                if ( length === 0 ) {
                     stack.push( this.getObjectPair( uniform, value ) );
-                } else if ( ( stack[ stack.length - 1 ].value & StateAttribute.OVERRIDE ) && !( value & StateAttribute.PROTECTED ) ) {
-                    stack.push( stack[ stack.length - 1 ] );
+                } else if ( ( stack.back().value & StateAttribute.OVERRIDE ) && !( value & StateAttribute.PROTECTED ) ) {
+                    stack.push( stack.back() );
                 } else {
                     stack.push( this.getObjectPair( uniform, value ) );
                 }
@@ -355,13 +371,31 @@ define( [
             }
         },
 
+
+        _applyTextureAttributeStack: function(gl,  textureUnit, attributeStack ) {
+            var attribute;
+            if ( attributeStack.values().length === 0 ) {
+                attribute = attributeStack.globalDefault;
+            } else {
+                attribute = attributeStack.back().object;
+            }
+            if ( attributeStack.asChanged ) {
+
+                gl.activeTexture( gl.TEXTURE0 + textureUnit );
+                attribute.apply( this, textureUnit );
+                attributeStack.lastApplied = attribute;
+                attributeStack.asChanged = false;
+
+            }
+        },
+
         applyTextureAttributeMapList: function ( textureAttributesMapList ) {
             var gl = this._graphicContext;
             var textureAttributeMap;
 
             for ( var textureUnit = 0, l = textureAttributesMapList.length; textureUnit < l; textureUnit++ ) {
                 textureAttributeMap = textureAttributesMapList[ textureUnit ];
-                if ( textureAttributeMap === undefined ) {
+                if ( !textureAttributeMap ) {
                     continue;
                 }
 
@@ -372,24 +406,25 @@ define( [
                     var key = textureAttributeMapKeys[ i ];
 
                     var attributeStack = textureAttributeMap[ key ];
-                    if ( attributeStack === undefined ) {
+                    if ( !attributeStack ) {
                         continue;
                     }
 
-                    var attribute;
-                    if ( attributeStack.length === 0 ) {
-                        attribute = attributeStack.globalDefault;
-                    } else {
-                        attribute = attributeStack.back().object;
-                    }
-                    if ( attributeStack.asChanged ) {
+                    this._applyTextureAttributeStack( gl, textureUnit, attributeStack );
+                    // var attribute;
+                    // if ( attributeStack.values().length === 0 ) {
+                    //     attribute = attributeStack.globalDefault;
+                    // } else {
+                    //     attribute = attributeStack.back().object;
+                    // }
+                    // if ( attributeStack.asChanged ) {
 
-                        gl.activeTexture( gl.TEXTURE0 + textureUnit );
-                        attribute.apply( this, textureUnit );
-                        attributeStack.lastApplied = attribute;
-                        attributeStack.asChanged = false;
+                    //     gl.activeTexture( gl.TEXTURE0 + textureUnit );
+                    //     attribute.apply( this, textureUnit );
+                    //     attributeStack.lastApplied = attribute;
+                    //     attributeStack.asChanged = false;
 
-                    }
+                    // }
                 }
             }
         },
@@ -402,7 +437,7 @@ define( [
                 attributeMap[ key ].globalDefault = attribute;
 
             } else {
-                attributeMap[ key ] = Stack.create();
+                attributeMap[ key ] = new Stack();
                 attributeMap[ key ].globalDefault = attribute;
 
                 this.attributeMap.dirty();
@@ -421,7 +456,7 @@ define( [
                 var attribute = attributePair.getAttribute();
 
                 if ( attributeMap[ type ] === undefined ) {
-                    attributeMap[ type ] = Stack.create();
+                    attributeMap[ type ] = new Stack();
                     attributeMap[ type ].globalDefault = attribute.cloneType();
 
                     attributeMap.dirty();
@@ -430,10 +465,11 @@ define( [
                 var value = attributePair.getValue();
 
                 attributeStack = attributeMap[ type ];
-                if ( attributeStack.length === 0 ) {
+                var length = attributeStack.values().length;
+                if ( length === 0 ) {
                     attributeStack.push( this.getObjectPair( attribute, value ) );
-                } else if ( ( attributeStack[ attributeStack.length - 1 ].value & StateAttribute.OVERRIDE ) && !( value & StateAttribute.PROTECTED ) ) {
-                    attributeStack.push( attributeStack[ attributeStack.length - 1 ] );
+                } else if ( ( attributeStack.back().value & StateAttribute.OVERRIDE ) && !( value & StateAttribute.PROTECTED ) ) {
+                    attributeStack.push( attributeStack.back() );
                 } else {
                     attributeStack.push( this.getObjectPair( attribute, value ) );
                 }
@@ -689,7 +725,7 @@ define( [
 
                     } else {
 
-                        if ( uniformStack.length === 0 ) {
+                        if ( uniformStack.values().length === 0 ) {
                             uniform = uniformStack.globalDefault;
                         } else {
                             uniform = uniformStack.back().object;
@@ -709,8 +745,7 @@ define( [
         _generateAndApplyProgram: function () {
 
             var attributeMap = this.attributeMap;
-
-            if ( attributeMap.Program !== undefined && attributeMap.Program.length !== 0 && attributeMap.Program.back().value !== StateAttribute.OFF )
+            if ( attributeMap.Program !== undefined && attributeMap.Program.values().length !== 0 && attributeMap.Program.back().value !== StateAttribute.OFF )
                 return undefined;
 
             // no custom program look into the stack of ShaderGenerator name
@@ -819,7 +854,7 @@ define( [
 
                 if ( uniformStack !== undefined ) {
 
-                    if ( uniformStack.length === 0 ) {
+                    if ( uniformStack.values().length === 0 ) {
                         uniform = uniformStack.globalDefault;
                     } else {
                         uniform = uniformStack.back().object;
@@ -832,10 +867,7 @@ define( [
         }
 
 
-
-
-
-    };
+    } ), 'osg', 'State' );
 
     return State;
 } );

@@ -169,13 +169,15 @@ define( [
 
         draw: function ( state, previousRenderLeaf ) {
 
+            var previousLeaf = previousRenderLeaf;
             // use callback drawImplementation if exist
             if ( this._drawCallback && this._drawCallback.drawImplementation ) {
-                this._drawCallback.drawImplementation( this, state, previousRenderLeaf );
+                previousLeaf = this._drawCallback.drawImplementation( this, state, previousLeaf );
             } else {
-                this.drawImplementation( state, previousRenderLeaf );
+                previousLeaf = this.drawImplementation( state, previousLeaf );
             }
 
+            return previousLeaf;
         },
 
         applyPositionedAttribute: function ( state, positionedAttributes ) {
@@ -194,7 +196,7 @@ define( [
 
         drawImplementation: function ( state, previousRenderLeaf ) {
 
-            var previous = previousRenderLeaf;
+            var previousLeaf = previousRenderLeaf;
             var binsKeys = window.Object.keys( this._bins );
             var bins = this._bins;
 
@@ -221,18 +223,18 @@ define( [
                 if ( bin.getBinNumber() > 0 ) {
                     break;
                 }
-                previous = bin.draw( state, previous );
+                previousLeaf = bin.draw( state, previousLeaf );
             }
 
             // draw leafs
-            previous = this.drawLeafs( state, previous );
+            previousLeaf = this.drawLeafs( state, previousLeaf );
 
             // draw post bins
             for ( ; current < end; current++ ) {
                 bin = binsArray[ current ];
-                previous = bin.draw( state, previous );
+                previousLeaf = bin.draw( state, previousLeaf );
             }
-            return previous;
+            return previousLeaf;
         },
 
 
@@ -244,7 +246,7 @@ define( [
             var leaf;
 
             if ( previousLeaf ) {
-                StateGraph.prototype.moveToRootStateGraph( state, previousRenderLeaf._parent );
+                StateGraph.prototype.moveToRootStateGraph( state, previousLeaf._parent );
             }
 
             // draw fine grained ordering.

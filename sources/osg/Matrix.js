@@ -5,6 +5,8 @@ define( [
     'osg/Quat'
 ], function ( Notify, Vec3, Vec4, Quat ) {
 
+    'use strict';
+
     /** @class Matrix Operations */
     var Matrix = {
 
@@ -808,7 +810,7 @@ define( [
                 ( tmp4 * matrix[ 1 ] + tmp9 * matrix[ 5 ] + tmp10 * matrix[ 9 ] ) );
 
             var d1 = ( matrix[ 0 ] * t0 + matrix[ 4 ] * t1 + matrix[ 8 ] * t2 + matrix[ 12 ] * t3 );
-            if ( Math.abs( d1 ) < 1e-5 ) {
+            if ( Math.abs( d1 ) < Number.EPSILON ) {
                 Notify.log( 'Warning can\'t inverse matrix ' + matrix );
                 return false;
             }
@@ -1129,9 +1131,15 @@ define( [
             var sy = Vec3.create();
             var sz = Vec3.create();
             return function ( matrix, result ) {
-                sx[ 0 ] = matrix[ 0 ]; sx[ 1 ] = matrix[ 4 ]; sx[ 2 ] = matrix[ 8 ];
-                sy[ 0 ] = matrix[ 1 ]; sy[ 1 ] = matrix[ 5 ]; sy[ 2 ] = matrix[ 9 ];
-                sz[ 0 ] = matrix[ 2 ]; sz[ 1 ] = matrix[ 6 ]; sz[ 2 ] = matrix[ 10 ];
+                sx[ 0 ] = matrix[ 0 ];
+                sx[ 1 ] = matrix[ 4 ];
+                sx[ 2 ] = matrix[ 8 ];
+                sy[ 0 ] = matrix[ 1 ];
+                sy[ 1 ] = matrix[ 5 ];
+                sy[ 2 ] = matrix[ 9 ];
+                sz[ 0 ] = matrix[ 2 ];
+                sz[ 1 ] = matrix[ 6 ];
+                sz[ 2 ] = matrix[ 10 ];
 
                 result[ 0 ] = Vec3.length( sx );
                 result[ 1 ] = Vec3.length( sy );
@@ -1145,9 +1153,15 @@ define( [
             var sy = Vec3.create();
             var sz = Vec3.create();
             return function ( matrix, result ) {
-                sx[ 0 ] = matrix[ 0 ]; sx[ 1 ] = matrix[ 4 ]; sx[ 2 ] = matrix[ 8 ];
-                sy[ 0 ] = matrix[ 1 ]; sy[ 1 ] = matrix[ 5 ]; sy[ 2 ] = matrix[ 9 ];
-                sz[ 0 ] = matrix[ 2 ]; sz[ 1 ] = matrix[ 6 ]; sz[ 2 ] = matrix[ 10 ];
+                sx[ 0 ] = matrix[ 0 ];
+                sx[ 1 ] = matrix[ 4 ];
+                sx[ 2 ] = matrix[ 8 ];
+                sy[ 0 ] = matrix[ 1 ];
+                sy[ 1 ] = matrix[ 5 ];
+                sy[ 2 ] = matrix[ 9 ];
+                sz[ 0 ] = matrix[ 2 ];
+                sz[ 1 ] = matrix[ 6 ];
+                sz[ 2 ] = matrix[ 10 ];
 
                 result[ 0 ] = Vec3.length2( sx );
                 result[ 1 ] = Vec3.length2( sy );

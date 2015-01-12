@@ -3,6 +3,7 @@ define( [
     'osgShader/shaderLib'
 
 ], function ( Notify, shaderLib ) {
+
     'use strict';
 
     //     Shader as vert/frag/glsl files Using requirejs text plugin
@@ -89,9 +90,9 @@ define( [
             return preShader;
         },
 
-        getShader: function ( shaderName ) {
+        getShader: function ( shaderName, defines ) {
             var shader = this.getShaderTextPure( shaderName );
-            return this.processShader( shader );
+            return this.processShader( shader, defines );
         },
 
         // recursively  handle #include external glsl

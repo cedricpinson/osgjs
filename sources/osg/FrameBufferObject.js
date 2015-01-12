@@ -2,7 +2,10 @@ define( [
     'osg/Notify',
     'osg/Utils',
     'osg/StateAttribute'
+
 ], function ( Notify, MACROUTILS, StateAttribute ) {
+
+    'use strict';
 
     /**
      * FrameBufferObject manage fbo / rtt
@@ -10,8 +13,8 @@ define( [
      */
     var FrameBufferObject = function () {
         StateAttribute.call( this );
-        this.fbo = undefined;
-        this.attachments = [];
+        this._fbo = undefined;
+        this._attachments = [];
         this.dirty();
     };
 
@@ -26,7 +29,7 @@ define( [
             return new FrameBufferObject();
         },
         setAttachment: function ( attachment ) {
-            this.attachments.push( attachment );
+            this._attachments.push( attachment );
         },
         _reportFrameBufferError: function ( code ) {
             switch ( code ) {
@@ -46,34 +49,51 @@ define( [
                 Notify.debug( 'FRAMEBUFFER unknown error ' + code.toString( 16 ) );
             }
         },
+
         apply: function ( state ) {
+
             var gl = state.getGraphicContext();
             var status;
-            if ( this.attachments.length > 0 ) {
+
+            var attachments = this._attachments;
+
+            if ( attachments.length > 0 ) {
+
                 if ( this.isDirty() ) {
 
-                    if ( !this.fbo ) {
-                        this.fbo = gl.createFramebuffer();
+                    if ( !this._fbo ) {
+                        this._fbo = gl.createFramebuffer();
                     }
 
-                    gl.bindFramebuffer( gl.FRAMEBUFFER, this.fbo );
+                    gl.bindFramebuffer( gl.FRAMEBUFFER, this._fbo );
                     var hasRenderBuffer = false;
-                    for ( var i = 0, l = this.attachments.length; i < l; ++i ) {
 
-                        if ( this.attachments[ i ].texture === undefined ) { // render buffer
+                    for ( var i = 0, l = attachments.length; i < l; ++i ) {
+
+                        var attachment = attachments[ i ];
+
+                        // render buffer
+                        if ( attachment.texture === undefined ) {
+
                             var rb = gl.createRenderbuffer();
                             gl.bindRenderbuffer( gl.RENDERBUFFER, rb );
-                            gl.renderbufferStorage( gl.RENDERBUFFER, this.attachments[ i ].format, this.attachments[ i ].width, this.attachments[ i ].height );
-                            gl.framebufferRenderbuffer( gl.FRAMEBUFFER, this.attachments[ i ].attachment, gl.RENDERBUFFER, rb );
+                            gl.renderbufferStorage( gl.RENDERBUFFER, attachment.format, attachment.width, attachment.height );
+                            gl.framebufferRenderbuffer( gl.FRAMEBUFFER, attachment.attachment, gl.RENDERBUFFER, rb );
                             hasRenderBuffer = true;
-                        } else {
-                            var texture = this.attachments[ i ].texture;
-                            // apply on unit 0 to init it
-                            state.applyTextureAttribute( 0, texture );
 
-                            gl.framebufferTexture2D( gl.FRAMEBUFFER, this.attachments[ i ].attachment, texture.getTextureTarget(), texture.getTextureObject().id(), this.attachments[ i ].level );
+                        } else {
+
+                            // use texture
+                            var texture = attachment.texture;
+                            // apply on unit 0 to init it
+                            state.applyTextureAttribute( 1, texture );
+
+                            gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment.attachment, attachment.textureTarget, texture.getTextureObject().id(), 0 );
+
                         }
+
                     }
+
                     status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
                     if ( status !== 0x8CD5 ) {
                         this._reportFrameBufferError( status );
@@ -82,16 +102,23 @@ define( [
                     if ( hasRenderBuffer ) { // set it to null only if used renderbuffer
                         gl.bindRenderbuffer( gl.RENDERBUFFER, null );
                     }
+
                     this.setDirty( false );
+
                 } else {
-                    gl.bindFramebuffer( gl.FRAMEBUFFER, this.fbo );
+
+                    gl.bindFramebuffer( gl.FRAMEBUFFER, this._fbo );
+
                     if ( Notify.reportWebGLError === true ) {
+
                         status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
                         if ( status !== 0x8CD5 ) {
                             this._reportFrameBufferError( status );
                         }
                     }
+
                 }
+
             } else {
                 gl.bindFramebuffer( gl.FRAMEBUFFER, null );
             }

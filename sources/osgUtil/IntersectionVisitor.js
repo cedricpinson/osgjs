@@ -166,7 +166,10 @@ define( [
             // Now only use PROJECTION coordinate frame
             if ( !this.enter( node ) ) return;
             // Accumulate Transform 
-            if ( this._modelStack.length > 0 ) {
+            if ( node.getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
+                this.pushViewMatrix( Matrix.create() );
+                this.pushModelMatrix( node.getMatrix() );
+            } else if ( this._modelStack.length > 0 ) {
                 var m = Matrix.copy( this.getModelMatrix(), Matrix.create() );
                 Matrix.preMult( m, node.getMatrix() );
                 this.pushModelMatrix( m );
@@ -179,6 +182,8 @@ define( [
             this.traverse( node );
 
             this.popModelMatrix();
+            if ( node.getReferenceFrame() === TransformEnums.ABSOLUTE_RF )
+                this.popViewMatrix();
             this._intersector.setCurrentTransformation( this.getTransformation() );
         },
     } );

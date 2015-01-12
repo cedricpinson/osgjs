@@ -4,10 +4,12 @@ define( [
 ], function ( MACROUTILS ) {
 
     var OptionsDefault = {
-        'antialias': true,
-        'useDevicePixelRatio': true,
+        'antialias': true, // activate MSAA
+        //'overrideDevicePixelRatio': 1, // if specified override the device pixel ratio
         'fullscreen': true,
-        'enableFrustumCulling': false
+        'enableFrustumCulling': false,
+        'stats' : false, // display canvas with stats for the viewer
+        'statsNoGraph' : false // display only text
     };
 
     var Options = function () {
@@ -18,18 +20,6 @@ define( [
 
     };
 
-
-    // singleton
-    Options.getOrCreateInstance = function( create ) {
-
-        if ( create )
-            return new Options();
-
-        if ( !Options.instance )
-            Options.instance = new Options();
-
-        return Options.instance;
-    };
 
     Options.prototype = {
 

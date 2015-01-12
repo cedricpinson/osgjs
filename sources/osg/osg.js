@@ -6,6 +6,7 @@ define( [
     'osg/BufferArray',
     'osg/Camera',
     'osg/ColorMask',
+    'osg/ComputeBoundsVisitor',
     'osg/ComputeMatrixFromNodePath',
     'osg/CullFace',
     'osg/CullSettings',
@@ -66,13 +67,15 @@ define( [
     'osg/TransformEnums',
     'osg/WebGLCaps'
 
-], function ( BlendColor,
+], function (
+    BlendColor,
     BlendFunc,
     BoundingBox,
     BoundingSphere,
     BufferArray,
     Camera,
     ColorMask,
+    ComputeBoundsVisitor,
     ComputeMatrixFromNodePath,
     CullFace,
     CullSettings,
@@ -133,6 +136,8 @@ define( [
     TransformEnums,
     WebGLCaps ) {
 
+    'use strict';
+
     var osg = {};
 
     osg.BlendColor = BlendColor;
@@ -140,8 +145,10 @@ define( [
     osg.BoundingBox = BoundingBox;
     osg.BoundingSphere = BoundingSphere;
     osg.BufferArray = BufferArray;
+    osg.ColorMask = ColorMask;
     osg.Camera = Camera;
     osg.ColorMask = ColorMask;
+    osg.ComputeBoundsVisitor = ComputeBoundsVisitor;
     MACROUTILS.objectMix( osg, ComputeMatrixFromNodePath );
     osg.CullFace = CullFace;
     osg.CullSettings = CullSettings;

@@ -9,6 +9,8 @@ define( [
     'osg/Matrix'
 ], function ( mockup, BoundingSphere, Node, Camera, TransformEnums, Shape, MatrixTransform, Matrix ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -18,40 +20,40 @@ define( [
             var simpleBoundingSphere = new BoundingSphere();
             ok( simpleBoundingSphere.valid() !== 1, 'BoundingSphere is invalid' );
 
-            var bs_0 = new BoundingSphere();
-            bs_0.expandByVec3( [ 1.0, 4.0, 0.0 ] );
-            bs_0.expandByVec3( [ 2.0, 3.0, 0.0 ] );
-            bs_0.expandByVec3( [ 3.0, 2.0, 0.0 ] );
-            bs_0.expandByVec3( [ 4.0, 1.0, 0.0 ] );
+            var bs0 = new BoundingSphere();
+            bs0.expandByVec3( [ 1.0, 4.0, 0.0 ] );
+            bs0.expandByVec3( [ 2.0, 3.0, 0.0 ] );
+            bs0.expandByVec3( [ 3.0, 2.0, 0.0 ] );
+            bs0.expandByVec3( [ 4.0, 1.0, 0.0 ] );
 
-            c_bs_0 = [ 2.5, 2.5, 0 ];
-            r_bs_0 = 2.12132;
-            var center_is_equal_bs_0 = mockup.check_near( c_bs_0, bs_0._center, 0.0001 ) & mockup.check_near( r_bs_0, bs_0._radius, 0.0001 );
-            ok( center_is_equal_bs_0, 'Expanding by vec3 -> bounding sphere test 1' );
-            var bs_1 = new BoundingSphere();
-            bs_1.expandByVec3( [ -1.0, 0.0, 0.0 ] );
-            bs_1.expandByVec3( [ 2.0, -3.0, 2.0 ] );
-            bs_1.expandByVec3( [ 3.0, 3.0, 1.0 ] );
-            bs_1.expandByVec3( [ 5.0, 5.0, 0.0 ] );
+            var cbs0 = [ 2.5, 2.5, 0 ];
+            var rbs0 = 2.12132;
+            var centerisequalbs0 = mockup.check_near( cbs0, bs0._center, 0.0001 ) & mockup.check_near( rbs0, bs0._radius, 0.0001 );
+            ok( centerisequalbs0, 'Expanding by vec3 -> bounding sphere test 1' );
+            var bs1 = new BoundingSphere();
+            bs1.expandByVec3( [ -1.0, 0.0, 0.0 ] );
+            bs1.expandByVec3( [ 2.0, -3.0, 2.0 ] );
+            bs1.expandByVec3( [ 3.0, 3.0, 1.0 ] );
+            bs1.expandByVec3( [ 5.0, 5.0, 0.0 ] );
 
-            c_bs_1 = [ 2.00438, 0.862774, 0.784302 ];
-            r_bs_1 = 5.16774;
-            var center_is_equal_bs_1 = mockup.check_near( c_bs_1, bs_1._center, 0.0001 ) & mockup.check_near( r_bs_1, bs_1._radius, 0.0001 );
-            ok( center_is_equal_bs_1, 'Expanding by vec3 ->  bounding sphere test 2' );
+            var cbs1 = [ 2.00438, 0.862774, 0.784302 ];
+            var rbs1 = 5.16774;
+            var centerisequalbs1 = mockup.check_near( cbs1, bs1._center, 0.0001 ) & mockup.check_near( rbs1, bs1._radius, 0.0001 );
+            ok( centerisequalbs1, 'Expanding by vec3 ->  bounding sphere test 2' );
 
-            var bs_01 = new BoundingSphere();
-            bs_01.expandBy( bs_0 );
+            var bs01 = new BoundingSphere();
+            bs01.expandByBoundingSphere( bs0 );
 
-            c_bs_01_0 = [ 2.5, 2.5, 0 ];
-            r_bs_01_0 = 2.12132;
-            var center_is_equal_bs_01_0 = mockup.check_near( c_bs_01_0, bs_01._center, 0.0001 ) & mockup.check_near( r_bs_01_0, bs_01._radius, 0.0001 );
-            ok( center_is_equal_bs_01_0, 'Expanding by BoundingSphere ->  bounding sphere test 1' );
+            var cbs010 = [ 2.5, 2.5, 0 ];
+            var rbs010 = 2.12132;
+            var centerisequalbs010 = mockup.check_near( cbs010, bs01._center, 0.0001 ) & mockup.check_near( rbs010, bs01._radius, 0.0001 );
+            ok( centerisequalbs010, 'Expanding by BoundingSphere ->  bounding sphere test 1' );
 
-            bs_01.expandBy( bs_1 );
-            c_bs_01_1 = [ 2.00438, 0.862774, 0.784302 ];
-            r_bs_01_1 = 5.16774;
-            var center_is_equal_bs_01_1 = mockup.check_near( c_bs_01_1, bs_01._center, 0.0001 ) & mockup.check_near( r_bs_01_1, bs_01._radius, 0.0001 );
-            ok( center_is_equal_bs_01_1, 'Expanding by BoundingSphere ->  bounding sphere test 2' );
+            bs01.expandByBoundingSphere( bs1 );
+            var cbs011 = [ 2.00438, 0.862774, 0.784302 ];
+            var rbs011 = 5.16774;
+            var centerisequalbs011 = mockup.check_near( cbs011, bs01._center, 0.0001 ) & mockup.check_near( rbs011, bs01._radius, 0.0001 );
+            ok( centerisequalbs011, 'Expanding by BoundingSphere ->  bounding sphere test 2' );
 
 
             // test case with camera and absolute transform

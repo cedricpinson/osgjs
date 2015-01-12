@@ -1,11 +1,12 @@
 define( [
     'osg/Notify',
+    'osg/Light',
     'osg/Program',
     'osg/Shader',
     'osg/Map',
     'osgShader/Compiler',
     'osgShader/ShaderProcessor'
-], function ( Notify, Program, Shader, Map, Compiler, ShaderProcessor ) {
+], function ( Notify, Light, Program, Shader, Map, Compiler, ShaderProcessor ) {
     'use strict';
 
     // this is the list of attributes type we support by default to generate shader
@@ -68,7 +69,6 @@ define( [
                 return true;
 
             // if it's a light and it's not enable we filter it
-            var Light = require( 'osg/Light' );
             if ( attribute.typeID === Light.typeID && !attribute.isEnable() ) {
                 return true;
             }
@@ -110,7 +110,7 @@ define( [
 
             for ( i = 0, l = attributeMapList.length; i < l; i++ ) {
                 var attributeMapForUnit = attributeMapList[ i ];
-                if ( attributeMapForUnit === undefined ) {
+                if ( !attributeMapForUnit ) {
                     continue;
                 }
                 list[ i ] = [];
@@ -121,7 +121,7 @@ define( [
 
                     var key = attributeMapForUnitKeys[ j ];
                     var attributeStack = attributeMapForUnit[ key ];
-                    if ( attributeStack.length === 0 ) {
+                    if ( attributeStack.values().length === 0 ) {
                         continue;
                     }
 
@@ -161,7 +161,7 @@ define( [
 
             for ( var a = 0, n = textureAttributeList.length; a < n; a++ ) {
                 var tat = textureAttributeList[ a ];
-                if ( tat !== undefined ) {
+                if ( tat ) {
                     for ( var b = 0, o = tat.length; b < o; b++ ) {
                         var attr = tat[ b ];
 
@@ -212,7 +212,7 @@ define( [
                 program.activeUniforms = this.getActiveUniforms( state, attributes, textureAttributes );
                 program.generated = true;
 
-                this._cache.set( hash, program);
+                this._cache.set( hash, program );
                 return program;
             };
         } )()

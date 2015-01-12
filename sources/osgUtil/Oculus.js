@@ -184,7 +184,7 @@ define( [
         camera.setProjectionMatrix( projMatrix );
         camera.setClearColor( [ 0.3, 0.3, 0.3, 0.0 ] );
         camera.setRenderOrder( Camera.POST_RENDER, 0 );
-        camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture, 0 );
+        camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture );
         camera.attachRenderBuffer( FrameBufferObject.DEPTH_ATTACHMENT, FrameBufferObject.DEPTH_COMPONENT16 );
         camera.setReferenceFrame( Transform.ABSOLUTE_RF );
         return camera;

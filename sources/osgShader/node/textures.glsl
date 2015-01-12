@@ -7,7 +7,7 @@ vec4 textureRGBA(const in sampler2D texture, const in vec2 uv) {
 }
 
 float textureIntensity(const in sampler2D texture, const in vec2 uv) {
-    return texture2D(texture, uv.xy ).r;
+    return dot(texture2D(texture, uv).rgb,vec3(1.0/3.0));
 }
 
 float textureAlpha(const in sampler2D texture, const in vec2 uv) {

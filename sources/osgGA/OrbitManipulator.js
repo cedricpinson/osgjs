@@ -1,4 +1,6 @@
 define( [
+    'osg/BoundingSphere',
+    'osg/ComputeBoundsVisitor',
     'osg/Utils',
     'osg/Vec3',
     'osg/Matrix',
@@ -10,8 +12,8 @@ define( [
     'osgGA/OrbitManipulatorDeviceOrientationController',
     'osgGA/OrbitManipulatorOculusController',
 
-], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController ) {
-    
+], function ( BoundingSphere, ComputeBoundsVisitor, MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController ) {
+
     'use strict';
 
     /**
@@ -198,21 +200,34 @@ define( [
                 this._distance = Vec3.distance( eye, center );
             };
         } )(),
-        computeHomePosition: function () {
+        computeHomePosition: function ( useBoundingBox ) {
+
             if ( this._node !== undefined ) {
-                //this.reset();
-                var bs = this._node.getBound();
+
+                var bs;
+                if ( useBoundingBox || this._flags & Manipulator.COMPUTE_HOME_USING_BBOX ) {
+                    bs = new BoundingSphere();
+                    var visitor = new ComputeBoundsVisitor();
+                    this._node.accept( visitor );
+                    var bb = visitor.getBoundingBox();
+
+                    if ( bb.valid() )
+                        bs.expandByBoundingBox( bb );
+                } else {
+                    bs = this._node.getBound();
+                }
+
                 this.setDistance( bs.radius() * 1.5 );
                 this.setTarget( bs.center() );
             }
         },
 
         getHomePosition: function () {
-            if ( this._node !== undefined ) {
-                var bs = this._node.getBound();
-                var distance = bs.radius() * 1.5;
 
-                var target = bs.center();
+            if ( this._node !== undefined ) {
+
+                var target = this._target;
+                var distance = this.getDistance();
 
                 this.computeEyePosition( target, distance, this._homePosition );
             }

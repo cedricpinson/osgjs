@@ -12,8 +12,9 @@ define( [
     'osgUtil/IntersectionVisitor',
     'osgUtil/LineSegmentIntersector',
     'osgUtil/GizmoGeometry',
+    'osg/TransformEnums',
     'osg/Utils'
-], function ( Node, MatrixTransform, Depth, BlendFunc, CullFace, Uniform, Vec2, Vec3, Matrix, Quat, IntersectionVisitor, LineSegmentIntersector, GizmoGeometry, MACROUTILS ) {
+], function ( Node, MatrixTransform, Depth, BlendFunc, CullFace, Uniform, Vec2, Vec3, Matrix, Quat, IntersectionVisitor, LineSegmentIntersector, GizmoGeometry, TransformEnums, MACROUTILS ) {
 
     'use strict';
 
@@ -458,6 +459,15 @@ define( [
                 arcs[ 3 ].dirtyBound();
             };
         } )(),
+        getTransformType: function ( node ) {
+            var n = node;
+            while ( n.parents.length > 0 ) {
+                if ( n.referenceFrame !== undefined && n.referenceFrame === TransformEnums.ABSOLUTE_RF )
+                    return TransformEnums.ABSOLUTE_RF;
+                n = n.parents[ 0 ];
+            }
+            return TransformEnums.RELATIVE_RF;
+        },
         updateGizmo: ( function () {
             var eye = Vec3.create();
             var trVec = Vec3.create();
@@ -471,6 +481,9 @@ define( [
             return function () {
                 if ( !this._attachedNode )
                     return;
+                var ttype = this.getTransformType( this._attachedNode );
+                this.setReferenceFrame( ttype );
+                this.setCullingActive( ttype === TransformEnums.RELATIVE_RF );
                 var worldMat = this._attachedNode.getWorldMatrices()[ 0 ];
 
                 // world trans
@@ -478,9 +491,15 @@ define( [
                 Matrix.makeTranslate( trVec[ 0 ], trVec[ 1 ], trVec[ 2 ], trWorld );
 
                 // normalize gizmo size
-                var scaleFov = Matrix.getScale( this._viewer.getCamera().getProjectionMatrix(), tmpVec )[ 0 ];
-                this._manipulator.getEyePosition( eye );
-                var scaleFactor = Vec3.distance( eye, trVec ) / ( 10 * scaleFov );
+                var scaleFactor = 3.0;
+                if ( ttype === TransformEnums.ABSOLUTE_RF ) {
+                    eye[ 0 ] = eye[ 1 ] = eye[ 2 ] = 0.0;
+                    tmpVec[ 0 ] = tmpVec[ 1 ] = tmpVec[ 2 ] = 1.0;
+                } else {
+                    var scaleFov = Matrix.getScale( this._viewer.getCamera().getProjectionMatrix(), tmpVec )[ 0 ];
+                    this._manipulator.getEyePosition( eye );
+                    scaleFactor = Vec3.distance( eye, trVec ) / ( 10 * scaleFov );
+                }
                 Matrix.makeScale( scaleFactor, scaleFactor, scaleFactor, scGiz );
 
                 // gizmo node
@@ -559,7 +578,8 @@ define( [
             var mat = Matrix.create();
             Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix() : Matrix.create() );
             Matrix.preMult( mat, cam.getProjectionMatrix() );
-            Matrix.preMult( mat, cam.getViewMatrix() );
+            if ( this.getReferenceFrame() === TransformEnums.RELATIVE_RF )
+                Matrix.preMult( mat, cam.getViewMatrix() );
 
             var screenPoint = out || Vec3.create();
             Matrix.transformVec3( mat, worldPoint, screenPoint );

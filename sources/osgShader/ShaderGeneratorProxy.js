@@ -4,15 +4,7 @@ define( [
 ], function ( ShaderGenerator ) {
     'use strict';
 
-    var ShaderGeneratorProxy = function ( createInstance ) {
-
-        if ( !createInstance ) {
-
-            if ( ShaderGeneratorProxy.instance ) {
-                return ShaderGeneratorProxy.instance;
-            }
-            ShaderGeneratorProxy.instance = this;
-        }
+    var ShaderGeneratorProxy = function () {
 
         // object of shader generators
         this._generators = new Map();
@@ -32,7 +24,7 @@ define( [
         },
 
         // user-space facility to provide its own
-        addShaderGenerator: function ( name , sg ) {
+        addShaderGenerator: function ( name, sg ) {
 
             this._generators.set( name, sg );
 
