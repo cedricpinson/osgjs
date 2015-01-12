@@ -33,15 +33,15 @@ vec4 getQuadFloatFromTex(sampler2D depths, vec2 uv){
 
 #pragma include "esm.glsl" "_ESM"
 
-#pragma include "pcfBand.glsl" "_PCF_BAND"
-#pragma include "pcfPoisson.glsl" "_PCF_POISSON"
-#pragma include "pcfTap.glsl" "_PCF_TAP"
+#pragma include "bandPCF.glsl" "_BAND_PCF"
+#pragma include "poissonPCF.glsl" "_POISSON_PCF"
+#pragma include "tapPCF.glsl" "_TAP_PCF"
 
 
 // SHADOWS
 float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
                              in sampler2D tex, in vec4 shadowMapSize,
-                             in float myBias, in float VsmEpsilon,
+                             in float myBias, in float epsilonVSM,
                              in float exponent0, in float exponent1) {
 
 
@@ -55,7 +55,7 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
 
 #elif defined( _PCF )
 
-    shadow = getPCFShadow(tex, shadowMapSize, shadowUV, shadowZ, myBias);
+    shadow = getShadowPCF(tex, shadowMapSize, shadowUV, shadowZ, myBias);
 
 #elif defined( _ESM )
 
@@ -65,7 +65,7 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
 
     vec2 moments = getDoubleFloatFromTex(tex, shadowUV.xy);
     float shadowBias = myBias;
-    shadow = chebyshevUpperBound(moments, shadowZ, shadowBias, VsmEpsilon);
+    shadow = chebyshevUpperBound(moments, shadowZ, shadowBias, epsilonVSM);
 
 #elif  defined( _EVSM )
 
@@ -73,12 +73,12 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
     vec2 exponents = vec2(exponent0, exponent1);
     vec2 warpedDepth = warpDepth(shadowZ, exponents);
 
-    float g_EVSM_Derivation = VsmEpsilon;
+    float derivationEVSM = epsilonVSM;
     // Derivative of warping at depth
-    vec2 depthScale = g_EVSM_Derivation * exponents * warpedDepth;
+    vec2 depthScale = derivationEVSM * exponents * warpedDepth;
     vec2 minVariance = depthScale * depthScale;
 
-    float evsmEpsilon = -VsmEpsilon;
+    float epsilonEVSM = -epsilonVSM;
     float shadowBias = myBias;
 
     // Compute the upper bounds of the visibility function both for x and y
@@ -104,7 +104,7 @@ float computeShadow(in bool lighted,
                     in float N_Dot_L,
                     in vec3 Normal,
                     in float bias,
-                    in float VsmEpsilon,
+                    in float epsilonVSM,
                     in float exponent,
                     in float exponent1) {
 
@@ -119,7 +119,7 @@ float computeShadow(in bool lighted,
     shadowBias = clamp(shadowBias, 0.0, bias);
 
 
-#if defined( _PCF_TAP) //|| (defined(_PCF_BAND) && defined(_PCFx9))
+#if defined( _TAP_PCF) //|| (defined(_BAND_PCF) && defined(_PCFx9))
     shadowBias = - shadowBias;
 #endif
     //normal offset aka Exploding Shadow Receivers
@@ -139,7 +139,7 @@ float computeShadow(in bool lighted,
     objDepth =  -  shadowZ.z;
     objDepth =  (objDepth - depthRange.x)* depthRange.w;// linearize (aka map z to near..far to 0..1)
 
-    return getShadowedTermUnified(shadowUV.xy, objDepth, tex, texSize, shadowBias, VsmEpsilon, exponent, exponent1);
+    return getShadowedTermUnified(shadowUV.xy, objDepth, tex, texSize, shadowBias, epsilonVSM, exponent, exponent1);
 
 }
 // end shadows

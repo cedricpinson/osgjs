@@ -8,8 +8,9 @@ define( [
     'osg/Node',
     'osg/NodeVisitor',
     'osg/CullVisitor'
-], function ( Notify, MACROUTILS, Vec4, Matrix, Uniform, StateSet, Node, NodeVisitor, CullVisitor ) {
+], function ( Notify, MACROUTILS, Vec4, Matrix, Uniform, StateSet, Node, NodeVisitor, CullVisitor, Viewport ) {
     'use strict';
+
     /**
      *  ShadowedScene provides a mechanism for decorating a scene that the needs to have shadows cast upon it.
      *  @class ShadowedScene
@@ -22,10 +23,6 @@ define( [
         // TODO: all  techniques (stencil/projTex/map/vol)
         this._shadowTechniques = [];
 
-        this._dirty = true;
-
-        this._shadowSettings = undefined;
-
         this._optimizedFrustum = false;
 
         this._frustumReceivers = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
@@ -34,7 +31,7 @@ define( [
     };
 
     /** @lends ShadowedScene.prototype */
-    ShadowedScene.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
+    ShadowedScene.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
 
         getShadowTechniques: function () {
             return this._shadowTechniques;
@@ -57,23 +54,10 @@ define( [
                 if ( idx !== -1 ) {
                     if ( this._shadowTechniques[ idx ].valid() ) {
                         this._shadowTechniques[ idx ].cleanSceneGraph();
-                        this._shadowTechniques[ idx ]._shadowedScene = 0;
                     }
                     this._shadowTechniques.splice( idx, 1 );
                 }
             }
-        },
-        /* Gets Default shadowSettings
-         * if it's shared between techniques
-         */
-        getShadowSettings: function () {
-            return this._shadowSettings;
-        },
-        /* Sets Default shadowSettings
-         * if it's shared between techniques
-         */
-        setShadowSettings: function ( ss ) {
-            this._shadowSettings = ss;
         },
         /** Clean scene graph from any shadow technique specific nodes, state and drawables.*/
         cleanSceneGraph: function () {
@@ -83,77 +67,63 @@ define( [
                 }
             }
         },
+
         /** Dirty any cache data structures held in the attached ShadowTechnique.*/
         dirty: function () {
-            this._dirty = false;
-            for ( var i = 0, lt = this._shadowTechniques.length; i < lt; i++ ) {
-                if ( this._shadowTechniques[ i ] && this._shadowTechniques[ i ].valid() ) {
-                    this._shadowTechniques[ i ].dirty();
-                }
-            }
-
+            for ( var i = 0; i < this._shadowTechniques.length; i++)
+                this._shadowTechniques[i].dirty();
         },
+
         nodeTraverse: function ( /*nv*/) {
             Node.prototype.traverse.apply( this, arguments );
         },
-        traverse: function ( nodeVisitor ) {
+        traverse: function ( nv ) {
 
             var i, st, lt = this._shadowTechniques.length;
 
-            if ( nodeVisitor.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
-                // init
-                var allDirty = this._dirty || ( this.getShadowSettings() && this.getShadowSettings()._dirty );
-                if ( allDirty ) {
-                    this.init();
-                } else {
-                    for ( i = 0; i < lt; i++ ) {
-                        st = this._shadowTechniques[ i ];
-                        if ( st && st.valid() && ( st._dirty || st.getShadowSettings()._dirty ) ) {
-                            this._shadowTechniques[ i ].init();
-                        }
+            if ( nv.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
+
+                // update all shadow technics
+                for ( i = 0; i < lt; i++ ) {
+                    st = this._shadowTechniques[ i ];
+
+                    if ( st && st.valid() ) {
+
+                        if (st.isDirty() ) // if dirty init shadow techniques
+
+                            st.init();
+
+                        if ( st.getEnable() )
+                            st.updateShadowTechnic( nv );
                     }
                 }
-                this.nodeTraverse( nodeVisitor );
 
-            } else if ( nodeVisitor.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
+                // update the scene
+                this.nodeTraverse( nv );
 
-                var cullVisitor = nodeVisitor;
+            } else if ( nv.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
 
-                if ( cullVisitor instanceof CullVisitor ) {
-                    // cull Shadowed Scene
-                    this.cullShadowReceivingScene( nodeVisitor );
+                // cull Shadowed Scene
+                this.cullShadowReceivingScene( nv );
 
-                    // cull Casters
-                    for ( i = 0; i < lt; i++ ) {
-                        st = this._shadowTechniques[ i ];
-                        if ( st && st.getEnabled() && st.valid() ) {
-                            st.cullShadowCastingScene( cullVisitor );
-                        }
+                // cull Casters
+                for ( i = 0; i < lt; i++ ) {
+                    st = this._shadowTechniques[ i ];
+                    if ( st && st.getEnable() && st.valid() ) {
+                        st.cullShadowCasting( nv );
                     }
-
                 }
+
             } else {
-                this.nodeTraverse( nodeVisitor );
+                this.nodeTraverse( nv );
             }
-        },
-        init: function () {
-            for ( var i = 0, lt = this._shadowTechniques.length; i < lt; i++ ) {
-                if ( this._shadowTechniques[ i ] && this._shadowTechniques[ i ].valid() ) {
-                    this._shadowTechniques[ i ].init();
-                }
-            }
-            if ( this.getShadowSettings() ) this.getShadowSettings()._dirty = false;
-            this._dirty = false;
         },
 
-        setReceivesShadowTraversalMask: function ( mask ) {
-            this._receivesShadowTraversalMask = mask;
-        },
-        getReceivesShadowTraversalMask: function () {
-            return this._receivesShadowTraversalMask;
-        },
         /*receiving shadows, cull normally, but with receiving shader/state set/texture*/
         cullShadowReceivingScene: function ( cullVisitor ) {
+
+
+            // not used any where ???
 
             // WARNING: only works if there is a camera as ancestor
             // TODO: Better (Multi)Camera detection handling
@@ -168,8 +138,7 @@ define( [
             this.nodeTraverse( cullVisitor );
             if ( this.stateset ) cullVisitor.popStateSet();
 
-
-        },
+        }
 
 
     } ), 'osgShadow', 'ShadowedScene' );

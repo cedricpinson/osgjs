@@ -14,7 +14,7 @@ define( [
     // see http://www.glprogramming.com/red/chapter05.html
 
 
-    var Light = function ( lightNumber ) {
+    var Light = function ( lightNumber, disable ) {
         StateAttribute.call( this );
 
         if ( lightNumber === undefined ) {
@@ -37,8 +37,10 @@ define( [
 
         this._lightUnit = lightNumber;
 
-        this._enable = true;
         this._invMatrix = new Matrix.create();
+
+        this._enable = !disable;
+
         this.dirty();
 
     };
@@ -54,7 +56,7 @@ define( [
         attributeType: 'Light',
 
         cloneType: function () {
-            return new Light( this._lightUnit );
+            return new Light( this._lightUnit, true );
         },
 
         getTypeMember: function () {
@@ -286,6 +288,9 @@ define( [
         },
 
         apply: function ( /*state*/) {
+
+            if ( !this._enable )
+                return;
 
             var uniformMap = this.getOrCreateUniforms();
 

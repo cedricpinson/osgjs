@@ -8,34 +8,12 @@ define( [
 ], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor ) {
     'use strict';
 
-    // cull callback interception
-    var CameraCullCallback = function ( shadowTechnique ) {
-        this._shadowTechnique = shadowTechnique;
-    };
-    CameraCullCallback.prototype = {
-        cull: function ( node, nodeVisitor ) {
-            this._shadowTechnique.enterCullCaster( nodeVisitor );
-
-            // tricky, as when cullvisitor goes through it
-            // it gives a "detached" cyclic graph !
-            // shadowedScene -> cameraLightCaster -> shadowedScene
-            // but only "nodeTraversing it" so just really
-            // skipping to children in fact.
-            this._shadowTechnique.getShadowedScene().nodeTraverse( nodeVisitor );
-
-
-            this._shadowTechnique.exitCullCaster( nodeVisitor );
-            return false;
-        }
-    };
-
     /**
      *  ShadowTechnique provides an implementation interface of shadow techniques.
      *  @class ShadowTechnique
      */
     var ShadowTechnique = function () {
         Object.call( this );
-
 
         this._enabled = true;
         this._shadowedScene = undefined;
@@ -44,23 +22,21 @@ define( [
     };
 
     /** @lends ShadowTechnique.prototype */
-    ShadowTechnique.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Object.prototype, {
+    ShadowTechnique.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+
         dirty: function () {
             this._dirty = true;
         },
 
-        setCameraCullCallback: function ( camera ) {
-            camera.setCullCallback( new CameraCullCallback( this ) );
-        },
         getShadowedScene: function () {
             return this._shadowedScene;
         },
 
-
-        setEnabled: function ( enabled ) {
+        setEnable: function ( enabled ) {
             this._enabled = enabled;
         },
-        getEnabled: function () {
+
+        getEnable: function () {
             return this._enabled;
         },
 
@@ -68,11 +44,9 @@ define( [
             this._shadowedScene = shadowedScene;
         },
 
-
         init: function () {
             // well shouldn't be called
             Notify.log( 'No ShadowTechnique activated: normal rendering activated' );
-
         },
 
         valid: function () {
@@ -80,44 +54,15 @@ define( [
             return false;
         },
 
-        update: function ( nodeVisitor ) {
-            this.getShadowedScene().nodeTraverse( nodeVisitor );
-        },
+        // update the technic
+        updateShadowTechnic: function ( nodeVisitor ) {},
 
-        cull: function ( cullVisitor ) {
-            this.getShadowedScene().nodeTraverse( cullVisitor );
-            return false;
-        },
+        cullShadowCasting: function ( cullVisitor ) {},
 
         cleanSceneGraph: function () {
             // well shouldn't be called
             Notify.log( 'No ShadowTechnique activated: normal rendering activated' );
-        },
-
-        enterCullCaster: function ( /*cullVisitor*/) {
-            // well shouldn't be called
-        },
-
-        exitCullCaster: function ( /*cullVisitor*/) {
-            // well shouldn't be called
-        },
-        traverse: function ( nodeVisitor ) {
-            if ( !this._shadowedScene ) return;
-            if ( nodeVisitor.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
-                if ( this._dirty ) this.init();
-
-                this.update( nodeVisitor );
-            } else if ( nodeVisitor.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
-                var cullVisitor = nodeVisitor;
-                if ( cullVisitor instanceof CullVisitor ) { // TODO: Have to find how to get if cull or node
-                    this.cull( cullVisitor );
-                } else {
-                    this.getShadowedScene().nodeTraverse( nodeVisitor );
-                }
-            } else {
-                this.getShadowedScene().nodeTraverse( nodeVisitor );
-            }
-        },
+        }
 
     } ), 'osgShadow', 'ShadowTechnique' );
 

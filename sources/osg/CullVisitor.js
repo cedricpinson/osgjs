@@ -63,6 +63,14 @@ define( [
             return -( coord[ 0 ] * matrix[ 2 ] + coord[ 1 ] * matrix[ 6 ] + coord[ 2 ] * matrix[ 10 ] + matrix[ 14 ] );
         },
 
+        getComputedNear: function() {
+            return this._computedNear;
+        },
+
+        getComputedFar: function() {
+            return this._computedFar;
+        },
+
         handleCullCallbacksAndTraverse: function ( node ) {
             var ccb = node.getCullCallback();
             if ( ccb ) {

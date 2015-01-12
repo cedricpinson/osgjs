@@ -1,6 +1,6 @@
 
 
-float getPCFShadow(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float gbias) {
+float getShadowPCF(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float gbias) {
 
     vec2 o = shadowMapSize.zw;
     float shadowed = 0.0;

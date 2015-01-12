@@ -42,7 +42,7 @@ define( [
 
                 this._inputs.normal,
                 this._inputs.shadowbias,
-                this._inputs.shadowvsmEpsilon,
+                this._inputs.shadowepsilonVSM,
                 this._inputs.shadowexponent0,
                 this._inputs.shadowexponent1
             ];

@@ -16,21 +16,21 @@
         // sample default parameters
         // at start most can be changed by the UI
         this._config = {
-            'texturesize': 1024,
+            'textureSize': 1024,
             'shadow': 'PCF',
-            'texturetype': 'UNSIGNED_BYTE',
-            'lightnum': 1,
+            'textureType': 'UNSIGNED_BYTE',
+            'lightNum': 1,
             'lightType': 'Spot',
             'bias': 0.005,
-            'VsmEpsilon': 0.0008,
-            'supersample': 0,
+            'epsilonVSM': 0.0008,
+            'superSample': 0,
             'blur': false,
             'blurKernelSize': 4.0,
             'blurTextureSize': 256,
             'model': 'material-test',
-            'shadowproj': 'fov',
+            'shadowProjection': 'fov',
             'fov': 50,
-            'pcfKernelSize': '4Band(4texFetch)',
+            'kernelSizePCF': '4Band(4texFetch)',
             'exponent': 80.0,
             'exponent1': 0.33,
 
@@ -40,7 +40,7 @@
             'lightAmbient': false,
             'frustumTest': 'free',
             'texture': true,
-            'debugRtt': true,
+            'debugRTT': true,
 
             '_spotCutoff': 25,
             '_spotBlend': 0.3,
@@ -104,7 +104,7 @@
 
         // ui value memory for minimizing switch on only
         // what changed
-        this._rtt = [];
+        this._RTT = [];
         this._parameterUniform = {};
 
         // Per Light/shadow
@@ -113,7 +113,6 @@
         this._lightsSource = [];
         this._debugLights = [];
         this._lightsUniform = [];
-        this._casterStateSet = []; // one statset per light casting shadow
         this._shadowTexture = [];
         this._shadowCamera = [];
 
@@ -122,16 +121,18 @@
         this._blurPass = [];
         this._downPass = [];
 
+        this._shadowSettings = [];
+
         // shared
         this._previousTech = this._config[ 'shadow' ];
-        this._previousTextureSize = this._config[ 'texturesize' ];
-        this._previousTextureType = this._config[ 'texturetype' ];
+        this._previousTextureSize = this._config[ 'textureSize' ];
+        this._previousTextureType = this._config[ 'textureType' ];
         this._previousBlur = this._config[ 'blur' ];
         this._previousFov = this._config[ 'fov' ];
         this._previousLightType = this._config[ 'lightType' ];
-        this._previousRtt = this._config[ 'debugRtt' ];
+        this._previousRTT = this._config[ 'debugRTT' ];
         this._previousFrustumTest = this._config[ 'frustumTest' ];
-        this._previousPcfKernelSize = this._config[ 'pcfKernelSize' ];
+        this._previousKernelSizePCF = this._config[ 'kernelSizePCF' ];
         this._previousDisable = this._config[ 'disableShadows' ];
         this._debugOtherTechniques = false;
         this._debugFrustum = false;
@@ -147,8 +148,12 @@
             this._debugFrustum = true;
             this._debugPrefilter = true;
         }
-        for ( var property in queryDict )
+
+        var keys = Object.keys( queryDict );
+        for ( var i = 0; i < keys.length; i++ ) {
+            var property = keys[ i ];
             this._config[ property ] = queryDict[ property ];
+        }
     };
 
 
@@ -164,11 +169,11 @@
         this._accum = 0;
         this._last = 0;
         this._debugNode = debugNode;
-        this.lightPos = position;
-        this.lightDir = dir;
+        this._lightPos = position;
+        this._lightDir = dir;
 
-        this.up = [ 0.0, 0.0, 1.0 ];
-        this.lightTarget = [ 0.0, 0.0, 0.0 ];
+        this._up = [ 0.0, 0.0, 1.0 ];
+        this._lightTarget = [ 0.0, 0.0, 0.0 ];
 
         this._directLightChange = false; // GUI change, mmm
 
@@ -177,8 +182,8 @@
         update: function ( node, nv ) {
             var currentTime = nv.getFrameStamp().getSimulationTime();
             //
-            var lightPos = this.lightPos;
-            var lightDir = this.lightDir;
+            var lightPos = this._lightPos;
+            var lightDir = this._lightDir;
 
             // is user didn't prevent animation
             if ( this._example._config[ 'lightMovement' ] !== 'Fixed' && this._example._config[ 'frustumTest' ] === 'free' ) {
@@ -203,7 +208,7 @@
 
                 //  GENERIC Code getting direction
                 //  50 50 15
-                var lightTarget = this.lightTarget;
+                var lightTarget = this._lightTarget;
                 switch ( this._example._config[ 'lightMovement' ] ) {
                 case 'Rotate':
                     lightPos[ 0 ] = x * this._positionX;
@@ -246,14 +251,14 @@
             // what follows,
             // .. just allow the debug node (AXIS) to be updated here.
             //
-            var up = this.up; //   camera up
+            var up = this._up; //   camera up
             // Check it's not coincident with lightDir
             if ( Math.abs( osg.Vec3.dot( up, lightDir ) ) >= 1.0 ) {
                 // another camera up
                 up = [ 1.0, 0.0, 0.0 ];
             }
 
-            var lightTargetDebug = this.lightTarget;
+            var lightTargetDebug = this._lightTarget;
             //osg.Vec3.mult( lightDir, 50, lightTargetDebug );
             //osg.Vec3.add( lightPos, lightTargetDebug, lightTargetDebug );
 
@@ -307,7 +312,7 @@
             controller = gui.add( this._config, 'shadow', algoShadow );
             controller.onChange( this.updateShadow.bind( this ) );
 
-            controller = gui.add( this._config, 'texturetype', textureTypes );
+            controller = gui.add( this._config, 'textureType', textureTypes );
             controller.onChange( this.updateShadow.bind( this ) );
 
             var texSizes = [];
@@ -317,7 +322,7 @@
                 texSizes.push( texSize );
                 texSize *= 2;
             }
-            controller = gui.add( this._config, 'texturesize', texSizes );
+            controller = gui.add( this._config, 'textureSize', texSizes );
             controller.onChange( this.updateShadow.bind( this ) );
 
             // shaders has to have under max varying decl
@@ -326,7 +331,7 @@
             // each shadow is 2 more.
             var maxLights = ~~( ( this._maxVaryings - 1 ) - 4 ) / 2.0;
 
-            controller = gui.add( this._config, 'lightnum', 1, maxLights ).step( 1 );
+            controller = gui.add( this._config, 'lightNum', 1, maxLights ).step( 1 );
             controller.onChange( this.updateShadow.bind( this ) );
 
             controller = gui.add( this._config, 'lightType', [ 'Spot',
@@ -373,28 +378,28 @@
 
 
             var pcfFolder = gui.addFolder( 'PCF' );
-            controller = pcfFolder.add( this._config, 'pcfKernelSize', [ '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)', '64Poisson(256texFetch)' ] );
+            controller = pcfFolder.add( this._config, 'kernelSizePCF', osgShadow.ShadowSettings.kernelSizeList );
             controller.onChange( this.updateShadow.bind( this ) );
 
             if ( this._debugOtherTechniques ) {
 
-                var VSMFolder = gui.addFolder( 'Variance (VSM, EVSM)' );
+                var folderVSM = gui.addFolder( 'Variance (VSM, EVSM)' );
 
-                controller = VSMFolder.add( this._config, 'VsmEpsilon' ).min( 0.0001 ).max( 0.01 );
+                controller = folderVSM.add( this._config, 'epsilonVSM' ).min( 0.0001 ).max( 0.01 );
                 controller.onChange( this.updateShadow.bind( this ) );
 
 
                 if ( this._debugPrefilter ) {
-                    controller = VSMFolder.add( this._config, 'supersample' ).step( 1 ).min( 0.0 ).max( 8 );
+                    controller = folderVSM.add( this._config, 'superSample' ).step( 1 ).min( 0.0 ).max( 8 );
                     controller.onChange( this.updateShadow.bind( this ) );
 
-                    controller = VSMFolder.add( this._config, 'blur' );
+                    controller = folderVSM.add( this._config, 'blur' );
                     controller.onChange( this.updateShadow.bind( this ) );
 
-                    controller = VSMFolder.add( this._config, 'blurKernelSize' ).min( 3.0 ).max( 128.0 );
+                    controller = folderVSM.add( this._config, 'blurKernelSize' ).min( 3.0 ).max( 128.0 );
                     controller.onChange( this.updateShadow.bind( this ) );
 
-                    controller = VSMFolder.add( this._config, 'blurTextureSize', [ 32, 64, 128, 256, 512, 1024, 2048, 4096, 8144 ] );
+                    controller = folderVSM.add( this._config, 'blurTextureSize', [ 32, 64, 128, 256, 512, 1024, 2048, 4096, 8144 ] );
                     controller.onChange( this.updateShadow.bind( this ) );
                 }
 
@@ -410,7 +415,7 @@
 
 
                 var debugFolder = gui.addFolder( 'Debug Show' );
-                controller = debugFolder.add( this._config, 'debugRtt' );
+                controller = debugFolder.add( this._config, 'debugRTT' );
                 controller.onChange( this.updateShadow.bind( this ) );
                 controller = debugFolder.add( this._config, 'texture' );
                 controller.onChange( this.updateShadow.bind( this ) );
@@ -530,12 +535,16 @@
         },
 
         updateLightsEnable: function () {
-            var l, numLights = ~~( this._config[ 'lightnum' ] );
+            var l, numLights = ~~( this._config[ 'lightNum' ] );
 
             while ( this._maxVaryings < ( numLights * 2 + 4 ) ) {
                 numLights--;
             }
-            this._config[ 'lightnum' ] = numLights;
+            this._config[ 'lightNum' ] = numLights;
+
+            for ( l = 0; l < this._lights.length; l++ )
+                this._lights[ l ].setEnable( false );
+
 
             if ( this._lights.length !== numLights ) {
 
@@ -557,6 +566,7 @@
                 this._lightsMatrix = [];
                 this._lightsSource = [];
                 this._shadowTechnique = [];
+                this._shadowSettings = [];
                 this._debugLights = [];
 
                 // re-add lights if any
@@ -564,20 +574,12 @@
                     this.addShadowedLight( group, k, lightScale );
                 }
 
-                this._lightAndShadowScene.init();
-                this._updateRtt = true;
+                this._updateRTT = true;
             }
 
 
-
-            l = this._lights.length;
-            while ( l-- ) {
-                this._lights[ l ]._enable = false;
-            }
-
-            while ( ++l < numLights ) {
-                this._lights[ l ]._enable = true;
-            }
+            for ( l = 0; l < numLights; l++ )
+                this._lights[ l ].setEnable( true );
 
         },
 
@@ -586,7 +588,7 @@
             // remove all lights
             while ( l-- ) {
                 var st = this._shadowTechnique[ l ];
-                st.setEnabled( !this._config[ 'shadowStatic' ] );
+                st.setEnable( !this._config[ 'shadowStatic' ] );
             }
             if ( this._config[ 'shadowStatic' ] ) {
                 this._config[ 'lightSpeed' ] = '0.0';
@@ -598,7 +600,7 @@
             var l = this._lights.length;
             var val = this._config[ 'lightAmbient' ] ? 0.6 : 0.0;
             while ( l-- ) {
-                this._lights[ l ]._ambient = [ val, val, val, 1.0 ];
+                this._lights[ l ].setAmbient( [ val, val, val, 1.0 ] );
                 this._lights[ l ].dirty();
             }
 
@@ -646,34 +648,34 @@
         updateShadowFormat: function () {
 
             var shadowMap;
-            var texType = this._config[ 'texturetype' ];
+            var texType = this._config[ 'textureType' ];
             if ( this._previousTextureType !== texType ) {
                 var l = this._lights.length;
                 while ( l-- ) {
 
                     shadowMap = this._shadowTechnique[ l ];
-                    var shadowSettings = shadowMap.getShadowSettings();
+                    var shadowSettings = this._shadowSettings[ l ];
                     shadowSettings.setTextureType( texType );
-
                 }
-                this._previousTextureType = this._config[ 'texturetype' ];
+                this._previousTextureType = this._config[ 'textureType' ];
             }
-            this._updateRtt = true;
+            this._updateRTT = true;
         },
+
         updateShadowMapSize: function () {
 
             var shadowMap;
-            var mapsize = ~~( this._config[ 'texturesize' ] );
+            var mapsize = ~~( this._config[ 'textureSize' ] );
             if ( this._previousTextureSize !== mapsize ) {
 
                 var l = this._lights.length;
                 while ( l-- ) {
                     shadowMap = this._shadowTechnique[ l ];
-                    shadowMap.getShadowSettings().setTextureSize( mapsize );
+                    this._shadowSettings[ l ].setTextureSize( mapsize );
                 }
                 this._previousTextureSize = mapsize;
             }
-            this._updateRtt = true;
+            this._updateRTT = true;
 
         },
         updateFov: function () {
@@ -690,7 +692,7 @@
         },
         updateShadowTechniqueMode: function () {
 
-            var l, numLights = ~~( this._config[ 'lightnum' ] );
+            var l, numLights = ~~( this._config[ 'lightNum' ] );
             var shadowMap;
 
             if ( this._previousTech !== this._config[ 'shadow' ] ) {
@@ -719,7 +721,7 @@
                 l = numLights;
                 while ( l-- ) {
                     shadowMap = this._shadowTechnique[ l ];
-                    shadowMap.getShadowSettings().setAlgorithm( this._config[ 'shadow' ] );
+                    this._shadowSettings[ l ].setAlgorithm( this._config[ 'shadow' ] );
                 }
 
                 this._previousTech = this._config[ 'shadow' ];
@@ -729,40 +731,40 @@
             while ( l-- ) {
                 shadowMap = this._shadowTechnique[ l ];
 
-                var shadowSettings = shadowMap.getShadowSettings();
+                var shadowSettings = this._shadowSettings[ l ];
 
-                shadowSettings._config[ 'bias' ] = this._config[ 'bias' ];
-                shadowSettings._config[ 'exponent' ] = this._config[ 'exponent' ];
-                shadowSettings._config[ 'exponent1' ] = this._config[ 'exponent1' ];
-                shadowSettings._config[ 'VsmEpsilon' ] = this._config[ 'VsmEpsilon' ];
-                shadowSettings._config[ 'pcfKernelSize' ] = this._config[ 'pcfKernelSize' ];
-
+                shadowSettings.bias = this._config[ 'bias' ];
+                shadowSettings.exponent = this._config[ 'exponent' ];
+                shadowSettings.exponent1 = this._config[ 'exponent1' ];
+                shadowSettings.epsilonVSM = this._config[ 'epsilonVSM' ];
+                shadowSettings.kernelSizePCF = this._config[ 'kernelSizePCF' ];
             }
+
 
         },
-        updateDebugRtt: function () {
+        updateDebugRTT: function () {
             // show the shadowmap as ui quad on left bottom screen
-            if ( this._updateRtt || ( this._previousRtt === true && this._config[ 'debugRtt' ] === false ) ) {
-                this._rttdebugNode.removeChildren();
+            if ( this._updateRTT || ( this._previousRTT === true && this._config[ 'debugRTT' ] === false ) ) {
+                this._RTTdebugNode.removeChildren();
             }
-            if ( this._updateRtt || ( this._previousRtt === false && this._config[ 'debugRtt' ] ) ) {
+            if ( this._updateRTT || ( this._previousRTT === false && this._config[ 'debugRTT' ] ) ) {
 
-                var l, numLights = ~~( this._config[ 'lightnum' ] );
+                var l, numLights = ~~( this._config[ 'lightNum' ] );
 
                 // make sure we have latest one
-                this._rtt = [];
+                this._RTT = [];
                 l = numLights;
                 while ( l-- ) {
                     var shadowMap = this._shadowTechnique[ l ];
-                    this._rtt.push( shadowMap.getTexture() );
+                    this._RTT.push( shadowMap.getTexture() );
                 }
                 this.showFrameBuffers( {
                     screenW: this._canvas.width,
                     screenH: this._canvas.height
                 } );
             }
-            this._previousRtt = this._config[ 'debugRtt' ];
-            this._updateRtt = false;
+            this._previousRTT = this._config[ 'debugRTT' ];
+            this._updateRTT = false;
         },
         /*
          * try to minimize update cost and code size
@@ -780,10 +782,9 @@
                 }
                 this._previousDisable = this._config[ 'disableShadows' ];
             }
-            //            if ( !this._config[ 'disableShadows' ]){
-            //                return;
-            //            }
+
             this.updateShadowStatic();
+
             this.updateLightsAmbient();
             this.updateLightsEnable();
 
@@ -796,20 +797,27 @@
             this.updateShadowFormat();
             this.updateShadowMapSize();
 
-            this.updateDebugRtt();
+            this.updateDebugRTT();
+
+            var l = this._lights.length;
+
+            while ( l-- ) {
+                var shadowMap = this._shadowTechnique[ l ];
+                shadowMap.setShadowSettings( this._shadowSettings[ l ] );
+            }
 
         },
 
         // show the shadowmap as ui quad on left bottom screen
-        // in fact show all texture inside this._rtt
+        // in fact show all texture inside this._RTT
         showFrameBuffers: function ( optionalArgs ) {
 
-            if ( !this._rttdebugNode ) this._rttdebugNode = new osg.Node();
+            if ( !this._RTTdebugNode ) this._RTTdebugNode = new osg.Node();
             if ( !this._composerDebugNode ) this._composerDebugNode = new osg.Node();
             this._composerDebugNode._name = 'debugComposerNode';
             this._composerDebugNode.setCullingActive( false );
             if ( !this._composerDebugCamera ) this._composerDebugCamera = new osg.Camera();
-            this._rttdebugNode.addChild( this._composerDebugCamera );
+            this._RTTdebugNode.addChild( this._composerDebugCamera );
 
             var optionsDebug = {
                 x: 0,
@@ -859,8 +867,8 @@
             stateset.setAttributeAndModes( this._programRTT );
 
 
-            for ( var i = 0, l = this._rtt.length; i < l; i++ ) {
-                texture = this._rtt[ i ];
+            for ( var i = 0, l = this._RTT.length; i < l; i++ ) {
+                texture = this._RTT[ i ];
                 if ( texture ) {
                     var quad = osg.createTexturedQuadGeometry( xOffset, yOffset, 0, optionsDebug.w, 0, 0, 0, optionsDebug.h, 0 );
 
@@ -993,8 +1001,8 @@
                 cubeNode.addChild( cubeSubNode );
 
             }
-
-            osgDB.readImageURL( '../camera/textures/sol_trauma_periph.png' ).then( function ( cubeImage ) {
+            var texturePath = '../media/textures/seamless/wood2.jpg';
+            osgDB.readImageURL( texturePath ).then( function ( cubeImage ) {
                 var cubeTex = osg.Texture.createFromImage( cubeImage );
                 cubeTex.setWrapT( 'MIRRORED_REPEAT' );
                 cubeTex.setWrapS( 'MIRRORED_REPEAT' );
@@ -1011,7 +1019,7 @@
             var groundSize = 600 / numPlanes;
             var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
 
-            osgDB.readImageURL( '../camera/textures/sol_trauma_periph.png' ).then( function ( groundImage ) {
+            osgDB.readImageURL( texturePath ).then( function ( groundImage ) {
                 var groundTex = osg.Texture.createFromImage( groundImage );
                 groundTex.setWrapT( 'MIRRORED_REPEAT' );
                 groundTex.setWrapS( 'MIRRORED_REPEAT' );
@@ -1049,14 +1057,17 @@
             return ShadowScene;
         },
         addShadowedLight: function ( group, num, lightScale, position, target ) {
+
             if ( !target ) target = [ 0, 0, 0 ];
+
             if ( !position ) position = [ -25 + -15 * num + -25 * ( num % 2 ),
                 25 + 15 * num - 25 * ( num % 2 ),
                 15 + 35 * num
             ];
+
             var shadowSettings = new osgShadow.ShadowSettings( this._config );
 
-            var mapres = parseInt( this._config[ 'texturesize' ] );
+            var mapres = parseInt( this._config[ 'textureSize' ] );
             shadowSettings.setTextureSize( mapres );
 
             shadowSettings.setCastsShadowTraversalMask( this._castsShadowTraversalMask );
@@ -1083,7 +1094,6 @@
             default:
             case 'Spot':
                 light.setLightAsSpot();
-
             }
 
 
@@ -1093,9 +1103,9 @@
             light.setLinearAttenuation( this._config[ '_linearAttenuation' ] );
             light.setQuadraticAttenuation( this._config[ '_quadraticAttenuation' ] );
 
-            light._ambient = [ 0.0, 0.0, 0.0, 1.0 ];
-            light._diffuse = [ lightScale, lightScale, lightScale, 1.0 ];
-            light._specular = [ lightScale, lightScale, lightScale, 1.0 ];
+            light.setAmbient([ 0.0, 0.0, 0.0, 1.0 ]);
+            light.setDiffuse( [ lightScale, lightScale, lightScale, 1.0 ]);
+            light.setSpecular( [ lightScale, lightScale, lightScale, 1.0 ]);
 
             lightSource.setLight( light );
             lightNode.addChild( lightSource );
@@ -1132,9 +1142,10 @@
             shadowSettings.setLightSource( lightSource );
             ///////////////////////////////
 
+            this._shadowSettings.push( shadowSettings );
             var shadowMap = new osgShadow.ShadowMap( shadowSettings );
             this._lightAndShadowScene.addShadowTechnique( shadowMap );
-
+            shadowMap.setShadowSettings( shadowSettings );
             this._shadowTechnique.push( shadowMap );
 
             // init is done by shadowscene, at first render
@@ -1147,14 +1158,12 @@
         createScene: function () {
             var group = new osg.Node();
 
-            this._receivesShadowTraversalMask = 0x1;
             this._castsShadowTraversalMask = 0x2;
 
             this._shadowScene = this.createSceneCasterReceiver();
 
             var shadowedScene = new osgShadow.ShadowedScene();
             this._lightAndShadowScene = shadowedScene;
-            shadowedScene.setReceivesShadowTraversalMask( this._receivesShadowTraversalMask );
 
             // here you can set/change the mask for node you want to be
             // casting shadow
@@ -1174,8 +1183,8 @@
             // need camera position in world too
             this._config[ 'camera' ] = this._viewer.getCamera();
 
-            var numLights = ~~( this._config[ 'lightnum' ] );
-            var lightScale = 1.0 / numLights;
+            var numLights = ~~( this._config[ 'lightNum' ] );
+            var lightScale = 1.0 / numLights - 1e-4;
 
 
             for ( var k = 0; k < numLights; k++ ) {
@@ -1183,13 +1192,13 @@
             }
 
 
-            this._rttdebugNode = new osg.Node();
-            this._rttdebugNode._name = 'debugFBNode';
-            group.addChild( this._rttdebugNode );
+            this._RTTdebugNode = new osg.Node();
+            this._RTTdebugNode._name = 'debugFBNode';
+            group.addChild( this._RTTdebugNode );
 
             // doesn't show anything as shadow text and scene
             // isn't init until first frame
-            if ( this._config[ 'debugRtt' ] ) {
+            if ( this._config[ 'debugRTT' ] ) {
                 this.showFrameBuffers( {
                     screenW: this._canvas.width,
                     screenH: this._canvas.height

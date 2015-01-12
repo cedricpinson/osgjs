@@ -3,13 +3,13 @@ define( [
     'text!osgShadow/shaders/shadowsCastFrag.glsl',
     'text!osgShadow/shaders/shadowsReceive.glsl',
     'text!osgShadow/shaders/shadowLinearSoft.glsl',
-    'text!osgShadow/shaders/pcfBand.glsl',
-    'text!osgShadow/shaders/pcfTap.glsl',
-    'text!osgShadow/shaders/pcfPoisson.glsl',
+    'text!osgShadow/shaders/bandPCF.glsl',
+    'text!osgShadow/shaders/tapPCF.glsl',
+    'text!osgShadow/shaders/poissonPCF.glsl',
     'text!osgShadow/shaders/esm.glsl',
     'text!osgShadow/shaders/vsm.glsl',
     'text!osgShadow/shaders/evsm.glsl'
-], function ( shadowsCastVert, shadowsCastFrag, shadowsReceive, shadowLinearSoft, pcfBand, pcfTap, pcfPoisson, esm, vsm, evsm ) {
+], function ( shadowsCastVert, shadowsCastFrag, shadowsReceive, shadowLinearSoft, bandPCF, tapPCF, poissonPCF, esm, vsm, evsm ) {
     'use strict';
 
     return {
@@ -17,9 +17,9 @@ define( [
         'shadowsCastFrag.glsl': shadowsCastFrag,
         'shadowsReceive.glsl': shadowsReceive,
         'shadowLinearSoft.glsl': shadowLinearSoft,
-        'pcfBand.glsl': pcfBand,
-        'pcfTap.glsl': pcfTap,
-        'pcfPoisson.glsl': pcfPoisson,
+        'bandPCF.glsl': bandPCF,
+        'tapPCF.glsl': tapPCF,
+        'poissonPCF.glsl': poissonPCF,
         'esm.glsl': esm,
         'vsm.glsl': vsm,
         'evsm.glsl': evsm

@@ -1,10 +1,12 @@
 define( [
     'osg/Notify',
     'osg/Utils',
+    'osg/FrameBufferObject',
     'osg/Object',
     'osg/Node',
     'osg/NodeVisitor',
     'osg/CullVisitor',
+    'osg/LightSource',
     'osg/Vec3',
     'osg/Vec4',
     'osg/Matrix',
@@ -24,8 +26,32 @@ define( [
     'osgShadow/ShadowTexture',
     'osgShader/ShaderProcessor',
     'osgShadow/ShadowTechnique'
-], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath, Transform, Camera, Texture, Viewport, StateSet, StateAttribute, Uniform, Shader, Program, ShadowAttribute, ShadowTexture, ShaderProcessor, ShadowTechnique ) {
+], function ( Notify, MACROUTILS, FrameBufferObject, Object, Node, NodeVisitor, CullVisitor, LightSource, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath, Transform, Camera, Texture, Viewport, StateSet, StateAttribute, Uniform, Shader, Program, ShadowAttribute, ShadowTexture, ShaderProcessor, ShadowTechnique ) {
     'use strict';
+
+
+
+    // Custom camera cull callback
+    // we customize it just to avoid to add extra 'virtual' function
+    // on the shadowTecnique class
+    var CameraCullCallback = function ( shadowTechnique ) {
+        this._shadowTechnique = shadowTechnique;
+    };
+
+    CameraCullCallback.prototype = {
+        cull: function ( node, nv ) {
+
+            // see ShadowTechnique CameraCullCallback
+            this._shadowTechnique.getShadowedScene().nodeTraverse( nv );
+
+            // we should use accessors when touching external object !!!
+            this._shadowTechnique._nearCaster = nv.getComputedNear();
+            this._shadowTechnique._farCaster = nv.getComputedFar();
+
+            return false;
+        }
+    };
+
 
     /**
      *  ShadowMap provides an implementation of shadow textures.
@@ -37,62 +63,96 @@ define( [
         this._projectionMatrix = Matrix.create();
         this._viewMatrix = Matrix.create();
 
-        this._tmpMat = Matrix.create();
-        this._tmpVec = Vec3.create();
-        this._tmpVecBis = Vec3.create();
-
         this._lightUp = [ 0.0, 0.0, 1.0 ];
-        this._shadowSettings = settings;
 
+        // data
+        this._cameraShadow = new Camera();
+        this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
+        this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
+        this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
+        this._cameraShadow.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
+
+        this._texture = new ShadowTexture();
+        this._textureUnitBase = 4;
+        this._textureUnit = this._textureUnitBase;
 
         // see shadowSettings.js header for param explanations
+        this._textureMagFilter = undefined;
+        this._textureMinFilter = undefined;
         this._textureSize = 256;
-        this._texturePrecisionFormat = 'UNSIGNED_BYTE';
-        this._algorithm = 'PCF';
-        this._depthRange = new Array( 4 );
+        this._depthRange = Vec4.create();
 
-        var lightSource = settings.getLightSource();
-        var light = lightSource.getLight();
-        this._shadowAttribute = new ShadowAttribute( light, this._algorithm, this._bias, this._exponent0, this._exponent1, this.vsmEpsilon );
+        this._receivingStateset = undefined;
+
+        this._casterStateSet = new StateSet();
+        this._casterStateSet.addUniform( Uniform.createFloat1( 0, 'exponent0' ) );
+        this._casterStateSet.addUniform( Uniform.createFloat1( 0, 'exponent1' ) );
+
+        var near = 0.001;
+        var far = 1000;
+        this._casterStateSet.addUniform( Uniform.createFloat4( [ near, far, far - near, 1.0 / ( far - near ) ], 'Shadow_DepthRange' ) );
+
+        this._castsShaderProgram = undefined;
+
+        this._lightSource = undefined;
+
+        this._shadowAttribute = new ShadowAttribute();
 
         this._worldLightPos = Vec4.create();
         this._worldLightPos[ 3 ] = 0;
         this._worldLightDir = Vec4.create();
         this._worldLightDir[ 3 ] = 1;
 
+
+        this._castsShadowTraversalMask = 0xffffffff;
+
+        // program cache
+        this._cache = {};
+
+        this._shaderProcessor = undefined;
+
+        // tmp variables
+        this._tmpVec = Vec3.create();
+        this._tmpVecBis = Vec3.create();
+
+        if ( settings )
+            this.setShadowSettings( settings );
+
+        this._dirty = true;
     };
 
     /** @lends ShadowMap.prototype */
-    ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( ShadowTechnique.prototype, {
-        dirty: function () {
-            this._dirty = true;
-        },
+    ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( ShadowTechnique.prototype, {
+
         getCamera: function () {
             return this._cameraShadow;
         },
+
         getTexture: function () {
             return this._texture;
         },
 
+        isDirty: function() {
+            return this._dirty;
+        },
+
         setShadowCasterShaderProgram: function ( prg ) {
-            var shadowSettings = this.getShadowSettings();
-            if ( shadowSettings._castingStateset ) shadowSettings._castingStateset.setAttributeAndModes( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
+            var stateSet = this._casterStateSet;
+            stateSet.setAttributeAndModes( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
             this._castsShaderProgram = prg;
         },
 
         getShaderProgram: function ( vs, ps, defines ) {
             var hash = vs + ps + defines.join( '_' );
-            var shadowSettings = this._shadowSettings || this.getShadowedScene().getShadowSettings();
-            if ( !shadowSettings._config[ 'cacheProgram' ] ) {
-                shadowSettings._config[ 'cacheProgram' ] = {};
-            }
-            var cache = shadowSettings._config[ 'cacheProgram' ];
+
+            var cache = this._cache;
             if ( cache[ hash ] !== undefined )
                 return cache[ hash ];
 
-            if ( !this._shaderProcessor ) {
-                this._shaderProcessor = new ShaderProcessor(); // singleton call ?
-            }
+            // we dont want singleton right now
+            // actually it should disappear and use instead the one from State
+            if ( !this._shaderProcessor )
+                this._shaderProcessor = new ShaderProcessor(); //
 
             var vertexshader = this._shaderProcessor.getShader( vs, defines );
             var fragmentshader = this._shaderProcessor.getShader( ps, defines );
@@ -103,21 +163,18 @@ define( [
             cache[ hash ] = program;
             return program;
         },
+
         // computes a shader upon user choice
         // of shadow algorithms
         // shader file, define but texture type/format
         // associated too
         computeShadowCasterShaderProgram: function () {
 
-            var shadowSettings = this._shadowSettings || this.getShadowedScene().getShadowSettings();
-
-            var textureFormat = shadowSettings.getTextureFormat();
             var defines = this._shadowAttribute.getDefines();
-
             // BASE FORMAT, unfortunately LUMINANCE isn't well supported on safari ?
             // TODO: LUMINANCE framebuffer float render texture support
             // save BW on float texture when using single float
-            textureFormat = Texture.RGBA;
+            var textureFormat = Texture.RGBA;
 
             var shadowmapCasterVertex = 'shadowsCastVert.glsl';
             var shadowmapCasterFragment = 'shadowsCastFrag.glsl';
@@ -133,160 +190,119 @@ define( [
             return this._castsShaderProgram;
         },
 
-        setCastingStateset: function ( st ) {
-            this.getShadowSettings()._castingStateset = st;
-        },
-        getCastingStateset: function () {
-            return this.getShadowSettings()._castingStateset;
-        },
-
-        /* Gets shadowSettings
-         * or return Default shadowSettings
-         * if it's shared between techniques
-         */
-        getShadowSettings: function () {
-            return this._shadowSettings || this.getShadowedScene().getShadowSettings();
-        },
         /* Sets  shadowSettings
          */
-        setShadowSettings: function ( ss ) {
-            this._shadowSettings = ss;
+        setShadowSettings: function ( shadowSettings ) {
+
+            if ( !shadowSettings )
+                return;
+
+            var lightSource = shadowSettings.lightSource;
+
+            this.setCastsShadowTraversalMask( shadowSettings.castsShadowTraversalMask );
+
+            this.setLightSource( lightSource );
+            this.setTextureSize( shadowSettings.textureSize );
+            this.setTexturePrecision( shadowSettings.textureType );
+
+            this.setKernelSizePCF( shadowSettings.kernelSizePCF );
+            this.setAlgorithm( shadowSettings.algorithm );
+            this.setBias( shadowSettings.bias );
+            this.setExponent0( shadowSettings.exponent );
+            this.setExponent1( shadowSettings.exponent1 );
+            this.setEpsilonVSM( shadowSettings.epsilonVSM );
+
+        },
+
+        setCastsShadowTraversalMask: function ( mask ) {
+            this._castsShadowTraversalMask = mask;
+        },
+        getCastsShadowTraversalMask: function () {
+            return this._castsShadowTraversalMask;
         },
 
         getBias: function () {
             return this._shadowAttribute.getBias();
-
         },
         setBias: function ( value ) {
             this._shadowAttribute.setBias( value );
         },
+
         getExponent0: function () {
             return this._shadowAttribute.getExponent0();
         },
         setExponent0: function ( value ) {
             this._shadowAttribute.setExponent0( value );
-            var casterStateSet = this.getShadowSettings()._castingStateset;
-            casterStateSet.getUniformList()[ 'exponent0' ].getUniform().set( value );
+            this._casterStateSet.getUniformList()[ 'exponent0' ].getUniform().set( value );
         },
+
         getExponent1: function () {
             return this._shadowAttribute.getExponent1();
         },
         setExponent1: function ( value ) {
             this._shadowAttribute.setExponent1( value );
-            var casterStateSet = this.getShadowSettings()._castingStateset;
-            casterStateSet.getUniformList()[ 'exponent1' ].getUniform().set( value );
+            this._casterStateSet.getUniformList()[ 'exponent1' ].getUniform().set( value );
         },
-        getVsmEpsilon: function () {
-            return this._shadowAttribute.getVsmEpsilon();
+
+        getEpsilonVSM: function () {
+            return this._shadowAttribute.getEpsilonVSM();
         },
-        setVsmEpsilon: function ( value ) {
-            this._shadowAttribute.setVsmEpsilon( value );
+        setEpsilonVSM: function ( value ) {
+            this._shadowAttribute.setEpsilonVSM( value );
         },
-        getPCFKernelSize: function () {
-            return this._shadowAttribute.getPCFKernelSize();
+
+        getKernelSizePCF: function () {
+            return this._shadowAttribute.getKernelSizePCF();
         },
-        setPCFKernelSize: function ( value ) {
-            this._shadowAttribute.setPCFKernelSize( value );
+        setKernelSizePCF: function ( value ) {
+            this._shadowAttribute.setKernelSizePCF( value );
+        },
+
+        setShadowedScene: function ( shadowedScene ) {
+            ShadowTechnique.prototype.setShadowedScene.call( this, shadowedScene );
+            this._receivingStateset = this._shadowedScene.getOrCreateStateSet();
+            this.dirty();
         },
 
         /** initialize the ShadowedScene and local cached data structures.*/
         init: function () {
+
             if ( !this._shadowedScene ) return;
 
-            var shadowSettings = this.getShadowSettings();
-            this._dirty = true;
+            // if light number changed we need to remove cleanly
+            // attributes from receiveStateSet
+            // it's because it use a typemember like light attribute
+            // so the number if very important to keep State clean
+            var light = this._lightSource.getLight();
+            var lightNumber = light.getLightNumber();
 
-            var lightSource = shadowSettings.getLightSource();
-            var light = lightSource.getLight();
+            if ( this._shadowAttribute.getLightNumber() !== lightNumber ) {
 
-            // TODO: sort mess between shadowsettings and shadomap
-            // handling dirty dirty shadowmpa and dirty shadowsettings
-            // make it for two way of ding things.. strange.
-            this._textureSize = shadowSettings.getTextureSize();
-            this._texturePrecisionFormat = shadowSettings.getTextureType();
-            this._textureMinFilter = shadowSettings.getTextureFilterMin();
-            this._textureMagFilter = shadowSettings.getTextureFilterMax();
-            this._algorithm = shadowSettings.getAlgorithm();
-
-
-            var bias = shadowSettings._config[ 'bias' ];
-            var exponent0 = shadowSettings._config[ 'exponent' ];
-            var exponent1 = shadowSettings._config[ 'exponent1' ];
-            var vsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
-            var pcfKernelSize = shadowSettings._config[ 'pcfKernelSize' ];
-
-            this._shadowAttribute = new ShadowAttribute( light, this._algorithm, bias, exponent0, exponent1, vsmEpsilon, pcfKernelSize, this._texturePrecisionFormat );
-            this._receivingStateset = this._shadowedScene.getOrCreateStateSet();
-
-            // First init-
-
-            // TODO: TexUnit choice reservation
-            var texUnit = light.getLightNumber() + 4;
-            if ( !this._texture ) {
-
-                var shadowTexture = new ShadowTexture();
-                shadowTexture.setLightUnit( light.getLightNumber() );
-                shadowTexture.setName( 'ShadowTexture' + texUnit );
-                this._texture = shadowTexture;
-
-                // init camera
-                var shadowCamera = new Camera();
-
-                this.setCameraCullCallback( shadowCamera );
-
-                shadowCamera.setRenderOrder( Camera.PRE_RENDER, 0 );
-                shadowCamera.setReferenceFrame( Transform.ABSOLUTE_RF );
-                shadowCamera.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
-
-
-                shadowCamera.setName( 'light_shadow_camera' + light.getName() );
-                shadowSettings._cameraShadow = shadowCamera;
-                this._cameraShadow = shadowCamera;
-
-
-                // init StateSets
-                //////////////
-                var casterStateSet = new StateSet();
-                shadowSettings._castingStateset = casterStateSet;
-
-                var myuniform;
-                myuniform = Uniform.createFloat1( exponent0, 'exponent0' );
-                casterStateSet.addUniform( myuniform );
-                myuniform = Uniform.createFloat1( exponent1, 'exponent1' );
-                casterStateSet.addUniform( myuniform );
-
-                /*
-                // prevent unnecessary texture bindings, could loop over max texture unit
-                var blankTexture = new Texture();
-                blankTexture.setName( 'emptyTex' );
-                // TODO: loop over texture unit max ?
-                casterStateSet.setTextureAttributeAndModes( 0, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
-                casterStateSet.setTextureAttributeAndModes( 1, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
-                casterStateSet.setTextureAttributeAndModes( 2, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
-                casterStateSet.setTextureAttributeAndModes( 3, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE );
-*/
-
-                var near = 0.001;
-                var far = 1000;
-                var depthRange = new Uniform.createFloat4( [ near, far, far - near, 1.0 / ( far - near ) ], 'Shadow_DepthRange' );
-                casterStateSet.addUniform( depthRange );
-
-                var camera = shadowSettings._config[ 'camera' ];
-                shadowSettings._cameraShadowed = camera;
+                // remove this._texture, but not if it's not this._texture
+                if ( this._receivingStateset.getTextureAttribute( this._textureUnit, this._texture.getTypeMember() ) === this._texture )
+                    this._receivingStateset.removeTextureAttribute( this._textureUnit, this._texture.getTypeMember() );
+                if ( this._receivingStateset.getAttribute( this._shadowAttribute.getTypeMember() ) === this._shadowAttribute )
+                    this._receivingStateset.removeAttribute( this._shadowAttribute.getTypeMember() );
 
             }
+            this._textureUnit = this._textureUnitBase + lightNumber;
 
-            this._textureAllocate();
+            this._texture.setLightUnit( lightNumber );
+            this._texture.setName( 'ShadowTexture' + this._textureUnit );
+            this._cameraShadow.setName( 'light_shadow_camera' + light.getName() );
+            this._shadowAttribute.setLight( this._lightSource.getLight() );
+
+            this._texture.setLightUnit( lightNumber );
+            this._receivingStateset.setAttributeAndModes( this._shadowAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
+
+            this.initTexture();
 
             var casterProgram = this.getShadowCasterShaderProgram();
             this.setShadowCasterShaderProgram( casterProgram );
-            shadowSettings._castingStateset.setAttributeAndModes( casterProgram, StateAttribute.ON | StateAttribute.OVERRIDE );
 
-            this._receivingStateset.setAttributeAndModes( this._shadowAttribute, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
-            this._receivingStateset.setTextureAttributeAndModes( texUnit, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
+            this._receivingStateset.setTextureAttributeAndModes( this._textureUnit, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
 
             this._dirty = false;
-            shadowSettings._dirty = false;
         },
 
         valid: function () {
@@ -294,104 +310,150 @@ define( [
             return true;
         },
 
-        updateShadowParams: function () {
-            this.aimShadowCastingCamera();
+        updateShadowTechnic: function ( nv ) {
+
+            var camera = this._cameraShadow;
+            var texture = this._texture;
+
+            if ( camera && texture ) {
+
+                var vp = camera.getViewport();
+                if ( !vp ) {
+                    vp = new Viewport();
+                    camera.setViewport( vp );
+                }
+
+                // if texture size changed update the camera rtt params
+                if ( vp.width() !== texture.getWidth() ||
+                    vp.height() !== texture.getHeight() ) {
+
+                    camera.detachAll();
+
+                    camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture );
+                    camera.attachRenderBuffer( FrameBufferObject.DEPTH_ATTACHMENT, FrameBufferObject.DEPTH_COMPONENT16 );
+
+                    camera.getViewport().setViewport( 0, 0, texture.getWidth(), texture.getHeight() );
+                }
+            }
         },
+
         // internal texture allocation
         // handle any change like resize, filter param, etc.
-        _textureAllocate: function () {
+        initTexture: function () {
 
             if ( !this._dirty ) return;
 
-            this._texture.dirty();
+            if ( !this._texture )
+                this._texture = new Texture();
 
-            var mapsize = this._textureSize;
-            var shadowSizeFinal = [ mapsize, mapsize, 1.0 / mapsize, 1.0 / mapsize ];
-
-            this._texture.setTextureSize( shadowSizeFinal[ 0 ], shadowSizeFinal[ 1 ] );
-
-
-            var texType = this._texturePrecisionFormat;
-            var textureType, textureFormat, texFilterMin, texFilterMax;
+            var texType = this.getTexturePrecision();
+            var textureType, textureFormat, texFilterMin, texFilterMag;
 
             // see shadowSettings.js header
-            switch ( this._algorithm ) {
+            switch ( this.getAlgorithm() ) {
             case 'ESM':
             case 'VSM':
             case 'EVSM':
-                texFilterMin = 'LINEAR';
-                texFilterMax = 'LINEAR';
+                texFilterMin = Texture.LINEAR;
+                texFilterMag = Texture.LINEAR;
                 break;
 
             default:
             case 'PCF':
             case 'NONE':
-                texFilterMin = 'NEAREST';
-                texFilterMax = 'NEAREST';
+                texFilterMin = Texture.NEAREST;
+                texFilterMag = Texture.NEAREST;
                 break;
             }
-
 
             switch ( texType ) {
             case 'HALF_FLOAT':
                 textureType = Texture.HALF_FLOAT;
-                texFilterMin = 'NEAREST';
-                texFilterMax = 'NEAREST';
+                texFilterMin = Texture.NEAREST;
+                texFilterMag = Texture.NEAREST;
                 break;
             case 'HALF_FLOAT_LINEAR':
                 textureType = Texture.HALF_FLOAT;
                 texFilterMin = Texture.LINEAR;
-                texFilterMax = Texture.LINEAR;
+                texFilterMag = Texture.LINEAR;
                 break;
             case 'FLOAT':
                 textureType = Texture.FLOAT;
-                texFilterMin = 'NEAREST';
-                texFilterMax = 'NEAREST';
+                texFilterMin = Texture.NEAREST;
+                texFilterMag = Texture.NEAREST;
                 break;
             case 'FLOAT_LINEAR':
                 textureType = Texture.FLOAT;
                 texFilterMin = Texture.LINEAR;
-                texFilterMax = Texture.LINEAR;
+                texFilterMag = Texture.LINEAR;
                 break;
             default:
-            case 'BYTE':
+            case 'UNSIGNED_BYTE':
                 textureType = Texture.UNSIGNED_BYTE;
                 break;
             }
 
             textureFormat = Texture.RGBA;
+            this._texture.setTextureSize( this._textureSize, this._textureSize );
+
             this._texture.setInternalFormatType( textureType );
-            this._shadowAttribute.setPrecision( textureType );
 
             this._texture.setMinFilter( texFilterMin );
-            this._texture.setMagFilter( texFilterMax );
+            this._texture.setMagFilter( texFilterMag );
             this._texture.setInternalFormat( textureFormat );
 
-            this._textureMagFilter = texFilterMax;
+            this._textureMagFilter = texFilterMag;
             this._textureMinFilter = texFilterMin;
 
             this._texture.setWrapS( Texture.CLAMP_TO_EDGE );
             this._texture.setWrapT( Texture.CLAMP_TO_EDGE );
 
-            // force reattach
-            this._texture.setCamera( this._cameraShadow );
-
+            this._texture.dirty();
 
         },
-        setTexturePrecision: function ( fmt ) {
-            this._texturePrecisionFormat = fmt;
-            this._shadowAttribute.setPrecision( fmt );
+        setTexturePrecision: function ( format ) {
+            if ( format === this._shadowAttribute.getPrecision() ) return;
+
+            this._shadowAttribute.setPrecision( format );
             this.dirty();
         },
+
+        getTexturePrecision:function() {
+            return this._shadowAttribute.getPrecision();
+        },
+
         setTextureSize: function ( mapSize ) {
+
+            if ( mapSize === this._textureSize ) return;
+
             this._textureSize = mapSize;
             this.dirty();
         },
+
         setAlgorithm: function ( algo ) {
-            this._previousAlgorithm = this._algorithm;
-            this._algorithm = algo;
+
+            if ( algo === this.getAlgorithm() ) return;
 
             this._shadowAttribute.setAlgorithm( algo );
+            this.dirty();
+        },
+
+        getAlgorithm: function () {
+            return this._shadowAttribute.getAlgorithm();
+        },
+
+        setLightSource: function ( lightSource ) {
+
+            if ( !lightSource || lightSource == this._lightSource)
+                return;
+
+            this._lightSource = lightSource;
+            var light = lightSource.getLight();
+
+            if ( !light ) {
+                Notify.log( 'ShadowMap.setLightSource no light attached to the lightsource' );
+            }
+
             this.dirty();
         },
 
@@ -403,8 +465,11 @@ define( [
          */
         aimShadowCastingCamera: function () {
 
-            var shadowSettings = this.getShadowSettings();
-            var lightSource = shadowSettings.getLightSource();
+            var lightSource = this._lightSource;
+
+            if ( !lightSource )
+                return;
+
             var light = lightSource.getLight();
             var camera = this._cameraShadow;
 
@@ -552,7 +617,7 @@ define( [
             this._depthRange[ 2 ] = zFar - zNear;
             this._depthRange[ 3 ] = 1.0 / ( zFar - zNear );
 
-            var castUniforms = shadowSettings._castingStateset.getUniformList();
+            var castUniforms = this._casterStateSet.getUniformList();
             castUniforms[ 'Shadow_DepthRange' ].getUniform().set( this._depthRange );
 
             Matrix.copy( this._projectionMatrix, camera.getProjectionMatrix() );
@@ -570,28 +635,16 @@ define( [
             // too late, it's latest frame
             // shadowCamera.setComputeNearFar( true );
             this._cameraShadow.setComputeNearFar( false );
-
-            var bias = shadowSettings._config[ 'bias' ];
-            if ( bias ) this.setBias( bias );
-            var exponent0 = shadowSettings._config[ 'exponent' ];
-            if ( exponent0 ) this.setExponent0( exponent0 );
-            var exponent1 = shadowSettings._config[ 'exponent1' ];
-            if ( exponent1 ) this.setExponent1( exponent1 );
-            var vsmEpsilon = shadowSettings._config[ 'VsmEpsilon' ];
-            if ( vsmEpsilon ) this.setVsmEpsilon( vsmEpsilon );
-            var pcfKernelSize = shadowSettings._config[ 'pcfKernelSize' ];
-            if ( pcfKernelSize ) this.setPCFKernelSize( pcfKernelSize );
         },
 
-        cullShadowCastingScene: function ( cullVisitor ) {
+        cullShadowCasting: function ( cullVisitor ) {
             // record the traversal mask on entry so we can reapply it later.
             var traversalMask = cullVisitor.getTraversalMask();
-            var shadowSettings = this.getShadowSettings();
 
-            cullVisitor.setTraversalMask( shadowSettings.getCastsShadowTraversalMask() );
+            cullVisitor.setTraversalMask( this._castsShadowTraversalMask );
 
             // cast geometries into depth shadow map
-            cullVisitor.pushStateSet( shadowSettings._castingStateset );
+            cullVisitor.pushStateSet( this._casterStateSet );
 
             this.aimShadowCastingCamera();
 
@@ -604,50 +657,27 @@ define( [
             cullVisitor.setTraversalMask( traversalMask );
         },
 
-        enterCullCaster: function ( /*cullVisitor*/) {
-
-        },
-
-        exitCullCaster: function ( cullVisitor ) {
-            this._nearCaster = cullVisitor._computedNear;
-            this._farCaster = cullVisitor._computedFar;
-        },
-
-
-        /** run the cull traversal of the ShadowedScene and set up the rendering for this ShadowTechnique.*/
-        cull: function ( cullVisitor ) {
-
-            // make sure positioned data is done for light,
-            // do it first
-            //this.cullShadowReceivingScene( cullVisitor );
-
-            // now we can update camera from light accordingly
-            this.updateShadowParams();
-            // culled last but rendered first
-            this.cullShadowCastingScene( cullVisitor );
-
-            return false;
-        },
-
         cleanSceneGraph: function () {
             // well release a lot more things when it works
-            var shadowSettings = this._shadowSettings;
-
-            if ( shadowSettings._castingStateset ) {
-                shadowSettings._cameraShadow = undefined;
-                // TODO: need state
-                //shadowSettings._castingStateset.releaseGLObjects();
-                shadowSettings._castingStateset = undefined;
-            }
-
             this._cameraShadow = undefined;
 
 
-            if ( this._texture ) {
-                // TODO: need state
-                //this._texture.releaseGLObjects();
-                this._texture = undefined;
+            if ( this._receivingStateset ) {
+
+                if ( this._texture ) {
+                    // remove this._texture, but not if it's not this._texture
+                    if ( this._receivingStateset.getTextureAttribute( this._textureUnit, this._texture.getTypeMember() ) === this._texture )
+                        this._receivingStateset.removeTextureAttribute( this._textureUnit, this._texture.getTypeMember() );
+                }
+
+                if ( this._receivingStateset.getAttribute( this._shadowAttribute.getTypeMember() ) === this._shadowAttribute )
+                    this._receivingStateset.removeAttribute( this._shadowAttribute.getTypeMember() );
             }
+
+            // TODO: need state
+            //this._texture.releaseGLObjects();
+            this._texture = undefined;
+            this._shadowedScene = undefined;
         }
 
     } ), 'osgShadow', 'ShadowMap' );

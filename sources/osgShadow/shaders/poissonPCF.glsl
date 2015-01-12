@@ -2,7 +2,7 @@
 
 #pragma include "shadowLinearSoft.glsl"
 
-float getPCFShadow(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float gbias) {
+float getShadowPCF(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float gbias) {
 
     // Not Good, as it needs the lerp things
     vec2 poissonDisk[64];

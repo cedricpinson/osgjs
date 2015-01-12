@@ -91,6 +91,14 @@ define( [
     Texture.FLOAT = 0x1406;
     Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
 
+    Texture.getEnumFromString = function( v ) {
+        var value = v;
+        if ( typeof ( value ) === 'string' ) {
+            value = checkAndFixEnum( value, v );
+        }
+        return value;
+    };
+
     Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
         attributeType: 'Texture',
 

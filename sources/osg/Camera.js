@@ -138,6 +138,13 @@ define( [
                 this.renderOrderNum = orderNum;
             },
 
+            detachAll: function() {
+                this._attachments = {};
+
+                if ( this.frameBufferObject )
+                    this.frameBufferObject.dirty();
+            },
+
             attachTexture: function ( bufferComponent, texture, textureTarget ) {
                 if ( this.frameBufferObject ) {
                     this.frameBufferObject.dirty();

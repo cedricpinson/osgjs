@@ -24,20 +24,16 @@ define( [
     var ShadowTexture = function () {
         Texture.call( this );
         this._uniforms = {};
-        this._mapSize = new Array( 4 );
+        this._mapSize = Vec4.create();
         this._lightUnit = -1; // default for a valid cloneType
-        this._cameraDirty = false;
     };
 
     ShadowTexture.uniforms = {};
     /** @lends Texture.prototype */
-    ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Texture.prototype, {
-        attributeType: 'Texture',
-
+    ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Texture.prototype, {
 
         cloneType: function () {
-            var t = new ShadowTexture();
-            return t;
+            return new ShadowTexture();
         },
 
         setLightUnit: function ( lun ) {
@@ -93,52 +89,28 @@ define( [
 
         setViewMatrix: function ( viewMatrix ) {
             this._viewMatrix = viewMatrix;
-
         },
+
         setProjectionMatrix: function ( projectionMatrix ) {
             this._projectionMatrix = projectionMatrix;
-
         },
+
         setDepthRange: function ( depthRange ) {
             this._depthRange = depthRange;
+        },
 
-        },
-        setCamera: function ( camera ) {
-            if ( this._camera !== camera ) {
-                this._cameraDirty = true;
-                this._camera = camera;
-            }
-        },
-        getCamera: function () {
-            return this._camera;
-        },
         setTextureSize: function ( w, h ) {
             Texture.prototype.setTextureSize.call( this, w, h );
-
+            this.dirty();
             this._mapSize[ 0 ] = w;
             this._mapSize[ 1 ] = h;
             this._mapSize[ 2 ] = 1.0 / w;
             this._mapSize[ 3 ] = 1.0 / h;
-            this._cameraDirty = true; // have to resize framebuffers
         },
+
         apply: function ( state, texUnit ) {
 
             var gl = state.getGraphicContext();
-            if ( this._camera && this._dirty ) { /*this._cameraDirty */
-
-                var frameBuffer = this._camera.frameBufferObject;
-                this._camera.attachments = undefined;
-                if ( frameBuffer ) {
-                    frameBuffer.attachments = [];
-                    frameBuffer.dirty();
-                }
-
-                this._camera.attachTexture( gl.COLOR_ATTACHMENT0, this );
-                this._camera.attachRenderBuffer( gl.DEPTH_ATTACHMENT, gl.DEPTH_COMPONENT16 );
-
-                this._camera.setViewport( new Viewport( 0, 0, this._textureWidth, this._textureHeight ) );
-                this._cameraDirty = false;
-            }
 
             // Texture stuff: call parent class method
             Texture.prototype.apply.call( this, state, texUnit );
@@ -152,6 +124,7 @@ define( [
 
             this.setDirty( false );
         },
+
         getHash: function () {
             return this.getTypeMember() + this._type;
         }

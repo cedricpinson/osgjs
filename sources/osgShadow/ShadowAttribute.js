@@ -16,7 +16,7 @@ define( [
      * @class ShadowAttribute
      * @inherits StateAttribute
      */
-    var ShadowAttribute = function ( light, algoType, bias, exponent0, exponent1, vsmEpsilon, pcfKernelSize, precision ) {
+    var ShadowAttribute = function ( lightNumber, disable ) {
         StateAttribute.call( this );
 
 
@@ -28,30 +28,32 @@ define( [
         // well it's not supposed to be a problem, but yeah the ordering is an issue, so maybe it's better to link to
         // the light attribute, in this case we dont need anymore the _lightNumber
         // but re ordering light seems to not be a good practice in osg, it's still a risk
-        this._light = light;
+        this._light = undefined;
         // that could be more generic to have the unit instead of the object
 
         // see shadowSettings.js header for shadow algo param explanations
 
+        this._lightNumber = lightNumber !== undefined ? lightNumber : 0;
 
         // hash change var
-        this._algoType = algoType || 'NONE';
+        this._algoType = 'NONE';
 
         // shadow depth bias as projected in shadow camera space texture
         // and viewer camera space projection introduce its bias
-        this._bias = bias !== undefined ? bias : 0.001;
+        this._bias = 0.001;
         // algo dependant
         // Exponential shadow maps use exponentials
         // to allows fuzzy depth
-        this._exponent0 = exponent0 !== undefined ? exponent0 : 0.001;
-        this._exponent1 = exponent1 !== undefined ? exponent1 : 0.001;
+        this._exponent0 = 0.001;
+        this._exponent1 = 0.001;
         // Variance Shadow mapping use One more epsilon
-        this._vsmEpsilon = vsmEpsilon !== undefined ? vsmEpsilon : 0.001;
+        this._epsilonVSM = 0.001;
         // shader compilation differnet upon texture precision
-        this._precision = precision !== undefined ? precision : 'UNSIGNED_BYTE';
+        this._precision = 'UNSIGNED_BYTE';
         // kernel size & type for pcf
-        this._pcfKernelSize = pcfKernelSize;
+        this._kernelSizePCF = undefined;
 
+        this._enable = !disable;
 
     };
 
@@ -61,14 +63,14 @@ define( [
         attributeType: 'ShadowAttribute',
 
         cloneType: function () {
-            return new ShadowAttribute();
+            return new ShadowAttribute( this._lightNumber, true );
         },
 
         getTypeMember: function () {
             return this.attributeType + this.getLightNumber();
         },
         getLightNumber: function () {
-            return this.getLight() ? this.getLight().getLightNumber() : -1;
+            return this._lightNumber;
         },
 
         getUniformName: function ( name ) {
@@ -101,28 +103,32 @@ define( [
         getExponent1: function () {
             return this._exponent1;
         },
-        setVsmEpsilon: function ( vsmEpsilon ) {
-            this._vsmEpsilon = vsmEpsilon;
-            //this.setDirty( true );
+        setEpsilonVSM: function ( epsilon ) {
+            this._epsilonVSM = epsilon;
         },
-        getVsmEpsilon: function () {
-            return this._vsmEpsilon;
+        getEpsilonVSM: function () {
+            return this._epsilonVSM;
         },
-        getPCFKernelSize: function () {
-            return this._pcfKernelSize;
+        getKernelSizePCF: function () {
+            return this._kernelSizePCF;
         },
-        setPCFKernelSize: function ( v ) {
-            this._pcfKernelSize = v;
+        setKernelSizePCF: function ( v ) {
+            this._kernelSizePCF = v;
         },
         setPrecision: function ( precision ) {
             this._precision = precision;
-            this.setDirty( true );
+            this.dirty();
         },
         getPrecision: function () {
             return this._precision;
         },
         getLight: function () {
             return this._light;
+        },
+        setLight: function ( light ) {
+            this._light = light;
+            this._lightNumber = light.getLightNumber();
+            this.dirty();
         },
 
         getOrCreateUniforms: function () {
@@ -138,7 +144,7 @@ define( [
                 'bias': 'createFloat',
                 'exponent0': 'createFloat',
                 'exponent1': 'createFloat',
-                'vsmEpsilon': 'createFloat'
+                'epsilonVSM': 'createFloat'
             };
 
             var uniforms = {};
@@ -168,13 +174,12 @@ define( [
             var isFloat = false;
             var isLinearFloat = false;
 
-            if ( ( typeof textureType === 'string' && textureType !== 'UNSIGNED_BYTE' ) || textureType !== Texture.UNSIGNED_BYTE ) {
+            if ( textureType !== 'UNSIGNED_BYTE' )
                 isFloat = true;
-            }
 
-            if ( isFloat && ( ( typeof textureType === 'string' && textureType.indexOf( 'LINEAR' ) !== -1 ) || textureType === Texture.HALF_FLOAT_LINEAR || textureType === Texture.FLOAT_LINEAR ) ) {
+            if ( isFloat && ( textureType === 'HALF_FLOAT_LINEAR' || textureType === 'FLOAT_LINEAR' ) )
                 isLinearFloat = true;
-            }
+
 
             if ( algo === 'ESM' ) {
                 defines.push( '#define _ESM' );
@@ -182,55 +187,55 @@ define( [
                 defines.push( '#define _NONE' );
             } else if ( algo === 'PCF' ) {
                 defines.push( '#define _PCF' );
-                var pcf = this.getPCFKernelSize();
+                var pcf = this.getKernelSizePCF();
                 switch ( pcf ) {
                 case '4Poisson(16texFetch)':
-                    defines.push( '#define _PCF_POISSON' );
+                    defines.push( '#define _POISSON_PCF' );
                     defines.push( '#define _PCFx4' );
                     break;
-                case '8Poisson(62texFetch)':
-                    defines.push( '#define _PCF_POISSON' );
-                    defines.push( '#define _PCFx8' );
+                case '8Poisson(32texFetch)':
+                    defines.push( '#define _POISSON_PCF' );
+                    defines.push( '#define _PCFx9' );
                     break;
                 case '16Poisson(64texFetch)':
-                    defines.push( '#define _PCF_POISSON' );
+                    defines.push( '#define _POISSON_PCF' );
                     defines.push( '#define _PCFx16' );
                     break;
                 case '25Poisson(100texFetch)':
-                    defines.push( '#define _PCF_POISSON' );
+                    defines.push( '#define _POISSON_PCF' );
                     defines.push( '#define _PCFx25' );
                     break;
                 case '32Poisson(128texFetch)':
-                    defines.push( '#define _PCF_POISSON' );
+                    defines.push( '#define _POISSON_PCF' );
                     defines.push( '#define _PCFx32' );
                     break;
                 case '64Poisson(256texFetch)':
-                    defines.push( '#define _PCF_POISSON' );
+                    defines.push( '#define _POISSON_PCF' );
                     defines.push( '#define _PCFx64' );
                     break;
                 case '4Band(4texFetch)':
-                    defines.push( '#define _PCF_BAND' );
+                    defines.push( '#define _BAND_PCF' );
                     defines.push( '#define _PCFx4' );
                     break;
                 case '9Band(9texFetch)':
-                    defines.push( '#define _PCF_BAND' );
+                    defines.push( '#define _BAND_PCF' );
                     defines.push( '#define _PCFx9' );
                     break;
                 case '16Band(16texFetch)':
-                    defines.push( '#define _PCF_BAND' );
+                    defines.push( '#define _BAND_PCF' );
                     defines.push( '#define _PCFx16' );
                     break;
                 case '9Tap(36texFetch)':
-                    defines.push( '#define _PCF_TAP' );
+                    defines.push( '#define _TAP_PCF' );
                     defines.push( '#define _PCFx9' );
                     break;
                 case '16Tap(64texFetch)':
-                    defines.push( '#define _PCF_TAP' );
+                    defines.push( '#define _TAP_PCF' );
                     defines.push( '#define _PCFx25' );
                     break;
                 default:
                 case '4Tap(16texFetch)':
-                    defines.push( '#define _PCF_TAP' );
+                    defines.push( '#define _TAP_PCF' );
                     defines.push( '#define _PCFx4' );
                     break;
                 }
@@ -257,13 +262,19 @@ define( [
             uniformMap.bias.set( this._bias );
             uniformMap.exponent0.set( this._exponent0 );
             uniformMap.exponent1.set( this._exponent1 );
-            uniformMap.vsmEpsilon.set( this._vsmEpsilon );
+            uniformMap.epsilonVSM.set( this._epsilonVSM );
 
             this.setDirty( false );
         },
 
+        // need a isEnable to let the ShaderGenerator to filter
+        // StateAttribute from the shader compilation
+        isEnable: function () {
+            return this._enable;
+        },
+
         getHash: function () {
-            return this.getTypeMember() + this.getAlgorithm() + this.getPCFKernelSize();
+            return this.getTypeMember() + this.getAlgorithm() + this.getKernelSizePCF();
         }
 
     } ), 'osgShadow', 'ShadowAttribute' );
