@@ -18,13 +18,19 @@ define( [
 
     /** @lends MatrixTransform.prototype */
     MatrixTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Transform.prototype, {
+
         getMatrix: function () {
             return this.matrix;
         },
+
         setMatrix: function ( m ) {
             this.matrix = m;
+            this.dirtyBound();
         },
+
+        // local to "local world" (not Global World)
         computeLocalToWorldMatrix: function ( matrix /*, nodeVisitor */ ) {
+
             if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                 Matrix.preMult( matrix, this.matrix );
             } else {
@@ -32,9 +38,11 @@ define( [
             }
             return true;
         },
+
         computeWorldToLocalMatrix: ( function () {
             var minverse = Matrix.create();
             return function ( matrix /*, nodeVisitor */ ) {
+
                 Matrix.inverse( this.matrix, minverse );
                 if ( this.referenceFrame === TransformEnums.RELATIVE_RF ) {
                     Matrix.postMult( minverse, matrix );

@@ -37,6 +37,7 @@
             'lightMovement': 'Rotate',
             'lightSpeed': 0.5,
             'lightDistance': 3.0,
+            'lightHeight': 0.3,
             'lightAmbient': false,
             'frustumTest': 'free',
             'texture': true,
@@ -204,7 +205,9 @@
                 var fac = 1.0 * lightDist;
                 var x = fac * Math.cos( delta );
                 var y = fac * Math.sin( delta );
-                //var z = fac * Math.sin( delta );
+
+                var lightHeight = parseFloat( this._example._config[ 'lightHeight' ] );
+                var z = fac * lightHeight;
 
 
                 //  GENERIC Code getting direction
@@ -214,7 +217,7 @@
                 case 'Rotate':
                     lightPos[ 0 ] = x * this._positionX;
                     lightPos[ 1 ] = y * this._positionY;
-                    //lightPos[ 2 ] = this._position_z;
+                    lightPos[ 2 ] = z * this._positionZ;
                     // lightDir = [ 0.0, -15.0, -1.0 ];
                     lightDir = osg.Vec3.sub( lightTarget, lightPos, [] );
                     osg.Vec3.normalize( lightDir, lightDir );
@@ -366,7 +369,10 @@
             controller = gui.add( this._config, 'lightSpeed', 0.0, 2.0 ).listen();
             controller.onChange( this.updateShadow.bind( this ) );
 
-            controller = gui.add( this._config, 'lightDistance', 0.0, 5.0 );
+            controller = gui.add( this._config, 'lightDistance', -15.0, 15.0 );
+            controller.onChange( this.updateShadow.bind( this ) );
+
+            controller = gui.add( this._config, 'lightHeight', 0.0, 4.0 );
             controller.onChange( this.updateShadow.bind( this ) );
 
             controller = gui.add( this._config, 'bias', 0.0001, 0.05 );

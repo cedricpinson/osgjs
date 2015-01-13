@@ -5,7 +5,6 @@ define( [
     'osg/Matrix',
     'osg/Texture',
     'osg/TransformEnums'
-
 ], function ( MACROUTILS, Transform, CullSettings, Matrix, Texture, TransformEnums ) {
 
     'use strict';
@@ -50,7 +49,6 @@ define( [
     Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit(
         CullSettings.prototype,
         MACROUTILS.objectInehrit( Transform.prototype, {
-
             // at which view this camera is attached
             getView: function () {
                 return this._view;
@@ -123,6 +121,17 @@ define( [
                 zNear, zFar ) {
                 Matrix.makeOrtho( left, right, bottom, top, zNear, zFar, this.getProjectionMatrix() );
             },
+            setNearFar: function ( zNear, zFar ) {
+                this._near = zNear;
+                this._far = zFar;
+            },
+            getNear: function () {
+                return this._near;
+            },
+            getFar: function () {
+                return this._far;
+            },
+
 
             getViewMatrix: function () {
                 return this.modelviewMatrix;
@@ -138,7 +147,7 @@ define( [
                 this.renderOrderNum = orderNum;
             },
 
-            detachAll: function() {
+            detachAll: function () {
                 this._attachments = {};
 
                 if ( this.frameBufferObject )

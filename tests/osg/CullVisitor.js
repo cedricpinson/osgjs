@@ -539,6 +539,7 @@ define( [
                 var viewer = new Viewer( canvas, {
                     'enableFrustumCulling': true
                 } );
+
                 var scene = new Node();
                 var mat = Matrix.create();
                 var mt = new MatrixTransform();
@@ -549,28 +550,80 @@ define( [
                 viewer.setSceneData( scene );
                 viewer.init();
                 viewer.updateTraversal();
-                // Build the frustum planes to check against them
+
+                // test done inside Camera cullcallback
+                // to get all context
+                var fb = function () {};
+                fb.prototype = {
+                    cull: function ( cam, cull ) {
+
+                        cull.nodePath = [];
+                        cull.nodePath.push( scene );
+                        cull.nodePath.push( mt );
+                        //  push the nodepath, simulating a scene traversal.
+                        var culled = cull.isCulled( quad, cull.nodePath );
+                        ok( culled === false, 'scene should not be culled' );
+                        return false;
+                    }
+                };
+                //Get the cullVisitor in context
+                viewer.getCamera().setCullCallback( new fb() );
+                viewer.updateTraversal();
+                // traverse so that it Build the frustum planes and cullsettings to check against them
                 viewer.renderingTraversal();
 
-                // Get the cullVisitor and push the nodepath, simulating a scene traversal.
-                var cull = viewer.getCamera().getRenderer().getCullVisitor();
 
-                cull.nodePath = [];
-                cull.nodePath.push( scene );
-                cull.nodePath.push( mt );
-                var culled = cull.isCulled( quad );
-                ok( culled === false, 'scene should not be culled' );
-
-                // Translate outside of the frustum, scene should be culled now
+                // TEST2
                 Matrix.setTrans( mat, 200, 0, 0 );
-                culled = cull.isCulled( quad );
-                ok( culled === true, 'scene should be culled' );
+                mt.setMatrix( mat ); // dirty Bounds
 
-                // Translate outside of the frustum and scale, node should not be culled now
+                // test done inside Camera cullcallback
+                // to get all context
+                var fb2 = function () {};
+                fb2.prototype = {
+                    cull: function ( cam, cull ) {
+                        cull.nodePath = [];
+                        cull.nodePath.push( scene );
+                        cull.nodePath.push( mt );
+                        // Translate outside of the frustum, scene should be culled now
+                        var culled = cull.isCulled( quad, cull.nodePath );
+                        ok( culled === true, 'scene should be culled' );
+
+                        return false;
+                    }
+                };
+                //Get the cullVisitor in context
+                viewer.getCamera().setCullCallback( new fb2() );
+                viewer.updateTraversal();
+                // traverse so that it Build the frustum planes and cullsettings to check against them
+                viewer.renderingTraversal();
+
+                // test3
                 Matrix.makeScale( 500, 0, 0, mat );
                 Matrix.setTrans( mat, 200, 0, 0 );
-                culled = cull.isCulled( quad );
-                ok( culled === false, 'scene should not be culled' );
+                mt.setMatrix( mat ); // dirty Bounds
+
+                // test done inside Camera cullcallback
+                // to get all context
+                var fb3 = function () {};
+                fb3.prototype = {
+                    cull: function ( cam, cull ) {
+                        cull.nodePath = [];
+                        cull.nodePath.push( scene );
+                        cull.nodePath.push( mt );
+                        // Translate outside of the frustum and scale, node should not be culled now
+                        var culled = cull.isCulled( quad, cull.nodePath );
+                        ok( culled === false, 'scene should not be culled' );
+                        return false;
+                    }
+                };
+                //Get the cullVisitor in context
+                viewer.getCamera().setCullCallback( new fb3() );
+                viewer.updateTraversal();
+                // traverse so that it Build the frustum planes and cullsettings to check against them
+                viewer.renderingTraversal();
+
+                // tests finished
                 mockup.removeCanvas( canvas );
             } )();
 

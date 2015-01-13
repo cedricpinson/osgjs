@@ -1,21 +1,23 @@
 define( [
     'osgShadow/ShadowAttribute',
-    'osgShadow/ShadowTexture',
-    'osgShadow/ShadowedScene',
+    'osgShadow/ShadowFrustumIntersection',
+    'osgShadow/ShadowMap',
     'osgShadow/ShadowSettings',
     'osgShadow/ShadowTechnique',
-    'osgShadow/ShadowMap'
-], function ( ShadowAttribute, ShadowTexture, ShadowedScene, ShadowSettings, ShadowTechnique, ShadowMap ) {
+    'osgShadow/ShadowTexture',
+    'osgShadow/ShadowedScene'
+], function ( ShadowAttribute, ShadowFrustumIntersection, ShadowMap, ShadowSettings, ShadowTechnique, ShadowTexture, ShadowedScene ) {
     'use strict';
 
     var osgShadow = {};
 
-    osgShadow.ShadowAtribute = ShadowAttribute;
-    osgShadow.ShadowTexture = ShadowTexture;
+    osgShadow.ShadowAttribute = ShadowAttribute;
+    osgShadow.ShadowFrustumIntersection = ShadowFrustumIntersection;
+    osgShadow.ShadowMap = ShadowMap;
     osgShadow.ShadowedScene = ShadowedScene;
     osgShadow.ShadowSettings = ShadowSettings;
     osgShadow.ShadowTechnique = ShadowTechnique;
-    osgShadow.ShadowMap = ShadowMap;
+    osgShadow.ShadowTexture = ShadowTexture;
 
 
     return osgShadow;

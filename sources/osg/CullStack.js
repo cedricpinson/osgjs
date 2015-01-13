@@ -1,25 +1,37 @@
 define( [
-    'osg/Matrix',
-    'osg/Notify',
+    'osg/BoundingSphere',
     'osg/Camera',
+    'osg/ComputeMatrixFromNodePath',
+    'osg/CullingSet',
+    'osg/Matrix',
+    'osg/MatrixTransform',
+    'osg/Notify',
+    'osg/Plane',
     'osg/TransformEnums',
-], function ( Matrix, Notify, Camera, TransformEnums ) {
+    'osg/Vec3'
+], function ( BoundingSphere, Camera, ComputeMatrixFromNodePath, CullingSet, Matrix, MatrixTransform, Notify, Plane, TransformEnums ) {
     'use strict';
 
     var CullStack = function () {
         this._modelViewMatrixStack = [];
         this._projectionMatrixStack = [];
         this._viewportStack = [];
+        this._cullingSetStack = [];
+        this._frustumVolume = -1.0;
         this._bbCornerFar = 0;
         this._bbCornerNear = 0;
-
-
 
         // keep a matrix in memory to avoid to create matrix
         this._reserveMatrixStack = [
             Matrix.create()
         ];
         this._reserveMatrixStack.current = 0;
+
+        this._reserveCullingSetStack = [
+            new CullingSet()
+        ];
+        this._reserveCullingSetStack.current = 0;
+
 
 
         // data for caching camera matrix inverse for computation of world/view
@@ -43,10 +55,20 @@ define( [
             return m;
         },
 
+        _getReservedCullingSet: function () {
+            var m = this._reserveCullingSetStack[ this._reserveCullingSetStack.current++ ];
+            if ( this._reserveCullingSetStack.current === this._reserveCullingSetStack.length ) {
+                this._reserveCullingSetStack.push( new CullingSet() );
+            }
+            return m;
+        },
         reset: function () {
             this._modelViewMatrixStack.length = 0;
             this._projectionMatrixStack.length = 0;
+            this._cullingSetStack.length = 0;
+
             this._reserveMatrixStack.current = 0;
+            this._reserveCullingSetStack.current = 0;
 
             this._cameraModelViewIndexStack.length = 0;
             this._cameraIndexStack.length = 0;
@@ -133,6 +155,95 @@ define( [
             this._viewportStack.pop();
         },
 
+        pushCullingSet: function () {
+            var cs = this._getReservedCullingSet();
+            if ( this._enableFrustumCulling ) {
+                Matrix.getFrustumPlanes( this.getCurrentProjectionMatrix(), this.getCurrentModelViewMatrix(), cs.getFrustum().getPlanes(), false );
+                // TODO: no far no near.
+                // should check if we have them
+                // should add at least a near 0 clip if not
+                cs.getFrustum().setupMask( 4 );
+            }
+
+            this._cullingSetStack.push( cs );
+        },
+        popCullingSet: function () {
+            return this._cullingSetStack.pop();
+        },
+        getCurrentCullingSet: function () {
+            return this._cullingSetStack[ this._cullingSetStack.length - 1 ];
+        },
+
+
+        pushCurrentMask: function () {
+            var cs = this.getCurrentCullingSet();
+            if ( cs ) cs.pushCurrentMask();
+        },
+        popCurrentMask: function () {
+            var cs = this.getCurrentCullingSet();
+            if ( cs ) cs.popCurrentMask();
+        },
+
+        isVerticesCulled: function ( vertices ) {
+            if ( !this._enableFrustumCulling )
+                return false;
+            return this.getCurrentCullingSet().isVeritcesCulled( vertices );
+        },
+
+        isBoundingBoxCulled: function ( bb ) {
+            if ( !this._enableFrustumCulling )
+                return false;
+            return bb.valid() && this.getCurrentCullingSet().isBoundingBoxCulled( bb );
+        },
+
+        isBoundingSphereCulled: function ( bs ) {
+            if ( !this._enableFrustumCulling )
+                return false;
+            return bs.valid() && this.getCurrentCullingSet().isBoundingSphereCulled( bs );
+        },
+
+        isCulled: ( function () {
+            var bsWorld = new BoundingSphere();
+            return function ( node, nodePath ) {
+                if ( !this._enableFrustumCulling )
+                    return false;
+                if ( node.isCullingActive() ) {
+                    if ( this.getCurrentCullingSet().getCurrentResultMask() === 0 )
+                        return false; // father bounding sphere totally inside
+
+                    var matrix;
+
+                    // TODO: Perf just get World Matrix at each node transform
+                    // store it in a World Transform Node Path (only world matrix change)
+                    // so that it's computed once and reused for each further node getCurrentModelWorld
+                    // otherwise, it's 1 mult for each node, each matrix node, and each geometry
+                    //matrix = this.getCurrentModelWorldMatrix();
+                    // tricky: change push be before isculled, and pop in case of culling
+                    // strange bug for now on frustum culling sample with that
+
+                    if ( node.getTypeID() === MatrixTransform.typeID ) {
+                        // tricky: MatrixTransform getBound is already transformed to
+                        // its local space whereas nodepath also have its matrix ...
+                        // so to get world space, you HAVE to remove that matrix from nodePATH
+                        // TODO: GC Perf of array slice creating new array
+                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath.slice( 0, nodePath.length - 1 ) );
+                    } else {
+                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath );
+                    }
+
+
+
+                    Matrix.transformBoundingSphere( matrix, node.getBound(), bsWorld );
+                    return this.getCurrentCullingSet().isBoundingSphereCulled( bsWorld );
+                } else {
+                    this.getCurrentCullingSet().resetCullingMask();
+                    return false;
+                }
+            };
+        } )(),
+
+
+
         pushModelViewMatrix: function ( matrix ) {
 
             // When pushing a matrix, it can be a transform or camera. To compute
@@ -197,10 +308,21 @@ define( [
         },
         pushProjectionMatrix: function ( matrix ) {
             this._projectionMatrixStack.push( matrix );
+
+            // need to recompute frustum volume.
+            this._frustumVolume = -1.0;
+
+            this.pushCullingSet();
         },
         popProjectionMatrix: function () {
             this._projectionMatrixStack.pop();
+
+            // need to recompute frustum volume.
+            this._frustumVolume = -1.0;
+
+            this.popCullingSet();
         }
+
     };
 
     return CullStack;

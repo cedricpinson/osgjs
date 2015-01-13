@@ -54,7 +54,7 @@ define( [
 
         } );
 
-        test( 'Matrix.computeFrustrumCornersVectors', function () {
+        test( 'Matrix.computeFustrumCornersVectors', function () {
             var m = [];
             var ratio = 16.0 / 9.0;
             Matrix.makePerspective( 45, ratio, 1.0, 100.0, m );
@@ -71,14 +71,14 @@ define( [
             corners.push( [ xmax, ymax, 1.0 ] );
 
             var vectors = [];
-            Matrix.computeFrustrumCornersVectors( m, vectors );
+            Matrix.computeFrustumCornersVectors( m, vectors );
             // Notify.log( corners );
             // Notify.log( vectors );
             mockup.near( vectors[ 0 ], corners[ 0 ] );
             mockup.near( vectors[ 1 ], corners[ 1 ] );
             mockup.near( vectors[ 2 ], corners[ 2 ] );
             mockup.near( vectors[ 3 ], corners[ 3 ] );
-            ok( true, 'check computeFrustrumVectors' );
+            ok( true, 'check computeFustrumVectors' );
         } );
 
         test( 'Matrix.getLookAt', function () {
@@ -166,7 +166,7 @@ define( [
             var height = 600;
             var translate = Matrix.create();
             var scale = Matrix.create();
-            var res =  Matrix.create();
+            var res = Matrix.create();
 
             Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
             Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
