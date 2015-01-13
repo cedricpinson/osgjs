@@ -77,7 +77,7 @@ define( [
 
         getTargetMaximumNumberOfPageLOD: function () {
             return this._targetMaximumNumberOfPagedLOD;
-        }
+        },
 
         addNodeToQueue: function ( dbrequest ) {
             // We don't need to determine if the dbrequest is in the queue
@@ -109,6 +109,10 @@ define( [
             this.addLoadedDataToSceneGraph( frameStamp );
         },
 
+        getRequestListSize: function () {
+            return this._pendingRequests.length + this._downloadingRequestsNumber;
+        },
+
         setProgressCallback: function ( cb ) {
             this._progressCallback = cb;
         },
@@ -126,6 +130,10 @@ define( [
                     this.registerPagedLODs( request._loadedModel, frameNumber );
                 }
             }
+        },
+
+        isLoading: function () {
+            return this._loading;
         },
 
         registerPagedLODs: function ( subgraph, frameNumber ) {
@@ -152,14 +160,14 @@ define( [
                 if ( this._pendingRequests.length < number )
                     number = this._pendingRequests.length;
                 for ( var i = 0; i < number; i++ ) {
-                    this.processRequest( this._pendingRequests.shift() );
                     this._downloadingRequestsNumber++;
+                    this.processRequest( this._pendingRequests.shift() );
                 }
             }
         },
 
         processRequest: function ( dbrequest ) {
-
+            this._loading = true;
             var that = this;
             // Load from function
             if ( dbrequest._function !== undefined ) {
@@ -177,7 +185,6 @@ define( [
                     that._loading = false;
                 } );
             }
-
         },
 
         loadNodeFromFunction: function ( func, plod ) {
