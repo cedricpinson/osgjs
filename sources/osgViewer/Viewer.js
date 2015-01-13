@@ -421,10 +421,10 @@ define( [
 
             // update the scene
             this.getScene().updateSceneGraph( this._updateVisitor );
-
+            // Remove ExpiredSubgraphs from DatabasePager
+            this.getDatabasePager().releaseGLExpiredSubgraphs( this.getGraphicContext(), 0.005 );
             // In OSG this.is deferred until the draw traversal, to handle multiple contexts
             this.flushDeletedGLObjects( 0.005 );
-
             var deltaS = Timer.instance().deltaS( startTraversal, Timer.instance().tick() );
 
             this.getViewerStats().setAttribute( this.getFrameStamp().getFrameNumber(), 'Update duration', deltaS );

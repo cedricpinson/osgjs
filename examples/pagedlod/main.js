@@ -121,6 +121,9 @@ var main = function () {
     // The viewer
     viewer = new osgViewer.Viewer( canvas , { 'enableFrustumCulling': true } );
     viewer.init();
+    viewer.getDatabasePager().setProgressCallback ( function ( a,b ) { 
+        progress( a + b );
+    });
     viewer.setSceneData( plod );
     var bs = plod.getBound();
     viewer.setupManipulator();

@@ -36,7 +36,16 @@
     <div class="osgjs-description">
       Demonstrate the usage of PageLOD
     </div>
-
+    <div style="border: 1px solid #a4b6bd; width:220px; height:5px; clear:both;">
+      <div id="progress" style="height:5px; width:0px; background-color:#00aeef;"/>
+    </div>
+    <script type="text/javascript">
+        var prg_width = 250;
+        var node = document.getElementById('progress');
+        function progress( percent ) {
+            node.style.width = percent + 'px';
+        }
+    </script>
   </div>
 
 </body>

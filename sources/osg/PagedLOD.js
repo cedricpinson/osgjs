@@ -20,8 +20,9 @@ define( [
         Lod.call( this );
         this._perRangeDataList = [];
         this._loading = false;
-        this._expiryTime = 5.0;
+        this._expiryTime = 2.0;
         this._centerMode = Lod.USER_DEFINED_CENTER;
+        this._frameNumberOfLastTraversal = 0;
     };
 
     /**
@@ -35,7 +36,6 @@ define( [
         this.timeStamp = 0.0;
         this.frameNumber = 0;
         this.frameNumberOfLastTraversal = 0;
-        this.dbrequest = undefined;
     };
 
     /** @lends PagedLOD.prototype */
@@ -84,35 +84,22 @@ define( [
             Lod.prototype.addChildNode.call( this, node );
         },
 
-        removeExpiredChildren: function ( frameStamp, gl ) {
+        setFrameNumberOfLastTraversal: function ( frameNumber ) {
+            this._frameNumberOfLastTraversal = frameNumber;
+        },
 
-            var ReleaseVisitor = function ( gl ) {
-                NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this.gl = gl;
-            };
-            ReleaseVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
-                apply: function ( node ) {
-                    node.releaseGLObjects( this.gl );
-                    this.traverse( node );
-                }
-            } );
-            if ( frameStamp.getFrameNumber() === 0 ) return;
-            var numChildren = this.children.length;
-            for ( var i = numChildren - 1; i > 0; i-- ) {
-                //First children never expires, also children added with addChild method should not be deleted
-                var timed = frameStamp.getSimulationTime() - this._perRangeDataList[ i ].timeStamp;
-                if ( ( timed > this._expiryTime ) && ( this._perRangeDataList[ i ].filename.length > 0 ||
-                    this._perRangeDataList[ i ].function !== undefined ) ) {
-                    if ( i === this.children.length - 1 ) {
-                        this.children[ i ].accept( new ReleaseVisitor( gl ) );
-                        this.removeChild( this.children[ i ] );
-                        this._perRangeDataList[ i ].loaded = false;
-                        this._perRangeDataList[ i ].dbrequest = undefined;
-                        numChildren--;
-                    }
-                } else {
-                    return;
-                }
+        getFrameNumberOfLastTraversal: function () {
+            return this._frameNumberOfLastTraversal;
+        },
+
+        removeExpiredChildren: function ( expiryTime, removedChildren ) {
+            var i = this.children.length - 1;
+            var timed = this._perRangeDataList[ i ].timeStamp + this._expiryTime;
+            if ( ( timed < expiryTime ) && ( this._perRangeDataList[ i ].filename.length > 0 ||
+                this._perRangeDataList[ i ].function !== undefined ) ) {
+                removedChildren.add( this.children[ i ] );
+                this.removeChild( this.children[ i ] );
+                this._perRangeDataList[ i ].loaded = false;
             }
         },
 
@@ -130,6 +117,7 @@ define( [
                 var updateTimeStamp = false;
 
                 if ( visitor.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
+                    this.setFrameNumberOfLastTraversal( visitor.getFrameStamp().getFrameNumber() );
                     updateTimeStamp = true;
                 }
 
@@ -196,22 +184,11 @@ define( [
                             if ( this._perRangeDataList[ numChildren ].loaded === false ) {
                                 this._perRangeDataList[ numChildren ].loaded = true;
                                 var dbhandler = visitor.getDatabaseRequestHandler();
-                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime() );
-                            } else {
-                                // Update timestamp of the request.
-                                if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined)
-                                    this._perRangeDataList[ numChildren ].dbrequest._timeStamp = visitor.getFrameStamp().getSimulationTime();
+                                dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime() );
                             }
                         }
                     }
-
-                    // Remove the expired childs if any
-                    // CP: issue here, no gl context should be used here
-                    // it should be deferred in another part, check in osg to see how it's done
-                    this.removeExpiredChildren( visitor.getFrameStamp(), visitor.getCurrentCamera().getGraphicContext() );
-
                     break;
-
                 default:
                     break;
                 }
