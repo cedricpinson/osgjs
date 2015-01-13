@@ -148,15 +148,22 @@ define( [
                 this._renderStage.setClearMask( camera.getClearMask() );
                 this._renderStage.setViewport( camera.getViewport() );
 
+
+
                 // init frustrum planes from camera
                 this._cullVisitor.initFrustrumPlanes( camera );
 
                 // dont add camera on the stack just traverse it
-                this._cullVisitor.traverse( camera );
+                this._cullVisitor.handleCullCallbacksAndTraverse( camera );
 
                 // fix projection matrix if camera has near/far auto compute
                 this._cullVisitor.popModelViewMatrix();
                 this._cullVisitor.popProjectionMatrix();
+
+                // store complete frustum
+                this._cullVisitor.initFrustrumPlanes( camera, true );
+                camera.setNearFar(this._cullVisitor._computedNear, this._cullVisitor._computedFar);
+
                 this._cullVisitor.popViewport();
                 this._cullVisitor.popStateSet();
 

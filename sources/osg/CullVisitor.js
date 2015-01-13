@@ -37,7 +37,6 @@ define( [
         this._currentRenderBin = undefined;
         this._currentRenderStage = undefined;
         this._rootRenderStage = undefined;
-        this._frustum = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
         this._enableFrustumCulling = false;
@@ -65,11 +64,11 @@ define( [
             return -( coord[ 0 ] * matrix[ 2 ] + coord[ 1 ] * matrix[ 6 ] + coord[ 2 ] * matrix[ 10 ] + matrix[ 14 ] );
         },
 
-        getComputedNear: function() {
+        getComputedNear: function () {
             return this._computedNear;
         },
 
-        getComputedFar: function() {
+        getComputedFar: function () {
             return this._computedFar;
         },
 
@@ -214,10 +213,10 @@ define( [
             this._rootRenderStage = rg;
             this._currentRenderBin = rg;
         },
-        setRenderer: function( renderer ) {
+        setRenderer: function ( renderer ) {
             this._renderer = renderer;
         },
-        getRenderer: function() {
+        getRenderer: function () {
             return this._renderer;
         },
 
@@ -308,10 +307,11 @@ define( [
 
             var mvp = Matrix.create();
 
-            return function ( camera ) {
-                if ( this._enableFrustumCulling === true ) {
+            return function ( camera, withNearFar ) {
+                if ( this._enableFrustumCulling === true || camera.getFrustumCulling() ) {
                     Matrix.mult( camera.getProjectionMatrix(), camera.getViewMatrix(), mvp );
-                    this.getFrustumPlanes( mvp, this._frustum );
+                    this._frustum = camera.getFrustumPlanes();
+                    this.getFrustumPlanes( mvp, this._frustum, withNearFar );
                 }
             };
         } )(),
@@ -320,71 +320,66 @@ define( [
             this._enableFrustumCulling = value;
         },
 
-        getFrustumPlanes: ( function () {
+        getFrustumPlanes: function ( matrix, result, withNearFar ) {
+            if ( withNearFar === undefined )
+                withNearFar = false;
+            // Right clipping plane.
+            var right = result[ 0 ];
+            right[ 0 ] = matrix[ 3 ] - matrix[ 0 ];
+            right[ 1 ] = matrix[ 7 ] - matrix[ 4 ];
+            right[ 2 ] = matrix[ 11 ] - matrix[ 8 ];
+            right[ 3 ] = matrix[ 15 ] - matrix[ 12 ];
 
-            var right = Vec4.create();
-            var left = Vec4.create();
-            var bottom = Vec4.create();
-            var top = Vec4.create();
-            var far = Vec4.create();
-            var near = Vec4.create();
+            // Left clipping plane.
+            var left = result[ 1 ];
+            left[ 0 ] = matrix[ 3 ] + matrix[ 0 ];
+            left[ 1 ] = matrix[ 7 ] + matrix[ 4 ];
+            left[ 2 ] = matrix[ 11 ] + matrix[ 8 ];
+            left[ 3 ] = matrix[ 15 ] + matrix[ 12 ];
 
-            return function ( matrix, result, withNearFar ) {
-                if ( withNearFar === undefined )
-                    withNearFar = false;
-                // Right clipping plane.
-                right[ 0 ] = matrix[ 3 ] - matrix[ 0 ];
-                right[ 1 ] = matrix[ 7 ] - matrix[ 4 ];
-                right[ 2 ] = matrix[ 11 ] - matrix[ 8 ];
-                right[ 3 ] = matrix[ 15 ] - matrix[ 12 ];
-                result[ 0 ] = right;
-                // Left clipping plane.
-                left[ 0 ] = matrix[ 3 ] + matrix[ 0 ];
-                left[ 1 ] = matrix[ 7 ] + matrix[ 4 ];
-                left[ 2 ] = matrix[ 11 ] + matrix[ 8 ];
-                left[ 3 ] = matrix[ 15 ] + matrix[ 12 ];
-                result[ 1 ] = left;
-                // Bottom clipping plane.
-                bottom[ 0 ] = matrix[ 3 ] + matrix[ 1 ];
-                bottom[ 1 ] = matrix[ 7 ] + matrix[ 5 ];
-                bottom[ 2 ] = matrix[ 11 ] + matrix[ 9 ];
-                bottom[ 3 ] = matrix[ 15 ] + matrix[ 13 ];
-                result[ 2 ] = bottom;
-                // Top clipping plane.
-                top[ 0 ] = matrix[ 3 ] - matrix[ 1 ];
-                top[ 1 ] = matrix[ 7 ] - matrix[ 5 ];
-                top[ 2 ] = matrix[ 11 ] - matrix[ 9 ];
-                top[ 3 ] = matrix[ 15 ] - matrix[ 13 ];
-                result[ 3 ] = top;
+            // Bottom clipping plane.
+            var bottom = result[ 2 ];
+            bottom[ 0 ] = matrix[ 3 ] + matrix[ 1 ];
+            bottom[ 1 ] = matrix[ 7 ] + matrix[ 5 ];
+            bottom[ 2 ] = matrix[ 11 ] + matrix[ 9 ];
+            bottom[ 3 ] = matrix[ 15 ] + matrix[ 13 ];
 
-                if ( withNearFar ) {
-                    // Far clipping plane.
-                    far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
-                    far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
-                    far[ 2 ] = matrix[ 11 ] - matrix[ 10 ];
-                    far[ 3 ] = matrix[ 15 ] - matrix[ 14 ];
-                    result[ 4 ] = far;
-                    // Near clipping plane.
-                    near[ 0 ] = matrix[ 3 ] + matrix[ 2 ];
-                    near[ 1 ] = matrix[ 7 ] + matrix[ 6 ];
-                    near[ 2 ] = matrix[ 11 ] + matrix[ 10 ];
-                    near[ 3 ] = matrix[ 15 ] + matrix[ 14 ];
-                    result[ 5 ] = near;
-                }
+            // Top clipping plane.
+            var top = result[ 3 ];
+            top[ 0 ] = matrix[ 3 ] - matrix[ 1 ];
+            top[ 1 ] = matrix[ 7 ] - matrix[ 5 ];
+            top[ 2 ] = matrix[ 11 ] - matrix[ 9 ];
+            top[ 3 ] = matrix[ 15 ] - matrix[ 13 ];
 
-                //Normalize the planes
-                var j = withNearFar ? 6 : 4;
-                for ( var i = 0; i < j; i++ ) {
-                    var norm = result[ i ][ 0 ] * result[ i ][ 0 ] + result[ i ][ 1 ] * result[ i ][ 1 ] + result[ i ][ 2 ] * result[ i ][ 2 ];
-                    var inv = 1.0 / Math.sqrt( norm );
-                    result[ i ][ 0 ] = result[ i ][ 0 ] * inv;
-                    result[ i ][ 1 ] = result[ i ][ 1 ] * inv;
-                    result[ i ][ 2 ] = result[ i ][ 2 ] * inv;
-                    result[ i ][ 3 ] = result[ i ][ 3 ] * inv;
-                }
+            if ( withNearFar ) {
+                // Far clipping plane.
+                var far = result[ 4 ];
+                far[ 0 ] = matrix[ 3 ] - matrix[ 2 ];
+                far[ 1 ] = matrix[ 7 ] - matrix[ 6 ];
+                far[ 2 ] = matrix[ 11 ] - matrix[ 10 ];
+                far[ 3 ] = matrix[ 15 ] - matrix[ 14 ];
 
-            };
-        } )(),
+                // Near clipping plane.
+                var near = result[ 5 ];
+                near[ 0 ] = matrix[ 3 ] + matrix[ 2 ];
+                near[ 1 ] = matrix[ 7 ] + matrix[ 6 ];
+                near[ 2 ] = matrix[ 11 ] + matrix[ 10 ];
+                near[ 3 ] = matrix[ 15 ] + matrix[ 14 ];
+            }
+
+            //Normalize the planes
+            var j = withNearFar ? 6 : 4;
+            for ( var i = 0; i < j; i++ ) {
+                var norm = result[ i ][ 0 ] * result[ i ][ 0 ] + result[ i ][ 1 ] * result[ i ][ 1 ] + result[ i ][ 2 ] * result[ i ][ 2 ];
+                var inv = 1.0 / Math.sqrt( norm );
+                result[ i ][ 0 ] = result[ i ][ 0 ] * inv;
+                result[ i ][ 1 ] = result[ i ][ 1 ] * inv;
+                result[ i ][ 2 ] = result[ i ][ 2 ] * inv;
+                result[ i ][ 3 ] = result[ i ][ 3 ] * inv;
+            }
+
+        },
+
         isCulled: ( function () {
             var position = Vec3.create();
             var scaleVec = Vec3.create();
@@ -454,6 +449,7 @@ define( [
 
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
+        this.initFrustrumPlanes( camera, !camera.getComputeNearFar() );
         this.setCullSettings( camera );
 
         // nested camera
@@ -506,6 +502,11 @@ define( [
         if ( camera.getViewport() ) {
             this.popViewport();
         }
+
+
+        // store complete frustum
+        this.initFrustrumPlanes( camera, true );
+        camera.setNearFar( this._computedNear, this._computedFar );
 
         // restore previous state of the camera
         this.setCullSettings( previousCullsettings );

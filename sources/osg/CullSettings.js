@@ -27,7 +27,14 @@ define( [], function () {
         },
         getComputeNearFar: function () {
             return this._computeNearFar;
+        },
+        setFrustumCulling: function ( value ) {
+            this._frustumCulling = value;
+        },
+        getFrustumCulling: function () {
+            return this._frustumCulling;
         }
+
     };
 
     return CullSettings;

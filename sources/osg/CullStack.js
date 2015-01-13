@@ -14,12 +14,12 @@ define( [
         this._bbCornerNear = 0;
 
 
-
         // keep a matrix in memory to avoid to create matrix
         this._reserveMatrixStack = [
             Matrix.create()
         ];
         this._reserveMatrixStack.current = 0;
+
 
 
         // data for caching camera matrix inverse for computation of world/view
@@ -201,6 +201,7 @@ define( [
         popProjectionMatrix: function () {
             this._projectionMatrixStack.pop();
         }
+
     };
 
     return CullStack;

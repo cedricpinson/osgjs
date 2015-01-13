@@ -4,9 +4,9 @@ define( [
     'osg/CullSettings',
     'osg/Matrix',
     'osg/Texture',
-    'osg/TransformEnums'
-
-], function ( MACROUTILS, Transform, CullSettings, Matrix, Texture, TransformEnums ) {
+    'osg/TransformEnums',
+    'osg/Vec4'
+], function ( MACROUTILS, Transform, CullSettings, Matrix, Texture, TransformEnums, Vec4 ) {
 
     'use strict';
 
@@ -23,6 +23,8 @@ define( [
         this._graphicContext = undefined;
         this.setClearColor( [ 0, 0, 0, 1.0 ] );
         this.setClearDepth( 1.0 );
+
+        this._frustumPlanes = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
 
         /*jshint bitwise: false */
         this.setClearMask( Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT );
@@ -123,7 +125,24 @@ define( [
                 zNear, zFar ) {
                 Matrix.makeOrtho( left, right, bottom, top, zNear, zFar, this.getProjectionMatrix() );
             },
-
+            setNearFar: function ( zNear, zFar ) {
+                this._near = zNear;
+                this._far = zFar;
+            },
+            getNear: function() {
+                return this._near;
+            },
+            getFar: function () {
+                return this._far;
+            },
+            setFrustumPlanes: function ( planes ) {
+                for ( var i = 0; i < planes.length; i++ ) {
+                    Vec4.copy( planes[ i ], this._frustumPlanes[ i ] );
+                }
+            },
+            getFrustumPlanes: function () {
+                return this._frustumPlanes;
+            },
             getViewMatrix: function () {
                 return this.modelviewMatrix;
             },

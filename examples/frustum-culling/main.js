@@ -67,8 +67,8 @@
 
         cull: function ( node, nv ) {
             // cull
-            config.near = nv._computedNear + '';
-            config.far = nv._computedFar + '';
+            config.near = config.camera.getNear() + '';
+            config.far = config.camera.getFar() + '';
 
             return true;
         }
@@ -409,6 +409,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             var callbackUpdateCount = new CountCallback();
             updateCountNode.setUpdateCallback( callbackUpdateCount );
 
+
             var nearFarCallback = new NearFarCallback();
             updateCountNode.setCullCallback( nearFarCallback );
 
@@ -421,6 +422,8 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             this.addFrameBufferView();
             root.addChild( this._topView );
             root.addChild( this._rttdebugNode );
+
+
             return root;
         },
 
@@ -441,6 +444,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
             cullVisitor.setEnableFrustumCulling( true );
 
+            this._config['camera'] = viewer.getCamera();
             viewer.getCamera().setComputeNearFar( true );
             viewer.getCamera().setName( 'main' );
 
