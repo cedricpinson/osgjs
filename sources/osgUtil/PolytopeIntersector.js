@@ -6,7 +6,8 @@ define( [
 ], function ( PolytopePrimitiveIntersector, Matrix, Vec4, Vec3 ) {
 
     'use strict';
-
+    /** Concrete class for implementing polytope intersections with the scene graph.
+     * To be used in conjunction with IntersectionVisitor. */
     var PolytopeIntersector = function () {
         this._intersections = [];
         this._index = 0;

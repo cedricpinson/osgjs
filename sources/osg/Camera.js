@@ -4,9 +4,8 @@ define( [
     'osg/CullSettings',
     'osg/Matrix',
     'osg/Texture',
-    'osg/TransformEnums',
-    'osg/Vec4'
-], function ( MACROUTILS, Transform, CullSettings, Matrix, Texture, TransformEnums, Vec4 ) {
+    'osg/TransformEnums'
+], function ( MACROUTILS, Transform, CullSettings, Matrix, Texture, TransformEnums ) {
 
     'use strict';
 
@@ -23,8 +22,6 @@ define( [
         this._graphicContext = undefined;
         this.setClearColor( [ 0, 0, 0, 1.0 ] );
         this.setClearDepth( 1.0 );
-
-        this._frustumPlanes = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
 
         /*jshint bitwise: false */
         this.setClearMask( Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT );
@@ -52,7 +49,6 @@ define( [
     Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit(
         CullSettings.prototype,
         MACROUTILS.objectInehrit( Transform.prototype, {
-
             // at which view this camera is attached
             getView: function () {
                 return this._view;
@@ -129,20 +125,14 @@ define( [
                 this._near = zNear;
                 this._far = zFar;
             },
-            getNear: function() {
+            getNear: function () {
                 return this._near;
             },
             getFar: function () {
                 return this._far;
             },
-            setFrustumPlanes: function ( planes ) {
-                for ( var i = 0; i < planes.length; i++ ) {
-                    Vec4.copy( planes[ i ], this._frustumPlanes[ i ] );
-                }
-            },
-            getFrustumPlanes: function () {
-                return this._frustumPlanes;
-            },
+
+
             getViewMatrix: function () {
                 return this.modelviewMatrix;
             },
@@ -157,7 +147,7 @@ define( [
                 this.renderOrderNum = orderNum;
             },
 
-            detachAll: function() {
+            detachAll: function () {
                 this._attachments = {};
 
                 if ( this.frameBufferObject )

@@ -199,6 +199,43 @@ define( [
             return this._ground;
         },
 
+        computeAttenuation: function ( dist ) {
+            // formula playground
+            // https://www.desmos.com/calculator/nmnaud1hrw
+            var constant = this._attenuation[ 0 ];
+            var linear = this._attenuation[ 1 ] * dist;
+            var quadratic = this._attenuation[ 2 ] * dist * dist;
+            return ( 1.0 / ( constant + linear + quadratic ) );
+        },
+        // First step to light intersection
+        // for culling
+        checkForNearerLightFar: function ( currentFar, epsilon ) {
+
+            if ( epsilon === undefined ) epsilon = 1e-6;
+            if ( this._attenuation[ 1 ] === epsilon && this._attenuation[ 2 ] <= epsilon )
+                return currentFar;
+
+            var att = this.computeAttenuation();
+            if ( att >= epsilon )
+                return currentFar; // currentFar lighted, no compute a smaller one
+
+            // either quadratic equation solve
+            // or just incremental search...
+            // not even dichotomic...
+            var distIncr = currentFar / 50.0;
+            var newFar = currentFar;
+            while ( att < epsilon ) {
+                newFar -= distIncr;
+                att = this.computeAttenuation( newFar );
+            }
+            if ( att >= epsilon ) {
+                // Last not lighted
+                return newFar + distIncr;
+            }
+            // currentFar lighted, it's ok
+            return newFar;
+        },
+
         // attenuation coeff
         setConstantAttenuation: function ( value ) {
             this._attenuation[ 0 ] = value;

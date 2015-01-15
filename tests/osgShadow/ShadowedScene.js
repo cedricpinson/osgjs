@@ -1,16 +1,14 @@
 define( [
-    'tests/mockup/mockup',
+    'osg/Camera',
+    'osg/Matrix',
     'osg/Node',
     'osg/Shape',
-    'osgUtil/IntersectionVisitor',
-    'osg/Camera',
     'osg/Viewport',
-    'osg/Matrix',
-    'osgShadow/ShadowedScene'
-], function ( mockup, Node, Shape, IntersectionVisitor, Camera, Viewport, Matrix, ShadowedScene ) {
-
+    'osgShadow/ShadowedScene', 'osgUtil/IntersectionVisitor',
+    'tests/mockup/mockup',
+], function ( Camera, Matrix, Node, Shape, Viewport, ShadowedScene, IntersectionVisitor, mockup ) {
     return function () {
-        module( 'osg' );
+        module( 'osgShadow' );
 
         test( 'ShadowedScene', function () {
 
