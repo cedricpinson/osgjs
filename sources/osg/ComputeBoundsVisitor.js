@@ -4,10 +4,9 @@ define( [
     'osg/Matrix',
     'osg/MatrixTransform',
     'osg/NodeVisitor',
-    'osg/Utils',
-    'osg/Vec3'
+    'osg/Utils'
 
-], function ( BoundingBox, Geometry, Matrix, MatrixTransform, NodeVisitor, MACROUTILS, Vec3 ) {
+], function ( BoundingBox, Geometry, Matrix, MatrixTransform, NodeVisitor, MACROUTILS ) {
 
     'use strict';
 
@@ -41,18 +40,18 @@ define( [
             var stackLength = this._matrixStack.length;
 
             if ( stackLength )
-                Matrix.copy( this._matrixStack[ stackLength - 1], matrix);
+                Matrix.copy( this._matrixStack[ stackLength - 1 ], matrix );
 
             transform.computeLocalToWorldMatrix( matrix, this );
 
-            this.pushMatrix(matrix);
+            this.pushMatrix( matrix );
 
-            this.traverse(transform);
+            this.traverse( transform );
 
             this.popMatrix();
         },
 
-        apply: function( node ) {
+        apply: function ( node ) {
 
             var typeID = node.getTypeID();
 
@@ -78,10 +77,8 @@ define( [
         },
 
 
-        applyBoundingBox: (function() {
-
-            var tmpVec = Vec3.create();
-            var tmpCorner = Vec3.create();
+        applyBoundingBox: ( function () {
+            var bbOut = new BoundingBox();
 
             return function ( bbox ) {
 
@@ -90,17 +87,9 @@ define( [
                 if ( !stackLength )
                     this._bb.expandByBoundingBox( bbox );
                 else if ( bbox.valid() ) {
-                    var matrix = this._matrixStack[ stackLength - 1];
-
-                    this._bb.expandByVec3( Matrix.transformVec3( matrix, bbox.corner(0, tmpCorner), tmpVec));
-                    this._bb.expandByVec3( Matrix.transformVec3( matrix, bbox.corner(1, tmpCorner), tmpVec));
-                    this._bb.expandByVec3( Matrix.transformVec3( matrix, bbox.corner(2, tmpCorner), tmpVec));
-                    this._bb.expandByVec3( Matrix.transformVec3( matrix, bbox.corner(3, tmpCorner), tmpVec));
-                    this._bb.expandByVec3( Matrix.transformVec3( matrix, bbox.corner(4, tmpCorner), tmpVec));
-                    this._bb.expandByVec3( Matrix.transformVec3( matrix, bbox.corner(5, tmpCorner), tmpVec));
-                    this._bb.expandByVec3( Matrix.transformVec3( matrix, bbox.corner(6, tmpCorner), tmpVec));
-                    this._bb.expandByVec3( Matrix.transformVec3( matrix, bbox.corner(7, tmpCorner), tmpVec));
-
+                    var matrix = this._matrixStack[ stackLength - 1 ];
+                    Matrix.transformBoundingBox( matrix, bbox, bbOut );
+                    this._bb.expandByBoundingBox( bbOut );
                 }
 
             };

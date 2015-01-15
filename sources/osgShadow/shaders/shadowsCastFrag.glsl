@@ -35,8 +35,7 @@ vec4 shadowDepthToEVSM(float depth)
 void main(void) {
     float depth;
     // distance to camera
-    depth =  -FragEyePos.z;
-    // linearize (aka map z to near..far to 0..1)
+    depth =  - FragEyePos.z* FragEyePos.w;
     depth = (depth - Shadow_DepthRange.x )* Shadow_DepthRange.w;
 
 #if defined (_FLOATTEX) && defined(_PCF)

@@ -131,5 +131,9 @@ define( [], function () {
 
     };
 
+    Vec3.zero = [ 0.0, 0.0, 0.0 ];
+    Vec3.infinity = [ Infinity, Infinity, Infinity ];
+    Vec3.negativeInfinity = [ -Infinity, -Infinity, -Infinity ];
+
     return Vec3;
 } );
