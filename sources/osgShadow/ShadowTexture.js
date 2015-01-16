@@ -1,15 +1,13 @@
 define( [
-    'osg/Utils',
+    'osg/Map',
+    'osg/Matrix',
     'osg/Notify',
     'osg/StateAttribute',
     'osg/Texture',
     'osg/Uniform',
-    'osg/Matrix',
-    'osg/Vec3',
-    'osg/Vec4',
-    'osg/Viewport',
-    'osg/Map'
-], function ( MACROUTILS, Notify, StateAttribute, Texture, Uniform, Matrix, Vec3, Vec4, Viewport, Map ) {
+    'osg/Utils',
+    'osg/Vec4'
+], function ( Map, Matrix, Notify, StateAttribute, Texture, Uniform, MACROUTILS, Vec4 ) {
     'use strict';
 
 
@@ -109,8 +107,6 @@ define( [
         },
 
         apply: function ( state, texUnit ) {
-
-            var gl = state.getGraphicContext();
 
             // Texture stuff: call parent class method
             Texture.prototype.apply.call( this, state, texUnit );

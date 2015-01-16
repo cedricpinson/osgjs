@@ -55,6 +55,8 @@ define( [
         this.visitorType = NodeVisitor.CULL_VISITOR;
 
         this._identityMatrix = Matrix.create();
+
+        this._renderer = undefined;
     };
 
     /** @lends CullVisitor.prototype */
@@ -212,6 +214,13 @@ define( [
             this._rootRenderStage = rg;
             this._currentRenderBin = rg;
         },
+        setRenderer: function( renderer ) {
+            this._renderer = renderer;
+        },
+        getRenderer: function() {
+            return this._renderer;
+        },
+
         reset: function () {
             CullStack.prototype.reset.call( this );
             // Reset the stack before reseting the current leaf index.

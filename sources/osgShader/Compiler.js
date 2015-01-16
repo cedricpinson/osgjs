@@ -744,12 +744,13 @@ define( [
 
             var func = function ( node ) {
 
-                if ( node.defines &&
-                    this._map[ node.id ] === undefined ) {
+                if ( node.defines && this._map[ node.id ] === undefined ) {
 
                     this._map[ node.id ] = true;
                     var c = node.defines();
-                    this._text.push( c );
+                    // push all elements of the array on text array
+                    // defines must return an array
+                    Array.prototype.push.apply( this._text, c );
 
                 }
 
@@ -759,7 +760,7 @@ define( [
             func._text = [];
             this.traverse( func, node );
 
-            return func._text.join( '\n' );
+            return func._text;
         },
 
         evaluateGlobalFunctionDeclaration: function ( node ) {
@@ -1018,7 +1019,9 @@ define( [
 
             var vars = Object.keys( this._variables );
 
-            this._fragmentShader.push( this.evaluateDefines( root ) );
+            // defines are added by process shader
+            var defines = this.evaluateDefines( root );
+
             this._fragmentShader.push( '\n' );
             this._fragmentShader.push( this.evaluateGlobalVariableDeclaration( root ) );
             this._fragmentShader.push( '\n' );
@@ -1048,7 +1051,7 @@ define( [
             var shader = this._fragmentShader.join( '\n' );
             //osg.log('Fragment Shader');
 
-            shader = this._shaderProcessor.processShader( shader );
+            shader = this._shaderProcessor.processShader( shader, defines );
 
             Notify.debug( shader );
             return shader;

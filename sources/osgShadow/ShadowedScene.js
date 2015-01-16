@@ -1,14 +1,12 @@
 define( [
-    'osg/Notify',
-    'osg/Utils',
-    'osg/Vec4',
+    'osg/CullVisitor',
     'osg/Matrix',
-    'osg/Uniform',
-    'osg/StateSet',
     'osg/Node',
     'osg/NodeVisitor',
-    'osg/CullVisitor'
-], function ( Notify, MACROUTILS, Vec4, Matrix, Uniform, StateSet, Node, NodeVisitor, CullVisitor, Viewport ) {
+    'osg/Utils',
+    'osg/Vec4',
+], function ( CullVisitor, Matrix, Node, NodeVisitor, MACROUTILS, Vec4 ) {
+
     'use strict';
 
     /**

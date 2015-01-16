@@ -30,7 +30,6 @@ define( [
     ShaderProcessor.prototype = {
         _shadersText: {},
         _shadersList: {},
-        _globalDefaultDefines: '',
         _globalDefaultprecision: '#ifdef GL_FRAGMENT_PRECISION_HIGH\n precision highp float;\n #else\n precision mediump float;\n#endif',
         _debugLines: false,
         _includeR: /#pragma include "([^"]+)"/g,
@@ -94,14 +93,13 @@ define( [
         },
 
         getShader: function ( shaderName, defines ) {
-            this._currentDefines = defines;
             var shader = this.getShaderTextPure( shaderName );
             return this.processShader( shader, defines );
         },
 
         // recursively  handle #include external glsl
         // files (for now in the same folder.)
-        preprocess: function ( content, sourceID, includeList ) {
+        preprocess: function ( content, sourceID, includeList, inputsDefines ) {
             var _self = this;
             return content.replace( this._includeCondR, function ( _, name ) {
                 var includeOpt = name.split( ' ' );
@@ -112,19 +110,24 @@ define( [
 
                 // conditionnal include is name included if _PCF defined
                 // \#pragma include "name" "_PCF";
-                if ( includeOpt.length > 1 && _self._currentDefines ) {
+                if ( includeOpt.length > 1 && inputsDefines ) {
+
                     // some conditions here.
                     // if not defined we do not include
                     var found = false;
-                    var defines = _self._currentDefines.map( function ( defineString ) {
+                    var defines = inputsDefines.map( function ( defineString ) {
                         return _self._defineR.test( defineString ) && defineString.split( ' ' )[ 1 ];
                     } );
+
                     for ( var i = 1; i < includeOpt.length && !found; i++ ) {
                         var key = includeOpt[ i ].replace( /"/g, '' );
                         for ( var k = 0; k < defines.length && !found; k++ ) {
+
                             if ( defines[ k ] !== false && defines[ k ] === key ) {
                                 found = true;
+                                break;
                             }
+
                         }
                     }
                     if ( !found )
@@ -142,7 +145,7 @@ define( [
                 }
                 sourceID++;
                 // to the infinite and beyond !
-                txt = this.preprocess( txt, sourceID, includeList );
+                txt = this.preprocess( txt, sourceID, includeList, inputsDefines );
                 return txt;
             }.bind( this ) );
 
@@ -162,7 +165,7 @@ define( [
                 preShader = this.instrumentShaderlines( preShader, sourceID );
                 sourceID++;
             }
-            var postShader = this.preprocess( preShader, sourceID, includeList );
+            var postShader = this.preprocess( preShader, sourceID, includeList, defines );
 
             var prePrend = '';
 
@@ -175,11 +178,13 @@ define( [
                 }
             }
 
-            if ( !defines ) defines = [];
-            defines.push( this._globalDefaultDefines );
-
-            prePrend += defines.join( '\n' ) + '\n';
+            // if defines
+            // add them
+            if ( defines ) {
+                prePrend += defines.join( '\n' ) + '\n';
+            }
             postShader = prePrend + postShader;
+
             return postShader;
         }
     };

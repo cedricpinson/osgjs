@@ -34,6 +34,7 @@ define( [
             this._state = new State( new osgShader.ShaderGeneratorProxy() );
 
             this._cullVisitor = new CullVisitor();
+            this._cullVisitor.setRenderer( this );
             this._renderStage = new RenderStage();
             this._stateGraph = new StateGraph();
 

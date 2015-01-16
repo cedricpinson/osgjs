@@ -1,32 +1,26 @@
 define( [
-    'osg/Notify',
-    'osg/Utils',
-    'osg/FrameBufferObject',
-    'osg/Object',
-    'osg/Node',
-    'osg/NodeVisitor',
-    'osg/CullVisitor',
-    'osg/LightSource',
-    'osg/Vec3',
-    'osg/Vec4',
-    'osg/Matrix',
-    'osg/BoundingBox',
-    'osg/BoundingSphere',
-    'osg/ComputeMatrixFromNodePath',
-    'osg/Transform',
     'osg/Camera',
-    'osg/Texture',
-    'osg/Viewport',
+    'osg/FrameBufferObject',
+    'osg/Notify',
+    'osg/Matrix',
+    'osg/Program',
     'osg/StateSet',
     'osg/StateAttribute',
-    'osg/Uniform',
     'osg/Shader',
-    'osg/Program',
+    'osg/Texture',
+    'osg/Transform',
+    'osg/Uniform',
+    'osg/Utils',
+    'osg/Vec3',
+    'osg/Vec4',
+    'osg/Viewport',
     'osgShadow/ShadowAttribute',
-    'osgShadow/ShadowTexture',
     'osgShader/ShaderProcessor',
-    'osgShadow/ShadowTechnique'
-], function ( Notify, MACROUTILS, FrameBufferObject, Object, Node, NodeVisitor, CullVisitor, LightSource, Vec3, Vec4, Matrix, BoundingBox, BoundingSphere, ComputeMatrixFromNodePath, Transform, Camera, Texture, Viewport, StateSet, StateAttribute, Uniform, Shader, Program, ShadowAttribute, ShadowTexture, ShaderProcessor, ShadowTechnique ) {
+    'osgShadow/ShadowTechnique',
+    'osgShadow/ShadowTexture'
+], function ( Camera, FrameBufferObject, Notify, Matrix, Program, StateSet, StateAttribute, Shader, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport,
+    ShadowAttribute, ShaderProcessor, ShadowTechnique, ShadowTexture ) {
+
     'use strict';
 
 
@@ -51,7 +45,6 @@ define( [
             return false;
         }
     };
-
 
     /**
      *  ShadowMap provides an implementation of shadow textures.
@@ -132,13 +125,12 @@ define( [
             return this._texture;
         },
 
-        isDirty: function() {
+        isDirty: function () {
             return this._dirty;
         },
 
         setShadowCasterShaderProgram: function ( prg ) {
-            var stateSet = this._casterStateSet;
-            stateSet.setAttributeAndModes( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
+            this._casterStateSet.setAttributeAndModes( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
             this._castsShaderProgram = prg;
         },
 
@@ -152,7 +144,7 @@ define( [
             // we dont want singleton right now
             // actually it should disappear and use instead the one from State
             if ( !this._shaderProcessor )
-                this._shaderProcessor = new ShaderProcessor(); //
+                this._shaderProcessor = new ShaderProcessor(true); //
 
             var vertexshader = this._shaderProcessor.getShader( vs, defines );
             var fragmentshader = this._shaderProcessor.getShader( ps, defines );
@@ -171,10 +163,6 @@ define( [
         computeShadowCasterShaderProgram: function () {
 
             var defines = this._shadowAttribute.getDefines();
-            // BASE FORMAT, unfortunately LUMINANCE isn't well supported on safari ?
-            // TODO: LUMINANCE framebuffer float render texture support
-            // save BW on float texture when using single float
-            var textureFormat = Texture.RGBA;
 
             var shadowmapCasterVertex = 'shadowsCastVert.glsl';
             var shadowmapCasterFragment = 'shadowsCastFrag.glsl';
@@ -310,7 +298,7 @@ define( [
             return true;
         },
 
-        updateShadowTechnic: function ( nv ) {
+        updateShadowTechnic: function ( /*nv*/) {
 
             var camera = this._cameraShadow;
             var texture = this._texture;
@@ -418,7 +406,7 @@ define( [
             this.dirty();
         },
 
-        getTexturePrecision:function() {
+        getTexturePrecision: function () {
             return this._shadowAttribute.getPrecision();
         },
 
@@ -444,7 +432,7 @@ define( [
 
         setLightSource: function ( lightSource ) {
 
-            if ( !lightSource || lightSource == this._lightSource)
+            if ( !lightSource || lightSource === this._lightSource )
                 return;
 
             this._lightSource = lightSource;
@@ -638,6 +626,10 @@ define( [
         },
 
         cullShadowCasting: function ( cullVisitor ) {
+
+            // get renderer to make the cull program
+
+
             // record the traversal mask on entry so we can reapply it later.
             var traversalMask = cullVisitor.getTraversalMask();
 

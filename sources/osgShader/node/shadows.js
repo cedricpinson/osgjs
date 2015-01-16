@@ -23,9 +23,10 @@ define( [
             this._shadow = shadowAttr;
         },
 
+        // must return an array of defines
+        // because it will be passed to the ShaderGenerator
         defines: function () {
-            var defines = this._shadow.getDefines();
-            return defines.join( '\n' );
+            return this._shadow.getDefines();
         },
 
         computeFragment: function () {

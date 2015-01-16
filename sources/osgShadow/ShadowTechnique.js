@@ -1,11 +1,8 @@
 define( [
     'osg/Notify',
-    'osg/Utils',
     'osg/Object',
-    'osg/Node',
-    'osg/NodeVisitor',
-    'osg/CullVisitor'
-], function ( Notify, MACROUTILS, Object, Node, NodeVisitor, CullVisitor ) {
+    'osg/Utils',
+], function ( Notify, Object, MACROUTILS ) {
     'use strict';
 
     /**
@@ -55,9 +52,9 @@ define( [
         },
 
         // update the technic
-        updateShadowTechnic: function ( nodeVisitor ) {},
+        updateShadowTechnic: function ( /*nodeVisitor*/ ) {},
 
-        cullShadowCasting: function ( cullVisitor ) {},
+        cullShadowCasting: function ( /*cullVisitor*/ ) {},
 
         cleanSceneGraph: function () {
             // well shouldn't be called
