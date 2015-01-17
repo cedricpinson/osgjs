@@ -111,6 +111,7 @@ define( [
 
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelViewMatrix( Matrix.create() );
+                cull.pushModelViewMatrix( Matrix.create() );
                 camera0.accept( cull );
 
                 ok( cull.rootRenderStage === cull.currentRenderBin, 'renderStage should stay the render bin and id ' ); //+ cull.rootRenderStage === cull.currentRenderBin
@@ -152,6 +153,7 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelViewMatrix( Matrix.create() );
                 cull.pushModelViewMatrix( Matrix.create() );
                 cull.pushStateSet( new StateSet() );
 
@@ -203,6 +205,7 @@ define( [
 
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelViewMatrix( Matrix.create() );
+                cull.pushModelViewMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0 ];
@@ -253,6 +256,7 @@ define( [
                 cull.setStateGraph( sg );
 
                 cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelViewMatrix( Matrix.create() );
                 cull.pushModelViewMatrix( Matrix.create() );
 
                 camera0.accept( cull );
@@ -338,6 +342,7 @@ define( [
 
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelViewMatrix( Matrix.create() );
+                cull.pushModelViewMatrix( Matrix.create() );
 
                 camera0.accept( cull );
                 ok( mockup.check_near( stack[ 1 ][ 0 ], d_near, 0.8 ), 'near should be ' + d_near + ' and is ' + stack[ 1 ][ 0 ] );
@@ -382,6 +387,7 @@ define( [
                 var rs = new RenderStage();
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelViewMatrix( Matrix.create() );
                 cull.pushModelViewMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
@@ -428,6 +434,7 @@ define( [
                 var sg = new StateGraph();
                 cull.pushProjectionMatrix( Matrix.create() );
                 cull.pushModelViewMatrix( Matrix.create() );
+                cull.pushModelViewMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
                 cull.setComputeNearFar( false );
@@ -472,6 +479,7 @@ define( [
                 var sg = new StateGraph();
                 rs.setViewport( new Viewport() );
                 cull.pushProjectionMatrix( Matrix.create() );
+                cull.pushModelViewMatrix( Matrix.create() );
                 cull.pushModelViewMatrix( Matrix.create() );
                 cull.setRenderStage( rs );
                 cull.setStateGraph( sg );
@@ -528,13 +536,15 @@ define( [
 
             ( function () {
                 var canvas = mockup.createCanvas();
-                var viewer = new Viewer( canvas , { 'enableFrustumCulling': true } );
+                var viewer = new Viewer( canvas, {
+                    'enableFrustumCulling': true
+                } );
                 var scene = new Node();
                 var mat = Matrix.create();
                 var mt = new MatrixTransform();
                 var quad = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0, 1, 1 );
                 mt.setMatrix( mat );
-                mt.addChild ( quad );
+                mt.addChild( quad );
                 scene.addChild( mt );
                 viewer.setSceneData( scene );
                 viewer.init();
@@ -544,6 +554,7 @@ define( [
 
                 // Get the cullVisitor and push the nodepath, simulating a scene traversal.
                 var cull = viewer.getCamera().getRenderer().getCullVisitor();
+
                 cull.nodePath = [];
                 cull.nodePath.push( scene );
                 cull.nodePath.push( mt );
@@ -627,6 +638,7 @@ define( [
             var sg = new StateGraph();
             rs.setViewport( new Viewport() );
             cull.pushProjectionMatrix( Matrix.create() );
+            cull.pushModelViewMatrix( Matrix.create() );
             cull.pushModelViewMatrix( Matrix.create() );
             cull.setRenderStage( rs );
             cull.setStateGraph( sg );

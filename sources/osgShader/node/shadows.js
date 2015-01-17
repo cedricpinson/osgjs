@@ -1,50 +1,63 @@
 define( [
     'osg/Utils',
+    'osg/Texture',
+    'osgShader/utils',
     'osgShader/node/Node'
-
-], function ( MACROUTILS, Node ) {
+], function ( MACROUTILS, Texture, ShaderUtils, Node ) {
     'use strict';
 
-    // TODO : use GLSL libraries shadow.glsl
-    var ShadowNode = function ( material, shadow ) {
-        Node.call( this );
-        this._shadow = shadow;
-        this._material = material;
+    var ShadowNode = function () {
+        Node.apply( this );
+
     };
 
     ShadowNode.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'ShadowNode',
-
-        _inputMaps: [ 'texture_size', 'bias' ],
-
-        // TODO: generate auto matically getters/setter using above map.
-        connect: function ( name, i ) {
-            this._inputs[ this._inputMaps.indexOf( name ) ] = i;
-        },
-        getConnection: function ( name /*, i */ ) {
-            return this._inputs[ this._inputMaps.indexOf( name ) ];
-        },
+        type: 'Shadow',
+        validOutputs: [ 'float' ],
 
         globalFunctionDeclaration: function () {
-            return [
-                ''
-            ].join( '\n' );
+            return '#pragma include "shadowsReceive.glsl"';
         },
 
-        computeVertex: function () {
-            var str = [ '',
-                ''
-            ].join( '\n' );
-            return str;
+        setShadowAttribute: function ( shadowAttr ) {
+            this._shadow = shadowAttr;
+        },
+
+        // must return an array of defines
+        // because it will be passed to the ShaderGenerator
+        defines: function () {
+            return this._shadow.getDefines();
         },
 
         computeFragment: function () {
-            var str = [ '',
-                ''
-            ].join( '\n' );
-            return str;
+
+            var inputs = [
+                this._inputs.lighted,
+                this._inputs.shadowVertexProjected,
+                this._inputs.shadowZ,
+                this._inputs.shadowTexture,
+                this._inputs.shadowTextureMapSize,
+                this._inputs.shadowTextureDepthRange,
+                this._inputs.lightEyePos,
+                this._inputs.lightNDL,
+
+                this._inputs.normal,
+                this._inputs.shadowbias,
+                this._inputs.shadowepsilonVSM,
+                this._inputs.shadowexponent0,
+                this._inputs.shadowexponent1
+            ];
+
+            return ShaderUtils.callFunction(
+                'computeShadow',
+                this._outputs.float,
+                inputs );
         }
+
+
     } );
 
-    return ShadowNode;
+    return {
+        Shadow: ShadowNode
+    };
 } );

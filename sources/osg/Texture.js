@@ -28,9 +28,14 @@ define( [
         return value;
     };
 
-
     /**
      * Texture encapsulate webgl texture object
+     * @class Texture
+     * Not that dirty here is mainly for texture binding
+     * any dirty will cause re-bind
+     * hint: don't dirty a texture attached to a camera/framebuffer
+     * it will end blank
+     * @inherits StateAttribute
      */
     var Texture = function () {
         StateAttribute.call( this );
@@ -85,6 +90,14 @@ define( [
     Texture.UNSIGNED_BYTE = 0x1401;
     Texture.FLOAT = 0x1406;
     Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
+
+    Texture.getEnumFromString = function( v ) {
+        var value = v;
+        if ( typeof ( value ) === 'string' ) {
+            value = checkAndFixEnum( value, v );
+        }
+        return value;
+    };
 
     Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
         attributeType: 'Texture',
@@ -418,8 +431,8 @@ define( [
 
             if ( this.hasMipmapFilter() ) {
                 gl.generateMipmap( target );
-                this._dirtyMipmap = false;
             }
+            this._dirtyMipmap = false;
         },
 
         // return true if contains a mipmap filter

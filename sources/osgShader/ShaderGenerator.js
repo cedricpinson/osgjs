@@ -13,6 +13,8 @@ define( [
     // if you need to adjust for your need provide or modify this list
     // if you still need more fine tuning to the filter, override the filterAttributeTypes
     var DefaultsAcceptAttributeTypes = [
+        'ShadowAttribute',
+        'ShadowTexture',
         'Texture',
         'Light',
         'Material'
@@ -59,7 +61,7 @@ define( [
         // filter input types and write the result in the outputs array
         filterAttributeTypes: function ( attribute ) {
 
-            if ( attribute.libraryName() !== 'osg' )
+            if ( attribute.libraryName() !== 'osg' && attribute.libraryName() !== 'osgShadow' )
                 return true;
 
             var attributeType = attribute.getType();
@@ -68,10 +70,14 @@ define( [
             if ( !this._acceptAttributeTypes.has( attributeType ) )
                 return true;
 
-            // if it's a light and it's not enable we filter it
-            if ( attribute.typeID === Light.typeID && !attribute.isEnable() ) {
+            // works for attribute that contains isEnable
+            // Light, Shadow. It let us to filter them to build a shader if not enabled
+            if ( attribute.isEnable && !attribute.isEnable() )
                 return true;
-            }
+            // // if it's a light and it's not enable we filter it
+            // if ( attribute.typeID === Light.typeID && !attribute.isEnable() ) {
+            //     return true;
+            // }
 
             return false;
         },

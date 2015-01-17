@@ -256,7 +256,7 @@ define( [
             if ( attributeStack.lastApplied !== attribute ) {
 
                 if ( attribute.apply ) {
-                    attribute.apply( this );
+                    attribute.apply( this, unit );
                 }
                 attributeStack.lastApplied = attribute;
                 attributeStack.asChanged = true;

@@ -14,7 +14,7 @@ define( [
     // see http://www.glprogramming.com/red/chapter05.html
 
 
-    var Light = function ( lightNumber ) {
+    var Light = function ( lightNumber, disable ) {
         StateAttribute.call( this );
 
         if ( lightNumber === undefined ) {
@@ -25,6 +25,7 @@ define( [
         this._diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
         this._specular = [ 0.2, 0.2, 0.2, 1.0 ];
 
+        // Default is directional as postion[3] is 0
         this._position = [ 0.0, 0.0, 1.0, 0.0 ];
         this._direction = [ 0.0, 0.0, -1.0 ];
 
@@ -36,8 +37,10 @@ define( [
 
         this._lightUnit = lightNumber;
 
-        this._enable = true;
         this._invMatrix = new Matrix.create();
+
+        this._enable = !disable;
+
         this.dirty();
 
     };
@@ -53,7 +56,7 @@ define( [
         attributeType: 'Light',
 
         cloneType: function () {
-            return new Light( this._lightUnit );
+            return new Light( this._lightUnit, true );
         },
 
         getTypeMember: function () {
@@ -66,7 +69,7 @@ define( [
         },
 
         getHash: function () {
-            return this.getType() + this._lightUnit + this.getLightType() + this.isEnable().toString();
+            return this.getTypeMember() + this.getLightType() + this.isEnable().toString();
         },
 
         getOrCreateUniforms: function () {
@@ -146,6 +149,7 @@ define( [
 
 
         // position, also used for directional light
+        // position[3] === 0 means directional
         // see creating lightsources http://www.glprogramming.com/red/chapter05.html
         setPosition: function ( a ) {
             Vec4.copy( a, this._position );
@@ -155,6 +159,7 @@ define( [
             return this._position;
         },
 
+        // unused for directional
         setDirection: function ( a ) {
             Vec3.copy( a, this._direction );
             this.dirty();
@@ -217,10 +222,10 @@ define( [
 
         getLightType: function () {
 
-            if ( this.isSpotLight() )
-                return Light.SPOT;
-            else if ( this.isDirectionLight() )
+            if ( this.isDirectionLight() )
                 return Light.DIRECTION;
+            else if ( this.isSpotLight() )
+                return Light.SPOT;
 
             return Light.POINT;
         },
@@ -283,6 +288,9 @@ define( [
         },
 
         apply: function ( /*state*/) {
+
+            if ( !this._enable )
+                return;
 
             var uniformMap = this.getOrCreateUniforms();
 
