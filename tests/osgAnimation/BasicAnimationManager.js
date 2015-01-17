@@ -1,13 +1,13 @@
 define( [
+    'vendors/q',
     'tests/mockup/mockup',
     'osgAnimation/BasicAnimationManager',
     'osg/Utils',
-    'vendors/Q',
     'osg/NodeVisitor',
     'osgDB/ReaderParser',
     'osgAnimation/LinkVisitor',
     'osg/Notify'
-], function ( mockup, BasicAnimationManager, MACROUTILS, Q, NodeVisitor, ReaderParser, LinkVisitor, Notify ) {
+], function ( Q, mockup, BasicAnimationManager, MACROUTILS, NodeVisitor, ReaderParser, LinkVisitor, Notify ) {
 
     return function () {
 

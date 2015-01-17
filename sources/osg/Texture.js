@@ -1,5 +1,5 @@
 define( [
-    'Q',
+    'q',
     'osg/Notify',
     'osg/Utils',
     'osg/StateAttribute',

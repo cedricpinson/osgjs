@@ -1,11 +1,11 @@
 define( [
+    'vendors/q',
     'tests/mockup/mockup',
     'osgDB/ReaderParser',
-    'vendors/Q',
     'osg/Texture',
     'osgDB/Input',
     'osg/PrimitiveSet'
-], function ( mockup, ReaderParser, Q, Texture, Input, PrimitiveSet ) {
+], function ( Q, mockup, ReaderParser, Texture, Input, PrimitiveSet ) {
 
     return function () {
 
@@ -524,11 +524,11 @@ define( [
                     "RangeDataList": {
                       "File 0": "cow.osgjs",
                       "File 1": "cessna.osgjs"
-                    }, 
+                    },
                     "RangeList": {
                       "Range 0": [ 0, 2000 ],
                       "Range 1": [ 2000, 3.40282e+38 ]
-                    }, 
+                    },
                     "RangeMode": "PIXEL_SIZE_ON_SCREEN",
                     "UserCenter": [ 1, 2, 3, 10 ]
                   }

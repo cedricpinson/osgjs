@@ -10,7 +10,7 @@ define( [
     'osg/Shape',
     'osgViewer/View',
     'osgDB/ReaderParser',
-    'vendors/Q'
+    'vendors/q'
 ], function ( mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser, Q ) {
 
     'use strict';

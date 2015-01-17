@@ -13,6 +13,6 @@ define( [
         LeapMotion: LeapMotion,
         StandardMouseKeyboard: StandardMouseKeyboard,
         Oculus: Oculus,
-        DeviceOrientation: DeviceOrientation,
+        DeviceOrientation: DeviceOrientation
     };
 } );

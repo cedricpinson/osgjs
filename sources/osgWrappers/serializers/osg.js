@@ -1,5 +1,5 @@
 define( [
-    'Q'
+    'q'
 ], function ( Q ) {
 
     'use strict';

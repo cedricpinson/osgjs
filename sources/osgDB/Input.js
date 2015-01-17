@@ -1,5 +1,5 @@
 define( [
-    'Q',
+    'q',
     'require',
     'osg/Utils',
     'osgNameSpace',

@@ -1,5 +1,5 @@
 define( [
-    'Q',
+    'q',
     'osg/Notify',
     'osgWrappers/serializers/osg'
 ], function ( Q, Notify, osgWrapper ) {

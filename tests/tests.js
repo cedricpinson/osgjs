@@ -26,10 +26,11 @@ requirejs.config( {
     paths: {
 
         text: '../sources/vendors/require/text',
+        jquery: '../sources/vendors/jquery',
         vr: '../sources/vendors/vr',
-        Q: '../sources/vendors/Q',
-        Hammer: '../sources/vendors/Hammer',
-        Leap: '../sources/vendors/Leap',
+        q: '../sources/vendors/q',
+        hammer: '../sources/vendors/hammer',
+        leap: '../sources/vendors/leap',
         tests: '../tests/'
     }
 } );

@@ -176,9 +176,10 @@ var gruntTasks = {};
             out: path.join( DIST_PATH, 'OSG.js' ),
             include: [ 'OSG' ],
             paths: {
-                'Q': 'vendors/Q',
-                'Hammer': 'vendors/Hammer',
-                'Leap': 'vendors/Leap',
+                'q': 'vendors/q',
+                'hammer': 'vendors/hammer',
+                'leap': 'vendors/leap',
+                'jquery': 'vendors/jquery',
                 'text': 'vendors/require/text'
             },
             wrap: {
@@ -217,9 +218,9 @@ var gruntTasks = {};
             out: path.join( BUILD_PATH, 'docs/OSG.js' ),
             include: [ 'OSG' ],
             paths: {
-                'Q': 'vendors/Q',
-                'Hammer': 'vendors/Hammer',
-                'Leap': 'vendors/Leap'
+                'q': 'vendors/q',
+                'hammer': 'vendors/hammer',
+                'leap': 'vendors/leap'
             }
         }
     };
@@ -327,8 +328,8 @@ var gruntTasks = {};
                 //Hammer:
                 {
                     cwd: './',
-                    src: 'examples/vendors/Hammer-1.0.5.js',
-                    dest: 'examples/vendors/Hammer.js'
+                    src: 'examples/vendors/hammer-1.0.5.js',
+                    dest: 'examples/vendors/hammer.js'
                 },
                 //RequireTextBuild:
                 {
@@ -339,8 +340,8 @@ var gruntTasks = {};
                 //Q:
                 {
                     cwd: './',
-                    src: 'examples/vendors/Q-0.9.7.js',
-                    dest: 'examples/vendors/Q.js'
+                    src: 'examples/vendors/q-0.9.7.js',
+                    dest: 'examples/vendors/q.js'
                 },
                 //es5-shim:
                 {

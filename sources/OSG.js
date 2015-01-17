@@ -11,9 +11,6 @@ define( [
 ], function ( osgNameSpace, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer, osgShader, osgShadow ) {
     'use strict';
 
-    /*jshint unused: true */
-    var Q = require( 'Q' );
-    /*jshint unused: false */
     var openSceneGraph = osgNameSpace;
 
     openSceneGraph.osg = osg;
