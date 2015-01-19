@@ -19,8 +19,6 @@ varying vec4 FragEyePos;
 // Input depth should be in [0, 1]
 vec2 warpDepth(float depth, vec2 exponents)
 {
-    // Rescale depth into [-1, 1]
-    depth = 2.0  * depth - 1.0;
     float pos =  exp( exponents.x * depth);
     float neg = -exp(-exponents.y * depth);
     return vec2(pos, neg);
@@ -29,8 +27,7 @@ vec2 warpDepth(float depth, vec2 exponents)
 // Convert depth value to EVSM representation
 vec4 shadowDepthToEVSM(float depth)
 {
-    vec2 exponents = vec2(exponent, exponent1);
-    vec2 warpedDepth = WarpDepth(depth, exponents);
+    vec2 warpedDepth = warpDepth(depth, vec2(exponent, exponent1));
     return  vec4(warpedDepth.xy, warpedDepth.xy * warpedDepth.xy);
 }
 #endif // _EVSM
@@ -46,8 +43,8 @@ void main(void) {
     gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
 #elif defined (_FLOATTEX)  && defined(_ESM)
     float depthScale = exponent1;
-    depth = depth*depthScale;
-    gl_FragColor = shadowDepthToEVSM(depth);
+    depth = exp(-depth*depthScale);
+    gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
 #elif defined (_FLOATTEX)  && defined(_VSM)
     gl_FragColor = vec4(depth, depth*depth, 0.0, 1.0);
 #elif defined (_FLOATTEX)  && defined(_EVSM)
@@ -58,8 +55,8 @@ void main(void) {
     gl_FragColor = encodeFloatRGBA(depth);
 #elif defined(_ESM)
     float depthScale = exponent1;
-    depth = depth*depthScale;
-    gl_FragColor = encodeFloatRGBA(depth);
+    depthScale = exp(-depth*depthScale);
+    gl_FragColor = encodeFloatRGBA(depthScale);
 #elif defined(_VSM)
     gl_FragColor = encodeHalfFloatRGBA(vec2(depth, depth*depth));
 #else // NONE

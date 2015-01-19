@@ -50,6 +50,7 @@
             'exampleObj': this,
             'shadowStatic': false,
             'disableShadows': false,
+            'basicScene': false,
             logCamLight: function () {
                 var example = this[ 'exampleObj' ];
                 var cam = example._viewer._manipulator;
@@ -413,13 +414,8 @@
                 controller = ExpFolder.add( this._config, 'exponent1' ).min( 0.0 ).max( 200.0 );
                 controller.onChange( this.updateShadow.bind( this ) );
 
-
-                var debugFolder = gui.addFolder( 'Debug Show' );
-                controller = debugFolder.add( this._config, 'debugRTT' );
-                controller.onChange( this.updateShadow.bind( this ) );
-                controller = debugFolder.add( this._config, 'texture' );
-                controller.onChange( this.updateShadow.bind( this ) );
             }
+            this._gui = gui;
 
         },
         testFrustumIntersections: function () {
@@ -701,18 +697,22 @@
                 this._groundNode.setNodeMask( ~this._castsShadowTraversalMask );
                 switch ( this._config[ 'shadow' ] ) {
                 case 'ESM':
-                    this._config[ 'exponent' ] = 40.0;
+
+                    this._config[ 'exponent' ] = 0.66;
+                    this._config[ 'exponent1' ] = 20.0;
+
                     this._groundNode.setNodeMask( this._castsShadowTraversalMask );
                     break;
                 case 'EVSM':
-                    this._config[ 'exponent' ] = 0.001;
-                    this._config[ 'exponent1' ] = 0.001;
-                    this._config[ 'texturetype' ] = 'FLOAT';
+                    this._config[ 'exponent' ] = 146;
+                    this._config[ 'exponent1' ] = 1.0;
+                    this._config[ 'bias' ] = 0.05;
+                    this._config[ 'textureType' ] = 'FLOAT';
                     this._groundNode.setNodeMask( this._castsShadowTraversalMask );
                     break;
                 case 'VSM':
-                    this._config[ 'exponent' ] = 0.001;
-                    this._config[ 'exponent1' ] = 0.001;
+                    this._config[ 'epsilonVSM' ] = 0.0001;
+                    this._groundNode.setNodeMask( this._castsShadowTraversalMask );
                     break;
                 default:
                     break;
@@ -804,6 +804,17 @@
             while ( l-- ) {
                 var shadowMap = this._shadowTechnique[ l ];
                 shadowMap.setShadowSettings( this._shadowSettings[ l ] );
+            }
+
+            // Iterate over all controllers
+            for ( var i in this._gui.__controllers ) {
+                this._gui.__controllers[ i ].updateDisplay();
+            }
+            for ( var f in this._gui.__folders ) {
+                var g = this._gui.__folders[ f ];
+                for ( i in g.__controllers ) {
+                    g.__controllers[ i ].updateDisplay();
+                }
             }
 
         },
@@ -900,53 +911,56 @@
             var modelName;
             modelName = this._config[ 'model' ];
 
-            var request = osgDB.readNodeURL( '../media/models/' + modelName + '/file.osgjs' );
+            if ( !this._config[ 'basicScene' ] ) {
+                var request = osgDB.readNodeURL( '../media/models/' + modelName + '/file.osgjs' );
 
-            request.then( function ( model ) {
+                request.then( function ( model ) {
 
-                model._name = 'material-test_model_0';
-                modelNode.addChild( model );
 
-                var dist = 25;
+                    // adds 4 model
+                    model._name = 'material-test_model_0';
+                    modelNode.addChild( model );
 
-                var modelSubNodeTrans = new osg.MatrixTransform();
-                var modelSubNode = new osg.Node();
-                modelSubNode._name = 'material-test_model_1';
-                modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.1, 0.1, 0.1, [] ) );
-                osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), 0, 0, 0 );
-                modelSubNodeTrans.addChild( model );
-                modelSubNode.addChild( modelSubNodeTrans );
-                modelNode.addChild( modelSubNode );
+                    var dist = 25;
 
-                modelSubNode = new osg.Node();
-                modelSubNode._name = 'material-test_model_2';
-                modelSubNodeTrans = new osg.MatrixTransform();
-                modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.7, 0.7, 0.7, [] ) );
-                osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), 0.7, 0.7, 0.7 );
-                modelSubNodeTrans.addChild( model );
-                modelSubNode.addChild( modelSubNodeTrans );
-                modelNode.addChild( modelSubNode );
+                    var modelSubNodeTrans = new osg.MatrixTransform();
+                    var modelSubNode = new osg.Node();
+                    modelSubNode._name = 'material-test_model_1';
+                    modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.1, 0.1, 0.1, [] ) );
+                    osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), 0, 0, 0 );
+                    modelSubNodeTrans.addChild( model );
+                    modelSubNode.addChild( modelSubNodeTrans );
+                    modelNode.addChild( modelSubNode );
 
-                modelSubNode = new osg.Node();
-                modelSubNodeTrans = new osg.MatrixTransform();
-                modelSubNode._name = 'material-test_model_3';
-                modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.3, 0.3, 0.3, [] ) );
-                osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), dist, 0, 0 );
-                modelSubNodeTrans.addChild( model );
-                modelSubNode.addChild( modelSubNodeTrans );
-                modelNode.addChild( modelSubNode );
+                    modelSubNode = new osg.Node();
+                    modelSubNode._name = 'material-test_model_2';
+                    modelSubNodeTrans = new osg.MatrixTransform();
+                    modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.7, 0.7, 0.7, [] ) );
+                    osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), 0.7, 0.7, 0.7 );
+                    modelSubNodeTrans.addChild( model );
+                    modelSubNode.addChild( modelSubNodeTrans );
+                    modelNode.addChild( modelSubNode );
 
-                modelSubNode = new osg.Node();
-                modelSubNodeTrans = new osg.MatrixTransform();
-                modelSubNode._name = 'material-test_model_3';
-                modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
-                osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), -dist, 0, -5 );
-                modelSubNodeTrans.addChild( model );
-                modelSubNode.addChild( modelSubNodeTrans );
-                modelNode.addChild( modelSubNode );
+                    modelSubNode = new osg.Node();
+                    modelSubNodeTrans = new osg.MatrixTransform();
+                    modelSubNode._name = 'material-test_model_3';
+                    modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.3, 0.3, 0.3, [] ) );
+                    osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), dist, 0, 0 );
+                    modelSubNodeTrans.addChild( model );
+                    modelSubNode.addChild( modelSubNodeTrans );
+                    modelNode.addChild( modelSubNode );
 
-            }.bind( this ) );
+                    modelSubNode = new osg.Node();
+                    modelSubNodeTrans = new osg.MatrixTransform();
+                    modelSubNode._name = 'material-test_model_3';
+                    modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
+                    osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), -dist, 0, -5 );
+                    modelSubNodeTrans.addChild( model );
+                    modelSubNode.addChild( modelSubNodeTrans );
+                    modelNode.addChild( modelSubNode );
 
+                }.bind( this ) );
+            }
             // make "pillars"
             // testing light artifacts
             // peter panning, light streaks, etc.
@@ -967,7 +981,7 @@
             cubeNode.addChild( cubeSubNode );
 
             //cubeNode.addChild( cubeSubNode );
-            if ( 1 && window.location.href.indexOf( 'cubes' ) !== -1 ) {
+            if ( !this._config[ 'basicScene' ] ) {
                 cubeSubNodeTrans = new osg.MatrixTransform();
                 cubeSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( dist, 0, 0, [] ) );
                 cubeSubNode = new osg.Node();
@@ -1014,8 +1028,7 @@
             var groundNode = new osg.Node();
             groundNode.setName( 'groundNode' );
 
-            var numPlanes = 5;
-            //var numPlanes = 1;
+            var numPlanes = this._config[ 'basicScene' ] ? 1 : 5;
             var groundSize = 600 / numPlanes;
             var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
 
@@ -1028,8 +1041,6 @@
 
 
             } );
-
-
             var groundSubNode;
             // intentionally create many node/transform
             // to mimick real scene with many nodes
@@ -1103,9 +1114,9 @@
             light.setLinearAttenuation( this._config[ '_linearAttenuation' ] );
             light.setQuadraticAttenuation( this._config[ '_quadraticAttenuation' ] );
 
-            light.setAmbient([ 0.0, 0.0, 0.0, 1.0 ]);
-            light.setDiffuse( [ lightScale, lightScale, lightScale, 1.0 ]);
-            light.setSpecular( [ lightScale, lightScale, lightScale, 1.0 ]);
+            light.setAmbient( [ 0.0, 0.0, 0.0, 1.0 ] );
+            light.setDiffuse( [ lightScale, lightScale, lightScale, 1.0 ] );
+            light.setSpecular( [ lightScale, lightScale, lightScale, 1.0 ] );
 
             lightSource.setLight( light );
             lightNode.addChild( lightSource );
