@@ -219,17 +219,23 @@ vec3 computeHemiLightShading(
     const in vec4 lightPosition,
 
     const in mat4 lightMatrix,
-    const in mat4 lightInvMatrix)
-{
+    const in mat4 lightInvMatrix,
 
-    vec3 lightDir = normalize( vec3(lightMatrix * lightPosition ) );
-    float NdotL = dot(lightDir, normal);
+    out vec3 eyeLightPos,
+    out vec3 eyeLightDir,
+    out float NdotL,
+    out bool lighted)
+{
+    lighted = false;
+
+    eyeLightDir = normalize( vec3(lightMatrix * lightPosition ) );
+    NdotL = dot(eyeLightDir, normal);
     float weight = 0.5 * NdotL + 0.5;
     vec3 diffuseContrib = materialDiffuse * mix(lightGround, lightDiffuse, weight);
 
     // same cook-torrance as above for sky/ground
-    float skyWeight = 0.5 * dot(normal, normalize(eyeVector + lightDir)) + 0.5;
-    float gndWeight = 0.5 * dot(normal, normalize(eyeVector - lightDir)) + 0.5;
+    float skyWeight = 0.5 * dot(normal, normalize(eyeVector + eyeLightDir)) + 0.5;
+    float gndWeight = 0.5 * dot(normal, normalize(eyeVector - eyeLightDir)) + 0.5;
     float skySpec = pow(skyWeight, materialShininess) / (0.1 + max( dot(normal, eyeVector), 0.0 ));
     float skyGround = pow(skyWeight, materialShininess) / (0.1 + max( dot(normal, eyeVector), 0.0 ));
     float att = materialShininess > 100.0 ? 1.0 : smoothstep(0.0, 1.0, materialShininess * 0.01);

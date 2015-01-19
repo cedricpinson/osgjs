@@ -245,7 +245,12 @@ define( [
             'lightposition',
 
             'lightmatrix',
-            'lightinvMatrix'
+            'lightinvMatrix',
+
+            'lighted',
+            'lightEyePos',
+            'lightEyeDir',
+            'lightNDL'
         ],
 
         computeFragment: function () {
@@ -266,6 +271,11 @@ define( [
 
                     this._inputs.lightmatrix,
                     this._inputs.lightinvMatrix,
+
+                    this._inputs.lightEyePos,
+                    this._inputs.lightEyeDir,
+                    this._inputs.lightNDL,
+                    this._inputs.lighted
                 ] );
         }
     } );

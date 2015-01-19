@@ -8,7 +8,6 @@ define( [
     'use strict';
 
     var Compiler = function ( attributes, textureAttributes, shaderProcessor ) {
-
         this._attributes = attributes;
         this._textureAttributes = textureAttributes;
 
@@ -20,44 +19,59 @@ define( [
         this._shaderProcessor = shaderProcessor;
         this._texturesByName = {};
 
-        // separate Material / Light / Texture
-        // because this shader generator is specific for this
-        var lights = [];
-        var shadows = [];
-        var material;
-
-        for ( var i = 0, l = attributes.length; i < l; i++ ) {
-
-            var type = attributes[ i ].className();
-
-            // Test one light at a time
-            if ( type === 'Light' ) { // && lights.length === 0) {
-
-                lights.push( attributes[ i ] );
-
-            } else if ( type === 'Material' ) {
-
-                if ( material !== undefined ) Notify.warn( 'Multiple Material attributes latest Chosen ' );
-                material = attributes[ i ];
-
-            } else if ( type === 'ShadowAttribute' ) {
-                shadows.push( attributes[ i ] );
-            }
-
-        }
-
-
-        var texturesNum = textureAttributes.length;
-        var textures = new Array( texturesNum );
-        var shadowTextures = new Array( texturesNum );
-
         // TODO: Have to handle better textures
         // 4 separate loop over texture list: one here, one for declareTexture, 2 for vertexShader (varying decl + varying store)
         // (not counting loops done above in shader generator)
-        for ( var j = 0; j < texturesNum; j++ ) {
 
-            var tu = textureAttributes[ j ];
-            if ( tu !== undefined ) {
+        this._shadowsTextures = [];
+        this._lights = [];
+        this._shadows = [];
+        this._textures = [];
+        this._material = null;
+
+        this.initAttributes();
+        this.initTextureAttributes();
+    };
+
+    Compiler.prototype = {
+
+        initAttributes: function () {
+            var attributes = this._attributes;
+            // separate Material / Light / Texture
+            // because this shader generator is specific for this
+            var lights = this._lights;
+            var shadows = this._shadows;
+            for ( var i = 0, l = attributes.length; i < l; i++ ) {
+
+                var type = attributes[ i ].className();
+
+                // Test one light at a time
+                if ( type === 'Light' ) { // && lights.length === 0) {
+
+                    lights.push( attributes[ i ] );
+
+                } else if ( type === 'Material' ) {
+
+                    this._material = attributes[ i ];
+
+                } else if ( type === 'ShadowAttribute' ) {
+                    shadows.push( attributes[ i ] );
+                }
+            }
+        },
+
+        initTextureAttributes: function () {
+            var textureAttributes = this._textureAttributes;
+            var texturesNum = textureAttributes.length;
+            var textures = this._textures;
+            var shadowTextures = this._shadowsTextures;
+            textures.length = shadowTextures.length = texturesNum;
+
+            for ( var j = 0; j < texturesNum; j++ ) {
+
+                var tu = textureAttributes[ j ];
+                if ( tu === undefined )
+                    continue;
 
                 for ( var t = 0, tl = tu.length; t < tl; t++ ) {
 
@@ -103,16 +117,7 @@ define( [
 
                 }
             }
-        }
-
-        this._lights = lights;
-        this._shadows = shadows;
-        this._material = material;
-        this._textures = textures;
-        this._shadowsTextures = shadowTextures;
-    };
-
-    Compiler.prototype = {
+        },
 
         getVariable: function ( name ) {
             return this._variables[ name ];
@@ -682,7 +687,7 @@ define( [
 
                 var lightMatAmbientOutput = this.createVariable( 'vec3', 'lightMatAmbientOutput' );
 
-                factory.getNode( 'Mult' ).inputs( materialUniforms.materialambient, lightUniforms.lightambient ).outputs( lightMatAmbientOutput );
+                factory.getNode( 'Mult' ).inputs( inputs.materialambient, lightUniforms.lightambient ).outputs( lightMatAmbientOutput );
 
 
                 lightList.push( lightMatAmbientOutput );
@@ -845,9 +850,7 @@ define( [
 
         //
         // TODO: change into node based graph shader system.
-        // Meanwhile, here it is.
-        createVertexShaderGraph: function () {
-
+        declareVertexVariables: function () {
             var texCoordMap = {};
             var textures = this._textures;
             var texturesMaterial = this._texturesByName;
@@ -871,64 +874,62 @@ define( [
 
             var i, ll;
             var hasShadows = false;
-            var shadowTexture;
-            var shadowTextureUniforms;
             for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
 
-                shadowTexture = this._shadowsTextures[ i ];
-                if ( shadowTexture !== undefined ) {
-                    shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
-                    var viewMat = shadowTextureUniforms.ViewMatrix;
-                    var projMat = shadowTextureUniforms.ProjectionMatrix;
-                    var depthRange = shadowTextureUniforms.DepthRange;
-                    var mapSize = shadowTextureUniforms.MapSize;
-                    // uniforms
-                    this._vertexShader.push( 'uniform mat4 ' + projMat.getName() + ';' );
-                    this._vertexShader.push( 'uniform mat4 ' + viewMat.getName() + ';' );
-                    this._vertexShader.push( 'uniform vec4 ' + depthRange.getName() + ';' );
-                    this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
-                    // varyings
-                    this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'VertexProjected' ) + ';' );
-                    this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'Z' ) + ';' );
+                var shadowTexture = this._shadowsTextures[ i ];
+                if ( shadowTexture === undefined )
+                    continue;
+                if ( !hasShadows ) {
                     hasShadows = true;
+                    this._vertexShader.push( 'uniform mat4 ModelWorldMatrix;' );
                 }
-            }
 
-            if ( hasShadows ) {
-                this._vertexShader.push( 'uniform mat4 ModelWorldMatrix;' );
+                var shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
+                var viewMat = shadowTextureUniforms.ViewMatrix;
+                var projMat = shadowTextureUniforms.ProjectionMatrix;
+                var depthRange = shadowTextureUniforms.DepthRange;
+                var mapSize = shadowTextureUniforms.MapSize;
+                // uniforms
+                this._vertexShader.push( 'uniform mat4 ' + projMat.getName() + ';' );
+                this._vertexShader.push( 'uniform mat4 ' + viewMat.getName() + ';' );
+                this._vertexShader.push( 'uniform vec4 ' + depthRange.getName() + ';' );
+                this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
+                // varyings
+                this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'VertexProjected' ) + ';' );
+                this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'Z' ) + ';' );
+                hasShadows = true;
             }
 
             for ( var t = 0, tl = textures.length; t < tl; t++ ) {
 
                 var texture = textures[ t ];
+                if ( texture === undefined )
+                    continue;
 
-                if ( texture !== undefined ) {
-
-                    // no method to retrieve textureCoordUnit, we maybe dont need any uvs
-                    var textureMaterial = texturesMaterial[ texture.getName() ];
-                    if ( !textureMaterial && !textureMaterial.textureUnit )
-                        continue;
+                // no method to retrieve textureCoordUnit, we maybe dont need any uvs
+                var textureMaterial = texturesMaterial[ texture.getName() ];
+                if ( !textureMaterial )
+                    continue;
 
 
-                    var texCoordUnit = textureMaterial.textureUnit;
-                    if ( texCoordUnit === undefined ) {
-                        texCoordUnit = t; // = t;
-                        textureMaterial.textureUnit = 0;
-                    }
+                var texCoordUnit = textureMaterial.textureUnit;
+                if ( texCoordUnit === undefined ) {
+                    texCoordUnit = t; // = t;
+                    textureMaterial.textureUnit = 0;
+                }
 
-                    if ( texCoordMap[ texCoordUnit ] === undefined ) {
+                if ( texCoordMap[ texCoordUnit ] === undefined ) {
 
-                        this._vertexShader.push( 'attribute vec2 TexCoord' + texCoordUnit + ';' );
-                        this._vertexShader.push( 'varying vec2 FragTexCoord' + texCoordUnit + ';' );
-                        texCoordMap[ texCoordUnit ] = true;
-
-                    }
+                    this._vertexShader.push( 'attribute vec2 TexCoord' + texCoordUnit + ';' );
+                    this._vertexShader.push( 'varying vec2 FragTexCoord' + texCoordUnit + ';' );
+                    texCoordMap[ texCoordUnit ] = true;
 
                 }
             }
+        },
 
+        declareVertexMain: function () {
             this._vertexShader.push( [ '',
-                'void main() {',
                 '  FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
                 '  FragEyeVector = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
                 '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
@@ -941,57 +942,61 @@ define( [
                 ''
             ].join( '\n' ) );
 
-            var self = this;
-            ( function () {
-                var texCoordMap = {};
+            var textures = this._textures;
+            var texturesMaterial = this._texturesByName;
+            var texCoordMap = {};
 
-                for ( var tt = 0, ttl = textures.length; tt < ttl; tt++ ) {
+            for ( var tt = 0, ttl = textures.length; tt < ttl; tt++ ) {
 
-                    if ( textures[ tt ] !== undefined ) {
+                if ( textures[ tt ] === undefined )
+                    continue;
 
-                        var texture = textures[ tt ];
-                        var textureMaterial = texturesMaterial[ texture.getName() ];
+                var texture = textures[ tt ];
+                var textureMaterial = texturesMaterial[ texture.getName() ];
+                if ( !textureMaterial )
+                    continue;
 
-                        // no method getTexCoordUnit, maybe we dont need it at all
-                        if ( !textureMaterial && !textureMaterial.textureUnit )
-                            continue;
-
-                        var texCoordUnit = texture.textureUnit;
-                        if ( texCoordUnit === undefined ) {
-                            texCoordUnit = tt;
-                            textureMaterial.textureUnit = texCoordUnit;
-                        }
-
-                        if ( texCoordMap[ texCoordUnit ] === undefined ) {
-                            self._vertexShader.push( 'FragTexCoord' + texCoordUnit + ' = TexCoord' + texCoordUnit + ';' );
-                            texCoordMap[ texCoordUnit ] = true;
-                        }
-                    }
+                var texCoordUnit = texture.textureUnit;
+                if ( texCoordUnit === undefined ) {
+                    texCoordUnit = tt;
+                    textureMaterial.textureUnit = texCoordUnit;
                 }
-            } )();
-            if ( hasShadows ) {
 
-                this._vertexShader.push( 'vec4 worldPosition = ModelWorldMatrix * vec4(Vertex,1.0);' );
-
-                for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
-                    shadowTexture = this._shadowsTextures[ i ];
-                    if ( shadowTexture ) {
-
-                        // uniforms
-                        shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
-                        var shadowView = shadowTextureUniforms.ViewMatrix.getName();
-                        var shadowProj = shadowTextureUniforms.ProjectionMatrix.getName();
-
-                        // varyings
-                        var shadowVertProj = shadowTexture.getVaryingName( 'VertexProjected' );
-                        var shadowZ = shadowTexture.getVaryingName( 'Z' );
-
-
-                        this._vertexShader.push( ' ' + shadowZ + ' = ' + shadowView + ' *  worldPosition;' );
-                        this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * ' + shadowZ + ';' );
-                    }
+                if ( texCoordMap[ texCoordUnit ] === undefined ) {
+                    this._vertexShader.push( 'FragTexCoord' + texCoordUnit + ' = TexCoord' + texCoordUnit + ';' );
+                    texCoordMap[ texCoordUnit ] = true;
                 }
             }
+
+            var hasShadows = false;
+            for ( var i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
+                var shadowTexture = this._shadowsTextures[ i ];
+                if ( !shadowTexture )
+                    continue;
+                if ( !hasShadows ) {
+                    hasShadows = true;
+                    this._vertexShader.push( 'vec4 worldPosition = ModelWorldMatrix * vec4(Vertex,1.0);' );
+                }
+
+                // uniforms
+                var shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
+                var shadowView = shadowTextureUniforms.ViewMatrix.getName();
+                var shadowProj = shadowTextureUniforms.ProjectionMatrix.getName();
+
+                // varyings
+                var shadowVertProj = shadowTexture.getVaryingName( 'VertexProjected' );
+                var shadowZ = shadowTexture.getVaryingName( 'Z' );
+
+
+                this._vertexShader.push( ' ' + shadowZ + ' = ' + shadowView + ' *  worldPosition;' );
+                this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * ' + shadowZ + ';' );
+            }
+        },
+        // Meanwhile, here it is.
+        createVertexShaderGraph: function () {
+            this.declareVertexVariables();
+            this._vertexShader.push( 'void main() {' );
+            this.declareVertexMain();
             this._vertexShader.push( '}' );
         },
 
