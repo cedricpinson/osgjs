@@ -19,15 +19,17 @@ float fetchESM(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, 
     occluder = occluder + ((occluder4.z + (occluder4.y - occluder4.z) * fractional.y) - occluder)*fractional.x;
 
 #else
-    float occluder = getSingleFloatFromTex(tex, shadowUV );
+    float occluder = getSingleFloatFromTex(tex, shadowUV);
 #endif
 
+
+    // we're on an edge
     float depthScale = exponent1;
     float over_darkening_factor = exponent0;
     float receiver = depthScale * ( shadowZ + gbias);
-
-
-    return exp(over_darkening_factor * ( occluder - receiver ));
+    return 1.0 - clamp(over_darkening_factor*(occluder*exp(receiver)), 0.0, 1.0);
 }
+
+
 
 // end ESM
