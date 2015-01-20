@@ -29,6 +29,10 @@ define( [
         this._position = [ 0.0, 0.0, 1.0, 0.0 ];
         this._direction = [ 0.0, 0.0, -1.0 ];
 
+        // TODO : refactor lights management
+        // w=1.0 (isHemi), w=-1.0 (isNotHemi)
+        this._ground = [ 1.0, 0.0, 0.0, -1.0 ];
+
         this._spotCutoff = 180.0;
         this._spotBlend = 0.01;
 
@@ -48,7 +52,7 @@ define( [
     Light.DIRECTION = 'DIRECTION';
     Light.SPOT = 'SPOT';
     Light.POINT = 'POINT';
-
+    Light.HEMI = 'HEMI';
 
     Light.uniforms = {};
     Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
@@ -90,6 +94,8 @@ define( [
 
                 'spotCutOff': 'createFloat1',
                 'spotBlend': 'createFloat1',
+
+                'ground': 'createFloat3',
 
                 'matrix': 'createMatrix4',
                 'invMatrix': 'createMatrix4'
@@ -185,6 +191,13 @@ define( [
             return this._spotBlend;
         },
 
+        setGround: function ( a ) {
+            Vec3.copy( a, this._ground );
+            this.dirty();
+        },
+        getGround: function () {
+            return this._ground;
+        },
 
         // attenuation coeff
         setConstantAttenuation: function ( value ) {
@@ -216,39 +229,49 @@ define( [
                 return this.setLightAsDirection();
             else if ( type === Light.SPOT )
                 return this.setLightAsSpot();
-
+            else if ( type === Light.HEMI )
+                return this.setLightAsHemi();
             return this.setLightAsPoint();
         },
 
         getLightType: function () {
-
             if ( this.isDirectionLight() )
                 return Light.DIRECTION;
             else if ( this.isSpotLight() )
                 return Light.SPOT;
-
+            else if ( this.isHemiLight() )
+                return Light.HEMI;
             return Light.POINT;
         },
 
         setLightAsSpot: function () {
-            this._position = [ 0.0, 0.0, 0.0, 1.0 ];
-            this._direction = [ 0.0, 0.0, -1.0 ];
+            Vec4.set( 0.0, 0.0, 0.0, 1.0, this._position );
+            Vec3.set( 0.0, 0.0, -1.0, this._direction );
+            this._ground[ 3 ] = -1.0;
             this._spotCutoff = 90;
             this.dirty();
         },
 
         setLightAsPoint: function () {
-            this._position = [ 0.0, 0.0, 0.0, 1.0 ];
-            this._direction = [ 0.0, 0.0, -1.0 ];
+            Vec4.set( 0.0, 0.0, 0.0, 1.0, this._position );
+            Vec3.set( 0.0, 0.0, -1.0, this._direction );
+            this._ground[ 3 ] = -1.0;
             this.dirty();
         },
 
         setLightAsDirection: function () {
-            this._position = [ 0.0, 0.0, 1.0, 0.0 ];
+            Vec4.set( 0.0, 0.0, 1.0, 0.0, this._position );
             this._spotCutoff = 180;
+            this._ground[ 3 ] = -1.0;
             this.dirty();
         },
 
+        setLightAsHemi: function () {
+            Vec4.set( 0.0, 0.0, 1.0, 0.0, this._position );
+            this._spotCutoff = 180;
+            this._ground[ 3 ] = 1.0;
+            this.dirty();
+        },
 
         setLightNumber: function ( unit ) {
             this._lightUnit = unit;
@@ -259,16 +282,18 @@ define( [
             return this._lightUnit;
         },
 
-
         // internal helper
         isSpotLight: function () {
             return this._spotCutoff < 180.0;
         },
 
         isDirectionLight: function () {
-            return this._position[ 3 ] === 0.0;
+            return this._position[ 3 ] === 0.0 && this._ground[ 3 ] < 0.0;
         },
 
+        isHemiLight: function () {
+            return this._ground[ 3 ] >= 0.0;
+        },
 
         applyPositionedUniform: function ( matrix /*, state*/ ) {
 
@@ -307,6 +332,10 @@ define( [
 
                 Vec3.copy( this._direction, uniformMap.direction.get() );
                 uniformMap.direction.dirty();
+            }
+            if ( this.isHemiLight() ) {
+                Vec3.copy( this._ground, uniformMap.ground.get() );
+                uniformMap.ground.dirty();
             }
 
             Vec4.copy( this._attenuation, uniformMap.attenuation.get() );
