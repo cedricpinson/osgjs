@@ -6,13 +6,11 @@ define( [
     'osgGA/osgGA',
     'osgUtil/osgUtil',
     'osgViewer/osgViewer',
-    'osgShader/osgShader'
-], function ( osgNameSpace, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer, osgShader ) {
+    'osgShader/osgShader',
+    'osgShadow/osgShadow'
+], function ( osgNameSpace, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer, osgShader, osgShadow ) {
+    'use strict';
 
-
-    /*jshint unused: true */
-    var Q = require('Q');
-    /*jshint unused: false */
     var openSceneGraph = osgNameSpace;
 
     openSceneGraph.osg = osg;
@@ -22,8 +20,9 @@ define( [
     openSceneGraph.osgUtil = osgUtil;
     openSceneGraph.osgViewer = osgViewer;
     openSceneGraph.osgShader = osgShader;
+    openSceneGraph.osgShadow = osgShadow;
 
-    var namespaces = [ 'osg', 'osgAnimation', 'osgDB', 'osgGA', 'osgUtil', 'osgViewer', 'osgShader' ];
+    var namespaces = [ 'osg', 'osgAnimation', 'osgDB', 'osgGA', 'osgUtil', 'osgViewer', 'osgShader', 'osgShadow' ];
 
     // for backward compatibility
     openSceneGraph.globalify = function () {

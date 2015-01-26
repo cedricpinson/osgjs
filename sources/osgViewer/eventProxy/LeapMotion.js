@@ -1,5 +1,5 @@
 define( [
-    'Leap',
+    'leap',
     'osg/Notify'
 ], function ( Leap, Notify ) {
 

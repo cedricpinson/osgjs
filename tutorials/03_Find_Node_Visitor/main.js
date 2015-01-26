@@ -1,75 +1,81 @@
-// Wait for it
+// from require to global var
+var OSG = window.OSG;
+OSG.globalify();
+var osg = window.osg;
+var osgViewer = window.osgViewer;
 
-window.addEventListener("load",
-    function() {
-        // from require to global var
-        OSG.globalify();
+// Wait for it
+window.addEventListener( 'load',
+    function () {
         // The 3D canvas.
-        var canvas = document.getElementById("3DView");
+        var canvas = document.getElementById( '3DView' );
         var viewer;
 
         var group = new osg.MatrixTransform();
-        group.setName("BoxRotate");
-        group.setMatrix(osg.Matrix.makeTranslate(-5, 10, -5));
+        group.setName( 'BoxRotate' );
+        group.setMatrix( osg.Matrix.makeTranslate( -5, 10, -5, osg.Matrix.create() ) );
         var size = 5;
-        var ground = osg.createTexturedBox(0, 0, 0, size, size, size);
-        group.addChild(ground);
-        group.getOrCreateStateSet().setAttributeAndMode(new osg.CullFace('DISABLE'));
+        var ground = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
+        group.addChild( ground );
+        group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
 
         var mainNode = new osg.Node();
-        mainNode.setName("Light.003");
-        lightnew = new osg.Light();
+        mainNode.setName( 'Light.003' );
+        var lightnew = new osg.Light();
         mainNode.light = lightnew;
-        mainNode.addChild(group);
+        mainNode.addChild( group );
 
         // Here we create a new form of
         // Scene Graph Visitor
-        var FindByNameVisitor = function(name) {
-            osg.NodeVisitor.call(this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN);
+        var FindByNameVisitor = function ( name ) {
+            osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
             this._name = name;
         };
 
-        FindByNameVisitor.prototype = osg.objectInehrit(osg.NodeVisitor.prototype, {
+        FindByNameVisitor.prototype = osg.objectInehrit( osg.NodeVisitor.prototype, {
             // in found we'll store our resulting matching node
-            init: function() {
+            init: function () {
                 this.found = undefined;
             },
             // the crux of it
-            apply: function(node) {
-                if (node.getName() == this._name) {
+            apply: function ( node ) {
+                if ( node.getName() == this._name ) {
                     this.found = node;
                     return;
                 }
-                this.traverse(node);
+                this.traverse( node );
             }
-        });
+        } );
 
-        // we look for a node named "Light.003"
-        var finder = new FindByNameVisitor("Light.003");
-        mainNode.accept(finder);
-        document.getElementById("result_1").firstChild.data = finder.found === undefined ? "No Light.003" : " found a Light.003 Node";
-        console.log(finder.found);
+        // we look for a node named 'Light.003'
+        var finder = new FindByNameVisitor( 'Light.003' );
+        mainNode.accept( finder );
+        document.getElementById( 'result_1' ).firstChild.data = finder.found === undefined ? 'No Light.003' : ' found a Light.003 Node';
+        console.log( finder.found );
 
-        // we look for a node named "BoxRotate"
-        var finder2 = new FindByNameVisitor("BoxRotate");
-        mainNode.accept(finder2);
-        document.getElementById("result_2").firstChild.data = finder2.found === undefined ? "No BoxRotate" : " found a BoxRotate Node";
-        console.log(finder2.found);
+        // we look for a node named 'BoxRotate'
+        var finder2 = new FindByNameVisitor( 'BoxRotate' );
+        mainNode.accept( finder2 );
+        document.getElementById( 'result_2' ).firstChild.data = finder2.found === undefined ? 'No BoxRotate' : ' found a BoxRotate Node';
+        console.log( finder2.found );
 
-        // we look for a node named "sdf"
-        var finder3 = new FindByNameVisitor("sdf");
-        mainNode.accept(finder3);
-        document.getElementById("result_3").firstChild.data = finder3.found === undefined ? "No sdf" : " found a sdf Node";
-        console.log(finder3.found);
+        // we look for a node named 'sdf'
+        var finder3 = new FindByNameVisitor( 'sdf' );
+        mainNode.accept( finder3 );
+        document.getElementById( 'result_3' ).firstChild.data = finder3.found === undefined ? 'No sdf' : ' found a sdf Node';
+        console.log( finder3.found );
 
         // The viewer
-        viewer = new osgViewer.Viewer(canvas);
+        viewer = new osgViewer.Viewer( canvas );
         viewer.init();
-        viewer.setLight(lightnew);
-        viewer.getCamera().setClearColor([0.3, 0.3, 0.3, 0.3]);
-        viewer.setSceneData(mainNode);
+
+        viewer.getCamera().setClearColor( [ 0.3, 0.3, 0.3, 0.3 ] );
+        viewer.setSceneData( mainNode );
         viewer.setupManipulator();
+        viewer.setLightingMode( osgViewer.View.LightingMode.NO_LIGHT );
+
+        viewer.setLight( lightnew );
         viewer.run();
 
-    }, true);
+    }, true );

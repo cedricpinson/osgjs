@@ -1,36 +1,41 @@
-var main = function() {
-    // from require to global var
-    OSG.globalify();
+// from require to global var
+var OSG = window.OSG;
+OSG.globalify();
+var osg = window.osg;
+var osgViewer = window.osgViewer;
+var osgGA = window.osgGA;
+
+var main = function () {
     // The 3D canvas.
-    var canvas = document.getElementById("3DView");
+    var canvas = document.getElementById( '3DView' );
     var viewer;
     try {
-        viewer = new osgViewer.Viewer(canvas, {
+        viewer = new osgViewer.Viewer( canvas, {
             antialias: true,
             alpha: true
-        });
+        } );
         viewer.init();
         var rotate = new osg.MatrixTransform();
-        rotate.addChild(createScene());
-        viewer.setSceneData(rotate);
+        rotate.addChild( createScene() );
+        viewer.setSceneData( rotate );
 
 
-        viewer.setupManipulator(new osgGA.OrbitManipulator());
+        viewer.setupManipulator( new osgGA.OrbitManipulator() );
         // set distance
-        viewer.getManipulator().setDistance(20.0);
+        viewer.getManipulator().setDistance( 20.0 );
 
         viewer.run();
 
-        var mousedown = function(ev) {
+        var mousedown = function ( ev ) {
             ev.stopPropagation();
         };
-    } catch (er) {
-        osg.log("exception in osgViewer " + er);
-        alert("exception in osgViewer " + er);
+    } catch ( er ) {
+        osg.log( 'exception in osgViewer ' + er );
+        alert( 'exception in osgViewer ' + er );
     }
 };
 
-var SimpleUpdateCallback = function(material) {
+var SimpleUpdateCallback = function ( material ) {
     this.material = material;
 };
 
@@ -38,20 +43,22 @@ SimpleUpdateCallback.prototype = {
     // rotation angle
     alpha: 0,
 
-    update: function(node, nv) {
+    update: function ( node, nv ) {
         var t = nv.getFrameStamp().getSimulationTime();
         var dt = t - node._lastUpdate;
-        if (dt < 0) {
+        if ( dt < 0 ) {
             return true;
         }
         node._lastUpdate = t;
-        document.getElementById("update").innerHTML = node._lastUpdate.toFixed(2);;
-        document.getElementById("alpha").innerHTML = this.alpha.toFixed(2);;
+        document.getElementById( 'update' ).innerHTML = node._lastUpdate.toFixed( 2 );
+        document.getElementById( 'alpha' ).innerHTML = this.alpha.toFixed( 2 );
 
         this.alpha += 0.01;
-        if (this.alpha > 1.0) this.alpha = 0.0;
-        var emission = this.material.getEmission();
-        emission[3] = this.alpha;
+        if ( this.alpha > 1.0 ) this.alpha = 0.0;
+        var channel;
+
+        channel = this.material.getDiffuse();
+        channel[ 3 ] = this.alpha;
 
         return true;
     }
@@ -63,29 +70,29 @@ function createScene() {
 
     // create a cube in center of the scene(0, 0, 0) and set it's size to 7
     var size = 7;
-    var cubeModel = osg.createTexturedBox(0, 0, 0, size, size, size);
-    cube.addChild(cubeModel);
+    var cubeModel = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
+    cube.addChild( cubeModel );
 
-    cube.getOrCreateStateSet().setRenderingHint('TRANSPARENT_BIN');
-    cube.getOrCreateStateSet().setAttributeAndMode(new osg.BlendFunc('SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA'));
-    cube.getOrCreateStateSet().setAttributeAndMode(new osg.CullFace('DISABLE'));
+    cube.getOrCreateStateSet().setRenderingHint( 'TRANSPARENT_BIN' );
+    cube.getOrCreateStateSet().setAttributeAndModes( new osg.BlendFunc( 'SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA' ) );
+    cube.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
     // add a stateSet of texture to cube
     var material = new osg.Material();
-    material.setDiffuse([1.0, 1.0, 0.2, 0.0]);
-    material.setAmbient([1.0, 1.0, 0.2, 0.0]);
-    material.setSpecular([1.0, 1.0, 0.0, 0.0]);
-    material.setEmission([0.0, 0.0, 0.0, 0.5]);
-    cube.getOrCreateStateSet().setAttributeAndMode(material);
+    material.setDiffuse( [ 1.0, 1.0, 0.2, 0.0 ] );
+    material.setAmbient( [ 1.0, 1.0, 0.2, 0.0 ] );
+    material.setSpecular( [ 1.0, 1.0, 0.0, 0.0 ] );
+    material.setEmission( [ 0.0, 0.0, 0.0, 0.5 ] );
+    cube.getOrCreateStateSet().setAttributeAndMode( material );
 
     // attache updatecallback function to cube
-    var cb = new SimpleUpdateCallback(material);;
-    cube.addUpdateCallback(cb);
+    var cb = new SimpleUpdateCallback( material );
+    cube.addUpdateCallback( cb );
 
     // add to root and return
-    root.addChild(cube);
+    root.addChild( cube );
 
     return root;
 }
 
-window.addEventListener("load", main, true);
+window.addEventListener( 'load', main, true );

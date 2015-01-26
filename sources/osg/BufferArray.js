@@ -5,6 +5,8 @@ define( [
 
 ], function ( MACROUTILS, Notify, Object ) {
 
+    'use strict';
+
     /**
      * BufferArray manage vertex / normal / ... array used by webgl.
      * @class BufferArray
@@ -24,9 +26,9 @@ define( [
 
         if ( elements !== undefined ) {
             if ( this._type === BufferArray.ELEMENT_ARRAY_BUFFER ) {
-                this._elements = new MACROUTILS.Uint16Array( elements );
+                this._elements = elements instanceof MACROUTILS.Uint16Array ? elements : new MACROUTILS.Uint16Array( elements );
             } else {
-                this._elements = new MACROUTILS.Float32Array( elements );
+                this._elements = elements instanceof MACROUTILS.Float32Array ? elements : new MACROUTILS.Float32Array( elements );
             }
         }
     };

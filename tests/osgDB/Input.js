@@ -1,9 +1,9 @@
 define( [
+    'vendors/q',
     'osgDB/Input',
-    'vendors/Q',
     'osg/Notify',
     'osg/Image'
-], function ( Input, Q, Notify, Image ) {
+], function ( Q, Input, Notify, Image ) {
 
     return function () {
 

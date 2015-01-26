@@ -1,5 +1,5 @@
 define( [
-    'Hammer'
+    'hammer'
 ], function ( Hammer ) {
 
     var HammerController = function ( viewer ) {

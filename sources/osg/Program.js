@@ -63,7 +63,7 @@ define( [
 
         apply: function ( state ) {
 
-            if (this._nullProgram) return;
+            if ( this._nullProgram ) return;
 
             var gl = state.getGraphicContext();
 
@@ -87,14 +87,29 @@ define( [
                     gl.attachShader( this._program, this._fragment.shader );
                     MACROUTILS.timeStamp( 'osgjs.metrics:linkShader' );
                     gl.linkProgram( this._program );
-                    gl.validateProgram( this._program );
 
                     if ( !gl.getProgramParameter( this._program, gl.LINK_STATUS ) && !gl.isContextLost() ) {
-                        Notify.error( gl.getProgramInfoLog( this._program ) );
-                        Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this._vertex.text + '\n fragment shader:\n' + this._fragment.text, true, false );
-                        compileClean = false;
+                        var errLink = gl.getProgramInfoLog( this._program );
 
+                        Notify.error( errLink );
+                        Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this._vertex.text + '\n fragment shader:\n' + this._fragment.text, true, false );
+                        // rawgl trick is for webgl inspector
+                        var debugShader = ( gl.rawgl !== undefined ? gl.rawgl : gl );
+                        if ( debugShader !== undefined && debugShader.getExtension !== undefined ) debugShader.getExtension( 'WEBGL_debug_shaders' );
+                        if ( debugShader && errLink === 'Failed to create D3D shaders.\n' ) {
+
+                            Notify.error( debugShader.getTranslatedShaderSource( this._vertex.shader ), true, false );
+                            Notify.error( debugShader.getTranslatedShaderSource( this._fragment.shader ), true, false );
+                        }
+
+                        compileClean = false;
                     }
+                    // TODO: better usage of validate.
+                    // as it's intended at shader program usage
+                    // validating against current gl state
+                    // Not for compilation stage
+                    // gl.validateProgram( this._program );
+
                 }
 
                 if ( !compileClean ) {

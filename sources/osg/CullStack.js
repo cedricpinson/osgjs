@@ -4,6 +4,7 @@ define( [
     'osg/Camera',
     'osg/TransformEnums',
 ], function ( Matrix, Notify, Camera, TransformEnums ) {
+    'use strict';
 
     var CullStack = function () {
         this._modelViewMatrixStack = [];

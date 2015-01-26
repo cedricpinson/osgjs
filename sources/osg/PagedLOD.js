@@ -2,7 +2,7 @@
  * @author Jordi Torres
  */
 define( [
-    'Q',
+    'q',
     'osg/Utils',
     'osg/Lod',
     'osg/NodeVisitor',

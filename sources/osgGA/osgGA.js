@@ -1,5 +1,5 @@
 define( [
-    'Hammer',
+    'hammer',
     'osgGA/FirstPersonManipulator',
     'osgGA/FirstPersonManipulatorMouseKeyboardController',
     'osgGA/FirstPersonManipulatorOculusController',

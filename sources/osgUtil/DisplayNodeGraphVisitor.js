@@ -1,5 +1,5 @@
 define( [
-    'vendors/jQuery',
+    'jquery',
     'osg/Utils',
     'osg/NodeVisitor'
 

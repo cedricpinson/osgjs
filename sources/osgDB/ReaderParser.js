@@ -1,5 +1,5 @@
 define( [
-    'Q',
+    'q',
     'require',
     'osgDB/Input',
     'osg/Notify',
