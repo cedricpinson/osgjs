@@ -20,7 +20,8 @@ define( [
         Lod.call( this );
         this._perRangeDataList = [];
         this._loading = false;
-        this._expiryTime = 2.0;
+        this._expiryTime = 0.0;
+        this._expiryFrame = 0;
         this._centerMode = Lod.USER_DEFINED_CENTER;
         this._frameNumberOfLastTraversal = 0;
     };
@@ -36,6 +37,7 @@ define( [
         this.timeStamp = 0.0;
         this.frameNumber = 0;
         this.frameNumberOfLastTraversal = 0;
+        this.dbrequest = undefined;
     };
 
     /** @lends PagedLOD.prototype */
@@ -91,15 +93,29 @@ define( [
         getFrameNumberOfLastTraversal: function () {
             return this._frameNumberOfLastTraversal;
         },
-
-        removeExpiredChildren: function ( expiryTime, removedChildren ) {
+        setTimeStamp: function ( childNo, timeStamp ) {
+            this._perRangeDataList[ childNo ].timeStamp = timeStamp;
+        },
+        setFrameNumber: function ( childNo, frameNumber ) {
+            this._perRangeDataList[ childNo ].frameNumber = frameNumber;
+        },
+        getDatabaseRequest: function ( childNo ) {
+            return this._perRangeDataList[ childNo ].dbrequest;
+        },
+        removeExpiredChildren: function ( expiryTime, expiryFrame, removedChildren ) {
             var i = this.children.length - 1;
-            var timed = this._perRangeDataList[ i ].timeStamp + this._expiryTime;
-            if ( ( timed < expiryTime ) && ( this._perRangeDataList[ i ].filename.length > 0 ||
+            var timed, framed;
+            timed = this._perRangeDataList[ i ].timeStamp + this._expiryTime;
+            framed = this._perRangeDataList[ i ].frameNumber + this._expiryFrame;
+            if ( timed < expiryTime && framed < expiryFrame && ( this._perRangeDataList[ i ].filename.length > 0 ||
                 this._perRangeDataList[ i ].function !== undefined ) ) {
-                removedChildren.add( this.children[ i ] );
+                removedChildren.push( this.children[ i ] );
                 this.removeChild( this.children[ i ] );
                 this._perRangeDataList[ i ].loaded = false;
+                if ( this._perRangeDataList[ i ].dbrequest !== undefined ) {
+                    this._perRangeDataList[ i ].dbrequest._groupExpired = true;
+                    this._perRangeDataList[ i ].dbrequest = undefined;
+                }
             }
         },
 
@@ -117,7 +133,7 @@ define( [
                 var updateTimeStamp = false;
 
                 if ( visitor.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
-                    this.setFrameNumberOfLastTraversal( visitor.getFrameStamp().getFrameNumber() );
+                    this._frameNumberOfLastTraversal = visitor.getFrameStamp().getFrameNumber();
                     updateTimeStamp = true;
                 }
 
@@ -158,6 +174,7 @@ define( [
 
                                 if ( updateTimeStamp ) {
                                     this._perRangeDataList[ j ].timeStamp = visitor.getFrameStamp().getSimulationTime();
+                                    this._perRangeDataList[ j ].frameNumber = visitor.getFrameStamp().getFrameNumber();
                                 }
 
                                 this.children[ j ].accept( visitor );
@@ -173,18 +190,19 @@ define( [
 
                             if ( updateTimeStamp ) {
                                 this._perRangeDataList[ numChildren - 1 ].timeStamp = visitor.getFrameStamp().getSimulationTime();
+                                this._perRangeDataList[ numChildren - 1 ].frameNumber = visitor.getFrameStamp().getFrameNumber();
                             }
 
                             this.children[ numChildren - 1 ].accept( visitor );
                         }
                         // now request the loading of the next unloaded child.
-                        if ( numChildren < this._range.length ) {
+                        if ( numChildren < this._perRangeDataList.length ) {
                             // Here we do the request
                             var group = visitor.nodePath[ visitor.nodePath.length - 1 ];
                             if ( this._perRangeDataList[ numChildren ].loaded === false ) {
                                 this._perRangeDataList[ numChildren ].loaded = true;
                                 var dbhandler = visitor.getDatabaseRequestHandler();
-                                dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime() );
+                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime() );
                             }
                         }
                     }

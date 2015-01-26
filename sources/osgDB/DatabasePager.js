@@ -8,8 +8,10 @@ define( [
     'osg/Utils',
     'osg/NodeVisitor',
     'osg/PagedLOD',
-    'osg/Timer'
-], function ( Q, MACROUTILS, NodeVisitor, PagedLOD, Timer ) {
+    'osg/Timer',
+    'osg/Notify',
+    'osg/Camera'
+], function ( Q, MACROUTILS, NodeVisitor, PagedLOD, Timer, Notify, Camera ) {
 
     'use strict';
     /**
@@ -37,17 +39,27 @@ define( [
         this._url = undefined;
         this._function = undefined;
         this._timeStamp = 0.0;
-
+        this._groupExpired = false;
         //  this.frameNumber = 0;
         //  this.frameNumberOfLastTraversal = 0;
     };
+
+    var ParentVisitor = function () {
+        this.nodePaths = [];
+        NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
+    };
+    ParentVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+        apply: function ( node ) {
+            this.nodePaths.unshift( node );
+            this.traverse( node );
+        }
+    } );
 
     var FindPagedLODsVisitor = function ( pagedLODList, frameNumber ) {
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
         this._activePagedLODList = pagedLODList;
         this._frameNumber = frameNumber;
     };
-
     FindPagedLODsVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
         apply: function ( node ) {
             if ( node.getTypeID() === PagedLOD.getTypeID() ) {
@@ -66,6 +78,45 @@ define( [
         apply: function ( node ) {
             node.releaseGLObjects( this.gl );
             this.traverse( node );
+        }
+    } );
+
+    var ExpirePagedLODVisitor = function () {
+        NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
+        this._childrenList = [];
+    };
+    ExpirePagedLODVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+        apply: function ( node ) {
+            if ( node.getTypeID() === PagedLOD.getTypeID() ) {
+                this._childrenList.push( node );
+                this._markRequestsExpired( node );
+            }
+            this.traverse( node );
+        },
+        removeExpiredChildrenAndFindPagedLODs: function ( plod, expiryTime, expiryFrame, removedChildren ) {
+            var sizeBefore = removedChildren.length;
+            if ( plod.getChildren().length > 0 )
+                plod.removeExpiredChildren( expiryTime, expiryFrame, removedChildren );
+            else {
+                console.log( 'trying to remove plod with no childs' );
+                removedChildren.push( plod );
+            }
+            for ( var i = sizeBefore; i < removedChildren.length; i++ ) {
+                removedChildren[ i ].accept( this );
+            }
+            return sizeBefore !== removedChildren.length;
+        },
+        _markRequestsExpired: function ( plod ) {
+            var numChildren = plod.children.length;
+            var request;
+            for ( var i = 0; i < numChildren; i++ ) {
+                request = plod.getDatabaseRequest( i );
+                if ( request !== undefined ) {
+                    request._groupExpired = true;
+                    request._loadedModel = null;
+                    //request._group = null;
+                }
+            }
         }
     } );
 
@@ -121,13 +172,32 @@ define( [
             // Prune the list of database requests.
             if ( this._pendingNodes.length ) {
                 var request = this._pendingNodes.shift();
-                request._group.addChildNode( request._loadedModel );
                 var frameNumber = frameStamp.getFrameNumber();
-                // Register PagedLODs.
-                if ( !this._activePagedLODList.has( request._group ) ) {
-                    this.registerPagedLODs( request._group, frameNumber );
-                } else {
-                    this.registerPagedLODs( request._loadedModel, frameNumber );
+                var timeStamp = frameStamp.getSimulationTime();
+                // Let's see the pagedLOD is conected to the scenegraph
+                var parentVisitor = new ParentVisitor();
+                request._group.accept( parentVisitor );
+                // If it is not, return.
+                if ( parentVisitor.nodePaths[ 0 ].getTypeID() !== Camera.getTypeID() ) {
+                    Notify.log( 'DatabasePager::addLoadedDataToSceneGraph() node in parental chain deleted, discarding subgraph.' );
+                    // Clean the request
+                    request._loadedModel = undefined;
+                    request = undefined;
+                    return;
+                }
+                // If the request is not expired, then add/register new childs
+                if ( request._groupExpired === false ) {
+                    var plod = request._group;
+                    plod.setTimeStamp( plod.children.length, timeStamp );
+                    plod.setFrameNumber( plod.children.length, frameNumber );
+                    plod._perRangeDataList[ plod.children.length - 1 ].dbrequest = undefined;
+                    plod.addChildNode( request._loadedModel );
+                    // Register PagedLODs.
+                    if ( !this._activePagedLODList.has( plod ) ) {
+                        this.registerPagedLODs( plod, frameNumber );
+                    } else {
+                        this.registerPagedLODs( request._loadedModel, frameNumber );
+                    }
                 }
             }
         },
@@ -142,6 +212,7 @@ define( [
         },
 
         requestNodeFile: function ( func, url, node, timestamp ) {
+            if ( node.getParents().length === 0 ) return;
             var dbrequest = new DatabaseRequest();
             dbrequest._group = node;
             dbrequest._function = func;
@@ -177,7 +248,7 @@ define( [
                     that._pendingNodes.push( dbrequest );
                     that._loading = false;
                 } );
-            } else { // Load from URL
+            } else if ( dbrequest._url !== '' ) { // Load from URL
                 Q.when( this.loadNodeFromURL( dbrequest._url ) ).then( function ( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
@@ -213,12 +284,12 @@ define( [
             var elapsedTime = 0.0;
             var beginTime = Timer.instance().tick();
             var that = this;
-            this._childrenToRemoveList.forEach( function ( plod ) {
+            this._childrenToRemoveList.forEach( function ( node ) {
                 if ( elapsedTime > availableTime ) return;
-                plod.accept( new ReleaseVisitor( gl ) );
-                that._childrenToRemoveList.delete( plod );
-                plod.removeChildren();
-                plod = null;
+                that._childrenToRemoveList.delete( node );
+                node.accept( new ReleaseVisitor( gl ) );
+                node.removeChildren();
+                node = null;
                 elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
             } );
             availableTime -= elapsedTime;
@@ -228,31 +299,34 @@ define( [
             if ( frameStamp.getFrameNumber() === 0 ) return;
             var numToPrune = this._activePagedLODList.size - this._targetMaximumNumberOfPagedLOD;
             var expiryTime = frameStamp.getSimulationTime() - 0.1;
-
+            var expiryFrame = frameStamp.getFrameNumber() - 1;
             // First traverse and remove inactive PagedLODs, as their children will
             // certainly have expired.
-            // TODO: Then traverse active nodes if we still
-            // need to prune.
+            // TODO: Then traverse active nodes if we still need to prune.
             if ( numToPrune > 0 ) {
-                this.removeExpiredChildren( numToPrune, expiryTime );
+                this.removeExpiredChildren( numToPrune, expiryTime, expiryFrame );
             }
         },
 
-        removeExpiredChildren: function ( numToPrune, expiryTime ) {
-            // Iterate over the activePagedLODList to remove children
+        removeExpiredChildren: function ( numToPrune, expiryTime, expiryFrame ) {
+            // Iterate over the activePagedLODList to remove expired children
             var that = this;
-            var sizeBefore = this._childrenToRemoveList.size;
+            var removedChildren = [];
+            var expiredPagedLODVisitor = new ExpirePagedLODVisitor();
             this._activePagedLODList.forEach( function ( plod ) {
                 if ( numToPrune > 0 ) {
-                    plod.removeExpiredChildren( expiryTime, that._childrenToRemoveList );
-                    if ( sizeBefore !== that._childrenToRemoveList.size ) {
-                        if ( that._activePagedLODList.delete( plod ) ) {
-                            plod = null;
-                            numToPrune--;
-                        }
+                    // See if plod is still active, so we don't have to prune
+                    if ( expiryFrame < plod.getFrameNumberOfLastTraversal() ) return;
+                    expiredPagedLODVisitor.removeExpiredChildrenAndFindPagedLODs( plod, expiryTime, expiryFrame, removedChildren );
+                    for ( var i = 0; i < expiredPagedLODVisitor._childrenList.length; i++ ) {
+                        that._activePagedLODList.delete( expiredPagedLODVisitor._childrenList[ i ] );
+                        numToPrune--;
                     }
-                } else {
-                    return;
+                    // Add to the remove list all the childs deleted
+                    for ( i = 0; i < removedChildren.length; i++ )
+                        that._childrenToRemoveList.add( removedChildren[ i ] );
+                    expiredPagedLODVisitor._childrenList.length = 0;
+                    removedChildren.length = 0;
                 }
             } );
         },
