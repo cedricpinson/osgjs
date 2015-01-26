@@ -124,6 +124,10 @@
                 'baseFrag',
                 'diffFrag',
                 'fxaa',
+                'depthVert',
+                'depthFrag',
+                'motionBlurDepth',
+                'motionBlurVelocity',
                 'ssaa_node',
                 'velocity_node',
                 'colorEncode',
@@ -466,20 +470,27 @@
                 this.update = function ( node, nv ) {
                     _self._currentFrame++;
 
+                    // making sure here same proj/view
+                    if ( _self._notSame ) {
+                        if ( _self._effect1.updateCamera ) {
+                            _self._effect1.updateCamera( _self._effect0.getCamera().getProjectionMatrix(), _self._effect0.getCamera().getViewMatrix() );
+                        } else {
+                            osg.Matrix.copy( _self._effect0.getCamera().getProjectionMatrix(), _self._effect1.getCamera().getProjectionMatrix() );
+                            osg.Matrix.copy( _self._effect0.getCamera().getViewMatrix(), _self._effect1.getCamera().getViewMatrix() );
+                        }
+                    }
+
+
                     if ( _self._doAnimate ) {
                         _self._currentTime = nv.getFrameStamp().getSimulationTime();
                         var x = Math.cos( _self._currentTime );
                         osg.Matrix.makeRotate( x, 0, 0, 1, _self._model.getMatrix() );
                     }
 
+
                     _self._effect0.update();
                     if ( _self._notSame ) _self._effect1.update();
 
-                    // making sure here same proj/view
-                    if ( _self._notSame ) {
-                        osg.Matrix.copy( _self._effect0.getCamera().getProjectionMatrix(), _self._effect1.getCamera().getProjectionMatrix() );
-                        osg.Matrix.copy( _self._effect0.getCamera().getViewMatrix(), _self._effect1.getCamera().getViewMatrix() );
-                    }
 
                     _self._quad.getOrCreateStateSet().setTextureAttributeAndModes( 0, _self._effect0.getOutputTexture() );
                     _self._quad.getOrCreateStateSet().setTextureAttributeAndModes( 1, _self._effect1.getOutputTexture() );

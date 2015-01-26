@@ -1,6 +1,5 @@
-#ifdef GL_ES
-   precision lowp float;
- #endif
+precision highp float;
+
 
 float FxaaLuma(vec4 rgba) { return rgba.y; }
 vec4 FxaaPixelShader(

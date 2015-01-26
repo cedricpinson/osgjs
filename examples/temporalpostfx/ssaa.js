@@ -49,6 +49,13 @@
             return ( this._helper._currentFrame % 2 === 0 ) ? this._cameraRTT : this._cameraRTT2;
         },
 
+        updateCamera: function ( projection, view ) {
+            osg.Matrix.copy( projection, this._cameraRTT.getProjectionMatrix() );
+            osg.Matrix.copy( view, this._cameraRTT.getViewMatrix() );
+            osg.Matrix.copy( projection, this._cameraRTT2.getProjectionMatrix() );
+            osg.Matrix.copy( view, this._cameraRTT2.getViewMatrix() );
+        },
+
         update: function () {
 
             var numSSAA = 4096;

@@ -59,7 +59,6 @@ var CustomCompiler;
 
             // compute alpha
             var alpha = this.createVariable( 'float' );
-
             var textureTexel = this.getFirstValidTexture();
 
             var alphaCompute;
@@ -75,33 +74,21 @@ var CustomCompiler;
                 alpha: alpha
             } );
 
-
-
+            // 2 codes path
+            // if we have light we compute a subgraph that will generate
+            // color from lights contribution...
+            // if we dont have light we will use the diffuse color found as default
+            // fallback
             var fragTempColor = this.createVariable( 'vec4' );
             if ( this._lights.length > 0 ) {
-
                 // creates lights nodes
                 var lightedOutput = this.createLighting( {
                     materialdiffuse: diffuseColor
                 } );
-
-                // get final color
-                // use the rampResult from previous node
-                factory.getNode( 'InlineCode' ).code( '%color = vec4(%emit.rgb + %lightedOutput, 1.0);' ).inputs( {
-                    emit: materialUniforms.emission,
-                    lightedOutput: lightedOutput
-                } ).outputs( {
-                    color: fragTempColor
-                } );
-
+                fragTempColor = lightedOutput;
             } else {
-
                 // no lights use a default behaviour
-                factory.getNode( 'InlineCode' ).code( '%color = vec4(%diffuse, 1.0);' ).inputs( {
-                    diffuse: diffuseColor
-                } ).outputs( {
-                    color: fragTempColor
-                } );
+                fragTempColor = diffuseColor;
             }
 
 
@@ -315,10 +302,10 @@ var CustomCompiler;
             } else if ( velocityAttribute ) {
 
                 this._vertexShader.push( [ '',
-                    '  vec4 pos = ModelViewMatrix * vec4(Vertex,1.0);',
+                    '  vec4 viewPos = ModelViewMatrix * vec4(Vertex,1.0);',
                     '  mat4 projMat = ProjectionMatrix;',
                     '  //projection space',
-                    '  FragScreenPos = projMat * pos;',
+                    '  FragScreenPos = projMat * viewPos;',
                     '',
                     '  vec4 position = FragScreenPos;',
                     '  gl_Position = position;',
@@ -334,14 +321,15 @@ var CustomCompiler;
                 /////////////
             } else {
                 this._vertexShader.push( [ '',
-                    '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);', '',
+                    '  vec4 viewPos = ModelViewMatrix * vec4(Vertex,1.0);',
+                    '  gl_Position = ProjectionMatrix * viewPos;',
                     ''
                 ].join( '\n' ) );
             }
 
             this._vertexShader.push( [ '',
                 '  FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
-                '  FragEyeVector = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
+                '  FragEyeVector = viewPos.xyz;',
                 '  if (ArrayColorEnabled == 1.0)',
                 '    VertexColor = Color;',
                 '  else',

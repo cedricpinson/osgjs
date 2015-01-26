@@ -24,6 +24,11 @@
             getCamera: function () {
                 return this._cameraRTT;
             },
+
+            updateCamera: function ( projection, view ) {
+                osg.Matrix.copy( projection, this._cameraRTT.getProjectionMatrix() );
+                osg.Matrix.copy( view, this._cameraRTT.getViewMatrix() );
+            },
             update: function () {
                 // nothing.
             },
