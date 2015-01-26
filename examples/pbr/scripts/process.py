@@ -10,10 +10,13 @@ DEBUG=False
 envIrradiance_cmd="~/dev/envtools/release/envIrradiance"
 envPrefilter_cmd="~/dev/envtools/release/envPrefilter"
 envIntegrateBRDF_cmd="~/dev/envtools/release/envBRDF"
-packer_cmd="~/dev/envtools/release/packer"
+cubemap_packer_cmd="~/dev/envtools/release/cubemapPacker"
 panorama_packer_cmd="~/dev/envtools/release/panoramaPacker"
 envremap_cmd="~/dev/envtools/release/envremap"
 seamlessCubemap_cmd="~/dev/envtools/release/seamlessCubemap"
+envBackground_cmd="~/dev/envtools/release/envBackground"
+gzip_cmd="gzip"
+7zip_cmd="7z"
 
 def execute_command(cmd, **kwargs):
 
@@ -54,6 +57,10 @@ class ProcessEnvironment(object):
         self.pattern_filter = kwargs.get("pattern_filter", "rgss" )
         self.nb_samples = kwargs.get("nb_samples", "1024" )
         self.prefilter_stop_size = kwargs.get("prefilter_stop_size", 8 )
+
+        self.background_size = kwargs.get("background_size", 256 )
+        self.background_blur = kwargs.get("background_blur", 1.5 )
+
 
 
     def writeConfig(self, filename):
@@ -105,9 +112,9 @@ class ProcessEnvironment(object):
             index = line.find("shCoef:")
             if index != -1:
                 self.sh_coef = line[line.find(":") + 1:]
-                with open( os.path.join(self.output_directory, "spherical"), "w") as f:
-                    f.write(self.sh_coef)
-                break
+                # with open( os.path.join(self.output_directory, "spherical"), "w") as f:
+                #     f.write(self.sh_coef)
+                # break
 
 
         # generate texture for irrandiance
@@ -129,7 +136,11 @@ class ProcessEnvironment(object):
         execute_command(cmd)
 
     def cubemap_packer(self, pattern, max_level, output ):
-        cmd = "{} {} {} {}".format(packer_cmd, pattern, max_level, output)
+        cmd = ""
+        if max_level > 0:
+            cmd = "{} -p -n {} {} {}".format(cubemap_packer_cmd, max_level, pattern, output)
+        else:
+            cmd = "{} {} {}".format(cubemap_packer_cmd, pattern, output)
         execute_command(cmd)
 
         cmd = "gzip -f {}".format( output + "*.bin")
@@ -189,6 +200,23 @@ class ProcessEnvironment(object):
         cmd = "gzip -f {}".format( outout_filename )
         execute_command(cmd)
 
+
+    def background_create( self ):
+
+        # compute it one time for panorama
+        outout_filename = "/tmp/background.tiff"
+        cmd = "{} -s {} -n {} -r {} -f {}".format(envBackground_cmd, self.background_size, self.nb_samples, self.background_blur , outout_filename)
+        execute_command(cmd)
+
+        # packer use a pattern, fix cubemap packer ?
+        input_filename = outout_filename
+        output = os.path.join(self.output_directory, "cubemap_background" )
+        self.cubemap_packer( input_filename, 0, output )
+
+        cmd = "gzip -f {}".format( output + "*.bin")
+        execute_command(cmd)
+
+
     # use the step from cubemap prefilter
     def panorama_specular_create_prefilter(self):
 
@@ -244,7 +272,6 @@ class ProcessEnvironment(object):
         # generate irradiance*PI panorama/cubemap/sph
         self.compute_irradiance(cubemap_generic)
 
-
         # generate specular
         self.cubemap_specular_create_mipmap(cubemap_generic)
 
@@ -258,6 +285,9 @@ class ProcessEnvironment(object):
         # generate prefilter ue4 specular panorama
         self.panorama_specular_create_prefilter()
 
+
+        # generate background
+        self.background_create()
 
 
         # write config for this environment
