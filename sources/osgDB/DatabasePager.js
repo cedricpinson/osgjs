@@ -95,12 +95,8 @@ define( [
         },
         removeExpiredChildrenAndFindPagedLODs: function ( plod, expiryTime, expiryFrame, removedChildren ) {
             var sizeBefore = removedChildren.length;
-            if ( plod.getChildren().length > 0 )
-                plod.removeExpiredChildren( expiryTime, expiryFrame, removedChildren );
-            else {
-                console.log( 'trying to remove plod with no childs' );
-                removedChildren.push( plod );
-            }
+            plod.removeExpiredChildren( expiryTime, expiryFrame, removedChildren );
+
             for ( var i = sizeBefore; i < removedChildren.length; i++ ) {
                 removedChildren[ i ].accept( this );
             }
@@ -174,7 +170,7 @@ define( [
                 var request = this._pendingNodes.shift();
                 var frameNumber = frameStamp.getFrameNumber();
                 var timeStamp = frameStamp.getSimulationTime();
-                // Let's see the pagedLOD is conected to the scenegraph
+                // Let's see if the pagedLOD is conected to the scenegraph
                 var parentVisitor = new ParentVisitor();
                 request._group.accept( parentVisitor );
                 // If it is not, return.
@@ -240,6 +236,15 @@ define( [
         processRequest: function ( dbrequest ) {
             this._loading = true;
             var that = this;
+            // Check if the PLOD node have been removed from the scenegraph.
+            var parentVisitor = new ParentVisitor();
+            dbrequest._group.accept( parentVisitor );
+            if ( parentVisitor.nodePaths[ 0 ].getTypeID() !== Camera.getTypeID() ) {
+                Notify.log( 'DatabasePager::processRequest() node in parental chain deleted, discarding request.' );
+                that._downloadingRequestsNumber--;
+                this._loading = false;
+                return;
+            }
             // Load from function
             if ( dbrequest._function !== undefined ) {
                 q.when( this.loadNodeFromFunction( dbrequest._function, dbrequest._group ) ).then( function ( child ) {
