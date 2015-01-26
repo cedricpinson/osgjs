@@ -79,21 +79,27 @@ var CustomCompiler;
             // color from lights contribution...
             // if we dont have light we will use the diffuse color found as default
             // fallback
-            var fragTempColor = this.createVariable( 'vec4' );
+            var finalColor;
+
             if ( this._lights.length > 0 ) {
+
                 // creates lights nodes
                 var lightedOutput = this.createLighting( {
                     materialdiffuse: diffuseColor
                 } );
-                fragTempColor = lightedOutput;
+                finalColor = lightedOutput;
+
             } else {
-                // no lights use a default behaviour
-                fragTempColor = diffuseColor;
+
+                // no light use diffuse color
+                finalColor = diffuseColor;
+
             }
 
 
             // premult alpha
-            var finalColor = this.getPremultAlpha( fragTempColor, alpha );
+            finalColor = this.getPremultAlpha( finalColor, alpha );
+
             var fragTempFinalColor = this.createVariable( 'vec4' );
 
             // todo add gamma corrected color, but it would also
@@ -180,7 +186,9 @@ var CustomCompiler;
 
             return fragColor;
         },
-        createVertexShaderGraph: function () {
+        //
+        // TODO: change into node based graph shader system.
+        declareVertexVariables: function () {
 
             var texCoordMap = {};
             var textures = this._textures;
@@ -190,16 +198,20 @@ var CustomCompiler;
                 'attribute vec3 Vertex;',
                 'attribute vec4 Color;',
                 'attribute vec3 Normal;',
+                '',
                 'uniform float ArrayColorEnabled;',
                 'uniform mat4 ModelViewMatrix;',
                 'uniform mat4 ProjectionMatrix;',
                 'uniform mat4 NormalMatrix;',
+                '',
                 'varying vec4 VertexColor;',
                 'varying vec3 FragNormal;',
                 'varying vec3 FragEyeVector;',
                 '',
                 ''
             ].join( '\n' ) );
+
+
             ////////////////////:
             var temporalAttribute = this.getAttributeType( 'Temporal' );
             var velocityAttribute = this.getAttributeType( 'Velocity' );
@@ -239,46 +251,60 @@ var CustomCompiler;
                 ].join( '\n' ) );
             }
             /////////////
-            for ( var t = 0, tl = textures.length; t < tl; t++ ) {
 
-                var texture = textures[ t ];
+            var i, ll;
+            var hasShadows = false;
+            for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
 
-                if ( texture !== undefined ) {
-
-                    // no method to retrieve textureCoordUnit, we maybe dont need any uvs
-                    var textureMaterial = texturesMaterial[ texture.getName() ];
-                    if ( !textureMaterial && !textureMaterial.textureUnit )
-                        continue;
-
-                    var texCoordUnit = textureMaterial.textureUnit;
-                    if ( texCoordUnit === undefined ) {
-                        texCoordUnit = t; // = t;
-                        textureMaterial.textureUnit = 0;
-                    }
-
-                    if ( texCoordMap[ texCoordUnit ] === undefined ) {
-
-                        this._vertexShader.push( 'attribute vec2 TexCoord' + texCoordUnit + ';' );
-                        this._vertexShader.push( 'varying vec2 FragTexCoord' + texCoordUnit + ';' );
-                        texCoordMap[ texCoordUnit ] = true;
-
-                    }
-
+                var shadowTexture = this._shadowsTextures[ i ];
+                if ( shadowTexture === undefined )
+                    continue;
+                if ( !hasShadows ) {
+                    hasShadows = true;
+                    this._vertexShader.push( 'uniform mat4 ModelWorldMatrix;' );
                 }
+
+                var shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
+                var viewMat = shadowTextureUniforms.ViewMatrix;
+                var projMat = shadowTextureUniforms.ProjectionMatrix;
+                var depthRange = shadowTextureUniforms.DepthRange;
+                var mapSize = shadowTextureUniforms.MapSize;
+                // uniforms
+                this._vertexShader.push( 'uniform mat4 ' + projMat.getName() + ';' );
+                this._vertexShader.push( 'uniform mat4 ' + viewMat.getName() + ';' );
+                this._vertexShader.push( 'uniform vec4 ' + depthRange.getName() + ';' );
+                this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
+                // varyings
+                this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'VertexProjected' ) + ';' );
+                this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'Z' ) + ';' );
+                hasShadows = true;
             }
 
-            this._vertexShader.push( [ '',
-                'void main() {',
-                ''
-            ].join( '\n' ) );
+            for ( var t = 0, tl = this._textures.length; t < tl; t++ ) {
+                var texCoordUnit = this.getTexCoordUnit( t );
+                if ( texCoordUnit === undefined || texCoordMap[ texCoordUnit ] !== undefined )
+                    continue;
+                this._vertexShader.push( 'attribute vec2 TexCoord' + texCoordUnit + ';' );
+                this._vertexShader.push( 'varying vec2 FragTexCoord' + texCoordUnit + ';' );
+                texCoordMap[ texCoordUnit ] = true;
+            }
 
+        },
+
+
+        declareVertexMain: function () {
+
+
+            /////////////// reproj
+            var temporalAttribute = this.getAttributeType( 'Temporal' );
+            var velocityAttribute = this.getAttributeType( 'Velocity' );
             if ( temporalAttribute ) {
 
                 this._vertexShader.push( [ '',
-                    '  vec4 pos = ModelViewMatrix * vec4(Vertex,1.0);',
+                    '  vec4 viewPos = ModelViewMatrix * vec4(Vertex,1.0);',
                     '  mat4 projMat = ProjectionMatrix;',
                     '  //projection space',
-                    '  FragScreenPos = projMat * pos;',
+                    '  FragScreenPos = projMat * viewPos;',
                     '',
                     '  if (temporalEnable == 1 && FrameNum > 1.0){',
                     '    // original paper stretch to -1,1 but neighbour pixel will',
@@ -287,7 +313,7 @@ var CustomCompiler;
                     '     projMat[2][0] += ((SampleX ) - 0.5) / (RenderSize.x );',
                     '     projMat[2][1] += ((SampleY ) - 0.5) / (RenderSize.y );',
                     '  }',
-                    '  vec4 position = projMat * pos;',
+                    '  vec4 position = projMat * viewPos;',
                     '  gl_Position = position;',
                     '',
                     '   // compute prev clip space position',
@@ -327,7 +353,9 @@ var CustomCompiler;
                 ].join( '\n' ) );
             }
 
-            this._vertexShader.push( [ '',
+
+            this._vertexShader.push( [
+                '',
                 '  FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
                 '  FragEyeVector = viewPos.xyz;',
                 '  if (ArrayColorEnabled == 1.0)',
@@ -335,45 +363,50 @@ var CustomCompiler;
                 '  else',
                 '    VertexColor = vec4(1.0,1.0,1.0,1.0);',
                 '  gl_PointSize = 1.0;',
-                '',
                 ''
             ].join( '\n' ) );
 
-            var self = this;
-            ( function () {
-                var texCoordMap = {};
+            var texCoordMap = {};
 
-                for ( var tt = 0, ttl = textures.length; tt < ttl; tt++ ) {
+            for ( var tt = 0; tt < this._textures.length; tt++ ) {
+                var texCoordUnit = this.getTexCoordUnit( tt );
+                if ( texCoordUnit === undefined || texCoordMap[ texCoordUnit ] !== undefined )
+                    continue;
+                this._vertexShader.push( 'FragTexCoord' + texCoordUnit + ' = TexCoord' + texCoordUnit + ';' );
+                texCoordMap[ texCoordUnit ] = true;
+            }
 
-                    if ( textures[ tt ] !== undefined ) {
-
-                        var texture = textures[ tt ];
-                        var textureMaterial = texturesMaterial[ texture.getName() ];
-
-                        // no method getTexCoordUnit, maybe we dont need it at all
-                        if ( !textureMaterial && !textureMaterial.textureUnit )
-                            continue;
-
-                        var texCoordUnit = texture.textureUnit;
-                        if ( texCoordUnit === undefined ) {
-                            texCoordUnit = tt;
-                            textureMaterial.textureUnit = texCoordUnit;
-                        }
-
-                        if ( texCoordMap[ texCoordUnit ] === undefined ) {
-                            self._vertexShader.push( 'FragTexCoord' + texCoordUnit + ' = TexCoord' + texCoordUnit + ';' );
-                            texCoordMap[ texCoordUnit ] = true;
-                        }
-                    }
+            var hasShadows = false;
+            for ( var i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
+                var shadowTexture = this._shadowsTextures[ i ];
+                if ( !shadowTexture )
+                    continue;
+                if ( !hasShadows ) {
+                    hasShadows = true;
+                    this._vertexShader.push( 'vec4 worldPosition = ModelWorldMatrix * vec4(Vertex,1.0);' );
                 }
-            } )();
+
+                // uniforms
+                var shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
+                var shadowView = shadowTextureUniforms.ViewMatrix.getName();
+                var shadowProj = shadowTextureUniforms.ProjectionMatrix.getName();
+
+                // varyings
+                var shadowVertProj = shadowTexture.getVaryingName( 'VertexProjected' );
+                var shadowZ = shadowTexture.getVaryingName( 'Z' );
 
 
-
-
-            this._vertexShader.push( '}' );
+                this._vertexShader.push( ' ' + shadowZ + ' = ' + shadowView + ' *  worldPosition;' );
+                this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * ' + shadowZ + ';' );
+            }
         },
-
+        // Meanwhile, here it is.
+        createVertexShaderGraph: function () {
+            this.declareVertexVariables();
+            this._vertexShader.push( 'void main() {' );
+            this.declareVertexMain();
+            this._vertexShader.push( '}' );
+        }
 
     } );
 

@@ -7,6 +7,11 @@ var CacheUniformApply = function ( state, program ) {
     this.modelWorldUniform = program._uniformsCache[ state.modelWorldMatrix.name ];
     this.viewUniform = program._uniformsCache[ state.viewMatrix.name ];
 
+    //
+    this.prevModelViewUniform = program._uniformsCache[ state.prevModelViewMatrix.name ];
+    this.prevProjectionUniform = program._uniformsCache[ state.prevProjectionMatrix.name ];
+
+
     this.apply = undefined;
     this.Matrix = Matrix;
     this.generateUniformsApplyMethods();
@@ -40,9 +45,19 @@ CacheUniformApply.prototype = {
             functionStr.push( '};' );
         }
 
+        // reproj
+        if ( this.prevModelViewUniform !== undefined ) {
+            functionStr.push( 'state.applyPrevModelViewMatrix( prevmodelview );' );
+        }
+
+        if ( this.prevProjectionUniform !== undefined ) {
+            functionStr.push( 'state.applyPrevProjectionMatrix( prevprojection );' );
+        }
+
+
         // I am the evil, so please bother someone else
         /*jshint evil: true */
-        var func = new Function( 'state', 'modelview', 'modelworld', 'view', 'projection', functionStr.join( '\n' ) );
+        var func = new Function( 'state', 'modelview', 'modelworld', 'view', 'projection', 'normal', 'prevmodelview', 'prevprojection', functionStr.join( '\n' ) );
         /*jshint evil: false */
 
         this.apply = func;

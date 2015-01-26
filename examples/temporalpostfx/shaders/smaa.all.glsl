@@ -50,12 +50,13 @@
 
 
 #define textureLod(tex, coord, lod) texture2D(tex, coord, -15.0)
-#define textureLodOffset(tex, coord, lod, offset) texture2D(tex, coord + offset, -15.0)
+#define textureLodOffset(tex, coord, lod, offset) texture2D(tex, coord + vec2(offset), -15.0)
 #define texture(tex, coord, offset) texture2D(tex, coord + offset)
 
 
 #define SMAATexture2D(tex) sampler2D tex
 #define SMAATexturePass2D(tex) tex
+//#define SMAATexturePass2D(tex)  sampler2D tex
 #define SMAASampleLevelZero(tex, coord) textureLod(tex, coord, 0.0)
 #define SMAASampleLevelZeroPoint(tex, coord) textureLod(tex, coord, 0.0)
 #define SMAASampleLevelZeroOffset(tex, coord, offset) textureLodOffset(tex, coord, 0.0, offset)
@@ -77,6 +78,7 @@
 #define bool3 bvec3
 #define bool4 bvec4
 
+#define round(a) floor(a + 0.5)
 
 /**
  *                  _______  ___  ___       ___           ___
@@ -1076,11 +1078,16 @@ float SMAASearchXLeft(SMAATexture2D(edgesTex), SMAATexture2D(searchTex), float2 
      * which edges are active from the four fetched ones.
      */
     float2 e = float2(0.0, 1.0);
-    while (texcoord.x > end &&
-           e.g > 0.8281 && // Is there some edge not activated?
-           e.r == 0.0) { // Or is there a crossing edge that breaks the line?
-        e = SMAASampleLevelZero(edgesTex, texcoord).rg;
-        texcoord = mad(-float2(2.0, 0.0), SMAA_RT_METRICS.xy, texcoord);
+    for (int i = 0; i < 16 ; i++) { // Or is there a crossing edge that breaks the line?
+        if ( texcoord.x > end &&
+             e.g > 0.8281 && // Is there some edge not activated?
+             e.r == 0.0){
+
+            e = SMAASampleLevelZero(edgesTex, texcoord).rg;
+            texcoord = mad(-float2(2.0, 0.0), SMAA_RT_METRICS.xy, texcoord);
+        }
+
+
     }
 
     float offset = mad(-(255.0 / 127.0), SMAASearchLength(SMAATexturePass2D(searchTex), e, 0.0), 3.25);

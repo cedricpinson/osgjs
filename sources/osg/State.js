@@ -201,6 +201,39 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         this.getGraphicContext().useProgram( program );
     },
 
+    applyPrevModelViewMatrix: function ( matrix ) {
+
+        if ( this._prevModelViewMatrix === matrix ) return false;
+
+        var program = this.getLastProgramApplied();
+
+        var mu = this.prevModelViewMatrix;
+        var mul = program._uniformsCache[ mu.name ];
+        if ( mul ) {
+            Matrix.copy( matrix, mu.get() );
+            mu.dirty();
+            mu.apply( this.getGraphicContext(), mul );
+        }
+
+        this._prevModelViewMatrix = matrix;
+        return true;
+    },
+
+    applyPrevProjectionMatrix: function ( matrix ) {
+
+        if ( this._prevProjectionMatrix === matrix ) return;
+
+        this._prevProjectionMatrix = matrix;
+        var program = this.getLastProgramApplied();
+        var mu = this.prevProjectionMatrix;
+
+        var mul = program._uniformsCache[ mu.name ];
+        Matrix.copy( matrix, mu.get() );
+        mu.dirty();
+        mu.apply( this.getGraphicContext(), mul );
+
+    },
+
     applyModelViewMatrix: ( function () {
 
         var normal = Matrix.create();

@@ -22,12 +22,10 @@ uniform mat4 ProjectionMatrix;
 varying vec2 FragTexCoord0;
 varying vec4 offset[3];
 
-
-#define SMAA_ONLY_COMPILE_VS 1
-#define SMAA_ONLY_COMPILE_PS 0
 #define SMAA_INCLUDE_VS 1
 #define SMAA_INCLUDE_PS 0
-#pragma include "smaa.all"
+
+#pragma include "smaa.all" "_EDGE_VS"
 
 void main()
 {
@@ -49,16 +47,15 @@ varying vec2 FragTexCoord0;
 varying vec4 offset[3];
 varying vec4 dummy2;
 
-#define SMAA_ONLY_COMPILE_VS 0
-#define SMAA_ONLY_COMPILE_PS 1
 #define SMAA_INCLUDE_VS 0
 #define SMAA_INCLUDE_PS 1
-#pragma include "smaa.all"
+
+#pragma include "smaa.all" "_EDGE_FS"
 
 void main()
 {
     //gl_FragColor = SMAAColorEdgeDetectionPS(texcoord, offset, texture);
-    gl_FragColor = SMAALumaEdgeDetectionPS(FragTexCoord0, offset, texture0);
+    gl_FragColor.xy = SMAALumaEdgeDetectionPS(FragTexCoord0, offset, texture0);
     //gl_FragColor.a = 1.0; // This is not there originally! Instead turn blending off!!
 }
 #endif //_EDGE_FS
@@ -73,7 +70,8 @@ out vec4 dummy2;
 
 #define SMAA_ONLY_COMPILE_VS 1
 #define SMAA_ONLY_COMPILE_PS 0
-#pragma include "smaa.all"
+
+#pragma include "smaa.all" "_BLEND_VS"
 
 void main()
 {
@@ -94,7 +92,9 @@ uniform sampler2D search_tex;
 
 #define SMAA_ONLY_COMPILE_VS 0
 #define SMAA_ONLY_COMPILE_PS 1
-#pragma include "smaa.all"
+
+#pragma include "smaa.all" "_BLEND_FS"
+
 
 in vec2 texcoord;
 in vec2 pixcoord;
@@ -119,7 +119,8 @@ out vec4 dummy2;
 
 #define SMAA_ONLY_COMPILE_VS 1
 #define SMAA_ONLY_COMPILE_PS 0
-#pragma include "smaa.all"
+
+#pragma include "smaa.all" "_NEIGH_VS"
 
 void main()
 {
@@ -137,7 +138,8 @@ void main()
 
 #define SMAA_ONLY_COMPILE_VS 0
 #define SMAA_ONLY_COMPILE_PS 1
-#pragma include "smaa.all"
+
+#pragma include "smaa.all" "_NEIGH_FS"
 
 uniform sampler2D texture;
 uniform sampler2D blend_tex;
