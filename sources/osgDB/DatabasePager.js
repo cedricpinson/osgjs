@@ -4,14 +4,14 @@
 
 
 define( [
-    'Q',
+    'q',
     'osg/Utils',
     'osg/NodeVisitor',
     'osg/PagedLOD',
     'osg/Timer',
     'osg/Notify',
     'osg/Camera'
-], function ( Q, MACROUTILS, NodeVisitor, PagedLOD, Timer, Notify, Camera ) {
+], function ( q, MACROUTILS, NodeVisitor, PagedLOD, Timer, Notify, Camera ) {
 
     'use strict';
     /**
@@ -242,14 +242,14 @@ define( [
             var that = this;
             // Load from function
             if ( dbrequest._function !== undefined ) {
-                Q.when( this.loadNodeFromFunction( dbrequest._function, dbrequest._group ) ).then( function ( child ) {
+                q.when( this.loadNodeFromFunction( dbrequest._function, dbrequest._group ) ).then( function ( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
                     that._pendingNodes.push( dbrequest );
                     that._loading = false;
                 } );
             } else if ( dbrequest._url !== '' ) { // Load from URL
-                Q.when( this.loadNodeFromURL( dbrequest._url ) ).then( function ( child ) {
+                q.when( this.loadNodeFromURL( dbrequest._url ) ).then( function ( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
                     that._pendingNodes.push( dbrequest );
@@ -260,8 +260,8 @@ define( [
 
         loadNodeFromFunction: function ( func, plod ) {
             // Need to call with pagedLOD as parent, to be able to have multiresolution structures.
-            var defer = Q.defer();
-            Q.when( ( func )( plod ) ).then( function ( child ) {
+            var defer = q.defer();
+            q.when( ( func )( plod ) ).then( function ( child ) {
                 defer.resolve( child );
             } );
             return defer.promise;
@@ -269,10 +269,10 @@ define( [
 
         loadNodeFromURL: function ( url ) {
             var ReaderParser = require( 'osgDB/ReaderParser' );
-            var defer = Q.defer();
+            var defer = q.defer();
             // Call to ReaderParser just in case there is a custom readNodeURL Callback
             // See osgDB/Options.js and/or osgDB/Input.js
-            Q.when( ReaderParser.readNodeURL( url ) ).then( function ( child ) {
+            q.when( ReaderParser.readNodeURL( url ) ).then( function ( child ) {
                 defer.resolve( child );
             } );
             return defer.promise;
