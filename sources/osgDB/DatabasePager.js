@@ -8,10 +8,8 @@ define( [
     'osg/Utils',
     'osg/NodeVisitor',
     'osg/PagedLOD',
-    'osg/Timer',
-    'osg/Notify',
-    'osg/Camera'
-], function ( q, MACROUTILS, NodeVisitor, PagedLOD, Timer, Notify, Camera ) {
+    'osg/Timer'
+], function ( q, MACROUTILS, NodeVisitor, PagedLOD, Timer ) {
 
     'use strict';
     /**
@@ -29,7 +27,7 @@ define( [
         this._childrenToRemoveList = new Set();
         this._downloadingRequestsNumber = 0;
         // In OSG the targetMaximumNumberOfPagedLOD is 300 by default
-        // here we set 50 as we need to be more strict wiith memory in a browser  
+        // here we set 50 as we need to be more strict with memory in a browser  
         this._targetMaximumNumberOfPagedLOD = 50;
     };
 
@@ -43,17 +41,6 @@ define( [
         //  this.frameNumber = 0;
         //  this.frameNumberOfLastTraversal = 0;
     };
-
-    var ParentVisitor = function () {
-        this.nodePaths = [];
-        NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
-    };
-    ParentVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
-        apply: function ( node ) {
-            this.nodePaths.unshift( node );
-            this.traverse( node );
-        }
-    } );
 
     var FindPagedLODsVisitor = function ( pagedLODList, frameNumber ) {
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
@@ -103,14 +90,13 @@ define( [
             return sizeBefore !== removedChildren.length;
         },
         _markRequestsExpired: function ( plod ) {
-            var numChildren = plod.children.length;
+            var numRanges = plod._perRangeDataList.length;
             var request;
-            for ( var i = 0; i < numChildren; i++ ) {
+            for ( var i = 0; i < numRanges; i++ ) {
                 request = plod.getDatabaseRequest( i );
                 if ( request !== undefined ) {
                     request._groupExpired = true;
                     request._loadedModel = null;
-                    //request._group = null;
                 }
             }
         }
@@ -168,25 +154,14 @@ define( [
             // Prune the list of database requests.
             if ( this._pendingNodes.length ) {
                 var request = this._pendingNodes.shift();
+
                 var frameNumber = frameStamp.getFrameNumber();
                 var timeStamp = frameStamp.getSimulationTime();
-                // Let's see if the pagedLOD is conected to the scenegraph
-                var parentVisitor = new ParentVisitor();
-                request._group.accept( parentVisitor );
-                // If it is not, return.
-                if ( parentVisitor.nodePaths[ 0 ].getTypeID() !== Camera.getTypeID() ) {
-                    Notify.log( 'DatabasePager::addLoadedDataToSceneGraph() node in parental chain deleted, discarding subgraph.' );
-                    // Clean the request
-                    request._loadedModel = undefined;
-                    request = undefined;
-                    return;
-                }
                 // If the request is not expired, then add/register new childs
                 if ( request._groupExpired === false ) {
                     var plod = request._group;
                     plod.setTimeStamp( plod.children.length, timeStamp );
                     plod.setFrameNumber( plod.children.length, frameNumber );
-                    plod._perRangeDataList[ plod.children.length - 1 ].dbrequest = undefined;
                     plod.addChildNode( request._loadedModel );
                     // Register PagedLODs.
                     if ( !this._activePagedLODList.has( plod ) ) {
@@ -194,7 +169,13 @@ define( [
                     } else {
                         this.registerPagedLODs( request._loadedModel, frameNumber );
                     }
+                } else {
+                    // Clean the request
+                    request._loadedModel = undefined;
+                    request = undefined;
+                    return;
                 }
+
             }
         },
 
@@ -222,7 +203,7 @@ define( [
             if ( this._pendingRequests.length ) {
                 // Sort requests depending on timestamp
                 this._pendingRequests.sort( function ( r1, r2 ) {
-                    return r1.timestamp - r2.timestamp;
+                    return r1.timeStamp - r2.timeStamp;
                 } );
                 if ( this._pendingRequests.length < number )
                     number = this._pendingRequests.length;
@@ -236,15 +217,14 @@ define( [
         processRequest: function ( dbrequest ) {
             this._loading = true;
             var that = this;
-            // Check if the PLOD node have been removed from the scenegraph.
-            var parentVisitor = new ParentVisitor();
-            dbrequest._group.accept( parentVisitor );
-            if ( parentVisitor.nodePaths[ 0 ].getTypeID() !== Camera.getTypeID() ) {
-                Notify.log( 'DatabasePager::processRequest() node in parental chain deleted, discarding request.' );
+            // Check if the request is valid;
+            if ( dbrequest._groupExpired ) {
+                //Notify.log( 'DatabasePager::processRequest() Request expired.' );
                 that._downloadingRequestsNumber--;
                 this._loading = false;
                 return;
             }
+
             // Load from function
             if ( dbrequest._function !== undefined ) {
                 q.when( this.loadNodeFromFunction( dbrequest._function, dbrequest._group ) ).then( function ( child ) {
@@ -328,8 +308,9 @@ define( [
                         numToPrune--;
                     }
                     // Add to the remove list all the childs deleted
-                    for ( i = 0; i < removedChildren.length; i++ )
+                    for ( i = 0; i < removedChildren.length; i++ ){
                         that._childrenToRemoveList.add( removedChildren[ i ] );
+                    }
                     expiredPagedLODVisitor._childrenList.length = 0;
                     removedChildren.length = 0;
                 }
