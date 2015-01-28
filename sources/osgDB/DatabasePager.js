@@ -26,6 +26,7 @@ define( [
         this._activePagedLODList = new Set();
         this._childrenToRemoveList = new Set();
         this._downloadingRequestsNumber = 0;
+        this._maxRequestsPerFrame = 10;
         // In OSG the targetMaximumNumberOfPagedLOD is 300 by default
         // here we set 50 as we need to be more strict with memory in a browser  
         this._targetMaximumNumberOfPagedLOD = 50;
@@ -136,12 +137,17 @@ define( [
             this.removeExpiredSubgraphs( frameStamp );
 
             if ( !this._loading ) {
-                // Now taking one request per frame. It could be changed.
-                this.takeRequests( 1 );
+                // Time to do the requests.
+                this.takeRequests();
             }
             this.addLoadedDataToSceneGraph( frameStamp );
         },
-
+        setMaxRequestsPerFrame: function ( numRequests ) {
+            this._maxRequestsPerFrame = numRequests;
+        },
+        getMaxRequestsPerFrame: function () {
+            return this._maxRequestsPerFrame;
+        },
         getRequestListSize: function () {
             return this._pendingRequests.length + this._downloadingRequestsNumber;
         },
@@ -189,7 +195,6 @@ define( [
         },
 
         requestNodeFile: function ( func, url, node, timestamp ) {
-            if ( node.getParents().length === 0 ) return;
             var dbrequest = new DatabaseRequest();
             dbrequest._group = node;
             dbrequest._function = func;
@@ -199,15 +204,15 @@ define( [
             return dbrequest;
         },
 
-        takeRequests: function ( number ) {
+        takeRequests: function ( ) {
             if ( this._pendingRequests.length ) {
                 // Sort requests depending on timestamp
                 this._pendingRequests.sort( function ( r1, r2 ) {
                     return r1.timeStamp - r2.timeStamp;
                 } );
-                if ( this._pendingRequests.length < number )
-                    number = this._pendingRequests.length;
-                for ( var i = 0; i < number; i++ ) {
+
+                var numRequests = Math.min( this._maxRequestsPerFrame, this._pendingRequests.length );
+                for ( var i = 0; i < numRequests; i++ ) {
                     this._downloadingRequestsNumber++;
                     this.processRequest( this._pendingRequests.shift() );
                 }
@@ -270,7 +275,8 @@ define( [
             var beginTime = Timer.instance().tick();
             var that = this;
             this._childrenToRemoveList.forEach( function ( node ) {
-                if ( elapsedTime > availableTime ) return;
+                // If we don't have more time, break the loop.
+                if ( elapsedTime > availableTime ) return false;
                 that._childrenToRemoveList.delete( node );
                 node.accept( new ReleaseVisitor( gl ) );
                 node.removeChildren();
