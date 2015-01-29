@@ -28,7 +28,7 @@ define( [
         this._downloadingRequestsNumber = 0;
         this._maxRequestsPerFrame = 10;
         // In OSG the targetMaximumNumberOfPagedLOD is 300 by default
-        // here we set 50 as we need to be more strict with memory in a browser  
+        // here we set 50 as we need to be more strict with memory in a browser
         this._targetMaximumNumberOfPagedLOD = 50;
     };
 
@@ -82,9 +82,9 @@ define( [
             this.traverse( node );
         },
         removeExpiredChildrenAndFindPagedLODs: function ( plod, expiryTime, expiryFrame, removedChildren ) {
+            if ( !plod.children.length ) return;
             var sizeBefore = removedChildren.length;
             plod.removeExpiredChildren( expiryTime, expiryFrame, removedChildren );
-
             for ( var i = sizeBefore; i < removedChildren.length; i++ ) {
                 removedChildren[ i ].accept( this );
             }
@@ -118,7 +118,17 @@ define( [
             // That is already done in the PagedLOD
             this._pendingNodes.push( dbrequest );
         },
-
+        reset: function () {
+            this._pendingRequests = [];
+            this._pendingNodes = [];
+            this._loading = false;
+            this._lastCB = true;
+            this._activePagedLODList.clear();
+            this._childrenToRemoveList.clear();
+            this._downloadingRequestsNumber = 0;
+            this._maxRequestsPerFrame = 10;
+            this._targetMaximumNumberOfPagedLOD = 50;
+        },
         updateSceneGraph: function ( frameStamp ) {
             // Progress callback
             if ( this._progressCallback !== undefined ) {
