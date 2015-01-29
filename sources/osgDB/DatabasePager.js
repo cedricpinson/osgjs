@@ -169,6 +169,10 @@ define( [
         addLoadedDataToSceneGraph: function ( frameStamp ) {
             // Prune the list of database requests.
             if ( this._pendingNodes.length ) {
+                // Sort requests depending on timestamp
+                this._pendingRequests.sort( function ( r1, r2 ) {
+                    return r2._timeStamp - r1._timeStamp;
+                } );
                 var request = this._pendingNodes.shift();
 
                 var frameNumber = frameStamp.getFrameNumber();
@@ -216,12 +220,8 @@ define( [
 
         takeRequests: function ( ) {
             if ( this._pendingRequests.length ) {
-                // Sort requests depending on timestamp
-                this._pendingRequests.sort( function ( r1, r2 ) {
-                    return r1.timeStamp - r2.timeStamp;
-                } );
-
                 var numRequests = Math.min( this._maxRequestsPerFrame, this._pendingRequests.length );
+
                 for ( var i = 0; i < numRequests; i++ ) {
                     this._downloadingRequestsNumber++;
                     this.processRequest( this._pendingRequests.shift() );
@@ -272,6 +272,8 @@ define( [
             var defer = q.defer();
             // Call to ReaderParser just in case there is a custom readNodeURL Callback
             // See osgDB/Options.js and/or osgDB/Input.js
+            // TODO: We should study if performance can be improved if separating the XHTTP request from
+            // the parsing. This way several/many request could be done at the same time.
             q.when( ReaderParser.readNodeURL( url ) ).then( function ( child ) {
                 defer.resolve( child );
             } );

@@ -203,6 +203,10 @@ define( [
                                 this._perRangeDataList[ numChildren ].loaded = true;
                                 var dbhandler = visitor.getDatabaseRequestHandler();
                                 this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime() );
+                            } else {
+                                // Update timestamp of the request.
+                                if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined)
+                                    this._perRangeDataList[ numChildren ].dbrequest._timeStamp = visitor.getFrameStamp().getSimulationTime();
                             }
                         }
                     }
