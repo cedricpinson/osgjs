@@ -170,7 +170,7 @@ define( [
             // Prune the list of database requests.
             if ( this._pendingNodes.length ) {
                 // Sort requests depending on timestamp
-                this._pendingRequests.sort( function ( r1, r2 ) {
+                this._pendingNodes.sort( function ( r1, r2 ) {
                     return r2._timeStamp - r1._timeStamp;
                 } );
                 var request = this._pendingNodes.shift();
@@ -221,7 +221,10 @@ define( [
         takeRequests: function ( ) {
             if ( this._pendingRequests.length ) {
                 var numRequests = Math.min( this._maxRequestsPerFrame, this._pendingRequests.length );
-
+                // Ask for newer requests first.
+                this._pendingRequests.sort( function ( r1, r2 ) {
+                    return r2._timeStamp - r1._timeStamp;
+                } );
                 for ( var i = 0; i < numRequests; i++ ) {
                     this._downloadingRequestsNumber++;
                     this.processRequest( this._pendingRequests.shift() );
@@ -274,6 +277,8 @@ define( [
             // See osgDB/Options.js and/or osgDB/Input.js
             // TODO: We should study if performance can be improved if separating the XHTTP request from
             // the parsing. This way several/many request could be done at the same time.
+            // Also we should be able to cancel requests, so there is a need to have access
+            // to the HTTPRequest Object
             q.when( ReaderParser.readNodeURL( url ) ).then( function ( child ) {
                 defer.resolve( child );
             } );
