@@ -150,7 +150,7 @@ define( [
                 // Time to do the requests.
                 this.takeRequests();
             }
-            this.addLoadedDataToSceneGraph( frameStamp );
+            this.addLoadedDataToSceneGraph( frameStamp, 0.005 );
         },
         setMaxRequestsPerFrame: function ( numRequests ) {
             this._maxRequestsPerFrame = numRequests;
@@ -166,13 +166,20 @@ define( [
             this._progressCallback = cb;
         },
 
-        addLoadedDataToSceneGraph: function ( frameStamp ) {
+        addLoadedDataToSceneGraph: function ( frameStamp, availableTime ) {
+            if ( availableTime <= 0.0 ) return;
             // Prune the list of database requests.
-            if ( this._pendingNodes.length ) {
-                // Sort requests depending on timestamp
-                this._pendingNodes.sort( function ( r1, r2 ) {
+            var elapsedTime = 0.0;
+            var beginTime = Timer.instance().tick();
+            this._pendingNodes.sort( function ( r1, r2 ) {
                     return r2._timeStamp - r1._timeStamp;
-                } );
+            } );
+
+            for (var i = 0; i< this._pendingNodes.length; i++ ) {
+                 if ( elapsedTime > availableTime ) {
+                    //console.log('yeah');
+                    return;
+                }
                 var request = this._pendingNodes.shift();
 
                 var frameNumber = frameStamp.getFrameNumber();
@@ -193,9 +200,8 @@ define( [
                     // Clean the request
                     request._loadedModel = undefined;
                     request = undefined;
-                    return;
                 }
-
+                elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
             }
         },
 

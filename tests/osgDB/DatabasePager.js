@@ -3,8 +3,9 @@ define( [
     'vendors/q',
     'osg/PagedLOD',
     'osg/Node',
-    'osg/FrameStamp'
-], function ( DatabasePager, Q, PagedLOD, Node, FrameStamp ) {
+    'osg/FrameStamp',
+    'osg/Notify'
+], function ( DatabasePager, Q, PagedLOD, Node, FrameStamp, Notify ) {
 
     return function () {
 
@@ -79,7 +80,7 @@ define( [
             ok( dbpager._pendingRequests.length === 1, 'Node requested' );
             Q.when( dbpager.processRequest( request ) ).then( function ( ) {
                 start();
-                dbpager.addLoadedDataToSceneGraph(new FrameStamp());
+                dbpager.addLoadedDataToSceneGraph(new FrameStamp(), 0.005 );
                 ok( dbpager._activePagedLODList.size === 2, 'we should have two plods active' );
             } ).fail( function ( error ) {
                 Notify.error( error );
