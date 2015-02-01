@@ -97,17 +97,20 @@
 
 
             //var spherical = environment + 'spherical';
-            var cubemapPackedFloat = environment + 'cubemap_mipmap_float.bin.gz';
-            var integrateBRDF = environment + 'brdf.bin.gz';
+            var cubemapPackedFloat = environment + config['mipmapCubemap_float'];
+            var integrateBRDF = environment + config['brdfUE4'];
 
             //this._cubemapIrradiance = new EnvironmentCubeMap( cubemapIrradiance );
-            this._cubemapPackedFloat = new EnvironmentCubeMap( cubemapPackedFloat, config );
+            this._cubemapPackedFloat = new EnvironmentCubeMap( cubemapPackedFloat, config['mipmapCubemapSize'], config );
 
 
             // read all panorama format U4
             formatList.forEach( function ( key ) {
                 var str = key.toLowerCase();
-                this._panoramaUE4[ key ] = new EnvironmentPanorama( environment + 'panorama_prefilter_' + str + '.bin.gz', config );
+                var file = config['specularPanoramaUE4_' + str];
+                var size = config['specularPanoramaUE4Size'];
+                if ( file === undefined || size === undefined ) return;
+                this._panoramaUE4[ key ] = new EnvironmentPanorama( environment + file, size , config );
                 ready.push( this._panoramaUE4[ key ].loadPacked( key ) );
 
             }.bind( this ) );
@@ -116,18 +119,21 @@
             // read all cubemap format U4
             formatList.forEach( function ( key ) {
                 var str = key.toLowerCase();
-                this._cubemapUE4[ key ] = new EnvironmentCubeMap( environment + 'cubemap_prefilter_' + str + '.bin.gz', config );
+                var file = config['specularCubemapUE4_' + str];
+                var size = config['specularCubemapUE4Size'];
+                if ( file === undefined || size === undefined ) return;
+                this._cubemapUE4[ key ] = new EnvironmentCubeMap( environment + file, size, config );
                 ready.push( this._cubemapUE4[ key ].loadPacked( key ) );
 
             }.bind( this ) );
 
-            this._integrateBRDF = new IntegrateBRDFMap( integrateBRDF );
+            this._integrateBRDF = new IntegrateBRDFMap( integrateBRDF, config['brdfUE4Size'] );
 
 
-            if ( !this._config.shCoefs )
+            if ( !this._config.diffuseSPH )
                 osg.error( 'cant find shCoefs in environment config' );
 
-            this._spherical = new EnvironmentSphericalHarmonics( config.shCoefs );
+            this._spherical = new EnvironmentSphericalHarmonics( config.diffuseSPH );
 
             ready.push( this._cubemapPackedFloat.loadPacked() );
             ready.push( this._integrateBRDF.loadPacked() );
@@ -999,7 +1005,8 @@
 
             //var environment = 'textures/parking/';
             //var environment = 'textures/path/';
-            var environment = 'textures/field/';
+            //var environment = 'textures/field/';
+            var environment = 'textures/bus_garage/';
             //var environment = 'textures/tmp/';
 
             //var model = new ModelLoader( 'models/cerberus/' );

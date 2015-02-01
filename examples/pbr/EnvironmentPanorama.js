@@ -8,9 +8,10 @@ window.EnvironmentPanorama = ( function () {
 
     var shaderProcessor = new osgShader.ShaderProcessor();
 
-    var PanoramaEnv = function ( file, options ) {
+    var PanoramaEnv = function ( file, size, options ) {
         this._options = options || {};
         this._file = file;
+        this._size = size[0];
     };
 
     PanoramaEnv.prototype = {
@@ -45,7 +46,7 @@ window.EnvironmentPanorama = ( function () {
             var load = function() {
                 var data = xhr.response;
 
-                var size = this._options.specularPanoramaSize;
+                var size = this._size;
 
                 var imageData;
                 if ( type === 'FLOAT' )

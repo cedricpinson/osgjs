@@ -7,8 +7,9 @@ window.IntegrateBRDFMap = ( function () {
     var osgDB = OSG.osgDB;
     var osgShader = OSG.osgShader;
 
-    var IntegrateBRDFMap = function ( file ) {
+    var IntegrateBRDFMap = function ( file, size ) {
         this._file = file;
+        this._size = size[0];
     };
 
     IntegrateBRDFMap.prototype = {
@@ -29,7 +30,7 @@ window.IntegrateBRDFMap = ( function () {
             var defer = Q.defer();
 
             var xhr = new XMLHttpRequest();
-            var size = 128;
+            var size = this._size;
             var error = function () {};
             var load = function () {
                 var data = xhr.response;

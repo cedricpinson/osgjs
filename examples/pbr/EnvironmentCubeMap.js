@@ -8,8 +8,9 @@ window.EnvironmentCubeMap = ( function () {
 
     var shaderProcessor = new osgShader.ShaderProcessor();
 
-    var CubeMapEnv = function ( file, options ) {
+    var CubeMapEnv = function ( file, size, options ) {
         this._options = options || {};
+        this._size = size[0];
         this._file = file; // abandoned_sanatorium_staircase_%d.png
     };
 
@@ -76,7 +77,7 @@ window.EnvironmentCubeMap = ( function () {
             var load = function() {
                 var data = xhr.response;
 
-                var maxLevel = Math.log(this._options.specularCubemapSize)/Math.LN2;
+                var maxLevel = Math.log(this._size)/Math.LN2;
                 var offset = 0;
                 var images = { };
                 for ( var i = 0; i <= maxLevel; i++ ) {

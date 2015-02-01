@@ -5,13 +5,15 @@
 // getReferenceTexelEnvironment( Direction, Lod )
 
 
-float invG1( const in float ndw, const in float k ) {
+float invG1( const in float ndw, const in float k )
+{
     // return ndw*(1.0-k) + k ;
     return mix( ndw, 1.0, k);
 }
 
 // w is either Ln or Vn
-float G1( const in float ndw, const in float k ) {
+float G1( const in float ndw, const in float k )
+{
     // One generic factor of the geometry function divided by ndw
     // NB : We should have k > 0
     // return 1.0 / ( ndw*(1.0-k) + k );
@@ -20,7 +22,8 @@ float G1( const in float ndw, const in float k ) {
 
 
 
-vec3 F_Schlick( const in vec3 f0, const in float vdh ) {
+vec3 F_Schlick( const in vec3 f0, const in float vdh )
+{
     // Schlick with Spherical Gaussian approximation
     // cf http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf p3
     float Fc = pow( 1.0 - vdh, 5.0 );
@@ -31,7 +34,8 @@ vec3 F_Schlick( const in vec3 f0, const in float vdh ) {
     return mix( vec3(sphg), vec3(1.0), f0);
 }
 
-float G_SmithGGX(const in float NdotL, const in float NdotV, const in float k) {
+float G_SmithGGX(const in float NdotL, const in float NdotV, const in float k)
+{
     // cf http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf p3
     // visibility is a Cook-Torrance geometry function divided by (n.l)*(n.v)
     return NdotL * NdotV * G1( NdotL, k) * G1( NdotV, k);
@@ -41,7 +45,8 @@ float G_SmithGGX(const in float NdotL, const in float NdotV, const in float k) {
 }
 
 
-float D_GGX( const in float NdotH, const in float alpha) {
+float D_GGX( const in float NdotH, const in float alpha)
+{
     // use GGX / Trowbridge-Reitz, same as Disney and Unreal 4
     // cf http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf p3
     float tmp = alpha / (NdotH*NdotH*(alpha*alpha-1.0)+1.0);
@@ -49,11 +54,13 @@ float D_GGX( const in float NdotH, const in float alpha) {
 }
 
 
-float rand2(const in vec2 co){
+float rand2(const in vec2 co)
+{
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-vec2 getSample(const in int i ) {
+vec2 getSample(const in int i )
+{
     vec2 u;
     u[0] = rand2(vec2( float(i) * 1.0 ) );
     u[1] = rand2(vec2( float(i) * 3.5 ) );
@@ -63,7 +70,8 @@ vec2 getSample(const in int i ) {
 vec3 evaluateDiffuseIBL( const in vec3 N,
                          const in vec3 V,
                          const in vec3 tangentX,
-                         const in vec3 tangentY) {
+                         const in vec3 tangentY)
+{
 
     vec3 contrib = vec3(0.0);
     vec2 u;
@@ -106,7 +114,8 @@ vec3 evaluateSpecularIBL( const in vec3 N,
                           const in vec3 tangentY,
 
                           const in float roughness_,
-                          const in vec3 specular ) {
+                          const in vec3 specular )
+{
 
     vec3 contrib = vec3(0.0);
     // if dont simplify the math you can get a rougness of 0 and it will
@@ -242,7 +251,8 @@ vec3 evaluateSpecularIBL( const in vec3 N,
 
 void computeTangentFrame( const in vec4 tangent, const in vec3 normal,
                           out vec3 tangentx,
-                          out vec3 tangenty ) {
+                          out vec3 tangenty )
+{
 
     // Build local referential
 #ifdef NO_TANGENT
@@ -275,7 +285,7 @@ vec3 computeIBL( const in vec4 tangent,
     vec3 color = vec3(0.0);
     if ( albedo != color ) { // skip if no diffuse
         color += albedo * evaluateDiffuseSphericalHarmonics(normal,
-                                                            view );
+                 view );
     }
 
     color += evaluateSpecularIBL(normal,
@@ -294,7 +304,8 @@ vec3 referenceIBL( const in vec4 tangent,
                    const in vec3 view,
                    const in vec3 albedo,
                    const in float roughness,
-                   const in vec3 specular) {
+                   const in vec3 specular)
+{
 
     //vectors used for importance sampling
     vec3 tangentX, tangentY;
@@ -302,10 +313,10 @@ vec3 referenceIBL( const in vec4 tangent,
 
     vec3 color = vec3(0.0);
     if ( albedo != color ) { // skip if no diffuse
-         color += albedo * evaluateDiffuseIBL(normal,
-                                              view,
-                                              tangentX,
-                                              tangentY);
+        color += albedo * evaluateDiffuseIBL(normal,
+                                             view,
+                                             tangentX,
+                                             tangentY);
     }
 
     color += evaluateSpecularIBL(normal,
