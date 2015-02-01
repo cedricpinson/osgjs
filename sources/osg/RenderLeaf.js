@@ -54,11 +54,11 @@ define( [
 
                 program = state.getLastProgramApplied();
 
-                modelViewUniform = program._uniformsCache[ state.modelViewMatrix.name ];
-                modelWorldUniform = program._uniformsCache[ state.modelWorldMatrix.name ];
-                viewUniform = program._uniformsCache[ state.viewMatrix.name ];
-                projectionUniform = program._uniformsCache[ state.projectionMatrix.name ];
-                normalUniform = program._uniformsCache[ state.normalMatrix.name ];
+                modelViewUniform = program._uniformsCache[ 'ModelViewMatrix' ];
+                modelWorldUniform = program._uniformsCache[ 'ModelWorldMatrix' ];
+                viewUniform = program._uniformsCache[ 'ViewMatrix' ];
+                projectionUniform = program._uniformsCache[ 'ProjectionMatrix' ];
+                normalUniform = program._uniformsCache[ 'NormalMatrix' ];
 
                 if ( modelViewUniform !== undefined ) {
                     state.modelViewMatrix.set( this._modelView );
