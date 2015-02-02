@@ -21,7 +21,6 @@
     // - more esthetic scenes, diferent shapes
     // bugsfix:
     // - fix remove texture for sphere?
-    // - find a way to get Near/Far ?
     //
     // some refs:
     // https://fgiesen.wordpress.com/2010/10/20/some-more-frustum-culling-notes/
@@ -34,16 +33,33 @@
                 console.log( 'autoNearFar: ' + viewer.getCamera().getComputeNearFar() );
             },
             frustumculling: function () {
-                var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
-                cullVisitor.setEnableFrustumCulling( !cullVisitor._enableFrustumCulling );
+                viewer.getCamera().setEnableFrustumCulling( !viewer.getCamera().getEnableFrustumCulling() );
 
-                console.log( 'frustumCull ' + cullVisitor._enableFrustumCulling );
+                console.log( 'frustumCull ' + viewer.getCamera().getEnableFrustumCulling() );
             },
             near: '0',
             far: '0',
             culled: '0'
         };
         config = this._config;
+
+        // default & change debug
+        var queryDict = {};
+        window.location.search.substr( 1 ).split( '&' ).forEach( function ( item ) {
+            queryDict[ item.split( '=' )[ 0 ] ] = item.split( '=' )[ 1 ];
+        } );
+        if ( queryDict[ 'debug' ] ) {
+            this._debugOtherTechniques = true;
+            this._debugFrustum = true;
+            this._debugPrefilter = true;
+        }
+
+        var keys = Object.keys( queryDict );
+        for ( var i = 0; i < keys.length; i++ ) {
+            var property = keys[ i ];
+            this._config[ property ] = queryDict[ property ];
+        }
+
     };
 
     // Callback getting the Total, only on model root node for main render
@@ -67,8 +83,8 @@
 
         cull: function ( node, nv ) {
             // cull
-            config.near = nv._computedNear + '';
-            config.far = nv._computedFar + '';
+            config.near = config.camera.getNear() + '';
+            config.far = config.camera.getFar() + '';
 
             return true;
         }
@@ -85,18 +101,22 @@
         update: function ( node, nv ) {
             // update
             var topView = false;
+            var debugSphere = false;
             nv.getNodePath().forEach( function ( a ) {
-                if ( a.getName() === 'TopView' || a.getName() === 'debugSphere' ) {
+                if ( a.getName() === 'TopView' || ( a.getParents()[ 0 ] && a.getParents()[ 0 ].getName() === 'TopView' ) ) {
                     topView = true;
                 }
+                if ( a.getName() === 'debugSphere' || ( a.getParents()[ 0 ] && a.getParents()[ 0 ].getName() === 'debugSphere' ) ) {
+                    debugSphere = true;
+                }
             } );
-            if ( !topView ) {
+            if ( !topView && !debugSphere ) {
                 culled++;
 
                 var ss = node.getOrCreateStateSet();
                 var m = ss.getAttribute( 'Material' );
                 if ( m ) {
-                    m.setTransparency( 0.75 );
+                    //m.setTransparency( 0.75 );
                     m.setDiffuse( [ 1.0, 0.0, 0.0, 1.0 ] );
                 }
             }
@@ -106,18 +126,22 @@
         cull: function ( node, nv ) {
             // cull
             var topView = false;
+            var debugSphere = false;
             nv.getNodePath().forEach( function ( a ) {
-                if ( a.getName() === 'TopView' || a.getName() === 'debugSphere' ) {
+                if ( a.getName() === 'TopView' || ( a.getParents()[ 0 ] && a.getParents()[ 0 ].getName() === 'TopView' ) ) {
                     topView = true;
                 }
+                if ( a.getName() === 'debugSphere' || ( a.getParents()[ 0 ] && a.getParents()[ 0 ].getName() === 'debugSphere' ) ) {
+                    debugSphere = true;
+                }
             } );
-            if ( !topView ) {
+            if ( !topView && !debugSphere ) {
                 culled--;
 
                 var ss = node.getOrCreateStateSet();
                 var m = ss.getAttribute( 'Material' );
                 if ( m ) {
-                    m.setTransparency( 0.1 );
+                    //m.setTransparency( 0.1 );
                     m.setDiffuse( [ 0.0, 1.0, 0.0, 1.0 ] );
                 }
             }
@@ -158,7 +182,10 @@
             if ( !this._model ) {
 
                 // for now a once and for all
-                var debugSphere = true;
+                var debugSphere = false;
+                if ( this._config[ 'debug' ] ) {
+                    debugSphere = true;
+                }
 
                 this._model = new osg.MatrixTransform();
                 this._groundNode = this._model;
@@ -166,7 +193,14 @@
 
                 this._groundNode.setName( 'groundNode' );
 
-                var groundSize = 5;
+                var count = 10;
+
+                // intentionally create many node/transform
+                // to mimick real scene with many nodes
+                if ( this._config[ 'count' ] ) {
+                    count = this._config[ 'count' ];
+                }
+                var groundSize = 75 / count;
                 var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
                 ground.setName( 'groundWithThousandsParent' );
                 ground.setCullingActive( true );
@@ -184,9 +218,7 @@
                 var callbackUpdateCull;
                 var bbs, bs;
                 var groundSubNode;
-                // intentionally create many node/transform
-                // to mimick real scene with many nodes
-                var count = 15;
+
                 for ( var wG = 0; wG < count; wG++ ) {
                     for ( var wH = 0; wH < count; wH++ ) {
                         var groundSubNodeTrans = new osg.MatrixTransform();
@@ -213,7 +245,9 @@
                             bbs = groundSubNode.getBound();
                             bs = osg.createTexturedSphere( bbs.radius() );
                             bs.setName( 'debugSphere' );
-                            bs.setCullingActive( true );
+
+                            bs.setCullingActive( false );
+
                             this.setMaterialAndAlpha( bs, 0.5 );
 
                             bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, emptyTex, osg.StateAttribute.OFF | osg.StateAttribute.PROTECTED );
@@ -231,16 +265,8 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
                             groundSubNode.addChild( transformSphere );
                             transformSphere.addChild( bs );
 
-                            bs.setBound(  new osg.BoundingBox() );
-
-                            // bs.boundingboxComputed = true;
-                            // bs.boundingsphereComputed = true;
-                            // bs.boundingBox.valid = function () {
-                            //     return false;
-                            // };
-                            // bs.boundingSphere.valid = function () {
-                            //     return false;
-                            // };
+                            // should fin
+                            bs.setBound( new osg.BoundingBox() );
                         }
                     }
                 }
@@ -249,7 +275,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
                     bbs = this._groundNode.getBound();
                     bs = osg.createTexturedSphere( bbs.radius() );
                     bs.setName( 'debugSphere' );
-                    bs.setCullingActive( true );
+                    bs.setCullingActive( false );
                     this.setMaterialAndAlpha( bs, 0.5 );
 
                     bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.StateAttribute.ON | osg.StateAttribute.PROTECTED | osg.StateAttribute.OVERRIDE );
@@ -258,23 +284,15 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
                     bs.setUpdateCallback( callbackUpdateCull );
                     bs.setCullCallback( callbackUpdateCull );
 
-                    // CP: vv redeclaration
-                    var transformSphere = new osg.MatrixTransform();
-                    transformSphere.setMatrix(
+
+                    var transformSphere2 = new osg.MatrixTransform();
+                    transformSphere2.setMatrix(
                         osg.Matrix.makeTranslate( count * groundSize * 0.5 - 100, count * groundSize * 0.5 - 100, -5.0, [] ) );
-                    this._groundNode.addChild( transformSphere );
-                    transformSphere.addChild( bs );
+                    this._groundNode.addChild( transformSphere2 );
+                    transformSphere2.addChild( bs );
 
-                    bs.setBound(  new osg.BoundingBox() );
+                    bs.setBound( new osg.BoundingBox() );
 
-                    // bs.boundingboxComputed = true;
-                    // bs.boundingsphereComputed = true;
-                    // bs.boundingBox.valid = function () {
-                    //     return false;
-                    // };
-                    // bs.boundingSphere.valid = function () {
-                    //     return false;
-                    // };
                 }
                 this._groundNode.setCullingActive( true );
 
@@ -297,7 +315,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             rttCamera.setViewMatrix( [ 1, -4.4404402314756446e-13, 1.459502124082795e-13, 0, 4.674147612079625e-13, 0.9500000000000002, -0.3122498999199198, 0, -0, 0.31224989991991986, 0.95, 0, 62.50000000002921, 60.936249499571865, -94.31513162847247, 1 ] );
             // we will render a textured quad on the rtt target with a fixed texture without
             // motion
-            rttCamera.addChild( this._model );
+            //rttCamera.addChild( this._model );
             var disableCullingNode = new osg.Node();
             disableCullingNode.setName( 'DisableCullingNode' );
             disableCullingNode.addChild( this._model );
@@ -409,6 +427,7 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             var callbackUpdateCount = new CountCallback();
             updateCountNode.setUpdateCallback( callbackUpdateCount );
 
+
             var nearFarCallback = new NearFarCallback();
             updateCountNode.setCullCallback( nearFarCallback );
 
@@ -421,13 +440,15 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             this.addFrameBufferView();
             root.addChild( this._topView );
             root.addChild( this._rttdebugNode );
+
+
             return root;
         },
 
         run: function ( canvas ) {
 
             viewer = new osgViewer.Viewer( canvas, {
-                'enableFrustumCulling': true
+                'enableFrustumCulling': false
             } );
             this._canvas = canvas;
             this._viewer = viewer;
@@ -435,12 +456,9 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
 
             var scene = this.createScene();
 
-            // not working for now
-            // will when fix current culling attachable
-            // only to main cam et setted only globally once
-            var cullVisitor = viewer.getCamera().getRenderer().getCullVisitor();
-            cullVisitor.setEnableFrustumCulling( true );
+            viewer.getCamera().setEnableFrustumCulling( true );
 
+            this._config[ 'camera' ] = viewer.getCamera();
             viewer.getCamera().setComputeNearFar( true );
             viewer.getCamera().setName( 'main' );
 
@@ -448,6 +466,8 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             viewer.setupManipulator();
             viewer.getManipulator().setNode( this._model );
             viewer.getManipulator().computeHomePosition();
+
+            this._topView.setEnableFrustumCulling( false );
 
             viewer.run();
 

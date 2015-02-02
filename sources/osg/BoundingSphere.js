@@ -8,13 +8,13 @@ define( [
 
     var BoundingSphere = function () {
         this._center = [ 0.0, 0.0, 0.0 ];
-        this._radius = -1;
+        this._radius = -1.0;
     };
 
     BoundingSphere.prototype = {
         init: function () {
             Vec3.init( this._center );
-            this._radius = -1;
+            this._radius = -1.0;
         },
         valid: function () {
             return this._radius >= 0.0;
