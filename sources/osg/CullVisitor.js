@@ -228,13 +228,7 @@ define( [
     CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
 
         var stateset = camera.getStateSet();
-        if ( stateset ) {
-            this.pushStateSet( stateset );
-        }
-
-        if ( camera.light ) {
-            this.addPositionedAttribute( this.getCurrentModelViewMatrix(), camera.light );
-        }
+        if ( stateset ) this.pushStateSet( stateset );
 
         var modelview = this._getReservedMatrix();
         var projection = this._getReservedMatrix();
@@ -354,9 +348,7 @@ define( [
         this._computedNear = previousZnear;
         this._computedFar = previousZfar;
 
-        if ( stateset ) {
-            this.popStateSet();
-        }
+        if ( stateset ) this.popStateSet();
 
     };
 
@@ -385,19 +377,12 @@ define( [
 
 
         var stateset = node.getStateSet();
-        if ( stateset ) {
-            this.pushStateSet( stateset );
-        }
 
-        if ( node.light ) {
-            this.addPositionedAttribute( this.getCurrentModelViewMatrix(), node.light );
-        }
+        if ( stateset ) this.pushStateSet( stateset );
 
         this.handleCullCallbacksAndTraverse( node );
 
-        if ( stateset ) {
-            this.popStateSet();
-        }
+        if ( stateset ) this.popStateSet();
 
 
         this.popModelViewMatrix();
@@ -413,16 +398,11 @@ define( [
         this.pushProjectionMatrix( matrix );
 
         var stateset = node.getStateSet();
-
-        if ( stateset ) {
-            this.pushStateSet( stateset );
-        }
+        if ( stateset ) this.pushStateSet( stateset );
 
         this.handleCullCallbacksAndTraverse( node );
 
-        if ( stateset ) {
-            this.popStateSet();
-        }
+        if ( stateset ) this.popStateSet();
 
         this.popProjectionMatrix();
     };
@@ -431,7 +411,6 @@ define( [
     // as there's isn't any in osgjs
     // so frustumCulling is done here
     CullVisitor.prototype[ Node.typeID ] = function ( node ) {
-
 
 
         // Camera and lights must enlarge node parent bounding boxes for this not to cull
@@ -443,18 +422,11 @@ define( [
         this.pushCurrentMask();
 
         var stateset = node.getStateSet();
-        if ( stateset ) {
-            this.pushStateSet( stateset );
-        }
-        if ( node.light ) {
-            this.addPositionedAttribute( this.getCurrentModelViewMatrix(), node.light );
-        }
+        if ( stateset ) this.pushStateSet( stateset );
 
         this.handleCullCallbacksAndTraverse( node );
 
-        if ( stateset ) {
-            this.popStateSet();
-        }
+        if ( stateset ) this.popStateSet();
 
         // pop the culling mode.
         this.popCurrentMask();
@@ -470,20 +442,14 @@ define( [
     CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
 
         var stateset = node.getStateSet();
-        if ( stateset ) {
-            this.pushStateSet( stateset );
-        }
+        if ( stateset ) this.pushStateSet( stateset );
 
         var light = node.getLight();
-        if ( light ) {
-            this.addPositionedAttribute( this.getCurrentModelViewMatrix(), light );
-        }
+        if ( light ) this.addPositionedAttribute( this.getCurrentModelViewMatrix(), light );
 
         this.handleCullCallbacksAndTraverse( node );
 
-        if ( stateset ) {
-            this.popStateSet();
-        }
+        if ( stateset ) this.popStateSet();
     };
 
     CullVisitor.prototype[ Geometry.typeID ] = ( function () {
@@ -501,9 +467,8 @@ define( [
             }
 
             var stateset = node.getStateSet();
-            if ( stateset ) {
-                this.pushStateSet( stateset );
-            }
+            if ( stateset ) this.pushStateSet( stateset );
+
 
             // using modelview is not a pb because geometry
             // is a leaf node, else traversing the graph would be an
@@ -535,9 +500,8 @@ define( [
                 leafs.push( leaf );
             }
 
-            if ( stateset ) {
-                this.popStateSet();
-            }
+            if ( stateset ) this.popStateSet();
+
         };
     } )();
 

@@ -184,6 +184,9 @@ define( [
         draw: function () {
 
             var state = this.getState();
+
+            state.resetApplyMatrix(); // important because cache are used in cullvisitor
+
             this._renderStage.draw( state );
 
             // noticed that we accumulate lot of stack, maybe because of the stateGraph
