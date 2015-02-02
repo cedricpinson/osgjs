@@ -197,16 +197,23 @@ define( [
                         }
                         // now request the loading of the next unloaded child.
                         if ( numChildren < this._perRangeDataList.length ) {
+                            // compute priority from where abouts in the required range the distance falls.
+                            var priority = ( this._range[ numChildren ][ 0 ] - requiredRange ) / ( this._range[ numChildren ][ 1 ]- this._range[ numChildren ][ 0 ] );
+                            if ( this._rangeMode === Lod.PIXEL_SIZE_ON_SCREEN ) {
+                                priority = -priority;
+                            }
                             // Here we do the request
                             var group = visitor.nodePath[ visitor.nodePath.length - 1 ];
                             if ( this._perRangeDataList[ numChildren ].loaded === false ) {
                                 this._perRangeDataList[ numChildren ].loaded = true;
                                 var dbhandler = visitor.getDatabaseRequestHandler();
-                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime() );
+                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime(), priority );
                             } else {
                                 // Update timestamp of the request.
-                                if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined)
+                                if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined) {
                                     this._perRangeDataList[ numChildren ].dbrequest._timeStamp = visitor.getFrameStamp().getSimulationTime();
+                                    this._perRangeDataList[ numChildren ].dbrequest._priority = priority;
+                                }
                             }
                         }
                     }

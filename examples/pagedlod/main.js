@@ -98,7 +98,7 @@ var main = function () {
             plod.setRangeMode( osg.PagedLOD.PIXEL_SIZE_ON_SCREEN );
             plod.addChild( node, 0, 100000 );
             plod.setFunction( 1, create );
-            plod.setRange( 1, 100000, Infinity );
+            plod.setRange( 1, 100000, Number.MAX_VALUE );
             plod.level = designation.sLevel;
             plod.x = designation.sRow;
             plod.y = designation.sCol;
@@ -116,7 +116,7 @@ var main = function () {
     plod.x = 0;
     plod.y = 0;
     plod.setFunction( 1, create );
-    plod.setRange( 1, 100000, Infinity );
+    plod.setRange( 1, 100000, Number.MAX_VALUE );
 
     // The viewer
     viewer = new osgViewer.Viewer( canvas , { 'enableFrustumCulling': true } );
