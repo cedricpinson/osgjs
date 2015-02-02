@@ -55,11 +55,21 @@ define( [
         // texture manager is referenced here because it's associated with gl object
         // of the gl context intialized with State
         this._textureManager = new TextureManager();
+
+
+        // we dont use Map because in this use case with a few entries
+        // {} is faster
+        this._programCommonUniformsCache = {};
+
     };
 
     State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
 
-        getTextureManager: function() {
+        getCacheUniformsApplyRenderLeaf: function () {
+            return this._programCommonUniformsCache;
+        },
+
+        getTextureManager: function () {
             return this._textureManager;
         },
 
@@ -103,7 +113,7 @@ define( [
             }
         },
 
-        getStateSetStackSize: function() {
+        getStateSetStackSize: function () {
             return this.stateSets.values().length;
         },
 
@@ -372,7 +382,7 @@ define( [
         },
 
 
-        _applyTextureAttributeStack: function(gl,  textureUnit, attributeStack ) {
+        _applyTextureAttributeStack: function ( gl, textureUnit, attributeStack ) {
             var attribute;
             if ( attributeStack.values().length === 0 ) {
                 attribute = attributeStack.globalDefault;
