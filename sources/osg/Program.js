@@ -61,6 +61,10 @@ define( [
             return this._fragment;
         },
 
+        getProgram: function () {
+            return this._program;
+        },
+
         apply: function ( state ) {
 
             if ( this._nullProgram ) return;
@@ -145,7 +149,7 @@ define( [
                 this.setDirty( false );
             }
 
-            gl.useProgram( this._program );
+            state.applyProgram( this._program );
         },
 
         cacheUniformList: function ( gl, str ) {
