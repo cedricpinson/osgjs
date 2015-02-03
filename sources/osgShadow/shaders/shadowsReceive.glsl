@@ -48,30 +48,44 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
     // Calculate shadow amount
     float shadow = 1.0;
 
+    // return 0.0 for black;
+    // return 1.0 for light;
+
+    // shadowZ must be clamped to [0,1]
+    // otherwise it's not comparable to
+    // shadow caster depth map
+    // which is clamped to [0,1]
+    // Not doing that makes ALL shadowReceiver > 1.0 black
+    // because they ALL becomes behind any point in Caster depth map
+    float shadowReceiverZ = clamp(shadowZ, 0.0, 1.0);
+
 #ifdef _NONE
 
     float shadowDepth = getSingleFloatFromTex(tex, shadowUV.xy);
-    shadow = ( shadowZ - myBias > shadowDepth ) ? 0.0 : 1.0;
+    // shadowReceiverZ : receiver depth in light view
+    // shadowDepth : caster depth in light view
+    // receiver is shadowed if its depth is superior to the caster
+    shadow = ( shadowReceiverZ - myBias > shadowDepth ) ? 0.0 : 1.0;
 
 #elif defined( _PCF )
 
-    shadow = getShadowPCF(tex, shadowMapSize, shadowUV, shadowZ, myBias);
+    shadow = getShadowPCF(tex, shadowMapSize, shadowUV, shadowReceiverZ, myBias);
 
 #elif defined( _ESM )
 
-    shadow = fetchESM(tex, shadowMapSize, shadowUV, shadowZ, myBias, exponent0, exponent1);
+    shadow = fetchESM(tex, shadowMapSize, shadowUV, shadowReceiverZ, myBias, exponent0, exponent1);
 
 #elif  defined( _VSM )
 
     vec2 moments = getDoubleFloatFromTex(tex, shadowUV.xy);
     float shadowBias = myBias;
-    shadow = chebyshevUpperBound(moments, shadowZ, shadowBias, epsilonVSM);
+    shadow = chebyshevUpperBound(moments, shadowReceiverZ, shadowBias, epsilonVSM);
 
 #elif  defined( _EVSM )
 
     vec4 occluder = getQuadFloatFromTex(tex, shadowUV.xy);
     vec2 exponents = vec2(exponent0, exponent1);
-    vec2 warpedDepth = warpDepth(shadowZ, exponents);
+    vec2 warpedDepth = warpDepth(shadowReceiverZ, exponents);
 
     float derivationEVSM = epsilonVSM;
     // Derivative of warping at depth
@@ -131,13 +145,18 @@ float computeShadow(in bool lighted,
     shadowUV = shadowVertexProjected / shadowVertexProjected.w;
     shadowUV.xy = shadowUV.xy* 0.5 + 0.5;
 
-    if (shadowUV.x > 1.0 || shadowUV.y > 1.0 || shadowUV.x < 0.0 || shadowUV.y < 0.0 || shadowUV.z > 1.0 || shadowUV.z < -1.0)
+
+    if (shadowUV.x > 1.0 || shadowUV.y > 1.0 || shadowUV.x < 0.0 || shadowUV.y < 0.0 )
         return 1.0;// limits of light frustum
+
 
     float objDepth;
 
-    objDepth =  -  shadowZ.z;
-    objDepth =  (objDepth - depthRange.x)* depthRange.w;// linearize (aka map z to near..far to 0..1)
+    // linearize
+    objDepth =  -shadowZ.z / shadowZ.w;
+    // to [0,1]
+    objDepth =  (objDepth - depthRange.x)* depthRange.w;
+
 
     return getShadowedTermUnified(shadowUV.xy, objDepth, tex, texSize, shadowBias, epsilonVSM, exponent, exponent1);
 

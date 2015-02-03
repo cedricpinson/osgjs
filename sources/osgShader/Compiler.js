@@ -926,8 +926,9 @@ define( [
         declareVertexMain: function () {
             this._vertexShader.push( [ '',
                 '  FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
-                '  FragEyeVector = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
-                '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
+                '  vec4 viewPos = ModelViewMatrix * vec4(Vertex,1.0);',
+                '  FragEyeVector = viewPos.xyz;',
+                '  gl_Position = ProjectionMatrix * viewPos;',
                 '  if (ArrayColorEnabled == 1.0)',
                 '    VertexColor = Color;',
                 '  else',

@@ -1298,7 +1298,7 @@ function createSceneTestReconstructPosition() {
 
                     var coord = this._geom.getAttributes().TexCoord1.getElements();
                     var vectorsTmp = [];
-                    osg.Matrix.computeFrustrumCornersVectors( this._projection.get(), vectorsTmp );
+                    osg.Matrix.computeFrustumCornersVectors( this._projection.get(), vectorsTmp );
                     var vectors = [];
                     vectors[ 0 ] = vectorsTmp[ 0 ];
                     vectors[ 1 ] = vectorsTmp[ 1 ];
@@ -1686,7 +1686,7 @@ function createSceneOptimized( width, height ) {
 
                 var coord = this._array.getElements();
                 var vectorsTmp = [];
-                osg.Matrix.computeFrustrumCornersVectors( this._projection.get(), vectorsTmp );
+                osg.Matrix.computeFrustumCornersVectors( this._projection.get(), vectorsTmp );
                 var vectors = [];
                 vectors[ 0 ] = vectorsTmp[ 0 ];
                 vectors[ 1 ] = vectorsTmp[ 1 ];

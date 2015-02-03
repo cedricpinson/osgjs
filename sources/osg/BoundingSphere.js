@@ -7,14 +7,14 @@ define( [
     'use strict';
 
     var BoundingSphere = function () {
-        this._center = [ 0.0, 0.0, 0.0 ];
-        this._radius = -1;
+        this._center = Vec3.create();
+        this._radius = -1.0;
     };
 
     BoundingSphere.prototype = {
         init: function () {
             Vec3.init( this._center );
-            this._radius = -1;
+            this._radius = -1.0;
         },
         valid: function () {
             return this._radius >= 0.0;
@@ -34,7 +34,7 @@ define( [
         },
 
         expandByBoundingBox: ( function () {
-            var v = [ 0.0, 0.0, 0.0 ];
+            var v = Vec3.create();
             var newbb = new BoundingBox();
             return function ( bb ) {
                 if ( !bb.valid() )
@@ -61,13 +61,13 @@ define( [
                         newbb.expandByVec3( v ); // add it into the new bounding box.
                     }
 
-                    c = newbb.center();
+                    c = newbb.center( v );
                     this._center[ 0 ] = c[ 0 ];
                     this._center[ 1 ] = c[ 1 ];
                     this._center[ 2 ] = c[ 2 ];
                     this._radius = newbb.radius();
                 } else {
-                    c = bb.center();
+                    c = bb.center( v );
                     this._center[ 0 ] = c[ 0 ];
                     this._center[ 1 ] = c[ 1 ];
                     this._center[ 2 ] = c[ 2 ];
@@ -85,7 +85,7 @@ define( [
             var dv = [ 0.0, 0.0, 0.0 ];
             return function ( v ) {
                 if ( this.valid() ) {
-                    Vec3.sub( v, this.center(), dv );
+                    Vec3.sub( v, this.center( dv ), dv );
                     var r = Vec3.length( dv );
                     if ( r > this.radius() ) {
                         var dr = ( r - this.radius() ) * 0.5;
