@@ -71,8 +71,8 @@ var gruntTasks = {};
         options: {
             //optimize: 'uglify2',
             optimize: 'none',
-            //            generateSourceMaps: true,
-            //            useSourceUrl: true,
+            //generateSourceMaps: true,
+            //useSourceUrl: true,
             preserveLicenseComments: false,
             findNestedDependencies: true,
             optimizeAllPluginResources: true,
@@ -428,7 +428,7 @@ var gruntTasks = {};
                 branch: 'gh-pages',
                 repository: 'git@github.com:cedricpinson/osgjs.git',
                 directory: path.join( BUILD_PATH, 'web' )
-                //, depth: -1 // cannot push from a shallow clone
+                    //, depth: -1 // cannot push from a shallow clone
             }
         }
     };
