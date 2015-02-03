@@ -28,8 +28,9 @@ define( [
         this._downloadingRequestsNumber = 0;
         this._maxRequestsPerFrame = 10;
         // In OSG the targetMaximumNumberOfPagedLOD is 300 by default
-        // here we set 50 as we need to be more strict with memory in a browser
-        this._targetMaximumNumberOfPagedLOD = 50;
+        // here we set 75 as we need to be more strict with memory in a browser
+        // This value can be setted using setTargetMaximumNumberOfPageLOD method.
+        this._targetMaximumNumberOfPagedLOD = 75;
     };
 
     var DatabaseRequest = function () {
@@ -40,8 +41,6 @@ define( [
         this._timeStamp = 0.0;
         this._groupExpired = false;
         this._priority = 0.0;
-        //  this.frameNumber = 0;
-        //  this.frameNumberOfLastTraversal = 0;
     };
 
     var FindPagedLODsVisitor = function ( pagedLODList, frameNumber ) {
@@ -113,12 +112,6 @@ define( [
         getTargetMaximumNumberOfPageLOD: function () {
             return this._targetMaximumNumberOfPagedLOD;
         },
-
-        addNodeToQueue: function ( dbrequest ) {
-            // We don't need to determine if the dbrequest is in the queue
-            // That is already done in the PagedLOD
-            this._pendingNodes.push( dbrequest );
-        },
         reset: function () {
             this._pendingRequests = [];
             this._pendingNodes = [];
@@ -128,7 +121,7 @@ define( [
             this._childrenToRemoveList.clear();
             this._downloadingRequestsNumber = 0;
             this._maxRequestsPerFrame = 10;
-            this._targetMaximumNumberOfPagedLOD = 50;
+            this._targetMaximumNumberOfPagedLOD = 75;
         },
         updateSceneGraph: function ( frameStamp ) {
             // Progress callback
@@ -136,13 +129,17 @@ define( [
                 // Maybe we should encapsulate this in a promise.
                 this.executeProgressCallback();
             }
-            // Remove expired nodes
-            this.removeExpiredSubgraphs( frameStamp );
+            // We need to control the time spent in DatabasePager tasks to
+            // avoid making the rendering slow.
+            // Probably we can have a time parameter to manage all the tasks.
+            // Now it is fixed to 0.0025 ms to remove expired childs
+            // and 0.005 ms  to add to the scene the loaded requests.
 
-            if ( !this._loading ) {
-                // Time to do the requests.
-                this.takeRequests();
-            }
+            // Remove expired nodes
+            this.removeExpiredSubgraphs( frameStamp, 0.0025 );
+            // Time to do the requests.
+            if ( !this._loading ) this.takeRequests();
+            // Add the loaded data to the graph
             this.addLoadedDataToSceneGraph( frameStamp, 0.005 );
         },
         executeProgressCallback: function() {
@@ -204,6 +201,8 @@ define( [
                 }
                 elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
             }
+            availableTime -= elapsedTime;
+            return availableTime;
         },
 
         isLoading: function () {
@@ -216,6 +215,8 @@ define( [
         },
 
         requestNodeFile: function ( func, url, node, timestamp, priority ) {
+            // We don't need to determine if the dbrequest is in the queue
+            // That is already done in the PagedLOD, so we just create the request
             var dbrequest = new DatabaseRequest();
             dbrequest._group = node;
             dbrequest._function = func;
@@ -256,7 +257,6 @@ define( [
                 this._loading = false;
                 return;
             }
-
             // Load from function
             if ( dbrequest._function !== undefined ) {
                 q.when( this.loadNodeFromFunction( dbrequest._function, dbrequest._group ) ).then( function ( child ) {
@@ -315,9 +315,10 @@ define( [
                 elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
             } );
             availableTime -= elapsedTime;
+            return availableTime;
         },
 
-        removeExpiredSubgraphs: function ( frameStamp ) {
+        removeExpiredSubgraphs: function ( frameStamp, availableTime ) {
             if ( frameStamp.getFrameNumber() === 0 ) return;
             var numToPrune = this._activePagedLODList.size - this._targetMaximumNumberOfPagedLOD;
             var expiryTime = frameStamp.getSimulationTime() - 0.1;
@@ -326,14 +327,14 @@ define( [
             // certainly have expired.
             // TODO: Then traverse active nodes if we still need to prune.
             if ( numToPrune > 0 ) {
-                this.removeExpiredChildren( numToPrune, expiryTime, expiryFrame );
+                availableTime = this.removeExpiredChildren( numToPrune, expiryTime, expiryFrame, availableTime );
             }
+            return availableTime;
         },
 
-        removeExpiredChildren: function ( numToPrune, expiryTime, expiryFrame ) {
+        removeExpiredChildren: function ( numToPrune, expiryTime, expiryFrame, availableTime ) {
             // Iterate over the activePagedLODList to remove expired children
-            var availableTime  = 0.0025;
-            // We need to test if we have time to flush
+            // We need to control the time spent in remove childs.
             var elapsedTime = 0.0;
             var beginTime = Timer.instance().tick();
             var that = this;
@@ -358,6 +359,7 @@ define( [
                 elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
             } );
             availableTime -= elapsedTime;
+            return availableTime;
         },
     }, 'osgDB', 'DatabasePager' );
 
