@@ -923,7 +923,7 @@
                 request.then( function ( model ) {
 
 
-                    // adds 4 model
+                    // adds models
                     model._name = 'material-test_model_0';
                     modelNode.addChild( model );
 
@@ -938,14 +938,6 @@
                     modelSubNode.addChild( modelSubNodeTrans );
                     modelNode.addChild( modelSubNode );
 
-                    modelSubNode = new osg.Node();
-                    modelSubNode._name = 'material-test_model_2';
-                    modelSubNodeTrans = new osg.MatrixTransform();
-                    modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.7, 0.7, 0.7, [] ) );
-                    osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), 0.7, 0.7, 0.7 );
-                    modelSubNodeTrans.addChild( model );
-                    modelSubNode.addChild( modelSubNodeTrans );
-                    modelNode.addChild( modelSubNode );
 
                     modelSubNode = new osg.Node();
                     modelSubNodeTrans = new osg.MatrixTransform();
@@ -955,16 +947,25 @@
                     modelSubNodeTrans.addChild( model );
                     modelSubNode.addChild( modelSubNodeTrans );
                     modelNode.addChild( modelSubNode );
+                    if ( this._config[ 'complexScene' ] ) {
+                        modelSubNode = new osg.Node();
+                        modelSubNodeTrans = new osg.MatrixTransform();
+                        modelSubNode._name = 'material-test_model_3';
+                        modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
+                        osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), -dist, 0, -5 );
+                        modelSubNodeTrans.addChild( model );
+                        modelSubNode.addChild( modelSubNodeTrans );
+                        modelNode.addChild( modelSubNode );
 
-                    modelSubNode = new osg.Node();
-                    modelSubNodeTrans = new osg.MatrixTransform();
-                    modelSubNode._name = 'material-test_model_3';
-                    modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.5, 0.5, 0.5, [] ) );
-                    osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), -dist, 0, -5 );
-                    modelSubNodeTrans.addChild( model );
-                    modelSubNode.addChild( modelSubNodeTrans );
-                    modelNode.addChild( modelSubNode );
-
+                        modelSubNode = new osg.Node();
+                        modelSubNode._name = 'material-test_model_2';
+                        modelSubNodeTrans = new osg.MatrixTransform();
+                        modelSubNodeTrans.setMatrix( osg.Matrix.makeScale( 0.7, 0.7, 0.7, [] ) );
+                        osg.Matrix.setTrans( modelSubNodeTrans.getMatrix(), dist * 2, 0.7, 0.7 );
+                        modelSubNodeTrans.addChild( model );
+                        modelSubNode.addChild( modelSubNodeTrans );
+                        modelNode.addChild( modelSubNode );
+                    }
                 }.bind( this ) );
             }
             // make "pillars"
@@ -1034,7 +1035,7 @@
             var groundNode = new osg.Node();
             groundNode.setName( 'groundNode' );
 
-            var numPlanes = this._config[ 'basicScene' ] ? 1 : 5;
+            var numPlanes = !this._config[ 'complexScene' ] ? 1 : 5;
             var groundSize = 600 / numPlanes;
             var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
 
