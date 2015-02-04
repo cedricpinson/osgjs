@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta charset="utf-8">
     <title>PagedLod</title>
     <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
@@ -15,39 +15,39 @@
     <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
     <script type="text/javascript" src="main.js"></script>
 
-</head>
+  </head>
 
 
 
-<body class="osgjs-theme-dark">
+  <body class="osgjs-theme-dark">
 
-  <div id="ViewContainer" class="osgjs-fullpage">
-    <!-- very important change the size of the parent element instead-->
-    <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
-  </div>
-
-  <div class="osgjs-info osgjs-info-dark">
-
-    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
-      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
-      <strong>OSG.JS</strong>
-    </a>
-
-    <div class="osgjs-description">
-      Demonstrate the usage of PageLOD
+    <div id="ViewContainer" class="osgjs-fullpage">
+      <!-- very important change the size of the parent element instead-->
+      <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
     </div>
-    <div style="border: 1px solid #a4b6bd; width:220px; height:5px; clear:both;">
-      <div id="progress" style="height:5px; width:0px; background-color:#00aeef;"/>
-    </div>
-    <script type="text/javascript">
+
+    <div class="osgjs-info osgjs-info-dark">
+
+      <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+        <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+        <strong>OSG.JS</strong>
+      </a>
+
+      <div class="osgjs-description">
+        Demonstrate the usage of PageLOD
+      </div>
+      <div style="border: 1px solid #a4b6bd; width:220px; height:5px; clear:both;">
+        <div id="progress" style="height:5px; width:0px; background-color:#00aeef;"/>
+      </div>
+      <script type="text/javascript">
         var prg_width = 250;
         var node = document.getElementById('progress');
         function progress( percent ) {
-            node.style.width = percent + 'px';
+        node.style.width = percent + 'px';
         }
-    </script>
-  </div>
+      </script>
+    </div>
 
-</body>
+  </body>
 
 </html>

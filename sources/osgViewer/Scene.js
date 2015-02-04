@@ -29,6 +29,7 @@ define( [
         getDatabasePager: function () {
             return this._databasePager;
         },
+
         // database pager are not implemented yet here
         updateSceneGraph: function ( updateVisitor ) {
             if ( this._databasePager)

@@ -177,12 +177,15 @@ define( [
         setFrameStamp: function ( frameStamp ) {
             this._frameStamp = frameStamp;
         },
+
         getFrameStamp: function () {
             return this._frameStamp;
         },
+
         setCamera: function ( camera ) {
             this._camera = camera;
         },
+
         getCamera: function () {
             return this._camera;
         },
@@ -198,21 +201,27 @@ define( [
             this._camera.addChild( node );
 
         },
+
         getSceneData: function () {
             return this._scene.getSceneData();
         },
+
         setDatabasePager: function ( dbpager ) {
             this._scene.setDatabasePager( dbpager );
         },
+
         getDatabasePager: function () {
             return this._scene.getDatabasePager();
         },
+
         getScene: function () {
             return this._scene;
         },
+
         getManipulator: function () {
             return this._manipulator;
         },
+
         setManipulator: function ( manipulator ) {
             this._manipulator = manipulator;
         },
@@ -227,17 +236,20 @@ define( [
                 this._scene.getOrCreateStateSet().setAttributeAndModes( this._light );
             }
         },
+
         getLightingMode: function () {
             return this._lightingMode;
         },
+
         setLightingMode: function ( lightingMode ) {
+
             if ( this._lightingMode !== lightingMode ) {
                 this._lightingMode = lightingMode;
+
                 if ( this._lightingMode !== View.LightingMode.NO_LIGHT ) {
-                    if ( !this._light ) {
-                        this._light = new Light();
-                        //this._light.setColor( [ 0.8, 0.8, 0.8, 1.0 ] );
-                    }
+
+                    if ( !this._light ) this._light = new Light();
+
                 } else {
                     this._light = undefined;
                 }

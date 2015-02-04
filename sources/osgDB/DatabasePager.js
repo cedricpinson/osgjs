@@ -2,14 +2,13 @@
  * @author Jordi Torres
  */
 
-
 define( [
     'q',
     'osg/Utils',
     'osg/NodeVisitor',
     'osg/PagedLOD',
     'osg/Timer'
-], function ( q, MACROUTILS, NodeVisitor, PagedLOD, Timer ) {
+], function ( Q, MACROUTILS, NodeVisitor, PagedLOD, Timer ) {
 
     'use strict';
     /**
@@ -73,7 +72,9 @@ define( [
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
         this._childrenList = [];
     };
+
     ExpirePagedLODVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+
         apply: function ( node ) {
             if ( node.getTypeID() === PagedLOD.getTypeID() ) {
                 this._childrenList.push( node );
@@ -81,8 +82,10 @@ define( [
             }
             this.traverse( node );
         },
+
         removeExpiredChildrenAndFindPagedLODs: function ( plod, expiryTime, expiryFrame, removedChildren ) {
-            if ( !plod.children.length ) return;
+            if ( !plod.children.length ) return false;
+
             var sizeBefore = removedChildren.length;
             plod.removeExpiredChildren( expiryTime, expiryFrame, removedChildren );
             for ( var i = sizeBefore; i < removedChildren.length; i++ ) {
@@ -90,6 +93,7 @@ define( [
             }
             return sizeBefore !== removedChildren.length;
         },
+
         _markRequestsExpired: function ( plod ) {
             var numRanges = plod._perRangeDataList.length;
             var request;
@@ -112,6 +116,7 @@ define( [
         getTargetMaximumNumberOfPageLOD: function () {
             return this._targetMaximumNumberOfPagedLOD;
         },
+
         reset: function () {
             this._pendingRequests = [];
             this._pendingNodes = [];
@@ -123,6 +128,7 @@ define( [
             this._maxRequestsPerFrame = 10;
             this._targetMaximumNumberOfPagedLOD = 75;
         },
+
         updateSceneGraph: function ( frameStamp ) {
             // Progress callback
             if ( this._progressCallback !== undefined ) {
@@ -142,6 +148,7 @@ define( [
             // Add the loaded data to the graph
             this.addLoadedDataToSceneGraph( frameStamp, 0.005 );
         },
+
         executeProgressCallback: function() {
             if ( this._pendingRequests.length > 0 || this._pendingNodes.length > 0 ) {
                 this._progressCallback( this._pendingRequests.length + this._downloadingRequestsNumber, this._pendingNodes.length );
@@ -153,12 +160,15 @@ define( [
                 }
             }
         },
+
         setMaxRequestsPerFrame: function ( numRequests ) {
             this._maxRequestsPerFrame = numRequests;
         },
+
         getMaxRequestsPerFrame: function () {
             return this._maxRequestsPerFrame;
         },
+
         getRequestListSize: function () {
             return this._pendingRequests.length + this._downloadingRequestsNumber;
         },
@@ -168,7 +178,9 @@ define( [
         },
 
         addLoadedDataToSceneGraph: function ( frameStamp, availableTime ) {
-            if ( availableTime <= 0.0 ) return;
+
+            if ( availableTime <= 0.0 ) return 0.0;
+
             // Prune the list of database requests.
             var elapsedTime = 0.0;
             var beginTime = Timer.instance().tick();
@@ -177,27 +189,33 @@ define( [
             } );
 
             for (var i = 0; i< this._pendingNodes.length; i++ ) {
-                if ( elapsedTime > availableTime ) return;
+                if ( elapsedTime > availableTime ) return 0.0;
 
                 var request = this._pendingNodes.shift();
                 var frameNumber = frameStamp.getFrameNumber();
                 var timeStamp = frameStamp.getSimulationTime();
+
                 // If the request is not expired, then add/register new childs
                 if ( request._groupExpired === false ) {
+
                     var plod = request._group;
                     plod.setTimeStamp( plod.children.length, timeStamp );
                     plod.setFrameNumber( plod.children.length, frameNumber );
                     plod.addChildNode( request._loadedModel );
+
                     // Register PagedLODs.
                     if ( !this._activePagedLODList.has( plod ) ) {
                         this.registerPagedLODs( plod, frameNumber );
                     } else {
                         this.registerPagedLODs( request._loadedModel, frameNumber );
                     }
+
                 } else {
+
                     // Clean the request
                     request._loadedModel = undefined;
                     request = undefined;
+
                 }
                 elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
             }
@@ -238,7 +256,7 @@ define( [
                         value = r2._priority - r1._priority;
                     }
                     return value;
-                    
+
                 } );
                 for ( var i = 0; i < numRequests; i++ ) {
                     this._downloadingRequestsNumber++;
@@ -248,6 +266,7 @@ define( [
         },
 
         processRequest: function ( dbrequest ) {
+
             this._loading = true;
             var that = this;
             // Check if the request is valid;
@@ -257,16 +276,18 @@ define( [
                 this._loading = false;
                 return;
             }
+
             // Load from function
             if ( dbrequest._function !== undefined ) {
-                q.when( this.loadNodeFromFunction( dbrequest._function, dbrequest._group ) ).then( function ( child ) {
+                Q.when( this.loadNodeFromFunction( dbrequest._function, dbrequest._group ) ).then( function ( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
                     that._pendingNodes.push( dbrequest );
                     that._loading = false;
                 } );
+
             } else if ( dbrequest._url !== '' ) { // Load from URL
-                q.when( this.loadNodeFromURL( dbrequest._url ) ).then( function ( child ) {
+                Q.when( this.loadNodeFromURL( dbrequest._url ) ).then( function ( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
                     that._pendingNodes.push( dbrequest );
@@ -277,8 +298,8 @@ define( [
 
         loadNodeFromFunction: function ( func, plod ) {
             // Need to call with pagedLOD as parent, to be able to have multiresolution structures.
-            var defer = q.defer();
-            q.when( ( func )( plod ) ).then( function ( child ) {
+            var defer = Q.defer();
+            Q.when( ( func )( plod ) ).then( function ( child ) {
                 defer.resolve( child );
             } );
             return defer.promise;
@@ -286,40 +307,45 @@ define( [
 
         loadNodeFromURL: function ( url ) {
             var ReaderParser = require( 'osgDB/ReaderParser' );
-            var defer = q.defer();
+            var defer = Q.defer();
             // Call to ReaderParser just in case there is a custom readNodeURL Callback
             // See osgDB/Options.js and/or osgDB/Input.js
             // TODO: We should study if performance can be improved if separating the XHTTP request from
             // the parsing. This way several/many request could be done at the same time.
             // Also we should be able to cancel requests, so there is a need to have access
             // to the HTTPRequest Object
-            q.when( ReaderParser.readNodeURL( url ) ).then( function ( child ) {
+            Q.when( ReaderParser.readNodeURL( url ) ).then( function ( child ) {
                 defer.resolve( child );
             } );
             return defer.promise;
         },
 
         releaseGLExpiredSubgraphs: function ( gl, availableTime ) {
-            if ( availableTime <= 0.0 ) return;
+
+            if ( availableTime <= 0.0 ) return 0.0;
             // We need to test if we have time to flush
             var elapsedTime = 0.0;
             var beginTime = Timer.instance().tick();
             var that = this;
+
             this._childrenToRemoveList.forEach( function ( node ) {
                 // If we don't have more time, break the loop.
-                if ( elapsedTime > availableTime ) return false;
+                if ( elapsedTime > availableTime ) return;
                 that._childrenToRemoveList.delete( node );
                 node.accept( new ReleaseVisitor( gl ) );
                 node.removeChildren();
                 node = null;
                 elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
             } );
+
             availableTime -= elapsedTime;
             return availableTime;
         },
 
         removeExpiredSubgraphs: function ( frameStamp, availableTime ) {
-            if ( frameStamp.getFrameNumber() === 0 ) return;
+
+            if ( frameStamp.getFrameNumber() === 0 ) return 0.0;
+
             var numToPrune = this._activePagedLODList.size - this._targetMaximumNumberOfPagedLOD;
             var expiryTime = frameStamp.getSimulationTime() - 0.1;
             var expiryFrame = frameStamp.getFrameNumber() - 1;
@@ -340,9 +366,10 @@ define( [
             var that = this;
             var removedChildren = [];
             var expiredPagedLODVisitor = new ExpirePagedLODVisitor();
+
             this._activePagedLODList.forEach( function ( plod ) {
-                if ( elapsedTime > availableTime ) return false;
-                if ( numToPrune < 0 ) return false;
+                if ( elapsedTime > availableTime ) return;
+                if ( numToPrune < 0 ) return;
                 // See if plod is still active, so we don't have to prune
                 if ( expiryFrame < plod.getFrameNumberOfLastTraversal() ) return;
                 expiredPagedLODVisitor.removeExpiredChildrenAndFindPagedLODs( plod, expiryTime, expiryFrame, removedChildren );
@@ -357,10 +384,11 @@ define( [
                 expiredPagedLODVisitor._childrenList.length = 0;
                 removedChildren.length = 0;
                 elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
+
             } );
             availableTime -= elapsedTime;
             return availableTime;
-        },
+        }
     }, 'osgDB', 'DatabasePager' );
 
     return DatabasePager;
