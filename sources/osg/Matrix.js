@@ -1,9 +1,11 @@
 define( [
+    'osg/BoundingBox',
     'osg/Notify',
+    'osg/Plane',
+    'osg/Quat',
     'osg/Vec3',
-    'osg/Vec4',
-    'osg/Quat'
-], function ( Notify, Vec3, Vec4, Quat ) {
+    'osg/Vec4'
+], function ( BoundingBox, Notify, Plane, Quat, Vec3, Vec4 ) {
 
     'use strict';
 
@@ -13,7 +15,14 @@ define( [
         create: function () {
             return [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
         },
-
+        isIdentity: function ( matrix ) {
+            for ( var i = 0; i < 16; i++ ) {
+                if ( matrix[ i ] !== Matrix.identity[ i ] ) {
+                    return false;
+                }
+            }
+            return true;
+        },
         valid: function ( matrix ) {
             for ( var i = 0; i < 16; i++ ) {
                 if ( isNaN( matrix[ i ] ) ) {
@@ -48,10 +57,13 @@ define( [
                 Notify.warn( 'no matrix destination !' );
                 return Matrix.create();
             }
-            Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
-            Matrix.setRow( matrix, 1, 0.0, 1.0, 0.0, 0.0 );
-            Matrix.setRow( matrix, 2, 0.0, 0.0, 1.0, 0.0 );
-            Matrix.setRow( matrix, 3, 0.0, 0.0, 0.0, 1.0 );
+            Matrix.copy( Matrix.identity, matrix );
+
+            // explaining comment
+            //Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
+            //Matrix.setRow( matrix, 1, 0.0, 1.0, 0.0, 0.0 );
+            //Matrix.setRow( matrix, 2, 0.0, 0.0, 1.0, 0.0 );
+            //Matrix.setRow( matrix, 3, 0.0, 0.0, 0.0, 1.0 );
             return matrix;
         },
 
@@ -358,21 +370,17 @@ define( [
             return r;
         },
 
-        makeLookAt: ( function () {
-            var f = [ 0.0, 0.0, 0.0 ];
+        makeLookFromDirection: ( function () {
             var s = [ 0.0, 0.0, 0.0 ];
             var u = [ 0.0, 0.0, 0.0 ];
             var neg = [ 0.0, 0.0, 0.0 ];
 
-            return function ( eye, center, up, result ) {
+            return function ( eye, eyeDir, up, result ) {
                 if ( result === undefined ) {
                     Notify.warn( 'no matrix destination !' );
                     result = Matrix.create();
                 }
-
-                Vec3.sub( center, eye, f );
-                Vec3.normalize( f, f );
-
+                var f = eyeDir;
                 Vec3.cross( f, up, s );
                 Vec3.normalize( s, s );
 
@@ -402,6 +410,22 @@ define( [
                 result[ 15 ] = 1.0;
 
                 Matrix.multTranslate( result, Vec3.neg( eye, neg ), result );
+                return result;
+            };
+        } )(),
+        makeLookAt: ( function () {
+            var f = [ 0.0, 0.0, 0.0 ];
+
+            return function ( eye, center, up, result ) {
+                if ( result === undefined ) {
+                    Notify.warn( 'no matrix destination !' );
+                    result = Matrix.create();
+                }
+
+
+                Vec3.sub( center, eye, f );
+                Vec3.normalize( f, f );
+                this.makeLookFromDirection( eye, f, up, result );
                 return result;
             };
         } )(),
@@ -641,6 +665,7 @@ define( [
                 Notify.warn( 'no matrix destination !' );
                 result = Matrix.create();
             }
+
             result[ 0 ] = m[ 0 ] * v[ 0 ] + m[ 1 ] * v[ 1 ] + m[ 2 ] * v[ 2 ];
             result[ 1 ] = m[ 4 ] * v[ 0 ] + m[ 5 ] * v[ 1 ] + m[ 6 ] * v[ 2 ];
             result[ 2 ] = m[ 8 ] * v[ 0 ] + m[ 9 ] * v[ 1 ] + m[ 10 ] * v[ 2 ];
@@ -651,12 +676,12 @@ define( [
             var tmpVec = [ 0.0, 0.0, 0.0 ];
 
             return function ( matrix, vector, result ) {
-                var d = 1.0 / ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] );
-
                 if ( result === undefined ) {
-                    Notify.warn( 'no matrix destination !' );
-                    result = Matrix.create();
+                    Notify.warn( 'no vec3 destination !' );
+                    result = Vec3.create();
                 }
+
+                var d = 1.0 / ( matrix[ 3 ] * vector[ 0 ] + matrix[ 7 ] * vector[ 1 ] + matrix[ 11 ] * vector[ 2 ] + matrix[ 15 ] );
 
                 var tmp;
                 if ( result === vector ) {
@@ -681,8 +706,8 @@ define( [
             return function ( matrix, vector, result ) {
 
                 if ( result === undefined ) {
-                    Notify.warn( 'no matrix destination !' );
-                    result = Matrix.create();
+                    Notify.warn( 'no Vec4 destination !' );
+                    result = Vec4.create();
                 }
                 var tmp;
                 if ( result === vector ) {
@@ -702,14 +727,63 @@ define( [
             };
         } )(),
 
+        // could be 6 mult
+        // http://dev.theomader.com/transform-bounding-boxes/
+        // https://github.com/erich666/GraphicsGems/blob/master/gems/TransBox.c
+        transformBoundingBox: ( function () {
+            var tmpCorner = Vec3.create();
+            var tmpVec = Vec3.create();
+            var tempBbox = new BoundingBox();
+            return function ( m, bbIn, bbOut ) {
+                if ( bbOut === bbIn ) {
+                    bbOut = tempBbox;
+                }
+                bbOut.init();
+                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 0, tmpCorner ), tmpVec ) );
+                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 1, tmpCorner ), tmpVec ) );
+                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 2, tmpCorner ), tmpVec ) );
+                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 3, tmpCorner ), tmpVec ) );
+                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 4, tmpCorner ), tmpVec ) );
+                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 5, tmpCorner ), tmpVec ) );
+                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 6, tmpCorner ), tmpVec ) );
+                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 7, tmpCorner ), tmpVec ) );
+
+                if ( bbOut === tempBbox ) {
+                    bbIn.copy( tempBbox );
+                }
+
+            };
+        } )(),
+
+        transformBoundingSphere: ( function () {
+            var scaleVec = Vec3.create();
+            return function ( matrix, bSphere, bsOut ) {
+                if ( !bSphere.valid() ) {
+                    return bsOut;
+                }
+                Vec3.copy( bSphere._center, bsOut._center );
+                bsOut._radius = bSphere._radius;
+                var sphCenter = bsOut._center;
+                var sphRadius = bsOut._radius;
+
+                Matrix.getScale2( matrix, scaleVec );
+                var scale = Math.sqrt( Math.max( Math.max( scaleVec[ 0 ], scaleVec[ 1 ] ), scaleVec[ 2 ] ) );
+                sphRadius = sphRadius * scale;
+                bsOut._radius = sphRadius;
+                Matrix.transformVec3( matrix, sphCenter, sphCenter );
+
+                return bsOut;
+            };
+        } )(),
+
         transformVec4PostMult: ( function () {
             var tmpVec = Vec4.create();
 
             return function ( matrix, vector, result ) {
 
                 if ( result === undefined ) {
-                    Notify.warn( 'no matrix destination !' );
-                    result = Matrix.create();
+                    Notify.warn( 'no Vec4 destination !' );
+                    result = Vec4.create();
                 }
                 var tmp;
                 if ( result === vector ) {
@@ -1044,6 +1118,69 @@ define( [
             }
         },
 
+        getFrustumPlanes: ( function () {
+
+            var mvp;
+
+            return function ( projection, view, result, withNearFar ) {
+                mvp = mvp ? mvp : Matrix.create();
+                Matrix.mult( projection, view, mvp );
+
+                if ( withNearFar === undefined )
+                    withNearFar = false;
+                // Right clipping plane.
+                var right = result[ 0 ];
+                right[ 0 ] = mvp[ 3 ] - mvp[ 0 ];
+                right[ 1 ] = mvp[ 7 ] - mvp[ 4 ];
+                right[ 2 ] = mvp[ 11 ] - mvp[ 8 ];
+                right[ 3 ] = mvp[ 15 ] - mvp[ 12 ];
+
+                // Left clipping plane.
+                var left = result[ 1 ];
+                left[ 0 ] = mvp[ 3 ] + mvp[ 0 ];
+                left[ 1 ] = mvp[ 7 ] + mvp[ 4 ];
+                left[ 2 ] = mvp[ 11 ] + mvp[ 8 ];
+                left[ 3 ] = mvp[ 15 ] + mvp[ 12 ];
+
+                // Bottom clipping plane.
+                var bottom = result[ 2 ];
+                bottom[ 0 ] = mvp[ 3 ] + mvp[ 1 ];
+                bottom[ 1 ] = mvp[ 7 ] + mvp[ 5 ];
+                bottom[ 2 ] = mvp[ 11 ] + mvp[ 9 ];
+                bottom[ 3 ] = mvp[ 15 ] + mvp[ 13 ];
+
+                // Top clipping plane.
+                var top = result[ 3 ];
+                top[ 0 ] = mvp[ 3 ] - mvp[ 1 ];
+                top[ 1 ] = mvp[ 7 ] - mvp[ 5 ];
+                top[ 2 ] = mvp[ 11 ] - mvp[ 9 ];
+                top[ 3 ] = mvp[ 15 ] - mvp[ 13 ];
+
+                if ( withNearFar ) {
+                    // Far clipping plane.
+                    var far = result[ 4 ];
+                    far[ 0 ] = mvp[ 3 ] - mvp[ 2 ];
+                    far[ 1 ] = mvp[ 7 ] - mvp[ 6 ];
+                    far[ 2 ] = mvp[ 11 ] - mvp[ 10 ];
+                    far[ 3 ] = mvp[ 15 ] - mvp[ 14 ];
+
+                    // Near clipping plane.
+                    var near = result[ 5 ];
+                    near[ 0 ] = mvp[ 3 ] + mvp[ 2 ];
+                    near[ 1 ] = mvp[ 7 ] + mvp[ 6 ];
+                    near[ 2 ] = mvp[ 11 ] + mvp[ 10 ];
+                    near[ 3 ] = mvp[ 15 ] + mvp[ 14 ];
+                }
+
+                //Normalize the planes
+                var j = withNearFar ? 6 : 4;
+                for ( var i = 0; i < j; i++ ) {
+                    Plane.normalizeEquation( result[ i ] );
+                }
+
+            };
+        } )(),
+
         makePerspective: function ( fovy, aspect, znear, zfar, result ) {
             if ( result === undefined ) {
                 Notify.warn( 'no matrix destination !' );
@@ -1170,8 +1307,94 @@ define( [
             };
         } )(),
 
-        // compute the 4 corners vector of the frustrum
-        computeFrustrumCornersVectors: function ( projectionMatrix, vectorsArray ) {
+        clampProjectionMatrix: function ( projection, znear, zfar, nearFarRatio, resultNearFar ) {
+            var epsilon = 1e-6;
+            if ( zfar < znear - epsilon ) {
+                Notify.log( 'clampProjectionMatrix not applied, invalid depth range, znear = ' + znear + '  zfar = ' + zfar );
+                return false;
+            }
+
+            var desiredZnear, desiredZfar;
+            if ( zfar < znear + epsilon ) {
+                // znear and zfar are too close together and could cause divide by zero problems
+                // late on in the clamping code, so move the znear and zfar apart.
+                var average = ( znear + zfar ) * 0.5;
+                znear = average - epsilon;
+                zfar = average + epsilon;
+                // OSG_INFO << '_clampProjectionMatrix widening znear and zfar to '<<znear<<' '<<zfar<<std::endl;
+            }
+
+            if ( Math.abs( Matrix.get( projection, 0, 3 ) ) < epsilon &&
+                Math.abs( Matrix.get( projection, 1, 3 ) ) < epsilon &&
+                Math.abs( Matrix.get( projection, 2, 3 ) ) < epsilon ) {
+                // OSG_INFO << 'Orthographic matrix before clamping'<<projection<<std::endl;
+
+                var deltaSpan = ( zfar - znear ) * 0.02;
+                if ( deltaSpan < 1.0 ) {
+                    deltaSpan = 1.0;
+                }
+                desiredZnear = znear - deltaSpan;
+                desiredZfar = zfar + deltaSpan;
+
+                // assign the clamped values back to the computed values.
+                znear = desiredZnear;
+                zfar = desiredZfar;
+
+                Matrix.set( projection, 2, 2, -2.0 / ( desiredZfar - desiredZnear ) );
+                Matrix.set( projection, 3, 2, -( desiredZfar + desiredZnear ) / ( desiredZfar - desiredZnear ) );
+
+                // OSG_INFO << 'Orthographic matrix after clamping '<<projection<<std::endl;
+            } else {
+
+                // OSG_INFO << 'Persepective matrix before clamping'<<projection<<std::endl;
+                //std::cout << '_computed_znear'<<_computed_znear<<std::endl;
+                //std::cout << '_computed_zfar'<<_computed_zfar<<std::endl;
+
+                var zfarPushRatio = 1.02;
+                var znearPullRatio = 0.98;
+
+                //znearPullRatio = 0.99;
+
+                desiredZnear = znear * znearPullRatio;
+                desiredZfar = zfar * zfarPushRatio;
+
+                // near plane clamping.
+                var minNearPlane = zfar * nearFarRatio;
+                if ( desiredZnear < minNearPlane ) {
+                    desiredZnear = minNearPlane;
+                }
+
+                // assign the clamped values back to the computed values.
+                znear = desiredZnear;
+                zfar = desiredZfar;
+
+                var m22 = Matrix.get( projection, 2, 2 );
+                var m32 = Matrix.get( projection, 3, 2 );
+                var m23 = Matrix.get( projection, 2, 3 );
+                var m33 = Matrix.get( projection, 3, 3 );
+                var transNearPlane = ( -desiredZnear * m22 + m32 ) / ( -desiredZnear * m23 + m33 );
+                var transFarPlane = ( -desiredZfar * m22 + m32 ) / ( -desiredZfar * m23 + m33 );
+
+                var ratio = Math.abs( 2.0 / ( transNearPlane - transFarPlane ) );
+                var center = -( transNearPlane + transFarPlane ) / 2.0;
+
+                var matrix = [ 1.0, 0.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, ratio, 0.0,
+                    0.0, 0.0, center * ratio, 1.0
+                ];
+                Matrix.postMult( matrix, projection );
+                // OSG_INFO << 'Persepective matrix after clamping'<<projection<<std::endl;
+            }
+            if ( resultNearFar !== undefined ) {
+                resultNearFar[ 0 ] = znear;
+                resultNearFar[ 1 ] = zfar;
+            }
+            return true;
+        },
+
+        // compute the 4 corners vector of the frustum
+        computeFrustumCornersVectors: function ( projectionMatrix, vectorsArray ) {
             //var znear = projectionMatrix[ 12 + 2 ] / ( projectionMatrix[ 8 + 2 ] - 1.0 );
             //var zfar = projectionMatrix[ 12 + 2 ] / ( projectionMatrix[ 8 + 2 ] + 1.0 );
             var x = 1.0 / projectionMatrix[ 0 ];
@@ -1182,6 +1405,29 @@ define( [
             vectorsArray[ 2 ] = [ x, -y, 1.0 ];
             vectorsArray[ 3 ] = [ x, y, 1.0 ];
             return vectorsArray;
+        },
+
+        // better precison
+        // no far clipping artifacts.
+        // no reason not to use.
+        // Tightening the Precision of Perspective Rendering
+        //http://www.geometry.caltech.edu/pubs/UD12.pdf
+        // drop-in, just remove the one below, and rename this one
+        makeFrustumInfinite: function ( left, right, bottom, top, znear, zfar, result ) {
+            if ( result === undefined ) {
+                Notify.warn( 'no matrix destination !' );
+                result = Matrix.create();
+            }
+            var X = 2.0 * znear / ( right - left );
+            var Y = 2.0 * znear / ( top - bottom );
+            var A = ( right + left ) / ( right - left );
+            var B = ( top + bottom ) / ( top - bottom );
+            var C = -1.0;
+            Matrix.setRow( result, 0, X, 0.0, 0.0, 0.0 );
+            Matrix.setRow( result, 1, 0.0, Y, 0.0, 0.0 );
+            Matrix.setRow( result, 2, A, B, C, -1.0 );
+            Matrix.setRow( result, 3, 0.0, 0.0, -2.0 * znear, 0.0 );
+            return result;
         },
 
         makeFrustum: function ( left, right, bottom, top, znear, zfar, result ) {
@@ -1276,6 +1522,8 @@ define( [
             return matrix;
         }
     };
+
+    Matrix.identity = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
 
     return Matrix;
 } );

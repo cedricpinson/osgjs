@@ -1,6 +1,6 @@
 define( [
     'osg/Utils',
-
+    'osg/CullSettings',
     'osg/CullVisitor',
     'osg/Matrix',
     'osg/Object',
@@ -10,7 +10,7 @@ define( [
 
     'osgShader/osgShader',
 
-], function ( MACROUTILS, CullVisitor, Matrix, Object, RenderStage, State, StateGraph, osgShader ) {
+], function ( MACROUTILS, CullSettings, CullVisitor, Matrix, Object, RenderStage, State, StateGraph, osgShader ) {
 
     'use strict';
 
@@ -114,8 +114,17 @@ define( [
 
                 this._cullVisitor.pushStateSet( camera.getStateSet() );
 
-                this._cullVisitor.pushProjectionMatrix( Matrix.copy( camera.getProjectionMatrix(), projectionMatrixTmp ) );
+                // save cullSettings
+                var previousCullsettings = new CullSettings();
+                previousCullsettings.setCullSettings( this._cullVisitor );
+                this._cullVisitor.setCullSettings( camera );
+                if ( previousCullsettings.getSettingSourceOverrider() === this._cullVisitor && previousCullsettings.getEnableFrustumCulling() ) {
+                    this._cullVisitor.setEnableFrustumCulling( true );
+                }
+
                 this._cullVisitor.pushModelViewMatrix( Matrix.copy( camera.getViewMatrix(), viewMatrixTmp ) );
+
+                this._cullVisitor.pushProjectionMatrix( Matrix.copy( camera.getProjectionMatrix(), projectionMatrixTmp ) );
 
                 // update bound
                 camera.getBound();
@@ -141,7 +150,8 @@ define( [
                 }
 
                 this._cullVisitor.pushViewport( camera.getViewport() );
-                this._cullVisitor.setCullSettings( camera );
+
+
 
                 this._renderStage.setClearDepth( camera.getClearDepth() );
                 this._renderStage.setClearColor( camera.getClearColor() );
@@ -149,15 +159,20 @@ define( [
                 this._renderStage.setViewport( camera.getViewport() );
                 // pass de dbpager to the cullvisitor, so plod's can do the requests
                 this._cullVisitor.setDatabaseRequestHandler( this._camera.getView().getDatabasePager() );
-                // init frustrum planes from camera
-                this._cullVisitor.initFrustrumPlanes( camera );
-
                 // dont add camera on the stack just traverse it
-                this._cullVisitor.traverse( camera );
+                this._cullVisitor.handleCullCallbacksAndTraverse( camera );
 
                 // fix projection matrix if camera has near/far auto compute
                 this._cullVisitor.popModelViewMatrix();
                 this._cullVisitor.popProjectionMatrix();
+
+
+                // store complete frustum
+                camera.setNearFar( this._cullVisitor._computedNear, this._cullVisitor._computedFar );
+
+                // restore previous state of the camera
+                this._cullVisitor.setCullSettings( previousCullsettings );
+
                 this._cullVisitor.popViewport();
                 this._cullVisitor.popStateSet();
 
@@ -169,6 +184,9 @@ define( [
         draw: function () {
 
             var state = this.getState();
+
+            state.resetApplyMatrix(); // important because cache are used in cullvisitor
+
             this._renderStage.draw( state );
 
             // noticed that we accumulate lot of stack, maybe because of the stateGraph

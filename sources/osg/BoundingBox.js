@@ -1,19 +1,21 @@
 define( [
     'osg/Notify',
-    'osg/Utils'
-], function ( Notify, MACROUTILS ) {
+    'osg/Utils',
+    'osg/Vec3'
+], function ( Notify, MACROUTILS, Vec3 ) {
 
     'use strict';
 
     var BoundingBox = function () {
+        this._min = Vec3.create();
+        this._max = Vec3.create();
         this.init();
     };
     BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
-        _cacheRadius2: [ 0.0, 0.0, 0.0 ],
 
         init: function () {
-            this._min = [ Infinity, Infinity, Infinity ];
-            this._max = [ -Infinity, -Infinity, -Infinity ];
+            Vec3.copy( Vec3.infinity, this._min );
+            Vec3.copy( Vec3.negativeInfinity, this._max );
         },
 
         copy: function ( bbox ) {
@@ -85,24 +87,40 @@ define( [
             if ( bbmax[ 2 ] > max[ 2 ] ) max[ 2 ] = bbmax[ 2 ];
         },
 
-        center: function () {
+        center: function ( result ) {
             var min = this._min;
             var max = this._max;
-            return [ ( min[ 0 ] + max[ 0 ] ) * 0.5, ( min[ 1 ] + max[ 1 ] ) * 0.5, ( min[ 2 ] + max[ 2 ] ) * 0.5 ];
+            if ( result === undefined ) {
+                // TODO: deprecated warning?
+                Notify.warn( 'no center destination !' );
+                result = Vec3.create();
+            }
+            Vec3.set( ( min[ 0 ] + max[ 0 ] ) * 0.5, ( min[ 1 ] + max[ 1 ] ) * 0.5, ( min[ 2 ] + max[ 2 ] ) * 0.5, result );
+            return result;
         },
 
         radius: function () {
             return Math.sqrt( this.radius2() );
         },
 
-        radius2: function () {
-            var min = this._min;
-            var max = this._max;
-            var cache = this._cacheRadius2;
-            cache[ 0 ] = max[ 0 ] - min[ 0 ];
-            cache[ 1 ] = max[ 1 ] - min[ 1 ];
-            cache[ 2 ] = max[ 2 ] - min[ 2 ];
-            return 0.25 * ( cache[ 0 ] * cache[ 0 ] + cache[ 1 ] * cache[ 1 ] + cache[ 2 ] * cache[ 2 ] );
+        radius2: ( function () {
+            var cache = [ 0.0, 0.0, 0.0 ];
+            return function () {
+                var min = this._min;
+                var max = this._max;
+                cache[ 0 ] = max[ 0 ] - min[ 0 ];
+                cache[ 1 ] = max[ 1 ] - min[ 1 ];
+                cache[ 2 ] = max[ 2 ] - min[ 2 ];
+                return 0.25 * ( cache[ 0 ] * cache[ 0 ] + cache[ 1 ] * cache[ 1 ] + cache[ 2 ] * cache[ 2 ] );
+            };
+        } )(),
+
+        getMin: function () {
+            return this._min;
+        },
+
+        getMax: function () {
+            return this._max;
         },
 
         corner: function ( pos, resultVec ) {

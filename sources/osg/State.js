@@ -3,12 +3,13 @@ define( [
     'osg/Matrix',
     'osg/Notify',
     'osg/Object',
+    'osg/Program',
     'osg/StateAttribute',
     'osg/Stack',
     'osg/TextureManager',
     'osg/Uniform',
     'osg/Utils'
-], function ( Map, Matrix, Notify, Object, StateAttribute, Stack, TextureManager, Uniform, MACROUTILS ) {
+], function ( Map, Matrix, Notify, Object, Program, StateAttribute, Stack, TextureManager, Uniform, MACROUTILS ) {
 
     'use strict';
 
@@ -46,6 +47,7 @@ define( [
         } );
 
 
+        this.previousHasColorAttrib = false;
         this.vertexAttribMap = {};
         this.vertexAttribMap._disable = [];
         this.vertexAttribMap._keys = [];
@@ -55,11 +57,32 @@ define( [
         // texture manager is referenced here because it's associated with gl object
         // of the gl context intialized with State
         this._textureManager = new TextureManager();
+
+
+        // we dont use Map because in this use case with a few entries
+        // {} is faster
+        this._programCommonUniformsCache = {};
+
+        // keep pointer on the last applied modelview matrix
+        this._modelViewMatrix = undefined;
+        // keep pointer on the last applied projection matrix
+        this._projectionMatrix = undefined;
+
+
+        // keep track of last applied program
+        this._program = undefined;
+        // inject a default program to initialize the stack Program
+        this.applyAttribute( new Program() );
+
     };
 
     State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
 
-        getTextureManager: function() {
+        getCacheUniformsApplyRenderLeaf: function () {
+            return this._programCommonUniformsCache;
+        },
+
+        getTextureManager: function () {
             return this._textureManager;
         },
 
@@ -103,7 +126,7 @@ define( [
             }
         },
 
-        getStateSetStackSize: function() {
+        getStateSetStackSize: function () {
             return this.stateSets.values().length;
         },
 
@@ -159,6 +182,95 @@ define( [
 
             };
         } )(),
+
+
+        // needed because we use a cache of matrix in cullvisitor
+        // so we can have the same reference between frame if only
+        // one matrix
+        resetApplyMatrix: function () {
+            this._modelViewMatrix = this._projectionMatrix = undefined;
+        },
+
+
+        // apply program if needed
+        applyProgram: function ( program ) {
+            if ( this._program === program ) return;
+            this._program = program;
+            this.getGraphicContext().useProgram( program );
+        },
+
+        applyModelViewMatrix: ( function () {
+
+            var normal = Matrix.create();
+
+            return function ( matrix ) {
+
+                if ( this._modelViewMatrix === matrix ) return false;
+
+                var program = this.getLastProgramApplied();
+
+                var mu = this.modelViewMatrix;
+                var mul = program._uniformsCache[ mu.name ];
+                if ( mul ) {
+                    Matrix.copy( matrix, mu.get() );
+                    mu.dirty();
+                    mu.apply( this.getGraphicContext(), mul );
+                }
+
+                var sendNormal;
+                if ( this._modelViewMatrix ) {
+                    sendNormal = false;
+                    // check if we need to push normal
+                    // test rotation component, if not diff
+                    // we dont need to send normal
+                    for ( var i = 0; i < 11; i++ ) {
+                        if ( matrix[ i ] !== this._modelViewMatrix[ i ] ) {
+                            sendNormal = true;
+                            break;
+                        }
+                    }
+                } else {
+                    sendNormal = true;
+                }
+
+                if ( sendNormal ) {
+                    mu = this.normalMatrix;
+                    mul = program._uniformsCache[ mu.name ];
+                    if ( mul ) {
+                        Matrix.copy( matrix, normal );
+
+                        normal[ 12 ] = 0.0;
+                        normal[ 13 ] = 0.0;
+                        normal[ 14 ] = 0.0;
+
+                        Matrix.inverse( normal, normal );
+                        Matrix.transpose( normal, normal );
+
+                        Matrix.copy( normal, mu.get() );
+                        mu.dirty();
+                        mu.apply( this.getGraphicContext(), mul );
+                    }
+                }
+
+                this._modelViewMatrix = matrix;
+                return true;
+            };
+        } )(),
+
+        applyProjectionMatrix: function ( matrix ) {
+
+            if ( this._projectionMatrix === matrix ) return;
+
+            this._projectionMatrix = matrix;
+            var program = this.getLastProgramApplied();
+            var mu = this.projectionMatrix;
+
+            var mul = program._uniformsCache[ mu.name ];
+            Matrix.copy( matrix, mu.get() );
+            mu.dirty();
+            mu.apply( this.getGraphicContext(), mul );
+
+        },
 
         applyStateSet: function ( stateset ) {
             this.pushStateSet( stateset );
@@ -269,6 +381,8 @@ define( [
 
         apply: function () {
 
+            var lastProgram = this.getLastProgramApplied();
+
             this.applyAttributeMap( this.attributeMap );
             this.applyTextureAttributeMapList( this.textureAttributeMapList );
 
@@ -286,6 +400,12 @@ define( [
                 // our program want them. It must be defined by the user
                 this._applyCustomProgramUniforms( this.attributeMap.Program.lastApplied );
 
+            }
+
+            // reset reference of last applied matrix
+            if ( lastProgram !== this.getLastProgramApplied() ) {
+                this._modelViewMatrix = undefined;
+                this._projectionMatrix = undefined;
             }
         },
 
@@ -372,7 +492,7 @@ define( [
         },
 
 
-        _applyTextureAttributeStack: function(gl,  textureUnit, attributeStack ) {
+        _applyTextureAttributeStack: function ( gl, textureUnit, attributeStack ) {
             var attribute;
             if ( attributeStack.values().length === 0 ) {
                 attribute = attributeStack.globalDefault;
@@ -526,37 +646,33 @@ define( [
                 }
             }
 
-            // it takes 4.26% of global cpu
-            // there would be a way to cache it and track state if the program has not changed ...
             var program = this.attributeMap.Program.lastApplied;
+            if ( !program._uniformsCache.ArrayColorEnabled ) return; // no color array uniform exit
 
-            if ( program !== undefined ) {
-                var gl = this.getGraphicContext();
-                var color = program._attributesCache.Color;
-                var updateColorUniform = false;
-                var hasColorAttrib = false;
-                if ( color !== undefined ) {
-                    hasColorAttrib = this.vertexAttribMap[ color ];
-                }
 
-                var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
-                if ( this.previousHasColorAttrib !== hasColorAttrib ) {
-                    updateColorUniform = true;
-                }
+            var gl = this.getGraphicContext();
 
-                this.previousHasColorAttrib = hasColorAttrib;
+            var hasColorAttrib = false;
 
-                if ( updateColorUniform ) {
-                    if ( hasColorAttrib ) {
-                        uniform.get()[ 0 ] = 1.0;
-                    } else {
-                        uniform.get()[ 0 ] = 0.0;
-                    }
-                    uniform.dirty();
-                }
+            // check if we have colorAttribute on the current geometry
+            var color = program._attributesCache.Color;
+            if ( color !== undefined ) hasColorAttrib = this.vertexAttribMap[ color ];
 
-                uniform.apply( gl, program._uniformsCache.ArrayColorEnabled );
+            // no change -> exit
+            if ( this.previousHasColorAttrib === hasColorAttrib ) return;
+
+            // update uniform
+            var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
+            this.previousHasColorAttrib = hasColorAttrib;
+
+            if ( hasColorAttrib ) {
+                uniform.get()[ 0 ] = 1.0;
+            } else {
+                uniform.get()[ 0 ] = 0.0;
             }
+            uniform.dirty();
+            uniform.apply( gl, program._uniformsCache.ArrayColorEnabled );
+
         },
 
         setVertexAttribArray: function ( attrib, array, normalize ) {

@@ -9,6 +9,7 @@ define( [
     'osg/ComputeBoundsVisitor',
     'osg/ComputeMatrixFromNodePath',
     'osg/CullFace',
+    'osg/CullingSet',
     'osg/CullSettings',
     'osg/CullStack',
     'osg/CullVisitor',
@@ -37,6 +38,8 @@ define( [
     'osg/Notify',
     'osg/Object',
     'osg/PagedLOD',
+    'osg/Polytope',
+    'osg/Plane',
     'osg/PrimitiveFunctor',
     'osg/PrimitiveSet',
     'osg/Program',
@@ -78,6 +81,7 @@ define( [
     ComputeBoundsVisitor,
     ComputeMatrixFromNodePath,
     CullFace,
+    CullingSet,
     CullSettings,
     CullStack,
     CullVisitor,
@@ -106,6 +110,8 @@ define( [
     Notify,
     Object,
     PagedLOD,
+    Polytope,
+    Plane,
     PrimitiveFunctor,
     PrimitiveSet,
     Program,
@@ -151,6 +157,7 @@ define( [
     osg.ComputeBoundsVisitor = ComputeBoundsVisitor;
     MACROUTILS.objectMix( osg, ComputeMatrixFromNodePath );
     osg.CullFace = CullFace;
+    osg.CullingSet = CullingSet;
     osg.CullSettings = CullSettings;
     osg.CullStack = CullStack;
     osg.CullVisitor = CullVisitor;
@@ -181,6 +188,8 @@ define( [
     MACROUTILS.objectMix( osg, Notify );
     osg.Object = Object;
     osg.PagedLOD = PagedLOD;
+    osg.Plane = Plane;
+    osg.Polytope = Polytope;
     osg.PrimitiveSet = PrimitiveSet;
     osg.PrimitiveFunctor = PrimitiveFunctor;
     osg.Program = Program;

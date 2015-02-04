@@ -848,12 +848,25 @@ define( [
             this._fragmentShader.push( func._text.join( '\n' ) );
         },
 
+        getTexCoordUnit: function ( id ) {
+            var texture = this._textures[ id ];
+            if ( texture === undefined )
+                return;
+
+            var textureMaterial = this._texturesByName[ texture.getName() ];
+            if ( !textureMaterial )
+                return;
+
+            var texCoordUnit = textureMaterial.textureUnit;
+            if ( texCoordUnit === undefined )
+                textureMaterial.textureUnit = texCoordUnit = id;
+            return texCoordUnit;
+        },
+
         //
         // TODO: change into node based graph shader system.
         declareVertexVariables: function () {
             var texCoordMap = {};
-            var textures = this._textures;
-            var texturesMaterial = this._texturesByName;
 
             this._vertexShader.push( [ '',
                 'attribute vec3 Vertex;',
@@ -900,39 +913,22 @@ define( [
                 hasShadows = true;
             }
 
-            for ( var t = 0, tl = textures.length; t < tl; t++ ) {
-
-                var texture = textures[ t ];
-                if ( texture === undefined )
+            for ( var t = 0, tl = this._textures.length; t < tl; t++ ) {
+                var texCoordUnit = this.getTexCoordUnit( t );
+                if ( texCoordUnit === undefined || texCoordMap[ texCoordUnit ] !== undefined )
                     continue;
-
-                // no method to retrieve textureCoordUnit, we maybe dont need any uvs
-                var textureMaterial = texturesMaterial[ texture.getName() ];
-                if ( !textureMaterial )
-                    continue;
-
-
-                var texCoordUnit = textureMaterial.textureUnit;
-                if ( texCoordUnit === undefined ) {
-                    texCoordUnit = t; // = t;
-                    textureMaterial.textureUnit = 0;
-                }
-
-                if ( texCoordMap[ texCoordUnit ] === undefined ) {
-
-                    this._vertexShader.push( 'attribute vec2 TexCoord' + texCoordUnit + ';' );
-                    this._vertexShader.push( 'varying vec2 FragTexCoord' + texCoordUnit + ';' );
-                    texCoordMap[ texCoordUnit ] = true;
-
-                }
+                this._vertexShader.push( 'attribute vec2 TexCoord' + texCoordUnit + ';' );
+                this._vertexShader.push( 'varying vec2 FragTexCoord' + texCoordUnit + ';' );
+                texCoordMap[ texCoordUnit ] = true;
             }
         },
 
         declareVertexMain: function () {
             this._vertexShader.push( [ '',
                 '  FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
-                '  FragEyeVector = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
-                '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
+                '  vec4 viewPos = ModelViewMatrix * vec4(Vertex,1.0);',
+                '  FragEyeVector = viewPos.xyz;',
+                '  gl_Position = ProjectionMatrix * viewPos;',
                 '  if (ArrayColorEnabled == 1.0)',
                 '    VertexColor = Color;',
                 '  else',
@@ -942,30 +938,14 @@ define( [
                 ''
             ].join( '\n' ) );
 
-            var textures = this._textures;
-            var texturesMaterial = this._texturesByName;
             var texCoordMap = {};
 
-            for ( var tt = 0, ttl = textures.length; tt < ttl; tt++ ) {
-
-                if ( textures[ tt ] === undefined )
+            for ( var tt = 0; tt < this._textures.length; tt++ ) {
+                var texCoordUnit = this.getTexCoordUnit( tt );
+                if ( texCoordUnit === undefined || texCoordMap[ texCoordUnit ] !== undefined )
                     continue;
-
-                var texture = textures[ tt ];
-                var textureMaterial = texturesMaterial[ texture.getName() ];
-                if ( !textureMaterial )
-                    continue;
-
-                var texCoordUnit = texture.textureUnit;
-                if ( texCoordUnit === undefined ) {
-                    texCoordUnit = tt;
-                    textureMaterial.textureUnit = texCoordUnit;
-                }
-
-                if ( texCoordMap[ texCoordUnit ] === undefined ) {
-                    this._vertexShader.push( 'FragTexCoord' + texCoordUnit + ' = TexCoord' + texCoordUnit + ';' );
-                    texCoordMap[ texCoordUnit ] = true;
-                }
+                this._vertexShader.push( 'FragTexCoord' + texCoordUnit + ' = TexCoord' + texCoordUnit + ';' );
+                texCoordMap[ texCoordUnit ] = true;
             }
 
             var hasShadows = false;
