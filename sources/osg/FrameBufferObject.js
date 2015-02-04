@@ -23,7 +23,7 @@ define( [
     FrameBufferObject.DEPTH_COMPONENT16 = 0x81A5;
 
     /** @lends FrameBufferObject.prototype */
-    FrameBufferObject.prototype = MACROUTILS.objectInehrit( StateAttribute.prototype, {
+    FrameBufferObject.prototype = MACROUTILS.objectInherit( StateAttribute.prototype, {
         attributeType: 'FrameBufferObject',
         cloneType: function () {
             return new FrameBufferObject();

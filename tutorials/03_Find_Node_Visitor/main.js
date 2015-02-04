@@ -33,7 +33,7 @@ window.addEventListener( 'load',
             this._name = name;
         };
 
-        FindByNameVisitor.prototype = osg.objectInehrit( osg.NodeVisitor.prototype, {
+        FindByNameVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
             // in found we'll store our resulting matching node
             init: function () {
                 this.found = undefined;

@@ -31,7 +31,7 @@ define( [
     };
 
     /** @lends StackedRotateAxis.prototype */
-    StackedRotateAxis.prototype = MACROUTILS.objectInehrit( Object.prototype, {
+    StackedRotateAxis.prototype = MACROUTILS.objectInherit( Object.prototype, {
         setAxis: function ( axis ) {
             Vec3.copy( axis, this._axis );
         },

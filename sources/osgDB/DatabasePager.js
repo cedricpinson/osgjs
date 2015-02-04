@@ -47,7 +47,7 @@ define( [
         this._activePagedLODList = pagedLODList;
         this._frameNumber = frameNumber;
     };
-    FindPagedLODsVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    FindPagedLODsVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         apply: function ( node ) {
             if ( node.getTypeID() === PagedLOD.getTypeID() ) {
                 node.setFrameNumberOfLastTraversal( this._frameNumber );
@@ -61,7 +61,7 @@ define( [
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
         this.gl = gl;
     };
-    ReleaseVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    ReleaseVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         apply: function ( node ) {
             node.releaseGLObjects( this.gl );
             this.traverse( node );
@@ -73,7 +73,7 @@ define( [
         this._childrenList = [];
     };
 
-    ExpirePagedLODVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    ExpirePagedLODVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
         apply: function ( node ) {
             if ( node.getTypeID() === PagedLOD.getTypeID() ) {

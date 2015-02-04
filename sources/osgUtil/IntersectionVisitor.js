@@ -14,7 +14,7 @@ define( [
     var IntersectionVisitor = function () {
         NodeVisitor.call( this );
         // We could need to use a stack of intersectors in case we want
-        // to use several intersectors. Right now we use only one. 
+        // to use several intersectors. Right now we use only one.
         this._intersector = undefined;
         this._projectionStack = [];
         this._modelStack = [];
@@ -22,7 +22,7 @@ define( [
         this._windowStack = [];
     };
 
-    IntersectionVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         setIntersector: function ( intersector ) {
             this._intersector = intersector;
         },
@@ -165,7 +165,7 @@ define( [
         applyTransform: function ( node ) {
             // Now only use PROJECTION coordinate frame
             if ( !this.enter( node ) ) return;
-            // Accumulate Transform 
+            // Accumulate Transform
             if ( node.getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
                 this.pushViewMatrix( Matrix.create() );
                 this.pushModelMatrix( node.getMatrix() );

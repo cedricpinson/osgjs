@@ -22,7 +22,7 @@ define( [
     };
 
     /** @lends StackedTranslate.prototype */
-    StackedTranslate.prototype = MACROUTILS.objectInehrit( Object.prototype, {
+    StackedTranslate.prototype = MACROUTILS.objectInherit( Object.prototype, {
         setTranslate: function ( translate ) {
             Vec3.copy( translate, this._translate );
         },

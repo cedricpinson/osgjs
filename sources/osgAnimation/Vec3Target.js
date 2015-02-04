@@ -8,7 +8,7 @@ define( [
         Target.call( this );
         this._target = [ 0, 0, 0 ];
     };
-    Vec3Target.prototype = MACROUTILS.objectInehrit( Target.prototype, {
+    Vec3Target.prototype = MACROUTILS.objectInherit( Target.prototype, {
         update: function ( weight, val, priority ) {
             if ( this._weight || this._priorityWeight ) {
 

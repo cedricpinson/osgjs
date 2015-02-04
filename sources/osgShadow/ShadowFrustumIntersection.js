@@ -37,7 +37,7 @@ define( [
     /*
      * TODO: apply world matrix on the traverse instead of per node
      */
-    ComputeMultiFrustumBoundsVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    ComputeMultiFrustumBoundsVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         reset: function ( traversalMask, worldLightPos, cameraFrustum, cameraNearFar, lightFrustum ) {
 
             this.setTraversalMask( traversalMask );

@@ -46,9 +46,9 @@ define( [
     Camera.STENCIL_BUFFER_BIT = 0x00000400;
 
     /** @lends Camera.prototype */
-    Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit(
+    Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         CullSettings.prototype,
-        MACROUTILS.objectInehrit( Transform.prototype, {
+        MACROUTILS.objectInherit( Transform.prototype, {
             // at which view this camera is attached
             getView: function () {
                 return this._view;

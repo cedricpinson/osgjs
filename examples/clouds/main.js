@@ -294,7 +294,7 @@ var NodeVolume = function() {
     osg.Node.call(this);
 };
 
-NodeVolume.prototype = osg.objectInehrit(osg.Node.prototype, {
+NodeVolume.prototype = osg.objectInherit(osg.Node.prototype, {
 });
 
 function createScene() {

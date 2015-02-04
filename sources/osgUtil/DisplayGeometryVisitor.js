@@ -42,7 +42,7 @@ define( [
         program = new Program( new Shader( Shader.VERTEX_SHADER, vertexshader ), new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
         return program;
     };
-    GeometryColorDebugVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         setCustomShader: function ( node, bool ) {
             this._customShader = bool;
             this.apply( node );

@@ -165,7 +165,7 @@ define( [
                         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
                         this._cb = undefined;
                     };
-                    FindAnimationManagerVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+                    FindAnimationManagerVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
                         init: function () {
                             this.found = [];
                         },

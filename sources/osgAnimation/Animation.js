@@ -13,7 +13,7 @@ define( [
     };
 
     /** @lends Animation.prototype */
-    Animation.prototype = MACROUTILS.objectInehrit( Object.prototype, {
+    Animation.prototype = MACROUTILS.objectInherit( Object.prototype, {
         getChannels: function () {
             return this._channels;
         },

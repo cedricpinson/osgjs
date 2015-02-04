@@ -41,7 +41,7 @@ define( [
     };
 
     /** @lends PagedLOD.prototype */
-    PagedLOD.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Lod.prototype, {
+    PagedLOD.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Lod.prototype, {
         // Functions here
         setRange: function ( childNo, min, max ) {
             if ( childNo >= this._range.length ) {

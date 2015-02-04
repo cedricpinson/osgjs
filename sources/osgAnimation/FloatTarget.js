@@ -8,7 +8,7 @@ define( [
         this._target = [ value ];
     };
 
-    FloatTarget.prototype = MACROUTILS.objectInehrit( Target.prototype, {
+    FloatTarget.prototype = MACROUTILS.objectInherit( Target.prototype, {
         update: function ( weight, val, priority ) {
             if ( this._weight || this._priorityWeight ) {
 

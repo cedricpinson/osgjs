@@ -39,7 +39,7 @@ var Ground = function () {
     this.addChild( quad );
 };
 
-Ground.prototype = osg.objectLibraryClass( osg.objectInehrit( osg.MatrixTransform.prototype, {
+Ground.prototype = osg.objectLibraryClass( osg.objectInherit( osg.MatrixTransform.prototype, {
 
     // The min height of a bsphere will near always be lower than
     // that of the bounding box, so try to compensate it

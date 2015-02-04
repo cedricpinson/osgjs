@@ -104,7 +104,7 @@ define( [
     ];
 
     /** @lends OrbitManipulator.prototype */
-    OrbitManipulator.prototype = MACROUTILS.objectInehrit( Manipulator.prototype, {
+    OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         init: function () {
             this._distance = 25.0;
             this._target = [ 0.0, 0.0, 0.0 ];

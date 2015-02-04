@@ -48,7 +48,7 @@ OSG.globalify();
         this.setUpdateCallback(new UpdateCallback());
     };
 
-    osgUtil.Composer.prototype = osg.objectInehrit(osg.Node.prototype, {
+    osgUtil.Composer.prototype = osg.objectInherit(osg.Node.prototype, {
 
         // arg0 can be a texture
         addPass: function(filter, arg0, arg1) {
@@ -293,7 +293,7 @@ OSG.globalify();
         this._vertexShader = osgUtil.Composer.Filter.defaultVertexShader;
     };
 
-    osgUtil.Composer.Filter.Custom.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+    osgUtil.Composer.Filter.Custom.prototype = osg.objectInherit(osgUtil.Composer.Filter.prototype, {
         build: function() {
 
             var program = new osg.Program(
@@ -346,7 +346,7 @@ OSG.globalify();
         }
     };
 
-    osgUtil.Composer.Filter.HBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+    osgUtil.Composer.Filter.HBlur.prototype = osg.objectInherit(osgUtil.Composer.Filter.prototype, {
         setBlurSize: function(nbSamples) {
             if (nbSamples%2 !== 1) {
                 nbSamples+=1;
@@ -409,7 +409,7 @@ OSG.globalify();
         this._pixelSize = 1.0;
     };
 
-    osgUtil.Composer.Filter.AverageHBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+    osgUtil.Composer.Filter.AverageHBlur.prototype = osg.objectInherit(osgUtil.Composer.Filter.prototype, {
         setBlurSize: function(nbSamples) {
             if (nbSamples%2 !== 1) {
                 nbSamples+=1;
@@ -468,7 +468,7 @@ OSG.globalify();
         osgUtil.Composer.Filter.AverageHBlur.call(this, nbSamplesOpt);
     };
 
-    osgUtil.Composer.Filter.AverageVBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.AverageHBlur.prototype, {
+    osgUtil.Composer.Filter.AverageVBlur.prototype = osg.objectInherit(osgUtil.Composer.Filter.AverageHBlur.prototype, {
         getShaderBlurKernel: function() {
             var nbSamples = this._nbSamples;
             var kernel = [];
@@ -509,7 +509,7 @@ OSG.globalify();
         this.setRadius(radius);
     };
 
-    osgUtil.Composer.Filter.BilateralHBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+    osgUtil.Composer.Filter.BilateralHBlur.prototype = osg.objectInherit(osgUtil.Composer.Filter.prototype, {
         setBlurSize: function(nbSamples) {
             if (nbSamples%2 !== 1) {
                 nbSamples+=1;
@@ -612,7 +612,7 @@ OSG.globalify();
         osgUtil.Composer.Filter.BilateralHBlur.call(this, options);
     };
 
-    osgUtil.Composer.Filter.BilateralVBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.BilateralHBlur.prototype, {
+    osgUtil.Composer.Filter.BilateralVBlur.prototype = osg.objectInherit(osgUtil.Composer.Filter.BilateralHBlur.prototype, {
         getUVOffset: function(value) {
             return "vec2(float("+value+"),0.0)/RenderSize[0];";
         }
@@ -624,7 +624,7 @@ OSG.globalify();
         this._stateSet.setTextureAttributeAndModes(0, texture);
     };
 
-    osgUtil.Composer.Filter.InputTexture.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+    osgUtil.Composer.Filter.InputTexture.prototype = osg.objectInherit(osgUtil.Composer.Filter.prototype, {
         build: function() {
             this._dirty = false;
         }
@@ -635,7 +635,7 @@ OSG.globalify();
         osgUtil.Composer.Filter.HBlur.call(this);
     };
 
-    osgUtil.Composer.Filter.VBlur.prototype = osg.objectInehrit(osgUtil.Composer.Filter.HBlur.prototype, {
+    osgUtil.Composer.Filter.VBlur.prototype = osg.objectInherit(osgUtil.Composer.Filter.HBlur.prototype, {
 
         build: function() {
             var nbSamples = this._nbSamples;
@@ -709,7 +709,7 @@ OSG.globalify();
         stateSet.addUniform(mixValueUniform);
     };
 
-    osgUtil.Composer.Filter.BlendMix = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+    osgUtil.Composer.Filter.BlendMix = osg.objectInherit(osgUtil.Composer.Filter.prototype, {
         getBlendFactorUniform: function() {
             return this._mixValueUniform;
         },
@@ -760,7 +760,7 @@ OSG.globalify();
         stateSet.addUniform(osg.Uniform.createInt1(unit1,'Texture1'));
     };
 
-    osgUtil.Composer.Filter.BlendMultiply.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+    osgUtil.Composer.Filter.BlendMultiply.prototype = osg.objectInherit(osgUtil.Composer.Filter.prototype, {
         build: function() {
             var vtx = osgUtil.Composer.Filter.defaultVertexShader;
             var fgt = [
@@ -821,7 +821,7 @@ OSG.globalify();
         this._sceneRadius = 2.0;
     };
 
-    osgUtil.Composer.Filter.SSAO.prototype = osg.objectInehrit(osgUtil.Composer.Filter.prototype, {
+    osgUtil.Composer.Filter.SSAO.prototype = osg.objectInherit(osgUtil.Composer.Filter.prototype, {
         setSceneRadius: function(value) {
             this._sceneRadius = value;
             this.dirty();
@@ -1007,7 +1007,7 @@ OSG.globalify();
         osgUtil.Composer.Filter.SSAO.call(this, options);
     };
 
-    osgUtil.Composer.Filter.SSAO8.prototype = osg.objectInehrit(osgUtil.Composer.Filter.SSAO.prototype, {
+    osgUtil.Composer.Filter.SSAO8.prototype = osg.objectInherit(osgUtil.Composer.Filter.SSAO.prototype, {
         buildGeometry: function(quad) {
             quad.getAttributes().TexCoord1 = this._texCoord1;
             return quad;

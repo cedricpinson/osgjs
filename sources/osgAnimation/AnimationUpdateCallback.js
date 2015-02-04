@@ -11,7 +11,7 @@ define( [
     var AnimationUpdateCallback = function () {};
 
     /** @lends AnimationUpdateCallback.prototype */
-    AnimationUpdateCallback.prototype = MACROUTILS.objectInehrit( Object.prototype, {
+    AnimationUpdateCallback.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
         linkChannel: function () {},
         linkAnimation: function ( anim ) {

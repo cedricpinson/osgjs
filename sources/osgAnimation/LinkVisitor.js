@@ -18,7 +18,7 @@ define( [
     };
 
     /** @lends LinkVisitor.prototype */
-    LinkVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    LinkVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         setAnimationMap: function ( anims ) {
             this._animations = anims;
             this._animationKeys = window.Object.keys( anims );

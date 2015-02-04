@@ -108,7 +108,7 @@ define( [
         return target;
     };
 
-    Utils.objectInehrit = Utils.objectInherit = function ( base /*, extras*/ ) {
+    Utils.objectInherit = function ( base /*, extras*/ ) {
         function F() {}
         F.prototype = base;
         var obj = new F();
@@ -119,6 +119,10 @@ define( [
         }
         return obj;
     };
+    Utils.objectInehrit = function( ) {
+        console.warn( 'please use objectInherit instead of objectInehrit' );
+    };
+
     Utils.objectMix = function ( obj, properties, test ) {
         for ( var key in properties ) {
             if ( !( test && obj[ key ] ) ) {

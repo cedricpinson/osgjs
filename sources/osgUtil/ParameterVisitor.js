@@ -231,7 +231,7 @@ define( [
         ( new ArraySlider() ).createSlider( param );
     };
 
-    ParameterVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    ParameterVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
         setTargetHTML: function ( html ) {
             this.targetHTML = html;
@@ -309,7 +309,7 @@ define( [
             var BackVisitor = function () {
                 NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
             };
-            BackVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+            BackVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
                 setUniformMap: function ( map ) {
                     this.uniformMap = map;
                 },

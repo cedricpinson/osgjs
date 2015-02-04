@@ -56,7 +56,7 @@ define( [
     };
 
     /** @lends CullVisitor.prototype */
-    CullVisitor.prototype = MACROUTILS.objectInehrit( CullStack.prototype, MACROUTILS.objectInehrit( CullSettings.prototype, MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTILS.objectInherit( CullSettings.prototype, MACROUTILS.objectInherit( NodeVisitor.prototype, {
         distance: function ( coord, matrix ) {
             return -( coord[ 0 ] * matrix[ 2 ] + coord[ 1 ] * matrix[ 6 ] + coord[ 2 ] * matrix[ 10 ] + matrix[ 14 ] );
         },

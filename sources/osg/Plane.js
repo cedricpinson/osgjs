@@ -8,7 +8,7 @@ define( [
     'use strict';
 
     /** @class Plane Operations */
-    var Plane = MACROUTILS.objectInehrit( Vec4, {
+    var Plane = MACROUTILS.objectInherit( Vec4, {
         // Many case (frustum, convexity)
         // needs to know where from a plane it stands,
         // not just boolean intersection

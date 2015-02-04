@@ -34,7 +34,7 @@ define( [
     };
 
     /** @lends Node.prototype */
-    Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Object.prototype, {
+    Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
         /**
         Return StateSet and create it if it does not exist yet
         @type StateSet
@@ -268,7 +268,7 @@ define( [
                 this.halt = halt;
                 NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
             };
-            CollectParentPaths.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+            CollectParentPaths.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
                 apply: function ( node ) {
                     if ( node.parents.length === 0 || node === this.halt || ( node.referenceFrame !== undefined && node.referenceFrame === TransformEnums.ABSOLUTE_RF ) ) {
                         // copy

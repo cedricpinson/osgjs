@@ -68,7 +68,7 @@ define( [
         this.getOrCreateStateSet().setAttributeAndModes( new Depth( 'DISABLE' ) );
     };
 
-    Composer.prototype = MACROUTILS.objectInehrit( Node.prototype, {
+    Composer.prototype = MACROUTILS.objectInherit( Node.prototype, {
         dirty: function () {
             for ( var i = 0, l = this._stack.length; i < l; i++ ) {
                 this._stack[ i ].filter.dirty();
@@ -357,7 +357,7 @@ define( [
         this._vertexShader = Composer.Filter.defaultVertexShader;
     };
 
-    Composer.Filter.Custom.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.Custom.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
         build: function () {
 
             var program = new Program(
@@ -412,7 +412,7 @@ define( [
         this._pixelSize = 1.0;
     };
 
-    Composer.Filter.AverageHBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.AverageHBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
         setBlurSize: function ( nbSamples ) {
             if ( nbSamples % 2 !== 1 ) {
                 nbSamples += 1;
@@ -529,7 +529,7 @@ define( [
     Composer.Filter.AverageVBlur = function ( nbSamplesOpt, linear ) {
         Composer.Filter.AverageHBlur.call( this, nbSamplesOpt, linear );
     };
-    Composer.Filter.AverageVBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.AverageHBlur.prototype, {
+    Composer.Filter.AverageVBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.AverageHBlur.prototype, {
         getUVOffset: function ( value ) {
             return 'vec2(0.0, float(' + value + ')/RenderSize[1]);';
         }
@@ -557,7 +557,7 @@ define( [
         this.setRadius( radius );
     };
 
-    Composer.Filter.BilateralHBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.BilateralHBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
         setBlurSize: function ( nbSamples ) {
             if ( nbSamples % 2 !== 1 ) {
                 nbSamples += 1;
@@ -662,7 +662,7 @@ define( [
         Composer.Filter.BilateralHBlur.call( this, options );
     };
 
-    Composer.Filter.BilateralVBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.BilateralHBlur.prototype, {
+    Composer.Filter.BilateralVBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.BilateralHBlur.prototype, {
         getUVOffset: function ( value ) {
             return 'vec2(float(' + value + ')*pixelSize/RenderSize[0],0.0);';
         }
@@ -674,7 +674,7 @@ define( [
         Composer.Filter.call( this );
         this._stateSet.setTextureAttributeAndModes( 0, texture );
     };
-    Composer.Filter.InputTexture.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.InputTexture.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
         build: function () {
             this._dirty = false;
         }
@@ -691,7 +691,7 @@ define( [
         }
     };
 
-    Composer.Filter.HBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.HBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
         setBlurSize: function ( nbSamples ) {
             if ( nbSamples % 2 !== 0 ) {
                 nbSamples += 1;
@@ -802,7 +802,7 @@ define( [
         Composer.Filter.HBlur.call( this, nbSamplesOpt, linear );
     };
 
-    Composer.Filter.VBlur.prototype = MACROUTILS.objectInehrit( Composer.Filter.HBlur.prototype, {
+    Composer.Filter.VBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.HBlur.prototype, {
         getUVOffset: function ( value ) {
             return 'vec2(0.0, float(' + value + ')/RenderSize[1]) ;';
         }
@@ -816,7 +816,7 @@ define( [
         this._factor = Uniform.createFloat( 1.0, 'factor' );
     };
 
-    Composer.Filter.SobelFilter.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.SobelFilter.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
         setColor: function ( color ) {
             this._color.get()[ 0 ] = color[ 0 ];
             this._color.get()[ 1 ] = color[ 1 ];
@@ -901,7 +901,7 @@ define( [
         stateSet.addUniform( this._mixValueUniform );
     };
 
-    Composer.Filter.BlendMix.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.BlendMix.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
         getBlendFactorUniform: function () {
             return this._mixValueUniform;
         },
@@ -952,7 +952,7 @@ define( [
         stateSet.addUniform( Uniform.createInt1( unit1, 'Texture1' ) );
     };
 
-    Composer.Filter.BlendMultiply.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.BlendMultiply.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
         build: function () {
             var vtx = Composer.Filter.defaultVertexShader;
             var fgt = [
@@ -1016,7 +1016,7 @@ define( [
 
     };
 
-    Composer.Filter.SSAO.prototype = MACROUTILS.objectInehrit( Composer.Filter.prototype, {
+    Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
 
         initNoise: function () {
             var sizeNoise = this._noiseTextureSize;
@@ -1209,7 +1209,7 @@ define( [
         Composer.Filter.SSAO.call( this, options );
     };
 
-    Composer.Filter.SSAO8.prototype = MACROUTILS.objectInehrit( Composer.Filter.SSAO.prototype, {
+    Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO.prototype, {
         buildGeometry: function ( quad ) {
             quad.getAttributes().TexCoord1 = this._texCoord1;
             return quad;

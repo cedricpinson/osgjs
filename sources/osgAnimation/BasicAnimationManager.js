@@ -20,7 +20,7 @@ define( [
     };
 
     /** @lends BasicAnimationManager.prototype */
-    BasicAnimationManager.prototype = MACROUTILS.objectInehrit( Object.prototype, {
+    BasicAnimationManager.prototype = MACROUTILS.objectInherit( Object.prototype, {
         _updateAnimation: function ( animationParameter, t, priority ) {
             var duration = animationParameter.duration;
             var weight = animationParameter.weight;

@@ -29,7 +29,7 @@ define( [
     FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation' ];
 
     /** @lends FirstPersonManipulator.prototype */
-    FirstPersonManipulator.prototype = MACROUTILS.objectInehrit( Manipulator.prototype, {
+    FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         setNode: function ( node ) {
             this._node = node;
             this.computeHomePosition();

@@ -19,7 +19,7 @@ define( [
     };
 
     /** @lends Channel.prototype */
-    Channel.prototype = MACROUTILS.objectInehrit( Object.prototype, {
+    Channel.prototype = MACROUTILS.objectInherit( Object.prototype, {
         getKeyframes: function () {
             return this._sampler.getKeyframes();
         },

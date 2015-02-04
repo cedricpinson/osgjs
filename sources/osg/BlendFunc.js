@@ -54,7 +54,7 @@ define( [
 
 
     /** @lends BlendFunc.prototype */
-    BlendFunc.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
+    BlendFunc.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
         /**
     StateAttribute type of BlendFunc
     @type String

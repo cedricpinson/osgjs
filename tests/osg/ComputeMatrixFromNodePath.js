@@ -22,7 +22,7 @@ define( [
                     NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
                     this.node = undefined;
                 };
-                GetRootItem.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+                GetRootItem.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
                     apply: function ( node ) {
                         this.node = node;
                         this.traverse( node );
