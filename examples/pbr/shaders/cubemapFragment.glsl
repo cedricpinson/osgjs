@@ -29,7 +29,7 @@ void main() {
 #ifdef CUBEMAP_LOD
     vec3 color = textureCubeLodEXTFixed(uEnvironmentCube, direction, uLod ).rgb;
 #else
-    vec3 color = textureCube( uEnvironmentCube, direction ).rgb;
+    vec3 color = textureCubemap( uEnvironmentCube, direction ).rgb;
 #endif
     //color = textureCube(uEnvironment, direction ).rgb;
     gl_FragColor = vec4( linearTosRGB(color, DefaultGamma ), 1.0);

@@ -83,6 +83,8 @@ window.EnvironmentCubeMap = ( function () {
                 for ( var i = 0; i <= maxLevel; i++ ) {
                     var size = Math.pow(2, maxLevel - i );
                     var byteSize;
+                    if ( offset >= data.byteLength )
+                        break;
                     for ( var face = 0; face < 6; face++ ) {
 
                         // add entry if does not exist

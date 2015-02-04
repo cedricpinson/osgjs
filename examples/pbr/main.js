@@ -86,6 +86,7 @@
         this._promises = [];
         this._panoramaUE4 = {};
         this._cubemapUE4 = {};
+        this._backgroundCubemap = {};
     };
 
     Environment.prototype = {
@@ -129,6 +130,16 @@
 
             this._integrateBRDF = new IntegrateBRDFMap( integrateBRDF, config['brdfUE4Size'] );
 
+            // read all cubemap format U4
+            formatList.forEach( function ( key ) {
+                var str = key.toLowerCase();
+                var file = config['backgroundCubemap_' + str];
+                var size = config['backgroundCubemapSize'];
+                if ( file === undefined || size === undefined ) return;
+                this._backgroundCubemap[ key ] = new EnvironmentCubeMap( environment + file, size, config );
+                ready.push( this._backgroundCubemap[ key ].loadPacked( key ) );
+
+            }.bind( this ) );
 
             if ( !this._config.diffuseSPH )
                 osg.error( 'cant find shCoefs in environment config' );
@@ -162,6 +173,9 @@
         },
         getCubemapIrradiance: function () {
             return this._cubemapIrradiance;
+        },
+        getBackgroundCubemap: function() {
+            return this._backgroundCubemap;
         },
         getConfig: function () {
             return this._config;
@@ -212,6 +226,9 @@
 
         // rotation of the environment geometry
         this._environmentTransformMatrix = undefined;
+
+        // background stateSet
+        this._backgroundStateSet = new osg.StateSet();
     };
 
     Example.prototype = {
@@ -845,9 +862,12 @@
 
             // set the stateSet of the environment geometry
             this._environmentStateSet.setAttributeAndModes(
-                this.createShaderCubemap( [ '#define CUBEMAP_LOD',
+                this.createShaderCubemap( [
                     '#define ' + this._config.format,
                 ] ) );
+
+            var textureBackground = this._currentEnvironment.getBackgroundCubemap()[this._config.format ].getTexture();
+            this._environmentStateSet.setTextureAttributeAndModes( 0, textureBackground );
 
             var texture;
             if ( this._config.pbr === 'UE4' ) {
@@ -871,7 +891,6 @@
             stateSet.setTextureAttributeAndModes( 0, texture );
 
         },
-
 
         setSphericalEnv: function () {
             this._environmentStateSet.addUniform( this._currentEnvironment.getSpherical()._uniformSpherical );
@@ -1006,7 +1025,7 @@
             //var environment = 'textures/parking/';
             //var environment = 'textures/path/';
             //var environment = 'textures/field/';
-            var environment = 'textures/bus_garage/';
+            var environment = 'textures/bus_garage2/';
             //var environment = 'textures/tmp/';
 
             //var model = new ModelLoader( 'models/cerberus/' );
