@@ -22,7 +22,7 @@ define( [
     };
 
     /** @lends StackedQuaternion.prototype */
-    StackedQuaternion.prototype = MACROUTILS.objectInehrit( Object.prototype, {
+    StackedQuaternion.prototype = MACROUTILS.objectInherit( Object.prototype, {
         setQuaternion: function ( q ) {
             Quat.copy( q, this._quaternion );
         },

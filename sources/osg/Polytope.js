@@ -26,7 +26,7 @@ define( [
         this._maskStack.push( this._resultMask );
     };
 
-    Polytope.prototype = MACROUTILS.objectInehrit( Object.prototype, {
+    Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
 
         getPlanes: function () {

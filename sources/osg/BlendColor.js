@@ -18,7 +18,7 @@ define( [
     };
 
     /** @lends BlendColor.prototype */
-    BlendColor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
+    BlendColor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
         attributeType: 'BlendColor',
         cloneType: function () {
             return new BlendColor();

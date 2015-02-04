@@ -32,7 +32,7 @@ define( [
     Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED = 2;
 
     /** @lends Lod.prototype */
-    Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
+    Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
         // Functions here
         getRadius: function () {
             return this._radius;

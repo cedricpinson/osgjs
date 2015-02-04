@@ -13,7 +13,7 @@ define( [
     };
 
     /** @lends LightSource.prototype */
-    LightSource.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Node.prototype, {
+    LightSource.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
         getLight: function () {
             return this._light;
         },

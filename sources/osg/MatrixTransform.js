@@ -17,7 +17,7 @@ define( [
     };
 
     /** @lends MatrixTransform.prototype */
-    MatrixTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( Transform.prototype, {
+    MatrixTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Transform.prototype, {
 
         getMatrix: function () {
             return this.matrix;

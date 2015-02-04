@@ -18,7 +18,7 @@ define( [
     };
 
     /** @lends Transform.prototype */
-    Transform.prototype = MACROUTILS.objectInehrit( Node.prototype, {
+    Transform.prototype = MACROUTILS.objectInherit( Node.prototype, {
         setReferenceFrame: function ( value ) {
             this.referenceFrame = value;
         },

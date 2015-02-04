@@ -28,7 +28,7 @@ define( [
         ts.addUniform( Uniform.createFloat3( [ 0.0, 1.0, 0.0 ], 'uColorDebug' ) );
         ts.setAttribute( new Depth( Depth.NEVER ) );
     };
-    DisplayNormalVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    DisplayNormalVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         setTangentVisibility: function ( bool ) {
             this._tangentStateSet.setAttribute( new Depth( bool ? Depth.LESS : Depth.NEVER ) );
         },

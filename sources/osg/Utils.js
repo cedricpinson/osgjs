@@ -108,7 +108,7 @@ define( [
         return target;
     };
 
-    Utils.objectInehrit = Utils.objectInherit = function ( base /*, extras*/ ) {
+    Utils.objectInherit = Utils.objectInherit = function ( base /*, extras*/ ) {
         function F() {}
         F.prototype = base;
         var obj = new F();

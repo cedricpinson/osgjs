@@ -13,7 +13,7 @@ define( [
         };
     };
 
-    KdTreeBuilder.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    KdTreeBuilder.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         apply: function ( node ) {
             if ( node.getShape ) {
                 var shape = node.getShape();

@@ -17,7 +17,7 @@ define( [
         this._bb = new BoundingBox();
     };
 
-    ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
         reset: function () {
             this._matrixStack.length = 0;

@@ -10,7 +10,7 @@ define( [
         this.visitorType = NodeVisitor.UPDATE_VISITOR;
     };
 
-    UpdateVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
+    UpdateVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
         apply: function ( node ) {
 

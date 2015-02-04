@@ -122,7 +122,7 @@ define( [
     };
 
 
-    Viewer.prototype = MACROUTILS.objectInehrit( View.prototype, {
+    Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
         initDeviceEvents: function ( options, canvas ) {
 

@@ -21,7 +21,7 @@ define( [
     CullFace.FRONT_AND_BACK = 0x0408;
 
     /** @lends CullFace.prototype */
-    CullFace.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInehrit( StateAttribute.prototype, {
+    CullFace.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
         attributeType: 'CullFace',
         cloneType: function () {
             return new CullFace();

@@ -9,7 +9,7 @@ define( [
         Target.call( this );
         this._target = Quat.create();
     };
-    QuatTarget.prototype = MACROUTILS.objectInehrit( Target.prototype, {
+    QuatTarget.prototype = MACROUTILS.objectInherit( Target.prototype, {
         update: function ( weight, val, priority ) {
             if ( this._weight || this._priorityWeight ) {
 

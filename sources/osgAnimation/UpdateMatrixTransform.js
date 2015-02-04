@@ -15,7 +15,7 @@ define( [
     };
 
     /** @lends AnimationUpdateCallback.prototype */
-    UpdateMatrixTransform.prototype = MACROUTILS.objectInehrit( AnimationUpdateCallback.prototype, {
+    UpdateMatrixTransform.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.prototype, {
         getStackedTransforms: function () {
             return this._stackedTransforms;
         },
