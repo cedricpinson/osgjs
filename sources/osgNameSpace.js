@@ -1,4 +1,5 @@
 define( [
-], function ( ) {
-    return {};
+    'version'
+], function ( version ) {
+    return version;
 } );
