@@ -99,7 +99,7 @@ define( [
                         Notify.log( 'can\'t link program\n' + 'vertex shader:\n' + this._vertex.text + '\n fragment shader:\n' + this._fragment.text, true, false );
                         // rawgl trick is for webgl inspector
                         var debugShader = ( gl.rawgl !== undefined ? gl.rawgl : gl );
-                        if ( debugShader !== undefined && debugShader.getExtension !== undefined ) debugShader.getExtension( 'WEBGL_debug_shaders' );
+                        if ( debugShader !== undefined && debugShader.getExtension !== undefined ) debugShader = debugShader.getExtension( 'WEBGL_debug_shaders' );
                         if ( debugShader && errLink === 'Failed to create D3D shaders.\n' ) {
 
                             Notify.error( debugShader.getTranslatedShaderSource( this._vertex.shader ), true, false );
