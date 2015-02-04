@@ -13,7 +13,7 @@ define( [], function () {
         }
         this.nodePath = [];
         this.visitorType = NodeVisitor.NODE_VISITOR;
-
+        this._databaseRequestHandler = undefined;
         this._frameStamp = undefined;
     };
 
@@ -108,6 +108,13 @@ define( [], function () {
         },
         getVisitorType: function () {
             return this.visitorType;
+        },
+        setDatabaseRequestHandler: function ( dbpager )
+        {
+            this._databaseRequestHandler = dbpager;
+        },
+        getDatabaseRequestHandler: function () {
+            return this._databaseRequestHandler;
         }
     };
 

@@ -157,8 +157,8 @@ define( [
                 this._renderStage.setClearColor( camera.getClearColor() );
                 this._renderStage.setClearMask( camera.getClearMask() );
                 this._renderStage.setViewport( camera.getViewport() );
-
-
+                // pass de dbpager to the cullvisitor, so plod's can do the requests
+                this._cullVisitor.setDatabaseRequestHandler( this._camera.getView().getDatabasePager() );
                 // dont add camera on the stack just traverse it
                 this._cullVisitor.handleCullCallbacksAndTraverse( camera );
 

@@ -50,7 +50,6 @@ define( [
 
         this._camera = new Camera();
         this._scene = new Scene();
-
         this._frameStamp = new FrameStamp();
         this._lightingMode = undefined;
         this._manipulator = undefined;
@@ -199,15 +198,18 @@ define( [
             this._camera.addChild( node );
 
         },
-
         getSceneData: function () {
             return this._scene.getSceneData();
         },
-
+        setDatabasePager: function ( dbpager ) {
+            this._scene.setDatabasePager( dbpager );
+        },
+        getDatabasePager: function () {
+            return this._scene.getDatabasePager();
+        },
         getScene: function () {
             return this._scene;
         },
-
         getManipulator: function () {
             return this._manipulator;
         },

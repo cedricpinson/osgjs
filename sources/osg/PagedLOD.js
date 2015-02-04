@@ -7,11 +7,8 @@ define( [
     'osg/Lod',
     'osg/NodeVisitor',
     'osg/Matrix',
-    'osg/Vec3',
-    'osg/Node',
-    'osg/Geometry',
-    'osg/Notify'
-], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3, Node, Geometry, Notify ) {
+    'osg/Vec3'
+], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3 ) {
 
     'use strict';
 
@@ -23,8 +20,10 @@ define( [
         Lod.call( this );
         this._perRangeDataList = [];
         this._loading = false;
-        this._expiryTime = 5.0;
+        this._expiryTime = 0.0;
+        this._expiryFrame = 0;
         this._centerMode = Lod.USER_DEFINED_CENTER;
+        this._frameNumberOfLastTraversal = 0;
     };
 
     /**
@@ -38,6 +37,7 @@ define( [
         this.timeStamp = 0.0;
         this.frameNumber = 0;
         this.frameNumberOfLastTraversal = 0;
+        this.dbrequest = undefined;
     };
 
     /** @lends PagedLOD.prototype */
@@ -84,62 +84,37 @@ define( [
 
         addChildNode: function ( node ) {
             Lod.prototype.addChildNode.call( this, node );
-            // this.perRangeDataList.push ( null );
         },
 
-        loadNode: function ( perRangeData, node ) {
-            if ( perRangeData.function === undefined )
-                this.loadNodeFromURL( perRangeData, node );
-            else this.loadNodeFromFunction( perRangeData, node );
+        setFrameNumberOfLastTraversal: function ( frameNumber ) {
+            this._frameNumberOfLastTraversal = frameNumber;
         },
 
-        loadNodeFromURL: function ( perRangeData, node ) {
-            // TODO:
-            // we could implement a IndexedDB layer here
-            Notify.log( 'loading ' + perRangeData.filename );
-            var ReaderParser = require( 'osgDB/ReaderParser' );
-            // Call to ReaderParser just in case there is a custom readNodeURL Callback
-            // See osgDB/Options.js and/or osgDB/Input.js
-            Q.when( ReaderParser.readNodeURL( perRangeData.filename ) ).then( function ( child ) {
-                node.addChildNode( child );
-            } );
-
+        getFrameNumberOfLastTraversal: function () {
+            return this._frameNumberOfLastTraversal;
         },
-
-        loadNodeFromFunction: function ( perRangeData, node ) {
-            // Need to call with this paged lod as parent
-            Q.when( ( perRangeData.function )( this ) ).then( function ( child ) {
-                node.addChildNode( child );
-            } );
+        setTimeStamp: function ( childNo, timeStamp ) {
+            this._perRangeDataList[ childNo ].timeStamp = timeStamp;
         },
-
-        removeExpiredChildren: function ( frameStamp, gl ) {
-
-            var ReleaseVisitor = function ( gl ) {
-                NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this.gl = gl;
-            };
-            ReleaseVisitor.prototype = MACROUTILS.objectInehrit( NodeVisitor.prototype, {
-                apply: function ( node ) {
-                    node.releaseGLObjects( this.gl );
-                    this.traverse( node );
-                }
-            } );
-            if ( frameStamp.getFrameNumber() === 0 ) return;
-            var numChildren = this.children.length;
-            for ( var i = numChildren - 1; i > 0; i-- ) {
-                //First children never expires, also children added with addChild method should not be deleted
-                var timed = frameStamp.getSimulationTime() - this._perRangeDataList[ i ].timeStamp;
-                if ( ( timed > this._expiryTime ) && ( this._perRangeDataList[ i ].filename.length > 0 ||
-                    this._perRangeDataList[ i ].function !== undefined ) ) {
-                    if ( i === this.children.length - 1 ) {
-                        this.children[ i ].accept( new ReleaseVisitor( gl ) );
-                        this.removeChild( this.children[ i ] );
-                        this._perRangeDataList[ i ].loaded = false;
-                        numChildren--;
-                    }
-                } else {
-                    return;
+        setFrameNumber: function ( childNo, frameNumber ) {
+            this._perRangeDataList[ childNo ].frameNumber = frameNumber;
+        },
+        getDatabaseRequest: function ( childNo ) {
+            return this._perRangeDataList[ childNo ].dbrequest;
+        },
+        removeExpiredChildren: function ( expiryTime, expiryFrame, removedChildren ) {
+            var i = this.children.length - 1;
+            var timed, framed;
+            timed = this._perRangeDataList[ i ].timeStamp + this._expiryTime;
+            framed = this._perRangeDataList[ i ].frameNumber + this._expiryFrame;
+            if ( timed < expiryTime && framed < expiryFrame && ( this._perRangeDataList[ i ].filename.length > 0 ||
+                this._perRangeDataList[ i ].function !== undefined ) ) {
+                removedChildren.push( this.children[ i ] );
+                this.removeChild( this.children[ i ] );
+                this._perRangeDataList[ i ].loaded = false;
+                if ( this._perRangeDataList[ i ].dbrequest !== undefined ) {
+                    this._perRangeDataList[ i ].dbrequest._groupExpired = true;
+                    //this._perRangeDataList[ i ].dbrequest = undefined;
                 }
             }
         },
@@ -158,6 +133,7 @@ define( [
                 var updateTimeStamp = false;
 
                 if ( visitor.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
+                    this._frameNumberOfLastTraversal = visitor.getFrameStamp().getFrameNumber();
                     updateTimeStamp = true;
                 }
 
@@ -198,6 +174,7 @@ define( [
 
                                 if ( updateTimeStamp ) {
                                     this._perRangeDataList[ j ].timeStamp = visitor.getFrameStamp().getSimulationTime();
+                                    this._perRangeDataList[ j ].frameNumber = visitor.getFrameStamp().getFrameNumber();
                                 }
 
                                 this.children[ j ].accept( visitor );
@@ -213,29 +190,34 @@ define( [
 
                             if ( updateTimeStamp ) {
                                 this._perRangeDataList[ numChildren - 1 ].timeStamp = visitor.getFrameStamp().getSimulationTime();
+                                this._perRangeDataList[ numChildren - 1 ].frameNumber = visitor.getFrameStamp().getFrameNumber();
                             }
 
                             this.children[ numChildren - 1 ].accept( visitor );
                         }
                         // now request the loading of the next unloaded child.
-                        if ( numChildren < this._range.length ) {
-
-                            // Here we should do the request
+                        if ( numChildren < this._perRangeDataList.length ) {
+                            // compute priority from where abouts in the required range the distance falls.
+                            var priority = ( this._range[ numChildren ][ 0 ] - requiredRange ) / ( this._range[ numChildren ][ 1 ]- this._range[ numChildren ][ 0 ] );
+                            if ( this._rangeMode === Lod.PIXEL_SIZE_ON_SCREEN ) {
+                                priority = -priority;
+                            }
+                            // Here we do the request
                             var group = visitor.nodePath[ visitor.nodePath.length - 1 ];
                             if ( this._perRangeDataList[ numChildren ].loaded === false ) {
                                 this._perRangeDataList[ numChildren ].loaded = true;
-                                this.loadNode( this._perRangeDataList[ numChildren ], group );
+                                var dbhandler = visitor.getDatabaseRequestHandler();
+                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime(), priority );
+                            } else {
+                                // Update timestamp of the request.
+                                if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined) {
+                                    this._perRangeDataList[ numChildren ].dbrequest._timeStamp = visitor.getFrameStamp().getSimulationTime();
+                                    this._perRangeDataList[ numChildren ].dbrequest._priority = priority;
+                                }
                             }
                         }
                     }
-
-                    // Remove the expired childs if any
-                    // CP: issue here, no gl context should be used here
-                    // it should be deferred in another part, check in osg to see how it's done
-                    this.removeExpiredChildren( visitor.getFrameStamp(), visitor.getCurrentCamera().getGraphicContext() );
-
                     break;
-
                 default:
                     break;
                 }
