@@ -57,7 +57,7 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
     // which is clamped to [0,1]
     // Not doing that makes ALL shadowReceiver > 1.0 black
     // because they ALL becomes behind any point in Caster depth map
-    float shadowReceiverZ = clamp(shadowZ, 0.0, 1.0);
+    float shadowReceiverZ = clamp(shadowZ, 0.0, 1.0 - myBias);
 
 #ifdef _NONE
 
@@ -132,10 +132,6 @@ float computeShadow(in bool lighted,
     float shadowBias = 0.005*tan(acos(N_Dot_L)); // cosTheta is dot( n, l ), clamped between 0 and 1
     shadowBias = clamp(shadowBias, 0.0, bias);
 
-
-#if defined( _TAP_PCF) //|| (defined(_BAND_PCF) && defined(_PCFx9))
-    shadowBias = - shadowBias;
-#endif
     //normal offset aka Exploding Shadow Receivers
     if(shadowVertexProjected.w != 1.0){
         // only relevant for perspective, not orthogonal
