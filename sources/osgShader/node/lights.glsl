@@ -236,10 +236,11 @@ vec3 computeHemiLightShading(
     // same cook-torrance as above for sky/ground
     float skyWeight = 0.5 * dot(normal, normalize(eyeVector + eyeLightDir)) + 0.5;
     float gndWeight = 0.5 * dot(normal, normalize(eyeVector - eyeLightDir)) + 0.5;
-    float skySpec = pow(skyWeight, materialShininess) / (0.1 + max( dot(normal, eyeVector), 0.0 ));
-    float skyGround = pow(skyWeight, materialShininess) / (0.1 + max( dot(normal, eyeVector), 0.0 ));
+    float skySpec = pow(skyWeight, materialShininess);
+    float skyGround = pow(gndWeight, materialShininess);
+    float divisor = (0.1 + max( dot(normal, eyeVector), 0.0 ))
     float att = materialShininess > 100.0 ? 1.0 : smoothstep(0.0, 1.0, materialShininess * 0.01);
-    vec3 specularContrib = lightDiffuse * materialSpecular * weight * att * (skySpec + skyGround);
+    vec3 specularContrib = lightDiffuse * materialSpecular * weight * att * (skySpec + skyGround) / divisor;
 
     return diffuseContrib + specularContrib;
 }
