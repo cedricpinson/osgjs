@@ -628,12 +628,12 @@ define( [
 
         },
 
-        createLighting: function ( materials ) {
+        createLighting: function ( materials, overrideNodeName ) {
 
             var output = this.createVariable( 'vec3' );
             var lightList = [];
 
-            var enumToNodeName = {
+            var enumToNodeName = overrideNodeName || {
                 DIRECTION: 'SunLight',
                 SPOT: 'SpotLight',
                 POINT: 'PointLight',
