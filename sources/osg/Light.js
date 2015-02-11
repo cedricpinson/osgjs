@@ -29,9 +29,10 @@ define( [
         this._position = [ 0.0, 0.0, 1.0, 0.0 ];
         this._direction = [ 0.0, 0.0, -1.0 ];
 
-        // TODO : refactor lights management
-        // w=1.0 (isHemi), w=-1.0 (isNotHemi)
-        this._ground = [ 1.0, 0.0, 0.0, -1.0 ];
+        // TODO : refactor lights management w=1.0 (isHemi), w=-1.0
+        // (isNotHemi) _ground contains the color but w says if it's
+        // an hemi or not
+        this._ground = [ 0.2, 0.2, 0.2, -1.0 ];
 
         this._spotCutoff = 180.0;
         this._spotBlend = 0.01;
@@ -191,6 +192,7 @@ define( [
             return this._spotBlend;
         },
 
+        // set/get the color of the ground
         setGround: function ( a ) {
             Vec3.copy( a, this._ground );
             this.dirty();
