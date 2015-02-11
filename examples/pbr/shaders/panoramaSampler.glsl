@@ -96,6 +96,8 @@ vec3 texturePanorama(const in sampler2D texture, const in vec2 uv)
 #endif
 #ifdef LUV
     return LUVToRGB( rgba );
+#else
+    return rgba.rgb;
 #endif
 }
 

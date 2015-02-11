@@ -2,6 +2,7 @@ uniform samplerCube uEnvironmentCube;
 
 uniform mat4 uEnvironmentTransform;
 uniform float uLod;
+uniform float uBrightness;
 uniform vec2 uEnvironmentLodRange;
 #extension GL_EXT_shader_texture_lod : enable
 uniform vec2 uEnvironmentSize;
@@ -27,9 +28,9 @@ void main() {
     //direction = normalize(osg_FragVertex.xyz);
     direction = getEnvironmentTransfrom( uEnvironmentTransform ) * direction;
 #ifdef CUBEMAP_LOD
-    vec3 color = textureCubeLodEXTFixed(uEnvironmentCube, direction, uLod ).rgb;
+    vec3 color = uBrightness * textureCubeLodEXTFixed(uEnvironmentCube, direction, uLod ).rgb;
 #else
-    vec3 color = textureCubemap( uEnvironmentCube, direction ).rgb;
+    vec3 color = uBrightness * textureCubeFixed( uEnvironmentCube, direction ).rgb;
 #endif
     //color = textureCube(uEnvironment, direction ).rgb;
     gl_FragColor = vec4( linearTosRGB(color, DefaultGamma ), 1.0);

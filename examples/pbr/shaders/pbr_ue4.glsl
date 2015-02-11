@@ -68,11 +68,12 @@ vec3 approximateSpecularIBL( const in vec3 specularColor,
     vec3 dir = environmentTransform * R;
     vec3 prefilteredColor = prefilterEnvMap( roughnessLinear, dir );
     //vec3 prefilteredColor = vec3(1.0);
+
 #ifdef MOBILE
-    return prefilteredColor * integrateBRDFApprox( specularColor, roughnessLinear, NoV );
+    return uBrightness * prefilteredColor * integrateBRDFApprox( specularColor, roughnessLinear, NoV );
 #else
     vec2 envBRDF = integrateBRDF( roughnessLinear, NoV );
-    return prefilteredColor * ( specularColor * envBRDF.x + envBRDF.y );
+    return uBrightness * prefilteredColor * ( specularColor * envBRDF.x + envBRDF.y );
 #endif
 }
 
@@ -86,8 +87,8 @@ vec3 computeIBL_UE4( const in vec3 normal,
 
     vec3 color = vec3(0.0);
     if ( albedo != color ) { // skip if no diffuse
-        color += albedo * evaluateDiffuseSphericalHarmonics(normal,
-                                                            view );
+        color += uBrightness * albedo * evaluateDiffuseSphericalHarmonics(normal,
+                                                                          view );
     }
 
     color += approximateSpecularIBL(specular,

@@ -47,23 +47,44 @@ vec3 textureCubemap(const in samplerCube texture, const in vec3 dir )
 #endif
 #ifdef LUV
     return LUVToRGB( rgba );
+#else
+    return rgba.rgb;
 #endif
 }
 
 
-vec3 textureCubeLodEXTFixed(const in samplerCube texture, const in vec3 direction, const in float lodInput )
+
+vec3 cubemapSeamlessFixDirection(const in vec3 direction, const in float scale )
 {
-
     vec3 dir = direction;
-    float lod = min( uEnvironmentLodRange[0], lodInput );
-
     // http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
-    float scale = 1.0 - exp2(lod) / uEnvironmentSize[0];
     float M = max(max(abs(dir.x), abs(dir.y)), abs(dir.z));
 
     if (abs(dir.x) != M) dir.x *= scale;
     if (abs(dir.y) != M) dir.y *= scale;
     if (abs(dir.z) != M) dir.z *= scale;
 
+    return dir;
+}
+
+vec3 textureCubeLodEXTFixed(const in samplerCube texture, const in vec3 direction, const in float lodInput )
+{
+
+    float lod = min( uEnvironmentLodRange[0], lodInput );
+
+    // http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
+    float scale = 1.0 - exp2(lod) / uEnvironmentSize[0];
+    vec3 dir = cubemapSeamlessFixDirection( direction, scale);
+
     return textureCubemapLod( texture, dir, lod ).rgb;
+}
+
+
+// seamless cubemap for background ( no lod )
+vec3 textureCubeFixed(const in samplerCube texture, const in vec3 direction )
+{
+    // http://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
+    float scale = 1.0 - 1.0 / uEnvironmentSize[0];
+    vec3 dir = cubemapSeamlessFixDirection( direction, scale);
+    return textureCubemap( texture, dir );
 }

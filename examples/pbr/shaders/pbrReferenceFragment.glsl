@@ -18,6 +18,8 @@ uniform vec2 uEnvironmentSize;
 uniform vec2 uEnvironmentLodRange;
 uniform float uLod;
 
+uniform float uBrightness;
+
 #ifdef UE4
 uniform sampler2D uIntegrateBRDF; // ue4
 #endif

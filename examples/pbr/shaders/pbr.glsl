@@ -96,7 +96,7 @@ vec3 evaluateDiffuseIBL( const in vec3 N,
 
             // vec3 dir = uEnvironmentTransform * L;
             // vec3 color = textureCubeLodEXT(uEnvironment, dir, 0.0 ).rgb;
-            vec3 color = getReferenceTexelEnvironmentLod( L, pdf ).rgb;
+            vec3 color = uBrightness * getReferenceTexelEnvironmentLod( L, pdf ).rgb;
 
             // could simplified to texel * INV_PI
             contrib += color * NdotL / pdf;
@@ -229,7 +229,7 @@ vec3 evaluateSpecularIBL( const in vec3 N,
 
         //vec3 dir = environmentTransform * L;
         //vec3 color = textureCubeLodEXT(uEnvironmentCube, dir, 0.0 ).rgb;
-        vec3 color = getReferenceTexelEnvironmentLod( L, pdf ).rgb;
+        vec3 color = uBrightness * getReferenceTexelEnvironmentLod( L, pdf ).rgb;
 
         // to debug the brdf
         //vec3 color = vec3(1.0);

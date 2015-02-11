@@ -15,6 +15,9 @@ window.EnvironmentPanorama = ( function () {
     };
 
     PanoramaEnv.prototype = {
+        getFile: function() {
+            return this._file;
+        },
 
         createShaderPanorama: function ( defines ) {
 
@@ -110,6 +113,19 @@ window.EnvironmentPanorama = ( function () {
             texture.setFlipY(true);
 
             texture.setImage( image, 'RGBA' );
+            this._texture = texture;
+            return texture;
+        },
+        createRGB: function( image ) {
+
+            var texture = new osg.Texture();
+
+            texture.setMinFilter( 'LINEAR' );
+            texture.setMagFilter( 'LINEAR' );
+            texture.setWrapS( 'REPEAT' );
+            texture.setFlipY(true);
+
+            texture.setImage( image, 'RGB' );
             this._texture = texture;
             return texture;
         }

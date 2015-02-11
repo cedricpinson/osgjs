@@ -3,6 +3,7 @@ uniform vec2 uEnvironmentSize;
 uniform vec2 uIrradianceSize;
 uniform vec2 uEnvironmentLodRange;
 uniform float uLod;
+uniform float uBrightness;
 
 uniform mat4 uEnvironmentTransform;
 
@@ -18,13 +19,17 @@ varying vec3 osg_FragWorldVertex;
 
 // environment rgbe lod inline
 vec3 test0( const in vec3 direction ) {
+#ifdef BACKGROUND
     vec2 uvBase = normalToPanoramaUV( direction );
+    return texture2D( uEnvironment, uvBase).rgb;
+#else
     vec3 texel = texturePanoramaLod( uEnvironment,
                                      uEnvironmentSize,
                                      direction,
                                      uLod,
                                      uEnvironmentLodRange[0] );
     return texel;
+#endif
 }
 
 mat3 getEnvironmentTransfrom( mat4 transform ) {
@@ -51,5 +56,8 @@ void main() {
     direction = getEnvironmentTransfrom ( uEnvironmentTransform ) * direction;
 
     vec3 color = test0( direction );
-    gl_FragColor = vec4( linearTosRGB(color, DefaultGamma ), 1.0);
+#ifdef BACKGROUND
+    color = sRGBToLinear( color, DefaultGamma );
+#endif
+    gl_FragColor = vec4( linearTosRGB(color * uBrightness, DefaultGamma ), 1.0);
 }

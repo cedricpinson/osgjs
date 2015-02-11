@@ -11,10 +11,7 @@
     var $ = window.$;
 
 
-    var EnvironmentPanorama = window.EnvironmentPanorama;
-    var EnvironmentCubeMap = window.EnvironmentCubeMap;
-    var EnvironmentSphericalHarmonics = window.EnvironmentSphericalHarmonics;
-    var IntegrateBRDFMap = window.IntegrateBRDFMap;
+    var Environment = window.Environment;
     var ModelLoader = window.ModelLoader;
 
     var PredefinedMaterials = {
@@ -52,7 +49,6 @@
     };
 
 
-
     var linear2Srgb = function ( value, gamma ) {
         if ( !gamma ) gamma = 2.2;
         var result = 0.0;
@@ -76,112 +72,13 @@
 
 
     var formatList = [ 'FLOAT', 'RGBE', 'RGBM', 'LUV' ];
+    window.formatList = formatList;
 
     var modelsPBR = [ 'cerberus', 'c3po', 'devastator' ];
 
     var modelList = [ 'sphere', 'model' ].concat( modelsPBR );
 
 
-    var Environment = function () {
-        this._promises = [];
-        this._panoramaUE4 = {};
-        this._cubemapUE4 = {};
-        this._backgroundCubemap = {};
-    };
-
-    Environment.prototype = {
-
-        init: function ( environment, config ) {
-            this._config = config;
-
-            var ready = this._promises;
-
-
-            //var spherical = environment + 'spherical';
-            var cubemapPackedFloat = environment + config['mipmapCubemap_float'];
-            var integrateBRDF = environment + config['brdfUE4'];
-
-            //this._cubemapIrradiance = new EnvironmentCubeMap( cubemapIrradiance );
-            this._cubemapPackedFloat = new EnvironmentCubeMap( cubemapPackedFloat, config['mipmapCubemapSize'], config );
-
-
-            // read all panorama format U4
-            formatList.forEach( function ( key ) {
-                var str = key.toLowerCase();
-                var file = config['specularPanoramaUE4_' + str];
-                var size = config['specularPanoramaUE4Size'];
-                if ( file === undefined || size === undefined ) return;
-                this._panoramaUE4[ key ] = new EnvironmentPanorama( environment + file, size , config );
-                ready.push( this._panoramaUE4[ key ].loadPacked( key ) );
-
-            }.bind( this ) );
-
-
-            // read all cubemap format U4
-            formatList.forEach( function ( key ) {
-                var str = key.toLowerCase();
-                var file = config['specularCubemapUE4_' + str];
-                var size = config['specularCubemapUE4Size'];
-                if ( file === undefined || size === undefined ) return;
-                this._cubemapUE4[ key ] = new EnvironmentCubeMap( environment + file, size, config );
-                ready.push( this._cubemapUE4[ key ].loadPacked( key ) );
-
-            }.bind( this ) );
-
-            this._integrateBRDF = new IntegrateBRDFMap( integrateBRDF, config['brdfUE4Size'] );
-
-            // read all cubemap format U4
-            formatList.forEach( function ( key ) {
-                var str = key.toLowerCase();
-                var file = config['backgroundCubemap_' + str];
-                var size = config['backgroundCubemapSize'];
-                if ( file === undefined || size === undefined ) return;
-                this._backgroundCubemap[ key ] = new EnvironmentCubeMap( environment + file, size, config );
-                ready.push( this._backgroundCubemap[ key ].loadPacked( key ) );
-
-            }.bind( this ) );
-
-            if ( !this._config.diffuseSPH )
-                osg.error( 'cant find shCoefs in environment config' );
-
-            this._spherical = new EnvironmentSphericalHarmonics( config.diffuseSPH );
-
-            ready.push( this._cubemapPackedFloat.loadPacked() );
-            ready.push( this._integrateBRDF.loadPacked() );
-
-            return this.getPromise();
-        },
-
-        getPromise: function () {
-            return Q.all( this._promises );
-        },
-
-        getIntegrateBRDF: function () {
-            return this._integrateBRDF;
-        },
-        getPanoramaUE4: function () {
-            return this._panoramaUE4;
-        },
-        getCubemapUE4: function () {
-            return this._cubemapUE4;
-        },
-        getCubemapMipMapped: function () {
-            return this._cubemapPackedFloat;
-        },
-        getSpherical: function () {
-            return this._spherical;
-        },
-        getCubemapIrradiance: function () {
-            return this._cubemapIrradiance;
-        },
-        getBackgroundCubemap: function() {
-            return this._backgroundCubemap;
-        },
-        getConfig: function () {
-            return this._config;
-        }
-
-    };
 
     var Example = function () {
         this._shaderPath = 'shaders/';
@@ -192,6 +89,8 @@
             albedo: '#bdaaeb',
             nbSamples: 8,
             environmentType: 'cubemapSeamless',
+            brightness: 1.0,
+
 
             roughness: 0.5,
             material: 'Gold',
@@ -226,6 +125,8 @@
 
         // rotation of the environment geometry
         this._environmentTransformMatrix = undefined;
+
+        this._envBrightnessUniform = osg.Uniform.createFloat1( 1.0, 'uBrightness' );
 
         // background stateSet
         this._backgroundStateSet = new osg.StateSet();
@@ -430,6 +331,13 @@
             }
 
             return this._shaderCache[ hash ];
+        },
+
+
+        updateEnvironmentBrightness: function() {
+            var b = this._config.brightness;
+            this._envBrightnessUniform.get()[0] = b;
+            this._envBrightnessUniform.dirty();
         },
 
         updateEnvironmentRotation: function() {
@@ -827,11 +735,13 @@
 
             texture = this._currentEnvironment.getPanoramaUE4()[ this._config.format ].getTexture();
 
-            var shader = this.createShaderPanorama( [
-                '#define PANORAMA',
-                '#define ' + this._config.format
-            ] );
-            this._environmentStateSet.setAttributeAndModes( shader );
+            if ( false ) {
+                var shader = this.createShaderPanorama( [
+                    '#define PANORAMA',
+                    '#define ' + this._config.format
+                ] );
+                this._environmentStateSet.setAttributeAndModes( shader );
+            }
 
             var stateSet = this._mainSceneNode.getOrCreateStateSet();
             var w = texture.getWidth();
@@ -846,6 +756,7 @@
             stateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironment' ) );
 
             stateSet.addUniform( this._environmentTransformUniform );
+            stateSet.addUniform( this._envBrightnessUniform );
             stateSet.setTextureAttributeAndModes( 0, texture );
 
         },
@@ -860,14 +771,7 @@
                 this._config.format = 'FLOAT';
             }
 
-            // set the stateSet of the environment geometry
-            this._environmentStateSet.setAttributeAndModes(
-                this.createShaderCubemap( [
-                    '#define ' + this._config.format,
-                ] ) );
 
-            var textureBackground = this._currentEnvironment.getBackgroundCubemap()[this._config.format ].getTexture();
-            this._environmentStateSet.setTextureAttributeAndModes( 0, textureBackground );
 
             var texture;
             if ( this._config.pbr === 'UE4' ) {
@@ -888,7 +792,57 @@
             stateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironmentCube' ) );
 
             stateSet.addUniform( this._environmentTransformUniform );
+            stateSet.addUniform( this._envBrightnessUniform );
+
             stateSet.setTextureAttributeAndModes( 0, texture );
+
+        },
+
+
+        setBackgroundEnvironment: function() {
+
+            if ( true ) {
+                // set the stateSet of the environment geometry
+                this._environmentStateSet.setAttributeAndModes(
+                    this.createShaderCubemap( [
+                        '#define ' + this._config.format,
+                    ] ) );
+
+                var textureBackground = this._currentEnvironment.getBackgroundCubemap()[this._config.format ].getTexture();
+                var w = textureBackground.getWidth();
+                this._environmentStateSet.addUniform( osg.Uniform.createFloat2( [ w, w ], 'uEnvironmentSize' ) );
+                this._environmentStateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironmentCube' ) );
+                this._environmentStateSet.setTextureAttributeAndModes( 0, textureBackground );
+            }
+            return;
+
+
+
+            if ( false ) {
+                // set the stateSet of the environment geometry
+                this._environmentStateSet.setAttributeAndModes(
+                    this.createShaderCubemap( [
+                        '#define ' + this._config.format,
+                    ] ) );
+            }
+
+            this._environmentStateSet.setAttributeAndModes(
+                this.createShaderPanorama( [
+                    '#define PANORAMA',
+                    '#define BACKGROUND'
+                ] ) );
+
+            var url = this._currentEnvironment.getBackgroundPanorama()['srgb'].getFile();
+            var img = osgDB.readImageURL( url ,{ imageLoadingUsePromise: true });
+            Q.when( img,function( image ) {
+
+                var texture = this._currentEnvironment.getBackgroundPanorama()[ 'srgb' ].createRGB( image );
+                this._environmentStateSet.setTextureAttributeAndModes( 0, texture );
+                var w = texture.getWidth();
+                this._environmentStateSet.addUniform( osg.Uniform.createFloat2( [ w, w / 2 ], 'uEnvironmentSize' ) );
+                this._environmentStateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironment' ) );
+
+            }.bind( this ) );
 
         },
 
@@ -1025,7 +979,15 @@
             //var environment = 'textures/parking/';
             //var environment = 'textures/path/';
             //var environment = 'textures/field/';
-            var environment = 'textures/bus_garage2/';
+            //var environment = 'textures/bus_garage3/';
+//            var environment = 'textures/bus_garage8/';
+//            var environment = 'textures/bus_garage9/';
+//            var environment = 'textures/bus_garagea/';
+//            var environment = 'textures/bus_garageb/';
+            var environment = 'textures/bus_garagec/';
+            //var environment = 'textures/bus_garage5/';
+            //var environment = 'textures/walk_of_fame/';
+            //var environment = 'textures/airport/';
             //var environment = 'textures/tmp/';
 
             //var model = new ModelLoader( 'models/cerberus/' );
@@ -1067,13 +1029,16 @@
 
                 viewer.run();
 
-                osg.Matrix.makePerspective( 30, canvas.width / canvas.height, 0.1, 1000, viewer.getCamera().getProjectionMatrix() );
+                osg.Matrix.makePerspective( 50, canvas.width / canvas.height, 0.1, 1000, viewer.getCamera().getProjectionMatrix() );
 
                 var gui = new window.dat.GUI();
                 var controller;
 
                 controller = gui.add( this._config, 'envRotation', -Math.PI, Math.PI  ).step(0.1);
                 controller.onChange( this.updateEnvironmentRotation.bind( this ) );
+
+                controller = gui.add( this._config, 'brightness', 0.0, 25.0  ).step(0.01);
+                controller.onChange( this.updateEnvironmentBrightness.bind( this ) );
 
                 controller = gui.add( this._config, 'lod', 0.0, 15.01 ).step( 0.1 );
                 controller.onChange( function ( value ) {
@@ -1187,6 +1152,8 @@
             } else {
                 this.setPanorama();
             }
+
+            this.setBackgroundEnvironment();
 
             this.updateShaderPBR();
         },
