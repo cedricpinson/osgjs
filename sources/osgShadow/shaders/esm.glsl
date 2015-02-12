@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////
 // ESM
-float fetchESM(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, float gbias, float exponent0, float exponent1) {
+float fetchESM(const in sampler2D tex, const in vec4 shadowMapSize, const in vec2 shadowUV, const in float shadowZ,  const in float exponent0, const in float exponent1) {
 
 
 #if defined(_FLOATTEX) && (!defined(_FLOATLINEAR))
@@ -26,7 +26,7 @@ float fetchESM(sampler2D tex, vec4 shadowMapSize, vec2 shadowUV, float shadowZ, 
     // we're on an edge
     float depthScale = exponent1;
     float over_darkening_factor = exponent0;
-    float receiver = depthScale * ( shadowZ + gbias);
+    float receiver = depthScale * ( shadowZ);
     return 1.0 - clamp(over_darkening_factor*(occluder*exp(receiver)), 0.0, 1.0);
 }
 

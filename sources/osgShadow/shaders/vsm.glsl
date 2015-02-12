@@ -1,5 +1,6 @@
 //////VSM
-float chebychevInequality (vec2 moments, float t)
+//http://en.wikipedia.org/wiki/Chebyshev%27s_inequality
+float chebychevInequality (const in vec2 moments, const in float t)
 {
     // No shadow if depth of fragment is in front
     if ( t <= moments.x )
@@ -16,7 +17,8 @@ float chebychevInequality (vec2 moments, float t)
     return variance / (variance + d * d);
 }
 
-float chebyshevUpperBound(vec2 moments, float mean, float bias, float minVariance)
+// http://http.developer.nvidia.com/GPUGems3/gpugems3_ch08.html
+float chebyshevUpperBound(const in vec2 moments, const in float mean, const in float minVariance)
 {
     float d = mean - moments.x;
     if ( d <= 0.0 )
@@ -27,7 +29,7 @@ float chebyshevUpperBound(vec2 moments, float mean, float bias, float minVarianc
 
     // Compute probabilistic upper bound
     //p represent an upper bound on the visibility percentage of the receiver. This value //attempts to estimate how much of the distribution of occluders at the surface location is //beyond the surface's distance from the light. If it is 0, then there is no probability //that the fragment is partially lit, so it will be fully in shadow. If it is a value in the //[0, 1] range, it represent the penumbrae value of the shadow edge.
-    float p = smoothstep(mean - bias, mean, moments.x);
+    float p = smoothstep(mean, mean, moments.x);
 
     // Remove the [0, Amount] tail and linearly rescale (Amount, 1].
     /// light bleeding when shadows overlap.
