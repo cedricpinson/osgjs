@@ -2,6 +2,7 @@
     'use strict';
 
     var OSG = window.OSG;
+    var osgDB = OSG.osgDB;
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
@@ -24,8 +25,11 @@
             pointAttenuation: 5.0,
 
             directionalAmbient: '#000000',
-            directionalDiffuse: '#0c0525',
+            directionalDiffuse: '#6955b1',
             directionalSpecular: '#000000',
+
+            hemiDiffuse: '#d2ce90',
+            hemiGround: '#151515',
 
             materialAmbient: '#050505',
             materialDiffuse: '#f0f0f0',
@@ -87,6 +91,14 @@
 
 
 
+
+            controller = gui.addColor( this._config, 'hemiDiffuse' );
+            controller.onChange( this.updateHemi.bind( this ) );
+
+            controller = gui.addColor( this._config, 'hemiGround' );
+            controller.onChange( this.updateHemi.bind( this ) );
+
+
             controller = gui.addColor( this._config, 'materialAmbient' );
             controller.onChange( this.updateMaterial.bind( this ) );
 
@@ -140,6 +152,11 @@
             this._directionalLight.setAmbient( this.convertColor( this._config.directionalAmbient ) );
         },
 
+        updateHemi: function () {
+            this._hemiLight.setDiffuse( this.convertColor( this._config.hemiDiffuse ) );
+            this._hemiLight.setGround( this.convertColor( this._config.hemiGround ) );
+        },
+
         updatePoint: function () {
             this._pointLight.setDiffuse( this.convertColor( this._config.pointDiffuse ) );
             this._pointLight.setSpecular( this.convertColor( this._config.pointSpecular ) );
@@ -159,7 +176,10 @@
         },
 
 
-        createDirectionalLight: function () {
+        createDirectionalLight: function ( x, y, z ) {
+
+            var root = new osg.MatrixTransform();
+            osg.Matrix.makeTranslate( x, y, z, root.getMatrix() );
 
             var ls = new osg.LightSource();
 
@@ -173,7 +193,7 @@
             var lightTransform = new osg.MatrixTransform();
 
             var matrixTranslate = osg.Matrix.create();
-            osg.Matrix.makeTranslate( 10, 0, 10, matrixTranslate );
+            osg.Matrix.makeTranslate( 0, 0, 10, matrixTranslate );
 
             var matrixRotate = osg.Matrix.create();
             osg.Matrix.makeRotate( Math.PI / 4, 1, 0, 0, matrixRotate );
@@ -187,10 +207,54 @@
 
             lightTransform.addChild( lightGeometry );
 
-            return lightTransform;
+            root.addChild( this.createPlane() );
+            root.addChild( lightTransform );
+
+            return root;
         },
 
-        createSpotLight: function () {
+
+        createHemiLight: function ( x, y, z ) {
+
+            var root = new osg.MatrixTransform();
+            osg.Matrix.makeTranslate( x, y, z, root.getMatrix() );
+
+            var ls = new osg.LightSource();
+
+            var light = new osg.Light( 3 );
+            light.setLightAsHemi();
+            this._hemiLight = light;
+
+            ls.setLight( light );
+            this.updateHemi();
+
+            var lightTransform = new osg.MatrixTransform();
+
+            var matrixTranslate = osg.Matrix.create();
+            osg.Matrix.makeTranslate( 0, 0, 10, matrixTranslate );
+
+            var matrixRotate = osg.Matrix.create();
+            osg.Matrix.makeRotate( Math.PI / 4, 1, 0, 0, matrixRotate );
+
+            osg.Matrix.mult( matrixRotate, matrixTranslate, lightTransform.getMatrix() );
+
+            lightTransform.addChild( ls );
+
+            var lightGeometry = osg.createTexturedBoxGeometry( 0, 0, 0,
+                1, 1, 1 );
+
+            lightTransform.addChild( lightGeometry );
+
+            root.addChild( this.createPlane() );
+            root.addChild( lightTransform );
+
+            return root;
+        },
+
+        createSpotLight: function ( x, y, z ) {
+
+            var root = new osg.MatrixTransform();
+            osg.Matrix.makeTranslate( x, y, z, root.getMatrix() );
 
             var ls = new osg.LightSource();
             var light = new osg.Light( 1 );
@@ -218,10 +282,16 @@
 
             lightTransform.addChild( lightGeometry );
 
-            return lightTransform;
+            root.addChild( this.createPlane() );
+            root.addChild( lightTransform );
+
+            return root;
         },
 
-        createPointLight: function () {
+        createPointLight: function ( x, y, z ) {
+
+            var root = new osg.MatrixTransform();
+            osg.Matrix.makeTranslate( x, y, z, root.getMatrix() );
 
             var ls = new osg.LightSource();
             var light = new osg.Light( 2 );
@@ -234,38 +304,97 @@
 
             var lightTransform = new osg.MatrixTransform();
 
-            osg.Matrix.makeTranslate( -10, 0, 5, lightTransform.getMatrix() );
+            osg.Matrix.makeTranslate( 0, 0, 5, lightTransform.getMatrix() );
 
             lightTransform.addChild( ls );
 
-            var lightGeometry = osg.createTexturedSphereGeometry( 1, 20, 20 );
+            var lightGeometry = osg.createTexturedSphereGeometry( 0.8, 20, 20 );
 
             lightTransform.addChild( lightGeometry );
 
-            return lightTransform;
+            root.addChild( this.createPlane() );
+            root.addChild( lightTransform );
+
+            return root;
+        },
+
+
+        createModelInstance: function () {
+
+            if ( !this._model ) {
+
+                this._model = new osg.MatrixTransform();
+                osg.Matrix.makeRotate( Math.PI, 0, 0, 1, this._model.getMatrix() );
+                var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
+
+                // copy tex coord 0 to tex coord1 for multi texture
+                request.then( function ( model ) {
+                    this._model.addChild( model );
+                }.bind( this ) );
+
+            }
+
+            var node = new osg.MatrixTransform();
+            var rotate = osg.Matrix.makeRotate( Math.PI, 0, 0, 1, osg.Matrix.create() );
+            var scale = osg.Matrix.makeScale( 0.1, 0.1, 0.1, osg.Matrix.create() );
+            osg.Matrix.mult( scale, rotate, node.getMatrix() );
+            node.addChild( this._model );
+            return node;
+        },
+
+
+        setDisableLights: function ( stateSet, except ) {
+            for ( var i = 0; i < 4; i++ ) {
+                if ( i === except )
+                    continue;
+                var light = new osg.Light( i, true );
+                stateSet.setAttributeAndModes( light ); // use a default light to disable all
+            }
+        },
+
+        createPlane: function () {
+            // create plane
+            var grp = new osg.Node();
+            var planeSize = 20;
+            var plane = osg.createTexturedQuadGeometry( -planeSize / 2, -planeSize / 2, 0,
+                planeSize, 0, 0,
+                0, planeSize, 0,
+                0, 0
+            );
+
+            grp.addChild( this.createModelInstance() );
+            grp.addChild( plane );
+            return grp;
         },
 
         createScene: function () {
             var group = new osg.Node();
 
             // add a light directionnal
-            group.addChild( this.createDirectionalLight() );
-            group.addChild( this.createSpotLight() );
-            group.addChild( this.createPointLight() );
+            var scene;
 
-            // create plane
-            var planeSize = 40;
-            var plane = osg.createTexturedQuadGeometry( -planeSize/2, -planeSize/2, 0,
-                                                        planeSize, 0, 0,
-                                                        0, planeSize, 0,
-                                                        0, 0
-                                                      );
+            scene = this.createHemiLight( 0, 0, 0 );
+            this.setDisableLights( scene.getOrCreateStateSet(), 3 );
+            group.addChild( scene );
+
+            scene = this.createDirectionalLight( 25, 0, 0 );
+            this.setDisableLights( scene.getOrCreateStateSet(), 0 );
+            group.addChild( scene );
+
+            scene = this.createSpotLight( 50, 0, 0 );
+            this.setDisableLights( scene.getOrCreateStateSet(), 1 );
+            group.addChild( scene );
+
+            scene = this.createPointLight( 75, 0, 0 );
+            this.setDisableLights( scene.getOrCreateStateSet(), 2 );
+            group.addChild( scene );
+
+
 
             var planeMaterial = new osg.Material();
             this._material = planeMaterial;
             this.updateMaterial();
-            plane.getOrCreateStateSet().setAttributeAndModes( planeMaterial );
-            group.addChild( plane );
+            group.getOrCreateStateSet().setAttributeAndModes( planeMaterial );
 
             return group;
         },
