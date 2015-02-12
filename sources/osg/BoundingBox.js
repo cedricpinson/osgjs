@@ -92,7 +92,7 @@ define( [
             var max = this._max;
             if ( result === undefined ) {
                 // TODO: deprecated warning?
-                Notify.warn( 'no center destination !' );
+                Notify.warn( 'deprecated use center( result ) instead !' );
                 result = Vec3.create();
             }
             Vec3.set( ( min[ 0 ] + max[ 0 ] ) * 0.5, ( min[ 1 ] + max[ 1 ] ) * 0.5, ( min[ 2 ] + max[ 2 ] ) * 0.5, result );
