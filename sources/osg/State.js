@@ -47,7 +47,7 @@ define( [
         } );
 
 
-        this.previousHasColorAttrib = false;
+        this._previousColorAttribPair = {};
         this.vertexAttribMap = {};
         this.vertexAttribMap._disable = [];
         this.vertexAttribMap._keys = [];
@@ -184,10 +184,10 @@ define( [
         } )(),
 
 
-        // needed because we use a cache of matrix in cullvisitor
-        // so we can have the same reference between frame if only
-        // one matrix
-        resetApplyMatrix: function () {
+        // needed because we use a cache during the frame to avoid
+        // applying uniform or operation. At each frame we need to
+        // invalidate those informations
+        resetCacheFrame: function () {
             this._modelViewMatrix = this._projectionMatrix = undefined;
         },
 
@@ -647,7 +647,9 @@ define( [
             }
 
             var program = this.attributeMap.Program.lastApplied;
-            if ( !program._uniformsCache.ArrayColorEnabled ) return; // no color array uniform exit
+
+            if ( !program._uniformsCache.ArrayColorEnabled ||
+                 !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
 
 
             var gl = this.getGraphicContext();
@@ -656,14 +658,19 @@ define( [
 
             // check if we have colorAttribute on the current geometry
             var color = program._attributesCache.Color;
-            if ( color !== undefined ) hasColorAttrib = this.vertexAttribMap[ color ];
+            hasColorAttrib = this.vertexAttribMap[ color ];
 
-            // no change -> exit
-            if ( this.previousHasColorAttrib === hasColorAttrib ) return;
+
+            // check per program
+            var previousColorAttrib = this._previousColorAttribPair[program.getInstanceID()];
+
+            // no change with the same program -> exit
+            if ( previousColorAttrib === hasColorAttrib ) return;
+
+            this._previousColorAttribPair[program.getInstanceID()] = hasColorAttrib;
 
             // update uniform
             var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
-            this.previousHasColorAttrib = hasColorAttrib;
 
             if ( hasColorAttrib ) {
                 uniform.get()[ 0 ] = 1.0;

@@ -186,7 +186,7 @@ define( [
 
             var state = this.getState();
 
-            state.resetApplyMatrix(); // important because cache are used in cullvisitor
+            state.resetCacheFrame(); // important because cache are used in cullvisitor
 
             this._renderStage.draw( state );
 
