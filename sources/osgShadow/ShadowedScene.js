@@ -68,8 +68,8 @@ define( [
 
         /** Dirty any cache data structures held in the attached ShadowTechnique.*/
         dirty: function () {
-            for ( var i = 0; i < this._shadowTechniques.length; i++)
-                this._shadowTechniques[i].dirty();
+            for ( var i = 0; i < this._shadowTechniques.length; i++ )
+                this._shadowTechniques[ i ].dirty();
         },
 
         nodeTraverse: function ( /*nv*/) {
@@ -87,7 +87,7 @@ define( [
 
                     if ( st && st.valid() ) {
 
-                        if (st.isDirty() ) // if dirty init shadow techniques
+                        if ( st.isDirty() ) // if dirty init shadow techniques
 
                             st.init();
 
@@ -99,6 +99,8 @@ define( [
                 // update the scene
                 this.nodeTraverse( nv );
 
+
+
             } else if ( nv.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
 
                 // cull Shadowed Scene
@@ -107,7 +109,8 @@ define( [
                 // cull Casters
                 for ( i = 0; i < lt; i++ ) {
                     st = this._shadowTechniques[ i ];
-                    if ( st && st.getEnable() && st.valid() ) {
+                    // dirty check for user playing with shadows inside update traverse
+                    if ( st && st.getEnable() && st.valid() && !st.isDirty() ) {
                         st.cullShadowCasting( nv );
                     }
                 }
