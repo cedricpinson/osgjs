@@ -634,9 +634,10 @@ define( [
             var worldLightPos = this._worldLightPos;
 
             //  light pos & lightTarget in World Space
-            Matrix.transformVec3( worldMatrix, light.getPosition(), worldLightPos );
+            Matrix.transformVec4( worldMatrix, light.getPosition(), worldLightPos );
 
             if ( light.getPosition()[ 3 ] !== 0.0 ) {
+
 
                 // not a directionnal light, compute the world light dir
                 var worldLightDir = this._worldLightDir;
