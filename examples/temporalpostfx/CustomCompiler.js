@@ -15,7 +15,64 @@ var CustomCompiler;
 
     CustomCompiler.prototype = osg.objectInherit( osgShader.Compiler.prototype, {
 
+        initTextureAttributes: function () {
+            var textureAttributes = this._textureAttributes;
+            var texturesNum = textureAttributes.length;
+            var textures = this._textures;
+            var shadowTextures = this._shadowsTextures;
+            textures.length = shadowTextures.length = texturesNum;
 
+            for ( var j = 0; j < texturesNum; j++ ) {
+
+                var tu = textureAttributes[ j ];
+                if ( tu === undefined )
+                    continue;
+
+                for ( var t = 0, tl = tu.length; t < tl; t++ ) {
+
+                    var tuTarget = tu[ t ];
+
+                    var tType = tuTarget.className();
+
+                    var texUnit;
+                    var tName;
+                    if ( tType === 'Texture' ) {
+
+                        texUnit = j;
+                        tName = tuTarget.getName();
+                        if ( tuTarget.getName() === undefined ) {
+                            tName = tType + texUnit;
+                            tuTarget.setName( tName );
+                        }
+                        textures[ texUnit ] = tuTarget;
+
+                        this._texturesByName[ tName ] = {
+                            variable: undefined,
+                            textureUnit: texUnit,
+                            shadow: ( ( tuTarget.preventDiffuseAcc === undefined ) ? false : true )
+                        };
+
+                    } else if ( tType === 'ShadowTexture' ) {
+
+                        texUnit = j;
+                        tName = tuTarget.getName();
+                        if ( tuTarget.getName() === undefined ) {
+                            tName = tType + texUnit;
+                            tuTarget.setName( tName );
+                        }
+                        shadowTextures[ texUnit ] = tuTarget;
+
+                        this._texturesByName[ tName ] = {
+                            'variable': undefined,
+                            'textureUnit': texUnit,
+                            'shadow': true
+                        };
+                    }
+                    // TODO: cubemap
+
+                }
+            }
+        },
         // this is the main code that instanciate and link nodes together
         // it's a simplified version of the curent osgjs compiler
         // it could also be simpler

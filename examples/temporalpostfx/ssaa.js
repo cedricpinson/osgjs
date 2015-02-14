@@ -116,6 +116,7 @@
             var result2 = this._helper.commonScene( this._helper._rttSize, osg.Camera.PRE_RENDER, this._helper._model, false );
             this._commonNode2 = result2[ 0 ];
             this._sceneTexture2 = result2[ 1 ];
+            this._sceneTexture2.preventDiffuseAcc = true;
             this._cameraRTT2 = result2[ 2 ];
 
             //////////////////////////////////////////////
@@ -123,6 +124,7 @@
             var result = this._helper.commonScene( this._helper._rttSize, osg.Camera.PRE_RENDER, this._helper._model, false );
             this._commonNode = result[ 0 ];
             this._sceneTexture = result[ 1 ];
+            this._sceneTexture.preventDiffuseAcc = true;
             this._cameraRTT = result[ 2 ];
 
         },
