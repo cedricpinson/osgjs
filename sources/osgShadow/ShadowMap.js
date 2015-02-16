@@ -130,6 +130,10 @@ define( [
 
         this._computeFrustumBounds = new ShadowFrustumIntersection();
         this._computeBoundsVisitor = new ComputeBoundsVisitor();
+
+        // true if shadow map rendered at least once
+        // since dirtied, handy for static shadow map
+        this._filledOnce = false;
     };
 
     /** @lends ShadowMap.prototype */
@@ -145,6 +149,10 @@ define( [
 
         isDirty: function () {
             return this._dirty;
+        },
+
+        isFilledOnce: function () {
+            return this._filledOnce;
         },
 
         setShadowCasterShaderProgram: function ( prg ) {
@@ -807,12 +815,14 @@ define( [
 
             // reapply the original traversal mask
             cullVisitor.setTraversalMask( traversalMask );
+            this._filledOnce = true;
         },
 
 
         cleanSceneGraph: function () {
             // well release a lot more things when it works
             this._cameraShadow = undefined;
+            this._filledOnce = false;
 
 
             if ( this._receivingStateset ) {
