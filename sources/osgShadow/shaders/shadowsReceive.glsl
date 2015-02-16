@@ -39,10 +39,10 @@ vec4 getQuadFloatFromTex(sampler2D depths, vec2 uv){
 
 
 // SHADOWS
-float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
-                             in sampler2D tex, in vec4 shadowMapSize,
-                             in float myBias, in float epsilonVSM,
-                             in float exponent0, in float exponent1) {
+float getShadowedTermUnified(const in vec2 shadowUV, const in float shadowReceiverZ,
+                             const in sampler2D tex, const in vec4 shadowMapSize,
+                             const in float epsilonVSM,
+                             const in float exponent0, const in float exponent1) {
 
 
     // Calculate shadow amount
@@ -51,13 +51,6 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
     // return 0.0 for black;
     // return 1.0 for light;
 
-    // shadowZ must be clamped to [0,1]
-    // otherwise it's not comparable to
-    // shadow caster depth map
-    // which is clamped to [0,1]
-    // Not doing that makes ALL shadowReceiver > 1.0 black
-    // because they ALL becomes behind any point in Caster depth map
-    float shadowReceiverZ = clamp(shadowZ, 0.0, 1.0 - myBias);
 
 #ifdef _NONE
 
@@ -65,21 +58,20 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
     // shadowReceiverZ : receiver depth in light view
     // shadowDepth : caster depth in light view
     // receiver is shadowed if its depth is superior to the caster
-    shadow = ( shadowReceiverZ - myBias > shadowDepth ) ? 0.0 : 1.0;
+    shadow = ( shadowReceiverZ > shadowDepth ) ? 0.0 : 1.0;
 
 #elif defined( _PCF )
 
-    shadow = getShadowPCF(tex, shadowMapSize, shadowUV, shadowReceiverZ, myBias);
+    shadow = getShadowPCF(tex, shadowMapSize, shadowUV, shadowReceiverZ);
 
 #elif defined( _ESM )
 
-    shadow = fetchESM(tex, shadowMapSize, shadowUV, shadowReceiverZ, myBias, exponent0, exponent1);
+    shadow = fetchESM(tex, shadowMapSize, shadowUV, shadowReceiverZ, exponent0, exponent1);
 
 #elif  defined( _VSM )
 
     vec2 moments = getDoubleFloatFromTex(tex, shadowUV.xy);
-    float shadowBias = myBias;
-    shadow = chebyshevUpperBound(moments, shadowReceiverZ, shadowBias, epsilonVSM);
+    shadow = chebyshevUpperBound(moments, shadowReceiverZ, epsilonVSM);
 
 #elif  defined( _EVSM )
 
@@ -93,11 +85,10 @@ float getShadowedTermUnified(in vec2 shadowUV, in float shadowZ,
     vec2 minVariance = depthScale * depthScale;
 
     float epsilonEVSM = -epsilonVSM;
-    float shadowBias = myBias;
 
     // Compute the upper bounds of the visibility function both for x and y
-    float posContrib = chebyshevUpperBound(occluder.xz, -warpedDepth.x, shadowBias, minVariance.x);
-    float negContrib = chebyshevUpperBound(occluder.yw, warpedDepth.y,  shadowBias, minVariance.y);
+    float posContrib = chebyshevUpperBound(occluder.xz, -warpedDepth.x, minVariance.x);
+    float negContrib = chebyshevUpperBound(occluder.yw, warpedDepth.y, minVariance.y);
 
     shadow = min(posContrib, negContrib);
 
@@ -152,9 +143,17 @@ float computeShadow(in bool lighted,
     objDepth =  -shadowZ.z / shadowZ.w;
     // to [0,1]
     objDepth =  (objDepth - depthRange.x)* depthRange.w;
+    objDepth -= shadowBias;
 
+    // shadowZ must be clamped to [0,1]
+    // otherwise it's not comparable to
+    // shadow caster depth map
+    // which is clamped to [0,1]
+    // Not doing that makes ALL shadowReceiver > 1.0 black
+    // because they ALL becomes behind any point in Caster depth map
+    objDepth = clamp(objDepth, 0.0, 1.0 - shadowBias);
 
-    return getShadowedTermUnified(shadowUV.xy, objDepth, tex, texSize, shadowBias, epsilonVSM, exponent, exponent1);
+    return getShadowedTermUnified(shadowUV.xy, objDepth, tex, texSize,  epsilonVSM, exponent, exponent1);
 
 }
 // end shadows

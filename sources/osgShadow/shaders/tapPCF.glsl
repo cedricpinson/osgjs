@@ -2,36 +2,77 @@
 
 #pragma include "shadowLinearSoft.glsl"
 
-float getShadowPCF(sampler2D depths, vec4 size, vec2 uv, float compare, float gbias){
+float getShadowPCF(sampler2D depths, vec4 size, vec2 uv, float compare){
 
-    float result = 0.0;
+    float res = 0.0;
 
 #if defined(_PCFx4)
-    result += texture2DShadowLerp(depths, size, uv, compare, gbias);
+    res += texture2DShadowLerp(depths, size, uv, compare);
+#else
 
-#elif defined(_PCFx9)
+    float dx0 = -size.z;
+    float dy0 = -size.w;
+    float dx1 = size.z;
+    float dy1 = size.w;
 
-    for(int x=-1; x<=1; x++){
-        for(int y=-1; y<=1; y++){
-            vec2 off = vec2(x,y)*size.zw;
-            result += texture2DShadowLerp(depths, size, uv+off, compare, gbias);
-        }
-    }
-    result /=9.0;
+#define TSF(o1,o2) texture2DShadowLerp(depths, size, uv + vec2(o1, o2),  compare)
+
+
+
+    res += TSF(dx0, dx0);
+    res += TSF(dx0, .0);
+    res += TSF(dx0, dx1);
+
+    res += TSF(.0, dx0);
+    res += TSF(.0, .0);
+    res += TSF(.0, dx1);
+
+    res += TSF(dx1, dx0);
+    res += TSF(dx1, .0);
+    res += TSF(dx1, dx1);
+
+#if defined(_PCFx9)
+
+    res /=9.0;
 
 #elif defined(_PCFx25)
 
-    for(int x=-2; x<=2; x++){
-        for(int y=-2; y<=2; y++){
-            vec2 off = vec2(x,y)*size.zw;
-            result += texture2DShadowLerp(depths, size, uv+off, compare, gbias);
-        }
-    }
-    result/=25.0;
+    float dx02 = -2.0*size.z;
+    float dy02 = -2.0*size.w;
+    float dx2 = 2.0*size.z;
+    float dy2 = 2.0*size.w;
 
-    result += texture2DShadowLerp(depths, size, uv, compare, gbias);
+    // complete row above
+    res += TSF(dx0, dx02);
+    res += TSF(dx0, dx2);
+
+    res += TSF(.0, dx02);
+    res += TSF(.0, dx2);
+
+    res += TSF(dx1, dx02);
+    res += TSF(dx1, dx2);
+
+    // two new col
+    res += TSF(dx02, dx02);
+    res += TSF(dx02, dx0);
+    res += TSF(dx02, .0);
+    res += TSF(dx02, dx1);
+    res += TSF(dx02, dx2);
+
+    res += TSF(dx2, dx02);
+    res += TSF(dx2, dx0);
+    res += TSF(dx2, .0);
+    res += TSF(dx2, dx1);
+    res += TSF(dx2, dx2);
+
+
+    res/=25.0;
 
 #endif
-    return result;
+
+#undef TSF
+
+#endif
+    return res;
 }
 /////// end Tap

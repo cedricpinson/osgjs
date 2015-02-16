@@ -209,10 +209,6 @@ define( [
                     defines.push( '#define _POISSON_PCF' );
                     defines.push( '#define _PCFx32' );
                     break;
-                case '64Poisson(256texFetch)':
-                    defines.push( '#define _POISSON_PCF' );
-                    defines.push( '#define _PCFx64' );
-                    break;
                 case '4Band(4texFetch)':
                     defines.push( '#define _BAND_PCF' );
                     defines.push( '#define _PCFx4' );
