@@ -12,10 +12,12 @@ define( [
     var ShadowTechnique = function () {
         Object.call( this );
 
-        this._enabled = true;
         this._shadowedScene = undefined;
         this._dirty = false;
-
+        // need to be computed
+        this._enabled = true;
+        // since dirtied, handy for static shadow map
+        this._filledOnce = false;
     };
 
     /** @lends ShadowTechnique.prototype */
@@ -37,6 +39,10 @@ define( [
             return this._enabled;
         },
 
+        isFilledOnce: function () {
+            return this._filledOnce;
+        },
+
         setShadowedScene: function ( shadowedScene ) {
             this._shadowedScene = shadowedScene;
         },
@@ -52,9 +58,9 @@ define( [
         },
 
         // update the technic
-        updateShadowTechnic: function ( /*nodeVisitor*/ ) {},
+        updateShadowTechnic: function ( /*nodeVisitor*/) {},
 
-        cullShadowCasting: function ( /*cullVisitor*/ ) {},
+        cullShadowCasting: function ( /*cullVisitor*/) {},
 
         cleanSceneGraph: function () {
             // well shouldn't be called

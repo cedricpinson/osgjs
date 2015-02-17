@@ -13,7 +13,8 @@ define( [
      */
     var ShadowSettings = function ( options ) {
 
-        this.castsShadowTraversalMask = 0xffffffff;
+        this.castsShadowDrawTraversalMask = 0xffffffff;
+        this.castsShadowBoundsTraversalMask = 0xffffffff;
 
         this.textureSize = 1024;
 
@@ -85,11 +86,18 @@ define( [
 
     ShadowSettings.prototype = {
 
-        setCastsShadowTraversalMask: function ( mask ) {
-            this.castsShadowTraversalMask = mask;
+        setCastsShadowDrawTraversalMask: function ( mask ) {
+            this.castsShadowDrawTraversalMask = mask;
         },
-        getCastsShadowTraversalMask: function () {
-            return this.castsShadowTraversalMask;
+        getCastsShadowDrawTraversalMask: function () {
+            return this.castsDrawShadowTraversalMask;
+        },
+
+        setCastsShadowBoundsTraversalMask: function ( mask ) {
+            this.castsShadowBoundsTraversalMask = mask;
+        },
+        getCastsShadowBoundsTraversalMask: function () {
+            return this.castsShadowBoundsTraversalMask;
         },
 
         setLightSource: function ( lightSource ) {

@@ -97,6 +97,7 @@ define( [
         this._casterStateSet = new StateSet();
         this._casterStateSet.addUniform( Uniform.createFloat1( 0, 'exponent0' ) );
         this._casterStateSet.addUniform( Uniform.createFloat1( 0, 'exponent1' ) );
+        this._casterStateSet.addUniform( Uniform.createFloat1( 0.005, 'bias' ) );
 
         var near = 0.001;
         var far = 1000;
@@ -114,7 +115,8 @@ define( [
         this._worldLightDir[ 3 ] = 1;
 
 
-        this._castsShadowTraversalMask = 0xffffffff;
+        this._castsShadowDrawTraversalMask = 0xffffffff;
+        this._castsShadowBoundsTraversalMask = 0xffffffff;
 
         // program cache
         this._cache = {};
@@ -132,8 +134,7 @@ define( [
         this._computeBoundsVisitor = new ComputeBoundsVisitor();
 
         // true if shadow map rendered at least once
-        // since dirtied, handy for static shadow map
-        this._filledOnce = false;
+
     };
 
     /** @lends ShadowMap.prototype */
@@ -151,9 +152,6 @@ define( [
             return this._dirty;
         },
 
-        isFilledOnce: function () {
-            return this._filledOnce;
-        },
 
         setShadowCasterShaderProgram: function ( prg ) {
             this._casterStateSet.setAttributeAndModes( prg, StateAttribute.ON | StateAttribute.OVERRIDE );
@@ -213,7 +211,8 @@ define( [
 
             var lightSource = shadowSettings.lightSource;
 
-            this.setCastsShadowTraversalMask( shadowSettings.castsShadowTraversalMask );
+            this.setCastsShadowDrawTraversalMask( shadowSettings.castsShadowDrawTraversalMask );
+            this.setCastsShadowBoundsTraversalMask( shadowSettings.castsShadowBoundsTraversalMask );
 
             this.setLightSource( lightSource );
             this.setTextureSize( shadowSettings.textureSize );
@@ -228,18 +227,29 @@ define( [
 
         },
 
-        setCastsShadowTraversalMask: function ( mask ) {
-            this._castsShadowTraversalMask = mask;
+        setCastsShadowDrawTraversalMask: function ( mask ) {
+            this._castsShadowDrawTraversalMask = mask;
         },
-        getCastsShadowTraversalMask: function () {
-            return this._castsShadowTraversalMask;
+        getCastsShadowDrawTraversalMask: function () {
+            return this._castsDrawShadowTraversalMask;
         },
+
+        setCastsShadowBoundsTraversalMask: function ( mask ) {
+            this._castsShadowBoundsTraversalMask = mask;
+        },
+        getCastsShadowBoundsTraversalMask: function () {
+            return this._castsShadowBoundsTraversalMask;
+        },
+
 
         getBias: function () {
             return this._shadowAttribute.getBias();
         },
         setBias: function ( value ) {
             this._shadowAttribute.setBias( value );
+
+            this._casterStateSet.getUniformList()[ 'bias' ].getUniform().set( value );
+
         },
 
         getExponent0: function () {
@@ -283,6 +293,7 @@ define( [
 
             if ( !this._shadowedScene ) return;
 
+            this._filledOnce = false;
             // if light number changed we need to remove cleanly
             // attributes from receiveStateSet
             // it's because it use a typemember like light attribute
@@ -458,7 +469,6 @@ define( [
         setAlgorithm: function ( algo ) {
 
             if ( algo === this.getAlgorithm() ) return;
-
             this._shadowAttribute.setAlgorithm( algo );
             this.dirty();
         },
@@ -564,7 +574,9 @@ define( [
                 var xmax = fovRadius;
                 var xmin = -xmax;
 
-                Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+
+                //Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+                Matrix.makeFrustum( xmin, xmax, ymin, ymax, zNear, zFar, projection );
 
                 Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
 
@@ -770,8 +782,7 @@ define( [
             // record the traversal mask on entry so we can reapply it later.
             var traversalMask = cullVisitor.getTraversalMask();
 
-
-            cullVisitor.setTraversalMask( this._castsShadowTraversalMask );
+            cullVisitor.setTraversalMask( this._castsShadowDrawTraversalMask );
 
             // cast geometries into depth shadow map
             cullVisitor.pushStateSet( this._casterStateSet );
@@ -786,7 +797,7 @@ define( [
 
 
 
-            this._computeBoundsVisitor.setTraversalMask( this._castsShadowTraversalMask );
+            this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
             this.getShadowedScene().accept( this._computeBoundsVisitor );
             bbox = this._computeBoundsVisitor.getBoundingBox();
 
