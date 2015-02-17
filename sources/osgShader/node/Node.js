@@ -15,6 +15,10 @@ define( [
 
     Node.prototype = {
 
+        getID: function () {
+            return this._id;
+        },
+
         toString: function () {
             return this._name + ' : { input: ' + this._inputs.toString() + ' }, output: { ' + this._output.toString() + ' } ';
         },
