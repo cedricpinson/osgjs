@@ -631,7 +631,7 @@ define( [
         createLighting: function ( materials, overrideNodeName ) {
 
             var output = this.createVariable( 'vec3' );
-            var lightList = [];
+            var lightOutputVarList = [];
 
             var enumToNodeName = overrideNodeName || {
                 DIRECTION: 'SunLight',
@@ -680,9 +680,9 @@ define( [
 
                 var shadowedOutput = this.createShadowingLight( light, inputs, lightedOutput );
                 if ( shadowedOutput ) {
-                    lightList.push( shadowedOutput );
+                    lightOutputVarList.push( shadowedOutput );
                 } else {
-                    lightList.push( lightedOutput );
+                    lightOutputVarList.push( lightedOutput );
                 }
 
                 var lightMatAmbientOutput = this.createVariable( 'vec3', 'lightMatAmbientOutput' );
@@ -690,16 +690,16 @@ define( [
                 factory.getNode( 'Mult' ).inputs( inputs.materialambient, lightUniforms.lightambient ).outputs( lightMatAmbientOutput );
 
 
-                lightList.push( lightMatAmbientOutput );
+                lightOutputVarList.push( lightMatAmbientOutput );
             }
-            // add emission too
-            if ( materialUniforms.emission )
-                lightList.push( materialUniforms.emission );
 
-            if ( lightList.length === 0 )
-                lightList.push( this.createVariable( 'vec3' ).setValue( 'vec3(0.0)' ) );
+            // do not delete on the assumption that light list is always filled
+            // in case CreateLighting is called with a empty lightList
+            // when Compiler is overriden.
+            if ( lightOutputVarList.length === 0 )
+                lightOutputVarList.push( this.createVariable( 'vec3' ).setValue( 'vec3(0.0)' ) );
 
-            factory.getNode( 'Add' ).inputs( lightList ).outputs( output );
+            factory.getNode( 'Add' ).inputs( lightOutputVarList ).outputs( output );
 
             return output;
         },
@@ -1120,12 +1120,16 @@ define( [
                 finalColor = lightedOutput;
 
             } else {
-
-                // no light use diffuse color
+                // no light, no emssion use diffuse color
                 finalColor = diffuseColor;
-
             }
 
+            if ( materialUniforms.emission ) {
+                // add emission if any
+                var outputDiffEm = this.createVariable( 'vec3' ).setValue( 'vec3(0.0)' );
+                factory.getNode( 'Add' ).inputs( finalColor, materialUniforms.emission ).outputs( outputDiffEm );
+                finalColor = outputDiffEm;
+            }
 
             // premult alpha
             finalColor = this.getPremultAlpha( finalColor, alpha );
