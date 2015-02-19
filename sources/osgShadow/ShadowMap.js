@@ -723,14 +723,15 @@ define( [
             var zFar = this._farCaster;
 
             var resultNearFar = [ zNear, zFar ];
-            Matrix.clampProjectionMatrix( projection, zNear, zFar, cullVisitor.getNearFarRatio(), resultNearFar );
 
+            Matrix.clampProjectionMatrix( projection, zNear, zFar, cullVisitor.getNearFarRatio(), resultNearFar );
             zNear = resultNearFar[ 0 ];
             zFar = resultNearFar[ 1 ];
 
             Matrix.copy( projection, camera.getProjectionMatrix() );
             Matrix.copy( view, camera.getViewMatrix() );
             this.setShadowUniformsDepthValue( zNear, zFar, view, projection );
+
 
         },
 
@@ -814,7 +815,9 @@ define( [
             // Here culling is done, we do have near/far.
             // and cull/non-culled info
             // if we wanted a tighter frustum.
-            this.frameShadowCastingFrustum( cullVisitor );
+            if ( this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask ) {
+                this.frameShadowCastingFrustum( cullVisitor );
+            }
 
 
             // enabling this makes for strange projection fuck up
