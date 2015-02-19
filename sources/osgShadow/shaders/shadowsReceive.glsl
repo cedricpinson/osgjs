@@ -120,7 +120,9 @@ float computeShadow(in bool lighted,
     vec4 shadowUV;
 
     // depth bias
-    float shadowBias = 0.005*tan(acos(N_Dot_L)); // cosTheta is dot( n, l ), clamped between 0 and 1
+    //float shadowBias = 0.005*tan(acos(N_Dot_L)); // cosTheta is dot( n, l ), clamped between 0 and 1
+    // same but 4 cycles instead of 15
+    float shadowBias = 0.005 * sqrt( 1. -  N_Dot_L*N_Dot_L) / N_Dot_L;
     shadowBias = clamp(shadowBias, 0.0, bias);
 
     //normal offset aka Exploding Shadow Receivers

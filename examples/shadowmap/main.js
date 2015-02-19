@@ -700,7 +700,9 @@
             if ( this._previousTech !== this._config[ 'shadow' ] ) {
                 // technique change.
 
-                this._groundNode.setNodeMask( ~this._castsShadowTraversalMask );
+
+                this._groundNode.setNodeMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
+
                 switch ( this._config[ 'shadow' ] ) {
                 case 'ESM':
 
@@ -1088,7 +1090,8 @@
             var mapres = parseInt( this._config[ 'textureSize' ] );
             shadowSettings.setTextureSize( mapres );
 
-            shadowSettings.setCastsShadowTraversalMask( this._castsShadowTraversalMask );
+            shadowSettings.setCastsShadowDrawTraversalMask( this._castsShadowDrawTraversalMask );
+            shadowSettings.setCastsShadowBoundsTraversalMask( this._castsShadowBoundsTraversalMask );
 
             shadowSettings.setAlgorithm( this._config[ 'shadow' ] );
 
@@ -1176,7 +1179,8 @@
         createScene: function () {
             var group = new osg.Node();
 
-            this._castsShadowTraversalMask = 0x2;
+            this._castsShadowDrawTraversalMask = 0x2;
+            this._castsShadowBoundsTraversalMask = 0x4;
 
             this._shadowScene = this.createSceneCasterReceiver();
 
@@ -1187,9 +1191,13 @@
             // casting shadow
             // receiving shadow
             // any combination possible.
-            //this._shadowScene.setNodeMask( this._castsShadowTraversalMask );
+            //this._shadowScene.setNodeMask( this._castsShadowDrawTraversalMask );
             //this._shadowScene.setNodeMask( this._receivesShadowTraversalMask );
-            this._groundNode.setNodeMask( ~this._castsShadowTraversalMask );
+
+
+            this._cubeNode.setNodeMask( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask );
+            this._modelNode.setNodeMask( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask );
+            this._groundNode.setNodeMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
 
             /////////////////////////
             shadowedScene.addChild( this._shadowScene );
