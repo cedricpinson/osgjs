@@ -99,23 +99,23 @@ float getShadowedTermUnified(const in vec2 shadowUV, const in float shadowReceiv
 }
 
 
-float computeShadow(in bool lighted,
+float computeShadow(const in bool lighted,
                     in vec4 shadowVertexProjected,
-                    in vec4 shadowZ,
-                    in sampler2D tex,
-                    in vec4 texSize,
-                    in vec4 depthRange,
-                    in vec3 LightPosition,
-                    in float N_Dot_L,
-                    in vec3 Normal,
-                    in float bias,
-                    in float epsilonVSM,
-                    in float exponent,
-                    in float exponent1) {
+                    const in vec4 shadowZ,
+                    const in sampler2D tex,
+                    const in vec4 texSize,
+                    const in vec4 depthRange,
+                    const in vec3 LightPosition,
+                    const in float N_Dot_L,
+                    const in vec3 Normal,
+                    const in float bias,
+                    const in float epsilonVSM,
+                    const in float exponent,
+                    const in float exponent1) {
 
 
     if (!lighted)
-        return 1.0;
+        return 1.;
 
     vec4 shadowUV;
 
@@ -123,19 +123,19 @@ float computeShadow(in bool lighted,
     //float shadowBias = 0.005*tan(acos(N_Dot_L)); // cosTheta is dot( n, l ), clamped between 0 and 1
     // same but 4 cycles instead of 15
     float shadowBias = 0.005 * sqrt( 1. -  N_Dot_L*N_Dot_L) / N_Dot_L;
-    shadowBias = clamp(shadowBias, 0.0, bias);
+    shadowBias = clamp(shadowBias, 0., bias);
 
     //normal offset aka Exploding Shadow Receivers
     if(shadowVertexProjected.w != 1.0){
         // only relevant for perspective, not orthogonal
-        shadowVertexProjected += vec4(Normal.xyz*shadowBias*(shadowVertexProjected.z * 2.0*texSize.z),0);
+        shadowVertexProjected += vec4(Normal.xyz*shadowBias*(shadowVertexProjected.z * 2.0*texSize.z),0.);
     }
 
     shadowUV = shadowVertexProjected / shadowVertexProjected.w;
     shadowUV.xy = shadowUV.xy* 0.5 + 0.5;
 
-
-    if (shadowUV.x > 1.0 || shadowUV.y > 1.0 || shadowUV.x < 0.0 || shadowUV.y < 0.0 )
+    bool outFrustum = any(bvec4 ( shadowUV.x > 1., shadowUV.x < 0., shadowUV.y > 1., shadowUV.y < 0. ));
+    if (outFrustum)
         return 1.0;// limits of light frustum
 
 
@@ -144,8 +144,8 @@ float computeShadow(in bool lighted,
     // linearize
     objDepth =  -shadowZ.z / shadowZ.w;
     // to [0,1]
-    objDepth =  (objDepth - depthRange.x)* depthRange.w;
-    objDepth -= shadowBias;
+    //objDepth =  (objDepth - depthRange.x)* depthRange.w;
+    objDepth =  objDepth / depthRange.y;
 
     // shadowZ must be clamped to [0,1]
     // otherwise it's not comparable to
@@ -153,7 +153,8 @@ float computeShadow(in bool lighted,
     // which is clamped to [0,1]
     // Not doing that makes ALL shadowReceiver > 1.0 black
     // because they ALL becomes behind any point in Caster depth map
-    objDepth = clamp(objDepth, 0.0, 1.0 - shadowBias);
+    objDepth = clamp(objDepth, 0., 1. - shadowBias);
+    objDepth -= shadowBias;
 
     return getShadowedTermUnified(shadowUV.xy, objDepth, tex, texSize,  epsilonVSM, exponent, exponent1);
 
