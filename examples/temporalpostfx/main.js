@@ -7,6 +7,7 @@
     //var osgUtil = window.osgUtil;
     var osgViewer = window.osgViewer;
     var osgShader = window.osgShader;
+    var osgShadow = window.osgShadow;
     var $ = window.$;
     var Q = window.Q;
     var osgDB = window.osgDB;
@@ -15,6 +16,26 @@
     window.postScenes = [];
     var CustomCompiler = window.CustomCompiler;
 
+    var LightRemoveVisitor = function () {
+        osg.NodeVisitor.call( this );
+        this.nodeList = [];
+    };
+    LightRemoveVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+        apply: function ( node ) {
+            if ( ( node.getName() && node.getName().indexOf( 'Point' ) !== -1 ) || node.getTypeID() === osg.Light.getTypeID() ) {
+                this.nodeList.push( node );
+                return;
+            }
+            this.traverse( node );
+        },
+        clean: function () {
+            for ( var i = 0; i < this.nodeList.length; i++ ) {
+                var node = this.nodeList[ i ];
+                var parents = node.getParents();
+                if ( parents && parents[ 0 ] ) parents[ 0 ].removeChild( node );
+            }
+        }
+    } );
 
     var Example = function () {
         this._config = {};
@@ -30,25 +51,52 @@
             var model = new osg.MatrixTransform();
             model.setName( 'ModelParent' );
             osg.Matrix.makeRotate( Math.PI, 0, 0, 1, model.getMatrix() );
-            var modelName = '../ssao/raceship.osgjs';
-            var request = osgDB.readNodeURL( modelName );
 
-            //        var groundTex = osg.Texture.createFromURL( '../media/textures/seamless/bricks1.jpg' );
-            //        groundTex.setWrapT( 'MIRRORED_REPEAT' );
-            //        groundTex.setWrapS( 'MIRRORED_REPEAT' );
+            var modelName = '../ssao/raceship.osgjs';
+            ///var modelName = '../media/models/material-test/file.osgjs';
+
+            var request = osgDB.readNodeURL( modelName );
 
             // copy tex coord 0 to tex coord1 for multi texture
             request.then( function ( loadedModel ) {
+                var lightRmv = new LightRemoveVisitor();
+                loadedModel.accept( lightRmv );
+                lightRmv.clean();
+
                 loadedModel.setName( 'model' );
                 model.addChild( loadedModel );
 
-                //          model.getOrCreateStateSet().setTextureAttributeAndModes( 0, groundTex );
             } );
 
             // add a node to animate the scene
             var rootModel = new osg.MatrixTransform();
             rootModel.setName( 'rootModel' );
             rootModel.addChild( model );
+
+
+            var numPlanes = 5;
+            var groundSize = 60 / numPlanes;
+            var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
+            var groundTex = osg.Texture.createFromURL( '../media/textures/seamless/bricks1.jpg' );
+            groundTex.setWrapT( 'MIRRORED_REPEAT' );
+            groundTex.setWrapS( 'MIRRORED_REPEAT' );
+            ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, groundTex );
+
+            for ( var wG = 0; wG < numPlanes; wG++ ) {
+                for ( var wH = 0; wH < numPlanes; wH++ ) {
+
+                    var groundSubNodeTrans = new osg.MatrixTransform();
+                    //groundSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( -groundSize + groundSize * 0.5, -groundSize + groundSize * 0.5, -5.0, [] ) );
+
+                    groundSubNodeTrans.setMatrix( osg.Matrix.makeTranslate( -wG * groundSize + groundSize * numPlanes * 0.5, -wH * groundSize + groundSize * numPlanes * 0.5, -5.0, [] ) );
+
+                    groundSubNodeTrans.setName( 'groundSubNode_' + wG + '_' + wH );
+                    groundSubNodeTrans.addChild( ground );
+                    rootModel.addChild( groundSubNodeTrans );
+                }
+            }
+
+
 
             rootModel._name = 'UPDATED MODEL NODE';
             return rootModel;
@@ -92,12 +140,72 @@
                 newSceneTexture.setInternalFormat( osg.Texture.RGBA );
             }
 
+
+
+
             camera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, newSceneTexture, 0 );
             camera.attachRenderBuffer( osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16 );
+
+
+            // shadows
+            var lightnew = new osg.Light( 0 );
+
+            // pretty spotlight fallof showing
+            // clearly directions
+            var spot = false;
+            if ( spot ) {
+                lightnew.setSpotCutoff( 25 );
+                lightnew.setSpotBlend( 1.0 );
+                lightnew.setLightType( osg.Light.SPOT );
+            } else {
+                lightnew.setSpotCutoff( 190 );
+                lightnew.setLightType( osg.Light.DIRECTION );
+            }
+
+            lightnew.setConstantAttenuation( 0 );
+            lightnew.setLinearAttenuation( 0.005 );
+            lightnew.setQuadraticAttenuation( 0 );
+
+            lightnew.setName( 'light0' );
+            lightnew._enabled = true;
+
+            // light source is a node handling the light
+            var lightSourcenew = new osg.LightSource();
+            lightSourcenew.setName( 'lightNode0' );
+            lightSourcenew.setLight( lightnew );
+
+            // node helping position the light
+            var lightNodemodelNodeParent = new osg.MatrixTransform();
+
+            // Important: set the light as attribute so that it's inhered by all node under/attached the mainNode
+            camera.getOrCreateStateSet().setAttributeAndModes( lightnew );
+
+            // setting light, each above its cube
+            lightNodemodelNodeParent.setMatrix( osg.Matrix.makeTranslate( -10, -10, 10, osg.Matrix.create() ) );
+
+            // red light
+            lightnew.setAmbient( [ 0.0, 0, 0.0, 1.0 ] );
+            lightnew.setDiffuse( [ 1.5, 1.5, 1.5, 1.0 ] );
+            lightnew.setSpecular( [ 1.0, 1.0, 1.0, 1.0 ] );
+
+
+            var shadowedNode = new osgShadow.ShadowedScene();
+            shadowedNode.addChild( rootModel );
+
+            if ( false ) {
+                var shadowSettings = new osgShadow.ShadowSettings();
+                shadowSettings.setLightSource( lightSourcenew );
+                shadowSettings.setAlgorithm( 'NONE' );
+                shadowSettings.setTextureSize( 2048 );
+                shadowSettings.bias = 0.5;
+                var shadowMap = new osgShadow.ShadowMap();
+                shadowMap.setShadowSettings( shadowSettings );
+
+                shadowedNode.addShadowTechnique( shadowMap );
+            }
+
             // add the scene to the camera
-            camera.addChild( rootModel );
-
-
+            camera.addChild( shadowedNode );
             // better view
             osg.Matrix.copy( [ 1.3408910815142607, 0, 0, 0, 0, 1.920982126971166, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.002002002002002, 0 ], camera.getProjectionMatrix() );
             //osg.Matrix.copy( [ -1, 0, -0, 0, 0, 1, -0, 0, 0, -0, -1, 0, 0, 0, -50, 1 ], camera.getViewMatrix() );
@@ -274,7 +382,7 @@
 
             this._notSame = effectName0 !== effectName1;
 
-            this._rttSize = [ this._canvas.width * textureScale, this._canvas.height * textureScale ];
+            this._rttSize = [ this._canvas.width * textureScale, this._canvas.height * textureScale, 1.0 / this._canvas.width * textureScale, 1.0 / this._canvas.height * textureScale ];
 
             this._effect0 = this._effects[ effectName0 ];
             this._effect1 = this._effects[ effectName1 ];
@@ -373,7 +481,9 @@
 
         createScene: function () {
 
-            this._rttSize = [ this._canvas.width, this._canvas.height ];
+            var textureScale = 1.0;
+
+            this._rttSize = [ this._canvas.width * textureScale, this._canvas.height * textureScale, 1.0 / this._canvas.width * textureScale, 1.0 / this._canvas.height * textureScale ];
             // cannot add same model multiple in same grap
             // it would break previousframe matrix saves
 
@@ -385,11 +495,7 @@
             this.sampleXUnif = osg.Uniform.createFloat1( 0.0, 'SampleX' );
             this.sampleYUnif = osg.Uniform.createFloat1( 0.0, 'SampleY' );
             this.frameNumUnif = osg.Uniform.createFloat1( 0.0, 'FrameNum' );
-            this.factorRenderUnif = osg.Uniform.createFloat1( 1.0, 'FactorRender' );
-
-            this.diffUnif = osg.Uniform.createFloat1( -1.0, 'diffScale' );
-            this.slideUnif = osg.Uniform.createFloat1( 0.5, 'slide' );
-            this.mixUnif = osg.Uniform.createFloat1( -1.0, 'mixTex' );
+            this.factorRenderUnif = osg.Uniform.createFloat1( textureScale, 'FactorRender' );
 
             this._root.getOrCreateStateSet().addUniform( this.sampleXUnif );
             this._root.getOrCreateStateSet().addUniform( this.sampleYUnif );
@@ -403,6 +509,11 @@
             this._root.getOrCreateStateSet().addUniform( this._texW );
             this._root.getOrCreateStateSet().addUniform( this._texH );
 
+            this._renderSize = osg.Uniform.createFloat1( this._rttSize, 'renderSize' );
+            this._root.getOrCreateStateSet().addUniform( this._renderSize );
+
+
+
             // create a quad on main camera which will be applied the postprocess effects
             var quadSize = [ 16 / 9, 1 ];
             this._quad = osg.createTexturedQuadGeometry( -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
@@ -413,7 +524,7 @@
 
             this.diffUnif = osg.Uniform.createFloat1( 0.0, 'diffScale' );
             this.slideUnif = osg.Uniform.createFloat1( 0.5, 'slide' );
-            this.mixUnif = osg.Uniform.createFloat1( 0.0, 'mix' );
+            this.mixUnif = osg.Uniform.createFloat1( 0.0, 'mixTex' );
 
             this._quad.getOrCreateStateSet().addUniform( this.diffUnif );
             this._quad.getOrCreateStateSet().addUniform( this.mixUnif );
@@ -530,6 +641,8 @@
             this._viewer = new osgViewer.Viewer( this._canvas, {
                 antialias: false
             } );
+            // we'll do it ourself
+            this._viewer.setLightingMode( osgViewer.View.LightingMode.NO_LIGHT );
             this._viewer.init();
 
             var rotate = new osg.MatrixTransform();

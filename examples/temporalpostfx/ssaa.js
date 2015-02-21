@@ -9,7 +9,6 @@
     var TemporalAttribute = window.TemporalAttribute;
 
     //http://www.ben-peck.com/articles/halton/
-    // TODO: hammersley seems to have  better voronoi spread
     var halton = function ( index, base ) {
         var result = 0.0;
         var f = 1.0 / base;
@@ -60,6 +59,7 @@
 
             var numSSAA = 4096;
             var numCol = 64;
+
             if ( !this._helper._doAnimate ) {
                 this._helper._currentFrameSinceStop++;
                 if ( this._helper._currentFrameSinceStop ) {
@@ -170,7 +170,7 @@
 
         update: function () {
 
-            if ( !this._helper._doAnimate ) {
+            if ( true || !this._helper._doAnimate ) {
                 this._helper._currentFrameSinceStop++;
             } else {
                 this._helper._currentFrameSinceStop = 0;
@@ -179,7 +179,7 @@
             var frameNum = this._helper._currentFrameSinceStop;
             if ( frameNum >= 1 ) {
 
-                this._helper.sampleXUnif.set( halton( frameNum - 1, 2 ) );
+                this._helper.sampleXUnif.set( halton( frameNum - 1, 4 ) );
                 this._helper.sampleYUnif.set( halton( frameNum - 1, 3 ) );
 
 
