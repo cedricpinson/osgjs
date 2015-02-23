@@ -165,6 +165,14 @@ define( [
                 preShader = this.instrumentShaderlines( preShader, sourceID );
                 sourceID++;
             }
+
+            // removes duplicates
+            if ( defines !== undefined ) {
+                defines = defines.sort().filter( function ( item, pos ) {
+                    return !pos || item !== defines[ pos - 1 ];
+                } );
+            }
+
             var postShader = this.preprocess( preShader, sourceID, includeList, defines );
 
             var prePrend = '';
@@ -180,7 +188,7 @@ define( [
 
             // if defines
             // add them
-            if ( defines ) {
+            if ( defines !== undefined ) {
                 prePrend += defines.join( '\n' ) + '\n';
             }
             postShader = prePrend + postShader;
