@@ -500,7 +500,7 @@ define( [
         makePerspectiveFromBoundingBox: function ( bbox, fov, eyePos, eyeDir, view, projection ) {
             var center = bbox.center( this._tmpVec );
             var radius = bbox.radius();
-            var zNear = 0.0001;
+            var zNear = 1e-4;
             var zFar = 1.0;
 
             // light Near Plane Equation
@@ -514,17 +514,17 @@ define( [
                 // won't render anything the object  is behind..
                 // TODO: handle an empty render...
                 // avoiding cullvisitor pass on caster would be nice.
-            } else if ( distance < 0 ) {
+            } else if ( distance <= 0.0 ) {
                 // shhh.. we're inside !
                 // sphere center is behind
-                zNear = 0.00001;
+                zNear = 1e-5;
                 zFar = distance + radius;
                 //radius = zFar;
 
             } else if ( distance < radius ) {
                 // shhh.. we're inside !
                 // sphere center is in front
-                zNear = 0.00001;
+                zNear = 1e-5;
                 zFar = distance + radius;
 
                 //radius = zFar;

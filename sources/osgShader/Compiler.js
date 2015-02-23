@@ -168,9 +168,8 @@ define( [
             return v;
         },
 
-        getOrCreateStateAttributeUniforms: function ( stateAttribute, prefix ) {
-
-            var uniforms = stateAttribute.getOrCreateUniforms();
+        // Map of uniform from a StateAttribute or TextureStateAttribute
+        getOrCreateUniformFromUniformMap: function ( uniforms, prefix ) {
             var keys = Object.keys( uniforms );
             var object = {};
 
@@ -182,6 +181,19 @@ define( [
             }
 
             return object;
+        },
+
+        // specialized for texture, enforcing last parameter usage.
+        getOrCreateTextureStateAttributeUniforms: function ( stateAttribute, prefix, unit ) {
+
+            var uniforms = stateAttribute.getOrCreateUniforms( unit );
+            return this.getOrCreateUniformFromUniformMap( uniforms, prefix );
+        },
+
+        getOrCreateStateAttributeUniforms: function ( stateAttribute, prefix ) {
+
+            var uniforms = stateAttribute.getOrCreateUniforms();
+            return this.getOrCreateUniformFromUniformMap( uniforms, prefix );
         },
 
         getOrCreateUniform: function ( type, varname ) {
@@ -563,7 +575,8 @@ define( [
 
             // seach current light its corresponding shadow and shadowTextures.
             // if none, no shadow, hop we go.
-            // TODO Link shadowTexture and shadowAttribute ?
+            // TODO: harder Link shadowTexture and shadowAttribute ?
+            // TODO: multi shadow textures for 1 light
             for ( k = 0; k < this._shadows.length; k++ ) {
                 shadow = this._shadows[ k ];
                 if ( shadow.getLight() === light ) {
@@ -600,9 +613,10 @@ define( [
                     tex = this.getOrCreateSampler( 'sampler2D', shadowTexture.getName() );
                     inputs.shadowTexture = tex;
                     // per texture uniforms
-                    var shadowTextureUniforms = this.getOrCreateStateAttributeUniforms( shadowTexture, 'shadowTexture' );
 
+                    var shadowTextureUniforms = this.getOrCreateTextureStateAttributeUniforms( shadowTexture, 'shadowTexture', k );
                     inputs = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
+
 
                     // Varyings
                     shadowVertexProjected = this.getOrCreateVarying( 'vec4', shadowTexture.getVaryingName( 'VertexProjected' ) );
@@ -853,11 +867,11 @@ define( [
         getTexCoordUnit: function ( id ) {
             var texture = this._textures[ id ];
             if ( texture === undefined )
-                return;
+                return undefined;
 
             var textureMaterial = this._texturesByName[ texture.getName() ];
             if ( !textureMaterial )
-                return;
+                return undefined;
 
             var texCoordUnit = textureMaterial.textureUnit;
             if ( texCoordUnit === undefined )
