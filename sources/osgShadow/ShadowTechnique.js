@@ -31,11 +31,11 @@ define( [
             return this._shadowedScene;
         },
 
-        setEnable: function ( enabled ) {
+        setEnabled: function ( enabled ) {
             this._enabled = enabled;
         },
 
-        getEnable: function () {
+        isEnabled: function () {
             return this._enabled;
         },
 

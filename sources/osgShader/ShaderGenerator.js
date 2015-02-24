@@ -70,12 +70,12 @@ define( [
             if ( !this._acceptAttributeTypes.has( attributeType ) )
                 return true;
 
-            // works for attribute that contains isEnable
+            // works for attribute that contains isEnabled
             // Light, Shadow. It let us to filter them to build a shader if not enabled
-            if ( attribute.isEnable && !attribute.isEnable() )
+            if ( attribute.isEnabled && !attribute.isEnabled() )
                 return true;
             // // if it's a light and it's not enable we filter it
-            // if ( attribute.typeID === Light.typeID && !attribute.isEnable() ) {
+            // if ( attribute.typeID === Light.typeID && !attribute.isEnabled() ) {
             //     return true;
             // }
 

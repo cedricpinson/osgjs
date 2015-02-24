@@ -263,9 +263,9 @@ define( [
             this.setDirty( false );
         },
 
-        // need a isEnable to let the ShaderGenerator to filter
+        // need a isEnabled to let the ShaderGenerator to filter
         // StateAttribute from the shader compilation
-        isEnable: function () {
+        isEnabled: function () {
             return this._enable;
         },
 

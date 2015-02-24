@@ -74,7 +74,7 @@ define( [
         },
 
         getHash: function () {
-            return this.getTypeMember() + this.getLightType() + this.isEnable().toString();
+            return this.getTypeMember() + this.getLightType() + this.isEnabled().toString();
         },
 
         getOrCreateUniforms: function () {
@@ -120,10 +120,10 @@ define( [
 
         // enable / disable is not implemented in uniform
         // we should add it
-        isEnable: function () {
+        isEnabled: function () {
             return this._enable;
         },
-        setEnable: function ( bool ) {
+        setEnabled: function ( bool ) {
             this._enable = bool;
             this.dirty();
         },
