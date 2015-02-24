@@ -90,7 +90,8 @@
             nbSamples: 8,
             environmentType: 'cubemapSeamless',
             brightness: 1.0,
-
+            normalAA: false,
+            occlusionHorizon: false,
 
             roughness: 0.5,
             material: 'Gold',
@@ -127,6 +128,9 @@
         this._environmentTransformMatrix = undefined;
 
         this._envBrightnessUniform = osg.Uniform.createFloat1( 1.0, 'uBrightness' );
+
+        this._normalAA = osg.Uniform.createInt1( 0, 'uNormalAA' );
+        this._occlusionHorizon = osg.Uniform.createInt1( 0, 'uOcclusionHorizon' );
 
         // background stateSet
         this._backgroundStateSet = new osg.StateSet();
@@ -338,6 +342,18 @@
             var b = this._config.brightness;
             this._envBrightnessUniform.get()[0] = b;
             this._envBrightnessUniform.dirty();
+        },
+
+        updateNormalAA: function() {
+            var aa = this._config.normalAA ? 1 : 0;
+            this._normalAA.get()[0] = aa;
+            this._normalAA.dirty();
+        },
+
+        updateOcclusionHorizon: function() {
+            var aa = this._config.occlusionHorizon ? 1 : 0;
+            this._occlusionHorizon.get()[0] = aa;
+            this._occlusionHorizon.dirty();
         },
 
         updateEnvironmentRotation: function() {
@@ -720,6 +736,13 @@
 
         },
 
+        updateGlobalUniform: function( stateSet ) {
+            stateSet.addUniform( this._environmentTransformUniform );
+            stateSet.addUniform( this._envBrightnessUniform );
+            stateSet.addUniform( this._normalAA );
+            stateSet.addUniform( this._occlusionHorizon );
+        },
+
         setPanorama: function () {
 
             // set the stateSet of the environment geometry
@@ -748,15 +771,18 @@
             stateSet.addUniform( osg.Uniform.createFloat2( [ w, w / 2 ], 'uEnvironmentSize' ) );
 
             // x4 because the base is for cubemap
-            var minTextureSize = this._currentEnvironment.getConfig().specularLimitSize * 4;
+            var textures = this._currentEnvironment.getTextures('specular_ue4', 'luv', 'panorama');
+            var textureConfig = textures[0];
+            var minTextureSize = textureConfig.limitSize;
+
             var nbLod = Math.log( w ) / Math.LN2;
             var maxLod = nbLod - Math.log( minTextureSize ) / Math.LN2;
 
             stateSet.addUniform( osg.Uniform.createFloat2( [ nbLod, maxLod ], 'uEnvironmentLodRange' ) );
             stateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironment' ) );
 
-            stateSet.addUniform( this._environmentTransformUniform );
-            stateSet.addUniform( this._envBrightnessUniform );
+            this.updateGlobalUniform( stateSet );
+
             stateSet.setTextureAttributeAndModes( 0, texture );
 
         },
@@ -783,7 +809,10 @@
             var stateSet = this._mainSceneNode.getOrCreateStateSet();
             var w = texture.getWidth();
 
-            var minTextureSize = this._currentEnvironment.getConfig().specularLimitSize;
+            var textures = this._currentEnvironment.getTextures('specular_ue4', 'luv', 'cubemap');
+            var textureConfig = textures[0];
+            var minTextureSize = textureConfig.limitSize;
+
             var nbLod = Math.log( w ) / Math.LN2;
             var maxLod = nbLod - Math.log( minTextureSize ) / Math.LN2;
 
@@ -791,8 +820,7 @@
             stateSet.addUniform( osg.Uniform.createFloat2( [ w, w ], 'uEnvironmentSize' ) );
             stateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironmentCube' ) );
 
-            stateSet.addUniform( this._environmentTransformUniform );
-            stateSet.addUniform( this._envBrightnessUniform );
+            this.updateGlobalUniform(stateSet);
 
             stateSet.setTextureAttributeAndModes( 0, texture );
 
@@ -984,7 +1012,7 @@
 //            var environment = 'textures/bus_garage9/';
 //            var environment = 'textures/bus_garagea/';
 //            var environment = 'textures/bus_garageb/';
-            var environment = 'textures/bus_garagec/';
+            var environment = 'textures/testB/';
             //var environment = 'textures/bus_garage5/';
             //var environment = 'textures/walk_of_fame/';
             //var environment = 'textures/airport/';
@@ -1039,6 +1067,13 @@
 
                 controller = gui.add( this._config, 'brightness', 0.0, 25.0  ).step(0.01);
                 controller.onChange( this.updateEnvironmentBrightness.bind( this ) );
+
+                controller = gui.add( this._config, 'normalAA');
+                controller.onChange( this.updateNormalAA.bind( this ) );
+
+                controller = gui.add( this._config, 'occlusionHorizon');
+                controller.onChange( this.updateOcclusionHorizon.bind( this ) );
+
 
                 controller = gui.add( this._config, 'lod', 0.0, 15.01 ).step( 0.1 );
                 controller.onChange( function ( value ) {

@@ -41,9 +41,26 @@ uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D aoMap;
 uniform int uFlipNormalY;
+uniform int uNormalAA;
+uniform int uOcclusionHorizon;
 
 #pragma include "sphericalHarmonics.glsl"
 #pragma include "colorSpace.glsl"
+
+
+
+
+float occlusionHorizon( const in vec3 R, const in vec3 normal)
+{
+    if ( uOcclusionHorizon == 0)
+        return 1.0;
+
+// http://marmosetco.tumblr.com/post/81245981087
+// TODO we set a min value (10%) to avoid pure blackness (in case of pure metal)
+    float factor = clamp( 1.0 + 1.3 * dot(R, normal), 0.1, 1.0 );
+    return factor * factor;
+}
+
 
 vec3 evaluateDiffuseSphericalHarmonics( const in vec3 N,
                                         const in vec3 V ) {
@@ -154,6 +171,18 @@ vec3 textureNormal(const in vec3 rgb) {
     return n;
 }
 
+float adjustRoughness( const in float roughness, const in vec3 normal ) {
+    // Based on The Order : 1886 SIGGRAPH course notes implementation (page 21 notes)
+    float normalLen = length(normal*2.0-1.0);
+    if ( normalLen < 1.0) {
+        float normalLen2 = normalLen * normalLen;
+        float kappa = ( 3.0 * normalLen -  normalLen2 * normalLen )/( 1.0 - normalLen2 );
+        // http://www.frostbite.com/2014/11/moving-frostbite-to-pbr/
+        // page 91 : they use 0.5/kappa instead
+        return min(1.0, sqrt( roughness * roughness + 1.0/kappa ));
+    }
+    return roughness;
+}
 
 void main(void) {
 
@@ -173,8 +202,8 @@ void main(void) {
 #ifdef NORMAL
     vec3 normalTexel = texture2D( normalMap, uv ).rgb;
     if ( length(normalTexel) > 0.0001 ) {
-        normalTexel = textureNormal( normalTexel );
-        normal = computeNormalFromTangentSpaceNormalMap( tangent, normal, normalTexel );
+        vec3 realNormal = textureNormal( normalTexel );
+        normal = computeNormalFromTangentSpaceNormalMap( tangent, normal, realNormal );
     }
 #endif
 
@@ -186,6 +215,12 @@ void main(void) {
 
     roughness = max( minRoughness , roughness );
     float ao = 1.0;
+
+#ifdef NORMAL
+    if ( uNormalAA == 1 ) {
+        roughness = adjustRoughness( roughness, normalTexel);
+    }
+#endif
 
 #ifdef AO
     ao = texture2D( aoMap, uv ).r;

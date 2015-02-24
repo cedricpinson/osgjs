@@ -11,7 +11,7 @@ window.EnvironmentPanorama = ( function () {
     var PanoramaEnv = function ( file, size, options ) {
         this._options = options || {};
         this._file = file;
-        this._size = size[0];
+        this._size = size;
     };
 
     PanoramaEnv.prototype = {

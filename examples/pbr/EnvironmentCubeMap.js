@@ -10,7 +10,7 @@ window.EnvironmentCubeMap = ( function () {
 
     var CubeMapEnv = function ( file, size, options ) {
         this._options = options || {};
-        this._size = size[0];
+        this._size = size;
         this._file = file; // abandoned_sanatorium_staircase_%d.png
     };
 
@@ -147,8 +147,8 @@ window.EnvironmentCubeMap = ( function () {
         createFloatPacked: function() {
 
             var texture = new osg.TextureCubeMap();
-            texture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
-            texture.setMagFilter( 'LINEAR' );
+            texture.setMinFilter( this._options.minFilter || 'LINEAR_MIPMAP_LINEAR' );
+            texture.setMagFilter( this._options.magFilter || 'LINEAR' );
             // texture.setMinFilter( 'NEAREST_MIPMAP_NEAREST' );
             // texture.setMagFilter( 'NEAREST' );
             texture.setType('FLOAT');

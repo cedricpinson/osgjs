@@ -1,3 +1,4 @@
+
 // require:
 // uniform int uEnvironmentMaxLod
 // samplerCube uEnvironmentCube
@@ -68,6 +69,9 @@ vec3 approximateSpecularIBL( const in vec3 specularColor,
     vec3 dir = environmentTransform * R;
     vec3 prefilteredColor = prefilterEnvMap( roughnessLinear, dir );
     //vec3 prefilteredColor = vec3(1.0);
+
+    // marmoset tricks
+    prefilteredColor *= occlusionHorizon( R, osg_FragNormal );
 
 #ifdef MOBILE
     return uBrightness * prefilteredColor * integrateBRDFApprox( specularColor, roughnessLinear, NoV );

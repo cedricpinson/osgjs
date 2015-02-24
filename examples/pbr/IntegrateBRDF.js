@@ -9,7 +9,7 @@ window.IntegrateBRDFMap = ( function () {
 
     var IntegrateBRDFMap = function ( file, size ) {
         this._file = file;
-        this._size = size[0];
+        this._size = size;
     };
 
     IntegrateBRDFMap.prototype = {
