@@ -40,10 +40,12 @@ define( [
         getLightUnit: function () {
             return this._lightUnit;
         },
+
         getUniformName: function ( name ) {
-            var prefix = this.getType() + this._lightUnit.toString();
+            var prefix = 'Shadow_' + this.getType() + this._lightUnit.toString();
             return prefix + '_uniform_' + name;
         },
+
         getVaryingName: function ( name ) {
             var prefix = this.getType() + this._lightUnit.toString();
             return prefix + '_varying_' + name;
@@ -122,7 +124,10 @@ define( [
         },
 
         getHash: function () {
-            return this.getTypeMember() + this._type;
+
+            return this.getTypeMember() + '_' + this._lightUnit + '_' +
+                this._type;
+
         }
 
     } ), 'osgShadow', 'ShadowTexture' );

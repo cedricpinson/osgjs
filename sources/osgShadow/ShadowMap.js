@@ -294,31 +294,44 @@ define( [
             if ( !this._shadowedScene ) return;
 
             this._filledOnce = false;
+
+
+            var light = this._lightSource.getLight();
+            var lightNumber = light.getLightNumber();
+
+
             // if light number changed we need to remove cleanly
             // attributes from receiveStateSet
             // it's because it use a typemember like light attribute
             // so the number if very important to keep State clean
-            var light = this._lightSource.getLight();
-            var lightNumber = light.getLightNumber();
-
             if ( this._shadowAttribute.getLightNumber() !== lightNumber ) {
+                if ( this._receivingStateset.getAttribute( this._shadowAttribute.getTypeMember() ) === this._shadowAttribute )
+                    this._receivingStateset.removeAttribute( this._shadowAttribute.getTypeMember() );
+            }
 
+            if ( this._texture && this._texture.getLightUnit() !== lightNumber ) {
                 // remove this._texture, but not if it's not this._texture
                 if ( this._receivingStateset.getTextureAttribute( this._textureUnit, this._texture.getTypeMember() ) === this._texture )
                     this._receivingStateset.removeTextureAttribute( this._textureUnit, this._texture.getTypeMember() );
-                if ( this._receivingStateset.getAttribute( this._shadowAttribute.getTypeMember() ) === this._shadowAttribute )
-                    this._receivingStateset.removeAttribute( this._shadowAttribute.getTypeMember() );
-
             }
-            this._textureUnit = this._textureUnitBase + lightNumber;
+
+            if ( !this._cameraShadow ) {
+                this._cameraShadow = new Camera();
+                this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
+                this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
+                this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
+                this._cameraShadow.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
+            }
 
             this.initTexture();
-            this._texture.setLightUnit( lightNumber );
-            this._texture.setName( 'ShadowTexture' + this._textureUnit );
+            this._textureUnit = this._textureUnitBase + lightNumber;
             this._cameraShadow.setName( 'light_shadow_camera' + light.getName() );
-            this._shadowAttribute.setLight( this._lightSource.getLight() );
 
             this._texture.setLightUnit( lightNumber );
+            this._texture.setName( 'ShadowTexture' + this._textureUnit );
+
+            this._shadowAttribute.setLight( light );
+
             this._receivingStateset.setAttributeAndModes( this._shadowAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
 
 
@@ -372,14 +385,6 @@ define( [
                 this._texture = new ShadowTexture();
                 this._textureUnitBase = 4;
                 this._textureUnit = this._textureUnitBase;
-            }
-
-            if ( !this._cameraShadow ) {
-                this._cameraShadow = new Camera();
-                this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
-                this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
-                this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
-                this._cameraShadow.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
             }
 
             var texType = this.getTexturePrecision();
@@ -495,7 +500,7 @@ define( [
         makePerspectiveFromBoundingBox: function ( bbox, fov, eyePos, eyeDir, view, projection ) {
             var center = bbox.center( this._tmpVec );
             var radius = bbox.radius();
-            var zNear = 0.0001;
+            var zNear = 1e-4;
             var zFar = 1.0;
 
             // light Near Plane Equation
@@ -506,20 +511,20 @@ define( [
             var distance = Vec3.dot( center, eyeDir ) + d;
 
             if ( distance < -radius ) {
-                // won't render anything the objectio is behind..
+                // won't render anything the object  is behind..
                 // TODO: handle an empty render...
                 // avoiding cullvisitor pass on caster would be nice.
-            } else if ( distance < 0 ) {
+            } else if ( distance <= 0.0 ) {
                 // shhh.. we're inside !
                 // sphere center is behind
-                zNear = 0.00001;
+                zNear = 1e-5;
                 zFar = distance + radius;
                 //radius = zFar;
 
             } else if ( distance < radius ) {
                 // shhh.. we're inside !
                 // sphere center is in front
-                zNear = 0.00001;
+                zNear = 1e-5;
                 zFar = distance + radius;
 
                 //radius = zFar;
@@ -528,11 +533,10 @@ define( [
                 // long distance runner
                 // we must make a nicer zNear here!
                 zNear = distance - radius;
-                zFar = distance + radius * 2.5;
-
+                zFar = distance + radius;
+                //zNear = 0.0001;
                 //radius = ( zFar - zNear ) * 0.5;
             }
-
             var epsilon = 1e-6;
             if ( zFar < zNear - epsilon ) {
 
@@ -551,6 +555,25 @@ define( [
                 zNear = zFar * zNearRatio;
             }
 
+
+            // positional light: spot, point, area
+            //  fov < 180.0
+            // statically defined by spot, only needs zNear zFar estimates
+            var fovRadius = zNear * Math.tan( fov * 2.0 * Math.PI / 360.0 );
+            // if scene radius is smaller than fov on scene
+            // tighten and enhance precision
+            fovRadius = fovRadius > radius ? radius : fovRadius;
+
+            var ymax = fovRadius;
+            var ymin = -ymax;
+
+            var xmax = fovRadius;
+            var xmin = -xmax;
+
+
+            Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+            //Matrix.makeFrustum( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+
             // compute a up vector ensuring avoiding parallel vectors
             // not using this._lightUp because not
             // reverting to it once got the change here done once
@@ -559,28 +582,9 @@ define( [
                 // another camera up
                 up = [ 1.0, 0.0, 0.0 ];
             }
-
-            // positional light: spot, point, area
-            if ( fov < 180.0 ) {
-                // statically defined by spot, only needs zNear zFar estimates
-                var fovRadius = zNear * Math.tan( fov * 2.0 * Math.PI / 360.0 );
-                // if scene radius is smaller than fov on scene
-                // tighten and enhance precision
-                fovRadius = fovRadius > radius ? radius : fovRadius;
-
-                var ymax = fovRadius;
-                var ymin = -ymax;
-
-                var xmax = fovRadius;
-                var xmin = -xmax;
+            Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
 
 
-                //Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, zNear, zFar, projection );
-                Matrix.makeFrustum( xmin, xmax, ymin, ymax, zNear, zFar, projection );
-
-                Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
-
-            }
 
             this._nearCaster = zNear;
             this._farCaster = zFar;
@@ -665,21 +669,22 @@ define( [
             var worldLightPos = this._worldLightPos;
 
             //  light pos & lightTarget in World Space
-            Matrix.transformVec4( worldMatrix, light.getPosition(), worldLightPos );
 
             if ( light.getPosition()[ 3 ] !== 0.0 ) {
 
+                Matrix.transformVec3( worldMatrix, light.getPosition(), worldLightPos );
 
                 // not a directionnal light, compute the world light dir
                 var worldLightDir = this._worldLightDir;
                 Vec3.copy( light.getDirection(), worldLightDir );
-                Matrix.transformVec3( worldMatrix, worldLightDir, worldLightDir );
+                Matrix.transformVec4( worldMatrix, worldLightDir, worldLightDir );
                 Vec3.normalize( worldLightDir, worldLightDir );
 
                 // and compute a perspective frustum
                 this.makePerspectiveFromBoundingBox( frustumBound, light.getSpotCutoff(), worldLightPos, worldLightDir, view, projection );
             } else {
 
+                Matrix.transformVec4( worldMatrix, light.getPosition(), worldLightPos );
                 // lightpos is a light dir
                 // so we now have to normalize
                 // since the transform to world above
@@ -723,14 +728,15 @@ define( [
             var zFar = this._farCaster;
 
             var resultNearFar = [ zNear, zFar ];
-            Matrix.clampProjectionMatrix( projection, zNear, zFar, cullVisitor.getNearFarRatio(), resultNearFar );
 
+            Matrix.clampProjectionMatrix( projection, zNear, zFar, cullVisitor.getNearFarRatio(), resultNearFar );
             zNear = resultNearFar[ 0 ];
             zFar = resultNearFar[ 1 ];
 
             Matrix.copy( projection, camera.getProjectionMatrix() );
             Matrix.copy( view, camera.getViewMatrix() );
             this.setShadowUniformsDepthValue( zNear, zFar, view, projection );
+
 
         },
 
@@ -814,7 +820,9 @@ define( [
             // Here culling is done, we do have near/far.
             // and cull/non-culled info
             // if we wanted a tighter frustum.
-            this.frameShadowCastingFrustum( cullVisitor );
+            if ( this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask ) {
+                this.frameShadowCastingFrustum( cullVisitor );
+            }
 
 
             // enabling this makes for strange projection fuck up
@@ -829,13 +837,7 @@ define( [
             this._filledOnce = true;
         },
 
-
-        cleanSceneGraph: function () {
-            // well release a lot more things when it works
-            this._cameraShadow = undefined;
-            this._filledOnce = false;
-
-
+        cleanReceivingStateSet: function () {
             if ( this._receivingStateset ) {
 
                 if ( this._texture ) {
@@ -848,8 +850,18 @@ define( [
                     this._receivingStateset.removeAttribute( this._shadowAttribute.getTypeMember() );
             }
 
+        },
+        cleanSceneGraph: function () {
+            // well release a lot more things when it works
+            this._cameraShadow = undefined;
+            this._filledOnce = false;
+
+
+            this.cleanReceivingStateSet();
+
             // TODO: need state
             //this._texture.releaseGLObjects();
+            //this._shadowAttribute = undefined;
             this._texture = undefined;
             this._shadowedScene = undefined;
         }
