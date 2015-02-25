@@ -34,7 +34,6 @@ define( [
             var inputs = [
                 this._inputs.lighted,
                 this._inputs.shadowVertexProjected,
-                this._inputs.shadowZ,
                 this._inputs.shadowTexture,
                 this._inputs.shadowTextureMapSize,
                 this._inputs.shadowTextureDepthRange,

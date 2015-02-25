@@ -604,7 +604,7 @@ define( [
             inputs = MACROUTILS.objectMix( inputs, shadowUniforms );
 
             // shadowTexture  Attribute uniforms AND varying
-            var tex, shadowVertexProjected, shadowZ;
+            var tex, shadowVertexProjected;
             // TODO: better handle multi texture shadow (CSM/PSM/etc.)
             for ( k = 0; k < shadowTextures.length; k++ ) {
 
@@ -620,10 +620,8 @@ define( [
 
                     // Varyings
                     shadowVertexProjected = this.getOrCreateVarying( 'vec4', shadowTexture.getVaryingName( 'VertexProjected' ) );
-                    shadowZ = this.getOrCreateVarying( 'vec4', shadowTexture.getVaryingName( 'Z' ) );
                     var shadowVarying = {
                         shadowVertexProjected: shadowVertexProjected,
-                        shadowZ: shadowZ,
                         lightEyeDir: inputs.lightEyeDir,
                         lightNDL: inputs.lightNDL
                     };
@@ -925,7 +923,6 @@ define( [
                 this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
                 // varyings
                 this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'VertexProjected' ) + ';' );
-                this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'Z' ) + ';' );
                 hasShadows = true;
             }
 
@@ -981,11 +978,12 @@ define( [
 
                 // varyings
                 var shadowVertProj = shadowTexture.getVaryingName( 'VertexProjected' );
-                var shadowZ = shadowTexture.getVaryingName( 'Z' );
 
-
-                this._vertexShader.push( ' ' + shadowZ + ' = ' + shadowView + ' *  worldPosition;' );
-                this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * ' + shadowZ + ';' );
+                this._vertexShader.push( 'vec4 shadowPos' + i + ' = ' + shadowView + ' *  worldPosition;' );
+                this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * shadowPos' + i + ';' );
+                // varying packing using 1 vec4 fo both Projection vector & viewworld z pos
+                // and pre-linearize Z
+                this._vertexShader.push( ' ' + shadowVertProj + '.z  = shadowPos' + i + '.z ;' );
             }
         },
         // Meanwhile, here it is.

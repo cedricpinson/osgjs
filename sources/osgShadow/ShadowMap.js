@@ -577,10 +577,21 @@ define( [
             // compute a up vector ensuring avoiding parallel vectors
             // not using this._lightUp because not
             // reverting to it once got the change here done once
-            var up = [ 0.0, 0.0, 1.0 ];
+            // [ 0.0, 0.0, 1.0 ];
+            var up = this._lightUp;
             if ( Math.abs( Vec3.dot( up, eyeDir ) ) >= 1.0 ) {
                 // another camera up
-                up = [ 1.0, 0.0, 0.0 ];
+                // [ 1.0, 0.0, 0.0 ];
+                if ( this._lightUp[ 0 ] === 1.0 ) {
+                    this._lightUp[ 0 ] = 0.0;
+                    this._lightUp[ 1 ] = 0.0;
+                    this._lightUp[ 2 ] = 1.0;
+                } else {
+                    this._lightUp[ 0 ] = 1.0;
+                    this._lightUp[ 1 ] = 0.0;
+                    this._lightUp[ 2 ] = 0.0;
+                }
+
             }
             Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
 
@@ -593,6 +604,7 @@ define( [
         makeOrthoFromBoundingBox: function ( bbox, eyeDir, view, projection ) {
 
             var center = bbox.center( this._tmpVecTercio );
+
             var radius = bbox.radius();
             var diameter = radius + radius;
 
@@ -618,10 +630,21 @@ define( [
             // compute a up vector ensuring avoiding parallel vectors
             // not using this._lightUp because not
             // reverting to it once got the change here done once
-            var up = [ 0.0, 0.0, 1.0 ];
+            // [ 0.0, 0.0, 1.0 ];
+            var up = this._lightUp;
             if ( Math.abs( Vec3.dot( up, eyeDir ) ) >= 1.0 ) {
                 // another camera up
-                up = [ 1.0, 0.0, 0.0 ];
+                // [ 1.0, 0.0, 0.0 ];
+                if ( this._lightUp[ 0 ] === 1.0 ) {
+                    this._lightUp[ 0 ] = 0.0;
+                    this._lightUp[ 1 ] = 0.0;
+                    this._lightUp[ 2 ] = 1.0;
+                } else {
+                    this._lightUp[ 0 ] = 1.0;
+                    this._lightUp[ 1 ] = 0.0;
+                    this._lightUp[ 2 ] = 0.0;
+                }
+
             }
             //Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
             Matrix.makeLookFromDirection( eyePos, eyeDir, up, view );
@@ -796,7 +819,8 @@ define( [
             this._cameraShadow.setEnableFrustumCulling( true );
             // enabling this makes for strange projection fuck up
             // (as in clamped too tight projection)
-            this._cameraShadow.setComputeNearFar( true );
+            var needNearFar = this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask;
+            this._cameraShadow.setComputeNearFar( needNearFar );
 
 
             var bbox;
@@ -804,6 +828,7 @@ define( [
 
 
             this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
+            this._computeBoundsVisitor.reset();
             this.getShadowedScene().accept( this._computeBoundsVisitor );
             bbox = this._computeBoundsVisitor.getBoundingBox();
 
@@ -820,7 +845,7 @@ define( [
             // Here culling is done, we do have near/far.
             // and cull/non-culled info
             // if we wanted a tighter frustum.
-            if ( this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask ) {
+            if ( needNearFar ) {
                 this.frameShadowCastingFrustum( cullVisitor );
             }
 
