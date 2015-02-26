@@ -34,7 +34,7 @@ float getShadowPCF(sampler2D tex, vec4 shadowMapSize, vec2 uv, float shadowZ) {
     // or even complex "blurring"
     if (shadowed != 0.0) // we're on an edge
     {
-        shadowed += (shadowZ  < getSingleFloatFromTex( tex, uv.xy ))  ?  1.0 : 0.0;
+        shadowed += step(shadowZ, getSingleFloatFromTex( tex, uv.xy ));
         shadowed *= 0.5;
     }
 

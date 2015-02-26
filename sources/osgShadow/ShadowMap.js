@@ -335,9 +335,42 @@ define( [
             this._receivingStateset.setAttributeAndModes( this._shadowAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
 
 
+
+            // prevent unnecessary texture bindings
+
+            if ( !ShadowMap.BlankTexture ) {
+                ShadowMap.BlankTexture = new Texture();
+                ShadowMap.BlankTexture.defaultType = true;
+                ShadowMap.BlankTexture.setName( 'emptyTex' );
+            }
+            var blankTexture = ShadowMap.BlankTexture;
+
+            // Mandatory: prevent binding shadow textures themselves (shadowedScene stateSet is applied
+            // just above in stateset hierarchy
+            // that would mean undefined values as it would be read/write access...
+            this._casterStateSet.setTextureAttributeAndModes( this._textureUnit, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
+
+            // TODO: optimize: have a "don't touch current Texture stateAttribute"
+            // on ALL texture unit but alpha max texture for Depth/Normal/etc renders
+
+            // TODO: actually get the real max texture unit from webglCaps
+            //var shouldGetMaxTextureUnits = 32;
+            //
+            // TODO:: Should handle the alpha_mask that uses a texture
+            // case somehow...
+            // deduce from shader compil ?
+            //for ( var k = 0; k < shouldGetMaxTextureUnits; k++ ) {
+            //    this._casterStateSet.setTextureAttributeAndModes( k, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
+            //}
+
+
             var casterProgram = this.getShadowCasterShaderProgram();
             this.setShadowCasterShaderProgram( casterProgram );
 
+            // add shadow texture to the receivers
+            // should make sure somehow that
+            // alpha blender transparent receiver doens't use it
+            // compiler wise at least
             this._receivingStateset.setTextureAttributeAndModes( this._textureUnit, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
 
             this._dirty = false;
