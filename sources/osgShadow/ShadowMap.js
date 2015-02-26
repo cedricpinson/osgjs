@@ -1,10 +1,12 @@
 define( [
     'osg/BoundingBox',
+    'osg/BlendFunc',
     'osg/Camera',
     'osg/ComputeBoundsVisitor',
     'osg/FrameBufferObject',
     'osg/Matrix',
     'osg/Notify',
+    'osg/NodeVisitor',
     'osg/Program',
     'osg/Shader',
     'osg/StateAttribute',
@@ -21,10 +23,56 @@ define( [
     'osgShadow/ShadowFrustumIntersection',
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowTexture'
-], function ( BoundingBox, Camera, ComputeBoundsVisitor, FrameBufferObject, Matrix, Notify, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowAttribute, ShadowFrustumIntersection, ShadowTechnique, ShadowTexture ) {
+], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, FrameBufferObject, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowAttribute, ShadowFrustumIntersection, ShadowTechnique, ShadowTexture ) {
 
     'use strict';
 
+
+    var TransparentRemoveVisitor = function ( mask ) {
+        NodeVisitor.call( this );
+        this._noCastMask = mask;
+        this._nodeList = [];
+    };
+    TransparentRemoveVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+        reset: function () {
+            this._nodeList = [];
+        },
+        apply: function ( node ) {
+            var st = node.getStateSet();
+            // check that and other things ?
+            if ( st ) {
+                var blend = st.getAttribute( 'BlendFunc' );
+                if ( blend !== undefined && blend.getSource() !== BlendFunc.DISABLE ) {
+                    /*jshint bitwise: false */
+                    var nm = node.getNodeMask();
+                    if ( nm === ~0x0 ) {
+                        nm = this._noCastMask;
+                        node.setNodeMask( nm );
+                    }
+                    if ( ( nm & ~( this._noCastMask ) ) !== 0 ) {
+                        node.setNodeMask( nm | this._noCastMask );
+                        this._nodeList.push( node );
+                    }
+                    /*jshint bitwise: true */
+                    return;
+                }
+            }
+            this.traverse( node );
+        },
+        setNoCastMask: function ( mask ) {
+            this._noCastMask = mask;
+        },
+        restore: function () {
+            var node, i = this._nodeList.length;
+            while ( i-- ) {
+                node = this._nodeList[ i ];
+                var nm = node.getNodeMask();
+                if ( nm === this._noCastMask ) node.setNodeMask( ~0x0 );
+                else node.setNodeMask( nm & ~this._noCastMask );
+            }
+        }
+
+    } );
 
 
     // Custom camera cull callback
@@ -132,7 +180,7 @@ define( [
 
         this._computeFrustumBounds = new ShadowFrustumIntersection();
         this._computeBoundsVisitor = new ComputeBoundsVisitor();
-
+        this._transparentVisitor = new TransparentRemoveVisitor( this._castsShadowTraversalMask );
         // true if shadow map rendered at least once
 
     };
@@ -859,6 +907,10 @@ define( [
             var bbox;
 
 
+            this._transparentVisitor.setNoCastMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
+            this._transparentVisitor.reset();
+            this.getShadowedScene().accept( this._transparentVisitor );
+
 
             this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
             this._computeBoundsVisitor.reset();
@@ -887,6 +939,9 @@ define( [
             // (as in clamped too tight projection)
             this._cameraShadow.setComputeNearFar( false );
 
+            // remove our flags changes on any bitmask
+            // not to break things
+            this._transparentVisitor.restore();
 
             cullVisitor.popStateSet();
 
