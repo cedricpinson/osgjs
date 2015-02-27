@@ -162,7 +162,6 @@ define( [
         this._worldLightDir = Vec4.create();
         this._worldLightDir[ 3 ] = 1;
 
-
         this._castsShadowDrawTraversalMask = 0xffffffff;
         this._castsShadowBoundsTraversalMask = 0xffffffff;
 
@@ -241,6 +240,10 @@ define( [
             var prg = this.getShaderProgram( shadowmapCasterVertex, shadowmapCasterFragment, defines );
 
             return prg;
+        },
+        setTextureUnitBase: function ( unitBase ) {
+            this._textureUnitBase = unitBase;
+            this._textureUnit = unitBase;
         },
 
         getShadowCasterShaderProgram: function () {
@@ -388,7 +391,6 @@ define( [
 
             if ( !ShadowMap.BlankTexture ) {
                 ShadowMap.BlankTexture = new Texture();
-                ShadowMap.BlankTexture.defaultType = true;
                 ShadowMap.BlankTexture.setName( 'emptyTex' );
             }
             var blankTexture = ShadowMap.BlankTexture;

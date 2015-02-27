@@ -9,8 +9,8 @@ define( [
      */
     var BlendFunc = function ( sourceRGB, destinationRGB, sourceAlpha, destinationAlpha ) {
         StateAttribute.call( this );
-        this._sourceFactor = BlendFunc.ONE;
-        this._destinationFactor = BlendFunc.ZERO;
+        this._sourceFactor = BlendFunc.DISABLE;
+        this._destinationFactor = BlendFunc.DISABLE;
         this._sourceFactorAlpha = this._sourceFactor;
         this._destinationFactorAlpha = this._destinationFactor;
         this._separate = false;
@@ -72,8 +72,6 @@ define( [
             this.setSourceAlpha( f );
         },
         getSource: function () {
-            if ( this._separate )
-                return undefined;
             return this._sourceFactor;
         },
         setDestination: function ( f ) {
@@ -81,11 +79,11 @@ define( [
             this.setDestinationAlpha( f );
         },
         getDestination: function () {
-            if ( this._separate )
-                return undefined;
             return this._destinationFactor;
         },
-
+        getSeparate: function () {
+            return this._separate;
+        },
         checkSeparate: function () {
             return ( this._sourceFactor !== this._sourceFactorAlpha ||
                 this._destinationFactor !== this._destinationFactorAlpha );
@@ -131,7 +129,7 @@ define( [
             }
             this._separate = this.checkSeparate();
         },
-        getDestringationAlpha: function () {
+        getDestinationAlpha: function () {
             return this._destinationFactorAlpha;
         },
 
