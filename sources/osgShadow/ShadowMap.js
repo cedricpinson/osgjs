@@ -1,10 +1,12 @@
 define( [
     'osg/BoundingBox',
+    'osg/BlendFunc',
     'osg/Camera',
     'osg/ComputeBoundsVisitor',
     'osg/FrameBufferObject',
     'osg/Matrix',
     'osg/Notify',
+    'osg/NodeVisitor',
     'osg/Program',
     'osg/Shader',
     'osg/StateAttribute',
@@ -21,10 +23,56 @@ define( [
     'osgShadow/ShadowFrustumIntersection',
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowTexture'
-], function ( BoundingBox, Camera, ComputeBoundsVisitor, FrameBufferObject, Matrix, Notify, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowAttribute, ShadowFrustumIntersection, ShadowTechnique, ShadowTexture ) {
+], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, FrameBufferObject, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowAttribute, ShadowFrustumIntersection, ShadowTechnique, ShadowTexture ) {
 
     'use strict';
 
+
+    var TransparentRemoveVisitor = function ( mask ) {
+        NodeVisitor.call( this );
+        this._noCastMask = mask;
+        this._nodeList = [];
+    };
+    TransparentRemoveVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+        reset: function () {
+            this._nodeList = [];
+        },
+        apply: function ( node ) {
+            var st = node.getStateSet();
+            // check that and other things ?
+            if ( st ) {
+                var blend = st.getAttribute( 'BlendFunc' );
+                if ( blend !== undefined && blend.getSource() !== BlendFunc.DISABLE ) {
+                    /*jshint bitwise: false */
+                    var nm = node.getNodeMask();
+                    if ( nm === ~0x0 ) {
+                        nm = this._noCastMask;
+                        node.setNodeMask( nm );
+                    }
+                    if ( ( nm & ~( this._noCastMask ) ) !== 0 ) {
+                        node.setNodeMask( nm | this._noCastMask );
+                        this._nodeList.push( node );
+                    }
+                    /*jshint bitwise: true */
+                    return;
+                }
+            }
+            this.traverse( node );
+        },
+        setNoCastMask: function ( mask ) {
+            this._noCastMask = mask;
+        },
+        restore: function () {
+            var node, i = this._nodeList.length;
+            while ( i-- ) {
+                node = this._nodeList[ i ];
+                var nm = node.getNodeMask();
+                if ( nm === this._noCastMask ) node.setNodeMask( ~0x0 );
+                else node.setNodeMask( nm & ~this._noCastMask );
+            }
+        }
+
+    } );
 
 
     // Custom camera cull callback
@@ -114,7 +162,6 @@ define( [
         this._worldLightDir = Vec4.create();
         this._worldLightDir[ 3 ] = 1;
 
-
         this._castsShadowDrawTraversalMask = 0xffffffff;
         this._castsShadowBoundsTraversalMask = 0xffffffff;
 
@@ -132,7 +179,7 @@ define( [
 
         this._computeFrustumBounds = new ShadowFrustumIntersection();
         this._computeBoundsVisitor = new ComputeBoundsVisitor();
-
+        this._transparentVisitor = new TransparentRemoveVisitor( this._castsShadowTraversalMask );
         // true if shadow map rendered at least once
 
     };
@@ -193,6 +240,10 @@ define( [
             var prg = this.getShaderProgram( shadowmapCasterVertex, shadowmapCasterFragment, defines );
 
             return prg;
+        },
+        setTextureUnitBase: function ( unitBase ) {
+            this._textureUnitBase = unitBase;
+            this._textureUnit = unitBase;
         },
 
         getShadowCasterShaderProgram: function () {
@@ -335,9 +386,41 @@ define( [
             this._receivingStateset.setAttributeAndModes( this._shadowAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
 
 
+
+            // prevent unnecessary texture bindings
+
+            if ( !ShadowMap.BlankTexture ) {
+                ShadowMap.BlankTexture = new Texture();
+                ShadowMap.BlankTexture.setName( 'emptyTex' );
+            }
+            var blankTexture = ShadowMap.BlankTexture;
+
+            // Mandatory: prevent binding shadow textures themselves (shadowedScene stateSet is applied
+            // just above in stateset hierarchy
+            // that would mean undefined values as it would be read/write access...
+            this._casterStateSet.setTextureAttributeAndModes( this._textureUnit, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
+
+            // TODO: optimize: have a "don't touch current Texture stateAttribute"
+            // on ALL texture unit but alpha max texture for Depth/Normal/etc renders
+
+            // TODO: actually get the real max texture unit from webglCaps
+            //var shouldGetMaxTextureUnits = 32;
+            //
+            // TODO:: Should handle the alpha_mask that uses a texture
+            // case somehow...
+            // deduce from shader compil ?
+            //for ( var k = 0; k < shouldGetMaxTextureUnits; k++ ) {
+            //    this._casterStateSet.setTextureAttributeAndModes( k, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
+            //}
+
+
             var casterProgram = this.getShadowCasterShaderProgram();
             this.setShadowCasterShaderProgram( casterProgram );
 
+            // add shadow texture to the receivers
+            // should make sure somehow that
+            // alpha blender transparent receiver doens't use it
+            // compiler wise at least
             this._receivingStateset.setTextureAttributeAndModes( this._textureUnit, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
 
             this._dirty = false;
@@ -826,6 +909,10 @@ define( [
             var bbox;
 
 
+            this._transparentVisitor.setNoCastMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
+            this._transparentVisitor.reset();
+            this.getShadowedScene().accept( this._transparentVisitor );
+
 
             this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
             this._computeBoundsVisitor.reset();
@@ -854,6 +941,9 @@ define( [
             // (as in clamped too tight projection)
             this._cameraShadow.setComputeNearFar( false );
 
+            // remove our flags changes on any bitmask
+            // not to break things
+            this._transparentVisitor.restore();
 
             cullVisitor.popStateSet();
 

@@ -56,6 +56,7 @@ define( [
             var obj = ShadowTexture;
 
             Notify.assert( unit !== undefined );
+            Notify.assert( this._lightUnit !== -1 );
 
             if ( obj.uniforms[ unit ] !== undefined ) return obj.uniforms[ unit ];
 
@@ -112,6 +113,9 @@ define( [
 
             // Texture stuff: call parent class method
             Texture.prototype.apply.call( this, state, texUnit );
+
+            if ( this._lightUnit === -1 )
+                return;
 
             // update Uniforms
             var uniformMap = this.getOrCreateUniforms( texUnit );

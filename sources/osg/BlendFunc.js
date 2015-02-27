@@ -9,8 +9,8 @@ define( [
      */
     var BlendFunc = function ( sourceRGB, destinationRGB, sourceAlpha, destinationAlpha ) {
         StateAttribute.call( this );
-        this._sourceFactor = BlendFunc.ONE;
-        this._destinationFactor = BlendFunc.ZERO;
+        this._sourceFactor = BlendFunc.DISABLE;
+        this._destinationFactor = BlendFunc.DISABLE;
         this._sourceFactorAlpha = this._sourceFactor;
         this._destinationFactorAlpha = this._destinationFactor;
         this._separate = false;
@@ -29,6 +29,7 @@ define( [
         }
     };
 
+    BlendFunc.DISABLE = -1;
     BlendFunc.ZERO = 0;
     BlendFunc.ONE = 1;
     BlendFunc.SRC_COLOR = 0x0300;
@@ -70,9 +71,18 @@ define( [
             this.setSourceRGB( f );
             this.setSourceAlpha( f );
         },
+        getSource: function () {
+            return this._sourceFactor;
+        },
         setDestination: function ( f ) {
             this.setDestinationRGB( f );
             this.setDestinationAlpha( f );
+        },
+        getDestination: function () {
+            return this._destinationFactor;
+        },
+        getSeparate: function () {
+            return this._separate;
         },
         checkSeparate: function () {
             return ( this._sourceFactor !== this._sourceFactorAlpha ||
@@ -86,6 +96,9 @@ define( [
             }
             this._separate = this.checkSeparate();
         },
+        getSourceRGB: function () {
+            return this._sourceFactor;
+        },
         setSourceAlpha: function ( f ) {
             if ( typeof f === 'string' ) {
                 this._sourceFactorAlpha = BlendFunc[ f ];
@@ -93,6 +106,9 @@ define( [
                 this._sourceFactorAlpha = f;
             }
             this._separate = this.checkSeparate();
+        },
+        getSourceAlpha: function () {
+            return this._sourceFactorAlpha;
         },
         setDestinationRGB: function ( f ) {
             if ( typeof f === 'string' ) {
@@ -102,6 +118,9 @@ define( [
             }
             this._separate = this.checkSeparate();
         },
+        getDestinationRGB: function () {
+            return this._destinationFactor;
+        },
         setDestinationAlpha: function ( f ) {
             if ( typeof f === 'string' ) {
                 this._destinationFactorAlpha = BlendFunc[ f ];
@@ -110,6 +129,9 @@ define( [
             }
             this._separate = this.checkSeparate();
         },
+        getDestinationAlpha: function () {
+            return this._destinationFactorAlpha;
+        },
 
         /**
         Apply the mode, must be called in the draw traversal
@@ -117,12 +139,16 @@ define( [
     */
         apply: function ( state ) {
             var gl = state.getGraphicContext();
-            gl.enable( gl.BLEND );
-            if ( this._separate ) {
-                gl.blendFuncSeparate( this._sourceFactor, this._destinationFactor,
-                    this._sourceFactorAlpha, this._destinationFactorAlpha );
+            if ( this._sourceFactor === BlendFunc.DISABLE || this._destinationFactor === BlendFunc.DISABLE ) {
+                gl.disable( gl.BLEND );
             } else {
-                gl.blendFunc( this._sourceFactor, this._destinationFactor );
+                gl.enable( gl.BLEND );
+                if ( this._separate ) {
+                    gl.blendFuncSeparate( this._sourceFactor, this._destinationFactor,
+                        this._sourceFactorAlpha, this._destinationFactorAlpha );
+                } else {
+                    gl.blendFunc( this._sourceFactor, this._destinationFactor );
+                }
             }
         }
     } ), 'osg', 'BlendFunc' );
