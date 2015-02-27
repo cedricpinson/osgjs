@@ -10,6 +10,7 @@
     "undef": true,
     "unused": true,
     "trailing": true,
+    "esnext": true,
 
     "eqnull": true,
     "laxcomma": true,
