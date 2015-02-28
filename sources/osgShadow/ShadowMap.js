@@ -48,8 +48,8 @@ define( [
                     if ( nm === ~0x0 ) {
                         nm = this._noCastMask;
                         node.setNodeMask( nm );
-                    }
-                    if ( ( nm & ~( this._noCastMask ) ) !== 0 ) {
+                        this._nodeList.push( node );
+                    } else if ( ( nm & ~( this._noCastMask ) ) !== 0 ) {
                         node.setNodeMask( nm | this._noCastMask );
                         this._nodeList.push( node );
                     }
@@ -597,6 +597,7 @@ define( [
                 // won't render anything the object  is behind..
                 // TODO: handle an empty render...
                 // avoiding cullvisitor pass on caster would be nice.
+                this._emptyCasterScene = true;
             } else if ( distance <= 0.0 ) {
                 // shhh.. we're inside !
                 // sphere center is behind
@@ -625,9 +626,9 @@ define( [
 
                 // TODO: clear shadow texture and return wihtout any further ops
                 // with a early out
-                Notify.debug( 'empty shadowMap' );
+                //Notify.debug( 'empty shadowMap' );
                 // for now just prevent NaN errors
-
+                this._emptyCasterScene = true;
                 zFar = 1;
                 zNear = 0.001;
             } else if ( zNear < epsilon ) {
@@ -751,8 +752,10 @@ define( [
 
             var lightSource = this._lightSource;
 
-            if ( !lightSource )
+            if ( !lightSource ) {
+                this._emptyCasterScene = true;
                 return;
+            }
 
             var light = lightSource.getLight();
             var camera = this._cameraShadow;
@@ -806,9 +809,9 @@ define( [
 
                 // TODO: clear shadow texture and return wihtout any further ops
                 // with a early out
-                Notify.debug( 'empty shadowMap' );
+                // Notify.debug( 'empty shadowMap' );
                 // for now just prevent NaN errors
-
+                this._emptyCasterScene = true;
                 zFar = 1;
                 zNear = 0.001;
             }
@@ -855,8 +858,9 @@ define( [
                 // TODO: clear shadow texture and return wihtout any further ops
                 // with a early out
                 //Notify.debug( 'empty shadowMap' );
-                zFar = 1;
+                zFar = 1.0;
                 zNear = 0.001;
+                this._emptyCasterScene = true;
             }
 
             // check all other code but depthRange
@@ -878,16 +882,68 @@ define( [
 
         },
 
+        noDraw: function () {
+
+            this._depthRange[ 0 ] = 0.0;
+            this._depthRange[ 1 ] = 0.0;
+            this._depthRange[ 2 ] = 0.0;
+            this._depthRange[ 3 ] = 0.0;
+
+            var castUniforms = this._casterStateSet.getUniformList();
+            castUniforms[ 'Shadow_DepthRange' ].getUniform().set( this._depthRange );
+            this._texture.setDepthRange( this._depthRange );
+
+            var camera = this._cameraShadow;
+
+            // make sure it's not modified outside our computations
+            // camera matrix can be modified by cullvisitor afterwards...
+            Matrix.copy( camera.getProjectionMatrix(), this._projectionMatrix );
+            Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
+
+            this._texture.setViewMatrix( this._viewMatrix );
+            this._texture.setProjectionMatrix( this._projectionMatrix );
+
+
+            this._filledOnce = true;
+        },
         // Defines the frustum from light param.
         //
         cullShadowCasting: function ( cullVisitor ) {
 
 
+            var bbox;
+
+
+            this._transparentVisitor.setNoCastMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
+            this._transparentVisitor.reset();
+            this.getShadowedScene().accept( this._transparentVisitor );
+
+
+            this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
+            this._computeBoundsVisitor.reset();
+            this.getShadowedScene().accept( this._computeBoundsVisitor );
+            bbox = this._computeBoundsVisitor.getBoundingBox();
+
+            if ( !bbox.valid() ) {
+                // nothing to draw Early out.
+                this.noDraw();
+                return;
+            }
+
             // HERE we get the shadowedScene Current World Matrix
             // to get any world transform ABOVE the shadowedScene
             var worldMatrix = cullVisitor.getCurrentModelWorldMatrix();
             // it does fuck up the results.
+            Matrix.transformBoundingBox( worldMatrix, bbox, bbox );
 
+            this._emptyCasterScene = false;
+            this.aimShadowCastingCamera( cullVisitor, bbox );
+
+            if ( this._emptyCasterScene ) {
+                // nothing to draw Early out.
+                this.noDraw();
+                return;
+            }
 
 
             // get renderer to make the cull program
@@ -904,25 +960,6 @@ define( [
             // (as in clamped too tight projection)
             var needNearFar = this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask;
             this._cameraShadow.setComputeNearFar( needNearFar );
-
-
-            var bbox;
-
-
-            this._transparentVisitor.setNoCastMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
-            this._transparentVisitor.reset();
-            this.getShadowedScene().accept( this._transparentVisitor );
-
-
-            this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
-            this._computeBoundsVisitor.reset();
-            this.getShadowedScene().accept( this._computeBoundsVisitor );
-            bbox = this._computeBoundsVisitor.getBoundingBox();
-
-
-            Matrix.transformBoundingBox( worldMatrix, bbox, bbox );
-
-            this.aimShadowCastingCamera( cullVisitor, bbox );
 
 
 
