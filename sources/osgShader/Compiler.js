@@ -640,6 +640,26 @@ define( [
 
         },
 
+        // Shared var between lights and shadows
+        createCommonLightingVars: function ( materials, enumLights, numLights ) {
+
+            if ( numLights === 0 )
+                return {};
+
+            var lighted = this.createVariable( 'bool', 'lighted' );
+            var lightPos = this.createVariable( 'vec3', 'lightEyePos' );
+            var lightDir = this.createVariable( 'vec3', 'lightEyeDir' );
+            var lightNDL = this.createVariable( 'float', 'lightNDL' );
+
+            return {
+                lighted: lighted,
+                lightEyePos: lightPos,
+                lightEyeDir: lightDir,
+                lightNDL: lightNDL
+            };
+
+        },
+
         createLighting: function ( materials, overrideNodeName ) {
 
             var output = this.createVariable( 'vec3' );
@@ -652,17 +672,7 @@ define( [
                 HEMI: 'HemiLight'
             };
 
-
-            var lighted = this.createVariable( 'bool', 'lighted' );
-            var lightPos = this.createVariable( 'vec3', 'lightEyePos' );
-            var lightDir = this.createVariable( 'vec3', 'lightEyeDir' );
-            var lightNDL = this.createVariable( 'float', 'lightNDL' );
-            var lightOutShadowIn = {
-                lighted: lighted,
-                lightEyePos: lightPos,
-                lightEyeDir: lightDir,
-                lightNDL: lightNDL
-            };
+            var lightOutShadowIn = this.createCommonLightingVars( materials, enumToNodeName, this._lights.length );
 
             var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material, 'material' );
             for ( var i = 0; i < this._lights.length; i++ ) {
