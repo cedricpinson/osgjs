@@ -768,14 +768,14 @@ define( [
             functor.call( functor, node );
         },
 
-        evaluateDefines: function ( node ) {
+        evaluateAndGatherField: function ( node, field ) {
 
             var func = function ( node ) {
 
-                if ( node.defines && this._map[ node.getID() ] === undefined ) {
+                if ( node[ field ] && this._map[ node.getID() ] === undefined ) {
 
                     this._map[ node.getID() ] = true;
-                    var c = node.defines();
+                    var c = node[ field ]();
                     // push all elements of the array on text array
                     // defines must return an array
                     Array.prototype.push.apply( this._text, c );
@@ -795,10 +795,11 @@ define( [
 
             var func = function ( node ) {
 
+                var id = node.getID();
                 if ( node.globalFunctionDeclaration &&
-                    this._map[ node.type ] === undefined ) {
+                    this._map[ id ] === undefined ) {
 
-                    this._map[ node.type ] = true;
+                    this._map[ id ] = true;
                     var c = node.globalFunctionDeclaration();
                     this._text.push( c );
 
@@ -1029,8 +1030,9 @@ define( [
 
             var vars = Object.keys( this._variables );
 
-            // defines are added by process shader
-            var defines = this.evaluateDefines( root );
+            // defines and extensions are added by process shader
+            var extensions = this.evaluateAndGatherField( root, 'extensions' );
+            var defines = this.evaluateAndGatherField( root, 'defines' );
 
             this._fragmentShader.push( '\n' );
             this._fragmentShader.push( this.evaluateGlobalVariableDeclaration( root ) );
@@ -1061,7 +1063,7 @@ define( [
             var shader = this._fragmentShader.join( '\n' );
             //osg.log('Fragment Shader');
 
-            shader = this._shaderProcessor.processShader( shader, defines );
+            shader = this._shaderProcessor.processShader( shader, defines, extensions );
 
             Notify.debug( shader );
             return shader;
