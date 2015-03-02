@@ -181,8 +181,7 @@ define( [
             var postShader = this.preprocess( preShader, sourceID, includeList, defines );
 
             var prePrend = '';
-
-            // prePrend += '#version 100'; // optional
+            prePrend += '#version 100\n'; // webgl1  (webgl2 #version 130 ?)
 
             // then
             // it's extensions first
