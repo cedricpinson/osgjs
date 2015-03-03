@@ -11,7 +11,7 @@ define( [
 
     return function () {
 
-        module( 'osg' );
+        module( 'osgShader' );
 
         test( 'ShaderGenerator', function () {
 

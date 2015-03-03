@@ -640,6 +640,26 @@ define( [
 
         },
 
+        // Shared var between lights and shadows
+        createCommonLightingVars: function ( materials, enumLights, numLights ) {
+
+            if ( numLights === 0 )
+                return {};
+
+            var lighted = this.createVariable( 'bool', 'lighted' );
+            var lightPos = this.createVariable( 'vec3', 'lightEyePos' );
+            var lightDir = this.createVariable( 'vec3', 'lightEyeDir' );
+            var lightNDL = this.createVariable( 'float', 'lightNDL' );
+
+            return {
+                lighted: lighted,
+                lightEyePos: lightPos,
+                lightEyeDir: lightDir,
+                lightNDL: lightNDL
+            };
+
+        },
+
         createLighting: function ( materials, overrideNodeName ) {
 
             var output = this.createVariable( 'vec3' );
@@ -652,17 +672,7 @@ define( [
                 HEMI: 'HemiLight'
             };
 
-
-            var lighted = this.createVariable( 'bool', 'lighted' );
-            var lightPos = this.createVariable( 'vec3', 'lightEyePos' );
-            var lightDir = this.createVariable( 'vec3', 'lightEyeDir' );
-            var lightNDL = this.createVariable( 'float', 'lightNDL' );
-            var lightOutShadowIn = {
-                lighted: lighted,
-                lightEyePos: lightPos,
-                lightEyeDir: lightDir,
-                lightNDL: lightNDL
-            };
+            var lightOutShadowIn = this.createCommonLightingVars( materials, enumToNodeName, this._lights.length );
 
             var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material, 'material' );
             for ( var i = 0; i < this._lights.length; i++ ) {
@@ -758,16 +768,32 @@ define( [
             functor.call( functor, node );
         },
 
-        evaluateDefines: function ( node ) {
+        // Gather a particular output field
+        // for now one of
+        // ['define', 'extensions']
+        //
+        // from a nodeGraph
+        //
+        // In case a node of same Type
+        // have different outputs (shadow with different defines)
+        // it use ID rather than Type as map index
+        // UNIQUE PER TYPE
+        // TODO: adds includes so that we can remove it from
+        // the eval Global Functions ?
+        evaluateAndGatherField: function ( node, field ) {
 
             var func = function ( node ) {
 
-                if ( node.defines && this._map[ node.getID() ] === undefined ) {
+                var idx = node.getType();
+                if ( idx === undefined || idx === '' ) {
+                    Notify.error( 'Your node ' + node + ' has not type' );
+                }
+                if ( node[ field ] && this._map[ idx ] === undefined ) {
 
-                    this._map[ node.getID() ] = true;
-                    var c = node.defines();
+                    this._map[ idx ] = true;
+                    var c = node[ field ]();
                     // push all elements of the array on text array
-                    // defines must return an array
+                    // node[field]()  must return an array
                     Array.prototype.push.apply( this._text, c );
 
                 }
@@ -781,16 +807,30 @@ define( [
             return func._text;
         },
 
+        // Gather a functions declartions of nodes
+        // from a nodeGraph
+        // (for now pragma include done here too. could be done with define/etc...)
+        // Node of same Type has to share
+        // exact same "node.globalFunctionDeclaration" output
+        // as it use Type rather than ID as map index
         evaluateGlobalFunctionDeclaration: function ( node ) {
 
             var func = function ( node ) {
 
-                if ( node.globalFunctionDeclaration &&
-                    this._map[ node.type ] === undefined ) {
+                // UNIQUE PER TYPE
+                var idx = node.getType();
 
-                    this._map[ node.type ] = true;
+                if ( idx === undefined || idx === '' ) {
+                    Notify.error( 'Your node ' + node + ' has not type' );
+                }
+                if ( node.globalFunctionDeclaration &&
+                    this._map[ idx ] === undefined ) {
+
+                    this._map[ idx ] = true;
                     var c = node.globalFunctionDeclaration();
-                    this._text.push( c );
+                    if ( c !== undefined ) {
+                        this._text.push( c );
+                    }
 
                 }
 
@@ -803,22 +843,26 @@ define( [
             return func._text.join( '\n' );
         },
 
+        // Gather a Variables declarations of nodes
+        // from a nodeGraph to be outputted
+        // outside the VOID MAIN code
+        // ( Uniforms, Varying )
+        // Node of same Type has different output
+        // as it use Type rather than ID as map index
         evaluateGlobalVariableDeclaration: function ( node ) {
 
             var func = function ( node ) {
 
-                var id = node.getID();
-                if ( this._map[ id ] === undefined ) {
+                // UNIQUE PER NODE
+                var idx = node.getID();
 
-                    this._map[ id ] = true;
+                if ( node.globalDeclaration &&
+                    this._map[ idx ] === undefined ) {
 
-                    if ( node.globalDeclaration !== undefined ) {
-
-                        var c = node.globalDeclaration();
-                        if ( c !== undefined ) {
-                            this._text.push( c );
-                        }
-
+                    this._map[ idx ] = true;
+                    var c = node.globalDeclaration();
+                    if ( c !== undefined ) {
+                        this._text.push( c );
                     }
                 }
             };
@@ -1019,8 +1063,9 @@ define( [
 
             var vars = Object.keys( this._variables );
 
-            // defines are added by process shader
-            var defines = this.evaluateDefines( root );
+            // defines and extensions are added by process shader
+            var extensions = this.evaluateAndGatherField( root, 'extensions' );
+            var defines = this.evaluateAndGatherField( root, 'defines' );
 
             this._fragmentShader.push( '\n' );
             this._fragmentShader.push( this.evaluateGlobalVariableDeclaration( root ) );
@@ -1051,7 +1096,7 @@ define( [
             var shader = this._fragmentShader.join( '\n' );
             //osg.log('Fragment Shader');
 
-            shader = this._shaderProcessor.processShader( shader, defines );
+            shader = this._shaderProcessor.processShader( shader, defines, extensions );
 
             Notify.debug( shader );
             return shader;
