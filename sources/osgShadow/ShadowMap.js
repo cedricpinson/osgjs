@@ -30,6 +30,7 @@ define( [
 
     var TransparentRemoveVisitor = function ( mask ) {
         NodeVisitor.call( this );
+        // mask setting to avoid casting shadows
         this._noCastMask = mask;
         this._nodeList = [];
     };
@@ -45,11 +46,14 @@ define( [
                 if ( blend !== undefined && blend.getSource() !== BlendFunc.DISABLE ) {
                     /*jshint bitwise: false */
                     var nm = node.getNodeMask();
+                    // ~0x0 as not to be processed
                     if ( nm === ~0x0 ) {
+                        // set to avoid casting shadow
                         nm = this._noCastMask;
                         node.setNodeMask( nm );
                         this._nodeList.push( node );
                     } else if ( ( nm & ~( this._noCastMask ) ) !== 0 ) {
+                        // set to avoid casting shadow
                         node.setNodeMask( nm | this._noCastMask );
                         this._nodeList.push( node );
                     }
@@ -62,6 +66,8 @@ define( [
         setNoCastMask: function ( mask ) {
             this._noCastMask = mask;
         },
+        // restore to any previous mask avoiding any breaks
+        // in other application mask usage.
         restore: function () {
             var node, i = this._nodeList.length;
             while ( i-- ) {
