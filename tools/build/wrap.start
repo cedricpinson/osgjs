@@ -1,0 +1,12 @@
+// OSGJS
+// Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)
+
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD.
+        define([ 'Q', 'Hammer', 'Leap' ], factory);
+    } else {
+        // Browser globals
+        root.OSG = factory( root.Q, root.Hammer, root.Leap );
+    }
+}(this, function ( Q, Hammer, Leap ) {

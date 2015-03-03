@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Advanded Shadow Map</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
+
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/es5-shim.js"></script>
+    <script type="text/javascript" src="../vendors/es6-shim.js"></script>
+
+    <script type="text/javascript" src="../vendors/jquery-2.1.1.js"></script>
+    <script type="text/javascript" src="../vendors/q.js"></script>
+    <script type="text/javascript" src="../vendors/hammer.js"></script>
+    <script type="text/javascript" src="../vendors/leap.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="../vendors/dat.gui.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+
+</head>
+
+<body class="osgjs-theme-dark">
+
+  <div id="ViewContainer" class="osgjs-fullpage">
+    <!-- very important change the size of the parent element instead-->
+    <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
+  </div>
+
+  <div class="osgjs-info osgjs-info-dark">
+
+    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+      <strong>OSG.JS</strong>
+    </a>
+
+    <div class="osgjs-description">
+      ShadowMap: <a href="http://en.wikipedia.org/wiki/Shadow_mapping">Wikipedia page</a>
+    </div>
+
+  </div>
+
+</body>
+
+</html>

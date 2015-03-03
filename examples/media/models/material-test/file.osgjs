@@ -1,0 +1,196 @@
+{
+  "Generator": "OpenSceneGraph 3.1.4",
+  "Version": 7,
+  "osg.Node": {
+    "Children": [ {
+      "osg.Node": {
+        "UniqueID": 0,
+        "Name": "MaterialTester.obj",
+        "Children": [ {
+          "osg.Node": {
+            "UniqueID": 1,
+            "Name": "Round_Base",
+            "Children": [ {
+              "osg.Geometry": {
+                "UniqueID": 2,
+                "PrimitiveSetList": [ {
+                  "DrawElementsUShort": {
+                    "UniqueID": 10,
+                    "Indices": {
+                      "Array": {
+                        "Uint16Array": {
+                          "File": "model.bin.gz",
+                          "Size": 396,
+                          "Offset": 0
+                        }
+                      },
+                      "ItemSize": 1,
+                      "Type": "ELEMENT_ARRAY_BUFFER"
+                    },
+                    "Mode": "TRIANGLES"
+                  }
+                },
+                {
+                  "DrawElementsUShort": {
+                    "UniqueID": 11,
+                    "Indices": {
+                      "Array": {
+                        "Uint16Array": {
+                          "File": "model.bin.gz",
+                          "Size": 170853,
+                          "Offset": 792
+                        }
+                      },
+                      "ItemSize": 1,
+                      "Type": "ELEMENT_ARRAY_BUFFER"
+                    },
+                    "Mode": "TRIANGLE_STRIP"
+                  }
+                } ],
+                "VertexAttributeList": {
+                  "Normal": {
+                    "UniqueID": 7,
+                    "Array": {
+                      "Float32Array": {
+                        "File": "model.bin.gz",
+                        "Size": 65536,
+                        "Offset": 342500
+                      }
+                    },
+                    "ItemSize": 3,
+                    "Type": "ARRAY_BUFFER"
+                  },
+                  "Tangent": {
+                    "UniqueID": 9,
+                    "Array": {
+                      "Float32Array": {
+                        "File": "model.bin.gz",
+                        "Size": 65536,
+                        "Offset": 1128932
+                      }
+                    },
+                    "ItemSize": 4,
+                    "Type": "ARRAY_BUFFER"
+                  },
+                  "TexCoord0": {
+                    "UniqueID": 8,
+                    "Array": {
+                      "Float32Array": {
+                        "File": "model.bin.gz",
+                        "Size": 65536,
+                        "Offset": 2177508
+                      }
+                    },
+                    "ItemSize": 2,
+                    "Type": "ARRAY_BUFFER"
+                  },
+                  "Vertex": {
+                    "UniqueID": 6,
+                    "Array": {
+                      "Float32Array": {
+                        "File": "model.bin.gz",
+                        "Size": 65536,
+                        "Offset": 2701796
+                      }
+                    },
+                    "ItemSize": 3,
+                    "Type": "ARRAY_BUFFER"
+                  }
+                }
+              }
+            },
+            {
+              "osg.Geometry": {
+                "UniqueID": 12,
+                "PrimitiveSetList": [ {
+                  "DrawElementsUShort": {
+                    "UniqueID": 17,
+                    "Indices": {
+                      "Array": {
+                        "Uint16Array": {
+                          "File": "model.bin.gz",
+                          "Size": 15,
+                          "Offset": 3488228
+                        }
+                      },
+                      "ItemSize": 1,
+                      "Type": "ELEMENT_ARRAY_BUFFER"
+                    },
+                    "Mode": "TRIANGLES"
+                  }
+                },
+                {
+                  "DrawElementsUShort": {
+                    "UniqueID": 18,
+                    "Indices": {
+                      "Array": {
+                        "Uint16Array": {
+                          "File": "model.bin.gz",
+                          "Size": 12917,
+                          "Offset": 3488260
+                        }
+                      },
+                      "ItemSize": 1,
+                      "Type": "ELEMENT_ARRAY_BUFFER"
+                    },
+                    "Mode": "TRIANGLE_STRIP"
+                  }
+                } ],
+                "VertexAttributeList": {
+                  "Normal": {
+                    "UniqueID": 14,
+                    "Array": {
+                      "Float32Array": {
+                        "File": "model.bin.gz",
+                        "Size": 5147,
+                        "Offset": 3514096
+                      }
+                    },
+                    "ItemSize": 3,
+                    "Type": "ARRAY_BUFFER"
+                  },
+                  "Tangent": {
+                    "UniqueID": 16,
+                    "Array": {
+                      "Float32Array": {
+                        "File": "model.bin.gz",
+                        "Size": 5147,
+                        "Offset": 3575860
+                      }
+                    },
+                    "ItemSize": 4,
+                    "Type": "ARRAY_BUFFER"
+                  },
+                  "TexCoord0": {
+                    "UniqueID": 15,
+                    "Array": {
+                      "Float32Array": {
+                        "File": "model.bin.gz",
+                        "Size": 5147,
+                        "Offset": 3658212
+                      }
+                    },
+                    "ItemSize": 2,
+                    "Type": "ARRAY_BUFFER"
+                  },
+                  "Vertex": {
+                    "UniqueID": 13,
+                    "Array": {
+                      "Float32Array": {
+                        "File": "model.bin.gz",
+                        "Size": 5147,
+                        "Offset": 3699388
+                      }
+                    },
+                    "ItemSize": 3,
+                    "Type": "ARRAY_BUFFER"
+                  }
+                }
+              }
+            } ]
+          }
+        } ]
+      }
+    } ]
+  }
+}

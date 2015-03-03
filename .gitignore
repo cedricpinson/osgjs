@@ -1,4 +1,6 @@
 .gitignore
+.DS_Store
+node_modules
 qunit
 sandbox
 *~
@@ -14,3 +16,19 @@ test/lighting
 *.log
 *.c
 *.orig
+*Thumbs.db
+.hooks
+builds
+builds/active
+builds/active/OSG.js
+builds/active/OSG.js.map
+builds/dist/OSG.js
+builds/dist/OSG.js.map
+examples/vendors/q.js
+examples/vendors/Require.js
+examples/vendors/es5-shim.js
+examples/vendors/es6-shim.js
+examples/vendors/hammer.js
+sources/vendors
+examples/vendors/require/text.js
+sources/version.js

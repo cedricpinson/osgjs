@@ -18,47 +18,36 @@
  *
  */
 
-var main = function() {
-    var canvas = document.getElementById("3DView");
-    var w = window.innerWidth;
-    var h = window.innerHeight;
-    osg.log("size " + w + " x " + h );
-    canvas.style.width = w;
-    canvas.style.height = h;
-    canvas.width = w;
-    canvas.height = h;
+OSG.globalify();
 
-    var stats = document.getElementById("Stats");
+var main = function () {
+    var canvas = document.getElementById( "View" );
 
     var viewer;
-    try {
-        viewer = new osgViewer.Viewer(canvas, {antialias : true, alpha: true });
-        viewer.init();
-        viewer.setupManipulator();
-        var rotate = new osg.MatrixTransform();
-        rotate.addChild(createScene());
-        viewer.getCamera().setClearColor([0.0, 0.0, 0.0, 0.0]);
-        viewer.setSceneData(rotate);
-        viewer.getManipulator().computeHomePosition();
+    // try {
+    viewer = new osgViewer.Viewer( canvas, {
+        antialias: true,
+        alpha: true
+    } );
+    viewer.init();
+    viewer.setupManipulator();
+    var rotate = new osg.MatrixTransform();
+    rotate.addChild( createScene() );
+    viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+    viewer.setSceneData( rotate );
+    viewer.getManipulator().computeHomePosition();
 
-        //viewer.getManipulator().setDistance(100.0);
-        //viewer.getManipulator().setTarget([0,0,0]);
-            
-        viewer.run();
+    //viewer.getManipulator().setDistance(100.0);
+    //viewer.getManipulator().setTarget([0,0,0]);
 
+    viewer.run();
 
-        var mousedown = function(ev) {
-            ev.stopPropagation();
-        };
-        document.getElementById("explanation").addEventListener("mousedown", mousedown, false);
-
-    } catch (er) {
-        osg.log("exception in osgViewer " + er);
-    }
+    // } catch (er) {
+    //     osg.log("exception in osgViewer " + er);
+    // }
 };
 
-function getShader()
-{
+function getShader() {
     var vertexshader = [
         "",
         "#ifdef GL_ES",
@@ -72,7 +61,7 @@ function getShader()
         "  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);",
         "  position = ModelViewMatrix * vec4(Vertex,1.0);",
         "}"
-    ].join('\n');
+    ].join( '\n' );
 
     var fragmentshader = [
         "",
@@ -89,15 +78,15 @@ function getShader()
         "  gl_FragColor = f*MaterialAmbient;",
         "}",
         ""
-    ].join('\n');
+    ].join( '\n' );
 
     var program = new osg.Program(
-        new osg.Shader(gl.VERTEX_SHADER, vertexshader),
-        new osg.Shader(gl.FRAGMENT_SHADER, fragmentshader));
+        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
     program.trackAttributes = {};
     program.trackAttributes.attributeKeys = [];
-    program.trackAttributes.attributeKeys.push('Material');
+    program.trackAttributes.attributeKeys.push( 'Material' );
 
     return program;
 }
@@ -107,36 +96,36 @@ function createScene() {
     var group = new osg.Node();
 
     var size = 500;
-    var ground = osg.createTexturedQuad(-size*0.5,-size*0.5,-50,
-                                        size,0,0,
-                                        0,size,0);
+    var ground = osg.createTexturedQuadGeometry( -size * 0.5, -size * 0.5, -50,
+        size, 0, 0,
+        0, size, 0 );
 
     var materialGround = new osg.Material();
-    materialGround.setAmbient([1,0,0,1]);
-    materialGround.setDiffuse([0,0,0,1]);
-    ground.getOrCreateStateSet().setAttributeAndMode(materialGround);
-    ground.getOrCreateStateSet().setAttributeAndMode(getShader());
+    materialGround.setAmbient( [ 1, 0, 0, 1 ] );
+    materialGround.setDiffuse( [ 0, 0, 0, 1 ] );
+    ground.getOrCreateStateSet().setAttributeAndModes( materialGround );
+    ground.getOrCreateStateSet().setAttributeAndModes( getShader() );
 
-    density = osg.Uniform.createFloat1(0.0, 'density');
-    ground.getOrCreateStateSet().addUniform(density);
+    var density = osg.Uniform.createFloat1( 0.002, 'density' );
 
-    group.addChild(ground);
-    group.getOrCreateStateSet().setAttributeAndMode(new osg.CullFace('DISABLE'));
+    var gui = new dat.GUI();
 
-    var parameterVisitor = new osgUtil.ShaderParameterVisitor();
-    parameterVisitor.setTargetHTML(document.getElementById("Parameters"));
-
-    parameterVisitor.types.float.params['density'] = {
-        min: 0,
-        max: 200.0/10000.0,
-        step: 1.0/10000.0,
-        value: function() { return [0.002]; }
+    var param = {
+        'density': density.get()[ 0 ],
     };
-    group.accept(parameterVisitor);
+
+    var densityCtrl = gui.add( param, 'density', 0, 0.006 ).onChange( function ( value ) {
+        density.set( value );
+    } );
+
+    ground.getOrCreateStateSet().addUniform( density );
+
+    group.addChild( ground );
+    group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
     return group;
 }
 
 
 
-window.addEventListener("load", main ,true);
+window.addEventListener( "load", main, true );

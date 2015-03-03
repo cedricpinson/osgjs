@@ -1,0 +1,181 @@
+<html><body>
+
+<script type="text/javascript" src="../../examples/vendors/es5-shim.js"></script>
+<script type="text/javascript" src="../../examples/vendors/es6-shim.js"></script>
+<script type="text/javascript" src="../../examples/vendors/q.js"></script>
+<script type="text/javascript" src="../../examples/vendors/hammer.js"></script>
+<script type="text/javascript" src="../../examples/vendors/leap.js"></script>
+<script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+
+
+<p>Equation and demo of an area light using WestLangley approx</p>
+
+<div id="ViewContainer" width="100%" height="100%">
+<canvas id="3DView" style="width:100%;height:80%;display: block;" ></canvas>
+</div>
+
+
+<script id="vertex-vs" type="x-shader/x-vertex">
+
+#define NVERTS 4
+
+// just state all defaults
+// http://www.khronos.org/registry/gles/specs/2.0/GLSL_ES_Specification_1.0.17.pdf
+// 4.5.2
+precision highp float;
+precision highp int;
+precision lowp sampler2D;
+precision lowp samplerCube;
+
+
+attribute vec3 Vertex;
+attribute vec3 Normal;
+
+uniform mat4 ModelViewMatrix;
+uniform mat4 ViewMatrix;
+uniform mat4 ProjectionMatrix;
+uniform mat4 NormalMatrix;
+
+uniform vec3 lightverts[ NVERTS ];	// in local space
+uniform mat4 lightMatrixWorld;
+
+varying vec3 vNormal;
+varying vec3 vViewPosition;
+varying vec4 lvPosition[ NVERTS ];
+varying  vec3 lvVector[ NVERTS ];
+varying  vec3 lightDir;
+
+
+void main() {
+
+	vec4 mvPosition = ModelViewMatrix * vec4( Vertex, 1.0 );
+	vViewPosition = -mvPosition.xyz;
+	vNormal = vec3(NormalMatrix * vec4( Normal, 1.0 ));
+	gl_Position = ProjectionMatrix * mvPosition;
+
+   mat4  viewLightPosition = ViewMatrix * lightMatrixWorld;
+  //mat4  viewLightPosition = ModelViewMatrix * lightMatrixWorld;
+  //mat4  viewLightPosition = lightMatrixWorld;
+	for( int i = 0; i < NVERTS; i ++ ) {
+  // that could  be done in js but js speed/gpu speed tradeoff to check...
+		lvPosition[ i ] = viewLightPosition * vec4( lightverts[ i ], 1.0 ); // in camera space
+		lvVector[ i ] =  (lvPosition[ i ].xyz + vViewPosition.xyz ); // dir from vertex to areaLight
+  }
+  // light direction for non lighted culling
+  lightDir =  cross( ( lvPosition[ 2 ] - lvPosition[ 0 ] ).xyz, ( lvPosition[ 1 ] - lvPosition[ 0 ] ).xyz );
+}
+
+</script>
+
+<script id="fragment-fs" type="x-shader/x-fragment">
+
+// just state default as in
+// http://www.khronos.org/registry/gles/specs/2.0/GLSL_ES_Specification_1.0.17.pdf
+// 4.5.2
+
+precision mediump int;
+precision lowp sampler2D;
+precision lowp samplerCube;
+
+// set a default:
+#if GL_FRAGMENT_PRECISION_HIGH == 1
+   // highp is supported
+  //precision highp float;
+ // precision mediump float;
+  precision lowp float;
+#else
+    // high is not supported
+  precision mediump float;
+  //precision lowp float;
+#endif
+
+
+#define NVERTS 4
+
+uniform vec3 color;
+uniform vec3 lightColor;
+uniform float lightIntensity;
+
+varying vec3 vNormal;				// in camera space
+varying vec3 vViewPosition;			// in camera space
+varying vec4 lvPosition[ NVERTS ];
+varying vec3 lvVector[ NVERTS ];
+varying vec3 lightDir;
+
+const float EPS = 1e-4;
+
+vec3 cornerContrib(vec3 v0, vec3 v1)
+{
+
+    float acosL = dot( v0, v1 );
+    if ( acosL < -(1.0-EPS) ) {
+       return vec3(1.0);
+    }
+
+    if ( acosL < (1.0-EPS) ){
+         acosL = acos( acosL);
+         vec3 lightCornerDir = cross( v0, v1 );
+         float l = length(lightCornerDir);
+         if (l > 0.0 + EPS){
+             lightCornerDir = lightCornerDir / l;
+             return acosL * lightCornerDir;
+        }
+    }
+
+    return vec3(0.0); //acos undefined if input > 1.0
+}
+
+  void main() {
+
+	// stub in some ambient reflectance
+	vec3 ambient = color * vec3( 0.2 );
+
+ vec3 lVector[ NVERTS ];
+
+	// Cull Non lighted Fragment out of light
+  vec3 lightLDir =  - lightDir ;
+  float tmp = dot( lvVector[ 0 ], lightLDir );
+  if ( tmp > 0.0 + EPS ) {
+  	gl_FragColor = vec4( ambient, 1.0 );
+  	return;
+  }
+
+  // In lighted Zone Now
+	for( int i = 0; i < NVERTS; i ++ ) {
+    lVector[ i ] =  normalize( lvVector[ i ] );
+  }
+
+  vec3 normal = normalize(  -vNormal );
+  if (!gl_FrontFacing){
+    normal = -normal;
+  }
+
+	// Accumulate lightVec at point from NVERTS corners
+	vec3 lightVec = vec3( 0.0 );
+  for(int i = 0; i < NVERTS - 1; i ++ ) {
+       lightVec += cornerContrib(lVector[ i ], lVector[ i + 1 ]);
+  }
+   lightVec += cornerContrib(lVector[ NVERTS - 1 ], lVector[ 0 ]);
+  float DotNL = dot(lightVec, normal);
+  if (DotNL  < 0.0 + EPS){
+  	gl_FragColor = vec4( ambient, 1.0 );
+  	return;
+  }
+
+  float factor = DotNL;
+  factor /= ( 2.0 * 3.14159265 );
+
+	// frag color
+	factor = factor * lightIntensity;
+	vec3 diffuse = factor * color;
+	diffuse = diffuse * lightColor;
+  vec3 color =  ambient + diffuse;
+
+  //color =  vec3(factor);
+	gl_FragColor = vec4( color, 1.0 );
+}
+
+</script>
+
+<script type="text/javascript" src="main.js"></script>
+</body></html>

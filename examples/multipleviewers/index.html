@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Multiple context rendering</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
+
+    <style type="text/css">
+    /* Custom CSS goes here */
+    /* Start of Column CSS */
+        #container2 {
+          clear:left;
+          float:left;
+          width:100%;
+          height:100%;
+          overflow:hidden;
+        }
+        #container1 {
+          float:left;
+          width:100%;
+          position:relative;
+          right:50%;
+          height:100%;
+        }
+        #col1 {
+          float:left;
+          width:46%;
+          position:relative;
+          left:52%;
+          overflow:hidden;
+          height:100%;
+        }
+        #col2 {
+          float:left;
+          width:46%;
+          position:relative;
+          left:56%;
+          overflow:hidden;
+          height:100%;
+        }
+        #footer {
+          clear:both;
+          float:left;
+          width:100%;
+        }
+
+    </style>
+
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/es5-shim.js"></script>
+    <script type="text/javascript" src="../vendors/es6-shim.js"></script>
+    <script type="text/javascript" src="../vendors/jquery-2.1.1.js"></script>
+    <script type="text/javascript" src="../vendors/q.js"></script>
+    <script type="text/javascript" src="../vendors/hammer.js"></script>
+    <script type="text/javascript" src="../vendors/leap.js"></script>
+    <script type="text/javascript" src="../vendors/dat.gui.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+
+</head>
+
+
+
+<body style="height:100%;">
+
+    <!-- very important change the size of the parent element instead-->
+    <div id="container2">
+    <div id="container1">
+      <div id="col1">
+        <canvas id="View1"  style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
+      </div>
+      <div id="col2" >
+        <canvas id="View2" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
+      </div>
+    </div>
+    </div>
+   <div class="osgjs-info osgjs-info-dark">
+
+    <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+      <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+      <strong>OSG.JS</strong>
+    </a>
+
+    <div class="osgjs-description">
+      Multiple context rendering
+    </div>
+
+  </div>
+
+</body>
+
+</html>

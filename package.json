@@ -1,0 +1,38 @@
+{
+  "name": "OpenSceneGraph",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:cedricpinson/osgjs.git"
+  },
+  "description": "OpenSceneGraph implementation in javascript",
+  "license": "LGPL V3+ (https://spdx.org/licenses/LGPL-3.0+)",
+  "author": "Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)",
+  "version": "0.2.0",
+  "contributors": [
+    "Tuan.kuranes <tuan.kuranes@gmail.com>",
+    "Matt Fontaine <tehqin@gmail.com>"
+  ],
+  "dependencies": {
+    "extend": "*",
+    "glob": "*",
+    "grunt": "*",
+    "grunt-contrib-clean": "*",
+    "grunt-contrib-copy": "*",
+    "grunt-contrib-jshint": "*",
+    "grunt-contrib-requirejs": "*",
+    "grunt-copy-to": "0.0.12",
+    "grunt-contrib-uglify": "*",
+    "grunt-contrib-watch": "*",
+    "grunt-git": "*",
+    "grunt-shell": "*",
+    "grunt-wintersmith-compile": "*",
+    "wintersmith-nunjucks": "^0.5.0"
+  },
+  "devDependencies": {
+    "grunt-contrib-connect": "~0.9.0",
+    "grunt-contrib-qunit": "~0.5.0",
+    "grunt-docco": "~0.3.2",
+    "grunt-plato": "~0.2.1",
+    "grunt-release": "^0.10.0"
+  }
+}

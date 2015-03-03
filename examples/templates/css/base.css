@@ -1,0 +1,129 @@
+@import "https://fonts.googleapis.com/css?family=Exo+2:700|Roboto:100,300,400,500,700,900";
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    overflow: hidden;
+
+    font-family: "Roboto", sans-serif;
+    font-weight: 300;
+    line-height: 1.5;
+
+    background: #444;
+    color: #FFF;
+}
+
+a {
+    color: #80ebff;
+    text-decoration: none;
+}
+a:hover {
+    color: #FFF;
+    text-decoration: underline;
+}
+
+canvas {
+    display: block; /* Fix middle button drag on FF */
+}
+
+.osgjs-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
+    padding: 20px 160px 20px 20px;
+}
+
+.osgjs-fullpage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+.osgjs-description {
+    font-size: 14px;
+}
+
+.osgjs-powered {
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    z-index: 1;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 15px 10px 10px;
+    border-radius: 25px;
+
+    line-height: 32px;
+
+    background: rgba(0,0,0,.3);
+    color: #FFF !important;
+
+    opacity: 0.5;
+}
+.osgjs-powered:hover {
+    text-decoration: none;
+    opacity: 1;
+}
+    .osgjs-powered img {
+        vertical-align: bottom;
+    }
+    .osgjs-powered strong {
+        font-size: 18px;
+        font-family: 'Exo 2', sans-serif;
+        font-weight: 700;
+    }
+
+/**
+ * Light theme
+ ******************************************************************************/
+
+.osgjs-theme-light {
+
+    color: #111;
+
+    background: rgb(238,238,238);
+    background: -moz-radial-gradient(center, ellipse cover,  rgba(238,238,238,1) 0%, rgba(204,204,204,1) 100%);
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(238,238,238,1)), color-stop(100%,rgba(204,204,204,1)));
+    background: -webkit-radial-gradient(center, ellipse cover,  rgba(238,238,238,1) 0%,rgba(204,204,204,1) 100%);
+    background: -o-radial-gradient(center, ellipse cover,  rgba(238,238,238,1) 0%,rgba(204,204,204,1) 100%);
+    background: -ms-radial-gradient(center, ellipse cover,  rgba(238,238,238,1) 0%,rgba(204,204,204,1) 100%);
+    background: radial-gradient(ellipse at center,  rgba(238,238,238,1) 0%,rgba(204,204,204,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#cccccc',GradientType=1 );
+}
+    .osgjs-theme-light .osgjs-description {
+        color: #111;
+    }
+    .osgjs-theme-light .osgjs-description a {
+        color: #009EBB;
+    }
+
+/**
+ * Dark theme
+ ******************************************************************************/
+
+.osgjs-theme-dark {
+
+    color: #FFF;
+
+    background: rgb(79,79,79);
+    background: -moz-radial-gradient(center, ellipse cover,  rgba(79,79,79,1) 0%, rgba(22,22,22,1) 100%);
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(79,79,79,1)), color-stop(100%,rgba(22,22,22,1)));
+    background: -webkit-radial-gradient(center, ellipse cover,  rgba(79,79,79,1) 0%,rgba(22,22,22,1) 100%);
+    background: -o-radial-gradient(center, ellipse cover,  rgba(79,79,79,1) 0%,rgba(22,22,22,1) 100%);
+    background: -ms-radial-gradient(center, ellipse cover,  rgba(79,79,79,1) 0%,rgba(22,22,22,1) 100%);
+    background: radial-gradient(ellipse at center,  rgba(79,79,79,1) 0%,rgba(22,22,22,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#4f4f4f', endColorstr='#161616',GradientType=1 );
+}
+    .osgjs-theme-dark .osgjs-description {
+        color: #FFF;
+    }
+    .osgjs-theme-dark .osgjs-description a {
+        color: #80ebff;
+    }
