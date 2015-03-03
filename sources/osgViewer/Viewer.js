@@ -136,11 +136,12 @@ define( [
             eventsBackend.StandardMouseKeyboard.mouseEventNode = mouseEventNode;
             eventsBackend.StandardMouseKeyboard.keyboardEventNode = eventsBackend.StandardMouseKeyboard.keyboardEventNode || document;
 
-            // hammer
-            eventsBackend.Hammer = eventsBackend.Hammer || {};
-            eventsBackend.Hammer.eventNode = eventsBackend.Hammer.eventNode || defaultMouseEventNode;
-
-            // gamepade
+            // hammer, Only activate it if we have a touch device in order to fix problems with IE11
+            if ( 'ontouchstart' in window ) {
+                eventsBackend.Hammer = eventsBackend.Hammer || {};
+                eventsBackend.Hammer.eventNode = eventsBackend.Hammer.eventNode || defaultMouseEventNode;
+            }
+            // gamepad
             eventsBackend.GamePad = eventsBackend.GamePad || {};
 
             this._eventProxy = this.initEventProxy( options );
