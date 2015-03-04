@@ -200,6 +200,16 @@ define( [
             CullStack.prototype.popProjectionMatrix.call( this );
         },
 
+        popCameraModelViewProjectionMatrix: function( /*camera*/ ) {
+            this.popModelViewMatrix();
+            this.popProjectionMatrix();
+        },
+
+        pushCameraModelViewProjectionMatrix: function( camera, modelview, projection ) {
+            this.pushModelViewMatrix( modelview );
+            this.pushProjectionMatrix( projection );
+        },
+
         apply: function ( node ) {
             this[ node.typeID ].call( this, node );
         },
@@ -220,6 +230,7 @@ define( [
 
 
     } ) ) );
+
 
 
     // Camera cull visitor call
@@ -274,10 +285,8 @@ define( [
             this.setEnableFrustumCulling( true );
         }
 
-        this.pushModelViewMatrix( modelview );
-        this.pushProjectionMatrix( projection );
 
-
+        this.pushCameraModelViewProjectionMatrix(camera, modelview, projection);
 
         if ( camera.getViewport() ) {
             this.pushViewport( camera.getViewport() );
@@ -328,8 +337,7 @@ define( [
             }
         }
 
-        this.popModelViewMatrix();
-        this.popProjectionMatrix();
+        this.popCameraModelViewProjectionMatrix(camera);
 
         if ( camera.getViewport() ) {
             this.popViewport();
