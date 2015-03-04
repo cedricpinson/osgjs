@@ -91,7 +91,7 @@ define( [
     Texture.FLOAT = 0x1406;
     Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
 
-    Texture.getEnumFromString = function( v ) {
+    Texture.getEnumFromString = function ( v ) {
         var value = v;
         if ( typeof ( value ) === 'string' ) {
             value = checkAndFixEnum( value, v );
@@ -214,12 +214,12 @@ define( [
         },
 
         releaseGLObjects: function ( state ) {
-		 if (state !==undefined){
-            if ( this._textureObject !== undefined && this._textureObject !== null ) {
-                state.getTextureManager().releaseTextureObject( this._textureObject );
-                this._textureObject = undefined;
+            if ( state !== undefined ) {
+                if ( this._textureObject !== undefined && this._textureObject !== null ) {
+                    state.getTextureManager().releaseTextureObject( this._textureObject );
+                    this._textureObject = undefined;
+                }
             }
-		 }
         },
 
 
