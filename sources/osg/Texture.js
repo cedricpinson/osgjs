@@ -214,10 +214,12 @@ define( [
         },
 
         releaseGLObjects: function ( state ) {
+		 if (state !==undefined){
             if ( this._textureObject !== undefined && this._textureObject !== null ) {
                 state.getTextureManager().releaseTextureObject( this._textureObject );
                 this._textureObject = undefined;
             }
+		 }
         },
 
 
