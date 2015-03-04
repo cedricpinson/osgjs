@@ -49,7 +49,6 @@ define( [
             'lightattenuation',
 
             'lightmatrix',
-            'lightinvMatrix',
 
             'lighted',
             'lightEyePos',
@@ -78,7 +77,6 @@ define( [
                     this._inputs.lightattenuation,
 
                     this._inputs.lightmatrix,
-                    this._inputs.lightinvMatrix,
 
                     this._inputs.lightEyePos,
                     this._inputs.lightEyeDir,
@@ -186,7 +184,6 @@ define( [
             'lightposition',
 
             'lightmatrix',
-            'lightinvMatrix',
 
             'lighted',
             'lightEyePos',
@@ -214,7 +211,6 @@ define( [
                     this._inputs.lightposition,
 
                     this._inputs.lightmatrix,
-                    this._inputs.lightinvMatrix,
 
                     this._inputs.lightEyePos,
                     this._inputs.lightEyeDir,
@@ -245,7 +241,6 @@ define( [
             'lightposition',
 
             'lightmatrix',
-            'lightinvMatrix',
 
             'lighted',
             'lightEyePos',
@@ -270,7 +265,6 @@ define( [
                     this._inputs.lightposition,
 
                     this._inputs.lightmatrix,
-                    this._inputs.lightinvMatrix,
 
                     this._inputs.lightEyePos,
                     this._inputs.lightEyeDir,
