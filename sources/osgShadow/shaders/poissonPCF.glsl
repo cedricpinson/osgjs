@@ -4,7 +4,7 @@
 
 #pragma include "hash.glsl"
 
-float getShadowPCF(const in sampler2D tex, const in vec4 size, const in vec2 uv, const in float shadowZ) {
+float getShadowPCF(const in sampler2D tex, const in vec4 size, const in vec2 uv, const in float shadowZ, const in vec2 biasPcf) {
 
     vec2 o = size.zw;
     float s = 0.0;
