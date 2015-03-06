@@ -406,19 +406,7 @@ define( [
         },
 
 
-        updateTraversal: function () {
-
-            var startTraversal = Timer.instance().tick();
-
-            // setup framestamp
-            this._updateVisitor.setFrameStamp( this.getFrameStamp() );
-
-
-            // Update Manipulator/Event
-            if ( this.getManipulator() ) {
-                this.getManipulator().update( this._updateVisitor );
-                Matrix.copy( this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix() );
-            }
+        updateTraversal: function ( startTraversal ) {
 
             // update the scene
             this.getScene().updateSceneGraph( this._updateVisitor );
@@ -480,6 +468,10 @@ define( [
             }
         },
 
+        checkNeedToDoFrame: function () {
+            return this._requestContinousUpdate || this._requestRedraw;
+        },
+
         frame: function () {
 
             this.beginFrame();
@@ -487,13 +479,25 @@ define( [
             this.advance();
 
             // update viewport if a resize occured
-            this.updateViewport();
+            var canvasSizeChanged = this.updateViewport();
 
             // update inputs devices
             this.updateEventProxy( this._eventProxy, this.getFrameStamp() );
 
-            this.updateTraversal();
-            this.renderingTraversal();
+            var startTraversal = Timer.instance().tick();
+            // setup framestamp
+            this._updateVisitor.setFrameStamp( this.getFrameStamp() );
+            // Update Manipulator/Event
+            if ( this.getManipulator() ) {
+                this.getManipulator().update( this._updateVisitor );
+                Matrix.copy( this.getManipulator().getInverseMatrix(), this.getCamera().getViewMatrix() );
+            }
+
+            if ( this.checkNeedToDoFrame() || canvasSizeChanged ) {
+                this._requestRedraw = false;
+                this.updateTraversal( startTraversal );
+                this.renderingTraversal();
+            }
 
             this.endFrame();
         },
@@ -538,7 +542,9 @@ define( [
             var gl = this.getGraphicContext();
             var canvas = gl.canvas;
 
-            this.computeCanvasSize( canvas );
+            var hasChanged = this.computeCanvasSize( canvas );
+            if ( !hasChanged )
+                return false;
 
             var camera = this.getCamera();
             var vp = camera.getViewport();
@@ -554,6 +560,8 @@ define( [
             if ( aspectRatioChange !== 1.0 ) {
                 Matrix.preMult( camera.getProjectionMatrix(), Matrix.makeScale( 1.0 / aspectRatioChange, 1.0, 1.0, Matrix.create() ) );
             }
+
+            return true;
         },
 
         // intialize all input devices

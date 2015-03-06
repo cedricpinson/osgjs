@@ -549,6 +549,7 @@ define( [
                 scene.addChild( mt );
                 viewer.setSceneData( scene );
                 viewer.init();
+                viewer._updateVisitor.setFrameStamp( viewer.getFrameStamp() );
                 viewer.updateTraversal();
 
                 // test done inside Camera cullcallback
@@ -568,6 +569,7 @@ define( [
                 };
                 //Get the cullVisitor in context
                 viewer.getCamera().setCullCallback( new fb() );
+                viewer._updateVisitor.setFrameStamp( viewer.getFrameStamp() );
                 viewer.updateTraversal();
                 // traverse so that it Build the frustum planes and cullsettings to check against them
                 viewer.renderingTraversal();
@@ -594,6 +596,7 @@ define( [
                 };
                 //Get the cullVisitor in context
                 viewer.getCamera().setCullCallback( new fb2() );
+                viewer._updateVisitor.setFrameStamp( viewer.getFrameStamp() );
                 viewer.updateTraversal();
                 // traverse so that it Build the frustum planes and cullsettings to check against them
                 viewer.renderingTraversal();
@@ -619,6 +622,7 @@ define( [
                 };
                 //Get the cullVisitor in context
                 viewer.getCamera().setCullCallback( new fb3() );
+                viewer._updateVisitor.setFrameStamp( viewer.getFrameStamp() );
                 viewer.updateTraversal();
                 // traverse so that it Build the frustum planes and cullsettings to check against them
                 viewer.renderingTraversal();

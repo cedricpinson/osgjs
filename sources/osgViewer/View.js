@@ -57,6 +57,9 @@ define( [
         this._canvasWidth = 0;
         this._canvasHeight = 0;
 
+        this._requestContinousUpdate = true;
+        this._requestRedraw = true;
+
         this.setLightingMode( View.LightingMode.HEADLIGHT );
         // assign a renderer to the camera
         var renderer = this.createRenderer( this.getCamera() );
@@ -73,7 +76,12 @@ define( [
     };
 
     View.prototype = {
-
+        requestRedraw: function () {
+            this._requestRedraw = true;
+        },
+        requestContinuousUpdate: function ( bool ) {
+            this._requestContinousUpdate = bool;
+        },
         createRenderer: function ( camera ) {
             var render = new Renderer( camera );
             //camera->setStats(new osg::Stats("Camera"));
@@ -112,16 +120,19 @@ define( [
                 var widthPixel = Math.floor( clientWidth * devicePixelRatio );
                 var heightPixel = Math.floor( clientHeight * devicePixelRatio );
 
+                var hasChanged = false;
                 if ( this._canvasWidth !== widthPixel ) {
                     canvas.width = widthPixel;
                     this._canvasWidth = widthPixel;
+                    hasChanged = true;
                 }
 
                 if ( this._canvasHeight !== heightPixel ) {
                     canvas.height = heightPixel;
                     this._canvasHeight = heightPixel;
+                    hasChanged = true;
                 }
-
+                return hasChanged;
             };
         } )(),
 
