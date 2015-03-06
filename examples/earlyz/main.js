@@ -9,17 +9,19 @@
     var osgShader = OSG.osgShader;
     var $ = window.$;
 
+    var uTimeUnif;
 
-    var EarlyZ = function () {
+    var EarlyZ = function ( shaderProcessor ) {
 
         if ( EarlyZ.instance )
             return EarlyZ.instance;
+
+        this._shaderProcessor = shaderProcessor;
 
         this._drawImplementation = osg.RenderBin.prototype.drawImplementation;
         this._earlyZ = false;
 
         this._stateSet = this.getOrCreateDefaultStateSet();
-
 
         var depth = new osg.Depth( 'EQUAL' );
         depth.setWriteMask( false );
@@ -35,22 +37,8 @@
 
         getOrCreateShaderEarlyZ: function () {
 
-            var vertexShader = [
-                'attribute vec3 Vertex;',
-                '',
-                'uniform mat4 ModelViewMatrix;',
-                'uniform mat4 ProjectionMatrix;',
-                '',
-                'void main(void) {',
-                '    gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-                '}'
-            ].join( '\n' );
-
-            var fragmentShader = [
-                'void main( void ) {',
-                '    gl_FragColor = vec4( 1.0, 0.0, 1.0, 1.0 );',
-                '}'
-            ].join( '\n' );
+            var vertexShader = this._shaderProcessor.getShader( 'vertex.glsl' );
+            var fragmentShader = this._shaderProcessor.getShader( 'fragment.glsl' );
 
             var program = new osg.Program(
                 new osg.Shader( 'VERTEX_SHADER', vertexShader ),
@@ -63,6 +51,17 @@
 
             var stateSet = new osg.StateSet();
             stateSet.setAttributeAndModes( this.getOrCreateShaderEarlyZ(), osg.StateAttribute.OVERRIDE );
+
+            stateSet.addUniform( uTimeUnif );
+
+            var cullFace = new osg.CullFace( 'DISABLE' );
+            stateSet.setAttributeAndModes( cullFace );
+
+
+
+            var alpha = osg.Uniform.createInt1( 1, 'uAlpha' );
+            stateSet.addUniform( alpha );
+
             stateSet.setAttributeAndModes( new osg.Depth( 'LESS' ), osg.StateAttribute.OVERRIDE );
             // disable it to debug and see ff00ff color if bad depth
             stateSet.setAttributeAndModes( new osg.ColorMask( false, false, false, false ), osg.StateAttribute.OVERRIDE );
@@ -99,7 +98,7 @@
 
                 // need to pop back all statesets and matrices.
                 while ( sg ) {
-                    if ( sg.stateset )++num;
+                    if ( sg.stateset ) ++num;
                     sg = sg.parent;
                 }
 
@@ -124,7 +123,7 @@
 
                     // check where to insert stateSet
                     var num = ( previous ? numToPop( previous._parent ) : 0 );
-                    if ( num > 1 )--num;
+                    if ( num > 1 ) --num;
                     var insertStateSetPosition = state.getStateSetStackSize() - num;
 
                     // draw zbuffer only
@@ -157,19 +156,33 @@
 
         this._config = {
 
-            enableEarlyZ: false
-
+            enableEarlyZ: false,
+            passCountNoise: 2
         };
 
-        this._stateSet1 = undefined;
-        this._shaderProcessor = new osgShader.ShaderProcessor();
+        // default & change config with URL params
+        var queryDict = {};
+        window.location.search.substr( 1 ).split( '&' ).forEach( function ( item ) {
+            queryDict[ item.split( '=' )[ 0 ] ] = item.split( '=' )[ 1 ];
+        } );
+        var keys = Object.keys( queryDict );
+        for ( var i = 0; i < keys.length; i++ ) {
+            var property = keys[ i ];
+            this._config[ property ] = queryDict[ property ];
+        }
 
-        this._earlyZ = new EarlyZ();
+        this._shaderProcessor = new osgShader.ShaderProcessor();
+        this._stateSet1 = undefined;
     };
 
 
     Example.prototype = {
+        init: function () {
 
+            uTimeUnif = osg.Uniform.createFloat1( 0.0, 'uTime' );
+            this._earlyZ = new EarlyZ( this._shaderProcessor );
+
+        },
         initDatGUI: function () {
 
             var gui = new window.dat.GUI();
@@ -247,7 +260,9 @@
             if ( !this._shader ) {
 
                 var vertexshader = this._shaderProcessor.getShader( 'vertex.glsl' );
-                var fragmentshader = this._shaderProcessor.getShader( 'fragment.glsl' );
+                var fragmentshader = this._shaderProcessor.getShader( 'fragment.glsl', [
+                    '#define GPU_HARD', '#define COUNT ' +  this._config['passCountNoise']
+                ] );
 
                 var program = new osg.Program(
                     new osg.Shader( 'VERTEX_SHADER', vertexshader ),
@@ -293,7 +308,7 @@
             // stateAttribute for transparent
             var depth = new osg.Depth();
             var blendFunc = new osg.BlendFunc( 'ONE', 'ONE_MINUS_SRC_ALPHA' );
-            var cullFace = new osg.CullFace( 'DISABLE' ) ;
+            var cullFace = new osg.CullFace( 'DISABLE' );
 
             var stateSetTranparent = new osg.StateSet();
             stateSetTranparent.setRenderingHint( 'TRANSPARENT_BIN' );
@@ -315,11 +330,12 @@
                         osg.Matrix.makeTranslate( i * 15, j * 15, k * 15, model.getMatrix() );
                         node.addChild( model );
 
-                        if ( (j === 1 || i === 1 ) && k === 1) {
+                        if ( ( j === 1 || i === 1 ) && k === 1 ) {
 
                             model.setStateSet( stateSetTranparent );
 
                         } else {
+                            model.getOrCreateStateSet().setAttributeAndModes( cullFace );
                             model.getOrCreateStateSet().setRenderingHint( 'OPAQUE_BIN' );
                         }
                     }
@@ -328,8 +344,9 @@
             // add also a rtt to demonstrate how to organise scene with rtt and earlyZ
 
 
+
             this._stateSet = node.getOrCreateStateSet();
-            this._stateSet.addUniform( osg.Uniform.createFloat1( 0.0, 'uTime' ) );
+            this._stateSet.addUniform( uTimeUnif );
             node.addUpdateCallback( new UpdateCallback( this._stateSet ) );
             this.updateMaterial();
 
@@ -346,6 +363,7 @@
 
             this.readShaders().then( function () {
 
+                this.init();
                 var scene = this.createScene();
 
                 viewer.setSceneData( scene );

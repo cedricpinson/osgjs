@@ -114,11 +114,10 @@ float heightMap( vec3 coord ) {
     return n;
 
 }
+vec4 computeSnoise(float e, float time)
+{
+    vec3 offset = vec3(time * 0.1);
 
-void main( void ) {
-
-    const float e = 0.001;
-    vec3 offset = vec3(uTime * 0.1);
     float nx = heightMap( osg_FragVertex + offset + vec3( e, 0.0, 0.0 ) );
     float ny = heightMap( osg_FragVertex + offset + vec3( 0.0, e, 0.0 ) );
     float nz = heightMap( osg_FragVertex + offset + vec3( 0.0, 0.0, e ) );
@@ -128,6 +127,22 @@ void main( void ) {
     if ( uAlpha == 0 )
         alpha = 1.0;
 
-    gl_FragColor = vec4( nx, ny, nz, alpha );
+    return vec4( nx, ny, nz, alpha );
+}
 
+void main( void ) {
+
+    const float e = 0.001;
+
+    gl_FragColor = computeSnoise(e, uTime);
+
+    if (dot(gl_FragColor.rgb,gl_FragColor.rgb) < 0.2)
+        discard;
+#if defined(GPU_HARD)
+    const int count = COUNT;
+    for(int i = 1; i < count; i++){
+        gl_FragColor += computeSnoise(e + 0.001*float(i), uTime);
+    }
+    gl_FragColor /= float(count);
+#endif // GPU_HARD
 }
