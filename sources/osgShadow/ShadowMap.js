@@ -152,6 +152,7 @@ define( [
         this._casterStateSet.addUniform( Uniform.createFloat1( 0, 'exponent0' ) );
         this._casterStateSet.addUniform( Uniform.createFloat1( 0, 'exponent1' ) );
         this._casterStateSet.addUniform( Uniform.createFloat1( 0.005, 'bias' ) );
+        this._casterStateSet.addUniform( Uniform.createFloat1( 1.0 / this._textureSize, 'texelSize' ) );
 
         var near = 0.001;
         var far = 1000;
@@ -186,8 +187,9 @@ define( [
         this._computeFrustumBounds = new ShadowFrustumIntersection();
         this._computeBoundsVisitor = new ComputeBoundsVisitor();
         this._transparentVisitor = new TransparentRemoveVisitor( this._castsShadowTraversalMask );
-        // true if shadow map rendered at least once
 
+
+        this._infiniteFrustum = true;
     };
 
     /** @lends ShadowMap.prototype */
@@ -599,6 +601,9 @@ define( [
             // perpendicular to lightdir
             var distance = Vec3.dot( center, eyeDir ) + d;
 
+            // inside or not have unfluence
+            // on using radius for fov
+            var notInside = true;
             if ( distance < -radius ) {
                 // won't render anything the object  is behind..
                 // TODO: handle an empty render...
@@ -610,13 +615,13 @@ define( [
                 zNear = 1e-5;
                 zFar = distance + radius;
                 //radius = zFar;
-
+                notInside = false;
             } else if ( distance < radius ) {
                 // shhh.. we're inside !
                 // sphere center is in front
                 zNear = 1e-5;
                 zFar = distance + radius;
-
+                notInside = false;
                 //radius = zFar;
             } else {
                 //  Sphere totally in front
@@ -627,6 +632,7 @@ define( [
                 //zNear = 0.0001;
                 //radius = ( zFar - zNear ) * 0.5;
             }
+
             var epsilon = 1e-6;
             if ( zFar < zNear - epsilon ) {
 
@@ -649,10 +655,14 @@ define( [
             // positional light: spot, point, area
             //  fov < 180.0
             // statically defined by spot, only needs zNear zFar estimates
-            var fovRadius = zNear * Math.tan( fov * 2.0 * Math.PI / 360.0 );
+            var fovRadius = zNear * Math.tan( fov * Math.PI / 180.0 );
             // if scene radius is smaller than fov on scene
-            // tighten and enhance precision
-            fovRadius = fovRadius > radius ? radius : fovRadius;
+            // Tighten and enhance precision
+            if ( notInside ) {
+                // note that it only work if light pos is not inside the scene bbox
+                // otherwise it breaks the hypothesis and give wrong results
+                fovRadius = fovRadius > radius ? radius : fovRadius;
+            }
 
             var ymax = fovRadius;
             var ymin = -ymax;
@@ -661,9 +671,11 @@ define( [
             var xmin = -xmax;
 
 
-            Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, zNear, zFar, projection );
-            //Matrix.makeFrustum( xmin, xmax, ymin, ymax, zNear, zFar, projection );
-
+            if ( this._infiniteFrustum ) {
+                Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+            } else {
+                Matrix.makeFrustum( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+            }
             // compute a up vector ensuring avoiding parallel vectors
             // not using this._lightUp because not
             // reverting to it once got the change here done once
@@ -684,8 +696,6 @@ define( [
 
             }
             Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
-
-
 
             this._nearCaster = zNear;
             this._farCaster = zFar;
@@ -835,23 +845,31 @@ define( [
         // possible for shadowcasting
         frameShadowCastingFrustum: function ( cullVisitor ) {
 
-            var camera = this._cameraShadow;
             var projection = this._projectionMatrix;
             var view = this._viewMatrix;
 
-            var zNear = this._nearCaster;
-            var zFar = this._farCaster;
 
-            var resultNearFar = [ zNear, zFar ];
 
-            Matrix.clampProjectionMatrix( projection, zNear, zFar, cullVisitor.getNearFarRatio(), resultNearFar );
-            zNear = resultNearFar[ 0 ];
-            zFar = resultNearFar[ 1 ];
+            if ( !this._infiniteFrustum ) {
+                var zNear = this._nearCaster;
+                var zFar = this._farCaster;
 
-            Matrix.copy( projection, camera.getProjectionMatrix() );
-            Matrix.copy( view, camera.getViewMatrix() );
-            this.setShadowUniformsDepthValue( zNear, zFar, view, projection );
+                var epsilon = 1e-6;
+                if ( zNear - epsilon < 0 ) {
+                    zNear = 0.001;
+                }
+                var resultNearFar = [ zNear, zFar ];
+                Matrix.clampProjectionMatrix( projection, zNear, zFar, cullVisitor.getNearFarRatio(), resultNearFar );
+                zNear = resultNearFar[ 0 ];
+                zFar = resultNearFar[ 1 ];
 
+                this.setShadowUniformsDepthValue( zNear, zFar, view, projection );
+            }
+
+
+            // overwrite any cullvisitor wrongness
+            Matrix.copy( this._projectionMatrix, this._projectionMatrix );
+            Matrix.copy( this._viewMatrix, this._viewMatrix );
 
         },
 
