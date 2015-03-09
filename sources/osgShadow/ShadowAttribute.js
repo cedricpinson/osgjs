@@ -6,8 +6,9 @@ define( [
     'osg/Matrix',
     'osg/Vec3',
     'osg/Vec4',
-    'osg/Map'
-], function ( MACROUTILS, StateAttribute, Texture, Uniform, Matrix, Vec3, Vec4, Map ) {
+    'osg/Map',
+    'osg/Notify'
+], function ( MACROUTILS, StateAttribute, Texture, Uniform, Matrix, Vec3, Vec4, Map, Notify ) {
     'use strict';
 
 
@@ -268,7 +269,11 @@ define( [
         isEnabled: function () {
             return this._enable;
         },
-
+        // Deprecated methods, should be removed in the future
+        isEnable: function () {
+            Notify.log( 'ShadowAttribute.isEnable() is deprecated, use isEnabled() instead' );
+            return this.isEnabled();
+        },
         getHash: function () {
 
             return this.getTypeMember() + this.getAlgorithm() + this.getKernelSizePCF();

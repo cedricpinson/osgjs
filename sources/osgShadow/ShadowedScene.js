@@ -105,7 +105,7 @@ define( [
                             st.init();
 
                         if ( st.isEnabled() || !st.isFilledOnce() ) {
-                            st.updateShadowTechnic( nv );
+                            st.updateShadowTechnique( nv );
                             st.cullShadowCasting( nv );
                         }
                     }
