@@ -46,7 +46,7 @@
             '_spotCutoff': 25,
             '_spotBlend': 0.3,
             '_constantAttenuation': 0.0,
-            '_linearAttenuation': 0.005,
+            '_linearAttenuation': 0.001,
             '_quadraticAttenuation': 0.0,
             'exampleObj': this,
             'shadowStatic': false,
@@ -332,8 +332,8 @@
             // shaders has to have under max varying decl
             // max = this._maxVaryings -1
             // usual shader is already 4 vertexColor, FragNormal, FragEye, FragTexcoord.
-            // each shadow is 2 more.
-            var maxLights = ~~( ( this._maxVaryings - 1 ) - 4 ) / 2.0;
+            // each shadow is 1 more vec4 per shadow
+            var maxLights = ~~( ( this._maxVaryings - 1 ) - 4 );
 
             controller = gui.add( this._config, 'lightNum', 1, maxLights ).step( 1 );
             controller.onChange( this.updateShadow.bind( this ) );
@@ -539,7 +539,7 @@
         updateLightsEnable: function () {
             var l, numLights = ~~( this._config[ 'lightNum' ] );
 
-            while ( this._maxVaryings < ( numLights * 2 + 4 ) ) {
+            while ( this._maxVaryings < ( numLights + 4 ) ) {
                 numLights--;
             }
             this._config[ 'lightNum' ] = numLights;
@@ -550,7 +550,7 @@
 
             if ( this._lights.length !== numLights ) {
 
-                var lightScale = 1.0 / numLights;
+                var lightScale = 1.0 / ( numLights + 4 );
 
                 var group = this._viewer.getSceneData();
 
@@ -701,7 +701,7 @@
                 // technique change.
 
 
-                this._groundNode.setNodeMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
+                this._groundNode.setNodeMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowTraversalMask ) );
 
                 switch ( this._config[ 'shadow' ] ) {
                 case 'ESM':
@@ -1048,6 +1048,7 @@
                 ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, groundTex );
                 ground.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ), osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
 
+                //ground.getOrCreateStateSet().setAttributeAndModes( new osg.BlendFunc( osg.BlendFunc.ONE, osg.BlendFunc.ONE_MINUS_SRC_ALPHA ) );
 
             } );
             var groundSubNode;
@@ -1180,7 +1181,8 @@
             var group = new osg.Node();
 
             this._castsShadowDrawTraversalMask = 0x2;
-            this._castsShadowBoundsTraversalMask = 0x4;
+            this._castsShadowBoundsTraversalMask = 0x2;
+            //this._castsShadowBoundsTraversalMask = 0x4;
 
             this._shadowScene = this.createSceneCasterReceiver();
 
@@ -1198,6 +1200,7 @@
             this._cubeNode.setNodeMask( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask );
             this._modelNode.setNodeMask( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask );
             this._groundNode.setNodeMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
+            //this._groundNode.setNodeMask( ~this._castsShadowBoundsTraversalMask );
 
             /////////////////////////
             shadowedScene.addChild( this._shadowScene );

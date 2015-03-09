@@ -92,9 +92,9 @@ define( [
             return preShader;
         },
 
-        getShader: function ( shaderName, defines ) {
+        getShader: function ( shaderName, defines, extensions ) {
             var shader = this.getShaderTextPure( shaderName );
-            return this.processShader( shader, defines );
+            return this.processShader( shader, defines, extensions );
         },
 
         // recursively  handle #include external glsl
@@ -156,7 +156,7 @@ define( [
         //  resolving include dependencies
         //  adding defines
         //  adding line instrumenting.
-        processShader: function ( shader, defines ) {
+        processShader: function ( shader, defines, extensions ) {
 
             var includeList = [];
             var preShader = shader;
@@ -165,9 +165,33 @@ define( [
                 preShader = this.instrumentShaderlines( preShader, sourceID );
                 sourceID++;
             }
+
+            // removes duplicates
+            if ( defines !== undefined ) {
+                defines = defines.sort().filter( function ( item, pos ) {
+                    return !pos || item !== defines[ pos - 1 ];
+                } );
+            }
+            if ( extensions !== undefined ) {
+                extensions = extensions.sort().filter( function ( item, pos ) {
+                    return !pos || item !== extensions[ pos - 1 ];
+                } );
+            }
+
             var postShader = this.preprocess( preShader, sourceID, includeList, defines );
 
             var prePrend = '';
+            prePrend += '#version 100\n'; // webgl1  (webgl2 #version 130 ?)
+
+            // then
+            // it's extensions first
+            // See https://khronos.org/registry/gles/specs/2.0/GLSL_ES_Specification_1.0.17.pdf
+            // p14-15: before any non-processor token
+            // add them
+            if ( extensions !== undefined ) {
+                // could add an extension check support warning there...
+                prePrend += extensions.join( '\n' ) + '\n';
+            }
 
             if ( this._globalDefaultprecision ) {
                 if ( !this._precisionR.test( postShader ) ) {
@@ -180,7 +204,7 @@ define( [
 
             // if defines
             // add them
-            if ( defines ) {
+            if ( defines !== undefined ) {
                 prePrend += defines.join( '\n' ) + '\n';
             }
             postShader = prePrend + postShader;

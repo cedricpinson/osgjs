@@ -40,10 +40,12 @@ define( [
         getLightUnit: function () {
             return this._lightUnit;
         },
+
         getUniformName: function ( name ) {
-            var prefix = this.getType() + this._lightUnit.toString();
+            var prefix = 'Shadow_' + this.getType() + this._lightUnit.toString();
             return prefix + '_uniform_' + name;
         },
+
         getVaryingName: function ( name ) {
             var prefix = this.getType() + this._lightUnit.toString();
             return prefix + '_varying_' + name;
@@ -54,6 +56,7 @@ define( [
             var obj = ShadowTexture;
 
             Notify.assert( unit !== undefined );
+            Notify.assert( this._lightUnit !== -1 );
 
             if ( obj.uniforms[ unit ] !== undefined ) return obj.uniforms[ unit ];
 
@@ -111,6 +114,9 @@ define( [
             // Texture stuff: call parent class method
             Texture.prototype.apply.call( this, state, texUnit );
 
+            if ( this._lightUnit === -1 )
+                return;
+
             // update Uniforms
             var uniformMap = this.getOrCreateUniforms( texUnit );
             uniformMap.ViewMatrix.set( this._viewMatrix );
@@ -122,7 +128,10 @@ define( [
         },
 
         getHash: function () {
-            return this.getTypeMember() + this._type;
+
+            return this.getTypeMember() + '_' + this._lightUnit + '_' +
+                this._type;
+
         }
 
     } ), 'osgShadow', 'ShadowTexture' );

@@ -270,7 +270,9 @@ define( [
         },
 
         getHash: function () {
+
             return this.getTypeMember() + this.getAlgorithm() + this.getKernelSizePCF();
+
         }
 
     } ), 'osgShadow', 'ShadowAttribute' );

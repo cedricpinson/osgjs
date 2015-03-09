@@ -19,7 +19,6 @@ define( [
     'tests/osg/PagedLOD',
     'tests/osg/Plane',
     'tests/osg/Quat',
-    'tests/osg/ShaderGenerator',
     'tests/osg/State',
     'tests/osg/StateSet',
     'tests/osg/Texture',
@@ -29,7 +28,7 @@ define( [
     'tests/osg/Uniform',
     'tests/osg/Vec2',
     'tests/osg/PrimitiveFunctor'
-], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeBoundsVisitor, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Plane, Quat, ShaderGenerator, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2, PrimitiveFunctor ) {
+], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeBoundsVisitor, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Plane, Quat, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2, PrimitiveFunctor ) {
 
     'use strict';
 
@@ -54,7 +53,6 @@ define( [
         Plane();
         PagedLOD();
         Quat();
-        ShaderGenerator();
         State();
         StateSet();
         Texture();

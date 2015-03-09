@@ -43,6 +43,10 @@ define( [
             return this._filledOnce;
         },
 
+        requestRedraw: function () {
+            this._filledOnce = false;
+        },
+
         setShadowedScene: function ( shadowedScene ) {
             this._shadowedScene = shadowedScene;
         },

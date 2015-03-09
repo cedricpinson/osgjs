@@ -1,10 +1,12 @@
 define( [
     'osg/BoundingBox',
+    'osg/BlendFunc',
     'osg/Camera',
     'osg/ComputeBoundsVisitor',
     'osg/FrameBufferObject',
     'osg/Matrix',
     'osg/Notify',
+    'osg/NodeVisitor',
     'osg/Program',
     'osg/Shader',
     'osg/StateAttribute',
@@ -21,10 +23,62 @@ define( [
     'osgShadow/ShadowFrustumIntersection',
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowTexture'
-], function ( BoundingBox, Camera, ComputeBoundsVisitor, FrameBufferObject, Matrix, Notify, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowAttribute, ShadowFrustumIntersection, ShadowTechnique, ShadowTexture ) {
+], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, FrameBufferObject, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowAttribute, ShadowFrustumIntersection, ShadowTechnique, ShadowTexture ) {
 
     'use strict';
 
+
+    var TransparentRemoveVisitor = function ( mask ) {
+        NodeVisitor.call( this );
+        // mask setting to avoid casting shadows
+        this._noCastMask = mask;
+        this._nodeList = [];
+    };
+    TransparentRemoveVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+        reset: function () {
+            this._nodeList = [];
+        },
+        apply: function ( node ) {
+            var st = node.getStateSet();
+            // check that and other things ?
+            if ( st ) {
+                var blend = st.getAttribute( 'BlendFunc' );
+                if ( blend !== undefined && blend.getSource() !== BlendFunc.DISABLE ) {
+                    /*jshint bitwise: false */
+                    var nm = node.getNodeMask();
+                    // ~0x0 as not to be processed
+                    if ( nm === ~0x0 ) {
+                        // set to avoid casting shadow
+                        nm = this._noCastMask;
+                        node.setNodeMask( nm );
+                        this._nodeList.push( node );
+                    } else if ( ( nm & ~( this._noCastMask ) ) !== 0 ) {
+                        // set to avoid casting shadow
+                        node.setNodeMask( nm | this._noCastMask );
+                        this._nodeList.push( node );
+                    }
+                    /*jshint bitwise: true */
+                    return;
+                }
+            }
+            this.traverse( node );
+        },
+        setNoCastMask: function ( mask ) {
+            this._noCastMask = mask;
+        },
+        // restore to any previous mask avoiding any breaks
+        // in other application mask usage.
+        restore: function () {
+            var node, i = this._nodeList.length;
+            while ( i-- ) {
+                node = this._nodeList[ i ];
+                var nm = node.getNodeMask();
+                if ( nm === this._noCastMask ) node.setNodeMask( ~0x0 );
+                else node.setNodeMask( nm & ~this._noCastMask );
+            }
+        }
+
+    } );
 
 
     // Custom camera cull callback
@@ -114,7 +168,6 @@ define( [
         this._worldLightDir = Vec4.create();
         this._worldLightDir[ 3 ] = 1;
 
-
         this._castsShadowDrawTraversalMask = 0xffffffff;
         this._castsShadowBoundsTraversalMask = 0xffffffff;
 
@@ -132,7 +185,7 @@ define( [
 
         this._computeFrustumBounds = new ShadowFrustumIntersection();
         this._computeBoundsVisitor = new ComputeBoundsVisitor();
-
+        this._transparentVisitor = new TransparentRemoveVisitor( this._castsShadowTraversalMask );
         // true if shadow map rendered at least once
 
     };
@@ -193,6 +246,10 @@ define( [
             var prg = this.getShaderProgram( shadowmapCasterVertex, shadowmapCasterFragment, defines );
 
             return prg;
+        },
+        setTextureUnitBase: function ( unitBase ) {
+            this._textureUnitBase = unitBase;
+            this._textureUnit = unitBase;
         },
 
         getShadowCasterShaderProgram: function () {
@@ -294,37 +351,82 @@ define( [
             if ( !this._shadowedScene ) return;
 
             this._filledOnce = false;
+
+
+            var light = this._lightSource.getLight();
+            var lightNumber = light.getLightNumber();
+
+
             // if light number changed we need to remove cleanly
             // attributes from receiveStateSet
             // it's because it use a typemember like light attribute
             // so the number if very important to keep State clean
-            var light = this._lightSource.getLight();
-            var lightNumber = light.getLightNumber();
-
             if ( this._shadowAttribute.getLightNumber() !== lightNumber ) {
+                if ( this._receivingStateset.getAttribute( this._shadowAttribute.getTypeMember() ) === this._shadowAttribute )
+                    this._receivingStateset.removeAttribute( this._shadowAttribute.getTypeMember() );
+            }
 
+            if ( this._texture && this._texture.getLightUnit() !== lightNumber ) {
                 // remove this._texture, but not if it's not this._texture
                 if ( this._receivingStateset.getTextureAttribute( this._textureUnit, this._texture.getTypeMember() ) === this._texture )
                     this._receivingStateset.removeTextureAttribute( this._textureUnit, this._texture.getTypeMember() );
-                if ( this._receivingStateset.getAttribute( this._shadowAttribute.getTypeMember() ) === this._shadowAttribute )
-                    this._receivingStateset.removeAttribute( this._shadowAttribute.getTypeMember() );
-
             }
-            this._textureUnit = this._textureUnitBase + lightNumber;
+
+            if ( !this._cameraShadow ) {
+                this._cameraShadow = new Camera();
+                this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
+                this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
+                this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
+                this._cameraShadow.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
+            }
 
             this.initTexture();
-            this._texture.setLightUnit( lightNumber );
-            this._texture.setName( 'ShadowTexture' + this._textureUnit );
+            this._textureUnit = this._textureUnitBase + lightNumber;
             this._cameraShadow.setName( 'light_shadow_camera' + light.getName() );
-            this._shadowAttribute.setLight( this._lightSource.getLight() );
 
             this._texture.setLightUnit( lightNumber );
+            this._texture.setName( 'ShadowTexture' + this._textureUnit );
+
+            this._shadowAttribute.setLight( light );
+
             this._receivingStateset.setAttributeAndModes( this._shadowAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
+
+
+
+            // prevent unnecessary texture bindings
+
+            if ( !ShadowMap.BlankTexture ) {
+                ShadowMap.BlankTexture = new Texture();
+                ShadowMap.BlankTexture.setName( 'emptyTex' );
+            }
+            var blankTexture = ShadowMap.BlankTexture;
+
+            // Mandatory: prevent binding shadow textures themselves (shadowedScene stateSet is applied
+            // just above in stateset hierarchy
+            // that would mean undefined values as it would be read/write access...
+            this._casterStateSet.setTextureAttributeAndModes( this._textureUnit, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
+
+            // TODO: optimize: have a "don't touch current Texture stateAttribute"
+            // on ALL texture unit but alpha max texture for Depth/Normal/etc renders
+
+            // TODO: actually get the real max texture unit from webglCaps
+            //var shouldGetMaxTextureUnits = 32;
+            //
+            // TODO:: Should handle the alpha_mask that uses a texture
+            // case somehow...
+            // deduce from shader compil ?
+            //for ( var k = 0; k < shouldGetMaxTextureUnits; k++ ) {
+            //    this._casterStateSet.setTextureAttributeAndModes( k, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
+            //}
 
 
             var casterProgram = this.getShadowCasterShaderProgram();
             this.setShadowCasterShaderProgram( casterProgram );
 
+            // add shadow texture to the receivers
+            // should make sure somehow that
+            // alpha blender transparent receiver doens't use it
+            // compiler wise at least
             this._receivingStateset.setTextureAttributeAndModes( this._textureUnit, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
 
             this._dirty = false;
@@ -372,14 +474,6 @@ define( [
                 this._texture = new ShadowTexture();
                 this._textureUnitBase = 4;
                 this._textureUnit = this._textureUnitBase;
-            }
-
-            if ( !this._cameraShadow ) {
-                this._cameraShadow = new Camera();
-                this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
-                this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
-                this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
-                this._cameraShadow.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
             }
 
             var texType = this.getTexturePrecision();
@@ -495,7 +589,7 @@ define( [
         makePerspectiveFromBoundingBox: function ( bbox, fov, eyePos, eyeDir, view, projection ) {
             var center = bbox.center( this._tmpVec );
             var radius = bbox.radius();
-            var zNear = 0.0001;
+            var zNear = 1e-4;
             var zFar = 1.0;
 
             // light Near Plane Equation
@@ -506,20 +600,21 @@ define( [
             var distance = Vec3.dot( center, eyeDir ) + d;
 
             if ( distance < -radius ) {
-                // won't render anything the objectio is behind..
+                // won't render anything the object  is behind..
                 // TODO: handle an empty render...
                 // avoiding cullvisitor pass on caster would be nice.
-            } else if ( distance < 0 ) {
+                this._emptyCasterScene = true;
+            } else if ( distance <= 0.0 ) {
                 // shhh.. we're inside !
                 // sphere center is behind
-                zNear = 0.00001;
+                zNear = 1e-5;
                 zFar = distance + radius;
                 //radius = zFar;
 
             } else if ( distance < radius ) {
                 // shhh.. we're inside !
                 // sphere center is in front
-                zNear = 0.00001;
+                zNear = 1e-5;
                 zFar = distance + radius;
 
                 //radius = zFar;
@@ -528,19 +623,18 @@ define( [
                 // long distance runner
                 // we must make a nicer zNear here!
                 zNear = distance - radius;
-                zFar = distance + radius * 2.5;
-
+                zFar = distance + radius;
+                //zNear = 0.0001;
                 //radius = ( zFar - zNear ) * 0.5;
             }
-
             var epsilon = 1e-6;
             if ( zFar < zNear - epsilon ) {
 
                 // TODO: clear shadow texture and return wihtout any further ops
                 // with a early out
-                Notify.debug( 'empty shadowMap' );
+                //Notify.debug( 'empty shadowMap' );
                 // for now just prevent NaN errors
-
+                this._emptyCasterScene = true;
                 zFar = 1;
                 zNear = 0.001;
             } else if ( zNear < epsilon ) {
@@ -551,36 +645,47 @@ define( [
                 zNear = zFar * zNearRatio;
             }
 
+
+            // positional light: spot, point, area
+            //  fov < 180.0
+            // statically defined by spot, only needs zNear zFar estimates
+            var fovRadius = zNear * Math.tan( fov * 2.0 * Math.PI / 360.0 );
+            // if scene radius is smaller than fov on scene
+            // tighten and enhance precision
+            fovRadius = fovRadius > radius ? radius : fovRadius;
+
+            var ymax = fovRadius;
+            var ymin = -ymax;
+
+            var xmax = fovRadius;
+            var xmin = -xmax;
+
+
+            Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+            //Matrix.makeFrustum( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+
             // compute a up vector ensuring avoiding parallel vectors
             // not using this._lightUp because not
             // reverting to it once got the change here done once
-            var up = [ 0.0, 0.0, 1.0 ];
+            // [ 0.0, 0.0, 1.0 ];
+            var up = this._lightUp;
             if ( Math.abs( Vec3.dot( up, eyeDir ) ) >= 1.0 ) {
                 // another camera up
-                up = [ 1.0, 0.0, 0.0 ];
-            }
-
-            // positional light: spot, point, area
-            if ( fov < 180.0 ) {
-                // statically defined by spot, only needs zNear zFar estimates
-                var fovRadius = zNear * Math.tan( fov * 2.0 * Math.PI / 360.0 );
-                // if scene radius is smaller than fov on scene
-                // tighten and enhance precision
-                fovRadius = fovRadius > radius ? radius : fovRadius;
-
-                var ymax = fovRadius;
-                var ymin = -ymax;
-
-                var xmax = fovRadius;
-                var xmin = -xmax;
-
-
-                //Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, zNear, zFar, projection );
-                Matrix.makeFrustum( xmin, xmax, ymin, ymax, zNear, zFar, projection );
-
-                Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
+                // [ 1.0, 0.0, 0.0 ];
+                if ( this._lightUp[ 0 ] === 1.0 ) {
+                    this._lightUp[ 0 ] = 0.0;
+                    this._lightUp[ 1 ] = 0.0;
+                    this._lightUp[ 2 ] = 1.0;
+                } else {
+                    this._lightUp[ 0 ] = 1.0;
+                    this._lightUp[ 1 ] = 0.0;
+                    this._lightUp[ 2 ] = 0.0;
+                }
 
             }
+            Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
+
+
 
             this._nearCaster = zNear;
             this._farCaster = zFar;
@@ -589,6 +694,7 @@ define( [
         makeOrthoFromBoundingBox: function ( bbox, eyeDir, view, projection ) {
 
             var center = bbox.center( this._tmpVecTercio );
+
             var radius = bbox.radius();
             var diameter = radius + radius;
 
@@ -614,10 +720,21 @@ define( [
             // compute a up vector ensuring avoiding parallel vectors
             // not using this._lightUp because not
             // reverting to it once got the change here done once
-            var up = [ 0.0, 0.0, 1.0 ];
+            // [ 0.0, 0.0, 1.0 ];
+            var up = this._lightUp;
             if ( Math.abs( Vec3.dot( up, eyeDir ) ) >= 1.0 ) {
                 // another camera up
-                up = [ 1.0, 0.0, 0.0 ];
+                // [ 1.0, 0.0, 0.0 ];
+                if ( this._lightUp[ 0 ] === 1.0 ) {
+                    this._lightUp[ 0 ] = 0.0;
+                    this._lightUp[ 1 ] = 0.0;
+                    this._lightUp[ 2 ] = 1.0;
+                } else {
+                    this._lightUp[ 0 ] = 1.0;
+                    this._lightUp[ 1 ] = 0.0;
+                    this._lightUp[ 2 ] = 0.0;
+                }
+
             }
             //Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
             Matrix.makeLookFromDirection( eyePos, eyeDir, up, view );
@@ -641,8 +758,10 @@ define( [
 
             var lightSource = this._lightSource;
 
-            if ( !lightSource )
+            if ( !lightSource ) {
+                this._emptyCasterScene = true;
                 return;
+            }
 
             var light = lightSource.getLight();
             var camera = this._cameraShadow;
@@ -665,21 +784,22 @@ define( [
             var worldLightPos = this._worldLightPos;
 
             //  light pos & lightTarget in World Space
-            Matrix.transformVec4( worldMatrix, light.getPosition(), worldLightPos );
 
             if ( light.getPosition()[ 3 ] !== 0.0 ) {
 
+                Matrix.transformVec3( worldMatrix, light.getPosition(), worldLightPos );
 
                 // not a directionnal light, compute the world light dir
                 var worldLightDir = this._worldLightDir;
                 Vec3.copy( light.getDirection(), worldLightDir );
-                Matrix.transformVec3( worldMatrix, worldLightDir, worldLightDir );
+                Matrix.transformVec4( worldMatrix, worldLightDir, worldLightDir );
                 Vec3.normalize( worldLightDir, worldLightDir );
 
                 // and compute a perspective frustum
                 this.makePerspectiveFromBoundingBox( frustumBound, light.getSpotCutoff(), worldLightPos, worldLightDir, view, projection );
             } else {
 
+                Matrix.transformVec4( worldMatrix, light.getPosition(), worldLightPos );
                 // lightpos is a light dir
                 // so we now have to normalize
                 // since the transform to world above
@@ -695,9 +815,9 @@ define( [
 
                 // TODO: clear shadow texture and return wihtout any further ops
                 // with a early out
-                Notify.debug( 'empty shadowMap' );
+                // Notify.debug( 'empty shadowMap' );
                 // for now just prevent NaN errors
-
+                this._emptyCasterScene = true;
                 zFar = 1;
                 zNear = 0.001;
             }
@@ -723,14 +843,15 @@ define( [
             var zFar = this._farCaster;
 
             var resultNearFar = [ zNear, zFar ];
-            Matrix.clampProjectionMatrix( projection, zNear, zFar, cullVisitor.getNearFarRatio(), resultNearFar );
 
+            Matrix.clampProjectionMatrix( projection, zNear, zFar, cullVisitor.getNearFarRatio(), resultNearFar );
             zNear = resultNearFar[ 0 ];
             zFar = resultNearFar[ 1 ];
 
             Matrix.copy( projection, camera.getProjectionMatrix() );
             Matrix.copy( view, camera.getViewMatrix() );
             this.setShadowUniformsDepthValue( zNear, zFar, view, projection );
+
 
         },
 
@@ -743,8 +864,9 @@ define( [
                 // TODO: clear shadow texture and return wihtout any further ops
                 // with a early out
                 //Notify.debug( 'empty shadowMap' );
-                zFar = 1;
+                zFar = 1.0;
                 zNear = 0.001;
+                this._emptyCasterScene = true;
             }
 
             // check all other code but depthRange
@@ -766,16 +888,68 @@ define( [
 
         },
 
+        noDraw: function () {
+
+            this._depthRange[ 0 ] = 0.0;
+            this._depthRange[ 1 ] = 0.0;
+            this._depthRange[ 2 ] = 0.0;
+            this._depthRange[ 3 ] = 0.0;
+
+            var castUniforms = this._casterStateSet.getUniformList();
+            castUniforms[ 'Shadow_DepthRange' ].getUniform().set( this._depthRange );
+            this._texture.setDepthRange( this._depthRange );
+
+            var camera = this._cameraShadow;
+
+            // make sure it's not modified outside our computations
+            // camera matrix can be modified by cullvisitor afterwards...
+            Matrix.copy( camera.getProjectionMatrix(), this._projectionMatrix );
+            Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
+
+            this._texture.setViewMatrix( this._viewMatrix );
+            this._texture.setProjectionMatrix( this._projectionMatrix );
+
+
+            this._filledOnce = true;
+        },
         // Defines the frustum from light param.
         //
         cullShadowCasting: function ( cullVisitor ) {
 
 
+            var bbox;
+
+
+            this._transparentVisitor.setNoCastMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
+            this._transparentVisitor.reset();
+            this.getShadowedScene().accept( this._transparentVisitor );
+
+
+            this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
+            this._computeBoundsVisitor.reset();
+            this.getShadowedScene().accept( this._computeBoundsVisitor );
+            bbox = this._computeBoundsVisitor.getBoundingBox();
+
+            if ( !bbox.valid() ) {
+                // nothing to draw Early out.
+                this.noDraw();
+                return;
+            }
+
             // HERE we get the shadowedScene Current World Matrix
             // to get any world transform ABOVE the shadowedScene
             var worldMatrix = cullVisitor.getCurrentModelWorldMatrix();
             // it does fuck up the results.
+            Matrix.transformBoundingBox( worldMatrix, bbox, bbox );
 
+            this._emptyCasterScene = false;
+            this.aimShadowCastingCamera( cullVisitor, bbox );
+
+            if ( this._emptyCasterScene ) {
+                // nothing to draw Early out.
+                this.noDraw();
+                return;
+            }
 
 
             // get renderer to make the cull program
@@ -790,21 +964,8 @@ define( [
             this._cameraShadow.setEnableFrustumCulling( true );
             // enabling this makes for strange projection fuck up
             // (as in clamped too tight projection)
-            this._cameraShadow.setComputeNearFar( true );
-
-
-            var bbox;
-
-
-
-            this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
-            this.getShadowedScene().accept( this._computeBoundsVisitor );
-            bbox = this._computeBoundsVisitor.getBoundingBox();
-
-
-            Matrix.transformBoundingBox( worldMatrix, bbox, bbox );
-
-            this.aimShadowCastingCamera( cullVisitor, bbox );
+            var needNearFar = this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask;
+            this._cameraShadow.setComputeNearFar( needNearFar );
 
 
 
@@ -814,13 +975,18 @@ define( [
             // Here culling is done, we do have near/far.
             // and cull/non-culled info
             // if we wanted a tighter frustum.
-            this.frameShadowCastingFrustum( cullVisitor );
+            if ( needNearFar ) {
+                this.frameShadowCastingFrustum( cullVisitor );
+            }
 
 
             // enabling this makes for strange projection fuck up
             // (as in clamped too tight projection)
             this._cameraShadow.setComputeNearFar( false );
 
+            // remove our flags changes on any bitmask
+            // not to break things
+            this._transparentVisitor.restore();
 
             cullVisitor.popStateSet();
 
@@ -829,13 +995,7 @@ define( [
             this._filledOnce = true;
         },
 
-
-        cleanSceneGraph: function () {
-            // well release a lot more things when it works
-            this._cameraShadow = undefined;
-            this._filledOnce = false;
-
-
+        cleanReceivingStateSet: function () {
             if ( this._receivingStateset ) {
 
                 if ( this._texture ) {
@@ -848,8 +1008,18 @@ define( [
                     this._receivingStateset.removeAttribute( this._shadowAttribute.getTypeMember() );
             }
 
+        },
+        cleanSceneGraph: function () {
+            // well release a lot more things when it works
+            this._cameraShadow = undefined;
+            this._filledOnce = false;
+
+
+            this.cleanReceivingStateSet();
+
             // TODO: need state
             //this._texture.releaseGLObjects();
+            //this._shadowAttribute = undefined;
             this._texture = undefined;
             this._shadowedScene = undefined;
         }

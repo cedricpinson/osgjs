@@ -47,9 +47,11 @@ define( [
             }
         },
         removeShadowTechnique: function ( technique ) {
+
             if ( this._shadowTechniques.length > 0 ) {
                 var idx = this._shadowTechniques.indexOf( technique );
                 if ( idx !== -1 ) {
+
                     if ( this._shadowTechniques[ idx ].valid() ) {
                         this._shadowTechniques[ idx ].cleanSceneGraph();
                     }

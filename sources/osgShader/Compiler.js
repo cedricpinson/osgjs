@@ -168,9 +168,8 @@ define( [
             return v;
         },
 
-        getOrCreateStateAttributeUniforms: function ( stateAttribute, prefix ) {
-
-            var uniforms = stateAttribute.getOrCreateUniforms();
+        // Map of uniform from a StateAttribute or TextureStateAttribute
+        getOrCreateUniformFromUniformMap: function ( uniforms, prefix ) {
             var keys = Object.keys( uniforms );
             var object = {};
 
@@ -182,6 +181,19 @@ define( [
             }
 
             return object;
+        },
+
+        // specialized for texture, enforcing last parameter usage.
+        getOrCreateTextureStateAttributeUniforms: function ( stateAttribute, prefix, unit ) {
+
+            var uniforms = stateAttribute.getOrCreateUniforms( unit );
+            return this.getOrCreateUniformFromUniformMap( uniforms, prefix );
+        },
+
+        getOrCreateStateAttributeUniforms: function ( stateAttribute, prefix ) {
+
+            var uniforms = stateAttribute.getOrCreateUniforms();
+            return this.getOrCreateUniformFromUniformMap( uniforms, prefix );
         },
 
         getOrCreateUniform: function ( type, varname ) {
@@ -563,7 +575,8 @@ define( [
 
             // seach current light its corresponding shadow and shadowTextures.
             // if none, no shadow, hop we go.
-            // TODO Link shadowTexture and shadowAttribute ?
+            // TODO: harder Link shadowTexture and shadowAttribute ?
+            // TODO: multi shadow textures for 1 light
             for ( k = 0; k < this._shadows.length; k++ ) {
                 shadow = this._shadows[ k ];
                 if ( shadow.getLight() === light ) {
@@ -591,7 +604,7 @@ define( [
             inputs = MACROUTILS.objectMix( inputs, shadowUniforms );
 
             // shadowTexture  Attribute uniforms AND varying
-            var tex, shadowVertexProjected, shadowZ;
+            var tex, shadowVertexProjected;
             // TODO: better handle multi texture shadow (CSM/PSM/etc.)
             for ( k = 0; k < shadowTextures.length; k++ ) {
 
@@ -600,16 +613,15 @@ define( [
                     tex = this.getOrCreateSampler( 'sampler2D', shadowTexture.getName() );
                     inputs.shadowTexture = tex;
                     // per texture uniforms
-                    var shadowTextureUniforms = this.getOrCreateStateAttributeUniforms( shadowTexture, 'shadowTexture' );
 
+                    var shadowTextureUniforms = this.getOrCreateTextureStateAttributeUniforms( shadowTexture, 'shadowTexture', k );
                     inputs = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
+
 
                     // Varyings
                     shadowVertexProjected = this.getOrCreateVarying( 'vec4', shadowTexture.getVaryingName( 'VertexProjected' ) );
-                    shadowZ = this.getOrCreateVarying( 'vec4', shadowTexture.getVaryingName( 'Z' ) );
                     var shadowVarying = {
                         shadowVertexProjected: shadowVertexProjected,
-                        shadowZ: shadowZ,
                         lightEyeDir: inputs.lightEyeDir,
                         lightNDL: inputs.lightNDL
                     };
@@ -628,6 +640,26 @@ define( [
 
         },
 
+        // Shared var between lights and shadows
+        createCommonLightingVars: function ( materials, enumLights, numLights ) {
+
+            if ( numLights === 0 )
+                return {};
+
+            var lighted = this.createVariable( 'bool', 'lighted' );
+            var lightPos = this.createVariable( 'vec3', 'lightEyePos' );
+            var lightDir = this.createVariable( 'vec3', 'lightEyeDir' );
+            var lightNDL = this.createVariable( 'float', 'lightNDL' );
+
+            return {
+                lighted: lighted,
+                lightEyePos: lightPos,
+                lightEyeDir: lightDir,
+                lightNDL: lightNDL
+            };
+
+        },
+
         createLighting: function ( materials, overrideNodeName ) {
 
             var output = this.createVariable( 'vec3' );
@@ -640,17 +672,7 @@ define( [
                 HEMI: 'HemiLight'
             };
 
-
-            var lighted = this.createVariable( 'bool', 'lighted' );
-            var lightPos = this.createVariable( 'vec3', 'lightEyePos' );
-            var lightDir = this.createVariable( 'vec3', 'lightEyeDir' );
-            var lightNDL = this.createVariable( 'float', 'lightNDL' );
-            var lightOutShadowIn = {
-                lighted: lighted,
-                lightEyePos: lightPos,
-                lightEyeDir: lightDir,
-                lightNDL: lightNDL
-            };
+            var lightOutShadowIn = this.createCommonLightingVars( materials, enumToNodeName, this._lights.length );
 
             var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material, 'material' );
             for ( var i = 0; i < this._lights.length; i++ ) {
@@ -746,16 +768,32 @@ define( [
             functor.call( functor, node );
         },
 
-        evaluateDefines: function ( node ) {
+        // Gather a particular output field
+        // for now one of
+        // ['define', 'extensions']
+        //
+        // from a nodeGraph
+        //
+        // In case a node of same Type
+        // have different outputs (shadow with different defines)
+        // it use ID rather than Type as map index
+        // UNIQUE PER TYPE
+        // TODO: adds includes so that we can remove it from
+        // the eval Global Functions ?
+        evaluateAndGatherField: function ( node, field ) {
 
             var func = function ( node ) {
 
-                if ( node.defines && this._map[ node.getID() ] === undefined ) {
+                var idx = node.getType();
+                if ( idx === undefined || idx === '' ) {
+                    Notify.error( 'Your node ' + node + ' has not type' );
+                }
+                if ( node[ field ] && this._map[ idx ] === undefined ) {
 
-                    this._map[ node.getID() ] = true;
-                    var c = node.defines();
+                    this._map[ idx ] = true;
+                    var c = node[ field ]();
                     // push all elements of the array on text array
-                    // defines must return an array
+                    // node[field]()  must return an array
                     Array.prototype.push.apply( this._text, c );
 
                 }
@@ -769,16 +807,30 @@ define( [
             return func._text;
         },
 
+        // Gather a functions declartions of nodes
+        // from a nodeGraph
+        // (for now pragma include done here too. could be done with define/etc...)
+        // Node of same Type has to share
+        // exact same "node.globalFunctionDeclaration" output
+        // as it use Type rather than ID as map index
         evaluateGlobalFunctionDeclaration: function ( node ) {
 
             var func = function ( node ) {
 
-                if ( node.globalFunctionDeclaration &&
-                    this._map[ node.type ] === undefined ) {
+                // UNIQUE PER TYPE
+                var idx = node.getType();
 
-                    this._map[ node.type ] = true;
+                if ( idx === undefined || idx === '' ) {
+                    Notify.error( 'Your node ' + node + ' has not type' );
+                }
+                if ( node.globalFunctionDeclaration &&
+                    this._map[ idx ] === undefined ) {
+
+                    this._map[ idx ] = true;
                     var c = node.globalFunctionDeclaration();
-                    this._text.push( c );
+                    if ( c !== undefined ) {
+                        this._text.push( c );
+                    }
 
                 }
 
@@ -791,22 +843,26 @@ define( [
             return func._text.join( '\n' );
         },
 
+        // Gather a Variables declarations of nodes
+        // from a nodeGraph to be outputted
+        // outside the VOID MAIN code
+        // ( Uniforms, Varying )
+        // Node of same Type has different output
+        // as it use Type rather than ID as map index
         evaluateGlobalVariableDeclaration: function ( node ) {
 
             var func = function ( node ) {
 
-                var id = node.getID();
-                if ( this._map[ id ] === undefined ) {
+                // UNIQUE PER NODE
+                var idx = node.getID();
 
-                    this._map[ id ] = true;
+                if ( node.globalDeclaration &&
+                    this._map[ idx ] === undefined ) {
 
-                    if ( node.globalDeclaration !== undefined ) {
-
-                        var c = node.globalDeclaration();
-                        if ( c !== undefined ) {
-                            this._text.push( c );
-                        }
-
+                    this._map[ idx ] = true;
+                    var c = node.globalDeclaration();
+                    if ( c !== undefined ) {
+                        this._text.push( c );
                     }
                 }
             };
@@ -853,11 +909,11 @@ define( [
         getTexCoordUnit: function ( id ) {
             var texture = this._textures[ id ];
             if ( texture === undefined )
-                return;
+                return undefined;
 
             var textureMaterial = this._texturesByName[ texture.getName() ];
             if ( !textureMaterial )
-                return;
+                return undefined;
 
             var texCoordUnit = textureMaterial.textureUnit;
             if ( texCoordUnit === undefined )
@@ -911,7 +967,6 @@ define( [
                 this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
                 // varyings
                 this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'VertexProjected' ) + ';' );
-                this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'Z' ) + ';' );
                 hasShadows = true;
             }
 
@@ -967,11 +1022,12 @@ define( [
 
                 // varyings
                 var shadowVertProj = shadowTexture.getVaryingName( 'VertexProjected' );
-                var shadowZ = shadowTexture.getVaryingName( 'Z' );
 
-
-                this._vertexShader.push( ' ' + shadowZ + ' = ' + shadowView + ' *  worldPosition;' );
-                this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * ' + shadowZ + ';' );
+                this._vertexShader.push( 'vec4 shadowPos' + i + ' = ' + shadowView + ' *  worldPosition;' );
+                this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * shadowPos' + i + ';' );
+                // varying packing using 1 vec4 fo both Projection vector & viewworld z pos
+                // and pre-linearize Z
+                this._vertexShader.push( ' ' + shadowVertProj + '.z  = shadowPos' + i + '.z ;' );
             }
         },
         // Meanwhile, here it is.
@@ -1007,8 +1063,9 @@ define( [
 
             var vars = Object.keys( this._variables );
 
-            // defines are added by process shader
-            var defines = this.evaluateDefines( root );
+            // defines and extensions are added by process shader
+            var extensions = this.evaluateAndGatherField( root, 'extensions' );
+            var defines = this.evaluateAndGatherField( root, 'defines' );
 
             this._fragmentShader.push( '\n' );
             this._fragmentShader.push( this.evaluateGlobalVariableDeclaration( root ) );
@@ -1039,7 +1096,7 @@ define( [
             var shader = this._fragmentShader.join( '\n' );
             //osg.log('Fragment Shader');
 
-            shader = this._shaderProcessor.processShader( shader, defines );
+            shader = this._shaderProcessor.processShader( shader, defines, extensions );
 
             Notify.debug( shader );
             return shader;

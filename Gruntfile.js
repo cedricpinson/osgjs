@@ -345,7 +345,7 @@ var generateVersionFile = function() {
                 //Hammer:
                 {
                     cwd: './',
-                    src: 'examples/vendors/hammer-1.0.5.js',
+                    src: 'examples/vendors/hammer-2.0.4.js',
                     dest: 'examples/vendors/hammer.js'
                 },
                 //RequireTextBuild:
