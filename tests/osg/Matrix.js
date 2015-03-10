@@ -4,6 +4,8 @@ define( [
     'osg/Notify'
 ], function ( mockup, Matrix, Notify ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -180,7 +182,7 @@ define( [
             Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
             Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
             Matrix.preMult( scale, translate, res );
-            ok( mockup.check_near( res, [ 400, 0, 0, 0,
+            ok( mockup.checkNear( res, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
                 400, 300, 0.5, 1
@@ -189,7 +191,7 @@ define( [
             Matrix.makeTranslate( 1.0, 1.0, 1.0, translate );
             Matrix.makeScale( 0.5 * width, 0.5 * height, 0.5, scale );
             Matrix.postMult( scale, translate, res );
-            ok( mockup.check_near( res, [ 400, 0, 0, 0,
+            ok( mockup.checkNear( res, [ 400, 0, 0, 0,
                 0, 300, 0, 0,
                 0, 0, 0.5, 0,
                 400, 300, 0.5, 1
@@ -251,7 +253,7 @@ define( [
                 0, 0, 0, 1
             ];
             var m1result = [];
-            var ok1 = Matrix.inverse4x3( m1, m1result );
+            Matrix.inverse4x3( m1, m1result );
             mockup.near( m1result, [ 243.988, -49.3875, 393.386, 0,
                 284.374, 343.661, -133.23, 0, -276.267, 310.128, 210.282, 0, -0, -0, -0, 1
             ], 1e-3 );
@@ -261,7 +263,7 @@ define( [
                 0, 0, 0, 1
             ];
             var m2result = [];
-            var ok2 = Matrix.inverse4x3( m2, m2result );
+            Matrix.inverse4x3( m2, m2result );
             mockup.near( m2result, [ 243.988, 284.374, -276.267, 0, -49.3875, 343.661, 310.128, 0,
                 393.386, -133.23, 210.282, 0, -0, -0, -0, 1
             ], 1e-3 );
@@ -295,10 +297,9 @@ define( [
         } );
 
         test( 'Matrix.makePerspective', function () {
-            var result = [];
             var m = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.0020020020020022, 0 ];
             var res = Matrix.makePerspective( 60, 800 / 600, 1.0, 1000 );
-            ok( mockup.check_near( res, m ), 'makePerspective should be ' + m + ' and is ' + res );
+            ok( mockup.checkNear( res, m ), 'makePerspective should be ' + m + ' and is ' + res );
         } );
     };
 } );

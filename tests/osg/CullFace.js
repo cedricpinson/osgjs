@@ -5,6 +5,8 @@ define( [
     'osgShader/ShaderGeneratorProxy'
 ], function ( mockup, CullFace, State, ShaderGeneratorProxy ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -12,7 +14,7 @@ define( [
         test( 'CullFace', function () {
 
             var n = new CullFace();
-            ok( n.getMode() === CullFace.BACK, "Check default mode" );
+            ok( n.getMode() === CullFace.BACK, 'Check default mode' );
 
             var state = new State( new ShaderGeneratorProxy() );
             state.setGraphicContext( mockup.createFakeRenderer() );
@@ -23,7 +25,7 @@ define( [
             n.apply( state );
 
             var n2 = new CullFace( 'FRONT' );
-            ok( n2.getMode() === CullFace.FRONT, "Check string parameter" );
+            ok( n2.getMode() === CullFace.FRONT, 'Check string parameter' );
         } );
     };
 } );

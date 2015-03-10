@@ -4,6 +4,8 @@ define( [
     'tests/osgDB/DatabasePager'
 ], function ( Input, ReaderParser, DatabasePager ) {
 
+    'use strict';
+
     return function () {
         Input();
         ReaderParser();

@@ -7,6 +7,8 @@ define( [
     'osg/PrimitiveSet'
 ], function ( Q, mockup, ReaderParser, Texture, Input, PrimitiveSet ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osgDB' );
@@ -42,11 +44,11 @@ define( [
                 ok( result.getStateSet() !== undefined, 'check old stateset' );
                 var material = result.getStateSet().getAttribute( 'Material' );
                 var materialCheck = ( material !== undefined &&
-                    mockup.check_near( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
-                    mockup.check_near( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
-                    mockup.check_near( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
-                    mockup.check_near( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
-                    mockup.check_near( material.getShininess(), 2.5 ) &&
+                    mockup.checkNear( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
+                    mockup.checkNear( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
+                    mockup.checkNear( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
+                    mockup.checkNear( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
+                    mockup.checkNear( material.getShininess(), 2.5 ) &&
                     material.getName() === 'FloorBorder1' );
 
                 ok( materialCheck, 'check old material' );
@@ -106,11 +108,11 @@ define( [
                 ok( result.getStateSet().getAttribute( 'BlendFunc' ) !== undefined, 'check BlendFunc' );
                 var material = result.getStateSet().getAttribute( 'Material' );
                 var materialCheck = ( material !== undefined &&
-                    mockup.check_near( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
-                    mockup.check_near( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
-                    mockup.check_near( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
-                    mockup.check_near( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
-                    mockup.check_near( material.getShininess(), 2.5 ) &&
+                    mockup.checkNear( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
+                    mockup.checkNear( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
+                    mockup.checkNear( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
+                    mockup.checkNear( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
+                    mockup.checkNear( material.getShininess(), 2.5 ) &&
                     material.getName() === 'FloorBorder1' );
 
                 ok( materialCheck, 'check Material' );
@@ -203,7 +205,7 @@ define( [
             Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
                 ok( result.getStateSet() !== undefined, 'check geometry StateSet' );
                 ok( result.getStateSet().getUserData() !== undefined, 'check StateSet userdata' );
-                ok( result.getPrimitiveSetList().length == 1, 'check primitives' );
+                ok( result.getPrimitiveSetList().length === 1, 'check primitives' );
                 ok( result.getPrimitiveSetList()[ 0 ].getMode() === PrimitiveSet.TRIANGLES, 'check triangles primitive' );
                 ok( result.getPrimitiveSetList()[ 0 ].getFirst() === 0, 'check triangles first index' );
                 ok( result.getPrimitiveSetList()[ 0 ].getIndices().getElements().length === 36, 'check triangles indices' );
@@ -515,34 +517,34 @@ define( [
             } );
         } );
 
-        asyncTest ( 'PagedLOD', function () {
+        asyncTest( 'PagedLOD', function () {
             var tree = {
-                  "osg.PagedLOD": {
-                    "UniqueID": 1,
-                    "Name": "PAGEDLOD",
-                    "CenterMode": "USER_DEFINED_CENTER",
-                    "RangeDataList": {
-                      "File 0": "cow.osgjs",
-                      "File 1": "cessna.osgjs"
+                'osg.PagedLOD': {
+                    'UniqueID': 1,
+                    'Name': 'PAGEDLOD',
+                    'CenterMode': 'USER_DEFINED_CENTER',
+                    'RangeDataList': {
+                        'File 0': 'cow.osgjs',
+                        'File 1': 'cessna.osgjs'
                     },
-                    "RangeList": {
-                      "Range 0": [ 0, 2000 ],
-                      "Range 1": [ 2000, 3.40282e+38 ]
+                    'RangeList': {
+                        'Range 0': [ 0, 2000 ],
+                        'Range 1': [ 2000, 3.40282e+38 ]
                     },
-                    "RangeMode": "PIXEL_SIZE_ON_SCREEN",
-                    "UserCenter": [ 1, 2, 3, 10 ]
-                  }
-              };
-               Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
-                    ok (result._rangeMode ===1, 'check RangeMode');
-                    ok (result._perRangeDataList.length === 2, 'check children number');
-                    ok (result._perRangeDataList[ 0 ].filename === 'cow.osgjs', 'check child 0 filename');
-                    ok (result._perRangeDataList[ 1 ].filename === 'cessna.osgjs', 'check child 1 filename');
-                    ok (result._range.length === 2, 'check RangeList');
-                    ok (result._radius === 10, 'check user defined radius');
-                    start();
-               } );
-        });
+                    'RangeMode': 'PIXEL_SIZE_ON_SCREEN',
+                    'UserCenter': [ 1, 2, 3, 10 ]
+                }
+            };
+            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+                ok( result._rangeMode === 1, 'check RangeMode' );
+                ok( result._perRangeDataList.length === 2, 'check children number' );
+                ok( result._perRangeDataList[ 0 ].filename === 'cow.osgjs', 'check child 0 filename' );
+                ok( result._perRangeDataList[ 1 ].filename === 'cessna.osgjs', 'check child 1 filename' );
+                ok( result._range.length === 2, 'check RangeList' );
+                ok( result._radius === 10, 'check user defined radius' );
+                start();
+            } );
+        } );
 
         asyncTest( 'Node Children Ordering', function () {
             var tree = {

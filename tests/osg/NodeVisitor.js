@@ -4,6 +4,8 @@ define( [
     'osg/Utils'
 ], function ( NodeVisitor, Node, MACROUTILS ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );

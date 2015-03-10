@@ -3,6 +3,8 @@ define( [
     'osg/BufferArray'
 ], function ( mockup, BufferArray ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );

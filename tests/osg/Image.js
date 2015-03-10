@@ -3,6 +3,8 @@ define( [
     'osg/Image'
 ], function ( mockup, Image ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -10,10 +12,10 @@ define( [
         asyncTest( 'Image.isGreyScale grey image', function () {
 
 
-            var test = function( img ) {
+            var test = function ( img ) {
                 var n = new Image( img );
 
-                equal( n.isGreyscale( 2 ), true, "check image is grey");
+                equal( n.isGreyscale( 2 ), true, 'check image is grey' );
                 start();
             };
 
@@ -28,10 +30,10 @@ define( [
         asyncTest( 'Image.isGreyScale color image', function () {
 
 
-            var test = function( img ) {
+            var test = function ( img ) {
                 var n = new Image( img );
 
-                equal( n.isGreyscale( 2 ), false, "check image is not grey");
+                equal( n.isGreyscale( 2 ), false, 'check image is not grey' );
                 start();
             };
 

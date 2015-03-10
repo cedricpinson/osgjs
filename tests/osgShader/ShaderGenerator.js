@@ -9,6 +9,8 @@ define( [
     'osgShader/ShaderGeneratorProxy'
 ], function ( mockup, State, StateSet, Material, Shader, Program, Texture, ShaderGeneratorProxy ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osgShader' );

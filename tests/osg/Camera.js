@@ -6,6 +6,8 @@ define( [
     'osg/TransformEnums'
 ], function ( mockup, Camera, Matrix, MatrixTransform, TransformEnums ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -21,7 +23,7 @@ define( [
         test( 'Camera absolute vs relative', function () {
 
             var rotation = Matrix.makeRotate( Math.PI * 0.5, 1.0, 0.0, 0.0, Matrix.create() );
-            var translate = Matrix.makeTranslate( 1, 0,0, Matrix.create() );
+            var translate = Matrix.makeTranslate( 1, 0, 0, Matrix.create() );
             var invRotation = Matrix.create();
             Matrix.inverse( rotation, invRotation );
 
@@ -33,21 +35,21 @@ define( [
 
             Matrix.copy( translate, test );
             camera.computeLocalToWorldMatrix( test );
-            mockup.near( test, Matrix.mult( translate, rotation, Matrix.create() ),'Should expect Translation * Rotation' );
+            mockup.near( test, Matrix.mult( translate, rotation, Matrix.create() ), 'Should expect Translation * Rotation' );
 
             Matrix.copy( translate, test );
             camera.computeWorldToLocalMatrix( test );
-            mockup.near( test, Matrix.mult( translate, invRotation, Matrix.create() ),'Should expect Translation * invRotation' );
+            mockup.near( test, Matrix.mult( translate, invRotation, Matrix.create() ), 'Should expect Translation * invRotation' );
 
             camera.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
 
             Matrix.copy( translate, test );
             camera.computeLocalToWorldMatrix( test );
-            mockup.near( test, rotation,'Should expect Rotation' );
+            mockup.near( test, rotation, 'Should expect Rotation' );
 
             Matrix.copy( translate, test );
             camera.computeWorldToLocalMatrix( test );
-            mockup.near( test, invRotation,'Should expect invRotation' );
+            mockup.near( test, invRotation, 'Should expect invRotation' );
 
 
         } );

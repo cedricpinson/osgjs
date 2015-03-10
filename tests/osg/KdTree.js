@@ -11,6 +11,8 @@ define( [
     'osg/KdTree'
 ], function ( mockup, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry, KdTree ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );

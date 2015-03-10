@@ -5,6 +5,8 @@ define( [
     'osgShader/ShaderGeneratorProxy'
 ], function ( mockup, BlendColor, State, ShaderGeneratorProxy ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );

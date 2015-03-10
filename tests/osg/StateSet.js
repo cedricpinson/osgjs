@@ -6,6 +6,8 @@ define( [
     'osg/Texture'
 ], function ( StateSet, Uniform, Shader, Program, Texture ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );

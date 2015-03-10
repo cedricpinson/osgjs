@@ -22,9 +22,6 @@ define( [
             root.addChild( b );
             b.addChild( c );
 
-
-
-
             var callRoot = 0;
             var callb = 0;
             var callc = 0;

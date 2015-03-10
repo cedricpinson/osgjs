@@ -10,6 +10,8 @@ define( [
     'osg/TransformEnums'
 ], function ( mockup, ComputeMatrixFromNodePath, NodeVisitor, MACROUTILS, MatrixTransform, Matrix, Camera, Vec3, TransformEnums ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -49,15 +51,15 @@ define( [
 
                 var path = [ root, child0, child1, child2 ];
                 var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
-                var trans = Matrix.getTrans( matrix, [0, 0, 0] );
-                mockup.near( trans, [ 0, -10, 10 ] , 'Check translation of matrix' );
+                var trans = Matrix.getTrans( matrix, [ 0, 0, 0 ] );
+                mockup.near( trans, [ 0, -10, 10 ], 'Check translation of matrix' );
             } )();
 
 
-            (function() {
+            ( function () {
                 var root = new Camera();
                 root.setName( 'root' );
-                root.setViewMatrix( Matrix.makeTranslate(0,0,1000, Matrix.create() ) );
+                root.setViewMatrix( Matrix.makeTranslate( 0, 0, 1000, Matrix.create() ) );
 
                 var child1 = new MatrixTransform();
                 Matrix.makeTranslate( 0, -10, 0, child1.getMatrix() );
@@ -69,7 +71,7 @@ define( [
                 var matrix = ComputeMatrixFromNodePath.computeLocalToWorld( path );
                 var result = Vec3.create();
                 Matrix.getTrans( matrix, result );
-                mockup.near( result, [0,-10,10] , 'Check we dont use the camera on top' );
+                mockup.near( result, [ 0, -10, 10 ], 'Check we dont use the camera on top' );
             } )();
 
         } );
