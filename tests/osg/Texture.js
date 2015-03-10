@@ -5,6 +5,8 @@ define( [
     'osgShader/ShaderGeneratorProxy'
 ], function ( mockup, Texture, State, ShaderGeneratorProxy ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -15,7 +17,7 @@ define( [
             var textureFromURL = Texture.createFromURL( '"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII="' );
             ok( textureFromURL !== undefined, 'Check textureFromURL' );
 
-            var ready = undefined;
+            var ready;
             var loadingComplete = function () {
                 loadingComplete.nbLoad--;
                 if ( loadingComplete.nbLoad === 0 ) {
@@ -42,8 +44,8 @@ define( [
             var greyscale = loadTexture( 'mockup/greyscale.png', Texture.ALPHA );
             greyscale.setUnrefImageDataAfterApply( true );
 
-            var rgb24 = loadTexture( 'mockup/rgb24.png', Texture.RGB );
-            var rgba32 = loadTexture( 'mockup/rgba32.png', Texture.RGBA );
+            loadTexture( 'mockup/rgb24.png', Texture.RGB );
+            loadTexture( 'mockup/rgba32.png', Texture.RGBA );
 
             ready = function () {
                 var cnv = document.createElement( 'canvas' );

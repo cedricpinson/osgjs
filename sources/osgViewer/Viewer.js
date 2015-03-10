@@ -406,8 +406,9 @@ define( [
         },
 
 
-        updateTraversal: function ( startTraversal ) {
+        updateTraversal: function () {
 
+            var startTraversal = Timer.instance().tick();
             // update the scene
             this.getScene().updateSceneGraph( this._updateVisitor );
             // Remove ExpiredSubgraphs from DatabasePager
@@ -484,7 +485,6 @@ define( [
             // update inputs devices
             this.updateEventProxy( this._eventProxy, this.getFrameStamp() );
 
-            var startTraversal = Timer.instance().tick();
             // setup framestamp
             this._updateVisitor.setFrameStamp( this.getFrameStamp() );
             // Update Manipulator/Event
@@ -495,7 +495,7 @@ define( [
 
             if ( this.checkNeedToDoFrame() || canvasSizeChanged ) {
                 this._requestRedraw = false;
-                this.updateTraversal( startTraversal );
+                this.updateTraversal();
                 this.renderingTraversal();
             }
 

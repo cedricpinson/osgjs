@@ -4,6 +4,8 @@ define( [
     'osgDB/ReaderParser'
 ], function ( mockup, BoundingBox, ReaderParser ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -27,7 +29,7 @@ define( [
 
                 var o = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
                 o.getBound();
-                var bbTestSceneGraphTest = ( mockup.check_near( o.boundingSphere.radius(), 2.41421, 0.00001 ) );
+                var bbTestSceneGraphTest = ( mockup.checkNear( o.boundingSphere.radius(), 2.41421, 0.00001 ) );
                 ok( bbTestSceneGraphTest, 'Box.js tested  ->  bounding sphere scene graph test' );
             } )();
 
@@ -36,8 +38,8 @@ define( [
                 bb._min = [ 1, 2, 3 ];
                 bb._max = [ 4, 5, 6 ];
 
-                ok( mockup.check_near( bb.corner( 0 ), [ 1, 2, 3 ] ), 'Box corner 0' );
-                ok( mockup.check_near( bb.corner( 7 ), [ 4, 5, 6 ] ), 'Box corner 0' );
+                ok( mockup.checkNear( bb.corner( 0 ), [ 1, 2, 3 ] ), 'Box corner 0' );
+                ok( mockup.checkNear( bb.corner( 7 ), [ 4, 5, 6 ] ), 'Box corner 0' );
             } )();
         } );
     };

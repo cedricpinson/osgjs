@@ -6,6 +6,8 @@ define( [
     'osg/Shape'
 ], function ( mockup, Node, Lod, PagedLOD, Shape ) {
 
+    'use strict';
+
     return function () {
         module( 'osg' );
 
@@ -26,10 +28,10 @@ define( [
             var plod = new PagedLOD();
             // Create a quad of 2x2 with center in 0,0,0
 
-            var n = Shape.createTexturedQuadGeometry( -1, -1, 0, 2 , 0, 0, 0, 2, 0 );
+            var n = Shape.createTexturedQuadGeometry( -1, -1, 0, 2, 0, 0, 0, 2, 0 );
             plod.setRange( 0, 0, 200 );
             plod.addChildNode( n );
-            console.log( plod.getBound().radius());
+            console.log( plod.getBound().radius() );
             mockup.near( plod.getBound().radius(), 1.4142135623730951, 0.0000001 );
             // Set a USER_DEFINED_CENTER/radius and try again
             plod.setCenter( [ 0, 0, 0 ] );
@@ -37,11 +39,11 @@ define( [
             plod.dirtyBound();
             mockup.near( plod.getBound().radius(), 10.0, 0.0000001 );
             // Now test UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED
-            plod.setCenterMode ( Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED );
+            plod.setCenterMode( Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED );
             // move the center, so the user defined bs does not contain the default bs
-            plod.setCenter ( [ 10, 10, 10 ] );
+            plod.setCenter( [ 10, 10, 10 ] );
             plod.dirtyBound();
-            mockup.near ( plod.getBound().radius(), 14.367360819, 0.0000001 );
+            mockup.near( plod.getBound().radius(), 14.367360819, 0.0000001 );
         } );
     };
 } );

@@ -8,6 +8,10 @@ define( [
     'tests/mockup/mockup'
 ], function ( State, StateSet, Material, StateAttribute, Texture, ShaderGeneratorProxy, mockup ) {
 
+    'use strict';
+
+    var QUnit = window.QUnit;
+
     return function () {
 
         module( 'osg' );
@@ -39,8 +43,12 @@ define( [
                 var state = new State( new ShaderGeneratorProxy() );
                 var fakeRenderer = mockup.createFakeRenderer();
                 var id = 0;
-                fakeRenderer.createProgram = function() { return id++; };
-                fakeRenderer.getProgramParameter = function() { return true; };
+                fakeRenderer.createProgram = function () {
+                    return id++;
+                };
+                fakeRenderer.getProgramParameter = function () {
+                    return true;
+                };
                 state.setGraphicContext( fakeRenderer );
 
                 var stateSet0 = new StateSet();
@@ -57,7 +65,7 @@ define( [
                 state.applyStateSet( stateSet2 );
 
                 equal( state.getStateSetStackSize(), 1, 'check stateSet stack length' );
-                notEqual( state.getLastProgramApplied(), undefined, 'check last program applied' );
+                QUnit.notEqual( state.getLastProgramApplied(), undefined, 'check last program applied' );
                 equal( state.attributeMap.Program.values().length, 0, 'check program stack length' );
             } )();
         } );

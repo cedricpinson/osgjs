@@ -8,6 +8,8 @@ define( [
     'osgShadow/ShadowTexture'
 ], function ( mockup, Light, LightSource, Material, Compiler, ShadowAttribute, ShadowTexture ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osgShader' );

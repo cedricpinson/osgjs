@@ -4,9 +4,13 @@ define( [
     'osg/Node',
     'osg/Shape',
     'osg/Viewport',
-    'osgShadow/ShadowedScene', 'osgUtil/IntersectionVisitor',
+    'osgShadow/ShadowedScene',
+    'osgUtil/IntersectionVisitor',
     'tests/mockup/mockup',
 ], function ( Camera, Matrix, Node, Shape, Viewport, ShadowedScene, IntersectionVisitor, mockup ) {
+
+    'use strict';
+
     return function () {
         module( 'osgShadow' );
 
@@ -56,7 +60,7 @@ define( [
             iv.setIntersector( di );
             camera.accept( iv );
 
-            ok( mockup[ 'check_near' ]( di.stackTransforms[ 0 ], [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
+            ok( mockup.checkNear( di.stackTransforms[ 0 ], [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
         } );
     };
 } );

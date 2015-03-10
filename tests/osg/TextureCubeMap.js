@@ -7,13 +7,15 @@ define( [
     'osgShader/ShaderGeneratorProxy'
 ], function ( mockup, TextureCubeMap, Texture, State, ReaderParser, ShaderGeneratorProxy ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
 
         test( 'TextureCubeMap', function () {
 
-            var ready = undefined;
+            var ready;
             var loadingComplete = function () {
                 loadingComplete.nbLoad--;
                 if ( loadingComplete.nbLoad === 0 ) {
@@ -23,17 +25,6 @@ define( [
             loadingComplete.nbLoad = 0;
             loadingComplete.addRessource = function () {
                 loadingComplete.nbLoad++;
-            };
-
-            var loadTexture = function ( name, format ) {
-                loadingComplete.addRessource();
-                var image = new Image();
-                image.onload = function () {
-                    texture.setImage( image, format );
-                    loadingComplete();
-                };
-                image.src = name;
-                return texture;
             };
 
             var greyscale = ReaderParser.readImage( 'mockup/greyscale.png', {

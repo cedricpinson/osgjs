@@ -2,6 +2,8 @@ define( [
     'osgAnimation/Keyframe'
 ], function ( Keyframe ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osgAnimation' );

@@ -2,6 +2,8 @@ define( [
     'osgGA/FirstPersonManipulator'
 ], function ( FirstPersonManipulator ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osgGA' );

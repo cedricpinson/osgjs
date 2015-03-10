@@ -2,6 +2,8 @@ define( [
     'osgViewer/View'
 ], function ( View ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osgViewer' );

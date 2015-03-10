@@ -2,6 +2,8 @@ define( [
     'osgGA/OrbitManipulator'
 ], function ( OrbitManipulator ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osgGA' );

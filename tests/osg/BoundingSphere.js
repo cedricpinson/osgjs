@@ -28,7 +28,7 @@ define( [
 
             var cbs0 = [ 2.5, 2.5, 0 ];
             var rbs0 = 2.12132;
-            var centerisequalbs0 = mockup.check_near( cbs0, bs0._center, 0.0001 ) & mockup.check_near( rbs0, bs0._radius, 0.0001 );
+            var centerisequalbs0 = mockup.checkNear( cbs0, bs0._center, 0.0001 ) & mockup.checkNear( rbs0, bs0._radius, 0.0001 );
             ok( centerisequalbs0, 'Expanding by vec3 -> bounding sphere test 1' );
             var bs1 = new BoundingSphere();
             bs1.expandByVec3( [ -1.0, 0.0, 0.0 ] );
@@ -38,7 +38,7 @@ define( [
 
             var cbs1 = [ 2.00438, 0.862774, 0.784302 ];
             var rbs1 = 5.16774;
-            var centerisequalbs1 = mockup.check_near( cbs1, bs1._center, 0.0001 ) & mockup.check_near( rbs1, bs1._radius, 0.0001 );
+            var centerisequalbs1 = mockup.checkNear( cbs1, bs1._center, 0.0001 ) & mockup.checkNear( rbs1, bs1._radius, 0.0001 );
             ok( centerisequalbs1, 'Expanding by vec3 ->  bounding sphere test 2' );
 
             var bs01 = new BoundingSphere();
@@ -46,13 +46,13 @@ define( [
 
             var cbs010 = [ 2.5, 2.5, 0 ];
             var rbs010 = 2.12132;
-            var centerisequalbs010 = mockup.check_near( cbs010, bs01._center, 0.0001 ) & mockup.check_near( rbs010, bs01._radius, 0.0001 );
+            var centerisequalbs010 = mockup.checkNear( cbs010, bs01._center, 0.0001 ) & mockup.checkNear( rbs010, bs01._radius, 0.0001 );
             ok( centerisequalbs010, 'Expanding by BoundingSphere ->  bounding sphere test 1' );
 
             bs01.expandByBoundingSphere( bs1 );
             var cbs011 = [ 2.00438, 0.862774, 0.784302 ];
             var rbs011 = 5.16774;
-            var centerisequalbs011 = mockup.check_near( cbs011, bs01._center, 0.0001 ) & mockup.check_near( rbs011, bs01._radius, 0.0001 );
+            var centerisequalbs011 = mockup.checkNear( cbs011, bs01._center, 0.0001 ) & mockup.checkNear( rbs011, bs01._radius, 0.0001 );
             ok( centerisequalbs011, 'Expanding by BoundingSphere ->  bounding sphere test 2' );
 
 

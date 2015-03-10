@@ -11,6 +11,8 @@ define( [
     'osg/Geometry'
 ], function ( mockup, TriangleIntersector, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osgUtil' );

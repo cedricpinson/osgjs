@@ -7,6 +7,8 @@ define( [
     'tests/osgAnimation/Sampler'
 ], function ( Animation, BasicAnimationManager, Channel, Interpolator, Keyframe, Sampler ) {
 
+    'use strict';
+
     return function () {
         Animation();
         BasicAnimationManager();

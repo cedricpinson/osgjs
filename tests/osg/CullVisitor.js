@@ -21,6 +21,8 @@ define( [
     'osgShader/ShaderGeneratorProxy'
 ], function ( mockup, BoundingBox, Camera, CullSettings, CullVisitor, Matrix, MatrixTransform, Node, RenderBin, RenderStage, Shape, StateGraph, State, StateSet, TransformEnums, Vec3, Viewport, View, Viewer, ShaderGeneratorProxy ) {
 
+    'use strict';
+
     return function () {
 
         module( 'osg' );
@@ -47,7 +49,7 @@ define( [
 
             var fb = function () {};
             fb.prototype = {
-                cull: function ( node, nv ) {
+                cull: function ( /*node, nv*/) {
                     callb = 1;
                     return false;
                 }
@@ -55,7 +57,7 @@ define( [
 
             var fc = function () {};
             fc.prototype = {
-                cull: function ( node, nv ) {
+                cull: function ( /*node, nv*/) {
                     callc = 1;
                     return true;
                 }
@@ -183,18 +185,18 @@ define( [
 
                 var stack = [];
 
-                function setCullSettings( settings ) {
+                var setCullSettings = function ( settings ) {
                     if ( this._computedNear !== undefined ) {
                         stack.push( [ this._computedNear, this._computedFar ] );
                     }
                     CullSettings.prototype.setCullSettings.call( this, settings );
-                }
+                };
                 var resultProjection;
 
-                function popProjectionMatrix() {
+                var popProjectionMatrix = function () {
                     resultProjection = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
                     CullVisitor.prototype.popProjectionMatrix.call( this );
-                }
+                };
                 CullVisitor.prototype.setCullSettings = setCullSettings;
                 var cull = new CullVisitor();
                 var rs = new RenderStage();
@@ -209,9 +211,9 @@ define( [
 
                 camera0.accept( cull );
                 var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.9423076923076918, -1, 0, 0, -14.417307692307686, 0 ];
-                ok( mockup.check_near( stack[ 1 ][ 0 ], 5 ), 'near should be 5.0 and is ' + stack[ 1 ][ 0 ] );
-                ok( mockup.check_near( stack[ 1 ][ 1 ], 15 ), 'near should be 15.0 and is ' + stack[ 1 ][ 1 ] );
-                ok( mockup.check_near( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+                ok( mockup.checkNear( stack[ 1 ][ 0 ], 5 ), 'near should be 5.0 and is ' + stack[ 1 ][ 0 ] );
+                ok( mockup.checkNear( stack[ 1 ][ 1 ], 15 ), 'near should be 15.0 and is ' + stack[ 1 ][ 1 ] );
+                ok( mockup.checkNear( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
             } )();
 
             // check the computation of nearfar with camera in position that it reverses near far
@@ -232,20 +234,20 @@ define( [
 
                 var stack = [];
 
-                function setCullSettings( settings ) {
+                var setCullSettings = function ( settings ) {
                     if ( this._computedNear !== undefined ) {
                         stack.push( [ this._computedNear, this._computedFar ] );
                     }
                     CullSettings.prototype.setCullSettings.call( this, settings );
-                }
+                };
                 CullVisitor.prototype.setCullSettings = setCullSettings;
 
                 var resultProjection;
 
-                function popProjectionMatrix() {
+                var popProjectionMatrix = function () {
                     resultProjection = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
                     CullVisitor.prototype.popProjectionMatrix.call( this );
-                }
+                };
 
                 var supposedProjection = [ 1.299038105676658, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -49.999750101250868, -1, 0, 0, -499.79750101250352, 0 ];
                 var cull = new CullVisitor();
@@ -260,9 +262,9 @@ define( [
                 cull.pushModelViewMatrix( Matrix.create() );
 
                 camera0.accept( cull );
-                ok( mockup.check_near( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
-                ok( mockup.check_near( stack[ 1 ][ 1 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 1 ] );
-                ok( mockup.check_near( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+                ok( mockup.checkNear( stack[ 1 ][ 0 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 0 ] );
+                ok( mockup.checkNear( stack[ 1 ][ 1 ], 10 ), 'near should be 10 and is ' + stack[ 1 ][ 1 ] );
+                ok( mockup.checkNear( resultProjection, supposedProjection ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
 
             } )();
 
@@ -286,8 +288,8 @@ define( [
                 var eye = [ -8050356.805171473, 5038241.363464848, 5364184.10053209 ];
                 var target = [ 110530, 14460, -19660 ];
 
-                //        var d_far = 15715646.446620844;
-                //        var d_near = 6098715.042224069;
+                //        var dFar = 15715646.446620844;
+                //        var dNear = 6098715.042224069;
 
                 //var matrixOffset = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 9520443.940837447, 0, 0, 0, -9539501.699646605, 1];
                 // var projectionResult = [
@@ -300,8 +302,8 @@ define( [
                 //      var projectionResult = [0.9742785792574936, 0, 0, 0, 0, 1.7320508075688774, 0, 0, 0, 0, -1.002002002002002, -1, 0, 0, -2.0020020020020022, 0]
 
 
-                var d_far = 21546781.959391922;
-                var d_near = 267579.84430311248;
+                var dFar = 21546781.959391922;
+                var dNear = 267579.84430311248;
                 //      var bbmax = [6353000, 6326310, 6317430];
                 //      var bbmin = [-6131940, -6297390, -6356750];
                 //      var bbCornerFar = 1;
@@ -312,20 +314,20 @@ define( [
 
                 var stack = [];
 
-                function setCullSettings( settings ) {
+                var setCullSettings = function ( settings ) {
                     if ( this._computedNear !== undefined ) {
                         stack.push( [ this._computedNear, this._computedFar ] );
                     }
                     CullSettings.prototype.setCullSettings.call( this, settings );
-                }
+                };
                 CullVisitor.prototype.setCullSettings = setCullSettings;
 
                 var resultProjection;
 
-                function popProjectionMatrix() {
+                var popProjectionMatrix = function () {
                     resultProjection = this._projectionMatrixStack[ this._projectionMatrixStack.length - 1 ];
                     CullVisitor.prototype.popProjectionMatrix.call( this );
-                }
+                };
 
                 var supposedProjection = [
                     0.97427857925749362, 0, 0, 0,
@@ -345,9 +347,9 @@ define( [
                 cull.pushModelViewMatrix( Matrix.create() );
 
                 camera0.accept( cull );
-                ok( mockup.check_near( stack[ 1 ][ 0 ], d_near, 0.8 ), 'near should be ' + d_near + ' and is ' + stack[ 1 ][ 0 ] );
-                ok( mockup.check_near( stack[ 1 ][ 1 ], d_far, 0.8 ), 'near should be ' + d_far + ' and is ' + stack[ 1 ][ 1 ] );
-                ok( mockup.check_near( resultProjection, supposedProjection, 0.8 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
+                ok( mockup.checkNear( stack[ 1 ][ 0 ], dNear, 0.8 ), 'near should be ' + dNear + ' and is ' + stack[ 1 ][ 0 ] );
+                ok( mockup.checkNear( stack[ 1 ][ 1 ], dFar, 0.8 ), 'near should be ' + dFar + ' and is ' + stack[ 1 ][ 1 ] );
+                ok( mockup.checkNear( resultProjection, supposedProjection, 0.8 ), 'check projection matrix [' + resultProjection.toString() + '] [' + supposedProjection.toString() + ']' );
 
             } )();
 
@@ -641,7 +643,7 @@ define( [
                 Matrix.mult( leaf._view, leaf._modelWorld, tmp );
 
                 mockup.near( tmp, leaf._modelView );
-                //ok( mockup.check_near( tmp, leaf.modelview ), 'View * World === ModelView' );
+                //ok( mockup.checkNear( tmp, leaf.modelview ), 'View * World === ModelView' );
             };
 
             var q = Shape.createTexturedBoxGeometry( 0, 0, 0, 1, 1, 1 );
