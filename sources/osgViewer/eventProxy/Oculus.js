@@ -88,21 +88,25 @@ define( [
                 // If no real oculus is detected, navigators (vr builds of FF and Chrome) simulate a fake oculus
                 // On firefox, this fake oculus returns a wrong quaternion: [0, 0, 0, 0]
                 // So we detect and set this quaternion to a neutral value: [0, 0, 0, 1]
-                if ( quat.x === 0.0 && quat.y === 0.0 && quat.y === 0.0 && quat.w === 0.0 )
-                    quat.w = 1.0;
-
-                // On oculus the up vector is [0,1,0]
-                // On osgjs the up vector is [0,0,1]
-                this._quat[ 0 ] = quat.x;
-                this._quat[ 1 ] = -quat.z;
-                this._quat[ 2 ] = quat.y;
-                this._quat[ 3 ] = quat.w;
+                // UPDATE : it looks like that sometimes no quaternion is returned
+                if ( !quat ) {
+                    Quat.init( this._quat );
+                } else {
+                    if ( quat.x === 0.0 && quat.y === 0.0 && quat.y === 0.0 && quat.w === 0.0 )
+                        quat.w = 1.0;
+                    // On oculus the up vector is [0,1,0]
+                    // On osgjs the up vector is [0,0,1]
+                    this._quat[ 0 ] = quat.x;
+                    this._quat[ 1 ] = -quat.z;
+                    this._quat[ 2 ] = quat.y;
+                    this._quat[ 3 ] = quat.w;
+                }
 
                 manipulatorAdapter.update( this._quat );
             }
         },
 
-        getHmd: function() {
+        getHmd: function () {
             return this._hmd;
         }
     };
