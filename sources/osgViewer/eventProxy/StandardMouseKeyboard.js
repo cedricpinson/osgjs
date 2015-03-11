@@ -13,13 +13,17 @@ define( [], function () {
     };
 
     StandardMouseKeyboard.prototype = {
-        init: function ( args ) {
+        init: function ( options ) {
 
             this.removeEventListeners( this._mouseEventNode, this._wheelEventNode, this._keyboardEventNode );
 
-            var mouse = args.mouseEventNode;
-            var mousewheel = args.wheelEventNode || mouse;
-            var keyboard = args.keyboardEventNode || mouse;
+            var mouse = options.mouseEventNode;
+
+            var mousewheel = options.wheelEventNode || mouse;
+            var keyboard = options.keyboardEventNode || mouse;
+
+            if ( options.getBoolean( 'scrollwheel' ) === false )
+                mousewheel = null;
 
             this.addEventListeners( mouse, mousewheel, keyboard );
             this._mouseEventNode = mouse;
@@ -76,61 +80,72 @@ define( [], function () {
         getManipulatorController: function () {
             return this._viewer.getManipulator().getControllerList()[ this._type ];
         },
+
         keyup: function ( ev ) {
-            if ( !this.isValid() )
-                return;
-            if ( this.getManipulatorController().keyup )
+
+            if ( this.isValid() && this.getManipulatorController().keyup )
                 return this.getManipulatorController().keyup( ev );
+
+            return undefined;
         },
+
         keydown: function ( ev ) {
-            if ( !this.isValid() )
-                return;
-            if ( this.getManipulatorController().keydown )
+
+            if ( this.isValid() && this.getManipulatorController().keydown )
                 return this.getManipulatorController().keydown( ev );
+
+            return undefined;
         },
 
         mousedown: function ( ev ) {
-            if ( !this.isValid() )
-                return;
-            if ( this.getManipulatorController().mousedown )
+
+            if ( this.isValid() && this.getManipulatorController().mousedown )
                 return this.getManipulatorController().mousedown( ev );
+
+            return undefined;
         },
 
         mouseup: function ( ev ) {
-            if ( !this.isValid() )
-                return;
-            if ( this.getManipulatorController().mouseup )
+
+            if ( this.isValid() && this.getManipulatorController().mouseup )
                 return this.getManipulatorController().mouseup( ev );
+
+            return undefined;
         },
 
         mouseout: function ( ev ) {
-            if ( !this.isValid() )
-                return;
-            if ( this.getManipulatorController().mouseout )
+
+            if ( this.isValid() && this.getManipulatorController().mouseout )
                 return this.getManipulatorController().mouseout( ev );
+
+            return undefined;
         },
 
         mousemove: function ( ev ) {
-            if ( !this.isValid() )
-                return;
-            if ( this.getManipulatorController().mousemove )
+
+            if ( this.isValid() && this.getManipulatorController().mousemove )
                 return this.getManipulatorController().mousemove( ev );
+
+            return undefined;
         },
 
         dblclick: function ( ev ) {
-            if ( !this.isValid() )
-                return;
-            if ( this.getManipulatorController().dblclick )
+
+            if ( this.isValid() && this.getManipulatorController().dblclick )
                 return this.getManipulatorController().dblclick( ev );
+
+            return undefined;
         },
 
         mousewheel: function ( event ) {
+
             if ( !this.isValid() )
-                return;
+                return undefined;
 
             var manipulatorAdapter = this.getManipulatorController();
+
             if ( !manipulatorAdapter.mousewheel )
-                return;
+                return undefined;
 
             // from jquery
             var orgEvent = event || window.event,

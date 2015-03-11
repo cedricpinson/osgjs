@@ -571,6 +571,8 @@ define( [
 
             var lists = EventProxy;
             var argumentEventBackend = args.EventBackend;
+
+
             // loop on each devices and try to initialize it
             var keys = window.Object.keys( lists );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
@@ -584,9 +586,35 @@ define( [
                     argDevice = argumentEventBackend[ device ];
                 }
 
+                // extend argDevice with regular options eg:
+                // var options = {
+                //     EventBackend: {
+                //         Hammer: {
+                //             drag_max_touches: 4,
+                //             transform_min_scale: 0.08,
+                //             transform_min_rotation: 180,
+                //             transform_always_block: true
+                //         }
+                //     },
+                //     zoomscroll: false
+                // };
+
+                // to options merged:
+                // var options = {
+                //     drag_max_touches: 4,
+                //     transform_min_scale: 0.08,
+                //     transform_min_rotation: 180,
+                //     transform_always_block: true,
+                //     zoomscroll: false
+                // };
+                //
+                var options = new Options();
+                options.extend( argDevice ).extend( argsObject );
+                delete options.EventBackend;
+
                 if ( initialize ) {
                     var inputDevice = new lists[ device ]( this );
-                    inputDevice.init( argDevice );
+                    inputDevice.init( options );
                     deviceEnabled[ device ] = inputDevice;
                 }
             }
