@@ -551,7 +551,8 @@ define( [
                 var hits = this._viewer.computeIntersections( x, y, tmask );
 
                 if ( hits.length === 0 )
-                    return;
+                    return undefined;
+
                 hits.sort( sortByRatio );
                 return hits[ 0 ];
             };

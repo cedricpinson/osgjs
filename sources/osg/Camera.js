@@ -132,6 +132,9 @@ define( [
                 return this._far;
             },
 
+            isRenderToTextureCamera: function() {
+                return Object.keys(this._attachments).length > 0;
+            },
 
             getViewMatrix: function () {
                 return this.modelviewMatrix;

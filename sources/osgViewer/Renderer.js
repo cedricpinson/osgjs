@@ -54,6 +54,11 @@ define( [
             return this._cullVisitor;
         },
 
+        setCullVisitor: function ( cv ) {
+            if ( cv && !cv.getRenderer() ) cv.setRenderer( this );
+            this._cullVisitor = cv;
+        },
+
         getCamera: function () {
             return this._camera;
         },

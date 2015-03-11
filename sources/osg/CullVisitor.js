@@ -69,9 +69,6 @@ define( [
             return this._computedFar;
         },
 
-        getNearFarRatio: function () {
-            return this._nearFarRatio;
-        },
         handleCullCallbacksAndTraverse: function ( node ) {
             var ccb = node.getCullCallback();
             if ( ccb ) {
