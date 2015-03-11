@@ -122,9 +122,9 @@ define( [
             var projection, view, model;
             if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF && this.getViewMatrix() && this.getProjectionMatrix() ) {
                 // relative
-                projection = Matrix.mult( camera.getProjectionMatrix(), this.getProjectionMatrix(), Matrix.create() );
+                projection = Matrix.mult( this.getProjectionMatrix(), camera.getProjectionMatrix(), Matrix.create() );
                 view = this.getViewMatrix();
-                model = Matrix.mult( camera.getViewMatrix(), this.getModelMatrix(), Matrix.create() );
+                model = Matrix.mult( this.getModelMatrix(), camera.getViewMatrix(), Matrix.create() );
             } else {
                 // absolute
                 projection = camera.getProjectionMatrix();
@@ -185,7 +185,7 @@ define( [
             if ( node.getReferenceFrame() === TransformEnums.ABSOLUTE_RF )
                 this.popViewMatrix();
             this._intersector.setCurrentTransformation( this.getTransformation() );
-        },
+        }
     } );
 
     return IntersectionVisitor;

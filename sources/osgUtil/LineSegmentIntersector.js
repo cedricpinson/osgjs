@@ -99,6 +99,7 @@ define( [
                 // No intersection found
                 return false;
             }
+            return false;
         },
         getIntersections: function () {
             return this._intersections;
@@ -107,7 +108,7 @@ define( [
             Matrix.inverse( matrix, matrix );
             Matrix.transformVec3( matrix, this._start, this._iStart );
             Matrix.transformVec3( matrix, this._end, this._iEnd );
-        },
+        }
     };
 
 
