@@ -12,10 +12,11 @@ define( [
     };
 
     HammerController.prototype = {
-        init: function ( args ) {
+        init: function ( options ) {
 
             /*jshint camelcase: false */
-            var options = {
+
+            var deviceOptions = {
                 prevent_default: true,
                 drag_max_touches: 2,
                 transform_min_scale: 0.08,
@@ -28,9 +29,21 @@ define( [
             };
             /*jshint camelcase: true */
 
-            this._eventNode = args.eventNode;
+            this._eventNode = options.eventNode;
+
             if ( this._eventNode ) {
-                this._hammer = new Hammer( this._eventNode, options );
+
+                this._hammer = new Hammer( this._eventNode, deviceOptions );
+
+                if ( options.getBoolean( 'scrollwheel' ) === false )
+                    this._hammer.get( 'pinch' ).set( {
+                        enable: false
+                    } );
+                else
+                    this._hammer.get( 'pinch' ).set( {
+                        enable: true
+                    } );
+
             }
         },
 

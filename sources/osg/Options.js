@@ -8,8 +8,9 @@ define( [
         //'overrideDevicePixelRatio': 1, // if specified override the device pixel ratio
         'fullscreen': true,
         'enableFrustumCulling': false,
-        'stats' : false, // display canvas with stats for the viewer
-        'statsNoGraph' : false // display only text
+        'stats': false, // display canvas with stats for the viewer
+        'statsNoGraph': false, // display only text
+        'scrollwheel': true
     };
 
     var Options = function () {
@@ -23,8 +24,9 @@ define( [
 
     Options.prototype = {
 
-        extend: function( options ) {
+        extend: function ( options ) {
             MACROUTILS.objectMix( this, options );
+            return this;
         },
 
         get: function ( key ) {
@@ -52,4 +54,4 @@ define( [
     };
 
     return Options;
-});
+} );
