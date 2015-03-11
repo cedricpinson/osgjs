@@ -31,14 +31,22 @@ define( [
             return this._shadowedScene;
         },
 
-        setEnable: function ( enabled ) {
+        setEnabled: function ( enabled ) {
             this._enabled = enabled;
         },
 
-        getEnable: function () {
+        isEnabled: function () {
             return this._enabled;
         },
-
+        // Deprecated methods, should be removed in the future
+        getEnable: function () {
+            Notify.log( 'ShadowTechnique.getEnable() is deprecated, use isEnabled instead' );
+            return this.isEnabled();
+        },
+        setEnable: function ( enabled ) {
+            Notify.log( 'ShadowTechnique.setEnable() is deprecated, use setEnabled instead' );
+            this.setEnabled( enabled );
+        },
         isFilledOnce: function () {
             return this._filledOnce;
         },
@@ -61,8 +69,9 @@ define( [
             return false;
         },
 
+
         // update the technic
-        updateShadowTechnic: function ( /*nodeVisitor*/) {},
+        updateShadowTechnique: function ( /*nodeVisitor*/) {},
 
         cullShadowCasting: function ( /*cullVisitor*/) {},
 

@@ -104,8 +104,8 @@ define( [
                         if ( st.isDirty() )
                             st.init();
 
-                        if ( st.getEnable() || !st.isFilledOnce() ) {
-                            st.updateShadowTechnic( nv );
+                        if ( st.isEnabled() || !st.isFilledOnce() ) {
+                            st.updateShadowTechnique( nv );
                             st.cullShadowCasting( nv );
                         }
                     }

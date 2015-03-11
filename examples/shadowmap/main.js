@@ -545,7 +545,7 @@
             this._config[ 'lightNum' ] = numLights;
 
             for ( l = 0; l < this._lights.length; l++ )
-                this._lights[ l ].setEnable( false );
+                this._lights[ l ].setEnabled( false );
 
 
             if ( this._lights.length !== numLights ) {
@@ -581,7 +581,7 @@
 
 
             for ( l = 0; l < numLights; l++ )
-                this._lights[ l ].setEnable( true );
+                this._lights[ l ].setEnabled( true );
 
         },
 
@@ -590,7 +590,7 @@
             // remove all lights
             while ( l-- ) {
                 var st = this._shadowTechnique[ l ];
-                st.setEnable( !this._config[ 'shadowStatic' ] );
+                st.setEnabled( !this._config[ 'shadowStatic' ] );
             }
             if ( this._config[ 'shadowStatic' ] ) {
                 this._config[ 'lightSpeed' ] = '0.0';

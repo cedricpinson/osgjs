@@ -437,7 +437,7 @@ define( [
             return true;
         },
 
-        updateShadowTechnic: function ( /*nv*/) {
+        updateShadowTechnique: function ( /*nv*/) {
 
             var camera = this._cameraShadow;
             var texture = this._texture;
@@ -462,6 +462,11 @@ define( [
                     camera.getViewport().setViewport( 0, 0, texture.getWidth(), texture.getHeight() );
                 }
             }
+        },
+
+        updateShadowTechnic: function ( /*nv*/) {
+            Notify.log('ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead');
+            this.updateShadowTechnique();
         },
 
         // internal texture allocation

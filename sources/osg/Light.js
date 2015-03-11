@@ -5,8 +5,9 @@ define( [
     'osg/Matrix',
     'osg/Vec3',
     'osg/Vec4',
-    'osg/Map'
-], function ( MACROUTILS, StateAttribute, Uniform, Matrix, Vec3, Vec4, Map ) {
+    'osg/Map',
+    'osg/Notify'
+], function ( MACROUTILS, StateAttribute, Uniform, Matrix, Vec3, Vec4, Map, Notify ) {
     'use strict';
 
 
@@ -74,7 +75,7 @@ define( [
         },
 
         getHash: function () {
-            return this.getTypeMember() + this.getLightType() + this.isEnable().toString();
+            return this.getTypeMember() + this.getLightType() + this.isEnabled().toString();
         },
 
         getOrCreateUniforms: function () {
@@ -120,15 +121,22 @@ define( [
 
         // enable / disable is not implemented in uniform
         // we should add it
-        isEnable: function () {
+        isEnabled: function () {
             return this._enable;
         },
-        setEnable: function ( bool ) {
+        setEnabled: function ( bool ) {
             this._enable = bool;
             this.dirty();
         },
-
-
+        // Deprecated methods, should be removed in the future
+        isEnable: function () {
+            Notify.log( 'Light.isEnable() is deprecated, use isEnabled instead' );
+            return this.isEnabled();
+        },
+        setEnable: function ( bool ) {
+            Notify.log( 'Light.setEnable() is deprecated, use setEnabled instead' );
+            this.setEnabled( bool );
+        },
         // colors
         setAmbient: function ( a ) {
             Vec4.copy( a, this._ambient );
