@@ -1,6 +1,8 @@
 define( [
+    'osg/BoundingSphere',
+    'osg/ComputeBoundsVisitor',
     'osg/Matrix'
-], function ( Matrix ) {
+], function ( BoundingSphere, ComputeBoundsVisitor, Matrix ) {
 
     'use strict';
 
@@ -13,10 +15,51 @@ define( [
 
         this._controllerList = {};
         this._inverseMatrix = Matrix.create();
+        this._camera = undefined;
+        this._node = undefined;
+        this._frustum = {};
     };
 
     Manipulator.prototype = {
+        setCamera: function ( c ) {
+            this._camera = c;
+        },
+        getCamera: function () {
+            return this._camera;
+        },
+        setNode: function ( node ) {
+            this._node = node;
+        },
+        getHomeBound: function ( useBoundingBox ) {
+            if ( !this._node )
+                return;
 
+            var bs;
+            if ( useBoundingBox || this._flags & Manipulator.COMPUTE_HOME_USING_BBOX ) {
+                bs = new BoundingSphere();
+                var visitor = new ComputeBoundsVisitor();
+                this._node.accept( visitor );
+                var bb = visitor.getBoundingBox();
+
+                if ( bb.valid() )
+                    bs.expandByBoundingBox( bb );
+            } else {
+                bs = this._node.getBound();
+            }
+            return bs;
+        },
+        getHomeDistance: function ( bs ) {
+            var frustum = this._frustum;
+            var dist = bs.radius();
+            if ( this._camera && Matrix.getFrustum( this._camera.getProjectionMatrix(), frustum ) ) {
+                var vertical2 = Math.abs( frustum.right - frustum.left ) / frustum.zNear / 2;
+                var horizontal2 = Math.abs( frustum.top - frustum.bottom ) / frustum.zNear / 2;
+                dist /= Math.sin( Math.atan2( horizontal2 < vertical2 ? horizontal2 : vertical2, 1 ) );
+            } else {
+                dist *= 1.5;
+            }
+            return dist;
+        },
         // eg: var currentTime = nv.getFrameStamp().getSimulationTime();
         update: function ( /*nv*/) {},
 

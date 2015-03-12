@@ -1,6 +1,6 @@
-define( [
-    'osg/Notify'
-], function ( Notify ) {
+define( [], function () {
+
+    'use strict';
 
     /**
      *  OrbitManipulator
@@ -13,6 +13,14 @@ define( [
 
     /** @lends SwitchManipulator.prototype */
     SwitchManipulator.prototype = {
+        getCamera: function () {
+            return this.getCurrentManipulator().getCamera();
+        },
+        setCamera: function ( cam ) {
+            var cbList = this.getManipulatorList();
+            for ( var i = 0, nb = cbList.length; i < nb; ++i )
+                cbList[ i ].setCamera( cam );
+        },
         update: function ( nv ) {
             var manipulator = this.getCurrentManipulator();
             if ( manipulator !== undefined ) {
@@ -20,13 +28,14 @@ define( [
             }
             return undefined;
         },
+        getNode: function () {
+            // we should add an accessor in the osgjs manipulator
+            return this.getCurrentManipulator()._node;
+        },
         setNode: function ( node ) {
-            var manipulator = this.getCurrentManipulator();
-            if ( manipulator.setNode === undefined ) {
-                Notify.log( 'manipulator has not setNode method' );
-                return;
-            }
-            manipulator.setNode( node );
+            var cbList = this.getManipulatorList();
+            for ( var i = 0, nb = cbList.length; i < nb; ++i )
+                cbList[ i ].setNode( node );
         },
         getControllerList: function () {
             return this.getCurrentManipulator().getControllerList();
@@ -56,10 +65,10 @@ define( [
         reset: function () {
             this.getCurrentManipulator().reset();
         },
-        computeHomePosition: function () {
+        computeHomePosition: function ( useBoundingBox ) {
             var manipulator = this.getCurrentManipulator();
             if ( manipulator !== undefined ) {
-                manipulator.computeHomePosition();
+                manipulator.computeHomePosition( useBoundingBox );
             }
         },
         getInverseMatrix: function () {
@@ -67,6 +76,9 @@ define( [
             if ( manipulator !== undefined ) {
                 return manipulator.getInverseMatrix();
             }
+        },
+        setByMatrix: function ( matrix ) {
+            this.getCurrentManipulator().setByMatrix( matrix );
         }
     };
 
