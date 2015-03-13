@@ -1,6 +1,11 @@
+#extension GL_OES_standard_derivatives : require
 
 #pragma include "colorEncode"
 
+uniform mat4 ProjectionMatrix;
+
+uniform sampler2D Texture0;
+uniform vec2 RenderSize;
 
 /** Morgan McGuire Deep G-buffer
     Reconstruct camera-space P.xyz from screen-space S = (x, y) in
@@ -31,27 +36,16 @@ vec3 getPosition(const vec2 uv, const sampler2D tex, const vec4 projInfo)
 }
 
 
-float getDepth(const in float depth, const in vec2 nearFar)
-{
-    return depth;
+// reconstructs view-space unit normal from view-space position
+vec3 reconstructNormalVS(const in vec3 positionVS) {
 
-     float zf = nearFar[0];
-     float zn = nearFar[1];
-     return   zn  * zf / (depth * zn - zf + zf);
+     return normalize(vec3(dFdx(positionVS.z) * 500.0, dFdy(positionVS.z) * 500.0, 1.0)) * 0.5 + 0.5;
 
-    float zNear = nearFar.x;
-    float zFar = nearFar.y;
-    return (2.0 * zNear) / (zFar + zNear - depth * (zFar - zNear));
+     //return normalize(cross(dFdx(positionVS), dFdy(positionVS))) * 0.5 + 0.5;
+
+  //return normalize(cross(dFdx(positionVS), dFdy(positionVS)));
 
 }
-
-uniform mat4 ProjectionMatrix;
-
-uniform sampler2D Texture0;
-uniform vec2 RenderSize;
-uniform vec4 renderSize;
-uniform vec2 NearFar;
-
 void main(void) {
 
     vec2 screenPos = gl_FragCoord.xy / RenderSize.xy;
@@ -66,7 +60,10 @@ void main(void) {
 
 //   gl_FragColor = vec4( Position.xyz, 1.0);
 
-   gl_FragColor = vec4( vec3(getDepth(Position.z, NearFar)), 1.0);
-   //gl_FragColor = vec4( vec3(Position.z), 1.0);
+
+   // reconstructs view-space unit normal from view-space position
+   vec3 Normal = reconstructNormalVS(Position);
+
+   gl_FragColor = vec4( Normal, 1.0);
 
 }

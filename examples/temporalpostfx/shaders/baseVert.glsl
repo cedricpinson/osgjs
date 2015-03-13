@@ -6,6 +6,6 @@ uniform mat4 ModelViewMatrix;
 uniform mat4 ProjectionMatrix;
 
 void main(void) {
-  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);
+    gl_Position = ProjectionMatrix * (ModelViewMatrix * vec4(Vertex,1.0));
   FragTexCoord0 = TexCoord0;
 }

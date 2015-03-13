@@ -38,4 +38,7 @@ void main (void)
       gl_FragColor = (FragTexCoord0.x < slide ) ? color0 : color1;
     }
   }
+  else{
+      gl_FragColor = color1 ;
+  }
 }

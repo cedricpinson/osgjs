@@ -37,23 +37,202 @@
         }
     } );
 
+
+
     var Example = function () {
         this._config = {};
+
+        // default & change config with URL params
+        var queryDict = {};
+        window.location.search.substr( 1 ).split( '&' ).forEach( function ( item ) {
+            queryDict[ item.split( '=' )[ 0 ] ] = item.split( '=' )[ 1 ];
+        } );
+        if ( queryDict[ 'debug' ] ) {
+            this._debugOtherTechniques = true;
+            this._debugFrustum = true;
+            this._debugPrefilter = true;
+        }
+
+        var keys = Object.keys( queryDict );
+        for ( var i = 0; i < keys.length; i++ ) {
+            var property = keys[ i ];
+            this._config[ property ] = queryDict[ property ];
+        }
     };
 
 
     Example.prototype = {
 
+        getShaderBackground: function () {
+            var vertexshader = [
+                'attribute vec3 Vertex;',
+                'attribute vec3 Normal;',
+                'attribute vec2 TexCoord0;',
+                'uniform mat4 ModelViewMatrix;',
+                'uniform mat4 ProjectionMatrix;',
+                'uniform mat4 NormalMatrix;',
+
+                'varying vec3 osg_FragNormal;',
+                'varying vec3 osg_FragEye;',
+                'varying vec3 osg_FragVertex;',
+                'varying vec2 osg_TexCoord0;',
+
+                'void main(void) {',
+                '  osg_FragVertex = Vertex;',
+                '  osg_TexCoord0 = TexCoord0;',
+                '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
+                '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));',
+                '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+                '}'
+            ].join( '\n' );
+
+            var fragmentshader = [
+                'precision highp float;',
+                'uniform samplerCube Texture0;',
+                'varying vec3 osg_FragNormal;',
+                'varying vec3 osg_FragEye;',
+                'varying vec3 osg_FragVertex;',
+                'varying vec2 osg_TexCoord0;',
+
+                'void main(void) {',
+                '  vec3 eye = -normalize(osg_FragVertex);',
+                '  gl_FragColor = textureCube(Texture0, eye);',
+                '}',
+                ''
+            ].join( '\n' );
+
+            var program = new osg.Program(
+                new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+                new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+
+            return program;
+        },
+
+        addBackground: function () {
+            var group = new osg.Node();
+
+            var size = 250;
+            var background = this.getCubeMap( size, group );
+            background.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
+            background.getOrCreateStateSet().setAttributeAndModes( this.getShaderBackground() );
+
+
+
+            var texture = new osg.TextureCubeMap();
+            this._cubemapTexture = texture;
+
+            Q.all( [
+                osgDB.readImage( '../cubemap/textures/posx.jpg' ),
+                osgDB.readImage( '../cubemap/textures/negx.jpg' ),
+
+                osgDB.readImage( '../cubemap/textures/posy.jpg' ),
+                osgDB.readImage( '../cubemap/textures/negy.jpg' ),
+
+                osgDB.readImage( '../cubemap/textures/posz.jpg' ),
+                osgDB.readImage( '../cubemap/textures/negz.jpg' )
+            ] ).then( function ( images ) {
+
+
+                texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_X', images[ 0 ] );
+                texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_X', images[ 1 ] );
+
+                texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_Y', images[ 2 ] );
+                texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_Y', images[ 3 ] );
+
+                texture.setImage( 'TEXTURE_CUBE_MAP_POSITIVE_Z', images[ 4 ] );
+                texture.setImage( 'TEXTURE_CUBE_MAP_NEGATIVE_Z', images[ 5 ] );
+
+                texture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
+
+                background.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
+                background.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'Texture0' ) );
+            } );
+
+            this.backGround = group;
+        },
+        getCubeMap: function ( size, scene ) {
+            // create the environment sphere
+            var geom = osg.createTexturedBoxGeometry( 0, 0, 0,
+                size, size, size );
+            geom.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
+            geom.getOrCreateStateSet().setAttributeAndModes( this.getShaderBackground() );
+
+            var cubemapTransform = osg.Uniform.createMatrix4( osg.Matrix.create(), 'CubemapTransform' );
+
+            var mt = new osg.MatrixTransform();
+            mt.setMatrix( osg.Matrix.makeRotate( Math.PI / 2.0, 1, 0, 0, [] ) );
+            mt.addChild( geom );
+
+            var CullCallback = function () {
+                this.cull = function ( node, nv ) {
+                    // overwrite matrix, remove translate so environment is always at camera origin
+                    osg.Matrix.setTrans( nv.getCurrentModelViewMatrix(), 0, 0, 0 );
+                    var m = nv.getCurrentModelViewMatrix();
+                    osg.Matrix.copy( m, cubemapTransform.get() );
+                    cubemapTransform.dirty();
+                    return true;
+                };
+            };
+            mt.setCullCallback( new CullCallback() );
+            scene.getOrCreateStateSet().addUniform( cubemapTransform );
+
+
+            var cam = new osg.Camera();
+
+            cam.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+            cam.addChild( mt );
+
+            // the update callback get exactly the same view of the camera
+            // but configure the projection matrix to always be in a short znear/zfar range to not vary depend on the scene size
+            var _self = this;
+            var UpdateCallback = function () {
+                this.update = function ( /*node, nv*/) {
+                    var rootCam = _self._viewer.getCamera();
+                    var info = {};
+                    osg.Matrix.getPerspective( rootCam.getProjectionMatrix(), info );
+                    var proj = [];
+                    osg.Matrix.makePerspective( info.fovy, info.aspectRatio, 1.0, 100.0, proj );
+                    cam.setProjectionMatrix( proj );
+                    cam.setViewMatrix( rootCam.getViewMatrix() );
+
+                    return true;
+                };
+            };
+
+            cam.setUpdateCallback( new UpdateCallback() );
+
+            scene.addChild( cam );
+
+            return geom;
+        },
 
         addModel: function () {
+
+            var groundTex = osg.Texture.createFromURL( '../media/textures/seamless/bricks1.jpg' );
+            groundTex.setWrapT( 'MIRRORED_REPEAT' );
+            groundTex.setWrapS( 'MIRRORED_REPEAT' );
+
+            var modelTex = osg.Texture.createFromURL( '../media/textures/alpha/logo.png' );
+            modelTex.setWrapT( 'MIRRORED_REPEAT' );
+            modelTex.setWrapS( 'MIRRORED_REPEAT' );
 
             //var model = osg.createTexturedBoxGeometry( 0, 0, 0, 2, 2, 2 );
             var model = new osg.MatrixTransform();
             model.setName( 'ModelParent' );
-            osg.Matrix.makeRotate( Math.PI, 0, 0, 1, model.getMatrix() );
 
-            var modelName = '../ssao/raceship.osgjs';
-            ///var modelName = '../media/models/material-test/file.osgjs';
+            var modelTrans = new osg.MatrixTransform();
+            modelTrans.setName( 'ModelTrans' );
+            model.addChild( modelTrans );
+            /*
+                        var modelName = '../ssao/raceship.osgjs';
+                        osg.Matrix.makeRotate( Math.PI, 0, 0, 1, modelTrans.getMatrix() );
+            */
+
+            var modelName = '../media/models/material-test/file.osgjs';
+            osg.Matrix.makeScale( 0.3, 0.3, 0.3, modelTrans.getMatrix() );
+            osg.Matrix.setTrans( modelTrans.getMatrix(), 15, 15.0, -5.0 );
+            modelTrans.getOrCreateStateSet().setTextureAttributeAndModes( 0, modelTex );
+            modelTrans.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'BACK' ) );
 
             var request = osgDB.readNodeURL( modelName );
 
@@ -64,9 +243,17 @@
                 lightRmv.clean();
 
                 loadedModel.setName( 'model' );
-                model.addChild( loadedModel );
+
+
+
+                modelTrans.addChild( loadedModel );
+
 
             } );
+            modelTrans.getOrCreateStateSet().setTextureAttributeAndModes( 6, this._cubemapTexture );
+            modelTrans.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 6, 'Texture6' ) );
+
+
 
             // add a node to animate the scene
             var rootModel = new osg.MatrixTransform();
@@ -74,14 +261,13 @@
             rootModel.addChild( model );
 
 
+
+
+            var groundNode = new osg.MatrixTransform();
             var numPlanes = 5;
             var groundSize = 60 / numPlanes;
             var ground = osg.createTexturedQuadGeometry( 0, 0, 0, groundSize, 0, 0, 0, groundSize, 0 );
-            var groundTex = osg.Texture.createFromURL( '../media/textures/seamless/bricks1.jpg' );
-            groundTex.setWrapT( 'MIRRORED_REPEAT' );
-            groundTex.setWrapS( 'MIRRORED_REPEAT' );
             ground.getOrCreateStateSet().setTextureAttributeAndModes( 0, groundTex );
-
             for ( var wG = 0; wG < numPlanes; wG++ ) {
                 for ( var wH = 0; wH < numPlanes; wH++ ) {
 
@@ -92,12 +278,15 @@
 
                     groundSubNodeTrans.setName( 'groundSubNode_' + wG + '_' + wH );
                     groundSubNodeTrans.addChild( ground );
-                    rootModel.addChild( groundSubNodeTrans );
+                    groundNode.addChild( groundSubNodeTrans );
                 }
             }
+            rootModel.addChild( groundNode );
 
 
-
+            if ( !rootModel._userData ) rootModel._userData = {};
+            rootModel._userData[ 'model' ] = model;
+            rootModel._userData[ 'ground' ] = groundNode;
             rootModel._name = 'UPDATED MODEL NODE';
             return rootModel;
         },
@@ -122,7 +311,8 @@
 
             // prevent projection matrix changes
             // after store in node
-            camera.setComputeNearFar( false );
+            //camera.setComputeNearFar( false );
+            camera.setComputeNearFar( true );
 
             // attach a texture to the camera to render the scene on
             var newSceneTexture = new osg.Texture();
@@ -190,7 +380,10 @@
 
 
             var shadowedNode = new osgShadow.ShadowedScene();
-            shadowedNode.addChild( rootModel );
+
+            var rootTrans = new osg.MatrixTransform();
+            rootTrans.addChild( rootModel );
+            shadowedNode.addChild( rootTrans );
 
             if ( false ) {
                 var shadowSettings = new osgShadow.ShadowSettings();
@@ -203,6 +396,7 @@
 
                 shadowedNode.addShadowTechnique( shadowMap );
             }
+
 
             // add the scene to the camera
             camera.addChild( shadowedNode );
@@ -218,7 +412,9 @@
             newRoot.setName( 'CameraRTTFather' );
             newRoot.addChild( camera );
 
-            return [ newRoot, newSceneTexture, camera, rootModel ];
+            camera.addChild( this.backGround );
+
+            return [ newRoot, newSceneTexture, camera, rootTrans ];
         },
 
 
@@ -228,10 +424,23 @@
             this._shaderProcessor = new osgShader.ShaderProcessor();
 
             var shaders = [
+                'add.frag',
                 'baseVert',
                 'baseFrag',
                 'diffFrag',
                 'fxaa',
+                'hbao.frag',
+                'normal.vert',
+                'normal.frag',
+                'showNormal.frag',
+                'reconstNormal.frag',
+                'reconstFrag',
+                'refractVert',
+                'refractFrag',
+                'reflect.frag',
+                'reflectOpt.frag',
+                'UVVert',
+                'UVFrag',
                 'depthVert',
                 'depthFrag',
                 'motionBlurDepth',
@@ -239,6 +448,7 @@
                 'ssaa_node',
                 'velocity_node',
                 'colorEncode',
+                'raytrace',
                 'smaa.all',
                 'smaa'
             ];
@@ -412,13 +622,57 @@
             this._currentFrameSinceStop = 0;
             this._rtt = [];
 
-            this._rtt.push( this._effect0.getInputTexture() );
-            if ( this._effect0.getInputTexture() !== this._effect0.getOutputTexture() )
-                this._rtt.push( this._effect0.getOutputTexture() );
+            var output, l, k;
+            var input = this._effect0.getInputTexture();
 
-            if ( this._notSame ) this._rtt.push( this._effect1.getInputTexture() );
-            if ( this._notSame && this._effect1.getInputTexture() !== this._effect1.getOutputTexture() ) this._rtt.push( this._effect1.getOutputTexture() );
+            if ( Object.prototype.toString.call( input ) === '[object Array]' ) {
+                for ( k = 0; k < input.length; k++ ) {
+                    this._rtt.push( input[ k ] );
+                }
+            } else {
+                this._rtt.push( this._effect0.getInputTexture() );
+            }
 
+            // MRT handle, woot
+            output = this._effect0.getOutputTexture();
+            if ( Object.prototype.toString.call( output ) === '[object Array]' ) {
+                for ( l = 0; l < output.length; l++ ) {
+                    if ( this._rtt.indexOf( output[ l ] ) === -1 ) {
+                        this._rtt.push( output[ l ] );
+                    }
+                }
+            } else {
+                if ( this._rtt.indexOf( output ) === -1 ) {
+                    this._rtt.push( output );
+                }
+            }
+
+
+            if ( this._notSame ) {
+                input = this._effect1.getInputTexture();
+                if ( Object.prototype.toString.call( input ) === '[object Array]' ) {
+                    for ( k = 0; k < input.length; k++ ) {
+                        this._rtt.push( input[ k ] );
+                    }
+                } else {
+                    this._rtt.push( this._effect1.getInputTexture() );
+                }
+
+                // MRT handle, woot
+                output = this._effect1.getOutputTexture();
+                if ( Object.prototype.toString.call( output ) === '[object Array]' ) {
+                    for ( l = 0; l < output.length; l++ ) {
+                        if ( this._rtt.indexOf( output[ l ] ) === -1 ) {
+                            this._rtt.push( output[ l ] );
+                        }
+                    }
+                } else {
+                    if ( this._rtt.indexOf( output ) === -1 ) {
+                        this._rtt.push( output );
+                    }
+                }
+
+            }
             this.updateDebugRtt();
 
         },
@@ -509,7 +763,7 @@
             this._root.getOrCreateStateSet().addUniform( this._texW );
             this._root.getOrCreateStateSet().addUniform( this._texH );
 
-            this._renderSize = osg.Uniform.createFloat1( this._rttSize, 'renderSize' );
+            this._renderSize = osg.Uniform.createFloat4( this._rttSize, 'renderSize' );
             this._root.getOrCreateStateSet().addUniform( this._renderSize );
 
 
@@ -568,7 +822,26 @@
                 }
             };
 
-            this.setComposers( this._globalGui.filter0, this._globalGui.filter1, parseFloat( _self._globalGui.pixelRatio ) );
+            var filter0 = this._config[ 'filter0' ];
+            if ( !filter0 ) filter0 = this._globalGui.filter0;
+            else this._globalGui.filter1 = filter0;
+
+            var filter1 = this._config[ 'filter1' ];
+            if ( !filter1 ) filter1 = this._globalGui.filter0;
+            else this._globalGui.filter1 = filter1;
+
+            var pxlRatio = parseFloat( this._config[ 'pxlRatio' ] );
+            if ( !pxlRatio ) pxlRatio = parseFloat( this._globalGui.pixelRatio );
+            else pxlRatio = this._globalGui.pixelRatio;
+
+
+            if ( this._config[ 'hideGui' ] ) setTimeout( function () {
+                    _self._gui.close();
+                },
+                50 );
+            this.setComposers( filter0,
+                filter1,
+                parseFloat( pxlRatio ) );
 
             this._scene.addChild( this._quad );
             this._scene.addChild( this._rttDebugNode );
@@ -595,7 +868,15 @@
                     if ( _self._doAnimate ) {
                         _self._currentTime = nv.getFrameStamp().getSimulationTime();
                         var x = Math.cos( _self._currentTime );
+                        if ( _self._effect0.updateTransNode ) {
+                            _self._effect0.updateTransNode( x );
+                        }
+                        if ( _self._notSame && _self._effect1.updateTransNode ) {
+                            _self._effect1.updateTransNode( x );
+                        }
                         osg.Matrix.makeRotate( x, 0, 0, 1, _self._model.getMatrix() );
+
+
                     }
 
 
@@ -655,6 +936,7 @@
             this._viewer.getManipulator().computeHomePosition();
             this._viewer.run();
 
+            this.addBackground();
 
             var _self = this;
             this.readShaders().then( function () {

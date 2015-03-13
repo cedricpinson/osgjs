@@ -4,16 +4,23 @@
 vec4 motionBlur(sampler2D tex, vec2 texCoord, vec2 velocityFact)
 {
     vec4 finalColor = vec4( 0. );
-    vec2 offset = vec2( 0. );
-    float weight = 0.;
+
+    //const int samples = 50;
     //const int samples = 20;
-    const int samples = 5;
+    const int samples = 10;
+
+    float w = 1.0;
+    float totalW = 0.0;
+    vec2 offsetIncr = vec2( velocityFact  / ( float( samples ) ));
+    vec2 offset = vec2( 0.0 );
     for( int i = 0; i < samples; i++ ) {
-        offset = velocityFact * ( float( i ) / ( float( samples ) - 1. ) - .5 );
-        vec4 c = texture2D( tex, texCoord + offset );
-        finalColor += c;
+        finalColor += w * texture2D( tex, texCoord + offset );
+        totalW += w;
+        w *= 0.8;
+
+        offset -= offsetIncr;
     }
-    finalColor /= float( samples );
+    finalColor /= totalW;
     return finalColor;
 }
 
@@ -27,9 +34,9 @@ vec2 getVelocity(sampler2D tex, vec2 pos)
     // clear came on renderbin is broken
     vec2 vel;
     vel = decodeHalfFloatRGBA(col) ;
-     // set to [-1.0,1.0]
+     // set to [-2.0,2.0]
     vel -= vec2(0.5);
-    vel *= 2.0;
+    vel *= 4.0;
     return vel;
 }
 
@@ -38,7 +45,7 @@ uniform sampler2D Texture1;
 uniform vec2 RenderSize;
 
 void main(){
-    vec2 screenPos = gl_FragCoord.xy/RenderSize;
+    vec2 screenPos = gl_FragCoord.xy/RenderSize.xy;
     vec2 velocity = getVelocity(Texture0, screenPos);
 
     vec2 screenPosPrev = screenPos - velocity;
@@ -46,21 +53,10 @@ void main(){
 
     vec4 color;
 
-    if ((abs(velocity.x) > 0.0 || abs(velocity.y) > 0.0)
-        /* &&     (abs(velocityPrev.x) > 0.0 || abs(velocityPrev.y) > 0.0)*/
-        )
-        {
-            //velocity = clamp(velocity, vec2(-0.2), vec2(0.2) );
-            //color = motionBlur( Texture1, screenPos, (velocity + velocityPrev)*0.0675);
-
-            velocity = clamp(velocity, vec2(-8.)/RenderSize.xy, vec2(8.)/RenderSize.xy);
-            color = motionBlur( Texture1, screenPos, velocity);
-        }
-    else
-        {
-            color = texture2D(Texture1, screenPos);
-            //color = vec4(1.0, 0.0, 0.0, 1.0);
-        }
+    if (any(greaterThan(abs(velocity), vec2(1e-6))))
+    {
+            color = motionBlur( Texture1, screenPos, -velocity*4.);
+    }
 
     gl_FragColor = vec4(color.rgb, 1.0);
 }

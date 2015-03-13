@@ -71,6 +71,7 @@
 
             var st;
             st = this._cameraRTT.getOrCreateStateSet();
+            this._cameraRTT.removeChild( this._helper.backGround );
 
 
             this._commonNode.getOrCreateStateSet().setAttributeAndModes( this._velocityAttribute, osg.StateAttribute.ON | osg.StateAttribute.OVERRIDE );
