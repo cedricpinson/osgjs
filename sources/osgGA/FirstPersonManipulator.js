@@ -10,6 +10,8 @@ define( [
     'osgGA/FirstPersonManipulatorDeviceOrientationController'
 ], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController, FirstPersonManipulatorDeviceOrientationController ) {
 
+    'use strict';
+
     /**
      * Authors:
      *  Matt Fontaine <tehqin@gmail.com>
@@ -25,30 +27,26 @@ define( [
         this.init();
     };
 
-    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation'];
+    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation' ];
     FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation' ];
 
     /** @lends FirstPersonManipulator.prototype */
     FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
-        setNode: function ( node ) {
-            this._node = node;
-            this.computeHomePosition();
-        },
-        computeHomePosition: function () {
-            if ( this._node !== undefined ) {
-                var bs = this._node.getBound();
-                this._radius = bs.radius();
-                var eye = this._eye;
-                eye[ 0 ] = 0.0;
-                eye[ 1 ] = -bs.radius();
-                eye[ 2 ] = 0.0;
-            }
+        computeHomePosition: function ( useBoundingBox ) {
+            var bs = this.getHomeBound( useBoundingBox );
+            if ( !bs ) return;
+
+            this._radius = this.getHomeDistance( bs );
+            var cen = bs.center();
+            Vec3.mult( this._direction, -this._radius, this._eye );
+            Vec3.add( cen, this._eye, this._eye );
+            this.setTarget( cen );
         },
         init: function () {
             this._direction = [ 0.0, 1.0, 0.0 ];
             this._eye = [ 0.0, 25.0, 10.0 ];
             this._up = [ 0.0, 0.0, 1.0 ];
-            this._radius = 1.0;
+            this._distance = 1.0;
             this._forward = new OrbitManipulator.Interpolator( 1 );
             this._side = new OrbitManipulator.Interpolator( 1 );
             this._lookPosition = new OrbitManipulator.Interpolator( 2 );
@@ -90,11 +88,8 @@ define( [
             return this;
         },
 
-        getTarget: function ( pos, distance ) {
-            if ( distance === undefined ) {
-                distance = 25.0;
-            }
-            var dir = Vec3.mult( this._direction, distance, this._tmpGetTargetDir );
+        getTarget: function ( pos ) {
+            var dir = Vec3.mult( this._direction, this._distance, this._tmpGetTargetDir );
             Vec3.add( this._eye, dir, pos );
             return pos;
         },
@@ -145,7 +140,7 @@ define( [
                 // TOTO refactor the way the rotation matrix is managed
                 Matrix.preMult( rotMat, this._rotBase );
 
-                this._direction = Matrix.transformVec3( rotMat, upy, this._direction );
+                Matrix.transformVec3( rotMat, upy, this._direction );
                 Vec3.normalize( this._direction, this._direction );
 
                 Matrix.transformVec3( rotMat, upz, this._up );
@@ -154,7 +149,12 @@ define( [
         reset: function () {
             this.init();
         },
-
+        setDistance: function ( d ) {
+            this._distance = d;
+        },
+        getDistance: function () {
+            return this._distance;
+        },
         setStepFactor: function ( t ) {
             this._stepFactor = t;
         },
@@ -180,8 +180,8 @@ define( [
                 if ( Vec2.length( vec ) > 1.0 ) {
                     Vec2.normalize( vec, vec );
                 }
-                var factor = this._radius;
-                if ( this._radius < 1e-3 ) {
+                var factor = this._distance;
+                if ( this._distance < 1e-3 ) {
                     factor = 1.0;
                 }
                 this.moveForward( vec[ 0 ] * factor * this._stepFactor * dt );
@@ -194,10 +194,6 @@ define( [
         } )(),
         setRotationBaseFromQuat: function ( quat ) {
             Matrix.makeRotateFromQuat( quat, this._rotBase );
-        },
-
-        getInverseMatrix: function () {
-            return this._inverseMatrix;
         },
 
         moveForward: ( function () {

@@ -532,6 +532,7 @@ define( [
                 manipulator.view = this;
             }
 
+            manipulator.setCamera( this.getCamera() );
             this.setManipulator( manipulator );
         },
 

@@ -1,6 +1,4 @@
 define( [
-    'osg/BoundingSphere',
-    'osg/ComputeBoundsVisitor',
     'osg/Utils',
     'osg/Vec3',
     'osg/Matrix',
@@ -12,7 +10,7 @@ define( [
     'osgGA/OrbitManipulatorDeviceOrientationController',
     'osgGA/OrbitManipulatorOculusController',
 
-], function ( BoundingSphere, ComputeBoundsVisitor, MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController ) {
+], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController ) {
 
     'use strict';
 
@@ -23,6 +21,7 @@ define( [
     var OrbitManipulator = function () {
         Manipulator.call( this );
         this._homePosition = [ 0.0, 0.0, 0.0 ];
+        this._frustum = {};
         this.init();
     };
 
@@ -150,9 +149,6 @@ define( [
         reset: function () {
             this.init();
         },
-        setNode: function ( node ) {
-            this._node = node;
-        },
         setTarget: function ( target ) {
             Vec3.copy( target, this._target );
             var eyePos = [ 0.0, 0.0, 0.0 ];
@@ -201,25 +197,10 @@ define( [
             };
         } )(),
         computeHomePosition: function ( useBoundingBox ) {
-
-            if ( this._node !== undefined ) {
-
-                var bs;
-                if ( useBoundingBox || this._flags & Manipulator.COMPUTE_HOME_USING_BBOX ) {
-                    bs = new BoundingSphere();
-                    var visitor = new ComputeBoundsVisitor();
-                    this._node.accept( visitor );
-                    var bb = visitor.getBoundingBox();
-
-                    if ( bb.valid() )
-                        bs.expandByBoundingBox( bb );
-                } else {
-                    bs = this._node.getBound();
-                }
-
-                this.setDistance( bs.radius() * 1.5 );
-                this.setTarget( bs.center() );
-            }
+            var bs = this.getHomeBound( useBoundingBox );
+            if ( !bs ) return;
+            this.setDistance( this.getHomeDistance( bs ) );
+            this.setTarget( bs.center() );
         },
 
         getHomePosition: function () {
@@ -355,7 +336,6 @@ define( [
 
         update: ( function () {
             var eye = [ 0.0, 0.0, 0.0 ];
-            var tmpDist = [ 0.0, 0.0, 0.0 ];
             return function ( nv ) {
                 var t = nv.getFrameStamp().getSimulationTime();
                 if ( this._lastUpdate === undefined ) {
@@ -392,16 +372,12 @@ define( [
                 // Matrix.preMult( this._rotBase, this._rotation );
                 // Matrix.inverse( this._rotBase, this._inverseMatrix );
 
-                tmpDist[ 1 ] = distance;
-                Matrix.transformVec3( this._inverseMatrix, tmpDist, eye );
+                Vec3.set( 0.0, distance, 0.0, eye );
+                Matrix.transformVec3( this._inverseMatrix, eye, eye );
 
                 Matrix.makeLookAt( Vec3.add( target, eye, eye ), target, this._upz, this._inverseMatrix );
             };
-        } )(),
-
-        getInverseMatrix: function () {
-            return this._inverseMatrix;
-        }
+        } )()
     } );
 
     ( function ( module ) {
