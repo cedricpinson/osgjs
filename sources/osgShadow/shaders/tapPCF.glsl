@@ -2,7 +2,8 @@
 
 #pragma include "shadowLinearSoft.glsl"
 
-float getShadowPCF(sampler2D depths, vec4 size, vec2 uv, float compare){
+float getShadowPCF(const in sampler2D depths, const in vec4 size, const in vec2 uv, const in float compare, const in vec2 biasPcf)
+{
 
     float res = 0.0;
 

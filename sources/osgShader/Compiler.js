@@ -1046,7 +1046,12 @@ define( [
             shader = this._shaderProcessor.processShader( shader );
             return shader;
         },
-
+        evaluateDefines: function ( root ) {
+            return this.evaluateAndGatherField( root, 'getDefines' );
+        },
+        evaluateExtensions: function ( root ) {
+            return this.evaluateAndGatherField( root, 'getExtensions' );
+        },
         createFragmentShader: function () {
 
             this.declareUniforms();
@@ -1064,8 +1069,9 @@ define( [
             var vars = Object.keys( this._variables );
 
             // defines and extensions are added by process shader
-            var extensions = this.evaluateAndGatherField( root, 'extensions' );
-            var defines = this.evaluateAndGatherField( root, 'defines' );
+            var extensions = this.evaluateExtensions( root );
+            var defines = this.evaluateDefines( root );
+
 
             this._fragmentShader.push( '\n' );
             this._fragmentShader.push( this.evaluateGlobalVariableDeclaration( root ) );

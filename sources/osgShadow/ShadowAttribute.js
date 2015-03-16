@@ -163,6 +163,14 @@ define( [
             return obj.uniforms[ typeMember ];
         },
 
+        getExtensions: function () {
+            var algo = this.getAlgorithm();
+            if ( algo === 'PCF' ) {
+                return [ '#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif' ];
+            } else {
+                return [];
+            }
+        },
 
         // Here to be common between  caster and receiver
         // (used by shadowMap and shadow node shader)

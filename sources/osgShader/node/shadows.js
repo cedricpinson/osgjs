@@ -25,12 +25,16 @@ define( [
 
         // must return an array of defines
         // because it will be passed to the ShaderGenerator
-        defines: function () {
+        getDefines: function () {
             return this._shadow.getDefines();
         },
-
+        getExtensions: function () {
+            return this._shadow.getExtensions();
+        },
         computeFragment: function () {
 
+
+            // common inputs
             var inputs = [
                 this._inputs.lighted,
                 this._inputs.shadowVertexProjected,
@@ -41,11 +45,21 @@ define( [
                 this._inputs.lightNDL,
 
                 this._inputs.normal,
-                this._inputs.shadowbias,
-                this._inputs.shadowepsilonVSM,
-                this._inputs.shadowexponent0,
-                this._inputs.shadowexponent1
+                this._inputs.shadowbias
             ];
+
+
+            var algo = this._shadow.getAlgorithm();
+            if ( algo === 'ESM' ) {
+                inputs.push( this._inputs.shadowexponent0 );
+                inputs.push( this._inputs.shadowexponent1 );
+            } else if ( algo === 'EVSM' ) {
+                inputs.push( this._inputs.shadowepsilonVSM );
+                inputs.push( this._inputs.shadowexponent0 );
+                inputs.push( this._inputs.shadowexponent1 );
+            } else if ( algo === 'VSM' ) {
+                inputs.push( this._inputs.shadowepsilonVSM );
+            }
 
             return ShaderUtils.callFunction(
                 'computeShadow',

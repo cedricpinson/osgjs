@@ -1,11 +1,11 @@
 
 
-float getShadowPCF(sampler2D tex, vec4 shadowMapSize, vec2 uv, float shadowZ) {
+float getShadowPCF(const in sampler2D tex, const in vec4 shadowMapSize, const in vec2 uv, const in float shadowZ, const in vec2 biasPcf) {
 
     vec2 o = shadowMapSize.zw;
     float shadowed = 0.0;
 
-#define TSF(off1, off2) getSingleFloatFromTex( tex, uv.xy + vec2(off1, off2) );
+#define TSF(off1, off2) getSingleFloatFromTex( tex, uv.xy + vec2(off1, off2)*biasPcf );
 
     // fastest bug gives banding
 #if defined(_PCFx4)
