@@ -25,10 +25,10 @@ define( [
 
         // must return an array of defines
         // because it will be passed to the ShaderGenerator
-        defines: function () {
+        getDefines: function () {
             return this._shadow.getDefines();
         },
-        extensions: function () {
+        getExtensions: function () {
             return this._shadow.getExtensions();
         },
         computeFragment: function () {

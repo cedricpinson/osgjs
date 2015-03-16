@@ -32,9 +32,9 @@ define( [
 
                 var root = compiler.createFragmentShaderGraph();
 
-                var extensions = compiler.evaluateAndGatherField( root, 'extensions' );
+                var extensions = compiler.evaluateAndGatherField( root, 'getExtensions' );
                 ok( extensions.length === 0, 'Compiler Evaluate And Gather Field: defines rightly so' );
-                var defines = compiler.evaluateAndGatherField( root, 'defines' );
+                var defines = compiler.evaluateAndGatherField( root, 'getDefines' );
                 ok( defines.length === 1, 'Compiler Evaluate And Gather Field: defines rightly so' );
 
 
