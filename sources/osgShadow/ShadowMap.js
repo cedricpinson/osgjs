@@ -479,7 +479,6 @@ define( [
 
             if ( !this._texture ) {
                 this._texture = new ShadowTexture();
-                this._textureUnitBase = 4;
                 this._textureUnit = this._textureUnitBase;
             }
 
