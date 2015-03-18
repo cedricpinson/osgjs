@@ -2,9 +2,9 @@ define( [
     'osg/Utils',
 
     'osg/Notify',
-    'osg/Object',
-    'osg/StateGraph'
-], function ( MACROUTILS, Notify, Object, StateGraph ) {
+    'osg/Object'
+
+], function ( MACROUTILS, Notify, Object ) {
 
     'use strict';
 

@@ -178,44 +178,62 @@ define( [
             };
         } )(),
 
-        render: function ( state, previousLeaf ) {
+        render: (function() {
+            var previousHash;
 
-            var prevRenderGraph;
-            var prevRenderGraphParent;
-            var rg;
+            return function ( state, previousLeaf ) {
 
-            if ( previousLeaf !== undefined ) {
+                var prevRenderGraph;
+                var prevRenderGraphParent;
+                var rg;
 
-                // apply state if required.
-                prevRenderGraph = previousLeaf._parent;
-                prevRenderGraphParent = prevRenderGraph.parent;
-                rg = this._parent;
+                if ( previousLeaf !== undefined ) {
 
-                if ( prevRenderGraphParent !== rg.parent ) {
+                    // apply state if required.
+                    prevRenderGraph = previousLeaf._parent;
+                    prevRenderGraphParent = prevRenderGraph.parent;
+                    rg = this._parent;
 
-                    rg.moveStateGraph( state, prevRenderGraphParent, rg.parent );
+                    if ( prevRenderGraphParent !== rg.parent ) {
 
-                    // send state changes and matrix changes to OpenGL.
+                        rg.moveStateGraph( state, prevRenderGraphParent, rg.parent );
 
-                    state.applyStateSet( rg.stateset );
+                        // send state changes and matrix changes to OpenGL.
 
-                } else if ( rg !== prevRenderGraph ) {
+                        state.applyStateSet( rg.stateset );
+                        previousHash = state.getStateSetStackHash();
 
-                    // send state changes and matrix changes to OpenGL.
-                    state.applyStateSet( rg.stateset );
+                    } else if ( rg !== prevRenderGraph ) {
+
+                        // send state changes and matrix changes to OpenGL.
+                        state.applyStateSet( rg.stateset );
+                        previousHash = state.getStateSetStackHash();
+
+                    } else {
+
+                        // in osg we call apply but actually we dont need
+                        // except if the stateSetStack changed.
+                        // for example if insert/remove StateSet has been used
+                        var hash = state.getStateSetStackHash();
+                        if ( previousHash !== hash ) {
+                            this._parent.moveStateGraph( state, undefined, this._parent.parent );
+                            state.applyStateSet( this._parent.stateset );
+                            previousHash = hash;
+                        }
+                    }
+
+                } else {
+
+                    this._parent.moveStateGraph( state, undefined, this._parent.parent );
+                    state.applyStateSet( this._parent.stateset );
+                    previousHash = state.getStateSetStackHash();
 
                 }
 
-            } else {
+                this.drawGeometry( state );
 
-                this._parent.moveStateGraph( state, undefined, this._parent.parent );
-                state.applyStateSet( this._parent.stateset );
-
-            }
-
-            this.drawGeometry( state );
-
-        }
+            };
+        })()
 
     };
 
