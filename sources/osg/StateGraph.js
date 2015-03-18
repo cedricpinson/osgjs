@@ -54,7 +54,7 @@ define( [
         moveToRootStateGraph: function ( state, sgCurrent ) {
             // need to pop back all statesets and matrices.
             while ( sgCurrent ) {
-                if ( sgCurrent.stateSet ) {
+                if ( sgCurrent.stateset ) {
                     state.popStateSet();
                 }
                 sgCurrent = sgCurrent.parent;

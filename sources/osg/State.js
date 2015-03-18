@@ -286,6 +286,8 @@ define( [
 
         popStateSet: function () {
 
+            if ( this.stateSets.empty() ) return;
+
             var stateset = this.stateSets.pop();
 
             if ( stateset.attributeMap ) {

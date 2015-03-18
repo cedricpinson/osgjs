@@ -245,9 +245,6 @@ define( [
             var previousLeaf = previousRenderLeaf;
             var leaf;
 
-            if ( previousLeaf ) {
-                StateGraph.prototype.moveToRootStateGraph( state, previousLeaf._parent );
-            }
 
             // draw fine grained ordering.
             for ( var d = 0, dl = leafs.length; d < dl; d++ ) {
