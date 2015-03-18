@@ -8,27 +8,65 @@ define( [
     'osg/StateSet',
     'osg/Uniform',
     'osg/Depth',
-    'osgUtil/DisplayGeometryVisitor'
-], function ( MACROUTILS, NodeVisitor, Geometry, BufferArray, DrawArrays, PrimitiveSet, StateSet, Uniform, Depth, DGV ) {
+    'osg/Program',
+    'osg/Shader'
+], function ( MACROUTILS, NodeVisitor, Geometry, BufferArray, DrawArrays, PrimitiveSet, StateSet, Uniform, Depth, Program, Shader ) {
 
     'use strict';
 
-    var DisplayNormalVisitor = function ( scale ) {
+    var program;
+
+    var DisplayNormalVisitor = function () {
         NodeVisitor.call( this );
 
-        this._scale = scale || 1.0;
+        this._unifScale = Uniform.createFloat( 1.0, 'uScale' );
 
         var ns = this._normalStateSet = new StateSet();
-        ns.setAttribute( DGV.getShader() );
+        ns.setAttribute( DisplayNormalVisitor.getShader() );
         ns.addUniform( Uniform.createFloat3( [ 1.0, 0.0, 0.0 ], 'uColorDebug' ) );
+        ns.addUniform( this._unifScale );
         ns.setAttribute( new Depth( Depth.NEVER ) );
 
         var ts = this._tangentStateSet = new StateSet();
-        ts.setAttribute( DGV.getShader() );
+        ts.setAttribute( DisplayNormalVisitor.getShader() );
         ts.addUniform( Uniform.createFloat3( [ 0.0, 1.0, 0.0 ], 'uColorDebug' ) );
+        ts.addUniform( this._unifScale );
         ts.setAttribute( new Depth( Depth.NEVER ) );
     };
+
+    DisplayNormalVisitor.getShader = function () {
+        if ( program ) return program;
+        var vertexshader = [
+            '#ifdef GL_ES',
+            'precision highp float;',
+            '#endif',
+            'attribute vec3 Vertex;',
+            'attribute vec3 Normal;',
+            'uniform float uScale;',
+            'uniform mat4 ModelViewMatrix;',
+            'uniform mat4 ProjectionMatrix;',
+            'void main(void) {',
+            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex + Normal * uScale, 1.0);',
+            '}'
+        ].join( '\n' );
+
+        var fragmentshader = [
+            '#ifdef GL_ES',
+            'precision highp float;',
+            '#endif',
+            'uniform vec3 uColorDebug;',
+            'void main(void) {',
+            '  gl_FragColor = vec4(uColorDebug, 1.0);',
+            '}'
+        ].join( '\n' );
+        program = new Program( new Shader( Shader.VERTEX_SHADER, vertexshader ), new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
+        return program;
+    };
+
     DisplayNormalVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+        setScale: function ( scale ) {
+            this._unifScale.set( scale );
+        },
         setTangentVisibility: function ( bool ) {
             this._tangentStateSet.setAttribute( new Depth( bool ? Depth.LESS : Depth.NEVER ) );
         },
@@ -66,23 +104,23 @@ define( [
 
             var nbVertices = vertices.length / vSize;
             var lineVertices = new Float32Array( nbVertices * 2 * 3 );
-            var scale = this._scale;
-            var i = 0;
-            for ( i = 0; i < nbVertices; ++i ) {
+            var lineNormals = new Float32Array( nbVertices * 2 * 3 );
+            for ( var i = 0; i < nbVertices; ++i ) {
                 var idl = i * 6;
                 var idv = i * vSize;
                 var idd = i * dSize;
 
-                lineVertices[ idl ] = vertices[ idv ];
-                lineVertices[ idl + 1 ] = vertices[ idv + 1 ];
-                lineVertices[ idl + 2 ] = vertices[ idv + 2 ];
-                lineVertices[ idl + 3 ] = vertices[ idv ] + dispVec[ idd ] * scale;
-                lineVertices[ idl + 4 ] = vertices[ idv + 1 ] + dispVec[ idd + 1 ] * scale;
-                lineVertices[ idl + 5 ] = vertices[ idv + 2 ] + dispVec[ idd + 2 ] * scale;
+                lineVertices[ idl ] = lineVertices[ idl + 3 ] = vertices[ idv ];
+                lineVertices[ idl + 1 ] = lineVertices[ idl + 4 ] = vertices[ idv + 1 ];
+                lineVertices[ idl + 2 ] = lineVertices[ idl + 5 ] = vertices[ idv + 2 ];
+                lineNormals[ idl + 3 ] = dispVec[ idd ];
+                lineNormals[ idl + 4 ] = dispVec[ idd + 1 ];
+                lineNormals[ idl + 5 ] = dispVec[ idd + 2 ];
             }
             var g = new Geometry();
             g._isNormalDebug = true;
             g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, lineVertices, 3 );
+            g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, lineNormals, 3 );
             var primitive = new DrawArrays( PrimitiveSet.LINES, 0, nbVertices * 2 );
             g.getPrimitives().push( primitive );
             return g;
