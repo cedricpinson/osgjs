@@ -141,10 +141,14 @@ define( [
 
             var devicePixelRatio = window.devicePixelRatio || 1;
             var overrideDevicePixelRatio = options.getNumber( 'overrideDevicePixelRatio' );
+            var maxDevicePixelRatio = options.getNumber( 'maxDevicePixelRatio' ) || -1;
 
             // override the pixel ratio, used to save pixel on mobile
-            if ( typeof overrideDevicePixelRatio === 'number' )
+            if ( typeof overrideDevicePixelRatio === 'number' ){
                 devicePixelRatio = overrideDevicePixelRatio;
+            } else if (maxDevicePixelRatio !== -1){
+                devicePixelRatio = maxDevicePixelRatio;
+            }
             this._devicePixelRatio = devicePixelRatio;
 
             this.computeCanvasSize( canvas );
