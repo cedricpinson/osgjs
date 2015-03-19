@@ -10,6 +10,9 @@ define( [], function () {
     };
 
     Stack.prototype = {
+        empty: function() {
+            return this._values.length === 0;
+        },
         values: function() {
             return this._values;
         },

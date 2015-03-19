@@ -2,9 +2,9 @@ define( [
     'osg/Utils',
 
     'osg/Notify',
-    'osg/Object',
-    'osg/StateGraph'
-], function ( MACROUTILS, Notify, Object, StateGraph ) {
+    'osg/Object'
+
+], function ( MACROUTILS, Notify, Object ) {
 
     'use strict';
 
@@ -245,9 +245,6 @@ define( [
             var previousLeaf = previousRenderLeaf;
             var leaf;
 
-            if ( previousLeaf ) {
-                StateGraph.prototype.moveToRootStateGraph( state, previousLeaf._parent );
-            }
 
             // draw fine grained ordering.
             for ( var d = 0, dl = leafs.length; d < dl; d++ ) {

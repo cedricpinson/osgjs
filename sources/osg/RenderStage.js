@@ -68,6 +68,9 @@ define( [
         setCamera: function ( camera ) {
             this.camera = camera;
         },
+        getCamera: function () {
+            return this.camera;
+        },
         addPreRenderStage: function ( rs, order ) {
             for ( var i = 0, l = this.preRenderList.length; i < l; i++ ) {
                 var render = this.preRenderList[ i ];

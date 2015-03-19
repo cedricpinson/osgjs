@@ -278,6 +278,14 @@ define( [
             this.popStateSet();
         },
 
+        getStateSetStackHash: function() {
+            var values = this.stateSets.values();
+            var sum = 0;
+            for ( var i = 0, l = values.length; i < l; i++ )
+                sum += values[i].getInstanceID();
+            return sum;
+        },
+
         popAllStateSets: function () {
             while ( this.stateSets.values().length ) {
                 this.popStateSet();
@@ -285,6 +293,8 @@ define( [
         },
 
         popStateSet: function () {
+
+            if ( this.stateSets.empty() ) return;
 
             var stateset = this.stateSets.pop();
 
