@@ -186,7 +186,6 @@ define( [
             'lightmatrix',
 
             'lighted',
-            'lightEyePos',
             'lightEyeDir',
             'lightNDL'
 
@@ -212,7 +211,6 @@ define( [
 
                     this._inputs.lightmatrix,
 
-                    this._inputs.lightEyePos,
                     this._inputs.lightEyeDir,
                     this._inputs.lightNDL,
                     this._inputs.lighted
@@ -243,7 +241,6 @@ define( [
             'lightmatrix',
 
             'lighted',
-            'lightEyePos',
             'lightEyeDir',
             'lightNDL'
         ],
@@ -266,7 +263,6 @@ define( [
 
                     this._inputs.lightmatrix,
 
-                    this._inputs.lightEyePos,
                     this._inputs.lightEyeDir,
                     this._inputs.lightNDL,
                     this._inputs.lighted

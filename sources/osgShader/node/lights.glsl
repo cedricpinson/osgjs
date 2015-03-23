@@ -180,7 +180,6 @@ vec3 computeSunLightShading(
 
                             const in mat4 lightMatrix,
 
-                            out vec3 eyeLightPos,
                             out vec3 eyeLightDir,
                             out float NdotL,
                             out bool lighted)
@@ -218,7 +217,6 @@ vec3 computeHemiLightShading(
 
     const in mat4 lightMatrix,
 
-    out vec3 eyeLightPos,
     out vec3 eyeLightDir,
     out float NdotL,
     out bool lighted)
