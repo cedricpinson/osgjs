@@ -42,8 +42,8 @@ define( [
 
                 var cullvisitor = viewer.getCamera().getRenderer().getCullVisitor();
                 // with auto compute near far
-                equal( cullvisitor._computedFar, 31.30036755335051, 'check far' );
-                equal( cullvisitor._computedNear, 18.699632446649503, 'check near' );
+                equal( cullvisitor._computedFar, 31.300367553350508, 'check far' );
+                equal( cullvisitor._computedNear, 18.6996324466495, 'check near' );
 
                 cullvisitor.reset();
                 equal( cullvisitor._computedNear, Number.POSITIVE_INFINITY, 'Check near after reset' );

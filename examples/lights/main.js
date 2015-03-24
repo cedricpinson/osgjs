@@ -196,7 +196,7 @@
             osg.Matrix.makeTranslate( 0, 0, 10, matrixTranslate );
 
             var matrixRotate = osg.Matrix.create();
-            osg.Matrix.makeRotate( Math.PI / 4, 1, 0, 0, matrixRotate );
+            osg.Matrix.makeRotate( -Math.PI / 4, 1, 0, 0, matrixRotate );
 
             osg.Matrix.mult( matrixRotate, matrixTranslate, lightTransform.getMatrix() );
 
@@ -234,7 +234,7 @@
             osg.Matrix.makeTranslate( 0, 0, 10, matrixTranslate );
 
             var matrixRotate = osg.Matrix.create();
-            osg.Matrix.makeRotate( Math.PI / 4, 1, 0, 0, matrixRotate );
+            osg.Matrix.makeRotate( -Math.PI / 4, 1, 0, 0, matrixRotate );
 
             osg.Matrix.mult( matrixRotate, matrixTranslate, lightTransform.getMatrix() );
 
@@ -271,7 +271,7 @@
             osg.Matrix.makeTranslate( 0, 0, 10, matrixTranslate );
 
             var matrixRotate = osg.Matrix.create();
-            osg.Matrix.makeRotate( Math.PI / 4, 1, 0, 0, matrixRotate );
+            osg.Matrix.makeRotate( -Math.PI / 4, 1, 0, 0, matrixRotate );
 
             osg.Matrix.mult( matrixRotate, matrixTranslate, lightTransform.getMatrix() );
 
@@ -324,7 +324,7 @@
             if ( !this._model ) {
 
                 this._model = new osg.MatrixTransform();
-                osg.Matrix.makeRotate( Math.PI, 0, 0, 1, this._model.getMatrix() );
+                osg.Matrix.makeRotate( -Math.PI, 0, 0, 1, this._model.getMatrix() );
                 var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
 
                 // copy tex coord 0 to tex coord1 for multi texture
@@ -335,7 +335,7 @@
             }
 
             var node = new osg.MatrixTransform();
-            var rotate = osg.Matrix.makeRotate( Math.PI, 0, 0, 1, osg.Matrix.create() );
+            var rotate = osg.Matrix.makeRotate( -Math.PI, 0, 0, 1, osg.Matrix.create() );
             var scale = osg.Matrix.makeScale( 0.1, 0.1, 0.1, osg.Matrix.create() );
             osg.Matrix.mult( scale, rotate, node.getMatrix() );
             node.addChild( this._model );

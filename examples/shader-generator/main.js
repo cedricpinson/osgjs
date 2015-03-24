@@ -24,7 +24,7 @@
     };
 
 
-    var convertColor =  function ( color ) {
+    var convertColor = function ( color ) {
 
         var r, g, b;
 
@@ -51,7 +51,7 @@
 
     Example.prototype = {
 
-        initDatGUI: function() {
+        initDatGUI: function () {
 
             var controller;
             var gui = new window.dat.GUI();
@@ -60,22 +60,22 @@
             controller.onChange( this.updateDiffuse.bind( this ) );
 
             controller = gui.add( this._config, 'negatif' );
-            controller.onChange( this.updateNegatif.bind( this )  );
+            controller.onChange( this.updateNegatif.bind( this ) );
 
             controller = gui.add( this._config, 'ramp', 0, 1.0 );
             controller.onChange( this.updateRamp.bind( this ) );
 
         },
 
-        updateNegatif: function() {
+        updateNegatif: function () {
             this._negatifAttribute.setAttributeEnable( this._config.negatif );
         },
 
-        updateRamp: function() {
+        updateRamp: function () {
             this._rampAttribute.setAttributeEnable( this._config.ramp );
         },
 
-        updateDiffuse: function() {
+        updateDiffuse: function () {
             this._materialAttribute.setDiffuse( convertColor( this._config.diffuse ) );
         },
 
@@ -124,7 +124,7 @@
                 Q.when( request, function ( model ) {
 
                     var mt = new osg.MatrixTransform();
-                    osg.Matrix.makeRotate( Math.PI / 2, 1, 0, 0, mt.getMatrix() );
+                    osg.Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, mt.getMatrix() );
                     var bb = model.getBound();
                     osg.Matrix.mult( osg.Matrix.makeTranslate( 0, -bb.radius() / 2, 0, osg.Matrix.create() ), mt.getMatrix(), mt.getMatrix() );
                     mt.addChild( model );
@@ -169,7 +169,7 @@
 
             // use the default shader generator
             var rendering2 = new osg.MatrixTransform();
-            osg.Matrix.makeTranslate( -20, 0 , 0, rendering2.getMatrix() );
+            osg.Matrix.makeTranslate( -20, 0, 0, rendering2.getMatrix() );
 
 
             var model = this.getOrCreateModel();

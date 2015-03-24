@@ -22,7 +22,7 @@ define( [
 
         test( 'Camera absolute vs relative', function () {
 
-            var rotation = Matrix.makeRotate( Math.PI * 0.5, 1.0, 0.0, 0.0, Matrix.create() );
+            var rotation = Matrix.makeRotate( -Math.PI * 0.5, 1.0, 0.0, 0.0, Matrix.create() );
             var translate = Matrix.makeTranslate( 1, 0, 0, Matrix.create() );
             var invRotation = Matrix.create();
             Matrix.inverse( rotation, invRotation );

@@ -110,8 +110,8 @@ define( [
             this._upz = [ 0.0, 0.0, 1.0 ];
             Vec3.init( this._target );
 
-            var rot1 = Matrix.makeRotate( Math.PI, 0.0, 0.0, 1.0, Matrix.create() );
-            var rot2 = Matrix.makeRotate( -Math.PI / 10.0, 1.0, 0.0, 0.0, Matrix.create() );
+            var rot1 = Matrix.makeRotate( -Math.PI, 0.0, 0.0, 1.0, Matrix.create() );
+            var rot2 = Matrix.makeRotate( Math.PI / 10.0, 1.0, 0.0, 0.0, Matrix.create() );
             this._rotation = Matrix.create();
             Matrix.mult( rot1, rot2, this._rotation );
             this._time = 0.0;
@@ -262,10 +262,10 @@ define( [
             var tmp = [ 0.0, 0.0, 0.0 ];
             var tmpDist = [ 0.0, 0.0, 0.0 ];
             return function ( dx, dy ) {
-                Matrix.makeRotate( dx / 10.0, 0.0, 0.0, 1.0, of );
+                Matrix.makeRotate( -dx / 10.0, 0.0, 0.0, 1.0, of );
                 Matrix.mult( this._rotation, of, r );
 
-                Matrix.makeRotate( dy / 10.0, 1.0, 0.0, 0.0, of );
+                Matrix.makeRotate( -dy / 10.0, 1.0, 0.0, 0.0, of );
                 Matrix.mult( of, r, r2 );
 
                 // test that the eye is not too up and not too down to not kill

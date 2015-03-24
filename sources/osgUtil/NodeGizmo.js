@@ -356,8 +356,8 @@ define( [
             mtY._nbAxis = 1;
             mtZ._nbAxis = 2;
 
-            Matrix.makeRotate( -Math.PI * 0.5, 0.0, 1.0, 0.0, mtX.getMatrix() );
-            Matrix.makeRotate( Math.PI * 0.5, 1.0, 0.0, 0.0, mtY.getMatrix() );
+            Matrix.makeRotate( Math.PI * 0.5, 0.0, 1.0, 0.0, mtX.getMatrix() );
+            Matrix.makeRotate( -Math.PI * 0.5, 1.0, 0.0, 0.0, mtY.getMatrix() );
 
             var hideNode = new MatrixTransform();
             hideNode.setCullCallback( new HideCullCallback() );
@@ -403,8 +403,8 @@ define( [
             mtY._nbAxis = 1;
             mtZ._nbAxis = 2;
 
-            Matrix.makeRotate( Math.PI * 0.5, 0.0, 1.0, 0.0, mtX.getMatrix() );
-            Matrix.makeRotate( -Math.PI * 0.5, 1.0, 0.0, 0.0, mtY.getMatrix() );
+            Matrix.makeRotate( -Math.PI * 0.5, 0.0, 1.0, 0.0, mtX.getMatrix() );
+            Matrix.makeRotate( Math.PI * 0.5, 1.0, 0.0, 0.0, mtY.getMatrix() );
 
             // set masks
             mtPlane.setNodeMask( NodeGizmo.PICK_PLANE );
@@ -777,11 +777,11 @@ define( [
                 angle %= ( Math.PI * 2 );
                 var nbAxis = this._hoverNode._nbAxis;
                 if ( nbAxis === 0 )
-                    Matrix.makeRotate( angle, 1.0, 0.0, 0.0, mrot );
+                    Matrix.makeRotate( -angle, 1.0, 0.0, 0.0, mrot );
                 else if ( nbAxis === 1 )
-                    Matrix.makeRotate( angle, 0.0, 1.0, 0.0, mrot );
+                    Matrix.makeRotate( -angle, 0.0, 1.0, 0.0, mrot );
                 else if ( nbAxis === 2 )
-                    Matrix.makeRotate( angle, 0.0, 0.0, 1.0, mrot );
+                    Matrix.makeRotate( -angle, 0.0, 0.0, 1.0, mrot );
 
                 this._showAngle.getOrCreateStateSet().getUniform( 'uAngle' ).set( nbAxis === 0 ? -angle : angle );
 

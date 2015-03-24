@@ -112,7 +112,7 @@ function createScene() {
             this.lastTime = currentTime;
             var m = lightNode.getMatrix();
             osg.Matrix.setTrans( m, 25 + 25 * Math.sin( t ), 0.0, Math.min( 25 * Math.cos( t ) ), 0.0 );
-            osg.Matrix.makeRotate( Math.min( t, Math.PI * 2 ), 0.0, 1.0, 0.0, m );
+            osg.Matrix.makeRotate( -Math.min( t, Math.PI * 2 ), 0.0, 1.0, 0.0, m );
 
             lightNode.setMatrix( m );
 

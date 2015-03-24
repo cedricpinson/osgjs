@@ -133,8 +133,8 @@ define( [
                 var first = this._tmpComputeRotation1;
                 var second = this._tmpComputeRotation2;
                 var rotMat = this._tmpComputeRotation3;
-                Matrix.makeRotate( this._angleVertical, 1.0, 0.0, 0.0, first );
-                Matrix.makeRotate( this._angleHorizontal, 0.0, 0.0, 1.0, second );
+                Matrix.makeRotate( -this._angleVertical, 1.0, 0.0, 0.0, first );
+                Matrix.makeRotate( -this._angleHorizontal, 0.0, 0.0, 1.0, second );
                 Matrix.mult( second, first, rotMat );
 
                 // TOTO refactor the way the rotation matrix is managed

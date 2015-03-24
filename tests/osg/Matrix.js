@@ -98,7 +98,7 @@ define( [
         } );
 
         test( 'Matrix.transformVec3', function () {
-            var m = Matrix.makeRotate( Math.PI / 2.0, 0, 1, 0, [] );
+            var m = Matrix.makeRotate( -Math.PI / 2.0, 0, 1, 0, [] );
             var vec = [ 0, 0, 10 ];
             var inv = [];
             Matrix.inverse( m, inv );

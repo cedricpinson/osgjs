@@ -35,7 +35,7 @@ define( [
         } );
 
         test( 'Transform absolute vs relative', function () {
-            var mat = Matrix.makeRotate( Math.PI * 0.5, 1.0, 0.0, 0.0, Matrix.create() );
+            var mat = Matrix.makeRotate( -Math.PI * 0.5, 1.0, 0.0, 0.0, Matrix.create() );
             var inv = Matrix.create();
             Matrix.inverse( mat, inv );
 
