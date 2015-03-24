@@ -290,7 +290,7 @@
             if ( !this._model ) {
 
                 this._model = new osg.MatrixTransform();
-                osg.Matrix.makeRotate( Math.PI, 0, 0, 1, this._model.getMatrix() );
+                osg.Matrix.makeRotate( -Math.PI, 0, 0, 1, this._model.getMatrix() );
                 var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
 
                 // copy tex coord 0 to tex coord1 for multi texture

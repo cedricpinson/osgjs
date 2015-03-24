@@ -68,7 +68,7 @@ TransitionUpdateCallback.prototype = {
         current[ 1 ] += dy * dt * ratio;
         current[ 2 ] += dz * dt * ratio;
 
-        osg.Matrix.makeRotate( ( t - node._start ) * ratio, node._axis[ 0 ], node._axis[ 1 ], node._axis[ 2 ], m );
+        osg.Matrix.makeRotate( -( t - node._start ) * ratio, node._axis[ 0 ], node._axis[ 1 ], node._axis[ 2 ], m );
         osg.Matrix.setTrans( m, current[ 0 ], current[ 1 ], current[ 2 ] );
         return true;
     }

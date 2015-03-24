@@ -23,7 +23,7 @@ function commonScene( rttSize ) {
         this.update = function ( node, nv ) {
             var currentTime = nv.getFrameStamp().getSimulationTime();
             var x = Math.cos( currentTime );
-            osg.Matrix.makeRotate( x, 0, 0, 1, node.getMatrix() );
+            osg.Matrix.makeRotate( -x, 0, 0, 1, node.getMatrix() );
             node.traverse( nv );
         };
     };

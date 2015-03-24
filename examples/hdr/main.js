@@ -208,7 +208,7 @@ function getEnvSphere(size, scene)
 
     var cubemapTransform = osg.Uniform.createMatrix4(osg.Matrix.create(), 'CubemapTransform');
     var mt = new osg.MatrixTransform();
-    mt.setMatrix(osg.Matrix.makeRotate(Math.PI/2.0, 1,0,0,[]));
+    mt.setMatrix(osg.Matrix.makeRotate(-Math.PI/2.0, 1,0,0,[]));
     mt.addChild(geom);
     var CullCallback = function() {
         this.cull = function(node, nv) {
@@ -479,7 +479,7 @@ var addLoading = function() {
 
 var getModel = function() {
     var node = new osg.MatrixTransform();
-    node.setMatrix(osg.Matrix.makeRotate(-Math.PI/2, 1,0,0, []));
+    node.setMatrix(osg.Matrix.makeRotate(Math.PI/2, 1,0,0, []));
 
     var loadModel = function(url, cbfunc) {
         osg.log('loading ' + url);

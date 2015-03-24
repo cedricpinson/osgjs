@@ -601,64 +601,17 @@ define( [
             return result;
         },
 
-        makeRotate: function ( angle, x, y, z, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                result = Matrix.create();
-            }
+        makeRotate: ( function () {
+            var qtemp = Quat.create();
 
-            var mag = Math.sqrt( x * x + y * y + z * z );
-            var sinAngle = Math.sin( angle );
-            var cosAngle = Math.cos( angle );
-
-            if ( mag > 0.0 ) {
-                var xx, yy, zz, xy, yz, zx, xs, ys, zs;
-                var oneMinusCos;
-
-                mag = 1.0 / mag;
-
-                x *= mag;
-                y *= mag;
-                z *= mag;
-
-                xx = x * x;
-                yy = y * y;
-                zz = z * z;
-                xy = x * y;
-                yz = y * z;
-                zx = z * x;
-                xs = x * sinAngle;
-                ys = y * sinAngle;
-                zs = z * sinAngle;
-                oneMinusCos = 1.0 - cosAngle;
-
-                result[ 0 ] = ( oneMinusCos * xx ) + cosAngle;
-                result[ 1 ] = ( oneMinusCos * xy ) - zs;
-                result[ 2 ] = ( oneMinusCos * zx ) + ys;
-                result[ 3 ] = 0.0;
-
-                result[ 4 ] = ( oneMinusCos * xy ) + zs;
-                result[ 5 ] = ( oneMinusCos * yy ) + cosAngle;
-                result[ 6 ] = ( oneMinusCos * yz ) - xs;
-                result[ 7 ] = 0.0;
-
-                result[ 8 ] = ( oneMinusCos * zx ) - ys;
-                result[ 9 ] = ( oneMinusCos * yz ) + xs;
-                result[ 10 ] = ( oneMinusCos * zz ) + cosAngle;
-                result[ 11 ] = 0.0;
-
-                result[ 12 ] = 0.0;
-                result[ 13 ] = 0.0;
-                result[ 14 ] = 0.0;
-                result[ 15 ] = 1.0;
-
-                return result;
-            } else {
-                return Matrix.makeIdentity( result );
-            }
-
-            return result;
-        },
+            return function ( angle, x, y, z, result ) {
+                if ( result === undefined ) {
+                    Notify.warn( 'no matrix destination !' );
+                    result = Matrix.create();
+                }
+                return Matrix.makeRotateFromQuat( Quat.makeRotate( angle, x, y, z, qtemp ), result );
+            };
+        } )(),
 
         transform3x3: function ( m, v, result ) {
             if ( result === undefined ) {

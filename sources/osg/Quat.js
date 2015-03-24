@@ -70,7 +70,8 @@ define( [
 
         makeRotate: function ( angle, x, y, z, result ) {
             if ( result === undefined ) {
-                result = [ 0.0, 0.0, 0.0, 0.0 ];
+                Notify.warn( 'no quat destination !' );
+                result = this.create();
             }
 
             var epsilon = 0.0000001;

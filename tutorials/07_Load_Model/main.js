@@ -4,7 +4,7 @@ var main = function() {
     console.log('osg ready');
 
     var rootModelNode = new osg.MatrixTransform();
-    rootModelNode.setMatrix(osg.Matrix.makeRotate(-Math.PI / 2, 1, 0, 0, []));
+    rootModelNode.setMatrix(osg.Matrix.makeRotate(Math.PI / 2, 1, 0, 0, []));
 
     function getModelJsonp(modelName, cbFocusCamera) {
         var url_model;

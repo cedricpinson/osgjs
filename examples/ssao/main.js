@@ -68,7 +68,7 @@ var addLoading = function () {
 var getModel = function ( func ) {
     var defer = Q.defer();
     var node = new osg.MatrixTransform();
-    //node.setMatrix(osg.Matrix.makeRotate(-Math.PI/2, 1,0,0, []));
+    //node.setMatrix(osg.Matrix.makeRotate(Math.PI/2, 1,0,0, []));
     var loadModel = function ( url ) {
         osg.log( 'loading ' + url );
         var req = new XMLHttpRequest();

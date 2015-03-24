@@ -24,7 +24,7 @@ SimpleUpdateCallback.prototype = {
 
         // rotation
         var m = node.getMatrix();
-        osg.Matrix.makeRotate( this.angle, 0.0, 0.0, 1.0, m );
+        osg.Matrix.makeRotate( -this.angle, 0.0, 0.0, 1.0, m );
 
 
 
