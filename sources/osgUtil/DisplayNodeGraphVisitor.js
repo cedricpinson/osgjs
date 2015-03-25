@@ -1,11 +1,17 @@
 define( [
-    'jquery',
     'osg/Utils',
     'osg/NodeVisitor'
 
-], function ( $, MACROUTILS, NodeVisitor ) {
+], function ( MACROUTILS, NodeVisitor ) {
 
     'use strict';
+
+    // Make the jquery dependency optional
+    try {
+        var $ = require( 'jquery' );
+    } catch ( e ) {
+        throw new Error( 'jQuery is required to use the DisplayNodeGraphVisitor' );
+    }
 
     // Simple tooltips implementation
     var SimpleTooltips = function ( options ) {

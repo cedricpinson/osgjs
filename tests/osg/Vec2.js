@@ -1,14 +1,15 @@
 define( [
+    'qunit',
     'osg/Vec2'
-], function ( Vec2 ) {
+], function ( QUnit, Vec2 ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'Vec2', function () {
+        QUnit.test( 'Vec2', function () {
 
             ( function () {
                 var a = [ 2, 3 ];

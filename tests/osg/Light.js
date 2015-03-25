@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/Light',
     'osgViewer/Viewer',
@@ -8,15 +9,15 @@ define( [
     'osg/RenderStage',
     'osg/StateGraph',
     'osg/Matrix'
-], function ( mockup, Light, Viewer, Shape, Node, CullVisitor, RenderStage, StateGraph, Matrix ) {
+], function ( QUnit, mockup, Light, Viewer, Shape, Node, CullVisitor, RenderStage, StateGraph, Matrix ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'Light', function () {
+        QUnit.test( 'Light', function () {
 
             ( function () {
 

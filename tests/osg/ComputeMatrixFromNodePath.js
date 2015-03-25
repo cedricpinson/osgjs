@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/ComputeMatrixFromNodePath',
     'osg/NodeVisitor',
@@ -8,15 +9,15 @@ define( [
     'osg/Camera',
     'osg/Vec3',
     'osg/TransformEnums'
-], function ( mockup, ComputeMatrixFromNodePath, NodeVisitor, MACROUTILS, MatrixTransform, Matrix, Camera, Vec3, TransformEnums ) {
+], function ( QUnit, mockup, ComputeMatrixFromNodePath, NodeVisitor, MACROUTILS, MatrixTransform, Matrix, Camera, Vec3, TransformEnums ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'ComputeMatrixFromNodePath', function () {
+        QUnit.test( 'ComputeMatrixFromNodePath', function () {
 
             ( function () {
                 // test visit parents

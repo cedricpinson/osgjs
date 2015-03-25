@@ -1,16 +1,16 @@
 define( [
-    'text!osgShadow/shaders/shadowsCastVert.glsl',
-    'text!osgShadow/shaders/shadowsCastFrag.glsl',
-    'text!osgShadow/shaders/shadowsReceive.glsl',
-    'text!osgShadow/shaders/shadowLinearSoft.glsl',
-    'text!osgShadow/shaders/bandPCF.glsl',
-    'text!osgShadow/shaders/tapPCF.glsl',
-    'text!osgShadow/shaders/hash.glsl',
-    'text!osgShadow/shaders/arrayPoisson.glsl',
-    'text!osgShadow/shaders/poissonPCF.glsl',
-    'text!osgShadow/shaders/esm.glsl',
-    'text!osgShadow/shaders/vsm.glsl',
-    'text!osgShadow/shaders/evsm.glsl'
+    'osgShadow/shaders/shadowsCastVert.glsl',
+    'osgShadow/shaders/shadowsCastFrag.glsl',
+    'osgShadow/shaders/shadowsReceive.glsl',
+    'osgShadow/shaders/shadowLinearSoft.glsl',
+    'osgShadow/shaders/bandPCF.glsl',
+    'osgShadow/shaders/tapPCF.glsl',
+    'osgShadow/shaders/hash.glsl',
+    'osgShadow/shaders/arrayPoisson.glsl',
+    'osgShadow/shaders/poissonPCF.glsl',
+    'osgShadow/shaders/esm.glsl',
+    'osgShadow/shaders/vsm.glsl',
+    'osgShadow/shaders/evsm.glsl'
 ], function ( shadowsCastVert, shadowsCastFrag, shadowsReceive, shadowLinearSoft, bandPCF, tapPCF, hash, arrayPoisson, poissonPCF, esm, vsm, evsm ) {
     'use strict';
 

@@ -1,19 +1,20 @@
 define( [
-    'vendors/q',
+    'qunit',
+    'q',
     'osgDB/Input',
     'osg/Notify',
     'osg/Image'
-], function ( Q, Input, Notify, Image ) {
+], function ( QUnit, Q, Input, Notify, Image ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgDB' );
+        QUnit.module( 'osgDB' );
 
         var ImageTest = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 
-        asyncTest( 'Input.readImageURL', function () {
+        QUnit.asyncTest( 'Input.readImageURL', function () {
 
             var input = new Input();
             input.setPrefixURL( 'testXtest' );
@@ -25,7 +26,7 @@ define( [
             } );
         } );
 
-        asyncTest( 'Input.readImageURL with readImageURL replacement', function () {
+        QUnit.asyncTest( 'Input.readImageURL with readImageURL replacement', function () {
             var called = false;
             var input = new Input();
             var readImageURLReplacement = function ( url /*, options*/ ) {
@@ -43,7 +44,7 @@ define( [
         } );
 
 
-        asyncTest( 'Input.readImageURL inline dataimage with crossOrigin', function () {
+        QUnit.asyncTest( 'Input.readImageURL inline dataimage with crossOrigin', function () {
             var input = new Input();
             var url = 'error-404';
 
@@ -89,7 +90,7 @@ define( [
         } );
 
 
-        asyncTest( 'Input.readArrayBuffer-old', function () {
+        QUnit.asyncTest( 'Input.readArrayBuffer-old', function () {
 
             var ba = {
                 'Elements': [ 0.01727, -0.00262, 3.0 ],
@@ -109,7 +110,7 @@ define( [
 
         } );
 
-        asyncTest( 'Input.readBinaryArrayURL with replacement option', function () {
+        QUnit.asyncTest( 'Input.readBinaryArrayURL with replacement option', function () {
             var calledBinaryArray = false;
             var readBinaryArrayURL = function ( /*url, options*/) {
                 calledBinaryArray = true;
@@ -125,7 +126,7 @@ define( [
 
         } );
 
-        asyncTest( 'Input.readNodeURL with replacement option', function () {
+        QUnit.asyncTest( 'Input.readNodeURL with replacement option', function () {
             var calledNodeURL = false;
             var readNodeURL = function ( /*url, options*/) {
                 calledNodeURL = true;
@@ -160,7 +161,7 @@ define( [
             } )();
         } );
 
-        asyncTest( 'Input.readObject - Material', function () {
+        QUnit.asyncTest( 'Input.readObject - Material', function () {
             var obj = {
                 'osg.Material': {
                     'UniqueID': 10,
@@ -186,7 +187,7 @@ define( [
             } );
         } );
 
-        asyncTest( 'Input.computeURL use prefix', function () {
+        QUnit.asyncTest( 'Input.computeURL use prefix', function () {
             var input = new Input();
             ok( input.computeURL( 'toto' ) === 'toto', 'check default computeURL' );
             input.setPrefixURL( undefined );
@@ -196,7 +197,7 @@ define( [
             start();
         } );
 
-        asyncTest( 'Input.readPrimitiveSet', function () {
+        QUnit.asyncTest( 'Input.readPrimitiveSet', function () {
 
             var input = new Input( {
                 'DrawArrays': {
@@ -219,7 +220,7 @@ define( [
         } );
 
 
-        asyncTest( 'Input.readBufferArray - inline', function () {
+        QUnit.asyncTest( 'Input.readBufferArray - inline', function () {
             var ba = {
                 'Array': {
                     'Uint16Array': {
@@ -242,7 +243,7 @@ define( [
             } );
         } );
 
-        asyncTest( 'Input.readBufferArray - external', function () {
+        QUnit.asyncTest( 'Input.readBufferArray - external', function () {
             var ba = {
                 'Array': {
                     'Uint16Array': {
@@ -278,7 +279,7 @@ define( [
         } );
 
 
-        asyncTest( 'Input.readBufferArray - external offset', function () {
+        QUnit.asyncTest( 'Input.readBufferArray - external offset', function () {
             var ba = {
                 'TexCoord0': {
                     'UniqueID': 202,

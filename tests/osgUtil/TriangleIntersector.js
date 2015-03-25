@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osgUtil/TriangleIntersector',
     'osg/Matrix',
@@ -9,15 +10,15 @@ define( [
     'osg/PrimitiveSet',
     'osg/BufferArray',
     'osg/Geometry'
-], function ( mockup, TriangleIntersector, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry ) {
+], function ( QUnit, mockup, TriangleIntersector, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgUtil' );
+        QUnit.module( 'osgUtil' );
 
-        test( 'TriangleIntersector', function () {
+        QUnit.test( 'TriangleIntersector', function () {
 
             var checkPrimitive = function ( geom, msg ) {
                 var ti = new TriangleIntersector();

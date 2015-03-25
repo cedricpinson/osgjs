@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/BoundingSphere',
     'osg/Node',
@@ -7,15 +8,15 @@ define( [
     'osg/Shape',
     'osg/MatrixTransform',
     'osg/Matrix'
-], function ( mockup, BoundingSphere, Node, Camera, TransformEnums, Shape, MatrixTransform, Matrix ) {
+], function ( QUnit, mockup, BoundingSphere, Node, Camera, TransformEnums, Shape, MatrixTransform, Matrix ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'BoundingSphere', function () {
+        QUnit.test( 'BoundingSphere', function () {
 
             var simpleBoundingSphere = new BoundingSphere();
             ok( simpleBoundingSphere.valid() !== 1, 'BoundingSphere is invalid' );

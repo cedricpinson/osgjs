@@ -1,14 +1,15 @@
 define( [
+    'qunit',
     'osg/Node'
-], function ( Node ) {
+], function ( QUnit, Node ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'Node', function () {
+        QUnit.test( 'Node', function () {
 
             var n = new Node();
             ok( n.children.length === 0, 'number of children must be 0' );

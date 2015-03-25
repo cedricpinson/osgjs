@@ -1,16 +1,17 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/Matrix',
     'osg/Notify'
-], function ( mockup, Matrix, Notify ) {
+], function ( QUnit, mockup, Matrix, Notify ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'Matrix.makeRotateFromQuat', function () {
+        QUnit.test( 'Matrix.makeRotateFromQuat', function () {
             var m = [];
             Matrix.makeRotateFromQuat( [ 0.653281, 0.270598, -0.653281, 0.270598 ], m );
             mockup.near( m, [ 1.66533e-16, 1.11022e-16, -1, 0,
@@ -19,7 +20,7 @@ define( [
             ] );
         } );
 
-        test( 'Matrix.getRotate', function () {
+        QUnit.test( 'Matrix.getRotate', function () {
             var m = [];
             Matrix.makeRotateFromQuat( [ 0.653281, 0.270598, -0.653281, 0.270598 ], m );
             var q = Matrix.getRotate( m );
@@ -27,7 +28,7 @@ define( [
 
         } );
 
-        test( 'Matrix.getPerspective', function () {
+        QUnit.test( 'Matrix.getPerspective', function () {
             var m = [];
             Matrix.makePerspective( 60, 800 / 200, 2.0, 500.0, m );
             var r = {};
@@ -38,7 +39,7 @@ define( [
             mockup.near( r.aspectRatio, 4.0 );
         } );
 
-        test( 'Matrix.makeLookAt', function () {
+        QUnit.test( 'Matrix.makeLookAt', function () {
             var m = Matrix.makeLookAt( [ 0, -10, 0 ], [ 0.0, 0.0, 0.0 ], [ 0.0, 0.0, 1.0 ] );
             mockup.near( m, [ 1, 0, -0, 0,
                 0, 0, -1, 0,
@@ -56,7 +57,7 @@ define( [
 
         } );
 
-        test( 'Matrix.computeFustrumCornersVectors', function () {
+        QUnit.test( 'Matrix.computeFustrumCornersVectors', function () {
             var m = [];
             var ratio = 16.0 / 9.0;
             Matrix.makePerspective( 45, ratio, 1.0, 100.0, m );
@@ -83,7 +84,7 @@ define( [
             ok( true, 'check computeFustrumVectors' );
         } );
 
-        test( 'Matrix.getLookAt', function () {
+        QUnit.test( 'Matrix.getLookAt', function () {
             var m = Matrix.makeLookAt( [ 0, -10, 0 ], [ 0.0, 5.0, 0.0 ], [ 0.0, 0.0, 1.0 ] );
             var eye = [];
             var target = [];
@@ -97,7 +98,7 @@ define( [
             mockup.near( up, [ 0, 0, 1 ] );
         } );
 
-        test( 'Matrix.transformVec3', function () {
+        QUnit.test( 'Matrix.transformVec3', function () {
             var m = Matrix.makeRotate( -Math.PI / 2.0, 0, 1, 0, [] );
             var vec = [ 0, 0, 10 ];
             var inv = [];
@@ -126,7 +127,7 @@ define( [
 
         } );
 
-        test( 'Matrix.transpose', function () {
+        QUnit.test( 'Matrix.transpose', function () {
             var m = [ 0, 1, 2, 3,
                 4, 5, 6, 7,
                 8, 9, 10, 11,
@@ -154,7 +155,7 @@ define( [
             ] );
         } );
 
-        test( 'Matrix.makeRotate', function () {
+        QUnit.test( 'Matrix.makeRotate', function () {
             var res = Matrix.makeRotate( 0, 0, 0, 1, [] );
             mockup.near( res, [ 1, 0, 0, 0,
                 0, 1, 0, 0,
@@ -163,7 +164,7 @@ define( [
             ] );
         } );
 
-        test( 'Matrix.mult', function () {
+        QUnit.test( 'Matrix.mult', function () {
             var width = 800;
             var height = 600;
             var translate = Matrix.create();

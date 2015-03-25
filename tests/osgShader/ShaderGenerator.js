@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/State',
     'osg/StateSet',
@@ -7,15 +8,15 @@ define( [
     'osg/Program',
     'osg/Texture',
     'osgShader/ShaderGeneratorProxy'
-], function ( mockup, State, StateSet, Material, Shader, Program, Texture, ShaderGeneratorProxy ) {
+], function ( QUnit, mockup, State, StateSet, Material, Shader, Program, Texture, ShaderGeneratorProxy ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgShader' );
+        QUnit.module( 'osgShader' );
 
-        test( 'ShaderGenerator', function () {
+        QUnit.test( 'ShaderGenerator', function () {
 
 
             ( function () {

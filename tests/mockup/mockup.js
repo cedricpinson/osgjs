@@ -1,5 +1,5 @@
 define( [
-    'vendors/jquery',
+    'jquery',
     'tests/mockup/scene',
     'tests/mockup/box'
 

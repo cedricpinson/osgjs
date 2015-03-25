@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/ComputeBoundsVisitor',
     'osg/Geometry',
@@ -6,15 +7,15 @@ define( [
     'osg/MatrixTransform',
     'osg/Shape',
 
-], function ( mockup, ComputeBoundsVisitor, Geometry, Matrix, MatrixTransform, Shape ) {
+], function ( QUnit, mockup, ComputeBoundsVisitor, Geometry, Matrix, MatrixTransform, Shape ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'ComputeBoundsVisitor', function () {
+        QUnit.test( 'ComputeBoundsVisitor', function () {
 
             ( function () {
 

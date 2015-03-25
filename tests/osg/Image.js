@@ -1,15 +1,17 @@
 define( [
+    'qunit',
+
     'tests/mockup/mockup',
     'osg/Image'
-], function ( mockup, Image ) {
+], function ( QUnit, mockup, Image ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        asyncTest( 'Image.isGreyScale grey image', function () {
+        QUnit.asyncTest( 'Image.isGreyScale grey image', function () {
 
 
             var test = function ( img ) {
@@ -27,7 +29,7 @@ define( [
 
         } );
 
-        asyncTest( 'Image.isGreyScale color image', function () {
+        QUnit.asyncTest( 'Image.isGreyScale color image', function () {
 
 
             var test = function ( img ) {

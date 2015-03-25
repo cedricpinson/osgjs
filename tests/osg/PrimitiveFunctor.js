@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'osg/Utils',
     'tests/mockup/mockup',
     'osg/PrimitiveFunctor',
@@ -8,15 +9,15 @@ define( [
     'osg/Geometry',
     'osg/BufferArray',
     'osg/Vec3'
-], function ( MACROUTILS, mockup, PrimitiveFunctor, PrimitiveSet, DrawElements, DrawArrays, Geometry, BufferArray, Vec3 ) {
+], function ( QUnit, MACROUTILS, mockup, PrimitiveFunctor, PrimitiveSet, DrawElements, DrawArrays, Geometry, BufferArray, Vec3 ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'PrimitiveFunctor Points', function () {
+        QUnit.test( 'PrimitiveFunctor Points', function () {
             // Test DrawArrays
             var node = createGeometry( PrimitiveSet.POINTS, 0 );
             var vertices = node.getAttributes().Vertex.getElements();
@@ -51,7 +52,7 @@ define( [
         } );
 
 
-        test( 'PrimitiveFunctor Lines', function () {
+        QUnit.test( 'PrimitiveFunctor Lines', function () {
             // Test DrawArrays
             var node = createGeometry( PrimitiveSet.LINES, 0 );
             var vertices = node.getAttributes().Vertex.getElements();
@@ -79,7 +80,7 @@ define( [
             mockup.near( vectors[ 1 ], [ 0, 0, 0 ] );
         } );
 
-        test( 'PrimitiveFunctor LineStrip', function () {
+        QUnit.test( 'PrimitiveFunctor LineStrip', function () {
             // Test DrawArrays
             var node = createGeometry( PrimitiveSet.LINE_STRIP, 0 );
             var vertices = node.getAttributes().Vertex.getElements();
@@ -111,7 +112,7 @@ define( [
             mockup.near( vectors[ 3 ], [ 2, 2, 0 ] );
         } );
 
-        test( 'PrimitiveFunctor LineLoop', function () {
+        QUnit.test( 'PrimitiveFunctor LineLoop', function () {
             // Test DrawArrays
             var node = createGeometry( PrimitiveSet.LINE_LOOP, 0 );
             var vertices = node.getAttributes().Vertex.getElements();
@@ -147,7 +148,7 @@ define( [
             mockup.near( vectors[ 5 ], [ -2.0, 2.0, 0 ] );
         } );
 
-        test( 'PrimitiveFunctor Triangle', function () {
+        QUnit.test( 'PrimitiveFunctor Triangle', function () {
             // Test DrawArrays
             var node = createGeometry( PrimitiveSet.TRIANGLES, 0 );
             var vertices = node.getAttributes().Vertex.getElements();

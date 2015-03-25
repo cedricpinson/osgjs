@@ -1,12 +1,12 @@
-define( [], function () {
+define( [ 'qunit' ], function ( QUnit ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgAnimation' );
+        QUnit.module( 'osgAnimation' );
 
-        test( 'Animation', function () {
+        QUnit.test( 'Animation', function () {
             ok( true );
         } );
     };

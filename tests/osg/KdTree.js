@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/Matrix',
     'osg/Vec3',
@@ -9,15 +10,15 @@ define( [
     'osg/BufferArray',
     'osg/Geometry',
     'osg/KdTree'
-], function ( mockup, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry, KdTree ) {
+], function ( QUnit, mockup, Matrix, Vec3, Shape, DrawElements, DrawArrays, PrimitiveSet, BufferArray, Geometry, KdTree ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'KdTree', function () {
+        QUnit.test( 'KdTree', function () {
 
             var createTrianglesIndexed = function () {
                 // triangles

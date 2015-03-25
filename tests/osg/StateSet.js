@@ -1,18 +1,19 @@
 define( [
+    'qunit',
     'osg/StateSet',
     'osg/Uniform',
     'osg/Shader',
     'osg/Program',
     'osg/Texture'
-], function ( StateSet, Uniform, Shader, Program, Texture ) {
+], function ( QUNit, StateSet, Uniform, Shader, Program, Texture ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'StateSet', function () {
+        QUnit.test( 'StateSet', function () {
 
             ( function () {
                 var stateset = new StateSet();

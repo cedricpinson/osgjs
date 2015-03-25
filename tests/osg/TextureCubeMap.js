@@ -1,19 +1,20 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/TextureCubeMap',
     'osg/Texture',
     'osg/State',
     'osgDB/ReaderParser',
     'osgShader/ShaderGeneratorProxy'
-], function ( mockup, TextureCubeMap, Texture, State, ReaderParser, ShaderGeneratorProxy ) {
+], function ( QUnit, mockup, TextureCubeMap, Texture, State, ReaderParser, ShaderGeneratorProxy ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'TextureCubeMap', function () {
+        QUnit.test( 'TextureCubeMap', function () {
 
             var ready;
             var loadingComplete = function () {

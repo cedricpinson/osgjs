@@ -1,20 +1,21 @@
 define( [
+    'qunit',
     'osgGA/OrbitManipulator'
-], function ( OrbitManipulator ) {
+], function ( QUnit, OrbitManipulator ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgGA' );
+        QUnit.module( 'osgGA' );
 
-        test( 'OrbitManipulator', function () {
+        QUnit.test( 'OrbitManipulator', function () {
             var manipulator = new OrbitManipulator();
             var matrix = manipulator.getInverseMatrix();
             ok( matrix !== undefined, 'check getInverseMatrix method' );
         } );
 
-        test( 'OrbitManipulator check controllers', function () {
+        QUnit.test( 'OrbitManipulator check controllers', function () {
             var manipulator = new OrbitManipulator();
             var list = manipulator.getControllerList();
             ok( list.StandardMouseKeyboard !== undefined, 'check mouse support' );

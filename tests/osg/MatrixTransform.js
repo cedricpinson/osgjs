@@ -1,18 +1,19 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/MatrixTransform',
     'osg/Matrix',
     'osgDB/ReaderParser',
     'osg/TransformEnums'
-], function ( mockup, MatrixTransform, Matrix, ReaderParser, TransformEnums ) {
+], function ( QUnit, mockup, MatrixTransform, Matrix, ReaderParser, TransformEnums ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'MatrixTransform', function () {
+        QUnit.test( 'MatrixTransform', function () {
 
             var n = new MatrixTransform();
             var scene = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
@@ -23,7 +24,7 @@ define( [
             mockup.near( bs.radius(), 2.414213562373095 );
         } );
 
-        test( 'Transform', function () {
+        QUnit.test( 'Transform', function () {
 
             var n = new MatrixTransform();
             var scene = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
@@ -34,7 +35,7 @@ define( [
             mockup.near( bs.radius(), 9.65685424949238 );
         } );
 
-        test( 'Transform absolute vs relative', function () {
+        QUnit.test( 'Transform absolute vs relative', function () {
             var mat = Matrix.makeRotate( -Math.PI * 0.5, 1.0, 0.0, 0.0, Matrix.create() );
             var inv = Matrix.create();
             Matrix.inverse( mat, inv );

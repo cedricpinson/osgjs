@@ -1,20 +1,21 @@
 define( [
-    'vendors/q',
+    'qunit',
+    'q',
     'tests/mockup/mockup',
     'osgAnimation/BasicAnimationManager',
     'osg/Utils',
     'osg/NodeVisitor',
     'osgDB/ReaderParser',
     'osgAnimation/LinkVisitor'
-], function ( Q, mockup, BasicAnimationManager, MACROUTILS, NodeVisitor, ReaderParser, LinkVisitor ) {
+], function ( QUnit, Q, mockup, BasicAnimationManager, MACROUTILS, NodeVisitor, ReaderParser, LinkVisitor ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgAnimation' );
+        QUnit.module( 'osgAnimation' );
 
-        asyncTest( 'BasicAnimationManager', function () {
+        QUnit.asyncTest( 'BasicAnimationManager', function () {
             var tree = {
                 'Generator': 'OpenSceneGraph 3.1.0',
                 'Version': 1,

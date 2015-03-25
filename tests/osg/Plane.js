@@ -1,18 +1,19 @@
 define( [
+    'qunit',
     'osg/BoundingBox',
     'osg/BoundingSphere',
     'osg/Plane',
     'osg/Vec3'
 
-], function ( BoundingBox, BoundingSphere, Plane ) {
+], function ( QUnit, BoundingBox, BoundingSphere, Plane ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'Plane', function () {
+        QUnit.test( 'Plane', function () {
 
             var p = Plane.create();
             Plane.setNormal( p, [ 2, 0, 0 ] );

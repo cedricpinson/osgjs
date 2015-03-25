@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'osg/State',
     'osg/StateSet',
     'osg/Material',
@@ -6,17 +7,15 @@ define( [
     'osg/Texture',
     'osgShader/ShaderGeneratorProxy',
     'tests/mockup/mockup'
-], function ( State, StateSet, Material, StateAttribute, Texture, ShaderGeneratorProxy, mockup ) {
+], function ( QUnit, State, StateSet, Material, StateAttribute, Texture, ShaderGeneratorProxy, mockup ) {
 
     'use strict';
 
-    var QUnit = window.QUnit;
-
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'State', function () {
+        QUnit.test( 'State', function () {
 
             ( function () {
                 var state = new State( new ShaderGeneratorProxy() );
@@ -37,7 +36,7 @@ define( [
         } );
 
 
-        test( 'State applyStateSet', function () {
+        QUnit.test( 'State applyStateSet', function () {
 
             ( function () {
                 var state = new State( new ShaderGeneratorProxy() );

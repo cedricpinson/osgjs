@@ -1,16 +1,17 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/TextureManager',
     'osg/Texture'
-], function ( mockup, TextureManager, Texture ) {
+], function ( QUnit, mockup, TextureManager, Texture ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'TextureManager', function () {
+        QUnit.test( 'TextureManager', function () {
             var tm = new TextureManager();
             var gl = mockup.createFakeRenderer();
             var batch0 = [];
@@ -64,7 +65,7 @@ define( [
 
         } );
 
-        test( 'TextureManager flushDeletedTextureObjects', function () {
+        QUnit.test( 'TextureManager flushDeletedTextureObjects', function () {
             var tm = new TextureManager();
             var gl = mockup.createFakeRenderer();
             var batch0 = [];

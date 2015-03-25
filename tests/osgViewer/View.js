@@ -1,14 +1,15 @@
 define( [
+    'qunit',
     'osgViewer/View'
-], function ( View ) {
+], function ( QUnit, View ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgViewer' );
+        QUnit.module( 'osgViewer' );
 
-        test( 'View', function () {
+        QUnit.test( 'View', function () {
             var gc = 2;
             var view = new View();
             view.setGraphicContext( gc );

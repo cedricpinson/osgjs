@@ -1,17 +1,18 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/Texture',
     'osg/State',
     'osgShader/ShaderGeneratorProxy'
-], function ( mockup, Texture, State, ShaderGeneratorProxy ) {
+], function ( QUnit, mockup, Texture, State, ShaderGeneratorProxy ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        asyncTest( 'Texture', function () {
+        QUnit.asyncTest( 'Texture', function () {
             //stop();
 
             var textureFromURL = Texture.createFromURL( '"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2P8DwQACgAD/il4QJ8AAAAASUVORK5CYII="' );
