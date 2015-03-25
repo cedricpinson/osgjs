@@ -390,7 +390,7 @@
                     var m = nv.getCurrentModelViewMatrix();
 
                     // add a rotation, because environment has the convention y up
-                    var rotateYtoZ = osg.Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, osg.Matrix.create() );
+                    var rotateYtoZ = osg.Matrix.makeRotate( Math.PI / 2, 1, 0, 0, osg.Matrix.create() );
 
                     osg.Matrix.mult( m, rotateYtoZ, environmentTransform.get() );
                     //osg.Matrix.copy( m, environmentTransform.get() );
@@ -440,7 +440,7 @@
             Q.when( request, function ( model ) {
 
                 var mt = new osg.MatrixTransform();
-                osg.Matrix.makeRotate( Math.PI / 2, 1, 0, 0, mt.getMatrix() );
+                osg.Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, mt.getMatrix() );
                 var bb = model.getBound();
                 osg.Matrix.mult( osg.Matrix.makeTranslate( 0, -bb.radius() / 2, 0, osg.Matrix.create() ), mt.getMatrix(), mt.getMatrix() );
                 mt.addChild( model );
@@ -953,7 +953,7 @@
                 //group.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
                 // y up
-                osg.Matrix.makeRotate( Math.PI / 2, -1, 0, 0, group.getMatrix() );
+                osg.Matrix.makeRotate( -Math.PI / 2, -1, 0, 0, group.getMatrix() );
 
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.ROUGHNESS_TEXTURE_UNIT, 'roughnessMap' ) );
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.NORMAL_TEXTURE_UNIT, 'normalMap' ) );
