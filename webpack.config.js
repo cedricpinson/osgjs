@@ -17,13 +17,42 @@ module.exports = {
         libraryTarget: 'umd',
         library: 'OSG'
     },
-    externals: {
-        'qunit': 'QUnit',
-        'q': 'Q',
-        'hammer': 'Hammer',
-        'leap': 'Leap',
-        'jquery': '$'
-    },
+    externals: [ {
+        'qunit': {
+            root: 'QUnit',
+            commonjs2: 'qunit',
+            commonjs: 'qunit',
+            amd: 'qunit'
+        }
+    }, {
+        'q': {
+            root: 'Q',
+            commonjs2: 'q',
+            commonjs: 'q',
+            amd: 'q'
+        }
+    }, {
+        'hammer': {
+            root: 'Hammer',
+            commonjs2: 'hammerjs',
+            commonjs: 'hammerjs',
+            amd: 'hammer'
+        }
+    }, {
+        'leap': {
+            root: 'Leap',
+            commonjs2: 'leapjs',
+            commonjs: 'leapjs',
+            amd: 'leap'
+        }
+    }, {
+        'jquery': {
+            root: '$',
+            commonjs2: 'jquery',
+            commonjs: 'jquery',
+            amd: 'jquery'
+        }
+    } ],
     resolve: {
         root: [
             SOURCES_PATH,
