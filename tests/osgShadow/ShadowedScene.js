@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'osg/Camera',
     'osg/Matrix',
     'osg/Node',
@@ -7,14 +8,14 @@ define( [
     'osgShadow/ShadowedScene',
     'osgUtil/IntersectionVisitor',
     'tests/mockup/mockup',
-], function ( Camera, Matrix, Node, Shape, Viewport, ShadowedScene, IntersectionVisitor, mockup ) {
+], function ( QUnit, Camera, Matrix, Node, Shape, Viewport, ShadowedScene, IntersectionVisitor, mockup ) {
 
     'use strict';
 
     return function () {
-        module( 'osgShadow' );
+        QUnit.module( 'osgShadow' );
 
-        test( 'ShadowedScene', function () {
+        QUnit.test( 'ShadowedScene', function () {
 
             var pShadow = new ShadowedScene();
             ok( pShadow.children.length === 0, 'number of children must be 0' );
@@ -42,7 +43,7 @@ define( [
             }
         };
 
-        test( 'IntersectionVisitor with 1 camera', function () {
+        QUnit.test( 'IntersectionVisitor with 1 camera', function () {
 
             var camera = new Camera();
             camera.setViewport( new Viewport() );

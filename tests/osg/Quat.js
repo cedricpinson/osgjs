@@ -1,22 +1,23 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/Quat',
     'osg/Matrix'
-], function ( mockup, Quat, Matrix ) {
+], function ( QUnit, mockup, Quat, Matrix ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'Quat.init', function () {
+        QUnit.test( 'Quat.init', function () {
             var q = [];
             Quat.init( q );
             deepEqual( q, [ 0, 0, 0, 1 ] );
         } );
 
-        test( 'Quat.makeRotate', function () {
+        QUnit.test( 'Quat.makeRotate', function () {
             var q0 = Quat.makeRotate( Math.PI, 1, 0, 0, [] );
             mockup.near( q0, [ 1, 0, 0, 6.12303e-17 ], 1e-5 );
 
@@ -27,7 +28,7 @@ define( [
             mockup.near( q2, [ 0, 0, 0.382683, 0.92388 ] );
         } );
 
-        test( 'Quat.makeRotateFromTo', function () {
+        QUnit.test( 'Quat.makeRotateFromTo', function () {
             var q1 = Quat.makeRotateFromTo( [ 1, 0, 0 ], [ 0, 1, 0 ], [] );
             mockup.near( q1, [ 0, 0, 0.707107, 0.707107 ], 1e-5 );
 
@@ -37,13 +38,13 @@ define( [
             mockup.near( q2, qyrot, 1e-5 );
         } );
 
-        // test('Quat.rotateVec3', function() {
+        // QUnit.test('Quat.rotateVec3', function() {
         //     var q0 = Quat.makeRotate(Math.PI, 1, 0, 0);
         //     var result = Quat.rotateVec3(q0, [10, 0,0], []);
         //     near(result , [-10.0, 0, 0]);
         // });
 
-        test( 'Quat.mult', function () {
+        QUnit.test( 'Quat.mult', function () {
             var q0 = Quat.makeRotate( Math.PI, 1, 0, 0, [] );
             var q1 = Quat.makeRotate( Math.PI / 2, 0, 1, 0, [] );
             var q2 = Quat.makeRotate( Math.PI / 4, 0, 0, 1, [] );
@@ -68,13 +69,13 @@ define( [
             mockup.near( Quat.mult( q2, Quat.mult( q1, q0, [] ), [] ), [ 0.653281, 0.270598, -0.653281, 0.270598 ] );
         } );
 
-        test( 'Quat.slerp', function () {
+        QUnit.test( 'Quat.slerp', function () {
             var q = [];
             Quat.slerp( 0.5, [ 0, 0.707107, 0, 0.707107 ], [ 0, 0, 0.382683, 0.92388 ], q );
             mockup.near( q, [ 0, 0.388863, 0.210451, 0.896937 ] );
         } );
 
-        test( 'Quat.transformVec3', function () {
+        QUnit.test( 'Quat.transformVec3', function () {
             var v = [ 1.0, 2.0, 3.0 ];
             Quat.transformVec3( [ 0, 0.707107, 0, 0.707107 ], v, v );
             mockup.near( v, [ 3.0, 2.0, -1.0 ] );

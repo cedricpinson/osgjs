@@ -1,17 +1,18 @@
 define( [
+    'qunit',
     'osgDB/DatabasePager',
     'vendors/q',
     'osg/PagedLOD',
     'osg/Node',
     'osg/FrameStamp',
     'osg/Notify'
-], function ( DatabasePager, Q, PagedLOD, Node, FrameStamp, Notify ) {
+], function ( QUnit, DatabasePager, Q, PagedLOD, Node, FrameStamp, Notify ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgDB' );
+        QUnit.module( 'osgDB' );
         var dbpager = new DatabasePager();
         // Modify the processRequest Method to add a defer variable to test it easily.
         dbpager.processRequest = function ( dbrequest ) {
@@ -48,7 +49,7 @@ define( [
             return defer.promise;
         };
 
-        asyncTest( 'DatabasePager.requestNodeFile', function () {
+        QUnit.asyncTest( 'DatabasePager.requestNodeFile', function () {
             dbpager.reset();
             var fn = function createNode( /*parent*/) {
                 var n = new Node();
@@ -67,7 +68,7 @@ define( [
             } );
         } );
 
-        asyncTest( 'DatabasePager.addLoadedDataToSceneGraph', function () {
+        QUnit.asyncTest( 'DatabasePager.addLoadedDataToSceneGraph', function () {
             dbpager.reset();
             var fn = function createNode( /*parent*/) {
                 var n = new PagedLOD();
@@ -88,7 +89,7 @@ define( [
             } );
         } );
 
-        asyncTest( 'DatabasePager.removeExpiredChildren', function () {
+        QUnit.asyncTest( 'DatabasePager.removeExpiredChildren', function () {
             dbpager.reset();
             dbpager.setTargetMaximumNumberOfPageLOD( 1 );
             var fn = function createNode( /*parent*/) {

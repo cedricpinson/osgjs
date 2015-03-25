@@ -1,20 +1,21 @@
 define( [
+    'qunit',
     'osgGA/FirstPersonManipulator'
-], function ( FirstPersonManipulator ) {
+], function ( QUnit, FirstPersonManipulator ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgGA' );
+        QUnit.module( 'osgGA' );
 
-        test( 'FirstPersonManipulator', function () {
+        QUnit.test( 'FirstPersonManipulator', function () {
             var manipulator = new FirstPersonManipulator();
             var matrix = manipulator.getInverseMatrix();
             ok( matrix !== undefined, 'check getInverseMatrix method' );
         } );
 
-        test( 'FirstPersonManipulator check controllers', function () {
+        QUnit.test( 'FirstPersonManipulator check controllers', function () {
             var manipulator = new FirstPersonManipulator();
             var list = manipulator.getControllerList();
             ok( list.StandardMouseKeyboard !== undefined, 'check mouse support' );

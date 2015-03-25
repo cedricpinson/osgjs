@@ -1,19 +1,20 @@
 define( [
+    'qunit',
     'vendors/q',
     'tests/mockup/mockup',
     'osgDB/ReaderParser',
     'osg/Texture',
     'osgDB/Input',
     'osg/PrimitiveSet'
-], function ( Q, mockup, ReaderParser, Texture, Input, PrimitiveSet ) {
+], function ( QUnit, Q, mockup, ReaderParser, Texture, Input, PrimitiveSet ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgDB' );
+        QUnit.module( 'osgDB' );
 
-        asyncTest( 'StateSet - MultiTextures', function () {
+        QUnit.asyncTest( 'StateSet - MultiTextures', function () {
             var tree = {
 
                 'stateset': {
@@ -63,7 +64,7 @@ define( [
             } );
         } );
 
-        asyncTest( 'StateSet - BlendFunc, Material', function () {
+        QUnit.asyncTest( 'StateSet - BlendFunc, Material', function () {
             var tree = {
                 'osg.Node': {
                     'StateSet': {
@@ -127,7 +128,7 @@ define( [
         } );
 
 
-        asyncTest( 'Geometry Cube UserData', function () {
+        QUnit.asyncTest( 'Geometry Cube UserData', function () {
             var tree = {
                 'osg.Geometry': {
                     'Name': 'Cube',
@@ -216,7 +217,7 @@ define( [
         } );
 
 
-        asyncTest( 'MatrixTransform', function () {
+        QUnit.asyncTest( 'MatrixTransform', function () {
             var tree = {
                 'osg.MatrixTransform': {
                     'Name': 'Lamp',
@@ -237,7 +238,7 @@ define( [
         } );
 
 
-        asyncTest( 'BasicAnimationManager', function () {
+        QUnit.asyncTest( 'BasicAnimationManager', function () {
             var tree = {
                 'osg.Node': {
                     'Name': 'Root',
@@ -297,7 +298,7 @@ define( [
         } );
 
 
-        asyncTest( 'FloatLerpChannel', function () {
+        QUnit.asyncTest( 'FloatLerpChannel', function () {
             var tree = {
                 'osgAnimation.FloatLerpChannel': {
                     'Name': 'euler_x',
@@ -318,7 +319,7 @@ define( [
         } );
 
 
-        asyncTest( 'QuatSlerpChannel', function () {
+        QUnit.asyncTest( 'QuatSlerpChannel', function () {
             var tree = {
                 'osgAnimation.QuatSlerpChannel': {
                     'Name': 'quaternion',
@@ -338,7 +339,7 @@ define( [
         } );
 
 
-        asyncTest( 'QuatLerpChannel', function () {
+        QUnit.asyncTest( 'QuatLerpChannel', function () {
             var tree = {
                 'osgAnimation.QuatLerpChannel': {
                     'Name': 'quaternion',
@@ -360,7 +361,7 @@ define( [
         } );
 
 
-        asyncTest( 'StackedTransform', function () {
+        QUnit.asyncTest( 'StackedTransform', function () {
 
             var tree = {
                 'osg.MatrixTransform': {
@@ -412,7 +413,7 @@ define( [
         } );
 
 
-        asyncTest( 'DrawArray', function () {
+        QUnit.asyncTest( 'DrawArray', function () {
             var tree = {
                 'osg.Geometry': {
                     'PrimitiveSetList': [ {
@@ -437,7 +438,7 @@ define( [
             } );
         } );
 
-        asyncTest( 'DrawArrays', function () {
+        QUnit.asyncTest( 'DrawArrays', function () {
             var tree2 = {
                 'osg.Geometry': {
                     'PrimitiveSetList': [ {
@@ -463,7 +464,7 @@ define( [
 
 
 
-        asyncTest( 'DrawArrayLengths', function () {
+        QUnit.asyncTest( 'DrawArrayLengths', function () {
             var tree = {
                 'osg.Geometry': {
                     'PrimitiveSetList': [ {
@@ -489,7 +490,7 @@ define( [
         } );
 
 
-        asyncTest( 'LightSource', function () {
+        QUnit.asyncTest( 'LightSource', function () {
             var tree = {
                 'osg.LightSource': {
                     'Name': 'Lamp.005',
@@ -517,7 +518,7 @@ define( [
             } );
         } );
 
-        asyncTest( 'PagedLOD', function () {
+        QUnit.asyncTest( 'PagedLOD', function () {
             var tree = {
                 'osg.PagedLOD': {
                     'UniqueID': 1,
@@ -546,7 +547,7 @@ define( [
             } );
         } );
 
-        asyncTest( 'Node Children Ordering', function () {
+        QUnit.asyncTest( 'Node Children Ordering', function () {
             var tree = {
                 'osg.Node': {
                     'UniqueID': 2,

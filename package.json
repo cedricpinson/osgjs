@@ -20,12 +20,14 @@
     "grunt-contrib-copy": "*",
     "grunt-contrib-jshint": "*",
     "grunt-contrib-requirejs": "*",
-    "grunt-copy-to": "0.0.12",
     "grunt-contrib-uglify": "*",
     "grunt-contrib-watch": "*",
+    "grunt-copy-to": "0.0.12",
     "grunt-git": "*",
     "grunt-shell": "*",
     "grunt-wintersmith-compile": "*",
+    "raw-loader": "^0.5.1",
+    "webpack": "^1.7.3",
     "wintersmith-nunjucks": "^0.5.0"
   },
   "devDependencies": {

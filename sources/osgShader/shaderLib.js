@@ -1,8 +1,8 @@
 define( [
-    'text!osgShader/node/functions.glsl',
-    'text!osgShader/node/lights.glsl',
-    'text!osgShader/node/textures.glsl',
-    'text!osgShader/node/colorEncode.glsl'
+    'osgShader/node/functions.glsl',
+    'osgShader/node/lights.glsl',
+    'osgShader/node/textures.glsl',
+    'osgShader/node/colorEncode.glsl'
 ], function ( functions, lights, textures, colorEncode ) {
     'use strict';
 

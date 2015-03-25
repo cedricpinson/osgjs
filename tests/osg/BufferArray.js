@@ -1,15 +1,16 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/BufferArray'
-], function ( mockup, BufferArray ) {
+], function ( QUnit, mockup, BufferArray ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'BufferArray', function () {
+        QUnit.test( 'BufferArray', function () {
 
             ( function () {
                 var gl = mockup.createFakeRenderer();

@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/BoundingBox',
     'osg/Camera',
@@ -19,15 +20,15 @@ define( [
     'osgViewer/View',
     'osgViewer/Viewer',
     'osgShader/ShaderGeneratorProxy'
-], function ( mockup, BoundingBox, Camera, CullSettings, CullVisitor, Matrix, MatrixTransform, Node, RenderBin, RenderStage, Shape, StateGraph, State, StateSet, TransformEnums, Vec3, Viewport, View, Viewer, ShaderGeneratorProxy ) {
+], function ( QUnit, mockup, BoundingBox, Camera, CullSettings, CullVisitor, Matrix, MatrixTransform, Node, RenderBin, RenderStage, Shape, StateGraph, State, StateSet, TransformEnums, Vec3, Viewport, View, Viewer, ShaderGeneratorProxy ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'CullVisitor', function () {
+        QUnit.test( 'CullVisitor', function () {
 
             var canvas = mockup.createCanvas();
             var viewer = new Viewer( canvas );
@@ -78,7 +79,7 @@ define( [
         } );
 
 
-        test( 'CullVisitor 2', function () {
+        QUnit.test( 'CullVisitor 2', function () {
 
             // check render stage and render bin
             ( function () {
@@ -636,7 +637,7 @@ define( [
         } );
 
 
-        test( 'CullVisitor World/View matrix', function () {
+        QUnit.test( 'CullVisitor World/View matrix', function () {
 
             var checkLeaf = function ( leaf ) {
                 var tmp = Matrix.create();

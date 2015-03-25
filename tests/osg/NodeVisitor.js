@@ -1,16 +1,17 @@
 define( [
+    'qunit',
     'osg/NodeVisitor',
     'osg/Node',
     'osg/Utils'
-], function ( NodeVisitor, Node, MACROUTILS ) {
+], function ( QUnit, NodeVisitor, Node, MACROUTILS ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'NodeVisitor', function () {
+        QUnit.test( 'NodeVisitor', function () {
 
             var FindItemAnchor = function ( search ) {
                 NodeVisitor.call( this );

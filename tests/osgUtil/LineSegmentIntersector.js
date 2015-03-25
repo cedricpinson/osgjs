@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osgUtil/IntersectionVisitor',
     'osgUtil/LineSegmentIntersector',
@@ -11,15 +12,15 @@ define( [
     'osgViewer/View',
     'osgDB/ReaderParser',
     'vendors/q'
-], function ( mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser, Q ) {
+], function ( QUnit, mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser, Q ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgUtil' );
+        QUnit.module( 'osgUtil' );
 
-        test( 'LineSegmentIntersector without 2 branches', function () {
+        QUnit.test( 'LineSegmentIntersector without 2 branches', function () {
 
             // right branch should be picked
             // left branch shouldn't be picked
@@ -57,7 +58,7 @@ define( [
 
         } );
 
-        test( 'LineSegmentIntersector without kdtree', function () {
+        QUnit.test( 'LineSegmentIntersector without kdtree', function () {
 
             var camera = new Camera();
             camera.setViewport( new Viewport() );
@@ -91,7 +92,7 @@ define( [
             } );
         } );
 
-        test( 'LineSegmentIntersector with kdtree', function () {
+        QUnit.test( 'LineSegmentIntersector with kdtree', function () {
             // This test will never work with kdtree
             var camera = new Camera();
             camera.setViewport( new Viewport() );

@@ -1,17 +1,18 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/Depth',
     'osg/State',
     'osgShader/ShaderGeneratorProxy'
-], function ( mockup, Depth, State, ShaderGeneratorProxy ) {
+], function ( QUnit, mockup, Depth, State, ShaderGeneratorProxy ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'Depth', function () {
+        QUnit.test( 'Depth', function () {
 
             var n = new Depth();
             ok( n._near === 0.0, 'Check near' );

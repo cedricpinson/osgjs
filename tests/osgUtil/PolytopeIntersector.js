@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'osg/Utils',
     'tests/mockup/mockup',
     'osgUtil/IntersectionVisitor',
@@ -14,15 +15,15 @@ define( [
     'osg/DrawElements',
     'osg/DrawArrays',
     'osg/PrimitiveSet'
-], function ( MACROUTILS, mockup, IntersectionVisitor, PolytopeIntersector, Camera, Viewport, Matrix, View, ReaderParser, Shape, Geometry, BufferArray, DrawElements, DrawArrays, PrimitiveSet ) {
+], function ( QUnit, MACROUTILS, mockup, IntersectionVisitor, PolytopeIntersector, Camera, Viewport, Matrix, View, ReaderParser, Shape, Geometry, BufferArray, DrawElements, DrawArrays, PrimitiveSet ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgUtil' );
+        QUnit.module( 'osgUtil' );
 
-        test( 'PolytopeIntersector intersectPoints', function () {
+        QUnit.test( 'PolytopeIntersector intersectPoints', function () {
 
             var camera = new Camera();
             camera.setViewport( new Viewport() );
@@ -84,7 +85,7 @@ define( [
 
         } );
 
-        test( 'PolytopeIntersector intersectLines', function () {
+        QUnit.test( 'PolytopeIntersector intersectLines', function () {
 
             var camera = new Camera();
             camera.setViewport( new Viewport() );
@@ -117,7 +118,7 @@ define( [
             ok( pi._intersections.length === 1, 'Hits should be 1 and result is ' + pi._intersections.length );
         } );
 
-        test( 'PolytopeIntersector intersectLineStrip', function () {
+        QUnit.test( 'PolytopeIntersector intersectLineStrip', function () {
 
             var camera = new Camera();
             camera.setViewport( new Viewport() );
@@ -137,7 +138,7 @@ define( [
             mockup.near( pi._intersections[ 0 ]._center, [ -0.06415, 0.06415, 0 ] );
         } );
 
-        test( 'PolytopeIntersector intersectTriangle', function () {
+        QUnit.test( 'PolytopeIntersector intersectTriangle', function () {
 
             var camera = new Camera();
             camera.setViewport( new Viewport() );

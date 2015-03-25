@@ -1,18 +1,19 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/Camera',
     'osg/Matrix',
     'osg/MatrixTransform',
     'osg/TransformEnums'
-], function ( mockup, Camera, Matrix, MatrixTransform, TransformEnums ) {
+], function ( QUnit, mockup, Camera, Matrix, MatrixTransform, TransformEnums ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'Camera', function () {
+        QUnit.test( 'Camera', function () {
 
             var matrix = Matrix.makeOrtho( -1, 1, -1, 1, -2, 2, Matrix.create() );
             var camera = new Camera();
@@ -20,7 +21,7 @@ define( [
             mockup.near( matrix, camera.getProjectionMatrix(), 'check Camera.setProjectionMatrixAsOrtho' );
         } );
 
-        test( 'Camera absolute vs relative', function () {
+        QUnit.test( 'Camera absolute vs relative', function () {
 
             var rotation = Matrix.makeRotate( -Math.PI * 0.5, 1.0, 0.0, 0.0, Matrix.create() );
             var translate = Matrix.makeTranslate( 1, 0, 0, Matrix.create() );

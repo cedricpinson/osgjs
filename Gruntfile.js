@@ -555,7 +555,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'build', [ 'copyto', 'build:dist' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
-    grunt.registerTask( 'serve', [ 'build', 'connect:dist:keepalive' ] );
+    grunt.registerTask( 'serve', [ 'connect:dist:keepalive' ] );
     grunt.registerTask( 'website_only', [ 'clean:staticWeb', 'gitclone:staticWeb', 'copy:staticWeb', 'wintersmith_compile:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb' ] );
     grunt.registerTask( 'website', [ 'default', 'docs', 'website_only' ] );
 

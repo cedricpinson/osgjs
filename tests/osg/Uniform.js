@@ -1,14 +1,15 @@
 define( [
+    'qunit',
     'osg/Uniform'
-], function ( Uniform ) {
+], function ( QUnit, Uniform ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'Uniform', function () {
+        QUnit.test( 'Uniform', function () {
 
             ( function () {
                 var testInt = Uniform.createInt1( 12, 'int_uniform' );

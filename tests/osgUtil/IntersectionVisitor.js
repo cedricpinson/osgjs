@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osgUtil/IntersectionVisitor',
     'osg/Camera',
@@ -6,13 +7,13 @@ define( [
     'osg/Matrix',
     'osg/Shape',
     'osg/TransformEnums'
-], function ( mockup, IntersectionVisitor, Camera, Viewport, Matrix, Shape, TransformEnums ) {
+], function ( QUnit, mockup, IntersectionVisitor, Camera, Viewport, Matrix, Shape, TransformEnums ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgUtil' );
+        QUnit.module( 'osgUtil' );
 
         var DummyIntersector = function () {
             this.point = [ 0.5, 0.5, 0.5 ];
@@ -32,7 +33,7 @@ define( [
             }
         };
 
-        test( 'IntersectionVisitor with 1 camera', function () {
+        QUnit.test( 'IntersectionVisitor with 1 camera', function () {
 
             var camera = new Camera();
             camera.setViewport( new Viewport() );
@@ -48,7 +49,7 @@ define( [
             ok( mockup[ 'checkNear' ]( di.stackTransforms[ 0 ], [ 0.1536, -0.1152, -9.8002 ], 0.001 ), 'check end transform point' );
         } );
 
-        test( 'IntersectionVisitor with second relative camera', function () {
+        QUnit.test( 'IntersectionVisitor with second relative camera', function () {
 
             var camera = new Camera();
             camera.setViewport( new Viewport() );
@@ -71,7 +72,7 @@ define( [
             ok( mockup[ 'checkNear' ]( di.stackTransforms[ 1 ], [ -0.0197, -0.0111, -0.1666 ], 0.001 ), 'check end transform point' );
         } );
 
-        test( 'IntersectionVisitor with second absolute camera', function () {
+        QUnit.test( 'IntersectionVisitor with second absolute camera', function () {
 
             var camera = new Camera();
             camera.setViewport( new Viewport() );

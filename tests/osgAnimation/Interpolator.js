@@ -1,16 +1,17 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osgAnimation/Keyframe',
     'osgAnimation/Interpolator'
-], function ( mockup, Keyframe, Interpolator ) {
+], function ( QUnit, mockup, Keyframe, Interpolator ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgAnimation' );
+        QUnit.module( 'osgAnimation' );
 
-        test( 'Vec3LerpInterpolator', function () {
+        QUnit.test( 'Vec3LerpInterpolator', function () {
             var keys = [];
             keys.push( Keyframe.createVec3Keyframe( 0, [ 1, 1, 1 ] ) );
             keys.push( Keyframe.createVec3Keyframe( 1, [ 0, 0, 0 ] ) );
@@ -53,7 +54,7 @@ define( [
 
         } );
 
-        test( 'FloatLerpInterpolator', function () {
+        QUnit.test( 'FloatLerpInterpolator', function () {
             var keys = [];
             keys.push( Keyframe.createFloatKeyframe( 0, 1 ) );
             keys.push( Keyframe.createFloatKeyframe( 1, 0 ) );

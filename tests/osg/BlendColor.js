@@ -1,17 +1,19 @@
 define( [
+    'qunit',
+
     'tests/mockup/mockup',
     'osg/BlendColor',
     'osg/State',
     'osgShader/ShaderGeneratorProxy'
-], function ( mockup, BlendColor, State, ShaderGeneratorProxy ) {
+], function ( QUnit, mockup, BlendColor, State, ShaderGeneratorProxy ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'BlendColor', function () {
+        QUnit.test( 'BlendColor', function () {
 
             var n = new BlendColor();
             ok( n.getConstantColor()[ 0 ] === 1.0 &&

@@ -1,18 +1,17 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osgViewer/Viewer',
     'osg/Shape'
-], function ( mockup, Viewer, Shape ) {
+], function ( QUnit, mockup, Viewer, Shape ) {
 
     'use strict';
 
-    var QUnit = window.QUnit;
-
     return function () {
 
-        module( 'osgViewer' );
+        QUnit.module( 'osgViewer' );
 
-        test( 'Viewer', function () {
+        QUnit.test( 'Viewer', function () {
             ( function () {
                 var canvas = mockup.createCanvas();
                 var viewer = new Viewer( canvas );

@@ -1,4 +1,5 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/Light',
     'osg/LightSource',
@@ -7,15 +8,15 @@ define( [
     'osgShader/nodeFactory',
     'osgShadow/ShadowAttribute',
     'osgShadow/ShadowTexture'
-], function ( mockup, Light, LightSource, Material, Compiler, nodeFactory, ShadowAttribute, ShadowTexture ) {
+], function ( QUnit, mockup, Light, LightSource, Material, Compiler, nodeFactory, ShadowAttribute, ShadowTexture ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgShader' );
+        QUnit.module( 'osgShader' );
 
-        test( 'Compiler', function () {
+        QUnit.test( 'Compiler', function () {
 
             ( function () {
 

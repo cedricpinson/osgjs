@@ -1,17 +1,18 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/CullFace',
     'osg/State',
     'osgShader/ShaderGeneratorProxy'
-], function ( mockup, CullFace, State, ShaderGeneratorProxy ) {
+], function ( QUnit, mockup, CullFace, State, ShaderGeneratorProxy ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'CullFace', function () {
+        QUnit.test( 'CullFace', function () {
 
             var n = new CullFace();
             ok( n.getMode() === CullFace.BACK, 'Check default mode' );

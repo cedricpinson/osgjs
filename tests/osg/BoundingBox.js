@@ -1,16 +1,17 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/BoundingBox',
     'osgDB/ReaderParser'
-], function ( mockup, BoundingBox, ReaderParser ) {
+], function ( QUnit, mockup, BoundingBox, ReaderParser ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'BoundingBox', function () {
+        QUnit.test( 'BoundingBox', function () {
 
             ( function () {
                 var bb = new BoundingBox();

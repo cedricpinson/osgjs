@@ -1,17 +1,18 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osgAnimation/Sampler',
     'osgAnimation/Keyframe',
     'osgAnimation/Interpolator'
-], function ( mockup, Sampler, Keyframe, Interpolator ) {
+], function ( QUnit, mockup, Sampler, Keyframe, Interpolator ) {
 
     'use strict';
 
     return function () {
 
-        module( 'osgAnimation' );
+        QUnit.module( 'osgAnimation' );
 
-        test( 'Sampler', function () {
+        QUnit.test( 'Sampler', function () {
             var keys = [];
             keys.push( Keyframe.createVec3Keyframe( 0.1, [ 1, 1, 1 ] ) );
             keys.push( Keyframe.createVec3Keyframe( 1, [ 0, 0, 0 ] ) );

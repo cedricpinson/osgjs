@@ -1,17 +1,18 @@
 define( [
+    'qunit',
     'tests/mockup/mockup',
     'osg/Node',
     'osg/Lod',
     'osg/PagedLOD',
     'osg/Shape'
-], function ( mockup, Node, Lod, PagedLOD, Shape ) {
+], function ( QUnit, mockup, Node, Lod, PagedLOD, Shape ) {
 
     'use strict';
 
     return function () {
-        module( 'osg' );
+        QUnit.module( 'osg' );
 
-        test( 'PagedLOD', function () {
+        QUnit.test( 'PagedLOD', function () {
 
             var plod = new PagedLOD();
             ok( plod.children.length === 0, 'number of children must be 0' );
@@ -23,7 +24,7 @@ define( [
             ok( plod._range[ 0 ][ 1 ] === 200, ' range max should be 200' );
         } );
 
-        test( 'PagedLOD.UserDefinedBound', function () {
+        QUnit.test( 'PagedLOD.UserDefinedBound', function () {
 
             var plod = new PagedLOD();
             // Create a quad of 2x2 with center in 0,0,0
