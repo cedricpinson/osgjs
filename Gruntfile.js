@@ -98,8 +98,8 @@ var gruntTasks = {};
 //
 ( function () {
 
-    gruntTasks.webpack = {
-        options: webpackConfig,
+
+    var targets = {
         build: {
             entry: {
                 OSG: [ './sources/OSG.js' ],
@@ -115,6 +115,25 @@ var gruntTasks = {};
             }
         }
     };
+
+
+    gruntTasks.webpack = {
+        options: webpackConfig,
+        build: targets.build,
+        docs: targets.docs,
+        watch: {
+            entry: targets.build.entry,
+            devtool: targets.build.devtool,
+
+            // use webpacks watcher
+            // You need to keep the grunt process alive
+            watch: true,
+            keepalive: true
+
+        }
+    };
+
+
 } )();
 
 
@@ -464,7 +483,6 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-jshint' );
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
     grunt.loadNpmTasks( 'grunt-contrib-clean' );
-    grunt.loadNpmTasks( 'grunt-contrib-watch' );
 
     // windows not supporting link in git repo
     grunt.loadNpmTasks( 'grunt-copy-to' );
@@ -474,9 +492,10 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-shell' );
     grunt.loadNpmTasks( 'grunt-webpack' );
 
+    grunt.registerTask( 'watch', [ 'webpack:watch' ] );
     grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
 
-    grunt.registerTask( 'test', [ 'build', 'connect:server', 'qunit:all' ] );
+    grunt.registerTask( 'test', [ 'connect:server', 'qunit:all' ] );
 
     grunt.registerTask( 'docs', [ 'webpack:docs', 'docco' ] );
 
@@ -487,6 +506,5 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'website_only', [ 'clean:staticWeb', 'gitclone:staticWeb', 'copy:staticWeb', 'wintersmith_compile:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb' ] );
     grunt.registerTask( 'website', [ 'default', 'docs', 'website_only' ] );
 
-//    grunt.registerTask( 'release', [ 'release:patch', 'build:sources:dist', 'release:patch' ] );
 
 };

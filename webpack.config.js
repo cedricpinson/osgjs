@@ -45,4 +45,5 @@ module.exports = {
             'Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)'
         ].join('\n') )
     ]
+
 };

@@ -20,7 +20,6 @@
     "grunt-contrib-copy": "*",
     "grunt-contrib-jshint": "*",
     "grunt-contrib-uglify": "*",
-    "grunt-contrib-watch": "*",
     "grunt-copy-to": "0.0.12",
     "grunt-git": "*",
     "grunt-shell": "*",
