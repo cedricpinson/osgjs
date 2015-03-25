@@ -1,6 +1,6 @@
 define( [
     'qunit',
-    'vendors/q',
+    'q',
     'osgDB/Input',
     'osg/Notify',
     'osg/Image'

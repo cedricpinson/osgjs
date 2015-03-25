@@ -1,12 +1,12 @@
 define( [
     'qunit',
+    'q',
     'osgDB/DatabasePager',
-    'vendors/q',
     'osg/PagedLOD',
     'osg/Node',
     'osg/FrameStamp',
     'osg/Notify'
-], function ( QUnit, DatabasePager, Q, PagedLOD, Node, FrameStamp, Notify ) {
+], function ( QUnit, Q, DatabasePager, PagedLOD, Node, FrameStamp, Notify ) {
 
     'use strict';
 

@@ -1,6 +1,9 @@
+var webpack = require( 'webpack' );
+
 var ROOT_PATH = __dirname;
 var SOURCES_PATH = ROOT_PATH + '/sources/';
 var VENDORS_PATH = SOURCES_PATH + 'vendors/';
+var NODE_PATH = ROOT_PATH + '/vendors/';
 
 
 module.exports = {
@@ -11,19 +14,22 @@ module.exports = {
     output: {
         path: './builds/dist',
         filename: '[name].js',
-        libraryTarget: 'var',
+        libraryTarget: 'umd',
         library: 'OSG'
     },
     externals: {
-        // Provide QUnit as an external, because it's loaded separately in as script tag
-        // but accessed in our tests modules
-        'qunit': 'QUnit'
+        'qunit': 'QUnit',
+        'q': 'Q',
+        'hammer': 'Hammer',
+        'leap': 'Leap',
+        'jquery': '$'
     },
     resolve: {
         root: [
             SOURCES_PATH,
             VENDORS_PATH,
-            ROOT_PATH
+            ROOT_PATH,
+            NODE_PATH
         ]
     },
     module: {
@@ -32,5 +38,11 @@ module.exports = {
             test: /\.(frag|vert|glsl)$/,
             loader: 'raw-loader'
         } ]
-    }
+    },
+    plugins: [
+        new webpack.BannerPlugin( [
+            'OSGJS',
+            'Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)'
+        ].join('\n') )
+    ]
 };

@@ -1,6 +1,6 @@
 define( [
     'qunit',
-    'vendors/q',
+    'q',
     'tests/mockup/mockup',
     'osgAnimation/BasicAnimationManager',
     'osg/Utils',

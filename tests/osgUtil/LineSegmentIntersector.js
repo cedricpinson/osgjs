@@ -11,7 +11,7 @@ define( [
     'osg/Shape',
     'osgViewer/View',
     'osgDB/ReaderParser',
-    'vendors/q'
+    'q'
 ], function ( QUnit, mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser, Q ) {
 
     'use strict';
@@ -76,7 +76,7 @@ define( [
 
         } );
 
-        asyncTest( 'LineSegmentIntersector without kdtree', function () {
+        QUnit.asyncTest( 'LineSegmentIntersector without kdtree', function () {
 
             var view = new View();
             view.getCamera().setViewport( new Viewport() );
@@ -116,7 +116,7 @@ define( [
             ok( lsi._intersections[ 0 ].nodepath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ].nodepath.length );
         } );
 
-        asyncTest( 'LineSegmentIntersector with kdtree', function () {
+        QUnit.asyncTest( 'LineSegmentIntersector with kdtree', function () {
 
             var view = new View();
             view.getCamera().setViewport( new Viewport() );
