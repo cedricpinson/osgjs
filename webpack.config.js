@@ -1,10 +1,12 @@
+'use strict';
+
 var webpack = require( 'webpack' );
 
+var path = require( 'path' );
 var ROOT_PATH = __dirname;
-var SOURCES_PATH = ROOT_PATH + '/sources/';
-var VENDORS_PATH = SOURCES_PATH + 'vendors/';
-var NODE_PATH = ROOT_PATH + '/vendors/';
-
+var SOURCES_PATH = path.join( ROOT_PATH, 'sources' );
+var VENDORS_PATH = path.join( SOURCES_PATH, 'vendors' );
+var NODE_PATH = path.join( ROOT_PATH, 'node_modules' );
 
 module.exports = {
     entry: {
@@ -72,7 +74,7 @@ module.exports = {
         new webpack.BannerPlugin( [
             'OSGJS',
             'Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)'
-        ].join('\n') )
+        ].join( '\n' ) )
     ]
 
 };
