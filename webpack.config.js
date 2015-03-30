@@ -70,6 +70,7 @@ module.exports = {
             loader: 'raw-loader'
         } ]
     },
+    devtool: 'eval-source-map',
     plugins: [
         new webpack.BannerPlugin( [
             'OSGJS',
