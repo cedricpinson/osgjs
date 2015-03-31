@@ -101,9 +101,8 @@ define( [
                 var m = nv.getCurrentProjectionMatrix();
 
                 //Matrix.clampProjectionMatrix( m, nv.getComputedNear(), nv.getComputedFar(), nv.getNearFarRatio() );
-                // we should use accessors when touching external object !!!
-                this._shadowTechnique._nearCaster = nv.getComputedNear();
-                this._shadowTechnique._farCaster = nv.getComputedFar();
+                this._shadowTechnique.getDepthRange()[ 0 ] = nv.getComputedNear();
+                this._shadowTechnique.getDepthRange()[ 1 ] = nv.getComputedFar();
 
                 Matrix.getFrustumPlanes( m, nv.getCurrentModelViewMatrix(), cs.getFrustum().getPlanes(), false );
                 // TODO: no far no near.
@@ -112,7 +111,7 @@ define( [
                 cs.getFrustum().setupMask( 6 );
             }
 
-            this._shadowTechnique._lightFrustum = cs.getFrustum();
+            this._shadowTechnique.setLightFrustum( cs.getFrustum() );
             return false;
         }
     };
@@ -144,7 +143,7 @@ define( [
         this._textureMagFilter = undefined;
         this._textureMinFilter = undefined;
         this._textureSize = 256;
-        this._depthRange = Vec4.create();
+
 
         this._receivingStateset = undefined;
 
@@ -156,7 +155,12 @@ define( [
 
         var near = 0.001;
         var far = 1000;
-        this._casterStateSet.addUniform( Uniform.createFloat4( [ near, far, far - near, 1.0 / ( far - near ) ], 'Shadow_DepthRange' ) );
+        this._depthRange = Vec4.create();
+        this._depthRange[ 0 ] = near;
+        this._depthRange[ 1 ] = far;
+        this._depthRange[ 2 ] = far - near;
+        this._depthRange[ 3 ] = 1.0 / ( far - near );
+        this._casterStateSet.addUniform( Uniform.createFloat4( this._depthRange, 'Shadow_DepthRange' ) );
 
         this._castsShaderProgram = undefined;
 
@@ -192,9 +196,16 @@ define( [
         this._infiniteFrustum = true;
     };
 
+
     /** @lends ShadowMap.prototype */
     ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( ShadowTechnique.prototype, {
 
+        getDepthRange: function () {
+            return this._depthRange;
+        },
+        setLightFrustum: function ( lf ) {
+            this._lightFrustum = lf;
+        },
         getCamera: function () {
             return this._cameraShadow;
         },
@@ -467,7 +478,7 @@ define( [
         },
 
         updateShadowTechnic: function ( /*nv*/) {
-            Notify.log('ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead');
+            Notify.log( 'ShadowMap.updateShadowTechnic() is deprecated, use updateShadowTechnique instead' );
             this.updateShadowTechnique();
         },
 
@@ -592,81 +603,109 @@ define( [
             this.dirty();
         },
 
+        getUp: function ( dir ) {
+            //avoid dir/up wrong angle breaking computation
+
+            // compute a up vector ensuring avoiding parallel vectors
+            // also might reverting to it once got the change here done once
+            // [ 0.0, 0.0, 1.0 ];
+
+            if ( Math.abs( Vec3.dot( this._lightUp, dir ) ) >= 1.0 ) {
+                // another camera up
+                // [ 1.0, 0.0, 0.0 ];
+                if ( this._lightUp[ 0 ] === 1.0 ) {
+                    this._lightUp[ 0 ] = 0.0;
+                    this._lightUp[ 1 ] = 1.0;
+                    this._lightUp[ 2 ] = 0.0;
+                } else {
+                    this._lightUp[ 0 ] = 1.0;
+                    this._lightUp[ 1 ] = 0.0;
+                    this._lightUp[ 2 ] = 0.0;
+                }
+            }
+            return this._lightUp;
+        },
+
+        // makes sure we don't have incorrect near/far
+        // or we actually have to render something.
+        // Empty or Bad Frustums
+        // No objects, handle it gracefully
+        nearFarBounding: function () {
+
+            var zNear = this._depthRange[ 0 ];
+            var zFar = this._depthRange[ 1 ];
+
+            var epsilon = ShadowMap.EPSILON;
+            if ( zFar < zNear - epsilon ) {
+                // early out
+                this._emptyCasterScene = true;
+                zFar = 1;
+                zNear = epsilon;
+            } else if ( zNear < epsilon ) {
+                zNear = epsilon;
+            }
+
+            var nearFarRatio = 0.005;
+            if ( zNear < zFar * nearFarRatio ) {
+                zNear = zFar * nearFarRatio;
+            }
+
+            this._depthRange[ 0 ] = zNear;
+            this._depthRange[ 1 ] = zFar;
+        },
+
         makePerspectiveFromBoundingBox: function ( bbox, fov, eyePos, eyeDir, view, projection ) {
             var center = bbox.center( this._tmpVec );
             var radius = bbox.radius();
-            var zNear = 1e-4;
+            var epsilon = ShadowMap.EPSILON;
+            var zNear = epsilon;
             var zFar = 1.0;
+
+            Vec3.copy( eyeDir, this._tmpVecBis );
+            Vec3.neg( this._tmpVecBis, this._tmpVecBis );
+            Vec3.normalize( this._tmpVecBis, this._tmpVecBis );
 
             // light Near Plane Equation
             // E = eyeDir + d
-            var d = Vec3.dot( eyePos, eyeDir );
+            var d = Vec3.dot( eyePos, this._tmpVecBis );
             // then distance to center point of sphere
             // perpendicular to lightdir
-            var distance = Vec3.dot( center, eyeDir ) + d;
+            var distance = Vec3.dot( center, this._tmpVecBis ) + d;
 
             // inside or not have unfluence
             // on using radius for fov
-            var notInside = true;
             if ( distance < -radius ) {
                 // won't render anything the object  is behind..
-                // TODO: handle an empty render...
-                // avoiding cullvisitor pass on caster would be nice.
                 this._emptyCasterScene = true;
             } else if ( distance <= 0.0 ) {
                 // shhh.. we're inside !
                 // sphere center is behind
-                zNear = 1e-5;
+                zNear = epsilon;
                 zFar = distance + radius;
-                //radius = zFar;
-                notInside = false;
             } else if ( distance < radius ) {
                 // shhh.. we're inside !
                 // sphere center is in front
-                zNear = 1e-5;
+                zNear = epsilon;
                 zFar = distance + radius;
-                notInside = false;
-                //radius = zFar;
             } else {
                 //  Sphere totally in front
                 // long distance runner
                 // we must make a nicer zNear here!
                 zNear = distance - radius;
                 zFar = distance + radius;
-                //zNear = 0.0001;
-                //radius = ( zFar - zNear ) * 0.5;
             }
 
-            var epsilon = 1e-6;
-            if ( zFar < zNear - epsilon ) {
-
-                // TODO: clear shadow texture and return wihtout any further ops
-                // with a early out
-                //Notify.debug( 'empty shadowMap' );
-                // for now just prevent NaN errors
-                this._emptyCasterScene = true;
-                zFar = 1;
-                zNear = 0.001;
-            } else if ( zNear < epsilon ) {
-                zNear = epsilon;
-            }
-            var zNearRatio = 0.001;
-            if ( zNear < zFar * zNearRatio ) {
-                zNear = zFar * zNearRatio;
-            }
-
+            this._depthRange[ 0 ] = zNear;
+            this._depthRange[ 1 ] = zFar;
+            this.nearFarBounding();
 
             // positional light: spot, point, area
             //  fov < 180.0
             // statically defined by spot, only needs zNear zFar estimates
-            var fovRadius = zNear * Math.tan( fov * Math.PI / 180.0 );
+            var fovRadius = this._depthRange[ 0 ] * Math.tan( fov * Math.PI / 180.0 );
             // if scene radius is smaller than fov on scene
             // Tighten and enhance precision
-            if ( notInside ) {
-                // note that it only work if light pos is not inside the scene bbox
-                // otherwise it breaks the hypothesis and give wrong results
-                fovRadius = fovRadius > radius ? radius : fovRadius;
-            }
+            fovRadius = fovRadius > radius ? radius : fovRadius;
 
             var ymax = fovRadius;
             var ymin = -ymax;
@@ -674,35 +713,15 @@ define( [
             var xmax = fovRadius;
             var xmin = -xmax;
 
+            var up = this.getUp( eyeDir );
 
             if ( this._infiniteFrustum ) {
-                Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+                Matrix.makeFrustumInfinite( xmin, xmax, ymin, ymax, this._depthRange[ 0 ], this._depthRange[ 1 ], projection );
             } else {
-                Matrix.makeFrustum( xmin, xmax, ymin, ymax, zNear, zFar, projection );
+                Matrix.makeFrustum( xmin, xmax, ymin, ymax, this._depthRange[ 0 ], this._depthRange[ 1 ], projection );
             }
-            // compute a up vector ensuring avoiding parallel vectors
-            // not using this._lightUp because not
-            // reverting to it once got the change here done once
-            // [ 0.0, 0.0, 1.0 ];
-            var up = this._lightUp;
-            if ( Math.abs( Vec3.dot( up, eyeDir ) ) >= 1.0 ) {
-                // another camera up
-                // [ 1.0, 0.0, 0.0 ];
-                if ( this._lightUp[ 0 ] === 1.0 ) {
-                    this._lightUp[ 0 ] = 0.0;
-                    this._lightUp[ 1 ] = 0.0;
-                    this._lightUp[ 2 ] = 1.0;
-                } else {
-                    this._lightUp[ 0 ] = 1.0;
-                    this._lightUp[ 1 ] = 0.0;
-                    this._lightUp[ 2 ] = 0.0;
-                }
 
-            }
-            Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
-
-            this._nearCaster = zNear;
-            this._farCaster = zFar;
+            Matrix.makeLookFromDirection( eyePos, eyeDir, up, view );
         },
 
         makeOrthoFromBoundingBox: function ( bbox, eyeDir, view, projection ) {
@@ -731,26 +750,7 @@ define( [
                 zNear = zFar * zNearRatio;
             }
 
-            // compute a up vector ensuring avoiding parallel vectors
-            // not using this._lightUp because not
-            // reverting to it once got the change here done once
-            // [ 0.0, 0.0, 1.0 ];
-            var up = this._lightUp;
-            if ( Math.abs( Vec3.dot( up, eyeDir ) ) >= 1.0 ) {
-                // another camera up
-                // [ 1.0, 0.0, 0.0 ];
-                if ( this._lightUp[ 0 ] === 1.0 ) {
-                    this._lightUp[ 0 ] = 0.0;
-                    this._lightUp[ 1 ] = 0.0;
-                    this._lightUp[ 2 ] = 1.0;
-                } else {
-                    this._lightUp[ 0 ] = 1.0;
-                    this._lightUp[ 1 ] = 0.0;
-                    this._lightUp[ 2 ] = 0.0;
-                }
-
-            }
-            //Matrix.makeLookFromDirection( eyePos, Vec3.neg( eyeDir, this._tmpVecBis ), up, view );
+            var up = this.getUp( eyeDir );
             Matrix.makeLookFromDirection( eyePos, eyeDir, up, view );
 
             var right, top;
@@ -758,8 +758,8 @@ define( [
             right = top;
             Matrix.makeOrtho( -right, right, -top, top, zNear, zFar, projection );
 
-            this._nearCaster = zNear;
-            this._farCaster = zFar;
+            this._depthRange[ 0 ] = zNear;
+            this._depthRange[ 1 ] = zFar;
 
         },
         /*
@@ -798,10 +798,16 @@ define( [
             var worldLightPos = this._worldLightPos;
 
             //  light pos & lightTarget in World Space
+            if ( light.getPosition()[ 3 ] !== 0.0 && light.getSpotCutoff() < 180 ) {
 
-            if ( light.getPosition()[ 3 ] !== 0.0 ) {
-
+                // same code as light spot shader
                 Matrix.transformVec3( worldMatrix, light.getPosition(), worldLightPos );
+                worldMatrix[ 12 ] = 0;
+                worldMatrix[ 13 ] = 0;
+                worldMatrix[ 14 ] = 0;
+                Matrix.inverse( worldMatrix, worldMatrix );
+                Matrix.transpose( worldMatrix, worldMatrix );
+                //////////////////////////////////////////////
 
                 // not a directionnal light, compute the world light dir
                 var worldLightDir = this._worldLightDir;
@@ -822,25 +828,12 @@ define( [
                 this.makeOrthoFromBoundingBox( frustumBound, worldLightPos, view, projection );
             }
 
-            var zNear = this._nearCaster;
-            var zFar = this._farCaster;
-            var epsilon = 1e-6;
-            if ( zFar < zNear - epsilon ) {
-
-                // TODO: clear shadow texture and return wihtout any further ops
-                // with a early out
-                // Notify.debug( 'empty shadowMap' );
-                // for now just prevent NaN errors
-                this._emptyCasterScene = true;
-                zFar = 1;
-                zNear = 0.001;
-            }
 
             Matrix.copy( this._projectionMatrix, camera.getProjectionMatrix() );
             Matrix.copy( this._viewMatrix, camera.getViewMatrix() );
 
             // set values now
-            this.setShadowUniformsDepthValue( zNear, zFar, view, projection );
+            this.setShadowUniformsDepthValue();
 
         },
 
@@ -849,63 +842,32 @@ define( [
         // possible for shadowcasting
         frameShadowCastingFrustum: function ( cullVisitor ) {
 
-            var projection = this._projectionMatrix;
-            var view = this._viewMatrix;
-
-
-
             if ( !this._infiniteFrustum ) {
-                var zNear = this._nearCaster;
-                var zFar = this._farCaster;
-
-                var epsilon = 1e-6;
-                if ( zNear - epsilon < 0 ) {
-                    zNear = 0.001;
-                }
-                var resultNearFar = [ zNear, zFar ];
-                Matrix.clampProjectionMatrix( projection, zNear, zFar, cullVisitor.getNearFarRatio(), resultNearFar );
-                zNear = resultNearFar[ 0 ];
-                zFar = resultNearFar[ 1 ];
-
-                this.setShadowUniformsDepthValue( zNear, zFar, view, projection );
+                this.nearFarBounding();
+                Matrix.clampProjectionMatrix( this._projectionMatrix, this._depthRange[ 0 ], this._depthRange[ 1 ], cullVisitor.getNearFarRatio(), this._depthRange );
+                this.setShadowUniformsDepthValue();
             }
 
-
             // overwrite any cullvisitor wrongness
-            Matrix.copy( this._projectionMatrix, this._projectionMatrix );
-            Matrix.copy( this._viewMatrix, this._viewMatrix );
+            var camera = this._cameraShadow;
+            Matrix.copy( this._projectionMatrix, camera.getProjectionMatrix() );
+            Matrix.copy( this._viewMatrix, camera.getViewMatrix() );
 
         },
 
-        setShadowUniformsDepthValue: function ( zNear, zFar, view, projection ) {
+        setShadowUniformsDepthValue: function () {
 
-            // Empty or Bad Frustums
-            // No objects, handle it gracefully
-            var epsilon = 1e-6;
-            if ( zFar < zNear - epsilon ) {
-                // TODO: clear shadow texture and return wihtout any further ops
-                // with a early out
-                //Notify.debug( 'empty shadowMap' );
-                zFar = 1.0;
-                zNear = 0.001;
-                this._emptyCasterScene = true;
-            }
-
-            // check all other code but depthRange
-            //zNear = 0.0001;
-            //zFar = 1000;
+            this.nearFarBounding();
 
             // set values now
-            this._depthRange[ 0 ] = zNear;
-            this._depthRange[ 1 ] = zFar;
-            this._depthRange[ 2 ] = zFar - zNear;
-            this._depthRange[ 3 ] = 1.0 / ( zFar - zNear );
+            this._depthRange[ 2 ] = this._depthRange[ 1 ] - this._depthRange[ 0 ];
+            this._depthRange[ 3 ] = 1.0 / ( this._depthRange[ 2 ] );
 
             var castUniforms = this._casterStateSet.getUniformList();
             castUniforms[ 'Shadow_DepthRange' ].getUniform().set( this._depthRange );
 
-            this._texture.setViewMatrix( view );
-            this._texture.setProjectionMatrix( projection );
+            this._texture.setViewMatrix( this._viewMatrix );
+            this._texture.setProjectionMatrix( this._projectionMatrix );
             this._texture.setDepthRange( this._depthRange );
 
         },
@@ -930,7 +892,6 @@ define( [
 
             this._texture.setViewMatrix( this._viewMatrix );
             this._texture.setProjectionMatrix( this._projectionMatrix );
-
 
             this._filledOnce = true;
         },
@@ -969,6 +930,7 @@ define( [
 
             if ( this._emptyCasterScene ) {
                 // nothing to draw Early out.
+                console.log( 'shadow early OUT' );
                 this.noDraw();
                 return;
             }
@@ -1047,6 +1009,8 @@ define( [
         }
 
     } ), 'osgShadow', 'ShadowMap' );
+
+    ShadowMap.EPSILON = 5e-3;
 
     MACROUTILS.setTypeID( ShadowMap );
 
