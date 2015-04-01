@@ -47,6 +47,12 @@ define( [
             var lines = source.split( '\n' );
             var i, m;
 
+            // IE reporting is not the same
+            if (r.exec(errors) === null){
+             r = /Shader compilation errors\n\((\d+)\, \d+\): (.+)/gmi;
+            }
+
+
             while ( ( m = r.exec( errors ) ) != null ) {
                 if ( m.index === r.lastIndex ) {
                     r.lastIndex++; // moving between errors
