@@ -48,8 +48,8 @@ define( [
             var i, m;
 
             // IE reporting is not the same
-            if (r.exec(errors) === null){
-             r = /Shader compilation errors\n\((\d+)\, \d+\): (.+)/gmi;
+            if ( r.exec( errors ) === null ) {
+                r = /Shader compilation errors\n\((\d+)\, \d+\): (.+)/gmi;
             }
 
 

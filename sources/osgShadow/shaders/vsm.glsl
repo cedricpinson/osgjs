@@ -38,4 +38,21 @@ float chebyshevUpperBound(const in vec2 moments, const in float mean, const in f
     // One-tailed chebyshev
     return clamp(max(p, pMax), 0.0, 1.0);
 }
+
+
+float computeShadow(const in bool lighted,
+                    in vec4 shadowVertexProjected,
+                    const in sampler2D tex,
+                    const in vec4 shadowMapSize,
+                    const in vec4 depthRange,
+                    const in vec3 LightPosition,
+                    const in float N_Dot_L,
+                    const in vec3 Normal,
+                    const in float bias,
+                    const in float epsilonVSM
+    )
+{
+#pragma include "shadowsReceiveMain.glsl" "_VSM"
+}
+
 // end VSM
