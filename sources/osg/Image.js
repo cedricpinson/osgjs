@@ -12,6 +12,7 @@ define( [
         this._url = undefined;
         this._width = undefined;
         this._height = undefined;
+        this._dirty = true;
 
         if ( image ) {
             this.setImage( image );
@@ -24,49 +25,77 @@ define( [
 
         dirty: function () {
             this._isGreyscale = undefined;
+            this._dirty = true;
         },
+
+        isDirty: function() {
+            return this._dirty;
+        },
+
+        setDirty: function( bool ) {
+            this._dirty = bool;
+        },
+
         getImage: function () {
             return this._imageObject;
         },
+
         getURL: function () {
             return this._url;
         },
+
         setURL: function ( url ) {
             this._url = url;
         },
+
         setImage: function ( img ) {
-            if ( !this._url && img && img.src ) {
+            if ( !this._url && img && ( img.src || img.currentSrc ) ) {
                 this._url = img.src;
             }
             this._imageObject = img;
             this.dirty();
         },
+
         isCanvas: function () {
             return this._imageObject instanceof HTMLCanvasElement;
         },
+
+        isVideo: function () {
+            return this._imageObject instanceof window.HTMLVideoElement;
+        },
+
         isImage: function () {
             return this._imageObject instanceof window.Image;
         },
+
         isTypedArray: function () {
             return this._imageObject instanceof Uint8Array || this._imageObject instanceof Float32Array;
         },
+
         setWidth: function ( w ) {
             this._width = w;
         },
+
         setHeight: function ( h ) {
             this._height = h;
         },
+
         getWidth: function () {
             if ( this.isImage() ) {
                 return this._imageObject.naturalWidth;
+            } else if ( this.isVideo() ) {
+                return this._imageObject.videoWidth;
             } else if ( this.isCanvas() ) {
                 return this._imageObject.width;
             }
             return this._width;
         },
+
         getHeight: function () {
             if ( this.isImage() ) {
                 return this._imageObject.naturalHeight;
+            } else if ( this.isVideo() ) {
+                return this._imageObject.videoHeight;
             } else if ( this.isCanvas() ) {
                 return this._imageObject.height;
             }
@@ -136,6 +165,11 @@ define( [
                     return true;
                 }
             }
+
+            if ( this.isVideo() ) {
+                if ( this.getWidth() !== 0 ) return true;
+            }
+
             return false;
         }
     } ), 'osg', 'Image' );

@@ -22,6 +22,7 @@ define( [
     'osg/FrameStamp',
     'osg/Geometry',
     'osg/Image',
+    'osg/ImageStream',
     'osg/KdTree',
     'osg/KdTreeBuilder',
     'osg/Light',
@@ -94,6 +95,7 @@ define( [
     FrameStamp,
     Geometry,
     Image,
+    ImageStream,
     KdTree,
     KdTreeBuilder,
     Light,
@@ -172,6 +174,7 @@ define( [
     osg.FrameStamp = FrameStamp;
     osg.Geometry = Geometry;
     osg.Image = Image;
+    osg.ImageStream = ImageStream;
     osg.KdTree = KdTree;
     osg.KdTreeBuilder = KdTreeBuilder;
     osg.Light = Light;
