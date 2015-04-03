@@ -11,4 +11,23 @@ vec2 warpDepth(const in float depth, const in vec2 exponents)
     return vec2(pos, neg);
 }
 
+
+float computeShadow(const in bool lighted,
+                    in vec4 shadowVertexProjected,
+                    const in sampler2D
+                    tex,
+                    const in vec4 shadowMapSize,
+                    const in vec4 depthRange,
+                    const in vec3 LightPosition,
+                    const in float N_Dot_L,
+                    const in vec3 Normal,
+                    const in float bias,
+                    const in float epsilonVSM,
+                    const in float exponent,
+                    const in float exponent1
+    )
+{
+    #pragma include "shadowsReceiveMain.glsl" "_EVSM"
+}
+
 // _EVSM
