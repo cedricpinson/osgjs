@@ -305,6 +305,15 @@ define( [
             return this._ground[ 3 ] >= 0.0;
         },
 
+        getPositionnedMatrix: function () {
+            var uniformMap = this.getOrCreateUniforms();
+            return uniformMap.matrix.get();
+        },
+
+        getPositionnedInvMatrix: function () {
+            var uniformMap = this.getOrCreateUniforms();
+            return uniformMap.invMatrix.get();
+        },
         applyPositionedUniform: function ( matrix /*, state*/ ) {
 
             var uniformMap = this.getOrCreateUniforms();
