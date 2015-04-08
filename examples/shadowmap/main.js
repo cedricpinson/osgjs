@@ -1137,8 +1137,9 @@
             this._lightsSource.push( lightSource );
 
             /////////////////////////////
-            // add light to scene
-            group.addChild( lightNode );
+            // add light to shadowedscene
+            this._lightAndShadowScene.addChild( lightNode );
+            //group.addChild( lightNode );
             /////////////////////////////
 
             var lightNodemodel = osg.createAxisGeometry();
@@ -1146,7 +1147,7 @@
             lightNodemodelNode.addChild( lightNodemodel );
             this._debugLights.push( lightNodemodelNode );
             // light debug axis view
-            // totally indepedant scene tree than light
+            // totally independant scene tree than light
             /////////
             group.addChild( lightNodemodelNode );
             ///////////////////
