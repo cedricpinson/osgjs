@@ -65,6 +65,7 @@ define( [
             this._gamepad = false;
             Notify.log( 'Gamepad disconnected', this._gamepad );
         },
+
         getGamePad: function () {
             return this._gamepad;
         },
