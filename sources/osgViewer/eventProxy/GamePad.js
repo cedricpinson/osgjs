@@ -2,20 +2,17 @@ define( [
     'osg/Notify'
 ], function ( Notify ) {
 
+    'use strict';
+
     var GamePad = function ( viewer ) {
         this._viewer = viewer;
         this._type = 'GamePad';
         this._enable = true;
+        this._gamepadIndex = -1;
     };
 
     GamePad.prototype = {
-        init: function ( /*args*/ ) {
-
-            var gamepadSupportAvailable = !! navigator.webkitGetGamepads || !! navigator.webkitGamepads;
-            // || (navigator.userAgent.indexOf('Firefox/') != -1); // impossible to detect Gamepad API support in FF
-            if ( !gamepadSupportAvailable ) return;
-
-        },
+        init: function ( /*args*/) {},
 
         isValid: function () {
             if ( !this._enable )
@@ -36,52 +33,50 @@ define( [
             return this._viewer.getManipulator().getControllerList()[ this._type ];
         },
 
-        webkitGamepadPoll: function () {
-            var rawGamepads = ( navigator.webkitGetGamepads && navigator.webkitGetGamepads() ) || navigator.webkitGamepads;
-            if ( !rawGamepads ) {
-                return;
-            }
+        gamepadPoll: function () {
+            if ( !navigator.getGamepads )
+                return null;
+            var gamepads = navigator.getGamepads();
+            var gamepad = gamepads[ this._gamepadIndex ];
+            if ( gamepad )
+                return gamepad;
 
-            if ( rawGamepads[ 0 ] ) {
-                if ( !this._gamepad ) {
-                    this.onGamepadConnect( {
-                        gamepad: rawGamepads[ 0 ]
-                    } );
+            for ( var i = 0, nb = gamepads.length; i < nb; ++i ) {
+                var gm = gamepads[ i ];
+                // https://code.google.com/p/chromium/issues/detail?id=413805
+                if ( gm && gm.id && gm.id.indexOf( 'Unknown Gamepad' ) === -1 ) {
+                    this._gamepadIndex = i;
+                    this.onGamepadConnect( gm );
+                    return gm;
                 }
-                this._gamepad = rawGamepads[ 0 ];
-            } else if ( this._gamepad ) {
-                this.onGamepadDisconnect( {
-                    gamepad: this._gamepad
-                } );
             }
+            if ( this._gamepadIndex >= 0 ) {
+                this._gamepadIndex = -1;
+                this.onGamepadConnect();
+            }
+            return null;
         },
 
-        onGamepadConnect: function ( evt ) {
-            this._gamepad = evt.gamepad;
-            Notify.log( 'Detected new gamepad!', this._gamepad );
+        onGamepadConnect: function ( gamepad ) {
+            Notify.log( 'Detected new gamepad!', gamepad );
         },
 
-        onGamepadDisconnect: function ( /*evt*/ ) {
-            this._gamepad = false;
-            Notify.log( 'Gamepad disconnected', this._gamepad );
-        },
-        getGamePad: function () {
-            return this._gamepad;
+        onGamepadDisconnect: function () {
+            Notify.log( 'Gamepad disconnected' );
         },
 
         // Called in each frame
         update: function () {
+            // we poll instead
 
-            // necessary
-            this.webkitGamepadPoll();
-
-            if ( !this._gamepad )
+            var gamepad = this.gamepadPoll();
+            if ( !gamepad )
                 return;
 
             var manipulatorAdapter = this.getManipulatorController();
             //manipulatorAdapter.setEventProxy(this);
             if ( manipulatorAdapter.update ) {
-                manipulatorAdapter.update( this );
+                manipulatorAdapter.update( gamepad );
             }
         }
     };

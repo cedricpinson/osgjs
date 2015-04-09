@@ -1,5 +1,7 @@
 define( [], function () {
 
+    'use strict';
+
     var OrbitManipulatorGamePadController = function ( manipulator ) {
         this._manipulator = manipulator;
         this.init();
@@ -85,12 +87,11 @@ define( [], function () {
             }
         },
 
-        update: function ( gamepadProxyEvent ) {
-            if ( !gamepadProxyEvent ) {
+        update: function ( gm ) {
+            if ( !gm ) {
                 return;
             }
 
-            var gm = gamepadProxyEvent.getGamePad();
             var axis = gm.axes;
             var buttons = gm.buttons;
 
@@ -104,7 +105,7 @@ define( [], function () {
                         preventDefault: emptyFunc,
                         gamepad: gm,
                         button: i
-                    }, !! buttons[ i ] );
+                    }, !!buttons[ i ] );
                 }
             }
         }
