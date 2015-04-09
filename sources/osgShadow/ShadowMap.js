@@ -185,6 +185,7 @@ define( [
         this._tmpVec = Vec3.create();
         this._tmpVecBis = Vec3.create();
         this._tmpVecTercio = Vec3.create();
+        this._tmpMatrix = Matrix.create();
         if ( settings )
             this.setShadowSettings( settings );
 
@@ -780,37 +781,61 @@ define( [
             var light = lightSource.getLight();
             var camera = this._cameraShadow;
 
+            var worldLightPos = this._worldLightPos;
+            var worldLightDir = this._worldLightDir;
+
             // make sure it's not modified outside our computations
             // camera matrix can be modified by cullvisitor afterwards...
+
             Matrix.copy( camera.getProjectionMatrix(), this._projectionMatrix );
             Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
             var projection = this._projectionMatrix;
             var view = this._viewMatrix;
 
             // inject camera world matrix.
-            // from light current world/pos
+            // from light current world/pos and camera eye pos.
+            var lightMatrix = light.getPositionnedMatrix();
 
-            // TODO: clever code share between light and shadow attributes
-            // try reusing light matrix uniform.
-            var matrixList = lightSource.getWorldMatrices();
-            var worldMatrix = matrixList[ 0 ]; // world
 
-            var worldLightPos = this._worldLightPos;
+
 
             //  light pos & lightTarget in World Space
             if ( light.getPosition()[ 3 ] !== 0.0 && light.getSpotCutoff() < 180 ) {
+                //TODO: when spot light is camera attached?
+                /*
+                                // light matrix is in eye space. even if it's below an Absolute REF Node. (wtf)
+                                var eyeToWorld = this._tmpMatrix;
+                                Matrix.inverse( cullVisitor.getCurrentModelViewMatrix(), eyeToWorld );
+
+                                Matrix.transformVec4( lightMatrix, light.getPosition(), worldLightPos );
+                                Matrix.transformVec4( eyeToWorld, worldLightPos, worldLightPos );
+
+                                var lightInvMatrix = light.getPositionnedInvMatrix();
+                                Matrix.transform3x3( lightInvMatrix, light.getDirection(), worldLightDir );
+                                Matrix.transform3x3( eyeToWorld, worldLightDir, worldLightDir );
+
+                                Vec3.mult( worldLightDir, -1.0, worldLightDir );
+                                Vec3.normalize( worldLightDir, worldLightDir );
+                */
+
+
+                var matrixList = lightSource.getWorldMatrices();
+                //var matrixList = this.getLightWorldMatrices( lightSource );
+                var worldMatrix = matrixList[ 0 ]; // world
 
                 // same code as light spot shader
+
                 Matrix.transformVec3( worldMatrix, light.getPosition(), worldLightPos );
                 worldMatrix[ 12 ] = 0;
                 worldMatrix[ 13 ] = 0;
                 worldMatrix[ 14 ] = 0;
                 Matrix.inverse( worldMatrix, worldMatrix );
                 Matrix.transpose( worldMatrix, worldMatrix );
+
                 //////////////////////////////////////////////
 
                 // not a directionnal light, compute the world light dir
-                var worldLightDir = this._worldLightDir;
+
                 Vec3.copy( light.getDirection(), worldLightDir );
                 Matrix.transformVec4( worldMatrix, worldLightDir, worldLightDir );
                 Vec3.normalize( worldLightDir, worldLightDir );
@@ -818,8 +843,13 @@ define( [
                 // and compute a perspective frustum
                 this.makePerspectiveFromBoundingBox( frustumBound, light.getSpotCutoff(), worldLightPos, worldLightDir, view, projection );
             } else {
+                // light matrix is in eye space. even if it's below an Absolute REF Node. (wtf)
+                var eyeToWorld = this._tmpMatrix;
+                Matrix.inverse( cullVisitor.getCurrentModelViewMatrix(), eyeToWorld );
 
-                Matrix.transformVec4( worldMatrix, light.getPosition(), worldLightPos );
+                Matrix.transformVec4( lightMatrix, light.getPosition(), worldLightPos );
+                Matrix.transformVec4( eyeToWorld, worldLightPos, worldLightPos );
+                // same code as light sun shader
                 // lightpos is a light dir
                 // so we now have to normalize
                 // since the transform to world above
