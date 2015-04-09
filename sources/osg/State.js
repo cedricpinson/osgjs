@@ -6,10 +6,10 @@ define( [
     'osg/Program',
     'osg/StateAttribute',
     'osg/Stack',
-    'osg/TextureManager',
+    'osg/Texture',
     'osg/Uniform',
     'osg/Utils'
-], function ( Map, Matrix, Notify, Object, Program, StateAttribute, Stack, TextureManager, Uniform, MACROUTILS ) {
+], function ( Map, Matrix, Notify, Object, Program, StateAttribute, Stack, Texture, Uniform, MACROUTILS ) {
 
     'use strict';
 
@@ -56,8 +56,7 @@ define( [
 
         // texture manager is referenced here because it's associated with gl object
         // of the gl context intialized with State
-        this._textureManager = new TextureManager();
-
+        this._textureManager = Texture.getTextureManager( this._graphicContext );
 
         // we dont use Map because in this use case with a few entries
         // {} is faster

@@ -6,8 +6,9 @@ define( [
     'osg/Uniform',
     'osg/Image',
     'osgDB/ReaderParser',
-    'osg/Map'
-], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ReaderParser, Map ) {
+    'osg/Map',
+    'osg/TextureManager'
+], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ReaderParser, CustomMap, TextureManager ) {
 
     'use strict';
 
@@ -91,6 +92,15 @@ define( [
     Texture.FLOAT = 0x1406;
     Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
 
+    Texture._sTextureManager = new Map();
+    
+    // Getter for textureManager 
+    Texture.getTextureManager = function ( gl ) {
+        if ( !Texture._sTextureManager.has( gl ) ) 
+            Texture._sTextureManager.set( gl, new TextureManager() );
+        return Texture._sTextureManager.get( gl );
+    };
+
     Texture.getEnumFromString = function ( v ) {
         var value = v;
         if ( typeof ( value ) === 'string' ) {
@@ -112,7 +122,7 @@ define( [
             }
             if ( Texture.uniforms[ unit ] === undefined ) {
                 var name = this.getType() + unit;
-                var uniformMap = new Map();
+                var uniformMap = new CustomMap();
                 var uniform = Uniform.createInt1( unit, name );
                 uniformMap.setMap( {
                     texture: uniform
@@ -214,14 +224,20 @@ define( [
         },
 
         releaseGLObjects: function ( state ) {
-            if ( state !== undefined ) {
-                if ( this._textureObject !== undefined && this._textureObject !== null ) {
+            if ( this._textureObject !== undefined && this._textureObject !== null ) {
+                // Remove from a explicit context
+                if ( state !== undefined ) {
                     state.getTextureManager().releaseTextureObject( this._textureObject );
-                    this._textureObject = undefined;
+                } else {
+                    // Try to remove the texture from all contexts
+                    var that = this;
+                    Texture._sTextureManager.forEach( function( texManager ) {
+                        texManager.releaseTextureObject( that._textureObject );
+                    } );
                 }
+                this._textureObject = undefined;
             }
         },
-
 
         getWrapT: function () {
             return this._wrapT;
