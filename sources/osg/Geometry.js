@@ -27,13 +27,13 @@ define( [
             this.stateset.releaseGLObjects( state );
             var i;
             for ( i in this.attributes ) {
-                this.attributes[ i ].releaseGLObjects( state.getGraphicContext() );
+                this.attributes[ i ].releaseGLObjects( state );
             }
             for ( var j = 0, l = this.primitives.length; j < l; j++ ) {
                 var prim = this.primitives[ j ];
                 if ( prim.getIndices !== undefined ) {
                     if ( prim.getIndices() !== undefined && prim.getIndices() !== null ) {
-                        prim.indices.releaseGLObjects( state.getGraphicContext() );
+                        prim.indices.releaseGLObjects( state );
                     }
                 }
             }

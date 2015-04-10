@@ -1,9 +1,10 @@
 define( [
     'osg/Utils',
     'osg/Notify',
-    'osg/Object'
+    'osg/Object',
+    'osg/Timer'
 
-], function ( MACROUTILS, Notify, Object ) {
+], function ( MACROUTILS, Notify, Object, Timer ) {
 
     'use strict';
 
@@ -37,6 +38,39 @@ define( [
     BufferArray.ARRAY_BUFFER = 0x8892;
 
 
+    // Does make sense to have a BufferObjectManager? could be helpful if having different contexts?
+    // For now use a static Map to track objects to be deleted
+
+    // static cache of glBuffers flagged for deletion, which will actually
+    // be deleted in the correct GL context.
+    BufferArray._sDeletedGLBufferArrayCache = new Map();
+
+    // static method to delete Program 
+    BufferArray.deleteGLBufferArray = function ( gl, buffer ) {
+        if ( !BufferArray._sDeletedGLBufferArrayCache.has( gl ) )
+            BufferArray._sDeletedGLBufferArrayCache.set( gl, [] );
+        BufferArray._sDeletedGLBufferArrayCache.get( gl ).push( buffer );
+    };
+
+    // static method to flush all the cached glPrograms which need to be deleted in the GL context specified
+    BufferArray.flushDeletedGLBufferArrays = function ( gl, availableTime ) {
+        // if no time available don't try to flush objects.
+        if ( availableTime <= 0.0 ) return availableTime;
+        if ( !BufferArray._sDeletedGLBufferArrayCache.has( gl ) ) return availableTime;
+        var elapsedTime = 0.0;
+        var beginTime = Timer.instance().tick();
+        var deleteList = BufferArray._sDeletedGLBufferArrayCache.get( gl );
+        var numBuffers = deleteList.length;
+        for ( var i = numBuffers -1; i >= 0 && elapsedTime < availableTime; i-- ) {
+            gl.deleteBuffer( deleteList[ i ] );
+            deleteList.splice( i, 1 );
+            elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
+        }
+        availableTime -= elapsedTime;
+        return availableTime;
+    };
+
+
     /** @lends BufferArray.prototype */
     BufferArray.prototype = {
         setItemSize: function ( size ) {
@@ -50,9 +84,9 @@ define( [
             return false;
         },
 
-        releaseGLObjects: function ( gl ) {
+        releaseGLObjects: function ( state ) {
             if ( this._buffer !== undefined && this._buffer !== null ) {
-                gl.deleteBuffer( this._buffer );
+                BufferArray.deleteGLBufferArray( state.getGraphicContext(), this._buffer );
             }
             this._buffer = undefined;
         },

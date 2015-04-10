@@ -218,10 +218,11 @@ define( [
                 this.getTextureAttribute( i, 'Texture' ).releaseGLObjects( state );
             }
             var list = this.getAttributeList();
-                for ( i = 0, j = list.length; i < j; i++ ) {
-                    // Remove only if we have releaseGLObject method. 
-                    if ( list[ i ]._object.releaseGLObjects )
-                        list[ i ]._object.releaseGLObjects( state );
+            for ( i = 0, j = list.length; i < j; i++ ) {
+                // Remove only if we have releaseGLObject method. 
+                if ( list[ i ]._object.releaseGLObjects ) {
+                    list[ i ]._object.releaseGLObjects( state );
+                }
             }
         },
         _getUniformMap: function () {

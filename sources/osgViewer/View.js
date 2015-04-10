@@ -1,5 +1,6 @@
 define( [
     'osg/BlendFunc',
+    'osg/BufferArray',
     'osg/Camera',
     'osg/CullFace',
     'osg/Depth',
@@ -23,6 +24,7 @@ define( [
 
 ], function (
     BlendFunc,
+    BufferArray,
     Camera,
     CullFace,
     Depth,
@@ -275,10 +277,11 @@ define( [
             }
         },
 
-        // CP: I guess it should move into Scene in something like an ImagePager things ?
+        // In OSG this call is done in SceneView
         flushDeletedGLObjects: function ( /*currentTime,*/ availableTime ) {
             // Flush all deleted OpenGL objects within the specified availableTime
             var gl = this.getGraphicContext();
+            availableTime = BufferArray.flushDeletedGLBufferArrays( gl, availableTime );
             availableTime = Texture.getTextureManager( gl ).flushDeletedTextureObjects( gl, availableTime );
             availableTime = Program.flushDeletedGLPrograms( gl, availableTime );
             availableTime = Shader.flushDeletedGLShaders( gl, availableTime );
