@@ -235,8 +235,15 @@ define( [
             var x = [ 0.0, 0.0, 0.0 ];
             var y = [ 0.0, 0.0, 0.0 ];
             return function ( dx, dy ) {
-                dy *= this._distance;
-                dx *= this._distance;
+                var proj = this._camera.getProjectionMatrix();
+                // modulate panning speed with verticalFov value
+                // if it's an orthographic we don't change the panning speed
+                // TODO : manipulators in osgjs don't support well true orthographic camera anyway because they
+                // manage the view matrix (and you need to edit the projection matrix to 'zoom' for true ortho camera) 
+                var vFov = proj[ 15 ] === 1 ? 1.0 : 2.00 / proj[ 5 ];
+                dy *= this._distance * vFov;
+                dx *= this._distance * vFov;
+
                 Matrix.inverse( this._rotation, inv );
                 x[ 0 ] = Matrix.get( inv, 0, 0 );
                 x[ 1 ] = Matrix.get( inv, 0, 1 );
