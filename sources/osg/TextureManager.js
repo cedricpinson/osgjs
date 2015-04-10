@@ -164,13 +164,11 @@ define( [
         },
 
         flushDeletedTextureObjects: function ( gl, availableTime ) {
+            // if no time available don't try to flush objects.
+            if ( availableTime <= 0.0 ) return availableTime;
             var nbTextures = this._orphanedTextureObjects.length;
-
             // Should we use a maxSizeTexturePool value?
             //var size = this.getProfile().getSize();
-
-            // if no time available don't try to flush objects.
-            if ( availableTime <= 0.0 ) return;
             // We need to test if we have time to flush
             var elapsedTime = 0.0;
             var beginTime = Timer.instance().tick();
@@ -182,6 +180,7 @@ define( [
             }
             this._orphanedTextureObjects.splice( 0, i );
             availableTime -= elapsedTime;
+            return availableTime;
             //Notify.info( 'TextureManager: released ' + nbTextures + ' with ' + (nbTextures*size/(1024*1024)) + ' MB' );
         },
 
@@ -266,8 +265,9 @@ define( [
             var key;
             for ( var i = 0, j = Object.keys( this._textureSetMap ).length; i < j && availableTime > 0.0; i++ ) {
                 key = Object.keys( this._textureSetMap )[ i ];
-                this._textureSetMap[ key ].flushDeletedTextureObjects( gl, availableTime );
+                availableTime = this._textureSetMap[ key ].flushDeletedTextureObjects( gl, availableTime );
             }
+            return availableTime;
         },
 
         releaseTextureObject: function ( textureObject ) {

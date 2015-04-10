@@ -10,6 +10,8 @@ define( [
     'osg/Node',
     'osg/Options',
     'osg/Texture',
+    'osg/Program',
+    'osg/Shader',
     'osg/Viewport',
     'osg/WebGLCaps',
 
@@ -31,6 +33,8 @@ define( [
     Node,
     Options,
     Texture,
+    Program,
+    Shader,
     Viewport,
     WebGLCaps,
 
@@ -274,7 +278,10 @@ define( [
         // CP: I guess it should move into Scene in something like an ImagePager things ?
         flushDeletedGLObjects: function ( /*currentTime,*/ availableTime ) {
             // Flush all deleted OpenGL objects within the specified availableTime
-            this.getCamera().getRenderer().getState().getTextureManager().flushDeletedTextureObjects( this.getGraphicContext(), availableTime );
+            var gl = this.getGraphicContext();
+            availableTime = Texture.getTextureManager( gl ).flushDeletedTextureObjects( gl, availableTime );
+            availableTime = Program.flushDeletedGLPrograms( gl, availableTime );
+            availableTime = Shader.flushDeletedGLShaders( gl, availableTime );
         }
 
     };

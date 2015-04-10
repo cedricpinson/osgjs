@@ -217,6 +217,12 @@ define( [
             for ( var i = 0, j = this.textureAttributeMapList.length; i < j; i++ ) {
                 this.getTextureAttribute( i, 'Texture' ).releaseGLObjects( state );
             }
+            var list = this.getAttributeList();
+                for ( i = 0, j = list.length; i < j; i++ ) {
+                    // Remove only if we have releaseGLObject method. 
+                    if ( list[ i ]._object.releaseGLObjects )
+                        list[ i ]._object.releaseGLObjects( state );
+            }
         },
         _getUniformMap: function () {
             return this.uniforms;
