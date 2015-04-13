@@ -2,17 +2,21 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Gizmo</title>
+    <title>Texture compression</title>
     <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
 
     <!-- Javascript -->
     <script type="text/javascript" src="../vendors/es5-shim.js"></script>
     <script type="text/javascript" src="../vendors/es6-shim.js"></script>
-    <script type="text/javascript" src="../vendors/bluebird.js"></script>
+    <script type="text/javascript" src="../vendors/q.js"></script>
     <script type="text/javascript" src="../vendors/hammer.js"></script>
     <script type="text/javascript" src="../vendors/leap.js"></script>
-    <script type="text/javascript" src="../vendors/gunzip.min.js"></script>
     <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="crunch.js"></script>
+    <script type="text/javascript" src="decompressCRN.js"></script>
+    <script type="text/javascript" src="loadCRN.js"></script>
+    <script type="text/javascript" src="dxt1ToRgb565.js"></script>
+    <script type="text/javascript" src="dxt5ToRgba8888.js"></script>
     <script type="text/javascript" src="main.js"></script>
 
 </head>
@@ -33,7 +37,7 @@
     </a>
 
     <div class="osgjs-description">
-      Demonstrate gizmo editing:  click on model, select gizmo axis by clicking and moving while still mouse button pushed.
+      Demonstrate webgl texture compression, from left to right : dxt1, dxt1 -> raw, dxt5, dxt5 -> raw, raw original
     </div>
 
   </div>
