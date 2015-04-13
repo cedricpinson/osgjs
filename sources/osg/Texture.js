@@ -61,6 +61,30 @@ define( [
     Texture.LUMINANCE = 0x1909;
     Texture.LUMINANCE_ALPHA = 0x190A;
 
+    // DXT formats, from:
+    // http://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/
+    Texture.COMPRESSED_RGB_S3TC_DXT1_EXT = 0x83F0;
+    Texture.COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1;
+    Texture.COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2;
+    Texture.COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3;
+
+    // ATC formats, from:
+    // http://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_atc/
+    Texture.COMPRESSED_RGB_ATC_WEBGL = 0x8C92;
+    Texture.COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL = 0x8C93;
+    Texture.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL = 0x87EE;
+
+    // PVR formats, from:
+    // http://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_pvrtc/
+    Texture.COMPRESSED_RGB_PVRTC_4BPPV1_IMG = 0x8C00;
+    Texture.COMPRESSED_RGB_PVRTC_2BPPV1_IMG = 0x8C01;
+    Texture.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG = 0x8C02;
+    Texture.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG = 0x8C03;
+
+    // ETC1 format, from:
+    // http://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/
+    Texture.COMPRESSED_RGB_ETC1_WEBGL = 0x8D64;
+
     // filter mode
     Texture.LINEAR = 0x2601;
     Texture.NEAREST = 0x2600;
@@ -90,6 +114,9 @@ define( [
     Texture.MAX_CUBE_MAP_TEXTURE_SIZE = 0x851C;
 
     Texture.UNSIGNED_BYTE = 0x1401;
+    Texture.UNSIGNED_SHORT_4_4_4_4 = 0x8033;
+    Texture.UNSIGNED_SHORT_5_5_5_1 = 0x8034;
+    Texture.UNSIGNED_SHORT_5_6_5 = 0x8363;
     Texture.FLOAT = 0x1406;
     Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
 
@@ -162,6 +189,7 @@ define( [
             this._dirtyMipmap = true;
             this._textureTarget = Texture.TEXTURE_2D;
             this._type = Texture.UNSIGNED_BYTE;
+            this._isCompressed = false;
 
             this._flipY = true;
             this._colorSpaceConversion = Texture.NONE; //Texture.BROWSER_DEFAULT_WEBGL;
@@ -381,13 +409,36 @@ define( [
             this._unrefImageDataAfterApply = bool;
         },
 
+        checkIsCompressed: function ( format ) {
+            var fo = format || this._internalFormat;
+            switch ( fo ) {
+            case Texture.COMPRESSED_RGB_S3TC_DXT1_EXT:
+            case Texture.COMPRESSED_RGBA_S3TC_DXT1_EXT:
+            case Texture.COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            case Texture.COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            case Texture.COMPRESSED_RGB_ATC_WEBGL:
+            case Texture.COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL:
+            case Texture.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL:
+            case Texture.COMPRESSED_RGB_PVRTC_4BPPV1_IMG:
+            case Texture.COMPRESSED_RGB_PVRTC_2BPPV1_IMG:
+            case Texture.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG:
+            case Texture.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG:
+            case Texture.COMPRESSED_RGB_ETC1_WEBGL:
+                return true;
+            default:
+                return false;
+            }
+        },
+
         setInternalFormat: function ( formatSource ) {
             var format = formatSource;
             if ( format ) {
                 if ( typeof ( format ) === 'string' ) {
                     format = Texture[ format ];
                 }
+                this._isCompressed = this.checkIsCompressed( format );
             } else {
+                this._isCompressed = false;
                 format = Texture.RGBA;
             }
 
@@ -403,6 +454,7 @@ define( [
         },
         // Will cause the mipmaps to be regenerated on the next bind of the texture
         // Nothing will be done if the minFilter is not of the form XXX_MIPMAP_XXX
+        // TODO : not to be used if the texture is compressed !
         dirtyMipmap: function () {
             this._dirtyMipmap = true;
         },
@@ -440,10 +492,27 @@ define( [
 
         generateMipmap: function ( gl, target ) {
 
-            if ( this.hasMipmapFilter() ) {
+            this._dirtyMipmap = false;
+            if ( !this.hasMipmapFilter() ) return;
+
+            // manual mipmap provided
+            var img = this._image;
+            if ( img && img.hasMipmap() ) {
+
+                var internalFormat = this._internalFormat;
+                var mips = img.getMipmap();
+                for ( var level = 1, nbLevel = mips.length; level < nbLevel; level++ ) {
+                    var imi = mips[ level ];
+                    if ( this._isCompressed )
+                        this.applyTexImage2D( gl, this._textureTarget, level, this._internalFormat, imi.getWidth(), imi.getHeight(), 0, imi.getImage() );
+                    else
+                        this.applyTexImage2D( gl, this._textureTarget, level, internalFormat, imi.getWidth(), imi.getHeight(), 0, internalFormat, this._type, imi.getImage() );
+                }
+
+            } else {
+                // automatic mipmap
                 gl.generateMipmap( target );
             }
-            this._dirtyMipmap = false;
         },
 
         // return true if contains a mipmap filter
@@ -462,7 +531,8 @@ define( [
             gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, this._flipY );
             gl.pixelStorei( gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, this._colorSpaceConversion );
 
-            gl.texImage2D.apply( gl, args );
+            if ( this._isCompressed ) gl.compressedTexImage2D.apply( gl, args );
+            else gl.texImage2D.apply( gl, args );
 
             // call a callback when upload is done if there is one
             var numCallback = this._applyTexImage2DCallbacks.length;
@@ -485,7 +555,9 @@ define( [
 
         applyImage: function ( gl, image ) {
 
-            if ( image.isTypedArray() ) {
+            if ( this._isCompressed ) {
+                this.applyTexImage2D( gl, this._textureTarget, 0, this._internalFormat, this._textureWidth, this._textureHeight, 0, image.getImage() );
+            } else if ( image.isTypedArray() ) {
                 this.applyTexImage2D( gl,
                     this._textureTarget,
                     0,
