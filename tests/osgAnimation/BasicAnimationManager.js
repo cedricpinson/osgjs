@@ -161,7 +161,7 @@ define( [
             };
 
             ( function () {
-                Q.when( ReaderParser.parseSceneGraph( tree ) ).then( function ( result ) {
+                ReaderParser.parseSceneGraph( tree ).then( function ( result ) {
 
                     var FindAnimationManagerVisitor = function () {
                         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );

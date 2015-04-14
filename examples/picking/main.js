@@ -1,9 +1,7 @@
 'use strict';
 
-var Q = window.Q;
 var OSG = window.OSG;
 var osg = OSG.osg;
-var osgUtil = OSG.osgUtil;
 var osgViewer = OSG.osgViewer;
 var osgDB = OSG.osgDB;
 
@@ -72,7 +70,7 @@ var loadModel = function ( data, viewer, node, unifs ) {
     var promise = osgDB.parseSceneGraph( data );
     // var promise = osg.createTexturedSphere( 1.0, 500, 500 );
 
-    Q.when( promise ).then( function ( child ) {
+    promise.then( function ( child ) {
         node.addChild( child );
         viewer.getManipulator().computeHomePosition();
 

@@ -45,18 +45,15 @@ define( [
 
         whenReady: function () {
 
-            if ( !this._imageObject )
-                return Q( false );
+            if ( !this._imageObject ) {
+                return Q.reject();
+            }
 
             if ( !this._canPlayDefered ) {
                 this._canPlayDefered = Q.defer();
-                this._imageObject.addEventListener(
-                    'canplaythrough',
-                    function () {
-                        this._canPlayDefered.resolve( this );
-                    }.bind( this ),
-
-                    true );
+                this._imageObject.addEventListener( 'canplaythrough', function () {
+                    this._canPlayDefered.resolve( this );
+                }.bind( this ), true );
             }
 
             return this._canPlayDefered.promise;

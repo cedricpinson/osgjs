@@ -30,7 +30,7 @@ define( [
 
             // Load from function
             if ( dbrequest._function !== undefined ) {
-                Q.when( this.loadNodeFromFunction( dbrequest._function, dbrequest._group ) ).then( function ( child ) {
+                this.loadNodeFromFunction( dbrequest._function, dbrequest._group ).then( function ( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
                     that._pendingNodes.push( dbrequest );
@@ -38,7 +38,7 @@ define( [
                     defer.resolve();
                 } );
             } else if ( dbrequest._url !== '' ) { // Load from URL
-                Q.when( this.loadNodeFromURL( dbrequest._url ) ).then( function ( child ) {
+                this.loadNodeFromURL( dbrequest._url ).then( function ( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
                     that._pendingNodes.push( dbrequest );
@@ -60,7 +60,7 @@ define( [
             plod.setRange( 0, 0, 200 );
             var request = dbpager.requestNodeFile( fn, '', plod, 1 );
             ok( dbpager._pendingRequests.length === 1, 'Node requested' );
-            Q.when( dbpager.processRequest( request ) ).then( function () {
+            dbpager.processRequest( request ).then( function () {
                 start();
                 ok( dbpager._pendingNodes.length === 1, 'Request processed' );
             } ).fail( function ( error ) {
@@ -80,7 +80,7 @@ define( [
             var request = dbpager.requestNodeFile( fn, '', plod, 1 );
 
             ok( dbpager._pendingRequests.length === 1, 'Node requested' );
-            Q.when( dbpager.processRequest( request ) ).then( function () {
+            dbpager.processRequest( request ).then( function () {
                 start();
                 dbpager.addLoadedDataToSceneGraph( new FrameStamp(), 0.005 );
                 ok( dbpager._activePagedLODList.size === 2, 'we should have two plods active' );
@@ -102,7 +102,7 @@ define( [
             var request = dbpager.requestNodeFile( fn, '', plod, 1 );
             var frameStamp = new FrameStamp();
             ok( dbpager._pendingRequests.length === 1, 'Node requested' );
-            Q.when( dbpager.processRequest( request ) ).then( function () {
+            dbpager.processRequest( request ).then( function () {
                 start();
                 dbpager.addLoadedDataToSceneGraph( frameStamp );
                 frameStamp.setSimulationTime( 10 );
