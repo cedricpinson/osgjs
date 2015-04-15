@@ -333,8 +333,8 @@ define( [
             return this._numChildrenWithCullingDisabled;
         },
 
-        releaseGLObjects: function ( state ) {
-            if ( this.stateset !== undefined ) this.stateset.releaseGLObjects( state );
+        releaseGLObjects: function () {
+            if ( this.stateset !== undefined ) this.stateset.releaseGLObjects();
         }
 
     } ), 'osg', 'Node' );

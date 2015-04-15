@@ -34,6 +34,7 @@ define( [
 
         if ( fShader )
             this.setFragmentShader( fShader );
+        this._gl = undefined;
     };
 
     // static cache of glPrograms flagged for deletion, which will actually
@@ -94,14 +95,13 @@ define( [
             return this._program;
         },
 
-        releaseGLObjects: function ( state ) {
+        releaseGLObjects: function ( ) {
             // Call to releaseGLOBjects on shaders
-            if ( this._vertex !== undefined ) this._vertex.releaseGLObjects( state );
-            if ( this._fragment !== undefined ) this._fragment.releaseGLObjects( state );
-            if ( this._program == null ) return;
-            if ( state !== undefined ) {
-                // Programs only can be removed from a explicit context
-                Program.deleteGLProgram( state.getGraphicContext(), this._program );
+            if ( this._vertex !== undefined ) this._vertex.releaseGLObjects();
+            if ( this._fragment !== undefined ) this._fragment.releaseGLObjects();
+            if ( this._program === null ) return;
+            if ( this._gl !== undefined ) {
+                    Program.deleteGLProgram( this._gl, this._program );
             }
             this._program = undefined;
         },
@@ -110,8 +110,10 @@ define( [
 
             if ( this._nullProgram ) return;
 
-            var gl = state.getGraphicContext();
-
+            if ( !this._gl ) {
+                this._gl = state.getGraphicContext();
+            }
+            var gl = this._gl;
             if ( !this._program || this.isDirty() ) {
 
                 var compileClean;

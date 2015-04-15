@@ -16,8 +16,6 @@ define( [
 
             ( function () {
                 var gl = mockup.createFakeRenderer();
-                var state = new State( new ShaderGeneratorProxy() );
-                state.setGraphicContext( gl );
                 gl.createBuffer = function () {
                     return {};
                 };
@@ -29,7 +27,7 @@ define( [
                 var b = new BufferArray( BufferArray.ARRAY_BUFFER, content, 3 );
                 b.bind( gl );
                 ok( b._buffer !== undefined, 'Check we created gl buffer' );
-                b.releaseGLObjects( state );
+                b.releaseGLObjects();
                 ok( b._buffer === undefined, 'Check we released gl buffer' );
             } )();
         } );

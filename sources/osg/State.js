@@ -54,10 +54,6 @@ define( [
 
         this._frameStamp = undefined;
 
-        // texture manager is referenced here because it's associated with gl object
-        // of the gl context intialized with State
-        this._textureManager = Texture.getTextureManager( this._graphicContext );
-
         // we dont use Map because in this use case with a few entries
         // {} is faster
         this._programCommonUniformsCache = {};
@@ -79,10 +75,6 @@ define( [
 
         getCacheUniformsApplyRenderLeaf: function () {
             return this._programCommonUniformsCache;
-        },
-
-        getTextureManager: function () {
-            return this._textureManager;
         },
 
         setGraphicContext: function ( graphicContext ) {

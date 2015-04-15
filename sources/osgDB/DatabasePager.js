@@ -57,14 +57,13 @@ define( [
         }
     } );
 
-    var ReleaseVisitor = function ( state ) {
+    var ReleaseVisitor = function () {
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
-        this.state = state;
     };
     ReleaseVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         apply: function ( node ) {
             // mark GLResources in nodes to be released
-            node.releaseGLObjects( this.state );
+            node.releaseGLObjects();
             this.traverse( node );
         }
     } );
@@ -321,7 +320,7 @@ define( [
             return defer.promise;
         },
 
-        releaseGLExpiredSubgraphs: function ( state, availableTime ) {
+        releaseGLExpiredSubgraphs: function ( availableTime ) {
 
             if ( availableTime <= 0.0 ) return 0.0;
             // We need to test if we have time to flush
@@ -333,7 +332,7 @@ define( [
                 // If we don't have more time, break the loop.
                 if ( elapsedTime > availableTime ) return;
                 that._childrenToRemoveList.delete( node );
-                node.accept( new ReleaseVisitor( state ) );
+                node.accept( new ReleaseVisitor() );
                 node.removeChildren();
                 node = null;
                 elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );

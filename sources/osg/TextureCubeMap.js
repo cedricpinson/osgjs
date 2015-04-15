@@ -255,11 +255,10 @@ define( [
 
         apply: function ( state ) {
 
+            var gl = state.getGraphicContext();
             // if need to release the texture
             if ( this._dirtyTextureObject )
-                this.releaseGLObjects( state );
-
-            var gl = state.getGraphicContext();
+                this.releaseGLObjects();
 
             if ( this._textureObject !== undefined && !this.isDirty() ) {
                 this._textureObject.bind( gl );

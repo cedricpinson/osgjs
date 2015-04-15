@@ -6,7 +6,7 @@ define( [
     'osg/Timer',
     'osg/UpdateVisitor',
     'osg/Utils',
-
+    'osg/Texture',
     'osgGA/OrbitManipulator',
 
     'osgViewer/CanvasStats',
@@ -15,7 +15,7 @@ define( [
     'osgViewer/webgl-utils',
     'osgViewer/webgl-debug'
 
-], function ( Notify, Matrix, Options, Stats, Timer, UpdateVisitor, MACROUTILS, OrbitManipulator, CanvasStats, EventProxy, View, WebGLUtils, WebGLDebugUtils ) {
+], function ( Notify, Matrix, Options, Stats, Timer, UpdateVisitor, MACROUTILS, Texture, OrbitManipulator, CanvasStats, EventProxy, View, WebGLUtils, WebGLDebugUtils ) {
 
     'use strict';
 
@@ -343,7 +343,7 @@ define( [
             canvasStats.addLayer( '#f0f000', 256,
                 function ( /*t*/) {
                     var fn = this.getFrameStamp().getFrameNumber() - 1;
-                    var stats = this.getCamera().getRenderer().getState().getTextureManager().getStats();
+                    var stats = Texture.getTextureManager( this.getGraphicContext() ).getStats();
                     var value = stats.getAttribute( fn, 'Texture used' );
                     return value / ( 1024 * 1024 );
                 }.bind( this ),
@@ -354,7 +354,7 @@ define( [
             canvasStats.addLayer( '#f00f00', 256,
                 function ( /*t*/) {
                     var fn = this.getFrameStamp().getFrameNumber() - 1;
-                    var stats = this.getCamera().getRenderer().getState().getTextureManager().getStats();
+                    var stats = Texture.getTextureManager( this.getGraphicContext() ).getStats();
                     var value = stats.getAttribute( fn, 'Texture total' );
                     return value / ( 1024 * 1024 );
                 }.bind( this ),
@@ -412,7 +412,7 @@ define( [
             // update the scene
             this.getScene().updateSceneGraph( this._updateVisitor );
             // Remove ExpiredSubgraphs from DatabasePager
-            this.getDatabasePager().releaseGLExpiredSubgraphs( this.getState(), 0.005 );
+            this.getDatabasePager().releaseGLExpiredSubgraphs( 0.005 );
             // In OSG this.is deferred until the draw traversal, to handle multiple contexts
             this.flushDeletedGLObjects( 0.005 );
             var deltaS = Timer.instance().deltaS( startTraversal, Timer.instance().tick() );
@@ -464,7 +464,7 @@ define( [
             this.getViewerStats().setAttribute( frameNumber, 'Frame duration', Timer.instance().deltaS( this._startFrameTick, Timer.instance().tick() ) );
 
             if ( this._canvasStats ) { // update ui stats
-                this.getCamera().getRenderer().getState().getTextureManager().updateStats( frameNumber );
+                Texture.getTextureManager( this.getGraphicContext() ).updateStats( frameNumber );
                 this._canvasStats.update();
             }
         },

@@ -16,6 +16,7 @@ define( [
         }
         this.type = t;
         this.setText( text );
+        this._gl = undefined;
     };
 
     Shader.VERTEX_SHADER = 0x8B31;
@@ -110,6 +111,7 @@ define( [
             }
         },
         compile: function ( gl ) {
+            if ( !this._gl ) this._gl = gl;
             this.shader = gl.createShader( this.type );
             gl.shaderSource( this.shader, this.text );
             Utils.timeStamp( 'osgjs.metrics:compileShader' );
@@ -133,10 +135,9 @@ define( [
             }
             return true;
         },
-        releaseGLObjects: function ( state ) {
-            if ( state !== undefined ) {
-                // Shaders only can be removed from a explicit context
-                Shader.deleteGLShader( state.getGraphicContext(), this.shader );
+        releaseGLObjects: function () {
+            if ( this._gl !== undefined ) {
+                Shader.deleteGLShader( this._gl, this.shader );
             }
             this.shader = undefined;
         }

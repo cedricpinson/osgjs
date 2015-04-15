@@ -32,6 +32,7 @@ define( [
                 this._elements = elements instanceof MACROUTILS.Float32Array ? elements : new MACROUTILS.Float32Array( elements );
             }
         }
+        this._gl = undefined;
     };
 
     BufferArray.ELEMENT_ARRAY_BUFFER = 0x8893;
@@ -84,15 +85,15 @@ define( [
             return false;
         },
 
-        releaseGLObjects: function ( state ) {
-            if ( this._buffer !== undefined && this._buffer !== null ) {
-                BufferArray.deleteGLBufferArray( state.getGraphicContext(), this._buffer );
+        releaseGLObjects: function () {
+            if ( this._buffer !== undefined && this._buffer !== null && this._gl !== undefined ) {
+                BufferArray.deleteGLBufferArray( this._gl, this._buffer );
             }
             this._buffer = undefined;
         },
 
         bind: function ( gl ) {
-
+            if ( !this._gl ) this._gl = gl;
             var type = this._type;
             var buffer = this._buffer;
 

@@ -46,6 +46,7 @@ define( [
         this._textureObject = undefined;
 
         this._textureNull = true;
+        this._gl = undefined;
     };
 
     Texture.UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
@@ -190,8 +191,9 @@ define( [
         },
 
         init: function ( state ) {
+            if ( !this._gl ) this._gl = state.getGraphicContext();
             if ( !this._textureObject ) {
-                this._textureObject = state.getTextureManager().generateTextureObject( state.getGraphicContext(),
+                this._textureObject = Texture.getTextureManager( this._gl ).generateTextureObject( this._gl,
                     this,
                     this._textureTarget,
                     this._internalFormat,
@@ -223,20 +225,11 @@ define( [
             return this._textureHeight;
         },
 
-        releaseGLObjects: function ( state ) {
-            if ( this._textureObject !== undefined && this._textureObject !== null ) {
-                // Remove from a explicit context
-                if ( state !== undefined ) {
-                    state.getTextureManager().releaseTextureObject( this._textureObject );
-                } else {
-                    // Try to remove the texture from all contexts
-                    var that = this;
-                    Texture._sTextureManager.forEach( function( texManager ) {
-                        texManager.releaseTextureObject( that._textureObject );
-                    } );
-                }
-                this._textureObject = undefined;
+        releaseGLObjects: function ( ) {
+            if ( this._textureObject !== undefined && this._textureObject !== null && this._gl !== undefined ) {
+                Texture.getTextureManager( this._gl ).releaseTextureObject( this._textureObject );
             }
+            this._textureObject = undefined;
         },
 
         getWrapT: function () {
@@ -518,13 +511,12 @@ define( [
 
         apply: function ( state ) {
 
+            var gl = state.getGraphicContext();
             // if need to release the texture
             if ( this._dirtyTextureObject ) {
-                this.releaseGLObjects( state );
+                this.releaseGLObjects();
                 this._dirtyTextureObject = false;
             }
-
-            var gl = state.getGraphicContext();
 
             if ( this._textureObject !== undefined && !this.isDirty() ) {
                 this._textureObject.bind( gl );

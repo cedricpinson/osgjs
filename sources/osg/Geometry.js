@@ -23,17 +23,17 @@ define( [
 
     /** @lends Geometry.prototype */
     Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
-        releaseGLObjects: function ( state ) {
-            this.stateset.releaseGLObjects( state );
+        releaseGLObjects: function () {
+            this.stateset.releaseGLObjects();
             var i;
             for ( i in this.attributes ) {
-                this.attributes[ i ].releaseGLObjects( state );
+                this.attributes[ i ].releaseGLObjects();
             }
             for ( var j = 0, l = this.primitives.length; j < l; j++ ) {
                 var prim = this.primitives[ j ];
                 if ( prim.getIndices !== undefined ) {
                     if ( prim.getIndices() !== undefined && prim.getIndices() !== null ) {
-                        prim.indices.releaseGLObjects( state );
+                        prim.indices.releaseGLObjects();
                     }
                 }
             }
