@@ -5,6 +5,7 @@ define( [
     'osg/CullFace',
     'osg/Depth',
     'osg/FrameStamp',
+    'osg/FrameBufferObject',
     'osg/Light',
     'osg/Material',
     'osg/Matrix',
@@ -29,6 +30,7 @@ define( [
     CullFace,
     Depth,
     FrameStamp,
+    FrameBufferObject,
     Light,
     Material,
     Matrix,
@@ -285,6 +287,7 @@ define( [
             availableTime = Texture.getTextureManager( gl ).flushDeletedTextureObjects( gl, availableTime );
             availableTime = Program.flushDeletedGLPrograms( gl, availableTime );
             availableTime = Shader.flushDeletedGLShaders( gl, availableTime );
+            availableTime = FrameBufferObject.flushDeletedGLFrameBuffers( gl, availableTime );
         }
 
     };

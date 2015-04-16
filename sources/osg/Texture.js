@@ -5,10 +5,11 @@ define( [
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Image',
+    'osg/GLObject',
     'osgDB/ReaderParser',
     'osg/Map',
     'osg/TextureManager'
-], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ReaderParser, CustomMap, TextureManager ) {
+], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, GLObject, ReaderParser, CustomMap, TextureManager ) {
 
     'use strict';
 
@@ -40,13 +41,13 @@ define( [
      */
     var Texture = function () {
         StateAttribute.call( this );
+        GLObject.call( this );
         this.setDefaultParameters();
         this._dirtyMipmap = true;
         this._applyTexImage2DCallbacks = [];
         this._textureObject = undefined;
 
         this._textureNull = true;
-        this._gl = undefined;
     };
 
     Texture.UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
@@ -110,7 +111,7 @@ define( [
         return value;
     };
 
-    Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+    Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
         attributeType: 'Texture',
 
         cloneType: function () {
@@ -191,7 +192,7 @@ define( [
         },
 
         init: function ( state ) {
-            if ( !this._gl ) this._gl = state.getGraphicContext();
+            if ( !this._gl ) this.setGraphicContext( state.getGraphicContext() );
             if ( !this._textureObject ) {
                 this._textureObject = Texture.getTextureManager( this._gl ).generateTextureObject( this._gl,
                     this,
@@ -589,7 +590,7 @@ define( [
                 }
             }
         }
-    } ), 'osg', 'Texture' );
+    } ) ), 'osg', 'Texture' );
 
     MACROUTILS.setTypeID( Texture );
 

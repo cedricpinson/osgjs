@@ -1,22 +1,22 @@
 define( [
     'osg/Notify',
     'osg/Utils',
-    'osg/Timer'
-], function ( Notify, Utils, Timer ) {
+    'osg/Timer',
+    'osg/GLObject'
+], function ( Notify, MACROUTILS, Timer, GLObject ) {
 
     /**
      * Shader manage shader for vertex and fragment, you need both to create a glsl program.
      * @class Shader
      */
     var Shader = function ( type, text ) {
-
+        GLObject.call( this );
         var t = type;
         if ( typeof ( type ) === 'string' ) {
             t = Shader[ type ];
         }
         this.type = t;
         this.setText( text );
-        this._gl = undefined;
     };
 
     Shader.VERTEX_SHADER = 0x8B31;
@@ -56,7 +56,7 @@ define( [
     };
 
     /** @lends Shader.prototype */
-    Shader.prototype = {
+    Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         setText: function ( text ) {
             this.text = text;
         },
@@ -111,10 +111,10 @@ define( [
             }
         },
         compile: function ( gl ) {
-            if ( !this._gl ) this._gl = gl;
+            if ( !this._gl ) this.setGraphicContext( gl );
             this.shader = gl.createShader( this.type );
             gl.shaderSource( this.shader, this.text );
-            Utils.timeStamp( 'osgjs.metrics:compileShader' );
+            MACROUTILS.timeStamp( 'osgjs.metrics:compileShader' );
             gl.compileShader( this.shader );
             if ( !gl.getShaderParameter( this.shader, gl.COMPILE_STATUS ) && !gl.isContextLost() ) {
 
@@ -141,7 +141,7 @@ define( [
             }
             this.shader = undefined;
         }
-    };
+    } );
 
     Shader.create = function ( type, text ) {
         Notify.log( 'Shader.create is deprecated, use new Shader with the same arguments instead' );

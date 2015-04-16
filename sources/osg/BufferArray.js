@@ -2,9 +2,10 @@ define( [
     'osg/Utils',
     'osg/Notify',
     'osg/Object',
+    'osg/GLObject',
     'osg/Timer'
 
-], function ( MACROUTILS, Notify, Object, Timer ) {
+], function ( MACROUTILS, Notify, Object, GLObject, Timer ) {
 
     'use strict';
 
@@ -13,7 +14,7 @@ define( [
      * @class BufferArray
      */
     var BufferArray = function ( type, elements, itemSize ) {
-
+        GLObject.call( this );
         // maybe could inherit from Object
         this._instanceID = Object.getInstanceID();
 
@@ -32,15 +33,10 @@ define( [
                 this._elements = elements instanceof MACROUTILS.Float32Array ? elements : new MACROUTILS.Float32Array( elements );
             }
         }
-        this._gl = undefined;
     };
 
     BufferArray.ELEMENT_ARRAY_BUFFER = 0x8893;
     BufferArray.ARRAY_BUFFER = 0x8892;
-
-
-    // Does make sense to have a BufferObjectManager? could be helpful if having different contexts?
-    // For now use a static Map to track objects to be deleted
 
     // static cache of glBuffers flagged for deletion, which will actually
     // be deleted in the correct GL context.
@@ -73,7 +69,7 @@ define( [
 
 
     /** @lends BufferArray.prototype */
-    BufferArray.prototype = {
+    BufferArray.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         setItemSize: function ( size ) {
             this._itemSize = size;
         },
@@ -93,7 +89,7 @@ define( [
         },
 
         bind: function ( gl ) {
-            if ( !this._gl ) this._gl = gl;
+            if ( !this._gl ) this.setGraphicContext( gl );
             var type = this._type;
             var buffer = this._buffer;
 
@@ -131,7 +127,7 @@ define( [
             this._elements = elements;
             this._dirty = true;
         }
-    };
+    } );
 
     BufferArray.create = function ( type, elements, itemSize ) {
         Notify.log( 'BufferArray.create is deprecated, use new BufferArray with same arguments instead' );

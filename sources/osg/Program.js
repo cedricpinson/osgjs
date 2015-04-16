@@ -1,10 +1,11 @@
 define( [
     'osg/Utils',
     'osg/Notify',
+    'osg/GLObject',
     'osg/StateAttribute',
     'osg/Map',
     'osg/Timer'
-], function ( MACROUTILS, Notify, StateAttribute, CustomMap, Timer ) {
+], function ( MACROUTILS, Notify, GLObject, StateAttribute, CustomMap, Timer ) {
     'use strict';
 
     /**
@@ -12,8 +13,8 @@ define( [
      * @class Program
      */
     var Program = function ( vShader, fShader ) {
+        GLObject.call( this );
         StateAttribute.call( this );
-
         this._program = null;
 
         // used to know if it's a default program
@@ -34,7 +35,6 @@ define( [
 
         if ( fShader )
             this.setFragmentShader( fShader );
-        this._gl = undefined;
     };
 
     // static cache of glPrograms flagged for deletion, which will actually
@@ -66,7 +66,7 @@ define( [
     };
 
     /** @lends Program.prototype */
-    Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+    Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
         attributeType: 'Program',
 
@@ -111,7 +111,7 @@ define( [
             if ( this._nullProgram ) return;
 
             if ( !this._gl ) {
-                this._gl = state.getGraphicContext();
+                this.setGraphicContext( state.getGraphicContext() );
             }
             var gl = this._gl;
             if ( !this._program || this.isDirty() ) {
@@ -228,7 +228,7 @@ define( [
                 }
             }
         }
-    } ), 'osg', 'Program' );
+    } ) ), 'osg', 'Program' );
 
     return Program;
 } );
