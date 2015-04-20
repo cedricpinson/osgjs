@@ -59,8 +59,7 @@ define( [], function () {
             return this._currentManipulator;
         },
         getCurrentManipulator: function () {
-            var manipulator = this._manipulatorList[ this._currentManipulator ];
-            return manipulator;
+            return this._manipulatorList[ this._currentManipulator ];
         },
         reset: function () {
             this.getCurrentManipulator().reset();
@@ -77,8 +76,11 @@ define( [], function () {
                 return manipulator.getInverseMatrix();
             }
         },
-        setByMatrix: function ( matrix ) {
-            this.getCurrentManipulator().setByMatrix( matrix );
+        getHomeBound: function ( useBoundingBox ) {
+            this.getCurrentManipulator().getHomeBound( useBoundingBox );
+        },
+        getHomeDistance: function ( bs ) {
+            this.getCurrentManipulator().getHomeDistance( bs );
         }
     };
 
