@@ -1,9 +1,11 @@
 define( [
     'osg/Utils',
     'osg/Notify',
+    'osg/GLObject',
     'osg/StateAttribute',
-    'osg/Map'
-], function ( MACROUTILS, Notify, StateAttribute, Map ) {
+    'osg/Map',
+    'osg/Timer'
+], function ( MACROUTILS, Notify, GLObject, StateAttribute, CustomMap, Timer ) {
     'use strict';
 
     /**
@@ -11,8 +13,8 @@ define( [
      * @class Program
      */
     var Program = function ( vShader, fShader ) {
+        GLObject.call( this );
         StateAttribute.call( this );
-
         this._program = null;
 
         // used to know if it's a default program
@@ -35,8 +37,36 @@ define( [
             this.setFragmentShader( fShader );
     };
 
+    // static cache of glPrograms flagged for deletion, which will actually
+    // be deleted in the correct GL context.
+    Program._sDeletedGLProgramCache = new Map();
+
+    // static method to delete Program 
+    Program.deleteGLProgram = function ( gl, program ) {
+        if ( !Program._sDeletedGLProgramCache.has( gl ) )
+            Program._sDeletedGLProgramCache.set( gl, [] );
+        Program._sDeletedGLProgramCache.get( gl ).push( program );
+    };
+    // static method to flush all the cached glPrograms which need to be deleted in the GL context specified
+    Program.flushDeletedGLPrograms = function ( gl, availableTime ) {
+        // if no time available don't try to flush objects.
+        if ( availableTime <= 0.0 ) return availableTime;
+        if ( !Program._sDeletedGLProgramCache.has( gl ) ) return availableTime;
+        var elapsedTime = 0.0;
+        var beginTime = Timer.instance().tick();
+        var deleteList = Program._sDeletedGLProgramCache.get( gl );
+        var numPrograms = deleteList.length;
+        for ( var i = numPrograms -1; i >= 0 && elapsedTime < availableTime; i-- ) {
+            gl.deleteProgram( deleteList[ i ] );
+            deleteList.splice( i, 1 );
+            elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
+        }
+        availableTime -= elapsedTime;
+        return availableTime;
+    };
+
     /** @lends Program.prototype */
-    Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+    Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
 
         attributeType: 'Program',
 
@@ -65,12 +95,25 @@ define( [
             return this._program;
         },
 
+        releaseGLObjects: function ( ) {
+            // Call to releaseGLOBjects on shaders
+            if ( this._vertex !== undefined ) this._vertex.releaseGLObjects();
+            if ( this._fragment !== undefined ) this._fragment.releaseGLObjects();
+            if ( this._program === null ) return;
+            if ( this._gl !== undefined ) {
+                    Program.deleteGLProgram( this._gl, this._program );
+            }
+            this._program = undefined;
+        },
+
         apply: function ( state ) {
 
             if ( this._nullProgram ) return;
 
-            var gl = state.getGraphicContext();
-
+            if ( !this._gl ) {
+                this.setGraphicContext( state.getGraphicContext() );
+            }
+            var gl = this._gl;
             if ( !this._program || this.isDirty() ) {
 
                 var compileClean;
@@ -138,8 +181,8 @@ define( [
                     this._program = this._failSafeCache;
                 }
 
-                this._uniformsCache = new Map();
-                this._attributesCache = new Map();
+                this._uniformsCache = new CustomMap();
+                this._attributesCache = new CustomMap();
 
                 this.cacheUniformList( gl, this._vertex.text );
                 this.cacheUniformList( gl, this._fragment.text );
@@ -185,7 +228,7 @@ define( [
                 }
             }
         }
-    } ), 'osg', 'Program' );
+    } ) ), 'osg', 'Program' );
 
     return Program;
 } );

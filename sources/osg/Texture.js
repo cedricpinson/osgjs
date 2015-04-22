@@ -5,9 +5,11 @@ define( [
     'osg/StateAttribute',
     'osg/Uniform',
     'osg/Image',
+    'osg/GLObject',
     'osgDB/ReaderParser',
-    'osg/Map'
-], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, ReaderParser, Map ) {
+    'osg/Map',
+    'osg/TextureManager'
+], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, GLObject, ReaderParser, CustomMap, TextureManager ) {
 
     'use strict';
 
@@ -39,6 +41,7 @@ define( [
      */
     var Texture = function () {
         StateAttribute.call( this );
+        GLObject.call( this );
         this.setDefaultParameters();
         this._dirtyMipmap = true;
         this._applyTexImage2DCallbacks = [];
@@ -91,6 +94,15 @@ define( [
     Texture.FLOAT = 0x1406;
     Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
 
+    Texture._sTextureManager = new Map();
+    
+    // Getter for textureManager 
+    Texture.getTextureManager = function ( gl ) {
+        if ( !Texture._sTextureManager.has( gl ) ) 
+            Texture._sTextureManager.set( gl, new TextureManager() );
+        return Texture._sTextureManager.get( gl );
+    };
+
     Texture.getEnumFromString = function ( v ) {
         var value = v;
         if ( typeof ( value ) === 'string' ) {
@@ -99,7 +111,7 @@ define( [
         return value;
     };
 
-    Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+    Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
         attributeType: 'Texture',
 
         cloneType: function () {
@@ -112,7 +124,7 @@ define( [
             }
             if ( Texture.uniforms[ unit ] === undefined ) {
                 var name = this.getType() + unit;
-                var uniformMap = new Map();
+                var uniformMap = new CustomMap();
                 var uniform = Uniform.createInt1( unit, name );
                 uniformMap.setMap( {
                     texture: uniform
@@ -180,8 +192,9 @@ define( [
         },
 
         init: function ( state ) {
+            if ( !this._gl ) this.setGraphicContext( state.getGraphicContext() );
             if ( !this._textureObject ) {
-                this._textureObject = state.getTextureManager().generateTextureObject( state.getGraphicContext(),
+                this._textureObject = Texture.getTextureManager( this._gl ).generateTextureObject( this._gl,
                     this,
                     this._textureTarget,
                     this._internalFormat,
@@ -213,15 +226,12 @@ define( [
             return this._textureHeight;
         },
 
-        releaseGLObjects: function ( state ) {
-            if ( state !== undefined ) {
-                if ( this._textureObject !== undefined && this._textureObject !== null ) {
-                    state.getTextureManager().releaseTextureObject( this._textureObject );
-                    this._textureObject = undefined;
-                }
+        releaseGLObjects: function ( ) {
+            if ( this._textureObject !== undefined && this._textureObject !== null && this._gl !== undefined ) {
+                Texture.getTextureManager( this._gl ).releaseTextureObject( this._textureObject );
             }
+            this._textureObject = undefined;
         },
-
 
         getWrapT: function () {
             return this._wrapT;
@@ -502,13 +512,12 @@ define( [
 
         apply: function ( state ) {
 
+            var gl = state.getGraphicContext();
             // if need to release the texture
             if ( this._dirtyTextureObject ) {
-                this.releaseGLObjects( state );
+                this.releaseGLObjects();
                 this._dirtyTextureObject = false;
             }
-
-            var gl = state.getGraphicContext();
 
             if ( this._textureObject !== undefined && !this.isDirty() ) {
                 this._textureObject.bind( gl );
@@ -581,7 +590,7 @@ define( [
                 }
             }
         }
-    } ), 'osg', 'Texture' );
+    } ) ), 'osg', 'Texture' );
 
     MACROUTILS.setTypeID( Texture );
 

@@ -1,14 +1,16 @@
 define( [
     'osg/Notify',
-    'osg/Utils'
-], function ( Notify, Utils ) {
+    'osg/Utils',
+    'osg/Timer',
+    'osg/GLObject'
+], function ( Notify, MACROUTILS, Timer, GLObject ) {
 
     /**
      * Shader manage shader for vertex and fragment, you need both to create a glsl program.
      * @class Shader
      */
     var Shader = function ( type, text ) {
-
+        GLObject.call( this );
         var t = type;
         if ( typeof ( type ) === 'string' ) {
             t = Shader[ type ];
@@ -24,8 +26,37 @@ define( [
     Shader.VS_DBG = 'attribute vec3 Vertex;uniform mat4 ModelViewMatrix;uniform mat4 ProjectionMatrix;void main(void) {  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);}';
     Shader.FS_DBG = 'precision lowp float; void main(void) { gl_FragColor = vec4(1.0, 0.6, 0.6, 1.0);}';
 
+
+    // static cache of glShaders flagged for deletion, which will actually
+    // be deleted in the correct GL context.
+    Shader._sDeletedGLShaderCache = new Map();
+
+    // static method to delete Program 
+    Shader.deleteGLShader = function ( gl, shader ) {
+        if ( !Shader._sDeletedGLShaderCache.has( gl ) )
+            Shader._sDeletedGLShaderCache.set( gl, [] );
+        Shader._sDeletedGLShaderCache.get( gl ).push( shader );
+    };
+
+    // static method to flush all the cached glShaders which need to be deleted in the GL context specified
+    Shader.flushDeletedGLShaders = function ( gl, availableTime ) {
+        // if no time available don't try to flush objects.
+        if ( availableTime <= 0.0 ) return availableTime;
+        if ( !Shader._sDeletedGLShaderCache.has( gl ) ) return availableTime;
+        var elapsedTime = 0.0;
+        var beginTime = Timer.instance().tick();
+        var deleteList = Shader._sDeletedGLShaderCache.get( gl );
+        var numShaders = deleteList.length;
+        for ( var i = numShaders -1; i >= 0 && elapsedTime < availableTime; i-- ) {
+            gl.deleteShader( deleteList[ i ] );
+            deleteList.splice( i, 1 );
+            elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
+        }
+        return availableTime -= elapsedTime;
+    };
+
     /** @lends Shader.prototype */
-    Shader.prototype = {
+    Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         setText: function ( text ) {
             this.text = text;
         },
@@ -80,9 +111,10 @@ define( [
             }
         },
         compile: function ( gl ) {
+            if ( !this._gl ) this.setGraphicContext( gl );
             this.shader = gl.createShader( this.type );
             gl.shaderSource( this.shader, this.text );
-            Utils.timeStamp( 'osgjs.metrics:compileShader' );
+            MACROUTILS.timeStamp( 'osgjs.metrics:compileShader' );
             gl.compileShader( this.shader );
             if ( !gl.getShaderParameter( this.shader, gl.COMPILE_STATUS ) && !gl.isContextLost() ) {
 
@@ -102,8 +134,14 @@ define( [
                 return false;
             }
             return true;
+        },
+        releaseGLObjects: function () {
+            if ( this._gl !== undefined ) {
+                Shader.deleteGLShader( this._gl, this.shader );
+            }
+            this.shader = undefined;
         }
-    };
+    } );
 
     Shader.create = function ( type, text ) {
         Notify.log( 'Shader.create is deprecated, use new Shader with the same arguments instead' );

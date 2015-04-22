@@ -1,9 +1,11 @@
 define( [
     'osg/Utils',
     'osg/Notify',
-    'osg/Object'
+    'osg/Object',
+    'osg/GLObject',
+    'osg/Timer'
 
-], function ( MACROUTILS, Notify, Object ) {
+], function ( MACROUTILS, Notify, Object, GLObject, Timer ) {
 
     'use strict';
 
@@ -12,7 +14,7 @@ define( [
      * @class BufferArray
      */
     var BufferArray = function ( type, elements, itemSize ) {
-
+        GLObject.call( this );
         // maybe could inherit from Object
         this._instanceID = Object.getInstanceID();
 
@@ -36,9 +38,38 @@ define( [
     BufferArray.ELEMENT_ARRAY_BUFFER = 0x8893;
     BufferArray.ARRAY_BUFFER = 0x8892;
 
+    // static cache of glBuffers flagged for deletion, which will actually
+    // be deleted in the correct GL context.
+    BufferArray._sDeletedGLBufferArrayCache = new Map();
+
+    // static method to delete Program 
+    BufferArray.deleteGLBufferArray = function ( gl, buffer ) {
+        if ( !BufferArray._sDeletedGLBufferArrayCache.has( gl ) )
+            BufferArray._sDeletedGLBufferArrayCache.set( gl, [] );
+        BufferArray._sDeletedGLBufferArrayCache.get( gl ).push( buffer );
+    };
+
+    // static method to flush all the cached glPrograms which need to be deleted in the GL context specified
+    BufferArray.flushDeletedGLBufferArrays = function ( gl, availableTime ) {
+        // if no time available don't try to flush objects.
+        if ( availableTime <= 0.0 ) return availableTime;
+        if ( !BufferArray._sDeletedGLBufferArrayCache.has( gl ) ) return availableTime;
+        var elapsedTime = 0.0;
+        var beginTime = Timer.instance().tick();
+        var deleteList = BufferArray._sDeletedGLBufferArrayCache.get( gl );
+        var numBuffers = deleteList.length;
+        for ( var i = numBuffers -1; i >= 0 && elapsedTime < availableTime; i-- ) {
+            gl.deleteBuffer( deleteList[ i ] );
+            deleteList.splice( i, 1 );
+            elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
+        }
+        availableTime -= elapsedTime;
+        return availableTime;
+    };
+
 
     /** @lends BufferArray.prototype */
-    BufferArray.prototype = {
+    BufferArray.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         setItemSize: function ( size ) {
             this._itemSize = size;
         },
@@ -50,15 +81,15 @@ define( [
             return false;
         },
 
-        releaseGLObjects: function ( gl ) {
-            if ( this._buffer !== undefined && this._buffer !== null ) {
-                gl.deleteBuffer( this._buffer );
+        releaseGLObjects: function () {
+            if ( this._buffer !== undefined && this._buffer !== null && this._gl !== undefined ) {
+                BufferArray.deleteGLBufferArray( this._gl, this._buffer );
             }
             this._buffer = undefined;
         },
 
         bind: function ( gl ) {
-
+            if ( !this._gl ) this.setGraphicContext( gl );
             var type = this._type;
             var buffer = this._buffer;
 
@@ -96,7 +127,7 @@ define( [
             this._elements = elements;
             this._dirty = true;
         }
-    };
+    } );
 
     BufferArray.create = function ( type, elements, itemSize ) {
         Notify.log( 'BufferArray.create is deprecated, use new BufferArray with same arguments instead' );

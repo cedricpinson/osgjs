@@ -212,10 +212,16 @@ define( [
         getShaderGeneratorName: function () {
             return this._shaderGeneratorName;
         },
-        releaseGLObjects: function ( state ) {
-            // TODO: We should release Program/Shader attributes too
+        releaseGLObjects: function () {
             for ( var i = 0, j = this.textureAttributeMapList.length; i < j; i++ ) {
-                this.getTextureAttribute( i, 'Texture' ).releaseGLObjects( state );
+                this.getTextureAttribute( i, 'Texture' ).releaseGLObjects();
+            }
+            var list = this.getAttributeList();
+            for ( i = 0, j = list.length; i < j; i++ ) {
+                // Remove only if we have releaseGLObject method. 
+                if ( list[ i ]._object.releaseGLObjects ) {
+                    list[ i ]._object.releaseGLObjects();
+                }
             }
         },
         _getUniformMap: function () {

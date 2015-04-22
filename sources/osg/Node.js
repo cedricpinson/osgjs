@@ -333,7 +333,7 @@ define( [
             return this._numChildrenWithCullingDisabled;
         },
 
-        releaseGLObjects: function ( /*gl*/) {
+        releaseGLObjects: function () {
             if ( this.stateset !== undefined ) this.stateset.releaseGLObjects();
         }
 

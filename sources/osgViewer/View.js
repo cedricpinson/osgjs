@@ -1,15 +1,19 @@
 define( [
     'osg/BlendFunc',
+    'osg/BufferArray',
     'osg/Camera',
     'osg/CullFace',
     'osg/Depth',
     'osg/FrameStamp',
+    'osg/FrameBufferObject',
     'osg/Light',
     'osg/Material',
     'osg/Matrix',
     'osg/Node',
     'osg/Options',
     'osg/Texture',
+    'osg/Program',
+    'osg/Shader',
     'osg/Viewport',
     'osg/WebGLCaps',
 
@@ -21,16 +25,20 @@ define( [
 
 ], function (
     BlendFunc,
+    BufferArray,
     Camera,
     CullFace,
     Depth,
     FrameStamp,
+    FrameBufferObject,
     Light,
     Material,
     Matrix,
     Node,
     Options,
     Texture,
+    Program,
+    Shader,
     Viewport,
     WebGLCaps,
 
@@ -271,10 +279,15 @@ define( [
             }
         },
 
-        // CP: I guess it should move into Scene in something like an ImagePager things ?
+        // In OSG this call is done in SceneView
         flushDeletedGLObjects: function ( /*currentTime,*/ availableTime ) {
             // Flush all deleted OpenGL objects within the specified availableTime
-            this.getCamera().getRenderer().getState().getTextureManager().flushDeletedTextureObjects( this.getGraphicContext(), availableTime );
+            var gl = this.getGraphicContext();
+            availableTime = BufferArray.flushDeletedGLBufferArrays( gl, availableTime );
+            availableTime = Texture.getTextureManager( gl ).flushDeletedTextureObjects( gl, availableTime );
+            availableTime = Program.flushDeletedGLPrograms( gl, availableTime );
+            availableTime = Shader.flushDeletedGLShaders( gl, availableTime );
+            availableTime = FrameBufferObject.flushDeletedGLFrameBuffers( gl, availableTime );
         }
 
     };

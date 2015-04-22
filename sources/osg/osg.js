@@ -21,6 +21,7 @@ define( [
     'osg/FrameBufferObject',
     'osg/FrameStamp',
     'osg/Geometry',
+    'osg/GLObject',
     'osg/Image',
     'osg/ImageStream',
     'osg/KdTree',
@@ -94,6 +95,7 @@ define( [
     FrameBufferObject,
     FrameStamp,
     Geometry,
+    GLObject,
     Image,
     ImageStream,
     KdTree,
@@ -173,6 +175,7 @@ define( [
     osg.FrameBufferObject = FrameBufferObject;
     osg.FrameStamp = FrameStamp;
     osg.Geometry = Geometry;
+    osg.GLObject = GLObject;
     osg.Image = Image;
     osg.ImageStream = ImageStream;
     osg.KdTree = KdTree;
