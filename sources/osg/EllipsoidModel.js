@@ -65,7 +65,7 @@ define( [
             var N = this._radiusEquator / Math.sqrt( 1.0 - this._eccentricitySquared * sinLatitude * sinLatitude );
 
             var cosLat = Math.cos( latitude );
-            if ( cosLat === 0) cosLat = 1;
+            if ( cosLat === 0 ) cosLat = 1;
             var height = p / cosLat - N;
             result[ 0 ] = latitude;
             result[ 1 ] = longitude;
@@ -83,7 +83,8 @@ define( [
             // Compute up vector
             return [ Math.cos( longitude ) * Math.cos( latitude ),
                 Math.sin( longitude ) * Math.cos( latitude ),
-                Math.sin( latitude ) ];
+                Math.sin( latitude )
+            ];
         },
         isWGS84: function () {
             return ( this._radiusEquator === EllipsoidModel.WGS_84_RADIUS_EQUATOR && this._radiusPolar === EllipsoidModel.WGS_84_RADIUS_POLAR );

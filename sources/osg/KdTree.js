@@ -5,7 +5,7 @@ define( [
     'osg/TriangleIndexFunctor',
     'osgUtil/TriangleIntersector',
     'osg/PrimitiveSet'
-], function( MACROUTILS, BoundingBox, Vec3, TriangleIndexFunctor, TriangleIntersector, PrimitiveSet ) {
+], function ( MACROUTILS, BoundingBox, Vec3, TriangleIndexFunctor, TriangleIntersector, PrimitiveSet ) {
 
     'use strict';
 
@@ -42,7 +42,7 @@ define( [
     // - first and second respectively represents the left and right sub children
     // We know that a node is a leaf if first is negative, in that case the range will be defined by
     // [ -first - 1, -first-1 + second ]
-    var KdNode = function( first, second ) {
+    var KdNode = function ( first, second ) {
         this._bb = new BoundingBox();
         this._first = first;
         this._second = second;
@@ -52,7 +52,7 @@ define( [
         this._nodeRayEnd = [ 0.0, 0.0, 0.0 ];
     };
 
-    var IntersectKdTree = function( vertices, nodes, triangles, intersections, start, end, nodePath ) {
+    var IntersectKdTree = function ( vertices, nodes, triangles, intersections, start, end, nodePath ) {
         this._vertices = vertices;
         this._kdNodes = nodes;
         this._triangles = triangles;
@@ -64,7 +64,7 @@ define( [
     };
 
     IntersectKdTree.prototype = {
-        init: function( intersections, start, end, nodePath ) {
+        init: function ( intersections, start, end, nodePath ) {
             var d = Vec3.sub( end, start, [ 0.0, 0.0, 0.0 ] );
             var len = Vec3.length( d );
             var invLen = 0.0;
@@ -83,13 +83,13 @@ define( [
         // If it's a leaf it does ray-triangles intersection with the triangles in the cell
         // If it's not a leaf, it descend in the tree in a recursive way as long as the ray
         // intersects the boundinbox of the nodes
-        intersect: ( function() {
+        intersect: ( function () {
 
             var v0 = [ 0.0, 0.0, 0.0 ];
             var v1 = [ 0.0, 0.0, 0.0 ];
             var v2 = [ 0.0, 0.0, 0.0 ];
 
-            return function( node, ls, le ) {
+            return function ( node, ls, le ) {
                 var first = node._first;
                 var second = node._second;
                 var triangles = this._triangles;
@@ -146,9 +146,9 @@ define( [
         // It test if the ray intersects the node
         // If so... it clip the ray so that the start and end point of the ray are
         // snapped to the bounding box of the nodes
-        intersectAndClip: ( function() {
+        intersectAndClip: ( function () {
             var tmp = [ 0.0, 0.0, 0.0 ];
-            return function( s, e, bb ) {
+            return function ( s, e, bb ) {
                 var min = bb._min;
                 var xmin = min[ 0 ];
                 var ymin = min[ 1 ];
@@ -269,7 +269,7 @@ define( [
         } )()
     };
 
-    var BuildKdTree = function( kdTree ) {
+    var BuildKdTree = function ( kdTree ) {
         this._kdTree = kdTree;
         this._bb = new BoundingBox();
         this._primitiveIndices = null; // Uint32Array
@@ -279,7 +279,7 @@ define( [
     };
 
     BuildKdTree.prototype = {
-        build: function( options, geom ) {
+        build: function ( options, geom ) {
             var targetTris = options._targetNumTrianglesPerLeaf;
             var vertexAttrib = geom.getVertexAttributeList().Vertex;
             if ( !vertexAttrib )
@@ -326,7 +326,7 @@ define( [
         // The function first gather all the triangles of the geometry
         // It then computes the centroid for each triangle and initialize
         // of triangles indices that will refer to the main triangles array
-        computeTriangles: function( geom ) {
+        computeTriangles: function ( geom ) {
             var kdTree = this._kdTree;
 
             var totalLenArray = 0;
@@ -344,7 +344,7 @@ define( [
             }
             var indices = new MACROUTILS.Uint32Array( totalLenArray );
             var next = 0;
-            var cb = function( i1, i2, i3 ) {
+            var cb = function ( i1, i2, i3 ) {
                 if ( i1 === i2 || i1 === i3 || i2 === i3 )
                     return;
                 indices[ next ] = i1;
@@ -406,7 +406,7 @@ define( [
                 primitives[ j ] = j;
             }
         },
-        computeDivisions: function( options ) {
+        computeDivisions: function ( options ) {
             this._stackLength = options._maxNumLevels;
             var max = this._bb._max;
             var min = this._bb._min;
@@ -427,7 +427,7 @@ define( [
         // and it ends here
         // If it's a node, then it puts the splitting axis position on the median population
         // On the same time it reorder the triangle index array
-        divide: function( options, bb, nodeIndex, level ) {
+        divide: function ( options, bb, nodeIndex, level ) {
             var kdTree = this._kdTree;
             var primitives = this._primitiveIndices;
             var nodes = kdTree.getNodes();
@@ -485,7 +485,7 @@ define( [
             }
 
             if ( left === right ) {
-                if ( centers[ primitives[ left ] * 3 + axis ] <= mid )++left;
+                if ( centers[ primitives[ left ] * 3 + axis ] <= mid ) ++left;
                 else --right;
             }
 
@@ -532,7 +532,7 @@ define( [
         },
         // It computes the bounding box of the node so that the box contains all the triangles
         // of the cell
-        computeNodeBox: function( node, istart, iend ) {
+        computeNodeBox: function ( node, istart, iend ) {
             var minx = Infinity,
                 miny = Infinity,
                 minz = Infinity,
@@ -581,37 +581,37 @@ define( [
         }
     };
 
-    var KdTree = function() {
+    var KdTree = function () {
         this._vertices = null;
         this._kdNodes = [];
         this._triangles = null; // Float32Array
     };
 
     KdTree.prototype = MACROUTILS.objectLibraryClass( {
-        getVertices: function() {
+        getVertices: function () {
             return this._vertices;
         },
-        setVertices: function( vertices ) {
+        setVertices: function ( vertices ) {
             this._vertices = vertices;
         },
-        getNodes: function() {
+        getNodes: function () {
             return this._kdNodes;
         },
-        getTriangles: function() {
+        getTriangles: function () {
             return this._triangles;
         },
-        setTriangles: function( triangles ) {
+        setTriangles: function ( triangles ) {
             this._triangles = triangles;
         },
-        addNode: function( node ) {
+        addNode: function ( node ) {
             this._kdNodes.push( node );
             return this._kdNodes.length - 1;
         },
-        build: function( options, geom ) {
+        build: function ( options, geom ) {
             var buildTree = new BuildKdTree( this );
             return buildTree.build( options, geom );
         },
-        intersect: function( start, end, intersections, nodePath ) {
+        intersect: function ( start, end, intersections, nodePath ) {
             if ( this._kdNodes.length === 0 ) {
                 return false;
             }

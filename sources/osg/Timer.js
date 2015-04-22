@@ -1,5 +1,4 @@
-define( [
-], function() {
+define( [], function () {
 
     // user performance if available or fallback
 
@@ -12,8 +11,8 @@ define( [
         }
 
         var fn = window.performance.now || window.performance.mozNow || window.performance.msNow || window.performance.oNow || window.performance.webkitNow ||
-                function () {
-                    return Date.now();
+            function () {
+                return Date.now();
             };
         return function () {
             return fn.apply( window.performance, arguments );
@@ -21,13 +20,12 @@ define( [
     } )();
 
 
-    var Timer = function() {
-    };
+    var Timer = function () {};
 
-    Timer.instance = function() {
+    Timer.instance = function () {
 
         if ( !Timer._instance )
-            Timer._instance = new Timer ();
+            Timer._instance = new Timer();
 
         return Timer._instance;
     };
@@ -35,16 +33,16 @@ define( [
     Timer.prototype = {
 
         // delta in seconds
-        deltaS: function( t0, t1 ) {
-            return (t1-t0)/1000.0;
+        deltaS: function ( t0, t1 ) {
+            return ( t1 - t0 ) / 1000.0;
         },
 
         // delta in milliseconds
-        deltaM: function( t0, t1 ) {
-            return t1-t0;
+        deltaM: function ( t0, t1 ) {
+            return t1 - t0;
         },
 
-        tick: function() {
+        tick: function () {
             return now();
         }
 
@@ -54,4 +52,4 @@ define( [
 
     return Timer;
 
-});
+} );

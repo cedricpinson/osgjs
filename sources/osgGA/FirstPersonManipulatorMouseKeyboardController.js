@@ -34,10 +34,10 @@ define( [], function () {
             manipulator.getLookPositionInterpolator().set( pos[ 0 ], pos[ 1 ] );
             this.pushButton();
         },
-        mouseup: function ( /*ev */ ) {
+        mouseup: function ( /*ev */) {
             this.releaseButton();
         },
-        mouseout: function ( /*ev */ ) {
+        mouseout: function ( /*ev */) {
             this.releaseButton();
         },
         mousemove: function ( ev ) {

@@ -20,8 +20,8 @@ define( [
             return this._status === ImageStream.PLAYING; // video is dirty if playing
         },
 
-        setImage: function( video ) {
-            Image.prototype.setImage.call(this, video);
+        setImage: function ( video ) {
+            Image.prototype.setImage.call( this, video );
 
             this._status = ImageStream.STOP;
 

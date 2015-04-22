@@ -93,15 +93,15 @@ define( [
             }
             ev.preventDefault();
         },
-        mouseup: function ( /*ev */ ) {
+        mouseup: function ( /*ev */) {
             this.releaseButton();
             this.setMode( undefined );
         },
-        mouseout: function ( /*ev */ ) {
+        mouseout: function ( /*ev */) {
             this.releaseButton();
             this.setMode( undefined );
         },
-        mousewheel: function ( ev, intDelta /*, deltaX, deltaY */) {
+        mousewheel: function ( ev, intDelta /*, deltaX, deltaY */ ) {
             var manipulator = this._manipulator;
             ev.preventDefault();
             var zoomTarget = manipulator.getZoomInterpolator().getTarget()[ 0 ] - intDelta;

@@ -47,7 +47,7 @@ define( [
         var beginTime = Timer.instance().tick();
         var deleteList = Shader._sDeletedGLShaderCache.get( gl );
         var numShaders = deleteList.length;
-        for ( var i = numShaders -1; i >= 0 && elapsedTime < availableTime; i-- ) {
+        for ( var i = numShaders - 1; i >= 0 && elapsedTime < availableTime; i-- ) {
             gl.deleteShader( deleteList[ i ] );
             deleteList.splice( i, 1 );
             elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );

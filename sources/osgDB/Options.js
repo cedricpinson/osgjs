@@ -1,5 +1,4 @@
-define( [
-], function( ) {
+define( [], function () {
 
     var defaultOptions = {
 
@@ -28,4 +27,4 @@ define( [
 
     return defaultOptions;
 
-});
+} );

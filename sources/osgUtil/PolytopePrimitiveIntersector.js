@@ -24,7 +24,7 @@ define( [
             if ( distance > this._maxDistance ) this._maxDistance = distance;
             if ( this._numPoints === this._maxNumIntesections ) break;
         }
-        Vec3.mult( this._center, 1/this._numPoints, this._center );
+        Vec3.mult( this._center, 1 / this._numPoints, this._center );
         this._distance = referencePlane[ 0 ] * this._center[ 0 ] + referencePlane[ 1 ] * this._center[ 1 ] + referencePlane[ 2 ] * this._center[ 2 ] + referencePlane[ 3 ];
         this.nodePath = nodePath;
     };
@@ -65,8 +65,7 @@ define( [
             }
         },
 
-        setDimensionMask: function ( mask )
-        {
+        setDimensionMask: function ( mask ) {
             this._dimensionMask = mask;
         },
 
@@ -380,12 +379,12 @@ define( [
                 if ( this._lines.length > 0 ) return this._lines; // Polytope lines already calculated
                 var selectorMask = 0x1;
                 for ( var i = 0, j = this._planes.length; i < j; i++, selectorMask <<= 1 ) {
-                    Vec3.copy( this.getNormal( this._planes[ i ] ) ,normal1 );
+                    Vec3.copy( this.getNormal( this._planes[ i ] ), normal1 );
                     Vec3.mult( normal1, -this._planes[ i ][ 3 ], point1 ); // canonical point on plane[ i ]
                     var subSelectorMask = ( selectorMask << 1 );
                     for ( var jt = i + 1, k = this._planes.length; jt < k; ++jt, subSelectorMask <<= 1 ) {
-                        Vec3.copy( this.getNormal( this._planes[ jt ] ) , normal2 );
-                        if ( Math.abs( Vec3.dot( normal1, normal2 ) ) >  ( 1.0 - epsilon ) ) continue;
+                        Vec3.copy( this.getNormal( this._planes[ jt ] ), normal2 );
+                        if ( Math.abs( Vec3.dot( normal1, normal2 ) ) > ( 1.0 - epsilon ) ) continue;
                         Vec3.cross( normal1, normal2, lineDirection );
                         Vec3.cross( lineDirection, normal1, searchDirection );
                         //-plane2.distance(point1)/(searchDirection*normal2);

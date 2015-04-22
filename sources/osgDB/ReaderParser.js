@@ -44,7 +44,7 @@ define( [
 
     ReaderParser.parseSceneGraph = function ( node, options ) {
         if ( node.Version !== undefined && node.Version > 0 ) {
-            MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraph');
+            MACROUTILS.time( 'osgjs.metric:ReaderParser.parseSceneGraph' );
 
             var getPropertyValue = function ( o ) {
                 var props = window.Object.keys( o );
@@ -67,15 +67,15 @@ define( [
                 var opt = MACROUTILS.objectMix( MACROUTILS.objectMix( {}, ReaderParser.registry().getOptions() ), options || {} );
                 input.setOptions( opt );
                 var object = input.readObject();
-                MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraph');
+                MACROUTILS.timeEnd( 'osgjs.metric:ReaderParser.parseSceneGraph' );
                 return object;
             } else {
                 Notify.log( 'can\'t parse scenegraph ' + node );
             }
         } else {
-            MACROUTILS.time('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
+            MACROUTILS.time( 'osgjs.metric:ReaderParser.parseSceneGraphDeprecated' );
             var nodeOld = ReaderParser.parseSceneGraphDeprecated( node );
-            MACROUTILS.timeEnd('osgjs.metric:ReaderParser.parseSceneGraphDeprecated');
+            MACROUTILS.timeEnd( 'osgjs.metric:ReaderParser.parseSceneGraphDeprecated' );
             return nodeOld;
         }
         return undefined;
@@ -114,19 +114,19 @@ define( [
         };
 
         var setTexture = function ( osgjs, json ) {
-            var magFilter = json.MagFilter || json['mag_filter'] || undefined;
+            var magFilter = json.MagFilter || json[ 'mag_filter' ] || undefined;
             if ( magFilter ) {
                 osgjs.setMagFilter( magFilter );
             }
-            var minFilter = json.MinFilter || json['min_filter'] || undefined;
+            var minFilter = json.MinFilter || json[ 'min_filter' ] || undefined;
             if ( minFilter ) {
                 osgjs.setMinFilter( minFilter );
             }
-            var wrapT = json.WrapT || json['wrap_t'] || undefined;
+            var wrapT = json.WrapT || json[ 'wrap_t' ] || undefined;
             if ( wrapT ) {
                 osgjs.setWrapT( wrapT );
             }
-            var wrapS = json.WrapS || json['wrap_s'] || undefined;
+            var wrapS = json.WrapS || json[ 'wrap_s' ] || undefined;
             if ( wrapS ) {
                 osgjs.setWrapS( wrapS );
             }
@@ -165,7 +165,7 @@ define( [
 
             var material = getFieldBackwardCompatible( 'Material', json );
             if ( material ) {
-                var Material = require(  'osg/Material' );
+                var Material = require( 'osg/Material' );
                 var newmaterial = new Material();
                 setMaterial( newmaterial, material );
                 osgjs.setAttributeAndModes( newmaterial );

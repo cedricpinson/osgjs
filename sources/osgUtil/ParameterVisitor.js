@@ -261,8 +261,10 @@ define( [
             var r = str.match( p );
             var list = map;
 
-            var createGetter = function( value ) {
-                return function() { return value; };
+            var createGetter = function ( value ) {
+                return function () {
+                    return value;
+                };
             };
 
             if ( r !== null ) {

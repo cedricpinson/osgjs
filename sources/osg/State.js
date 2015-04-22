@@ -269,11 +269,11 @@ define( [
             this.popStateSet();
         },
 
-        getStateSetStackHash: function() {
+        getStateSetStackHash: function () {
             var values = this.stateSets.values();
             var sum = 0;
             for ( var i = 0, l = values.length; i < l; i++ )
-                sum += values[i].getInstanceID();
+                sum += values[ i ].getInstanceID();
             return sum;
         },
 
@@ -650,7 +650,7 @@ define( [
             var program = this.attributeMap.Program.lastApplied;
 
             if ( !program._uniformsCache.ArrayColorEnabled ||
-                 !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
+                !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
 
 
             var gl = this.getGraphicContext();
@@ -663,12 +663,12 @@ define( [
 
 
             // check per program
-            var previousColorAttrib = this._previousColorAttribPair[program.getInstanceID()];
+            var previousColorAttrib = this._previousColorAttribPair[ program.getInstanceID() ];
 
             // no change with the same program -> exit
             if ( previousColorAttrib === hasColorAttrib ) return;
 
-            this._previousColorAttribPair[program.getInstanceID()] = hasColorAttrib;
+            this._previousColorAttribPair[ program.getInstanceID() ] = hasColorAttrib;
 
             // update uniform
             var uniform = this.uniforms.ArrayColorEnabled.globalDefault;

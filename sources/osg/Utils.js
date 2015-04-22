@@ -16,7 +16,7 @@ define( [
     };
 
     Utils.isArray = function ( obj ) {
-        Notify.log('isArray is deprecated, use instead Array.isArray' );
+        Notify.log( 'isArray is deprecated, use instead Array.isArray' );
         return Array.isArray( obj );
     };
 
@@ -52,7 +52,8 @@ define( [
         };
 
         // copy reference to target object
-        var target = arguments[ 0 ] || {}, i = 1,
+        var target = arguments[ 0 ] || {},
+            i = 1,
             length = arguments.length,
             deep = false,
             options, name, src, copy;
@@ -119,7 +120,7 @@ define( [
         }
         return obj;
     };
-    Utils.objectInehrit = function( ) {
+    Utils.objectInehrit = function () {
         console.warn( 'please use objectInherit instead of objectInehrit' );
     };
 
@@ -159,7 +160,9 @@ define( [
     Utils.setTypeID = function ( classObject ) {
         var className = classObject.prototype.className();
         var typeID = Utils.objectType.generate( className );
-        var getTypeID = function() { return typeID; };
+        var getTypeID = function () {
+            return typeID;
+        };
         classObject.typeID = classObject.prototype.typeID = typeID;
         classObject.getTypeID = classObject.prototype.getTypeID = getTypeID;
     };
@@ -195,9 +198,9 @@ define( [
             if ( times[ name ] === undefined )
                 return;
 
-            var duration = Timer.instance().deltaM( times[name], Timer.instance().tick() );
+            var duration = Timer.instance().deltaM( times[ name ], Timer.instance().tick() );
 
-            Notify.debug( name + ': ' + duration + 'ms');
+            Notify.debug( name + ': ' + duration + 'ms' );
             times[ name ] = undefined;
 
         };

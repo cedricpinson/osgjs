@@ -149,7 +149,7 @@ define( [
             this.addLoadedDataToSceneGraph( frameStamp, 0.005 );
         },
 
-        executeProgressCallback: function() {
+        executeProgressCallback: function () {
             if ( this._pendingRequests.length > 0 || this._pendingNodes.length > 0 ) {
                 this._progressCallback( this._pendingRequests.length + this._downloadingRequestsNumber, this._pendingNodes.length );
                 this._lastCB = false;
@@ -185,10 +185,10 @@ define( [
             var elapsedTime = 0.0;
             var beginTime = Timer.instance().tick();
             this._pendingNodes.sort( function ( r1, r2 ) {
-                    return r2._timeStamp - r1._timeStamp;
+                return r2._timeStamp - r1._timeStamp;
             } );
 
-            for (var i = 0; i< this._pendingNodes.length; i++ ) {
+            for ( var i = 0; i < this._pendingNodes.length; i++ ) {
                 if ( elapsedTime > availableTime ) return 0.0;
 
                 var request = this._pendingNodes.shift();
@@ -245,7 +245,7 @@ define( [
             return dbrequest;
         },
 
-        takeRequests: function ( ) {
+        takeRequests: function () {
             if ( this._pendingRequests.length ) {
                 var numRequests = Math.min( this._maxRequestsPerFrame, this._pendingRequests.length );
                 this._pendingRequests.sort( function ( r1, r2 ) {
@@ -379,7 +379,7 @@ define( [
                     numToPrune--;
                 }
                 // Add to the remove list all the childs deleted
-                for ( i = 0; i < removedChildren.length; i++ ){
+                for ( i = 0; i < removedChildren.length; i++ ) {
                     that._childrenToRemoveList.add( removedChildren[ i ] );
                 }
                 expiredPagedLODVisitor._childrenList.length = 0;

@@ -32,7 +32,7 @@ define( [
 
         // database pager are not implemented yet here
         updateSceneGraph: function ( updateVisitor ) {
-            if ( this._databasePager)
+            if ( this._databasePager )
                 this._databasePager.updateSceneGraph( updateVisitor.getFrameStamp() );
             if ( this._sceneData )
                 this._sceneData.accept( updateVisitor );

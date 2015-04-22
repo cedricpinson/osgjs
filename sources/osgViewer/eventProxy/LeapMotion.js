@@ -13,7 +13,7 @@ define( [
         init: function ( args ) {
 
             // add condition if no leap in global space
-            if ( typeof Leap === 'undefined' || !Leap.Controller)
+            if ( typeof Leap === 'undefined' || !Leap.Controller )
                 return;
 
             var self = this;

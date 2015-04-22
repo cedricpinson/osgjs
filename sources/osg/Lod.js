@@ -61,20 +61,15 @@ define( [
         },
 
         computeBound: function ( bsphere ) {
-            if ( this._centerMode === Lod.USER_DEFINED_CENTER && this._radius >= 0.0)
-            {
-                bsphere.set( this._userDefinedCenter, this._radius);
+            if ( this._centerMode === Lod.USER_DEFINED_CENTER && this._radius >= 0.0 ) {
+                bsphere.set( this._userDefinedCenter, this._radius );
                 return bsphere;
-            }
-            else if ( this._centerMode === Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED && this._radius >= 0.0)
-            {
-                bsphere.set( this._userDefinedCenter, this._radius);
+            } else if ( this._centerMode === Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED && this._radius >= 0.0 ) {
+                bsphere.set( this._userDefinedCenter, this._radius );
                 var bs = new BoundingSphere();
                 bsphere.expandByBoundingSphere( Node.prototype.computeBound.call( this, bs ) );
                 return bsphere;
-            }
-            else
-            {
+            } else {
                 Node.prototype.computeBound.call( this, bsphere );
                 return bsphere;
             }

@@ -2,7 +2,7 @@ define( [
     'osg/Utils'
 ], function ( MACROUTILS ) {
 
-        /**
+    /**
      *  Object class
      *  @class Object
      */

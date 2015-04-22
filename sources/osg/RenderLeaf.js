@@ -178,7 +178,7 @@ define( [
             };
         } )(),
 
-        render: (function() {
+        render: ( function () {
             var previousHash;
 
             return function ( state, previousLeaf ) {
@@ -233,7 +233,7 @@ define( [
                 this.drawGeometry( state );
 
             };
-        })()
+        } )()
 
     };
 

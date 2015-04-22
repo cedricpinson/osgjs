@@ -58,7 +58,7 @@ define( [
         var beginTime = Timer.instance().tick();
         var deleteList = BufferArray._sDeletedGLBufferArrayCache.get( gl );
         var numBuffers = deleteList.length;
-        for ( var i = numBuffers -1; i >= 0 && elapsedTime < availableTime; i-- ) {
+        for ( var i = numBuffers - 1; i >= 0 && elapsedTime < availableTime; i-- ) {
             gl.deleteBuffer( deleteList[ i ] );
             deleteList.splice( i, 1 );
             elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );

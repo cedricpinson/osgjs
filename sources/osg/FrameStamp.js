@@ -1,5 +1,4 @@
-define( [
-], function () {
+define( [], function () {
 
     var FrameStamp = function () {
         var frame = 0;

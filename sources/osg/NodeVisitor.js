@@ -109,8 +109,7 @@ define( [], function () {
         getVisitorType: function () {
             return this.visitorType;
         },
-        setDatabaseRequestHandler: function ( dbpager )
-        {
+        setDatabaseRequestHandler: function ( dbpager ) {
             this._databaseRequestHandler = dbpager;
         },
         getDatabaseRequestHandler: function () {

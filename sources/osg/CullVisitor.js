@@ -197,12 +197,12 @@ define( [
             CullStack.prototype.popProjectionMatrix.call( this );
         },
 
-        popCameraModelViewProjectionMatrix: function( /*camera*/ ) {
+        popCameraModelViewProjectionMatrix: function ( /*camera*/) {
             this.popModelViewMatrix();
             this.popProjectionMatrix();
         },
 
-        pushCameraModelViewProjectionMatrix: function( camera, modelview, projection ) {
+        pushCameraModelViewProjectionMatrix: function ( camera, modelview, projection ) {
             this.pushModelViewMatrix( modelview );
             this.pushProjectionMatrix( projection );
         },
@@ -283,7 +283,7 @@ define( [
         }
 
 
-        this.pushCameraModelViewProjectionMatrix(camera, modelview, projection);
+        this.pushCameraModelViewProjectionMatrix( camera, modelview, projection );
 
         if ( camera.getViewport() ) {
             this.pushViewport( camera.getViewport() );
@@ -334,7 +334,7 @@ define( [
             }
         }
 
-        this.popCameraModelViewProjectionMatrix(camera);
+        this.popCameraModelViewProjectionMatrix( camera );
 
         if ( camera.getViewport() ) {
             this.popViewport();

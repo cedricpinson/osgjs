@@ -28,8 +28,8 @@ define( [
             return undefined;
         }
 
-        var createPromiseCallback = function( animation ) {
-            return function( chan ) {
+        var createPromiseCallback = function ( animation ) {
+            return function ( chan ) {
                 if ( chan ) {
                     animation.getChannels().push( chan );
                 }

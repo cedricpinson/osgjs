@@ -95,10 +95,10 @@ define( [
     Texture.HALF_FLOAT_OES = Texture.HALF_FLOAT = 0x8D61;
 
     Texture._sTextureManager = new Map();
-    
+
     // Getter for textureManager 
     Texture.getTextureManager = function ( gl ) {
-        if ( !Texture._sTextureManager.has( gl ) ) 
+        if ( !Texture._sTextureManager.has( gl ) )
             Texture._sTextureManager.set( gl, new TextureManager() );
         return Texture._sTextureManager.get( gl );
     };
@@ -226,7 +226,7 @@ define( [
             return this._textureHeight;
         },
 
-        releaseGLObjects: function ( ) {
+        releaseGLObjects: function () {
             if ( this._textureObject !== undefined && this._textureObject !== null && this._gl !== undefined ) {
                 Texture.getTextureManager( this._gl ).releaseTextureObject( this._textureObject );
             }
@@ -484,27 +484,27 @@ define( [
 
         },
 
-        applyImage: function(gl, image) {
+        applyImage: function ( gl, image ) {
 
             if ( image.isTypedArray() ) {
                 this.applyTexImage2D( gl,
-                                      this._textureTarget,
-                                      0,
-                                      this._internalFormat,
-                                      this._textureWidth,
-                                      this._textureHeight,
-                                      0,
-                                      this._internalFormat,
-                                      this._type,
-                                      this._image.getImage() );
+                    this._textureTarget,
+                    0,
+                    this._internalFormat,
+                    this._textureWidth,
+                    this._textureHeight,
+                    0,
+                    this._internalFormat,
+                    this._type,
+                    this._image.getImage() );
             } else {
                 this.applyTexImage2D( gl,
-                                      this._textureTarget,
-                                      0,
-                                      this._internalFormat,
-                                      this._internalFormat,
-                                      this._type,
-                                      image.getImage() );
+                    this._textureTarget,
+                    0,
+                    this._internalFormat,
+                    this._internalFormat,
+                    this._type,
+                    image.getImage() );
             }
             image.setDirty( false );
 
@@ -530,7 +530,7 @@ define( [
 
                 // image update like video
                 if ( this._image !== undefined && this._image.isDirty() ) {
-                    this.applyImage(gl, this._image);
+                    this.applyImage( gl, this._image );
                 }
 
             } else if ( this._textureNull ) {

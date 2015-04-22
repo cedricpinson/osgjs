@@ -1,4 +1,4 @@
-define( [], function ( ) {
+define( [], function () {
 
     /**
      *  Target keep internal data of element to animate, and some function to merge them

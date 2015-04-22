@@ -1,4 +1,4 @@
-define( ['osg/Quat'], function (Quat) {
+define( [ 'osg/Quat' ], function ( Quat ) {
 
     var FirstPersonManipulatorDeviceOrientationController = function ( manipulator ) {
         this._manipulator = manipulator;
@@ -18,41 +18,41 @@ define( ['osg/Quat'], function (Quat) {
             // around the Z axis counterclockwise and the DeviceOrientation contains this rotation
             // To compensate this, we apply a rotation of the same angle in the opposite way
 
-            computeQuaternion(this._quat, deviceOrientation, screenOrientation);
-            this._manipulator.setRotationBaseFromQuat(this._quat);
+            computeQuaternion( this._quat, deviceOrientation, screenOrientation );
+            this._manipulator.setRotationBaseFromQuat( this._quat );
         },
 
     };
-    var computeQuaternion = (function () {
+    var computeQuaternion = ( function () {
 
         var screenTransform = Quat.create();
-        var worldTransform = [-Math.sqrt( 0.5 ), 0, 0, Math.sqrt( 0.5 ) ]; // - PI/2 around the x-axis
+        var worldTransform = [ -Math.sqrt( 0.5 ), 0, 0, Math.sqrt( 0.5 ) ]; // - PI/2 around the x-axis
         var minusHalfAngle = 0;
 
-        return function (quat, deviceOrientation, screenOrientation ) {
+        return function ( quat, deviceOrientation, screenOrientation ) {
 
             var alpha = deviceOrientation.alpha * degtorad;
             var beta = deviceOrientation.beta * degtorad;
             var gamma = deviceOrientation.gamma * degtorad;
             var screenAngle = screenOrientation * degtorad;
 
-            setQuatFromEuler(quat, beta, alpha, -gamma, 'YXZ');
+            setQuatFromEuler( quat, beta, alpha, -gamma, 'YXZ' );
 
             minusHalfAngle = -screenAngle / 2.0;
-            screenTransform[1] = Math.sin( minusHalfAngle );
-            screenTransform[3] = Math.cos( minusHalfAngle );
+            screenTransform[ 1 ] = Math.sin( minusHalfAngle );
+            screenTransform[ 3 ] = Math.cos( minusHalfAngle );
 
-            Quat.mult(quat, screenTransform, quat );
-            Quat.mult(quat, worldTransform, quat );
+            Quat.mult( quat, screenTransform, quat );
+            Quat.mult( quat, worldTransform, quat );
 
-            var yTemp = quat[1];
-            quat[1] = -quat[2];
-            quat[2] = yTemp;
+            var yTemp = quat[ 1 ];
+            quat[ 1 ] = -quat[ 2 ];
+            quat[ 2 ] = yTemp;
 
             return quat;
         };
 
-    })();
+    } )();
 
     var setQuatFromEuler = function ( quat, x, y, z, order ) {
 
@@ -69,45 +69,45 @@ define( ['osg/Quat'], function (Quat) {
 
         if ( order === 'XYZ' ) {
 
-            quat[0] = s1 * c2 * c3 + c1 * s2 * s3;
-            quat[1] = c1 * s2 * c3 - s1 * c2 * s3;
-            quat[2] = c1 * c2 * s3 + s1 * s2 * c3;
-            quat[3] = c1 * c2 * c3 - s1 * s2 * s3;
+            quat[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
+            quat[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
+            quat[ 2 ] = c1 * c2 * s3 + s1 * s2 * c3;
+            quat[ 3 ] = c1 * c2 * c3 - s1 * s2 * s3;
 
         } else if ( order === 'YXZ' ) {
 
-            quat[0] = s1 * c2 * c3 + c1 * s2 * s3;
-            quat[1] = c1 * s2 * c3 - s1 * c2 * s3;
-            quat[2] = c1 * c2 * s3 - s1 * s2 * c3;
-            quat[3] = c1 * c2 * c3 + s1 * s2 * s3;
+            quat[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
+            quat[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
+            quat[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
+            quat[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
 
         } else if ( order === 'ZXY' ) {
 
-            quat[0] = s1 * c2 * c3 - c1 * s2 * s3;
-            quat[1] = c1 * s2 * c3 + s1 * c2 * s3;
-            quat[2] = c1 * c2 * s3 + s1 * s2 * c3;
-            quat[3] = c1 * c2 * c3 - s1 * s2 * s3;
+            quat[ 0 ] = s1 * c2 * c3 - c1 * s2 * s3;
+            quat[ 1 ] = c1 * s2 * c3 + s1 * c2 * s3;
+            quat[ 2 ] = c1 * c2 * s3 + s1 * s2 * c3;
+            quat[ 3 ] = c1 * c2 * c3 - s1 * s2 * s3;
 
         } else if ( order === 'ZYX' ) {
 
-            quat[0] = s1 * c2 * c3 - c1 * s2 * s3;
-            quat[1] = c1 * s2 * c3 + s1 * c2 * s3;
-            quat[2] = c1 * c2 * s3 - s1 * s2 * c3;
-            quat[3] = c1 * c2 * c3 + s1 * s2 * s3;
+            quat[ 0 ] = s1 * c2 * c3 - c1 * s2 * s3;
+            quat[ 1 ] = c1 * s2 * c3 + s1 * c2 * s3;
+            quat[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
+            quat[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
 
         } else if ( order === 'YZX' ) {
 
-            quat[0] = s1 * c2 * c3 + c1 * s2 * s3;
-            quat[1] = c1 * s2 * c3 + s1 * c2 * s3;
-            quat[2] = c1 * c2 * s3 - s1 * s2 * c3;
-            quat[3] = c1 * c2 * c3 - s1 * s2 * s3;
+            quat[ 0 ] = s1 * c2 * c3 + c1 * s2 * s3;
+            quat[ 1 ] = c1 * s2 * c3 + s1 * c2 * s3;
+            quat[ 2 ] = c1 * c2 * s3 - s1 * s2 * c3;
+            quat[ 3 ] = c1 * c2 * c3 - s1 * s2 * s3;
 
         } else if ( order === 'XZY' ) {
 
-            quat[0] = s1 * c2 * c3 - c1 * s2 * s3;
-            quat[1] = c1 * s2 * c3 - s1 * c2 * s3;
-            quat[2] = c1 * c2 * s3 + s1 * s2 * c3;
-            quat[3] = c1 * c2 * c3 + s1 * s2 * s3;
+            quat[ 0 ] = s1 * c2 * c3 - c1 * s2 * s3;
+            quat[ 1 ] = c1 * s2 * c3 - s1 * c2 * s3;
+            quat[ 2 ] = c1 * c2 * s3 + s1 * s2 * c3;
+            quat[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
 
         }
     };

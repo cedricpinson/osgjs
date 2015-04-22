@@ -56,7 +56,7 @@ define( [
         var beginTime = Timer.instance().tick();
         var deleteList = Program._sDeletedGLProgramCache.get( gl );
         var numPrograms = deleteList.length;
-        for ( var i = numPrograms -1; i >= 0 && elapsedTime < availableTime; i-- ) {
+        for ( var i = numPrograms - 1; i >= 0 && elapsedTime < availableTime; i-- ) {
             gl.deleteProgram( deleteList[ i ] );
             deleteList.splice( i, 1 );
             elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
@@ -95,13 +95,13 @@ define( [
             return this._program;
         },
 
-        releaseGLObjects: function ( ) {
+        releaseGLObjects: function () {
             // Call to releaseGLOBjects on shaders
             if ( this._vertex !== undefined ) this._vertex.releaseGLObjects();
             if ( this._fragment !== undefined ) this._fragment.releaseGLObjects();
             if ( this._program === null ) return;
             if ( this._gl !== undefined ) {
-                    Program.deleteGLProgram( this._gl, this._program );
+                Program.deleteGLProgram( this._gl, this._program );
             }
             this._program = undefined;
         },

@@ -28,11 +28,11 @@ define( [
             this._dirty = true;
         },
 
-        isDirty: function() {
+        isDirty: function () {
             return this._dirty;
         },
 
-        setDirty: function( bool ) {
+        setDirty: function ( bool ) {
             this._dirty = bool;
         },
 

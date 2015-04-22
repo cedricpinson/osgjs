@@ -46,7 +46,7 @@ define( [
         var beginTime = Timer.instance().tick();
         var deleteList = FrameBufferObject._sDeletedGLFrameBufferCache.get( gl );
         var numBuffers = deleteList.length;
-        for ( var i = numBuffers -1; i >= 0 && elapsedTime < availableTime; i-- ) {
+        for ( var i = numBuffers - 1; i >= 0 && elapsedTime < availableTime; i-- ) {
             gl.deleteFrameBuffer( deleteList[ i ] );
             deleteList.splice( i, 1 );
             elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );

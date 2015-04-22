@@ -10,20 +10,20 @@ define( [], function () {
     };
 
     Stack.prototype = {
-        empty: function() {
+        empty: function () {
             return this._values.length === 0;
         },
-        values: function() {
+        values: function () {
             return this._values;
         },
-        back: function() {
+        back: function () {
             return this._back;
         },
-        push: function( value ) {
+        push: function ( value ) {
             this._values.push( value );
             this._back = value;
         },
-        pop: function() {
+        pop: function () {
             var value = this._values.pop();
             this._back = this._values[ this._values.length - 1 ];
             return value;
