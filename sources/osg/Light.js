@@ -305,6 +305,10 @@ define( [
             return this._ground[ 3 ] >= 0.0;
         },
 
+        // matrix is current model view, which can mean:
+        // world (node refAbsolute)
+        // world+camera (camera is refAbsolute)
+        // world+camera+camera+... (camera relative...)
         applyPositionedUniform: function ( matrix /*, state*/ ) {
 
             var uniformMap = this.getOrCreateUniforms();

@@ -185,6 +185,7 @@ define( [
         this._tmpVec = Vec3.create();
         this._tmpVecBis = Vec3.create();
         this._tmpVecTercio = Vec3.create();
+        this._tmpMatrix = Matrix.create();
         if ( settings )
             this.setShadowSettings( settings );
 
@@ -780,26 +781,49 @@ define( [
             var light = lightSource.getLight();
             var camera = this._cameraShadow;
 
+            var worldLightPos = this._worldLightPos;
+            var worldLightDir = this._worldLightDir;
+
             // make sure it's not modified outside our computations
             // camera matrix can be modified by cullvisitor afterwards...
+
             Matrix.copy( camera.getProjectionMatrix(), this._projectionMatrix );
             Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
             var projection = this._projectionMatrix;
             var view = this._viewMatrix;
 
             // inject camera world matrix.
+            // from light current world/pos and camera eye pos.
+            // inject camera world matrix.
             // from light current world/pos
+            // NEED same camera eye pos
+            var positionedAttribute = cullVisitor.getCurrentRenderBin().getPositionedAttribute();
 
-            // TODO: clever code share between light and shadow attributes
-            // try reusing light matrix uniform.
-            var matrixList = lightSource.getWorldMatrices();
-            var worldMatrix = matrixList[ 0 ]; // world
+            var lightMatrix;
+            positionedAttribute = positionedAttribute.find( function ( element ) {
+                if ( element.length > 0 && element[ 1 ] === light ) {
+                    lightMatrix = element[ 0 ];
+                    return true;
+                }
+                return false;
+            } );
+            if ( lightMatrix === undefined ) {
+                Notify.warn( 'light isnt inside children of shadowedScene Node' );
+                this._emptyCasterScene = true;
+                return;
+            }
 
-            var worldLightPos = this._worldLightPos;
+            var eyeToWorld = this._tmpMatrix;
+            Matrix.inverse( cullVisitor.getCurrentModelViewMatrix(), eyeToWorld );
 
             //  light pos & lightTarget in World Space
             if ( light.getPosition()[ 3 ] !== 0.0 && light.getSpotCutoff() < 180 ) {
+                //TODO: when spot light is camera attached?
 
+                // light matrix is in eye space. even if it's below an Absolute REF Node. (wtf)
+                Matrix.inverse( cullVisitor.getCurrentModelViewMatrix(), eyeToWorld );
+                Matrix.mult( eyeToWorld, lightMatrix, this._tmpMatrix );
+                var worldMatrix = this._tmpMatrix;
                 // same code as light spot shader
                 Matrix.transformVec3( worldMatrix, light.getPosition(), worldLightPos );
                 worldMatrix[ 12 ] = 0;
@@ -807,10 +831,8 @@ define( [
                 worldMatrix[ 14 ] = 0;
                 Matrix.inverse( worldMatrix, worldMatrix );
                 Matrix.transpose( worldMatrix, worldMatrix );
-                //////////////////////////////////////////////
 
                 // not a directionnal light, compute the world light dir
-                var worldLightDir = this._worldLightDir;
                 Vec3.copy( light.getDirection(), worldLightDir );
                 Matrix.transformVec4( worldMatrix, worldLightDir, worldLightDir );
                 Vec3.normalize( worldLightDir, worldLightDir );
@@ -818,8 +840,9 @@ define( [
                 // and compute a perspective frustum
                 this.makePerspectiveFromBoundingBox( frustumBound, light.getSpotCutoff(), worldLightPos, worldLightDir, view, projection );
             } else {
-
-                Matrix.transformVec4( worldMatrix, light.getPosition(), worldLightPos );
+                Matrix.transformVec4( lightMatrix, light.getPosition(), worldLightPos );
+                Matrix.transformVec4( eyeToWorld, worldLightPos, worldLightPos );
+                // same code as light sun shader
                 // lightpos is a light dir
                 // so we now have to normalize
                 // since the transform to world above
