@@ -20,6 +20,13 @@ define( [
 
         QUnit.test( 'KdTree', function () {
 
+            //   0-3
+            //   |\|
+            //   1-2
+            //
+            // 1 being [0, 0, 0]
+            // 3 being [1, 1, 0]
+
             var createTrianglesIndexed = function () {
                 // triangles
                 var quad = Shape.createTexturedQuadGeometry( 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1 );
@@ -31,10 +38,10 @@ define( [
                 var quad = Shape.createTexturedQuadGeometry( 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1 );
 
                 var indexes = [];
-                indexes[ 0 ] = 0;
-                indexes[ 1 ] = 1;
-                indexes[ 2 ] = 3;
-                indexes[ 3 ] = 2;
+                indexes[ 0 ] = 1;
+                indexes[ 1 ] = 0;
+                indexes[ 2 ] = 2;
+                indexes[ 3 ] = 3;
 
                 var primitive = new DrawElements( PrimitiveSet.TRIANGLE_STRIP, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
                 quad.getPrimitives()[ 0 ] = primitive;
@@ -114,21 +121,21 @@ define( [
                 var quad = new Geometry();
 
                 var vertexes = [];
-                vertexes[ 0 ] = cornerx + hx;
-                vertexes[ 1 ] = cornery + hy;
-                vertexes[ 2 ] = cornerz + hz;
+                vertexes[ 0 ] = cornerx;
+                vertexes[ 1 ] = cornery;
+                vertexes[ 2 ] = cornerz;
 
-                vertexes[ 3 ] = cornerx;
-                vertexes[ 4 ] = cornery;
-                vertexes[ 5 ] = cornerz;
+                vertexes[ 3 ] = cornerx + hx;
+                vertexes[ 4 ] = cornery + hy;
+                vertexes[ 5 ] = cornerz + hz;
 
-                vertexes[ 6 ] = cornerx + wx + hx;
-                vertexes[ 7 ] = cornery + wy + hy;
-                vertexes[ 8 ] = cornerz + wz + hz;
+                vertexes[ 6 ] = cornerx + wx;
+                vertexes[ 7 ] = cornery + wy;
+                vertexes[ 8 ] = cornerz + wz;
 
-                vertexes[ 9 ] = cornerx + wx;
-                vertexes[ 10 ] = cornery + wy;
-                vertexes[ 11 ] = cornerz + wz;
+                vertexes[ 9 ] = cornerx + wx + hx;
+                vertexes[ 10 ] = cornery + wy + hy;
+                vertexes[ 11 ] = cornerz + wz + hz;
 
                 quad.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 3 );
                 var primitive = new DrawArrays( PrimitiveSet.TRIANGLE_STRIP, 0, 4 );
@@ -225,18 +232,32 @@ define( [
             var end = [ 0.4, 0.2, 0.5 ];
 
             var hits = [];
-            kdTree.intersect( start, end, hits, [] );
+            kdTree.intersectRay( start, end, hits, [] );
             //console.log( hits )
 
-            ok( hits.length === nbPrimitives, ' Hits should be 1 and result is ' + hits.length );
+            // test ray intersection
+
+            ok( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
             var result = [ 0.4, 0.2, 0 ];
             var dir = Vec3.sub( end, start, [] );
             var found = Vec3.add( start, Vec3.mult( dir, hits[ 0 ].ratio, [] ), [] );
             mockup.near( found, result, 1e-4 );
 
             hits.length = 0;
-            kdTree.intersect( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ], hits, [] );
+            kdTree.intersectRay( [ 1.5, 0.2, -0.5 ], [ 1.5, 0.2, 0.5 ], hits, [] );
             ok( hits.length === 0, ' Hits should be 0 ' + hits.length );
+
+            // test sphere intersection
+            // sphere center in on vertex 1 (see ascii art on top of the file)
+
+            hits.length = 0;
+            kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 - 0.01, hits, [] );
+            ok( hits.length === nbPrimitives, ' Hits should be ' + nbPrimitives + ' and result is ' + hits.length );
+
+            hits.length = 0;
+            kdTree.intersectSphere( [ 0, 0, 0 ], Math.SQRT1_2 + 0.02, hits, [] );
+            var nbTriangles = nbPrimitives * 2; // the geometries are quad only
+            ok( hits.length === nbTriangles, ' Hits should be ' + nbTriangles + ' and result is ' + hits.length );
         } );
     };
 } );

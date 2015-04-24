@@ -10,6 +10,7 @@ define( [
     'osgUtil/ParameterVisitor',
     'osgUtil/PolytopeIntersector',
     'osgUtil/PolytopePrimitiveIntersector',
+    'osgUtil/SphereIntersector',
     'osgUtil/TangentSpaceGenerator',
     'osgUtil/TriangleIntersector',
     'osgUtil/WebVR',
@@ -25,6 +26,7 @@ define( [
     ParameterVisitor,
     PolytopeIntersector,
     PolytopePrimitiveIntersector,
+    SphereIntersector,
     TangentSpaceGenerator,
     TriangleIntersect,
     WebVR ) {
@@ -44,6 +46,7 @@ define( [
     osgUtil.ParameterVisitor = ParameterVisitor;
     osgUtil.PolytopeIntersector = PolytopeIntersector;
     osgUtil.PolytopePrimitiveIntersector = PolytopePrimitiveIntersector;
+    osgUtil.SphereIntersector = SphereIntersector;
     osgUtil.TangentSpaceGenerator = TangentSpaceGenerator;
     osgUtil.TriangleIntersect = TriangleIntersect;
     osgUtil.WebVR = WebVR;

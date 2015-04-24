@@ -178,13 +178,10 @@ define( [
             return Vec3.distance2( v, this.center() ) <= this.radius2();
         },
         intersects: function ( bs ) {
-            if ( !this.valid() )
+            if ( !this.valid() || !bs.valid() )
                 return false;
-            if ( !bs.valid() )
-                return false;
-            var lc = Vec3.distance2( this.center(), bs.center() );
             var r = this.radius() + bs.radius();
-            return lc <= r;
+            return Vec3.distance2( this.center(), bs.center() ) <= r * r;
         }
     };
 

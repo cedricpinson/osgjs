@@ -3,6 +3,8 @@ define( [
     'osg/TriangleIndexFunctor'
 ], function ( Vec3, TriangleIndexFunctor ) {
 
+    'use strict';
+
     var TriangleIntersection = function ( index, normal, r1, v1, r2, v2, r3, v3 ) {
         this.index = index;
         this.normal = normal;
@@ -39,9 +41,9 @@ define( [
             }
             var vertices = node.getAttributes().Vertex.getElements();
             var self = this;
-            var v1 = [ 0.0, 0.0, 0.0 ];
-            var v2 = [ 0.0, 0.0, 0.0 ];
-            var v3 = [ 0.0, 0.0, 0.0 ];
+            var v1 = Vec3.create();
+            var v2 = Vec3.create();
+            var v3 = Vec3.create();
             var cb = function ( i1, i2, i3 ) {
                 if ( i1 === i2 || i1 === i3 || i2 === i3 )
                     return;
@@ -64,12 +66,12 @@ define( [
         },
 
         intersect: ( function () {
-            var normal = [ 0.0, 0.0, 0.0 ];
-            var e2 = [ 0.0, 0.0, 0.0 ];
-            var e1 = [ 0.0, 0.0, 0.0 ];
-            var tvec = [ 0.0, 0.0, 0.0 ];
-            var pvec = [ 0.0, 0.0, 0.0 ];
-            var qvec = [ 0.0, 0.0, 0.0 ];
+            var normal = Vec3.create();
+            var e2 = Vec3.create();
+            var e1 = Vec3.create();
+            var tvec = Vec3.create();
+            var pvec = Vec3.create();
+            var qvec = Vec3.create();
             var epsilon = 1E-20;
             return function ( v0, v1, v2 ) {
                 this._index++;
@@ -114,10 +116,10 @@ define( [
                 Vec3.normalize( normal, normal );
 
                 this._intersections.push( {
-                    'ratio': r,
-                    'nodepath': this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
-                    'TriangleIntersection': new TriangleIntersection( this._index - 1, normal.slice( 0 ), r0, v0.slice( 0 ), r1, v1.slice( 0 ), r2, v2.slice( 0 ) ),
-                    'point': [ interX, interY, interZ ]
+                    ratio: r,
+                    nodepath: this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
+                    TriangleIntersection: new TriangleIntersection( this._index - 1, normal.slice( 0 ), r0, v0.slice( 0 ), r1, v1.slice( 0 ), r2, v2.slice( 0 ) ),
+                    point: [ interX, interY, interZ ]
                 } );
                 this.hit = true;
             };
