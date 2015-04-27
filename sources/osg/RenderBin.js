@@ -187,7 +187,7 @@ define( [
                 // add or set uniforms in state
                 var stateAttribute = element[ 1 ];
                 var matrix = element[ 0 ];
-                state.setGlobalDefaultValue( stateAttribute );
+                state.setGlobalDefaultAttribute( stateAttribute );
                 stateAttribute.apply( state );
                 stateAttribute.applyPositionedUniform( matrix, state );
                 state.haveAppliedAttribute( stateAttribute );
