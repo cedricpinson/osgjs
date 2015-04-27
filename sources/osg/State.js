@@ -493,21 +493,26 @@ define( [
         },
 
 
+        // this funtion must called only if stack has changed
+        // check applyTextureAttributeMapList
         _applyTextureAttributeStack: function ( gl, textureUnit, attributeStack ) {
+
             var attribute;
             if ( attributeStack.values().length === 0 ) {
                 attribute = attributeStack.globalDefault;
             } else {
                 attribute = attributeStack.back().object;
             }
-            if ( attributeStack.asChanged ) {
 
+            // if the the stack has changed but the last applied attribute is the same
+            // then we dont need to apply it again
+            if ( attributeStack.lastApplied !== attribute ) {
                 gl.activeTexture( gl.TEXTURE0 + textureUnit );
                 attribute.apply( this, textureUnit );
                 attributeStack.lastApplied = attribute;
-                attributeStack.asChanged = false;
-
             }
+
+            attributeStack.asChanged = false;
         },
 
         applyTextureAttributeMapList: function ( textureAttributesMapList ) {
@@ -527,9 +532,9 @@ define( [
                     var key = textureAttributeMapKeys[ i ];
 
                     var attributeStack = textureAttributeMap[ key ];
-                    if ( !attributeStack ) {
-                        continue;
-                    }
+
+                    // skip if not stack or not changed in stack
+                    if ( !attributeStack || !attributeStack.asChanged ) continue;
 
                     this._applyTextureAttributeStack( gl, textureUnit, attributeStack );
                     // var attribute;

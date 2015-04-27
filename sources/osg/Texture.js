@@ -96,7 +96,7 @@ define( [
 
     Texture._sTextureManager = new Map();
 
-    // Getter for textureManager 
+    // Getter for textureManager
     Texture.getTextureManager = function ( gl ) {
         if ( !Texture._sTextureManager.has( gl ) )
             Texture._sTextureManager.set( gl, new TextureManager() );
@@ -593,6 +593,8 @@ define( [
     } ) ), 'osg', 'Texture' );
 
     MACROUTILS.setTypeID( Texture );
+
+    Texture.textureNull = new Texture();
 
     Texture.createFromImage = function ( image, format ) {
         var a = new Texture();
