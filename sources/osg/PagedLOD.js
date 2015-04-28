@@ -24,6 +24,7 @@ define( [
         this._expiryFrame = 0;
         this._centerMode = Lod.USER_DEFINED_CENTER;
         this._frameNumberOfLastTraversal = 0;
+        this._databasePath = '';
     };
 
     /**
@@ -76,7 +77,9 @@ define( [
                 this._perRangeDataList[ childNo ].function = func;
             }
         },
-
+        setDatabasePath: function ( path ) {
+            this._databasePath = path;
+        },
         addChild: function ( node, min, max ) {
             Lod.prototype.addChild.call( this, node, min, max );
             this._perRangeDataList.push( new PerRangeData() );
@@ -207,12 +210,15 @@ define( [
                             if ( this._perRangeDataList[ numChildren ].loaded === false ) {
                                 this._perRangeDataList[ numChildren ].loaded = true;
                                 var dbhandler = visitor.getDatabaseRequestHandler();
-                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime(), priority );
+                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._databasePath + this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime(), priority );
                             } else {
                                 // Update timestamp of the request.
                                 if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined ) {
                                     this._perRangeDataList[ numChildren ].dbrequest._timeStamp = visitor.getFrameStamp().getSimulationTime();
                                     this._perRangeDataList[ numChildren ].dbrequest._priority = priority;
+                                } else {
+                                    // The DBPager was not accepting requests, so we need to ask for the child again.
+                                    this._perRangeDataList[ numChildren ].loaded = false;
                                 }
                             }
                         }

@@ -125,6 +125,26 @@ var main = function () {
     viewer.getDatabasePager().setProgressCallback ( function ( a,b ) { 
         progress( a + b );
     });
+
+    // Disable requests while using the mouse
+    canvas.addEventListener( 'mousedown', function( ev ) {
+        viewer.getDatabasePager().stopRequests();
+    } );
+
+    canvas.addEventListener( 'mouseup', function( ev ) {
+        viewer.getDatabasePager().startRequests();
+    } );
+    var wheeling;
+    $('#View').on('mousewheel', function (e) {
+        if (!wheeling) {
+            viewer.getDatabasePager().stopRequests();
+        }
+        clearTimeout($.data(this, 'timer'));
+        $.data(this, 'timer', setTimeout(function() {
+            viewer.getDatabasePager().startRequests();
+        }, 250));
+    });
+
     viewer.setSceneData( plod );
     var bs = plod.getBound();
     viewer.setupManipulator();

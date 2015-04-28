@@ -22,6 +22,7 @@ define( [
         this._loading = false;
         this._progressCallback = undefined;
         this._lastCB = true;
+        this._doRequests = true;
         this._activePagedLODList = new Set();
         this._childrenToRemoveList = new Set();
         this._downloadingRequestsNumber = 0;
@@ -126,7 +127,16 @@ define( [
             this._childrenToRemoveList.clear();
             this._downloadingRequestsNumber = 0;
             this._maxRequestsPerFrame = 10;
+            this._doRequests = true;
             this._targetMaximumNumberOfPagedLOD = 75;
+        },
+
+        stopRequests: function () {
+            this._doRequests = false;
+        },
+
+        startRequests: function () {
+            this._doRequests = true;
         },
 
         updateSceneGraph: function ( frameStamp ) {
@@ -235,6 +245,7 @@ define( [
         requestNodeFile: function ( func, url, node, timestamp, priority ) {
             // We don't need to determine if the dbrequest is in the queue
             // That is already done in the PagedLOD, so we just create the request
+            if ( !this._doRequests ) return undefined;
             var dbrequest = new DatabaseRequest();
             dbrequest._group = node;
             dbrequest._function = func;

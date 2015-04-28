@@ -89,6 +89,14 @@ define( [
             return this._defaultOptions.prefixURL;
         },
 
+        setDatabasePath: function ( path ) {
+            this._defaultOptions.databasePath = path;
+        },
+
+        getDatabasePath: function () {
+            return this._defaultOptions.databasePath;
+        },
+
         computeURL: function ( url ) {
 
             if ( typeof this._defaultOptions.prefixURL === 'string' &&
@@ -229,7 +237,7 @@ define( [
                                 options ),
                             function ( child ) {
                                 defer.resolve( child );
-                                Notify.log( 'loaded ' + url );
+                                //Notify.log( 'loaded ' + url );
 
                             } ).fail( function ( error ) {
                             defer.reject( error );

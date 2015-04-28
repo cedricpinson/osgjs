@@ -4,7 +4,8 @@ define( [], function () {
 
         // prefix to built url to load resource
         prefixURL: '',
-
+        // Path for PagedLOD databases, it should include last backslash
+        databasePath: '',
         // callback used when loading data
         progressXHRCallback: undefined,
 
