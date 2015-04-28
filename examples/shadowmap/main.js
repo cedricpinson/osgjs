@@ -1256,7 +1256,7 @@
             viewer.setLightingMode( osgViewer.View.LightingMode.NO_LIGHT );
             viewer.init();
 
-            viewer.getCamera().setComputeNearFar( false );
+            viewer.getCamera().setComputeNearFar( true );
 
             this._glContext = viewer.getGraphicContext();
 
