@@ -1,6 +1,5 @@
 define( [
     'q',
-    'require',
     'osg/Utils',
     'osgNameSpace',
     'osgDB/ReaderParser',
@@ -12,9 +11,11 @@ define( [
     'osg/DrawArrayLengths',
     'osg/DrawElements',
     'osg/PrimitiveSet'
-], function ( Q, require, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
+], function ( Q, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     'use strict';
+
+    var escape = window.escape;
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -219,21 +220,51 @@ define( [
                 options.prefixURL = prefix;
             }
 
+            var self = this;
             var req = new XMLHttpRequest();
             req.open( 'GET', url, true );
+
+            // handle gzip files and text files
+            req.responseType = 'arraybuffer';
+
+            function uintToString( uintArray ) {
+                var encodedString = String.fromCharCode.apply( null, uintArray ),
+                    decodedString = decodeURIComponent( escape( encodedString ) );
+                return decodedString;
+            }
+
+            // function uintToString2(uintArray) {
+            // function pad( n ) {
+            //     return n.length < 2 ? '0' + n : n;
+            // }
+            //     var str = '';
+            //     for( var i = 0, len = uintArray.length; i < len; ++i ) {
+            //         str += ( '%' + pad(uintArray[i].toString(16)));
+            //     }
+            //     str = decodeURIComponent(str);
+            //     return str;
+            // }
+
             req.onreadystatechange = function ( /*aEvt*/) {
                 if ( req.readyState === 4 ) {
                     if ( req.status === 200 ) {
                         var ReaderParser = require( 'osgDB/ReaderParser' );
-                        Q.when( ReaderParser.parseSceneGraph( JSON.parse( req.responseText ),
-                                options ),
-                            function ( child ) {
+
+                        var arrayBuffer = req.response; // Note: not oReq.responseText
+                        var unpacked = self._unzipTypedArray( arrayBuffer );
+
+                        var typedArray = new Uint8Array( unpacked );
+                        var str = uintToString( typedArray );
+                        var data = JSON.parse( str );
+
+                        ReaderParser.parseSceneGraph( data, options )
+                            .then( function ( child ) {
                                 defer.resolve( child );
                                 Notify.log( 'loaded ' + url );
-
                             } ).fail( function ( error ) {
-                            defer.reject( error );
-                        } );
+                                defer.reject( error );
+                            } );
+
                     } else {
                         defer.reject( req.status );
                     }
@@ -241,6 +272,26 @@ define( [
             };
             req.send( null );
             return defer.promise;
+        },
+
+        _unzipTypedArray: function ( binary ) {
+
+            var typedArray = new Uint8Array( binary );
+
+            // check magic number 1f8b
+            if ( typedArray[ 0 ] === 0x1f && typedArray[ 1 ] === 0x8b ) {
+                var zlib = require( 'Zlib' );
+
+                if ( !zlib ) {
+                    Notify.error( 'osg failed to use a gunzip.min.js to uncompress a gz file.\n You can add this vendors to enable this feature or adds the good header in your gzip file served by your server' );
+                }
+
+                var zdec = new zlib.Gunzip( typedArray );
+                var result = zdec.decompress();
+                return result.buffer;
+            }
+
+            return binary;
         },
 
         readBinaryArrayURL: function ( url, options ) {
@@ -276,9 +327,11 @@ define( [
             xhr.addEventListener( 'load', function ( /*oEvent */) {
                 var arrayBuffer = xhr.response; // Note: not oReq.responseText
                 if ( arrayBuffer ) {
-                    // var byteArray = new Uint8Array(arrayBuffer);
-                    self._identifierMap[ url ] = arrayBuffer;
-                    defer.resolve( arrayBuffer );
+
+                    var buffer = self._unzipTypedArray( arrayBuffer );
+                    self._identifierMap[ url ] = buffer;
+                    defer.resolve( buffer );
+
                 } else {
                     defer.reject();
                 }

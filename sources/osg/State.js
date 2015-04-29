@@ -557,7 +557,7 @@ define( [
         },
 
         setGlobalDefaultValue: function ( attribute ) {
-            Notify.log( 'setGlobalDefaultValue is deprecated, use instead setGlobalDefaultAttribute');
+            Notify.log( 'setGlobalDefaultValue is deprecated, use instead setGlobalDefaultAttribute' );
             this.setGlobalDefaultAttribute( attribute );
         },
 
@@ -573,7 +573,7 @@ define( [
             attributeMap[ typeMember ].globalDefault = attribute;
         },
 
-        getGlobalDefaultAttribute: function( typeMember ) {
+        getGlobalDefaultAttribute: function ( typeMember ) {
             var attributeMap = this.attributeMap;
             if ( attributeMap[ typeMember ] === undefined ) return undefined;
 
@@ -599,7 +599,7 @@ define( [
             return as.globalDefault;
         },
 
-        getOrCreateTextureAttributeMap: function( unit ) {
+        getOrCreateTextureAttributeMap: function ( unit ) {
             if ( !this.textureAttributeMapList[ unit ] ) this.textureAttributeMapList[ unit ] = new Map();
             return this.textureAttributeMapList[ unit ];
         },
