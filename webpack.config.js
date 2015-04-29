@@ -5,8 +5,9 @@ var webpack = require( 'webpack' );
 var path = require( 'path' );
 var ROOT_PATH = __dirname;
 var SOURCES_PATH = path.join( ROOT_PATH, 'sources' );
-var VENDORS_PATH = path.join( SOURCES_PATH, 'vendors' );
+var VENDORS_PATH = path.join( ROOT_PATH, '/examples/vendors' );
 var NODE_PATH = path.join( ROOT_PATH, 'node_modules' );
+var BUILD_PATH = path.join( ROOT_PATH, 'builds/dist/' );
 
 module.exports = {
     entry: {
@@ -14,7 +15,7 @@ module.exports = {
         tests: [ './tests/tests.js' ]
     },
     output: {
-        path: './builds/dist',
+        path: BUILD_PATH,
         filename: '[name].js',
         libraryTarget: 'umd',
         library: 'OSG'
@@ -25,6 +26,13 @@ module.exports = {
             commonjs2: 'qunit',
             commonjs: 'qunit',
             amd: 'qunit'
+        }
+    }, {
+        'Zlib': {
+            root: 'Zlib',
+            commonjs2: 'gunzip',
+            commonjs: 'gunzip',
+            amd: 'gunzip'
         }
     }, {
         'q': {
