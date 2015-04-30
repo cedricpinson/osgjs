@@ -9,7 +9,7 @@ define( [
     'osgAnimation/FloatTarget',
     'osgAnimation/Interpolator',
     'osgAnimation/Keyframe',
-    'osgAnimation/LinkVisitor',
+    'osgAnimation/CollectAnimationUpdateCallbackVisitor',
     'osgAnimation/QuatLerpChannel',
     'osgAnimation/QuatSlerpChannel',
     'osgAnimation/QuatTarget',
@@ -21,7 +21,7 @@ define( [
     'osgAnimation/UpdateMatrixTransform',
     'osgAnimation/Vec3LerpChannel',
     'osgAnimation/Vec3Target'
-], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
+], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, CollectAnimationUpdateCallbackVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
 
     var osgAnimation = {};
 
@@ -34,7 +34,7 @@ define( [
     osgAnimation.FloatTarget = FloatTarget;
     MACROUTILS.objectMix( osgAnimation, Interpolator );
     MACROUTILS.objectMix( osgAnimation, Keyframe );
-    osgAnimation.LinkVisitor = LinkVisitor;
+    osgAnimation.CollectAnimationUpdateCallbackVisitor = CollectAnimationUpdateCallbackVisitor;
     osgAnimation.QuatLerpChannel = QuatLerpChannel;
     osgAnimation.QuatSlerpChannel = QuatSlerpChannel;
     osgAnimation.QuatTarget = QuatTarget;
