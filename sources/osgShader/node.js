@@ -1,12 +1,12 @@
 define( [
-
+    'osgShader/node/animation',
     'osgShader/node/data',
     'osgShader/node/textures',
     'osgShader/node/functions',
     'osgShader/node/lights',
     'osgShader/node/operations'
 
-], function ( /*data, textures, functions, lights, operations */) {
+], function ( /*animation, data, textures, functions, lights, operations */) {
     'use strict';
 
     var lib = {};
