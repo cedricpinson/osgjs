@@ -1,18 +1,17 @@
 define( [
     'osg/Utils',
     'osgAnimation/Target',
-    'osg/Vec3'
-], function ( MACROUTILS, Target, Vec3 ) {
+    'osg/Matrix'
+], function ( MACROUTILS, Target, Matrix ) {
 
-    'use strict';
-
-    var Vec3Target = function ( target ) {
+    var MatrixTarget = function( target ) {
         Target.call( this );
-        this._target = Vec3.create();
-        if ( target )
-            Vec3.copy( target, this._target );
+        if ( !target )
+            this._target = Matrix.create();
+        else
+            Matrix.copy( target, this._target);
     };
-    Vec3Target.prototype = MACROUTILS.objectInherit( Target.prototype, {
+    MatrixTarget.prototype = MACROUTILS.objectInherit( Target.prototype, {
         update: function ( weight, val, priority ) {
             if ( this._weight || this._priorityWeight ) {
 
@@ -26,15 +25,15 @@ define( [
 
                 this._priorityWeight += weight;
                 var t = ( 1.0 - this._weight ) * weight / this._priorityWeight;
-                Vec3.lerp( t, this._target, val, this._target );
+                Matrix.lerp( t, this._target, val, this._target );
             } else {
 
                 this._priorityWeight = weight;
                 this._lastPriority = priority;
-                Vec3.copy( val, this._target );
+                Matrix.copy( val, this._target );
             }
         }
     } );
 
-    return Vec3Target;
+    return MatrixTarget;
 } );

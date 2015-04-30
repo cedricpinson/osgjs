@@ -4,6 +4,8 @@ define( [
     'osgWrappers/serializers/osg'
 ], function ( Q, Notify, osgWrapper ) {
 
+    'use strict';
+
     var osgAnimationWrapper = {};
 
     osgAnimationWrapper.Animation = function ( input, animation ) {
@@ -189,6 +191,30 @@ define( [
         return st;
     };
 
+    osgAnimationWrapper.StackedMatrixElement = function ( input, sme ) {
+        var jsonObj = input.getJSON();
+
+        //check
+        var check = function ( o ) {
+            if ( o.Name && o.Matrix ) {
+                return true;
+            }
+            return false;
+        };
+        if ( !check( jsonObj ) ) {
+            return;
+        }
+
+        if ( !osgWrapper.Object( input, sme ) ) {
+            return;
+        }
+
+        if ( jsonObj.Matrix ) {
+            sme.setMatrix( jsonObj.Matrix );
+        }
+        return sme;
+    };
+
     osgAnimationWrapper.StackedQuaternion = function ( input, st ) {
         var jsonObj = input.getJSON();
         // check
@@ -237,6 +263,85 @@ define( [
 
         return st;
     };
+
+    osgAnimationWrapper.Bone = function ( input, bone ) {
+        var jsonObj = input.getJSON();
+        var check = function ( o ) {
+            if ( o.InvBindMatrixInSkeletonSpace && o.BoneInSkeletonSpace ) {
+                return true;
+            }
+            return false;
+        };
+        if ( !check( jsonObj ) ) {
+            return undefined;
+        }
+
+        var promise = osgWrapper.MatrixTransform( input, bone );
+
+        if ( jsonObj.InvBindMatrixInSkeletonSpace !== undefined ) {
+            bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
+        }
+        if ( jsonObj.BoneInSkeletonSpace !== undefined ) {
+            bone.setMatrixInSkeletonSpace( jsonObj.BoneInSkeletonSpace );
+        }
+        return promise;
+    };
+
+    osgAnimationWrapper.Skeleton = function ( input, skl ) {
+        var jsonObj = input.getJSON();
+        var check = function ( o ) {
+            if ( o.Matrix ) {
+                return true;
+            }
+            return false;
+        };
+        if ( !check( jsonObj ) ) {
+            return;
+        }
+
+        return osgWrapper.MatrixTransform( input, skl );
+    };
+
+    osgAnimationWrapper.FloatCubicBezierChannel = function ( input, channel ) {
+        var jsonObj = input.getJSON();
+        var check = function ( o ) {
+            if ( o.KeyFrames && o.TargetName && o.Name ) {
+                var KeyFrames = o.KeyFrames;
+                if ( KeyFrames.Time && KeyFrames.Position && KeyFrames.ControlPointOut && KeyFrames.ControlPointIn ) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        if ( !check( jsonObj ) ) {
+            return;
+        }
+
+        //doit
+        if ( !osgWrapper.Object( input, channel ) ) {
+            return;
+        }
+
+        channel.setTargetName( jsonObj.TargetName );
+
+        //Keys building
+        var keys = channel.getSampler().getKeyframes();
+
+        var controlPointIn = input.setJSON( jsonObj.KeyFrames.ControlPointIn ).readBufferArray();
+        var controlPointOut = input.setJSON( jsonObj.KeyFrames.ControlPointOut ).readBufferArray();
+        var position = input.setJSON( jsonObj.KeyFrames.Position ).readBufferArray();
+        var time = input.setJSON( jsonObj.KeyFrames.Time ).readBufferArray();
+
+        for ( var i = 0, l = time.length - 1; i < l; i++ ) {
+            var keyPos = [ position[ i ], controlPointIn[ i ], controlPointOut[ i ] ];
+            var mykey = keyPos;
+            mykey.t = time[ i ];
+            keys.push( mykey );
+        }
+
+        return channel;
+    };
+
 
     return osgAnimationWrapper;
 } );
