@@ -8,7 +8,9 @@ define( [
      *  AnimationUpdateCallback
      *  @class AnimationUpdateCallback
      */
-    var AnimationUpdateCallback = function () {};
+    var AnimationUpdateCallback = function () {
+        Object.call( this );
+    };
 
     /** @lends AnimationUpdateCallback.prototype */
     AnimationUpdateCallback.prototype = MACROUTILS.objectInherit( Object.prototype, {
