@@ -15,7 +15,7 @@ define( [
         QUnit.asyncTest( 'osgAnimation', function () {
 
             var input = new Input();
-            input.readNodeURL( '../examples/media/models/material-test/file.osgjs').then( function( scene ) {
+            input.readNodeURL( '../examples/media/models/animation-test/brindherbetrs.osgjs').then( function( scene ) {
 
                 ok( scene !== undefined, true );
 
