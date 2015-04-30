@@ -3,9 +3,7 @@ define( [
     'tests/osgAnimation/BasicAnimationManager',
     'tests/osgAnimation/Channel',
     'tests/osgAnimation/Interpolator',
-    'tests/osgAnimation/Keyframe',
-    'tests/osgAnimation/Sampler'
-], function ( Animation, BasicAnimationManager, Channel, Interpolator, Keyframe, Sampler ) {
+], function ( Animation, BasicAnimationManager, Channel, Interpolator ) {
 
     'use strict';
 
@@ -14,7 +12,5 @@ define( [
         BasicAnimationManager();
         Channel();
         Interpolator();
-        Keyframe();
-        Sampler();
     };
 } );

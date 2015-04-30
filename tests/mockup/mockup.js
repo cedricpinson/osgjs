@@ -1,9 +1,11 @@
 define( [
     'jquery',
     'tests/mockup/scene',
-    'tests/mockup/box'
+    'tests/mockup/box',
+    'osgAnimation/Channel',
+    'osgAnimation/Animation'
 
-], function ( $, getScene, getBoxScene ) {
+], function ( $, getScene, getBoxScene, Channel, Animation ) {
 
     'use strict';
 
@@ -85,6 +87,41 @@ define( [
             }
         };
         return obj;
+    };
+
+    var createVec3Keyframes = function() {
+        var keys = [
+            1, 1, 1,
+            0, 0, 0,
+            3, 3, 3
+        ];
+        var times = [ 0, 1, 2 ];
+        return Channel.createVec3Channel(keys, times );
+    };
+
+    var createFloatKeyframes = function() {
+        var keys = [
+            1, 0, 3
+        ];
+
+        var start = 0;
+        if ( arguments.length > 0 ) // offset time keyframes
+            start = arguments[0];
+
+        var times = [ start + 0, start + 1, start + 2 ];
+        return Channel.createFloatChannel(keys, times );
+    };
+
+
+    var createAnimation = function( name, target1, target2 ) {
+
+        var a = createFloatKeyframes();
+        a.target = target1 || 'a';
+
+        var b = createFloatKeyframes(2);
+        b.target = target2 || 'b';
+
+        return Animation.createAnimation( [ a, b ], name );
     };
 
     var createCanvas = function () {
@@ -204,6 +241,9 @@ define( [
         createFakeRenderer: createFakeRenderer,
         removeCanvas: removeCanvas,
         createCanvas: createCanvas,
+        createVec3Keyframes: createVec3Keyframes,
+        createFloatKeyframes: createFloatKeyframes,
+        createAnimation: createAnimation,
         near: near,
         getBoxScene: getBoxScene,
         getScene: getScene
