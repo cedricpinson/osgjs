@@ -327,17 +327,45 @@ define( [
         //Keys building
         var keys = channel.getSampler().getKeyframes();
 
-        var controlPointIn = input.setJSON( jsonObj.KeyFrames.ControlPointIn ).readBufferArray();
-        var controlPointOut = input.setJSON( jsonObj.KeyFrames.ControlPointOut ).readBufferArray();
-        var position = input.setJSON( jsonObj.KeyFrames.Position ).readBufferArray();
-        var time = input.setJSON( jsonObj.KeyFrames.Time ).readBufferArray();
+        var bezierChannel = {};
+        var arraysPromise = [];
 
-        for ( var i = 0, l = time.length - 1; i < l; i++ ) {
-            var keyPos = [ position[ i ], controlPointIn[ i ], controlPointOut[ i ] ];
-            var mykey = keyPos;
-            mykey.t = time[ i ];
-            keys.push( mykey );
+        var createChannelAttribute = function ( name, jsonAttribute ) {
+            var defer = Q.defer();
+            arraysPromise.push( defer.promise );
+
+            var promise = input.setJSON( jsonAttribute ).readBufferArray();
+            Q.when( promise ).then( function ( buffer ) {
+                if ( buffer !== undefined ) {
+                    bezierChannel[ name ] = buffer._elements;
+                }
+                defer.resolve( buffer );
+            } );
+        };
+
+        for ( var k in jsonObj.KeyFrames ) {
+            createChannelAttribute( k, jsonObj.KeyFrames[ k ] );
         }
+
+        var interlaceKeyFrames = function () {
+            var controlPointIn = bezierChannel.ControlPointIn;
+            var controlPointOut = bezierChannel.ControlPointOut;
+            var position = bezierChannel.Position;
+            var time = bezierChannel.Time;
+
+            for ( var i = 0, l = time.length - 1; i < l; i++ ) {
+                var keyPos = [ position[ i ], controlPointIn[ i ], controlPointOut[ i ] ];
+                var mykey = keyPos;
+                mykey.t = time[ i ];
+                keys.push( mykey );
+            }
+        };
+
+        var defer = Q.defer();
+        Q.all( arraysPromise ).then( function () {
+            defer.resolve( bezierChannel );
+            interlaceKeyFrames();
+        } );
 
         return channel;
     };

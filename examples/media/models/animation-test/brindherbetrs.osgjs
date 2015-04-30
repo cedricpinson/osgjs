@@ -592,36 +592,96 @@
                     "Name": "scale", 
                     "TargetName": "Bone004", 
                     "KeyFrames": {
-                      "ControlPointIn": {
+                      "ControlPointIn": [ {
                         "Array": { 
                           "Float32Array": { 
-                            "Elements": [ 1, 1, 1, 2.28678, 2.28678, 2.28678, 0.929234, 0.929234, 0.929234 ],
-                            "Size": 9
+                            "Elements": [ 1, 2.28678, 0.929234 ],
+                            "Size": 3
                           }
                         }, 
                         "ItemSize": 1, 
                         "Type": "ARRAY_BUFFER"
-                      }, 
-                      "ControlPointOut": {
+                      },
+                      {
                         "Array": { 
                           "Float32Array": { 
-                            "Elements": [ 2.28678, 2.28678, 2.28678, 0.929234, 0.929234, 0.929234, 1, 1, 1 ],
-                            "Size": 9
+                            "Elements": [ 1, 2.28678, 0.929234 ],
+                            "Size": 3
                           }
                         }, 
                         "ItemSize": 1, 
                         "Type": "ARRAY_BUFFER"
-                      }, 
-                      "Position": {
+                      },
+                      {
                         "Array": { 
                           "Float32Array": { 
-                            "Elements": [ 1, 1, 1, 2.28678, 2.28678, 2.28678, 0.929234, 0.929234, 0.929234 ],
-                            "Size": 9
+                            "Elements": [ 1, 2.28678, 0.929234 ],
+                            "Size": 3
                           }
                         }, 
                         "ItemSize": 1, 
                         "Type": "ARRAY_BUFFER"
-                      }, 
+                      } ], 
+                      "ControlPointOut": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.28678, 0.929234, 1 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.28678, 0.929234, 1 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.28678, 0.929234, 1 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
+                      "Position": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 1, 2.28678, 0.929234 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 1, 2.28678, 0.929234 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 1, 2.28678, 0.929234 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
                       "Time": {
                         "Array": { 
                           "Float32Array": { 
@@ -928,36 +988,96 @@
                     "Name": "translate", 
                     "TargetName": "Bone001", 
                     "KeyFrames": {
-                      "ControlPointIn": {
+                      "ControlPointIn": [ {
                         "Array": { 
                           "Float32Array": { 
-                            "Elements": [ 0.532384, 8.14555, 3.56053e-07, 5.62053, 8.14555, -7.76188e-07, 0.121894, 8.14555, 4.47398e-07 ],
-                            "Size": 9
+                            "Elements": [ 0.532384, 5.62053, 0.121894 ],
+                            "Size": 3
                           }
                         }, 
                         "ItemSize": 1, 
                         "Type": "ARRAY_BUFFER"
-                      }, 
-                      "ControlPointOut": {
+                      },
+                      {
                         "Array": { 
                           "Float32Array": { 
-                            "Elements": [ 5.62053, 8.14555, -7.76188e-07, 0.121894, 8.14555, 4.47398e-07, 0.532384, 8.14555, 3.56053e-07 ],
-                            "Size": 9
+                            "Elements": [ 8.14555, 8.14555, 8.14555 ],
+                            "Size": 3
                           }
                         }, 
                         "ItemSize": 1, 
                         "Type": "ARRAY_BUFFER"
-                      }, 
-                      "Position": {
+                      },
+                      {
                         "Array": { 
                           "Float32Array": { 
-                            "Elements": [ 0.532384, 8.14555, 3.56053e-07, 5.62053, 8.14555, -7.76188e-07, 0.121894, 8.14555, 4.47398e-07 ],
-                            "Size": 9
+                            "Elements": [ 3.56053e-07, -7.76188e-07, 4.47398e-07 ],
+                            "Size": 3
                           }
                         }, 
                         "ItemSize": 1, 
                         "Type": "ARRAY_BUFFER"
-                      }, 
+                      } ], 
+                      "ControlPointOut": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 5.62053, 0.121894, 0.532384 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 8.14555, 8.14555, 8.14555 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -7.76188e-07, 4.47398e-07, 3.56053e-07 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
+                      "Position": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0.532384, 5.62053, 0.121894 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 8.14555, 8.14555, 8.14555 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.56053e-07, -7.76188e-07, 4.47398e-07 ],
+                            "Size": 3
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
                       "Time": {
                         "Array": { 
                           "Float32Array": { 

@@ -20,8 +20,9 @@ define( [
     'osgAnimation/Target',
     'osgAnimation/UpdateMatrixTransform',
     'osgAnimation/Vec3LerpChannel',
-    'osgAnimation/Vec3Target'
-], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
+    'osgAnimation/Vec3Target',
+    'osgAnimation/FloatCubicBezierChannel'
+], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target, FloatCubicBezierChannel ) {
 
     var osgAnimation = {};
 
@@ -30,6 +31,7 @@ define( [
     osgAnimation.BasicAnimationManager = BasicAnimationManager;
     osgAnimation.Channel = Channel;
     MACROUTILS.objectMix( osgAnimation, Easing );
+    osgAnimation.FloatCubicBezierChannel = FloatCubicBezierChannel;
     osgAnimation.FloatLerpChannel = FloatLerpChannel;
     osgAnimation.FloatTarget = FloatTarget;
     MACROUTILS.objectMix( osgAnimation, Interpolator );
