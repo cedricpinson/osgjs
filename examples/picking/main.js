@@ -1,6 +1,13 @@
 'use strict';
 
-function getShader() {
+var Q = window.Q;
+var OSG = window.OSG;
+var osg = OSG.osg;
+var osgUtil = OSG.osgUtil;
+var osgViewer = OSG.osgViewer;
+var osgDB = OSG.osgDB;
+
+var getShader = function () {
     var vertexshader = [
         '',
         '#ifdef GL_ES',
@@ -61,25 +68,11 @@ function getShader() {
     return program;
 };
 
-function loadUrl( url, viewer, node, unifs ) {
-    osg.log( 'loading ' + url );
-    var req = new XMLHttpRequest();
-    req.open( 'GET', url, true );
-    req.onload = function( aEvt ) {
-        loadModel( JSON.parse( req.responseText ), viewer, node, unifs );
-        osg.log( 'success ' + url );
-    };
-    req.onerror = function( aEvt ) {
-        osg.log( 'error ' + url );
-    };
-    req.send( null );
-};
-
-function loadModel( data, viewer, node, unifs ) {
+var loadModel = function ( data, viewer, node, unifs ) {
     var promise = osgDB.parseSceneGraph( data );
     // var promise = osg.createTexturedSphere( 1.0, 500, 500 );
 
-    Q.when( promise ).then( function( child ) {
+    Q.when( promise ).then( function ( child ) {
         node.addChild( child );
         viewer.getManipulator().computeHomePosition();
 
@@ -100,17 +93,31 @@ function loadModel( data, viewer, node, unifs ) {
     } );
 };
 
-function createScene( viewer, unifs ) {
+var loadUrl = function ( url, viewer, node, unifs ) {
+    osg.log( 'loading ' + url );
+    var req = new XMLHttpRequest();
+    req.open( 'GET', url, true );
+    req.onload = function ( /*aEvt*/) {
+        loadModel( JSON.parse( req.responseText ), viewer, node, unifs );
+        osg.log( 'success ' + url );
+    };
+    req.onerror = function ( /*aEvt */) {
+        osg.log( 'error ' + url );
+    };
+    req.send( null );
+};
+
+var createScene = function ( viewer, unifs ) {
 
     var root = new osg.Node();
 
     loadUrl( '../ssao/raceship.osgjs', viewer, root, unifs );
     root.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ) );
 
-    var UpdateCallback = function( base ) {
-        this.baseTime_ = ( new Date ).getTime();
-        this.update = function( node, nv ) {
-            unifs.time.set( ( new Date ).getTime() - this.baseTime_ );
+    var UpdateCallback = function ( /*base*/) {
+        this.baseTime_ = ( new Date() ).getTime();
+        this.update = function ( /*node, nv*/) {
+            unifs.time.set( ( new Date() ).getTime() - this.baseTime_ );
             return true;
         };
     };
@@ -120,7 +127,7 @@ function createScene( viewer, unifs ) {
     return root;
 };
 
-function projectToScreen( cam, hit ) {
+var projectToScreen = function ( cam, hit ) {
     var mat = osg.Matrix.create();
     osg.Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix() : osg.Matrix.create() );
     osg.Matrix.preMult( mat, cam.getProjectionMatrix() );
@@ -133,56 +140,72 @@ function projectToScreen( cam, hit ) {
     return pt;
 };
 
-window.addEventListener( 'load',
-    function() {
-        OSG.globalify();
+var onMouseMove = function ( canvas, viewer, unifs, ev ) {
+    // TODO maybe doing some benchmark with a lot of geometry,
+    // since there's one kdtree per geometry ...
+    // console.time( 'pick' );
 
-        var canvas = document.getElementById( 'View' );
+    // take care of retina display canvas size
+    var ratioX = canvas.width / canvas.clientWidth;
+    var ratioY = canvas.height / canvas.clientHeight;
 
-        var unifs = {
-            center: osg.Uniform.createFloat3( new Float32Array( 3 ), 'uCenterPicking' ),
-            radius2: osg.Uniform.createFloat1( 0.1, 'uRadiusSquared' ),
-            time: osg.Uniform.createFloat1( 0.1, 'uTime' )
-        };
+    var hits = viewer.computeIntersections( ev.clientX * ratioX, ( canvas.clientHeight - ev.clientY ) * ratioY );
+    // console.timeEnd( 'pick' );
+    // console.log( hits.length );
 
-        var viewer = new osgViewer.Viewer( canvas );
-        viewer.init();
-        viewer.setSceneData( createScene( viewer, unifs ) );
-        viewer.setupManipulator();
-        viewer.run();
+    hits.sort( function ( a, b ) {
+        return a.ratio - b.ratio;
+    } );
 
-        canvas.addEventListener( 'mousemove', function( ev ) {
-            // TODO maybe doing some benchmark with a lot of geometry,
-            // since there's one kdtree per geometry ...
-            // console.time( 'pick' );
+    if ( hits.length === 0 )
+        return;
+    var point = hits[ 0 ].point;
+    var ptFixed = [ point[ 0 ].toFixed( 2 ), point[ 1 ].toFixed( 2 ), point[ 2 ].toFixed( 2 ) ];
 
-            // take care of retina display canvas size
-            var ratioX = canvas.width / canvas.clientWidth;
-            var ratioY = canvas.height / canvas.clientHeight;
+    //update shader uniform
+    unifs.center.set( new Float32Array( point ) );
 
-            var hits = viewer.computeIntersections( ev.clientX * ratioX, (canvas.clientHeight - ev.clientY) * ratioY );
-            // console.timeEnd( 'pick' );
-            // console.log( hits.length );
+    var pt = projectToScreen( viewer.getCamera(), hits[ 0 ] );
 
-            hits.sort( function( a, b ) {
-                return a.ratio - b.ratio;
-            } );
+    var ptx = parseInt( pt[ 0 ], 10 ) / ratioX;
+    var pty = parseInt( canvas.height - pt[ 1 ], 10 ) / ratioY;
+    var d = document.getElementById( 'picking' );
+    d.innerText = 'x: ' + ptx + ' ' + 'y: ' + pty + '\n' + ptFixed;
+    d.style.transform = 'translate3d(' + ptx + 'px,' + pty + 'px,0)';
 
-            if ( hits.length > 0 ) {
-                var point = hits[ 0 ].point;
-                var ptFixed = [ point[ 0 ].toFixed( 2 ), point[ 1 ].toFixed( 2 ), point[ 2 ].toFixed( 2 ) ];
+    // // sphere intersection
+    // var si = new osgUtil.SphereIntersector();
 
-                //update shader uniform
-                unifs.center.set( new Float32Array( point ) );
+    // // compute world point for sphere intersection
+    // var worldPoint = osg.Vec3.create();
+    // osg.Matrix.transformVec3( osg.computeLocalToWorld( hits[ 0 ].nodepath.slice( 1 ) ), point, worldPoint );
 
-                var pt = projectToScreen( viewer.getCamera(), hits[ 0 ] );
+    // si.set( worldPoint, 5.0 );
+    // var iv = new osgUtil.IntersectionVisitor();
+    // iv.setIntersector( si );
+    // viewer.getSceneData().accept( iv );
+    // var hitsSphere = si.getIntersections();
+    // console.log( hitsSphere.length );
+};
 
-                var ptx = parseInt( pt[ 0 ], 10 ) / ratioX;
-                var pty = parseInt( canvas.height - pt[ 1 ], 10 ) / ratioY;
-                var d = document.getElementById( 'picking' );
-                d.innerText = 'x: ' + ptx + ' ' + 'y: ' + pty + '\n' + ptFixed;
-                d.style.transform = 'translate3d(' + ptx + 'px,' + pty + 'px,0)';
-            }
+var onLoad = function () {
+    OSG.globalify();
 
-        }, true );
-    }, true );
+    var canvas = document.getElementById( 'View' );
+
+    var unifs = {
+        center: osg.Uniform.createFloat3( new Float32Array( 3 ), 'uCenterPicking' ),
+        radius2: osg.Uniform.createFloat1( 0.1, 'uRadiusSquared' ),
+        time: osg.Uniform.createFloat1( 0.1, 'uTime' )
+    };
+
+    var viewer = new osgViewer.Viewer( canvas );
+    viewer.init();
+    viewer.setSceneData( createScene( viewer, unifs ) );
+    viewer.setupManipulator();
+    viewer.run();
+
+    canvas.addEventListener( 'mousemove', onMouseMove.bind( this, canvas, viewer, unifs ), true );
+};
+
+window.addEventListener( 'load', onLoad, true );

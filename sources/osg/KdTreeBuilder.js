@@ -4,6 +4,8 @@ define( [
     'osg/KdTree'
 ], function ( MACROUTILS, NodeVisitor, KdTree ) {
 
+    'use strict';
+
     var KdTreeBuilder = function ( options ) {
         NodeVisitor.call( this );
         this._buildOptions = options !== undefined ? options : {
