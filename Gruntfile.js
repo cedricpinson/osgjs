@@ -98,6 +98,7 @@ var gruntTasks = {};
 //
 ( function () {
 
+    var webpack = require( 'webpack' );
 
     var targets = {
         build: {
@@ -105,7 +106,24 @@ var gruntTasks = {};
                 OSG: [ './sources/OSG.js' ],
                 tests: [ './tests/tests.js' ]
             },
-            devtool: 'sourcemap'
+            devtool: 'source-map'
+        },
+
+        buildrelease: {
+            devtool: null,
+            output: {
+                path: DIST_PATH,
+                filename: '[name].min.js',
+                libraryTarget: 'umd',
+                library: 'OSG'
+            },
+
+            // additional plugins for this specific mode
+            plugins: [
+                new webpack.optimize.UglifyJsPlugin( {
+                    sourceMap: false
+                } )
+            ]
         },
         docs: {
             entry: './sources/OSG.js',
@@ -120,6 +138,7 @@ var gruntTasks = {};
     gruntTasks.webpack = {
         options: webpackConfig,
         build: targets.build,
+        buildrelease: targets.buildrelease,
         docs: targets.docs,
         watch: {
             entry: targets.build.entry,
@@ -500,6 +519,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'docs', [ 'webpack:docs', 'docco' ] );
 
     grunt.registerTask( 'build', [ 'copyto', 'webpack:build' ] );
+    grunt.registerTask( 'build-release', [ 'copyto', 'webpack:buildrelease' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
     grunt.registerTask( 'serve', [ 'build', 'connect:dist:keepalive' ] );
