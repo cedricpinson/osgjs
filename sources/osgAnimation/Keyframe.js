@@ -18,9 +18,23 @@ define( [], function () {
         return k;
     };
 
+    var createFloatCubicKeyframe = function ( t, pos, ctrlPtIn, ctrlPtOut ) {
+        var k = [ pos, ctrlPtIn, ctrlPtOut ];
+        k.t = t;
+        return k;
+    };
+
+    var createVec3CubicKeyframe = function ( t, pos, ctrlPtIn, ctrlPtOut ) {
+        var k = [ pos, ctrlPtIn, ctrlPtOut ];
+        k.t = t;
+        return k;
+    };
+
     return {
         createVec3Keyframe: createVec3Keyframe,
         createQuatKeyframe: createQuatKeyframe,
-        createFloatKeyframe: createFloatKeyframe
+        createFloatKeyframe: createFloatKeyframe,
+        createFloatCubicKeyframe: createFloatCubicKeyframe,
+        createVec3CubicKeyframe: createVec3CubicKeyframe
     };
 } );

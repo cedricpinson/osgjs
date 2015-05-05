@@ -2,24 +2,24 @@ define( [
     'osgAnimation/Channel',
     'osgAnimation/Sampler',
     'osgAnimation/Interpolator',
-    'osgAnimation/FloatTarget'
-], function ( Channel, Sampler, Interpolator, FloatTarget ) {
+    'osgAnimation/Vec3Target'
+], function ( Channel, Sampler, Interpolator, Vec3Target ) {
 
-    var FloatCubicBezierChannel = function ( keys, target ) {
+    var Vec3CubicBezierChannel = function ( keys, target ) {
         var sampler = new Sampler();
         if ( !keys ) {
             keys = [];
         }
         if ( !target ) {
-            target = new FloatTarget();
+            target = new Vec3Target();
         }
         Channel.call( this, sampler, target );
-        sampler.setInterpolator( Interpolator.FloatCubicBezierInterpolator );
+        sampler.setInterpolator( Interpolator.Vec3CubicBezierInterpolator );
         this.setKeyframes( keys );
         this._data.value = target.getValue();
     };
 
-    FloatCubicBezierChannel.prototype = Channel.prototype;
+    Vec3CubicBezierChannel.prototype = Channel.prototype;
 
-    return FloatCubicBezierChannel;
+    return Vec3CubicBezierChannel;
 } );

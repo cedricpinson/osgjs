@@ -1,7 +1,7 @@
 define( [
     'q',
     'osg/Notify',
-    'osgWrappers/serializers/osg'
+    'osgWrappers/serializers/osg',
 ], function ( Q, Notify, osgWrapper ) {
 
     'use strict';
@@ -343,8 +343,11 @@ define( [
             } );
         };
 
-        for ( var k in jsonObj.KeyFrames ) {
-            createChannelAttribute( k, jsonObj.KeyFrames[ k ] );
+        var keyFrames = Object.keys( jsonObj.KeyFrames );
+        for ( var i = 0; i < keyFrames.length; i++ ) {
+            var key = keyFrames[ i ];
+            var value = jsonObj.KeyFrames[ key ];
+            createChannelAttribute( key, value );
         }
 
         var interlaceKeyFrames = function () {
@@ -353,7 +356,7 @@ define( [
             var position = bezierChannel.Position;
             var time = bezierChannel.Time;
 
-            for ( var i = 0, l = time.length - 1; i < l; i++ ) {
+            for ( var i = 0, l = time.length; i < l; i++ ) {
                 var keyPos = [ position[ i ], controlPointIn[ i ], controlPointOut[ i ] ];
                 var mykey = keyPos;
                 mykey.t = time[ i ];
@@ -368,6 +371,126 @@ define( [
         } );
 
         return channel;
+    };
+
+    osgAnimationWrapper.Vec3CubicBezierChannel = function ( input, channel ) {
+        var jsonObj = input.getJSON();
+        var check = function ( o ) {
+            if ( o.KeyFrames && o.TargetName && o.Name ) {
+                var KeyFrames = o.KeyFrames;
+                if ( KeyFrames.Time && KeyFrames.Position && KeyFrames.ControlPointOut && KeyFrames.ControlPointIn &&
+                    KeyFrames.Position.length === 3 && KeyFrames.ControlPointIn.length === 3 &&
+                    KeyFrames.ControlPointOut.length === 3 ) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        if ( !check( jsonObj ) ) {
+            return;
+        }
+
+        //doit
+        if ( !osgWrapper.Object( input, channel ) ) {
+            return;
+        }
+
+        channel.setTargetName( jsonObj.TargetName );
+
+        //Keys building
+        var keys = channel.getSampler().getKeyframes();
+
+        var bezierChannel = {};
+        var arraysPromise = [];
+
+        var createChannelAttribute = function ( name, jsonAttribute ) {
+            var defer = Q.defer();
+            var promise;
+            arraysPromise.push( defer.promise );
+
+            if ( name !== 'Time' ) {
+                bezierChannel[ name ] = [];
+
+                promise = input.setJSON( jsonAttribute[ 0 ] ).readBufferArray();
+                Q.when( promise ).then( function ( buffer ) {
+                    if ( buffer !== undefined ) {
+                        bezierChannel[ name ].push( buffer._elements );
+                    }
+                    defer.resolve( buffer );
+                } );
+
+                promise = input.setJSON( jsonAttribute[ 1 ] ).readBufferArray();
+                Q.when( promise ).then( function ( buffer ) {
+                    if ( buffer !== undefined ) {
+                        bezierChannel[ name ].push( buffer._elements );
+                    }
+                    defer.resolve( buffer );
+                } );
+
+                promise = input.setJSON( jsonAttribute[ 2 ] ).readBufferArray();
+                Q.when( promise ).then( function ( buffer ) {
+                    if ( buffer !== undefined ) {
+                        bezierChannel[ name ].push( buffer._elements );
+                    }
+                    defer.resolve( buffer );
+                } );
+            } else {
+                promise = input.setJSON( jsonAttribute ).readBufferArray();
+                Q.when( promise ).then( function ( buffer ) {
+
+                    if ( buffer !== undefined ) {
+                        bezierChannel[ name ] = buffer._elements;
+                    }
+                    defer.resolve( buffer );
+                } );
+            }
+        };
+
+        //Reads all keyframes
+        var keyFrames = Object.keys( jsonObj.KeyFrames );
+        for ( var i = 0; i < keyFrames.length; i++ ) {
+            var key = keyFrames[ i ];
+            var value = jsonObj.KeyFrames[ key ];
+            //console.log( key );
+            createChannelAttribute( key, value );
+        }
+
+        var interlaceKeyFrames = function () {
+            var controlPointIn = bezierChannel.ControlPointIn;
+            var controlPointOut = bezierChannel.ControlPointOut;
+            var position = bezierChannel.Position;
+            var time = bezierChannel.Time;
+
+            for ( var i = 0, l = time.length; i < l; i++ ) {
+                var _position = [ position[ 0 ][ i ], position[ 1 ][ i ], position[ 2 ][ i ] ];
+                var _controlPointIn = [ controlPointIn[ 0 ][ i ], controlPointIn[ 1 ][ i ], controlPointIn[ 2 ][ i ] ];
+                var _controlPointOut = [ controlPointOut[ 0 ][ i ], controlPointOut[ 1 ][ i ], controlPointOut[ 2 ][ i ] ];
+
+                var keyPos = [ _position, _controlPointIn, _controlPointOut ];
+                var mykey = keyPos;
+                mykey.t = time[ i ];
+                keys.push( mykey );
+                //console.log( mykey );
+            }
+        };
+
+        var defer = Q.defer();
+        Q.all( arraysPromise ).then( function () {
+            defer.resolve( bezierChannel );
+            interlaceKeyFrames();
+        } );
+
+        return channel;
+    };
+
+    osgAnimationWrapper.UpdateSkeleton = function ( input, upSkl ) {
+
+        return upSkl;
+    };
+
+    osgAnimationWrapper.RigGeometry = function ( input, rigGeom ) {
+
+        return rigGeom;
     };
 
 
