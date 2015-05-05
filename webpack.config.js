@@ -28,11 +28,11 @@ module.exports = {
             amd: 'qunit'
         }
     }, {
-        'Zlib': {
+        'zlib': {
             root: 'Zlib',
-            commonjs2: 'gunzip',
-            commonjs: 'gunzip',
-            amd: 'gunzip'
+            commonjs2: 'zlib',
+            commonjs: 'zlib',
+            amd: 'zlib'
         }
     }, {
         'q': {
