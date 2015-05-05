@@ -2,7 +2,7 @@ define( [
     'osg/Utils',
     'osg/Object',
     'osg/Matrix',
-    'osg/MatrixTarget'
+    'osgAnimation/MatrixTarget'
 ], function ( MACROUTILS, Object, Matrix, MatrixTarget ) {
 
     'use strict';

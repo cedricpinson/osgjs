@@ -2,7 +2,7 @@ define( [
     'osg/Utils',
     'osg/Matrix',
     'osg/MatrixTransform',
-    'osg/UpdateBone'
+    'osgAnimation/UpdateBone'
 ], function ( MACROUTILS, Matrix, MatrixTransform, UpdateBone ) {
 
     'use strict';
@@ -59,5 +59,5 @@ define( [
             }
             this.setUpdateCallback( new UpdateBone( cbName ) );
         }
-    } ), 'osg', 'Bone' );
+    } ), 'osgAnimation', 'Bone' );
 } );
