@@ -210,7 +210,9 @@ define( [
                     ok( animationManager.isPlaying( 'Cube' ), false, 'Check animation is not active' );
                     ok( mockup.checkNear( animationManager._targets[ 0 ].getValue(), [ 2.6797789473684217, 0, 0 ] ), 'Check animation once result' );
                     start();
-                } );
+                } ).fail(function(error){
+                    console.log(error.stack);
+                });
             } )();
         } );
     };
