@@ -5,9 +5,6 @@ define( [], function () {
      *  @class Sampler
      */
     var Sampler = function ( keys, interpolator ) {
-        if ( !keys ) {
-            keys = [];
-        }
         this._keys = keys;
         this._interpolator = interpolator;
     };
