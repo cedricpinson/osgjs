@@ -21,7 +21,9 @@ define( [
 
     /** @lends BasicAnimationManager.prototype */
     BasicAnimationManager.prototype = MACROUTILS.objectInherit( Object.prototype, {
+
         _updateAnimation: function ( animationParameter, t, priority ) {
+
             var duration = animationParameter.duration;
             var weight = animationParameter.weight;
             var animation = animationParameter.anim;
@@ -48,29 +50,105 @@ define( [
             }
             return false;
         },
+
+
+
         update: function ( node, nv ) {
             var t = nv.getFrameStamp().getSimulationTime();
             this.updateManager( t );
             return true;
         },
+
         updateManager: function ( t ) {
 
             var targets = this._targets;
+
             for ( var i = 0, l = targets.length; i < l; i++ ) {
                 targets[ i ].reset();
             }
+
             if ( this._actives._keys.length > 0 ) {
+
                 var pri = this._actives._keys.length - 1;
+
                 while ( pri >= 0 ) {
+
                     var layer = this._actives[ pri ];
                     var keys = this._actives[ pri ]._keys;
                     var removes = [];
+
                     for ( var ai = 0, al = keys.length; ai < al; ai++ ) {
+
                         var key = keys[ ai ];
                         var anim = layer[ key ];
+
                         if ( anim.start === undefined ) {
                             anim.start = t;
                         }
+
+                        var remove = this._updateAnimation( anim, t, pri );
+                        if ( remove ) {
+                            removes.push( ai );
+                        }
+                    }
+
+                    // remove finished animation
+                    for ( var j = removes.length - 1; j >= 0; j-- ) {
+                        var k = keys[ j ];
+                        keys.splice( j, 1 );
+                        delete layer[ k ];
+                    }
+
+                    pri--;
+                }
+            }
+        },
+
+
+        updateManager2: function ( t ) {
+
+            var targets = this._targets;
+            var i;
+
+            for ( i = 0; i < targets.length; i++ ) {
+                targets[ i ].reset();
+            }
+
+            // handle actives animations
+            var keys = Object.keys( this._actives );
+            for ( i = 0; i < keys.length; i++ ) {
+                var priority = keys[i];
+                var animationPriorityList = this._actives[priority];
+
+                for ( var j = 0; j < animationPriorityList.length; j++ ) {
+
+                    var animation = animationPriorityList[ j ];
+                    var remove = this._updateAnimation( animation, t, priority );
+                    if ( remove ) removes.push( animation );
+
+                }
+
+            }
+
+            if ( this._actives._keys.length > 0 ) {
+
+                var pri = this._actives._keys.length - 1;
+
+                while ( pri >= 0 ) {
+
+                    var layer = this._actives[ pri ];
+                    var keys = this._actives[ pri ]._keys;
+                    var removes = [];
+
+                    for ( var ai = 0, al = keys.length; ai < al; ai++ ) {
+
+                        var key = keys[ ai ];
+                        var anim = layer[ key ];
+
+                        if ( anim.start === undefined ) {
+                            anim.start = t;
+                        }
+
                         var remove = this._updateAnimation( anim, t, pri );
                         if ( remove ) {
                             removes.push( ai );
@@ -90,6 +168,7 @@ define( [
         },
 
         stopAll: function () {},
+
         isPlaying: function ( name ) {
             if ( this._actives._keys.length > 0 ) {
                 var pri = this._actives._keys.length - 1;
