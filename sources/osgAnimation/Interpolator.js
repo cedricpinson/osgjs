@@ -2,10 +2,64 @@ define( [
     'osg/Quat'
 ], function ( Quat ) {
 
+    var Vec3CopyKeyFrame = function( i, keys, result ) {
+        var index = i;
+        result[ 0 ] = keys[index++];
+        result[ 1 ] = keys[index++];
+        result[ 2 ] = keys[index++];
+    };
+
+    var Vec3LerpInterpolator = function ( t, channelInstance ) {
+
+        var channel = channelInstance.channel;
+        var value = channelInstance.value;
+        var start = channel.start;
+        var end = channel.end;
+        var keys = channel.keys;
+        var times = channel.times;
+
+        if ( t >= end ) {
+            channelInstance.key = 0;
+            Vec3CopyKeyFrame( keys.length-3, keys, value );
+            return;
+
+        } else if ( t <= start ) {
+            channelInstance.key = 0;
+            Vec3CopyKeyFrame( 0, keys, value );
+            return;
+        }
+
+        var i1 = channelInstance.key;
+        while ( times[ i1 + 1 ] < t ) i1++;
+
+
+        var t1 = times[ i1 ];
+        var t2 = times[ i1 + 1 ];
+
+        var index = i1 * 3;
+        var x1 = keys[ index++ ];
+        var y1 = keys[ index++ ];
+        var z1 = keys[ index++ ];
+
+        var x2 = keys[ index++ ];
+        var y2 = keys[ index++ ];
+        var z2 = keys[ index++ ];
+
+        var r = ( t - t1 ) / ( t2 - t1 );
+
+        value[ 0 ] = x1 + ( x2 - x1 ) * r;
+        value[ 1 ] = y1 + ( y2 - y1 ) * r;
+        value[ 2 ] = z1 + ( z2 - z1 ) * r;
+        channelInstance.key = i1;
+    };
+
+
+
+
     /**
      *  Interpolator provide interpolation function to sampler
      */
-    var Vec3LerpInterpolator = function ( keys, t, result ) {
+    var Vec3LerpInterpolatorOld = function ( keys, t, result ) {
         var keyStart;
         var startTime;
         var keyEnd = keys[ keys.length - 1 ];

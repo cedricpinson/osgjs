@@ -1,22 +1,118 @@
 define( [
     'osg/Utils',
-    'osg/Object'
-], function ( MACROUTILS, Object ) {
+    'osg/Object',
+    'osg/Vec3',
+    'osg/Quat'
 
-    /**
-     *  Channel is responsible to interpolate keys
-     *  @class Channel
-     */
+], function ( MACROUTILS, Object, Vec3, Quat ) {
+
+    var ChannelType = {
+        Vec3: 0,
+        Quat: 1,
+        Float: 2
+    };
+
+
+
     var Channel = function ( sampler, target ) {
         Object.call( this );
         this._sampler = sampler;
         this._target = target;
         this._targetName = undefined;
+
         this._data = {
-            'value': undefined,
-            'key': 0
+            keys: undefined,
+            value: undefined,
+            t: 0.0,
+            key: 0
+        };
+
+    };
+
+    // channel {
+    //     keys: [],
+    //     times: [],
+    //     type: enum
+    // }
+    // init a channel with extra field
+    // start, end, duration
+    var initChannel = function( channel ) {
+        channel.start = channel.times[0];
+        channel.end = channel.times[channel.times.length-1];
+        channel.duration = channel.end - channel.start;
+        return channel;
+    };
+
+    var createVec3Channel = function( keys, times ) {
+        var channel = {
+            type: ChannelType.Vec3,
+            keys: keys,
+            times: times
+        };
+        return initChannel( channel );
+    };
+
+    var createFloatChannel = function( keys, times ) {
+        var channel = {
+            type: ChannelType.Float,
+            keys: keys,
+            times: times
+        };
+        return initChannel( channel );
+    };
+
+    var createQuatChannel = function( keys, times ) {
+        var channel = {
+            type: ChannelType.Quat,
+            keys: keys,
+            times: times
+        };
+        return initChannel( channel );
+    };
+
+    // channel contains {
+    //     keys: [],
+    //     times: [],
+    //     start: 0.0,
+    //     end: 1.0,
+    // }
+    // return {
+    //     channel: channel,
+    //     value: Vec3.create(),
+    //     key: 0
+    // }
+    var createActiveVec3Channel = function( channel ) {
+        return {
+            channel: channel,
+            value: Vec3.create(),
+            key: 0
         };
     };
+
+    var createActiveQuatChannel = function( channel ) {
+        return {
+            channel: channel,
+            value: Quat.create(),
+            key: 0
+        };
+    };
+
+    var createActiveFloatChannel = function( channel ) {
+        return {
+            channel: channel,
+            value: 0.0,
+            key: 0
+        };
+    };
+
+    // create an active channel from type
+    var createActiveChannel = function( channel ) {
+        return Channel[channel.type](channel);
+    };
+
+
+
+
 
     /** @lends Channel.prototype */
     Channel.prototype = MACROUTILS.objectInherit( Object.prototype, {
@@ -65,6 +161,94 @@ define( [
             this._target.reset();
         }
     } );
+
+
+
+
+
+    // animations actives
+    /*
+
+     |-----------------| anim0 (channel0_0, channel0_1 )
+               |--------------| anim1 (channel1_0, channel1_1, channel1_2 )
+
+     // si triage a cause de la priorité
+     // iterate on priority
+     // and for animations of the same priority
+
+
+
+     var targets = {};
+     for ( var i = 0 ; i < channels.length; i++ ) {
+        var target = channels[i].target;
+        targets[target].push( channels[i] );
+     }
+
+
+     // pour l'instant on ignore les pb d'organisation de priorité
+     //
+     // target X : [
+     //      ChannelAnima0_0
+     //      ChannelAnima1_0
+     // ]
+
+     // target Y : [
+     //      ChannelAnima0_1
+     //      ChannelAnima1_1
+     // ]
+
+
+     */
+
+
+    // for a target compute each channel contribution
+    // channel0, value0, w, priority0
+    // channel1, value1, w, priority0
+    // channel2, value2, w, priority0
+
+
+    // channel0, value0, w, priority1
+    // channel1, value1, w, priority1
+    // channel2, value2, w, priority1
+
+    /*
+
+     var value;
+     Copy( channels[0].value, value );
+     var weight = 0.0;
+     var priority = channels[0].priority;
+     var priorityWeight = channels[0].weight;
+
+     for ( var i = 1; i < channels.length; i++ ) {
+
+         if ( priority !== channels[i].priority ) {
+              weight += priorityWeight * ( 1.0 - weight );
+              priorityWeight = 0.0;
+              priority = channels[i].priority;
+         }
+
+         priorityWeight += weight;
+         t = ( 1.0 - weight ) * channels[i].weight / priorityWeight;
+         lerp( t, value, channels[i].value );
+     }
+
+
+
+     */
+
+    Channel.createActiveChannel = createActiveChannel;
+    Channel.createActiveVec3Channel = createActiveVec3Channel;
+    Channel.createActiveQuatChannel = createActiveQuatChannel;
+    Channel.createActiveFloatChannel = createActiveFloatChannel;
+
+    Channel.createVec3Channel = createVec3Channel;
+    Channel.createQuatChannel = createQuatChannel;
+    Channel.createFloatChannel = createFloatChannel;
+
+    Channel[ ChannelType.Vec3 ] = createActiveVec3Channel;
+    Channel[ ChannelType.Quat ] = createActiveQuatChannel;
+    Channel[ ChannelType.Float ] = createActiveFloatChannel;
+
 
     return Channel;
 } );
