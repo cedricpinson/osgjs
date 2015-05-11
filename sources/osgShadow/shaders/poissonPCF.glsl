@@ -4,7 +4,7 @@
 
 #pragma include "hash.glsl"
 
-float getShadowPCF(const in sampler2D tex, const in vec4 size, const in vec2 uv, const in float shadowZ, const in vec2 biasPcf) {
+float getShadowPCF(const in sampler2D tex, const in vec4 size, const in vec2 uv, const in float shadowZ, const in vec2 biasPCF) {
 
     vec2 o = size.zw;
     float s = 0.0;
@@ -15,7 +15,7 @@ float getShadowPCF(const in sampler2D tex, const in vec4 size, const in vec2 uv,
     int idx = 0;
 
     // Not Good, as it needs the lerp things
-#define TSF_BASE(p, m) texture2DShadowLerp(tex, size, uv + m*poissonDisk[p]*o,  shadowZ)
+#define TSF_BASE(p, m) texture2DShadowLerp(tex, size, uv + m*poissonDisk[p]*o + biasPCF,  shadowZ)
 
 // fixed pattern in the shadow, no noise
 #define TSF_FIXED(i) TSF_BASE(i, 1.0)
