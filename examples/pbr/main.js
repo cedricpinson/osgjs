@@ -620,7 +620,7 @@
 
                         var x = roughness * offset;
                         var y = metal * offset * 0.2;
-                        osg.Matrix.makeTranslate( x, 0, y, sample.getMatrix() );
+                        osg.Matrix.makeTranslate( x, -y*1.2, 0, sample.getMatrix() );
 
                         roughnessTexture = this.createTextureFromColor( roughness, false );
 
