@@ -4,6 +4,8 @@ define( [
     'osg/Camera',
     'osg/ComputeBoundsVisitor',
     'osg/FrameBufferObject',
+    'osg/Light',
+    'osg/LightSource',
     'osg/Matrix',
     'osg/Notify',
     'osg/NodeVisitor',
@@ -23,11 +25,9 @@ define( [
     'osgShadow/ShadowFrustumIntersection',
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowTexture'
-], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, FrameBufferObject, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowAttribute, ShadowFrustumIntersection, ShadowTechnique, ShadowTexture ) {
+], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, FrameBufferObject, Light, LightSource, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowAttribute, ShadowFrustumIntersection, ShadowTechnique, ShadowTexture ) {
 
     'use strict';
-
-
     var TransparentRemoveVisitor = function ( mask ) {
         NodeVisitor.call( this );
         // mask setting to avoid casting shadows
@@ -289,6 +289,7 @@ define( [
             this.setTextureSize( shadowSettings.textureSize );
             this.setTexturePrecision( shadowSettings.textureType );
 
+            this.setFakePCF( shadowSettings.fakePCF );
             this.setKernelSizePCF( shadowSettings.kernelSizePCF );
             this.setAlgorithm( shadowSettings.algorithm );
             this.setBias( shadowSettings.bias );
@@ -351,6 +352,14 @@ define( [
         },
         setKernelSizePCF: function ( value ) {
             this._shadowAttribute.setKernelSizePCF( value );
+        },
+
+        getFakePCF: function () {
+            return this._shadowAttribute.getFakePCF();
+        },
+        setFakePCF: function ( value ) {
+            this._shadowAttribute.setFakePCF( value );
+            this.setTextureFiltering();
         },
 
         setShadowedScene: function ( shadowedScene ) {
@@ -483,6 +492,70 @@ define( [
             this.updateShadowTechnique();
         },
 
+        setTextureFiltering: function () {
+
+            var textureType, texFilterMin, texFilterMag;
+            var texType = this.getTexturePrecision();
+            if ( this._texture ) {
+                // see shadowSettings.js header
+                switch ( this.getAlgorithm() ) {
+                case 'ESM':
+                case 'VSM':
+                case 'EVSM':
+                    texFilterMin = Texture.LINEAR;
+                    texFilterMag = Texture.LINEAR;
+                    break;
+
+                default:
+                case 'PCF':
+                case 'NONE':
+                    if ( this.getFakePCF() ) {
+                        texFilterMin = Texture.LINEAR;
+                        texFilterMag = Texture.LINEAR;
+                    } else {
+                        texFilterMin = Texture.NEAREST;
+                        texFilterMag = Texture.NEAREST;
+                    }
+                    break;
+                }
+
+                switch ( texType ) {
+                case 'HALF_FLOAT':
+                    textureType = Texture.HALF_FLOAT;
+                    texFilterMin = Texture.NEAREST;
+                    texFilterMag = Texture.NEAREST;
+                    break;
+                case 'HALF_FLOAT_LINEAR':
+                    textureType = Texture.HALF_FLOAT;
+                    texFilterMin = Texture.LINEAR;
+                    texFilterMag = Texture.LINEAR;
+                    break;
+                case 'FLOAT':
+                    textureType = Texture.FLOAT;
+                    texFilterMin = Texture.NEAREST;
+                    texFilterMag = Texture.NEAREST;
+                    break;
+                case 'FLOAT_LINEAR':
+                    textureType = Texture.FLOAT;
+                    texFilterMin = Texture.LINEAR;
+                    texFilterMag = Texture.LINEAR;
+                    break;
+                default:
+                case 'UNSIGNED_BYTE':
+                    textureType = Texture.UNSIGNED_BYTE;
+                    break;
+                }
+            }
+
+            this._texture.setInternalFormatType( textureType );
+            this._texture.setMinFilter( texFilterMin );
+            this._texture.setMagFilter( texFilterMag );
+            this._textureMagFilter = texFilterMag;
+            this._textureMinFilter = texFilterMin;
+
+            //this._texture.dirty();
+
+        },
         // internal texture allocation
         // handle any change like resize, filter param, etc.
         initTexture: function () {
@@ -494,64 +567,14 @@ define( [
                 this._textureUnit = this._textureUnitBase;
             }
 
-            var texType = this.getTexturePrecision();
-            var textureType, textureFormat, texFilterMin, texFilterMag;
 
-            // see shadowSettings.js header
-            switch ( this.getAlgorithm() ) {
-            case 'ESM':
-            case 'VSM':
-            case 'EVSM':
-                texFilterMin = Texture.LINEAR;
-                texFilterMag = Texture.LINEAR;
-                break;
-
-            default:
-            case 'PCF':
-            case 'NONE':
-                texFilterMin = Texture.NEAREST;
-                texFilterMag = Texture.NEAREST;
-                break;
-            }
-
-            switch ( texType ) {
-            case 'HALF_FLOAT':
-                textureType = Texture.HALF_FLOAT;
-                texFilterMin = Texture.NEAREST;
-                texFilterMag = Texture.NEAREST;
-                break;
-            case 'HALF_FLOAT_LINEAR':
-                textureType = Texture.HALF_FLOAT;
-                texFilterMin = Texture.LINEAR;
-                texFilterMag = Texture.LINEAR;
-                break;
-            case 'FLOAT':
-                textureType = Texture.FLOAT;
-                texFilterMin = Texture.NEAREST;
-                texFilterMag = Texture.NEAREST;
-                break;
-            case 'FLOAT_LINEAR':
-                textureType = Texture.FLOAT;
-                texFilterMin = Texture.LINEAR;
-                texFilterMag = Texture.LINEAR;
-                break;
-            default:
-            case 'UNSIGNED_BYTE':
-                textureType = Texture.UNSIGNED_BYTE;
-                break;
-            }
-
+            var textureFormat;
+            // luminance Float format ?
             textureFormat = Texture.RGBA;
+
             this._texture.setTextureSize( this._textureSize, this._textureSize );
-
-            this._texture.setInternalFormatType( textureType );
-
-            this._texture.setMinFilter( texFilterMin );
-            this._texture.setMagFilter( texFilterMag );
+            this.setTextureFiltering();
             this._texture.setInternalFormat( textureFormat );
-
-            this._textureMagFilter = texFilterMag;
-            this._textureMinFilter = texFilterMin;
 
             this._texture.setWrapS( Texture.CLAMP_TO_EDGE );
             this._texture.setWrapT( Texture.CLAMP_TO_EDGE );
@@ -786,7 +809,6 @@ define( [
 
             // make sure it's not modified outside our computations
             // camera matrix can be modified by cullvisitor afterwards...
-
             Matrix.copy( camera.getProjectionMatrix(), this._projectionMatrix );
             Matrix.copy( camera.getViewMatrix(), this._viewMatrix );
             var projection = this._projectionMatrix;
@@ -818,10 +840,7 @@ define( [
 
             //  light pos & lightTarget in World Space
             if ( light.getPosition()[ 3 ] !== 0.0 && light.getSpotCutoff() < 180 ) {
-                //TODO: when spot light is camera attached?
-
-                // light matrix is in eye space. even if it's below an Absolute REF Node. (wtf)
-                Matrix.inverse( cullVisitor.getCurrentModelViewMatrix(), eyeToWorld );
+                //TODO: check when spot light is camera attached?
                 Matrix.mult( eyeToWorld, lightMatrix, this._tmpMatrix );
                 var worldMatrix = this._tmpMatrix;
                 // same code as light spot shader
@@ -850,7 +869,6 @@ define( [
                 Vec3.normalize( worldLightPos, worldLightPos );
                 this.makeOrthoFromBoundingBox( frustumBound, worldLightPos, view, projection );
             }
-
 
             Matrix.copy( this._projectionMatrix, camera.getProjectionMatrix() );
             Matrix.copy( this._viewMatrix, camera.getViewMatrix() );
