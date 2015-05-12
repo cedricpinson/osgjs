@@ -54,6 +54,7 @@ define( [
         // kernel size & type for pcf
         this._kernelSizePCF = undefined;
 
+        this._fakePCF = true;
         this._enable = !disable;
 
     };
@@ -115,6 +116,12 @@ define( [
         },
         setKernelSizePCF: function ( v ) {
             this._kernelSizePCF = v;
+        },
+        getFakePCF: function () {
+            return this._fakePCF;
+        },
+        setFakePCF: function ( v ) {
+            this._fakePCF = v;
         },
         setPrecision: function ( precision ) {
             this._precision = precision;
@@ -197,6 +204,11 @@ define( [
             } else if ( algo === 'PCF' ) {
                 defines.push( '#define _PCF' );
                 var pcf = this.getKernelSizePCF();
+
+                if ( this._fakePCF ) {
+                    defines.push( '#define FAKE_PCF 1' );
+                }
+
                 switch ( pcf ) {
                 case '4Poisson(16texFetch)':
                     defines.push( '#define _POISSON_PCF' );
@@ -284,7 +296,7 @@ define( [
         },
         getHash: function () {
 
-            return this.getTypeMember() + this.getAlgorithm() + this.getKernelSizePCF();
+            return this.getTypeMember() + '_' + this.getAlgorithm() + '_' + this.getKernelSizePCF() + '_' + this.getFakePCF();
 
         }
 
