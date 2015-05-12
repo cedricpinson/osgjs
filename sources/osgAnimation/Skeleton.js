@@ -11,12 +11,13 @@ define( [
         MatrixTransform.call( this );
     };
 
-    Skeleton.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
+    Skeleton.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         setDefaultUpdateCallback: function () {
             this.setUpdateCallback( new UpdateSkeleton() );
         }
-    } );
+    } ), 'osgAnimation', 'Skeleton' );
+    MACROUTILS.setTypeID( Skeleton );
 
     return Skeleton;
 } );

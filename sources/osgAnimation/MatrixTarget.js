@@ -11,6 +11,7 @@ define( [
         else
             Matrix.copy( target, this._target);
     };
+
     MatrixTarget.prototype = MACROUTILS.objectInherit( Target.prototype, {
         update: function ( weight, val, priority ) {
             if ( this._weight || this._priorityWeight ) {

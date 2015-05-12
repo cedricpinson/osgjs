@@ -39,7 +39,7 @@ define( [
         };
         // channels
         for ( var i = 0, l = jsonObj.Channels.length; i < l; i++ ) {
-            Q.when( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( createPromiseCallback( animation ) );
+            Q( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( createPromiseCallback( animation ) );
         }
         return animation;
     };
@@ -167,6 +167,13 @@ define( [
         return umt;
     };
 
+    osgAnimationWrapper.UpdateBone = function ( input, updateBone ) {
+        if ( osgAnimationWrapper.UpdateMatrixTransform( input, updateBone ) === undefined ) {
+            return;
+        }
+        return updateBone;
+    };
+
     osgAnimationWrapper.StackedTranslate = function ( input, st ) {
         var jsonObj = input.getJSON();
 
@@ -267,7 +274,7 @@ define( [
     osgAnimationWrapper.Bone = function ( input, bone ) {
         var jsonObj = input.getJSON();
         var check = function ( o ) {
-            if ( o.InvBindMatrixInSkeletonSpace && o.BoneInSkeletonSpace ) {
+            if ( o.InvBindMatrixInSkeletonSpace && o.MatrixInSkeletonSpace ) {
                 return true;
             }
             return false;
@@ -276,15 +283,15 @@ define( [
             return undefined;
         }
 
-        var promise = osgWrapper.MatrixTransform( input, bone );
+        osgWrapper.MatrixTransform( input, bone );
 
         if ( jsonObj.InvBindMatrixInSkeletonSpace !== undefined ) {
             bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
         }
         if ( jsonObj.BoneInSkeletonSpace !== undefined ) {
-            bone.setMatrixInSkeletonSpace( jsonObj.BoneInSkeletonSpace );
+            bone.setMatrixInSkeletonSpace( jsonObj.MatrixInSkeletonSpace );
         }
-        return promise;
+        return bone;
     };
 
     osgAnimationWrapper.Skeleton = function ( input, skl ) {
@@ -298,7 +305,6 @@ define( [
         if ( !check( jsonObj ) ) {
             return;
         }
-
         return osgWrapper.MatrixTransform( input, skl );
     };
 
@@ -335,7 +341,7 @@ define( [
             arraysPromise.push( defer.promise );
 
             var promise = input.setJSON( jsonAttribute ).readBufferArray();
-            Q.when( promise ).then( function ( buffer ) {
+            Q( promise ).then( function ( buffer ) {
                 if ( buffer !== undefined ) {
                     bezierChannel[ name ] = buffer._elements;
                 }
@@ -375,6 +381,7 @@ define( [
 
     osgAnimationWrapper.Vec3CubicBezierChannel = function ( input, channel ) {
         var jsonObj = input.getJSON();
+
         var check = function ( o ) {
             if ( o.KeyFrames && o.TargetName && o.Name ) {
                 var KeyFrames = o.KeyFrames;
@@ -412,7 +419,7 @@ define( [
                 bezierChannel[ name ] = [];
 
                 promise = input.setJSON( jsonAttribute[ 0 ] ).readBufferArray();
-                Q.when( promise ).then( function ( buffer ) {
+                Q( promise ).then( function ( buffer ) {
                     if ( buffer !== undefined ) {
                         bezierChannel[ name ].push( buffer._elements );
                     }
@@ -420,7 +427,7 @@ define( [
                 } );
 
                 promise = input.setJSON( jsonAttribute[ 1 ] ).readBufferArray();
-                Q.when( promise ).then( function ( buffer ) {
+                Q( promise ).then( function ( buffer ) {
                     if ( buffer !== undefined ) {
                         bezierChannel[ name ].push( buffer._elements );
                     }
@@ -428,7 +435,7 @@ define( [
                 } );
 
                 promise = input.setJSON( jsonAttribute[ 2 ] ).readBufferArray();
-                Q.when( promise ).then( function ( buffer ) {
+                Q( promise ).then( function ( buffer ) {
                     if ( buffer !== undefined ) {
                         bezierChannel[ name ].push( buffer._elements );
                     }
@@ -436,7 +443,7 @@ define( [
                 } );
             } else {
                 promise = input.setJSON( jsonAttribute ).readBufferArray();
-                Q.when( promise ).then( function ( buffer ) {
+                Q( promise ).then( function ( buffer ) {
 
                     if ( buffer !== undefined ) {
                         bezierChannel[ name ] = buffer._elements;
@@ -484,15 +491,104 @@ define( [
     };
 
     osgAnimationWrapper.UpdateSkeleton = function ( input, upSkl ) {
+        if ( !osgWrapper.Object( input, upSkl ) ) {
+            return;
+        }
 
         return upSkl;
     };
 
     osgAnimationWrapper.RigGeometry = function ( input, rigGeom ) {
+        var jsonObj = input.getJSON();
+        var check = function ( o ) {
+            if ( o.InfluenceMap && o.SourceGeometry )
+                return true;
+            return false;
+        };
+
+        if ( !check( jsonObj ) ) {
+            return undefined;
+        }
+
+        if ( !osgWrapper.Geometry( input, rigGeom ) ) {
+            return;
+        }
+
+        input.setJSON( jsonObj.SourceGeometry );
+        if ( !osgWrapper.Geometry( input, rigGeom.getOrCreateSourceGeometry() ) )
+            return undefined;
+
+        var explodeInfluenceMap = {};
+        var arraysPromise = [];
+
+        var createVertexInfluence = function ( name, jsonAttribute ) {
+            //Get Index array
+            var deferIndex = Q.defer();
+            arraysPromise.push( deferIndex.promise );
+            var promiseIndex = input.setJSON( jsonAttribute[ 'Index' ] ).readBufferArray();
+            Q( promiseIndex ).then( function ( buffer ) {
+                if ( buffer !== undefined ) {
+                    if ( !explodeInfluenceMap[ name ] )
+                        explodeInfluenceMap[ name ] = {};
+                    explodeInfluenceMap[ name ][ 'Index' ] = buffer;
+                }
+                deferIndex.resolve( buffer );
+            } );
+
+            //Get weigth array
+            var deferWeight = Q.defer();
+            arraysPromise.push( deferWeight.promise );
+            var promiseWeight = input.setJSON( jsonAttribute[ 'Weight' ] ).readBufferArray();
+            Q( promiseWeight ).then( function ( buffer ) {
+                if ( buffer !== undefined ) {
+                    if ( !explodeInfluenceMap[ name ] )
+                        explodeInfluenceMap[ name ] = {};
+
+                    explodeInfluenceMap[ name ][ 'Weight' ] = buffer;
+                }
+                deferWeight.resolve( buffer );
+            } );
+        };
+
+        var keys = Object.keys( jsonObj.InfluenceMap );
+        var InfluenceMap = jsonObj.InfluenceMap;
+
+        for ( var i = 0, l = keys.length; i < l; i++ ) {
+            var key = keys[ i ];
+            var vertexInfluence = InfluenceMap[ key ];
+            createVertexInfluence( key, vertexInfluence );
+        }
+
+        //Build influence Map
+        var makeVertexInfluence = function ( name ) {
+            var vertexInfluence = explodeInfluenceMap[ name ];
+            var index = vertexInfluence[ 'Index' ]._elements;
+            var weight = vertexInfluence[ 'Weight' ]._elements;
+            var res = [];
+
+            for ( var i = 0, l = index.length; i < l; i++ ) {
+                res.push( [ index[ i ], weight[ i ] ] );
+            }
+            return res;
+        };
+
+        var rebuildInfluenceMap = {};
+
+        var defer = Q.defer();
+        Q.all( arraysPromise ).then( function () {
+            defer.resolve( explodeInfluenceMap );
+
+            var keys = Object.keys( explodeInfluenceMap );
+            for ( var i = 0, l = keys.length; i < l; i++ ) {
+                var key = keys[ i ];
+                rebuildInfluenceMap[ key ] = makeVertexInfluence( key );
+            }
+
+            rigGeom.setInfluenceMap( rebuildInfluenceMap );
+        } );
 
         return rigGeom;
     };
-
 
     return osgAnimationWrapper;
 } );

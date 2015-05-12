@@ -1,9 +1,6 @@
 define( [
-    'q',
-    'osg/Geometry'
-], function ( Q, Geometry ) {
-
-    'use strict';
+    'q'
+], function ( Q ) {
 
     var osgWrapper = {};
 
@@ -450,41 +447,6 @@ define( [
             defer.resolve( node );
         } );
         return defer.promise;
-    };
-
-    osgWrapper.RigGeometry = function ( input /*, geom*/ ) {
-        var jsonObj = input.getJSON();
-        var check = function ( o ) {
-            if ( o.InfluenceMap !== undefined && o.SourceGeometry !== undefined ) {
-                return true;
-            }
-            return false;
-        };
-        if ( !check( jsonObj ) ) {
-            return undefined;
-        }
-
-        Geometry.call( this );
-
-        //InfluenceMap
-        jsonObj.InfluenceMap = jsonObj.InfluenceMap || [];
-
-        for ( var key in jsonObj.InfluenceMap ) {
-            alert( key );
-            // TODO revoir la lecture des données
-            var index = jsonObj.InfluenceMap[ key ].Index.readBufferArray();
-            var weight = jsonObj.InfluenceMap[ key ].Weight.readBufferArray();
-
-            var vertexList = [];
-
-            for ( var i = 0, l = index.length - 1; i < l; i++ ) {
-                vertexList.push( [ index[ i ], weight[ i ] ] );
-            }
-            this._vertexInfluenceMap[ key ] = vertexList;
-        }
-
-        //SourceGeometry
-        //this._geometry = osgWrapper.Geometry( new Input( jsonObj.Geometry, "Geometry" ), geom );
     };
 
     osgWrapper.PagedLOD = function ( input, plod ) {

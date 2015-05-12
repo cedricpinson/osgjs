@@ -2,9 +2,8 @@ define( [
     'osg/Utils',
     'osg/Notify',
     'osg/NodeVisitor',
-    'osgAnimation/Bone',
-    'osgAnimation/Skeleton'
-], function ( MACROUTILS, Notify, NodeVisitor, Bone, Skeleton ) {
+    'osgAnimation/Bone'
+], function ( MACROUTILS, Notify, NodeVisitor, Bone ) {
 
     'use strict';
 
@@ -18,13 +17,15 @@ define( [
 
     ValidateSkeletonVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         apply: function ( node ) {
-            if ( node.getTypeId() !== Bone.getTypeId() ) {
+            if ( node.getTypeID() !== Bone.getTypeID() ) {
                 return;
             }
             var foundNonBone = false;
 
-            for ( var i = 0, l = node.getChildren().length - 1; i < l; i++ ) {
-                if ( node.getchild( i ).getTypeId() === Bone.getTypeId() ) {
+            var children = node.getChildren();
+            for ( var i = 0, l = node.getChildren().length; i < l; i++ ) {
+                var child = children[ i ];
+                if ( child.getTypeID() === Bone.getTypeID() ) {
                     if ( foundNonBone ) {
                         Notify.warn( 'Warning: a Bone was found after a non-Bone child ' +
                             'within a Skeleton. Children of a Bone must be ordered ' +
@@ -49,25 +50,25 @@ define( [
         this._needValidate = true;
     };
 
-    UpdateSkeleton.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
-
+    UpdateSkeleton.prototype = MACROUTILS.objectInherit( Object.prototype, {
         needToValidate: function () {
             return this._needValidate;
         },
-        update: function ( /*node,*/ nv ) {
+        update: function ( node, nv ) {
             if ( nv.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
-                if ( this.getTypeId() === Skeleton.getTypeId() && this._needValidate ) {
-
+                if ( node.className && node.className() === 'Skeleton' && this._needValidate ) {
                     var validateSkeletonVisitor = new ValidateSkeletonVisitor();
-                    for ( var i = 0, l = this.getChildren().length - 1; i < l; i++ ) {
-                        this.getChild( i ).accept( validateSkeletonVisitor );
+                    var children = node.getChildren();
+                    for ( var i = 0, l = children.length; i < l; i++ ) {
+                        var child = children[ i ];
+                        child.accept( validateSkeletonVisitor );
                     }
                     this._needValidate = false;
                 }
             }
-            this.traverse( nv );
+            nv.traverse( node, nv );
         }
-    } ) );
+    } );
 
     return UpdateSkeleton;
 } );

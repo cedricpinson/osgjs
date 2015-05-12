@@ -14,10 +14,10 @@ define( [
 
     var StackedMatrixElement = function ( name, matrix ) {
         Object.call( this );
-        if ( !matrix ) {
-            this._matrix = Matrix.makeIdentity();
+        this._matrix = Matrix.create();
+        if ( matrix !== undefined ) {
+            this._matrix = Matrix.copy( matrix, this._matrix );
         }
-        this._matrix = matrix;
         this._target = undefined;
         this.setName( name );
     };

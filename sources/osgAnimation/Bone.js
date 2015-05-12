@@ -60,4 +60,7 @@ define( [
             this.setUpdateCallback( new UpdateBone( cbName ) );
         }
     } ), 'osgAnimation', 'Bone' );
+    MACROUTILS.setTypeID( Bone );
+
+    return Bone;
 } );

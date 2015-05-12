@@ -1266,59 +1266,91 @@
                         "UniqueID": 6, 
                         "InfluenceMap": {
                           "Bone001": {
-                            "Index": { 
-                              "Int32Array": { 
-                                "Elements": [ 0, 3, 12, 15, 31, 5, 13, 18, 21, 1, 25, 30, 33, 2, 4, 19, 24, 27, 6, 9, 17, 32, 34, 7, 14, 16, 23, 11, 26, 28, 35, 8, 10, 20, 22, 29, 36, 39, 48, 51, 67, 41, 49, 54, 57, 42, 45, 53, 68, 70, 43, 50, 52, 59 ],
-                                "Size": 54
-                              }
+                            "Index": {
+                              "Array": { 
+                                "Uint16Array": { 
+                                  "Elements": [ 0, 3, 12, 15, 31, 5, 13, 18, 21, 1, 25, 30, 33, 2, 4, 19, 24, 27, 6, 9, 17, 32, 34, 7, 14, 16, 23, 11, 26, 28, 35, 8, 10, 20, 22, 29, 36, 39, 48, 51, 67, 41, 49, 54, 57, 42, 45, 53, 68, 70, 43, 50, 52, 59 ],
+                                  "Size": 54
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
                             }, 
-                            "Weight": { 
-                              "Float32Array": { 
-                                "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
-                                "Size": 54
-                              }
+                            "Weight": {
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                                  "Size": 54
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
                             }
                           }, 
                           "Bone002": {
-                            "Index": { 
-                              "Int32Array": { 
-                                "Elements": [ 37, 61, 66, 69, 38, 40, 55, 60, 63, 47, 62, 64, 71, 44, 46, 56, 58, 65, 72, 75, 84, 87, 103, 77, 85, 90, 93, 78, 81, 89, 104, 106, 79, 86, 88, 95 ],
-                                "Size": 36
-                              }
+                            "Index": {
+                              "Array": { 
+                                "Uint16Array": { 
+                                  "Elements": [ 37, 61, 66, 69, 38, 40, 55, 60, 63, 47, 62, 64, 71, 44, 46, 56, 58, 65, 72, 75, 84, 87, 103, 77, 85, 90, 93, 78, 81, 89, 104, 106, 79, 86, 88, 95 ],
+                                  "Size": 36
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
                             }, 
-                            "Weight": { 
-                              "Float32Array": { 
-                                "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
-                                "Size": 36
-                              }
+                            "Weight": {
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                                  "Size": 36
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
                             }
                           }, 
                           "Bone003": {
-                            "Index": { 
-                              "Int32Array": { 
-                                "Elements": [ 73, 97, 102, 105, 74, 76, 91, 96, 99, 83, 98, 100, 107, 80, 82, 92, 94, 101, 108, 111, 120, 123, 139, 113, 121, 126, 129, 114, 117, 125, 140, 142, 115, 122, 124, 131 ],
-                                "Size": 36
-                              }
+                            "Index": {
+                              "Array": { 
+                                "Uint16Array": { 
+                                  "Elements": [ 73, 97, 102, 105, 74, 76, 91, 96, 99, 83, 98, 100, 107, 80, 82, 92, 94, 101, 108, 111, 120, 123, 139, 113, 121, 126, 129, 114, 117, 125, 140, 142, 115, 122, 124, 131 ],
+                                  "Size": 36
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
                             }, 
-                            "Weight": { 
-                              "Float32Array": { 
-                                "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
-                                "Size": 36
-                              }
+                            "Weight": {
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                                  "Size": 36
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
                             }
                           }, 
                           "Bone004": {
-                            "Index": { 
-                              "Int32Array": { 
-                                "Elements": [ 109, 133, 138, 141, 110, 112, 127, 132, 135, 119, 134, 136, 143, 116, 118, 128, 130, 137 ],
-                                "Size": 18
-                              }
+                            "Index": {
+                              "Array": { 
+                                "Uint16Array": { 
+                                  "Elements": [ 109, 133, 138, 141, 110, 112, 127, 132, 135, 119, 134, 136, 143, 116, 118, 128, 130, 137 ],
+                                  "Size": 18
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
                             }, 
-                            "Weight": { 
-                              "Float32Array": { 
-                                "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
-                                "Size": 18
-                              }
+                            "Weight": {
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                                  "Size": 18
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
                             }
                           }
                         }, 
@@ -1416,7 +1448,7 @@
                 "Name": "Bone001", 
                 "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
                 "UpdateCallbacks": [ {
-                  "osgAnimation.UpdateMatrixTransform": {
+                  "osgAnimation.UpdateBone": {
                     "Name": "Bone001", 
                     "StackedTransforms": [ {
                       "osgAnimation.StackedTranslate": {
@@ -1465,7 +1497,7 @@
                     "Name": "Bone002", 
                     "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
                     "UpdateCallbacks": [ {
-                      "osgAnimation.UpdateMatrixTransform": {
+                      "osgAnimation.UpdateBone": {
                         "Name": "Bone002", 
                         "StackedTransforms": [ {
                           "osgAnimation.StackedMatrixElement": {
@@ -1502,7 +1534,7 @@
                         "Name": "Bone003", 
                         "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
                         "UpdateCallbacks": [ {
-                          "osgAnimation.UpdateMatrixTransform": {
+                          "osgAnimation.UpdateBone": {
                             "Name": "Bone003", 
                             "StackedTransforms": [ {
                               "osgAnimation.StackedMatrixElement": {
@@ -1539,7 +1571,7 @@
                             "Name": "Bone004", 
                             "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
                             "UpdateCallbacks": [ {
-                              "osgAnimation.UpdateMatrixTransform": {
+                              "osgAnimation.UpdateBone": {
                                 "Name": "Bone004", 
                                 "StackedTransforms": [ {
                                   "osgAnimation.StackedMatrixElement": {
@@ -1576,7 +1608,7 @@
                                 "Name": "Bone005", 
                                 "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
                                 "UpdateCallbacks": [ {
-                                  "osgAnimation.UpdateMatrixTransform": {
+                                  "osgAnimation.UpdateBone": {
                                     "Name": "Bone005", 
                                     "StackedTransforms": [ {
                                       "osgAnimation.StackedMatrixElement": {

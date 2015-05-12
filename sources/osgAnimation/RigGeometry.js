@@ -14,14 +14,16 @@ define( [
      */
     var RigGeometry = function () {
         Geometry.call( this );
+        this._geometry = undefined;
+        this._vertexInfluenceMap = undefined;
     };
 
     RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
-        setInfluenceMap: function () {
-
+        setInfluenceMap: function ( influenceMap ) {
+            this._vertexInfluenceMap = influenceMap;
         },
         getInfluenceMap: function () {
-
+            return this._vertexInfluenceMap;
         },
         getSkeleton: function () {
 
@@ -62,11 +64,14 @@ define( [
         getInvMatrixFromSkeletonToGeometry: function () {
 
         },
-        getSourceGeometry: function () {
-
+        getOrCreateSourceGeometry: function () {
+            if ( this._geometry === undefined ) {
+                this._geometry = new Geometry();
+            }
+            return this._geometry;
         },
-        setSourceGeometry: function () {
-
+        setSourceGeometry: function ( geometry ) {
+            this._geometry = geometry;
         }
     } ), 'osgAnimation', 'RigGeometry' );
 
