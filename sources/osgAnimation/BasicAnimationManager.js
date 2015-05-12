@@ -1,8 +1,11 @@
 define( [
     'osg/Notify',
     'osg/Utils',
-    'osg/Object'
-], function ( Notify, MACROUTILS, Object ) {
+    'osg/Object',
+    'osgAnimation/Channel',
+    'osgAnimation/Animation',
+
+], function ( Notify, MACROUTILS, Object, Channel, Animation ) {
 
     /**
      *  BasicAnimationManager
@@ -17,10 +20,62 @@ define( [
 
         this._lastUpdate = undefined;
         this._targets = [];
+
+        // new version
+
+        // original animation list to initialize the manager
+        this._animationsList = [];
+
+        // contains a map with instance animation
+        this._instanceAnimations = {};
+
+
+        // map array index ( targetID ) to targetName;
+        this._targetName = [];
+
+        // target id with active lists
+        this._targetID = [];
+
+
+        // current playing animations
+        this._activeAnimations = {};
+
+        // current actives channels by types
+        // activeChannels = [
+        //   [ chanel0, channel1, ... ] // Vec3 type
+        //   [ chanel2, channel3, ... ] // Quat type
+        //   [ chanel5, channel6, ... ] // Float type
+        // ]
+        this._activeChannelsByTypes = [];
+        var keys = Object.keys( Channel.ChannelType );
+        for ( var i = 0 ; i < keys.length; i++ ) {
+            this._activeChannelsByTypes[ i ].push( [] );
+        }
+
     };
 
     /** @lends BasicAnimationManager.prototype */
     BasicAnimationManager.prototype = MACROUTILS.objectInherit( Object.prototype, {
+
+        init: function( animations ) {
+
+            this._animationsList = animations;
+            this._instanceAnimations  = {};
+
+            var instanceAnimationList = [];
+            for ( var i = 0; i < animations.length; i++ ) {
+                var animation = Animation.createInstanceAnimation( animations[ i ] );
+                var name = animation.name;
+                this._instanceAnimations[ name ] = animation;
+                instanceAnimationList.push( animation );
+            }
+
+            // compute a map and set a targetID for each InstanceChannel
+            this._targetName = Animation.initChannelTargetID( instanceAnimationList );
+
+        },
+
+
 
         _updateAnimation: function ( animationParameter, t, priority ) {
 
@@ -181,6 +236,7 @@ define( [
             }
             return false;
         },
+
         stopAnimation: function ( name ) {
             if ( this._actives._keys.length > 0 ) {
                 var pri = this._actives._keys.length - 1;
@@ -197,12 +253,14 @@ define( [
                 }
             }
         },
+
         playAnimationObject: function ( obj ) {
+
             if ( obj.name === undefined ) {
                 return;
             }
 
-            var anim = this._animations[ obj.name ];
+            var anim = this._instanceAnimations[ obj.name ];
             if ( anim === undefined ) {
                 Notify.info( 'no animation ' + obj.name + ' found' );
                 return;

@@ -32,7 +32,8 @@ define( [
     // channel {
     //     keys: [],
     //     times: [],
-    //     type: enum
+    //     type: enum,
+    //     target: targetName
     // }
     // init a channel with extra field
     // start, end, duration
@@ -79,34 +80,38 @@ define( [
     // return {
     //     channel: channel,
     //     value: Vec3.create(),
+    //     targetID: int,
     //     key: 0
     // }
-    var createActiveVec3Channel = function( channel ) {
+    var createInstanceVec3Channel = function( channel ) {
         return {
             channel: channel,
             value: Vec3.create(),
+            targetID: 0,
             key: 0
         };
     };
 
-    var createActiveQuatChannel = function( channel ) {
+    var createInstanceQuatChannel = function( channel ) {
         return {
             channel: channel,
             value: Quat.create(),
+            targetID: 0,
             key: 0
         };
     };
 
-    var createActiveFloatChannel = function( channel ) {
+    var createInstanceFloatChannel = function( channel ) {
         return {
             channel: channel,
             value: 0.0,
+            targetID: 0,
             key: 0
         };
     };
 
-    // create an active channel from type
-    var createActiveChannel = function( channel ) {
+    // create an instance channel from type
+    var createInstanceChannel = function( channel ) {
         return Channel[channel.type](channel);
     };
 
@@ -166,7 +171,7 @@ define( [
 
 
 
-    // animations actives
+    // animations instances
     /*
 
      |-----------------| anim0 (channel0_0, channel0_1 )
@@ -177,7 +182,19 @@ define( [
      // and for animations of the same priority
 
 
+     // init d'une animation
 
+     // init du manager
+     //   createInstanceAnimation pour chaque animations
+     //      createInstanceChannels pour chaque animation
+
+     //   initChannelTargetID pour toute les animations du manager
+     //      id -> targetName
+
+
+
+
+     // get target for an animation to push on target list ( to blend )
      var targets = {};
      for ( var i = 0 ; i < channels.length; i++ ) {
         var target = channels[i].target;
@@ -236,18 +253,20 @@ define( [
 
      */
 
-    Channel.createActiveChannel = createActiveChannel;
-    Channel.createActiveVec3Channel = createActiveVec3Channel;
-    Channel.createActiveQuatChannel = createActiveQuatChannel;
-    Channel.createActiveFloatChannel = createActiveFloatChannel;
+    Channel.createInstanceChannel = createInstanceChannel;
+    Channel.createInstanceVec3Channel = createInstanceVec3Channel;
+    Channel.createInstanceQuatChannel = createInstanceQuatChannel;
+    Channel.createInstanceFloatChannel = createInstanceFloatChannel;
 
     Channel.createVec3Channel = createVec3Channel;
     Channel.createQuatChannel = createQuatChannel;
     Channel.createFloatChannel = createFloatChannel;
 
-    Channel[ ChannelType.Vec3 ] = createActiveVec3Channel;
-    Channel[ ChannelType.Quat ] = createActiveQuatChannel;
-    Channel[ ChannelType.Float ] = createActiveFloatChannel;
+    Channel[ ChannelType.Vec3 ] = createInstanceVec3Channel;
+    Channel[ ChannelType.Quat ] = createInstanceQuatChannel;
+    Channel[ ChannelType.Float ] = createInstanceFloatChannel;
+
+    Channel.ChannelType = ChannelType;
 
 
     return Channel;
