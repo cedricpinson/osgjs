@@ -348,15 +348,23 @@ define( [
 
             // check magic number 1f8b
             if ( typedArray[ 0 ] === 0x1f && typedArray[ 1 ] === 0x8b ) {
-                var zlib = require( 'zlib' );
 
-                if ( !zlib ) {
-                    Notify.error( 'osg failed to use a gunzip.min.js to uncompress a gz file.\n You can add this vendors to enable this feature or adds the good header in your gzip file served by your server' );
-                }
+                require.ensure( [], function () {
 
-                var zdec = new zlib.Gunzip( typedArray );
-                var result = zdec.decompress();
-                return result.buffer;
+                    var zlib = require( 'zlib' );
+
+                    if ( !zlib ) {
+                        Notify.error( 'osg failed to use a gunzip.min.js to uncompress a gz file.\n You can add this vendors to enable this feature or adds the good header in your gzip file served by your server' );
+                    }
+
+                    var zdec = new zlib.Gunzip( typedArray );
+                    var result = zdec.decompress();
+
+                    return result.buffer;
+
+                } );
+
+
             }
 
             return binary;
