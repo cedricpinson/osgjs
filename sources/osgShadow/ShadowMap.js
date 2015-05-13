@@ -28,15 +28,37 @@ define( [
 ], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, FrameBufferObject, Light, LightSource, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowAttribute, ShadowFrustumIntersection, ShadowTechnique, ShadowTexture ) {
 
     'use strict';
-    var TransparentRemoveVisitor = function ( mask ) {
+
+    /*
+     * Remove nodes that shouldn't not be culled when casting
+     * like lights, camera with rtt, transparent geometries
+     * (otherwise it might break things)
+     */
+    var RemoveNodesNeverCastingVisitor = function ( mask ) {
         NodeVisitor.call( this );
         // mask setting to avoid casting shadows
         this._noCastMask = mask;
         this._nodeList = [];
     };
-    TransparentRemoveVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+    RemoveNodesNeverCastingVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         reset: function () {
             this._nodeList = [];
+        },
+        removeNodeFromCasting: function ( node ) {
+            /*jshint bitwise: false */
+            var nm = node.getNodeMask();
+            // ~0x0 as not to be processed
+            if ( nm === ~0x0 ) {
+                // set to avoid casting shadow
+                nm = this._noCastMask;
+                node.setNodeMask( nm );
+                this._nodeList.push( node );
+            } else if ( ( nm & ~( this._noCastMask ) ) !== 0 ) {
+                // set to avoid casting shadow
+                node.setNodeMask( nm | this._noCastMask );
+                this._nodeList.push( node );
+            }
+            /*jshint bitwise: true */
         },
         apply: function ( node ) {
             var st = node.getStateSet();
@@ -44,25 +66,19 @@ define( [
             if ( st ) {
                 var blend = st.getAttribute( 'BlendFunc' );
                 if ( blend !== undefined && blend.getSource() !== BlendFunc.DISABLE ) {
-                    /*jshint bitwise: false */
-                    var nm = node.getNodeMask();
-                    // ~0x0 as not to be processed
-                    if ( nm === ~0x0 ) {
-                        // set to avoid casting shadow
-                        nm = this._noCastMask;
-                        node.setNodeMask( nm );
-                        this._nodeList.push( node );
-                    } else if ( ( nm & ~( this._noCastMask ) ) !== 0 ) {
-                        // set to avoid casting shadow
-                        node.setNodeMask( nm | this._noCastMask );
-                        this._nodeList.push( node );
-                    }
-                    /*jshint bitwise: true */
+                    this.removeNodeFromCasting( node );
+                    return;
+                } else if ( node.getTypeID() === Light.typeID || node.getTypeID() === LightSource.typeID ) {
+                    this.removeNodeFromCasting( node );
+                    return;
+                } else if ( node.getTypeID() === Camera.typeID && node.isRenderToTextureCamera() ) {
+                    this.removeNodeFromCasting( node );
                     return;
                 }
             }
             this.traverse( node );
         },
+
         setNoCastMask: function ( mask ) {
             this._noCastMask = mask;
         },
@@ -79,6 +95,7 @@ define( [
         }
 
     } );
+
 
 
     // Custom camera cull callback
@@ -191,7 +208,7 @@ define( [
 
         this._computeFrustumBounds = new ShadowFrustumIntersection();
         this._computeBoundsVisitor = new ComputeBoundsVisitor();
-        this._transparentVisitor = new TransparentRemoveVisitor( this._castsShadowTraversalMask );
+        this._removeNodesNeverCastingVisitor = new RemoveNodesNeverCastingVisitor( this._castsShadowTraversalMask );
 
 
         this._infiniteFrustum = true;
@@ -358,8 +375,10 @@ define( [
             return this._shadowAttribute.getFakePCF();
         },
         setFakePCF: function ( value ) {
-            this._shadowAttribute.setFakePCF( value );
-            this.setTextureFiltering();
+            if ( this._shadowAttribute.getFakePCF() !== value ) {
+                this._shadowAttribute.setFakePCF( value );
+                this.setTextureFiltering();
+            }
         },
 
         setShadowedScene: function ( shadowedScene ) {
@@ -512,6 +531,13 @@ define( [
                     if ( this.getFakePCF() ) {
                         texFilterMin = Texture.LINEAR;
                         texFilterMag = Texture.LINEAR;
+
+                        // // TODO try anisotropy with better biaspcf
+                        // texFilterMin = Texture.LINEAR_MIPMAP_LINEAR;
+                        // texFilterMag = Texture.LINEAR_MIPMAP_LINEAR;
+                        // this._texture.setMaxAnisotropy( 16 );
+
+
                     } else {
                         texFilterMin = Texture.NEAREST;
                         texFilterMag = Texture.NEAREST;
@@ -944,9 +970,9 @@ define( [
             var bbox;
 
 
-            this._transparentVisitor.setNoCastMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
-            this._transparentVisitor.reset();
-            this.getShadowedScene().accept( this._transparentVisitor );
+            this._removeNodesNeverCastingVisitor.setNoCastMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
+            this._removeNodesNeverCastingVisitor.reset();
+            this.getShadowedScene().accept( this._removeNodesNeverCastingVisitor );
 
 
             this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
@@ -1011,7 +1037,7 @@ define( [
 
             // remove our flags changes on any bitmask
             // not to break things
-            this._transparentVisitor.restore();
+            this._removeNodesNeverCastingVisitor.restore();
 
             cullVisitor.popStateSet();
 

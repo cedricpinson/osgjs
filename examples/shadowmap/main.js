@@ -30,7 +30,7 @@
             'model': 'material-test',
             'shadowProjection': 'fov',
             'fov': 50,
-            'kernelSizePCF': '4Band(4texFetch)',
+            'kernelSizePCF': '1Tap(4texFetch)',
             'fakePCF': false,
             'exponent': 80.0,
             'exponent1': 0.33,

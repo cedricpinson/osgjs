@@ -206,7 +206,7 @@ define( [
                 var pcf = this.getKernelSizePCF();
 
                 if ( this._fakePCF ) {
-                    defines.push( '#define FAKE_PCF 1' );
+                    defines.push( '#define _FAKE_PCF 1' );
                 }
 
                 switch ( pcf ) {
@@ -230,6 +230,10 @@ define( [
                     defines.push( '#define _POISSON_PCF' );
                     defines.push( '#define _PCFx32' );
                     break;
+                case '1Band(1texFetch)':
+                    defines.push( '#define _NONE' );
+                    defines.push( '#define _PCFx1' );
+                    break;
                 case '4Band(4texFetch)':
                     defines.push( '#define _BAND_PCF' );
                     defines.push( '#define _PCFx4' );
@@ -242,6 +246,10 @@ define( [
                     defines.push( '#define _BAND_PCF' );
                     defines.push( '#define _PCFx16' );
                     break;
+                case '4Tap(16texFetch)':
+                    defines.push( '#define _TAP_PCF' );
+                    defines.push( '#define _PCFx4' );
+                    break;
                 case '9Tap(36texFetch)':
                     defines.push( '#define _TAP_PCF' );
                     defines.push( '#define _PCFx9' );
@@ -251,9 +259,9 @@ define( [
                     defines.push( '#define _PCFx25' );
                     break;
                 default:
-                case '4Tap(16texFetch)':
+                case '1Tap(4texFetch)':
                     defines.push( '#define _TAP_PCF' );
-                    defines.push( '#define _PCFx4' );
+                    defines.push( '#define _PCFx1' );
                     break;
                 }
             } else if ( algo === 'VSM' ) {

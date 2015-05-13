@@ -5,7 +5,7 @@ define( [
 ], function ( MACROUTILS, Object, Texture ) {
     'use strict';
 
-    var kernelSizeList = [ '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)' ];
+    var kernelSizeList = [ '1Band(1texFetch)', '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '1Tap(4texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)' ];
 
     /**
      *  ShadowSettings provides the parameters that the ShadowTechnique should use as a guide for setting up shadowing
