@@ -9,14 +9,14 @@ define( [
     // Animation {
     //     channels: [],
     //     duration: 0.0;
-    //     start: 0.0,
-    //     end: 1.0,
     //     name: string
     // },
 
+    var animationCount = 0;
+
     // assume that iniChannel has been called
     // on each channel
-    var createAnimation = function( channels ) {
+    var createAnimation = function( channels, name ) {
 
         var min = Infinity;
         var max = -Infinity;
@@ -26,12 +26,12 @@ define( [
         }
 
         var duration = max - min;
-
+        var animationName = name || ('animation' + animationCount.toString()) ;
+        animationCount++;
         return {
             channels: channels,
             duration: duration,
-            start: min,
-            end: max
+            name: animationName
         };
     };
 
@@ -40,23 +40,21 @@ define( [
     // Animation {
     //     channels: [],
     //     duration: 0.0;
-    //     start: 0.0,
-    //     end: 1.0,
+    //     start: 0.0, // used to know when an animation has been started
     //     name: string
     // },
     var createInstanceAnimation = function( animation ) {
 
         var channels = [];
         for ( var i = 0; i < animation.channels.length; i++ ) {
-            var channel = Channel.createActiveChannel( animation.channels[i] );
+            var channel = Channel.createInstanceChannel( animation.channels[i] );
             channels.push( channel );
         }
 
         return {
             channels: channels,
             duration: animation.duration,
-            start: animation.start,
-            end: animation.end,
+            start: 0.0,
             name: animation.name
         };
     };
@@ -92,14 +90,20 @@ define( [
 
             for ( var c = 0; c < instanceChannels.length; c++ ) {
 
-                var target = instanceChannels[ c ].channel.target;
+                var targetName = instanceChannels[ c ].channel.target;
+                var type = instanceChannels[ c ].channel.type;
 
                 // not yet in the map create an id from the array size
-                if ( targetMap[ target ] === undefined ) {
+                if ( targetMap[ targetName ] === undefined ) {
                     var id = array.length;
+                    instanceChannels[ c ].targetID = id; // set the target ID in the channel
+                    var target = {
+                        target: targetName,
+                        type: type
+                    };
+                    targetMap[ targetName ] = true;
                     array.push( target );
-                    instanceChannels[ c ].targetID = id;
-                    targetMap[ target ] = target;
+
                 }
             }
         }
@@ -109,7 +113,10 @@ define( [
 
 
 
-    var Animation = {};
+    var Animation = function() {
+        this._animationData = undefined;
+    };
+
     Animation.createAnimation = createAnimation;
     Animation.createInstanceAnimation = createInstanceAnimation;
     Animation.initChannelTargetID = initChannelTargetID;
