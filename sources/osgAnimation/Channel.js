@@ -81,14 +81,16 @@ define( [
     //     channel: channel,
     //     value: Vec3.create(),
     //     targetID: int,
-    //     key: 0
+    //     key: 0,
+    //     t: 0,
     // }
     var createInstanceVec3Channel = function( channel ) {
         return {
             channel: channel,
             value: Vec3.create(),
             targetID: 0,
-            key: 0
+            key: 0,
+            t: 0.0
         };
     };
 
@@ -97,7 +99,8 @@ define( [
             channel: channel,
             value: Quat.create(),
             targetID: 0,
-            key: 0
+            key: 0,
+            t: 0.0
         };
     };
 
@@ -106,7 +109,8 @@ define( [
             channel: channel,
             value: 0.0,
             targetID: 0,
-            key: 0
+            key: 0,
+            t: 0.0
         };
     };
 
@@ -114,9 +118,6 @@ define( [
     var createInstanceChannel = function( channel ) {
         return Channel[channel.type](channel);
     };
-
-
-
 
 
     /** @lends Channel.prototype */
@@ -237,6 +238,28 @@ define( [
      var priorityWeight = channels[0].weight;
 
      for ( var i = 1; i < channels.length; i++ ) {
+
+         if ( priority !== channels[i].priority ) {
+              weight += priorityWeight * ( 1.0 - weight );
+              priorityWeight = 0.0;
+              priority = channels[i].priority;
+         }
+
+         priorityWeight += weight;
+         t = ( 1.0 - weight ) * channels[i].weight / priorityWeight;
+         lerp( t, value, channels[i].value );
+     }
+
+
+     // second version
+
+     var value;
+     Copy( channels[0].value, value );
+     var weight = 0; //channels[0].weight;
+     //var priority = channels[0].priority;
+     var priorityWeight = 0;
+
+     for ( var i = 0; i < channels.length; i++ ) {
 
          if ( priority !== channels[i].priority ) {
               weight += priorityWeight * ( 1.0 - weight );
