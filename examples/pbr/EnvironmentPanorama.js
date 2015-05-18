@@ -40,6 +40,29 @@ window.EnvironmentPanorama = ( function () {
             return this._texture;
         },
 
+        deinterleaveImage4: function(size, src, dst ) {
+            var npixel = size*size;
+            var npixel2 = 2*npixel;
+            var npixel3 = 3*npixel;
+            var idx = 0;
+            for ( var i = 0; i < npixel; i++ ) {
+                dst[idx++] = src[i];
+                dst[idx++] = src[i + npixel];
+                dst[idx++] = src[i + npixel2];
+                dst[idx++] = src[i + npixel3];
+            }
+        },
+
+        deinterleaveImage3: function(size, src, dst ) {
+            var npixel = size*size;
+            var idx = 0;
+            for ( var i = 0; i < npixel; i++ ) {
+                dst[idx++] = src[i];
+                dst[idx++] = src[i + npixel];
+                dst[idx++] = src[i + 2*npixel];
+            }
+        },
+
         loadPacked: function ( type ) {
             var defer = Q.defer();
 
@@ -51,11 +74,17 @@ window.EnvironmentPanorama = ( function () {
 
                 var size = this._size;
 
-                var imageData;
-                if ( type === 'FLOAT' )
+                var imageData, deinterleave;
+                if ( type === 'FLOAT' ) {
                     imageData = new Float32Array( data );
-                else
+                    deinterleave = new Float32Array( data.byteLength/4 );
+                    this.deinterleaveImage3( size, imageData, deinterleave );
+                } else {
                     imageData = new Uint8Array( data );
+                    deinterleave = new Uint8Array( data.byteLength );
+                    this.deinterleaveImage4( size, imageData, deinterleave );
+                }
+                imageData = deinterleave;
 
                 var image = new osg.Image();
                 image.setImage( imageData );

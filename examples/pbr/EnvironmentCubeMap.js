@@ -64,6 +64,29 @@ window.EnvironmentCubeMap = ( function () {
             return scene;
         },
 
+        deinterleaveImage4: function(size, src, dst ) {
+            var npixel = size*size;
+            var npixel2 = 2*size*size;
+            var npixel3 = 3*size*size;
+            var idx = 0;
+            for ( var i = 0; i < npixel; i++ ) {
+                dst[idx++] = src[i];
+                dst[idx++] = src[i + npixel];
+                dst[idx++] = src[i + npixel2];
+                dst[idx++] = src[i + npixel3];
+            }
+        },
+
+        deinterleaveImage3: function(size, src, dst ) {
+            var npixel = size*size;
+            var idx = 0;
+            for ( var i = 0; i < npixel; i++ ) {
+                dst[idx++] = src[i];
+                dst[idx++] = src[i + npixel];
+                dst[idx++] = src[i + 2*npixel];
+            }
+        },
+
         loadPacked: function ( type0 ) {
             var type = type0;
             if ( type === undefined )
@@ -92,13 +115,21 @@ window.EnvironmentCubeMap = ( function () {
                             images[osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face] = [];
 
                         var imageData;
+                        var deinterleave;
                         if ( type === 'FLOAT' ) {
                             byteSize = size*size*4*3;
                             imageData = new Float32Array( data, offset, byteSize/4 );
-                         } else {
+                            deinterleave = new Float32Array( byteSize/4 );
+                            this.deinterleaveImage3( size, imageData, deinterleave );
+                            //deinterleave = imageData;
+                        } else {
                             byteSize = size*size*4;
                             imageData = new Uint8Array( data, offset, byteSize );
-                         }
+                            deinterleave = new Uint8Array( byteSize );
+                            this.deinterleaveImage4( size, imageData, deinterleave );
+                            //deinterleave = imageData;
+                        }
+                        imageData = deinterleave;
 
                         var image = new osg.Image();
                         image.setImage( imageData );
