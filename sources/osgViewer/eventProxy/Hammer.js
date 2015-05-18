@@ -2,6 +2,8 @@ define( [
     'hammer'
 ], function ( Hammer ) {
 
+    'use strict';
+
     var HammerController = function ( viewer ) {
         this._enable = true;
         this._viewer = viewer;
@@ -64,6 +66,11 @@ define( [
 
             // we pass directly hammer object
             this.getManipulatorController().setEventProxy( this._hammer );
+        },
+        remove: function () {
+            if ( !this.isValid() )
+                return;
+            this.getManipulatorController().removeEventProxy( this._hammer );
         }
 
     };
