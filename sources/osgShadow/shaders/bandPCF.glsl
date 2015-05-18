@@ -1,22 +1,19 @@
 
 
-float getShadowPCF(const in sampler2D tex, const in vec4 shadowMapSize, const in vec2 uv, const in float shadowZ, const in vec2 biasPcf) {
 
-    vec2 o = shadowMapSize.zw;
+float getShadowPCF(const in sampler2D tex, const in vec4 size, const in vec2 uv, const in float shadowZ, const in vec2 biasPCF) {
+
     float shadowed = 0.0;
 
-#define TSF(off1, off2) getSingleFloatFromTex( tex, uv.xy + vec2(off1, off2)*biasPcf );
+    #define TSF(off1, off2) getSingleFloatFromTex( tex, uv.xy + vec2(off1, off2) + biasPCF )
 
-    // fastest bug gives banding
+    float dx0 = -size.z;
+    float dy0 = -size.w;
+    float dx1 = size.z;
+    float dy1 = size.w;
+
+    // fastest but gives banding
 #if defined(_PCFx4)
-
-    float xPixelOffset = o.x;
-    float yPixelOffset = o.y;
-
-    float dx0 = -1.0 * xPixelOffset;
-    float dy0 = -1.0 * yPixelOffset;
-    float dx1 = 1.0 * xPixelOffset;
-    float dy1 = 1.0 * yPixelOffset;
 
     vec4 sV;
 
@@ -30,23 +27,16 @@ float getShadowPCF(const in sampler2D tex, const in vec4 shadowMapSize, const in
 
     // here still didn't querying the real shadow at uv.
     // This could be a single func checking for branching
-    // like befire going to x9, x16 or anythiong
+    // like before going to x9, x16 or anything
     // or even complex "blurring"
     if (shadowed != 0.0) // we're on an edge
     {
-        shadowed += step(shadowZ, getSingleFloatFromTex( tex, uv.xy ));
+        shadowed += step(shadowZ, TSF(0.0, 0.0));
         shadowed *= 0.5;
     }
 
 #elif defined(_PCFx9)
 
-    float xPixelOffset = o.x;
-    float yPixelOffset = o.y;
-
-    float dx0 = -1.0 * xPixelOffset;
-    float dy0 = -1.0 * yPixelOffset;
-    float dx1 = 1.0 * xPixelOffset;
-    float dy1 = 1.0 * yPixelOffset;
 
     mat3 kern;
     mat3 depthKernel;
@@ -89,22 +79,30 @@ float getShadowPCF(const in sampler2D tex, const in vec4 shadowMapSize, const in
 
 #elif defined(_PCFx16)
 
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(-2.0, -2.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(-1.0, -2.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(1.0, -2.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(2.0, -2.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(-2.0, -1.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(-1.0, -1.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(1.0, -1.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(2.0, -1.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(-2.0, 1.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(-1.0, 1.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(1.0, 1.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(2.0, 1.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(-2.0, 2.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(-1.0, 2.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(1.0, 2.0)*o));
-    shadowed += step(shadowZ , getSingleFloatFromTex(tex, uv.xy + vec2(2.0, 2.0)*o));
+    float dx2 = -2.0 * size.z;
+    float dy2 = -2.0 * size.w;
+    float dx3 = 2.0 * size.z;
+    float dy3 = 2.0 * size.w;
+
+    shadowed += step(shadowZ , TSF(dx2, dy2));
+    shadowed += step(shadowZ , TSF(dx0, dy2));
+    shadowed += step(shadowZ , TSF(dx1, dy2));
+    shadowed += step(shadowZ , TSF(dx3, dy2));
+
+    shadowed += step(shadowZ , TSF(dx2, dy0));
+    shadowed += step(shadowZ , TSF(dx0, dy0));
+    shadowed += step(shadowZ , TSF(dx1, dy0));
+    shadowed += step(shadowZ , TSF(dx3, dy0));
+
+    shadowed += step(shadowZ , TSF(dx2, dy1));
+    shadowed += step(shadowZ , TSF(dx0, dy1));
+    shadowed += step(shadowZ , TSF(dx1, dy1));
+    shadowed += step(shadowZ , TSF(dx3, dy1));
+
+    shadowed += step(shadowZ , TSF(dx2, dy3));
+    shadowed += step(shadowZ , TSF(dx0, dy3));
+    shadowed += step(shadowZ , TSF(dx1, dy3));
+    shadowed += step(shadowZ , TSF(dx3, dy3));
 
     shadowed = shadowed / 16.0;
 #endif // pcfx16

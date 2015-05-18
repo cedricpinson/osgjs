@@ -5,7 +5,7 @@ define( [
 ], function ( MACROUTILS, Object, Texture ) {
     'use strict';
 
-    var kernelSizeList = [ '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)' ];
+    var kernelSizeList = [ '1Band(1texFetch)', '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '1Tap(4texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)' ];
 
     /**
      *  ShadowSettings provides the parameters that the ShadowTechnique should use as a guide for setting up shadowing
@@ -44,6 +44,10 @@ define( [
         // others a n*n*4 (emulating the HW shadowSampler)
         // '4Band(4texFetch)', '9Band(9texFetch)', '16Band(16texFetch)', '4Tap(16texFetch)', '9Tap(36texFetch)', '16Tap(64texFetch)', '4Poisson(16texFetch)', '8Poisson(32texFetch)', '16Poisson(64texFetch)', '25Poisson(100texFetch)', '32Poisson(128texFetch)'
         this.kernelSizePCF = '4Band(4texFetch)';
+        // ensure that we don't linearly interpolate between shadowmap
+        // but do use the fake Texture2DShadow
+        // http://codeflow.org/entries/2013/feb/15/soft-shadow-mapping/#interpolated-shadowing
+        this._fakePCF = false;
         // for prefilterable technique (ESM/VSM/EVSM)
         this.superSample = 0;
         this.blur = false;

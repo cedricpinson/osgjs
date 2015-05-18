@@ -83,6 +83,8 @@ define( [
                 r = /Shader compilation errors\n\((\d+)\, \d+\): (.+)/gmi;
             }
 
+            // reset index to start.
+            r.lastIndex = 0;
 
             while ( ( m = r.exec( errors ) ) != null ) {
                 if ( m.index === r.lastIndex ) {

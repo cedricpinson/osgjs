@@ -30,7 +30,8 @@
             'model': 'material-test',
             'shadowProjection': 'fov',
             'fov': 50,
-            'kernelSizePCF': '4Band(4texFetch)',
+            'kernelSizePCF': '1Tap(4texFetch)',
+            'fakePCF': false,
             'exponent': 80.0,
             'exponent1': 0.33,
 
@@ -136,6 +137,7 @@
         this._previousFrustumTest = this._config[ 'frustumTest' ];
         this._previousKernelSizePCF = this._config[ 'kernelSizePCF' ];
         this._previousDisable = this._config[ 'disableShadows' ];
+        this._fakePCF = this._config[ 'fakePCF' ];
         this._debugOtherTechniques = false;
         this._debugFrustum = false;
         this._debugPrefilter = false;
@@ -387,6 +389,10 @@
             var pcfFolder = gui.addFolder( 'PCF' );
             controller = pcfFolder.add( this._config, 'kernelSizePCF', osgShadow.ShadowSettings.kernelSizeList );
             controller.onChange( this.updateShadow.bind( this ) );
+
+            controller = pcfFolder.add( this._config, 'fakePCF' );
+            controller.onChange( this.updateShadow.bind( this ) );
+
 
             if ( this._debugOtherTechniques ) {
 
@@ -746,6 +752,7 @@
                 shadowSettings.exponent1 = this._config[ 'exponent1' ];
                 shadowSettings.epsilonVSM = this._config[ 'epsilonVSM' ];
                 shadowSettings.kernelSizePCF = this._config[ 'kernelSizePCF' ];
+                shadowSettings.fakePCF = this._config[ 'fakePCF' ];
             }
 
 

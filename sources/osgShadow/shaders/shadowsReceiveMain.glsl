@@ -79,8 +79,8 @@
 
     shadowBiasPCF.x +=  dFdx(shadowUV.xy).x * shadowMapSize.z;
     shadowBiasPCF.y +=  dFdy(shadowUV.xy).y * shadowMapSize.w;
-
     //shadowBias += dFdx(shadowReceiverZ);
+
 #endif
 
 
