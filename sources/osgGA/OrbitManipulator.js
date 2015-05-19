@@ -102,6 +102,8 @@ define( [
         'Oculus',
     ];
 
+    var DOT_LIMIT = 0.95; // angle limit around the pole
+
     /** @lends OrbitManipulator.prototype */
     OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         init: function () {
@@ -165,6 +167,15 @@ define( [
 
                 Vec3.sub( eye, center, f );
                 Vec3.normalize( f, f );
+
+                var p = Vec3.dot( f, this._upz );
+                if ( p > DOT_LIMIT ) {
+                    // we force z to DOT_LIMIT and we normalize the vec3 vector by only editing the x and y component
+                    var a = Math.sqrt( ( 1.0 - DOT_LIMIT * DOT_LIMIT ) / ( f[ 0 ] * f[ 0 ] + f[ 1 ] * f[ 1 ] ) );
+                    f[ 0 ] *= a;
+                    f[ 1 ] *= a;
+                    f[ 2 ] = DOT_LIMIT;
+                }
 
                 Vec3.cross( f, this._upz, s );
                 Vec3.normalize( s, s );
@@ -268,11 +279,16 @@ define( [
             var inv = Matrix.create();
             var tmp = [ 0.0, 0.0, 0.0 ];
             var tmpDist = [ 0.0, 0.0, 0.0 ];
+            var radLimit = Math.acos( DOT_LIMIT ) * 2.0;
             return function ( dx, dy ) {
                 Matrix.makeRotate( -dx / 10.0, 0.0, 0.0, 1.0, of );
                 Matrix.mult( this._rotation, of, r );
 
-                Matrix.makeRotate( -dy / 10.0, 1.0, 0.0, 0.0, of );
+                // limit the dy movement to the range [-radLimit, radLimit]
+                // so that we can't "jump" to the other side of the poles
+                // with a rapid mouse movement
+                dy = Math.max( Math.min( dy / 10.0, radLimit ), -radLimit );
+                Matrix.makeRotate( -dy, 1.0, 0.0, 0.0, of );
                 Matrix.mult( of, r, r2 );
 
                 // test that the eye is not too up and not too down to not kill
@@ -285,7 +301,7 @@ define( [
                 Vec3.normalize( tmp, tmp );
 
                 var p = Vec3.dot( tmp, this._upz );
-                if ( Math.abs( p ) > 0.95 ) {
+                if ( Math.abs( p ) > DOT_LIMIT ) {
                     //discard rotation on y
                     Matrix.copy( r, this._rotation );
                     return;
