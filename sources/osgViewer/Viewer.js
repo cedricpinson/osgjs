@@ -642,6 +642,9 @@ define( [
                 if ( device.remove )
                     device.remove();
             } );
+        },
+        getEventProxy: function () {
+            return this._eventProxy;
         }
 
     } );
