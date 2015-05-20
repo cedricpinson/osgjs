@@ -5,7 +5,14 @@
     if (depthRange.x == depthRange.y)
         return 1.;
 
-    if (shadowVertexProjected.w < 0.0 || - shadowVertexProjected.z < 0.0)
+    vec4 shadowVertexEye = shadowViewMatrix *  vertexWorld;
+    float shadowReceiverZ =  - shadowVertexEye.z;
+
+    if( shadowReceiverZ < 0.0)
+        return 1.0; // notably behind camera
+
+    vec4 shadowVertexProjected = shadowProjectionMatrix * shadowVertexEye;
+    if (shadowVertexProjected.w < 0.0)
         return 1.0; // notably behind camera
 
     vec2 shadowUV;
@@ -17,10 +24,7 @@
     if (outFrustum )
         return 1.0;// limits of light frustum
 
-
-    float shadowReceiverZ;
     // inv linearize done in vertex shader
-    shadowReceiverZ =  - shadowVertexProjected.z;
     // to [0,1]
     //shadowReceiverZ =  (shadowReceiverZ - depthRange.x)* depthRange.w;
     shadowReceiverZ =  shadowReceiverZ / depthRange.y;

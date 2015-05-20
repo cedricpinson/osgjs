@@ -37,13 +37,15 @@ define( [
             // common inputs
             var inputs = [
                 this._inputs.lighted,
-                this._inputs.shadowVertexProjected,
                 this._inputs.shadowTexture,
                 this._inputs.shadowTextureMapSize,
+                this._inputs.shadowTextureProjectionMatrix,
+                this._inputs.shadowTextureViewMatrix,
                 this._inputs.shadowTextureDepthRange,
                 this._inputs.lightEyePos,
                 this._inputs.lightNDL,
 
+                this._inputs.vertexWorld,
                 this._inputs.normal,
                 this._inputs.shadowbias
             ];
