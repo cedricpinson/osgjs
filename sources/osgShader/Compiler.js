@@ -298,13 +298,7 @@ define( [
             for ( t = 0; t < this._shadows.length; t++ ) {
                 this.declareAttributeUniforms( this._shadows[ t ] );
             }
-            /*
-            for ( t = 0; t < this._shadowsTextures.length; t++ ) {
-                if ( this._shadowsTextures[ t ] !== undefined ) {
-                    this.declareAttributeUniforms( this._shadowsTextures[ t ] );
-                }
-            }
-*/
+
 
         },
 
@@ -414,6 +408,7 @@ define( [
             if ( diffuseColor === undefined )
                 return undefined;
 
+            // investigate lowp
             var vertexColor = this.getOrCreateVarying( 'vec4', 'VertexColor' );
             var vertexColorUniform = this.getOrCreateUniform( 'float', 'ArrayColorEnabled' );
             var tmp = this.createVariable( 'vec4' );
@@ -515,6 +510,7 @@ define( [
             var texCoordUnit = unit;
             var texCoord = this.getVariable( 'FragTexCoord' + texCoordUnit );
             if ( texCoord === undefined ) {
+                // investigate lowp
                 texCoord = this.getOrCreateVarying( 'vec2', 'FragTexCoord' + texCoordUnit );
             }
 
@@ -593,6 +589,9 @@ define( [
             }
             if ( !hasShadows ) return undefined;
 
+            // Varyings
+            var vertexWorld = this.getOrCreateVarying( 'vec4','WorldPosition' ) ;
+
             // asserted we have a shadow we do the shadow node allocation
             // and mult with lighted output
 
@@ -604,7 +603,7 @@ define( [
             inputs = MACROUTILS.objectMix( inputs, shadowUniforms );
 
             // shadowTexture  Attribute uniforms AND varying
-            var tex, shadowVertexProjected;
+            var tex;
             // TODO: better handle multi texture shadow (CSM/PSM/etc.)
             for ( k = 0; k < shadowTextures.length; k++ ) {
 
@@ -612,16 +611,13 @@ define( [
                 if ( shadowTexture ) {
                     tex = this.getOrCreateSampler( 'sampler2D', shadowTexture.getName() );
                     inputs.shadowTexture = tex;
-                    // per texture uniforms
 
+                    // per texture uniforms
                     var shadowTextureUniforms = this.getOrCreateTextureStateAttributeUniforms( shadowTexture, 'shadowTexture', k );
                     inputs = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
 
-
-                    // Varyings
-                    shadowVertexProjected = this.getOrCreateVarying( 'vec4', shadowTexture.getVaryingName( 'VertexProjected' ) );
                     var shadowVarying = {
-                        shadowVertexProjected: shadowVertexProjected,
+                        vertexWorld: vertexWorld,
                         lightEyeDir: inputs.lightEyeDir,
                         lightNDL: inputs.lightNDL
                     };
@@ -926,9 +922,12 @@ define( [
         declareVertexVariables: function () {
             var texCoordMap = {};
 
+            // TODO: for performance:
+            // - remove non necessary attributes
+            // - remove unecessary varying (huge impact)
             this._vertexShader.push( [ '',
                 'attribute vec3 Vertex;',
-                'attribute vec4 Color;',
+                'attribute vec4 Color;',// investigate lowp
                 'attribute vec3 Normal;',
                 '',
                 'uniform float ArrayColorEnabled;',
@@ -936,15 +935,16 @@ define( [
                 'uniform mat4 ProjectionMatrix;',
                 'uniform mat4 NormalMatrix;',
                 '',
-                'varying vec4 VertexColor;',
-                'varying vec3 FragNormal;',
-                'varying vec3 FragEyeVector;',
+                'varying lowp vec4 VertexColor;',// investigate lowp
+                'varying vec3 FragNormal;',// investigate mediump
+                'varying vec3 FragEyeVector;', // investigate mediump
                 '',
                 ''
             ].join( '\n' ) );
 
             var i, ll;
             var hasShadows = false;
+
             for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
 
                 var shadowTexture = this._shadowsTextures[ i ];
@@ -953,20 +953,9 @@ define( [
                 if ( !hasShadows ) {
                     hasShadows = true;
                     this._vertexShader.push( 'uniform mat4 ModelWorldMatrix;' );
+                    this._vertexShader.push( 'varying vec4 WorldPosition;' );
+                    break;
                 }
-
-                var shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
-                var viewMat = shadowTextureUniforms.ViewMatrix;
-                var projMat = shadowTextureUniforms.ProjectionMatrix;
-                var depthRange = shadowTextureUniforms.DepthRange;
-                var mapSize = shadowTextureUniforms.MapSize;
-                // uniforms
-                this._vertexShader.push( 'uniform mat4 ' + projMat.getName() + ';' );
-                this._vertexShader.push( 'uniform mat4 ' + viewMat.getName() + ';' );
-                this._vertexShader.push( 'uniform vec4 ' + depthRange.getName() + ';' );
-                this._vertexShader.push( 'uniform vec4 ' + mapSize.getName() + ';' );
-                // varyings
-                this._vertexShader.push( 'varying vec4 ' + shadowTexture.getVaryingName( 'VertexProjected' ) + ';' );
                 hasShadows = true;
             }
 
@@ -1012,22 +1001,9 @@ define( [
                     continue;
                 if ( !hasShadows ) {
                     hasShadows = true;
-                    this._vertexShader.push( 'vec4 worldPosition = ModelWorldMatrix * vec4(Vertex,1.0);' );
+                    this._vertexShader.push( 'WorldPosition = ModelWorldMatrix * vec4(Vertex,1.0);' );
+                    break;
                 }
-
-                // uniforms
-                var shadowTextureUniforms = shadowTexture.getOrCreateUniforms( i );
-                var shadowView = shadowTextureUniforms.ViewMatrix.getName();
-                var shadowProj = shadowTextureUniforms.ProjectionMatrix.getName();
-
-                // varyings
-                var shadowVertProj = shadowTexture.getVaryingName( 'VertexProjected' );
-
-                this._vertexShader.push( 'vec4 shadowPos' + i + ' = ' + shadowView + ' *  worldPosition;' );
-                this._vertexShader.push( ' ' + shadowVertProj + ' = ' + shadowProj + ' * shadowPos' + i + ';' );
-                // varying packing using 1 vec4 fo both Projection vector & viewworld z pos
-                // and pre-linearize Z
-                this._vertexShader.push( ' ' + shadowVertProj + '.z  = shadowPos' + i + '.z ;' );
             }
         },
         // Meanwhile, here it is.
