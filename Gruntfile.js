@@ -289,7 +289,7 @@ var generateVersionFile = function() {
             options: {
                 port: 9000,
                 directory: currentDirectory,
-                hostname: '127.0.0.1',
+                hostname: '0.0.0.0',
                 open: true,
                 middleware: function ( connect, options, middlewares ) {
 
