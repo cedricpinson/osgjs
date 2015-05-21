@@ -1,15 +1,12 @@
-'use strict';
-var NegatifAttribute;
-var NegatifNode;
-
 ( function () {
+    'use strict';
 
     var osgShader = window.OSG.osgShader;
     var osg = window.OSG.osg;
     var shaderNode = osgShader.node;
     var factory = osgShader.nodeFactory;
 
-    NegatifAttribute = function () {
+    var NegatifAttribute = window.NegatifAttribute = function () {
         osg.StateAttribute.call( this );
         this._attributeEnable = false;
     };
@@ -55,7 +52,7 @@ var NegatifNode;
 
 
     // this node will call a function negatif in the shader
-    NegatifNode = function () {
+    var NegatifNode = window.NegatifNode = function () {
         shaderNode.BaseOperator.apply( this, arguments );
     };
 
@@ -81,6 +78,5 @@ var NegatifNode;
     } );
 
     factory.registerNode( 'Negatif', NegatifNode );
-
 
 } )();

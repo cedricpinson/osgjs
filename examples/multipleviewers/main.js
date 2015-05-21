@@ -15,7 +15,7 @@
 
         createScene1: function () {
             var node = new osg.MatrixTransform();
-            var request = osgDB.readNodeURL( '../ssao/raceship.osgjs' );
+            var request = osgDB.readNodeURL( '../media/models/raceship.osgjs' );
             request.then( function ( model ) {
 
                 node.addChild( model );

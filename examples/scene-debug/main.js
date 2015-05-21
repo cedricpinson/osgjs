@@ -2,7 +2,6 @@
     'use strict';
 
     var OSG = window.OSG;
-    OSG.globalify();
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
     var osgUtil = OSG.osgUtil;

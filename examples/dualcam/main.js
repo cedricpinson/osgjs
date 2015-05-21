@@ -1,179 +1,154 @@
-'use strict';
+( function () {
+    'use strict';
 
-var viewer;
+    var viewer;
 
-var OSG = window.OSG;
-OSG.globalify();
+    var OSG = window.OSG;
+    var osg = OSG.osg;
+    var osgGA = OSG.osgGA;
+    var osgDB = OSG.osgDB;
+    var osgUtil = OSG.osgUtil;
+    var osgViewer = OSG.osgViewer;
 
-var osg = window.osg;
-var osgGA = window.osgGA;
-var osgUtil = window.osgUtil;
-var osgDB = window.osgDB;
-var osgViewer = window.osgViewer;
+    function loadScene( viewer ) {
+        var root = new osg.MatrixTransform();
+        osg.Matrix.makeRotate( Math.PI, 0, 0, 1, root.getMatrix() );
+        viewer.setSceneData( root );
 
-var viewer;
+        osgDB.readNodeURL( '../media/models/material-test/file.osgjs' ).then( function ( model ) {
+            root.addChild( model );
 
-function setupScene( viewer, sceneData ) {
-    // load scene... as usual
-    viewer.setSceneData( sceneData );
-
-    // setup manipulator
-    // viewer.setupManipulator( new osgGA.FirstPersonManipulator() );
-    viewer.setupManipulator( new osgGA.OrbitManipulator() );
-    viewer.getManipulator().setNode( viewer.getSceneData() );
-    viewer.getManipulator().computeHomePosition();
-    viewer.getManipulator().setEyePosition( [ 0, -10, 5 ] );
-
-    viewer.run();
-}
-
-function onSceneLoaded( viewer, data ) {
-
-    new Q( osgDB.parseSceneGraph( data ) ).then( function ( sceneData ) {
-        setupScene( viewer, sceneData );
-    } );
-}
-
-
-function onURLloaded( url, viewer ) {
-    osg.log( 'loading ' + url );
-    var req = new XMLHttpRequest();
-    req.open( 'GET', url, true );
-    req.onload = function () {
-        onSceneLoaded( viewer, JSON.parse( req.responseText ) );
-        osg.log( 'success ' + url );
-    };
-    req.onerror = function () {
-        osg.log( 'error ' + url );
-    };
-    req.send( null );
-}
-
-// Find the right method, call on correct element
-function launchFullscreen( element, hmd ) {
-    if ( element.requestFullscreen ) {
-        element.requestFullscreen( hmd );
-    } else if ( element.mozRequestFullScreen ) {
-        element.mozRequestFullScreen( hmd );
-    } else if ( element.webkitRequestFullscreen ) {
-        element.webkitRequestFullscreen( hmd );
-    } else if ( element.msRequestFullscreen ) {
-        element.msRequestFullscreen( hmd );
+            // setup manipulator
+            // viewer.setupManipulator( new osgGA.FirstPersonManipulator() );
+            viewer.setupManipulator( new osgGA.OrbitManipulator() );
+            viewer.getManipulator().setNode( viewer.getSceneData() );
+            viewer.getManipulator().computeHomePosition();
+        } );
     }
-}
 
-function exitFullscreen() {
-    if ( document.exitFullscreen ) {
-        document.exitFullscreen();
-    } else if ( document.mozCancelFullScreen ) {
-        document.mozCancelFullScreen();
-    } else if ( document.webkitExitFullscreen ) {
-        document.webkitExitFullscreen();
+    // Find the right method, call on correct element
+    function launchFullscreen( element, hmd ) {
+        if ( element.requestFullscreen ) {
+            element.requestFullscreen( hmd );
+        } else if ( element.mozRequestFullScreen ) {
+            element.mozRequestFullScreen( hmd );
+        } else if ( element.webkitRequestFullscreen ) {
+            element.webkitRequestFullscreen( hmd );
+        } else if ( element.msRequestFullscreen ) {
+            element.msRequestFullscreen( hmd );
+        }
     }
-}
 
-var vrNode;
-var modelNode;
-var vrState = false;
-var fullscreen = false;
+    function exitFullscreen() {
+        if ( document.exitFullscreen ) {
+            document.exitFullscreen();
+        } else if ( document.mozCancelFullScreen ) {
+            document.mozCancelFullScreen();
+        } else if ( document.webkitExitFullscreen ) {
+            document.webkitExitFullscreen();
+        }
+    }
 
-function toggleVR() {
+    var vrNode;
+    var modelNode;
+    var vrState = false;
+    var fullscreen = false;
 
-    var sceneData = viewer.getSceneData();
+    function toggleVR() {
 
-    // Enable VR
-    if ( !vrState ) {
+        var sceneData = viewer.getSceneData();
 
-        // Detach the model from sceneData and cache it
-        modelNode = sceneData.getChildren()[ 0 ];
-        sceneData.removeChild( modelNode );
+        // Enable VR
+        if ( !vrState ) {
 
-        // If no vrNode (first time vr is toggled), create one
-        // The modelNode will be attached to it
-        if ( !vrNode ) {
-            if ( navigator.getVRDevices || navigator.mozGetVRDevices )
-                vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus.getHmd() );
-            else
-                vrNode = osgUtil.Oculus.createScene( viewer, modelNode, { isCardboard: true } );
+            // Detach the model from sceneData and cache it
+            modelNode = sceneData.getChildren()[ 0 ];
+            sceneData.removeChild( modelNode );
+
+            // If no vrNode (first time vr is toggled), create one
+            // The modelNode will be attached to it
+            if ( !vrNode ) {
+                if ( navigator.getVRDevices || navigator.mozGetVRDevices )
+                    vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus.getHmd() );
+                else
+                    vrNode = osgUtil.Oculus.createScene( viewer, modelNode, {
+                        isCardboard: true
+                    } );
+            }
+
+            // Attach the vrNode to sceneData instead of the model
+            sceneData.addChild( vrNode );
+        }
+        // Disable VR
+        else {
+            // Detach the vrNode and reattach the modelNode
+            sceneData.removeChild( vrNode );
+            sceneData.addChild( modelNode );
         }
 
-        // Attach the vrNode to sceneData instead of the model
-        sceneData.addChild( vrNode );
-    }
-    // Disable VR
-    else {
-        // Detach the vrNode and reattach the modelNode
-        sceneData.removeChild( vrNode );
-        sceneData.addChild( modelNode );
+        vrState = !vrState;
     }
 
-    vrState = !vrState;
-}
+    // On some platforms, (chrome * android), this event is fired too early
+    // And the WebVR retrieve the canvas size before the canvas gets resized to fullscreen
+    // So we could add a little delay via setTimeout to ensure we get the fullscreen size
 
-// On some platforms, (chrome * android), this event is fired too early
-// And the WebVR retrieve the canvas size before the canvas gets resized to fullscreen
-// So we could add a little delay via setTimeout to ensure we get the fullscreen size
+    // Prefixed on Firefox up to v33
+    document.addEventListener( 'mozfullscreenchange', function () {
+        toggleVR();
+        fullscreen = !fullscreen;
+    } );
+    // Prefixed on Chrome up to v38
+    document.addEventListener( 'webkitfullscreenchange', function () {
+        setTimeout( toggleVR, 500 );
+        fullscreen = !fullscreen;
+    } );
+    document.addEventListener( 'msfullscreenchange', function () {
+        toggleVR();
+        fullscreen = !fullscreen;
+    }, false );
+    document.addEventListener( 'fullscreenchange', function () {
+        toggleVR();
+        fullscreen = !fullscreen;
+    } );
 
-// Prefixed on Firefox up to v33
-document.addEventListener( 'mozfullscreenchange', function () {
-    toggleVR();
-    fullscreen = !fullscreen;
-} );
-// Prefixed on Chrome up to v38
-document.addEventListener( 'webkitfullscreenchange', function () {
-    setTimeout( toggleVR, 500 );
-    fullscreen = !fullscreen;
-} );
-document.addEventListener( 'msfullscreenchange', function () {
-    toggleVR();
-    fullscreen = !fullscreen;
-}, false );
-document.addEventListener( 'fullscreenchange', function () {
-    toggleVR();
-    fullscreen = !fullscreen;
-} );
+    function requestVRFullscreen() {
 
-function requestVRFullscreen() {
+        if ( !navigator.getVRDevices && !navigator.mozGetVRDevices ) {
+            osg.log( 'WebVR Api is not supported by your navigator' );
+        }
 
-    if ( !navigator.getVRDevices && !navigator.mozGetVRDevices ) {
-        osg.log( 'WebVR Api is not supported by your navigator' );
+        var canvas = viewer.getGraphicContext().canvas;
+
+        if ( fullscreen === false )
+            launchFullscreen( canvas, {
+                vrDisplay: viewer._eventProxy.Oculus.getHmd()
+            } );
+        else
+            exitFullscreen();
+
+        // var fullscreenRect = canvas.getBoundingClientRect();
+        // console.log(fullscreenRect.width, fullscreenRect.height);
     }
 
-    var canvas = viewer.getGraphicContext().canvas;
+    function init() {
 
-    if ( fullscreen === false )
-        launchFullscreen( canvas, {
-            vrDisplay: viewer._eventProxy.Oculus.getHmd()
-        } );
-    else
-        exitFullscreen();
+        var canvas = document.getElementById( 'View' );
 
-    // var fullscreenRect = canvas.getBoundingClientRect();
-    // console.log(fullscreenRect.width, fullscreenRect.height);
-}
+        viewer = new osgViewer.Viewer( canvas );
+        viewer.init();
+        loadScene( viewer );
+        viewer.run();
 
-function init() {
+        var button = document.getElementById( 'button' );
+        button.addEventListener( 'click', requestVRFullscreen, false );
 
-    var canvas = document.getElementById( 'View' );
-
-    viewer = new osgViewer.Viewer( canvas );
-
-    viewer.init();
-    viewer.setLightingMode( osgViewer.View.LightingMode.SKYLIGHT );
-
-    // onSceneLoaded( viewer, getPokerScene() );
-    // setupScene( viewer, getSimpleScene() );
-    onURLloaded( 'models/ogre.osgjs', viewer );
-
-    var button = document.getElementById( 'button' );
-    button.addEventListener( 'click', requestVRFullscreen, false );
-
-    window.addEventListener( 'keypress',
-        function ( event ) {
+        window.addEventListener( 'keypress', function ( event ) {
             if ( event.charCode === 'f'.charCodeAt( 0 ) )
                 requestVRFullscreen();
         }, true );
 
-}
+    }
 
-window.addEventListener( 'load', init, true );
+    window.addEventListener( 'load', init, true );
+} )();
