@@ -50,7 +50,7 @@ define( [
 
             this._cbPanStart = function ( event ) {
                 var manipulator = self._manipulator;
-                if ( !manipulator || self._transformStarted ) {
+                if ( !manipulator || self._transformStarted || event.pointerType === 'mouse' ) {
                     return;
                 }
                 var gesture = event;
@@ -71,10 +71,7 @@ define( [
 
             this._cbPanMove = function ( event ) {
                 var manipulator = self._manipulator;
-                if ( !manipulator ) {
-                    return;
-                }
-                if ( !self._dragStarted ) {
+                if ( !manipulator || !self._dragStarted || event.pointerType === 'mouse' ) {
                     return;
                 }
                 var gesture = event;
@@ -90,7 +87,7 @@ define( [
 
             this._cbPanEnd = function ( event ) {
                 var manipulator = self._manipulator;
-                if ( !manipulator || !self._dragStarted ) {
+                if ( !manipulator || !self._dragStarted || event.pointerType === 'mouse' ) {
                     return;
                 }
                 self._dragStarted = false;
@@ -102,7 +99,7 @@ define( [
             var toucheScale;
             this._cbPinchStart = function ( event ) {
                 var manipulator = self._manipulator;
-                if ( !manipulator ) {
+                if ( !manipulator || event.pointerType === 'mouse' ) {
                     return;
                 }
                 self._transformStarted = true;
@@ -116,13 +113,16 @@ define( [
             };
 
             this._cbPinchEnd = function ( event ) {
+                if ( event.pointerType === 'mouse' ) {
+                    return;
+                }
                 self._transformStarted = false;
                 Notify.debug( 'zoom end, ' + dragCB( event ) );
             };
 
             this._cbPinchInOut = function ( event ) {
                 var manipulator = self._manipulator;
-                if ( !manipulator || !self._transformStarted ) {
+                if ( !manipulator || !self._transformStarted || event.pointerType === 'mouse' ) {
                     return;
                 }
                 var gesture = event;
