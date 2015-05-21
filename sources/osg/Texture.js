@@ -411,7 +411,23 @@ define( [
 
         checkIsCompressed: function ( format ) {
             var fo = format || this._internalFormat;
-            return fo !== Texture.RGBA && fo !== Texture.RGB && fo !== Texture.LUMINANCE && fo !== Texture.LUMINANCE_ALPHA;
+            switch ( fo ) {
+            case Texture.COMPRESSED_RGB_S3TC_DXT1_EXT:
+            case Texture.COMPRESSED_RGBA_S3TC_DXT1_EXT:
+            case Texture.COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            case Texture.COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            case Texture.COMPRESSED_RGB_ATC_WEBGL:
+            case Texture.COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL:
+            case Texture.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL:
+            case Texture.COMPRESSED_RGB_PVRTC_4BPPV1_IMG:
+            case Texture.COMPRESSED_RGB_PVRTC_2BPPV1_IMG:
+            case Texture.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG:
+            case Texture.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG:
+            case Texture.COMPRESSED_RGB_ETC1_WEBGL:
+                return true;
+            default:
+                return false;
+            }
         },
 
         setInternalFormat: function ( formatSource ) {
