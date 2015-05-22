@@ -55,8 +55,8 @@ define( [
             return this._needValidate;
         },
         update: function ( node, nv ) {
-            if ( nv.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
-                if ( node.className && node.className() === 'Skeleton' && this._needValidate ) {
+            if ( this._needValidate && nv.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
+                if ( node.className && node.className() === 'Skeleton' ) {
                     var validateSkeletonVisitor = new ValidateSkeletonVisitor();
                     var children = node.getChildren();
                     for ( var i = 0, l = children.length; i < l; i++ ) {
@@ -66,7 +66,7 @@ define( [
                     this._needValidate = false;
                 }
             }
-            nv.traverse( node, nv );
+            return true;
         }
     } );
 

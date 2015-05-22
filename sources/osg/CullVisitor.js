@@ -448,8 +448,6 @@ define( [
 
     CullVisitor.prototype[ Skeleton.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
-    CullVisitor.prototype[ RigGeometry.typeID ] = CullVisitor.prototype[ Node.typeID ];
-
     CullVisitor.prototype[ Bone.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
 
 
@@ -470,8 +468,6 @@ define( [
         var tempVec = Vec3.create();
 
         return function ( node ) {
-
-
             var modelview = this.getCurrentModelViewMatrix();
             var bb = node.getBoundingBox();
             if ( this._computeNearFar && bb.valid() ) {
@@ -518,6 +514,8 @@ define( [
 
         };
     } )();
+
+    CullVisitor.prototype[ RigGeometry.typeID ] = CullVisitor.prototype[ Geometry.typeID ];
 
     return CullVisitor;
 } );

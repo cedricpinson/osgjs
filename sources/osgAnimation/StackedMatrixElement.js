@@ -23,14 +23,14 @@ define( [
     };
 
     StackedMatrixElement.prototype = MACROUTILS.objectInherit( Object.prototype, {
-        applyToMatrix: function ( matrix ) {
-            Matrix.postMult( this._matrix, matrix );
+        applyToMatrix: function ( m ) {
+            Matrix.preMult( m, this._matrix );
         },
         getMatrix: function () {
             return this._matrix;
         },
-        setMatrix: function ( matrix ) {
-            Matrix.copy( matrix, this._matrix );
+        setMatrix: function ( m ) {
+            Matrix.copy( m, this._matrix );
         },
         isIdentity: function () {
             return Matrix.isIdentity( this._matrix );

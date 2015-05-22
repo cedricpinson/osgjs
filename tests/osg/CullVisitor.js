@@ -1,4 +1,4 @@
-define( [
+madefine( [
     'qunit',
     'tests/mockup/mockup',
     'osg/BoundingBox',

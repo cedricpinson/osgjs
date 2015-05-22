@@ -50,18 +50,17 @@ define( [
 
                 var bone = node;
                 UpdateMatrixTransform.prototype.update.call( this, node );
+                bone.setMatrix( bone.getMatrix() ); //Update dirty()
                 var matrix = bone.getMatrix();
                 var parent = bone.getBoneParent();
 
                 if ( parent ) {
-                    var res = Matrix.create();
-                    Matrix.mult( matrix, parent.getMatrixInSkeletonSpace(), res );
-                    bone.setMatrixInSkeletonSpace( res );
+                    Matrix.mult( parent.getMatrixInSkeletonSpace(), matrix, bone.getMatrixInSkeletonSpace() );
                 } else {
                     bone.setMatrixInSkeletonSpace( matrix );
                 }
             }
-            nv.traverse( node );
+            return true;
         }
     } );
 

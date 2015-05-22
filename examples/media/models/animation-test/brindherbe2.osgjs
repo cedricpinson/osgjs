@@ -1,0 +1,1799 @@
+{
+  "Generator": "OpenSceneGraph 3.3.8", 
+  "Version": 7, 
+  "osg.Node": {
+    "Children": [ {
+      "osg.Node": {
+        "UniqueID": 0, 
+        "Name": "brindherbe2.FBX", 
+        "UpdateCallbacks": [ {
+          "osgAnimation.BasicAnimationManager": {
+            "Animations": [ {
+              "osgAnimation.Animation": {
+                "Name": "Take 001", 
+                "Channels": [ {
+                  "osgAnimation.Vec3CubicBezierChannel": {
+                    "Name": "translate", 
+                    "TargetName": "Box001", 
+                    "KeyFrames": {
+                      "ControlPointIn": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -3.09718, 33.9382 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.63116, 3.63116 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
+                      "ControlPointOut": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 33.9382, -3.09718 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.63116, 3.63116 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
+                      "Position": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -3.09718, 33.9382 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.63116, 3.63116 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateX", 
+                    "TargetName": "Box001", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateY", 
+                    "TargetName": "Box001", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0, -0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0, -0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateZ", 
+                    "TargetName": "Box001", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 1.07242 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 1.07242, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 1.07242 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateX", 
+                    "TargetName": "Bone006", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0.760024 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0.760024, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0.760024 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateY", 
+                    "TargetName": "Bone006", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, -0.850685 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0.850685, -0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0, -0.850685 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateZ", 
+                    "TargetName": "Bone006", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, -0.358003 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0.358003, 0 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, -0.358003 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateX", 
+                    "TargetName": "Bone005", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0, 0, 0.760024, 0 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0, 0.760024, 0, 0 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0, 0, 0.760024, 0 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 1.43333, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateY", 
+                    "TargetName": "Bone005", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 7.10785e-15, 7.10785e-15, 7.10785e-15, -0.850684, 7.10785e-15 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 7.10785e-15, 7.10785e-15, -0.850684, 7.10785e-15, 7.10785e-15 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 7.10785e-15, 7.10785e-15, 7.10785e-15, -0.850684, 7.10785e-15 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 1.43333, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateZ", 
+                    "TargetName": "Bone005", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0.00819658, -0.991555, -0.623692, -0.602151, 0.0142556 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0.991555, -0.684006, -0.643796, 0.0142556, 0.00819658 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0.00819658, -0.991555, -0.643796, -0.623692, 0.0142556 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 1.43333, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateX", 
+                    "TargetName": "Bone004", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 8.72516e-17, 8.72516e-17, 8.72516e-17, 0.467003, 8.72516e-17 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 8.72516e-17, 8.72516e-17, 0.467003, 8.72516e-17, 8.72516e-17 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 8.72516e-17, 8.72516e-17, 8.72516e-17, 0.467003, 8.72516e-17 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 1.1, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateY", 
+                    "TargetName": "Bone004", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0, 0, -1.00591, 0 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0, -1.00591, 0, 0 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0, 0, -1.00591, 0 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 1.1, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateZ", 
+                    "TargetName": "Bone004", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0.0412987, 0.931547, 1.14072, 0.164338, 0.0330662 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0.565072, 1.14072, 0.533557, 0.0330662, 0.0412987 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0.0412987, 0.735406, 1.14072, 0.355313, 0.0330662 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 1.1, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateX", 
+                    "TargetName": "Bone003", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 5.70318e-09, 5.70318e-09, 5.70318e-09, 0.96118, 5.70318e-09 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 5.70318e-09, 5.70318e-09, 0.96118, 5.70318e-09, 5.70318e-09 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 5.70318e-09, 5.70318e-09, 5.70318e-09, 0.96118, 5.70318e-09 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0.766667, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateY", 
+                    "TargetName": "Bone003", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0, 0, -0.582935, 0 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0, -0.582935, 0, 0 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0, 0, -0.582935, 0 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0.766667, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateZ", 
+                    "TargetName": "Bone003", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0.0494952, -0.744178, 0.804708, -0.0604994, -0.0604994 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0.744178, 0.804708, 0.219171, -0.0604994, -0.0494952 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0.0494952, -0.744178, 0.804708, 0.0841579, -0.0604994 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0.766667, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateX", 
+                    "TargetName": "Bone002", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.1754e-06, 3.1754e-06, 3.1754e-06, 1.05522, 3.1754e-06 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.1754e-06, 3.1754e-06, 1.05522, 3.1754e-06, 3.1754e-06 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.1754e-06, 3.1754e-06, 3.1754e-06, 1.05522, 3.1754e-06 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0.5, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateY", 
+                    "TargetName": "Bone002", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.82581e-07, 2.82581e-07, 2.82581e-07, -0.247669, 2.82581e-07 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.82581e-07, 2.82581e-07, -0.247669, 2.82581e-07, 2.82581e-07 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.82582e-07, 2.82582e-07, 2.82582e-07, -0.247669, 2.82582e-07 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0.5, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateZ", 
+                    "TargetName": "Bone002", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0.000350475, -0.535463, 0.475337, 0.0563931, 0.0513456 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0.535463, 0.475337, 0.197724, 0.0513456, -0.000350475 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -0.000350475, -0.535463, 0.475337, 0.129495, 0.0513456 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 0.5, 2.36667, 2.83333, 3.33333 ],
+                            "Size": 5
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.Vec3CubicBezierChannel": {
+                    "Name": "translate", 
+                    "TargetName": "Bone001", 
+                    "KeyFrames": {
+                      "ControlPointIn": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -3.08018, 33.9552 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 1.18153, 1.18153 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.7588, 3.7588 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
+                      "ControlPointOut": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 33.9552, -3.08018 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 1.18153, 1.18153 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.7588, 3.7588 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
+                      "Position": [ {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -3.08018, 33.9552 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 1.18153, 1.18153 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      },
+                      {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 3.7588, 3.7588 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      } ], 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateX", 
+                    "TargetName": "Bone001", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 1.57077, 2.64319 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.64319, 1.57077 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 1.57077, 2.64319 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateY", 
+                    "TargetName": "Bone001", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -1.57934, -1.57934 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -1.57934, -1.57934 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ -1.57934, -1.57934 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                },
+                {
+                  "osgAnimation.FloatCubicBezierChannel": {
+                    "Name": "rotateZ", 
+                    "TargetName": "Bone001", 
+                    "KeyFrames": {
+                      "ControlPointIn": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.45571e-05, 2.45571e-05 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "ControlPointOut": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.45571e-05, 2.45571e-05 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Position": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 2.45571e-05, 2.45571e-05 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }, 
+                      "Time": {
+                        "Array": { 
+                          "Float32Array": { 
+                            "Elements": [ 0, 2.83333 ],
+                            "Size": 2
+                          }
+                        }, 
+                        "ItemSize": 1, 
+                        "Type": "ARRAY_BUFFER"
+                      }
+                    }
+                  }
+                } ]
+              }
+            } ]
+          }
+        } ], 
+        "StateSet": {
+          "osg.StateSet": {
+            "UniqueID": 1
+          }
+        }, 
+        "Children": [ {
+          "osgAnimation.Skeleton": {
+            "UniqueID": 2, 
+            "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
+            "UpdateCallbacks": [ {
+              "osgAnimation.UpdateSkeleton": {
+                "UniqueID": 3
+              }
+            } ], 
+            "Children": [ {
+              "osg.MatrixTransform": {
+                "UniqueID": 4, 
+                "Matrix": [ 1, 4.55276e-19, -8.47033e-22, 0, -8.47033e-22, 6.12323e-17, -1, 0, -4.55276e-19, 1, 6.12323e-17, 0, -3.09718, 2.22045e-16, 3.63116, 1 ], 
+                "Children": [ {
+                  "osg.Node": {
+                    "UniqueID": 5, 
+                    "Name": "Box001", 
+                    "Children": [ {
+                      "osgAnimation.RigGeometry": {
+                        "UniqueID": 6, 
+                        "InfluenceMap": {
+                          "Bone001": {
+                            "Index": {
+                              "Array": { 
+                                "Uint16Array": { 
+                                  "Elements": [ 0, 3, 12, 15, 31, 5, 13, 18, 21, 1, 25, 30, 33, 2, 4, 19, 24, 27, 7, 14, 16, 23, 8, 10, 20, 22, 29, 36, 39, 48, 51, 67, 41, 49, 54, 57, 37, 61, 66, 69, 38, 40, 55, 60, 63 ],
+                                  "Size": 45
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }, 
+                            "Weight": {
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                                  "Size": 45
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }
+                          }, 
+                          "Bone002": {
+                            "Index": {
+                              "Array": { 
+                                "Uint16Array": { 
+                                  "Elements": [ 6, 9, 17, 32, 34, 11, 26, 28, 35, 42, 45, 53, 68, 70, 43, 50, 52, 59, 47, 62, 64, 71, 44, 46, 56, 58, 65, 72, 75, 84, 87, 103, 77, 85, 90, 93, 73, 97, 102, 105, 74, 76, 91, 96, 99 ],
+                                  "Size": 45
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }, 
+                            "Weight": {
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                                  "Size": 45
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }
+                          }, 
+                          "Bone003": {
+                            "Index": {
+                              "Array": { 
+                                "Uint16Array": { 
+                                  "Elements": [ 78, 81, 89, 104, 106, 79, 86, 88, 95, 83, 98, 100, 107, 80, 82, 92, 94, 101, 108, 111, 120, 123, 139, 113, 121, 126, 129, 109, 133, 138, 141, 110, 112, 127, 132, 135 ],
+                                  "Size": 36
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }, 
+                            "Weight": {
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                                  "Size": 36
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }
+                          }, 
+                          "Bone004": {
+                            "Index": {
+                              "Array": { 
+                                "Uint16Array": { 
+                                  "Elements": [ 114, 117, 125, 140, 142, 115, 122, 124, 131, 119, 134, 136, 143, 116, 118, 128, 130, 137, 144, 147, 156, 159, 175, 149, 157, 162, 165, 145, 169, 174, 177, 146, 148, 163, 168, 171 ],
+                                  "Size": 36
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }, 
+                            "Weight": {
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                                  "Size": 36
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }
+                          }, 
+                          "Bone005": {
+                            "Index": {
+                              "Array": { 
+                                "Uint16Array": { 
+                                  "Elements": [ 150, 153, 161, 176, 178, 151, 158, 160, 167, 155, 170, 172, 179, 152, 154, 164, 166, 173 ],
+                                  "Size": 18
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }, 
+                            "Weight": {
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                                  "Size": 18
+                                }
+                              }, 
+                              "ItemSize": 1, 
+                              "Type": "ARRAY_BUFFER"
+                            }
+                          }
+                        }, 
+                        "PrimitiveSetList": [ {
+                          "DrawArrays": {
+                            "UniqueID": 10, 
+                            "Count": 180, 
+                            "First": 0, 
+                            "Mode": "TRIANGLES"
+                          }
+                        } ], 
+                        "SourceGeometry": {
+                          "UniqueID": 12, 
+                          "Name": "Box001", 
+                          "PrimitiveSetList": [ {
+                            "DrawArrays": {
+                              "UniqueID": 10
+                            }
+                          } ], 
+                          "VertexAttributeList": {
+                            "Normal": {
+                              "UniqueID": 14, 
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0 ],
+                                  "Size": 180
+                                }
+                              }, 
+                              "ItemSize": 3, 
+                              "Type": "ARRAY_BUFFER"
+                            }, 
+                            "TexCoord0": {
+                              "UniqueID": 9
+                            }, 
+                            "Vertex": {
+                              "UniqueID": 13, 
+                              "Array": { 
+                                "Float32Array": { 
+                                  "Elements": [ -5.12801, -4.44759, 0, -5.12801, 4.44759, 0, 5.12801, 4.44759, 0, -5.12801, -4.44759, 0, 5.12801, 4.44759, 0, 5.12801, -4.44759, 0, -5.12801, -4.44759, 34.7031, 5.12801, -4.44759, 34.7031, 5.12801, 4.44759, 34.7031, -5.12801, -4.44759, 34.7031, 5.12801, 4.44759, 34.7031, -5.12801, 4.44759, 34.7031, -5.12801, -4.44759, 0, 5.12801, -4.44759, 0, 5.12801, -4.44759, 34.7031, -5.12801, -4.44759, 0, 5.12801, -4.44759, 34.7031, -5.12801, -4.44759, 34.7031, 5.12801, -4.44759, 0, 5.12801, 4.44759, 0, 5.12801, 4.44759, 34.7031, 5.12801, -4.44759, 0, 5.12801, 4.44759, 34.7031, 5.12801, -4.44759, 34.7031, 5.12801, 4.44759, 0, -5.12801, 4.44759, 0, -5.12801, 4.44759, 34.7031, 5.12801, 4.44759, 0, -5.12801, 4.44759, 34.7031, 5.12801, 4.44759, 34.7031, -5.12801, 4.44759, 0, -5.12801, -4.44759, 0, -5.12801, -4.44759, 34.7031, -5.12801, 4.44759, 0, -5.12801, -4.44759, 34.7031, -5.12801, 4.44759, 34.7031, -5.12801, -4.44759, 34.5944, -5.12801, 4.44758, 34.5944, 5.12801, 4.44758, 34.5944, -5.12801, -4.44759, 34.5944, 5.12801, 4.44758, 34.5944, 5.12801, -4.44759, 34.5944, -5.12801, -4.44759, 69.2975, 5.12801, -4.44759, 69.2975, 5.12801, 4.44758, 69.2975, -5.12801, -4.44759, 69.2975, 5.12801, 4.44758, 69.2975, -5.12801, 4.44758, 69.2975, -5.12801, -4.44759, 34.5944, 5.12801, -4.44759, 34.5944, 5.12801, -4.44759, 69.2975, -5.12801, -4.44759, 34.5944, 5.12801, -4.44759, 69.2975, -5.12801, -4.44759, 69.2975, 5.12801, -4.44759, 34.5944, 5.12801, 4.44758, 34.5944, 5.12801, 4.44758, 69.2975, 5.12801, -4.44759, 34.5944, 5.12801, 4.44758, 69.2975, 5.12801, -4.44759, 69.2975, 5.12801, 4.44758, 34.5944, -5.12801, 4.44758, 34.5944, -5.12801, 4.44758, 69.2975, 5.12801, 4.44758, 34.5944, -5.12801, 4.44758, 69.2975, 5.12801, 4.44758, 69.2975, -5.12801, 4.44758, 34.5944, -5.12801, -4.44759, 34.5944, -5.12801, -4.44759, 69.2975, -5.12801, 4.44758, 34.5944, -5.12801, -4.44759, 69.2975, -5.12801, 4.44758, 69.2975, -5.12801, -4.44759, 69.1888, -5.12801, 4.44758, 69.1888, 5.12801, 4.44758, 69.1888, -5.12801, -4.44759, 69.1888, 5.12801, 4.44758, 69.1888, 5.12801, -4.44759, 69.1888, -5.12801, -4.44759, 103.892, 5.12801, -4.44759, 103.892, 5.12801, 4.44758, 103.892, -5.12801, -4.44759, 103.892, 5.12801, 4.44758, 103.892, -5.12801, 4.44758, 103.892, -5.12801, -4.44759, 69.1888, 5.12801, -4.44759, 69.1888, 5.12801, -4.44759, 103.892, -5.12801, -4.44759, 69.1888, 5.12801, -4.44759, 103.892, -5.12801, -4.44759, 103.892, 5.12801, -4.44759, 69.1888, 5.12801, 4.44758, 69.1888, 5.12801, 4.44758, 103.892, 5.12801, -4.44759, 69.1888, 5.12801, 4.44758, 103.892, 5.12801, -4.44759, 103.892, 5.12801, 4.44758, 69.1888, -5.12801, 4.44758, 69.1888, -5.12801, 4.44758, 103.892, 5.12801, 4.44758, 69.1888, -5.12801, 4.44758, 103.892, 5.12801, 4.44758, 103.892, -5.12801, 4.44758, 69.1888, -5.12801, -4.44759, 69.1888, -5.12801, -4.44759, 103.892, -5.12801, 4.44758, 69.1888, -5.12801, -4.44759, 103.892, -5.12801, 4.44758, 103.892, -5.12801, -4.44759, 103.783, -5.12801, 4.44758, 103.783, 5.12801, 4.44758, 103.783, -5.12801, -4.44759, 103.783, 5.12801, 4.44758, 103.783, 5.12801, -4.44759, 103.783, -5.12801, -4.44759, 138.486, 5.12801, -4.44759, 138.486, 5.12801, 4.44758, 138.486, -5.12801, -4.44759, 138.486, 5.12801, 4.44758, 138.486, -5.12801, 4.44758, 138.486, -5.12801, -4.44759, 103.783, 5.12801, -4.44759, 103.783, 5.12801, -4.44759, 138.486, -5.12801, -4.44759, 103.783, 5.12801, -4.44759, 138.486, -5.12801, -4.44759, 138.486, 5.12801, -4.44759, 103.783, 5.12801, 4.44758, 103.783, 5.12801, 4.44758, 138.486, 5.12801, -4.44759, 103.783, 5.12801, 4.44758, 138.486, 5.12801, -4.44759, 138.486, 5.12801, 4.44758, 103.783, -5.12801, 4.44758, 103.783, -5.12801, 4.44758, 138.486, 5.12801, 4.44758, 103.783, -5.12801, 4.44758, 138.486, 5.12801, 4.44758, 138.486, -5.12801, 4.44758, 103.783, -5.12801, -4.44759, 103.783, -5.12801, -4.44759, 138.486, -5.12801, 4.44758, 103.783, -5.12801, -4.44759, 138.486, -5.12801, 4.44758, 138.486, -5.12801, -4.44759, 138.378, -5.12801, 4.44758, 138.378, 5.12801, 4.44758, 138.378, -5.12801, -4.44759, 138.378, 5.12801, 4.44758, 138.378, 5.12801, -4.44759, 138.378, -5.12801, -4.44759, 173.081, 5.12801, -4.44759, 173.081, 5.12801, 4.44758, 173.081, -5.12801, -4.44759, 173.081, 5.12801, 4.44758, 173.081, -5.12801, 4.44758, 173.081, -5.12801, -4.44759, 138.378, 5.12801, -4.44759, 138.378, 5.12801, -4.44759, 173.081, -5.12801, -4.44759, 138.378, 5.12801, -4.44759, 173.081, -5.12801, -4.44759, 173.081, 5.12801, -4.44759, 138.378, 5.12801, 4.44758, 138.378, 5.12801, 4.44758, 173.081, 5.12801, -4.44759, 138.378, 5.12801, 4.44758, 173.081, 5.12801, -4.44759, 173.081, 5.12801, 4.44758, 138.378, -5.12801, 4.44758, 138.378, -5.12801, 4.44758, 173.081, 5.12801, 4.44758, 138.378, -5.12801, 4.44758, 173.081, 5.12801, 4.44758, 173.081, -5.12801, 4.44758, 138.378, -5.12801, -4.44759, 138.378, -5.12801, -4.44759, 173.081, -5.12801, 4.44758, 138.378, -5.12801, -4.44759, 173.081, -5.12801, 4.44758, 173.081 ],
+                                  "Size": 180
+                                }
+                              }, 
+                              "ItemSize": 3, 
+                              "Type": "ARRAY_BUFFER"
+                            }
+                          }
+                        }, 
+                        "VertexAttributeList": {
+                          "Normal": {
+                            "UniqueID": 8, 
+                            "Array": { 
+                              "Float32Array": { 
+                                "Elements": [ 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0 ],
+                                "Size": 180
+                              }
+                            }, 
+                            "ItemSize": 3, 
+                            "Type": "ARRAY_BUFFER"
+                          }, 
+                          "TexCoord0": {
+                            "UniqueID": 9, 
+                            "Array": { 
+                              "Float32Array": { 
+                                "Elements": [ 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1 ],
+                                "Size": 180
+                              }
+                            }, 
+                            "ItemSize": 2, 
+                            "Type": "ARRAY_BUFFER"
+                          }, 
+                          "Vertex": {
+                            "UniqueID": 7, 
+                            "Array": { 
+                              "Float32Array": { 
+                                "Elements": [ -5.12801, -4.44759, 0, -5.12801, 4.44759, 0, 5.12801, 4.44759, 0, -5.12801, -4.44759, 0, 5.12801, 4.44759, 0, 5.12801, -4.44759, 0, -5.12801, -4.44759, 34.7031, 5.12801, -4.44759, 34.7031, 5.12801, 4.44759, 34.7031, -5.12801, -4.44759, 34.7031, 5.12801, 4.44759, 34.7031, -5.12801, 4.44759, 34.7031, -5.12801, -4.44759, 0, 5.12801, -4.44759, 0, 5.12801, -4.44759, 34.7031, -5.12801, -4.44759, 0, 5.12801, -4.44759, 34.7031, -5.12801, -4.44759, 34.7031, 5.12801, -4.44759, 0, 5.12801, 4.44759, 0, 5.12801, 4.44759, 34.7031, 5.12801, -4.44759, 0, 5.12801, 4.44759, 34.7031, 5.12801, -4.44759, 34.7031, 5.12801, 4.44759, 0, -5.12801, 4.44759, 0, -5.12801, 4.44759, 34.7031, 5.12801, 4.44759, 0, -5.12801, 4.44759, 34.7031, 5.12801, 4.44759, 34.7031, -5.12801, 4.44759, 0, -5.12801, -4.44759, 0, -5.12801, -4.44759, 34.7031, -5.12801, 4.44759, 0, -5.12801, -4.44759, 34.7031, -5.12801, 4.44759, 34.7031, -5.12801, -4.44759, 34.5944, -5.12801, 4.44758, 34.5944, 5.12801, 4.44758, 34.5944, -5.12801, -4.44759, 34.5944, 5.12801, 4.44758, 34.5944, 5.12801, -4.44759, 34.5944, -5.12801, -4.44759, 69.2975, 5.12801, -4.44759, 69.2975, 5.12801, 4.44758, 69.2975, -5.12801, -4.44759, 69.2975, 5.12801, 4.44758, 69.2975, -5.12801, 4.44758, 69.2975, -5.12801, -4.44759, 34.5944, 5.12801, -4.44759, 34.5944, 5.12801, -4.44759, 69.2975, -5.12801, -4.44759, 34.5944, 5.12801, -4.44759, 69.2975, -5.12801, -4.44759, 69.2975, 5.12801, -4.44759, 34.5944, 5.12801, 4.44758, 34.5944, 5.12801, 4.44758, 69.2975, 5.12801, -4.44759, 34.5944, 5.12801, 4.44758, 69.2975, 5.12801, -4.44759, 69.2975, 5.12801, 4.44758, 34.5944, -5.12801, 4.44758, 34.5944, -5.12801, 4.44758, 69.2975, 5.12801, 4.44758, 34.5944, -5.12801, 4.44758, 69.2975, 5.12801, 4.44758, 69.2975, -5.12801, 4.44758, 34.5944, -5.12801, -4.44759, 34.5944, -5.12801, -4.44759, 69.2975, -5.12801, 4.44758, 34.5944, -5.12801, -4.44759, 69.2975, -5.12801, 4.44758, 69.2975, -5.12801, -4.44759, 69.1888, -5.12801, 4.44758, 69.1888, 5.12801, 4.44758, 69.1888, -5.12801, -4.44759, 69.1888, 5.12801, 4.44758, 69.1888, 5.12801, -4.44759, 69.1888, -5.12801, -4.44759, 103.892, 5.12801, -4.44759, 103.892, 5.12801, 4.44758, 103.892, -5.12801, -4.44759, 103.892, 5.12801, 4.44758, 103.892, -5.12801, 4.44758, 103.892, -5.12801, -4.44759, 69.1888, 5.12801, -4.44759, 69.1888, 5.12801, -4.44759, 103.892, -5.12801, -4.44759, 69.1888, 5.12801, -4.44759, 103.892, -5.12801, -4.44759, 103.892, 5.12801, -4.44759, 69.1888, 5.12801, 4.44758, 69.1888, 5.12801, 4.44758, 103.892, 5.12801, -4.44759, 69.1888, 5.12801, 4.44758, 103.892, 5.12801, -4.44759, 103.892, 5.12801, 4.44758, 69.1888, -5.12801, 4.44758, 69.1888, -5.12801, 4.44758, 103.892, 5.12801, 4.44758, 69.1888, -5.12801, 4.44758, 103.892, 5.12801, 4.44758, 103.892, -5.12801, 4.44758, 69.1888, -5.12801, -4.44759, 69.1888, -5.12801, -4.44759, 103.892, -5.12801, 4.44758, 69.1888, -5.12801, -4.44759, 103.892, -5.12801, 4.44758, 103.892, -5.12801, -4.44759, 103.783, -5.12801, 4.44758, 103.783, 5.12801, 4.44758, 103.783, -5.12801, -4.44759, 103.783, 5.12801, 4.44758, 103.783, 5.12801, -4.44759, 103.783, -5.12801, -4.44759, 138.486, 5.12801, -4.44759, 138.486, 5.12801, 4.44758, 138.486, -5.12801, -4.44759, 138.486, 5.12801, 4.44758, 138.486, -5.12801, 4.44758, 138.486, -5.12801, -4.44759, 103.783, 5.12801, -4.44759, 103.783, 5.12801, -4.44759, 138.486, -5.12801, -4.44759, 103.783, 5.12801, -4.44759, 138.486, -5.12801, -4.44759, 138.486, 5.12801, -4.44759, 103.783, 5.12801, 4.44758, 103.783, 5.12801, 4.44758, 138.486, 5.12801, -4.44759, 103.783, 5.12801, 4.44758, 138.486, 5.12801, -4.44759, 138.486, 5.12801, 4.44758, 103.783, -5.12801, 4.44758, 103.783, -5.12801, 4.44758, 138.486, 5.12801, 4.44758, 103.783, -5.12801, 4.44758, 138.486, 5.12801, 4.44758, 138.486, -5.12801, 4.44758, 103.783, -5.12801, -4.44759, 103.783, -5.12801, -4.44759, 138.486, -5.12801, 4.44758, 103.783, -5.12801, -4.44759, 138.486, -5.12801, 4.44758, 138.486, -5.12801, -4.44759, 138.378, -5.12801, 4.44758, 138.378, 5.12801, 4.44758, 138.378, -5.12801, -4.44759, 138.378, 5.12801, 4.44758, 138.378, 5.12801, -4.44759, 138.378, -5.12801, -4.44759, 173.081, 5.12801, -4.44759, 173.081, 5.12801, 4.44758, 173.081, -5.12801, -4.44759, 173.081, 5.12801, 4.44758, 173.081, -5.12801, 4.44758, 173.081, -5.12801, -4.44759, 138.378, 5.12801, -4.44759, 138.378, 5.12801, -4.44759, 173.081, -5.12801, -4.44759, 138.378, 5.12801, -4.44759, 173.081, -5.12801, -4.44759, 173.081, 5.12801, -4.44759, 138.378, 5.12801, 4.44758, 138.378, 5.12801, 4.44758, 173.081, 5.12801, -4.44759, 138.378, 5.12801, 4.44758, 173.081, 5.12801, -4.44759, 173.081, 5.12801, 4.44758, 138.378, -5.12801, 4.44758, 138.378, -5.12801, 4.44758, 173.081, 5.12801, 4.44758, 138.378, -5.12801, 4.44758, 173.081, 5.12801, 4.44758, 173.081, -5.12801, 4.44758, 138.378, -5.12801, -4.44759, 138.378, -5.12801, -4.44759, 173.081, -5.12801, 4.44758, 138.378, -5.12801, -4.44759, 173.081, -5.12801, 4.44758, 173.081 ],
+                                "Size": 180
+                              }
+                            }, 
+                            "ItemSize": 3, 
+                            "Type": "ARRAY_BUFFER"
+                          }
+                        }, 
+                        "osg.ComputeBoundingBoxCallback": {
+                          "UniqueID": 11
+                        }
+                      }
+                    } ]
+                  }
+                } ]
+              }
+            },
+            {
+              "osgAnimation.Bone": {
+                "UniqueID": 15, 
+                "Name": "Bone001", 
+                "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
+                "UpdateCallbacks": [ {
+                  "osgAnimation.UpdateBone": {
+                    "Name": "Bone001", 
+                    "StackedTransforms": [ {
+                      "osgAnimation.StackedTranslate": {
+                        "Name": "translate", 
+                        "Translate": [ -3.08018, 1.18153, 3.7588]
+                      }
+                    },
+                    {
+                      "osgAnimation.StackedMatrixElement": {
+                        "Name": "matrix", 
+                        "Matrix": [ 1, 0, 0, 0, 0, 2.22045e-16, -1, 0, 0, 1, 2.22045e-16, 0, 0, 0, 0, 1 ]
+                      }
+                    },
+                    {
+                      "osgAnimation.StackedRotateAxis": {
+                        "Name": "rotateZ", 
+                        "Angle": -3.14157, 
+                        "Axis": [ 0, 0, 1]
+                      }
+                    },
+                    {
+                      "osgAnimation.StackedRotateAxis": {
+                        "Name": "rotateY", 
+                        "Angle": -1.56225, 
+                        "Axis": [ 0, 1, 0]
+                      }
+                    },
+                    {
+                      "osgAnimation.StackedRotateAxis": {
+                        "Name": "rotateX", 
+                        "Angle": -1.57082, 
+                        "Axis": [ 1, 0, 0]
+                      }
+                    } ]
+                  }
+                } ], 
+                "Children": [ {
+                  "osgAnimation.Bone": {
+                    "UniqueID": 16, 
+                    "Name": "Bone002", 
+                    "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
+                    "UpdateCallbacks": [ {
+                      "osgAnimation.UpdateBone": {
+                        "Name": "Bone002", 
+                        "StackedTransforms": [ {
+                          "osgAnimation.StackedMatrixElement": {
+                            "Name": "matrix", 
+                            "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 33.5273, -9.53674e-06, -1.66893e-06, 1 ]
+                          }
+                        },
+                        {
+                          "osgAnimation.StackedRotateAxis": {
+                            "Name": "rotateZ", 
+                            "Angle": -0.000350475, 
+                            "Axis": [ 0, 0, 1]
+                          }
+                        },
+                        {
+                          "osgAnimation.StackedRotateAxis": {
+                            "Name": "rotateY", 
+                            "Angle": 2.82582e-07, 
+                            "Axis": [ 0, 1, 0]
+                          }
+                        },
+                        {
+                          "osgAnimation.StackedRotateAxis": {
+                            "Name": "rotateX", 
+                            "Angle": 3.1754e-06, 
+                            "Axis": [ 1, 0, 0]
+                          }
+                        },
+                        {
+                          "osgAnimation.StackedMatrixElement": {
+                            "Name": "matrix", 
+                            "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                          }
+                        } ]
+                      }
+                    } ], 
+                    "Children": [ {
+                      "osgAnimation.Bone": {
+                        "UniqueID": 17, 
+                        "Name": "Bone003", 
+                        "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
+                        "UpdateCallbacks": [ {
+                          "osgAnimation.UpdateBone": {
+                            "Name": "Bone003", 
+                            "StackedTransforms": [ {
+                              "osgAnimation.StackedMatrixElement": {
+                                "Name": "matrix", 
+                                "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 34.96, 1.90735e-06, 2.38419e-07, 1 ]
+                              }
+                            },
+                            {
+                              "osgAnimation.StackedRotateAxis": {
+                                "Name": "rotateZ", 
+                                "Angle": -0.0494952, 
+                                "Axis": [ 0, 0, 1]
+                              }
+                            },
+                            {
+                              "osgAnimation.StackedRotateAxis": {
+                                "Name": "rotateY", 
+                                "Angle": -7.10543e-15, 
+                                "Axis": [ 0, 1, 0]
+                              }
+                            },
+                            {
+                              "osgAnimation.StackedRotateAxis": {
+                                "Name": "rotateX", 
+                                "Angle": 5.70318e-09, 
+                                "Axis": [ 1, 0, 0]
+                              }
+                            },
+                            {
+                              "osgAnimation.StackedMatrixElement": {
+                                "Name": "matrix", 
+                                "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                              }
+                            } ]
+                          }
+                        } ], 
+                        "Children": [ {
+                          "osgAnimation.Bone": {
+                            "UniqueID": 18, 
+                            "Name": "Bone004", 
+                            "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
+                            "UpdateCallbacks": [ {
+                              "osgAnimation.UpdateBone": {
+                                "Name": "Bone004", 
+                                "StackedTransforms": [ {
+                                  "osgAnimation.StackedMatrixElement": {
+                                    "Name": "matrix", 
+                                    "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 34.7019, -4.29153e-06, 3.8147e-06, 1 ]
+                                  }
+                                },
+                                {
+                                  "osgAnimation.StackedRotateAxis": {
+                                    "Name": "rotateZ", 
+                                    "Angle": 0.0412987, 
+                                    "Axis": [ 0, 0, 1]
+                                  }
+                                },
+                                {
+                                  "osgAnimation.StackedRotateAxis": {
+                                    "Name": "rotateY", 
+                                    "Angle": -0, 
+                                    "Axis": [ 0, 1, 0]
+                                  }
+                                },
+                                {
+                                  "osgAnimation.StackedRotateAxis": {
+                                    "Name": "rotateX", 
+                                    "Angle": -2.69207e-16, 
+                                    "Axis": [ 1, 0, 0]
+                                  }
+                                },
+                                {
+                                  "osgAnimation.StackedMatrixElement": {
+                                    "Name": "matrix", 
+                                    "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                                  }
+                                } ]
+                              }
+                            } ], 
+                            "Children": [ {
+                              "osgAnimation.Bone": {
+                                "UniqueID": 19, 
+                                "Name": "Bone005", 
+                                "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
+                                "UpdateCallbacks": [ {
+                                  "osgAnimation.UpdateBone": {
+                                    "Name": "Bone005", 
+                                    "StackedTransforms": [ {
+                                      "osgAnimation.StackedMatrixElement": {
+                                        "Name": "matrix", 
+                                        "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 34.3857, 0, 4.05312e-06, 1 ]
+                                      }
+                                    },
+                                    {
+                                      "osgAnimation.StackedRotateAxis": {
+                                        "Name": "rotateZ", 
+                                        "Angle": 0.00819658, 
+                                        "Axis": [ 0, 0, 1]
+                                      }
+                                    },
+                                    {
+                                      "osgAnimation.StackedRotateAxis": {
+                                        "Name": "rotateY", 
+                                        "Angle": 1.42109e-14, 
+                                        "Axis": [ 0, 1, 0]
+                                      }
+                                    },
+                                    {
+                                      "osgAnimation.StackedRotateAxis": {
+                                        "Name": "rotateX", 
+                                        "Angle": -5.55112e-17, 
+                                        "Axis": [ 1, 0, 0]
+                                      }
+                                    },
+                                    {
+                                      "osgAnimation.StackedMatrixElement": {
+                                        "Name": "matrix", 
+                                        "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                                      }
+                                    } ]
+                                  }
+                                } ], 
+                                "Children": [ {
+                                  "osgAnimation.Bone": {
+                                    "UniqueID": 20, 
+                                    "Name": "Bone006", 
+                                    "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
+                                    "UpdateCallbacks": [ {
+                                      "osgAnimation.UpdateBone": {
+                                        "Name": "Bone006", 
+                                        "StackedTransforms": [ {
+                                          "osgAnimation.StackedMatrixElement": {
+                                            "Name": "matrix", 
+                                            "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 34.9621, 1.52588e-05, 3.8147e-06, 1 ]
+                                          }
+                                        },
+                                        {
+                                          "osgAnimation.StackedRotateAxis": {
+                                            "Name": "rotateZ", 
+                                            "Angle": 0, 
+                                            "Axis": [ 0, 0, 1]
+                                          }
+                                        },
+                                        {
+                                          "osgAnimation.StackedRotateAxis": {
+                                            "Name": "rotateY", 
+                                            "Angle": -1.42109e-14, 
+                                            "Axis": [ 0, 1, 0]
+                                          }
+                                        },
+                                        {
+                                          "osgAnimation.StackedRotateAxis": {
+                                            "Name": "rotateX", 
+                                            "Angle": -3.33067e-16, 
+                                            "Axis": [ 1, 0, 0]
+                                          }
+                                        },
+                                        {
+                                          "osgAnimation.StackedMatrixElement": {
+                                            "Name": "matrix", 
+                                            "Matrix": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                                          }
+                                        } ]
+                                      }
+                                    } ], 
+                                    "InvBindMatrixInSkeletonSpace": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 
+                                    "MatrixInSkeletonSpace": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                                  }
+                                } ], 
+                                "InvBindMatrixInSkeletonSpace": [ -0.00819647, -0.999966, 4.74749e-09, 0, 0.999966, -0.00819647, 7.13407e-08, 0, -7.12994e-08, 5.33208e-09, 1, 0, -138.738, -1.08341, -3.75882, 1 ], 
+                                "MatrixInSkeletonSpace": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                              }
+                            } ], 
+                            "InvBindMatrixInSkeletonSpace": [ 7.28803e-08, -1, 4.75418e-09, 0, 1, 7.28803e-08, -3.46486e-16, 0, 0, 4.75418e-09, 1, 0, -104.339, -2.22054, -3.75881, 1 ], 
+                            "MatrixInSkeletonSpace": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                          }
+                        } ], 
+                        "InvBindMatrixInSkeletonSpace": [ 0.041287, -0.999147, 4.7555e-09, 0, 0.999147, 0.041287, 7.13407e-08, 0, -7.14762e-08, 1.806e-09, 1, 0, -69.4563, -6.52648, -3.75881, 1 ], 
+                        "MatrixInSkeletonSpace": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                      }
+                    } ], 
+                    "InvBindMatrixInSkeletonSpace": [ -0.00819643, -0.999967, -9.50844e-10, 0, 0.999967, -0.00819643, 7.15762e-08, 0, -7.15816e-08, -3.64143e-10, 1, 0, -34.7341, -3.08213, -3.75881, 1 ], 
+                    "MatrixInSkeletonSpace": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+                  }
+                } ], 
+                "InvBindMatrixInSkeletonSpace": [ -0.00854689, -0.999963, -3.17393e-06, 0, 0.999963, -0.00854689, -2.37023e-07, 0, 2.09887e-07, -3.17584e-06, 1, 0, -1.20781, -3.06996, -3.75881, 1 ], 
+                "MatrixInSkeletonSpace": [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
+              }
+            },
+            {
+              "osg.MatrixTransform": {
+                "UniqueID": 21, 
+                "Name": "Box001", 
+                "Matrix": [ 1, 0, 0, 0, 0, 2.22045e-16, -1, 0, 0, 1, 2.22045e-16, 0, -3.09718, 0, 3.63116, 1 ], 
+                "UpdateCallbacks": [ {
+                  "osgAnimation.UpdateMatrixTransform": {
+                    "Name": "Box001", 
+                    "StackedTransforms": [ {
+                      "osgAnimation.StackedTranslate": {
+                        "Name": "translate", 
+                        "Translate": [ -3.09718, 0, 3.63116]
+                      }
+                    },
+                    {
+                      "osgAnimation.StackedMatrixElement": {
+                        "Name": "matrix", 
+                        "Matrix": [ 1, 0, 0, 0, 0, 2.22045e-16, -1, 0, 0, 1, 2.22045e-16, 0, 0, 0, 0, 1 ]
+                      }
+                    },
+                    {
+                      "osgAnimation.StackedRotateAxis": {
+                        "Name": "rotateZ", 
+                        "Angle": 0, 
+                        "Axis": [ 0, 0, 1]
+                      }
+                    },
+                    {
+                      "osgAnimation.StackedRotateAxis": {
+                        "Name": "rotateY", 
+                        "Angle": 0, 
+                        "Axis": [ 0, 1, 0]
+                      }
+                    },
+                    {
+                      "osgAnimation.StackedRotateAxis": {
+                        "Name": "rotateX", 
+                        "Angle": 0, 
+                        "Axis": [ 1, 0, 0]
+                      }
+                    } ]
+                  }
+                } ]
+              }
+            } ]
+          }
+        } ]
+      }
+    } ]
+  }
+}

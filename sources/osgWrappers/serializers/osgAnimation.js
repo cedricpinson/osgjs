@@ -30,16 +30,15 @@ define( [
             return undefined;
         }
 
-        var createPromiseCallback = function ( animation ) {
-            return function ( chan ) {
-                if ( chan ) {
-                    animation.getChannels().push( chan );
-                }
-            };
+
+        var cb = function ( chan ) {
+            if ( chan ) {
+                animation.getChannels().push( chan );
+            }
         };
         // channels
         for ( var i = 0, l = jsonObj.Channels.length; i < l; i++ ) {
-            Q( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( createPromiseCallback( animation ) );
+            Q( input.setJSON( jsonObj.Channels[ i ] ).readObject() ).then( cb );
         }
         return animation;
     };
@@ -564,10 +563,10 @@ define( [
             var vertexInfluence = explodeInfluenceMap[ name ];
             var index = vertexInfluence[ 'Index' ]._elements;
             var weight = vertexInfluence[ 'Weight' ]._elements;
-            var res = [];
+            var res = {};
 
             for ( var i = 0, l = index.length; i < l; i++ ) {
-                res.push( [ index[ i ], weight[ i ] ] );
+                res[ index[ i ] ] = weight[ i ];
             }
             return res;
         };
