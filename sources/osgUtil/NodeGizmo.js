@@ -114,7 +114,7 @@ define( [
         this._translateNode = new MatrixTransform();
         this._planeNode = new MatrixTransform();
 
-        this._rotateInLocal = true; // local vs static space
+        this._rotateInLocal = true; // local vs world space
         this._showAngle = new MatrixTransform();
 
         //for realtime picking
@@ -129,12 +129,16 @@ define( [
         this._editLineDirection = Vec3.create();
         this._editOffset = Vec3.create();
 
+        // cached matrices when starting the editing operations
         this._editLocal = Matrix.create();
         this._editWorldTrans = Matrix.create();
         this._editWorldScaleRot = Matrix.create();
         this._editInvWorldScaleRot = Matrix.create();
 
+        // red line, it can be useful as helpers too
         this._debugNode = new Node();
+
+        this._lastDistToEye = 0.0; // see updateGizmo comment
 
         this._attachedNode = null;
         this.attachToGeometry( null );
@@ -498,7 +502,11 @@ define( [
                 } else {
                     var scaleFov = Matrix.getScale( this._viewer.getCamera().getProjectionMatrix(), tmpVec )[ 0 ];
                     this._manipulator.getEyePosition( eye );
-                    scaleFactor = Vec3.distance( eye, trVec ) / ( 10 * scaleFov );
+                    // while we are editing we don't normalize the gizmo
+                    // it gives a better depth feedback, especially if we are editing a geometry that has
+                    // a constant screen size (for example an icon)
+                    this._lastDistToEye = this._isEditing ? this._lastDistToEye : Vec3.distance( eye, trVec );
+                    scaleFactor = this._lastDistToEye / ( 10 * scaleFov );
                 }
                 Matrix.makeScale( scaleFactor, scaleFactor, scaleFactor, scGiz );
 
