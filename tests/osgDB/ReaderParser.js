@@ -1,12 +1,11 @@
 define( [
     'qunit',
-    'q',
     'tests/mockup/mockup',
     'osgDB/ReaderParser',
     'osg/Texture',
     'osgDB/Input',
     'osg/PrimitiveSet'
-], function ( QUnit, Q, mockup, ReaderParser, Texture, Input, PrimitiveSet ) {
+], function ( QUnit, mockup, ReaderParser, Texture, Input, PrimitiveSet ) {
 
     'use strict';
 

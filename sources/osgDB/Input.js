@@ -1,5 +1,5 @@
 define( [
-    'q',
+    'bluebird',
     'osg/Utils',
     'osgNameSpace',
     'osgDB/ReaderParser',
@@ -11,7 +11,7 @@ define( [
     'osg/DrawArrayLengths',
     'osg/DrawElements',
     'osg/PrimitiveSet'
-], function ( Q, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
+], function ( P, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     'use strict';
 
@@ -102,7 +102,7 @@ define( [
 
         requestFile: function ( url, options ) {
 
-            var defer = Q.defer();
+            var defer = P.defer();
 
             var req = new XMLHttpRequest();
             req.open( 'GET', url, true );
@@ -211,7 +211,7 @@ define( [
                 return this.fetchImage( image, url, options );
             }
 
-            var defer = Q.defer();
+            var defer = P.defer();
             this.fetchImage( image, url, options, defer );
 
             return defer.promise;
@@ -236,7 +236,7 @@ define( [
 
             url = this.computeURL( url );
 
-            var defer = Q.defer();
+            var defer = P.defer();
 
             // copy because we are going to modify it to have relative prefix to load assets
             options = MACROUTILS.objectMix( {}, options );
@@ -372,7 +372,7 @@ define( [
             if ( this._identifierMap[ url ] !== undefined ) {
                 return this._identifierMap[ url ];
             }
-            var defer = Q.defer();
+            var defer = P.defer();
 
             var filePromise = this.requestFile( url, {
                 responseType: 'arraybuffer',
@@ -394,7 +394,7 @@ define( [
                 return options.initializeBufferArray.call( this, vb, type, buf );
 
             var url = vb.File;
-            var defer = Q.defer();
+            var defer = P.defer();
             this.readBinaryArrayURL( url ).then( function ( array ) {
 
                 var typedArray;
@@ -464,14 +464,13 @@ define( [
                 return options.readBufferArray.call( this );
 
             if ( ( !jsonObj.Elements && !jsonObj.Array ) || !jsonObj.ItemSize || !jsonObj.Type )
-                return Q.reject();
+                return P.reject();
 
-            // var defer=Q.defer();
             var promise;
 
             // inline array
             if ( jsonObj.Elements ) {
-                promise = Q.resolve( new BufferArray( BufferArray[ jsonObj.Type ], jsonObj.Elements, jsonObj.ItemSize ) );
+                promise = P.resolve( new BufferArray( BufferArray[ jsonObj.Type ], jsonObj.Elements, jsonObj.ItemSize ) );
 
             } else if ( jsonObj.Array ) {
 
@@ -497,7 +496,7 @@ define( [
                     promise = this.initializeBufferArray( vb, type, buf );
                 } else if ( vb.Elements ) {
                     buf.setElements( new MACROUTILS[ type ]( vb.Elements ) );
-                    promise = Q.resolve( buf );
+                    promise = P.resolve( buf );
                 }
             }
 
@@ -527,7 +526,7 @@ define( [
             var uniqueID;
             var osgjsObject;
 
-            var defer = Q.defer();
+            var defer = P.defer();
             var obj, mode, first, count;
             var drawElementPrimitive = jsonObj.DrawElementUShort || jsonObj.DrawElementUByte || jsonObj.DrawElementUInt || jsonObj.DrawElementsUShort || jsonObj.DrawElementsUByte || jsonObj.DrawElementsUInt || undefined;
             if ( drawElementPrimitive ) {
@@ -611,7 +610,7 @@ define( [
             var prop = window.Object.keys( jsonObj )[ 0 ];
             if ( !prop ) {
                 Notify.warn( 'can\'t find property for object ' + jsonObj );
-                return Q.reject();
+                return P.reject();
             }
 
             var uniqueID = jsonObj[ prop ].UniqueID;
@@ -626,7 +625,7 @@ define( [
             var obj = this.getObjectWrapper( prop );
             if ( !obj ) {
                 Notify.warn( 'can\'t instanciate object ' + prop );
-                return Q.reject();
+                return P.reject();
             }
             var ReaderParser = require( 'osgDB/ReaderParser' );
             var scope = ReaderParser.ObjectWrapper.serializers;
@@ -635,7 +634,7 @@ define( [
                 var reader = scope[ splittedPath[ i ] ];
                 if ( reader === undefined ) {
                     Notify.warn( 'can\'t find function to read object ' + prop + ' - undefined' );
-                    return Q.reject();
+                    return P.reject();
                 }
                 scope = reader;
             }

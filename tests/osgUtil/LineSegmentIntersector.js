@@ -1,6 +1,5 @@
 define( [
     'qunit',
-    'q',
     'tests/mockup/mockup',
     'osgUtil/IntersectionVisitor',
     'osgUtil/LineSegmentIntersector',
@@ -12,7 +11,7 @@ define( [
     'osg/Shape',
     'osgViewer/View',
     'osgDB/ReaderParser'
-], function ( QUnit, Q, mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser ) {
+], function ( QUnit, mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser ) {
 
     'use strict';
 

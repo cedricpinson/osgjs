@@ -191,19 +191,19 @@ var gruntTasks = {};
 } )();
 
 
-var generateVersionFile = function() {
-    var pkg = JSON.parse( fs.readFileSync('package.json' ) );
+var generateVersionFile = function () {
+    var pkg = JSON.parse( fs.readFileSync( 'package.json' ) );
     var content = [
         'define( [], function() {',
         '    return {',
         '        name: \'' + pkg.name + '\',',
         '        version: \'' + pkg.version + '\',',
-        '        author: \'' + pkg.author +'\'',
+        '        author: \'' + pkg.author + '\'',
         '    };',
         '} );'
 
     ];
-    fs.writeFileSync( path.join( SOURCE_PATH, 'version.js'), content.join('\n'));
+    fs.writeFileSync( path.join( SOURCE_PATH, 'version.js' ), content.join( '\n' ) );
 };
 
 // ## Clean
@@ -327,11 +327,11 @@ var generateVersionFile = function() {
                     src: 'examples/vendors/hammer-2.0.4.js',
                     dest: 'examples/vendors/hammer.js'
                 },
-                //Q:
+                //Bluebird:
                 {
                     cwd: './',
-                    src: 'examples/vendors/q-0.9.7.js',
-                    dest: 'examples/vendors/q.js'
+                    src: 'examples/vendors/bluebird-2.9.25.js',
+                    dest: 'examples/vendors/bluebird.js'
                 },
                 //es5-shim:
                 {
@@ -418,7 +418,7 @@ var generateVersionFile = function() {
                 branch: 'gh-pages',
                 repository: 'git@github.com:cedricpinson/osgjs.git',
                 directory: path.join( BUILD_PATH, 'web' )
-                //, depth: -1 // cannot push from a shallow clone
+                    //, depth: -1 // cannot push from a shallow clone
             }
         }
     };

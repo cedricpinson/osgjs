@@ -1,6 +1,6 @@
 define( [
-    'q'
-], function ( Q ) {
+    'bluebird'
+], function ( P ) {
 
     'use strict';
 
@@ -55,11 +55,11 @@ define( [
                 queue.push( input.setJSON( jsonObj.Children[ i ] ).readObject() );
             }
         }
-        var defer = Q.defer();
+        var defer = P.defer();
         // Resolve first updateCallbacks and stateset.
-        Q.all( promiseArray ).then( function () {
+        P.all( promiseArray ).then( function () {
             // Need to wait until the stateset and the all the callbacks are resolved
-            Q.all( queue ).then( function ( queueNodes ) {
+            P.all( queue ).then( function ( queueNodes ) {
                 // All the results from P.all are on the argument as an array
                 // Now insert children in the right order
                 var len = queueNodes.length;
@@ -117,8 +117,8 @@ define( [
             }
         }
 
-        var defer = Q.defer();
-        Q.all( promiseArray ).then( function () {
+        var defer = P.defer();
+        P.all( promiseArray ).then( function () {
             defer.resolve( stateSet );
         } ).catch( defer.reject.bind( defer ) );
 
@@ -128,7 +128,7 @@ define( [
     osgWrapper.Material = function ( input, material ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.Diffuse || !jsonObj.Emission || !jsonObj.Specular || jsonObj.Shininess === undefined )
-            return Q.reject();
+            return P.reject();
 
         osgWrapper.Object( input, material );
 
@@ -137,13 +137,13 @@ define( [
         material.setEmission( jsonObj.Emission );
         material.setSpecular( jsonObj.Specular );
         material.setShininess( jsonObj.Shininess );
-        return Q.resolve( material );
+        return P.resolve( material );
     };
 
     osgWrapper.BlendFunc = function ( input, blend ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.SourceRGB || !jsonObj.SourceAlpha || !jsonObj.DestinationRGB || !jsonObj.DestinationAlpha )
-            return Q.reject();
+            return P.reject();
 
         osgWrapper.Object( input, blend );
 
@@ -151,27 +151,27 @@ define( [
         blend.setSourceAlpha( jsonObj.SourceAlpha );
         blend.setDestinationRGB( jsonObj.DestinationRGB );
         blend.setDestinationAlpha( jsonObj.DestinationAlpha );
-        return Q.resolve( blend );
+        return P.resolve( blend );
     };
 
     osgWrapper.CullFace = function ( input, attr ) {
         var jsonObj = input.getJSON();
         if ( jsonObj.Mode === undefined )
-            return Q.reject();
+            return P.reject();
 
         osgWrapper.Object( input, attr );
         attr.setMode( jsonObj.Mode );
-        return Q.resolve( attr );
+        return P.resolve( attr );
     };
 
     osgWrapper.BlendColor = function ( input, attr ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.ConstantColor )
-            return Q.reject();
+            return P.reject();
 
         osgWrapper.Object( input, attr );
         attr.setConstantColor( jsonObj.ConstantColor );
-        return Q.resolve( attr );
+        return P.resolve( attr );
     };
 
     osgWrapper.Light = function ( input, light ) {
@@ -187,7 +187,7 @@ define( [
             jsonObj.LinearAttenuation === undefined ||
             jsonObj.ConstantAttenuation === undefined ||
             jsonObj.QuadraticAttenuation === undefined )
-            return Q.reject();
+            return P.reject();
 
         osgWrapper.Object( input, light );
         light.setAmbient( jsonObj.Ambient );
@@ -204,7 +204,7 @@ define( [
         if ( jsonObj.SpotExponent !== undefined ) {
             light.setSpotBlend( jsonObj.SpotExponent / 128.0 );
         }
-        return Q.resolve( light );
+        return P.resolve( light );
     };
 
     osgWrapper.Texture = function ( input, texture ) {
@@ -223,7 +223,7 @@ define( [
             file = 'no-image-provided';
         }
 
-        var defer = Q.defer();
+        var defer = P.defer();
         input.readImageURL( file ).then( function ( img ) {
             texture.setImage( img );
             defer.resolve( texture );
@@ -234,7 +234,7 @@ define( [
     osgWrapper.Projection = function ( input, node ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.Matrix )
-            return Q.reject();
+            return P.reject();
 
         var promise = osgWrapper.Node( input, node );
         node.setMatrix( jsonObj.Matrix );
@@ -244,7 +244,7 @@ define( [
     osgWrapper.MatrixTransform = function ( input, node ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.Matrix )
-            return Q.reject();
+            return P.reject();
 
         var promise = osgWrapper.Node( input, node );
         node.setMatrix( jsonObj.Matrix );
@@ -254,11 +254,11 @@ define( [
     osgWrapper.LightSource = function ( input, node ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.Light )
-            return Q.reject();
+            return P.reject();
 
-        var defer = Q.defer();
+        var defer = P.defer();
         var promise = osgWrapper.Node( input, node );
-        Q.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
+        P.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
             var light = args[ 0 ];
             //var lightsource = args[ 1 ];
             node.setLight( light );
@@ -270,7 +270,7 @@ define( [
     osgWrapper.Geometry = function ( input, node ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.VertexAttributeList )
-            return Q.reject();
+            return P.reject();
 
         jsonObj.PrimitiveSetList = jsonObj.PrimitiveSetList || [];
 
@@ -304,8 +304,8 @@ define( [
             promiseBuffer.then( cbSetBuffer.bind( node, name ) );
         }
 
-        var defer = Q.defer();
-        Q.all( arraysPromise ).then( function () {
+        var defer = P.defer();
+        P.all( arraysPromise ).then( function () {
             defer.resolve( node );
         } ).catch( defer.reject.bind( defer ) );
         return defer.promise;
@@ -354,8 +354,8 @@ define( [
             }
         }
 
-        var defer = Q.defer();
-        Q.all( queue ).then( function ( queueNodes ) {
+        var defer = P.defer();
+        P.all( queue ).then( function ( queueNodes ) {
             // All the results from P.all are on the argument as an array
             var len = queueNodes.length;
             for ( i = 0; i < len; i++ )

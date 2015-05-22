@@ -1,10 +1,10 @@
 define( [
     'qunit',
-    'q',
+    'bluebird',
     'osgDB/Input',
     'osg/Notify',
     'osg/Image'
-], function ( QUnit, Q, Input, Notify, Image ) {
+], function ( QUnit, P, Input, Notify, Image ) {
 
     'use strict';
 
@@ -21,7 +21,7 @@ define( [
             input.readImageURL( ImageTest ).then( function ( image ) {
                 ok( image.getURL() === ImageTest, 'check image src' );
                 start();
-            } ).fail( function ( error ) {
+            } ).catch( function ( error ) {
                 Notify.error( error );
             } );
         } );
@@ -38,7 +38,7 @@ define( [
             } ).then( function ( /*image*/) {
                 equal( called, true, 'check image src' );
                 start();
-            } ).fail( function ( error ) {
+            } ).catch( function ( error ) {
                 Notify.error( error );
             } );
         } );
@@ -62,7 +62,7 @@ define( [
                 ok( image.getImage().src.substr( -9 ) !== url, 'with promise : used fallback image' );
 
                 start();
-            } ).fail( function ( error ) {
+            } ).catch( function ( error ) {
                 Notify.error( error );
             } );
         } );
@@ -114,7 +114,7 @@ define( [
             var calledBinaryArray = false;
             var readBinaryArrayURL = function ( /*url, options*/) {
                 calledBinaryArray = true;
-                return Q.resolve();
+                return P.resolve();
             };
             var input = new Input();
             input.readBinaryArrayURL( 'toto', {
@@ -130,7 +130,7 @@ define( [
             var calledNodeURL = false;
             var readNodeURL = function ( /*url, options*/) {
                 calledNodeURL = true;
-                return Q.resolve();
+                return P.resolve();
             };
             var input = new Input();
             input.readNodeURL( 'toto', {
@@ -312,7 +312,7 @@ define( [
                 var buffers = {};
 
                 var createVertexAttribute = function ( name, jsonAttribute ) {
-                    var defer = Q.defer();
+                    var defer = P.defer();
                     arraysPromise.push( defer.promise );
                     var promise = input.setJSON( jsonAttribute ).readBufferArray();
                     promise.then( function ( buffer ) {
@@ -326,7 +326,7 @@ define( [
                 createVertexAttribute( 'Tangent', ba.Tangent );
                 createVertexAttribute( 'TexCoord0', ba.TexCoord0 );
 
-                Q.all( arraysPromise ).then( function () {
+                P.all( arraysPromise ).then( function () {
                     var tc = buffers.TexCoord0.getElements();
                     var tcl = tc.length;
                     equal( tc[ 2 ], 2, 'readBufferArray with new array typed external file with offset' );

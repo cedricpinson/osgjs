@@ -3,12 +3,12 @@
  */
 
 define( [
-    'q',
+    'bluebird',
     'osg/Utils',
     'osg/NodeVisitor',
     'osg/PagedLOD',
     'osg/Timer'
-], function ( Q, MACROUTILS, NodeVisitor, PagedLOD, Timer ) {
+], function ( P, MACROUTILS, NodeVisitor, PagedLOD, Timer ) {
 
     'use strict';
     /**
@@ -300,9 +300,9 @@ define( [
             // Need to call with pagedLOD as parent, to be able to have multiresolution structures.
             var promise = ( func )( plod );
             // should func always return a promise ?
-            if ( !promise ) return Q.reject();
+            if ( !promise ) return P.reject();
             if ( promise && promise.then ) return promise;
-            return Q.resolve( promise );
+            return P.resolve( promise );
         },
 
         loadNodeFromURL: function ( url ) {

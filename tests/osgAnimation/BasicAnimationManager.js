@@ -1,13 +1,12 @@
 define( [
     'qunit',
-    'q',
     'tests/mockup/mockup',
     'osgAnimation/BasicAnimationManager',
     'osg/Utils',
     'osg/NodeVisitor',
     'osgDB/ReaderParser',
     'osgAnimation/LinkVisitor'
-], function ( QUnit, Q, mockup, BasicAnimationManager, MACROUTILS, NodeVisitor, ReaderParser, LinkVisitor ) {
+], function ( QUnit, mockup, BasicAnimationManager, MACROUTILS, NodeVisitor, ReaderParser, LinkVisitor ) {
 
     'use strict';
 
