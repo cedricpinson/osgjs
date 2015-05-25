@@ -9,26 +9,23 @@ define( [
 
     osgAnimationWrapper.Animation = function ( input, animation ) {
         var jsonObj = input.getJSON();
-        // check
         if ( !jsonObj.Name || !jsonObj.Channels || jsonObj.Channels.length === 0 )
             return P.reject();
 
         osgWrapper.Object( input, animation );
 
-        var cbSuccess = function ( chan ) {
-            if ( chan )
-                animation.getChannels().push( chan );
-        };
+        var channels = animation.getChannels();
+        var cb = channels.push.bind( channels );
+
         // channels
         for ( var i = 0, l = jsonObj.Channels.length; i < l; i++ ) {
-            input.setJSON( jsonObj.Channels[ i ] ).readObject().then( cbSuccess );
+            input.setJSON( jsonObj.Channels[ i ] ).readObject().then( cb );
         }
         return P.resolve( animation );
     };
 
     osgAnimationWrapper.Vec3LerpChannel = function ( input, channel ) {
         var jsonObj = input.getJSON();
-        // check
         if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name )
             return P.reject();
 
@@ -61,7 +58,6 @@ define( [
 
     osgAnimationWrapper.BasicAnimationManager = function ( input, manager ) {
         var jsonObj = input.getJSON();
-        // check
         if ( !jsonObj.Animations )
             return P.reject();
 
@@ -69,22 +65,24 @@ define( [
 
         var cbRegister = manager.registerAnimation.bind( manager );
         for ( var i = 0, l = jsonObj.Animations.length; i < l; i++ ) {
-            input.setJSON( jsonObj.Animations[ i ] ).readObject().then( cbRegister );
+            var prim = input.setJSON( jsonObj.Animations[ i ] ).readObject();
+            if ( prim.isRejected() )
+                continue;
+            prim.then( cbRegister );
         }
         return P.resolve( manager );
     };
 
     osgAnimationWrapper.UpdateMatrixTransform = function ( input, umt ) {
         var jsonObj = input.getJSON();
-        // check
         if ( !jsonObj.Name || !jsonObj.StackedTransforms )
             return P.reject();
 
         osgWrapper.Object( input, umt );
 
-        var cb = function ( ste ) {
-            umt.getStackedTransforms().push( ste );
-        };
+        var stack = umt.getStackedTransforms();
+        var cb = stack.push.bind( stack );
+
         for ( var i = 0, l = jsonObj.StackedTransforms.length; i < l; i++ ) {
             input.setJSON( jsonObj.StackedTransforms[ i ] ).readObject().then( cb );
         }
@@ -93,7 +91,6 @@ define( [
 
     osgAnimationWrapper.StackedTranslate = function ( input, st ) {
         var jsonObj = input.getJSON();
-        // check
         if ( !jsonObj.Name )
             return P.reject();
 
@@ -106,7 +103,6 @@ define( [
 
     osgAnimationWrapper.StackedQuaternion = function ( input, st ) {
         var jsonObj = input.getJSON();
-        // check
         if ( !jsonObj.Name )
             return P.reject();
 
@@ -118,7 +114,6 @@ define( [
 
     osgAnimationWrapper.StackedRotateAxis = function ( input, st ) {
         var jsonObj = input.getJSON();
-        // check
         if ( !jsonObj.Axis )
             return P.reject();
 

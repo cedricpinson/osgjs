@@ -29,10 +29,7 @@ define( [
         var promiseArray = [];
 
         if ( jsonObj.UpdateCallbacks ) {
-            var cbAddCallback = function ( cb ) {
-                if ( cb )
-                    node.addUpdateCallback( cb );
-            };
+            var cbAddCallback = node.addUpdateCallback.bind( node );
             for ( var j = 0, l = jsonObj.UpdateCallbacks.length; j < l; j++ ) {
                 var promise = input.setJSON( jsonObj.UpdateCallbacks[ j ] ).readObject();
                 promiseArray.push( promise );
@@ -43,9 +40,7 @@ define( [
         if ( jsonObj.StateSet ) {
             var pp = input.setJSON( jsonObj.StateSet ).readObject();
             promiseArray.push( pp );
-            pp.then( function ( stateset ) {
-                node.setStateSet( stateset );
-            } );
+            pp.then( node.setStateSet.bind( node ) );
         }
 
         var queue = [];
@@ -83,11 +78,10 @@ define( [
 
         var createAttribute = function ( jsonAttribute ) {
             var promise = input.setJSON( jsonAttribute ).readObject();
+            if ( promise.isRejected() ) // sometimes we have some empty objects
+                return;
             promiseArray.push( promise );
-            promise.then( function ( attribute ) {
-                if ( attribute !== undefined )
-                    stateSet.setAttributeAndModes( attribute );
-            } );
+            promise.then( stateSet.setAttributeAndModes.bind( stateSet ) );
         };
 
         var promiseArray = [];
@@ -101,10 +95,7 @@ define( [
         var createTextureAttribute = function ( unit, textureAttribute ) {
             var promise = input.setJSON( textureAttribute ).readObject();
             promiseArray.push( promise );
-            promise.then( function ( attribute ) {
-                if ( attribute )
-                    stateSet.setTextureAttributeAndModes( unit, attribute );
-            } );
+            promise.then( stateSet.setTextureAttributeAndModes.bind( stateSet, unit ) );
         };
 
         if ( jsonObj.TextureAttributeList ) {
@@ -277,10 +268,8 @@ define( [
         var arraysPromise = [];
         arraysPromise.push( osgWrapper.Node( input, node ) );
 
-        var cbAddPrimitives = function ( prim ) {
-            if ( prim )
-                node.getPrimitives().push( prim );
-        };
+        var prims = node.getPrimitives();
+        var cbAddPrimitives = prims.push.bind( prims );
         var i = 0;
         var l = jsonObj.PrimitiveSetList.length;
         for ( i = 0; i < l; i++ ) {
@@ -290,8 +279,7 @@ define( [
         }
 
         var cbSetBuffer = function ( name, buffer ) {
-            if ( buffer )
-                this.getVertexAttributeList()[ name ] = buffer;
+            this.getVertexAttributeList()[ name ] = buffer;
         };
 
         var vList = jsonObj.VertexAttributeList;
