@@ -68,13 +68,14 @@ define( [
                 if ( blend !== undefined && blend.getSource() !== BlendFunc.DISABLE ) {
                     this.removeNodeFromCasting( node );
                     return;
-                } else if ( node.getTypeID() === Light.typeID || node.getTypeID() === LightSource.typeID ) {
-                    this.removeNodeFromCasting( node );
-                    return;
-                } else if ( node.getTypeID() === Camera.typeID && node.isRenderToTextureCamera() ) {
-                    this.removeNodeFromCasting( node );
-                    return;
                 }
+            }
+            if ( node.getTypeID() === Light.typeID || node.getTypeID() === LightSource.typeID ) {
+                this.removeNodeFromCasting( node );
+                return;
+            } else if ( node.getTypeID() === Camera.typeID && node.isRenderToTextureCamera() ) {
+                this.removeNodeFromCasting( node );
+                return;
             }
             this.traverse( node );
         },
@@ -983,6 +984,10 @@ define( [
             if ( !bbox.valid() ) {
                 // nothing to draw Early out.
                 this.noDraw();
+
+                // remove our flags changes on any bitmask
+                // not to break things
+                this._removeNodesNeverCastingVisitor.restore();
                 return;
             }
 
@@ -997,8 +1002,12 @@ define( [
 
             if ( this._emptyCasterScene ) {
                 // nothing to draw Early out.
-                console.log( 'shadow early OUT' );
+                //console.log( 'shadow early OUT' );
                 this.noDraw();
+
+                // remove our flags changes on any bitmask
+                // not to break things
+                this._removeNodesNeverCastingVisitor.restore();
                 return;
             }
 
