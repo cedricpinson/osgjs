@@ -6,8 +6,10 @@ define( [
     'osg/Geometry',
     'osg/NodeVisitor',
     'osg/Notify',
-    'osg/Matrix'
-], function ( MACROUTILS, Vec3, Node, BoundingBox, Geometry, NodeVisitor, Notify, Matrix ) {
+    'osg/Matrix',
+    'osg/Uniform',
+    'osg/BufferArray'
+], function ( MACROUTILS, Vec3, Node, BoundingBox, Geometry, NodeVisitor, Notify, Matrix, Uniform, BufferArray ) {
 
     'use strict';
 
@@ -43,19 +45,63 @@ define( [
         this._bonePerVertex = undefined;
         this._palette = undefined;
         this._vertexIndexMatrixWeightList = undefined;
+        this._boneWeightAttribArrays = undefined;
     };
     UniformMatrixPalette.prototype = {
         createVertexUniform: function () {
-            var matrix = [];
-            for ( var i = 0, l = this._palette.length; i < l; i++ ) matrix.push( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 );
-            var ubonesUniform = osg.Uniform.createFloat4Array( new Float32Array( matrix ), 'uBones' );
-            return ubonesUniform;
+            var nbMatrix = this._palette.length;
+            var matrix = new Float32Array( nbMatrix * 12 );
+            for ( var i = 0; i < nbMatrix; i++ ) {
+                var id = i * 12;
+                matrix[ id ] = matrix[ id + 5 ] = matrix[ id + 10 ] = 1.0;
+            }
+            return Uniform.createFloat4Array( matrix, 'uBones' );
         },
-        createVertexAttribList: function () {
+        // setUniformPalette: function ( stateSet ) {
+        //     if ( this._ubonesUniform && stateSet )
+        //         stateSet.addUniform( ubonesUniform );
+        // },
 
+        createVertexAttribList: ( function () {
+            var compare = function ( a, b ) {
+                return b.weight - a.weight;
+            };
 
+            return function () {
+                var VertexIndexMatrixWeightList = this._vertexIndexMatrixWeightList;
+                var keys = Object.keys( VertexIndexMatrixWeightList );
+                var nbVerts = keys.length;
+                var attributeBone = new Uint8Array( nbVerts * 4 );
+                var attributeWeight = new Float32Array( nbVerts * 4 );
 
-        },
+                for ( var i = 0; i < nbVerts; i++ ) {
+                    var key = keys[ i ];
+                    var bones = VertexIndexMatrixWeightList[ key ]; //take all bones
+
+                    bones.sort( compare ); //sort it
+
+                    // keep stronger bones
+                    var sum = 0;
+                    var j = 0;
+                    for ( j = 0; j < 4 && bones[ j ]; j++ ) {
+                        sum += bones[ j ].weight;
+                    }
+                    var mult = 1.0 / sum;
+                    for ( var k = 0; k < j; k++ ) {
+                        var id = i * 4 + k;
+                        var bone = bones[ k ];
+                        attributeBone[ id ] = bone.index;
+                        attributeWeight[ id ] = bone.weight * mult;
+                    }
+                }
+
+                return {
+                    Bone: new BufferArray( BufferArray.ARRAY_BUFFER, attributeBone, 4 ),
+                    Weight: new BufferArray( BufferArray.ARRAY_BUFFER, attributeWeight, 4 )
+                };
+            };
+
+        } )(),
         createPalette: function ( boneMap, vertexIndexToBoneWeightMap ) {
 
             var maxBonePerVertex = 0;
@@ -97,11 +143,7 @@ define( [
                         palette.push( boneMap[ bw.name ] );
                         bname2Palette[ bw.name ] = palette.length - 1;
                         if ( !vertexIndexWeigth[ vertexIndex ] ) vertexIndexWeigth[ vertexIndex ] = [];
-                        var entry = {
-                            name: bname2Palette[ bw.name ],
-                            weigth: bw.weight
-                        };
-                        vertexIndexWeigth[ vertexIndex ].push( entry );
+                        vertexIndexWeigth[ vertexIndex ].push( indexWeigth( bname2Palette[ bw.name ], bw.weight ) );
                     } else {
                         //Notify.warn( 'RigTransformHardware.createPalette Bone ' + bw.name + ' has a weight ' + bw.weight + ' for vertex ' + vertexIndex + ' this bone will not be in the palette' );
                     }
@@ -124,7 +166,8 @@ define( [
             this._palette = palette;
             this._vertexIndexMatrixWeightList = vertexIndexWeigth;
             this._unformPalette = this.createVertexUniform();
-            this.__boneWeightAttribArrays = createVertexAttribList();
+            this._boneWeightAttribArrays = this.createVertexAttribList();
+            return true;
         },
         setElement: function ( index, matrix ) {
             if ( this._unformPalette ) {
@@ -257,12 +300,19 @@ define( [
 
             //Shader setUP
 
+            geom.getOrCreateStateSet().addUniform( this._matrixPalette._unformPalette );
+
+            for ( var attr in this._matrixPalette._boneWeightAttribArrays ) {
+                geom.getAttributes()[ attr ] = this._matrixPalette._boneWeightAttribArrays[ attr ];
+            }
+
             this._needInit = false;
             return true;
         },
         computeMatrixPalette: function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
-            for ( var i = 0, l = this._bonePalette.length; i < l; i++ ) {
-                var bone = this._bonePalette[ i ];
+            var palette = this._matrixPalette._palette;
+            for ( var i = 0, l = palette.length; i < l; i++ ) {
+                var bone = palette[ i ];
 
                 var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
                 var boneMatrix = bone.getMatrixInSkeletonSpace();
@@ -548,34 +598,34 @@ define( [
         */
         update: function () {
 
-            // if ( !this.getRigTransformImplementation() ) {
-            //     this.setRigTransformImplementation( new RigTransformHardware() );
-            // }
-
-            // this._rigTransformImplementation.update( this );
-
-            if ( this._boneMap.length === 0 )
-                this.initBoneMap();
-
-            var bones = this._boneMap;
-            for ( var i = 0, l = bones.length; i < l; i++ ) {
-                var bone = bones[ i ];
-
-                var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
-                var boneMatrix = bone.getMatrixInSkeletonSpace();
-                var resultBoneMatrix = Matrix.create();
-
-                //console.log( bone.getName() + '   ' + bone.getMatrixInSkeletonSpace() );
-                Matrix.mult( boneMatrix, invBindMatrix, resultBoneMatrix );
-                //console.log( bone.getName() + '   ' + resultBoneMatrix );
-
-                var result = Matrix.create();
-                Matrix.mult( this.getInvMatrixFromSkeletonToGeometry(), resultBoneMatrix, result );
-                Matrix.preMult( result, this.getMatrixFromSkeletonToGeometry() );
-
-                //this._mapResBone[ bone._index ] = Matrix.makeRotate( -Math.PI, 0, 0, 1, result );
-                this._mapResBone[ bone._index ] = result;
+            if ( !this.getRigTransformImplementation() ) {
+                this.setRigTransformImplementation( new RigTransformHardware() );
             }
+
+            this._rigTransformImplementation.update( this );
+
+            // if ( this._boneMap.length === 0 )
+            //     this.initBoneMap();
+
+            // var bones = this._boneMap;
+            // for ( var i = 0, l = bones.length; i < l; i++ ) {
+            //     var bone = bones[ i ];
+
+            //     var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
+            //     var boneMatrix = bone.getMatrixInSkeletonSpace();
+            //     var resultBoneMatrix = Matrix.create();
+
+            //     //console.log( bone.getName() + '   ' + bone.getMatrixInSkeletonSpace() );
+            //     Matrix.mult( boneMatrix, invBindMatrix, resultBoneMatrix );
+            //     //console.log( bone.getName() + '   ' + resultBoneMatrix );
+
+            //     var result = Matrix.create();
+            //     Matrix.mult( this.getInvMatrixFromSkeletonToGeometry(), resultBoneMatrix, result );
+            //     Matrix.preMult( result, this.getMatrixFromSkeletonToGeometry() );
+
+            //     //this._mapResBone[ bone._index ] = Matrix.makeRotate( -Math.PI, 0, 0, 1, result );
+            //     this._mapResBone[ bone._index ] = result;
+            // }
 
         }
     } ), 'osgAnimation', 'RigGeometry' );

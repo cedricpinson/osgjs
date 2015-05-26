@@ -4,6 +4,8 @@ define( [
     'osg/Object'
 ], function ( Notify, MACROUTILS, Object ) {
 
+    'use strict';
+
     /**
      *  BasicAnimationManager
      *  @class BasicAnimationManager
@@ -50,7 +52,7 @@ define( [
         },
         update: function ( node, nv ) {
             var t = nv.getFrameStamp().getSimulationTime();
-            this.updateManager( t );
+            this.updateManager( t * 0.25);
             //console.log( t );
             return true;
         },
