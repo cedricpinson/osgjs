@@ -113,13 +113,13 @@ define( [
     };
 
 
-    var createAnimation = function( name ) {
+    var createAnimation = function( name, target1, target2 ) {
 
         var a = createFloatKeyframes();
-        a.target = 'a';
+        a.target = target1 || 'a';
 
         var b = createFloatKeyframes(2);
-        b.target = 'b';
+        b.target = target2 || 'b';
 
         return Animation.createAnimation( [ a, b ], name );
     };

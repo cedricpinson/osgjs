@@ -19,7 +19,9 @@ define( [
             var timeArray = [ -1,
                               3,
                               0.5,
-                              1.5 ];
+                              1.5,
+                              5.0
+                            ];
 
             var channels = [];
 
@@ -50,6 +52,9 @@ define( [
             ok( mockup.checkNear( result.value, [ 1.5, 1.5, 1.5 ] ), 'Check value when time == 1.5' );
             ok( result.key === 1, 'Check key when time == 1.5' );
 
+            result = channels[4];
+            ok( mockup.checkNear( result.value, [ 3.0, 3.0, 3.0 ] ), 'Check value when time == 5.0' );
+            ok( result.key === 0, 'Check key when time == 5.0' );
 
             var keys2 = {
                 keys: [
@@ -74,7 +79,8 @@ define( [
             var timeArray = [ -1,
                               3,
                               0.5,
-                              1.5 ];
+                              1.5,
+                              5 ];
 
             var channels = [];
 
@@ -104,6 +110,10 @@ define( [
             result = channels[3];
             ok( mockup.checkNear( result.value, 1.5 ), 'Check value when time == 1.5' );
             ok( result.key === 1, 'Check key when time == 1.5' );
+
+            result = channels[4];
+            ok( mockup.checkNear( result.value, 3.0 ), 'Check value when time == 3.0' );
+            ok( result.key === 0, 'Check key when time == 3.0' );
 
         } );
     };

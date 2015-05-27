@@ -137,9 +137,8 @@ define( [
         var t1 = times[ i1 ];
         var t2 = times[ i1 + 1 ];
 
-        var index = i1 * 3;
+        var index = i1;
         var x1 = keys[ index++ ];
-
         var x2 = keys[ index++ ];
 
         var r = ( t - t1 ) / ( t2 - t1 );

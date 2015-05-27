@@ -2,52 +2,50 @@ define( [
     'osg/Utils',
     'osg/Object',
     'osg/Matrix',
-    'osgAnimation/QuatTarget',
     'osg/Quat'
-], function ( MACROUTILS, Object, Matrix, QuatTarget, Quat ) {
+], function ( MACROUTILS, Object, Matrix, Quat ) {
 
     /**
      *  StackedQuaternion
-     *  @class StackedQuaternion
      */
     var StackedQuaternion = function ( name, quat ) {
         Object.call( this );
-        if ( !quat ) {
-            quat = Quat.create();
-        }
-        this._quaternion = quat;
-        this._target = undefined;
-        this._matrixTmp = Matrix.create();
+
+        var value = Quat.create();
+
+        if ( quat ) Quat.copy( quat, value );
+
+        this._target = {
+            value: value
+        };
+
         this.setName( name );
     };
 
-    /** @lends StackedQuaternion.prototype */
     StackedQuaternion.prototype = MACROUTILS.objectInherit( Object.prototype, {
+
         setQuaternion: function ( q ) {
-            Quat.copy( q, this._quaternion );
+            Quat.copy( q, this._target.value );
         },
+
         setTarget: function ( target ) {
             this._target = target;
         },
+
         getTarget: function () {
             return this._target;
         },
-        update: function () {
-            if ( this._target !== undefined ) {
-                Quat.copy( this._target.getValue(), this._quaternion );
-            }
-        },
-        getOrCreateTarget: function () {
-            if ( !this._target ) {
-                this._target = new QuatTarget( this._quaternion );
-            }
-            return this._target;
-        },
-        applyToMatrix: function ( m ) {
-            var mtmp = this._matrixTmp;
-            Matrix.setRotateFromQuat( mtmp, this._quaternion );
-            Matrix.preMult( m, mtmp );
-        }
+
+        applyToMatrix: ( function () {
+            var matrixTmp = Matrix.create();
+
+            return function applyToMatrix( m ) {
+                var mtmp = matrixTmp;
+                Matrix.setRotateFromQuat( mtmp, this._target.value );
+                Matrix.preMult( m, mtmp );
+            };
+        } )()
+
     } );
 
     return StackedQuaternion;

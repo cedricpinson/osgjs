@@ -89,8 +89,10 @@ define( [
             channel: channel,
             value: Vec3.create(),
             targetID: 0,
+            weight: 1,
             key: 0,
-            t: 0.0
+            start: 0.0,
+            end: 0.0
         };
     };
 
@@ -99,8 +101,10 @@ define( [
             channel: channel,
             value: Quat.create(),
             targetID: 0,
+            weight: 1,
             key: 0,
-            t: 0.0
+            start: 0.0,
+            end: 0.0
         };
     };
 
@@ -109,8 +113,10 @@ define( [
             channel: channel,
             value: 0.0,
             targetID: 0,
+            weight: 1,
             key: 0,
-            t: 0.0
+            start: 0.0, // global time when the animation has started
+            end: 0.0 // global time when the animation will be finished
         };
     };
 
