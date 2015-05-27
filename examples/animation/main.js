@@ -68,13 +68,13 @@ function getShader( maxMatrix ) {
 
         'position = vec4( 0.0, 0.0, 0.0, 0.0 );',
         '',
-        'if ( Bone.x != -1.0 )',
+        'if ( Weight.x != 0.0 )',
         'computeAcummulatedPosition( int( Bone.x ), Weight.x );',
-        'if ( Bone.y != -1.0 )',
+        'if ( Weight.y != 0.0 )',
         'computeAcummulatedPosition( int( Bone.y ), Weight.y );',
-        'if ( Bone.z != -1.0 )',
+        'if ( Weight.z != 0.0 )',
         'computeAcummulatedPosition( int( Bone.z ), Weight.z );',
-        'if ( Bone.w != -1.0 )',
+        'if ( Weight.w != 0.0 )',
         'computeAcummulatedPosition( int( Bone.w ), Weight.w );',
 
         // 'if ( Bone.x == -1.0 &&  Bone.y == -1.0 &&  Bone.z == -1.0 &&  Bone.w == -1.0 ) ',
@@ -163,13 +163,12 @@ FindAnimationManagerVisitor.prototype = osg.objectInherit( osg.NodeVisitor.proto
 */
 var FindRigGeometryVisitor = function () {
     osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
-    this._rig = undefined;
+    this._rig = [];
 };
 FindRigGeometryVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
     apply: function ( node ) {
         if ( node.className && node.className() === 'RigGeometry' ) {
-            this._rig = node;
-            return;
+            this._rig.push( node );
         }
         this.traverse( node );
     }
@@ -346,8 +345,11 @@ var createScene = function ( viewer ) {
     //var request = osgDB.readNodeURL( '../media/models/animation-test/brindherbe.osgjs' );
     //var request = osgDB.readNodeURL( '../media/models/animation-test/brindherbe2.osgjs' );
     //var request = osgDB.readNodeURL( '../media/models/animation-test/mixamo beta front_twist_flip.osgjs' );
-    var request = osgDB.readNodeURL( '../media/models/animation-test/mixamo horse gallop.osgjs' );
+    //var request = osgDB.readNodeURL( '../media/models/animation-test/mixamo horse gallop.osgjs' );
     //var request = osgDB.readNodeURL( '../media/models/animation-test/mixamo wizard magic_attack_05.osgjs' );
+    //var request = osgDB.readNodeURL( '../media/models/animation-test/brin_multi.osgjs' );
+    //var request = osgDB.readNodeURL( '../media/models/animation-test/ArmyPilot.osgjs' );
+    var request = osgDB.readNodeURL( '../media/models/animation-test/mixamo fuse_w_blendshapes waving.osgjs' );
 
     Q( request ).then( function ( node ) {
         root.addChild( node );
@@ -366,11 +368,11 @@ var createScene = function ( viewer ) {
         // n.addChild(box);
 
         //Adds geometry on each bone
-        for ( var i = 0, l = bones.length; i < l; i++ ) {
-            var bone = bones[ i ];
-            //console.log( bone.getName() );
-            bone.addChild( new osg.createAxisGeometry() );
-        }
+        // for ( var i = 0, l = bones.length; i < l; i++ ) {
+        //     var bone = bones[ i ];
+        //     //console.log( bone.getName() );
+        //     bone.addChild( new osg.createAxisGeometry() );
+        // }
 
         //Index each Bone
         // var indexBoneVisitor = new IndexBoneVisitor();
@@ -424,8 +426,11 @@ var createScene = function ( viewer ) {
 
         var rigFinder = new FindRigGeometryVisitor();
         root.accept( rigFinder );
-        rigFinder._rig.parents[0].getOrCreateStateSet().setAttributeAndModes( getShader( 200 /*indexBoneVisitor.getBoneCount()*/ ), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
-        // root.getOrCreateStateSet().setAttributeAndModes( getShader( 200 /*indexBoneVisitor.getBoneCount()*/ ) );
+
+
+        console.log( rigFinder._rig[ 0 ] );
+        //rigFinder._rig[ 0 ].parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( 100 /*indexBoneVisitor.getBoneCount()*/ ), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+        //root.getOrCreateStateSet().setAttributeAndModes( getShader( 100 /*indexBoneVisitor.getBoneCount()*/ ) );
 
         //Link bone - animation
         // var linkVisitor = new osgAnimation.LinkVisitor();
@@ -434,6 +439,8 @@ var createScene = function ( viewer ) {
         finder = new FindAnimationManagerVisitor();
         root.accept( finder );
         var animationManager = finder._cb;
+        console.log( animationManager );
+
         var lv = new osgAnimation.LinkVisitor();
         lv.setAnimationMap( animationManager.getAnimationMap() );
         root.accept( lv );
@@ -453,6 +460,7 @@ var createScene = function ( viewer ) {
         //Plays animation
         animationManager.playAnimation( 'mixamo.com', 0, 0 );
         //animationManager.playAnimation( 'Take 001', 0, 0 );
+        //animationManager.playAnimation( 'Walk', 0, 0 );
 
     } );
 

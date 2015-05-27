@@ -52,6 +52,9 @@ define( [
                 UpdateMatrixTransform.prototype.update.call( this, node );
                 bone.setMatrix( bone.getMatrix() ); //Update dirty()
                 var matrix = bone.getMatrix();
+
+                //console.log( bone.getName() );
+                //console.log( matrix );
                 var parent = bone.getBoneParent();
 
                 if ( parent ) {

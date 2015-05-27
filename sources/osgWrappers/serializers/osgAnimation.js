@@ -143,7 +143,9 @@ define( [
         var jsonObj = input.getJSON();
         // check
         var check = function ( o ) {
-            if ( o.Name && o.StackedTransforms ) {
+            if ( /*o.Name &&*/ o.StackedTransforms ) {
+                if(!o.Name)
+                    o.Name = 'Empty';
                 return true;
             }
             return false;

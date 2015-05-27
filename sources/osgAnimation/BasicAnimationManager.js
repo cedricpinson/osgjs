@@ -52,7 +52,7 @@ define( [
         },
         update: function ( node, nv ) {
             var t = nv.getFrameStamp().getSimulationTime();
-            this.updateManager( t * 0.25);
+            this.updateManager( t * 0.1);
             //console.log( t );
             return true;
         },

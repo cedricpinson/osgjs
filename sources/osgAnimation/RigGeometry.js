@@ -13,6 +13,103 @@ define( [
 
     'use strict';
 
+    function getShader( maxMatrix ) {
+        var vertexshader = [
+            '',
+            '#ifdef GL_ES',
+            'precision highp float;',
+            '#endif',
+            'attribute vec3 Vertex;',
+            'attribute vec3 Normal;',
+            'attribute vec4 Bone;',
+            'attribute vec4 Weight;',
+
+            'uniform mat4 ModelViewMatrix;',
+            'uniform mat4 ProjectionMatrix;',
+            'uniform mat4 NormalMatrix;',
+            'uniform vec4 uBones[' + ( maxMatrix * 3 ) + '];',
+
+            'varying vec3 vNormal;',
+
+            'vec4 position;',
+
+            'mat4 getMatrix( int index ) {',
+            '            vec4 l1 = uBones[ index * 3 ];',
+            '            vec4 l2 = uBones[ index * 3 + 1 ];',
+            '            vec4 l3 = uBones[ index * 3 + 2 ];',
+            '',
+            '            mat4 myMat;',
+            '',
+            '            myMat[ 0 ][ 0 ] = l1[ 0 ];',
+            '            myMat[ 0 ][ 1 ] = l2[ 0 ];',
+            '            myMat[ 0 ][ 2 ] = l3[ 0 ];',
+            '            myMat[ 0 ][ 3 ] = 0.;',
+            '',
+            '            myMat[ 1 ][ 0 ] = l1[ 1 ];',
+            '            myMat[ 1 ][ 1 ] = l2[ 1 ];',
+            '            myMat[ 1 ][ 2 ] = l3[ 1 ];',
+            '            myMat[ 1 ][ 3 ] = 0.;',
+            '',
+            '            myMat[ 2 ][ 0 ] = l1[ 2 ];',
+            '            myMat[ 2 ][ 1 ] = l2[ 2 ];',
+            '            myMat[ 2 ][ 2 ] = l3[ 2 ];',
+            '            myMat[ 2 ][ 3 ] = 0.;',
+            '',
+            '            myMat[ 3 ][ 0 ] = l1[ 3 ];',
+            '            myMat[ 3 ][ 1 ] = l2[ 3 ];',
+            '            myMat[ 3 ][ 2 ] = l3[ 3 ];',
+            '            myMat[ 3 ][ 3 ] = 1.;',
+            '',
+            '            return myMat;',
+            '}',
+
+            'void computeAcummulatedPosition( int matrixIndex, float matrixWeight ) {',
+            'mat4 matrix = getMatrix( matrixIndex );',
+            '   position += matrixWeight * ( matrix * vec4( Vertex, 1.0 ) );',
+            '}',
+
+            'void main(void) {',
+
+            'position = vec4( 0.0, 0.0, 0.0, 0.0 );',
+            '',
+            'if ( Weight.x != 0.0 )',
+            'computeAcummulatedPosition( int( Bone.x ), Weight.x );',
+            'if ( Weight.y != 0.0 )',
+            'computeAcummulatedPosition( int( Bone.y ), Weight.y );',
+            'if ( Weight.z != 0.0 )',
+            'computeAcummulatedPosition( int( Bone.z ), Weight.z );',
+            'if ( Weight.w != 0.0 )',
+            'computeAcummulatedPosition( int( Bone.w ), Weight.w );',
+
+            // 'if ( Bone.x == -1.0 &&  Bone.y == -1.0 &&  Bone.z == -1.0 &&  Bone.w == -1.0 ) ',
+            // 'position = vec4( Vertex, 1.0 );',
+
+            'vNormal = (ModelViewMatrix * vec4(Normal, 0.0)).xyz;',
+            'gl_Position = ProjectionMatrix * ModelViewMatrix * position;',
+            '}'
+        ].join( '\n' );
+
+        var fragmentshader = [
+            '',
+            '#ifdef GL_ES',
+            'precision highp float;',
+            '#endif',
+
+            'varying vec3 vNormal;',
+
+            'void main(void) {',
+            '  gl_FragColor = vec4(normalize(vNormal) * .5 + .5, 1.0);',
+            '}',
+            ''
+        ].join( '\n' );
+
+        var program = new osg.Program(
+            new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+            new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+
+        return program;
+    }
+
 
     /**
      *   BoneMapVisitor
@@ -55,7 +152,7 @@ define( [
                 var id = i * 12;
                 matrix[ id ] = matrix[ id + 5 ] = matrix[ id + 10 ] = 1.0;
             }
-            return Uniform.createFloat4Array( matrix, 'uBones' );
+            return new Uniform.createFloat4Array( matrix, 'uBones' );
         },
         // setUniformPalette: function ( stateSet ) {
         //     if ( this._ubonesUniform && stateSet )
@@ -71,7 +168,7 @@ define( [
                 var VertexIndexMatrixWeightList = this._vertexIndexMatrixWeightList;
                 var keys = Object.keys( VertexIndexMatrixWeightList );
                 var nbVerts = keys.length;
-                var attributeBone = new Uint8Array( nbVerts * 4 );
+                var attributeBone = new Uint32Array( nbVerts * 4 );
                 var attributeWeight = new Float32Array( nbVerts * 4 );
 
                 for ( var i = 0; i < nbVerts; i++ ) {
@@ -103,7 +200,6 @@ define( [
 
         } )(),
         createPalette: function ( boneMap, vertexIndexToBoneWeightMap ) {
-
             var maxBonePerVertex = 0;
             var boneNameCountMap = {};
             var vertexIndexWeigth = {};
@@ -205,13 +301,11 @@ define( [
             this._vertex2Bones.length = 0; //clear();
 
             // Build _vertex2Bones
-
             var i, j, l, m;
 
             for ( i = 0, l = this._bone2Vertexes.length; i < l; i++ ) {
                 var vi = this._bone2Vertexes[ i ];
                 var viw = vi._map;
-
 
                 var keys = Object.keys( viw );
                 for ( j = 0, m = keys.length; j < m; j++ ) {
@@ -299,8 +393,8 @@ define( [
             }
 
             //Shader setUP
-
             geom.getOrCreateStateSet().addUniform( this._matrixPalette._unformPalette );
+            geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( this._matrixPalette._palette.length ) );
 
             for ( var attr in this._matrixPalette._boneWeightAttribArrays ) {
                 geom.getAttributes()[ attr ] = this._matrixPalette._boneWeightAttribArrays[ attr ];
@@ -309,7 +403,7 @@ define( [
             this._needInit = false;
             return true;
         },
-        computeMatrixPalette: function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
+        computeMatrixPalette: function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry, name ) {
             var palette = this._matrixPalette._palette;
             for ( var i = 0, l = palette.length; i < l; i++ ) {
                 var bone = palette[ i ];
@@ -324,13 +418,20 @@ define( [
                 Matrix.preMult( result, transformFromSkeletonToGeometry );
 
                 this._matrixPalette.setElement( i, result );
+
+                // if ( name === 'Eyes' )
+                //     console.log( boneMatrix );
+
             }
         },
         update: function ( geom ) {
+
+            //console.log(geom._geometry._name);
+
             if ( this._needInit )
                 if ( !this.init( geom ) )
                     return;
-            this.computeMatrixPalette( geom.getMatrixFromSkeletonToGeometry(), geom.getInvMatrixFromSkeletonToGeometry() );
+            this.computeMatrixPalette( geom.getMatrixFromSkeletonToGeometry(), geom.getInvMatrixFromSkeletonToGeometry(), geom._geometry._name );
         },
     };
 
@@ -584,18 +685,6 @@ define( [
             var indexBoneVisitor = new IndexBoneVisitor( this._boneMap, Object.keys( this._vertexInfluenceMap ) );
             this._root.accept( indexBoneVisitor );
         },
-        /*
-        for (int i = 0; i < (int)_bonePalette.size(); i++)
-        {
-            osg::ref_ptr<Bone> bone = _bonePalette[i].get();
-            const osg::Matrix& invBindMatrix = bone->getInvBindMatrixInSkeletonSpace();
-            const osg::Matrix& boneMatrix = bone->getMatrixInSkeletonSpace();
-            osg::Matrix resultBoneMatrix = invBindMatrix * boneMatrix;
-            osg::Matrix result =  transformFromSkeletonToGeometry * resultBoneMatrix * invTransformFromSkeletonToGeometry;
-            if (!_uniformMatrixPalette->setElement(i, result))
-                OSG_WARN << "RigTransformHardware::computeUniformMatrixPalette can't set uniform at " << i << " elements" << std::endl;
-        }
-        */
         update: function () {
 
             if ( !this.getRigTransformImplementation() ) {
