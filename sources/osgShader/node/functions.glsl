@@ -127,3 +127,21 @@ vec3 LUVToRGB( const in vec4 vLogLuv )
     vec3 vRGB = LUVInverse * Xp_Y_XYZp;
     return max(vRGB, 0.0);
 }
+
+// http://graphicrants.blogspot.fr/2009/04/rgbm-color-encoding.html
+vec4 encodeRGBM(const in vec3 col, const in float range) {
+    if(range <= 0.0)
+        return vec4(col, 1.0);
+    vec4 rgbm;
+    vec3 color = col / range;
+    rgbm.a = clamp( max( max( color.r, color.g ), max( color.b, 1e-6 ) ), 0.0, 1.0 );
+    rgbm.a = ceil( rgbm.a * 255.0 ) / 255.0;
+    rgbm.rgb = color / rgbm.a;
+    return rgbm;
+}
+
+vec3 decodeRGBM(const in vec4 col, const in float range) {
+    if(range <= 0.0)
+        return col.rgb;
+    return range * col.rgb * col.a;
+}

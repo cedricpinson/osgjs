@@ -106,13 +106,41 @@ define( [
         }
     } );
 
+    var getVec3 = function ( vec ) {
+        return vec.getType && vec.getType() === 'vec4' ? vec.getVariable() + '.rgb' : vec;
+    };
+    var EncodeRGBM = function () {
+        NodeFunctions.apply( this );
+    };
+    EncodeRGBM.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
+        type: 'EncodeRGBM',
+        validInputs: [ 'color', 'range' ],
+        validOutputs: [ 'color' ],
+        computeFragment: function () {
+            return utils.callFunction( 'encodeRGBM', this._outputs.color, [ getVec3( this._inputs.color ), this._inputs.range ] );
+        }
+    } );
+
+    var DecodeRGBM = function () {
+        NodeFunctions.apply( this );
+    };
+    DecodeRGBM.prototype = MACROUTILS.objectInherit( NodeFunctions.prototype, {
+        type: 'DecodeRGBM',
+        validInputs: [ 'color', 'range' ],
+        validOutputs: [ 'color' ],
+        computeFragment: function () {
+            return utils.callFunction( 'decodeRGBM', this._outputs.color, [ this._inputs.color, this._inputs.range ] );
+        }
+    } );
 
     return {
         NodeFunctions: NodeFunctions,
         NormalizeNormalAndEyeVector: NormalizeNormalAndEyeVector,
         sRGBToLinear: sRGBToLinear,
         LinearTosRGB: LinearTosRGB,
-        FrontNormal: FrontNormal
+        FrontNormal: FrontNormal,
+        DecodeRGBM: DecodeRGBM,
+        EncodeRGBM: EncodeRGBM
     };
 
 } );
