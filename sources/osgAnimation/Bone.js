@@ -31,11 +31,11 @@ define( [
         },
 
         setMatrixInSkeletonSpace: function ( m ) {
-            this._boneInSkeletonSpace = m;
+            Matrix.copy( m, this._boneInSkeletonSpace );
         },
 
         setInvBindMatrixInSkeletonSpace: function ( m ) {
-            this._invBindInSkeletonSpace = m;
+            Matrix.copy( m, this._invBindInSkeletonSpace );
         },
 
         getBoneParent: function () {

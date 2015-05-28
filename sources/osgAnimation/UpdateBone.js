@@ -49,6 +49,7 @@ define( [
                 }
 
                 var bone = node;
+
                 UpdateMatrixTransform.prototype.update.call( this, node );
                 bone.setMatrix( bone.getMatrix() ); //Update dirty()
                 var matrix = bone.getMatrix();

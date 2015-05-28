@@ -4,7 +4,7 @@ var Q = window.Q;
 var OSG = window.OSG;
 var osg = OSG.osg;
 var osgAnimation = OSG.osgAnimation;
-// var osgUtil = OSG.osgUtil;
+var osgUtil = OSG.osgUtil;
 var osgViewer = OSG.osgViewer;
 var osgDB = OSG.osgDB;
 
@@ -336,20 +336,11 @@ BoneAnimVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
     }
 } );
 
-var createScene = function ( viewer ) {
+var createScene = function ( viewer, root, url ) {
 
-    var root = new osg.MatrixTransform();
     osg.Matrix.makeRotate( Math.PI * 0.5, 1, 0, 0, root.getMatrix() );
 
-    //var request = osgDB.readNodeURL( '../media/models/animation-test/brindherbetrs.osgjs' );
-    //var request = osgDB.readNodeURL( '../media/models/animation-test/brindherbe.osgjs' );
-    //var request = osgDB.readNodeURL( '../media/models/animation-test/brindherbe2.osgjs' );
-    //var request = osgDB.readNodeURL( '../media/models/animation-test/mixamo beta front_twist_flip.osgjs' );
-    //var request = osgDB.readNodeURL( '../media/models/animation-test/mixamo horse gallop.osgjs' );
-    //var request = osgDB.readNodeURL( '../media/models/animation-test/mixamo wizard magic_attack_05.osgjs' );
-    //var request = osgDB.readNodeURL( '../media/models/animation-test/brin_multi.osgjs' );
-    //var request = osgDB.readNodeURL( '../media/models/animation-test/ArmyPilot.osgjs' );
-    var request = osgDB.readNodeURL( '../media/models/animation-test/mixamo fuse_w_blendshapes waving.osgjs' );
+    var request = osgDB.readNodeURL( '../media/models/animation-test/' + url );
 
     Q( request ).then( function ( node ) {
         root.addChild( node );
@@ -358,7 +349,7 @@ var createScene = function ( viewer ) {
         var finder = new FindBoneVisitor();
         root.accept( finder );
 
-        var bones = finder.getBones();
+        // var bones = finder.getBones();
 
         // var box = new osg.createTexturedBoxGeometry();
         // var n = new osg.MatrixTransform();
@@ -458,26 +449,54 @@ var createScene = function ( viewer ) {
         // animationManager.playAnimationObject(animationManager._animations['Take 001']);
 
         //Plays animation
-        animationManager.playAnimation( 'mixamo.com', 0, 0 );
+
+
+        if ( animationManager._animations )
+            animationManager.playAnimation( Object.keys( animationManager._animations )[ 0 ], 0, 0 );
         //animationManager.playAnimation( 'Take 001', 0, 0 );
         //animationManager.playAnimation( 'Walk', 0, 0 );
 
-    } );
+        // Debug scene
+        // var visitor = new osgUtil.DisplayNodeGraphVisitor();
+        // root.accept( visitor );
+        // visitor.createGraph();
 
+    } );
     // var g = osg.createAxisGeometry();
     // root.addChild( g );
-
-    return root;
 };
 
 var onLoad = function () {
     var canvas = document.getElementById( 'View' );
 
+    var models = this.models = {
+        horse: 'mixamo horse gallop.osgjs',
+        magic: 'mixamo wizard magic_attack_05.osgjs',
+        brindherbetrs: 'brindherbetrs.osgjs',
+        brindherbe: 'brindherbe.osgjs',
+        brindherbe2: 'brindherbe2.osgjs',
+        beta: 'mixamo beta front_twist_flip.osgjs',
+        brin: 'brin_multi.osgjs',
+        fuse: 'mixamo fuse_w_blendshapes waving.osgjs'
+    };
+
     var viewer = new osgViewer.Viewer( canvas );
     viewer.init();
-    viewer.setSceneData( createScene( viewer ) );
+    var root = new osg.MatrixTransform();
+    viewer.setSceneData( root );
     viewer.setupManipulator();
     viewer.run();
+
+    // createScene( viewer, root, models.magic );
+
+    var gui = new window.dat.GUI();
+    var modelController = gui.add( this, 'models', Object.keys( models ) );
+    modelController.onFinishChange( function ( value ) {
+        root.removeChildren();
+        createScene( viewer, root, models[ value ] );
+    } );
+
+    modelController.setValue( 'magic' );
 };
 
 window.addEventListener( 'load', onLoad, true );

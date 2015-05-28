@@ -8,8 +8,10 @@ define( [
     'osg/Notify',
     'osg/Matrix',
     'osg/Uniform',
-    'osg/BufferArray'
-], function ( MACROUTILS, Vec3, Node, BoundingBox, Geometry, NodeVisitor, Notify, Matrix, Uniform, BufferArray ) {
+    'osg/BufferArray',
+    'osg/Program',
+    'osg/Shader'
+], function ( MACROUTILS, Vec3, Node, BoundingBox, Geometry, NodeVisitor, Notify, Matrix, Uniform, BufferArray, Program, Shader ) {
 
     'use strict';
 
@@ -103,9 +105,9 @@ define( [
             ''
         ].join( '\n' );
 
-        var program = new osg.Program(
-            new osg.Shader( 'VERTEX_SHADER', vertexshader ),
-            new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+        var program = new Program(
+            new Shader( 'VERTEX_SHADER', vertexshader ),
+            new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
         return program;
     }
@@ -192,6 +194,14 @@ define( [
                     }
                 }
 
+                // var ss = '';
+
+                // for ( i = 0; i < nbVerts; i++ ) {
+                //     ss += attributeBone[ i * 4 + 0 ] + ' ' + attributeWeight[ i * 4 + 0 ] + ';';
+                //     ss += attributeBone[ i * 4 + 1 ] + ' ' + attributeWeight[ i * 4 + 1 ] + ';';
+                // }
+                // console.log(ss);
+
                 return {
                     Bone: new BufferArray( BufferArray.ARRAY_BUFFER, attributeBone, 4 ),
                     Weight: new BufferArray( BufferArray.ARRAY_BUFFER, attributeWeight, 4 )
@@ -268,15 +278,25 @@ define( [
         setElement: function ( index, matrix ) {
             if ( this._unformPalette ) {
                 var uniformData = this._unformPalette.get();
-                var mat = [ matrix[ 0 ], matrix[ 4 ], matrix[ 8 ], matrix[ 12 ],
-                    matrix[ 1 ], matrix[ 5 ], matrix[ 9 ], matrix[ 13 ],
-                    matrix[ 2 ], matrix[ 6 ], matrix[ 10 ], matrix[ 14 ]
-                ];
 
-                for ( var i = index * 12, l = ( index + 1 ) * 12, matI = 0; i < l; i++, matI++ ) {
-                    uniformData[ i ] = mat[ matI ];
-                }
+                var id = index * 12;
+                uniformData[ id ] = matrix[ 0 ];
+                uniformData[ id + 1 ] = matrix[ 4 ];
+                uniformData[ id + 2 ] = matrix[ 8 ];
+                uniformData[ id + 3 ] = matrix[ 12 ];
+
+                uniformData[ id + 4 ] = matrix[ 1 ];
+                uniformData[ id + 5 ] = matrix[ 5 ];
+                uniformData[ id + 6 ] = matrix[ 9 ];
+                uniformData[ id + 7 ] = matrix[ 13 ];
+
+                uniformData[ id + 8 ] = matrix[ 2 ];
+                uniformData[ id + 9 ] = matrix[ 6 ];
+                uniformData[ id + 10 ] = matrix[ 10 ];
+                uniformData[ id + 11 ] = matrix[ 14 ];
+
                 this._unformPalette.set( uniformData );
+                //console.log( uniformData );
                 return true;
             }
             console.log( 'UniformMatrixPalette.setElement() : Enable to set element ' + index );
@@ -393,8 +413,9 @@ define( [
             }
 
             //Shader setUP
-            geom.getOrCreateStateSet().addUniform( this._matrixPalette._unformPalette );
-            geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( this._matrixPalette._palette.length ) );
+            var st = geom.parents[ 0 ].getOrCreateStateSet();
+            st.addUniform( this._matrixPalette._unformPalette );
+            st.setAttributeAndModes( getShader( this._matrixPalette._palette.length ) );
 
             for ( var attr in this._matrixPalette._boneWeightAttribArrays ) {
                 geom.getAttributes()[ attr ] = this._matrixPalette._boneWeightAttribArrays[ attr ];
@@ -410,24 +431,16 @@ define( [
 
                 var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
                 var boneMatrix = bone.getMatrixInSkeletonSpace();
-                var resultBoneMatrix = Matrix.create();
                 var result = Matrix.create();
 
-                Matrix.mult( boneMatrix, invBindMatrix, resultBoneMatrix );
-                Matrix.mult( invTransformFromSkeletonToGeometry, resultBoneMatrix, result );
+                Matrix.mult( boneMatrix, invBindMatrix, result );
+                Matrix.postMult( invTransformFromSkeletonToGeometry, result );
                 Matrix.preMult( result, transformFromSkeletonToGeometry );
 
                 this._matrixPalette.setElement( i, result );
-
-                // if ( name === 'Eyes' )
-                //     console.log( boneMatrix );
-
             }
         },
         update: function ( geom ) {
-
-            //console.log(geom._geometry._name);
-
             if ( this._needInit )
                 if ( !this.init( geom ) )
                     return;
@@ -512,7 +525,7 @@ define( [
             if ( !( geom.className && geom.className() === 'RigGeometry' ) )
                 return;
 
-            if ( !geom.getSkeleton() && geom.getParents() !== [] ) {
+            if ( !geom.getSkeleton() && geom.getParents().length !== 0 ) {
                 var finder = new FindNearestParentSkeleton();
                 if ( geom.getParents().length > 1 )
                     Notify.warn( 'A RigGeometry should not have multi parent ( ' + geom.getName() + ' )' );
