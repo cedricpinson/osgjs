@@ -450,6 +450,8 @@ var createScene = function ( viewer, root, url ) {
 
         //Plays animation
 
+        osg.setNotifyLevel( osg.ERROR );
+
 
         if ( animationManager._animations )
             animationManager.playAnimation( Object.keys( animationManager._animations )[ 0 ], 0, 0 );
@@ -466,8 +468,12 @@ var createScene = function ( viewer, root, url ) {
     // root.addChild( g );
 };
 
+
+
 var onLoad = function () {
     var canvas = document.getElementById( 'View' );
+
+    var anims = this.anims = {};
 
     var models = this.models = {
         horse: 'mixamo horse gallop.osgjs',
@@ -477,7 +483,10 @@ var onLoad = function () {
         brindherbe2: 'brindherbe2.osgjs',
         beta: 'mixamo beta front_twist_flip.osgjs',
         brin: 'brin_multi.osgjs',
-        fuse: 'mixamo fuse_w_blendshapes waving.osgjs'
+        fuse: 'mixamo fuse_w_blendshapes waving.osgjs',
+        dumbird: 'dumbird.osgjs',
+        army: 'ArmyPilot.osgjs',
+        _4_4: '4x4_anim.osgjs'
     };
 
     var viewer = new osgViewer.Viewer( canvas );
@@ -490,13 +499,28 @@ var onLoad = function () {
     // createScene( viewer, root, models.magic );
 
     var gui = new window.dat.GUI();
+
     var modelController = gui.add( this, 'models', Object.keys( models ) );
     modelController.onFinishChange( function ( value ) {
         root.removeChildren();
         createScene( viewer, root, models[ value ] );
+
+        setTimeout(function() {var finder = new FindAnimationManagerVisitor();
+        root.accept( finder );
+
+        this.anims = Object.keys( finder._cb._animations );
+        console.log( Object.keys( finder._cb._animations ) );}, 100);
     } );
 
-    modelController.setValue( 'magic' );
+    var modelControllerAnim = gui.add( this, 'anims', anims );
+    modelControllerAnim.onFinishChange( function ( value ) {
+        console.log( 'play ' + value );
+        gui.add( this, 'anims', anims );
+    } );
+
+
+
+    modelController.setValue( 'horse' );
 };
 
 window.addEventListener( 'load', onLoad, true );

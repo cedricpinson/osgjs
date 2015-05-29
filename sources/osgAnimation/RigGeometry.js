@@ -130,7 +130,7 @@ define( [
         },
         getBoneMap: function () {
             return this._boneMap;
-        }
+        },
     } );
 
     /**
@@ -156,10 +156,6 @@ define( [
             }
             return new Uniform.createFloat4Array( matrix, 'uBones' );
         },
-        // setUniformPalette: function ( stateSet ) {
-        //     if ( this._ubonesUniform && stateSet )
-        //         stateSet.addUniform( ubonesUniform );
-        // },
 
         createVertexAttribList: ( function () {
             var compare = function ( a, b ) {
@@ -190,17 +186,9 @@ define( [
                         var id = i * 4 + k;
                         var bone = bones[ k ];
                         attributeBone[ id ] = bone.index;
-                        attributeWeight[ id ] = bone.weight * mult;
+                        attributeWeight[ id ] = bone.weight * mult; //normalize
                     }
                 }
-
-                // var ss = '';
-
-                // for ( i = 0; i < nbVerts; i++ ) {
-                //     ss += attributeBone[ i * 4 + 0 ] + ' ' + attributeWeight[ i * 4 + 0 ] + ';';
-                //     ss += attributeBone[ i * 4 + 1 ] + ' ' + attributeWeight[ i * 4 + 1 ] + ';';
-                // }
-                // console.log(ss);
 
                 return {
                     Bone: new BufferArray( BufferArray.ARRAY_BUFFER, attributeBone, 4 ),
@@ -251,7 +239,7 @@ define( [
                         if ( !vertexIndexWeigth[ vertexIndex ] ) vertexIndexWeigth[ vertexIndex ] = [];
                         vertexIndexWeigth[ vertexIndex ].push( indexWeigth( bname2Palette[ bw.name ], bw.weight ) );
                     } else {
-                        //Notify.warn( 'RigTransformHardware.createPalette Bone ' + bw.name + ' has a weight ' + bw.weight + ' for vertex ' + vertexIndex + ' this bone will not be in the palette' );
+                        Notify.warn( 'RigTransformHardware.createPalette Bone ' + bw.name + ' has a weight ' + bw.weight + ' for vertex ' + vertexIndex + ' this bone will not be in the palette' );
                     }
 
                 }
@@ -296,7 +284,6 @@ define( [
                 uniformData[ id + 11 ] = matrix[ 14 ];
 
                 this._unformPalette.set( uniformData );
-                //console.log( uniformData );
                 return true;
             }
             console.log( 'UniformMatrixPalette.setElement() : Enable to set element ' + index );
@@ -390,33 +377,48 @@ define( [
     RigTransformHardware.prototype = {
         init: function ( geom ) {
             var Vertex = geom.getAttributes().Vertex;
+            var Skeleton = geom.getSkeleton();
 
             if ( !Vertex ) {
                 Notify.warn( 'RigTransformHardware no vertex array in the geometry ' + geom.getName() );
                 return false;
             }
 
-            if ( !geom.getSkeleton() ) {
+            if ( !Skeleton ) {
                 Notify.warn( 'RigTransformHardware no skeleton set in geometry ' + geom.getName() );
                 return false;
             }
 
             var mapVisitor = new BoneMapVisitor();
-            geom.getSkeleton().accept( mapVisitor );
+            Skeleton.accept( mapVisitor );
             var bm = mapVisitor.getBoneMap();
+            var matrixPalette = this._matrixPalette;
 
-            if ( this._matrixPalette === undefined ) {
-                this._matrixPalette = new UniformMatrixPalette();
+            if ( matrixPalette === undefined ) {
+                matrixPalette = this._matrixPalette = new UniformMatrixPalette();
             }
-            if ( !this._matrixPalette.createPalette( bm, geom.getVertexInfluenceSet().getVertexToBoneList() ) ) {
+            if ( !matrixPalette.createPalette( bm, geom.getVertexInfluenceSet().getVertexToBoneList() ) ) {
                 return false;
             }
 
             //Shader setUP
-            var st = geom.parents[ 0 ].getOrCreateStateSet();
+
+            //Link Program in an orther way
+            // /!\  multiple geometry share the same  node
+
+            var  gepar =  geom.parents[0];
+
+
+            geom.parents[0].removeChild(geom);
+            var n = new Node();
+            n.addChild(geom);
+            gepar.addChild(n);
+
+            var st = n.getOrCreateStateSet();
             st.addUniform( this._matrixPalette._unformPalette );
             st.setAttributeAndModes( getShader( this._matrixPalette._palette.length ) );
 
+            //Adds all attributes in RigGeometry (Weight and Bone)
             for ( var attr in this._matrixPalette._boneWeightAttribArrays ) {
                 geom.getAttributes()[ attr ] = this._matrixPalette._boneWeightAttribArrays[ attr ];
             }
@@ -424,7 +426,7 @@ define( [
             this._needInit = false;
             return true;
         },
-        computeMatrixPalette: function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry, name ) {
+        computeMatrixPalette: function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
             var palette = this._matrixPalette._palette;
             for ( var i = 0, l = palette.length; i < l; i++ ) {
                 var bone = palette[ i ];
@@ -444,7 +446,7 @@ define( [
             if ( this._needInit )
                 if ( !this.init( geom ) )
                     return;
-            this.computeMatrixPalette( geom.getMatrixFromSkeletonToGeometry(), geom.getInvMatrixFromSkeletonToGeometry(), geom._geometry._name );
+            this.computeMatrixPalette( geom.getMatrixFromSkeletonToGeometry(), geom.getInvMatrixFromSkeletonToGeometry() );
         },
     };
 
@@ -453,22 +455,6 @@ define( [
      * FindNearestParentSkeleton
      * @class FindNearestParentSkeleton
      */
-
-    /*
-       struct FindNearestParentSkeleton : public osg::NodeVisitor
-       {
-           osg::ref_ptr<Skeleton> _root;
-           FindNearestParentSkeleton() : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_PARENTS) {}
-           void apply(osg::Transform& node)
-           {
-               if (_root.valid())
-                   return;
-               _root = dynamic_cast<osgAnimation::Skeleton*>(&node);
-               traverse(node);
-           }
-       };
-    */
-
     var FindNearestParentSkeleton = function () {
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
         this._root = undefined;
@@ -559,6 +545,7 @@ define( [
      */
     var RigGeometry = function () {
         Geometry.call( this );
+
         this.setUpdateCallback( new UpdateRigGeometry() );
 
         this._geometry = undefined;
@@ -572,9 +559,6 @@ define( [
         this._rigTransformImplementation = undefined;
 
         this._needToComputeMatrix = true;
-
-        this._boneMap = []; // Delme
-        this._mapResBone = {}; // Delme
     };
 
     RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
@@ -597,6 +581,7 @@ define( [
             return this._needToComputeMatrix;
         },
         buildVertexInfluenceSet: function () {
+            //@TODO improve function
             if ( !this._vertexInfluenceMap ) {
                 Notify.warn( 'buildVertexInfluenceSet can t be called without VertexInfluence already set to the RigGeometry (' + this.getName() + ' ) ' );
             }
@@ -618,23 +603,6 @@ define( [
         getVertexInfluenceSet: function () {
             return this._vertexInfluenceSet;
         },
-
-        /*
-        void RigGeometry::computeMatrixFromRootSkeleton()
-        {
-            if (!_root.valid())
-            {
-                OSG_WARN << "Warning " << className() <<"::computeMatrixFromRootSkeleton if you have this message it means you miss to call buildTransformer(Skeleton* root), or your RigGeometry (" << getName() <<") is not attached to a Skeleton subgraph" << std::endl;
-                return;
-            }
-            osg::MatrixList mtxList = getParent(0)->getWorldMatrices(_root.get());
-            osg::Matrix notRoot = _root->getMatrix();
-            _matrixFromSkeletonToGeometry = mtxList[0] * osg::Matrix::inverse(notRoot);
-            _invMatrixFromSkeletonToGeometry = osg::Matrix::inverse(_matrixFromSkeletonToGeometry);
-            _needToComputeMatrix = false;
-        }
-        */
-
         computeMatrixFromRootSkeleton: function () {
             if ( !this._root ) {
                 Notify.warn( 'Warning ' + this.className() + '.computeMatrixFromRootSkeleton if you have this message it means you miss to call buildTransformer( root ), or your RigGeometry (' + this.getName() + ') is not attached to a Skeleton subgraph' );
@@ -671,63 +639,14 @@ define( [
         setRigTransformImplementation: function ( implementation ) {
             this._rigTransformImplementation = implementation;
         },
-        /* delme  */
-        initBoneMap: function () {
-
-            var IndexBoneVisitor = function ( boneMap, boneList ) {
-                NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                this._boneMap = boneMap;
-                this._boneList = boneList;
-            };
-            IndexBoneVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
-                init: function () {},
-                apply: function ( node ) {
-                    if ( node.className() === 'Bone' ) {
-                        for ( var i = 0, l = this._boneList.length; i < l; i++ ) {
-                            var boneName = this._boneList[ i ];
-                            if ( boneName === node.getName() ) {
-                                this._boneMap.push( node );
-                                break;
-                            }
-                        }
-                    }
-                    this.traverse( node );
-                }
-            } );
-
-            var indexBoneVisitor = new IndexBoneVisitor( this._boneMap, Object.keys( this._vertexInfluenceMap ) );
-            this._root.accept( indexBoneVisitor );
-        },
         update: function () {
-
+            //console.time(this._geometry._name);
             if ( !this.getRigTransformImplementation() ) {
                 this.setRigTransformImplementation( new RigTransformHardware() );
             }
 
             this._rigTransformImplementation.update( this );
-
-            // if ( this._boneMap.length === 0 )
-            //     this.initBoneMap();
-
-            // var bones = this._boneMap;
-            // for ( var i = 0, l = bones.length; i < l; i++ ) {
-            //     var bone = bones[ i ];
-
-            //     var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
-            //     var boneMatrix = bone.getMatrixInSkeletonSpace();
-            //     var resultBoneMatrix = Matrix.create();
-
-            //     //console.log( bone.getName() + '   ' + bone.getMatrixInSkeletonSpace() );
-            //     Matrix.mult( boneMatrix, invBindMatrix, resultBoneMatrix );
-            //     //console.log( bone.getName() + '   ' + resultBoneMatrix );
-
-            //     var result = Matrix.create();
-            //     Matrix.mult( this.getInvMatrixFromSkeletonToGeometry(), resultBoneMatrix, result );
-            //     Matrix.preMult( result, this.getMatrixFromSkeletonToGeometry() );
-
-            //     //this._mapResBone[ bone._index ] = Matrix.makeRotate( -Math.PI, 0, 0, 1, result );
-            //     this._mapResBone[ bone._index ] = result;
-            // }
+            //console.timeEnd( this._geometry._name );
 
         }
     } ), 'osgAnimation', 'RigGeometry' );
