@@ -491,6 +491,9 @@ define( [
             str = 'File ' + i;
             plod.setFileName( i, o[ str ] );
         }
+        // Set database path from options
+        // TODO: Check also if we have a path from json
+        plod.setDatabasePath( input.getDatabasePath() );
 
         var createChildren = function ( jsonChildren ) {
             var promise = input.setJSON( jsonChildren ).readObject();

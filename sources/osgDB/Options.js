@@ -5,6 +5,9 @@ define( [], function () {
         // prefix to built url to load resource
         prefixURL: '',
 
+        // database URL for PagedLOD structures
+        databasePath: '',
+
         // callback used when loading data
         progressXHRCallback: undefined,
 
