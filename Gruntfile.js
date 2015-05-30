@@ -215,13 +215,14 @@ var gruntTasks = {};
 var generateVersionFile = function () {
     var pkg = JSON.parse( fs.readFileSync( 'package.json' ) );
     var content = [
-        'define( [], function() {',
+        'define( [], function () {',
         '    return {',
         '        name: \'' + pkg.name + '\',',
         '        version: \'' + pkg.version + '\',',
         '        author: \'' + pkg.author + '\'',
         '    };',
-        '} );'
+        '} );',
+        ''
 
     ];
     fs.writeFileSync( path.join( SOURCE_PATH, 'version.js' ), content.join( '\n' ) );
