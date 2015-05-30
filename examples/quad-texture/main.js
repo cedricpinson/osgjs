@@ -1,13 +1,12 @@
 ( function () {
     'use strict';
 
+    var Q = window.Q;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
-
-
 
     var Example = function () {
 
@@ -108,8 +107,8 @@
                 var size = 10;
                 // check osg/Shape.js to see arguements of createTexturedQuadGeometry
                 this._model = osg.createTexturedQuadGeometry( -size / 2, 0, -size / 2,
-                                                              size, 0, 0,
-                                                              0, 0, size );
+                    size, 0, 0,
+                    0, 0, size );
 
             }
 

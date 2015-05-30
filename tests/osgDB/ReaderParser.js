@@ -1,12 +1,11 @@
 define( [
     'qunit',
-    'q',
     'tests/mockup/mockup',
     'osgDB/ReaderParser',
     'osg/Texture',
     'osgDB/Input',
     'osg/PrimitiveSet'
-], function ( QUnit, Q, mockup, ReaderParser, Texture, Input, PrimitiveSet ) {
+], function ( QUnit, mockup, ReaderParser, Texture, Input, PrimitiveSet ) {
 
     'use strict';
 
@@ -14,7 +13,7 @@ define( [
 
         QUnit.module( 'osgDB' );
 
-        QUnit.asyncTest( 'StateSet - MultiTextures', function () {
+        QUnit.test( 'StateSet - MultiTextures', function () {
             var tree = {
 
                 'stateset': {
@@ -40,28 +39,27 @@ define( [
                 }
             };
 
-            Q.when( ReaderParser.parseSceneGraph( tree ) ).then( function ( result ) {
+            // TODO it uses the old sync parseSceneGraphDeprecated
+            var result = ReaderParser.parseSceneGraph( tree );
 
-                ok( result.getStateSet() !== undefined, 'check old stateset' );
-                var material = result.getStateSet().getAttribute( 'Material' );
-                var materialCheck = ( material !== undefined &&
-                    mockup.checkNear( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
-                    mockup.checkNear( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
-                    mockup.checkNear( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
-                    mockup.checkNear( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
-                    mockup.checkNear( material.getShininess(), 2.5 ) &&
-                    material.getName() === 'FloorBorder1' );
+            ok( result.getStateSet() !== undefined, 'check old stateset' );
+            var material = result.getStateSet().getAttribute( 'Material' );
+            var materialCheck = ( material !== undefined &&
+                mockup.checkNear( material.getAmbient(), [ 0.5, 0.5, 0.5, 1 ] ) &&
+                mockup.checkNear( material.getDiffuse(), [ 0.1, 0.1, 0.1, 0.1 ] ) &&
+                mockup.checkNear( material.getEmission(), [ 0.0, 0.0, 0.0, 0.5 ] ) &&
+                mockup.checkNear( material.getSpecular(), [ 0.5, 0.7, 0.5, 1 ] ) &&
+                mockup.checkNear( material.getShininess(), 2.5 ) &&
+                material.getName() === 'FloorBorder1' );
 
-                ok( materialCheck, 'check old material' );
-                var texture = result.getStateSet().getTextureAttribute( 1, 'Texture' );
-                var textureCheck = ( texture !== undefined &&
-                    texture.getWrapS() === Texture.REPEAT &&
-                    texture.getWrapT() === Texture.MIRRORED_REPEAT &&
-                    texture.getMinFilter() === Texture.NEAREST &&
-                    texture.getMagFilter() === Texture.NEAREST );
-                ok( textureCheck, 'check old texture' );
-                start();
-            } );
+            ok( materialCheck, 'check old material' );
+            var texture = result.getStateSet().getTextureAttribute( 1, 'Texture' );
+            var textureCheck = ( texture !== undefined &&
+                texture.getWrapS() === Texture.REPEAT &&
+                texture.getWrapT() === Texture.MIRRORED_REPEAT &&
+                texture.getMinFilter() === Texture.NEAREST &&
+                texture.getMagFilter() === Texture.NEAREST );
+            ok( textureCheck, 'check old texture' );
         } );
 
         QUnit.asyncTest( 'StateSet - BlendFunc, Material', function () {
@@ -102,8 +100,7 @@ define( [
                 }
             };
 
-            var promise = ( new Input() ).setJSON( tree ).readObject();
-            Q.when( promise ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
 
                 ok( result.getStateSet() !== undefined, 'check last StateSet' );
                 ok( result.getStateSet().getAttribute( 'BlendFunc' ) !== undefined, 'check BlendFunc' );
@@ -203,7 +200,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getStateSet() !== undefined, 'check geometry StateSet' );
                 ok( result.getStateSet().getUserData() !== undefined, 'check StateSet userdata' );
                 ok( result.getPrimitiveSetList().length === 1, 'check primitives' );
@@ -230,7 +227,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getName() === 'Lamp', 'check matrix transform' );
                 ok( result.getMatrix()[ 0 ] === -0.2909, 'check matrix transform content' );
                 start();
@@ -282,12 +279,10 @@ define( [
                     } ]
                 }
             };
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getUpdateCallbackList().length === 1, 'check update callback' );
-
                 ok( result.getUpdateCallback().getAnimationMap().Test !== undefined, 'check animation list' );
                 var animation = result.getUpdateCallback().getAnimationMap().Test;
-                ok( animation !== undefined, 'check animation' );
                 ok( animation.getChannels().length === 2, 'check channels' );
                 ok( animation.getChannels()[ 1 ].getName() === 'scale', 'check channel 1' );
                 ok( animation.getChannels()[ 1 ].getTargetName() === 'Zeppelin_2', 'check taget channel 1' );
@@ -310,7 +305,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getKeyframes().length === 2, 'Check keyframes FloatLerpChannel' );
                 ok( result.getTargetName() === 'Cube', 'Check TargetName FloatLerpChannel' );
                 ok( result.getName() === 'euler_x', 'Check Name FloatLerpChannel' );
@@ -330,7 +325,7 @@ define( [
                     ]
                 }
             };
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getKeyframes().length === 2, 'Check keyframes QuatSlerpChannel' );
                 ok( result.getTargetName() === 'Cube', 'Check TargetName QuatSlerpChannel' );
                 ok( result.getName() === 'quaternion', 'Check Name QuatSlerpChannel' );
@@ -351,7 +346,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getKeyframes().length === 2, 'Check keyframes QuatLerpChannel' );
                 ok( result.getTargetName() === 'Cube', 'Check TargetName QuatLerpChannel' );
                 ok( result.getName() === 'quaternion', 'Check Name QuatLerpChannel' );
@@ -404,7 +399,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getUpdateCallbackList().length === 1, 'check osgAnimation.UpdateMatrixTransform callback' );
                 ok( result.getUpdateCallback().getStackedTransforms().length === 5, 'check osgAnimation.UpdateMatrixTransform stacked transform' );
                 start();
@@ -427,7 +422,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 return result;
             } ).then( function ( geom ) {
                 var result = geom.getPrimitiveSetList()[ 0 ];
@@ -452,7 +447,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree2 ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree2 ).readObject().then( function ( result ) {
                 return result.getPrimitiveSetList()[ 0 ];
             } ).then( function ( result ) {
                 ok( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArray triangles' );
@@ -478,7 +473,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 return result.getPrimitiveSetList()[ 0 ];
             } ).then( function ( result ) {
                 ok( result.getMode() === PrimitiveSet.TRIANGLES, 'check DrawArrayLengths triangles' );
@@ -512,7 +507,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getLight() !== undefined, 'check if LightSource has a light' );
                 start();
             } );
@@ -536,7 +531,7 @@ define( [
                     'UserCenter': [ 1, 2, 3, 10 ]
                 }
             };
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result._rangeMode === 1, 'check RangeMode' );
                 ok( result._perRangeDataList.length === 2, 'check children number' );
                 ok( result._perRangeDataList[ 0 ].filename === 'cow.osgjs', 'check child 0 filename' );
@@ -578,7 +573,7 @@ define( [
                 }
             };
 
-            Q.when( ( new Input() ).setJSON( tree ).readObject() ).then( function ( result ) {
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 console.log( result.getChildren()[ 0 ].getName() );
                 ok( result.getChildren()[ 0 ].getName() === 'cow', 'the first node should be cow' );
                 ok( result.getChildren()[ 1 ].getName() === 'cessna', 'the second node should be cessna' );

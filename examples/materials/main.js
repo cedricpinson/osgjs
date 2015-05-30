@@ -1,13 +1,12 @@
 ( function () {
     'use strict';
 
+    var Q = window.Q;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
-
-
 
     // we use this visitor to copy TexCoord0 to TexCoord1
     // for multi texture purpose
@@ -24,8 +23,6 @@
             this.traverse( node );
         }
     } );
-
-
 
 
     var Example = function () {

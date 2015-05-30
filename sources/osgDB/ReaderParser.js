@@ -1,5 +1,4 @@
 define( [
-    'q',
     'require',
     'osgDB/Input',
     'osg/Notify',
@@ -17,8 +16,9 @@ define( [
     'osg/Matrix',
     'osg/MatrixTransform',
     'osg/Projection'
-], function ( Q, require, Input, Notify, MACROUTILS, Texture, Uniform, BlendFunc, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
+], function ( require, Input, Notify, MACROUTILS, Texture, Uniform, BlendFunc, Geometry, BufferArray, PrimitiveSet, DrawArrays, DrawElements, StateSet, Node, Matrix, MatrixTransform, Projection ) {
 
+    'use strict';
 
     var ReaderParser = {};
 
@@ -131,10 +131,11 @@ define( [
                 osgjs.setWrapS( wrapS );
             }
             var file = getFieldBackwardCompatible( 'File', json );
-            Q.when( ReaderParser.readImage( file ) ).then(
-                function ( img ) {
-                    osgjs.setImage( img );
-                } );
+            ReaderParser.readImage( file ).then( function ( img ) {
+                osgjs.setImage( img );
+            } ).catch( function () {
+                Notify.log( 'Can\'t read image' );
+            } );
         };
 
         var setStateSet = function ( osgjs, json ) {

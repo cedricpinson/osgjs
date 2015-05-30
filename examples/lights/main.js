@@ -7,7 +7,6 @@
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
 
-
     var Example = function () {
 
         this._config = {

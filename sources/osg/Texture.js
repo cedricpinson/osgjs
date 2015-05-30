@@ -1,5 +1,4 @@
 define( [
-    'q',
     'osg/Notify',
     'osg/Utils',
     'osg/StateAttribute',
@@ -9,7 +8,7 @@ define( [
     'osgDB/ReaderParser',
     'osg/Map',
     'osg/TextureManager'
-], function ( Q, Notify, MACROUTILS, StateAttribute, Uniform, Image, GLObject, ReaderParser, CustomMap, TextureManager ) {
+], function ( Notify, MACROUTILS, StateAttribute, Uniform, Image, GLObject, ReaderParser, CustomMap, TextureManager ) {
 
     'use strict';
 
@@ -614,11 +613,9 @@ define( [
     Texture.createFromURL = function ( imageSource, format ) {
         Notify.log( 'Texture.createFromURL is deprecated, use instead osgDB.readImageURL' );
         var texture = new Texture();
-        Q.when( ReaderParser.readImage( imageSource ) ).then(
-            function ( img ) {
-                texture.setImage( img, format );
-            }
-        );
+        ReaderParser.readImage( imageSource ).then( function ( img ) {
+            texture.setImage( img, format );
+        } );
         return texture;
     };
 

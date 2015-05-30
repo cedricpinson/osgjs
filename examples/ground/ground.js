@@ -1,127 +1,129 @@
-'use strict';
+( function () {
+    'use strict';
 
-var OSG = window.OSG;
-var osg = OSG.osg;
+    var OSG = window.OSG;
+    var osg = OSG.osg;
 
-var Ground = function () {
-    osg.MatrixTransform.call( this );
+    function getShader() {
+        var vertexshader = [
+            '',
+            '#ifdef GL_ES',
+            'precision highp float;',
+            '#endif',
+            'attribute vec3 Vertex;',
+            'uniform mat4 ModelViewMatrix;',
+            'uniform mat4 ProjectionMatrix;',
+            'varying vec2 position;',
+            'void main(void) {',
+            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+            '  position = Vertex.xy;',
+            '}'
+        ].join( '\n' );
 
-    // Height position of the ground, applied with the translateMatrix
-    // This value is normalized for all models and is scaled by the model scale factor
-    // 0: center, -1: under, 1: above
-    this._normalizedHeight = 0.0;
+        var fragmentshader = [
+            '',
+            '#ifdef GL_ES',
+            'precision highp float;',
+            '#endif',
+            'varying vec2 position;',
+            'uniform vec3 groundColor;',
+            'void main(void) {',
+            '   float f = length(position) * 1.0;',
+            '   f = smoothstep(0.0, 0.5, f);',
+            '   gl_FragColor = vec4(groundColor, 1.0 - f);',
+            '}',
+            ''
+        ].join( '\n' );
 
-    // Size of the ground, applied with the scaleMatrix
-    // We set the ground size via the scale Matrix instead of directly creating a presized quad
-    // If we presize a big quad, it could expand the bounding box of the scene and thus
-    // the default home position would be farther away and the model would appear smaller
-    this._size = 100.0;
+        var program = new osg.Program(
+            new osg.Shader( 'VERTEX_SHADER', vertexshader ),
+            new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
 
-    // The size of the ground should be the same for all models, but every model have a different
-    // size. So we scale the ground size with this per-model scale factor (radius of bounding sphere)
-    this._scale = 1.0;
+        return program;
+    }
 
-    this._scaleMatrix = osg.Matrix.create();
-    this._yTranslateMatrix = osg.Matrix.create();
-    this._center = osg.Vec3.create();
+    window.Ground = function () {
+        osg.MatrixTransform.call( this );
 
-    // Create geometry for the ground, 1 unit and centered around 0
-    var quad = osg.createTexturedQuadGeometry( -0.5, -0.5, 0.0,
-        1.0, 0.0, 0.0,
-        0.0, 1.0, 0.0
-    );
-    this._color = osg.Uniform.createFloat3( [ 0.7, 0.7, 0.7 ], 'groundColor' );
+        // Height position of the ground, applied with the translateMatrix
+        // This value is normalized for all models and is scaled by the model scale factor
+        // 0: center, -1: under, 1: above
+        this._normalizedHeight = 0.0;
 
-    quad.getOrCreateStateSet().setAttributeAndModes( getShader() );
-    quad.getOrCreateStateSet().setAttributeAndModes( new osg.BlendFunc( 'SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA' ) );
-    quad.getOrCreateStateSet().addUniform( this._color );
+        // Size of the ground, applied with the scaleMatrix
+        // We set the ground size via the scale Matrix instead of directly creating a presized quad
+        // If we presize a big quad, it could expand the bounding box of the scene and thus
+        // the default home position would be farther away and the model would appear smaller
+        this._size = 100.0;
 
-    this.addChild( quad );
-};
+        // The size of the ground should be the same for all models, but every model have a different
+        // size. So we scale the ground size with this per-model scale factor (radius of bounding sphere)
+        this._scale = 1.0;
 
-Ground.prototype = osg.objectLibraryClass( osg.objectInherit( osg.MatrixTransform.prototype, {
+        this._scaleMatrix = osg.Matrix.create();
+        this._yTranslateMatrix = osg.Matrix.create();
+        this._center = osg.Vec3.create();
 
-    // The min height of a bsphere will near always be lower than
-    // that of the bounding box, so try to compensate it
-    _correction: Math.sqrt( 2 ) / Math.sqrt( 3 ),
+        // Create geometry for the ground, 1 unit and centered around 0
+        var quad = osg.createTexturedQuadGeometry( -0.5, -0.5, 0.0,
+            1.0, 0.0, 0.0,
+            0.0, 1.0, 0.0
+        );
+        this._color = osg.Uniform.createFloat3( [ 0.7, 0.7, 0.7 ], 'groundColor' );
 
-    /**
-     * This function set the scale factor to the model bsphere radius
-     * and set the ground under the model (normalizedHeight = -1)
-     */
-    setGroundFromModel: function ( model ) {
+        quad.getOrCreateStateSet().setAttributeAndModes( getShader() );
+        quad.getOrCreateStateSet().setAttributeAndModes( new osg.BlendFunc( 'SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA' ) );
+        quad.getOrCreateStateSet().addUniform( this._color );
 
-        var bsphere = model.getBound();
+        this.addChild( quad );
+    };
 
-        this._normalizedHeight = -1.0;
-        this._scale = bsphere.radius() * this._correction;
+    window.Ground.prototype = osg.objectLibraryClass( osg.objectInherit( osg.MatrixTransform.prototype, {
 
-        osg.Vec3.copy( bsphere.center(), this._center );
+        // The min height of a bsphere will near always be lower than
+        // that of the bounding box, so try to compensate it
+        _correction: Math.sqrt( 2 ) / Math.sqrt( 3 ),
 
-        this.computeMatrix();
-    },
+        /**
+         * This function set the scale factor to the model bsphere radius
+         * and set the ground under the model (normalizedHeight = -1)
+         */
+        setGroundFromModel: function ( model ) {
 
-    computeMatrix: function () {
+            var bsphere = model.getBound();
 
-        osg.Matrix.makeScale( this._scale * this._size, this._scale * this._size, 1, this._scaleMatrix );
-        osg.Matrix.makeTranslate( this._center[ 0 ], this._center[ 1 ], this._center[ 2 ] + ( this._normalizedHeight * this._scale ), this._yTranslateMatrix );
+            this._normalizedHeight = -1.0;
+            this._scale = bsphere.radius() * this._correction;
 
-        osg.Matrix.mult( this._yTranslateMatrix, this._scaleMatrix, this.getMatrix() );
-    },
+            osg.Vec3.copy( bsphere.center(), this._center );
 
-    setNormalizedHeight: function ( normalizedHeight ) {
-        this._normalizedHeight = normalizedHeight;
-        this.computeMatrix();
-    },
+            this.computeMatrix();
+        },
 
-    getNormalizedHeight: function () {
-        return this._normalizedHeight;
-    },
+        computeMatrix: function () {
 
-    setColor: function ( color ) {
-        this._color.set( color );
-    },
+            osg.Matrix.makeScale( this._scale * this._size, this._scale * this._size, 1, this._scaleMatrix );
+            osg.Matrix.makeTranslate( this._center[ 0 ], this._center[ 1 ], this._center[ 2 ] + ( this._normalizedHeight * this._scale ), this._yTranslateMatrix );
 
-    getColor: function () {
-        return this._color.get();
-    },
+            osg.Matrix.mult( this._yTranslateMatrix, this._scaleMatrix, this.getMatrix() );
+        },
 
-} ), 'osgUtil', 'Ground' );
+        setNormalizedHeight: function ( normalizedHeight ) {
+            this._normalizedHeight = normalizedHeight;
+            this.computeMatrix();
+        },
 
-function getShader() {
-    var vertexshader = [
-        '',
-        '#ifdef GL_ES',
-        'precision highp float;',
-        '#endif',
-        'attribute vec3 Vertex;',
-        'uniform mat4 ModelViewMatrix;',
-        'uniform mat4 ProjectionMatrix;',
-        'varying vec2 position;',
-        'void main(void) {',
-        '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
-        '  position = Vertex.xy;',
-        '}'
-    ].join( '\n' );
+        getNormalizedHeight: function () {
+            return this._normalizedHeight;
+        },
 
-    var fragmentshader = [
-        '',
-        '#ifdef GL_ES',
-        'precision highp float;',
-        '#endif',
-        'varying vec2 position;',
-        'uniform vec3 groundColor;',
-        'void main(void) {',
-        '	float f = length(position) * 1.0;',
-        '	f = smoothstep(0.0, 0.5, f);',
-        '	gl_FragColor = vec4(groundColor, 1.0 - f);',
-        '}',
-        ''
-    ].join( '\n' );
+        setColor: function ( color ) {
+            this._color.set( color );
+        },
 
-    var program = new osg.Program(
-        new osg.Shader( 'VERTEX_SHADER', vertexshader ),
-        new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+        getColor: function () {
+            return this._color.get();
+        },
 
-    return program;
-}
+    } ), 'osgUtil', 'Ground' );
+} )();
