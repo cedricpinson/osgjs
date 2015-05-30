@@ -7,7 +7,7 @@
   "description": "OpenSceneGraph implementation in javascript",
   "license": "LGPL V3+ (https://spdx.org/licenses/LGPL-3.0+)",
   "author": "Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "contributors": [
     "Tuan.kuranes <tuan.kuranes@gmail.com>",
     "Matt Fontaine <tehqin@gmail.com>"
