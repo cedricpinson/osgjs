@@ -65,6 +65,16 @@ define( [
         return availableTime;
     };
 
+    Program.flushAllDeletedGLPrograms = function ( gl ) {
+        if ( !Program._sDeletedGLProgramCache.has( gl ) ) return;
+        var deleteList = Program._sDeletedGLProgramCache.get( gl );
+        var numPrograms = deleteList.length;
+        for ( var i = numPrograms - 1; i >= 0; i-- ) {
+            gl.deleteProgram( deleteList[ i ] );
+            deleteList.splice( i, 1 );
+        }
+    };
+
     /** @lends Program.prototype */
     Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
 

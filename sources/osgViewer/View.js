@@ -288,8 +288,17 @@ define( [
             availableTime = Program.flushDeletedGLPrograms( gl, availableTime );
             availableTime = Shader.flushDeletedGLShaders( gl, availableTime );
             availableTime = FrameBufferObject.flushDeletedGLFrameBuffers( gl, availableTime );
-        }
+        },
 
+        flushAllDeletedGLObjects: function ( ) {
+            // Flush all deleted OpenGL objects
+            var gl = this.getGraphicContext();
+            BufferArray.flushAllDeletedGLBufferArrays( gl );
+            Texture.getTextureManager( gl ).flushAllDeletedTextureObjects( gl );
+            Program.flushAllDeletedGLPrograms( gl );
+            Shader.flushAllDeletedGLShaders( gl );
+            FrameBufferObject.flushAllDeletedGLFrameBuffers( gl );
+        }
     };
 
     return View;
