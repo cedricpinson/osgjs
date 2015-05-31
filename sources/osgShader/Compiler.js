@@ -587,7 +587,7 @@ define( [
             if ( !hasShadows ) return undefined;
 
             // Varyings
-            var vertexWorld = this.getOrCreateVarying( 'vec4','WorldPosition' ) ;
+            var vertexWorld = this.getOrCreateVarying( 'vec4', 'WorldPosition' );
 
             // asserted we have a shadow we do the shadow node allocation
             // and mult with lighted output

@@ -191,16 +191,38 @@ var gruntTasks = {};
 } )();
 
 
+( function () {
+
+    gruntTasks.jsbeautifier = {
+        default: {
+            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js' ],
+            options: {
+                config: './.jsbeautifyrc'
+            }
+        },
+
+        check: {
+            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js' ],
+            // config: './.jsbeautifyrc',
+            options: {
+                mode: 'VERIFY_ONLY',
+                config: './.jsbeautifyrc'
+            }
+        }
+    };
+} )();
+
 var generateVersionFile = function () {
     var pkg = JSON.parse( fs.readFileSync( 'package.json' ) );
     var content = [
-        'define( [], function() {',
+        'define( [], function () {',
         '    return {',
         '        name: \'' + pkg.name + '\',',
         '        version: \'' + pkg.version + '\',',
         '        author: \'' + pkg.author + '\'',
         '    };',
-        '} );'
+        '} );',
+        ''
 
     ];
     fs.writeFileSync( path.join( SOURCE_PATH, 'version.js' ), content.join( '\n' ) );
@@ -503,6 +525,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
     grunt.loadNpmTasks( 'grunt-contrib-clean' );
 
+    grunt.loadNpmTasks( 'grunt-jsbeautifier' );
+
     // windows not supporting link in git repo
     grunt.loadNpmTasks( 'grunt-copy-to' );
     //static site
@@ -512,7 +536,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-webpack' );
 
     grunt.registerTask( 'watch', [ 'webpack:watch' ] );
-    grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
+    grunt.registerTask( 'check', [ 'jsbeautifier:check', 'jshint:self', 'jshint:sources' ] );
+    grunt.registerTask( 'beautify', [ 'jsbeautifier:default' ] );
 
     grunt.registerTask( 'test', [ 'connect:server', 'qunit:all' ] );
 
