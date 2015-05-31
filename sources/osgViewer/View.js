@@ -290,7 +290,7 @@ define( [
             availableTime = FrameBufferObject.flushDeletedGLFrameBuffers( gl, availableTime );
         },
 
-        flushAllDeletedGLObjects: function ( ) {
+        flushAllDeletedGLObjects: function () {
             // Flush all deleted OpenGL objects
             var gl = this.getGraphicContext();
             BufferArray.flushAllDeletedGLBufferArrays( gl );
