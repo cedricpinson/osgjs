@@ -2,7 +2,7 @@
     'use strict';
 
     var getOgre = window.getOgre;
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     OSG.globalify();
     var osg = OSG.osg;
@@ -730,7 +730,7 @@
         root.setComputeNearFar( false );
 
         if ( true ) {
-            Q( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
+            P.resolve( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
                 var project = createProjectedShadowScene( model );
                 project.setMatrix( osg.Matrix.makeTranslate( -10, 0, 0.0, [] ) );
                 root.addChild( project );
@@ -738,7 +738,7 @@
         }
 
         if ( true ) {
-            Q( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
+            P.resolve( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
                 var texproject = createTextureProjectedShadowScene( model );
                 texproject.setMatrix( osg.Matrix.makeTranslate( 0, 0, 0.0, [] ) );
                 root.addChild( texproject );
@@ -746,7 +746,7 @@
         }
 
         if ( true ) {
-            Q( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
+            P.resolve( osgDB.parseSceneGraph( getOgre() ) ).then( function ( model ) {
                 var shadowmap = createShadowMapScene( model );
                 shadowmap.setMatrix( osg.Matrix.makeTranslate( 10, 0, 0.0, [] ) );
                 root.addChild( shadowmap );
