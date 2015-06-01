@@ -5,7 +5,7 @@
 
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -24,11 +24,11 @@
 
         function createScene() {
             var lodNode = new osg.Lod();
-            Q( osgDB.parseSceneGraph( window.getModelB() ) ).then( function ( o ) {
+            P.resolve( osgDB.parseSceneGraph( window.getModelB() ) ).then( function ( o ) {
                 lodNode.addChild( o, 0, 50 );
             } );
 
-            Q( osgDB.parseSceneGraph( window.getModel() ) ).then( function ( data ) {
+            P.resolve( osgDB.parseSceneGraph( window.getModel() ) ).then( function ( data ) {
                 lodNode.addChild( data, 50, Infinity );
             } );
             return lodNode;

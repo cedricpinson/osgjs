@@ -1,7 +1,7 @@
 ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -84,7 +84,7 @@
             // get or create shader processor
             var shaderProcessor = new osgShader.ShaderProcessor();
 
-            var promise = Q( $.get( 'shaders/custom.glsl' ) );
+            var promise = P.resolve( $.get( 'shaders/custom.glsl' ) );
 
             // register shader to the shader processor
             promise.then( function ( shader ) {

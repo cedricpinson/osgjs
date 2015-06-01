@@ -1,12 +1,12 @@
 ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
-    var getPokerScene = OSG.getPokerScene;
+    var getPokerScene = window.getPokerScene;
 
     function createScene() {
         var root = new osg.Node();
@@ -20,7 +20,7 @@
             this.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
         };
 
-        Q( osgDB.parseSceneGraph( getPokerScene() ) ).then( function ( child ) {
+        P.resolve( osgDB.parseSceneGraph( getPokerScene() ) ).then( function ( child ) {
             root.addChild( child );
         } );
         return root;
