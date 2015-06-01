@@ -1,7 +1,7 @@
 ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgUtil = OSG.osgUtil;
@@ -22,7 +22,7 @@
         ];
 
         var imagesLoaded = false;
-        Q.all( images ).then( function ( images ) {
+        P.all( images ).then( function ( images ) {
             getSceneTexture( 'Budapest.jpg', images[ 0 ] );
             getSceneTexture( 'Beaumaris.jpg', images[ 1 ] );
             getSceneTexture( 'Seattle.jpg', images[ 2 ] );

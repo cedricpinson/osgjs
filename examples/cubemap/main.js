@@ -2,7 +2,7 @@
     'use strict';
 
     var Viewer;
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
@@ -227,7 +227,7 @@
 
         ground.getOrCreateStateSet().setAttributeAndModes( getShader() );
 
-        Q.all( [
+        P.all( [
             osgDB.readImage( 'textures/posx.jpg' ),
             osgDB.readImage( 'textures/negx.jpg' ),
 

@@ -1,7 +1,7 @@
 ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
@@ -219,7 +219,7 @@
 
         readShaders: function () {
 
-            var defer = Q.defer();
+            var defer = P.defer();
 
             var shaderNames = [
                 'vertex.glsl',
@@ -234,11 +234,10 @@
 
             var promises = [];
             shaders.forEach( function ( shader ) {
-                promises.push( Q( $.get( shader ) ) );
+                promises.push( P.resolve( $.get( shader ) ) );
             }.bind( this ) );
 
-
-            Q.all( promises ).then( function ( args ) {
+            P.all( promises ).then( function ( args ) {
 
                 var shaderNameContent = {};
                 shaderNames.forEach( function ( name, idx ) {

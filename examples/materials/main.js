@@ -1,7 +1,7 @@
 ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -222,9 +222,8 @@
             controller = material5.add( this._config, 'materialTransparency5', 0.01, 1.0 );
             controller.onChange( this.updateMaterial5.bind( this ) );
 
-
             // wait for all images
-            Q.all( images ).then( function ( args ) {
+            P.all( images ).then( function ( args ) {
 
                 this._textures = args.map( function ( image ) {
                     var texture = new osg.Texture();

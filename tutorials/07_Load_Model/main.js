@@ -39,7 +39,7 @@ var main = function() {
                 }
 
                 var promise = osgDB.parseSceneGraph(NodeModel);
-                Q.when(promise).then(function(child) {
+                P.resolve(promise).then(function(child) {
                     rootModelNode.removeChildren();
                     rootModelNode.addChild(child);
                     cbFocusCamera();
