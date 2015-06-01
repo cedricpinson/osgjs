@@ -23,6 +23,7 @@ define( [
         this._expiryFrame = 0;
         this._centerMode = Lod.USER_DEFINED_CENTER;
         this._frameNumberOfLastTraversal = 0;
+        this._databasePath = '';
     };
 
     /**
@@ -54,6 +55,14 @@ define( [
 
         setExpiryTime: function ( expiryTime ) {
             this._expiryTime = expiryTime;
+        },
+
+        setDatabasePath: function ( path ) {
+            this._databasePath = path;
+        },
+
+        getDatabasePath: function () {
+            return this._databasePath;
         },
 
         setFileName: function ( childNo, filename ) {
@@ -206,7 +215,7 @@ define( [
                             if ( this._perRangeDataList[ numChildren ].loaded === false ) {
                                 this._perRangeDataList[ numChildren ].loaded = true;
                                 var dbhandler = visitor.getDatabaseRequestHandler();
-                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime(), priority );
+                                this._perRangeDataList[ numChildren ].dbrequest = dbhandler.requestNodeFile( this._perRangeDataList[ numChildren ].function, this._databasePath + this._perRangeDataList[ numChildren ].filename, group, visitor.getFrameStamp().getSimulationTime(), priority );
                             } else {
                                 // Update timestamp of the request.
                                 if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined ) {
