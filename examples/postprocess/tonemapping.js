@@ -1,7 +1,7 @@
 ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgUtil = OSG.osgUtil;
@@ -405,7 +405,7 @@
         xhr.open( 'GET', url, true );
         xhr.responseType = 'arraybuffer';
 
-        var defer = Q.defer();
+        var defer = P.defer();
         xhr.onload = function () {
             if ( xhr.response ) {
                 var bytes = new Uint8Array( xhr.response );

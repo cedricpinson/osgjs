@@ -1,7 +1,7 @@
 ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -84,7 +84,7 @@
         xhr.open( 'GET', url, true );
         xhr.responseType = 'arraybuffer';
 
-        var defer = Q.defer();
+        var defer = P.defer();
         xhr.onload = function ( /*ev*/) {
             if ( xhr.response ) {
                 var bytes = new Uint8Array( xhr.response );
@@ -452,7 +452,7 @@
         };
         var urls = textures[ name ];
 
-        Q.all( [
+        P.all( [
             readImageURL( 'textures/' + name + '/' + urls[ 0 ] ),
             readImageURL( 'textures/' + name + '/' + urls[ 1 ] )
         ] ).then( function ( images ) {
