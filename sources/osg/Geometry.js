@@ -25,11 +25,13 @@ define( [
     Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
         releaseGLObjects: function () {
             if ( this.stateset !== undefined ) this.stateset.releaseGLObjects();
-            var i;
-            for ( i in this.attributes ) {
-                this.attributes[ i ].releaseGLObjects();
+            var keys = Object.keys( this.attributes );
+            var value;
+            for ( var i = 0, l = keys.length; i < l; i++ ) {
+                value = this.attributes[ keys[ i ] ];
+                value.releaseGLObjects();
             }
-            for ( var j = 0, l = this.primitives.length; j < l; j++ ) {
+            for ( var j = 0, h = this.primitives.length; j < h; j++ ) {
                 var prim = this.primitives[ j ];
                 if ( prim.getIndices !== undefined ) {
                     if ( prim.getIndices() !== undefined && prim.getIndices() !== null ) {
