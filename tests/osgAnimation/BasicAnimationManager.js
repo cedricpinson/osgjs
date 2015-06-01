@@ -5,7 +5,7 @@ define( [
     'osgAnimation/BasicAnimationManager',
     'osgAnimation/UpdateMatrixTransform',
     'osgAnimation/StackedRotateAxis',
-], function ( QUnit, Q, mockup, MatrixTransform, BasicAnimationManager, UpdateMatrixTransform, StackedRotateAxis ) {
+], function ( QUnit, mockup, MatrixTransform, BasicAnimationManager, UpdateMatrixTransform, StackedRotateAxis ) {
 
     'use strict';
 

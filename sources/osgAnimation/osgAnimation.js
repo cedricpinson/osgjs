@@ -20,8 +20,13 @@ define( [
     'osgAnimation/Target',
     'osgAnimation/UpdateMatrixTransform',
     'osgAnimation/Vec3LerpChannel',
-    'osgAnimation/Vec3Target'
-], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, CollectAnimationUpdateCallbackVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
+    'osgAnimation/Vec3Target',
+    'osgAnimation/Skeleton',
+    'osgAnimation/UpdateSkeleton',
+    'osgAnimation/UpdateBone',
+    'osgAnimation/StackedMatrixElement',
+    'osgAnimation/MatrixTarget'
+], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, CollectAnimationUpdateCallbackVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target, Skeleton, UpdateSkeleton, UpdateBone, StackedMatrixElement, MatrixTarget ) {
 
     var osgAnimation = {};
 
@@ -35,15 +40,20 @@ define( [
     MACROUTILS.objectMix( osgAnimation, Interpolator );
     MACROUTILS.objectMix( osgAnimation, Keyframe );
     osgAnimation.CollectAnimationUpdateCallbackVisitor = CollectAnimationUpdateCallbackVisitor;
+    osgAnimation.MatrixTarget = MatrixTarget;
     osgAnimation.QuatLerpChannel = QuatLerpChannel;
     osgAnimation.QuatSlerpChannel = QuatSlerpChannel;
     osgAnimation.QuatTarget = QuatTarget;
     osgAnimation.Sampler = Sampler;
+    osgAnimation.Skeleton = Skeleton;
+    osgAnimation.StackedMatrixElement = StackedMatrixElement;
     osgAnimation.StackedQuaternion = StackedQuaternion;
     osgAnimation.StackedRotateAxis = StackedRotateAxis;
     osgAnimation.StackedTranslate = StackedTranslate;
     osgAnimation.Target = Target;
+    osgAnimation.UpdateBone = UpdateBone;
     osgAnimation.UpdateMatrixTransform = UpdateMatrixTransform;
+    osgAnimation.UpdateSkeleton = UpdateSkeleton;
     osgAnimation.Vec3LerpChannel = Vec3LerpChannel;
     osgAnimation.Vec3Target = Vec3Target;
 

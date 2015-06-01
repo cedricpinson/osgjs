@@ -11,6 +11,7 @@ define( [
 
 ], function ( Notify, MACROUTILS, BaseObject, Quat, Vec3, Channel, Animation, Interpolator, CollectAnimationUpdateCallbackVisitor ) {
 
+    'use strict';
 
     var createTargetID = function ( id, value ) {
         return {

@@ -124,5 +124,42 @@ define( [
         return P.resolve( st );
     };
 
+    osgAnimationWrapper.Bone = function ( input, bone ) {
+        var jsonObj = input.getJSON();
+        var check = function ( o ) {
+            if ( o.InvBindMatrixInSkeletonSpace && o.MatrixInSkeletonSpace ) {
+                return true;
+            }
+            return false;
+        };
+        if ( !check( jsonObj ) ) {
+            return undefined;
+        }
+
+        osgWrapper.MatrixTransform( input, bone );
+
+        if ( jsonObj.InvBindMatrixInSkeletonSpace !== undefined ) {
+            bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
+        }
+        if ( jsonObj.BoneInSkeletonSpace !== undefined ) {
+            bone.setMatrixInSkeletonSpace( jsonObj.MatrixInSkeletonSpace );
+        }
+        return bone;
+    };
+
+    osgAnimationWrapper.Skeleton = function ( input, skl ) {
+        var jsonObj = input.getJSON();
+        var check = function ( o ) {
+            if ( o.Matrix ) {
+                return true;
+            }
+            return false;
+        };
+        if ( !check( jsonObj ) ) {
+            return;
+        }
+        return osgWrapper.MatrixTransform( input, skl );
+    };
+
     return osgAnimationWrapper;
 } );
