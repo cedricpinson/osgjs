@@ -55,6 +55,17 @@ define( [
         return availableTime -= elapsedTime;
     };
 
+    Shader.flushAllDeletedGLShaders = function ( gl ) {
+        if ( !Shader._sDeletedGLShaderCache.has( gl ) ) return;
+        var deleteList = Shader._sDeletedGLShaderCache.get( gl );
+        var numShaders = deleteList.length;
+        for ( var i = numShaders - 1; i >= 0; i-- ) {
+            gl.deleteShader( deleteList[ i ] );
+            deleteList.splice( i, 1 );
+        }
+        return;
+    };
+
     /** @lends Shader.prototype */
     Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         setText: function ( text ) {

@@ -1,10 +1,10 @@
 define( [
     'qunit',
-    'q',
+    'bluebird',
     'osgDB/Input',
     'osg/Notify',
     'osg/Image'
-], function ( QUnit, Q, Input, Notify, Image ) {
+], function ( QUnit, P, Input, Notify, Image ) {
 
     'use strict';
 
@@ -18,10 +18,10 @@ define( [
 
             var input = new Input();
             input.setPrefixURL( 'testXtest' );
-            Q( input.readImageURL( ImageTest ) ).then( function ( image ) {
+            input.readImageURL( ImageTest ).then( function ( image ) {
                 ok( image.getURL() === ImageTest, 'check image src' );
                 start();
-            } ).fail( function ( error ) {
+            } ).catch( function ( error ) {
                 Notify.error( error );
             } );
         } );
@@ -33,12 +33,12 @@ define( [
                 called = true;
                 return input.readImageURL( url );
             };
-            Q( input.readImageURL( ImageTest, {
+            input.readImageURL( ImageTest, {
                 readImageURL: readImageURLReplacement
-            } ) ).then( function ( /*image*/) {
+            } ).then( function ( /*image*/) {
                 equal( called, true, 'check image src' );
                 start();
-            } ).fail( function ( error ) {
+            } ).catch( function ( error ) {
                 Notify.error( error );
             } );
         } );
@@ -54,15 +54,15 @@ define( [
             ok( image instanceof Image, 'no promise : returned an Image' );
             // ok(image.src.substr(-9) !== url, 'no promise : used fallback image');  // FIXME: make readImageURL return a proxy osgImage
 
-            Q( input.readImageURL( 'error-404', {
+            input.readImageURL( 'error-404', {
                 imageCrossOrigin: 'Anonymous',
                 imageLoadingUsePromise: true
-            } ) ).then( function ( image ) {
+            } ).then( function ( image ) {
                 ok( image instanceof Image, 'with promise : returned image' );
                 ok( image.getImage().src.substr( -9 ) !== url, 'with promise : used fallback image' );
 
                 start();
-            } ).fail( function ( error ) {
+            } ).catch( function ( error ) {
                 Notify.error( error );
             } );
         } );
@@ -99,7 +99,7 @@ define( [
                 'UniqueID': 10
             };
             var input = new Input( ba );
-            Q( input.readBufferArray() ).then( function ( /*value*/) {
+            input.readBufferArray().then( function ( /*value*/) {
                 return input.setJSON( {
                     'UniqueID': 10
                 } ).readBufferArray();
@@ -114,12 +114,12 @@ define( [
             var calledBinaryArray = false;
             var readBinaryArrayURL = function ( /*url, options*/) {
                 calledBinaryArray = true;
-                return true;
+                return P.resolve();
             };
             var input = new Input();
-            Q( input.readBinaryArrayURL( 'toto', {
+            input.readBinaryArrayURL( 'toto', {
                 readBinaryArrayURL: readBinaryArrayURL
-            } ) ).then( function ( /*value*/) {
+            } ).then( function ( /*value*/) {
                 ok( calledBinaryArray, true, 'readBinaryArray replacement has been called' );
                 start();
             } );
@@ -130,12 +130,12 @@ define( [
             var calledNodeURL = false;
             var readNodeURL = function ( /*url, options*/) {
                 calledNodeURL = true;
-                return true;
+                return P.resolve();
             };
             var input = new Input();
-            Q( input.readNodeURL( 'toto', {
+            input.readNodeURL( 'toto', {
                 readNodeURL: readNodeURL
-            } ) ).then( function ( /*value*/) {
+            } ).then( function ( /*value*/) {
                 ok( calledNodeURL, true, 'readNodeURL replacement has been called' );
                 start();
             } );
@@ -175,7 +175,7 @@ define( [
             };
 
             var input = new Input( obj );
-            Q( input.readObject() ).then( function () {
+            input.readObject().then( function () {
                 return input.setJSON( {
                     'osg.Material': {
                         'UniqueID': 10
@@ -207,7 +207,7 @@ define( [
                     'mode': 'TRIANGLES'
                 }
             } );
-            Q( input.readPrimitiveSet() ).then( function ( /*value */) {
+            input.readPrimitiveSet().then( function ( /*value */) {
                 return input.setJSON( {
                     'DrawArrays': {
                         'UniqueID': 10
@@ -233,7 +233,7 @@ define( [
                 'UniqueID': 10
             };
             var input = new Input( ba );
-            Q( input.readBufferArray() ).then( function () {
+            input.readBufferArray().then( function () {
                 return input.setJSON( {
                     'UniqueID': 10
                 } ).readBufferArray();
@@ -257,7 +257,7 @@ define( [
             };
             ( function () {
                 var input = new Input( ba );
-                Q( input.readBufferArray() ).then( function ( buffer ) {
+                input.readBufferArray().then( function ( buffer ) {
                     ok( buffer.getElements()[ 2 ] === 10, 'readBufferArray with new array typed external file' );
                     start();
                 } );
@@ -270,7 +270,7 @@ define( [
                 };
                 var input = new Input( ba );
                 input.setProgressXHRCallback( progress );
-                Q( input.readBufferArray() ).then( function ( /*buffer*/) {
+                input.readBufferArray().then( function ( /*buffer*/) {
 
                     ok( calledProgress === true, 'readBufferArray check progress callback' );
                     start();
@@ -312,10 +312,10 @@ define( [
                 var buffers = {};
 
                 var createVertexAttribute = function ( name, jsonAttribute ) {
-                    var defer = Q.defer();
+                    var defer = P.defer();
                     arraysPromise.push( defer.promise );
                     var promise = input.setJSON( jsonAttribute ).readBufferArray();
-                    Q( promise ).then( function ( buffer ) {
+                    promise.then( function ( buffer ) {
                         if ( buffer !== undefined ) {
                             buffers[ name ] = buffer;
                         }
@@ -326,7 +326,7 @@ define( [
                 createVertexAttribute( 'Tangent', ba.Tangent );
                 createVertexAttribute( 'TexCoord0', ba.TexCoord0 );
 
-                Q( Q.all( arraysPromise ) ).then( function () {
+                P.all( arraysPromise ).then( function () {
                     var tc = buffers.TexCoord0.getElements();
                     var tcl = tc.length;
                     equal( tc[ 2 ], 2, 'readBufferArray with new array typed external file with offset' );

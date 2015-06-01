@@ -10,9 +10,8 @@ define( [
     'osg/MatrixTransform',
     'osg/Shape',
     'osgViewer/View',
-    'osgDB/ReaderParser',
-    'q'
-], function ( QUnit, mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser, Q ) {
+    'osgDB/ReaderParser'
+], function ( QUnit, mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser ) {
 
     'use strict';
 
@@ -76,20 +75,18 @@ define( [
 
         } );
 
-        QUnit.asyncTest( 'LineSegmentIntersector without kdtree', function () {
+        QUnit.test( 'LineSegmentIntersector without kdtree', function () {
 
             var view = new View();
             view.getCamera().setViewport( new Viewport() );
             view.getCamera().setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ), [] );
             view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
-            var promise = ReaderParser.parseSceneGraph( mockup.getScene() );
-            Q.when( promise ).then( function ( quad ) {
-                view.setSceneData( quad );
+            // TODO it uses the old sync parseSceneGraphDeprecated
+            var quad = ReaderParser.parseSceneGraph( mockup.getScene() );
+            view.setSceneData( quad );
 
-                var result = view.computeIntersections( 400, 300 );
-                ok( result.length === 1, 'Hits should be 1 and result is ' + result.length );
-                start();
-            } );
+            var result = view.computeIntersections( 400, 300 );
+            ok( result.length === 1, 'Hits should be 1 and result is ' + result.length );
         } );
 
         QUnit.test( 'LineSegmentIntersector with kdtree', function () {
@@ -116,27 +113,25 @@ define( [
             ok( lsi._intersections[ 0 ].nodepath.length === 2, 'NodePath should be 2 and result is ' + lsi._intersections[ 0 ].nodepath.length );
         } );
 
-        QUnit.asyncTest( 'LineSegmentIntersector with kdtree', function () {
+        QUnit.test( 'LineSegmentIntersector with kdtree', function () {
 
             var view = new View();
             view.getCamera().setViewport( new Viewport() );
             view.getCamera().setViewMatrix( Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ] ), [] );
             view.getCamera().setProjectionMatrix( Matrix.makePerspective( 60, 800 / 600, 0.1, 100.0, [] ) );
-            var promise = ReaderParser.parseSceneGraph( mockup.getScene() );
-            Q.when( promise ).then( function ( mockup ) {
-                view.setSceneData( mockup );
+            // TODO it uses the old sync parseSceneGraphDeprecated
+            var root = ReaderParser.parseSceneGraph( mockup.getScene() );
+            view.setSceneData( root );
 
-                var treeBuilder = new KdTreeBuilder( {
-                    _numVerticesProcessed: 0,
-                    _targetNumTrianglesPerLeaf: 50,
-                    _maxNumLevels: 20
-                } );
-                treeBuilder.apply( mockup );
-
-                var result = view.computeIntersections( 400, 300 );
-                ok( result.length === 1, 'Hits should be 1 and result is ' + result.length );
-                start();
+            var treeBuilder = new KdTreeBuilder( {
+                _numVerticesProcessed: 0,
+                _targetNumTrianglesPerLeaf: 50,
+                _maxNumLevels: 20
             } );
+            treeBuilder.apply( root );
+
+            var result = view.computeIntersections( 400, 300 );
+            ok( result.length === 1, 'Hits should be 1 and result is ' + result.length );
         } );
 
     };

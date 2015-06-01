@@ -1,10 +1,9 @@
 ( function () {
     'use strict';
 
+    var Q = window.Q;
     var OSG = window.OSG;
     var osg = OSG.osg;
-    var osgUtil = OSG.osgUtil;
-    var osgDB = OSG.osgDB;
     var osgViewer = OSG.osgViewer;
     var osgShader = OSG.osgShader;
     var $ = window.$;
@@ -261,7 +260,7 @@
 
                 var vertexshader = this._shaderProcessor.getShader( 'vertex.glsl' );
                 var fragmentshader = this._shaderProcessor.getShader( 'fragment.glsl', [
-                    '#define GPU_HARD', '#define COUNT ' +  this._config['passCountNoise']
+                    '#define GPU_HARD', '#define COUNT ' + this._config[ 'passCountNoise' ]
                 ] );
 
                 var program = new osg.Program(

@@ -3,7 +3,6 @@
 
     var OSG = window.OSG;
     var osg = OSG.osg;
-    //var osgDB = OSG.osgDB;
     var osgUtil = OSG.osgUtil;
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
@@ -81,7 +80,7 @@
     };
     NearFarCallback.prototype = {
 
-        cull: function ( node, nv ) {
+        cull: function ( /*node, nv*/) {
             // cull
             config.near = config.camera.getNear() + '';
             config.far = config.camera.getFar() + '';

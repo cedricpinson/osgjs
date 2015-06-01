@@ -2,13 +2,12 @@
  * @author Jordi Torres
  */
 define( [
-    'q',
     'osg/Utils',
     'osg/Lod',
     'osg/NodeVisitor',
     'osg/Matrix',
     'osg/Vec3'
-], function ( Q, MACROUTILS, Lod, NodeVisitor, Matrix, Vec3 ) {
+], function ( MACROUTILS, Lod, NodeVisitor, Matrix, Vec3 ) {
 
     'use strict';
 

@@ -24,7 +24,7 @@ builds/active/OSG.js
 builds/active/OSG.js.map
 builds/dist/OSG.js
 builds/dist/OSG.js.map
-examples/vendors/q.js
+examples/vendors/bluebird.js
 examples/vendors/Require.js
 examples/vendors/es5-shim.js
 examples/vendors/es6-shim.js

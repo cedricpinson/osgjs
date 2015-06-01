@@ -191,19 +191,41 @@ var gruntTasks = {};
 } )();
 
 
-var generateVersionFile = function() {
-    var pkg = JSON.parse( fs.readFileSync('package.json' ) );
+( function () {
+
+    gruntTasks.jsbeautifier = {
+        default: {
+            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js' ],
+            options: {
+                config: './.jsbeautifyrc'
+            }
+        },
+
+        check: {
+            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js' ],
+            // config: './.jsbeautifyrc',
+            options: {
+                mode: 'VERIFY_ONLY',
+                config: './.jsbeautifyrc'
+            }
+        }
+    };
+} )();
+
+var generateVersionFile = function () {
+    var pkg = JSON.parse( fs.readFileSync( 'package.json' ) );
     var content = [
-        'define( [], function() {',
+        'define( [], function () {',
         '    return {',
         '        name: \'' + pkg.name + '\',',
         '        version: \'' + pkg.version + '\',',
-        '        author: \'' + pkg.author +'\'',
+        '        author: \'' + pkg.author + '\'',
         '    };',
-        '} );'
+        '} );',
+        ''
 
     ];
-    fs.writeFileSync( path.join( SOURCE_PATH, 'version.js'), content.join('\n'));
+    fs.writeFileSync( path.join( SOURCE_PATH, 'version.js' ), content.join( '\n' ) );
 };
 
 // ## Clean
@@ -327,11 +349,11 @@ var generateVersionFile = function() {
                     src: 'examples/vendors/hammer-2.0.4.js',
                     dest: 'examples/vendors/hammer.js'
                 },
-                //Q:
+                //Bluebird:
                 {
                     cwd: './',
-                    src: 'examples/vendors/q-0.9.7.js',
-                    dest: 'examples/vendors/q.js'
+                    src: 'examples/vendors/bluebird-2.9.25.js',
+                    dest: 'examples/vendors/bluebird.js'
                 },
                 //es5-shim:
                 {
@@ -418,7 +440,7 @@ var generateVersionFile = function() {
                 branch: 'gh-pages',
                 repository: 'git@github.com:cedricpinson/osgjs.git',
                 directory: path.join( BUILD_PATH, 'web' )
-                //, depth: -1 // cannot push from a shallow clone
+                    //, depth: -1 // cannot push from a shallow clone
             }
         }
     };
@@ -503,6 +525,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
     grunt.loadNpmTasks( 'grunt-contrib-clean' );
 
+    grunt.loadNpmTasks( 'grunt-jsbeautifier' );
+
     // windows not supporting link in git repo
     grunt.loadNpmTasks( 'grunt-copy-to' );
     //static site
@@ -512,7 +536,8 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-webpack' );
 
     grunt.registerTask( 'watch', [ 'webpack:watch' ] );
-    grunt.registerTask( 'check', [ 'jshint:self', 'jshint:sources' ] );
+    grunt.registerTask( 'check', [ 'jsbeautifier:check', 'jshint:self', 'jshint:sources' ] );
+    grunt.registerTask( 'beautify', [ 'jsbeautifier:default' ] );
 
     grunt.registerTask( 'test', [ 'connect:server', 'qunit:all' ] );
 

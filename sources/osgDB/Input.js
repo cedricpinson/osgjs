@@ -1,5 +1,5 @@
 define( [
-    'q',
+    'bluebird',
     'osg/Utils',
     'osgNameSpace',
     'osgDB/ReaderParser',
@@ -11,12 +11,9 @@ define( [
     'osg/DrawArrayLengths',
     'osg/DrawElements',
     'osg/PrimitiveSet'
-], function ( Q, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
+], function ( P, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     'use strict';
-
-
-
 
     var Input = function ( json, identifier ) {
         this._json = json;
@@ -113,7 +110,7 @@ define( [
 
         requestFile: function ( url, options ) {
 
-            var defer = Q.defer();
+            var defer = P.defer();
 
             var req = new XMLHttpRequest();
             req.open( 'GET', url, true );
@@ -222,7 +219,7 @@ define( [
                 return this.fetchImage( image, url, options );
             }
 
-            var defer = Q.defer();
+            var defer = P.defer();
             this.fetchImage( image, url, options, defer );
 
             return defer.promise;
@@ -247,7 +244,7 @@ define( [
 
             url = this.computeURL( url );
 
-            var defer = Q.defer();
+            var defer = P.defer();
 
             // copy because we are going to modify it to have relative prefix to load assets
             options = MACROUTILS.objectMix( {}, options );
@@ -268,13 +265,10 @@ define( [
 
             var readSceneGraph = function ( data ) {
 
-                ReaderParser.parseSceneGraph( data, options )
-                    .then( function ( child ) {
-                        defer.resolve( child );
-                        Notify.log( 'loaded ' + url );
-                    } ).fail( function ( error ) {
-                        defer.reject( error );
-                    } );
+                ReaderParser.parseSceneGraph( data, options ).then( function ( child ) {
+                    defer.resolve( child );
+                    Notify.log( 'loaded ' + url );
+                } ).catch( defer.reject.bind( defer ) );
             };
 
             var ungzipFile = function ( file ) {
@@ -331,7 +325,7 @@ define( [
                     data = JSON.parse( str );
                     readSceneGraph( data );
 
-                } ).fail( function ( status ) {
+                } ).catch( function ( status ) {
 
                     Notify.error( 'cant read file ' + url + ' status ' + status );
                     defer.reject();
@@ -340,7 +334,7 @@ define( [
 
                 return true;
 
-            } ).fail( function ( status ) {
+            } ).catch( function ( status ) {
 
                 Notify.error( 'cant get file ' + url + ' status ' + status );
                 defer.reject();
@@ -386,28 +380,18 @@ define( [
             if ( this._identifierMap[ url ] !== undefined ) {
                 return this._identifierMap[ url ];
             }
-            var defer = Q.defer();
+            var defer = P.defer();
 
             var filePromise = this.requestFile( url, {
                 responseType: 'arraybuffer',
                 progress: this._defaultOptions.progressXHRCallback
             } );
 
-
-            filePromise.then( function ( file ) {
-
-                var buffer = this._unzipTypedArray( file );
-                this._identifierMap[ url ] = buffer;
-                defer.resolve( buffer );
-
-            }.bind( this ) ).fail( function ( // error
-            ) {
-
-                defer.reject();
-
-            } ).done();
-
             this._identifierMap[ url ] = defer.promise;
+            filePromise.then( function ( file ) {
+                defer.resolve( this._unzipTypedArray( file ) );
+            }.bind( this ) );
+
             return defer.promise;
         },
 
@@ -418,8 +402,8 @@ define( [
                 return options.initializeBufferArray.call( this, vb, type, buf );
 
             var url = vb.File;
-            var defer = Q.defer();
-            Q.when( this.readBinaryArrayURL( url ) ).then( function ( array ) {
+            var defer = P.defer();
+            this.readBinaryArrayURL( url ).then( function ( array ) {
 
                 var typedArray;
                 // manage endianness
@@ -464,8 +448,10 @@ define( [
 
                 buf.setElements( typedArray );
                 defer.resolve( buf );
+            } ).catch( function () {
+                Notify.warn( 'Can\'t read binary array URL' );
             } );
-            return defer;
+            return defer.promise;
         },
 
         readBufferArray: function ( options ) {
@@ -485,38 +471,28 @@ define( [
             if ( options.readBufferArray )
                 return options.readBufferArray.call( this );
 
-            var check = function ( o ) {
-                if ( ( o.Elements !== undefined || o.Array !== undefined ) &&
-                    o.ItemSize !== undefined &&
-                    o.Type ) {
-                    return true;
-                }
-                return false;
-            };
+            if ( ( !jsonObj.Elements && !jsonObj.Array ) || !jsonObj.ItemSize || !jsonObj.Type )
+                return P.reject();
 
-            if ( !check( jsonObj ) ) {
-                return undefined;
-            }
-
-            var obj, defer;
+            var promise;
 
             // inline array
-            if ( jsonObj.Elements !== undefined ) {
-                obj = new BufferArray( BufferArray[ jsonObj.Type ], jsonObj.Elements, jsonObj.ItemSize );
+            if ( jsonObj.Elements ) {
+                promise = P.resolve( new BufferArray( BufferArray[ jsonObj.Type ], jsonObj.Elements, jsonObj.ItemSize ) );
 
-            } else if ( jsonObj.Array !== undefined ) {
+            } else if ( jsonObj.Array ) {
 
                 var buf = new BufferArray( BufferArray[ jsonObj.Type ] );
                 buf.setItemSize( jsonObj.ItemSize );
 
                 var vb, type;
-                if ( jsonObj.Array.Float32Array !== undefined ) {
+                if ( jsonObj.Array.Float32Array ) {
                     vb = jsonObj.Array.Float32Array;
                     type = 'Float32Array';
-                } else if ( jsonObj.Array.Uint16Array !== undefined ) {
+                } else if ( jsonObj.Array.Uint16Array ) {
                     vb = jsonObj.Array.Uint16Array;
                     type = 'Uint16Array';
-                } else if ( jsonObj.Array.Uint8Array !== undefined ) {
+                } else if ( jsonObj.Array.Uint8Array ) {
                     vb = jsonObj.Array.Uint8Array;
                     type = 'Uint8Array';
                 } else {
@@ -524,24 +500,18 @@ define( [
                     type = 'Float32Array';
                 }
 
-                if ( vb !== undefined ) {
-                    if ( vb.File !== undefined ) {
-                        defer = this.initializeBufferArray( vb, type, buf );
-                    } else if ( vb.Elements !== undefined ) {
-                        buf.setElements( new MACROUTILS[ type ]( vb.Elements ) );
-                    }
+                if ( vb.File ) {
+                    promise = this.initializeBufferArray( vb, type, buf );
+                } else if ( vb.Elements ) {
+                    buf.setElements( new MACROUTILS[ type ]( vb.Elements ) );
+                    promise = P.resolve( buf );
                 }
-                obj = buf;
             }
 
             if ( uniqueID !== undefined ) {
-                this._identifierMap[ uniqueID ] = obj;
+                this._identifierMap[ uniqueID ] = promise;
             }
-
-            if ( defer !== undefined ) {
-                return defer.promise;
-            }
-            return obj;
+            return promise;
         },
 
         readUserDataContainer: function () {
@@ -564,10 +534,8 @@ define( [
             var uniqueID;
             var osgjsObject;
 
-            var obj;
-            var defer;
-            var mode;
-            var first, count;
+            var defer = P.defer();
+            var obj, mode, first, count;
             var drawElementPrimitive = jsonObj.DrawElementUShort || jsonObj.DrawElementUByte || jsonObj.DrawElementUInt || jsonObj.DrawElementsUShort || jsonObj.DrawElementsUByte || jsonObj.DrawElementsUInt || undefined;
             if ( drawElementPrimitive ) {
 
@@ -579,7 +547,6 @@ define( [
                     }
                 }
 
-                defer = Q.defer();
                 var jsonArray = drawElementPrimitive.Indices;
                 var prevJson = jsonObj;
 
@@ -592,11 +559,12 @@ define( [
                 obj = new DrawElements( mode );
 
                 this.setJSON( jsonArray );
-                Q.when( this.readBufferArray() ).then(
-                    function ( array ) {
-                        obj.setIndices( array );
-                        defer.resolve( obj );
-                    } );
+                this.readBufferArray().then( function ( array ) {
+                    obj.setIndices( array );
+                    defer.resolve( obj );
+                } ).catch( function () {
+                    Notify.warn( 'Error buffer array' );
+                } );
                 this.setJSON( prevJson );
             }
 
@@ -615,7 +583,7 @@ define( [
                 first = drawArrayPrimitive.First !== undefined ? drawArrayPrimitive.First : drawArrayPrimitive.first;
                 count = drawArrayPrimitive.Count !== undefined ? drawArrayPrimitive.Count : drawArrayPrimitive.count;
                 var drawArray = new DrawArrays( PrimitiveSet[ mode ], first, count );
-                obj = drawArray;
+                defer.resolve( drawArray );
             }
 
             var drawArrayLengthsPrimitive = jsonObj.DrawArrayLengths || undefined;
@@ -633,17 +601,14 @@ define( [
                 first = drawArrayLengthsPrimitive.First;
                 var array = drawArrayLengthsPrimitive.ArrayLengths;
                 var drawArrayLengths = new DrawArrayLengths( PrimitiveSet[ mode ], first, array );
-                obj = drawArrayLengths;
+                defer.resolve( drawArrayLengths );
             }
 
             if ( uniqueID !== undefined ) {
-                this._identifierMap[ uniqueID ] = obj;
+                this._identifierMap[ uniqueID ] = defer.promise;
             }
 
-            if ( defer ) {
-                return defer.promise;
-            }
-            return obj;
+            return defer.promise;
         },
 
 
@@ -653,7 +618,7 @@ define( [
             var prop = window.Object.keys( jsonObj )[ 0 ];
             if ( !prop ) {
                 Notify.warn( 'can\'t find property for object ' + jsonObj );
-                return undefined;
+                return P.reject();
             }
 
             var uniqueID = jsonObj[ prop ].UniqueID;
@@ -668,7 +633,7 @@ define( [
             var obj = this.getObjectWrapper( prop );
             if ( !obj ) {
                 Notify.warn( 'can\'t instanciate object ' + prop );
-                return undefined;
+                return P.reject();
             }
             var ReaderParser = require( 'osgDB/ReaderParser' );
             var scope = ReaderParser.ObjectWrapper.serializers;
@@ -677,7 +642,7 @@ define( [
                 var reader = scope[ splittedPath[ i ] ];
                 if ( reader === undefined ) {
                     Notify.warn( 'can\'t find function to read object ' + prop + ' - undefined' );
-                    return undefined;
+                    return P.reject();
                 }
                 scope = reader;
             }
@@ -685,9 +650,10 @@ define( [
             var promise = scope( this.setJSON( jsonObj[ prop ] ), obj );
 
             if ( uniqueID !== undefined ) {
-                this._identifierMap[ uniqueID ] = obj;
+                this._identifierMap[ uniqueID ] = promise;
                 obj._uniqueID = uniqueID;
             }
+
             return promise;
         }
     };

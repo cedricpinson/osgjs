@@ -2,9 +2,11 @@
     'use strict';
 
     var Viewer;
-    var osg = window.OSG.osg;
-    var osgViewer = window.OSG.osgViewer;
-    var osgDB = window.OSG.osgDB;
+    var Q = window.Q;
+    var OSG = window.OSG;
+    var osg = OSG.osg;
+    var osgViewer = OSG.osgViewer;
+    var osgDB = OSG.osgDB;
 
 
     var main = function () {
@@ -193,7 +195,7 @@
         // the update callback get exactly the same view of the camera
         // but configure the projection matrix to always be in a short znear/zfar range to not vary depend on the scene size
         var UpdateCallback = function () {
-            this.update = function ( node, nv ) {
+            this.update = function ( /*node, nv*/) {
                 var rootCam = Viewer.getCamera();
                 var info = {};
                 osg.Matrix.getPerspective( rootCam.getProjectionMatrix(), info );

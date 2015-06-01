@@ -3,6 +3,8 @@ define( [
     'osg/StateAttribute'
 ], function ( MACROUTILS, StateAttribute ) {
 
+    'use strict';
+
     /**
      *  Manage CullFace attribute
      *  @class CullFace

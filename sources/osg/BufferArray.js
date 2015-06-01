@@ -67,6 +67,15 @@ define( [
         return availableTime;
     };
 
+    BufferArray.flushAllDeletedGLBufferArrays = function ( gl ) {
+        if ( !BufferArray._sDeletedGLBufferArrayCache.has( gl ) ) return;
+        var deleteList = BufferArray._sDeletedGLBufferArrayCache.get( gl );
+        var numBuffers = deleteList.length;
+        for ( var i = numBuffers - 1; i >= 0; i-- ) {
+            gl.deleteBuffer( deleteList[ i ] );
+            deleteList.splice( i, 1 );
+        }
+    };
 
     /** @lends BufferArray.prototype */
     BufferArray.prototype = MACROUTILS.objectInherit( GLObject.prototype, {

@@ -1,12 +1,12 @@
-(function() {
+( function () {
     'use strict';
 
+    var Q = window.Q;
     var OSG = window.OSG;
-    OSG.globalify();
-    var osg = window.osg;
-    var osgDB = window.osgDB;
-    var osgViewer = window.osgViewer;
-    var getPokerScene = window.getPokerScene;
+    var osg = OSG.osg;
+    var osgDB = OSG.osgDB;
+    var osgViewer = OSG.osgViewer;
+    var getPokerScene = OSG.getPokerScene;
 
     function createScene() {
         var root = new osg.Node();
@@ -20,25 +20,22 @@
             this.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
         };
 
-        Q.when( osgDB.parseSceneGraph( getPokerScene() ) ).then( function ( child ) {
+        Q( osgDB.parseSceneGraph( getPokerScene() ) ).then( function ( child ) {
             root.addChild( child );
         } );
         return root;
     }
 
-    window.addEventListener(
-        'load',
+    window.addEventListener( 'load', function () {
 
-        function () {
+        var canvas = document.getElementById( 'View' );
 
-            var canvas = document.getElementById( 'View' );
+        var viewer;
+        viewer = new osgViewer.Viewer( canvas );
+        viewer.init();
+        viewer.setSceneData( createScene() );
+        viewer.setupManipulator();
+        viewer.run();
 
-            var viewer;
-            viewer = new osgViewer.Viewer( canvas );
-            viewer.init();
-            viewer.setSceneData( createScene() );
-            viewer.setupManipulator();
-            viewer.run();
-
-        }, true );
-})();
+    }, true );
+} )();

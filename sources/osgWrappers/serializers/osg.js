@@ -1,6 +1,6 @@
 define( [
-    'q'
-], function ( Q ) {
+    'bluebird'
+], function ( P ) {
 
     'use strict';
 
@@ -8,16 +8,8 @@ define( [
 
     osgWrapper.Object = function ( input, obj ) {
         var jsonObj = input.getJSON();
-        var check = function ( /*o*/) {
-            return true;
-        };
-        if ( !check( jsonObj ) ) {
-            return undefined;
-        }
 
-        if ( jsonObj.Name ) {
-            obj.setName( jsonObj.Name );
-        }
+        if ( jsonObj.Name ) obj.setName( jsonObj.Name );
 
         if ( jsonObj.UserDataContainer ) {
             var userdata = input.setJSON( jsonObj.UserDataContainer ).readUserDataContainer();
@@ -32,90 +24,51 @@ define( [
     osgWrapper.Node = function ( input, node ) {
         var jsonObj = input.getJSON();
 
-        var check = function ( /*o*/) {
-            return true;
-        };
-        if ( !check( jsonObj ) ) {
-            return undefined;
-        }
-
         osgWrapper.Object( input, node );
 
         var promiseArray = [];
 
-        var createCallback = function ( jsonCallback ) {
-            var promise = input.setJSON( jsonCallback ).readObject();
-            var df = Q.defer();
-            promiseArray.push( df.promise );
-            Q.when( promise ).then( function ( cb ) {
-                if ( cb ) {
-                    node.addUpdateCallback( cb );
-                }
-                df.resolve();
-            } );
-        };
-
         if ( jsonObj.UpdateCallbacks ) {
+            var cbAddCallback = node.addUpdateCallback.bind( node );
             for ( var j = 0, l = jsonObj.UpdateCallbacks.length; j < l; j++ ) {
-                createCallback( jsonObj.UpdateCallbacks[ j ] );
+                var promise = input.setJSON( jsonObj.UpdateCallbacks[ j ] ).readObject();
+                promiseArray.push( promise );
+                promise.then( cbAddCallback );
             }
         }
 
         if ( jsonObj.StateSet ) {
             var pp = input.setJSON( jsonObj.StateSet ).readObject();
-            var df = Q.defer();
-            promiseArray.push( df.promise );
-            Q.when( pp ).then( function ( stateset ) {
-                node.setStateSet( stateset );
-                df.resolve();
-            } );
+            promiseArray.push( pp );
+            pp.then( node.setStateSet.bind( node ) );
         }
-
-        var createChildren = function ( jsonChildren ) {
-            var promise = input.setJSON( jsonChildren ).readObject();
-            var df = Q.defer();
-            Q.when( promise ).then( function ( obj ) {
-                df.resolve( obj );
-            } );
-            return df.promise;
-        };
 
         var queue = [];
         // For each url, create a function call and add it to the queue
         if ( jsonObj.Children ) {
             for ( var i = 0, k = jsonObj.Children.length; i < k; i++ ) {
-                queue.push( createChildren( jsonObj.Children[ i ] ) );
+                queue.push( input.setJSON( jsonObj.Children[ i ] ).readObject() );
             }
         }
+        var defer = P.defer();
         // Resolve first updateCallbacks and stateset.
-        var deferred = Q.defer();
-        Q.all( promiseArray ).then( function () {
-            deferred.resolve();
-        } );
-
-        var defer = Q.defer();
-        // Need to wait until the stateset and the all the callbacks are resolved
-        Q( deferred.promise ).then( function () {
-            Q.all( queue ).then( function () {
-                // All the results from Q.all are on the argument as an array
+        P.all( promiseArray ).then( function () {
+            // Need to wait until the stateset and the all the callbacks are resolved
+            P.all( queue ).then( function ( queueNodes ) {
+                // All the results from P.all are on the argument as an array
                 // Now insert children in the right order
-                for ( var i = 0; i < queue.length; i++ )
-                    node.addChild( queue[ i ] );
+                var len = queueNodes.length;
+                for ( var i = 0; i < len; i++ )
+                    node.addChild( queueNodes[ i ] );
                 defer.resolve( node );
-            } );
-        } );
+            } ).catch( defer.reject.bind( defer ) );
+        } ).catch( defer.reject.bind( defer ) );
+
         return defer.promise;
     };
 
     osgWrapper.StateSet = function ( input, stateSet ) {
         var jsonObj = input.getJSON();
-        var check = function ( /*o*/) {
-            return true;
-        };
-
-        if ( !check( jsonObj ) ) {
-            return;
-        }
 
         osgWrapper.Object( input, stateSet );
 
@@ -125,14 +78,10 @@ define( [
 
         var createAttribute = function ( jsonAttribute ) {
             var promise = input.setJSON( jsonAttribute ).readObject();
-            var df = Q.defer();
-            promiseArray.push( df.promise );
-            Q.when( promise ).then( function ( attribute ) {
-                if ( attribute !== undefined ) {
-                    stateSet.setAttributeAndModes( attribute );
-                }
-                df.resolve();
-            } );
+            if ( promise.isRejected() ) // sometimes we have some empty objects
+                return;
+            promiseArray.push( promise );
+            promise.then( stateSet.setAttributeAndModes.bind( stateSet ) );
         };
 
         var promiseArray = [];
@@ -145,13 +94,8 @@ define( [
 
         var createTextureAttribute = function ( unit, textureAttribute ) {
             var promise = input.setJSON( textureAttribute ).readObject();
-            var df = Q.defer();
-            promiseArray.push( df.promise );
-            Q.when( promise ).then( function ( attribute ) {
-                if ( attribute )
-                    stateSet.setTextureAttributeAndModes( unit, attribute );
-                df.resolve();
-            } );
+            promiseArray.push( promise );
+            promise.then( stateSet.setTextureAttributeAndModes.bind( stateSet, unit ) );
         };
 
         if ( jsonObj.TextureAttributeList ) {
@@ -164,30 +108,18 @@ define( [
             }
         }
 
-        var defer = Q.defer();
-        Q.all( promiseArray ).then( function () {
+        var defer = P.defer();
+        P.all( promiseArray ).then( function () {
             defer.resolve( stateSet );
-        } );
+        } ).catch( defer.reject.bind( defer ) );
 
         return defer.promise;
     };
 
     osgWrapper.Material = function ( input, material ) {
         var jsonObj = input.getJSON();
-
-        var check = function ( o ) {
-            if ( o.Diffuse !== undefined &&
-                o.Emission !== undefined &&
-                o.Specular !== undefined &&
-                o.Shininess !== undefined ) {
-                return true;
-            }
-            return false;
-        };
-
-        if ( !check( jsonObj ) ) {
-            return;
-        }
+        if ( !jsonObj.Diffuse || !jsonObj.Emission || !jsonObj.Specular || jsonObj.Shininess === undefined )
+            return P.reject();
 
         osgWrapper.Object( input, material );
 
@@ -196,21 +128,13 @@ define( [
         material.setEmission( jsonObj.Emission );
         material.setSpecular( jsonObj.Specular );
         material.setShininess( jsonObj.Shininess );
-        return material;
+        return P.resolve( material );
     };
-
 
     osgWrapper.BlendFunc = function ( input, blend ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
-            if ( o.SourceRGB && o.SourceAlpha && o.DestinationRGB && o.DestinationAlpha ) {
-                return true;
-            }
-            return false;
-        };
-        if ( !check( jsonObj ) ) {
-            return;
-        }
+        if ( !jsonObj.SourceRGB || !jsonObj.SourceAlpha || !jsonObj.DestinationRGB || !jsonObj.DestinationAlpha )
+            return P.reject();
 
         osgWrapper.Object( input, blend );
 
@@ -218,63 +142,43 @@ define( [
         blend.setSourceAlpha( jsonObj.SourceAlpha );
         blend.setDestinationRGB( jsonObj.DestinationRGB );
         blend.setDestinationAlpha( jsonObj.DestinationAlpha );
-        return blend;
+        return P.resolve( blend );
     };
 
     osgWrapper.CullFace = function ( input, attr ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
-            if ( o.Mode !== undefined ) {
-                return true;
-            }
-            return false;
-        };
-        if ( !check( jsonObj ) ) {
-            return;
-        }
+        if ( jsonObj.Mode === undefined )
+            return P.reject();
 
         osgWrapper.Object( input, attr );
         attr.setMode( jsonObj.Mode );
-        return attr;
+        return P.resolve( attr );
     };
 
     osgWrapper.BlendColor = function ( input, attr ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
-            if ( o.ConstantColor !== undefined ) {
-                return true;
-            }
-            return false;
-        };
-        if ( !check( jsonObj ) ) {
-            return;
-        }
+        if ( !jsonObj.ConstantColor )
+            return P.reject();
 
         osgWrapper.Object( input, attr );
         attr.setConstantColor( jsonObj.ConstantColor );
-        return attr;
+        return P.resolve( attr );
     };
 
     osgWrapper.Light = function ( input, light ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
-            if ( o.LightNum !== undefined &&
-                o.Ambient !== undefined &&
-                o.Diffuse !== undefined &&
-                o.Direction !== undefined &&
-                o.Position !== undefined &&
-                o.Specular !== undefined &&
-                o.SpotCutoff !== undefined &&
-                o.LinearAttenuation !== undefined &&
-                o.ConstantAttenuation !== undefined &&
-                o.QuadraticAttenuation !== undefined ) {
-                return true;
-            }
-            return false;
-        };
-        if ( !check( jsonObj ) ) {
-            return undefined;
-        }
+
+        if ( !jsonObj.Ambient ||
+            !jsonObj.Diffuse ||
+            !jsonObj.Direction ||
+            !jsonObj.Position ||
+            !jsonObj.Specular ||
+            jsonObj.LightNum === undefined ||
+            jsonObj.SpotCutoff === undefined ||
+            jsonObj.LinearAttenuation === undefined ||
+            jsonObj.ConstantAttenuation === undefined ||
+            jsonObj.QuadraticAttenuation === undefined )
+            return P.reject();
 
         osgWrapper.Object( input, light );
         light.setAmbient( jsonObj.Ambient );
@@ -291,33 +195,18 @@ define( [
         if ( jsonObj.SpotExponent !== undefined ) {
             light.setSpotBlend( jsonObj.SpotExponent / 128.0 );
         }
-        return light;
+        return P.resolve( light );
     };
 
     osgWrapper.Texture = function ( input, texture ) {
         var jsonObj = input.getJSON();
-        var check = function ( /*o*/) {
-            return true;
-        };
-        if ( !check( jsonObj ) ) {
-            return undefined;
-        }
 
         osgWrapper.Object( input, texture );
 
-        if ( jsonObj.MinFilter !== undefined ) {
-            texture.setMinFilter( jsonObj.MinFilter );
-        }
-        if ( jsonObj.MagFilter !== undefined ) {
-            texture.setMagFilter( jsonObj.MagFilter );
-        }
-
-        if ( jsonObj.WrapT !== undefined ) {
-            texture.setWrapT( jsonObj.WrapT );
-        }
-        if ( jsonObj.WrapS !== undefined ) {
-            texture.setWrapS( jsonObj.WrapS );
-        }
+        if ( jsonObj.MinFilter ) texture.setMinFilter( jsonObj.MinFilter );
+        if ( jsonObj.MagFilter ) texture.setMagFilter( jsonObj.MagFilter );
+        if ( jsonObj.WrapT ) texture.setWrapT( jsonObj.WrapT );
+        if ( jsonObj.WrapS ) texture.setWrapS( jsonObj.WrapS );
 
         // no file return dummy texture
         var file = jsonObj.File;
@@ -325,140 +214,93 @@ define( [
             file = 'no-image-provided';
         }
 
-        var defer = Q.defer();
-        Q.when( input.readImageURL( file ) ).then(
-            function ( img ) {
-                texture.setImage( img );
-                defer.resolve( texture );
-            } );
+        var defer = P.defer();
+        input.readImageURL( file ).then( function ( img ) {
+            texture.setImage( img );
+            defer.resolve( texture );
+        } ).catch( defer.reject.bind( defer ) );
         return defer.promise;
     };
 
     osgWrapper.Projection = function ( input, node ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
-            if ( o.Matrix !== undefined ) {
-                return true;
-            }
-            return false;
-        };
-        if ( !check( jsonObj ) ) {
-            return;
-        }
+        if ( !jsonObj.Matrix )
+            return P.reject();
 
         var promise = osgWrapper.Node( input, node );
-
-        if ( jsonObj.Matrix !== undefined ) {
-            node.setMatrix( jsonObj.Matrix );
-        }
+        node.setMatrix( jsonObj.Matrix );
         return promise;
     };
 
     osgWrapper.MatrixTransform = function ( input, node ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
-            if ( o.Matrix ) {
-                return true;
-            }
-            return false;
-        };
-        if ( !check( jsonObj ) ) {
-            return undefined;
-        }
+        if ( !jsonObj.Matrix )
+            return P.reject();
 
         var promise = osgWrapper.Node( input, node );
-
-        if ( jsonObj.Matrix !== undefined ) {
-            node.setMatrix( jsonObj.Matrix );
-        }
+        node.setMatrix( jsonObj.Matrix );
         return promise;
     };
 
     osgWrapper.LightSource = function ( input, node ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
-            if ( o.Light !== undefined ) {
-                return true;
-            }
-            return false;
-        };
-        if ( !check( jsonObj ) ) {
-            return undefined;
-        }
+        if ( !jsonObj.Light )
+            return P.reject();
 
-        var defer = Q.defer();
+        var defer = P.defer();
         var promise = osgWrapper.Node( input, node );
-        Q.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
+        P.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
             var light = args[ 0 ];
             //var lightsource = args[ 1 ];
             node.setLight( light );
             defer.resolve( node );
-        } );
+        } ).catch( defer.reject.bind( defer ) );
         return defer.promise;
     };
 
     osgWrapper.Geometry = function ( input, node ) {
         var jsonObj = input.getJSON();
-        var check = function ( o ) {
-            return o.VertexAttributeList !== undefined;
-        };
-        if ( !check( jsonObj ) ) {
-            return;
-        }
+        if ( !jsonObj.VertexAttributeList )
+            return P.reject();
+
         jsonObj.PrimitiveSetList = jsonObj.PrimitiveSetList || [];
 
         var arraysPromise = [];
         arraysPromise.push( osgWrapper.Node( input, node ) );
 
-        var createPrimitive = function ( jsonPrimitive ) {
-            var defer = Q.defer();
-            arraysPromise.push( defer.promise );
-            var promise = input.setJSON( jsonPrimitive ).readPrimitiveSet();
-            Q.when( promise ).then( function ( primitiveSet ) {
-                if ( primitiveSet !== undefined ) {
-                    node.getPrimitives().push( primitiveSet );
-                }
-                defer.resolve( primitiveSet );
-            } );
-        };
-
-        for ( var i = 0, l = jsonObj.PrimitiveSetList.length; i < l; i++ ) {
-            var entry = jsonObj.PrimitiveSetList[ i ];
-            createPrimitive( entry );
+        var prims = node.getPrimitives();
+        var cbAddPrimitives = prims.push.bind( prims );
+        var i = 0;
+        var l = jsonObj.PrimitiveSetList.length;
+        for ( i = 0; i < l; i++ ) {
+            var promisePrimitive = input.setJSON( jsonObj.PrimitiveSetList[ i ] ).readPrimitiveSet();
+            arraysPromise.push( promisePrimitive );
+            promisePrimitive.then( cbAddPrimitives );
         }
 
-        var createVertexAttribute = function ( name, jsonAttribute ) {
-            var defer = Q.defer();
-            arraysPromise.push( defer.promise );
-            var promise = input.setJSON( jsonAttribute ).readBufferArray();
-            Q.when( promise ).then( function ( buffer ) {
-                if ( buffer !== undefined ) {
-                    node.getVertexAttributeList()[ name ] = buffer;
-                }
-                defer.resolve( buffer );
-            } );
+        var cbSetBuffer = function ( name, buffer ) {
+            this.getVertexAttributeList()[ name ] = buffer;
         };
-        for ( var key in jsonObj.VertexAttributeList ) {
-            if ( jsonObj.VertexAttributeList.hasOwnProperty( key ) ) {
-                createVertexAttribute( key, jsonObj.VertexAttributeList[ key ] );
-            }
+
+        var vList = jsonObj.VertexAttributeList;
+        var keys = Object.keys( vList );
+        l = keys.length;
+        for ( i = 0; i < l; i++ ) {
+            var name = keys[ i ];
+            var promiseBuffer = input.setJSON( vList[ name ] ).readBufferArray();
+            arraysPromise.push( promiseBuffer );
+            promiseBuffer.then( cbSetBuffer.bind( node, name ) );
         }
 
-        var defer = Q.defer();
-        Q.all( arraysPromise ).then( function () {
+        var defer = P.defer();
+        P.all( arraysPromise ).then( function () {
             defer.resolve( node );
-        } );
+        } ).catch( defer.reject.bind( defer ) );
         return defer.promise;
     };
 
     osgWrapper.PagedLOD = function ( input, plod ) {
         var jsonObj = input.getJSON();
-        var check = function ( /*o*/) {
-            return true;
-        };
-        if ( !check( jsonObj ) ) {
-            return undefined;
-        }
 
         osgWrapper.Object( input, plod );
         // Parse center Mode
@@ -495,30 +337,22 @@ define( [
         // TODO: Check also if we have a path from json
         plod.setDatabasePath( input.getDatabasePath() );
 
-        var createChildren = function ( jsonChildren ) {
-            var promise = input.setJSON( jsonChildren ).readObject();
-            var df = Q.defer();
-            Q.when( promise ).then( function ( obj ) {
-                df.resolve( obj );
-            } );
-            return df.promise;
-        };
-
         var queue = [];
         // For each url, create a function call and add it to the queue
         if ( jsonObj.Children ) {
             for ( var j = 0, k = jsonObj.Children.length; j < k; j++ ) {
-                queue.push( createChildren( jsonObj.Children[ j ] ) );
+                queue.push( input.setJSON( jsonObj.Children[ j ] ).readObject() );
             }
         }
 
-        var defer = Q.defer();
-        Q.all( queue ).then( function () {
-            // All the results from Q.all are on the argument as an array
-            for ( i = 0; i < queue.length; i++ )
-                plod.addChildNode( queue[ i ] );
+        var defer = P.defer();
+        P.all( queue ).then( function ( queueNodes ) {
+            // All the results from P.all are on the argument as an array
+            var len = queueNodes.length;
+            for ( i = 0; i < len; i++ )
+                plod.addChildNode( queueNodes[ i ] );
             defer.resolve( plod );
-        } );
+        } ).catch( defer.reject.bind( defer ) );
 
         return defer.promise;
     };

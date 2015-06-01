@@ -1,9 +1,9 @@
 ( function () {
     'use strict';
 
-    window.OSG.globalify();
-    var osg = window.osg;
-    var osgViewer = window.osgViewer;
+    var OSG = window.OSG;
+    var osg = OSG.osg;
+    var osgViewer = OSG.osgViewer;
 
     function createScene() {
 
@@ -21,8 +21,8 @@
         // we will render a textured quad on the rtt target with a fixed texture without
         // motion
         var textureQuad = osg.createTexturedQuadGeometry( 0, 0, 0,
-                                                  rttSize[ 0 ], 0, 0,
-                                                  0, rttSize[ 1 ], 0 );
+            rttSize[ 0 ], 0, 0,
+            0, rttSize[ 1 ], 0 );
         textureQuad.getOrCreateStateSet().setTextureAttributeAndModes( 0, osg.Texture.createFromURL( 'textures/sol_trauma_periph.png' ) );
         rttCamera.addChild( textureQuad );
 
@@ -39,8 +39,8 @@
         // for this we will create a textured quad that will use the rtt
         // target texture
         var texturedQuadUsingTargetTexture = osg.createTexturedQuadGeometry( -25, -25, 0,
-                                                                     50, 0, 0,
-                                                                     0, 50, 0 );
+            50, 0, 0,
+            0, 50, 0 );
         texturedQuadUsingTargetTexture.getOrCreateStateSet().setTextureAttributeAndModes( 0, rttTargetTexture );
 
         var root = new osg.Node();
@@ -75,40 +75,4 @@
     };
 
     window.addEventListener( 'load', main, true );
-
-
-    // var  appendScript = function(scriptUrl){
-    //   var s = document.createElement('script');
-    //   s.type = 'text/javascript';
-    //   s.src = scriptUrl;
-    //   document.head.appendChild(s);
-    // };
-
-    // var params = window.location.href.split('?');
-    // params = (params.length > 1) ? params[1].split('&') : [];
-    // if (params.length)  {
-    //   appendScript ('../vendors/Require.js');
-
-
-    //   window.addEventListener('load', function(){
-    //       //var requirejs = {};
-    //       requirejs.config ({
-    //       baseUrl: '../../sources/',
-    //       paths: {
-    //             'require/text': 'vendors/require/text',
-    //             'Q': 'vendors/Q',
-    //             'Hammer': 'vendors/Hammer',
-    //             'Leap': 'vendors/Leap'
-    //         }
-    //       });
-    //     require(['OSG'], function(OSG){
-    //         window.OSG = OSG;
-    //         main();
-    //     });
-    //   });
-    // }
-    // else{
-    //   appendScript ('../../builds/active/OSG.js');
-    //   window.addEventListener('load', main, true);
-    // }
 } )();
