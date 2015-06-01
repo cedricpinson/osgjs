@@ -1,8 +1,8 @@
 define( [
-    'q',
+    'bluebird',
     'osg/Utils',
     'osg/Image'
-], function ( Q, MACROUTILS, Image ) {
+], function ( P, MACROUTILS, Image ) {
 
     'use strict';
 
@@ -45,18 +45,13 @@ define( [
 
         whenReady: function () {
 
-            if ( !this._imageObject )
-                return Q( false );
+            if ( !this._imageObject ) {
+                return P.reject();
+            }
 
             if ( !this._canPlayDefered ) {
-                this._canPlayDefered = Q.defer();
-                this._imageObject.addEventListener(
-                    'canplaythrough',
-                    function () {
-                        this._canPlayDefered.resolve( this );
-                    }.bind( this ),
-
-                    true );
+                this._canPlayDefered = P.defer();
+                this._imageObject.addEventListener( 'canplaythrough', this._canPlayDefered.resolve.bind( this ), true );
             }
 
             return this._canPlayDefered.promise;

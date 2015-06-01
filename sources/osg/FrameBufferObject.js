@@ -55,6 +55,16 @@ define( [
         return availableTime;
     };
 
+    FrameBufferObject.flushAllDeletedGLFrameBuffers = function ( gl ) {
+        if ( !FrameBufferObject._sDeletedGLFrameBufferCache.has( gl ) ) return;
+        var deleteList = FrameBufferObject._sDeletedGLFrameBufferCache.get( gl );
+        var numBuffers = deleteList.length;
+        for ( var i = numBuffers - 1; i >= 0; i-- ) {
+            gl.deleteFrameBuffer( deleteList[ i ] );
+            deleteList.splice( i, 1 );
+        }
+    };
+
     /** @lends FrameBufferObject.prototype */
     FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
         attributeType: 'FrameBufferObject',

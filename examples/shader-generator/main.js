@@ -1,13 +1,13 @@
 ( function () {
     'use strict';
 
+    var Q = window.Q;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
     var osgShader = OSG.osgShader;
     var osgViewer = OSG.osgViewer;
     var $ = window.$;
-
 
     var CustomCompiler = window.CustomCompiler;
     var RampAttribute = window.RampAttribute;
@@ -22,7 +22,6 @@
         };
 
     };
-
 
     var convertColor = function ( color ) {
 
@@ -121,7 +120,7 @@
                 this._model = new osg.Node();
 
                 var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
-                Q.when( request, function ( model ) {
+                request.then( function ( model ) {
 
                     var mt = new osg.MatrixTransform();
                     osg.Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, mt.getMatrix() );

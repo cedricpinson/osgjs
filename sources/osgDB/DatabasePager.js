@@ -3,12 +3,12 @@
  */
 
 define( [
-    'q',
+    'bluebird',
     'osg/Utils',
     'osg/NodeVisitor',
     'osg/PagedLOD',
     'osg/Timer'
-], function ( Q, MACROUTILS, NodeVisitor, PagedLOD, Timer ) {
+], function ( P, MACROUTILS, NodeVisitor, PagedLOD, Timer ) {
 
     'use strict';
     /**
@@ -279,7 +279,7 @@ define( [
 
             // Load from function
             if ( dbrequest._function !== undefined ) {
-                Q.when( this.loadNodeFromFunction( dbrequest._function, dbrequest._group ) ).then( function ( child ) {
+                this.loadNodeFromFunction( dbrequest._function, dbrequest._group ).then( function ( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
                     that._pendingNodes.push( dbrequest );
@@ -287,7 +287,7 @@ define( [
                 } );
 
             } else if ( dbrequest._url !== '' ) { // Load from URL
-                Q.when( this.loadNodeFromURL( dbrequest._url ) ).then( function ( child ) {
+                this.loadNodeFromURL( dbrequest._url ).then( function ( child ) {
                     that._downloadingRequestsNumber--;
                     dbrequest._loadedModel = child;
                     that._pendingNodes.push( dbrequest );
@@ -298,26 +298,22 @@ define( [
 
         loadNodeFromFunction: function ( func, plod ) {
             // Need to call with pagedLOD as parent, to be able to have multiresolution structures.
-            var defer = Q.defer();
-            Q.when( ( func )( plod ) ).then( function ( child ) {
-                defer.resolve( child );
-            } );
-            return defer.promise;
+            var promise = ( func )( plod );
+            // should func always return a promise ?
+            if ( !promise ) return P.reject();
+            if ( promise && promise.then ) return promise;
+            return P.resolve( promise );
         },
 
         loadNodeFromURL: function ( url ) {
             var ReaderParser = require( 'osgDB/ReaderParser' );
-            var defer = Q.defer();
             // Call to ReaderParser just in case there is a custom readNodeURL Callback
             // See osgDB/Options.js and/or osgDB/Input.js
             // TODO: We should study if performance can be improved if separating the XHTTP request from
             // the parsing. This way several/many request could be done at the same time.
             // Also we should be able to cancel requests, so there is a need to have access
             // to the HTTPRequest Object
-            Q.when( ReaderParser.readNodeURL( url ) ).then( function ( child ) {
-                defer.resolve( child );
-            } );
-            return defer.promise;
+            return ReaderParser.readNodeURL( url );
         },
 
         releaseGLExpiredSubgraphs: function ( availableTime ) {

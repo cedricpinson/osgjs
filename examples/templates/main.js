@@ -45,7 +45,7 @@ Example.prototype = {
             // change the matrix
             osg.Matrix.makeScale( value, value, value, matrixTransform.getMatrix() );
             matrixTransform.dirtyBound();
-        });
+        } );
 
 
         scene.addChild( matrixTransform );

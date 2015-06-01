@@ -1,84 +1,85 @@
-'use strict';
+( function () {
+    'use strict';
 
-window.OSG.globalify();
-
-var osg = window.osg;
-var osgUtil = window.osgUtil;
-
-/*
-    This filter simulate the reduction of an image's brightness at the periphery compared to the image center.
-    It can be used as an artistic effect or to reproduce the look of old photo and films
-*/
-function getPostSceneVignette( sceneTexture ) {
-
-    var lensRadius = osg.Uniform.createFloat2( [ 0.8, 0.25 ], 'lensRadius' );
+    var OSG = window.OSG;
+    var osg = OSG.osg;
+    var osgUtil = OSG.osgUtil;
 
     /*
-        2 radiuses are used:
-        Pixels which are inside  the circle defined by the inner radius are not altered
-        Pixels which are outside the circle defined by the outer radius are set to black
-        Pixels which are in between these two circles are progressively darkened towards the exterior
+        This filter simulate the reduction of an image's brightness at the periphery compared to the image center.
+        It can be used as an artistic effect or to reproduce the look of old photo and films
     */
-    var vignetteFilter = new osgUtil.Composer.Filter.Custom(
-        [
-            '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'varying vec2 FragTexCoord0;',
-            'uniform sampler2D Texture0;',
-            'uniform vec2 lensRadius;',
+    window.getPostSceneVignette = function ( sceneTexture ) {
 
-            'void main(void) {',
-            '  vec4 color = texture2D( Texture0, FragTexCoord0);',
-            '  float dist = distance(FragTexCoord0.xy, vec2(0.5,0.5));',
-            '  color.rgb *= smoothstep(lensRadius.x, lensRadius.y, dist);',
-            '  gl_FragColor = color;',
-            '}',
-        ].join( '\n' ), {
-            'Texture0': sceneTexture,
-            'lensRadius': lensRadius,
-        }
-    );
+        var lensRadius = osg.Uniform.createFloat2( [ 0.8, 0.25 ], 'lensRadius' );
 
-    var effect = {
+        /*
+            2 radiuses are used:
+            Pixels which are inside  the circle defined by the inner radius are not altered
+            Pixels which are outside the circle defined by the outer radius are set to black
+            Pixels which are in between these two circles are progressively darkened towards the exterior
+        */
+        var vignetteFilter = new osgUtil.Composer.Filter.Custom(
+            [
+                '',
+                '#ifdef GL_ES',
+                'precision highp float;',
+                '#endif',
+                'varying vec2 FragTexCoord0;',
+                'uniform sampler2D Texture0;',
+                'uniform vec2 lensRadius;',
 
-        name: 'Vignette',
-        needCommonCube: true,
+                'void main(void) {',
+                '  vec4 color = texture2D( Texture0, FragTexCoord0);',
+                '  float dist = distance(FragTexCoord0.xy, vec2(0.5,0.5));',
+                '  color.rgb *= smoothstep(lensRadius.x, lensRadius.y, dist);',
+                '  gl_FragColor = color;',
+                '}',
+            ].join( '\n' ), {
+                'Texture0': sceneTexture,
+                'lensRadius': lensRadius,
+            }
+        );
 
-        buildComposer: function ( finalTexture ) {
+        var effect = {
 
-            var composer = new osgUtil.Composer();
-            composer.addPass( vignetteFilter, finalTexture );
-            composer.build();
-            return composer;
-        },
+            name: 'Vignette',
+            needCommonCube: true,
 
-        buildGui: function ( mainGui ) {
+            buildComposer: function ( finalTexture ) {
 
-            var folder = mainGui.addFolder( this.name );
-            folder.open();
+                var composer = new osgUtil.Composer();
+                composer.addPass( vignetteFilter, finalTexture );
+                composer.build();
+                return composer;
+            },
 
-            var vignette = {
-                innerRadius: lensRadius.get()[ 1 ],
-                outerRadius: lensRadius.get()[ 0 ]
-            };
+            buildGui: function ( mainGui ) {
 
-            var innerCtrl = folder.add( vignette, 'innerRadius', 0, 1 );
-            var outerCtrl = folder.add( vignette, 'outerRadius', 0, 1 );
+                var folder = mainGui.addFolder( this.name );
+                folder.open();
 
-            innerCtrl.onChange( function ( value ) {
-                lensRadius.get()[ 1 ] = value;
-                lensRadius.dirty();
-            } );
+                var vignette = {
+                    innerRadius: lensRadius.get()[ 1 ],
+                    outerRadius: lensRadius.get()[ 0 ]
+                };
 
-            outerCtrl.onChange( function ( value ) {
-                lensRadius.get()[ 0 ] = value;
-                lensRadius.dirty();
-            } );
-        }
+                var innerCtrl = folder.add( vignette, 'innerRadius', 0, 1 );
+                var outerCtrl = folder.add( vignette, 'outerRadius', 0, 1 );
+
+                innerCtrl.onChange( function ( value ) {
+                    lensRadius.get()[ 1 ] = value;
+                    lensRadius.dirty();
+                } );
+
+                outerCtrl.onChange( function ( value ) {
+                    lensRadius.get()[ 0 ] = value;
+                    lensRadius.dirty();
+                } );
+            }
+        };
+
+        return effect;
+
     };
-
-    return effect;
-
-}
+} )();

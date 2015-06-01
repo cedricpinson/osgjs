@@ -1,15 +1,12 @@
-'use strict';
-var RampAttribute;
-var RampNode;
-
 ( function () {
+    'use strict';
 
     var osgShader = window.OSG.osgShader;
     var osg = window.OSG.osg;
     var shaderNode = osgShader.node;
     var factory = osgShader.nodeFactory;
 
-    RampAttribute = function () {
+    var RampAttribute = window.RampAttribute = function () {
         osg.StateAttribute.call( this );
 
         this._attributeEnable = false;
@@ -45,7 +42,7 @@ var RampNode;
 
     // this node will call a function ramp in the shader
     // it will do a very basic operation like ramping the lighting
-    RampNode = function () {
+    var RampNode = window.RampNode = function () {
         shaderNode.BaseOperator.apply( this, arguments );
     };
 
@@ -70,6 +67,4 @@ var RampNode;
     } );
 
     factory.registerNode( 'Ramp', RampNode );
-
-
 } )();
