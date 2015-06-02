@@ -14,7 +14,7 @@ var createScene = function ( viewer ) {
 
     var request = osgDB.readNodeURL( '../media/models/animation/4x4_anim.osgjs' );
 
-    Q( request ).then( function ( node ) {
+    request.then( function ( node ) {
         root.addChild( node );
 
         viewer.getManipulator().computeHomePosition();

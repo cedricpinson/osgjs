@@ -113,7 +113,7 @@ define( [
     };
 
 
-    BasicAnimationManager.prototype = MACROUTILS.objectInherit( Object.prototype, {
+    BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype, {
 
 
         // run a visitor to collect all animationUpdateCallback found in node tree
