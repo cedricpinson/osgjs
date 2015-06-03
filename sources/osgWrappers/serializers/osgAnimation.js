@@ -186,7 +186,6 @@ define( [
 
         osgWrapper.Object( input, st );
 
-        st.setName( jsonObj.Name );
         if ( jsonObj.Translate ) st.setTranslate( jsonObj.Translate );
         return P.resolve( st );
     };
@@ -198,7 +197,6 @@ define( [
 
         osgWrapper.Object( input, st );
 
-        st.setName( jsonObj.Name );
         if ( jsonObj.Quaternion ) st.setQuaternion( jsonObj.Quaternion );
         return P.resolve( st );
     };
@@ -222,7 +220,6 @@ define( [
 
         osgWrapper.Object( input, sme );
 
-        sme.setName( jsonObj.Name );
         if ( jsonObj.Matrix ) sme.setMatrix( jsonObj.Matrix );
 
         return P.resolve( sme );
@@ -244,7 +241,29 @@ define( [
         return P.resolve( bone );
     };
 
+    osgAnimationWrapper.UpdateBone = function ( input, updateBone ) {
+        osgAnimationWrapper.UpdateMatrixTransform( input, updateBone );
+        return P.resolve( updateBone );
+    };
+
+    osgAnimationWrapper.UpdateSkeleton = function ( input, upSkl ) {
+        osgWrapper.Object( input, upSkl );
+        return P.resolve( upSkl );
+    };
+
     osgAnimationWrapper.Skeleton = osgWrapper.MatrixTransform;
+
+    osgAnimationWrapper.RigGeometry = function ( input, rigGeom ) {
+        var jsonObj = input.getJSON();
+
+        osgWrapper.Geometry( input, rigGeom );
+
+        input.setJSON( jsonObj.SourceGeometry );
+        if ( !osgWrapper.Geometry( input, rigGeom.getOrCreateSourceGeometry() ) )
+            return P.reject();
+
+        return P.resolve( rigGeom );
+    };
 
     return osgAnimationWrapper;
 } );

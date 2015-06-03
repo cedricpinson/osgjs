@@ -25,14 +25,16 @@ define( [
     'osgAnimation/UpdateSkeleton',
     'osgAnimation/UpdateBone',
     'osgAnimation/StackedMatrixElement',
-    'osgAnimation/MatrixTarget'
-], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, CollectAnimationUpdateCallbackVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target, Skeleton, UpdateSkeleton, UpdateBone, StackedMatrixElement, MatrixTarget ) {
+    'osgAnimation/MatrixTarget',
+    'osgAnimation/Bone'
+], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, CollectAnimationUpdateCallbackVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target, Skeleton, UpdateSkeleton, UpdateBone, StackedMatrixElement, MatrixTarget, Bone ) {
 
     var osgAnimation = {};
 
     osgAnimation.Animation = Animation;
     osgAnimation.AnimationUpdateCallback = AnimationUpdateCallback;
     osgAnimation.BasicAnimationManager = BasicAnimationManager;
+    osgAnimation.Bone = Bone;
     osgAnimation.Channel = Channel;
     MACROUTILS.objectMix( osgAnimation, Easing );
     osgAnimation.FloatLerpChannel = FloatLerpChannel;
