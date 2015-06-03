@@ -92,7 +92,6 @@ define( [
             return this._invMatrixFromSkeletonToGeometry;
         },
 
-
         getSourceGeometry: function () {
             return this._geometry;
         },

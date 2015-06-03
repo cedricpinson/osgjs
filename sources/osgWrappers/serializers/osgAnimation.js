@@ -9,7 +9,7 @@ define( [
 
     var osgAnimationWrapper = {};
 
-    osgAnimationWrapper.Animation = function ( input, animation ) {
+    osgAnimationWrapper.Animation = function ( input ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.Name || !jsonObj.Channels || jsonObj.Channels.length === 0 )
             return P.reject();
@@ -17,13 +17,22 @@ define( [
         var channels = [];
         var cb = channels.push.bind( channels );
 
+        var arrayChannelsPromise = [];
+
         // channels
         for ( var i = 0, l = jsonObj.Channels.length; i < l; i++ ) {
-            input.setJSON( jsonObj.Channels[ i ] ).readObject().then( cb );
+            var promise = input.setJSON( jsonObj.Channels[ i ] ).readObject();
+            promise.then( cb );
+            arrayChannelsPromise.push( promise );
         }
 
-        animation = Animation.createAnimation( channels, jsonObj.Name );
-        return P.resolve( animation );
+        var defer = P.defer();
+        P.all( arrayChannelsPromise ).then( function () {
+            var animation = Animation.createAnimation( channels, jsonObj.Name );
+            defer.resolve( animation );
+        } );
+
+        return defer.promise;
     };
 
     osgAnimationWrapper.StandardVec3Channel = function ( input, channel, creator ) {
@@ -47,7 +56,7 @@ define( [
             keys[ id + 2 ] = nodekey[ 3 ];
         }
 
-        channel = creator( keys, times );
+        channel = creator( keys, times, jsonObj.TargetName );
         return P.resolve( channel );
     };
 
@@ -73,7 +82,7 @@ define( [
             keys[ id + 3 ] = nodekey[ 4 ];
         }
 
-        channel = creator( keys, times );
+        channel = creator( keys, times, jsonObj.TargetName );
         return P.resolve( channel );
     };
 
@@ -94,7 +103,7 @@ define( [
             keys[ i ] = nodekey[ 1 ];
         }
 
-        channel = creator( keys, times );
+        channel = creator( keys, times, jsonObj.TargetName );
         return P.resolve( channel );
     };
 
@@ -148,11 +157,25 @@ define( [
         osgWrapper.Object( input, umt );
 
         var stack = umt.getStackedTransforms();
-        var cb = stack.push.bind( stack );
 
+        var cb = function( stackTransfrom ) {
+            stack.push( stackTransfrom );
+        };
+
+        var promiseArray = [];
         for ( var i = 0, l = jsonObj.StackedTransforms.length; i < l; i++ ) {
-            input.setJSON( jsonObj.StackedTransforms[ i ] ).readObject().then( cb );
+            var promise = input.setJSON( jsonObj.StackedTransforms[ i ] ).readObject();
+            promise.then( cb );
+            promiseArray.push( promise );
         }
+
+        // when UpdateMatrixTransform is ready
+        // compute the default value data
+        var all = P.all( promiseArray );
+        all.then( function () {
+            umt.computeChannels();
+        } );
+
         return P.resolve( umt );
     };
 
