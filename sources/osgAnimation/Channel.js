@@ -14,8 +14,6 @@ define( [
         Vec3CubicBezier: 4
     };
 
-
-
     var Channel = function () {
     };
 
@@ -55,22 +53,12 @@ define( [
         return initChannel( ChannelType.Quat, keys, times, targetName );
     };
 
-    var createFloatCubicBezierChannel = function ( keys, times ) {
-        var channel = {
-            type: ChannelType.FloatCubicBezier,
-            keys: keys,
-            times: times
-        };
-        return initChannel( channel );
+    var createFloatCubicBezierChannel = function ( keys, times, targetName ) {
+        return initChannel( ChannelType.FloatCubicBezier, keys, times, targetName );
     };
 
-    var createVec3CubicBezierChannel = function ( keys, times ) {
-        var channel = {
-            type: ChannelType.Vec3CubicBezier,
-            keys: keys,
-            times: times
-        };
-        return initChannel( channel );
+    var createVec3CubicBezierChannel = function ( keys, times, targetName ) {
+        return initChannel( ChannelType.Vec3CubicBezier, keys, times, targetName );
     };
 
 

@@ -37,23 +37,26 @@ define( [
 
     osgAnimationWrapper.StandardVec3Channel = function ( input, channel, creator ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name )
+        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Key || jsonObj.KeyFrames.Key.length !== 3 )
             return P.reject();
 
-        var size = jsonObj.KeyFrames.length;
+        var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
 
         // channels
         var keys = new Float32Array( size * 3 );
         var times = new Float32Array( size );
 
-        for ( var i = 0; i < size; i++ ) {
-            var nodekey = jsonObj.KeyFrames[ i ];
-            var id = i * 3;
-            times[ i ] = nodekey[ 0 ];
+        var jsTime = jsonObj.KeyFrames.Time.Array.Float32Array.Elements;
+        var jsKeyX = jsonObj.KeyFrames.Key[ 0 ].Array.Float32Array.Elements;
+        var jsKeyY = jsonObj.KeyFrames.Key[ 1 ].Array.Float32Array.Elements;
+        var jsKeyZ = jsonObj.KeyFrames.Key[ 2 ].Array.Float32Array.Elements;
 
-            keys[ id ] = nodekey[ 1 ];
-            keys[ id + 1 ] = nodekey[ 2 ];
-            keys[ id + 2 ] = nodekey[ 3 ];
+        for ( var i = 0; i < size; i++ ) {
+            var id = i * 3;
+            times[ i ] = jsTime[ i ];
+            keys[ id++ ] = jsKeyX[ i ];
+            keys[ id++ ] = jsKeyY[ i ];
+            keys[ id ] = jsKeyZ[ i ];
         }
 
         channel = creator( keys, times, jsonObj.TargetName );
@@ -62,24 +65,28 @@ define( [
 
     osgAnimationWrapper.StandardQuatChannel = function ( input, channel, creator ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name )
+        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Key || jsonObj.KeyFrames.Key.length !== 4 )
             return P.reject();
 
-        var size = jsonObj.KeyFrames.length;
+        var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
 
         // channels
         var keys = new Float32Array( size * 4 );
         var times = new Float32Array( size );
 
-        for ( var i = 0; i < size; i++ ) {
-            var nodekey = jsonObj.KeyFrames[ i ];
-            var id = i * 4;
-            times[ i ] = nodekey[ 0 ];
+        var jsTime = jsonObj.KeyFrames.Time.Array.Float32Array.Elements;
+        var jsKeyX = jsonObj.KeyFrames.Key[ 0 ].Array.Float32Array.Elements;
+        var jsKeyY = jsonObj.KeyFrames.Key[ 1 ].Array.Float32Array.Elements;
+        var jsKeyZ = jsonObj.KeyFrames.Key[ 2 ].Array.Float32Array.Elements;
+        var jsKeyW = jsonObj.KeyFrames.Key[ 3 ].Array.Float32Array.Elements;
 
-            keys[ id ] = nodekey[ 1 ];
-            keys[ id + 1 ] = nodekey[ 2 ];
-            keys[ id + 2 ] = nodekey[ 3 ];
-            keys[ id + 3 ] = nodekey[ 4 ];
+        for ( var i = 0; i < size; i++ ) {
+            var id = i * 4;
+            times[ i ] = jsTime[ i ];
+            keys[ id++ ] = jsKeyX[ i ];
+            keys[ id++ ] = jsKeyY[ i ];
+            keys[ id++ ] = jsKeyZ[ i ];
+            keys[ id ] = jsKeyW[ i ];
         }
 
         channel = creator( keys, times, jsonObj.TargetName );
@@ -88,19 +95,21 @@ define( [
 
     osgAnimationWrapper.StandardFloatChannel = function ( input, channel, creator ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name )
+        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Key )
             return P.reject();
 
-        var size = jsonObj.KeyFrames.length;
+        var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
 
         // channels
         var keys = new Float32Array( size );
         var times = new Float32Array( size );
 
+        var jsTime = jsonObj.KeyFrames.Time.Array.Float32Array.Elements;
+        var jsKey = jsonObj.KeyFrames.Key.Array.Float32Array.Elements;
+
         for ( var i = 0; i < size; i++ ) {
-            var nodekey = jsonObj.KeyFrames[ i ];
-            times[ i ] = nodekey[ 0 ];
-            keys[ i ] = nodekey[ 1 ];
+            times[ i ] = jsTime[ i ];
+            keys[ i ] = jsKey[ i ];
         }
 
         channel = creator( keys, times, jsonObj.TargetName );
@@ -172,7 +181,7 @@ define( [
             interlaceKeyFrames();
         } );
 
-        channel = Channel.createFloatCubicBezierChannel( keys, times );
+        channel = Channel.createFloatCubicBezierChannel( keys, times, jsonObj.TargetName );
         return P.resolve( channel );
     };
 
@@ -255,7 +264,7 @@ define( [
 
         P.all( arraysPromise ).then( interlaceKeyFrames );
 
-        channel = Channel.createVec3CubicBezierChannel( keys, times );
+        channel = Channel.createVec3CubicBezierChannel( keys, times, jsonObj.TargetName );
         return P.resolve( channel );
     };
 
@@ -287,14 +296,15 @@ define( [
 
     osgAnimationWrapper.UpdateMatrixTransform = function ( input, umt ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.Name || !jsonObj.StackedTransforms )
+        //  some stackedTransform on bones has no name but the transform is usefull
+        if ( /*!jsonObj.Name ||*/ !jsonObj.StackedTransforms )
             return P.reject();
 
         osgWrapper.Object( input, umt );
 
         var stack = umt.getStackedTransforms();
 
-        var cb = function( stackTransfrom ) {
+        var cb = function ( stackTransfrom ) {
             stack.push( stackTransfrom );
         };
 
@@ -363,7 +373,7 @@ define( [
 
     osgAnimationWrapper.Bone = function ( input, bone ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.InvBindMatrixInSkeletonSpace || !jsonObj.MatrixInSkeletonSpace )
+        if ( !jsonObj.InvBindMatrixInSkeletonSpace /*|| !jsonObj.MatrixInSkeletonSpace*/ )
             return P.reject();
 
         osgWrapper.MatrixTransform( input, bone );
@@ -371,9 +381,9 @@ define( [
         if ( jsonObj.InvBindMatrixInSkeletonSpace ) {
             bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
         }
-        if ( jsonObj.BoneInSkeletonSpace ) {
-            bone.setMatrixInSkeletonSpace( jsonObj.MatrixInSkeletonSpace );
-        }
+        // if ( jsonObj.BoneInSkeletonSpace ) {
+        //     bone.setMatrixInSkeletonSpace( jsonObj.MatrixInSkeletonSpace );
+        // }
         return P.resolve( bone );
     };
 

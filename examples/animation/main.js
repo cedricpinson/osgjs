@@ -34,7 +34,7 @@ var createScene = function ( viewer ) {
 
     var root = new osg.Node();
 
-    var request = osgDB.readNodeURL( '../media/models/animation/mixamo horse gallop.osgjs' );
+    var request = osgDB.readNodeURL( '../media/models/animation/4x4_anim.osgjs' );
 
     request.then( function ( node ) {
         root.addChild( node );
