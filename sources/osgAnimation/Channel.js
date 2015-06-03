@@ -16,16 +16,16 @@ define( [
 
     var Channel = function ( sampler, target ) {
         Object.call( this );
-        this._sampler = sampler;
-        this._target = target;
-        this._targetName = undefined;
+        // this._sampler = sampler;
+        // this._target = target;
+        // this._targetName = undefined;
 
-        this._data = {
-            keys: undefined,
-            value: undefined,
-            t: 0.0,
-            key: 0
-        };
+        // this._data = {
+        //     keys: undefined,
+        //     value: undefined,
+        //     t: 0.0,
+        //     key: 0
+        // };
 
     };
 

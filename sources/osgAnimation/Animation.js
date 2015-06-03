@@ -16,17 +16,17 @@ define( [
 
     // assume that iniChannel has been called
     // on each channel
-    var createAnimation = function( channels, name ) {
+    var createAnimation = function ( channels, name ) {
 
         var min = Infinity;
         var max = -Infinity;
-        for ( var i = 0 ; i < channels.length; i ++ ) {
-            min = Math.min( min, channels[i].start );
-            max = Math.max( max, channels[i].end );
+        for ( var i = 0; i < channels.length; i++ ) {
+            min = Math.min( min, channels[ i ].start );
+            max = Math.max( max, channels[ i ].end );
         }
 
         var duration = max - min;
-        var animationName = name || ('animation' + animationCount.toString()) ;
+        var animationName = name || ( 'animation' + animationCount.toString() );
         animationCount++;
         return {
             channels: channels,
@@ -43,11 +43,11 @@ define( [
     //     start: 0.0, // used to know when an animation has been started
     //     name: string
     // },
-    var createInstanceAnimation = function( animation ) {
+    var createInstanceAnimation = function ( animation ) {
 
         var channels = [];
         for ( var i = 0; i < animation.channels.length; i++ ) {
-            var channel = Channel.createInstanceChannel( animation.channels[i] );
+            var channel = Channel.createInstanceChannel( animation.channels[ i ] );
             channels.push( channel );
         }
 
@@ -111,10 +111,7 @@ define( [
         return array;
     };
 
-
-
-    var Animation = function() {
-        this._animationData = undefined;
+    var Animation = function () {
     };
 
     Animation.createAnimation = createAnimation;

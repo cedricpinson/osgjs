@@ -6,8 +6,8 @@ define( [
 
 
     var QuatSlerpChannel = function ( keys, target ) {
-        QuatLerpChannel.call( this, keys, target );
-        this.getSampler().setInterpolator( Interpolator.QuatSlerpInterpolator );
+        // QuatLerpChannel.call( this, keys, target );
+        // this.getSampler().setInterpolator( Interpolator.QuatSlerpInterpolator );
     };
 
     QuatSlerpChannel.prototype = Channel.prototype;

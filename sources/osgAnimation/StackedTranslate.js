@@ -14,10 +14,10 @@ define( [
         Object.call( this );
 
         var value = Vec3.create();
-        if ( value ) Vec3.copy( translate, value() );
+        if ( translate ) Vec3.copy( translate, value );
 
         this._target = { value: value };
-        this.setName( name );
+        if ( name ) this.setName( name );
     };
 
 
