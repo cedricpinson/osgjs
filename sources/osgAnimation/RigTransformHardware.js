@@ -5,15 +5,15 @@ define( [
     'osg/Matrix',
     'osg/Program',
     'osg/Shader',
-    'osgAnimation/CollectBoneVisitor',
-    'osgAnimation/UniformMatrixPalette'
+    'osg/Uniform',
+    'osgAnimation/CollectBoneVisitor'
 
-], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, CollectBoneVisitor, UniformMatrixPalette ) {
+], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, Uniform, CollectBoneVisitor ) {
 
     'use strict';
 
 
-    function getShader( maxMatrix ) {
+    function getShader( nbVec4 ) {
         var vertexshader = [
             '',
             '#ifdef GL_ES',
@@ -27,7 +27,7 @@ define( [
             'uniform mat4 ModelViewMatrix;',
             'uniform mat4 ProjectionMatrix;',
             'uniform mat4 NormalMatrix;',
-            'uniform vec4 uBones[' + ( maxMatrix * 3 ) + '];',
+            'uniform vec4 uBones[' + ( nbVec4 ) + '];',
 
             'varying vec3 vNormal;',
 
@@ -117,73 +117,101 @@ define( [
      *
      */
 
-    var RigTransformHardware = function () {
+    var RigTransformHardware = function ( nbMatrix ) {
         this._needInit = true;
-        this._bonesPerVertex = 0;
-        this._nbVertexes = 0;
 
-        this._bonePalette = undefined;
-        this._matrixPalette = new UniformMatrixPalette();
+        // bones are sorted to be used directly by
+        // computeMatrixPalette
+        // means the
+        this._bones = [];
+
+        // matrix are 4x3
+        var matrix = new Float32Array( nbMatrix * 12 );
+        this._matrixPalette = new Uniform.createFloat4Array( matrix, 'uBones' );
     };
 
 
     RigTransformHardware.prototype = {
 
+        // boneNameID contains a map: boneName: id
+        // {
+        //    'bone0' : 1,
+        //    'bone4' : 0,
+        // }
+        //
+        // boneMap contains a map: boneName: Bone
+        // {
+        //    'bone0: : Bone object,
+        //    'bone1: : Bone object,
+        // }
+        //
+        // return index / bone object
+        // [
+        //    Bone4 object,
+        //    Bone0 object
+        // ]
+        computeBonePalette: function( boneMap, boneNameID) {
+
+        },
+
+
         init: function ( geom ) {
 
-            var Vertex = geom.getAttributes().Vertex;
+            // init the bones map
 
-            if ( !Vertex ) {
-                Notify.warn( 'RigTransformHardware no vertex array in the geometry ' + geom.getName() );
-                return false;
-            }
-
-            if ( !geom.getSkeleton() ) {
-                Notify.warn( 'RigTransformHardware no skeleton set in geometry ' + geom.getName() );
-                return false;
-            }
-
+            // stop here
+            // compute bonemap / index
             var mapVisitor = new CollectBoneVisitor();
             geom.getSkeleton().accept( mapVisitor );
             var bm = mapVisitor.getBoneMap();
 
-            if ( !this._matrixPalette.createPalette( bm, geom.getVertexInfluenceSet().getVertexToBoneList() ) ) {
-                return false;
-            }
 
             //Shader setUP
-            geom.getOrCreateStateSet().addUniform( this._matrixPalette._unformPalette );
-            geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( this._matrixPalette._palette.length ) );
-
-            // do not iterate with var in
-            for ( var attr in this._matrixPalette._boneWeightAttribArrays ) {
-                geom.getAttributes()[ attr ] = this._matrixPalette._boneWeightAttribArrays[ attr ];
-            }
+            geom.getOrCreateStateSet().addUniform( this._matrixPalette );
+            var nbVec4Uniforms = this._matrixPalette/3;
+            geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
 
             this._needInit = false;
             return true;
         },
 
 
-        computeMatrixPalette: function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
-            var palette = this._matrixPalette._palette;
+        computeMatrixPalette: ( function() {
 
-            for ( var i = 0, l = palette.length; i < l; i++ ) {
-                var bone = palette[ i ];
+            var mTmp = Matrix.create();
 
-                var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
-                var boneMatrix = bone.getMatrixInSkeletonSpace();
-                var resultBoneMatrix = Matrix.create();
-                var result = Matrix.create();
+            return function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
 
-                Matrix.mult( boneMatrix, invBindMatrix, resultBoneMatrix );
-                Matrix.mult( invTransformFromSkeletonToGeometry, resultBoneMatrix, result );
-                Matrix.preMult( result, transformFromSkeletonToGeometry );
+                var bones = this._bones;
+                var uniformTypedArray = this._matrixPalette.get();
+                var uniformIndex = 0;
 
-                this._matrixPalette.setElement( i, result );
+                for ( var i = 0, l = bones.length; i < l; i++ ) {
+                    var bone = bones[ i ];
 
-            }
-        },
+                    var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
+                    var boneMatrix = bone.getMatrixInSkeletonSpace();
+
+                    Matrix.mult( boneMatrix, invBindMatrix, mTmp );
+                    Matrix.mult( invTransformFromSkeletonToGeometry, mTmp, mTmp );
+                    Matrix.mult( mTmp, transformFromSkeletonToGeometry, mTmp );
+
+                    uniformTypedArray[uniformIndex++] = mTmp[0];
+                    uniformTypedArray[uniformIndex++] = mTmp[4];
+                    uniformTypedArray[uniformIndex++] = mTmp[8];
+                    uniformTypedArray[uniformIndex++] = mTmp[12];
+                    uniformTypedArray[uniformIndex++] = mTmp[1];
+                    uniformTypedArray[uniformIndex++] = mTmp[5];
+                    uniformTypedArray[uniformIndex++] = mTmp[9];
+                    uniformTypedArray[uniformIndex++] = mTmp[13];
+                    uniformTypedArray[uniformIndex++] = mTmp[2];
+                    uniformTypedArray[uniformIndex++] = mTmp[6];
+                    uniformTypedArray[uniformIndex++] = mTmp[10];
+                    uniformTypedArray[uniformIndex++] = mTmp[14];
+                }
+            };
+
+        })(),
 
         update: function ( geom ) {
 

@@ -31,7 +31,6 @@ define( [
                 return;
             }
 
-            geom.buildVertexInfluenceSet();
             geom.setSkeleton( finder._root );
         },
 
@@ -51,6 +50,7 @@ define( [
 
             return true;
         }
+
     } );
 
 
