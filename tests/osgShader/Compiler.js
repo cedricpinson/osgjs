@@ -78,10 +78,10 @@ define( [
                     value.apply( instance );
                     var t = instance.getType();
 
-                    if ( t && t !== '' ) {
-                        realNodeList.push( t );
-                    } else if ( instance._name === 'Variable' ) {
+                    if ( instance._name === 'Variable' ) {
                         variableNodeList.push( instance );
+                    } else if ( t && t !== '' ) {
+                        realNodeList.push( t );
                     } else {
                         abstractNodeList.push( instance );
                     }

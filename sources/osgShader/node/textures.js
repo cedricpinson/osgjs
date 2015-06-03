@@ -23,7 +23,7 @@ define( [
         validInputs: [ 'sampler', 'uv' ],
         validOutputs: [ 'color' ],
 
-        computeFragment: function () {
+        computeShader: function () {
 
             return utils.callFunction( this.functionName,
                 this._outputs.color, [

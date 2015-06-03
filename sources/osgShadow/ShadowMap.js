@@ -255,7 +255,7 @@ define( [
             if ( !this._shaderProcessor )
                 this._shaderProcessor = new ShaderProcessor( true ); //
 
-            var vertexshader = this._shaderProcessor.getShader( vs, defines );
+            var vertexshader = this._shaderProcessor.getShader( vs, defines, undefined, 'vertex' );
             var fragmentshader = this._shaderProcessor.getShader( ps, defines );
 
             var program = new Program(

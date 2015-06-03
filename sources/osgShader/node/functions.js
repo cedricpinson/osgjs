@@ -40,7 +40,7 @@ define( [
             'eyeVector'
         ],
 
-        computeFragment: function () {
+        computeShader: function () {
             return utils.callFunction( 'normalizeNormalAndEyeVector', undefined, [
                 this._inputs.normal,
                 this._inputs.position,
@@ -62,7 +62,7 @@ define( [
         validInputs: [ 'color' /*, 'gamma'*/ ],
         validOuputs: [ 'color' ],
 
-        computeFragment: function () {
+        computeShader: function () {
             return this.computeConversion( 'sRGBToLinear' );
         },
         computeConversion: function ( funcName ) {
@@ -82,7 +82,7 @@ define( [
 
     LinearTosRGB.prototype = MACROUTILS.objectInherit( sRGBToLinear.prototype, {
         type: 'LinearTosRGB',
-        computeFragment: function () {
+        computeShader: function () {
             return this.computeConversion( 'linearTosRGB' );
         }
     } );
@@ -97,7 +97,7 @@ define( [
         validInputs: [ 'normal' ],
         validOuputs: [ 'normal' ],
 
-        computeFragment: function () {
+        computeShader: function () {
             return sprintf( '%s = gl_FrontFacing ? %s : -%s ;', [
                 this._outputs.normal.getVariable(),
                 this._inputs.normal.getVariable(),

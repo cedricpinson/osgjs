@@ -15,7 +15,6 @@ define( [
         this._specular = [ 0.0, 0.0, 0.0, 1.0 ];
         this._emission = [ 0.0, 0.0, 0.0, 1.0 ];
         this._shininess = 12.5;
-        this._shadeless = false;
     };
 
     Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
@@ -95,6 +94,7 @@ define( [
         getShininess: function () {
             return this._shininess;
         },
+
 
 
         setTransparency: function ( a ) {

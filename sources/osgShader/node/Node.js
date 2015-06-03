@@ -29,6 +29,9 @@ define( [
         getID: function () {
             return this._id;
         },
+        getName: function () {
+            return this._name;
+        },
 
         getType: function () {
             return this.type;
@@ -141,7 +144,7 @@ define( [
             return this;
         },
 
-        computeFragment: function () {
+        computeShader: function () {
             return this._text;
         },
 

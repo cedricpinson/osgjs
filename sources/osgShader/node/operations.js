@@ -35,10 +35,11 @@ define( [
 
         operator: '+',
 
-        computeFragment: function () {
+        computeShader: function () {
             // force inputs type to be all the same from the output
             var outputType = this._outputs.getType();
             var addType = '';
+
             if ( outputType === 'vec4' )
                 addType = '.rgba';
             else if ( outputType === 'vec3' )
@@ -46,10 +47,12 @@ define( [
             else if ( outputType === 'vec2' )
                 addType = '.rg';
 
+
             var str = this._outputs.getVariable() + ' = ' + this._inputs[ 0 ].getVariable() + addType;
             for ( var i = 1, l = this._inputs.length; i < l; i++ ) {
                 var input = this._inputs[ i ];
                 str += this.operator + input.getVariable();
+                // special var case that doesn't need any postfix
                 if ( input.getType() !== 'float' )
                     str += addType;
             }
@@ -57,6 +60,8 @@ define( [
             return str;
         }
     } );
+
+
 
     // Mult works like Add
     var Mult = function () {
@@ -68,8 +73,65 @@ define( [
         operator: '*'
     } );
 
+    // basic assignement alias: output = input
+    var SetFromNode = function () {
+        Add.apply( this );
+    };
+
+    SetFromNode.prototype = MACROUTILS.objectInherit( Add.prototype, {
+        type: 'SetFromeNode'
+    } );
+    // Mult Matrix * vector
+    var MatrixMultDirection = function () {
+        Add.apply( this );
+    };
+
+    MatrixMultDirection.prototype = MACROUTILS.objectInherit( Add.prototype, {
+        type: 'MatrixMultDirection',
+        operator: '*',
+        validInputs: [ 'vec', 'matrix' ],
+        validOutputs: [ 'vec' ],
+        complement: '0.',
+        computeShader: function () {
+            // force inputs type to be all the same from the output
+            // and handle vector complement
+
+            var strOut = this._outputs.vec.getVariable() + ' = ';
+
+            var outputType = this._outputs.vec.getType();
+            if ( outputType !== 'vec4' ) {
+                strOut += outputType + '(';
+            }
+
+            var strCasted = this._inputs.vec.getVariable();
+            var inputType = this._inputs.vec.getType();
+
+            if ( inputType !== 'vec4' ) {
+                strCasted = 'vec4(' + strCasted + '.xyz, ' + this.complement + ')';
+            }
+
+            strOut += this._inputs.matrix.getVariable() + this.operator + strCasted;
+
+            if ( outputType !== 'vec4' ) {
+                strOut += ')';
+            }
+
+            strOut += ';';
+            return strOut;
+        }
+    } );
+
+    // override only for complement.
+    var MatrixMultPosition = function () {
+        MatrixMultDirection.apply( this );
+    };
+    MatrixMultPosition.prototype = MACROUTILS.objectInherit( MatrixMultDirection.prototype, {
+        type: 'MatrixMultPosition',
+        complement: '1.'
+    } );
 
 
+    // add Code with variable input/output replace
     var InlineCode = function () {
         Node.apply( this );
     };
@@ -80,7 +142,7 @@ define( [
             this._text = txt;
             return this;
         },
-        computeFragment: function () {
+        computeShader: function () {
 
             // merge inputs and outputs dict to search in both
             var replaceVariables = MACROUTILS.objectMix( {}, this._inputs );
@@ -110,9 +172,8 @@ define( [
             return text;
         }
     } );
-
-
     // output = vec4( color.rgb, alpha )
+
     var SetAlpha = function () {
         BaseOperator.apply( this );
     };
@@ -121,7 +182,7 @@ define( [
         type: 'SetAlpha',
         validInputs: [ 'color', 'alpha' ],
         validOuputs: [ 'color' ],
-        computeFragment: function () {
+        computeShader: function () {
             return sprintf( '%s = vec4( %s.rgb, %s );', [
                 this._outputs.color.getVariable(),
                 this._inputs.color.getVariable(),
@@ -145,7 +206,7 @@ define( [
         validInputs: [ 'color' /*,'alpha'*/ ],
         validOuputs: [ 'color' ],
 
-        computeFragment: function () {
+        computeShader: function () {
             var variable = this._inputs.alpha !== undefined ? this._inputs.alpha : this._inputs.color;
 
             var srcAlpha;
@@ -165,9 +226,12 @@ define( [
     return {
         BaseOperator: BaseOperator,
         Mult: Mult,
+        MatrixMultPosition: MatrixMultPosition,
+        MatrixMultDirection: MatrixMultDirection,
         Add: Add,
         InlineCode: InlineCode,
         SetAlpha: SetAlpha,
+        SetFromNode: SetFromNode,
         PreMultAlpha: PreMultAlpha
     };
 

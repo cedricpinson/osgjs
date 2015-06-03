@@ -45,6 +45,10 @@ define( [
 
             var Constructor = this._nodes.get( name );
             if ( !Constructor ) {
+                // Means either:
+                // - the node isn't registered by methods above
+                // - you mistyped the name
+                // - Core Node has changed its Name
                 Notify.warn( 'Node ' + name + ' does not exist' );
                 return undefined;
             }

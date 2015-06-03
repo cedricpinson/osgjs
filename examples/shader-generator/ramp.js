@@ -58,7 +58,7 @@
         },
 
         // call the glsl function with input/output of the node
-        computeFragment: function () {
+        computeShader: function () {
             return osgShader.utils.callFunction( 'ramp', undefined, [
                 this._inputs.color,
                 this._outputs.color

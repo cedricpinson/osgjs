@@ -92,9 +92,9 @@ define( [
             return preShader;
         },
 
-        getShader: function ( shaderName, defines, extensions ) {
+        getShader: function ( shaderName, defines, extensions, type ) {
             var shader = this.getShaderTextPure( shaderName );
-            return this.processShader( shader, defines, extensions );
+            return this.processShader( shader, defines, extensions, type );
         },
 
         // recursively  handle #include external glsl
@@ -156,7 +156,7 @@ define( [
         //  resolving include dependencies
         //  adding defines
         //  adding line instrumenting.
-        processShader: function ( shader, defines, extensions ) {
+        processShader: function ( shader, defines, extensions, type ) {
 
             var includeList = [];
             var preShader = shader;
@@ -193,7 +193,8 @@ define( [
                 prePrend += extensions.join( '\n' ) + '\n';
             }
 
-            if ( this._globalDefaultprecision ) {
+            // vertex shader doesn't need precision, it's highp per default, enforced per spec
+            if ( this._globalDefaultprecision && type !== 'vertex' ) {
                 if ( !this._precisionR.test( postShader ) ) {
                     // use the shaderhighprecision flag at shaderloader start
                     //var highp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
