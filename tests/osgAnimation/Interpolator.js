@@ -116,5 +116,10 @@ define( [
             ok( result.key === 0, 'Check key when time == 3.0' );
 
         } );
+
+        QUnit.test( 'FloatCubicBezierChannel', function () {
+
+        } );
+
     };
 } );

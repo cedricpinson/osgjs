@@ -123,6 +123,142 @@ define( [
         return osgAnimationWrapper.StandardFloatChannel( input, channel, Channel.createFloatChannel );
     };
 
+    osgAnimationWrapper.FloatCubicBezierChannel = function ( input, channel ) {
+        var jsonObj = input.getJSON();
+
+        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name ||
+            !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Position ||
+            !jsonObj.KeyFrames.ControlPointOut || !jsonObj.KeyFrames.ControlPointIn )
+            return P.reject();
+
+        var bezierChannel = {};
+        var arraysPromise = [];
+        var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
+        var keys = new Float32Array( size * 3 );
+        var times = new Float32Array( size );
+
+
+        var createChannelAttribute = function ( name, jsonAttribute ) {
+            var promise = input.setJSON( jsonAttribute ).readBufferArray().then( function ( buffer ) {
+                bezierChannel[ name ] = buffer._elements;
+            } );
+            arraysPromise.push( promise );
+        };
+
+        var keyFrames = Object.keys( jsonObj.KeyFrames );
+        for ( var i = 0; i < keyFrames.length; i++ ) {
+            var key = keyFrames[ i ];
+            var value = jsonObj.KeyFrames[ key ];
+            createChannelAttribute( key, value );
+        }
+
+        var interlaceKeyFrames = function () {
+            var controlPointIn = bezierChannel.ControlPointIn;
+            var controlPointOut = bezierChannel.ControlPointOut;
+            var position = bezierChannel.Position;
+            var time = bezierChannel.Time;
+
+            for ( var i = 0; i < size; i++ ) {
+                var id = i * 3;
+
+                times[ i ] = time[ i ];
+                keys[ id++ ] = position[ i ];
+                keys[ id++ ] = controlPointIn[ i ];
+                keys[ id ] = controlPointOut[ i ];
+            }
+        };
+
+        P.all( arraysPromise ).then( function () {
+            interlaceKeyFrames();
+        } );
+
+        channel = Channel.createFloatCubicBezierChannel( keys, times );
+        return P.resolve( channel );
+    };
+
+    osgAnimationWrapper.Vec3CubicBezierChannel = function ( input, channel ) {
+        var jsonObj = input.getJSON();
+
+        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Position || !jsonObj.KeyFrames.ControlPointOut || !jsonObj.KeyFrames.ControlPointIn || jsonObj.KeyFrames.Position.length !== 3 || jsonObj.KeyFrames.ControlPointIn.length !== 3 || jsonObj.KeyFrames.ControlPointOut.length !== 3 )
+            return P.reject();
+
+        var bezierChannel = {};
+        var arraysPromise = [];
+        var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
+        var keys = new Float32Array( size * 9 );
+        var times = new Float32Array( size );
+
+
+        var createChannelAttribute = function ( name, jsonAttribute ) {
+            var promise;
+
+            if ( name !== 'Time' ) {
+                var bChannel = bezierChannel[ name ] = [];
+
+                promise = input.setJSON( jsonAttribute[ 0 ] ).readBufferArray();
+                promise.then( function ( buffer ) {
+                    bChannel[ 0 ] = buffer._elements;
+                } );
+                arraysPromise.push( promise );
+
+                promise = input.setJSON( jsonAttribute[ 1 ] ).readBufferArray();
+                promise.then( function ( buffer ) {
+                    bChannel[ 1 ] = buffer._elements;
+                } );
+                arraysPromise.push( promise );
+
+                promise = input.setJSON( jsonAttribute[ 2 ] ).readBufferArray();
+                promise.then( function ( buffer ) {
+                    bChannel[ 2 ] = buffer._elements;
+                } );
+                arraysPromise.push( promise );
+            } else {
+                promise = input.setJSON( jsonAttribute ).readBufferArray();
+                promise.then( function ( buffer ) {
+                    bezierChannel.Time = buffer._elements;
+                } );
+                arraysPromise.push( promise );
+            }
+        };
+
+        //Reads all keyframes
+        var keyFrames = Object.keys( jsonObj.KeyFrames );
+        for ( var i = 0; i < keyFrames.length; i++ ) {
+            var key = keyFrames[ i ];
+            var value = jsonObj.KeyFrames[ key ];
+            createChannelAttribute( key, value );
+        }
+
+        var interlaceKeyFrames = function () {
+            var controlPointIn = bezierChannel.ControlPointIn;
+            var controlPointOut = bezierChannel.ControlPointOut;
+            var position = bezierChannel.Position;
+            var time = bezierChannel.Time;
+
+            for ( var i = 0; i < size; i++ ) {
+                var id = i * 9;
+
+                times[ i ] = time[ i ];
+                keys[ id++ ] = position[ 0 ][ i ];
+                keys[ id++ ] = position[ 1 ][ i ];
+                keys[ id++ ] = position[ 2 ][ i ];
+
+                keys[ id++ ] = controlPointIn[ 0 ][ i ];
+                keys[ id++ ] = controlPointIn[ 1 ][ i ];
+                keys[ id++ ] = controlPointIn[ 2 ][ i ];
+
+                keys[ id++ ] = controlPointOut[ 0 ][ i ];
+                keys[ id++ ] = controlPointOut[ 1 ][ i ];
+                keys[ id ] = controlPointOut[ 2 ][ i ];
+            }
+        };
+
+        P.all( arraysPromise ).then( interlaceKeyFrames );
+
+        channel = Channel.createVec3CubicBezierChannel( keys, times );
+        return P.resolve( channel );
+    };
+
     osgAnimationWrapper.BasicAnimationManager = function ( input, manager ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.Animations )
