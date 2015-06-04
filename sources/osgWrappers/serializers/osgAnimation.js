@@ -59,7 +59,7 @@ define( [
             keys[ id ] = jsKeyZ[ i ];
         }
 
-        channel = creator( keys, times, jsonObj.TargetName );
+        channel = creator( keys, times, jsonObj.TargetName, jsonObj.Name );
         return P.resolve( channel );
     };
 
@@ -89,7 +89,7 @@ define( [
             keys[ id ] = jsKeyW[ i ];
         }
 
-        channel = creator( keys, times, jsonObj.TargetName );
+        channel = creator( keys, times, jsonObj.TargetName, jsonObj.Name );
         return P.resolve( channel );
     };
 
@@ -112,7 +112,7 @@ define( [
             keys[ i ] = jsKey[ i ];
         }
 
-        channel = creator( keys, times, jsonObj.TargetName );
+        channel = creator( keys, times, jsonObj.TargetName, jsonObj.Name );
         return P.resolve( channel );
     };
 
@@ -181,7 +181,7 @@ define( [
             interlaceKeyFrames();
         } );
 
-        channel = Channel.createFloatCubicBezierChannel( keys, times, jsonObj.TargetName );
+        channel = Channel.createFloatCubicBezierChannel( keys, times, jsonObj.TargetName, jsonObj.Name );
         return P.resolve( channel );
     };
 
@@ -264,7 +264,7 @@ define( [
 
         P.all( arraysPromise ).then( interlaceKeyFrames );
 
-        channel = Channel.createVec3CubicBezierChannel( keys, times, jsonObj.TargetName );
+        channel = Channel.createVec3CubicBezierChannel( keys, times, jsonObj.TargetName, jsonObj.Name );
         return P.resolve( channel );
     };
 

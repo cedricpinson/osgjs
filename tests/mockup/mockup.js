@@ -141,13 +141,15 @@ define( [
     };
 
 
-    var createAnimation = function ( name, target1, target2 ) {
+    var createAnimation = function ( name, target1, name1, target2, name2 ) {
 
         var a = createFloatKeyframes();
         a.target = target1 || 'a';
+        a.name = name1 || 'x';
 
         var b = createFloatKeyframes( 2 );
         b.target = target2 || 'b';
+        b.name = name2 || 'x';
 
         return Animation.createAnimation( [ a, b ], name );
     };

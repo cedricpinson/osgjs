@@ -48,7 +48,13 @@ var createScene = function ( viewer ) {
             console.log( animationManager.getAnimations() );
             var animations = Object.keys( animationManager.getAnimations() );
             var firstAnimation = animations.length ? animations[0] : undefined;
-            if ( firstAnimation ) animationManager.playAnimation( firstAnimation );
+            if ( firstAnimation ) {
+                window.play = function() {
+                    animationManager.playAnimation( firstAnimation );
+                };
+                window.animationManager = animationManager;
+                animationManager.playAnimation( firstAnimation );
+            }
         }
 
         osg.setNotifyLevel( osg.ERROR );

@@ -78,10 +78,9 @@ define( [
     //   "bone1",
     //   ... ]
     //
-    var initChannelTargetID = function ( animations ) {
+    var initChannelTargetID = function ( animations, targetList, targetMap ) {
 
-        var targetMap = {};
-        var array = [];
+        var array = targetList;
 
         for ( var i = 0; i < animations.length; i++ ) {
 
@@ -90,18 +89,26 @@ define( [
 
             for ( var c = 0; c < instanceChannels.length; c++ ) {
 
-                var targetName = instanceChannels[ c ].channel.target;
-                var type = instanceChannels[ c ].channel.type;
+                var instanceChannel = instanceChannels[ c ];
+                var channel = instanceChannel.channel;
+
+                var targetName = channel.target;
+                var name = channel.name; // translate, rotateX, rotateY, rotateZ, ...
+                var type = channel.type;
+
+                // compute a unique name for targetID
+                var uniqueTargetName = targetName + '.' + name;
 
                 // not yet in the map create an id from the array size
-                if ( targetMap[ targetName ] === undefined ) {
+                if ( targetMap[ uniqueTargetName ] === undefined ) {
                     var id = array.length;
-                    instanceChannels[ c ].targetID = id; // set the target ID in the channel
+                    instanceChannel.targetID = id; // set the target ID in the channel
                     var target = {
-                        target: targetName,
+                        target: uniqueTargetName,
+                        targetID: id,
                         type: type
                     };
-                    targetMap[ targetName ] = true;
+                    targetMap[ uniqueTargetName ] = target;
                     array.push( target );
 
                 }
