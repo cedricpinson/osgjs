@@ -161,7 +161,7 @@ define( [
 
         if ( t >= end ) {
             channelInstance.key = 0;
-            channelInstance.value = keys[ keys.length - 1 ];
+            channelInstance.value = keys[ keys.length - 3 ];
             return;
 
         } else if ( t <= start ) {
@@ -179,10 +179,11 @@ define( [
         var oneMinusT3 = oneMinusT2 * oneMinusT;
         var t2 = tt * tt;
 
-        var v0 = keys[ i ] * oneMinusT3;
-        var v1 = keys[ i + 1 ] * ( 3.0 * tt * oneMinusT2 );
-        var v2 = keys[ i + 2 ] * ( 3.0 * t2 * oneMinusT );
-        var v3 = keys[ i + 3 ] * ( t2 * tt );
+        var id = i * 3;
+        var v0 = keys[ id ] * oneMinusT3;
+        var v1 = keys[ id + 1 ] * ( 3.0 * tt * oneMinusT2 );
+        var v2 = keys[ id + 2 ] * ( 3.0 * t2 * oneMinusT );
+        var v3 = keys[ id + 3 ] * ( t2 * tt );
 
         value = v0 + v1 + v2 + v3;
         channelInstance.key = i;
@@ -199,7 +200,7 @@ define( [
 
         if ( t >= end ) {
             channelInstance.key = 0;
-            Vec3CopyKeyFrame( keys.length - 3, keys, value );
+            Vec3CopyKeyFrame( keys.length - 9, keys, value );
             return;
 
         } else if ( t <= start ) {
@@ -222,10 +223,11 @@ define( [
             v2 = Vec3.create(),
             v3 = Vec3.create();
 
-        Vec3.mult( keys[ i ], oneMinusT3, v0 );
-        Vec3.mult( keys[ i + 1 ], ( 3.0 * tt * oneMinusT2 ), v1 );
-        Vec3.mult( keys[ i + 2 ], ( 3.0 * t2 * oneMinusT ), v2 );
-        Vec3.mult( keys[ i + 3 ], ( t2 * tt ), v3 );
+        var id = i * 9;
+        Vec3.mult( [ keys[ id++ ], keys[ id++ ], keys[ id++ ] ], oneMinusT3, v0 );
+        Vec3.mult( [ keys[ id++ ], keys[ id++ ], keys[ id++ ] ], ( 3.0 * tt * oneMinusT2 ), v1 );
+        Vec3.mult( [ keys[ id++ ], keys[ id++ ], keys[ id++ ] ], ( 3.0 * t2 * oneMinusT ), v2 );
+        Vec3.mult( [ keys[ id++ ], keys[ id++ ], keys[ id++ ] ], ( t2 * tt ), v3 );
 
         value[ 0 ] = v0[ 0 ] + v1[ 0 ] + v2[ 0 ] + v3[ 0 ];
         value[ 1 ] = v0[ 1 ] + v1[ 1 ] + v2[ 1 ] + v3[ 1 ];

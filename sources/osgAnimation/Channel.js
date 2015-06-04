@@ -127,7 +127,7 @@ define( [
     var createInstanceVec3CubicBezierChannel = function ( channel ) {
         return {
             channel: channel,
-            value: 0.0,
+            value: Vec3.create(),
             targetID: 0,
             weight: 1,
             key: 0,
@@ -252,8 +252,8 @@ define( [
     Channel.createInstanceVec3Channel = createInstanceVec3Channel;
     Channel.createInstanceQuatChannel = createInstanceQuatChannel;
     Channel.createInstanceFloatChannel = createInstanceFloatChannel;
-    Channel.createInstanceFloatCubicBezierChannel = createFloatCubicBezierChannel;
-    Channel.createInstanceVec3CubicBezierChannel = createVec3CubicBezierChannel;
+    Channel.createInstanceFloatCubicBezierChannel = createInstanceFloatCubicBezierChannel;
+    Channel.createInstanceVec3CubicBezierChannel = createInstanceVec3CubicBezierChannel;
 
     Channel.createVec3Channel = createVec3Channel;
     Channel.createQuatChannel = createQuatChannel;
