@@ -333,6 +333,9 @@ define( [
             str = 'File ' + i;
             plod.setFileName( i, o[ str ] );
         }
+        // Set database path from options
+        // TODO: Check also if we have a path from json
+        plod.setDatabasePath( input.getDatabasePath() );
 
         var queue = [];
         // For each url, create a function call and add it to the queue
