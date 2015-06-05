@@ -33,7 +33,7 @@ define( [], function () {
                 replace( /^\s+(at eval )?at\s+/gm, '' ).
                 replace( /^([^\(]+?)([\n$])/gm, '{anonymous}()@$1$2' ).
                 replace( /^Object.<anonymous>\s*\(([^\)]+)\)/gm, '{anonymous}()@$1' ).split( '\n' );
-                // Remove call to this functionbv
+                // Remove call to this function
                 callstack.shift();
 
             }
