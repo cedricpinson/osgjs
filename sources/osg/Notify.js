@@ -33,7 +33,7 @@ define( [], function () {
                 replace( /^\s+(at eval )?at\s+/gm, '' ).
                 replace( /^([^\(]+?)([\n$])/gm, '{anonymous}()@$1$2' ).
                 replace( /^Object.<anonymous>\s*\(([^\)]+)\)/gm, '{anonymous}()@$1' ).split( '\n' );
-                // Remove call to this function
+                // Remove call to this functionbv
                 callstack.shift();
 
             }
@@ -48,6 +48,7 @@ define( [], function () {
 
         return callstack;
     }
+
     /** logging with readability in mind.
      * @param { str } actual log text
      * @param { fold  }  sometimes you want to hide looooong text
