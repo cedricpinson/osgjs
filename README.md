@@ -41,5 +41,4 @@ It should open a browser pointing to the examples directory.
 OpenSceneGraph osgjs plugin
 ----------------------------
 
-There is a plugin on my openscengraph branch https://github.com/cedricpinson/osg. This plugin will help you to export data from osg to osgjs. osgconv
-See:
+There is a plugin on my openscengraph branch https://github.com/cedricpinson/osg. This plugin will help you to export data from osg to osgjs. More instructions are available on the [wiki](https://github.com/cedricpinson/osgjs/wiki/Convert-model-with-OSG)
