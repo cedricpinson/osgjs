@@ -198,11 +198,9 @@ define( [
                 var vp = new Viewport( 0, 0, w, h );
                 camera.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
                 camera.setViewport( vp );
-                Matrix.makeOrtho( -w / 2, w / 2, -h / 2, h / 2, -5, 5, camera.getProjectionMatrix() );
+                Matrix.makeOrtho( 0, 1, 0, 1, -5, 5, camera.getProjectionMatrix() );
 
-                quad = Shape.createTexturedQuadGeometry( -w / 2, -h / 2, 0,
-                    w, 0, 0,
-                    0, h, 0 );
+                quad = Shape.createTexturedFullScreenFakeQuadGeometry();
 
                 if ( element.filter.buildGeometry !== undefined )
                     quad = element.filter.buildGeometry( quad );
