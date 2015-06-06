@@ -48,6 +48,7 @@ define( [], function () {
 
         return callstack;
     }
+
     /** logging with readability in mind.
      * @param { str } actual log text
      * @param { fold  }  sometimes you want to hide looooong text

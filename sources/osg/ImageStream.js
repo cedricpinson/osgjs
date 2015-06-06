@@ -51,7 +51,7 @@ define( [
 
             if ( !this._canPlayDefered ) {
                 this._canPlayDefered = P.defer();
-                this._imageObject.addEventListener( 'canplaythrough', this._canPlayDefered.resolve.bind( this ), true );
+                this._imageObject.addEventListener( 'canplaythrough', this._canPlayDefered.resolve.bind( this._canPlayDefered, this ), true );
             }
 
             return this._canPlayDefered.promise;
