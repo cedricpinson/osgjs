@@ -62,6 +62,7 @@ define( [
                 if ( node.isDirty() ) {
                     node.build();
                 }
+                return true;
             }
         };
         this.setUpdateCallback( new UpdateCallback() );
