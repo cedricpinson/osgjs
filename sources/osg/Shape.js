@@ -318,6 +318,35 @@ define( [
         return g;
     };
 
+    // better perf
+    // no more pixel shader hurt for nothing
+    // http://michaldrobot.com/2014/04/01/gcn-execution-patterns-in-full-screen-passes/
+    // It's a Singleton, as it's rendering invariant
+    // so same remove uneeded state change when same geom
+    var createTexturedFullScreenFakeQuadGeometry = ( function () {
+        var g = new Geometry();
+
+        var uvs = new MACROUTILS.Float32Array( [ -1.0, -1.0, -1.0, 4.0, 4.0, -1.0 ] );
+        var vertexes = new MACROUTILS.Float32Array( [ -1.0, -1.0, -1.0, 4.0, 4.0, -1.0 ] );
+
+        var indexes = new MACROUTILS.Uint16Array( 3 );
+        indexes[ 0 ] = 0;
+        indexes[ 1 ] = 1;
+        indexes[ 2 ] = 2;
+
+        // Further optim: no index, no uv (uv.xy = position.xy in vertex shader)
+        g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 2 );
+        g.getAttributes().TexCoord0 = new BufferArray( BufferArray.ARRAY_BUFFER, uvs, 2 );
+
+        var primitive = new DrawElements( PrimitiveSet.TRIANGLES, new BufferArray( BufferArray.ELEMENT_ARRAY_BUFFER, indexes, 1 ) );
+        g.getPrimitives().push( primitive );
+
+        return function () {
+            return g;
+        };
+    } )();
+
+
     var createTexturedQuadGeometry = function ( cornerx, cornery, cornerz,
         wx, wy, wz,
         hx, hy, hz,
@@ -711,6 +740,7 @@ define( [
         createTexturedQuadGeometry: createTexturedQuadGeometry,
         createTexturedSphereGeometry: createTexturedSphere,
         createTexturedBox: createTexturedBox,
+        createTexturedFullScreenFakeQuadGeometry: createTexturedFullScreenFakeQuadGeometry,
         createTexturedQuad: createTexturedQuad,
         createAxisGeometry: createAxisGeometry,
         createTexturedSphere: createTexturedSphere,
