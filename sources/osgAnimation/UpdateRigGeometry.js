@@ -5,7 +5,7 @@ define( [
     'osgAnimation/FindNearestParentSkeleton',
     'osgAnimation/RigGeometry'
 
-], function ( MACROUTILS, ObjectBase, Notify, FindNearestParentSkeleton, RigGeometry ) {
+], function ( MACROUTILS, Notify, ObjectBase, FindNearestParentSkeleton, RigGeometry ) {
 
     'use strict';
 
@@ -36,7 +36,8 @@ define( [
 
         update: function ( node /*, nv*/ ) {
 
-            if ( node && node.typeID !== RigGeometry.typeID ) return true;
+            // Circular ref
+            if ( node && node.className() !== 'RigGeometry' ) return true;
 
             var geom = node;
 

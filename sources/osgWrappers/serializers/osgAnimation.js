@@ -381,9 +381,6 @@ define( [
         if ( jsonObj.InvBindMatrixInSkeletonSpace ) {
             bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
         }
-        // if ( jsonObj.BoneInSkeletonSpace ) {
-        //     bone.setMatrixInSkeletonSpace( jsonObj.MatrixInSkeletonSpace );
-        // }
         return P.resolve( bone );
     };
 
@@ -402,11 +399,16 @@ define( [
     osgAnimationWrapper.RigGeometry = function ( input, rigGeom ) {
         var jsonObj = input.getJSON();
 
+        if ( !jsonObj.BoneMap ) // check boneMap
+            return P.reject();
+
         osgWrapper.Geometry( input, rigGeom );
 
-        input.setJSON( jsonObj.SourceGeometry );
-        if ( !osgWrapper.Geometry( input, rigGeom.getOrCreateSourceGeometry() ) )
-            return P.reject();
+        // input.setJSON( jsonObj.SourceGeometry );
+        // if ( !osgWrapper.Geometry( input, rigGeom.getOrCreateSourceGeometry() ) )
+        //     return P.reject();
+
+        rigGeom._boneNameID = jsonObj.BoneMap; // @tocheck (name)
 
         return P.resolve( rigGeom );
     };

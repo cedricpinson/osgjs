@@ -16,8 +16,11 @@ define( [
     'osg/PagedLOD',
     'osg/Camera',
     'osg/TransformEnums',
-    'osg/Vec3'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderLeaf, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec3 ) {
+    'osg/Vec3',
+    'osgAnimation/Skeleton',
+    'osgAnimation/RigGeometry',
+    'osgAnimation/Bone'
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderLeaf, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec3, Skeleton, RigGeometry, Bone ) {
     'use strict';
 
     /**
@@ -509,6 +512,12 @@ define( [
 
         };
     } )();
+
+    CullVisitor.prototype[ Skeleton.typeID ] = CullVisitor.prototype[ Node.typeID ];
+
+    CullVisitor.prototype[ RigGeometry.typeID ] = CullVisitor.prototype[ Node.typeID ];
+
+    CullVisitor.prototype[ Bone.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
     return CullVisitor;
 } );

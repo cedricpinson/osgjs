@@ -37,8 +37,9 @@ define( [
 
         this.setUpdateCallback( new UpdateRigGeometry() );
 
-        this._geometry = undefined;
+        //this._geometry = undefined;
         this._root = undefined;
+        this._boneNameID = {};
 
         this._matrixFromSkeletonToGeometry = Matrix.create();
         this._invMatrixFromSkeletonToGeometry = Matrix.create();

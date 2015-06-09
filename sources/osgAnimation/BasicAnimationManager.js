@@ -368,8 +368,8 @@ define( [
             this.updateTargetType( this._vec3TargetID, Vec3.lerp, Vec3.init );
             this.updateTargetType( this._floatTargetID, Float.lerp, Float.init );
 
-            this.updateTargetType( this._floatCubicBezierTargetID, Vec3.lerp, Vec3.init );
-            this.updateTargetType( this._vec3CubicBezierTargetID, Float.lerp, Float.init );
+            this.updateTargetType( this._floatCubicBezierTargetID, Float.lerp, Float.init );
+            this.updateTargetType( this._vec3CubicBezierTargetID, Vec3.lerp, Vec3.init );
 
 
             // update all animation callback
