@@ -142,11 +142,6 @@ define( [
 
         var bezierChannel = {};
         var arraysPromise = [];
-        var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
-        var keys = new Float32Array( size * 3 );
-        var times = new Float32Array( size );
-
-
         var createChannelAttribute = function ( name, jsonAttribute ) {
             var promise = input.setJSON( jsonAttribute ).readBufferArray().then( function ( buffer ) {
                 bezierChannel[ name ] = buffer._elements;
@@ -161,7 +156,12 @@ define( [
             createChannelAttribute( key, value );
         }
 
-        var interlaceKeyFrames = function () {
+        var defer = P.defer();
+        P.all( arraysPromise ).then( function () {
+            var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
+            var keys = new Float32Array( size * 3 );
+            var times = new Float32Array( size );
+
             var controlPointIn = bezierChannel.ControlPointIn;
             var controlPointOut = bezierChannel.ControlPointOut;
             var position = bezierChannel.Position;
@@ -175,14 +175,11 @@ define( [
                 keys[ id++ ] = controlPointIn[ i ];
                 keys[ id ] = controlPointOut[ i ];
             }
-        };
-
-        P.all( arraysPromise ).then( function () {
-            interlaceKeyFrames();
+            Channel.createFloatCubicBezierChannel( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
+            defer.resolve( channel );
         } );
 
-        channel = Channel.createFloatCubicBezierChannel( keys, times, jsonObj.TargetName, jsonObj.Name );
-        return P.resolve( channel );
+        return defer.promise;
     };
 
     osgAnimationWrapper.Vec3CubicBezierChannel = function ( input, channel ) {
@@ -193,10 +190,6 @@ define( [
 
         var bezierChannel = {};
         var arraysPromise = [];
-        var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
-        var keys = new Float32Array( size * 9 );
-        var times = new Float32Array( size );
-
 
         var createChannelAttribute = function ( name, jsonAttribute ) {
             var promise;
@@ -238,34 +231,50 @@ define( [
             createChannelAttribute( key, value );
         }
 
-        var interlaceKeyFrames = function () {
+        var defer = P.defer();
+        P.all( arraysPromise ).then( function () {
+            var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
+            var keys = new Float32Array( size * 9 );
+            var times = new Float32Array( size );
+
             var controlPointIn = bezierChannel.ControlPointIn;
             var controlPointOut = bezierChannel.ControlPointOut;
             var position = bezierChannel.Position;
             var time = bezierChannel.Time;
 
+            var p0 = position[ 0 ];
+            var p1 = position[ 1 ];
+            var p2 = position[ 2 ];
+
+            var cpi0 = controlPointIn[ 0 ];
+            var cpi1 = controlPointIn[ 1 ];
+            var cpi2 = controlPointIn[ 2 ];
+
+            var cpo0 = controlPointOut[ 0 ];
+            var cpo1 = controlPointOut[ 1 ];
+            var cpo2 = controlPointOut[ 2 ];
+
             for ( var i = 0; i < size; i++ ) {
                 var id = i * 9;
 
                 times[ i ] = time[ i ];
-                keys[ id++ ] = position[ 0 ][ i ];
-                keys[ id++ ] = position[ 1 ][ i ];
-                keys[ id++ ] = position[ 2 ][ i ];
+                keys[ id++ ] = p0[ i ];
+                keys[ id++ ] = p1[ i ];
+                keys[ id++ ] = p2[ i ];
 
-                keys[ id++ ] = controlPointIn[ 0 ][ i ];
-                keys[ id++ ] = controlPointIn[ 1 ][ i ];
-                keys[ id++ ] = controlPointIn[ 2 ][ i ];
+                keys[ id++ ] = cpi0[ i ];
+                keys[ id++ ] = cpi1[ i ];
+                keys[ id++ ] = cpi2[ i ];
 
-                keys[ id++ ] = controlPointOut[ 0 ][ i ];
-                keys[ id++ ] = controlPointOut[ 1 ][ i ];
-                keys[ id ] = controlPointOut[ 2 ][ i ];
+                keys[ id++ ] = cpo0[ i ];
+                keys[ id++ ] = cpo1[ i ];
+                keys[ id ] = cpo2[ i ];
             }
-        };
+            Channel.createVec3CubicBezierChannel( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
+            defer.resolve( channel );
+        } );
 
-        P.all( arraysPromise ).then( interlaceKeyFrames );
-
-        channel = Channel.createVec3CubicBezierChannel( keys, times, jsonObj.TargetName, jsonObj.Name );
-        return P.resolve( channel );
+        return defer.promise;
     };
 
     osgAnimationWrapper.BasicAnimationManager = function ( input, manager ) {

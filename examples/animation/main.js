@@ -15,7 +15,7 @@ FindAnimationManagerVisitor.prototype = osg.objectInherit( osg.NodeVisitor.proto
     init: function () {
         this.found = [];
     },
-    getAnimationManager: function() {
+    getAnimationManager: function () {
         return this._cb;
     },
     apply: function ( node ) {
@@ -30,16 +30,74 @@ FindAnimationManagerVisitor.prototype = osg.objectInherit( osg.NodeVisitor.proto
     }
 } );
 
+var FindBoneVisitor = function() {
+    osg.NodeVisitor.call(this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN);
+    this._bones = [];
+};
+FindBoneVisitor.prototype = osg.objectInherit(osg.NodeVisitor.prototype, {
+    init: function() {},
+    apply: function(node) {
+
+        if (node.className() === 'Bone') {
+            this._bones.push(node);
+        }
+        this.traverse(node);
+    },
+    getBones: function() {
+        return this._bones;
+    },
+    getBone: function(name) {
+        var bones = this.getBones();
+        for (var i = 0, l = bones.length; i < l; i++) {
+            var bone = bones[i];
+            if (bone.getName() === name) {
+                return bone;
+            }
+        }
+        return undefined;
+    }
+});
+
+
+
 var createScene = function ( viewer ) {
 
     var root = new osg.Node();
 
     var request = osgDB.readNodeURL( '../media/models/animation/mixamo horse gallop.osgjs' );
     //var request = osgDB.readNodeURL( '../media/models/animation/4x4_anim.osgjs' );
+    //var request = osgDB.readNodeURL( '../media/models/animation/roty.osgjs' );
+
 
 
     request.then( function ( node ) {
         root.addChild( node );
+
+
+
+        var bfinder = new FindBoneVisitor();
+        root.accept(bfinder);
+        var bones = bfinder.getBones();
+
+        var geom = osg.createAxisGeometry(40);
+        for (var i = 0, l = bones.length; i < l; i++) {
+            var bone = bones[i];
+            console.log( bone.getName() );
+            var tnode = new osg.Node();
+//            tnode.addChild( geom );
+//            tnode.addChild( osg.createTexturedBoxGeometry() );
+            bone.addChild( tnode );
+        }
+
+        window.listBones = function() {
+            for (var i = 0, l = bones.length; i < l; i++) {
+                var bone = bones[i];
+                console.log( bone.getName(), bone.getMatrix() );
+            }
+
+        };
+
+        viewer.getCamera().setComputeNearFar( false );
 
         viewer.getManipulator().computeHomePosition();
         var finder = new FindAnimationManagerVisitor();
@@ -49,9 +107,9 @@ var createScene = function ( viewer ) {
         if ( animationManager ) {
             console.log( animationManager.getAnimations() );
             var animations = Object.keys( animationManager.getAnimations() );
-            var firstAnimation = animations.length ? animations[0] : undefined;
+            var firstAnimation = animations.length ? animations[ 0 ] : undefined;
             if ( firstAnimation ) {
-                window.play = function() {
+                window.play = function () {
                     animationManager.playAnimation( firstAnimation );
                 };
                 window.animationManager = animationManager;

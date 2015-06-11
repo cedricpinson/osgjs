@@ -118,8 +118,7 @@ define( [
         return array;
     };
 
-    var Animation = function () {
-    };
+    var Animation = function () {};
 
     Animation.createAnimation = createAnimation;
     Animation.createInstanceAnimation = createInstanceAnimation;

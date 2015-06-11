@@ -513,11 +513,11 @@ define( [
         };
     } )();
 
-    CullVisitor.prototype[ Skeleton.typeID ] = CullVisitor.prototype[ Node.typeID ];
+    CullVisitor.prototype[ Skeleton.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
 
-    CullVisitor.prototype[ RigGeometry.typeID ] = CullVisitor.prototype[ Node.typeID ];
+    CullVisitor.prototype[ RigGeometry.typeID ] = CullVisitor.prototype[ Geometry.typeID ];
 
-    CullVisitor.prototype[ Bone.typeID ] = CullVisitor.prototype[ Node.typeID ];
+    CullVisitor.prototype[ Bone.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
 
     return CullVisitor;
 } );
