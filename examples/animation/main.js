@@ -73,7 +73,6 @@ var createScene = function ( viewer ) {
         root.addChild( node );
 
 
-
         var bfinder = new FindBoneVisitor();
         root.accept( bfinder );
         var bones = bfinder.getBones();
