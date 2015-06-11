@@ -69,8 +69,6 @@ var createScene = function ( viewer ) {
     //var request = osgDB.readNodeURL( '../media/models/animation/4x4_anim.osgjs' );
     //var request = osgDB.readNodeURL( '../media/models/animation/roty.osgjs' );
 
-
-
     request.then( function ( node ) {
         root.addChild( node );
 
