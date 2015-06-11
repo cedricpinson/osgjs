@@ -4,12 +4,12 @@ define( [
     'osg/Matrix'
 ], function ( MACROUTILS, Target, Matrix ) {
 
-    var MatrixTarget = function( target ) {
+    var MatrixTarget = function ( target ) {
         Target.call( this );
         if ( !target )
             this._target = Matrix.create();
         else
-            Matrix.copy( target, this._target);
+            Matrix.copy( target, this._target );
     };
 
     MatrixTarget.prototype = MACROUTILS.objectInherit( Target.prototype, {

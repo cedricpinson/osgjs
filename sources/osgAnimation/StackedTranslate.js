@@ -16,7 +16,9 @@ define( [
         var value = Vec3.create();
         if ( translate ) Vec3.copy( translate, value );
 
-        this._target = { value: value };
+        this._target = {
+            value: value
+        };
         if ( name ) this.setName( name );
     };
 

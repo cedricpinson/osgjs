@@ -72,13 +72,13 @@ define( [
 
             'position = vec4( 0.0, 0.0, 0.0, 0.0 );',
             '',
-            //'if ( Weights.x != 0.0 )',
+            'if ( Weights.x != 0.0 )',
             'computeAcummulatedPosition( int( Bones.x ), Weights.x );',
-            //'if ( Weights.y != 0.0 )',
+            'if ( Weights.y != 0.0 )',
             'computeAcummulatedPosition( int( Bones.y ), Weights.y );',
-            //'if ( Weights.z != 0.0 )',
+            'if ( Weights.z != 0.0 )',
             'computeAcummulatedPosition( int( Bones.z ), Weights.z );',
-            //'if ( Weights.w != 0.0 )',
+            'if ( Weights.w != 0.0 )',
             'computeAcummulatedPosition( int( Bones.w ), Weights.w );',
 
             // 'if ( Bone.x == -1.0 &&  Bone.y == -1.0 &&  Bone.z == -1.0 &&  Bone.w == -1.0 ) ',
@@ -106,9 +106,6 @@ define( [
         var program = new Program(
             new Shader( 'VERTEX_SHADER', vertexshader ),
             new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
-
-
-        console.log( program );
 
         return program;
     }
@@ -154,6 +151,7 @@ define( [
             var size = keys.length;
             var bones = this._bones;
 
+
             for ( var i = 0; i < size; i++ ) {
                 var bName = keys[ i ];
                 var index = boneNameID[ bName ];
@@ -183,10 +181,9 @@ define( [
             var matrix = new Float32Array( nbVec4Uniforms * 4 );
             this._matrixPalette = new Uniform.createFloat4Array( matrix, 'uBones' );
 
-
             //Shader setUP
-            geom.parents[0].getOrCreateStateSet().addUniform( this._matrixPalette );
-            geom.getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
+            geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
+            geom.parents[ 0 ].getOrCreateStateSet().addUniform( this._matrixPalette );
 
             this._needInit = false;
             return true;
@@ -225,9 +222,8 @@ define( [
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 6 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 10 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 14 ];
-
                 }
-                this._matrixPalette.set(uniformTypedArray);
+                this._matrixPalette.set( uniformTypedArray );
             };
 
         } )(),

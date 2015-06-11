@@ -13,10 +13,10 @@ define( [
     var StackedRotateAxis = function ( name, axis, angle ) {
         Object.call( this );
 
-        this._axis = Vec3.set( 0.0,0.0,1.0, Vec3.create() );
+        this._axis = Vec3.set( 0.0, 0.0, 1.0, Vec3.create() );
 
         if ( axis )
-            this._axis = Vec3.copy(axis, this._axis);
+            this._axis = Vec3.copy( axis, this._axis );
 
         this._target = {
             value: angle || 0.0
@@ -43,7 +43,7 @@ define( [
             return this._target;
         },
 
-        applyToMatrix: ( function() {
+        applyToMatrix: ( function () {
             var matrixTmp = Matrix.create();
             var quatTmp = Quat.create();
 
@@ -57,7 +57,7 @@ define( [
                 Matrix.setRotateFromQuat( mtmp, qtmp );
                 Matrix.preMult( m, mtmp );
             };
-        })()
+        } )()
 
     } );
 

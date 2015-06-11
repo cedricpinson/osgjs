@@ -130,7 +130,7 @@ define( [
 
 
         // run a visitor to collect all animationUpdateCallback found in node tree
-        findAnimationUpdateCallback: function( node ) {
+        findAnimationUpdateCallback: function ( node ) {
             var collector = new CollectAnimationUpdateCallbackVisitor();
             node.accept( collector );
             this._animationsUpdateCallback = collector.getAnimationUpdateCallbackMap();
@@ -146,13 +146,13 @@ define( [
         // manager we skip it.  It means that it should be called
         // after the animations has been registered into the animation
         // manager
-        assignTargetToAnimationCallback: function() {
+        assignTargetToAnimationCallback: function () {
 
             this._animationsUpdateCallbackArray.length = 0;
 
             var keys = Object.keys( this._animationsUpdateCallback );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
-                var key = keys[i];
+                var key = keys[ i ];
                 var animationUpdateCallback = this._animationsUpdateCallback[ key ];
                 var targetName = animationUpdateCallback.getName();
                 // loop over
@@ -161,12 +161,12 @@ define( [
 
                     var nbChannelsRegistered = 0;
                     for ( var a = 0; a < channels.length; a++ ) {
-                        var channel = channels[a];
-                        var name = channels[a].getName();
+                        var channel = channels[ a ];
+                        var name = channels[ a ].getName();
                         var uniqueTargetName = targetName + '.' + name;
 
                         // if not target id in animation manager skip
-                        var target = this._targetsMap[uniqueTargetName];
+                        var target = this._targetsMap[ uniqueTargetName ];
                         if ( target === undefined ) {
                             Notify.warn( 'target id ' + uniqueTargetName + ' (' + name + ') not found in manager' );
                             continue;
@@ -209,7 +209,7 @@ define( [
                     this._targetID.push( createTargetID( i, Vec3.create() ) );
                 else if ( type === Channel.ChannelType.Quat )
                     this._targetID.push( createTargetID( i, Quat.create() ) );
-                else if ( type === Channel.ChannelType.Float || Channel.ChannelType.FloatCubicBezier)
+                else if ( type === Channel.ChannelType.Float || Channel.ChannelType.FloatCubicBezier )
                     this._targetID.push( createTargetID( i, 0.0 ) );
                 else
                     Notify.warn( 'osgAnimation.BasicAnimationManager unknown target type' );
@@ -375,7 +375,7 @@ define( [
             // update all animation callback
             // expect to have UpdateMatrixTransform
             for ( var i = 0, l = this._animationsUpdateCallbackArray.length; i < l; i++ ) {
-                var animCallback = this._animationsUpdateCallbackArray[i];
+                var animCallback = this._animationsUpdateCallbackArray[ i ];
                 animCallback.computeChannels();
             }
 
@@ -390,7 +390,7 @@ define( [
 
             var i = 0;
             while ( i < activeAnimationList.length ) {
-                var instanceAnimation  = activeAnimationList[ i ];
+                var instanceAnimation = activeAnimationList[ i ];
                 var name = instanceAnimation.name;
                 var cmd = this._activeAnimations[ name ];
 

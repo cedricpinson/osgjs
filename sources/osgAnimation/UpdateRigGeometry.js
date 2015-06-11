@@ -18,7 +18,7 @@ define( [
 
     UpdateRigGeometry.prototype = MACROUTILS.objectInherit( ObjectBase.prototype, {
 
-        init: function( geom ) {
+        init: function ( geom ) {
 
             var finder = new FindNearestParentSkeleton();
             if ( geom.getParents().length > 1 )

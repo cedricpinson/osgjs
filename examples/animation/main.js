@@ -15,7 +15,7 @@ FindAnimationManagerVisitor.prototype = osg.objectInherit( osg.NodeVisitor.proto
     init: function () {
         this.found = [];
     },
-    getAnimationManager: function() {
+    getAnimationManager: function () {
         return this._cb;
     },
     apply: function ( node ) {
@@ -36,7 +36,7 @@ var createScene = function ( viewer ) {
 
     var request = osgDB.readNodeURL( '../media/models/animation/mixamo horse gallop.osgjs' );
     //var request = osgDB.readNodeURL( '../media/models/animation/4x4_anim.osgjs' );
-
+    //var request = osgDB.readNodeURL( '../media/models/animation/roty.osgjs' );
 
     request.then( function ( node ) {
         root.addChild( node );
@@ -49,9 +49,9 @@ var createScene = function ( viewer ) {
         if ( animationManager ) {
             console.log( animationManager.getAnimations() );
             var animations = Object.keys( animationManager.getAnimations() );
-            var firstAnimation = animations.length ? animations[0] : undefined;
+            var firstAnimation = animations.length ? animations[ 0 ] : undefined;
             if ( firstAnimation ) {
-                window.play = function() {
+                window.play = function () {
                     animationManager.playAnimation( firstAnimation );
                 };
                 window.animationManager = animationManager;
