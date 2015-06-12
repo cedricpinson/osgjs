@@ -298,7 +298,8 @@ define( [
         } else {
             // not tested
 
-            var previousStage = this.getCurrentRenderBin().getStage();
+            var renderBin = this.getCurrentRenderBin();
+            var previousStage = renderBin.getStage();
 
             // use render to texture stage
             var rtts = new RenderStage();
@@ -319,13 +320,11 @@ define( [
             // skip positional state for now
             // ...
 
-            var previousRenderBin = this.getCurrentRenderBin();
-
             this.setCurrentRenderBin( rtts );
 
             this.handleCullCallbacksAndTraverse( camera );
 
-            this.setCurrentRenderBin( previousRenderBin );
+            this.setCurrentRenderBin( renderBin );
 
             if ( camera.getRenderOrder() === Camera.PRE_RENDER ) {
                 this.getCurrentRenderBin().getStage().addPreRenderStage( rtts, camera.renderOrderNum );

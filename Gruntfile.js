@@ -290,7 +290,7 @@ var generateVersionFile = function () {
             options: {
                 timeout: 10000,
                 urls: [
-                    'http://localhost:9001/tests/index.html'
+                    'http://127.0.0.1:9001/tests/index.html'
                 ]
             }
         }
