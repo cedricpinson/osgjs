@@ -45,9 +45,10 @@ define( [
             return function ( bsphere ) {
                 if ( !bsphere.valid() ) return false;
                 Vec3.sub( bsphere.center(), this._iStart, l );
-                var s = Vec3.dot( l, this._iEnd );
                 var l2 = Vec3.length2( l );
-                if ( s < 0.0 && l2 > bsphere.radius2() ) return false;
+                if ( l2 < bsphere.radius2() ) return true;
+                var s = Vec3.dot( l, this._iEnd );
+                if ( s < 0 ) return false;
                 var m2 = l2 - ( s * s );
                 if ( m2 > bsphere.radius2() ) return false;
                 return true;
