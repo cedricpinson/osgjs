@@ -13,6 +13,7 @@ define( [
         this._width = undefined;
         this._height = undefined;
         this._dirty = true;
+        this._mipmap = [];
 
         if ( image ) {
             this.setImage( image );
@@ -37,7 +38,7 @@ define( [
         },
 
         getImage: function () {
-            return this._imageObject;
+            return ( this._imageObject instanceof Image ) ? this._imageObject.getImage() : this._imageObject;
         },
 
         getURL: function () {
@@ -48,28 +49,49 @@ define( [
             this._url = url;
         },
 
+        useOrCreateImage: function ( img ) {
+            return ( img instanceof( Image ) === false ) ? new Image( img ) : img;
+        },
+
         setImage: function ( img ) {
             if ( !this._url && img && ( img.src || img.currentSrc ) ) {
-                this._url = img.src;
+                // TODO what is currentSrc ?
+                this._url = img.src || img.currentSrc;
             }
-            this._imageObject = img;
+
+            this._mipmap.length = 0;
+
+            // img can be an image or an array of image if specify the
+            // all mipmap levels
+            if ( Array.isArray( img ) ) {
+                for ( var i = 0, nbImg = img.length; i < nbImg; i++ ) {
+                    this._mipmap.push( this.useOrCreateImage( img[ i ] ) );
+                }
+                this.setWidth( this._mipmap[ 0 ].getWidth() );
+                this.setHeight( this._mipmap[ 0 ].getHeight() );
+            } else {
+                this._mipmap.push( img );
+            }
+
+            this._imageObject = this._mipmap[ 0 ];
             this.dirty();
         },
 
         isCanvas: function () {
-            return this._imageObject instanceof HTMLCanvasElement;
+            return this.getImage() instanceof HTMLCanvasElement;
         },
 
         isVideo: function () {
-            return this._imageObject instanceof window.HTMLVideoElement;
+            return this.getImage() instanceof window.HTMLVideoElement;
         },
 
         isImage: function () {
-            return this._imageObject instanceof window.Image;
+            return this.getImage() instanceof window.Image;
         },
 
         isTypedArray: function () {
-            return this._imageObject instanceof Uint8Array || this._imageObject instanceof Float32Array;
+            var img = this.getImage();
+            return img instanceof Uint8Array || img instanceof Float32Array || img instanceof Uint16Array;
         },
 
         setWidth: function ( w ) {
@@ -81,23 +103,25 @@ define( [
         },
 
         getWidth: function () {
+            var img = this.getImage();
             if ( this.isImage() ) {
-                return this._imageObject.naturalWidth;
+                return img.naturalWidth;
             } else if ( this.isVideo() ) {
-                return this._imageObject.videoWidth;
+                return img.videoWidth;
             } else if ( this.isCanvas() ) {
-                return this._imageObject.width;
+                return img.width;
             }
             return this._width;
         },
 
         getHeight: function () {
+            var img = this.getImage();
             if ( this.isImage() ) {
-                return this._imageObject.naturalHeight;
+                return img.naturalHeight;
             } else if ( this.isVideo() ) {
-                return this._imageObject.videoHeight;
+                return img.videoHeight;
             } else if ( this.isCanvas() ) {
-                return this._imageObject.height;
+                return img.height;
             }
             return this._height;
         },
@@ -150,6 +174,10 @@ define( [
 
         isReady: function () {
 
+            // image is a osgImage
+            if ( this._imageObject && this._imageObject.isReady )
+                return this._imageObject.isReady();
+
             // image are ready for static data
             if ( this.isCanvas() ||
                 this.isTypedArray() ) {
@@ -157,7 +185,7 @@ define( [
             }
 
             if ( this.isImage() ) {
-                var image = this._imageObject;
+                var image = this.getImage();
                 if ( image.complete ) {
                     if ( image.naturalWidth !== undefined && image.naturalWidth === 0 ) {
                         return false;
@@ -171,6 +199,18 @@ define( [
             }
 
             return false;
+        },
+        getMipmap: function () {
+            return this._mipmap;
+        },
+
+        hasMipmap: function () {
+            return this._mipmap.length > 1;
+        },
+
+        release: function () {
+            this._mipmap.length = 0;
+            this._imageObject = undefined;
         }
     } ), 'osg', 'Image' );
 
