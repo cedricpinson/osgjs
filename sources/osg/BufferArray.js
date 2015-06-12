@@ -9,7 +9,7 @@ define( [
 
     'use strict';
 
-    var getAttributeType = function( array ) {
+    var getAttributeType = function ( array ) {
         var type;
 
         if ( array instanceof MACROUTILS.Float32Array ) type = 0x1406;

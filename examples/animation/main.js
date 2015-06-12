@@ -30,33 +30,33 @@ FindAnimationManagerVisitor.prototype = osg.objectInherit( osg.NodeVisitor.proto
     }
 } );
 
-var FindBoneVisitor = function() {
-    osg.NodeVisitor.call(this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN);
+var FindBoneVisitor = function () {
+    osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
     this._bones = [];
 };
-FindBoneVisitor.prototype = osg.objectInherit(osg.NodeVisitor.prototype, {
-    init: function() {},
-    apply: function(node) {
+FindBoneVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+    init: function () {},
+    apply: function ( node ) {
 
-        if (node.className() === 'Bone') {
-            this._bones.push(node);
+        if ( node.className() === 'Bone' ) {
+            this._bones.push( node );
         }
-        this.traverse(node);
+        this.traverse( node );
     },
-    getBones: function() {
+    getBones: function () {
         return this._bones;
     },
-    getBone: function(name) {
+    getBone: function ( name ) {
         var bones = this.getBones();
-        for (var i = 0, l = bones.length; i < l; i++) {
-            var bone = bones[i];
-            if (bone.getName() === name) {
+        for ( var i = 0, l = bones.length; i < l; i++ ) {
+            var bone = bones[ i ];
+            if ( bone.getName() === name ) {
                 return bone;
             }
         }
         return undefined;
     }
-});
+} );
 
 
 
@@ -76,22 +76,22 @@ var createScene = function ( viewer ) {
 
 
         var bfinder = new FindBoneVisitor();
-        root.accept(bfinder);
+        root.accept( bfinder );
         var bones = bfinder.getBones();
 
-        var geom = osg.createAxisGeometry(40);
-        for (var i = 0, l = bones.length; i < l; i++) {
-            var bone = bones[i];
+        var geom = osg.createAxisGeometry( 40 );
+        for ( var i = 0, l = bones.length; i < l; i++ ) {
+            var bone = bones[ i ];
             console.log( bone.getName() );
             var tnode = new osg.Node();
-//            tnode.addChild( geom );
-//            tnode.addChild( osg.createTexturedBoxGeometry() );
+            //            tnode.addChild( geom );
+            //            tnode.addChild( osg.createTexturedBoxGeometry() );
             bone.addChild( tnode );
         }
 
-        window.listBones = function() {
-            for (var i = 0, l = bones.length; i < l; i++) {
-                var bone = bones[i];
+        window.listBones = function () {
+            for ( var i = 0, l = bones.length; i < l; i++ ) {
+                var bone = bones[ i ];
                 console.log( bone.getName(), bone.getMatrix() );
             }
 
