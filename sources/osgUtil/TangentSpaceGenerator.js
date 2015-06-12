@@ -117,6 +117,7 @@ define( [
                 var sign = Vec3.dot( tmp0, b );
                 sign = sign < 0.0 ? -1.0 : 0.0;
 
+                // TODO perf : cache index var id = i * 4;
                 tangents[ i * 4 ] = t3[ 0 ];
                 tangents[ i * 4 + 1 ] = t3[ 1 ];
                 tangents[ i * 4 + 2 ] = t3[ 2 ];
@@ -134,6 +135,12 @@ define( [
             var i1 = primitiveSet.index( ib );
             var i2 = primitiveSet.index( ic );
 
+            // TODO perf : cache xx.getElements() but more importantly
+            // subarray call have very high overhead, it's super useful
+            // when you call it a few times for big array chunk, but for
+            // small array extraction (each vertex) it's better to use a temporary
+            // pre allocated array and simply fill it
+            // then, you'll have to write in the big arrays at the end
             var P1 = vx.getElements().subarray( i0 * 3, i0 * 3 + 3 );
             var P2 = vx.getElements().subarray( i1 * 3, i1 * 3 + 3 );
             var P3 = vx.getElements().subarray( i2 * 3, i2 * 3 + 3 );
@@ -147,6 +154,7 @@ define( [
             var uv3 = tx.getElements().subarray( i2 * 2, i2 * 2 + 2 );
 
             var vz, vy;
+            // TODO perf : use temporary vec
             var V = Vec3.create();
 
             var B1 = Vec3.create();

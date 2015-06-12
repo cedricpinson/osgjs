@@ -400,14 +400,12 @@ define( [
 
 
 
-    Composer.Filter.AverageHBlur = function ( nbSamplesOpt, linear ) {
+    Composer.Filter.AverageHBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
         Composer.Filter.call( this );
-        this._noLinear = linear === false;
-        if ( nbSamplesOpt === undefined ) {
-            this.setBlurSize( 5 );
-        } else {
-            this.setBlurSize( nbSamplesOpt );
-        }
+        this._linear = linear !== false;
+        this.setBlurSize( nbSamplesOpt !== undefined ? nbSamplesOpt : 5 );
+        this._unpack = unpack;
+        this._pack = pack;
         this._pixelSize = 1.0;
     };
 
@@ -433,7 +431,7 @@ define( [
 
             var kernel = [];
 
-            kernel.push( ' pixel = texture2D(Texture0, FragTexCoord0 );' );
+            kernel.push( ' pixel = unpack(Texture0, FragTexCoord0 );' );
             kernel.push( ' if (pixel.w == 0.0) { gl_FragColor = pixel; return; }' );
             kernel.push( ' vec2 offset;' );
             var i;
@@ -444,11 +442,11 @@ define( [
             }
             var numFinalSample = numTexBlurStep * 2.0 + 1.0;
             var weight = 1.0 / numFinalSample;
-            if ( this._noLinear ) {
+            if ( !this._linear ) {
                 for ( i = 0; i < numTexBlurStep; i++ ) {
                     kernel.push( ' offset = ' + this.getUVOffset( ( i + 1 ) * this._pixelSize ) );
-                    kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 + offset);' );
-                    kernel.push( ' pixel += texture2D(Texture0, FragTexCoord0 - offset);' );
+                    kernel.push( ' pixel += unpack(Texture0, FragTexCoord0 + offset);' );
+                    kernel.push( ' pixel += unpack(Texture0, FragTexCoord0 - offset);' );
                 }
                 kernel.push( ' pixel *= float(' + weight + ');' );
 
@@ -473,8 +471,8 @@ define( [
 
                     kernel.push( ' offset = ' + offset );
 
-                    kernel.push( ' pixelLin += texture2D(Texture0, FragTexCoord0 + offset);' );
-                    kernel.push( ' pixelLin += texture2D(Texture0, FragTexCoord0 - offset);' );
+                    kernel.push( ' pixelLin += unpack(Texture0, FragTexCoord0 + offset);' );
+                    kernel.push( ' pixelLin += unpack(Texture0, FragTexCoord0 - offset);' );
                 }
                 kernel.push( ' pixel += pixelLin * float(' + weightTwo * 2 + ');' );
 
@@ -488,11 +486,11 @@ define( [
         build: function () {
 
             var tex = this._stateSet.getTextureAttribute( 0, 'Texture' );
-            if ( tex && !this._noLinear ) {
+            if ( tex && this._linear ) {
                 tex.setMinFilter( 'LINEAR' );
                 tex.setMagFilter( 'LINEAR' );
             } else {
-                this._noLinear = true;
+                this._linear = false;
             }
 
             //var nbSamples = this._nbSamples;
@@ -501,11 +499,14 @@ define( [
                 Composer.Filter.defaultFragmentShaderHeader,
                 'uniform float width;',
 
+                this._unpack || 'vec4 unpack(const in sampler2D tex, const in vec2 uv) { return texture2D(tex, uv); }',
+                this._pack || 'vec4 pack(vec4 pix) { return pix; }',
+
                 'void main (void)',
                 '{',
                 '  vec4 pixel;',
                 this.getShaderBlurKernel().join( '\n' ),
-                '  gl_FragColor = vec4(pixel);',
+                '  gl_FragColor = pack(pixel);',
                 '}',
                 ''
             ].join( '\n' );
@@ -525,8 +526,8 @@ define( [
     } );
 
 
-    Composer.Filter.AverageVBlur = function ( nbSamplesOpt, linear ) {
-        Composer.Filter.AverageHBlur.call( this, nbSamplesOpt, linear );
+    Composer.Filter.AverageVBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
+        Composer.Filter.AverageHBlur.call( this, nbSamplesOpt, linear, unpack, pack );
     };
     Composer.Filter.AverageVBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.AverageHBlur.prototype, {
         getUVOffset: function ( value ) {
@@ -534,7 +535,7 @@ define( [
         }
     } );
 
-    Composer.Filter.BilateralHBlur = function ( options ) {
+    Composer.Filter.BilateralHBlur = function ( options, unpack, pack ) {
         Composer.Filter.call( this );
 
         if ( options === undefined ) {
@@ -545,15 +546,14 @@ define( [
         var depthTexture = options.depthTexture;
         var radius = options.radius;
 
-        if ( nbSamplesOpt === undefined ) {
-            this.setBlurSize( 5 );
-        } else {
-            this.setBlurSize( nbSamplesOpt );
-        }
+        this.setBlurSize( nbSamplesOpt !== undefined ? nbSamplesOpt : 5 );
         this._depthTexture = depthTexture;
         this._radius = Uniform.createFloat( 1.0, 'radius' );
         this._pixelSize = Uniform.createFloat( 1.0, 'pixelSize' );
         this.setRadius( radius );
+
+        this._unpack = unpack;
+        this._pack = pack;
     };
 
     Composer.Filter.BilateralHBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
@@ -579,24 +579,24 @@ define( [
         getShaderBlurKernel: function () {
             var nbSamples = this._nbSamples;
             var kernel = [];
-            kernel.push( ' pixel = texture2D(Texture0, FragTexCoord0 );' );
+            kernel.push( ' pixel = unpack(Texture0, FragTexCoord0 );' );
             kernel.push( ' if (pixel.w <= 0.0001) { gl_FragColor = vec4(1.0); return; }' );
             kernel.push( ' vec2 offset, tmpUV;' );
-            kernel.push( ' depth = getDepthValue(texture2D(Texture1, FragTexCoord0 ));' );
+            kernel.push( ' depth = getDepthValue(unpack(Texture1, FragTexCoord0 ));' );
             for ( var i = 1; i < Math.ceil( nbSamples / 2 ); i++ ) {
                 kernel.push( ' offset = ' + this.getUVOffset( i ) );
 
                 kernel.push( ' tmpUV =  FragTexCoord0 + offset;' );
-                kernel.push( ' tmpDepth = getDepthValue(texture2D(Texture1, tmpUV ));' );
+                kernel.push( ' tmpDepth = getDepthValue(unpack(Texture1, tmpUV ));' );
                 kernel.push( ' if ( abs(depth-tmpDepth) < radius) {' );
-                kernel.push( '   pixel += texture2D(Texture0, tmpUV);' );
+                kernel.push( '   pixel += unpack(Texture0, tmpUV);' );
                 kernel.push( '   nbHits += 1.0;' );
                 kernel.push( ' }' );
 
                 kernel.push( ' tmpUV =  FragTexCoord0 - offset;' );
-                kernel.push( ' tmpDepth = getDepthValue(texture2D(Texture1, tmpUV ));' );
+                kernel.push( ' tmpDepth = getDepthValue(unpack(Texture1, tmpUV ));' );
                 kernel.push( ' if ( abs(depth-tmpDepth) < radius) {' );
-                kernel.push( '   pixel += texture2D(Texture0, tmpUV);' );
+                kernel.push( '   pixel += unpack(Texture0, tmpUV);' );
                 kernel.push( '   nbHits += 1.0;' );
                 kernel.push( ' }' );
             }
@@ -613,6 +613,9 @@ define( [
                 'uniform mat4 projection;',
                 'uniform float radius;',
                 'uniform float pixelSize;',
+
+                this._unpack || 'vec4 unpack(const in sampler2D tex, const in vec2 uv) { return texture2D(tex, uv); }',
+                this._pack || 'vec4 pack(vec4 pix) { return pix; }',
 
                 'float znear,zfar,zrange;',
                 '',
@@ -634,7 +637,7 @@ define( [
                 '  float nbHits = 1.0;',
 
                 this.getShaderBlurKernel().join( '\n' ),
-                '  gl_FragColor = vec4(pixel);',
+                '  gl_FragColor = pack(pixel);',
                 '}',
                 ''
             ].join( '\n' );
@@ -657,8 +660,8 @@ define( [
         }
     } );
 
-    Composer.Filter.BilateralVBlur = function ( options ) {
-        Composer.Filter.BilateralHBlur.call( this, options );
+    Composer.Filter.BilateralVBlur = function ( options, unpack, pack ) {
+        Composer.Filter.BilateralHBlur.call( this, options, unpack, pack );
     };
 
     Composer.Filter.BilateralVBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.BilateralHBlur.prototype, {
@@ -680,14 +683,12 @@ define( [
     } );
 
     // Operate a Gaussian horizontal blur
-    Composer.Filter.HBlur = function ( nbSamplesOpt, linear ) {
+    Composer.Filter.HBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
         Composer.Filter.call( this );
-        this._noLinear = linear === false;
-        if ( nbSamplesOpt === undefined ) {
-            this.setBlurSize( 5 );
-        } else {
-            this.setBlurSize( nbSamplesOpt );
-        }
+        this._linear = linear !== false;
+        this.setBlurSize( nbSamplesOpt !== undefined ? nbSamplesOpt : 5 );
+        this._unpack = unpack;
+        this._pack = pack;
     };
 
     Composer.Filter.HBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
@@ -708,11 +709,11 @@ define( [
             // TODO: get rendersize from that and precompute
             // offset when possible
             var tex = this._stateSet.getTextureAttribute( 0, 'Texture' );
-            if ( tex && !this._noLinear ) {
+            if ( tex && this._linear ) {
                 tex.setMinFilter( 'LINEAR' );
                 tex.setMagFilter( 'LINEAR' );
             } else {
-                this._noLinear = true;
+                this._linear = false;
             }
 
             var vtx = Composer.Filter.defaultVertexShader;
@@ -728,11 +729,11 @@ define( [
             var start = Math.floor( coeffIdx / 2.0 );
 
             var kernel = [];
-            kernel.push( ' pixel = float(' + weights[ start ] + ')*texture2D(Texture0, FragTexCoord0 ).rgb;' );
+            kernel.push( ' pixel = float(' + weights[ start ] + ')*unpack(Texture0, FragTexCoord0 ).rgb;' );
 
             kernel.push( ' vec2 offset;' );
             var idx, i, weight, offset, offsetIdx;
-            if ( this._noLinear ) {
+            if ( !this._linear ) {
                 idx = 1;
                 for ( i = start + 1; i < nbSamples; i++ ) {
                     weight = weights[ i ];
@@ -743,8 +744,8 @@ define( [
                     offset = this.getUVOffset( offsetIdx );
 
                     kernel.push( ' offset = ' + offset );
-                    kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
-                    kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
+                    kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
+                    kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
                 }
             } else {
 
@@ -767,19 +768,22 @@ define( [
                     offset = this.getUVOffset( offsetIdx );
 
                     kernel.push( ' offset = ' + offset );
-                    kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
-                    kernel.push( ' pixel += ' + weight + '* texture2D(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
+                    kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (FragTexCoord0.xy + offset.xy)).rgb;' );
+                    kernel.push( ' pixel += ' + weight + '* unpack(Texture0, (FragTexCoord0.xy - offset.xy)).rgb;' );
                 }
             }
             var fgt = [
                 Composer.Filter.defaultFragmentShaderHeader,
                 'uniform float width;',
 
+                this._unpack || 'vec4 unpack(const in sampler2D tex, const in vec2 uv) { return texture2D(tex, uv); }',
+                this._pack || 'vec4 pack(vec4 pix) { return pix; }',
+
                 'void main (void)',
                 '{',
                 '  vec3 pixel;',
                 kernel.join( '\n' ),
-                '  gl_FragColor = vec4(pixel,1.0);',
+                '  gl_FragColor = pack(vec4(pixel, 1.0));',
                 '}',
                 ''
             ].join( '\n' );
@@ -797,8 +801,8 @@ define( [
     } );
 
     // Operate a Gaussian vertical blur
-    Composer.Filter.VBlur = function ( nbSamplesOpt, linear ) {
-        Composer.Filter.HBlur.call( this, nbSamplesOpt, linear );
+    Composer.Filter.VBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
+        Composer.Filter.HBlur.call( this, nbSamplesOpt, linear, unpack, pack );
     };
 
     Composer.Filter.VBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.HBlur.prototype, {
