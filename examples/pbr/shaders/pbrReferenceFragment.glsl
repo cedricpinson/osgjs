@@ -26,7 +26,7 @@ uniform sampler2D uIntegrateBRDF; // ue4
 
 uniform vec3 uEnvironmentSphericalHarmonics[9];
 
-uniform vec2 uHammersleySamples[NB_SAMPLES];
+//uniform vec2 uHammersleySamples[NB_SAMPLES];
 
 varying vec3 osg_FragEye;
 varying vec3 osg_FragNormal;
@@ -42,12 +42,32 @@ uniform sampler2D specularMap;
 uniform sampler2D aoMap;
 uniform int uFlipNormalY;
 uniform int uNormalAA;
+uniform int uSpecularPeak;
 uniform int uOcclusionHorizon;
 
 #pragma include "sphericalHarmonics.glsl"
 #pragma include "colorSpace.glsl"
 
 
+// From Sebastien Lagarde Moving Frostbite to PBR page 69
+// We have a better approximation of the off specular peak
+// but due to the other approximations we found this one performs better.
+// N is the normal direction
+// R is the mirror vector
+// This approximation works fine for G smith correlated and uncorrelated
+vec3 getSpecularDominantDir(const in vec3 N, const in vec3 R, const in float realRoughness)
+{
+    vec3 dominant;
+    if ( uSpecularPeak == 1 ) {
+        float smoothness = 1.0 - realRoughness;
+        float lerpFactor = smoothness * (sqrt(smoothness) + realRoughness);
+        // The result is not normalized as we fetch in a cubemap
+        dominant = mix(N, R, lerpFactor);
+    } else {
+        dominant = R;
+    }
+    return dominant;
+}
 
 
 float occlusionHorizon( const in vec3 R, const in vec3 normal)
@@ -123,15 +143,9 @@ vec3 getReferenceTexelEnvironmentLod( const in vec3 dirLocal, const in float pdf
     vec3 direction = environmentTransform * dirLocal;
 
 #ifdef CUBEMAP_LOD
-
-    float lod = computeLODCubemap( pdf, int(NB_SAMPLES), uEnvironmentLodRange[0]);
-    return textureCubeLodEXTFixed(uEnvironmentCube, direction, lod );
-
-#else
-
-    //float lod = computeLODPanorama(direction, pdf, int(NB_SAMPLES), uEnvironmentLodRange[0] );
-    float lod = computeLODPanorama(direction, pdf, int(NB_SAMPLES), uEnvironmentLodRange[1] );
-    return getTexelPanorama( direction, lod );
+    float lod = computeLODCubemap( pdf, int(NB_SAMPLES), uEnvironmentLodRange[1]);
+    //return textureCubeLodEXTFixed(uEnvironmentCube, direction, lod );
+    return textureCubemapLod( uEnvironmentCube, direction, lod ).rgb;
 #endif
 }
 

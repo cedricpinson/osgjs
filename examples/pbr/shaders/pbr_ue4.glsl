@@ -66,12 +66,18 @@ vec3 approximateSpecularIBL( const in vec3 specularColor,
     float roughnessLinear = max( rLinear, 0.0);
     float NoV = clamp( dot( N, V ), 0.0, 1.0 );
     vec3 R = normalize( (2.0 * NoV ) * N - V);
-    vec3 dir = environmentTransform * R;
+
+
+    // From Sebastien Lagarde Moving Frostbite to PBR page 69
+    // so roughness = linRoughness * linRoughness
+    vec3 dominantR = getSpecularDominantDir( N, R, roughnessLinear*roughnessLinear );
+
+    vec3 dir = environmentTransform * dominantR;
     vec3 prefilteredColor = prefilterEnvMap( roughnessLinear, dir );
-    //vec3 prefilteredColor = vec3(1.0);
+
 
     // marmoset tricks
-    prefilteredColor *= occlusionHorizon( R, osg_FragNormal );
+    prefilteredColor *= occlusionHorizon( dominantR, osg_FragNormal );
 
 #ifdef MOBILE
     return uBrightness * prefilteredColor * integrateBRDFApprox( specularColor, roughnessLinear, NoV );

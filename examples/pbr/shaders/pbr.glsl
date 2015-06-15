@@ -113,14 +113,14 @@ vec3 evaluateSpecularIBL( const in vec3 N,
                           const in vec3 tangentX,
                           const in vec3 tangentY,
 
-                          const in float roughness_,
+                          float linRoughness,
                           const in vec3 specular )
 {
 
     vec3 contrib = vec3(0.0);
     // if dont simplify the math you can get a rougness of 0 and it will
     // produce an error on D_GGX / 0.0
-    float roughness = max( roughness_, 0.015);
+    linRoughness = max( linRoughness, 0.015);
     // float roughness = MaterialRoughness;
 
     //vec3 f0 = MaterialSpecular;
@@ -129,7 +129,7 @@ vec3 evaluateSpecularIBL( const in vec3 N,
 
     float NdotV = abs( dot(V, N) ) + 1.0e-5;
 
-    float alpha = roughness*roughness;
+    float alpha = linRoughness*linRoughness;
     float alphaMinus1 = alpha - 1.0;
 
     float alpha2 = alpha*alpha;
@@ -144,8 +144,8 @@ vec3 evaluateSpecularIBL( const in vec3 N,
     for ( int i = 0; i < NB_SAMPLES; i++ ) {
 
         // get sample
-        //vec2 u = getSample( i );
-        vec2 u = uHammersleySamples[i];
+        vec2 u = getSample( i );
+        //vec2 u = uHammersleySamples[i];
 
         // Importance sampling GGX NDF sampling
         float cosThetaH = sqrt( (1.0-u.y) / (1.0 + alpha2Minus1 * u.y) ); // ue4
@@ -228,7 +228,7 @@ vec3 evaluateSpecularIBL( const in vec3 N,
 
 
         //vec3 dir = environmentTransform * L;
-        //vec3 color = textureCubeLodEXT(uEnvironmentCube, dir, 0.0 ).rgb;
+        //vec3 color = uBrightness * textureCubeLodEXT(uEnvironmentCube, L, 0.0 ).rgb;
         vec3 color = uBrightness * getReferenceTexelEnvironmentLod( L, pdf ).rgb;
 
         // marmoset tricks

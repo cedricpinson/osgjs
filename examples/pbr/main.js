@@ -91,6 +91,7 @@
             environmentType: 'cubemapSeamless',
             brightness: 1.0,
             normalAA: false,
+            specularPeak: false,
             occlusionHorizon: false,
 
             roughness: 0.5,
@@ -130,6 +131,8 @@
         this._envBrightnessUniform = osg.Uniform.createFloat1( 1.0, 'uBrightness' );
 
         this._normalAA = osg.Uniform.createInt1( 0, 'uNormalAA' );
+        this._specularPeak = osg.Uniform.createInt1( 0, 'uSpecularPeak' );
+
         this._occlusionHorizon = osg.Uniform.createInt1( 0, 'uOcclusionHorizon' );
 
         // background stateSet
@@ -348,6 +351,12 @@
             var aa = this._config.normalAA ? 1 : 0;
             this._normalAA.get()[0] = aa;
             this._normalAA.dirty();
+        },
+
+        updateSpecularPeak: function() {
+            var aa = this._config.specularPeak ? 1 : 0;
+            this._specularPeak.get()[0] = aa;
+            this._specularPeak.dirty();
         },
 
         updateOcclusionHorizon: function() {
@@ -740,6 +749,7 @@
             stateSet.addUniform( this._environmentTransformUniform );
             stateSet.addUniform( this._envBrightnessUniform );
             stateSet.addUniform( this._normalAA );
+            stateSet.addUniform( this._specularPeak );
             stateSet.addUniform( this._occlusionHorizon );
         },
 
@@ -995,7 +1005,7 @@
             viewer.init();
 
             var gl = viewer.getState().getGraphicContext();
-
+            console.log( gl.getSupportedExtensions() );
             console.log( gl.getExtension( 'OES_texture_float' ) );
             var hasFloatLinear = gl.getExtension( 'OES_texture_float_linear' );
             console.log( hasFloatLinear );
@@ -1072,6 +1082,9 @@
                 controller = gui.add( this._config, 'normalAA');
                 controller.onChange( this.updateNormalAA.bind( this ) );
 
+                controller = gui.add( this._config, 'specularPeak');
+                controller.onChange( this.updateSpecularPeak.bind( this ) );
+
                 controller = gui.add( this._config, 'occlusionHorizon');
                 controller.onChange( this.updateOcclusionHorizon.bind( this ) );
 
@@ -1089,7 +1102,7 @@
                 controller.onChange( this.updateEnvironment.bind( this ) );
 
 
-                controller = gui.add( this._config, 'nbSamples', [ 4, 8, 16, 32, 64, 128, 256 ] );
+                controller = gui.add( this._config, 'nbSamples', [ 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 ] );
                 var updateShaderCallback = this.updateShaderPBR.bind( this );
                 controller.onChange( updateShaderCallback );
 
