@@ -50,21 +50,18 @@ define( [
                 queue.push( input.setJSON( jsonObj.Children[ i ] ).readObject() );
             }
         }
-        var defer = P.defer();
         // Resolve first updateCallbacks and stateset.
-        P.all( promiseArray ).then( function () {
+        return P.all( promiseArray ).then( function () {
             // Need to wait until the stateset and the all the callbacks are resolved
-            P.all( queue ).then( function ( queueNodes ) {
+            return P.all( queue ).then( function ( queueNodes ) {
                 // All the results from P.all are on the argument as an array
                 // Now insert children in the right order
                 var len = queueNodes.length;
                 for ( var i = 0; i < len; i++ )
                     node.addChild( queueNodes[ i ] );
-                defer.resolve( node );
-            } ).catch( defer.reject.bind( defer ) );
-        } ).catch( defer.reject.bind( defer ) );
-
-        return defer.promise;
+                return node;
+            } );
+        } );
     };
 
     osgWrapper.StateSet = function ( input, stateSet ) {
@@ -108,12 +105,9 @@ define( [
             }
         }
 
-        var defer = P.defer();
-        P.all( promiseArray ).then( function () {
-            defer.resolve( stateSet );
-        } ).catch( defer.reject.bind( defer ) );
-
-        return defer.promise;
+        return P.all( promiseArray ).then( function () {
+            return stateSet;
+        } );
     };
 
     osgWrapper.Material = function ( input, material ) {
@@ -214,12 +208,10 @@ define( [
             file = 'no-image-provided';
         }
 
-        var defer = P.defer();
-        input.readImageURL( file ).then( function ( img ) {
+        return input.readImageURL( file ).then( function ( img ) {
             texture.setImage( img );
-            defer.resolve( texture );
-        } ).catch( defer.reject.bind( defer ) );
-        return defer.promise;
+            return texture;
+        } );
     };
 
     osgWrapper.Projection = function ( input, node ) {
@@ -247,15 +239,13 @@ define( [
         if ( !jsonObj.Light )
             return P.reject();
 
-        var defer = P.defer();
         var promise = osgWrapper.Node( input, node );
-        P.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
+        return P.all( [ input.setJSON( jsonObj.Light ).readObject(), promise ] ).then( function ( args ) {
             var light = args[ 0 ];
             //var lightsource = args[ 1 ];
             node.setLight( light );
-            defer.resolve( node );
-        } ).catch( defer.reject.bind( defer ) );
-        return defer.promise;
+            return node;
+        } );
     };
 
     osgWrapper.Geometry = function ( input, node ) {
@@ -292,11 +282,9 @@ define( [
             promiseBuffer.then( cbSetBuffer.bind( node, name ) );
         }
 
-        var defer = P.defer();
-        P.all( arraysPromise ).then( function () {
-            defer.resolve( node );
-        } ).catch( defer.reject.bind( defer ) );
-        return defer.promise;
+        return P.all( arraysPromise ).then( function () {
+            return node;
+        } );
     };
 
     osgWrapper.PagedLOD = function ( input, plod ) {
@@ -345,16 +333,13 @@ define( [
             }
         }
 
-        var defer = P.defer();
-        P.all( queue ).then( function ( queueNodes ) {
+        return P.all( queue ).then( function ( queueNodes ) {
             // All the results from P.all are on the argument as an array
             var len = queueNodes.length;
             for ( i = 0; i < len; i++ )
                 plod.addChildNode( queueNodes[ i ] );
-            defer.resolve( plod );
-        } ).catch( defer.reject.bind( defer ) );
-
-        return defer.promise;
+            return plod;
+        } );
     };
     return osgWrapper;
 } );
