@@ -65,7 +65,6 @@ var createScene = function ( viewer, root, url ) {
 
     //var request = osgDB.readNodeURL( '../media/models/animation/brindherbe_indexed.osgjs.gz' );
     //var request = osgDB.readNodeURL( '../media/models/animation/4x4_anim.osgjs' );
-    //var request = osgDB.readNodeURL( '../media/models/animation/roty.osgjs' );
     //var request = osgDB.readNodeURL( '../media/models/animation/brindherbetrs.osgjs' );
 
     //var request = osgDB.readNodeURL( '../media/models/animation/mixamo wizard magic_attack_05.osgjs' );
