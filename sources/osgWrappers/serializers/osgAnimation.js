@@ -59,7 +59,7 @@ define( [
             keys[ id ] = jsKeyZ[ i ];
         }
 
-        channel = creator( keys, times, jsonObj.TargetName, jsonObj.Name );
+        creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
         return P.resolve( channel );
     };
 
@@ -89,7 +89,7 @@ define( [
             keys[ id ] = jsKeyW[ i ];
         }
 
-        channel = creator( keys, times, jsonObj.TargetName, jsonObj.Name );
+        creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
         return P.resolve( channel );
     };
 
@@ -112,7 +112,7 @@ define( [
             keys[ i ] = jsKey[ i ];
         }
 
-        channel = creator( keys, times, jsonObj.TargetName, jsonObj.Name );
+        creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
         return P.resolve( channel );
     };
 
