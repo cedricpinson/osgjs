@@ -58,11 +58,10 @@ FindBoneVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
     }
 } );
 
+var createScene = function ( viewer, root, url ) {
 
-
-var createScene = function ( viewer ) {
-
-    var root = new osg.Node();
+    // var root = new osg.MatrixTransform();
+    osg.Matrix.makeRotate( Math.PI * 0.5, 1, 0, 0, root.getMatrix() );
 
     //var request = osgDB.readNodeURL( '../media/models/animation/brindherbe_indexed.osgjs.gz' );
     //var request = osgDB.readNodeURL( '../media/models/animation/4x4_anim.osgjs' );
@@ -71,7 +70,9 @@ var createScene = function ( viewer ) {
 
     //var request = osgDB.readNodeURL( '../media/models/animation/mixamo wizard magic_attack_05.osgjs' );
     //var request = osgDB.readNodeURL( '../media/models/animation/mixamo horse gallop.osgjs' );
-    var request = osgDB.readNodeURL( '../media/models/animation/mixamo fuse_w_blendshapes waving.osgjs' );
+    //var request = osgDB.readNodeURL( '../media/models/animation/mixamo fuse_w_blendshapes waving.osgjs' );
+
+    var request = osgDB.readNodeURL( '../media/models/animation/' + url );
 
     request.then( function ( node ) {
         root.addChild( node );
@@ -129,11 +130,31 @@ var createScene = function ( viewer ) {
 var onLoad = function () {
     var canvas = document.getElementById( 'View' );
 
+    var models = this.models = {
+        brindherbe_indexed: 'brindherbe_indexed.osgjs.gz',
+        _4x4_anim: '4x4_anim.osgjs',
+        brindherbetrs: 'brindherbetrs.osgjs',
+        magic: 'mixamo wizard magic_attack_05.osgjs',
+        horse: 'mixamo horse gallop.osgjs',
+        fuse: 'mixamo fuse_w_blendshapes waving.osgjs'
+    };
+
     var viewer = new osgViewer.Viewer( canvas );
     viewer.init();
-    viewer.setSceneData( createScene( viewer ) );
+    var root = new osg.MatrixTransform();
+    viewer.setSceneData( root );
     viewer.setupManipulator();
     viewer.run();
+
+    var gui = new window.dat.GUI();
+    var modelController = gui.add( this, 'models', Object.keys( models ) );
+    modelController.onFinishChange( function ( value ) {
+        root.removeChildren();
+        createScene( viewer, root, models[ value ] );
+    } );
+
+    modelController.setValue( 'horse' );
+
 };
 
 window.addEventListener( 'load', onLoad, true );
