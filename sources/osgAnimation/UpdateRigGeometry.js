@@ -2,10 +2,8 @@ define( [
     'osg/Utils',
     'osg/Notify',
     'osg/Object',
-    'osgAnimation/FindNearestParentSkeleton',
-    'osgAnimation/RigGeometry'
-
-], function ( MACROUTILS, Notify, ObjectBase, FindNearestParentSkeleton, RigGeometry ) {
+    'osgAnimation/FindNearestParentSkeleton'
+], function ( MACROUTILS, Notify, ObjectBase, FindNearestParentSkeleton ) {
 
     'use strict';
 
