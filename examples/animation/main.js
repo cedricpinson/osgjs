@@ -152,7 +152,7 @@ var onLoad = function () {
         createScene( viewer, root, models[ value ] );
     } );
 
-    modelController.setValue( 'horse' );
+    modelController.setValue( '_4x4_anim' );
 
 };
 
