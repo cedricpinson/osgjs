@@ -175,7 +175,8 @@ define( [
 
                 // store complete frustum
                 camera.setNearFar( this._cullVisitor._computedNear, this._cullVisitor._computedFar );
-
+                // Update near/far in the camera projection matrix
+                Matrix.clampProjectionMatrix( camera.getProjectionMatrix(), this._cullVisitor._computedNear, this._cullVisitor._computedFar, this._cullVisitor._nearFarRatio );
                 // restore previous state of the camera
                 this._cullVisitor.setCullSettings( previousCullsettings );
 
