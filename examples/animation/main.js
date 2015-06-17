@@ -3,7 +3,7 @@
 var OSG = window.OSG;
 var osg = OSG.osg;
 var osgAnimation = OSG.osgAnimation;
-//var osgUtil = OSG.osgUtil;
+var osgUtil = OSG.osgUtil;
 var osgViewer = OSG.osgViewer;
 var osgDB = OSG.osgDB;
 
@@ -121,6 +121,13 @@ var createScene = function ( viewer, root, url ) {
         }
 
         osg.setNotifyLevel( osg.ERROR );
+
+        var visitor = window.visitor;
+        visitor.reset();
+        if ( window.debugScene ) {
+            root.accept( visitor );
+            visitor.createGraph();
+        }
     } );
 
     return root;
@@ -139,6 +146,12 @@ var onLoad = function () {
         fuse: 'mixamo fuse_w_blendshapes waving.osgjs'
     };
 
+    window.debugScene = false;
+    this.visitor = new osgUtil.DisplayNodeGraphVisitor();
+    window.play = function () {};
+    window.speed = 1.0;
+    window.isPlaying = false;
+
     var viewer = new osgViewer.Viewer( canvas );
     viewer.init();
     var root = new osg.MatrixTransform();
@@ -147,14 +160,44 @@ var onLoad = function () {
     viewer.run();
 
     var gui = new window.dat.GUI();
-    var modelController = gui.add( this, 'models', Object.keys( models ) );
-    modelController.onFinishChange( function ( value ) {
+    var load = function ( value ) {
         root.removeChildren();
-        createScene( viewer, root, models[ value ] );
-    } );
+        createScene( viewer, root, models[ window.models ] );
+    };
+    var modelController = gui.add( this, 'models', Object.keys( models ) );
+    modelController.onFinishChange( load );
+    modelController.setValue( 'magic' );
 
-    modelController.setValue( '_4x4_anim' );
+    var debugSceneController = gui.add( window, 'debugScene' );
+    debugSceneController.onFinishChange( load );
 
+    gui.add( window, 'play' );
+    gui.add( window, 'speed', -10, 10 );
+    gui.add( window, 'isPlaying' ).listen();
+
+    var update = function () {
+        requestAnimationFrame( update );
+        if ( !window.animationManager ) return;
+        var animations = Object.keys( window.animationManager.getAnimations() );
+        var firstAnimation = animations.length ? animations[ 0 ] : undefined;
+        window.isPlaying = window.animationManager.isPlaying( firstAnimation );
+    };
+
+    update();
+
+    osgAnimation.BasicAnimationManager.prototype.update = function ( node, nv ) {
+
+        if ( this._dirty ) {
+            this.findAnimationUpdateCallback( node );
+            this.assignTargetToAnimationCallback();
+            this._dirty = false;
+        }
+
+        var t = nv.getFrameStamp().getSimulationTime();
+        var mult = ( speed < 0 ) ? 1. / -speed : speed;
+        this.updateManager( t * mult );
+        return true;
+    }
 };
 
 window.addEventListener( 'load', onLoad, true );
