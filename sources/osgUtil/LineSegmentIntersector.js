@@ -38,41 +38,19 @@ define( [
             // Not working if culling disabled ??
             return !node.isCullingActive() || this.intersects( node.getBound() );
         },
-        // Intersection Segment/Sphere 
+        // Optimized Intersection Segment/Sphere 
+        // From Real-Time Rendering, by Tomas Akenine-Möller, Eric Haines, and Naty Hoffman. Pages 738-741
         intersects: ( function () {
-            var sm = Vec3.create();
-            var se = Vec3.create();
+            var l = Vec3.create();
             return function ( bsphere ) {
-                // test for _start inside the bounding sphere
                 if ( !bsphere.valid() ) return false;
-                Vec3.sub( this._iStart, bsphere.center(), sm );
-                var c = Vec3.length2( sm ) - bsphere.radius2();
-                if ( c < 0.0 ) {
-                    return true;
-                }
-                // solve quadratic equation
-                Vec3.sub( this._iEnd, this._iStart, se );
-                var a = Vec3.length2( se );
-                var b = Vec3.dot( sm, se ) * 2.0;
-                var d = b * b - 4.0 * a * c;
-                // no intersections if d<0
-                if ( d < 0.0 ) {
-                    return false;
-                }
-                // compute two solutions of quadratic equation
-                d = Math.sqrt( d );
-                var div = 0.5 / a;
-                var r1 = ( -b - d ) * div;
-                var r2 = ( -b + d ) * div;
-
-                // return false if both intersections are before the ray start
-                if ( r1 <= 0.0 && r2 <= 0.0 ) {
-                    return false;
-                }
-
-                if ( r1 >= 1.0 && r2 >= 1.0 ) {
-                    return false;
-                }
+                Vec3.sub( bsphere.center(), this._iStart, l );
+                var l2 = Vec3.length2( l );
+                if ( l2 <= bsphere.radius2() ) return true;
+                var s = Vec3.dot( l, this._iEnd );
+                if ( s < 0.0 ) return false;
+                var m2 = l2 - ( s * s );
+                if ( m2 > bsphere.radius2() ) return false;
                 return true;
             };
         } )(),
