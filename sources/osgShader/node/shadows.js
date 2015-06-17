@@ -31,7 +31,7 @@ define( [
         getExtensions: function () {
             return this._shadow.getExtensions();
         },
-        computeFragment: function () {
+        computeShader: function () {
 
 
             // common inputs

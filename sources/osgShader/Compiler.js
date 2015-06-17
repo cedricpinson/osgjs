@@ -12,6 +12,7 @@ define( [
         this._textureAttributes = textureAttributes;
 
         this._variables = {};
+        this._varyings = {};
         this._vertexShader = [];
         this._fragmentShader = [];
 
@@ -29,8 +30,58 @@ define( [
         this._textures = [];
         this._material = null;
 
+
+        // LOW-LEVEL info
+        // shared between VS and FS pass
+        //
+        // List what we'll use
+        // allowing not to try
+        // to compute varying for nothing
+        // and interpolate varying for nothing
+        // default is nearly all disabled until proven otherwise
+        // but for texcoord.
+        // this._shaderAttributes = {
+        //     'Vertex': true,
+        //     'VertexColor': true,
+        //     'Normal': true
+        // };
+        this._shaderAttributes = {
+            'Vertex': true,
+            'VertexColor': false,
+            'Normal': false,
+            'Tangent': false
+        };
+
+        // High-Level Info, maybe specific
+        // to Material "light/ilb" Compilation
+        // shared between VS and FS pass
+        //
+        // This hints at current compiler is already too specialized
+        // and we should make a more abstract One the Parent class
+        // and this one one that inherits and add light, shadow, etc.
+        // (material?)
+        this._isLighted = false; // either shadeless, or no light (beware ibl)
+        this._isShadowed = false;
+        this._isShadeless = false;
+
+
+        // from Attributes to variables
+        // to build shader nodes graph from
         this.initAttributes();
         this.initTextureAttributes();
+
+        // Basic inference, any Compiler inheriting better check those
+        this._isShadeless = !this._material;
+        this._isLighted = !this._isShadeless && this._lights.length > 0;
+        // backup shader, FS just output 'fofd'
+        if ( !this._material ) this._isVertexColored = false;
+
+        // Important: if not using Compiler for Both VS and FS
+        // Check either of those
+        // it allow override by custom Processor of some check
+        // between the VS & FS pass (varying mostly)
+        this._customVertexShader = false;
+        this._customFragmentShader = false;
     };
 
     Compiler.prototype = {
@@ -50,12 +101,16 @@ define( [
 
                     lights.push( attributes[ i ] );
 
+
                 } else if ( type === 'Material' ) {
 
                     this._material = attributes[ i ];
 
+
                 } else if ( type === 'ShadowAttribute' ) {
+
                     shadows.push( attributes[ i ] );
+
                 }
             }
         },
@@ -119,8 +174,8 @@ define( [
             }
         },
 
-        getVariable: function ( name ) {
-            return this._variables[ name ];
+        getVariable: function ( nameID ) {
+            return this._variables[ nameID ];
         },
 
         getAttributeType: function ( type ) {
@@ -134,18 +189,20 @@ define( [
         },
 
 
+
+        // TODO: add Precision qualifier
         // if doesn't exist create a new on
-        // if name given and var already exist, create a varname +
+        // if nameID given and var already exist, create a varname +
         createVariable: function ( type, varname, deepness ) {
 
-            var name = varname;
+            var nameID = varname;
 
-            if ( name === undefined ) {
+            if ( nameID === undefined ) {
 
                 var len = Object.keys( this._variables ).length;
-                name = 'tmp_' + len;
+                nameID = 'tmp_' + len;
 
-            } else if ( this._variables[ name ] ) {
+            } else if ( this._variables[ nameID ] ) {
                 // create a new variable
                 // if we want to reuse a variable we should NOT
                 // call this function in the first place and do the
@@ -153,18 +210,18 @@ define( [
                 // however for uniform, varying and sampler, we return
                 // the variable if it already exists, because they are
                 // meant to be read only
-                name = name + deepness;
+                nameID = nameID + deepness;
                 if ( deepness === undefined ) {
                     return this.createVariable( type, varname, 1 );
-                } else if ( this._variables[ name ] ) {
+                } else if ( this._variables[ nameID ] ) {
                     deepness++;
                     return this.createVariable( type, varname, deepness );
                 }
 
             }
 
-            var v = factory.getNode( 'Variable', type, name );
-            this._variables[ name ] = v;
+            var v = factory.getNode( 'Variable', type, nameID );
+            this._variables[ nameID ] = v;
             return v;
         },
 
@@ -196,78 +253,140 @@ define( [
             return this.getOrCreateUniformFromUniformMap( uniforms, prefix );
         },
 
+
         getOrCreateUniform: function ( type, varname ) {
 
-            var name = varname;
+            var nameID = varname;
 
             // accept uniform as parameter to simplify code
             if ( type instanceof Uniform ) {
 
                 var uniform = type;
                 type = uniform.getType();
-                name = uniform.getName();
+                nameID = uniform.getName();
 
-            } else if ( name === undefined ) {
+            } else if ( nameID === undefined ) {
 
                 var len = Object.keys( this._variables ).length;
-                name = 'tmp_' + len;
+                nameID = 'tmp_' + len;
 
             }
 
-            var exist = this._variables[ name ];
+            var exist = this._variables[ nameID ];
             if ( exist ) {
                 // see comment in Variable function
                 return exist;
             }
 
-            var v = factory.getNode( 'Uniform', type, name );
-            this._variables[ name ] = v;
+            var v = factory.getNode( 'Uniform', type, nameID );
+            this._variables[ nameID ] = v;
             return v;
         },
 
+        getOrCreateAttribute: function ( type, nameID ) {
 
-        getOrCreateVarying: function ( type, varname ) {
+            if ( this._fragmentShaderMode ) {
+                Notify.error( 'No Vertex Attribute in Fragment Shader' );
+            }
 
-            var name = varname;
-            if ( name === undefined ) {
+            var exist = this._variables[ nameID ];
+            if ( exist ) {
+                return exist;
+            }
 
+            // adds the reference for Fragment Shader
+            // aknowledging data binded
+            // and that varying data will be available accordingly
+            this._shaderAttributes[ nameID ] = true;
+
+            var v = factory.getNode( 'Attribute', type, nameID );
+            this._variables[ nameID ] = v;
+            return v;
+        },
+
+        getOrCreateConstant: function ( type, varname ) {
+            var nameID = varname;
+            if ( nameID === undefined ) {
+                // TODO: temp constant ? or enforcing reuse ?
+                // maybe could parse variable to find other constant
+                // but would need having scope info
                 var len = Object.keys( this._variables ).length;
-                name = 'tmp_' + len;
+                nameID = 'tmp_' + len;
 
             } else {
 
-                var exist = this._variables[ name ];
+                var exist = this._variables[ nameID ];
                 if ( exist ) {
                     // see comment in Variable function
                     return exist;
                 }
 
             }
-            var v = factory.getNode( 'Varying', type, name );
-            this._variables[ name ] = v;
+            var v = factory.getNode( 'Constant', type, nameID );
+            this._variables[ nameID ] = v;
+            return v;
+        },
+
+
+        getOrCreateVarying: function ( type, nameID ) {
+
+            // make sure you don't create varying out of thin air
+            if ( nameID === undefined ) {
+                Notify.error( 'Error: better name varying as you need to retrieve them...' );
+            }
+
+            var exist = this._variables[ nameID ];
+            if ( exist ) {
+                // something went wrong: you created a variable and try to access it like a varying
+                if ( !this._varyings[ nameID ] ) {
+                    Notify.error( 'Error: requesting a varying not declared with getOrCreateVarying previously' );
+                }
+                // see comment in Variable function
+                return exist;
+            } else {
+                exist = this._varyings[ nameID ];
+                if ( exist ) {
+                    // varying was declared in Vertex Shader
+                    // just add it to variables cache.
+                    // as that cache is not shared between VS and PS
+                    this._variables[ nameID ] = exist;
+                    return exist;
+                }
+            }
+
+
+            // if it's not in Varying Cache, but requested from fragment shader
+            // it means => error
+            if ( this._fragmentShaderMode && !this._customVertexShader ) {
+                Notify.error( 'Error: requesting a varying not declared in Vertex Shader Graph.( if a Custom Vertex Shader in a custom processor, add this._customVertexShader to your custom processor)' );
+            }
+
+            var v = factory.getNode( 'Varying', type, nameID );
+            this._variables[ nameID ] = v;
+            this._varyings[ nameID ] = v;
             return v;
         },
 
 
         getOrCreateSampler: function ( type, varname ) {
 
-            var name = varname;
-            if ( name === undefined ) {
+            var nameID = varname;
+            if ( nameID === undefined ) {
 
                 var len = Object.keys( this._variables ).length;
-                name = 'sampler_' + len;
+                nameID = 'sampler_' + len;
 
             } else {
 
-                var exist = this._variables[ name ];
+                var exist = this._variables[ nameID ];
                 if ( exist ) {
                     // see comment in Variable function
                     return exist;
                 }
 
             }
-            var v = factory.getNode( 'Sampler', type, name );
-            this._variables[ name ] = v;
+            var v = factory.getNode( 'Sampler', type, nameID );
+            this._variables[ nameID ] = v;
             return v;
         },
 
@@ -517,16 +636,16 @@ define( [
 
             // this part would need to be checked/updated
             // not sure texturesByName makes sense
-            var name = texture.getName();
-            if ( name === undefined ) {
-                name = 'Texture' + texCoordUnit;
+            var nameID = texture.getName();
+            if ( nameID === undefined ) {
+                nameID = 'Texture' + texCoordUnit;
             }
 
             // create/update texture entry (texture, textureUnit)
-            var textureMaterial = this._texturesByName[ name ];
+            var textureMaterial = this._texturesByName[ nameID ];
             if ( textureMaterial === undefined ) {
 
-                this._texturesByName[ name ] = {
+                this._texturesByName[ nameID ] = {
                     variable: output,
                     textureUnit: unit
                 };
@@ -771,7 +890,7 @@ define( [
         // UNIQUE PER TYPE
         // TODO: adds includes so that we can remove it from
         // the eval Global Functions ?
-        evaluateAndGatherField: function ( node, field ) {
+        evaluateAndGatherField: function ( nodes, field ) {
 
             var func = function ( node ) {
 
@@ -793,7 +912,10 @@ define( [
 
             func._map = {};
             func._text = [];
-            this.traverse( func, node );
+
+            for ( var j = 0, jl = nodes.length; j < jl; j++ ) {
+                this.traverse( func, nodes[ j ] );
+            }
 
             return func._text;
         },
@@ -804,7 +926,7 @@ define( [
         // Node of same Type has to share
         // exact same "node.globalFunctionDeclaration" output
         // as it use Type rather than ID as map index
-        evaluateGlobalFunctionDeclaration: function ( node ) {
+        evaluateGlobalFunctionDeclaration: function ( nodes ) {
 
             var func = function ( node ) {
 
@@ -829,7 +951,10 @@ define( [
 
             func._map = {};
             func._text = [];
-            this.traverse( func, node );
+
+            for ( var j = 0, jl = nodes.length; j < jl; j++ ) {
+                this.traverse( func, nodes[ j ] );
+            }
 
             return func._text.join( '\n' );
         },
@@ -840,7 +965,7 @@ define( [
         // ( Uniforms, Varying )
         // Node of same Type has different output
         // as it use Type rather than ID as map index
-        evaluateGlobalVariableDeclaration: function ( node ) {
+        evaluateGlobalVariableDeclaration: function ( nodes ) {
 
             var func = function ( node ) {
 
@@ -860,12 +985,14 @@ define( [
 
             func._map = {};
             func._text = [];
-            this.traverse( func, node );
+            for ( var j = 0, jl = nodes.length; j < jl; j++ ) {
+                this.traverse( func, nodes[ j ] );
+            }
             return func._text.join( '\n' );
         },
 
 
-        evaluate: function ( node ) {
+        evaluate: function ( nodes ) {
 
             var func = function ( node ) {
 
@@ -874,7 +1001,7 @@ define( [
                     return;
                 }
 
-                var c = node.computeFragment();
+                var c = node.computeShader();
                 if ( c !== undefined ) {
 
                     if ( node.getComment !== undefined ) {
@@ -893,8 +1020,11 @@ define( [
 
             func._text = [];
             func._mapTraverse = [];
-            this.traverse( func, node );
-            this._fragmentShader.push( func._text.join( '\n' ) );
+
+            for ( var j = 0, jl = nodes.length; j < jl; j++ ) {
+                this.traverse( func, nodes[ j ] );
+            }
+            return func._text.join( '\n' );
         },
 
         getTexCoordUnit: function ( id ) {
@@ -912,165 +1042,340 @@ define( [
             return texCoordUnit;
         },
 
-        //
-        // TODO: change into node based graph shader system.
-        // TODO: Check Precision qualifier on vertex Attributes & Varying
+        // TODO:
+        // - remove non necessary attributes
+        // - remove unecessary varying (huge impact)
+        // - check Precision qualifier on vertex Attributes
+        // - check Precision qualifier on vertex Attributes Varying
         declareVertexVariables: function () {
-            var texCoordMap = {};
 
-            // TODO: for performance:
-            // - remove non necessary attributes
-            // - remove unecessary varying (huge impact)
-            this._vertexShader.push( [ '',
-                'attribute vec3 Vertex;',
-                'attribute vec4 Color;',
-                'attribute vec3 Normal;',
-                '',
-                'uniform float ArrayColorEnabled;',
-                'uniform mat4 ModelViewMatrix;',
-                'uniform mat4 ProjectionMatrix;',
-                'uniform mat4 NormalMatrix;',
-                '',
-                'varying vec4 VertexColor;',
-                'varying vec3 FragNormal;',
-                'varying vec3 FragEyeVector;',
-                '',
-                ''
-            ].join( '\n' ) );
+            var vertexVarying; // only needed if lighting
+            var vertexAttribute, modelViewMatrixUniform, projectionMatrixUniform;
+            vertexAttribute = this.getOrCreateAttribute( 'vec3', 'Vertex' );
+            modelViewMatrixUniform = this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' );
+            projectionMatrixUniform = this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' );
 
-            var i, ll;
-            for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
-
-                var shadowTexture = this._shadowsTextures[ i ];
-                if ( shadowTexture === undefined )
-                    continue;
-
-                this._vertexShader.push( 'uniform mat4 ModelWorldMatrix;' );
-                this._vertexShader.push( 'varying vec4 WorldPosition;' );
-
-                // found shadow and added code accordingly once and for all
-                break;
+            var normalAttribute, normalVarying, normalMatrixUniform;
+            // TODO: If lighted we do not need normals nor tagent or anything related
+            if ( this._isLighted || this._shaderAttributes[ 'Normal' ] ) {
+                vertexVarying = this.getOrCreateInputPosition();
+                normalAttribute = this.getOrCreateAttribute( 'vec3', 'Normal' );
+                normalVarying = this.getOrCreateInputNormal();
+                normalMatrixUniform = this.getOrCreateUniform( 'mat4', 'NormalMatrix' );
             }
 
-            for ( var t = 0, tl = this._textures.length; t < tl; t++ ) {
-                var texCoordUnit = this.getTexCoordUnit( t );
+            // if color uniforms
+            // some Repeat Code from this.getVertexColor
+            var vertexColorUniform;
+            vertexColorUniform = this.getOrCreateUniform( 'float', 'ArrayColorEnabled' );
+            var colorAttribute, colorVarying;
+            // TODO: vertex color handling
+            // does check vertexColorUniform.get()[ 0 ] === 1.0;
+            // or does need somth else like
+            // - true if any geom has vertex color with this material/stateset
+            // - false if no geom has vertex color with this material/stateset
+            // - get uniform from stateset
+            this._isVertexColored = this._material;
+            if ( this._isVertexColored ) {
+                colorAttribute = this.getOrCreateAttribute( 'vec4', 'Color' );
+                colorVarying = this.getOrCreateVarying( 'vec4', 'VertexColor' );
+            }
+
+
+            var i, ll;
+            // if no light, no shadow
+            if ( this._isLighted ) {
+                var worldMatrixUniform, worldPositionVarying;
+                this._isShadowed = false;
+                for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
+
+                    var shadowTexture = this._shadowsTextures[ i ];
+                    if ( shadowTexture === undefined )
+                        continue;
+
+                    worldMatrixUniform = this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' );
+                    worldPositionVarying = this.getOrCreateVarying( 'vec4', 'WorldPosition' );
+
+                    this._isShadowed = true;
+                    // found shadow and added code accordingly once and for all
+                    break;
+                }
+            }
+
+            if ( this._material ) {
+                var texCoordMap = {};
+                for ( var t = 0, tl = this._textures.length; t < tl; t++ ) {
+                    var texCoordUnit = this.getTexCoordUnit( t );
+                    if ( texCoordUnit === undefined || texCoordMap[ texCoordUnit ] !== undefined )
+                        continue;
+
+                    this.getOrCreateAttribute( 'vec2', 'TexCoord' + texCoordUnit );
+                    this.getOrCreateVarying( 'vec2', 'FragTexCoord' + texCoordUnit );
+
+                    // make sure only done once.
+                    texCoordMap[ texCoordUnit ] = true;
+                }
+            }
+        },
+        declareVertexTransformShadeless: function ( glPosition ) {
+            // No light
+            var tempViewSpace = this.createVariable( 'vec4' );
+
+            //viewSpace
+            factory.getNode( 'MatrixMultPosition' ).inputs( {
+                matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
+                vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
+            } ).outputs( {
+                vec: tempViewSpace
+            } );
+
+            //glpos
+            factory.getNode( 'MatrixMultPosition' ).inputs( {
+                matrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' ),
+                vec: tempViewSpace
+            } ).outputs( {
+                vec: glPosition
+            } );
+
+        },
+        declareVertexTransformLighted: function ( glPosition ) {
+
+
+            // FragNormal
+            factory.getNode( 'MatrixMultDirection' ).inputs( {
+                matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
+                vec: this.getOrCreateAttribute( 'vec3', 'Normal' )
+            } ).outputs( {
+                vec: this.getOrCreateVarying( 'vec4', 'FragNormal' )
+            } );
+
+
+            var tempViewSpace = this.createVariable( 'vec4' );
+            factory.getNode( 'MatrixMultPosition' ).inputs( {
+                matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
+                vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
+            } ).outputs( {
+                vec: tempViewSpace
+            } );
+
+            // FragEye
+            factory.getNode( 'SetFromNode' ).inputs(
+                tempViewSpace
+            ).outputs(
+                this.getOrCreateVarying( 'vec3', 'FragEyeVector' )
+            );
+            //glpos
+            factory.getNode( 'MatrixMultPosition' ).inputs( {
+                matrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' ),
+                vec: tempViewSpace
+            } ).outputs( {
+                vec: glPosition
+            } );
+
+        },
+        declareVertexTransformShadowed: function ( /*glPosition*/) {
+
+            // worldpos
+            factory.getNode( 'MatrixMultPosition' ).inputs( {
+                matrix: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' ),
+                vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
+            } ).outputs( {
+                vec: this.getOrCreateVarying( 'vec4', 'WorldPosition' )
+            } );
+
+        },
+        declareVertexTransforms: function ( glPosition ) {
+            // Make only necessary operation and varying
+            if ( this._isLighted || this._shaderAttributes[ 'Normal' ] ) {
+
+                if ( this._isShadowed ) {
+                    this.declareVertexTransformShadowed( glPosition );
+                }
+                this.declareVertexTransformLighted( glPosition );
+
+            } else {
+                this.declareVertexTransformShadeless( glPosition );
+            }
+        },
+
+        declareVertexTextureCoords: function ( /*glPosition*/) {
+
+            var texCoordMap = {};
+            for ( var tt = 0; tt < this._textures.length; tt++ ) {
+                var texCoordUnit = this.getTexCoordUnit( tt );
                 if ( texCoordUnit === undefined || texCoordMap[ texCoordUnit ] !== undefined )
                     continue;
-                this._vertexShader.push( 'attribute vec2 TexCoord' + texCoordUnit + ';' );
-                this._vertexShader.push( 'varying vec2 FragTexCoord' + texCoordUnit + ';' );
+
+                factory.getNode( 'SetFromNode' ).inputs( this.getOrCreateAttribute( 'vec2', 'TexCoord' + texCoordUnit ) ).outputs(
+                    this.getOrCreateVarying( 'vec2', 'FragTexCoord' + texCoordUnit )
+                );
+
                 texCoordMap[ texCoordUnit ] = true;
             }
         },
 
         declareVertexMain: function () {
-            this._vertexShader.push( [ '',
-                '  FragNormal = vec3(NormalMatrix * vec4(Normal, 0.0));',
-                '  vec4 viewPos = ModelViewMatrix * vec4(Vertex,1.0);',
-                '  FragEyeVector = viewPos.xyz;',
-                '  gl_Position = ProjectionMatrix * viewPos;',
-                '  if (ArrayColorEnabled == 1.0)',
-                '    VertexColor = Color;',
-                '  else',
-                '    VertexColor = vec4(1.0,1.0,1.0,1.0);',
-                '  gl_PointSize = 1.0;',
-                '',
-                ''
-            ].join( '\n' ) );
 
-            var texCoordMap = {};
+            var glPosition = factory.getNode( 'glPosition' );
 
-            for ( var tt = 0; tt < this._textures.length; tt++ ) {
-                var texCoordUnit = this.getTexCoordUnit( tt );
-                if ( texCoordUnit === undefined || texCoordMap[ texCoordUnit ] !== undefined )
-                    continue;
-                this._vertexShader.push( 'FragTexCoord' + texCoordUnit + ' = TexCoord' + texCoordUnit + ';' );
-                texCoordMap[ texCoordUnit ] = true;
+            var roots = [];
+
+            this.declareVertexTransforms( glPosition, roots );
+            this.declareVertexTextureCoords( glPosition, roots );
+
+
+            if ( this._isVertexColored ) {
+                var vertexDynamicColoring = [ '',
+                    'if ( %ArrayColorEnabled == 1.0 ) ',
+                    '    %VertexColor = %Color;',
+                    '  else',
+                    '    %VertexColor = vec4(1.0,1.0,1.0,1.0);'
+                ];
+
+                factory.getNode( 'InlineCode' ).code( vertexDynamicColoring.join( '\n' ) ).inputs( {
+                    ArrayColorEnabled: this.getOrCreateUniform( 'float', 'ArrayColorEnabled' ),
+                    Color: this.getOrCreateAttribute( 'vec4', 'Color' )
+                } ).outputs( {
+                    VertexColor: this.getOrCreateVarying( 'vec4', 'VertexColor' )
+                } );
             }
 
-            for ( var i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
-                var shadowTexture = this._shadowsTextures[ i ];
-                if ( !shadowTexture ) continue;
 
-                this._vertexShader.push( 'WorldPosition = ModelWorldMatrix * vec4(Vertex,1.0);' );
-                // shadow found and according code done once for all shadow
-                break;
+
+            // TODO: add this for POINT RENDERING ONLY
+            var str = '%out = %input;';
+            var glPointSize = factory.getNode( 'glPointSize' );
+            factory.getNode( 'InlineCode' ).code( str ).inputs( {
+                input: this.getOrCreateConstant( 'float', 'unitFloat' ).setValue( '1.0' )
+            } ).outputs( {
+                out: factory.getNode( 'glPointSize' )
+            } );
+            roots.push( glPointSize );
+
+
+            var vars = Object.keys( this._varyings );
+            for ( var j = 0, jl = vars.length; j < jl; j++ ) {
+                var varying = this._varyings[ vars[ j ] ];
+                if ( varying !== undefined ) {
+                    // make sure we link all vertex shader output
+                    // to the finale Node
+                    roots.push( varying );
+                }
             }
+
+            // last the position
+            roots.push( glPosition );
+            return roots;
+
         },
         // Meanwhile, here it is.
         createVertexShaderGraph: function () {
             this.declareVertexVariables();
-            this._vertexShader.push( 'void main() {' );
-            this.declareVertexMain();
-            this._vertexShader.push( '}' );
+            return this.declareVertexMain();
         },
 
-        createVertexShader: function () {
-            // Call to specialised inhenrited shader Compiler
-            this.createVertexShaderGraph();
-            var shader = this._vertexShader.join( '\n' );
+        createShaderFromGraphs: function ( roots, type ) {
 
-            shader = this._shaderProcessor.processShader( shader );
+
+            var vars = Object.keys( this._variables );
+
+            var variables = [];
+            for ( var j = 0, jl = vars.length; j < jl; j++ ) {
+
+                var varNode = this._variables[ vars[ j ] ];
+                var d = varNode.declare();
+                if ( d ) {
+                    variables.push( d );
+                }
+            }
+
+            // defines and extensions are added by process shader
+            var extensions = this.evaluateExtensions( roots );
+            var defines = this.evaluateDefines( roots );
+
+            var shaderStack = [];
+            shaderStack.push( '\n' );
+            shaderStack.push( this.evaluateGlobalVariableDeclaration( roots ) );
+            shaderStack.push( '\n' );
+            shaderStack.push( this.evaluateGlobalFunctionDeclaration( roots ) );
+
+
+            shaderStack.push( 'void main() {' );
+
+            // declare variables in main
+            if ( variables.length !== 0 ) {
+                shaderStack.push( '// vars\n' );
+                shaderStack.push( variables.join( ' ' ) );
+                shaderStack.push( '\n// end vars\n' );
+            }
+            if ( roots.length === 0 ) {
+                Notify.error( 'shader without output' );
+            }
+            shaderStack.push( this.evaluate( roots ) );
+
+            shaderStack.push( '}' );
+
+            var shaderStr = shaderStack.join( '\n' );
+            var shader = this._shaderProcessor.processShader( shaderStr, defines, extensions, type );
+
             return shader;
         },
-        evaluateDefines: function ( root ) {
-            return this.evaluateAndGatherField( root, 'getDefines' );
+        createVertexShader: function () {
+
+            // Call to specialised inhenrited shader Compiler
+            // start with clean slate
+            this._variables = {};
+            this._fragmentShaderMode = false;
+
+            var roots = this.createVertexShaderGraph();
+
+            var shader = this.createShaderFromGraphs( roots, 'vertex' );
+            Notify.debug( shader );
+
+            // reset for next
+            this._variables = {};
+            this._fragmentShaderMode = true;
+
+            var vars = Object.keys( this._varyings );
+            for ( var j = 0, jl = vars.length; j < jl; j++ ) {
+                var varying = this._varyings[ vars[ j ] ];
+                if ( varying !== undefined ) {
+                    // make sure we clean input/output
+                    // of varying for fragment shader graph
+                    varying.reset();
+                }
+            }
+
+
+            return shader;
         },
-        evaluateExtensions: function ( root ) {
-            return this.evaluateAndGatherField( root, 'getExtensions' );
+        evaluateDefines: function ( roots ) {
+
+            return this.evaluateAndGatherField( roots, 'getDefines' );
+        },
+        evaluateExtensions: function ( roots ) {
+            return this.evaluateAndGatherField( roots, 'getExtensions' );
         },
         createFragmentShader: function () {
+
+            // start with clean slate
+            this._variables = {};
+            this._fragmentShaderMode = true;
 
             this.declareUniforms();
             this.declareTextures();
 
             // Call to specialised inhenrited shader Compiler
-            var root = this.createFragmentShaderGraph();
-
-            this._fragmentShader.push( [ '',
-                'uniform mat4 NormalMatrix;',
-                ''
-            ].join( '\n' ) );
+            var roots = this.createFragmentShaderGraph();
 
 
-            var vars = Object.keys( this._variables );
-
-            // defines and extensions are added by process shader
-            var extensions = this.evaluateExtensions( root );
-            var defines = this.evaluateDefines( root );
-
-
-            this._fragmentShader.push( '\n' );
-            this._fragmentShader.push( this.evaluateGlobalVariableDeclaration( root ) );
-            this._fragmentShader.push( '\n' );
-            this._fragmentShader.push( this.evaluateGlobalFunctionDeclaration( root ) );
-
-
-            this._fragmentShader.push( 'void main() {' );
-
-            var variables = [];
-            variables.push( '// vars\n' );
-
-            for ( var j = 0, jl = vars.length; j < jl; j++ ) {
-
-                var d = this._variables[ vars[ j ] ].declare();
-                if ( d !== undefined ) {
-                    variables.push( this._variables[ vars[ j ] ].declare() );
-                }
-
-            }
-            variables.push( '\n// end vars\n' );
-            // declare variable in main
-            this._fragmentShader.push( variables.join( ' ' ) );
-
-            this.evaluate( root );
-
-            this._fragmentShader.push( '}' );
-            var shader = this._fragmentShader.join( '\n' );
-            //osg.log('Fragment Shader');
-
-            shader = this._shaderProcessor.processShader( shader, defines, extensions );
-
+            var shader = this.createShaderFromGraphs( roots, 'fragment' );
             Notify.debug( shader );
+
+            // reset for next
+            this._variables = {};
+            this._fragmentShaderMode = false;
+
             return shader;
         },
 
@@ -1079,7 +1384,10 @@ define( [
         // is present. If you inherit from this Compiler
         // you could change the default behavior
         createDefaultFragmentShaderGraph: function () {
-            return factory.getNode( 'FragColor' ).inputs( this.createVariable( 'vec4' ).setValue( 'vec4(1.0, 0.0, 1.0, 0.7)' ) );
+            var fofd = this.getOrCreateConstant( 'vec4', 'fofd' ).setValue( 'vec4(1.0, 0.0, 1.0, 0.7)' );
+            var fragCol = factory.getNode( 'glFragColor' );
+            factory.getNode( 'SetFromNode' ).inputs( fofd ).outputs( fragCol );
+            return fragCol;
         },
 
 
@@ -1088,10 +1396,14 @@ define( [
         // you could inherit and override this function
         createFragmentShaderGraph: function () {
 
-            // no material then return a default shader
-            if ( !this._material )
-                return this.createDefaultFragmentShaderGraph();
 
+            var roots = [];
+
+            // no material then return a default shader
+            if ( !this._material ) {
+                roots.push( this.createDefaultFragmentShaderGraph() );
+                return roots;
+            }
 
             var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material );
 
@@ -1163,7 +1475,8 @@ define( [
             // premult alpha
             finalColor = this.getPremultAlpha( finalColor, alpha );
 
-            var fragColor = factory.getNode( 'FragColor' );
+            var fragColor = factory.getNode( 'glFragColor' );
+
 
             // todo add gamma corrected color, but it would also
             // mean to handle correctly srgb texture. So it should be done
@@ -1175,7 +1488,9 @@ define( [
                 color: fragColor
             } );
 
-            return fragColor;
+            roots.push( fragColor );
+
+            return roots;
         }
     };
 

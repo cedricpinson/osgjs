@@ -94,9 +94,6 @@
     function getTextureProjectedShadowShader() {
         var vertexshader = [
             '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
             'attribute vec3 Vertex;',
             'uniform mat4 ModelViewMatrix;',
             'uniform mat4 ProjectionMatrix;',
@@ -136,9 +133,6 @@
     function getBlurrShader() {
         var vertexshader = [
             '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
             'attribute vec3 Vertex;',
             'attribute vec2 TexCoord0;',
             'uniform mat4 ModelViewMatrix;',
@@ -158,7 +152,7 @@
             '#endif',
             'uniform sampler2D Texture0;',
             'varying vec2 uv0;',
-            'float shift = 1.0/512.0;',
+            'const float shift = 1.0/512.0;',
             'vec4 getSmoothTexelFilter(vec2 uv) {',
             '  vec4 c = texture2D( Texture0,  uv);',
             '  c += texture2D( Texture0, uv+vec2(0,shift));',
@@ -315,9 +309,6 @@
     function getShadowMapShaderLight() {
         var vertexshader = [
             '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
             'attribute vec3 Vertex;',
             'uniform mat4 ModelViewMatrix;',
             'uniform mat4 ProjectionMatrix;',
@@ -368,9 +359,6 @@
 
     function getOgreShadowMapShader() {
         var vertexshader = [
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
             'attribute vec3 Vertex;',
             'attribute vec3 Normal;',
             'uniform mat4 ModelViewMatrix;',

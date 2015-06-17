@@ -57,7 +57,7 @@ define( [
 
         ],
 
-        computeFragment: function () {
+        computeShader: function () {
 
             return shaderUtils.callFunction(
                 'computePointLightShading',
@@ -126,7 +126,7 @@ define( [
 
         ],
 
-        computeFragment: function () {
+        computeShader: function () {
 
             return shaderUtils.callFunction(
                 'computeSpotLightShading',
@@ -191,7 +191,7 @@ define( [
 
         ],
 
-        computeFragment: function () {
+        computeShader: function () {
 
             return shaderUtils.callFunction(
                 'computeSunLightShading',
@@ -245,7 +245,7 @@ define( [
             'lightNDL'
         ],
 
-        computeFragment: function () {
+        computeShader: function () {
 
             return shaderUtils.callFunction(
                 'computeHemiLightShading',

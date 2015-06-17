@@ -246,9 +246,6 @@ define( [
 
 
     Composer.Filter.defaultVertexShader = [
-        '#ifdef GL_ES',
-        'precision highp float;',
-        '#endif',
         'attribute vec3 Vertex;',
         'attribute vec2 TexCoord0;',
         'varying vec2 FragTexCoord0;',
@@ -262,9 +259,7 @@ define( [
     ].join( '\n' );
 
     Composer.Filter.defaultFragmentShaderHeader = [
-        '#ifdef GL_ES',
-        'precision highp float;',
-        '#endif',
+        '#ifdef GL_FRAGMENT_PRECISION_HIGH\n precision highp float;\n #else\n precision mediump float;\n#endif',
         'varying vec2 FragTexCoord0;',
         'uniform vec2 RenderSize;',
         'uniform sampler2D Texture0;',
@@ -1106,9 +1101,6 @@ define( [
             }
             var vertexshader = [
                 '',
-                '#ifdef GL_ES',
-                'precision highp float;',
-                '#endif',
                 'attribute vec3 Vertex;',
                 'attribute vec2 TexCoord0;',
                 'varying vec2 FragTexCoord0;',
@@ -1251,9 +1243,6 @@ define( [
             }
             var vertexshader = [
                 '',
-                '#ifdef GL_ES',
-                'precision highp float;',
-                '#endif',
                 'attribute vec3 Vertex;',
                 'attribute vec2 TexCoord0;',
                 'attribute vec3 TexCoord1;',
