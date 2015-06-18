@@ -4,6 +4,7 @@ define( [
     'osgUtil/IntersectionVisitor',
     'osgUtil/LineSegmentIntersector',
     'osg/KdTreeBuilder',
+    'osg/BoundingSphere',
     'osg/Camera',
     'osg/Viewport',
     'osg/Matrix',
@@ -11,13 +12,54 @@ define( [
     'osg/Shape',
     'osgViewer/View',
     'osgDB/ReaderParser'
-], function ( QUnit, mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser ) {
+], function ( QUnit, mockup, IntersectionVisitor, LineSegmentIntersector, KdTreeBuilder, BoundingSphere, Camera, Viewport, Matrix, MatrixTransform, Shape, View, ReaderParser ) {
 
     'use strict';
 
     return function () {
 
         QUnit.module( 'osgUtil' );
+
+        QUnit.test( 'LineSegmentIntersector simple test', function () {
+            var lsi = new LineSegmentIntersector();
+            var bs = new BoundingSphere();
+            bs.set( [ 4.0, 2.0, 0.0 ], 2.0 );
+
+            // start right on the edge
+            lsi.set( [ 2.0, 2.0, 0.0 ], [ -1.0, 2.0, 0.0 ] );
+            lsi.setCurrentTransformation( Matrix.create() );
+            ok( lsi.intersects( bs ), 'hit success' );
+
+            // end right on edge
+            lsi.set( [ 2.0, 0.0, 0.0 ], [ 4.0, 0.0, 0.0 ] );
+            lsi.setCurrentTransformation( Matrix.create() );
+            ok( lsi.intersects( bs ), 'hit success' );
+
+            // line right on edge
+            lsi.set( [ 2.0, 0.0, 0.0 ], [ 4.0, 0.0, 0.0 ] );
+            lsi.setCurrentTransformation( Matrix.create() );
+            ok( lsi.intersects( bs ), 'hit success' );
+
+            lsi.set( [ 2.0, 0.0, 0.0 ], [ 3.0, 1.0, 0.0 ] );
+            lsi.setCurrentTransformation( Matrix.create() );
+            ok( lsi.intersects( bs ), 'hit success' );
+
+            lsi.set( [ 0.0, 2.0, 0.0 ], [ 1.9, 2.0, 0.0 ] );
+            lsi.setCurrentTransformation( Matrix.create() );
+            ok( !lsi.intersects( bs ), 'hit failed' );
+
+            lsi.set( [ 0.0, 2.0, 0.0 ], [ 2.1, 2.0, 0.0 ] );
+            lsi.setCurrentTransformation( Matrix.create() );
+            ok( lsi.intersects( bs ), 'hit success' );
+
+            lsi.set( [ 5.0, 1.0, 0.0 ], [ 6.0, 0.0, 0.0 ] );
+            lsi.setCurrentTransformation( Matrix.create() );
+            ok( lsi.intersects( bs ), 'hit success' );
+
+            lsi.set( [ 1.0, 1.0, 0.0 ], [ 2.0, 3.0, 0.0 ] );
+            lsi.setCurrentTransformation( Matrix.create() );
+            ok( !lsi.intersects( bs ), 'hit failed' );
+        } );
 
         QUnit.test( 'LineSegmentIntersector without 2 branches', function () {
 
