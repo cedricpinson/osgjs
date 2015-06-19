@@ -61,7 +61,6 @@ define( [
         // and this one one that inherits and add light, shadow, etc.
         // (material?)
         this._isLighted = false; // either shadeless, or no light (beware ibl)
-        this._isShadowed = false;
         this._isShadeless = false;
 
 
@@ -74,7 +73,7 @@ define( [
         this._isShadeless = !this._material;
         this._isLighted = !this._isShadeless && this._lights.length > 0;
         // backup shader, FS just output 'fofd'
-        if ( !this._material ) this._isVertexColored = false;
+        this._isVertexColored = !!this._material;
 
         // Important: if not using Compiler for Both VS and FS
         // Check either of those
@@ -341,6 +340,9 @@ define( [
                 if ( !this._varyings[ nameID ] ) {
                     Notify.error( 'Error: requesting a varying not declared with getOrCreateVarying previously' );
                 }
+                if ( exist.getType() !== type ) {
+                    Notify.error( 'Same varying, but different type' );
+                }
                 // see comment in Variable function
                 return exist;
             } else {
@@ -389,38 +391,6 @@ define( [
             this._variables[ nameID ] = v;
             return v;
         },
-
-        declareAttributeUniforms: function ( attribute ) {
-
-            var uniformMap = attribute.getOrCreateUniforms();
-            var uniformMapKeys = uniformMap.getKeys();
-
-            for ( var m = 0, ml = uniformMapKeys.length; m < ml; m++ ) {
-
-                var kk = uniformMapKeys[ m ];
-                var kkey = uniformMap[ kk ];
-                this.getOrCreateUniform( kkey.type, kkey.name );
-
-            }
-
-        },
-
-        declareUniforms: function () {
-
-            if ( this._material ) {
-                this.declareAttributeUniforms( this._material );
-            }
-            var t;
-            for ( t = 0; t < this._lights.length; t++ ) {
-                this.declareAttributeUniforms( this._lights[ t ] );
-            }
-            for ( t = 0; t < this._shadows.length; t++ ) {
-                this.declareAttributeUniforms( this._shadows[ t ] );
-            }
-
-
-        },
-
 
         getOrCreateInputNormal: function () {
             return this.getOrCreateVarying( 'vec3', 'FragNormal' );
@@ -1042,81 +1012,6 @@ define( [
             return texCoordUnit;
         },
 
-        // TODO:
-        // - remove non necessary attributes
-        // - remove unecessary varying (huge impact)
-        // - check Precision qualifier on vertex Attributes
-        // - check Precision qualifier on vertex Attributes Varying
-        declareVertexVariables: function () {
-
-            var vertexVarying; // only needed if lighting
-            var vertexAttribute, modelViewMatrixUniform, projectionMatrixUniform;
-            vertexAttribute = this.getOrCreateAttribute( 'vec3', 'Vertex' );
-            modelViewMatrixUniform = this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' );
-            projectionMatrixUniform = this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' );
-
-            var normalAttribute, normalVarying, normalMatrixUniform;
-            // TODO: If lighted we do not need normals nor tagent or anything related
-            if ( this._isLighted || this._shaderAttributes[ 'Normal' ] ) {
-                vertexVarying = this.getOrCreateInputPosition();
-                normalAttribute = this.getOrCreateAttribute( 'vec3', 'Normal' );
-                normalVarying = this.getOrCreateInputNormal();
-                normalMatrixUniform = this.getOrCreateUniform( 'mat4', 'NormalMatrix' );
-            }
-
-            // if color uniforms
-            // some Repeat Code from this.getVertexColor
-            var vertexColorUniform;
-            vertexColorUniform = this.getOrCreateUniform( 'float', 'ArrayColorEnabled' );
-            var colorAttribute, colorVarying;
-            // TODO: vertex color handling
-            // does check vertexColorUniform.get()[ 0 ] === 1.0;
-            // or does need somth else like
-            // - true if any geom has vertex color with this material/stateset
-            // - false if no geom has vertex color with this material/stateset
-            // - get uniform from stateset
-            this._isVertexColored = this._material;
-            if ( this._isVertexColored ) {
-                colorAttribute = this.getOrCreateAttribute( 'vec4', 'Color' );
-                colorVarying = this.getOrCreateVarying( 'vec4', 'VertexColor' );
-            }
-
-
-            var i, ll;
-            // if no light, no shadow
-            if ( this._isLighted ) {
-                var worldMatrixUniform, worldPositionVarying;
-                this._isShadowed = false;
-                for ( i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
-
-                    var shadowTexture = this._shadowsTextures[ i ];
-                    if ( shadowTexture === undefined )
-                        continue;
-
-                    worldMatrixUniform = this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' );
-                    worldPositionVarying = this.getOrCreateVarying( 'vec4', 'WorldPosition' );
-
-                    this._isShadowed = true;
-                    // found shadow and added code accordingly once and for all
-                    break;
-                }
-            }
-
-            if ( this._material ) {
-                var texCoordMap = {};
-                for ( var t = 0, tl = this._textures.length; t < tl; t++ ) {
-                    var texCoordUnit = this.getTexCoordUnit( t );
-                    if ( texCoordUnit === undefined || texCoordMap[ texCoordUnit ] !== undefined )
-                        continue;
-
-                    this.getOrCreateAttribute( 'vec2', 'TexCoord' + texCoordUnit );
-                    this.getOrCreateVarying( 'vec2', 'FragTexCoord' + texCoordUnit );
-
-                    // make sure only done once.
-                    texCoordMap[ texCoordUnit ] = true;
-                }
-            }
-        },
         declareVertexTransformShadeless: function ( glPosition ) {
             // No light
             var tempViewSpace = this.createVariable( 'vec4' );
@@ -1146,7 +1041,7 @@ define( [
                 matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
                 vec: this.getOrCreateAttribute( 'vec3', 'Normal' )
             } ).outputs( {
-                vec: this.getOrCreateVarying( 'vec4', 'FragNormal' )
+                vec: this.getOrCreateInputNormal()
             } );
 
 
@@ -1162,7 +1057,7 @@ define( [
             factory.getNode( 'SetFromNode' ).inputs(
                 tempViewSpace
             ).outputs(
-                this.getOrCreateVarying( 'vec3', 'FragEyeVector' )
+                this.getOrCreateInputPosition()
             );
             //glpos
             factory.getNode( 'MatrixMultPosition' ).inputs( {
@@ -1184,11 +1079,24 @@ define( [
             } );
 
         },
+
+        isShadowed: function () {
+            // if no light, no shadow
+            if ( !this._isLighted )
+                return false;
+            for ( var i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
+                if ( this._shadowsTextures[ i ] !== undefined )
+                    return true;
+            }
+            return false;
+        },
+        // - check Precision qualifier on vertex Attributes
+        // - check Precision qualifier on vertex Attributes Varying
         declareVertexTransforms: function ( glPosition ) {
             // Make only necessary operation and varying
             if ( this._isLighted || this._shaderAttributes[ 'Normal' ] ) {
 
-                if ( this._isShadowed ) {
+                if ( this.isShadowed() ) {
                     this.declareVertexTransformShadowed( glPosition );
                 }
                 this.declareVertexTransformLighted( glPosition );
@@ -1270,7 +1178,6 @@ define( [
         },
         // Meanwhile, here it is.
         createVertexShaderGraph: function () {
-            this.declareVertexVariables();
             return this.declareVertexMain();
         },
 
@@ -1362,7 +1269,6 @@ define( [
             this._variables = {};
             this._fragmentShaderMode = true;
 
-            this.declareUniforms();
             this.declareTextures();
 
             // Call to specialised inhenrited shader Compiler
