@@ -288,7 +288,7 @@ var generateVersionFile = function () {
     gruntTasks.qunit = {
         all: {
             options: {
-                timeout: 10000,
+                timeout: 30000,
                 urls: [
                     'http://127.0.0.1:9001/tests/index.html'
                 ]
