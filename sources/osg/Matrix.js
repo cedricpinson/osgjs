@@ -680,31 +680,44 @@ define( [
             };
         } )(),
 
-        // could be 6 mult
         // http://dev.theomader.com/transform-bounding-boxes/
         // https://github.com/erich666/GraphicsGems/blob/master/gems/TransBox.c
         transformBoundingBox: ( function () {
-            var tmpCorner = Vec3.create();
-            var tmpVec = Vec3.create();
             var tempBbox = new BoundingBox();
             return function ( m, bbIn, bbOut ) {
                 if ( bbOut === bbIn ) {
                     bbOut = tempBbox;
                 }
-                bbOut.init();
-                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 0, tmpCorner ), tmpVec ) );
-                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 1, tmpCorner ), tmpVec ) );
-                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 2, tmpCorner ), tmpVec ) );
-                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 3, tmpCorner ), tmpVec ) );
-                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 4, tmpCorner ), tmpVec ) );
-                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 5, tmpCorner ), tmpVec ) );
-                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 6, tmpCorner ), tmpVec ) );
-                bbOut.expandByVec3( Matrix.transformVec3( m, bbIn.corner( 7, tmpCorner ), tmpVec ) );
+                var inMin = bbIn.getMin();
+                var inMax = bbIn.getMax();
+
+                /* Take care of translation by beginning at T. */
+                var outMin = Matrix.getTrans( m, bbOut.getMin() );
+                var outMax = Vec3.copy( outMin, bbOut.getMax() );
+
+                /* Now find the extreme points by considering the product of the */
+                /* min and max with each component of M.  */
+                for ( var i = 0; i < 3; ++i ) {
+                    var i4 = i * 4;
+                    var mini = inMin[ i ];
+                    var maxi = inMax[ i ];
+                    for ( var j = 0; j < 3; ++j ) {
+                        var cm = m[ i4 + j ];
+                        var a = cm * maxi;
+                        var b = cm * mini;
+                        if ( a < b ) {
+                            outMin[ j ] += a;
+                            outMax[ j ] += b;
+                        } else {
+                            outMin[ j ] += b;
+                            outMax[ j ] += a;
+                        }
+                    }
+                }
 
                 if ( bbOut === tempBbox ) {
                     bbIn.copy( tempBbox );
                 }
-
             };
         } )(),
 
