@@ -339,14 +339,6 @@ define( [
             this.popViewport();
         }
 
-
-        // store complete frustum
-        // if we computed near far
-        // for any other usage
-        // (ie: shadow frustums intersection)
-        if ( camera.getComputeNearFar() ) {
-            camera.setNearFar( this._computedNear, this._computedFar );
-        }
         // restore previous state of the camera
         this.setCullSettings( previousCullsettings );
         this._computedNear = previousZnear;

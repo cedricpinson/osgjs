@@ -121,17 +121,6 @@ define( [
                 zNear, zFar ) {
                 Matrix.makeOrtho( left, right, bottom, top, zNear, zFar, this.getProjectionMatrix() );
             },
-            setNearFar: function ( zNear, zFar ) {
-                this._near = zNear;
-                this._far = zFar;
-            },
-            getNear: function () {
-                return this._near;
-            },
-            getFar: function () {
-                return this._far;
-            },
-
             isRenderToTextureCamera: function () {
                 return Object.keys( this._attachments ).length > 0;
             },
