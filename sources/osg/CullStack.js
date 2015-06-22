@@ -1,7 +1,9 @@
 define( [
+    'osg/Utils',
     'osg/BoundingSphere',
     'osg/Camera',
     'osg/ComputeMatrixFromNodePath',
+    'osg/CullSettings',
     'osg/CullingSet',
     'osg/Matrix',
     'osg/MatrixTransform',
@@ -9,7 +11,7 @@ define( [
     'osg/Plane',
     'osg/TransformEnums',
     'osg/Vec3'
-], function ( BoundingSphere, Camera, ComputeMatrixFromNodePath, CullingSet, Matrix, MatrixTransform, Notify, Plane, TransformEnums ) {
+], function ( MACROUTILS, BoundingSphere, Camera, ComputeMatrixFromNodePath, CullSettings, CullingSet, Matrix, MatrixTransform, Notify, Plane, TransformEnums ) {
     'use strict';
 
     var CullStack = function () {
@@ -45,7 +47,7 @@ define( [
 
     };
 
-    CullStack.prototype = {
+    CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
 
         _getReservedMatrix: function () {
             var m = this._reserveMatrixStack[ this._reserveMatrixStack.current++ ];
@@ -321,9 +323,10 @@ define( [
             this._frustumVolume = -1.0;
 
             this.popCullingSet();
-        }
+        },
 
-    };
+
+    } );
 
     return CullStack;
 } );
