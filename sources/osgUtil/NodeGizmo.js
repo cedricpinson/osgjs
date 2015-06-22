@@ -500,7 +500,9 @@ define( [
                     eye[ 0 ] = eye[ 1 ] = eye[ 2 ] = 0.0;
                     tmpVec[ 0 ] = tmpVec[ 1 ] = tmpVec[ 2 ] = 1.0;
                 } else {
-                    var scaleFov = Matrix.getScale( this._viewer.getCamera().getProjectionMatrix(), tmpVec )[ 0 ];
+                    // normalize gizmo size relative to screen size
+                    var proj = this._viewer.getCamera().getProjectionMatrix();
+                    var scaleFov = Math.min( proj[ 0 ], proj[ 5 ] * 0.5 );
                     this._manipulator.getEyePosition( eye );
                     // while we are editing we don't normalize the gizmo
                     // it gives a better depth feedback, especially if we are editing a geometry that has
