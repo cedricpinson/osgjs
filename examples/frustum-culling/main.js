@@ -11,6 +11,51 @@
     var culled = 0;
     var config;
 
+    // Callback getting the Total, only on model root node for main render
+    var CountCallback = function ( options, config ) {
+        this._options = options;
+        this._config = config;
+    };
+    CountCallback.prototype = {
+
+        update: function ( /*node, nv*/) {
+            // update
+            this._config.culled = culled + '';
+            culled = 0;
+            return true;
+        }
+    };
+
+
+
+    var CustomCullVisitor = function ( config ) {
+        osg.CullVisitor.call( this );
+        this._config = config;
+    };
+
+    // The Way of  getting the near/far, only on camera for main render
+
+    CustomCullVisitor.prototype = osg.objectInherit( osg.CullVisitor.prototype, {
+
+        // this one
+        popCameraModelViewProjectionMatrix: function ( camera ) {
+            this._mainCamera = camera === this._config[ 'camera' ];
+
+            this.popModelViewMatrix();
+            this.popProjectionMatrix( camera );
+
+            if ( this._mainCamera ) {
+
+                // cull
+                this._config.near = this._computedNear + '';
+                this._config.far = this._computedFar + '';
+
+            }
+        }
+
+    } );
+
+
     // TODO:
     // features
     // - add multiples scenes for frustum tests
@@ -25,6 +70,7 @@
     // https://fgiesen.wordpress.com/2010/10/20/some-more-frustum-culling-notes/
     // http://iquilezles.org/www/articles/frustumcorrect/frustumcorrect.htm
     var Example = function () {
+
 
         this._config = {
             nearFar: function () {
@@ -41,6 +87,7 @@
             culled: '0'
         };
         config = this._config;
+
 
         // default & change debug
         var queryDict = {};
@@ -61,33 +108,12 @@
 
     };
 
-    // Callback getting the Total, only on model root node for main render
-    var CountCallback = function ( options ) {
-        this._options = options;
-    };
-    CountCallback.prototype = {
 
-        update: function ( /*node, nv*/) {
-            // update
-            config.culled = culled + '';
-            culled = 0;
-            return true;
-        }
-    };
-    // Callback getting the near/far, only on camera for main render
-    var NearFarCallback = function ( options ) {
-        this._options = options;
-    };
-    NearFarCallback.prototype = {
 
-        cull: function ( /*node, nv*/) {
-            // cull
-            config.near = config.camera.getNear() + '';
-            config.far = config.camera.getFar() + '';
 
-            return true;
-        }
-    };
+
+
+
     // callback on each Node
     // tricky code with nodepath is to disable
     // debug sphere and the topview render
@@ -423,12 +449,9 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             var updateCountNode = new osg.Node();
             updateCountNode.setName( 'updateCountNode' );
 
-            var callbackUpdateCount = new CountCallback();
+            var callbackUpdateCount = new CountCallback( {}, this._config );
             updateCountNode.setUpdateCallback( callbackUpdateCount );
 
-
-            var nearFarCallback = new NearFarCallback();
-            updateCountNode.setCullCallback( nearFarCallback );
 
             updateCountNode.addChild( this._model );
             updateCountNode.setCullingActive( true );
@@ -439,6 +462,8 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             this.addFrameBufferView();
             root.addChild( this._topView );
             root.addChild( this._rttdebugNode );
+
+            this._viewer.getCamera().getRenderer().setCullVisitor( new CustomCullVisitor( this._config ) );
 
 
             return root;

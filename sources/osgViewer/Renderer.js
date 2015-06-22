@@ -169,12 +169,8 @@ define( [
                 this._cullVisitor.handleCullCallbacksAndTraverse( camera );
 
                 // fix projection matrix if camera has near/far auto compute
-                this._cullVisitor.popModelViewMatrix();
-                this._cullVisitor.popProjectionMatrix();
+                this._cullVisitor.popCameraModelViewProjectionMatrix( camera );
 
-
-                // store complete frustum
-                camera.setNearFar( this._cullVisitor._computedNear, this._cullVisitor._computedFar );
                 // Update near/far in the camera projection matrix
                 Matrix.clampProjectionMatrix( camera.getProjectionMatrix(), this._cullVisitor._computedNear, this._cullVisitor._computedFar, this._cullVisitor._nearFarRatio );
                 // restore previous state of the camera
