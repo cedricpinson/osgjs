@@ -104,10 +104,6 @@ define( [
 
                 this._cullVisitor.setFrameStamp( this._frameStamp );
 
-                // It should be done in RenderStage
-                this._cullVisitor.setCamera( this.getCamera() );
-
-
                 // this part of code should be called for each view
                 // right now, we dont support multi view
                 this._stateGraph.clean();

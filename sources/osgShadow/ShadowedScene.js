@@ -119,13 +119,6 @@ define( [
         /*receiving shadows, cull normally, but with receiving shader/state set/texture*/
         cullShadowReceivingScene: function ( cullVisitor ) {
 
-
-            // not used any where ???
-
-            // WARNING: only works if there is a camera as ancestor
-            // TODO: Better (Multi)Camera detection handling
-            this._cameraShadowed = cullVisitor.getCurrentCamera();
-
             // What to do here... we want to draw all scene object, not only receivers ?
             // so no mask for now
             //var traversalMask = cullVisitor.getTraversalMask();
