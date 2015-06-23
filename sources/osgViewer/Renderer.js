@@ -99,10 +99,6 @@ define( [
 
             this._cullVisitor.setFrameStamp( this._frameStamp );
 
-            // It should be done in RenderStage
-            this._cullVisitor.setCamera( this.getCamera() );
-
-
             // this part of code should be called for each view
             // right now, we dont support multi view
             this._stateGraph.clean();
@@ -122,11 +118,9 @@ define( [
                 this._cullVisitor.setEnableFrustumCulling( true );
             }
 
-            this._cullVisitor.pushModelViewMatrix( camera.getViewMatrix() );
-
             // Push reference on the projection stack, it means that if compute near/far
             // is activated, it will update the projection matrix of the camera
-            this._cullVisitor.pushProjectionMatrix( camera.getProjectionMatrix() );
+            this._cullVisitor.pushCameraModelViewProjectionMatrix( camera, camera.getViewMatrix(), camera.getProjectionMatrix() );
 
             // update bound
             camera.getBound();
@@ -170,14 +164,10 @@ define( [
 
             // Important notes about near/far
             // If you are using the picking on the main camera and
-            // that your main camera contains sub camera only, your
+            // you use only children sub camera for RTT, your
             // main camera will keep +/-infinity for near/far because
-            // the computation of near/far is done by camera
+            // the computation of near/far is done by camera and use Geometry
 
-            // store complete frustum
-            // CP: to remove, it's only used in example
-            // it cull should not store data in node but in the cull visitor
-            camera.setNearFar( this._cullVisitor._computedNear, this._cullVisitor._computedFar );
 
             // restore previous state of the camera
             this._cullVisitor.setCullSettings( previousCullsettings );
