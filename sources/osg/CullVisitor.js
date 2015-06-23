@@ -78,12 +78,11 @@ define( [
             }
             this.traverse( node );
         },
-        setCamera: function ( camera ) {
-            this._camera = camera;
-        },
+
         getCurrentCamera: function () {
-            return this._camera;
+            return this._currentRenderBin.getStage().getCamera();
         },
+
         updateCalculatedNearFar: function ( matrix, drawable ) {
 
             var bb = drawable.getBoundingBox();
