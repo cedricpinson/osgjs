@@ -117,7 +117,7 @@ define( [
      *
      */
 
-    var RigTransformHardware = function ( nbMatrix ) {
+    var RigTransformHardware = function () {
         this._needInit = true;
 
         // bones are sorted to be used directly by
@@ -157,7 +157,8 @@ define( [
                 var index = boneNameID[ bName ];
                 var bone = boneMap[ bName ];
 
-                bones[ index ] = bone;
+                if ( index !== undefined )
+                    bones[ index ] = bone;
             }
 
             return bones;

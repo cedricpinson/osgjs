@@ -59,7 +59,7 @@ define( [
             keys[ id ] = jsKeyZ[ i ];
         }
 
-        channel = creator( keys, times, jsonObj.TargetName, jsonObj.Name );
+        creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
         return P.resolve( channel );
     };
 
@@ -89,7 +89,7 @@ define( [
             keys[ id ] = jsKeyW[ i ];
         }
 
-        channel = creator( keys, times, jsonObj.TargetName, jsonObj.Name );
+        creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
         return P.resolve( channel );
     };
 
@@ -112,7 +112,7 @@ define( [
             keys[ i ] = jsKey[ i ];
         }
 
-        channel = creator( keys, times, jsonObj.TargetName, jsonObj.Name );
+        creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
         return P.resolve( channel );
     };
 
@@ -375,20 +375,26 @@ define( [
 
         osgWrapper.Object( input, sme );
 
-        if ( jsonObj.Matrix ) sme.setMatrix( jsonObj.Matrix );
+        sme.setMatrix( jsonObj.Matrix );
 
         return P.resolve( sme );
     };
 
     osgAnimationWrapper.Bone = function ( input, bone ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.InvBindMatrixInSkeletonSpace /*|| !jsonObj.MatrixInSkeletonSpace*/ )
+        if ( !jsonObj.InvBindMatrixInSkeletonSpace )
             return P.reject();
 
         osgWrapper.MatrixTransform( input, bone );
 
-        if ( jsonObj.InvBindMatrixInSkeletonSpace ) {
-            bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
+        bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
+
+        var AABBonBone = jsonObj.AABBonBone;
+        if ( AABBonBone ) {
+            bone.BoundingBox = {
+                min: AABBonBone.min,
+                max: AABBonBone.max
+            };
         }
         return P.resolve( bone );
     };
