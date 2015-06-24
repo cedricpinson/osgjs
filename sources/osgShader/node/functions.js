@@ -116,7 +116,7 @@ define( [
         type: 'EncodeRGBM',
         validInputs: [ 'color', 'range' ],
         validOutputs: [ 'color' ],
-        computeFragment: function () {
+        computeShader: function () {
             return utils.callFunction( 'encodeRGBM', this._outputs.color, [ getVec3( this._inputs.color ), this._inputs.range ] );
         }
     } );
@@ -128,7 +128,7 @@ define( [
         type: 'DecodeRGBM',
         validInputs: [ 'color', 'range' ],
         validOutputs: [ 'color' ],
-        computeFragment: function () {
+        computeShader: function () {
             return utils.callFunction( 'decodeRGBM', this._outputs.color, [ this._inputs.color, this._inputs.range ] );
         }
     } );
