@@ -16,6 +16,8 @@ define( [], function () {
         // it's an OVERRIDER for enableFrustumCulling
         // allowing for global EnableFrustimCulling
         this._settingsSourceOverrider = this;
+        //LOD bias for the CullVisitor to use
+        this._LODScale = 1.0;
     };
 
     CullSettings.prototype = {
@@ -47,6 +49,13 @@ define( [], function () {
 
         getSettingSourceOverrider: function () {
             return this._settingsSourceOverrider;
+        },
+
+        setLODScale: function ( scale ) {
+            this._LODScale = scale;
+        },
+        getLODScale: function () {
+            return this._LODScale;
         }
 
     };

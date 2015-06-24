@@ -149,14 +149,14 @@ define( [
                     if ( this._rangeMode === Lod.DISTANCE_FROM_EYE_POINT ) {
                         Matrix.transformVec3( viewModel, zeroVector, eye );
                         var d = Vec3.distance( eye, this.getBound().center() );
-                        requiredRange = d;
+                        requiredRange = d * visitor.getLODScale();
                     } else {
                         // Let's calculate pixels on screen
                         var projmatrix = visitor.getCurrentProjectionMatrix();
                         // focal lenght is the value stored in projmatrix[0]
                         requiredRange = this.projectBoundingSphere( this.getBound(), matrix, projmatrix[ 0 ] );
                         // Multiply by a factor to get the real area value
-                        requiredRange = ( requiredRange * visitor.getViewport().width() * visitor.getViewport().width() ) * 0.25;
+                        requiredRange = ( ( requiredRange * visitor.getViewport().width() * visitor.getViewport().width() ) * 0.25 ) / visitor.getLODScale();
                     }
 
                     var numChildren = this.children.length;

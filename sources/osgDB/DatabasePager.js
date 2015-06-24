@@ -250,10 +250,10 @@ define( [
                 var numRequests = Math.min( this._maxRequestsPerFrame, this._pendingRequests.length );
                 this._pendingRequests.sort( function ( r1, r2 ) {
                     // Ask for newer requests first.
-                    var value = r2._timeStamp - r1._timeStamp;
+                    var value = r1._timeStamp - r2._timeStamp;
                     // Ask for the greater priority if the timestamp is the same.
                     if ( value === 0 ) {
-                        value = r2._priority - r1._priority;
+                        value = r1._priority - r2._priority;
                     }
                     return value;
 
