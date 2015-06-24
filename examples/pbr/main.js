@@ -1,7 +1,7 @@
 ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgViewer = OSG.osgViewer;
@@ -24,6 +24,17 @@
         Titanium: [ 0.541931, 0.496791, 0.449419 ],
         Cobalt: [ 0.662124, 0.654864, 0.633732 ],
         Platinum: [ 0.672411, 0.637331, 0.585456 ]
+    };
+
+    var CameraPresets = {
+        CameraGold: {
+            target: [ 80.0, 0.0, 80.0 ],
+            eye: [ 80.0, 155.0, 120.0 ]
+        },
+        CameraMetal: {
+            target: [ 80.0, 0.0, 40.0 ],
+            eye: [ 80.0, 155.0, 80.0 ]
+        }
     };
 
 
@@ -93,6 +104,7 @@
             normalAA: false,
             specularPeak: false,
             occlusionHorizon: false,
+            cameraPreset: Object.keys( CameraPresets )[ 0 ],
 
             roughness: 0.5,
             material: 'Gold',
@@ -137,6 +149,16 @@
 
         // background stateSet
         this._backgroundStateSet = new osg.StateSet();
+
+
+        window.printCurrentCamera = function () {
+            var eye = osg.Vec3.create();
+            var target = osg.Vec3.create();
+            console.log( 'target ' + this._viewer.getManipulator().getTarget( target ).toString() );
+            console.log( 'eye ' + this._viewer.getManipulator().getEyePosition( eye ).toString() );
+        }.bind( this );
+
+
     };
 
     Example.prototype = {
@@ -208,7 +230,7 @@
 
         readShaders: function () {
 
-            var defer = Q.defer();
+            var defer = P.defer();
 
             var shaderNames = [
                 'math.glsl',
@@ -243,11 +265,11 @@
 
             var promises = [];
             shaders.forEach( function ( shader ) {
-                promises.push( Q( $.get( shader ) ) );
+                promises.push( P.resolve( $.get( shader ) ) );
             }.bind( this ) );
 
 
-            Q.all( promises ).then( function ( args ) {
+            P.all( promises ).then( function ( args ) {
 
                 var shaderNameContent = {};
                 shaderNames.forEach( function ( name, idx ) {
@@ -341,35 +363,45 @@
         },
 
 
-        updateEnvironmentBrightness: function() {
+        updateEnvironmentBrightness: function () {
             var b = this._config.brightness;
-            this._envBrightnessUniform.get()[0] = b;
+            this._envBrightnessUniform.get()[ 0 ] = b;
             this._envBrightnessUniform.dirty();
         },
 
-        updateNormalAA: function() {
+        updateNormalAA: function () {
             var aa = this._config.normalAA ? 1 : 0;
-            this._normalAA.get()[0] = aa;
+            this._normalAA.get()[ 0 ] = aa;
             this._normalAA.dirty();
         },
 
-        updateSpecularPeak: function() {
+        updateSpecularPeak: function () {
             var aa = this._config.specularPeak ? 1 : 0;
-            this._specularPeak.get()[0] = aa;
+            this._specularPeak.get()[ 0 ] = aa;
             this._specularPeak.dirty();
         },
 
-        updateOcclusionHorizon: function() {
+        updateOcclusionHorizon: function () {
             var aa = this._config.occlusionHorizon ? 1 : 0;
-            this._occlusionHorizon.get()[0] = aa;
+            this._occlusionHorizon.get()[ 0 ] = aa;
             this._occlusionHorizon.dirty();
         },
 
-        updateEnvironmentRotation: function() {
-            if (!this._environmentTransformMatrix)
+        updateCameraPreset: function () {
+            var preset = CameraPresets[ this._config.cameraPreset ];
+            if ( !preset ) {
+                preset = CameraPresets[ Object.keys( CameraPresets )[ 0 ] ];
+                osg.warn( 'Camera preset not found, use default' );
+            }
+            this._viewer.getManipulator().setTarget( preset.target );
+            this._viewer.getManipulator().setEyePosition( preset.eye );
+        },
+
+        updateEnvironmentRotation: function () {
+            if ( !this._environmentTransformMatrix )
                 return;
             var rotation = this._config.envRotation;
-            osg.Matrix.makeRotate( rotation, 0,0,1, this._environmentTransformMatrix );
+            osg.Matrix.makeRotate( rotation, 0, 0, 1, this._environmentTransformMatrix );
         },
 
         createEnvironmentNode: function () {
@@ -383,7 +415,7 @@
             var ss = geom.getOrCreateStateSet();
             geom.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
             geom.getOrCreateStateSet().setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
-            geom.setBound(new osg.BoundingBox() );
+            geom.setBound( new osg.BoundingBox() );
 
             ss.setRenderBinDetails( -1, 'RenderBin' );
 
@@ -446,7 +478,7 @@
 
             var request = osgDB.readNodeURL( '../media/models/material-test/file.osgjs' );
 
-            Q.when( request, function ( model ) {
+            request.then( function ( model ) {
 
                 var mt = new osg.MatrixTransform();
                 osg.Matrix.makeRotate( -Math.PI / 2, 1, 0, 0, mt.getMatrix() );
@@ -629,7 +661,7 @@
 
                         var x = roughness * offset;
                         var y = metal * offset * 0.2;
-                        osg.Matrix.makeTranslate( x, -y*1.2, 0, sample.getMatrix() );
+                        osg.Matrix.makeTranslate( x, -y * 1.2, 0, sample.getMatrix() );
 
                         roughnessTexture = this.createTextureFromColor( roughness, false );
 
@@ -745,7 +777,7 @@
 
         },
 
-        updateGlobalUniform: function( stateSet ) {
+        updateGlobalUniform: function ( stateSet ) {
             stateSet.addUniform( this._environmentTransformUniform );
             stateSet.addUniform( this._envBrightnessUniform );
             stateSet.addUniform( this._normalAA );
@@ -781,8 +813,8 @@
             stateSet.addUniform( osg.Uniform.createFloat2( [ w, w / 2 ], 'uEnvironmentSize' ) );
 
             // x4 because the base is for cubemap
-            var textures = this._currentEnvironment.getTextures('specular_ue4', 'luv', 'panorama');
-            var textureConfig = textures[0];
+            var textures = this._currentEnvironment.getTextures( 'specular_ue4', 'luv', 'panorama' );
+            var textureConfig = textures[ 0 ];
             var minTextureSize = textureConfig.limitSize;
 
             var nbLod = Math.log( w ) / Math.LN2;
@@ -819,8 +851,8 @@
             var stateSet = this._mainSceneNode.getOrCreateStateSet();
             var w = texture.getWidth();
 
-            var textures = this._currentEnvironment.getTextures('specular_ue4', 'luv', 'cubemap');
-            var textureConfig = textures[0];
+            var textures = this._currentEnvironment.getTextures( 'specular_ue4', 'luv', 'cubemap' );
+            var textureConfig = textures[ 0 ];
             var minTextureSize = textureConfig.limitSize;
 
             var nbLod = Math.log( w ) / Math.LN2;
@@ -830,14 +862,14 @@
             stateSet.addUniform( osg.Uniform.createFloat2( [ w, w ], 'uEnvironmentSize' ) );
             stateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironmentCube' ) );
 
-            this.updateGlobalUniform(stateSet);
+            this.updateGlobalUniform( stateSet );
 
             stateSet.setTextureAttributeAndModes( 0, texture );
 
         },
 
 
-        setBackgroundEnvironment: function() {
+        setBackgroundEnvironment: function () {
 
             if ( true ) {
                 // set the stateSet of the environment geometry
@@ -846,7 +878,7 @@
                         '#define ' + this._config.format,
                     ] ) );
 
-                var textureBackground = this._currentEnvironment.getBackgroundCubemap()[this._config.format ].getTexture();
+                var textureBackground = this._currentEnvironment.getBackgroundCubemap()[ this._config.format ].getTexture();
                 var w = textureBackground.getWidth();
                 this._environmentStateSet.addUniform( osg.Uniform.createFloat2( [ w, w ], 'uEnvironmentSize' ) );
                 this._environmentStateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironmentCube' ) );
@@ -870,9 +902,12 @@
                     '#define BACKGROUND'
                 ] ) );
 
-            var url = this._currentEnvironment.getBackgroundPanorama()['srgb'].getFile();
-            var img = osgDB.readImageURL( url ,{ imageLoadingUsePromise: true });
-            Q.when( img,function( image ) {
+            var url = this._currentEnvironment.getBackgroundPanorama()[ 'srgb' ].getFile();
+            var img = osgDB.readImageURL( url, {
+                imageLoadingUsePromise: true
+            } );
+
+            img.then( function ( image ) {
 
                 var texture = this._currentEnvironment.getBackgroundPanorama()[ 'srgb' ].createRGB( image );
                 this._environmentStateSet.setTextureAttributeAndModes( 0, texture );
@@ -942,7 +977,7 @@
             var promises = [];
 
             // precompute panorama
-            Q.all( promises ).then( function () {
+            P.all( promises ).then( function () {
 
                 group.addChild( this.createSampleScene() );
 
@@ -972,7 +1007,7 @@
                 root.getOrCreateStateSet().addUniform( osg.Uniform.createInt( window.ALBEDO_TEXTURE_UNIT, 'albedoMap' ) );
 
 
-                this._viewer.getManipulator().computeHomePosition(true);
+                this._viewer.getManipulator().computeHomePosition( true );
 
             }.bind( this ) );
 
@@ -984,9 +1019,9 @@
 
         readEnvConfig: function ( file ) {
 
-            var d = Q.defer();
+            var d = P.defer();
 
-            var p = Q( $.get( file ) );
+            var p = P.resolve( $.get( file ) );
 
             p.then( function ( text ) {
                 var config = text;
@@ -1018,10 +1053,10 @@
             //var environment = 'textures/path/';
             //var environment = 'textures/field/';
             //var environment = 'textures/bus_garage3/';
-//            var environment = 'textures/bus_garage8/';
-//            var environment = 'textures/bus_garage9/';
-//            var environment = 'textures/bus_garagea/';
-//            var environment = 'textures/bus_garageb/';
+            //            var environment = 'textures/bus_garage8/';
+            //            var environment = 'textures/bus_garage9/';
+            //            var environment = 'textures/bus_garagea/';
+            //            var environment = 'textures/bus_garageb/';
             var environment = 'textures/industrial_room/';
             var environment = 'textures/deinterleave/';
             //var environment = 'textures/bus_garage5/';
@@ -1052,9 +1087,9 @@
                 ready.push( this.readShaders() );
                 ready.push( this._currentEnvironment.getPromise() );
                 ready.push( this.createModelMaterialSample() );
-                ready.push( Q.all( modelPromises ) );
+                ready.push( P.all( modelPromises ) );
 
-                return Q.all( ready );
+                return P.all( ready );
 
             }.bind( this ) ).then( function () {
 
@@ -1068,26 +1103,28 @@
 
                 viewer.run();
 
-                osg.Matrix.makePerspective( 50, canvas.width / canvas.height, 0.1, 1000, viewer.getCamera().getProjectionMatrix() );
+                osg.Matrix.makePerspective( 40, canvas.width / canvas.height, 0.1, 1000, viewer.getCamera().getProjectionMatrix() );
 
                 var gui = new window.dat.GUI();
                 var controller;
 
-                controller = gui.add( this._config, 'envRotation', -Math.PI, Math.PI  ).step(0.1);
+                controller = gui.add( this._config, 'envRotation', -Math.PI, Math.PI ).step( 0.1 );
                 controller.onChange( this.updateEnvironmentRotation.bind( this ) );
 
-                controller = gui.add( this._config, 'brightness', 0.0, 25.0  ).step(0.01);
+                controller = gui.add( this._config, 'brightness', 0.0, 25.0 ).step( 0.01 );
                 controller.onChange( this.updateEnvironmentBrightness.bind( this ) );
 
-                controller = gui.add( this._config, 'normalAA');
+                controller = gui.add( this._config, 'normalAA' );
                 controller.onChange( this.updateNormalAA.bind( this ) );
 
-                controller = gui.add( this._config, 'specularPeak');
+                controller = gui.add( this._config, 'specularPeak' );
                 controller.onChange( this.updateSpecularPeak.bind( this ) );
 
-                controller = gui.add( this._config, 'occlusionHorizon');
+                controller = gui.add( this._config, 'occlusionHorizon' );
                 controller.onChange( this.updateOcclusionHorizon.bind( this ) );
 
+                controller = gui.add( this._config, 'cameraPreset', Object.keys( CameraPresets ) ).listen();
+                controller.onChange( this.updateCameraPreset.bind( this ) );
 
                 controller = gui.add( this._config, 'lod', 0.0, 15.01 ).step( 0.1 );
                 controller.onChange( function ( value ) {
@@ -1240,7 +1277,7 @@
         this._texture = texture;
         this._finalTexture = dest;
         this._textureTarget = textureTarget;
-        this._defer = Q.defer();
+        this._defer = P.defer();
 
         var self = this;
         var UpdateCallback = function () {
@@ -1319,8 +1356,6 @@
 
 
     } );
-
-
 
 
 

@@ -1,7 +1,7 @@
 window.ModelLoader = ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -37,9 +37,9 @@ window.ModelLoader = ( function () {
 
         load: function () {
 
-            var d = Q.defer();
+            var d = P.defer();
             // read config file
-            var p = Q( $.get( this._path + 'config.json' ) );
+            var p = P.resolve( $.get( this._path + 'config.json' ) );
 
             p.then( function ( config ) {
 
@@ -60,7 +60,7 @@ window.ModelLoader = ( function () {
                     this._albedo = this.readImage( config.albedo.file );
                     ready.push( this._albedo );
 
-                    Q.all( [ this._albedo, modelPromise ] ).then( function ( args ) {
+                    P.all( [ this._albedo, modelPromise ] ).then( function ( args ) {
                         this.setTexture( args[ 0 ], args[ 1 ], window.ALBEDO_TEXTURE_UNIT );
                     }.bind( this ) );
 
@@ -72,7 +72,7 @@ window.ModelLoader = ( function () {
                     this._metalness = this.readImage( config.metalness.file );
                     ready.push( this._metalness );
 
-                    Q.all( [ this._metalness, modelPromise ] ).then( function ( args ) {
+                    P.all( [ this._metalness, modelPromise ] ).then( function ( args ) {
                         this.setTexture( args[ 0 ], args[ 1 ], window.METALNESS_TEXTURE_UNIT );
                     }.bind( this ) );
 
@@ -85,7 +85,7 @@ window.ModelLoader = ( function () {
                     this._normal = this.readImage( config.normal.file );
                     ready.push( this._normal );
 
-                    Q.all( [ this._normal, modelPromise ] ).then( function ( args ) {
+                    P.all( [ this._normal, modelPromise ] ).then( function ( args ) {
                         this.setTexture( args[ 0 ], args[ 1 ], window.NORMAL_TEXTURE_UNIT );
                     }.bind( this ) );
 
@@ -98,7 +98,7 @@ window.ModelLoader = ( function () {
                     this._roughness = this.readImage( config.roughness.file );
                     ready.push( this._roughness );
 
-                    Q.all( [ this._roughness, modelPromise ] ).then( function ( args ) {
+                    P.all( [ this._roughness, modelPromise ] ).then( function ( args ) {
                         this.setTexture( args[ 0 ], args[ 1 ], window.ROUGHNESS_TEXTURE_UNIT );
                     }.bind( this ) );
 
@@ -114,7 +114,7 @@ window.ModelLoader = ( function () {
                 }
 
 
-                Q.all( ready ).then( function () {
+                P.all( ready ).then( function () {
                     d.resolve( config );
                 } );
 

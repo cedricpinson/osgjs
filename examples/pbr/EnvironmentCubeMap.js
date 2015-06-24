@@ -1,7 +1,7 @@
 window.EnvironmentCubeMap = ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgShader = OSG.osgShader;
@@ -64,26 +64,26 @@ window.EnvironmentCubeMap = ( function () {
             return scene;
         },
 
-        deinterleaveImage4: function(size, src, dst ) {
-            var npixel = size*size;
-            var npixel2 = 2*size*size;
-            var npixel3 = 3*size*size;
+        deinterleaveImage4: function ( size, src, dst ) {
+            var npixel = size * size;
+            var npixel2 = 2 * size * size;
+            var npixel3 = 3 * size * size;
             var idx = 0;
             for ( var i = 0; i < npixel; i++ ) {
-                dst[idx++] = src[i];
-                dst[idx++] = src[i + npixel];
-                dst[idx++] = src[i + npixel2];
-                dst[idx++] = src[i + npixel3];
+                dst[ idx++ ] = src[ i ];
+                dst[ idx++ ] = src[ i + npixel ];
+                dst[ idx++ ] = src[ i + npixel2 ];
+                dst[ idx++ ] = src[ i + npixel3 ];
             }
         },
 
-        deinterleaveImage3: function(size, src, dst ) {
-            var npixel = size*size;
+        deinterleaveImage3: function ( size, src, dst ) {
+            var npixel = size * size;
             var idx = 0;
             for ( var i = 0; i < npixel; i++ ) {
-                dst[idx++] = src[i];
-                dst[idx++] = src[i + npixel];
-                dst[idx++] = src[i + 2*npixel];
+                dst[ idx++ ] = src[ i ];
+                dst[ idx++ ] = src[ i + npixel ];
+                dst[ idx++ ] = src[ i + 2 * npixel ];
             }
         },
 
@@ -92,38 +92,38 @@ window.EnvironmentCubeMap = ( function () {
             if ( type === undefined )
                 type = 'FLOAT';
 
-            var defer = Q.defer();
+            var defer = P.defer();
 
             var xhr = new XMLHttpRequest();
 
-            var error = function() {};
-            var load = function() {
+            var error = function () {};
+            var load = function () {
                 var data = xhr.response;
 
-                var maxLevel = Math.log(this._size)/Math.LN2;
+                var maxLevel = Math.log( this._size ) / Math.LN2;
                 var offset = 0;
-                var images = { };
+                var images = {};
                 for ( var i = 0; i <= maxLevel; i++ ) {
-                    var size = Math.pow(2, maxLevel - i );
+                    var size = Math.pow( 2, maxLevel - i );
                     var byteSize;
                     if ( offset >= data.byteLength )
                         break;
                     for ( var face = 0; face < 6; face++ ) {
 
                         // add entry if does not exist
-                        if (!images[osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face])
-                            images[osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face] = [];
+                        if ( !images[ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face ] )
+                            images[ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face ] = [];
 
                         var imageData;
                         var deinterleave;
                         if ( type === 'FLOAT' ) {
-                            byteSize = size*size*4*3;
-                            imageData = new Float32Array( data, offset, byteSize/4 );
-                            deinterleave = new Float32Array( byteSize/4 );
+                            byteSize = size * size * 4 * 3;
+                            imageData = new Float32Array( data, offset, byteSize / 4 );
+                            deinterleave = new Float32Array( byteSize / 4 );
                             this.deinterleaveImage3( size, imageData, deinterleave );
                             //deinterleave = imageData;
                         } else {
-                            byteSize = size*size*4;
+                            byteSize = size * size * 4;
                             imageData = new Uint8Array( data, offset, byteSize );
                             deinterleave = new Uint8Array( byteSize );
                             this.deinterleaveImage4( size, imageData, deinterleave );
@@ -136,7 +136,7 @@ window.EnvironmentCubeMap = ( function () {
 
                         image.setWidth( size );
                         image.setHeight( size );
-                        images[osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face].push(image);
+                        images[ osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + face ].push( image );
                         offset += byteSize;
                     }
                 }
@@ -151,7 +151,7 @@ window.EnvironmentCubeMap = ( function () {
 
                 defer.resolve();
 
-            }.bind(this);
+            }.bind( this );
 
             xhr.addEventListener( 'error', error, false );
             xhr.addEventListener( 'load', function ( event ) {
@@ -161,7 +161,7 @@ window.EnvironmentCubeMap = ( function () {
                 }
                 load.call( event );
 
-            },false);
+            }, false );
 
             xhr.open( 'GET', this._file, true );
             xhr.responseType = 'arraybuffer';
@@ -171,40 +171,40 @@ window.EnvironmentCubeMap = ( function () {
 
         },
 
-        getTexture: function() {
+        getTexture: function () {
             return this._texture;
         },
 
-        createFloatPacked: function() {
+        createFloatPacked: function () {
 
             var texture = new osg.TextureCubeMap();
             texture.setMinFilter( this._options.minFilter || 'LINEAR_MIPMAP_LINEAR' );
             texture.setMagFilter( this._options.magFilter || 'LINEAR' );
             // texture.setMinFilter( 'NEAREST_MIPMAP_NEAREST' );
             // texture.setMagFilter( 'NEAREST' );
-            texture.setType('FLOAT');
-            texture.setFlipY(false);
+            texture.setType( 'FLOAT' );
+            texture.setFlipY( false );
 
-            for ( var j = 0 ; j < 6 ; j++ ) {
+            for ( var j = 0; j < 6; j++ ) {
                 var f = osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + j;
-                texture.setImage( f , this._packedImages[f], 'RGB' );
+                texture.setImage( f, this._packedImages[ f ], 'RGB' );
             }
             this._texture = texture;
             return texture;
         },
 
-        createRGBA8Packed: function() {
+        createRGBA8Packed: function () {
 
             var texture = new osg.TextureCubeMap();
             texture.setMinFilter( 'LINEAR_MIPMAP_LINEAR' );
             texture.setMagFilter( 'LINEAR' );
             // texture.setMinFilter( 'NEAREST_MIPMAP_NEAREST' );
             // texture.setMagFilter( 'NEAREST' );
-            texture.setFlipY(false);
+            texture.setFlipY( false );
 
-            for ( var j = 0 ; j < 6 ; j++ ) {
+            for ( var j = 0; j < 6; j++ ) {
                 var f = osg.Texture.TEXTURE_CUBE_MAP_POSITIVE_X + j;
-                texture.setImage( f , this._packedImages[f], 'RGBA' );
+                texture.setImage( f, this._packedImages[ f ], 'RGBA' );
             }
             this._texture = texture;
             return texture;
@@ -220,8 +220,9 @@ window.EnvironmentCubeMap = ( function () {
             geom.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
             geom.getOrCreateStateSet().setTextureAttributeAndModes( 0, this._texture );
             geom.getOrCreateStateSet().setAttributeAndModes( this.createShader( [ '#define FLOAT',
-                                                                                  '#define CUBEMAP_LOD',
-                                                                                  '#define CUBEMAP_SEAMLESS'] ) );
+                '#define CUBEMAP_LOD',
+                '#define CUBEMAP_SEAMLESS'
+            ] ) );
 
             scene.addChild( geom );
             return scene;

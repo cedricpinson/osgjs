@@ -1,7 +1,7 @@
 window.EnvironmentSphericalHarmonics = ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgShader = OSG.osgShader;
@@ -49,10 +49,10 @@ window.EnvironmentSphericalHarmonics = ( function () {
             return debugGroup;
         },
 
-        initSHCoef: function( sphCoef ) {
+        initSHCoef: function ( sphCoef ) {
 
             // use spherical harmonics with 9 coef
-            this._sphCoef = sphCoef.slice(0, 9 * 3 );
+            this._sphCoef = sphCoef.slice( 0, 9 * 3 );
 
             var coef0 = 1.0 / ( 2.0 * Math.sqrt( Math.PI ) );
             var coef1 = -( Math.sqrt( 3.0 / Math.PI ) * 0.5 );
@@ -89,7 +89,7 @@ window.EnvironmentSphericalHarmonics = ( function () {
             if ( this._uniformSpherical )
                 return this._uniformSpherical;
 
-            var p = Q( $.get( this._file ) );
+            var p = P( $.get( this._file ) );
 
             p.then( function ( text ) {
                 var coefs = JSON.parse( text );

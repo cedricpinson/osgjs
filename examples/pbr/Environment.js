@@ -1,6 +1,6 @@
-(function() {
+( function () {
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
 
@@ -28,7 +28,7 @@
             if ( !results.length )
                 return undefined;
 
-            return results[0].images[0];
+            return results[ 0 ].images[ 0 ];
         },
 
         getTextures: function ( type, encoding, format ) {
@@ -50,11 +50,11 @@
 
 
             //var spherical = environment + 'spherical';
-            var mipmapTexture = this.getFirstImage('mipmap', 'float', 'cubemap');
+            var mipmapTexture = this.getFirstImage( 'mipmap', 'float', 'cubemap' );
             var cubemapPackedFloat = environment + mipmapTexture.file;
             var size = mipmapTexture.width;
 
-            var brdfTexture = this.getFirstImage('brdf_ue4','rg16', 'lut');
+            var brdfTexture = this.getFirstImage( 'brdf_ue4', 'rg16', 'lut' );
             var integrateBRDF = environment + brdfTexture.file;
 
             //this._cubemapIrradiance = new EnvironmentCubeMap( cubemapIrradiance );
@@ -65,13 +65,13 @@
             formatList.forEach( function ( key ) {
                 var str = key.toLowerCase();
 
-                var texture = this.getFirstImage( 'specular_ue4', str, 'panorama');
+                var texture = this.getFirstImage( 'specular_ue4', str, 'panorama' );
 
-                if ( texture === undefined) return;
+                if ( texture === undefined ) return;
 
                 var file = texture.file;
                 var size = texture.width;
-                this._panoramaUE4[ key ] = new EnvironmentPanorama( environment + file, size , config );
+                this._panoramaUE4[ key ] = new EnvironmentPanorama( environment + file, size, config );
                 ready.push( this._panoramaUE4[ key ].loadPacked( key ) );
 
             }.bind( this ) );
@@ -80,8 +80,8 @@
             // read all cubemap format U4
             formatList.forEach( function ( key ) {
                 var str = key.toLowerCase();
-                var texture = this.getFirstImage( 'specular_ue4', str, 'cubemap');
-                if ( texture === undefined) return;
+                var texture = this.getFirstImage( 'specular_ue4', str, 'cubemap' );
+                if ( texture === undefined ) return;
 
                 var file = texture.file;
                 var size = texture.width;
@@ -95,8 +95,8 @@
             // read all background cubemap
             formatList.forEach( function ( key ) {
                 var str = key.toLowerCase();
-                var texture = this.getFirstImage( 'background', str, 'cubemap');
-                if ( texture === undefined) return;
+                var texture = this.getFirstImage( 'background', str, 'cubemap' );
+                if ( texture === undefined ) return;
                 var file = texture.file;
                 var size = texture.width;
                 this._backgroundCubemap[ key ] = new EnvironmentCubeMap( environment + file, size, {
@@ -119,7 +119,7 @@
         },
 
         getPromise: function () {
-            return Q.all( this._promises );
+            return P.all( this._promises );
         },
 
         getIntegrateBRDF: function () {
@@ -140,10 +140,10 @@
         getCubemapIrradiance: function () {
             return this._cubemapIrradiance;
         },
-        getBackgroundCubemap: function() {
+        getBackgroundCubemap: function () {
             return this._backgroundCubemap;
         },
-        getBackgroundPanorama: function() {
+        getBackgroundPanorama: function () {
             return this._backgroundPanorama;
         },
         getConfig: function () {
@@ -153,4 +153,4 @@
     };
 
     window.Environment = Environment;
-})();
+} )();

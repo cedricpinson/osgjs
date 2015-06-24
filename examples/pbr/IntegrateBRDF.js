@@ -1,7 +1,7 @@
 window.IntegrateBRDFMap = ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
@@ -27,7 +27,7 @@ window.IntegrateBRDFMap = ( function () {
         },
 
         loadPacked: function () {
-            var defer = Q.defer();
+            var defer = P.defer();
 
             var xhr = new XMLHttpRequest();
             var size = this._size;

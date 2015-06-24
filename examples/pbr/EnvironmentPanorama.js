@@ -1,7 +1,7 @@
 window.EnvironmentPanorama = ( function () {
     'use strict';
 
-    var Q = window.Q;
+    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
     var osgShader = OSG.osgShader;
@@ -15,7 +15,7 @@ window.EnvironmentPanorama = ( function () {
     };
 
     PanoramaEnv.prototype = {
-        getFile: function() {
+        getFile: function () {
             return this._file;
         },
 
@@ -36,40 +36,40 @@ window.EnvironmentPanorama = ( function () {
             return this._shaderPanorama;
         },
 
-        getTexture: function() {
+        getTexture: function () {
             return this._texture;
         },
 
-        deinterleaveImage4: function(size, src, dst ) {
-            var npixel = size*size;
-            var npixel2 = 2*npixel;
-            var npixel3 = 3*npixel;
+        deinterleaveImage4: function ( size, src, dst ) {
+            var npixel = size * size;
+            var npixel2 = 2 * npixel;
+            var npixel3 = 3 * npixel;
             var idx = 0;
             for ( var i = 0; i < npixel; i++ ) {
-                dst[idx++] = src[i];
-                dst[idx++] = src[i + npixel];
-                dst[idx++] = src[i + npixel2];
-                dst[idx++] = src[i + npixel3];
+                dst[ idx++ ] = src[ i ];
+                dst[ idx++ ] = src[ i + npixel ];
+                dst[ idx++ ] = src[ i + npixel2 ];
+                dst[ idx++ ] = src[ i + npixel3 ];
             }
         },
 
-        deinterleaveImage3: function(size, src, dst ) {
-            var npixel = size*size;
+        deinterleaveImage3: function ( size, src, dst ) {
+            var npixel = size * size;
             var idx = 0;
             for ( var i = 0; i < npixel; i++ ) {
-                dst[idx++] = src[i];
-                dst[idx++] = src[i + npixel];
-                dst[idx++] = src[i + 2*npixel];
+                dst[ idx++ ] = src[ i ];
+                dst[ idx++ ] = src[ i + npixel ];
+                dst[ idx++ ] = src[ i + 2 * npixel ];
             }
         },
 
         loadPacked: function ( type ) {
-            var defer = Q.defer();
+            var defer = P.defer();
 
             var xhr = new XMLHttpRequest();
 
-            var error = function() {};
-            var load = function() {
+            var error = function () {};
+            var load = function () {
                 var data = xhr.response;
 
                 var size = this._size;
@@ -77,7 +77,7 @@ window.EnvironmentPanorama = ( function () {
                 var imageData, deinterleave;
                 if ( type === 'FLOAT' ) {
                     imageData = new Float32Array( data );
-                    deinterleave = new Float32Array( data.byteLength/4 );
+                    deinterleave = new Float32Array( data.byteLength / 4 );
                     this.deinterleaveImage3( size, imageData, deinterleave );
                 } else {
                     imageData = new Uint8Array( data );
@@ -98,7 +98,7 @@ window.EnvironmentPanorama = ( function () {
 
                 defer.resolve();
 
-            }.bind(this);
+            }.bind( this );
 
             xhr.addEventListener( 'error', error, false );
             xhr.addEventListener( 'load', function ( event ) {
@@ -108,7 +108,7 @@ window.EnvironmentPanorama = ( function () {
                 }
                 load.call( event );
 
-            },false);
+            }, false );
 
             xhr.open( 'GET', this._file, true );
             xhr.responseType = 'arraybuffer';
@@ -117,42 +117,42 @@ window.EnvironmentPanorama = ( function () {
             return defer.promise;
         },
 
-        createFloatPacked: function( image ) {
+        createFloatPacked: function ( image ) {
 
             var texture = new osg.Texture();
 
             texture.setMinFilter( 'LINEAR' );
             texture.setMagFilter( 'LINEAR' );
             texture.setWrapS( 'REPEAT' );
-            texture.setType('FLOAT');
-            texture.setFlipY(true);
+            texture.setType( 'FLOAT' );
+            texture.setFlipY( true );
 
             texture.setImage( image, 'RGB' );
             this._texture = texture;
             return texture;
         },
 
-        createRGBA8Packed: function( image ) {
+        createRGBA8Packed: function ( image ) {
 
             var texture = new osg.Texture();
 
             texture.setMinFilter( 'LINEAR' );
             texture.setMagFilter( 'LINEAR' );
             texture.setWrapS( 'REPEAT' );
-            texture.setFlipY(true);
+            texture.setFlipY( true );
 
             texture.setImage( image, 'RGBA' );
             this._texture = texture;
             return texture;
         },
-        createRGB: function( image ) {
+        createRGB: function ( image ) {
 
             var texture = new osg.Texture();
 
             texture.setMinFilter( 'LINEAR' );
             texture.setMagFilter( 'LINEAR' );
             texture.setWrapS( 'REPEAT' );
-            texture.setFlipY(true);
+            texture.setFlipY( true );
 
             texture.setImage( image, 'RGB' );
             this._texture = texture;
