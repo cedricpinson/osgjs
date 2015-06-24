@@ -1156,7 +1156,7 @@ define( [
             factory.getNode( 'InlineCode' ).code( str ).inputs( {
                 input: this.getOrCreateConstant( 'float', 'unitFloat' ).setValue( '1.0' )
             } ).outputs( {
-                out: factory.getNode( 'glPointSize' )
+                out: glPointSize
             } );
             roots.push( glPointSize );
 
