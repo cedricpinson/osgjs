@@ -100,12 +100,6 @@ vec4 sRGBToLinear(const in vec4 c, const in float gamma)
   return v;
 }
 
-void normalizeNormalAndEyeVector( const in vec3 inputNormal, const in vec3 inputEye, out vec3 normal, out vec3 eye )
-{
-    normal = normalize( inputNormal );
-    eye = normalize( -inputEye );
-}
-
 //http://graphicrants.blogspot.fr/2009/04/rgbm-color-encoding.html
 vec3 RGBMToRGB( const in vec4 rgba )
 {
