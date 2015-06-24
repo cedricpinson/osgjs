@@ -420,8 +420,13 @@ define( [
             var normal = this._variables[ 'normal' ];
             if ( normal )
                 return normal;
-            this.normalizeNormalAndEyeVector();
-            return this._variables[ 'normal' ];
+            var out = this.createVariable( 'vec3', 'normal' );
+            factory.getNode( 'Normalize' ).inputs( {
+                vec: this.getOrCreateFrontNormal()
+            } ).outputs( {
+                vec: out
+            } );
+            return out;
         },
 
 
@@ -429,34 +434,16 @@ define( [
             var eye = this._variables[ 'eyeVector' ];
             if ( eye )
                 return eye;
-            this.normalizeNormalAndEyeVector();
-            return this._variables[ 'eyeVector' ];
-        },
-
-
-        // It should be called by getOrCreateNormalizedNormal or getOrCreateNormalizedPosition ONLY
-        normalizeNormalAndEyeVector: function () {
-
-            var frontNormal = this.getOrCreateFrontNormal();
-            var inputPosition = this.getOrCreateInputPosition();
-
-            // get or create normalized normal
-            var outputNormal = this.createVariable( 'vec3', 'normal' );
-
-            // get or create normalized position
-            var outputPosition = this.createVariable( 'vec3', 'eyeVector' );
-
-            //
-            factory.getNode( 'NormalizeNormalAndEyeVector' ).inputs( {
-                normal: frontNormal,
-                position: inputPosition
+            var nor = this.createVariable( 'vec3' );
+            factory.getNode( 'Normalize' ).inputs( {
+                vec: this.getOrCreateInputPosition()
             } ).outputs( {
-                normal: outputNormal,
-                eyeVector: outputPosition
+                vec: nor
             } );
-
+            var out = this.createVariable( 'vec3', 'eyeVector' );
+            factory.getNode( 'Mult' ).inputs( nor, this.createVariable( 'float' ).setValue( '-1.0' ) ).outputs( out );
+            return out;
         },
-
 
         getPremultAlpha: function ( finalColor, alpha ) {
 
