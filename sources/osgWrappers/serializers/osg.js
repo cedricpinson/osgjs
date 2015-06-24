@@ -91,6 +91,8 @@ define( [
 
         var createTextureAttribute = function ( unit, textureAttribute ) {
             var promise = input.setJSON( textureAttribute ).readObject();
+            if ( promise.isRejected() ) // sometimes we have some empty objects
+                return;
             promiseArray.push( promise );
             promise.then( stateSet.setTextureAttributeAndModes.bind( stateSet, unit ) );
         };
