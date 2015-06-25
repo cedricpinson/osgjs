@@ -16,17 +16,17 @@ define( [
 
     // assume that iniChannel has been called
     // on each channel
-    var createAnimation = function( channels, name ) {
+    var createAnimation = function ( channels, name ) {
 
         var min = Infinity;
         var max = -Infinity;
-        for ( var i = 0 ; i < channels.length; i ++ ) {
-            min = Math.min( min, channels[i].start );
-            max = Math.max( max, channels[i].end );
+        for ( var i = 0; i < channels.length; i++ ) {
+            min = Math.min( min, channels[ i ].start );
+            max = Math.max( max, channels[ i ].end );
         }
 
         var duration = max - min;
-        var animationName = name || ('animation' + animationCount.toString()) ;
+        var animationName = name || ( 'animation' + animationCount.toString() );
         animationCount++;
         return {
             channels: channels,
@@ -43,11 +43,11 @@ define( [
     //     start: 0.0, // used to know when an animation has been started
     //     name: string
     // },
-    var createInstanceAnimation = function( animation ) {
+    var createInstanceAnimation = function ( animation ) {
 
         var channels = [];
         for ( var i = 0; i < animation.channels.length; i++ ) {
-            var channel = Channel.createInstanceChannel( animation.channels[i] );
+            var channel = Channel.createInstanceChannel( animation.channels[ i ] );
             channels.push( channel );
         }
 
@@ -78,10 +78,9 @@ define( [
     //   "bone1",
     //   ... ]
     //
-    var initChannelTargetID = function ( animations ) {
+    var initChannelTargetID = function ( animations, targetList, targetMap ) {
 
-        var targetMap = {};
-        var array = [];
+        var array = targetList;
 
         for ( var i = 0; i < animations.length; i++ ) {
 
@@ -90,18 +89,26 @@ define( [
 
             for ( var c = 0; c < instanceChannels.length; c++ ) {
 
-                var targetName = instanceChannels[ c ].channel.target;
-                var type = instanceChannels[ c ].channel.type;
+                var instanceChannel = instanceChannels[ c ];
+                var channel = instanceChannel.channel;
+
+                var targetName = channel.target;
+                var name = channel.name; // translate, rotateX, rotateY, rotateZ, ...
+                var type = channel.type;
+
+                // compute a unique name for targetID
+                var uniqueTargetName = targetName + '.' + name;
 
                 // not yet in the map create an id from the array size
-                if ( targetMap[ targetName ] === undefined ) {
+                if ( targetMap[ uniqueTargetName ] === undefined ) {
                     var id = array.length;
-                    instanceChannels[ c ].targetID = id; // set the target ID in the channel
+                    instanceChannel.targetID = id; // set the target ID in the channel
                     var target = {
-                        target: targetName,
+                        target: uniqueTargetName,
+                        targetID: id,
                         type: type
                     };
-                    targetMap[ targetName ] = true;
+                    targetMap[ uniqueTargetName ] = target;
                     array.push( target );
 
                 }
@@ -111,11 +118,7 @@ define( [
         return array;
     };
 
-
-
-    var Animation = function() {
-        this._animationData = undefined;
-    };
+    var Animation = function () {};
 
     Animation.createAnimation = createAnimation;
     Animation.createInstanceAnimation = createInstanceAnimation;
