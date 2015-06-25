@@ -89,37 +89,67 @@ define( [
         return obj;
     };
 
-    var createVec3Keyframes = function() {
+    var createVec3Keyframes = function () {
         var keys = [
             1, 1, 1,
             0, 0, 0,
             3, 3, 3
         ];
         var times = [ 0, 1, 2 ];
-        return Channel.createVec3Channel(keys, times );
+        return Channel.createVec3Channel( keys, times );
     };
 
-    var createFloatKeyframes = function() {
+    var createFloatKeyframes = function () {
         var keys = [
             1, 0, 3
         ];
 
         var start = 0;
         if ( arguments.length > 0 ) // offset time keyframes
-            start = arguments[0];
+            start = arguments[ 0 ];
 
         var times = [ start + 0, start + 1, start + 2 ];
-        return Channel.createFloatChannel(keys, times );
+        return Channel.createFloatChannel( keys, times );
+    };
+
+    var createFloatCubicBezierKeyframes = function () {
+        var keys = [
+            1, 2, 3,
+            0, 1, 3,
+            3, 4, 5
+        ];
+        var times = [ 0, 1, 2 ];
+        return Channel.createFloatCubicBezierChannel( keys, times );
+    };
+
+    var createVec3CubicBezierKeyframes = function () {
+        var keys = [
+            1, 1, 1,
+            2, 2, 2,
+            5, 5, 5,
+
+            6, 6, 6,
+            9, 9, 9,
+            8, 8, 8,
+
+            6, 6, 6,
+            6, 6, 6,
+            6, 6, 6
+        ];
+        var times = [ 0, 1, 2 ];
+        return Channel.createVec3CubicBezierChannel( keys, times );
     };
 
 
-    var createAnimation = function( name, target1, target2 ) {
+    var createAnimation = function ( name, target1, name1, target2, name2 ) {
 
         var a = createFloatKeyframes();
         a.target = target1 || 'a';
+        a.name = name1 || 'x';
 
-        var b = createFloatKeyframes(2);
+        var b = createFloatKeyframes( 2 );
         b.target = target2 || 'b';
+        b.name = name2 || 'x';
 
         return Animation.createAnimation( [ a, b ], name );
     };
@@ -243,6 +273,8 @@ define( [
         createCanvas: createCanvas,
         createVec3Keyframes: createVec3Keyframes,
         createFloatKeyframes: createFloatKeyframes,
+        createFloatCubicBezierKeyframes: createFloatCubicBezierKeyframes,
+        createVec3CubicBezierKeyframes: createVec3CubicBezierKeyframes,
         createAnimation: createAnimation,
         near: near,
         getBoxScene: getBoxScene,

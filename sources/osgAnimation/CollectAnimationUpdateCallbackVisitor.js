@@ -16,7 +16,7 @@ define( [
 
 
     CollectAnimationUpdateCallbackVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
-        getAnimationUpdateCallbackMap: function() {
+        getAnimationUpdateCallbackMap: function () {
             return this._animationUpdateCallback;
         },
 

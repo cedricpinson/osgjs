@@ -753,7 +753,7 @@ define( [
                 }
 
                 vertexAttribMap[ attrib ] = array;
-                gl.vertexAttribPointer( attrib, array._itemSize, gl.FLOAT, normalize, 0, 0 );
+                gl.vertexAttribPointer( attrib, array._itemSize, array._glBind, normalize, 0, 0 );
             }
         },
 
