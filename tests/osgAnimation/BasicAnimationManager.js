@@ -5,7 +5,7 @@ define( [
     'osgAnimation/BasicAnimationManager',
     'osgAnimation/UpdateMatrixTransform',
     'osgAnimation/StackedRotateAxis',
-], function ( QUnit, Q, mockup, MatrixTransform, BasicAnimationManager, UpdateMatrixTransform, StackedRotateAxis ) {
+], function ( QUnit, mockup, MatrixTransform, BasicAnimationManager, UpdateMatrixTransform, StackedRotateAxis ) {
 
     'use strict';
 
@@ -42,11 +42,13 @@ define( [
             basicAnimationManager.playAnimation( animationName );
             ok( basicAnimationManager._startAnimations[ animationName ] !== undefined, 'check start animation queue' );
 
+            basicAnimationManager._dirty = false;
             basicAnimationManager.update( null, nv );
             ok( basicAnimationManager._activeAnimations[ animationName ] !== undefined, 'check animation ' + animationName + ' is playing' );
 
-            equal( basicAnimationManager._targets[ 0 ].target, 'a', 'check target a name' );
-            equal( basicAnimationManager._targets[ 1 ].target, 'b', 'check target b name' );
+            // .x comes from the mockup anmation name
+            equal( basicAnimationManager._targets[ 0 ].target, 'a.x', 'check target a name' );
+            equal( basicAnimationManager._targets[ 1 ].target, 'b.x', 'check target b name' );
 
             equal( basicAnimationManager._targetID[ 0 ].value, 1, 'check target a value at t = ' + time );
             equal( basicAnimationManager._targetID[ 1 ].value, 1, 'check target b value at t = ' + time );
@@ -77,7 +79,7 @@ define( [
 
         QUnit.test( 'BasicAnimationManager Linking', function () {
 
-            var animation = mockup.createAnimation( 'AnimationTest' );
+            var animation = mockup.createAnimation( 'AnimationTest', 'testUpdateMatrixTransform' );
             var basicAnimationManager = new BasicAnimationManager();
             basicAnimationManager.init( [ animation ] );
 
@@ -85,8 +87,8 @@ define( [
             // create a dumy tree with simple animation update callback
             var node = new MatrixTransform();
             var animationCallback = new UpdateMatrixTransform();
-            animationCallback.setName( 'testUpdateMatrixTransform');
-            var stackedRotateAxis = new StackedRotateAxis('a');
+            animationCallback.setName( 'testUpdateMatrixTransform' );
+            var stackedRotateAxis = new StackedRotateAxis('x');
             animationCallback.getStackedTransforms().push( stackedRotateAxis );
             node.addUpdateCallback( animationCallback );
 
@@ -118,6 +120,11 @@ define( [
             var animationName = Object.keys( animations )[ 0 ];
             basicAnimationManager.playAnimation( animationName );
 
+            basicAnimationManager._dirty = false;
+
+            time = 0.0;
+            basicAnimationManager.update( null, nv );
+
             time = 0.5;
             basicAnimationManager.update( null, nv );
             equal( stackedRotateAxis.getTarget().value, 0.5, 'check target a value at t = ' + time );
@@ -131,6 +138,7 @@ define( [
         QUnit.test( 'BasicAnimationManager Performance', function () {
 
             var basicAnimationManager = new BasicAnimationManager();
+            basicAnimationManager._dirty = false;
             var animations = [];
             var root = new MatrixTransform();
             var allUpdateCallback = [];
@@ -139,7 +147,8 @@ define( [
             var createAnimation = function() {
 
                 var index = animations.length.toString();
-                var animation = mockup.createAnimation( 'AnimationTest_' + index, 'a_'+ index, 'b_'+ index);
+                var targetName = 'testUpdateMatrixTransform_' + index;
+                var animation = mockup.createAnimation( 'AnimationTest_' + index, targetName, 'a_' + index, targetName, 'b_'+ index);
                 animations.push( animation );
 
                 // adds animationUpdateCallback to test compute UpdateMatrixTransform
@@ -148,7 +157,7 @@ define( [
                 root.addChild( node );
                 var animationCallback = new UpdateMatrixTransform();
                 allUpdateCallback.push(animationCallback);
-                animationCallback.setName( 'testUpdateMatrixTransform_' + index);
+                animationCallback.setName( targetName );
                 var stackedRotateAxis = new StackedRotateAxis('a_' + index);
                 animationCallback.getStackedTransforms().push( stackedRotateAxis );
                 var stackedRotateAxis2 = new StackedRotateAxis('b_' + index);

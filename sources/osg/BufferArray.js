@@ -9,6 +9,17 @@ define( [
 
     'use strict';
 
+    var getAttributeType = function ( array ) {
+        var type;
+
+        if ( array instanceof MACROUTILS.Float32Array ) type = 0x1406;
+        if ( array instanceof MACROUTILS.Uint32Array ) type = 0x1405;
+        if ( array instanceof MACROUTILS.Uint16Array ) type = 0x1403;
+        if ( array instanceof MACROUTILS.Uint8Array ) type = 0x1401;
+
+        return type;
+    };
+
     /**
      * BufferArray manage vertex / normal / ... array used by webgl.
      * @class BufferArray
@@ -25,13 +36,16 @@ define( [
             type = BufferArray[ type ];
         }
         this._type = type;
+        this._glBind = undefined;
 
         if ( elements !== undefined ) {
+            var typedArray;
             if ( this._type === BufferArray.ELEMENT_ARRAY_BUFFER ) {
-                this._elements = elements instanceof MACROUTILS.Uint16Array ? elements : new MACROUTILS.Uint16Array( elements );
+                typedArray = elements instanceof MACROUTILS.Uint16Array ? elements : new MACROUTILS.Uint16Array( elements );
             } else {
-                this._elements = elements instanceof MACROUTILS.Float32Array ? elements : new MACROUTILS.Float32Array( elements );
+                typedArray = elements instanceof MACROUTILS.Float32Array ? elements : new MACROUTILS.Float32Array( elements );
             }
+            this.setElements( typedArray );
         }
     };
 
@@ -42,7 +56,7 @@ define( [
     // be deleted in the correct GL context.
     BufferArray._sDeletedGLBufferArrayCache = new Map();
 
-    // static method to delete Program 
+    // static method to delete Program
     BufferArray.deleteGLBufferArray = function ( gl, buffer ) {
         if ( !BufferArray._sDeletedGLBufferArrayCache.has( gl ) )
             BufferArray._sDeletedGLBufferArrayCache.set( gl, [] );
@@ -134,6 +148,7 @@ define( [
         },
         setElements: function ( elements ) {
             this._elements = elements;
+            this._glBind = getAttributeType( elements );
             this._dirty = true;
         }
     } );
