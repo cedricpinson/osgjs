@@ -24,8 +24,7 @@ define( [
             return this._stackedTransforms;
         },
 
-        computeChannels: function() {
-
+        computeChannels: function () {
             var matrix = this._matrix;
             Matrix.makeIdentity( matrix );
             var transforms = this._stackedTransforms;
@@ -37,9 +36,7 @@ define( [
         },
 
         update: function ( node /*, nv */ ) {
-
             Matrix.copy( this._matrix, node.getMatrix() );
-            node.dirtyMatrix();
             return true;
         }
 
