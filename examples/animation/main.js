@@ -63,6 +63,7 @@ var createScene = function ( viewer, root, url ) {
     // var root = new osg.MatrixTransform();
     osg.Matrix.makeRotate( Math.PI * 0.5, 1, 0, 0, root.getMatrix() );
 
+
     //var request = osgDB.readNodeURL( '../media/models/animation/brindherbe_indexed.osgjs.gz' );
     //var request = osgDB.readNodeURL( '../media/models/animation/4x4_anim.osgjs' );
     //var request = osgDB.readNodeURL( '../media/models/animation/brindherbetrs.osgjs' );
@@ -81,12 +82,12 @@ var createScene = function ( viewer, root, url ) {
         root.accept( bfinder );
         var bones = bfinder.getBones();
 
-        var geom = osg.createAxisGeometry( 40 );
+        var geom = osg.createAxisGeometry( 0.25 );
         for ( var i = 0, l = bones.length; i < l; i++ ) {
             var bone = bones[ i ];
             console.log( bone.getName() );
             var tnode = new osg.Node();
-            //            tnode.addChild( geom );
+            tnode.addChild( geom );
             //            tnode.addChild( osg.createTexturedBoxGeometry() );
             bone.addChild( tnode );
         }
@@ -119,7 +120,7 @@ var createScene = function ( viewer, root, url ) {
             }
         }
 
-        osg.setNotifyLevel( osg.ERROR );
+        //osg.setNotifyLevel( osg.ERROR );
 
         var visitor = window.visitor;
         visitor.reset();
@@ -140,9 +141,12 @@ var onLoad = function () {
         brindherbe_indexed: 'brindherbe_indexed.osgjs.gz',
         _4x4_anim: '4x4_anim.osgjs',
         brindherbetrs: 'brindherbetrs.osgjs',
-        magic: 'mixamo wizard magic_attack_05.osgjs',
-        horse: 'mixamo horse gallop.osgjs',
-        fuse: 'mixamo fuse_w_blendshapes waving.osgjs'
+        magic: 'mixamo_wizard_magic_attack_05.osgjs',
+        horse: 'mixamo_horse_gallop.osgjs',
+        fuse: 'mixamo fuse_w_blendshapes waving.osgjs',
+        _44f5d95ddb794570a441fce7513bf5d1: '44f5d95ddb794570a441fce7513bf5d1.osgjs',
+        _05e94056f21c472da5ac5dfc2404e106: '05e94056f21c472da5ac5dfc2404e106.osgjs',
+        _44f5d95ddb794570a441fce7513bf5d1_box: '44f5d95ddb794570a441fce7513bf5d1_box.osgjs'
     };
 
     window.debugScene = false;
@@ -165,7 +169,7 @@ var onLoad = function () {
     };
     var modelController = gui.add( this, 'models', Object.keys( models ) );
     modelController.onFinishChange( load );
-    modelController.setValue( 'magic' );
+    modelController.setValue( '_44f5d95ddb794570a441fce7513bf5d1' );
 
     var debugSceneController = gui.add( window, 'debugScene' );
     debugSceneController.onFinishChange( load );
@@ -196,7 +200,7 @@ var onLoad = function () {
         var mult = ( speed < 0 ) ? 1. / -speed : speed;
         this.updateManager( t * mult );
         return true;
-    }
+    };
 };
 
 window.addEventListener( 'load', onLoad, true );
