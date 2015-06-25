@@ -2,10 +2,8 @@ define( [
     'osg/Utils',
     'osg/Notify',
     'osg/Object',
-    'osgAnimation/FindNearestParentSkeleton',
-    'osgAnimation/RigGeometry'
-
-], function ( MACROUTILS, ObjectBase, Notify, FindNearestParentSkeleton, RigGeometry ) {
+    'osgAnimation/FindNearestParentSkeleton'
+], function ( MACROUTILS, Notify, ObjectBase, FindNearestParentSkeleton ) {
 
     'use strict';
 
@@ -18,7 +16,7 @@ define( [
 
     UpdateRigGeometry.prototype = MACROUTILS.objectInherit( ObjectBase.prototype, {
 
-        init: function( geom ) {
+        init: function ( geom ) {
 
             var finder = new FindNearestParentSkeleton();
             if ( geom.getParents().length > 1 )
@@ -31,13 +29,13 @@ define( [
                 return;
             }
 
-            geom.buildVertexInfluenceSet();
             geom.setSkeleton( finder._root );
         },
 
         update: function ( node /*, nv*/ ) {
 
-            if ( node && node.typeID !== RigGeometry.typeID ) return true;
+            // Circular ref
+            if ( node && node.className() !== 'RigGeometry' ) return true;
 
             var geom = node;
 
@@ -51,6 +49,7 @@ define( [
 
             return true;
         }
+
     } );
 
 

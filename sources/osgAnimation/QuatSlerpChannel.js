@@ -1,16 +1,8 @@
-define( [
-    'osgAnimation/Channel',
-    'osgAnimation/QuatLerpChannel',
-    'osgAnimation/Interpolator'
-], function ( Channel, QuatLerpChannel, Interpolator ) {
+define( [], function () {
 
+    'use strict';
 
-    var QuatSlerpChannel = function ( keys, target ) {
-        QuatLerpChannel.call( this, keys, target );
-        this.getSampler().setInterpolator( Interpolator.QuatSlerpInterpolator );
-    };
-
-    QuatSlerpChannel.prototype = Channel.prototype;
+    var QuatSlerpChannel = function () {};
 
     return QuatSlerpChannel;
 } );

@@ -39,4 +39,4 @@ define( [
 
     return CollectBoneVisitor;
 
-});
+} );
