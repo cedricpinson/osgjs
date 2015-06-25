@@ -26,13 +26,9 @@ define( [
             arrayChannelsPromise.push( promise );
         }
 
-        var defer = P.defer();
-        P.all( arrayChannelsPromise ).then( function () {
-            var animation = Animation.createAnimation( channels, jsonObj.Name );
-            defer.resolve( animation );
+        return P.all( arrayChannelsPromise ).then( function () {
+            return Animation.createAnimation( channels, jsonObj.Name );
         } );
-
-        return defer.promise;
     };
 
     osgAnimationWrapper.StandardVec3Channel = function ( input, channel, creator ) {
@@ -156,8 +152,8 @@ define( [
             createChannelAttribute( key, value );
         }
 
-        var defer = P.defer();
-        P.all( arraysPromise ).then( function () {
+
+        return P.all( arraysPromise ).then( function () {
             var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
             var keys = new Float32Array( size * 3 );
             var times = new Float32Array( size );
@@ -176,10 +172,8 @@ define( [
                 keys[ id ] = controlPointOut[ i ];
             }
             Channel.createFloatCubicBezierChannel( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
-            defer.resolve( channel );
+            return channel;
         } );
-
-        return defer.promise;
     };
 
     osgAnimationWrapper.Vec3CubicBezierChannel = function ( input, channel ) {
@@ -231,8 +225,7 @@ define( [
             createChannelAttribute( key, value );
         }
 
-        var defer = P.defer();
-        P.all( arraysPromise ).then( function () {
+        return P.all( arraysPromise ).then( function () {
             var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
             var keys = new Float32Array( size * 9 );
             var times = new Float32Array( size );
@@ -271,10 +264,8 @@ define( [
                 keys[ id ] = cpo2[ i ];
             }
             Channel.createVec3CubicBezierChannel( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
-            defer.resolve( channel );
+            return channel;
         } );
-
-        return defer.promise;
     };
 
     osgAnimationWrapper.BasicAnimationManager = function ( input, manager ) {
@@ -296,11 +287,10 @@ define( [
             prim.then( pushAnimCb );
         }
 
-        P.all( animPromises ).then( function () {
+        return P.all( animPromises ).then( function () {
             manager.init( animations );
+            return manager;
         } );
-
-        return P.resolve( manager );
     };
 
     osgAnimationWrapper.UpdateMatrixTransform = function ( input, umt ) {
@@ -326,12 +316,10 @@ define( [
 
         // when UpdateMatrixTransform is ready
         // compute the default value data
-        var all = P.all( promiseArray );
-        all.then( function () {
+        return P.all( promiseArray ).then( function () {
             umt.computeChannels();
+            return umt;
         } );
-
-        return P.resolve( umt );
     };
 
     osgAnimationWrapper.StackedTranslate = function ( input, st ) {
