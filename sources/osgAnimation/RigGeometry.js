@@ -31,40 +31,15 @@ define( [
     // }
 
 
-    // to compute VertexInfluenceSet we need the list of bone / vtx index / weight
-
-
-
-    // GUILLAUME:
-    // Dont use an object to compute vertex influence set, compute directly the
-    // vertex / bones / weigth
-    var computeBonesPerVertex = function( vertexInfluenceMap, bonesList, nbVertexes ) {
-
-        // support 4 bones max per vertex
-        var bonesUsed = Object.keys( vertexInfluenceMap );
-        var bonesMapIndex = {};
-
-
-        // boneID0 weight0 boneID1 weight1
-        // we could pack to not waste an attributes
-        var indexBone = new Uint32Array( nbVertexes * 4 );
-        var weight = new Float32Array( nbVertexes * 4 );
-
-
-    };
-
-
-
     var RigGeometry = function () {
 
         Geometry.call( this );
 
         this.setUpdateCallback( new UpdateRigGeometry() );
 
-        this._geometry = undefined;
-        this._vertexInfluenceMap = undefined;
-        this._vertexInfluenceSet = new VertexInfluenceSet();
+        //this._geometry = undefined;
         this._root = undefined;
+        this._boneNameID = {};
 
         this._matrixFromSkeletonToGeometry = Matrix.create();
         this._invMatrixFromSkeletonToGeometry = Matrix.create();
@@ -76,14 +51,6 @@ define( [
     };
 
     RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
-
-        setInfluenceMap: function ( influenceMap ) {
-            this._vertexInfluenceMap = influenceMap;
-        },
-
-        getInfluenceMap: function () {
-            return this._vertexInfluenceMap;
-        },
 
         getSkeleton: function () {
             return this._root;
@@ -99,35 +66,6 @@ define( [
 
         getNeedToComputeMatrix: function () {
             return this._needToComputeMatrix;
-        },
-
-        getVertexInfluenceSet: function () {
-            return this._vertexInfluenceSet;
-        },
-
-        buildVertexInfluenceSet: function () {
-
-            if ( !this._vertexInfluenceMap ) {
-                Notify.warn( 'buildVertexInfluenceSet can t be called without VertexInfluence already set to the RigGeometry (' + this.getName() + ' ) ' );
-            }
-
-            this._vertexInfluenceSet.clear();
-
-            var keys = Object.keys( this._vertexInfluenceMap );
-
-            for ( var i = 0, l = keys.length; i < l; i++ ) {
-
-                var key = keys[ i ];
-                var value = this._vertexInfluenceMap[ key ];
-
-                var input = {};
-                input._map = value;
-                input._name = key;
-
-                this._vertexInfluenceSet.addVertexInfluence( input );
-            }
-
-            this._vertexInfluenceSet.buildVertex2BoneList();
         },
 
         computeMatrixFromRootSkeleton: function () {
@@ -155,12 +93,8 @@ define( [
             return this._invMatrixFromSkeletonToGeometry;
         },
 
-
-        getOrCreateSourceGeometry: function () {
-
-            if ( !this._geometry ) this._geometry = new Geometry();
+        getSourceGeometry: function () {
             return this._geometry;
-
         },
 
         setSourceGeometry: function ( geometry ) {

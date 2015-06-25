@@ -11,6 +11,7 @@ define( [
 
 ], function ( Notify, MACROUTILS, BaseObject, Quat, Vec3, Channel, Animation, Interpolator, CollectAnimationUpdateCallbackVisitor ) {
 
+    'use strict';
 
     var createTargetID = function ( id, value ) {
         return {
@@ -57,6 +58,7 @@ define( [
         //    target: name
         // }
         this._targets = [];
+        this._targetsMap = {};
 
 
         // targetID contains an array of all target id valid for this manager
@@ -78,11 +80,18 @@ define( [
         this._quatTargetID = [];
         this._vec3TargetID = [];
         this._floatTargetID = [];
+        this._floatCubicBezierTargetID = [];
+        this._vec3CubicBezierTargetID = [];
+
+
         this._targetIDByTypes = [];
         this._targetIDByTypes.length = Object.keys( Channel.ChannelType ).length;
         this._targetIDByTypes[ Channel.ChannelType.Vec3 ] = this._vec3TargetID;
         this._targetIDByTypes[ Channel.ChannelType.Quat ] = this._quatTargetID;
         this._targetIDByTypes[ Channel.ChannelType.Float ] = this._floatTargetID;
+
+        this._targetIDByTypes[ Channel.ChannelType.FloatCubicBezier ] = this._floatCubicBezierTargetID;
+        this._targetIDByTypes[ Channel.ChannelType.Vec3CubicBezier ] = this._vec3CubicBezierTargetID;
 
         // current playing animations
         this._activeAnimations = {};
@@ -95,12 +104,16 @@ define( [
         this._quatActiveChannels = [];
         this._vec3ActiveChannels = [];
         this._floatActiveChannels = [];
+        this._floatCubicBezierActiveChannels = [];
+        this._vec3CubicBezierActiveChannels = [];
 
         this._activeChannelsByTypes = [];
         this._activeChannelsByTypes.length = Object.keys( Channel.ChannelType ).length;
         this._activeChannelsByTypes[ Channel.ChannelType.Vec3 ] = this._vec3ActiveChannels;
         this._activeChannelsByTypes[ Channel.ChannelType.Quat ] = this._quatActiveChannels;
         this._activeChannelsByTypes[ Channel.ChannelType.Float ] = this._floatActiveChannels;
+        this._activeChannelsByTypes[ Channel.ChannelType.FloatCubicBezier ] = this._floatCubicBezierActiveChannels;
+        this._activeChannelsByTypes[ Channel.ChannelType.Vec3CubicBezier ] = this._vec3CubicBezierActiveChannels;
 
 
         // assign all target/channel in animationCallback
@@ -109,20 +122,22 @@ define( [
         this._animationsUpdateCallback = {};
         this._animationsUpdateCallbackArray = [];
 
+        this._dirty = true;
     };
 
 
-    BasicAnimationManager.prototype = MACROUTILS.objectInherit( Object.prototype, {
+    BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype, {
 
 
         // run a visitor to collect all animationUpdateCallback found in node tree
-        findAnimationUpdateCallback: function( node ) {
+        findAnimationUpdateCallback: function ( node ) {
             var collector = new CollectAnimationUpdateCallbackVisitor();
             node.accept( collector );
             this._animationsUpdateCallback = collector.getAnimationUpdateCallbackMap();
         },
 
 
+        // STOP HERE
         // assignTargetToAnimationCallback
         //
         // check all animationUpdateCallback collected and try to
@@ -131,38 +146,34 @@ define( [
         // manager we skip it.  It means that it should be called
         // after the animations has been registered into the animation
         // manager
-        assignTargetToAnimationCallback: function() {
-
-            var findTargetName = function( array, name) {
-                for ( var i = 0, l = array.length; i < l; i++ )
-                    if ( array[i].target === name ) return i;
-                return -1;
-            };
+        assignTargetToAnimationCallback: function () {
 
             this._animationsUpdateCallbackArray.length = 0;
 
             var keys = Object.keys( this._animationsUpdateCallback );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
-                var key = keys[i];
+                var key = keys[ i ];
                 var animationUpdateCallback = this._animationsUpdateCallback[ key ];
+                var targetName = animationUpdateCallback.getName();
                 // loop over
                 if ( animationUpdateCallback.getStackedTransforms ) {
                     var channels = animationUpdateCallback.getStackedTransforms();
 
                     var nbChannelsRegistered = 0;
                     for ( var a = 0; a < channels.length; a++ ) {
-                        var channel = channels[a];
-                        var name = channels[a].getName();
+                        var channel = channels[ a ];
+                        var name = channels[ a ].getName();
+                        var uniqueTargetName = targetName + '.' + name;
 
                         // if not target id in animation manager skip
-                        var targetID = findTargetName( this._targets, name );
-                        if ( targetID === -1 ) {
-                            Notify.warn( 'target id ' + name + ' not found in manager' );
+                        var target = this._targetsMap[ uniqueTargetName ];
+                        if ( target === undefined ) {
+                            Notify.warn( 'target id ' + uniqueTargetName + ' (' + name + ') not found in manager' );
                             continue;
                         }
                         nbChannelsRegistered++;
                         // assign the channel instance with value into the animation update callback
-                        channel.setTarget( this._targetID[ targetID ] );
+                        channel.setTarget( this._targetID[ target.targetID ] );
                     }
 
                     // keep list of updateCallback to update if they contains channel to compute
@@ -188,17 +199,17 @@ define( [
             }
 
             // compute a map and set a targetID for each InstanceChannel
-            this._targets = Animation.initChannelTargetID( instanceAnimationList );
+            Animation.initChannelTargetID( instanceAnimationList, this._targets, this._targetsMap );
             this._targetID.length = 0;
             for ( i = 0; i < this._targets.length; i++ ) {
                 var type = this._targets[ i ].type;
 
                 // probably it's not a good idea here
-                if ( type === Channel.ChannelType.Vec3 )
+                if ( type === Channel.ChannelType.Vec3 || Channel.ChannelType.Vec3CubicBezier )
                     this._targetID.push( createTargetID( i, Vec3.create() ) );
                 else if ( type === Channel.ChannelType.Quat )
                     this._targetID.push( createTargetID( i, Quat.create() ) );
-                else if ( type === Channel.ChannelType.Float )
+                else if ( type === Channel.ChannelType.Float || Channel.ChannelType.FloatCubicBezier )
                     this._targetID.push( createTargetID( i, 0.0 ) );
                 else
                     Notify.warn( 'osgAnimation.BasicAnimationManager unknown target type' );
@@ -250,6 +261,12 @@ define( [
 
         update: function ( node, nv ) {
 
+            if ( this._dirty ) {
+                this.findAnimationUpdateCallback( node );
+                this.assignTargetToAnimationCallback();
+                this._dirty = false;
+            }
+
             var t = nv.getFrameStamp().getSimulationTime();
             this.updateManager( t );
             return true;
@@ -288,7 +305,7 @@ define( [
 
             for ( var c = 0, l = channels.length; c < l; c++ ) {
                 var channel = channels[ c ];
-                var tlocal = t - channel.start;
+                var tlocal = t - channel.t;
                 interpolator( tlocal, channel );
             }
 
@@ -341,6 +358,9 @@ define( [
             this.updateChannelsType( t, this._quatActiveChannels, Interpolator.QuatLerpInterpolator );
             this.updateChannelsType( t, this._floatActiveChannels, Interpolator.FloatLerpInterpolator );
 
+            this.updateChannelsType( t, this._floatCubicBezierActiveChannels, Interpolator.FloatCubicBezierInterpolator );
+            this.updateChannelsType( t, this._vec3CubicBezierActiveChannels, Interpolator.Vec3CubicBezierInterpolator );
+
 
             // update targets
             //
@@ -348,11 +368,14 @@ define( [
             this.updateTargetType( this._vec3TargetID, Vec3.lerp, Vec3.init );
             this.updateTargetType( this._floatTargetID, Float.lerp, Float.init );
 
+            this.updateTargetType( this._floatCubicBezierTargetID, Float.lerp, Float.init );
+            this.updateTargetType( this._vec3CubicBezierTargetID, Vec3.lerp, Vec3.init );
+
 
             // update all animation callback
             // expect to have UpdateMatrixTransform
             for ( var i = 0, l = this._animationsUpdateCallbackArray.length; i < l; i++ ) {
-                var animCallback = this._animationsUpdateCallbackArray[i];
+                var animCallback = this._animationsUpdateCallbackArray[ i ];
                 animCallback.computeChannels();
             }
 
@@ -367,7 +390,7 @@ define( [
 
             var i = 0;
             while ( i < activeAnimationList.length ) {
-                var instanceAnimation  = activeAnimationList[ i ];
+                var instanceAnimation = activeAnimationList[ i ];
                 var name = instanceAnimation.name;
                 var cmd = this._activeAnimations[ name ];
 
