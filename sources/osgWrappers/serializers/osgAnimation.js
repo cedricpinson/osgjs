@@ -407,11 +407,7 @@ define( [
 
         osgWrapper.Geometry( input, rigGeom );
 
-        // input.setJSON( jsonObj.SourceGeometry );
-        // if ( !osgWrapper.Geometry( input, rigGeom.getOrCreateSourceGeometry() ) )
-        //     return P.reject();
-
-        rigGeom._boneNameID = jsonObj.BoneMap; // @tocheck (name)
+        rigGeom._boneNameID = jsonObj.BoneMap;
 
         return P.resolve( rigGeom );
     };

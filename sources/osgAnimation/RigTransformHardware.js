@@ -99,6 +99,7 @@ define( [
 
             'void main(void) {',
             '  gl_FragColor = vec4(normalize(vNormal) * .5 + .5, 1.0);',
+            '  //gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);',
             '}',
             ''
         ].join( '\n' );
@@ -182,9 +183,26 @@ define( [
             var matrix = new Float32Array( nbVec4Uniforms * 4 );
             this._matrixPalette = new Uniform.createFloat4Array( matrix, 'uBones' );
 
+
+            // var gepar = geom.parents[ 0 ];
+            // geom.parents[ 0 ].removeChild( geom );
+
+            // var n = new Node();
+            // n.addChild( geom );
+            // gepar.addChild( n );
+
+            // var st = n.getOrCreateStateSet();
+            // st.setAttributeAndModes( getShader( nbVec4Uniforms ) );
+            // st.addUniform( this._matrixPalette );
+
             //Shader setUP
-            geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
-            geom.parents[ 0 ].getOrCreateStateSet().addUniform( this._matrixPalette );
+            // geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
+            // geom.parents[ 0 ].getOrCreateStateSet().addUniform( this._matrixPalette );
+
+            window.setTimeout( function () {
+                geom.getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
+                geom.getOrCreateStateSet().addUniform( this._matrixPalette );
+            }.bind( this ), 1000 );
 
             this._needInit = false;
             return true;
@@ -231,7 +249,8 @@ define( [
 
         update: function ( geom ) {
 
-            if ( this._needInit && !this.init( geom ) ) return;
+            if ( this._needInit )
+                this.init( geom );
 
             this.computeMatrixPalette( geom.getMatrixFromSkeletonToGeometry(), geom.getInvMatrixFromSkeletonToGeometry() );
         }
