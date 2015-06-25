@@ -298,17 +298,35 @@ define( [
                 'osgAnimation.FloatLerpChannel': {
                     'Name': 'euler_x',
                     'TargetName': 'Cube',
-                    'KeyFrames': [
-                        [ -0.04, 0 ],
-                        [ 0.36, -0 ]
-                    ]
+                    "KeyFrames": {
+                        "Key": {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159 ],
+                                    "Size": 28
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        },
+                        "Time": {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ 0, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3, 0.333333, 0.866667, 0.9, 0.933333, 0.966667, 1, 1.76667, 1.8, 1.83333, 1.86667, 1.9, 1.93333, 1.96667, 2, 2.3, 2.33333, 2.36667, 2.4, 2.43333, 2.46667, 2.5 ],
+                                    "Size": 28
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        }
+                    }
                 }
             };
 
             ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-                ok( result.getKeyframes().length === 2, 'Check keyframes FloatLerpChannel' );
-                ok( result.getTargetName() === 'Cube', 'Check TargetName FloatLerpChannel' );
-                ok( result.getName() === 'euler_x', 'Check Name FloatLerpChannel' );
+                ok( result.keys.length === 28, 'Check keys FloatLerpChannel' );
+                ok( result.times.length === 28, 'Check times FloatLerpChannel' );
+                ok( result.target === 'Cube', 'Check TargetName FloatLerpChannel' );
                 start();
             } );
         } );
@@ -317,18 +335,63 @@ define( [
         QUnit.asyncTest( 'QuatSlerpChannel', function () {
             var tree = {
                 'osgAnimation.QuatSlerpChannel': {
-                    'Name': 'quaternion',
+                    'Name': 'rotate_x',
                     'TargetName': 'Cube',
-                    'KeyFrames': [
-                        [ -0.04, 0, 0, 0, 1 ],
-                        [ 0.36, -0, 0, 0, 1 ]
-                    ]
+                    "KeyFrames": {
+                        "Key": [ {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        }, {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        }, {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        }, {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        } ],
+                        "Time": {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ 0, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3 ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        }
+                    }
                 }
             };
             ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-                ok( result.getKeyframes().length === 2, 'Check keyframes QuatSlerpChannel' );
-                ok( result.getTargetName() === 'Cube', 'Check TargetName QuatSlerpChannel' );
-                ok( result.getName() === 'quaternion', 'Check Name QuatSlerpChannel' );
+                ok( result.keys.length === 28, 'Check keys QuatSlerpChannel' );
+                ok( result.times.length === 7, 'Check times QuatSlerpChannel' );
+                ok( result.target === 'Cube', 'Check TargetName QuatSlerpChannel' );
                 start();
             } );
         } );
@@ -337,19 +400,64 @@ define( [
         QUnit.asyncTest( 'QuatLerpChannel', function () {
             var tree = {
                 'osgAnimation.QuatLerpChannel': {
-                    'Name': 'quaternion',
+                    'Name': 'rotate_x',
                     'TargetName': 'Cube',
-                    'KeyFrames': [
-                        [ -0.04, 0, 0, 0, 1 ],
-                        [ 0.36, -0, 0, 0, 1 ]
-                    ]
+                    "KeyFrames": {
+                        "Key": [ {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        }, {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        }, {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        }, {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        } ],
+                        "Time": {
+                            "Array": {
+                                "Float32Array": {
+                                    "Elements": [ 0, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3 ],
+                                    "Size": 7
+                                }
+                            },
+                            "ItemSize": 1,
+                            "Type": "ARRAY_BUFFER"
+                        }
+                    }
                 }
             };
 
             ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
-                ok( result.getKeyframes().length === 2, 'Check keyframes QuatLerpChannel' );
-                ok( result.getTargetName() === 'Cube', 'Check TargetName QuatLerpChannel' );
-                ok( result.getName() === 'quaternion', 'Check Name QuatLerpChannel' );
+                ok( result.keys.length === 28, 'Check keys QuatSlerpChannel' );
+                ok( result.times.length === 7, 'Check times QuatSlerpChannel' );
+                ok( result.target === 'Cube', 'Check TargetName QuatSlerpChannel' );
                 start();
             } );
 

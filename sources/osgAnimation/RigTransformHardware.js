@@ -5,15 +5,15 @@ define( [
     'osg/Matrix',
     'osg/Program',
     'osg/Shader',
-    'osgAnimation/CollectBoneVisitor',
-    'osgAnimation/UniformMatrixPalette'
+    'osg/Uniform',
+    'osgAnimation/CollectBoneVisitor'
 
-], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, CollectBoneVisitor, UniformMatrixPalette ) {
+], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, Uniform, CollectBoneVisitor ) {
 
     'use strict';
 
 
-    function getShader( maxMatrix ) {
+    function getShader( nbVec4 ) {
         var vertexshader = [
             '',
             '#ifdef GL_ES',
@@ -21,13 +21,13 @@ define( [
             '#endif',
             'attribute vec3 Vertex;',
             'attribute vec3 Normal;',
-            'attribute vec4 Bone;',
-            'attribute vec4 Weight;',
+            'attribute vec4 Bones;',
+            'attribute vec4 Weights;',
 
             'uniform mat4 ModelViewMatrix;',
             'uniform mat4 ProjectionMatrix;',
             'uniform mat4 NormalMatrix;',
-            'uniform vec4 uBones[' + ( maxMatrix * 3 ) + '];',
+            'uniform vec4 uBones[' + ( nbVec4 ) + '];',
 
             'varying vec3 vNormal;',
 
@@ -72,14 +72,14 @@ define( [
 
             'position = vec4( 0.0, 0.0, 0.0, 0.0 );',
             '',
-            'if ( Weight.x != 0.0 )',
-            'computeAcummulatedPosition( int( Bone.x ), Weight.x );',
-            'if ( Weight.y != 0.0 )',
-            'computeAcummulatedPosition( int( Bone.y ), Weight.y );',
-            'if ( Weight.z != 0.0 )',
-            'computeAcummulatedPosition( int( Bone.z ), Weight.z );',
-            'if ( Weight.w != 0.0 )',
-            'computeAcummulatedPosition( int( Bone.w ), Weight.w );',
+            'if ( Weights.x != 0.0 )',
+            'computeAcummulatedPosition( int( Bones.x ), Weights.x );',
+            'if ( Weights.y != 0.0 )',
+            'computeAcummulatedPosition( int( Bones.y ), Weights.y );',
+            'if ( Weights.z != 0.0 )',
+            'computeAcummulatedPosition( int( Bones.z ), Weights.z );',
+            'if ( Weights.w != 0.0 )',
+            'computeAcummulatedPosition( int( Bones.w ), Weights.w );',
 
             // 'if ( Bone.x == -1.0 &&  Bone.y == -1.0 &&  Bone.z == -1.0 &&  Bone.w == -1.0 ) ',
             // 'position = vec4( Vertex, 1.0 );',
@@ -119,81 +119,125 @@ define( [
 
     var RigTransformHardware = function () {
         this._needInit = true;
-        this._bonesPerVertex = 0;
-        this._nbVertexes = 0;
 
-        this._bonePalette = undefined;
-        this._matrixPalette = new UniformMatrixPalette();
+        // bones are sorted to be used directly by
+        // computeMatrixPalette
+        // means the
+        this._bones = [];
     };
 
 
     RigTransformHardware.prototype = {
 
+        // boneNameID contains a map: boneName: id
+        // {
+        //    'bone0' : 1,
+        //    'bone4' : 0,
+        // }
+        //
+        // boneMap contains a map: boneName: Bone
+        // {
+        //    'bone0: : Bone object,
+        //    'bone1: : Bone object,
+        // }
+        //
+        // return index / bone object
+        // [
+        //    Bone4 object,
+        //    Bone0 object
+        // ]
+        computeBonePalette: function ( boneMap, boneNameID ) {
+            var keys = Object.keys( boneMap );
+            var size = keys.length;
+            var bones = this._bones;
+
+
+            for ( var i = 0; i < size; i++ ) {
+                var bName = keys[ i ];
+                var index = boneNameID[ bName ];
+                var bone = boneMap[ bName ];
+
+                if ( index !== undefined )
+                    bones[ index ] = bone;
+            }
+
+            return bones;
+        },
+
+
         init: function ( geom ) {
 
-            var Vertex = geom.getAttributes().Vertex;
+            // init the bones map
 
-            if ( !Vertex ) {
-                Notify.warn( 'RigTransformHardware no vertex array in the geometry ' + geom.getName() );
-                return false;
-            }
-
-            if ( !geom.getSkeleton() ) {
-                Notify.warn( 'RigTransformHardware no skeleton set in geometry ' + geom.getName() );
-                return false;
-            }
-
+            // stop here
+            // compute bonemap / index
             var mapVisitor = new CollectBoneVisitor();
             geom.getSkeleton().accept( mapVisitor );
             var bm = mapVisitor.getBoneMap();
 
-            if ( !this._matrixPalette.createPalette( bm, geom.getVertexInfluenceSet().getVertexToBoneList() ) ) {
-                return false;
-            }
+            this.computeBonePalette( bm, geom._boneNameID );
+
+            // matrix are 4x3
+            var nbVec4Uniforms = this._bones.length * 3;
+            var matrix = new Float32Array( nbVec4Uniforms * 4 );
+            this._matrixPalette = new Uniform.createFloat4Array( matrix, 'uBones' );
 
             //Shader setUP
-            geom.getOrCreateStateSet().addUniform( this._matrixPalette._unformPalette );
-            geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( this._matrixPalette._palette.length ) );
-
-            // do not iterate with var in
-            for ( var attr in this._matrixPalette._boneWeightAttribArrays ) {
-                geom.getAttributes()[ attr ] = this._matrixPalette._boneWeightAttribArrays[ attr ];
-            }
+            geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
+            geom.parents[ 0 ].getOrCreateStateSet().addUniform( this._matrixPalette );
 
             this._needInit = false;
             return true;
         },
 
 
-        computeMatrixPalette: function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
-            var palette = this._matrixPalette._palette;
+        computeMatrixPalette: ( function () {
 
-            for ( var i = 0, l = palette.length; i < l; i++ ) {
-                var bone = palette[ i ];
+            var mTmp = Matrix.create();
 
-                var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
-                var boneMatrix = bone.getMatrixInSkeletonSpace();
-                var resultBoneMatrix = Matrix.create();
-                var result = Matrix.create();
+            return function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
 
-                Matrix.mult( boneMatrix, invBindMatrix, resultBoneMatrix );
-                Matrix.mult( invTransformFromSkeletonToGeometry, resultBoneMatrix, result );
-                Matrix.preMult( result, transformFromSkeletonToGeometry );
+                var bones = this._bones;
+                var uniformTypedArray = this._matrixPalette.get();
+                var uniformIndex = 0;
 
-                this._matrixPalette.setElement( i, result );
+                for ( var i = 0, l = bones.length; i < l; i++ ) {
+                    var bone = bones[ i ];
 
-            }
-        },
+                    var invBindMatrix = bone.getInvBindMatrixInSkeletonSpace();
+                    var boneMatrix = bone.getMatrixInSkeletonSpace();
+
+                    Matrix.mult( boneMatrix, invBindMatrix, mTmp );
+                    Matrix.postMult( invTransformFromSkeletonToGeometry, mTmp );
+                    Matrix.preMult( mTmp, transformFromSkeletonToGeometry );
+
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 0 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 4 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 8 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 12 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 1 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 5 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 9 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 13 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 2 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 6 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 10 ];
+                    uniformTypedArray[ uniformIndex++ ] = mTmp[ 14 ];
+                }
+                this._matrixPalette.set( uniformTypedArray );
+            };
+
+        } )(),
 
         update: function ( geom ) {
 
             if ( this._needInit && !this.init( geom ) ) return;
 
-            this.computeMatrixPalette( geom.getMatrixFromSkeletonToGeometry(), geom.getInvMatrixFromSkeletonToGeometry(), geom._geometry._name );
+            this.computeMatrixPalette( geom.getMatrixFromSkeletonToGeometry(), geom.getInvMatrixFromSkeletonToGeometry() );
         }
     };
 
 
     return RigTransformHardware;
 
-});
+} );

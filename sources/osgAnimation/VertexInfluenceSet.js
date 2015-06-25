@@ -81,4 +81,4 @@ define( [
 
     return VertexInfluenceSet;
 
-});
+} );
