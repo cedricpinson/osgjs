@@ -115,6 +115,12 @@ var createScene = function ( viewer, root, url ) {
                 window.play = function () {
                     animationManager.playAnimation( firstAnimation );
                 };
+                window.stop = function () {
+                    animationManager.stopAnimation( firstAnimation );
+                };
+                window.pause = function () {
+                    animationManager.pauseAnimation( firstAnimation );
+                };
                 window.animationManager = animationManager;
                 animationManager.playAnimation( firstAnimation );
             }
@@ -152,6 +158,8 @@ var onLoad = function () {
     window.debugScene = false;
     this.visitor = new osgUtil.DisplayNodeGraphVisitor();
     window.play = function () {};
+    window.stop = function () {};
+    window.pause = function () {};
     window.speed = 1.0;
     window.isPlaying = false;
 
@@ -169,12 +177,15 @@ var onLoad = function () {
     };
     var modelController = gui.add( this, 'models', Object.keys( models ) );
     modelController.onFinishChange( load );
-    modelController.setValue( '_44f5d95ddb794570a441fce7513bf5d1' );
+    //modelController.setValue( '_44f5d95ddb794570a441fce7513bf5d1' );
+    modelController.setValue( 'magic' );
 
     var debugSceneController = gui.add( window, 'debugScene' );
     debugSceneController.onFinishChange( load );
 
     gui.add( window, 'play' );
+    gui.add( window, 'stop' );
+    gui.add( window, 'pause' );
     gui.add( window, 'speed', -10, 10 );
     gui.add( window, 'isPlaying' ).listen();
 
