@@ -62,7 +62,7 @@ define( [
         // (material?)
         this._isLighted = false; // either shadeless, or no light (beware ibl)
         this._isShadeless = false;
-
+        this._isShadowCast = false;
 
         // from Attributes to variables
         // to build shader nodes graph from
@@ -70,10 +70,10 @@ define( [
         this.initTextureAttributes();
 
         // Basic inference, any Compiler inheriting better check those
-        this._isShadeless = !this._material;
-        this._isLighted = !this._isShadeless && this._lights.length > 0;
+        this._isShadeless = !this._isShadowCast || !this._material;
+        this._isLighted = !this._isShadowCast || ( !this._isShadeless && this._lights.length > 0 );
         // backup shader, FS just output 'fofd'
-        this._isVertexColored = !!this._material;
+        this._isVertexColored = !this._isShadowCast && !!this._material;
 
         // Important: if not using Compiler for Both VS and FS
         // Check either of those
@@ -106,15 +106,26 @@ define( [
                     this._material = attributes[ i ];
 
 
-                } else if ( type === 'ShadowAttribute' ) {
+                } else if ( type === 'ShadowReceiveAttribute' ) {
 
                     shadows.push( attributes[ i ] );
 
+                } else if ( type === 'ShadowCastAttribute' ) {
+                    this._isShadowCast = attributes[ i ].isEnabled();
+                    this._shadowCastAttribute = attributes[ i ];
                 }
             }
         },
 
         initTextureAttributes: function () {
+
+            // Shadow casting is about casting Depth
+            // no need for textures.
+            // as we don't support natively
+            // shadow of aplha Blending or Masking Materials
+            if ( this._isShadowCast )
+                return;
+
             var textureAttributes = this._textureAttributes;
             var texturesNum = textureAttributes.length;
             var textures = this._textures;
@@ -172,7 +183,11 @@ define( [
                 }
             }
         },
-
+        // global accessor because it modifies
+        // globally the compiler behavbiour
+        isShadowCast: function () {
+            return this._isShadowCast;
+        },
         getVariable: function ( nameID ) {
             return this._variables[ nameID ];
         },
@@ -411,8 +426,11 @@ define( [
         },
 
 
+        // return a Vec4 so that we have the .w
+        // Allowing to know homogenous/ndc transfor
+        // (help linearizing depth casting for example)
         getOrCreateInputPosition: function () {
-            return this.getOrCreateVarying( 'vec3', 'FragEyeVector' );
+            return this.getOrCreateVarying( 'vec4', 'FragEyeVector' );
         },
 
 
@@ -435,8 +453,10 @@ define( [
             if ( eye )
                 return eye;
             var nor = this.createVariable( 'vec3' );
+            var castEye = this.createVariable( 'vec3' );
+            factory.getNode( 'SetFromNode' ).inputs( this.getOrCreateInputPosition() ).outputs( castEye );
             factory.getNode( 'Normalize' ).inputs( {
-                vec: this.getOrCreateInputPosition()
+                vec: castEye
             } ).outputs( {
                 vec: nor
             } );
@@ -697,7 +717,7 @@ define( [
 
             }
             // TODO: shadow Attributes in node, is this the legit way
-            factory.getNode( 'Shadow' ).inputs( inputs ).outputs( {
+            factory.getNode( 'ShadowReceive' ).inputs( inputs ).outputs( {
                 float: shadowedOutput
             } ).setShadowAttribute( shadow );
 
@@ -1020,11 +1040,17 @@ define( [
             } );
 
         },
-        declareVertexTransformLighted: function ( glPosition ) {
 
+        // Transform Position into NDC
+        // but keep intermediary result
+        // FragEye which is in Camera/Eye space
+        // (most light computation are in eye space)
+        // (better precision, particulary if camera is far from World 0.0.0)
+        declareTransformWithEyeSpace: function ( glPosition ) {
 
-
-            var tempViewSpace = this.createVariable( 'vec4' );
+            // FragEye
+            // need vec4 for linearization of depth
+            var tempViewSpace = this.getOrCreateInputPosition();
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
                 vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
@@ -1032,20 +1058,16 @@ define( [
                 vec: tempViewSpace
             } );
 
-            // FragEye
-            factory.getNode( 'SetFromNode' ).inputs(
-                tempViewSpace
-            ).outputs(
-                this.getOrCreateInputPosition()
-            );
-
-            //glpos
+            // glposition
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' ),
                 vec: tempViewSpace
             } ).outputs( {
                 vec: glPosition
             } );
+        },
+        declareVertexTransformLighted: function ( glPosition ) {
+
 
             // FragNormal
             factory.getNode( 'MatrixMultDirection' ).inputs( {
@@ -1054,6 +1076,8 @@ define( [
             } ).outputs( {
                 vec: this.getOrCreateInputNormal()
             } );
+
+            this.declareTransformWithEyeSpace( glPosition );
         },
         declareVertexTransformShadowed: function ( /*glPosition*/) {
 
@@ -1080,6 +1104,11 @@ define( [
         // - check Precision qualifier on vertex Attributes
         // - check Precision qualifier on vertex Attributes Varying
         declareVertexTransforms: function ( glPosition ) {
+            // Fast Path, only Depth
+            if ( this._isShadowCast ) {
+                this.declareTransformWithEyeSpace( glPosition );
+                return;
+            }
             // Make only necessary operation and varying
             if ( this._isLighted || this._shaderAttributes[ 'Normal' ] ) {
 
@@ -1288,14 +1317,33 @@ define( [
             return fragCol;
         },
 
+        // Depth Shadow Map Casted from Light Pov
+        // Depth encoded in color buffer
+        createShadowCastFragmentShaderGraph: function () {
+            var frag = factory.getNode( 'glFragColor' );
+            factory.getNode( 'ShadowCast' ).setShadowCastAttribute( this._shadowCastAttribute ).inputs( {
+                exponent: this.getOrCreateUniform( 'float', 'exponent0' ),
+                exponent1: this.getOrCreateUniform( 'float', 'exponent1' ),
+                shadowDepthRange: this.getOrCreateUniform( 'vec4', 'Shadow_DepthRange' ),
+                fragEye: this.getOrCreateInputPosition()
+            } ).outputs( {
+                color: frag
+            } );
+            return frag;
+        },
 
         // this is the main function that will generate the
         // fragment shader. If you need to improve / add your own
         // you could inherit and override this function
         createFragmentShaderGraph: function () {
 
-
             var roots = [];
+
+            // depth cast
+            if ( this._isShadowCast ) {
+                roots.push( this.createShadowCastFragmentShaderGraph() );
+                return roots;
+            }
 
             // no material then return a default shader
             if ( !this._material ) {
@@ -1391,6 +1439,7 @@ define( [
             return roots;
         },
         getFragmentShaderName: function () {
+            if ( this.isShadowCast() ) return 'ShadowCastClassic';
             return this._material ? 'CompilerOSGJS' : 'NoMaterialCompilerOSGJS';
         },
         getVertexShaderName: function () {

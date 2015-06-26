@@ -70,7 +70,7 @@ vec3 computeSpotLightShading(
 {
     lighted = false;
     eyeLightPos = vec3(lightMatrix * lightSpotPosition);
-    eyeLightDir = eyeLightPos - FragEyeVector;
+    eyeLightDir = eyeLightPos - FragEyeVector.xyz;
     // compute dist
     float dist = length(eyeLightDir);
     // compute attenuation
@@ -138,7 +138,7 @@ vec3 computePointLightShading(
 {
 
     eyeLightPos =  vec3(lightMatrix * lightPosition);
-    eyeLightDir = eyeLightPos - FragEyeVector;
+    eyeLightDir = eyeLightPos - FragEyeVector.xyz;
     float dist = length(eyeLightDir);
     // compute dist
     // compute attenuation

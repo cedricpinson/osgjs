@@ -13,7 +13,8 @@ define( [
     // if you need to adjust for your need provide or modify this list
     // if you still need more fine tuning to the filter, override the filterAttributeTypes
     var DefaultsAcceptAttributeTypes = [
-        'ShadowAttribute',
+        'ShadowCast',
+        'ShadowReceive',
         'ShadowTexture',
         'Texture',
         'Light',

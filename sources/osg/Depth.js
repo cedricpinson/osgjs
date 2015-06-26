@@ -51,6 +51,12 @@ define( [
         setWriteMask: function ( mask ) {
             this._writeMask = mask;
         },
+        getWriteMask: function () {
+            return this._writeMask;
+        },
+        getFunc: function () {
+            return this._func;
+        },
         apply: function ( state ) {
             var gl = state.getGraphicContext();
             if ( this._func === 0 ) {

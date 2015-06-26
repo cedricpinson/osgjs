@@ -23,8 +23,8 @@ define( [
     lib.utils = utils;
 
 
-    // set it to one to have verbose in shaders
-    lib.debugShaderNode = true;
+    // debug utility: set it to one to have verbose in shaders
+    lib.debugShaderNode = false;
 
 
     return lib;
