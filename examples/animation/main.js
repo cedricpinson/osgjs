@@ -86,10 +86,10 @@ var createScene = function ( viewer, root, url ) {
         for ( var i = 0, l = bones.length; i < l; i++ ) {
             var bone = bones[ i ];
             console.log( bone.getName() );
-            var tnode = new osg.Node();
-            tnode.addChild( geom );
+            // var tnode = new osg.Node();
+            // tnode.addChild( geom );
             //            tnode.addChild( osg.createTexturedBoxGeometry() );
-            bone.addChild( tnode );
+            // bone.addChild( tnode );
         }
 
         window.listBones = function () {
@@ -152,7 +152,11 @@ var onLoad = function () {
         fuse: 'mixamo fuse_w_blendshapes waving.osgjs',
         _44f5d95ddb794570a441fce7513bf5d1: '44f5d95ddb794570a441fce7513bf5d1.osgjs',
         _05e94056f21c472da5ac5dfc2404e106: '05e94056f21c472da5ac5dfc2404e106.osgjs',
-        _44f5d95ddb794570a441fce7513bf5d1_box: '44f5d95ddb794570a441fce7513bf5d1_box.osgjs'
+        _44f5d95ddb794570a441fce7513bf5d1_box: '44f5d95ddb794570a441fce7513bf5d1_box.osgjs',
+        BatMeshAnim: 'BatMeshAnim.osgjs',
+        BatMeshAnim_box: 'BatMeshAnim_box.osgjs',
+        kicking: 'kicking.osgjs',
+        zombie_normal: 'zombie_normal.osgjs'
     };
 
     window.debugScene = false;
@@ -160,6 +164,7 @@ var onLoad = function () {
     window.play = function () {};
     window.stop = function () {};
     window.pause = function () {};
+    window.count = 0;
     window.speed = 1.0;
     window.isPlaying = false;
 
@@ -186,8 +191,16 @@ var onLoad = function () {
     gui.add( window, 'play' );
     gui.add( window, 'stop' );
     gui.add( window, 'pause' );
+    var countCursor = gui.add( window, 'count', 0, 10 ).step( 1 );
     gui.add( window, 'speed', -10, 10 );
     gui.add( window, 'isPlaying' ).listen();
+
+    countCursor.onFinishChange( function ( value ) {
+        if ( !window.animationManager ) return;
+        var animations = Object.keys( window.animationManager.getAnimations() );
+        var firstAnimation = animations.length ? animations[ 0 ] : undefined;
+        window.animationManager.setLoopNum( firstAnimation, value );
+    } );
 
     var update = function () {
         requestAnimationFrame( update );
