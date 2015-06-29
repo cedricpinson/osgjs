@@ -6,9 +6,10 @@ define( [
     'osg/Program',
     'osg/Shader',
     'osg/Uniform',
-    'osgAnimation/CollectBoneVisitor'
+    'osgAnimation/CollectBoneVisitor',
+    'osg/Node'
 
-], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, Uniform, CollectBoneVisitor ) {
+], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, Uniform, CollectBoneVisitor, Node ) {
 
     'use strict';
 
@@ -195,9 +196,9 @@ define( [
             // st.setAttributeAndModes( getShader( nbVec4Uniforms ) );
             // st.addUniform( this._matrixPalette );
 
-            //Shader setUP
-            // geom.parents[ 0 ].getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
-            // geom.parents[ 0 ].getOrCreateStateSet().addUniform( this._matrixPalette );
+            // //Shader setUP
+            // st.setAttributeAndModes( getShader( nbVec4Uniforms ) );
+            // st.addUniform( this._matrixPalette );
 
             window.setTimeout( function () {
                 geom.getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
