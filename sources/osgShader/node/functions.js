@@ -118,6 +118,22 @@ define( [
         }
     } );
 
+    var Define = function ( name ) {
+        Node.apply( this );
+        this._defineName = name;
+        this._defineValue = '';
+    };
+    Define.prototype = MACROUTILS.objectInherit( Node.prototype, {
+        type: 'Define',
+        setValue: function ( value ) {
+            this._defineValue = value;
+            return this;
+        },
+        getDefines: function () {
+            return [ '#define ' + this._defineName + ' ' + this._defineValue ];
+        }
+    } );
+
     return {
         NodeFunctions: NodeFunctions,
         Normalize: Normalize,
@@ -125,7 +141,8 @@ define( [
         LinearTosRGB: LinearTosRGB,
         FrontNormal: FrontNormal,
         DecodeRGBM: DecodeRGBM,
-        EncodeRGBM: EncodeRGBM
+        EncodeRGBM: EncodeRGBM,
+        Define: Define
     };
 
 } );
