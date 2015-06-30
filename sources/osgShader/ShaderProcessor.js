@@ -156,7 +156,7 @@ define( [
         //  resolving include dependencies
         //  adding defines
         //  adding line instrumenting.
-        processShader: function ( shader, defines, extensions, type ) {
+        processShader: function ( shader, defines, extensions /*, type*/ ) {
 
             var includeList = [];
             var preShader = shader;
@@ -194,7 +194,10 @@ define( [
             }
 
             // vertex shader doesn't need precision, it's highp per default, enforced per spec
-            if ( this._globalDefaultprecision && type !== 'vertex' ) {
+            // but then not giving precision on uniform/varying might make conflicts arise
+            // between both FS and VS if FS default is mediump !
+            // && type !== 'vertex'
+            if ( this._globalDefaultprecision ) {
                 if ( !this._precisionR.test( postShader ) ) {
                     // use the shaderhighprecision flag at shaderloader start
                     //var highp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
