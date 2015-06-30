@@ -19,11 +19,13 @@ define( [
     var getOrCreateShader = function () {
         if ( program )
             return program;
+        var shaderName = '#define SHADER_NAME GizmoLine3D';
         var vertexshader = [
             glPrecision,
             'attribute vec3 Vertex;',
             'uniform mat4 ModelViewMatrix;',
             'uniform mat4 ProjectionMatrix;',
+            shaderName,
             '',
             'void main(void) {',
             '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
@@ -33,6 +35,7 @@ define( [
         var fragmentshader = [
             glPrecision,
             'uniform vec4 uColor;',
+            shaderName,
             '',
             'void main(void) {',
             '  gl_FragColor = uColor;',
@@ -48,9 +51,11 @@ define( [
     var getOrCreateShader2D = function () {
         if ( program2D )
             return program2D;
+        var shaderName = '#define SHADER_NAME GizmoLine2D';
         var vertexshader = [
             glPrecision,
             'attribute vec2 Vertex;',
+            shaderName,
             '',
             'void main(void) {',
             '  gl_Position = vec4(Vertex, 0.0, 1.0);',
@@ -59,6 +64,8 @@ define( [
 
         var fragmentshader = [
             glPrecision,
+            shaderName,
+            '',
             'void main(void) {',
             '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);',
             '}'
@@ -73,12 +80,14 @@ define( [
     var getOrCreateShaderQuadCircle = function () {
         if ( programQC )
             return programQC;
+        var shaderName = '#define SHADER_NAME GizmoQuadCircle';
         var vertexshader = [
             glPrecision,
             'attribute vec3 Vertex;',
             'uniform mat4 ModelViewMatrix;',
             'uniform mat4 ProjectionMatrix;',
             'varying vec3 vVertex;',
+            shaderName,
             '',
             'void main(void) {',
             '  vVertex = Vertex;',
@@ -93,6 +102,7 @@ define( [
             'varying vec3 vVertex;',
             'const float PI = 3.14159265358979323846264;',
             'const float PI2 = PI * 2.0;',
+            shaderName,
             '',
             'void main(void) {',
             '  if(length(vVertex) > 0.5)',
