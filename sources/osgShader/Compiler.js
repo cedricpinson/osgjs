@@ -1222,6 +1222,9 @@ define( [
             this._fragmentShaderMode = false;
 
             var roots = this.createVertexShaderGraph();
+            var vname = this.getVertexShaderName();
+            if ( vname )
+                roots.push( factory.getNode( 'Define', 'SHADER_NAME' ).setValue( vname ) );
 
             var shader = this.createShaderFromGraphs( roots, 'vertex' );
             Notify.debug( shader );
@@ -1260,7 +1263,9 @@ define( [
 
             // Call to specialised inhenrited shader Compiler
             var roots = this.createFragmentShaderGraph();
-
+            var fname = this.getFragmentShaderName();
+            if ( fname )
+                roots.push( factory.getNode( 'Define', 'SHADER_NAME' ).setValue( fname ) );
 
             var shader = this.createShaderFromGraphs( roots, 'fragment' );
             Notify.debug( shader );
@@ -1384,6 +1389,12 @@ define( [
             roots.push( fragColor );
 
             return roots;
+        },
+        getFragmentShaderName: function () {
+            return 'CompilerOSGJS';
+        },
+        getVertexShaderName: function () {
+            return this.getFragmentShaderName();
         }
     };
 

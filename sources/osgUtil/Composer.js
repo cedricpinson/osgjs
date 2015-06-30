@@ -82,32 +82,21 @@ define( [
         // addPass(filter, texture) -> the filter will be done on the giver texture using its width and height
         addPass: function ( filter, arg0, arg1 ) {
 
+            var newPass = {};
+            newPass.filter = filter;
             // when arg0 is a texture
             // arg1 is the target, can be TEXTURE_2D ( by default ) or
             // a cubemape's face like TEXTURE_CUBE_MAP_POSITIVE_X, ...
             if ( arg0 instanceof Texture ) {
-
-                this._stack.push( {
-                    filter: filter,
-                    texture: arg0,
-                    textureTarget: arg1 || Texture.TEXTURE_2D
-                } );
-
+                newPass.texture = arg0;
+                newPass.textureTarget = arg1 || Texture.TEXTURE_2D;
             } else if ( arg0 !== undefined && arg1 !== undefined ) {
-
-                this._stack.push( {
-                    filter: filter,
-                    width: Math.floor( arg0 ),
-                    height: Math.floor( arg1 )
-                } );
-
-            } else {
-
-                this._stack.push( {
-                    filter: filter
-                } );
-
+                newPass.width = Math.floor( arg0 );
+                newPass.height = Math.floor( arg1 );
             }
+
+            this._stack.push( newPass );
+            return newPass.filter;
         },
         renderToScreen: function ( w, h ) {
             this._renderToScreen = true;
@@ -227,9 +216,23 @@ define( [
     Composer.Filter = function () {
         this._stateSet = new StateSet();
         this._dirty = true;
+        this._fragmentName = 'FilterOSGJS';
+        this._vertexName = '';
     };
 
     Composer.Filter.prototype = {
+        setFragmentName: function ( fname ) {
+            this._fragmentName = fname;
+        },
+        setVertexName: function ( vname ) {
+            this._vertexName = vname;
+        },
+        getDefineFragmentName: function () {
+            return '\n#define SHADER_NAME ' + this._fragmentName + '\n';
+        },
+        getDefineVertexName: function () {
+            return '\n#define SHADER_NAME ' + ( this._vertexName || this._fragmentName ) + '\n';
+        },
         getStateSet: function () {
             return this._stateSet;
         },
@@ -355,8 +358,8 @@ define( [
         build: function () {
 
             var program = new Program(
-                new Shader( 'VERTEX_SHADER', this._vertexShader ),
-                new Shader( 'FRAGMENT_SHADER', this._fragmentShader ) );
+                new Shader( Shader.VERTEX_SHADER, this._vertexShader + this.getDefineVertexName() ),
+                new Shader( Shader.FRAGMENT_SHADER, this._fragmentShader + this.getDefineFragmentName() ) );
 
             if ( this._uniforms ) {
                 var unitIndex = 0;
@@ -402,6 +405,7 @@ define( [
         this._unpack = unpack;
         this._pack = pack;
         this._pixelSize = 1.0;
+        this._fragmentName = 'AverageHBlur' + this._nbSamples;
     };
 
     Composer.Filter.AverageHBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
@@ -507,8 +511,8 @@ define( [
             ].join( '\n' );
 
             var program = new Program(
-                new Shader( 'VERTEX_SHADER', vtx ),
-                new Shader( 'FRAGMENT_SHADER', fgt ) );
+                new Shader( Shader.VERTEX_SHADER, vtx + this.getDefineVertexName() ),
+                new Shader( Shader.FRAGMENT_SHADER, fgt + this.getDefineFragmentName() ) );
 
             if ( this._stateSet.getUniform( 'Texture0' ) === undefined ) {
                 this._stateSet.addUniform( Uniform.createInt1( 0, 'Texture0' ) );
@@ -523,6 +527,7 @@ define( [
 
     Composer.Filter.AverageVBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
         Composer.Filter.AverageHBlur.call( this, nbSamplesOpt, linear, unpack, pack );
+        this._fragmentName = 'AverageVBlur' + this._nbSamples;
     };
     Composer.Filter.AverageVBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.AverageHBlur.prototype, {
         getUVOffset: function ( value ) {
@@ -549,6 +554,7 @@ define( [
 
         this._unpack = unpack;
         this._pack = pack;
+        this._fragmentName = 'BilateralHBlur' + this._nbSamples;
     };
 
     Composer.Filter.BilateralHBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
@@ -638,8 +644,8 @@ define( [
             ].join( '\n' );
 
             var program = new Program(
-                new Shader( 'VERTEX_SHADER', vtx ),
-                new Shader( 'FRAGMENT_SHADER', fgt ) );
+                new Shader( Shader.VERTEX_SHADER, vtx + this.getDefineVertexName() ),
+                new Shader( Shader.FRAGMENT_SHADER, fgt + this.getDefineFragmentName() ) );
 
             if ( this._stateSet.getUniform( 'Texture0' ) === undefined ) {
                 this._stateSet.addUniform( Uniform.createInt1( 0, 'Texture0' ) );
@@ -657,6 +663,7 @@ define( [
 
     Composer.Filter.BilateralVBlur = function ( options, unpack, pack ) {
         Composer.Filter.BilateralHBlur.call( this, options, unpack, pack );
+        this._fragmentName = 'BilateralVBlur' + this._nbSamples;
     };
 
     Composer.Filter.BilateralVBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.BilateralHBlur.prototype, {
@@ -670,6 +677,7 @@ define( [
     Composer.Filter.InputTexture = function ( texture ) {
         Composer.Filter.call( this );
         this._stateSet.setTextureAttributeAndModes( 0, texture );
+        this._fragmentName = 'InputTexture';
     };
     Composer.Filter.InputTexture.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
         build: function () {
@@ -684,6 +692,7 @@ define( [
         this.setBlurSize( nbSamplesOpt !== undefined ? nbSamplesOpt : 5 );
         this._unpack = unpack;
         this._pack = pack;
+        this._fragmentName = 'HBlur' + this._nbSamples;
     };
 
     Composer.Filter.HBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
@@ -784,8 +793,8 @@ define( [
             ].join( '\n' );
 
             var program = new Program(
-                new Shader( 'VERTEX_SHADER', vtx ),
-                new Shader( 'FRAGMENT_SHADER', fgt ) );
+                new Shader( Shader.VERTEX_SHADER, vtx + this.getDefineVertexName() ),
+                new Shader( Shader.FRAGMENT_SHADER, fgt + this.getDefineFragmentName() ) );
 
             if ( this._stateSet.getUniform( 'Texture0' ) === undefined ) {
                 this._stateSet.addUniform( Uniform.createInt1( 0, 'Texture0' ) );
@@ -798,6 +807,7 @@ define( [
     // Operate a Gaussian vertical blur
     Composer.Filter.VBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
         Composer.Filter.HBlur.call( this, nbSamplesOpt, linear, unpack, pack );
+        this._fragmentName = 'VBlur' + this._nbSamples;
     };
 
     Composer.Filter.VBlur.prototype = MACROUTILS.objectInherit( Composer.Filter.HBlur.prototype, {
@@ -812,6 +822,7 @@ define( [
         Composer.Filter.call( this );
         this._color = Uniform.createFloat3( [ 1.0, 1.0, 1.0 ], 'color' );
         this._factor = Uniform.createFloat( 1.0, 'factor' );
+        this._fragmentName = 'SobelFilter';
     };
 
     Composer.Filter.SobelFilter.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
@@ -859,8 +870,8 @@ define( [
             ].join( '\n' );
 
             var program = new Program(
-                new Shader( 'VERTEX_SHADER', vtx ),
-                new Shader( 'FRAGMENT_SHADER', fgt ) );
+                new Shader( Shader.VERTEX_SHADER, vtx + this.getDefineVertexName() ),
+                new Shader( Shader.FRAGMENT_SHADER, fgt + this.getDefineFragmentName() ) );
 
             stateSet.setAttributeAndModes( program );
             stateSet.addUniform( this._color );
@@ -869,8 +880,6 @@ define( [
             this._dirty = false;
         }
     } );
-
-
 
     Composer.Filter.BlendMix = function () {
         Composer.Filter.call( this );
@@ -897,6 +906,7 @@ define( [
         stateSet.addUniform( Uniform.createInt1( unit1, 'Texture1' ) );
         this._mixValueUniform = Uniform.createFloat1( mixValue, 'MixValue' );
         stateSet.addUniform( this._mixValueUniform );
+        this._fragmentName = 'BlendMix';
     };
 
     Composer.Filter.BlendMix.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
@@ -921,8 +931,8 @@ define( [
             ].join( '\n' );
 
             var program = new Program(
-                new Shader( 'VERTEX_SHADER', vtx ),
-                new Shader( 'FRAGMENT_SHADER', fgt ) );
+                new Shader( Shader.VERTEX_SHADER, vtx + this.getDefineVertexName() ),
+                new Shader( Shader.FRAGMENT_SHADER, fgt + this.getDefineFragmentName() ) );
 
             stateSet.setAttributeAndModes( program );
             this._dirty = false;
@@ -948,6 +958,7 @@ define( [
         stateSet.setTextureAttributeAndModes( unit1, texture1 );
         stateSet.addUniform( Uniform.createInt1( unit0, 'Texture0' ) );
         stateSet.addUniform( Uniform.createInt1( unit1, 'Texture1' ) );
+        this._fragmentName = 'BlendMultiply';
     };
 
     Composer.Filter.BlendMultiply.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
@@ -967,8 +978,8 @@ define( [
             ].join( '\n' );
 
             var program = new Program(
-                new Shader( 'VERTEX_SHADER', vtx ),
-                new Shader( 'FRAGMENT_SHADER', fgt ) );
+                new Shader( Shader.VERTEX_SHADER, vtx + this.getDefineVertexName() ),
+                new Shader( Shader.FRAGMENT_SHADER, fgt + this.getDefineFragmentName() ) );
 
             this._stateSet.setAttributeAndModes( program );
             this._dirty = false;
@@ -1011,7 +1022,7 @@ define( [
         stateSet.setTextureAttributeAndModes( 1, texturePosition );
 
         this.initNoise();
-
+        this._fragmentName = 'SSAO';
     };
 
     Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
@@ -1099,7 +1110,7 @@ define( [
                 uniform.set( [ this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ] );
                 uniform.dirty();
             }
-            var vertexshader = [
+            var vertexShader = [
                 '',
                 'attribute vec3 Vertex;',
                 'attribute vec2 TexCoord0;',
@@ -1123,7 +1134,7 @@ define( [
             //var ssaoRadiusMax = this._sceneRadius * 0.05;
             //var ssaoRadiusStep = ( ssaoRadiusMax - ssaoRadiusMin ) / 200.0;
 
-            var fragmentshader = [
+            var fragmentShader = [
                 '',
                 Composer.Filter.defaultFragmentShaderHeader,
                 'uniform sampler2D Texture1;',
@@ -1190,18 +1201,17 @@ define( [
             ].join( '\n' );
 
             var program = new Program(
-                new Shader( 'VERTEX_SHADER', vertexshader ),
-                new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+                new Shader( Shader.VERTEX_SHADER, vertexShader + this.getDefineVertexName() ),
+                new Shader( Shader.FRAGMENT_SHADER, fragmentShader + this.getDefineFragmentName() ) );
 
             stateSet.setAttributeAndModes( program );
             this._dirty = false;
         }
     } );
 
-
-
     Composer.Filter.SSAO8 = function ( options ) {
         Composer.Filter.SSAO.call( this, options );
+        this._fragmentName = 'SSAO8';
     };
 
     Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO.prototype, {
@@ -1241,7 +1251,7 @@ define( [
                 uniform.set( [ this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ] );
                 uniform.dirty();
             }
-            var vertexshader = [
+            var vertexShader = [
                 '',
                 'attribute vec3 Vertex;',
                 'attribute vec2 TexCoord0;',
@@ -1268,7 +1278,7 @@ define( [
             //var ssaoRadiusMax = this._sceneRadius * 0.05;
             //var ssaoRadiusStep = ( ssaoRadiusMax - ssaoRadiusMin ) / 200.0;
 
-            var fragmentshader = [
+            var fragmentShader = [
                 '',
                 Composer.Filter.defaultFragmentShaderHeader,
                 'varying vec3 FragTexCoord1;',
@@ -1364,8 +1374,8 @@ define( [
             ].join( '\n' );
 
             var program = new Program(
-                new Shader( 'VERTEX_SHADER', vertexshader ),
-                new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
+                new Shader( Shader.VERTEX_SHADER, vertexShader + this.getDefineVertexName() ),
+                new Shader( Shader.FRAGMENT_SHADER, fragmentShader + this.getDefineFragmentName() ) );
 
             stateSet.setAttributeAndModes( program );
             this._dirty = false;
