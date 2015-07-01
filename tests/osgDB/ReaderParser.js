@@ -238,41 +238,254 @@ define( [
         QUnit.asyncTest( 'BasicAnimationManager', function () {
             var tree = {
                 'osg.Node': {
-                    'Name': 'Root',
+                    'UniqueID': 0,
+                    'Name': 'brindherbetrs.FBX',
                     'UpdateCallbacks': [ {
                         'osgAnimation.BasicAnimationManager': {
                             'Animations': [ {
                                 'osgAnimation.Animation': {
-                                    'Name': 'Test',
+                                    'Name': 'Take 001',
                                     'Channels': [ {
-                                        'osgAnimation.Vec3LerpChannel': {
-                                            'Name': 'translate',
-                                            'KeyFrames': [
-                                                [ 0, -15.7923,
-                                                    781.26,
-                                                    136.075
-                                                ]
-                                            ],
-                                            'TargetName': 'Zeppelin_2'
+                                        'osgAnimation.FloatCubicBezierChannel': {
+                                            'Name': 'rotateX',
+                                            'TargetName': 'BetaHighResMeshes',
+                                            'KeyFrames': {
+                                                'ControlPointIn': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 1.5708 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'ControlPointOut': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 1.5708 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Position': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 1.5708 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Time': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                }
+                                            }
                                         }
                                     }, {
-                                        'osgAnimation.Vec3LerpChannel': {
-                                            'Name': 'scale',
-                                            'KeyFrames': [
-                                                [ 0,
-                                                    1,
-                                                    1,
-                                                    1
-                                                ],
-                                                [ 39.96,
-                                                    1,
-                                                    1,
-                                                    1
-                                                ]
-                                            ],
-                                            'TargetName': 'Zeppelin_2'
+                                        'osgAnimation.FloatCubicBezierChannel': {
+                                            'Name': 'rotateY',
+                                            'TargetName': 'BetaHighResMeshes',
+                                            'KeyFrames': {
+                                                'ControlPointIn': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'ControlPointOut': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ -0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Position': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ -0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Time': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                }
+                                            }
                                         }
-                                    } ]
+                                    }, {
+                                        'osgAnimation.FloatCubicBezierChannel': {
+                                            'Name': 'rotateZ',
+                                            'TargetName': 'BetaHighResMeshes',
+                                            'KeyFrames': {
+                                                'ControlPointIn': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'ControlPointOut': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Position': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Time': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                }
+                                            }
+                                        }
+                                    }, {
+                                        'osgAnimation.FloatCubicBezierChannel': {
+                                            'Name': 'rotateX',
+                                            'TargetName': 'Box001',
+                                            'KeyFrames': {
+                                                'ControlPointIn': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 1.5708 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'ControlPointOut': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 1.5708 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Position': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 1.5708 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Time': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                }
+                                            }
+                                        }
+                                    }, {
+                                        'osgAnimation.FloatCubicBezierChannel': {
+                                            'Name': 'rotateY',
+                                            'TargetName': 'Box001',
+                                            'KeyFrames': {
+                                                'ControlPointIn': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'ControlPointOut': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ -0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Position': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ -0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                },
+                                                'Time': {
+                                                    'Array': {
+                                                        'Float32Array': {
+                                                            'Elements': [ 0 ],
+                                                            'Size': 1
+                                                        }
+                                                    },
+                                                    'ItemSize': 1,
+                                                    'Type': 'ARRAY_BUFFER'
+                                                }
+                                            }
+                                        }
+                                    } ],
+                                    'StateSet': {
+                                        'osg.StateSet': {
+                                            'UniqueID': 1
+                                        }
+                                    }
                                 }
                             } ]
                         }
@@ -281,12 +494,11 @@ define( [
             };
             ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getUpdateCallbackList().length === 1, 'check update callback' );
-                ok( result.getUpdateCallback().getAnimationMap().Test !== undefined, 'check animation list' );
-                var animation = result.getUpdateCallback().getAnimationMap().Test;
-                ok( animation.getChannels().length === 2, 'check channels' );
-                ok( animation.getChannels()[ 1 ].getName() === 'scale', 'check channel 1' );
-                ok( animation.getChannels()[ 1 ].getTargetName() === 'Zeppelin_2', 'check taget channel 1' );
-                ok( animation.getChannels()[ 1 ].getSampler().getKeyframes().length === 2, 'check keyframes on channel 1' );
+                ok( result.getUpdateCallback().getAnimations()[ 'Take 001' ] !== undefined, 'check animation list' );
+                var animation = result.getUpdateCallback().getAnimations()[ 'Take 001' ];
+                ok( animation.channels.length === 5, 'check channels' );
+                ok( animation.channels[ 1 ].channel.name === 'rotateY', 'check channel 1' );
+                ok( animation.channels[ 1 ].channel.target === 'BetaHighResMeshes', 'check taget channel 1' );
                 start();
             } );
 
@@ -298,26 +510,26 @@ define( [
                 'osgAnimation.FloatLerpChannel': {
                     'Name': 'euler_x',
                     'TargetName': 'Cube',
-                    "KeyFrames": {
-                        "Key": {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159 ],
-                                    "Size": 28
+                    'KeyFrames': {
+                        'Key': {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159 ],
+                                    'Size': 28
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         },
-                        "Time": {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ 0, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3, 0.333333, 0.866667, 0.9, 0.933333, 0.966667, 1, 1.76667, 1.8, 1.83333, 1.86667, 1.9, 1.93333, 1.96667, 2, 2.3, 2.33333, 2.36667, 2.4, 2.43333, 2.46667, 2.5 ],
-                                    "Size": 28
+                        'Time': {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 0, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3, 0.333333, 0.866667, 0.9, 0.933333, 0.966667, 1, 1.76667, 1.8, 1.83333, 1.86667, 1.9, 1.93333, 1.96667, 2, 2.3, 2.33333, 2.36667, 2.4, 2.43333, 2.46667, 2.5 ],
+                                    'Size': 28
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         }
                     }
                 }
@@ -337,53 +549,53 @@ define( [
                 'osgAnimation.QuatSlerpChannel': {
                     'Name': 'rotate_x',
                     'TargetName': 'Cube',
-                    "KeyFrames": {
-                        "Key": [ {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
-                                    "Size": 7
+                    'KeyFrames': {
+                        'Key': [ {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         }, {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
-                                    "Size": 7
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         }, {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
-                                    "Size": 7
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         }, {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
-                                    "Size": 7
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         } ],
-                        "Time": {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ 0, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3 ],
-                                    "Size": 7
+                        'Time': {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 0, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3 ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         }
                     }
                 }
@@ -402,53 +614,53 @@ define( [
                 'osgAnimation.QuatLerpChannel': {
                     'Name': 'rotate_x',
                     'TargetName': 'Cube',
-                    "KeyFrames": {
-                        "Key": [ {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
-                                    "Size": 7
+                    'KeyFrames': {
+                        'Key': [ {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         }, {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
-                                    "Size": 7
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         }, {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
-                                    "Size": 7
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         }, {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
-                                    "Size": 7
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, -3.14159, ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         } ],
-                        "Time": {
-                            "Array": {
-                                "Float32Array": {
-                                    "Elements": [ 0, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3 ],
-                                    "Size": 7
+                        'Time': {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 0, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3 ],
+                                    'Size': 7
                                 }
                             },
-                            "ItemSize": 1,
-                            "Type": "ARRAY_BUFFER"
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
                         }
                     }
                 }
@@ -463,6 +675,182 @@ define( [
 
         } );
 
+
+        QUnit.asyncTest( 'FloatCubicBezierChannel', function () {
+
+            var tree = {
+                'osgAnimation.FloatCubicBezierChannel': {
+                    'Name': 'rotateX',
+                    'TargetName': 'Box001',
+                    'KeyFrames': {
+                        'ControlPointIn': {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 1.5708 ],
+                                    'Size': 1
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        },
+                        'ControlPointOut': {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 2.5708 ],
+                                    'Size': 1
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        },
+                        'Position': {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 3.5708 ],
+                                    'Size': 1
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        },
+                        'Time': {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 0 ],
+                                    'Size': 1
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        }
+                    }
+                }
+            };
+
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
+                ok( result.keys.length === 3, 'Check keys FloatCubicBezierChannel' );
+                ok( result.times.length === 1, 'Check times FloatCubicBezierChannel' );
+                ok( mockup.checkNear( result.keys[ 0 ], 3.5708 ), 'Ckeck Position' );
+                ok( mockup.checkNear( result.keys[ 1 ], 1.5708 ), 'Check ControlIn' );
+                ok( mockup.checkNear( result.keys[ 2 ], 2.5708 ), 'Check ControlOut' );
+                ok( result.target === 'Box001', 'Check TargetName FloatCubicBezierChannel' );
+                start();
+            } );
+        } );
+
+        QUnit.asyncTest( 'Vec3CubicBezierChannel', function () {
+
+            var tree = {
+                'osgAnimation.Vec3CubicBezierChannel': {
+                    'Name': 'scale',
+                    'TargetName': 'Bone004',
+                    'KeyFrames': {
+                        'ControlPointIn': [ {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 1, 2.28678, 0.929234 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        }, {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 1, 2.28678, 0.929234 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        }, {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 1, 2.28678, 0.929234 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        } ],
+                        'ControlPointOut': [ {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 2.28678, 0.929234, 1 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        }, {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 2.28678, 0.929234, 1 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        }, {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 2.28678, 0.929234, 1 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        } ],
+                        'Position': [ {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 1, 2.28678, 0.929234 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        }, {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 1, 2.28678, 0.929234 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        }, {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 1, 2.28678, 0.929234 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        } ],
+                        'Time': {
+                            'Array': {
+                                'Float32Array': {
+                                    'Elements': [ 0, 0.866667, 1.76667 ],
+                                    'Size': 3
+                                }
+                            },
+                            'ItemSize': 1,
+                            'Type': 'ARRAY_BUFFER'
+                        }
+                    }
+                }
+            };
+
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
+                ok( result.keys.length === 27, 'Check keys Vec3CubicBezierChannel' );
+                ok( result.times.length === 3, 'Check times Vec3CubicBezierChannel' );
+                ok( mockup.checkNear( result.keys[ 15 ], 0.92923402 ), 'Check value' );
+
+                start();
+            } );
+        } );
 
         QUnit.asyncTest( 'StackedTransform', function () {
 

@@ -225,6 +225,7 @@ define( [
                 var instanceChannel = instanceChannels[ i ];
                 var type = instanceChannel.channel.type;
                 instanceChannel.t = t; // reset time
+                instanceChannel.instanceAnimation = instanceAnimation; // link with parent animation
                 var targetID = instanceChannel.targetID;
                 this._activeChannelsByTypes[ type ].push( instanceChannel );
                 this._targetID[ targetID ].channels.push( instanceChannel );
@@ -305,8 +306,26 @@ define( [
 
             for ( var c = 0, l = channels.length; c < l; c++ ) {
                 var channel = channels[ c ];
-                var tlocal = t - channel.t;
-                interpolator( tlocal, channel );
+                var instanceAnimation = channel.instanceAnimation;
+
+                if ( instanceAnimation.initPause ) {
+                    instanceAnimation.initPause = false;
+                    instanceAnimation.pauseTLocal = t - channel.t;
+                }
+
+                if ( instanceAnimation.stopPause ) {
+                    instanceAnimation.stopPause = false;
+                    var instanceChannels = instanceAnimation.channels;
+                    var instanceChannel;
+                    for ( var j = 0, m = instanceChannels.length; j < m; j++ ) {
+                        instanceChannel = instanceChannels[ j ];
+                        instanceChannel.t = t - instanceAnimation.pauseTLocal;
+                    }
+                    this._activeAnimations[ instanceAnimation.name ].end = instanceChannel.t + instanceAnimation.duration;
+                }
+
+                if ( !instanceAnimation.pause )
+                    interpolator( t - channel.t, channel );
             }
 
         },
@@ -395,11 +414,67 @@ define( [
                 var cmd = this._activeAnimations[ name ];
 
                 if ( t > cmd.end ) {
-                    this.removeActiveChannels( instanceAnimation );
-                    this._activeAnimations[ name ] = undefined;
-                    activeAnimationList.splice( i, 1 );
+                    if ( cmd.loop === 1 ) {
+                        this.removeActiveChannels( instanceAnimation );
+                        this._activeAnimations[ name ] = undefined;
+                        activeAnimationList.splice( i, 1 );
+                    } else {
+                        if ( !instanceAnimation.pause ) {
+                            if ( cmd.loop !== 0 ) cmd.loop--;
+                            var instanceChannels = instanceAnimation.channels;
+                            for ( var j = 0, l = instanceChannels.length; j < l; j++ ) {
+                                var instanceChannel = instanceChannels[ j ];
+                                instanceChannel.t = t; // reset time
+                            }
+                            cmd.end = t + this._instanceAnimations[ cmd.name ].duration; //reset end animation time
+                        } else {
+                            i++;
+                        }
+
+                    }
                 } else {
                     i++;
+                }
+            }
+        },
+
+        setLoopMode: function ( name ) {
+            if ( !this.isPlaying( name ) )
+                this.playAnimation( name );
+
+            this._activeAnimations[ name ].loop = 0;
+        },
+
+        setLoopNum: function ( name, num ) {
+            if ( !this.isPlaying( name ) )
+                this.playAnimation( name );
+
+            num = ( num === 0 || num < 0 ) ? undefined : num;
+            this._activeAnimations[ name ].loop = num;
+        },
+
+        pauseAnimation: function ( name ) {
+            var anim = this._instanceAnimations[ name ];
+            if ( anim.pause ) {
+                anim.pause = !anim.pause;
+                anim.stopPause = true;
+            } else {
+                if ( anim.pauseTime === undefined )
+                    anim.pauseTime = 0;
+                anim.pause = true;
+                anim.initPause = true;
+            }
+        },
+
+        stopAnimation: function ( name ) {
+            var activeAnimationList = this._activeAnimationList;
+            var i = 0;
+            while ( i < activeAnimationList.length ) {
+                if ( activeAnimationList[ i ].name === name ) {
+                    this.removeActiveChannels( this._instanceAnimations[ name ] );
+                    this._activeAnimations[ name ] = undefined;
+                    activeAnimationList.splice( i, 1 );
+                    return;
                 }
             }
         },
@@ -459,7 +534,6 @@ define( [
         getAnimations: function () {
             return this._instanceAnimations;
         }
-
 
     } );
 
