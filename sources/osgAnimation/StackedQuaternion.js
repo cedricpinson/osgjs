@@ -8,6 +8,9 @@ define( [
     /**
      *  StackedQuaternion
      */
+
+    'use strict';
+
     var StackedQuaternion = function ( name, quat ) {
         Object.call( this );
 
