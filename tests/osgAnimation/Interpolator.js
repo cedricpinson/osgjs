@@ -69,7 +69,6 @@ define( [
             Interpolator.Vec3LerpInterpolator( 1, channelOneKey );
             ok( mockup.checkNear( result.value, [ 1.0, 1.0, 1.0 ] ), 'Check value when time == 1.0 with 1 key' );
             ok( result.key === 0, 'Check key when time == 1.0 with 1 keyframes' );
-
         } );
 
         QUnit.test( 'FloatLerpInterpolator', function () {
@@ -115,7 +114,6 @@ define( [
             result = channels[ 4 ];
             ok( mockup.checkNear( result.value, 3.0 ), 'Check value when time == 5.0' );
             ok( result.key === 0, 'Check key when time == 5.0' );
-
         } );
 
         QUnit.test( 'FloatCubicBezierChannel', function () {
@@ -205,6 +203,51 @@ define( [
 
             result = channels[ 4 ];
             ok( mockup.checkNear( result.value, [ 6, 6, 6 ] ), 'Check value when time == 5.0' );
+            ok( result.key === 0, 'Check key when time == 5.0' );
+        } );
+
+        QUnit.test( 'QuatLerpChannel', function () {
+
+            var keys = mockup.createQuatLerpKeyFrames();
+
+            var timeArray = [ -1,
+                3,
+                0.5,
+                1.5,
+                5
+            ];
+
+            var channels = [];
+
+            var i;
+            for ( i = 0; i < timeArray.length; i++ ) {
+                var c = Channel.createInstanceQuatChannel( keys );
+                channels.push( c );
+            }
+
+            for ( i = 0; i < timeArray.length; i++ )
+                Interpolator.QuatLerpInterpolator( timeArray[ i ], channels[ i ] );
+
+            var result;
+
+            result = channels[ 0 ];
+            ok( mockup.checkNear( result.value, [ 1.22465e-16, 1.22465e-16, 1.22465e-16, -1 ] ), 'Check value when time < first key' );
+            ok( result.key === 0, 'Check key when time < first key' );
+
+            result = channels[ 1 ];
+            ok( mockup.checkNear( result.value, [ 0.126911, -0.0991929, 0.119115, -0.979727 ] ), 'Check value when time > last key' );
+            ok( result.key === 0, 'Check key when time > last key' );
+
+            result = channels[ 2 ];
+            ok( mockup.checkNear( result.value, [ 0.382683, 6.62774e-17, 1.60008e-16, -0.92388 ] ), 'Check value when time == 0.5' );
+            ok( result.key === 2, 'Check key when time == 0.5' );
+
+            result = channels[ 3 ];
+            ok( mockup.checkNear( result.value, [ 0.126911, -0.0991929, 0.119115, -0.979727 ] ), 'Check value when time == 1.5' );
+            ok( result.key === 0, 'Check key when time == 1.5' );
+
+            result = channels[ 4 ];
+            ok( mockup.checkNear( result.value, [ 0.126911, -0.0991929, 0.119115, -0.979727 ] ), 'Check value when time == 5.0' );
             ok( result.key === 0, 'Check key when time == 5.0' );
         } );
 

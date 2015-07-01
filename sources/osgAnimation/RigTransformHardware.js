@@ -6,10 +6,8 @@ define( [
     'osg/Program',
     'osg/Shader',
     'osg/Uniform',
-    'osgAnimation/CollectBoneVisitor',
-    'osg/Node'
-
-], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, Uniform, CollectBoneVisitor, Node ) {
+    'osgAnimation/CollectBoneVisitor'
+], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, Uniform, CollectBoneVisitor ) {
 
     'use strict';
 
