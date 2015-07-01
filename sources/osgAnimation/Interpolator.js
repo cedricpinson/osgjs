@@ -109,6 +109,13 @@ define( [
         value[ 1 ] = y1 + ( y2 - y1 ) * r;
         value[ 2 ] = z1 + ( z2 - z1 ) * r;
         value[ 3 ] = w1 + ( w2 - w1 ) * r;
+
+        var invLength = 1 / Math.sqrt( value[ 0 ] * value[ 0 ] + value[ 1 ] * value[ 1 ] + value[ 2 ] * value[ 2 ] + value[ 3 ] * value[ 3 ] );
+        value[ 0 ] *= invLength;
+        value[ 1 ] *= invLength;
+        value[ 2 ] *= invLength;
+        value[ 3 ] *= invLength;
+
         channelInstance.key = i1;
     };
 
