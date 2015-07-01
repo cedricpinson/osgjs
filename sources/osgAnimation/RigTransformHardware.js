@@ -1,122 +1,24 @@
 define( [
+
     'osg/Utils',
     'osg/NodeVisitor',
     'osg/Notify',
     'osg/Matrix',
     'osg/Program',
     'osg/Shader',
+    'osg/StateAttribute',
     'osg/Uniform',
+    'osgAnimation/AnimationAttribute',
     'osgAnimation/CollectBoneVisitor'
-], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, Uniform, CollectBoneVisitor ) {
+
+], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, StateAttribute, Uniform, AnimationAttribute, CollectBoneVisitor ) {
 
     'use strict';
-
-
-    function getShader( nbVec4 ) {
-        var vertexshader = [
-            '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'attribute vec3 Vertex;',
-            'attribute vec3 Normal;',
-            'attribute vec4 Bones;',
-            'attribute vec4 Weights;',
-
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
-            'uniform mat4 NormalMatrix;',
-            'uniform vec4 uBones[' + ( nbVec4 ) + '];',
-
-            'varying vec3 vNormal;',
-
-            'vec4 position;',
-
-            'mat4 getMatrix( int index ) {',
-            '            vec4 l1 = uBones[ index * 3 ];',
-            '            vec4 l2 = uBones[ index * 3 + 1 ];',
-            '            vec4 l3 = uBones[ index * 3 + 2 ];',
-            '',
-            '            mat4 myMat;',
-            '',
-            '            myMat[ 0 ][ 0 ] = l1[ 0 ];',
-            '            myMat[ 0 ][ 1 ] = l2[ 0 ];',
-            '            myMat[ 0 ][ 2 ] = l3[ 0 ];',
-            '            myMat[ 0 ][ 3 ] = 0.;',
-            '',
-            '            myMat[ 1 ][ 0 ] = l1[ 1 ];',
-            '            myMat[ 1 ][ 1 ] = l2[ 1 ];',
-            '            myMat[ 1 ][ 2 ] = l3[ 1 ];',
-            '            myMat[ 1 ][ 3 ] = 0.;',
-            '',
-            '            myMat[ 2 ][ 0 ] = l1[ 2 ];',
-            '            myMat[ 2 ][ 1 ] = l2[ 2 ];',
-            '            myMat[ 2 ][ 2 ] = l3[ 2 ];',
-            '            myMat[ 2 ][ 3 ] = 0.;',
-            '',
-            '            myMat[ 3 ][ 0 ] = l1[ 3 ];',
-            '            myMat[ 3 ][ 1 ] = l2[ 3 ];',
-            '            myMat[ 3 ][ 2 ] = l3[ 3 ];',
-            '            myMat[ 3 ][ 3 ] = 1.;',
-            '',
-            '            return myMat;',
-            '}',
-
-            'void computeAcummulatedPosition( int matrixIndex, float matrixWeight ) {',
-            'mat4 matrix = getMatrix( matrixIndex );',
-            '   position += matrixWeight * ( matrix * vec4( Vertex, 1.0 ) );',
-            '}',
-
-            'void main(void) {',
-
-            'position = vec4( 0.0, 0.0, 0.0, 0.0 );',
-            '',
-            'if ( Weights.x != 0.0 )',
-            'computeAcummulatedPosition( int( Bones.x ), Weights.x );',
-            'if ( Weights.y != 0.0 )',
-            'computeAcummulatedPosition( int( Bones.y ), Weights.y );',
-            'if ( Weights.z != 0.0 )',
-            'computeAcummulatedPosition( int( Bones.z ), Weights.z );',
-            'if ( Weights.w != 0.0 )',
-            'computeAcummulatedPosition( int( Bones.w ), Weights.w );',
-
-            // 'if ( Bone.x == -1.0 &&  Bone.y == -1.0 &&  Bone.z == -1.0 &&  Bone.w == -1.0 ) ',
-            // 'position = vec4( Vertex, 1.0 );',
-
-            'vNormal = (ModelViewMatrix * vec4(Normal, 0.0)).xyz;',
-            'gl_Position = ProjectionMatrix * ModelViewMatrix * position;',
-            '}'
-        ].join( '\n' );
-
-        var fragmentshader = [
-            '',
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-
-            'varying vec3 vNormal;',
-
-            'void main(void) {',
-            '  gl_FragColor = vec4(normalize(vNormal) * .5 + .5, 1.0);',
-            '  //gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);',
-            '}',
-            ''
-        ].join( '\n' );
-
-        var program = new Program(
-            new Shader( 'VERTEX_SHADER', vertexshader ),
-            new Shader( 'FRAGMENT_SHADER', fragmentshader ) );
-
-        return program;
-    }
-
-
 
     /**
      * Hardware implementation for rigGeometry
      *
      */
-
     var RigTransformHardware = function () {
         this._needInit = true;
 
@@ -182,26 +84,12 @@ define( [
             var matrix = new Float32Array( nbVec4Uniforms * 4 );
             this._matrixPalette = new Uniform.createFloat4Array( matrix, 'uBones' );
 
+            var st = geom.getOrCreateStateSet();
 
-            // var gepar = geom.parents[ 0 ];
-            // geom.parents[ 0 ].removeChild( geom );
-
-            // var n = new Node();
-            // n.addChild( geom );
-            // gepar.addChild( n );
-
-            // var st = n.getOrCreateStateSet();
-            // st.setAttributeAndModes( getShader( nbVec4Uniforms ) );
-            // st.addUniform( this._matrixPalette );
-
-            // //Shader setUP
-            // st.setAttributeAndModes( getShader( nbVec4Uniforms ) );
-            // st.addUniform( this._matrixPalette );
-
-            window.setTimeout( function () {
-                geom.getOrCreateStateSet().setAttributeAndModes( getShader( nbVec4Uniforms ) );
-                geom.getOrCreateStateSet().addUniform( this._matrixPalette );
-            }.bind( this ), 1000 );
+            var animAttrib = new AnimationAttribute();
+            st.setAttributeAndModes( animAttrib, StateAttribute.ON );
+            animAttrib.setMatrixPalette( this._matrixPalette );
+            animAttrib.setBoneSize( nbVec4Uniforms );
 
             this._needInit = false;
             return true;
@@ -228,20 +116,28 @@ define( [
                     Matrix.postMult( invTransformFromSkeletonToGeometry, mTmp );
                     Matrix.preMult( mTmp, transformFromSkeletonToGeometry );
 
+                    // TODO: maybe change upload order so that we can use
+                    // glsl constructor :
+                    // mat4(uBones[index], uBones[index+1], uBones[index+2], vec4(0.0, 0.0, 0.0, 1.0))
+                    // for faster glsl
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 0 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 4 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 8 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 12 ];
+
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 1 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 5 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 9 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 13 ];
+
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 2 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 6 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 10 ];
                     uniformTypedArray[ uniformIndex++ ] = mTmp[ 14 ];
                 }
+
                 this._matrixPalette.set( uniformTypedArray );
+                this._matrixPalette.dirty();
             };
 
         } )(),
