@@ -231,14 +231,16 @@
         //GUI SETUP
         var gui = new window.dat.GUI();
 
-        var defaultChoice = 'PBOT_DTF';
+        var defaultChoice = 'magic';
 
         var overrideURL = this._config[ 'url' ];
         if ( overrideURL ) {
-            var filename = this._config[ 'url' ].replace( /^.*[\\\/]/, '' ).replace( ' ', '_' );
+            var filename = overrideURL.replace( /^.*[\\\/]/, '' ).replace( ' ', '_' );
             var dot = filename.indexOf( '.' );
             if ( dot !== -1 ) filename = filename.substring( 0, dot );
-            this.models[ filename ] = overrideURL;
+            if ( this.models[ filename ] === undefined )
+                this.models[ filename ] = overrideURL;
+
             defaultChoice = filename;
         }
 

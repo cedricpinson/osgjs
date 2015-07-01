@@ -24,7 +24,7 @@ define( [
 
 
     // set it to one to have verbose in shaders
-    lib.debugShaderNode = true;
+    lib.debugShaderNode = false;
 
 
     return lib;

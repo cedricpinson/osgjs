@@ -13,6 +13,7 @@ define( [
     // if you need to adjust for your need provide or modify this list
     // if you still need more fine tuning to the filter, override the filterAttributeTypes
     var DefaultsAcceptAttributeTypes = [
+        'AnimationAttribute',
         'ShadowAttribute',
         'ShadowTexture',
         'Texture',
@@ -61,7 +62,7 @@ define( [
         // filter input types and write the result in the outputs array
         filterAttributeTypes: function ( attribute ) {
 
-            if ( attribute.libraryName() !== 'osg' && attribute.libraryName() !== 'osgShadow' )
+            if ( attribute.libraryName() !== 'osg' && attribute.libraryName() !== 'osgShadow' && attribute.libraryName() !== 'osgAnimation' )
                 return true;
 
             var attributeType = attribute.getType();
