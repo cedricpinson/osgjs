@@ -1023,14 +1023,6 @@ define( [
         declareVertexTransformLighted: function ( glPosition ) {
 
 
-            // FragNormal
-            factory.getNode( 'MatrixMultDirection' ).inputs( {
-                matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
-                vec: this.getOrCreateAttribute( 'vec3', 'Normal' )
-            } ).outputs( {
-                vec: this.getOrCreateInputNormal()
-            } );
-
 
             var tempViewSpace = this.createVariable( 'vec4' );
             factory.getNode( 'MatrixMultPosition' ).inputs( {
@@ -1046,6 +1038,7 @@ define( [
             ).outputs(
                 this.getOrCreateInputPosition()
             );
+
             //glpos
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' ),
@@ -1054,6 +1047,13 @@ define( [
                 vec: glPosition
             } );
 
+            // FragNormal
+            factory.getNode( 'MatrixMultDirection' ).inputs( {
+                matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
+                vec: this.getOrCreateAttribute( 'vec3', 'Normal' )
+            } ).outputs( {
+                vec: this.getOrCreateInputNormal()
+            } );
         },
         declareVertexTransformShadowed: function ( /*glPosition*/) {
 
