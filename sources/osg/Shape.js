@@ -399,6 +399,7 @@ define( [
         uvs[ 7 ] = t;
 
         var n = Vec3.cross( [ wx, wy, wz ], [ hx, hy, hz ], [ 0.0, 0.0, 0.0 ] );
+        Vec3.normalize( n, n );
         var normal = new MACROUTILS.Float32Array( 12 );
         normal[ 0 ] = n[ 0 ];
         normal[ 1 ] = n[ 1 ];
