@@ -16,6 +16,7 @@ define( [
     'osgAnimation/Sampler',
     'osgAnimation/StackedQuaternion',
     'osgAnimation/StackedRotateAxis',
+    'osgAnimation/StackedScaleElement',
     'osgAnimation/StackedTranslate',
     'osgAnimation/Target',
     'osgAnimation/UpdateMatrixTransform',
@@ -30,7 +31,8 @@ define( [
     'osgAnimation/FloatCubicBezierChannel',
     'osgAnimation/Vec3CubicBezierChannel',
     'osgAnimation/RigGeometry'
-], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, CollectAnimationUpdateCallbackVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target, Skeleton, UpdateSkeleton, UpdateBone, StackedMatrixElement, MatrixTarget, Bone, FloatCubicBezierChannel, Vec3CubicBezierChannel, RigGeometry ) {
+
+], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, CollectAnimationUpdateCallbackVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedScaleElement, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target, Skeleton, UpdateSkeleton, UpdateBone, StackedMatrixElement, MatrixTarget, Bone, FloatCubicBezierChannel, Vec3CubicBezierChannel, RigGeometry ) {
 
     var osgAnimation = {};
 
@@ -64,6 +66,7 @@ define( [
     osgAnimation.Vec3CubicBezierChannel = Vec3CubicBezierChannel;
     osgAnimation.Vec3LerpChannel = Vec3LerpChannel;
     osgAnimation.Vec3Target = Vec3Target;
+    osgAnimation.StackedScaleElement = StackedScaleElement;
 
     return osgAnimation;
 } );
