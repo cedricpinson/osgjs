@@ -79,13 +79,14 @@
 #elif defined( _PCF )
 
 
-#ifdef GL_OES_standard_derivatives
+// looks like derivative is broken on some mac + intel cg ...
+// #ifdef GL_OES_standard_derivatives
 
-    shadowBiasPCF.x +=  dFdx(shadowUV.xy).x * shadowMapSize.z;
-    shadowBiasPCF.y +=  dFdy(shadowUV.xy).y * shadowMapSize.w;
-    //shadowBias += dFdx(shadowReceiverZ);
+//     shadowBiasPCF.x +=  dFdx(shadowUV.xy).x * shadowMapSize.z;
+//     shadowBiasPCF.y +=  dFdy(shadowUV.xy).y * shadowMapSize.w;
+//     //shadowBias += dFdx(shadowReceiverZ);
 
-#endif
+// #endif
 
 
     shadow = getShadowPCF(tex, shadowMapSize, shadowUV, shadowReceiverZ, shadowBiasPCF);
