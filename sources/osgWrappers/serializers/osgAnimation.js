@@ -368,12 +368,24 @@ define( [
         return P.resolve( sme );
     };
 
+    osgAnimationWrapper.StackedScaleElement = function ( input, stc ) {
+        var jsonObj = input.getJSON();
+        if ( !jsonObj.Name || !jsonObj.Scale )
+            return P.reject();
+
+        osgWrapper.Object( input, stc );
+
+        stc.setScale( jsonObj.Scale );
+
+        return P.resolve( stc );
+    };
+
     osgAnimationWrapper.Bone = function ( input, bone ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.InvBindMatrixInSkeletonSpace )
             return P.reject();
 
-        osgWrapper.MatrixTransform( input, bone );
+        var promise = osgWrapper.MatrixTransform( input, bone );
 
         bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
 
@@ -384,13 +396,10 @@ define( [
                 max: AABBonBone.max
             };
         }
-        return P.resolve( bone );
+        return promise;
     };
 
-    osgAnimationWrapper.UpdateBone = function ( input, updateBone ) {
-        osgAnimationWrapper.UpdateMatrixTransform( input, updateBone );
-        return P.resolve( updateBone );
-    };
+    osgAnimationWrapper.UpdateBone = osgAnimationWrapper.UpdateMatrixTransform;
 
     osgAnimationWrapper.UpdateSkeleton = function ( input, upSkl ) {
         osgWrapper.Object( input, upSkl );
@@ -405,11 +414,11 @@ define( [
         if ( !jsonObj.BoneMap ) // check boneMap
             return P.reject();
 
-        osgWrapper.Geometry( input, rigGeom );
+        var promise = osgWrapper.Geometry( input, rigGeom );
 
         rigGeom._boneNameID = jsonObj.BoneMap;
 
-        return P.resolve( rigGeom );
+        return promise;
     };
 
     return osgAnimationWrapper;
