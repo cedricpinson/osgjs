@@ -82,14 +82,14 @@ var createScene = function ( viewer, root, url ) {
         root.accept( bfinder );
         var bones = bfinder.getBones();
 
-        var geom = osg.createAxisGeometry( 0.25 );
+        var geom = osg.createAxisGeometry( 10 );
         for ( var i = 0, l = bones.length; i < l; i++ ) {
             var bone = bones[ i ];
             console.log( bone.getName() );
-            // var tnode = new osg.Node();
-            // tnode.addChild( geom );
+            var tnode = new osg.Node();
+            tnode.addChild( geom );
             //            tnode.addChild( osg.createTexturedBoxGeometry() );
-            // bone.addChild( tnode );
+            bone.addChild( tnode );
         }
 
         window.listBones = function () {
@@ -156,7 +156,8 @@ var onLoad = function () {
         BatMeshAnim: 'BatMeshAnim.osgjs',
         BatMeshAnim_box: 'BatMeshAnim_box.osgjs',
         kicking: 'kicking.osgjs',
-        zombie_normal: 'zombie_normal.osgjs'
+        zombie_normal: 'zombie_normal.osgjs',
+        PBOT_DTF: 'PBOT_DTF.osgjs'
     };
 
     window.debugScene = false;
@@ -167,6 +168,8 @@ var onLoad = function () {
     window.count = 0;
     window.speed = 1.0;
     window.isPlaying = false;
+    window.times = 0;
+    window.manual = false;
 
     var viewer = new osgViewer.Viewer( canvas );
     viewer.init();
@@ -183,7 +186,7 @@ var onLoad = function () {
     var modelController = gui.add( this, 'models', Object.keys( models ) );
     modelController.onFinishChange( load );
     //modelController.setValue( '_44f5d95ddb794570a441fce7513bf5d1' );
-    modelController.setValue( 'magic' );
+    modelController.setValue( 'PBOT_DTF' );
 
     var debugSceneController = gui.add( window, 'debugScene' );
     debugSceneController.onFinishChange( load );
@@ -193,6 +196,8 @@ var onLoad = function () {
     gui.add( window, 'pause' );
     var countCursor = gui.add( window, 'count', 0, 10 ).step( 1 );
     gui.add( window, 'speed', -10, 10 );
+    gui.add( window, 'manual' );
+    var times = gui.add( window, 'times', 0, 1 ).step( 0.05 );
     gui.add( window, 'isPlaying' ).listen();
 
     countCursor.onFinishChange( function ( value ) {
@@ -220,9 +225,16 @@ var onLoad = function () {
             this._dirty = false;
         }
 
-        var t = nv.getFrameStamp().getSimulationTime();
-        var mult = ( speed < 0 ) ? 1. / -speed : speed;
-        this.updateManager( t * mult );
+        if ( !window.manual ) {
+            var t = nv.getFrameStamp().getSimulationTime();
+            var mult = ( window.speed < 0 ) ? 1.0 / -window.speed : window.speed;
+            this.updateManager( t * mult );
+        } else {
+            if ( this._activeAnimationList[ 0 ] )
+                this.updateManager( window.times * this._activeAnimationList[ 0 ].duration );
+        }
+
+
         return true;
     };
 };
