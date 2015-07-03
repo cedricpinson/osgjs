@@ -19,6 +19,7 @@ define( [
         this._target = {
             value: value
         };
+        this._bindTransform = value;
         if ( name ) this.setName( name );
     };
 
