@@ -425,6 +425,7 @@ define( [
                             for ( var j = 0, l = instanceChannels.length; j < l; j++ ) {
                                 var instanceChannel = instanceChannels[ j ];
                                 instanceChannel.t = t; // reset time
+                                instanceChannel.start = t; // reset time
                             }
                             cmd.end = t + this._instanceAnimations[ cmd.name ].duration; //reset end animation time
                         } else {
@@ -479,11 +480,36 @@ define( [
             }
         },
 
+        stopAllAnimation: function () {
+            var activeAnimationList = this._activeAnimationList;
+            var i = 0;
+            while ( i < activeAnimationList.length ) {
+                var name = activeAnimationList[ i ].name;
+                this.removeActiveChannels( this._instanceAnimations[ name ] );
+                this._activeAnimations[ name ] = undefined;
+                activeAnimationList.splice( i, 1 );
+            }
+        },
+
         isPlaying: function ( name ) {
             if ( this._activeAnimations[ name ] ) return true;
             return false;
         },
 
+        bindModel: function () { //Put the model in bind pose (T pose)
+            var animationsUpdateCallbackArray = this._animationsUpdateCallbackArray;
+            var size = animationsUpdateCallbackArray.length;
+
+            for ( var i = 0; i < size; i++ ) {
+                var up = animationsUpdateCallbackArray[ i ];
+                var stackedTransforms = up._stackedTransforms;
+                for ( var st = 0, l = stackedTransforms.length; st < l; st++ ) {
+                    var stackedTransform = stackedTransforms[ st ];
+                    stackedTransform._target.value = stackedTransform._bindTransform;
+                }
+                up.computeChannels();
+            }
+        },
 
         // play animation using object as config
         // {
