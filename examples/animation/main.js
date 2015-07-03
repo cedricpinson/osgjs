@@ -60,6 +60,12 @@ FindBoneVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
 
 var createScene = function ( viewer, root, url ) {
 
+    window.count = 0;
+    window.speed = 1.0;
+    window.isPlaying = false;
+    window.times = 0;
+    window.manual = false;
+
     // var root = new osg.MatrixTransform();
     osg.Matrix.makeRotate( Math.PI * 0.5, 1, 0, 0, root.getMatrix() );
 
@@ -121,6 +127,11 @@ var createScene = function ( viewer, root, url ) {
                 window.pause = function () {
                     animationManager.pauseAnimation( firstAnimation );
                 };
+                window.bind = function () {
+                    window.manual = false;
+                    animationManager.stopAllAnimation();
+                    animationManager.bindModel();
+                };
                 window.animationManager = animationManager;
                 animationManager.playAnimation( firstAnimation );
             }
@@ -165,6 +176,7 @@ var onLoad = function () {
     window.play = function () {};
     window.stop = function () {};
     window.pause = function () {};
+    window.bind = function () {};
     window.count = 0;
     window.speed = 1.0;
     window.isPlaying = false;
@@ -194,10 +206,12 @@ var onLoad = function () {
     gui.add( window, 'play' );
     gui.add( window, 'stop' );
     gui.add( window, 'pause' );
-    var countCursor = gui.add( window, 'count', 0, 10 ).step( 1 );
+    gui.add( window, 'bind' );
+    var countCursor = gui.add( window, 'count', 0, 10 ).step( 1 ).listen();
     gui.add( window, 'speed', -10, 10 );
-    gui.add( window, 'manual' );
-    var times = gui.add( window, 'times', 0, 1 ).step( 0.05 );
+    var manu = gui.add( window, 'manual' );
+    manu.listen();
+    var times = gui.add( window, 'times', 0, 1 ).step( 0.05 ).listen();
     gui.add( window, 'isPlaying' ).listen();
 
     countCursor.onFinishChange( function ( value ) {
@@ -205,6 +219,24 @@ var onLoad = function () {
         var animations = Object.keys( window.animationManager.getAnimations() );
         var firstAnimation = animations.length ? animations[ 0 ] : undefined;
         window.animationManager.setLoopNum( firstAnimation, value );
+    } );
+
+    manu.onFinishChange( function ( value ) {
+        var activeAnimation = animationManager._activeAnimations;
+        var keys = Object.keys( activeAnimation );
+
+        var unCheck = true;
+
+        for ( var a = 0, l = keys.length; a < l; a++ ) {
+            var key = keys[ a ];
+            var anim = activeAnimation[ key ];
+            if ( anim ) {
+                unCheck = false;
+                break;
+            }
+        }
+        if ( unCheck ) window.manual = false;
+        window.times = 0;
     } );
 
     var update = function () {
@@ -230,10 +262,20 @@ var onLoad = function () {
             var mult = ( window.speed < 0 ) ? 1.0 / -window.speed : window.speed;
             this.updateManager( t * mult );
         } else {
-            if ( this._activeAnimationList[ 0 ] )
-                this.updateManager( window.times * this._activeAnimationList[ 0 ].duration );
-        }
+            var resetActiveChannelType = function ( channels ) {
+                for ( var c = 0, l = channels.length; c < l; c++ ) {
+                    channels[ c ].key = 0;
+                }
+            };
 
+            resetActiveChannelType( this._quatActiveChannels );
+            resetActiveChannelType( this._vec3ActiveChannels );
+            resetActiveChannelType( this._floatActiveChannels );
+            resetActiveChannelType( this._floatCubicBezierActiveChannels );
+            resetActiveChannelType( this._vec3CubicBezierActiveChannels );
+
+            this.updateManager( window.times * this._activeAnimationList[ 0 ].duration + ( this._activeAnimationList[ 0 ].channels[ 0 ].t ) );
+        }
 
         return true;
     };
