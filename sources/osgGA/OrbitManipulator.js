@@ -169,12 +169,12 @@ define( [
                 Vec3.normalize( f, f );
 
                 var p = Vec3.dot( f, this._upz );
-                if ( p > DOT_LIMIT ) {
+                if ( Math.abs( p ) > DOT_LIMIT ) {
                     // we force z to DOT_LIMIT and we normalize the vec3 vector by only editing the x and y component
                     var a = Math.sqrt( ( 1.0 - DOT_LIMIT * DOT_LIMIT ) / ( f[ 0 ] * f[ 0 ] + f[ 1 ] * f[ 1 ] ) );
                     f[ 0 ] *= a;
                     f[ 1 ] *= a;
-                    f[ 2 ] = DOT_LIMIT;
+                    f[ 2 ] = DOT_LIMIT * Math.sign( p );
                 }
 
                 Vec3.cross( f, this._upz, s );
