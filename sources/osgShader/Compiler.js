@@ -1391,7 +1391,7 @@ define( [
             return roots;
         },
         getFragmentShaderName: function () {
-            return 'CompilerOSGJS';
+            return this._material ? 'CompilerOSGJS' : 'NoMaterialCompilerOSGJS';
         },
         getVertexShaderName: function () {
             return this.getFragmentShaderName();
