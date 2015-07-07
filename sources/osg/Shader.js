@@ -5,6 +5,8 @@ define( [
     'osg/GLObject'
 ], function ( Notify, MACROUTILS, Timer, GLObject ) {
 
+    'use strict';
+
     /**
      * Shader manage shader for vertex and fragment, you need both to create a glsl program.
      * @class Shader
@@ -25,6 +27,10 @@ define( [
     // Debug Pink shader for when shader fails
     Shader.VS_DBG = 'attribute vec3 Vertex;uniform mat4 ModelViewMatrix;uniform mat4 ProjectionMatrix;void main(void) {  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);}';
     Shader.FS_DBG = 'precision lowp float; void main(void) { gl_FragColor = vec4(1.0, 0.6, 0.6, 1.0);}';
+
+    var debugName = '\n#define SHADER_NAME FailSafe\n';
+    Shader.VS_DBG += debugName;
+    Shader.FS_DBG += debugName;
 
 
     // static cache of glShaders flagged for deletion, which will actually
