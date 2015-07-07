@@ -69,10 +69,10 @@ vec3 reconstructNormalVS(const in vec3 positionVS) {
 
 // sampling radius is in view space
 #define SAMPLING_RADIUS 15.0
-#define NUM_SAMPLE_DIRECTIONS 16
+#define NUM_SAMPLE_DIRECTIONS 4
 // sampling step is in texture space
 #define SAMPLING_STEP 0.08
-#define NUM_SAMPLE_STEPS 16
+#define NUM_SAMPLE_STEPS 4
 #define THRESHOLD 0.1
 #define SCALE 1.0
 #define NOISE_SCALE 0.1
@@ -141,14 +141,65 @@ void main() {
   float jitter = sampleNoise.z;
   float occlusion = 0.0;
 
-  for (int i = 0; i < NUM_SAMPLE_DIRECTIONS; ++i) {
+  int i = 0;
+  int j = 0;
+
+  vec2 sampleDirUV;
+  float oldAngle;
+
+#define _ANGLE_BUG 1
+#ifdef _ANGLE_BUG
+  for (int k = 0; k < NUM_SAMPLE_DIRECTIONS*NUM_SAMPLE_STEPS; k++){
+      if (j == 0){
+          // incrementally rotate sample direction
+          deltaUV = deltaRotationMatrix * deltaUV;
+           sampleDirUV = deltaUV;
+           oldAngle   = SAMPLING_STEP;
+      }
+
+      vec2 sampleUV     = vUV + (jitter + float(j)) * sampleDirUV;
+      vec3 sampleVS     = getPosition(sampleUV, Texture0, projInfo);
+      vec3 sampleDirVS  = (sampleVS - originVS);
+
+      // angle between fragment tangent and the sample
+      float gamma = (PI / 2.0) - acos(dot(normalVS, normalize(sampleDirVS)));
+
+      if (gamma > oldAngle)
+      {
+        float value = sin(gamma) - sin(oldAngle);
+//#define APPLY_ATTENUATION 1
+#ifdef APPLY_ATTENUATION
+        // distance between original and sample points
+        float attenuation = clamp(1.0 - pow(length(sampleDirVS) / radiusWS, 2.0), 0.0, 1.0);
+        occlusion += attenuation * value;
+#else
+        occlusion += value;
+#endif
+        oldAngle = gamma;
+      }
+
+
+      if (j > NUM_SAMPLE_STEPS){
+          i++;
+          j= 0;
+      }
+      else{
+          j++;
+      }
+
+      if (i > NUM_SAMPLE_DIRECTIONS) break;
+
+  }
+
+#else
+  for (int i = 0; i < NUM_SAMPLE_DIRECTIONS; i++) {
     // incrementally rotate sample direction
     deltaUV = deltaRotationMatrix * deltaUV;
 
     vec2 sampleDirUV = deltaUV;
     float oldAngle   = SAMPLING_STEP;
 
-    for (int j = 0; j < NUM_SAMPLE_STEPS; ++j) {
+    for (int j = 0; j < NUM_SAMPLE_STEPS; j++) {
       vec2 sampleUV     = vUV + (jitter + float(j)) * sampleDirUV;
       vec3 sampleVS     = getPosition(sampleUV, Texture0, projInfo);
       vec3 sampleDirVS  = (sampleVS - originVS);
@@ -171,6 +222,8 @@ void main() {
       }
     }
   }
+
+#endif
 
   occlusion = 1.0 - occlusion / float(NUM_SAMPLE_DIRECTIONS);
   occlusion = clamp(pow(occlusion, 1.0 + SCALE), 0.0, 1.0);
