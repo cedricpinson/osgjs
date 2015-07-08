@@ -13,11 +13,11 @@ define( [
 
 
     /**
-     * ShadowAttribute encapsulate Shadow Main State object
-     * @class ShadowAttribute
+     * ShadowReceiveAttribute encapsulate Shadow Main State object
+     * @class ShadowReceiveAttribute
      * @inherits StateAttribute
      */
-    var ShadowAttribute = function ( lightNumber, disable ) {
+    var ShadowReceiveAttribute = function ( lightNumber, disable ) {
         StateAttribute.call( this );
 
 
@@ -59,13 +59,13 @@ define( [
 
     };
 
-    ShadowAttribute.uniforms = {};
-    ShadowAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+    ShadowReceiveAttribute.uniforms = {};
+    ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
 
-        attributeType: 'ShadowAttribute',
+        attributeType: 'ShadowReceive',
 
         cloneType: function () {
-            return new ShadowAttribute( this._lightNumber, true );
+            return new ShadowReceiveAttribute( this._lightNumber, true );
         },
 
         getTypeMember: function () {
@@ -141,7 +141,7 @@ define( [
 
         getOrCreateUniforms: function () {
             // uniform are once per CLASS attribute, not per instance
-            var obj = ShadowAttribute;
+            var obj = ShadowReceiveAttribute;
 
             var typeMember = this.getTypeMember();
 
@@ -310,9 +310,9 @@ define( [
 
         }
 
-    } ), 'osgShadow', 'ShadowAttribute' );
+    } ), 'osgShadow', 'ShadowReceiveAttribute' );
 
-    MACROUTILS.setTypeID( ShadowAttribute );
+    MACROUTILS.setTypeID( ShadowReceiveAttribute );
 
-    return ShadowAttribute;
+    return ShadowReceiveAttribute;
 } );

@@ -6,13 +6,13 @@ define( [
 ], function ( MACROUTILS, Texture, ShaderUtils, Node ) {
     'use strict';
 
-    var ShadowNode = function () {
+    var ShadowReceive = function () {
         Node.apply( this );
 
     };
 
-    ShadowNode.prototype = MACROUTILS.objectInherit( Node.prototype, {
-        type: 'Shadow',
+    ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
+        type: 'ShadowReceiveNode',
         validOutputs: [ 'float' ],
 
         globalFunctionDeclaration: function () {
@@ -72,7 +72,44 @@ define( [
 
     } );
 
+    var ShadowCast = function () {
+        Node.apply( this );
+
+    };
+
+    ShadowCast.prototype = MACROUTILS.objectInherit( Node.prototype, {
+        type: 'ShadowCast',
+        validOutputs: [ 'color' ],
+
+        globalFunctionDeclaration: function () {
+            return '#pragma include "shadowsCastFrag.glsl"';
+        },
+
+        setShadowCastAttribute: function ( shadowAttr ) {
+            this._shadowCast = shadowAttr;
+            return this;
+        },
+
+        // must return an array of defines
+        // because it will be passed to the ShaderGenerator
+        getDefines: function () {
+            return this._shadowCast.getDefines();
+        },
+        computeShader: function () {
+            // common inputs
+            var inputs = [];
+
+            return ShaderUtils.callFunction(
+                'computeShadowDepth',
+                this._outputs.color,
+                inputs );
+        }
+
+
+    } );
+
     return {
-        Shadow: ShadowNode
+        ShadowCast: ShadowCast,
+        ShadowReceive: ShadowReceive
     };
 } );

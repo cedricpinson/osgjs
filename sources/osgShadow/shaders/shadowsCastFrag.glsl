@@ -1,14 +1,3 @@
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-
-uniform float exponent;
-uniform float exponent1;
-uniform vec4 Shadow_DepthRange;
-
-varying vec4 FragEyePos;
 
 #pragma include "colorEncode.glsl"
 
@@ -32,38 +21,42 @@ vec4 shadowDepthToEVSM(float depth)
 }
 #endif // _EVSM
 
-void main(void) {
+
+vec4 computeShadowDepth(void) {
     float depth;
     // distance to camera
-    depth =  -FragEyePos.z * FragEyePos.w;
+    depth =  -FragEyeVector.z * FragEyeVector.w;
 
     //depth = (depth - Shadow_DepthRange.x )* Shadow_DepthRange.w;
     depth = depth  / Shadow_DepthRange.y;
 
+    vec4 outputFrag;
+
 #if defined (_FLOATTEX) && defined(_PCF)
-    gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
+    outputFrag = vec4(depth, 0.0, 0.0, 1.0);
 #elif defined (_FLOATTEX)  && defined(_ESM)
     float depthScale = exponent1;
     depth = exp(-depth*depthScale);
-    gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
+    outputFrag = vec4(depth, 0.0, 0.0, 1.0);
 #elif defined (_FLOATTEX)  && defined(_VSM)
-    gl_FragColor = vec4(depth, depth*depth, 0.0, 1.0);
+    outputFrag = vec4(depth, depth*depth, 0.0, 1.0);
 #elif defined (_FLOATTEX)  && defined(_EVSM)
-    gl_FragColor = shadowDepthToEVSM(depth);
+    outputFrag = shadowDepthToEVSM(depth);
 #elif defined (_FLOATTEX) // && defined(_NONE)
-    gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
+    outputFrag = vec4(depth, 0.0, 0.0, 1.0);
 #elif defined(_PCF)
-    gl_FragColor = encodeFloatRGBA(depth);
+    outputFrag = encodeFloatRGBA(depth);
 #elif defined(_ESM)
     float depthScale = exponent1;
     depthScale = exp(-depth*depthScale);
-    gl_FragColor = encodeFloatRGBA(depthScale);
+    outputFrag = encodeFloatRGBA(depthScale);
 #elif defined(_VSM)
-    gl_FragColor = encodeHalfFloatRGBA(vec2(depth, depth*depth));
+    outputFrag = encodeHalfFloatRGBA(vec2(depth, depth*depth));
 #else // NONE
-    gl_FragColor = encodeFloatRGBA(depth);
+    outputFrag = encodeFloatRGBA(depth);
 #endif
 
 
+    return outputFrag;
 
 }

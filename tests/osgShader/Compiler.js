@@ -6,9 +6,9 @@ define( [
     'osg/Material',
     'osgShader/Compiler',
     'osgShader/nodeFactory',
-    'osgShadow/ShadowAttribute',
+    'osgShadow/ShadowReceiveAttribute',
     'osgShadow/ShadowTexture'
-], function ( QUnit, mockup, Light, LightSource, Material, Compiler, nodeFactory, ShadowAttribute, ShadowTexture ) {
+], function ( QUnit, mockup, Light, LightSource, Material, Compiler, nodeFactory, ShadowReceiveAttribute, ShadowTexture ) {
 
     'use strict';
 
@@ -23,13 +23,13 @@ define( [
                 var light = new Light( 1 );
                 var lightSource = new LightSource();
                 lightSource.setLight( light );
-                var shadowAttribute = new ShadowAttribute();
+                var shadowReceiveAttribute = new ShadowReceiveAttribute();
                 var shadowTexture = new ShadowTexture();
-                shadowAttribute.setLight( light );
+                shadowReceiveAttribute.setLight( light );
                 shadowTexture.setLightUnit( light.getLightNumber() );
 
                 var material = new Material();
-                var compiler = new Compiler( [ light, material, shadowAttribute ], [
+                var compiler = new Compiler( [ light, material, shadowReceiveAttribute ], [
                     [ shadowTexture ]
                 ] );
 
