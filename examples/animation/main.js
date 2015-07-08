@@ -132,7 +132,7 @@
                         animationManager.stopAnimation( config.currentAnim );
                     };
                     controller.pause = function () {
-                        animationManager.pauseAnimation( config.currentAnim );
+                        animationManager.togglePause();
                     };
                     controller.bind = function () {
                         controller.manual = false;
@@ -328,42 +328,42 @@
 
 
         //Override function for custom behavior
-        osgAnimation.BasicAnimationManager.prototype.update = function ( node, nv ) {
+        // osgAnimation.BasicAnimationManager.prototype.update = function ( node, nv ) {
 
-            if ( this._dirty ) {
-                this.findAnimationUpdateCallback( node );
-                this.assignTargetToAnimationCallback();
-                this._dirty = false;
-            }
+        //     if ( this._dirty ) {
+        //         this.findAnimationUpdateCallback( node );
+        //         this.assignTargetToAnimationCallback();
+        //         this._dirty = false;
+        //     }
 
-            if ( !controller.manual ) {
-                var t = nv.getFrameStamp().getSimulationTime();
-                var mult = ( controller.speed < 0 ) ? 1.0 / -controller.speed : controller.speed;
-                this.updateManager( t * mult );
-                if ( !!!animationManager._instanceAnimations[ config.currentAnim ].pause && animationManager.isPlaying( config.currentAnim ) )
-                    controller.times = ( ( t * mult ) - this._activeAnimationList[ 0 ].channels[ 0 ].t ) * 100;
-            } else {
+        //     if ( !controller.manual ) {
+        //         var t = nv.getFrameStamp().getSimulationTime();
+        //         var mult = ( controller.speed < 0 ) ? 1.0 / -controller.speed : controller.speed;
+        //         this.updateManager( t * mult );
+        //         if ( !!!animationManager._instanceAnimations[ config.currentAnim ].pause && animationManager.isPlaying( config.currentAnim ) )
+        //             controller.times = ( ( t * mult ) - this._activeAnimationList[ 0 ].channels[ 0 ].t ) * 100;
+        //     } else {
 
-                var resetActiveChannelType = function ( channels ) {
-                    for ( var c = 0, l = channels.length; c < l; c++ ) {
-                        channels[ c ].key = 0;
-                    }
-                };
+        //         var resetActiveChannelType = function ( channels ) {
+        //             for ( var c = 0, l = channels.length; c < l; c++ ) {
+        //                 channels[ c ].key = 0;
+        //             }
+        //         };
 
-                resetActiveChannelType( this._quatActiveChannels );
-                resetActiveChannelType( this._vec3ActiveChannels );
-                resetActiveChannelType( this._floatActiveChannels );
-                resetActiveChannelType( this._floatCubicBezierActiveChannels );
-                resetActiveChannelType( this._vec3CubicBezierActiveChannels );
+        //         resetActiveChannelType( this._quatActiveChannels );
+        //         resetActiveChannelType( this._vec3ActiveChannels );
+        //         resetActiveChannelType( this._floatActiveChannels );
+        //         resetActiveChannelType( this._floatCubicBezierActiveChannels );
+        //         resetActiveChannelType( this._vec3CubicBezierActiveChannels );
 
-                var activeAnimation = this._activeAnimationList[ 0 ];
-                if ( activeAnimation )
-                    this.updateManager( ( controller.times / 100 ) /* activeAnimation.duration*/ + ( activeAnimation.channels[ 0 ].t ) );
-            }
+        //         var activeAnimation = this._activeAnimationList[ 0 ];
+        //         if ( activeAnimation )
+        //             this.updateManager( ( controller.times / 100 ) /* activeAnimation.duration*/ + ( activeAnimation.channels[ 0 ].t ) );
+        //     }
 
 
-            return true;
-        };
+        //     return true;
+        // };
     };
 
     window.addEventListener( 'load', onLoad, true );
