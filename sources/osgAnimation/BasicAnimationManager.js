@@ -122,6 +122,12 @@ define( [
         this._animationsUpdateCallback = {};
         this._animationsUpdateCallbackArray = [];
 
+        //Pause status (true / false)
+        this._pause = false;
+        this._pauseTime = 0;
+
+        this._loop = 0; //Loop mode for start animation
+
         this._dirty = true;
     };
 
@@ -268,10 +274,11 @@ define( [
                 this._dirty = false;
             }
 
-            var t = nv.getFrameStamp().getSimulationTime();
-            this.updateManager( t );
-            return true;
+            var sim = this.getSimulationTime( nv );
+            this.updateManager( sim );
+            console.log( sim );
 
+            return true;
         },
 
         // blend value from each channels for each target
@@ -307,27 +314,8 @@ define( [
             for ( var c = 0, l = channels.length; c < l; c++ ) {
                 var channel = channels[ c ];
                 var instanceAnimation = channel.instanceAnimation;
-
-                if ( instanceAnimation.initPause ) {
-                    instanceAnimation.initPause = false;
-                    instanceAnimation.pauseTLocal = t - channel.t;
-                }
-
-                if ( instanceAnimation.stopPause ) {
-                    instanceAnimation.stopPause = false;
-                    var instanceChannels = instanceAnimation.channels;
-                    var instanceChannel;
-                    for ( var j = 0, m = instanceChannels.length; j < m; j++ ) {
-                        instanceChannel = instanceChannels[ j ];
-                        instanceChannel.t = t - instanceAnimation.pauseTLocal;
-                    }
-                    this._activeAnimations[ instanceAnimation.name ].end = instanceChannel.t + instanceAnimation.duration;
-                }
-
-                if ( !instanceAnimation.pause )
-                    interpolator( t - channel.t, channel );
+                interpolator( ( t - channel.t ) % instanceAnimation.duration, channel );
             }
-
         },
 
         addActiveAnimation: function ( t, cmd ) {
@@ -413,72 +401,73 @@ define( [
                 var name = instanceAnimation.name;
                 var cmd = this._activeAnimations[ name ];
 
-                if ( t > cmd.end ) {
-                    if ( cmd.loop === 1 ) {
-                        this.removeActiveChannels( instanceAnimation );
-                        this._activeAnimations[ name ] = undefined;
-                        activeAnimationList.splice( i, 1 );
-                    } else {
-                        if ( !instanceAnimation.pause ) {
-                            if ( cmd.loop !== 0 ) cmd.loop--;
-                            var instanceChannels = instanceAnimation.channels;
-                            for ( var j = 0, l = instanceChannels.length; j < l; j++ ) {
-                                var instanceChannel = instanceChannels[ j ];
-                                instanceChannel.t = t; // reset time
-                                instanceChannel.start = t; // reset time
-                            }
-                            cmd.end = t + this._instanceAnimations[ cmd.name ].duration; //reset end animation time
-                        } else {
-                            i++;
-                        }
-
-                    }
+                if ( t > cmd.end && cmd.loop === 1 ) {
+                    this.removeActiveChannels( instanceAnimation );
+                    this._activeAnimations[ name ] = undefined;
+                    activeAnimationList.splice( i, 1 );
                 } else {
                     i++;
                 }
             }
         },
 
-        setLoopMode: function ( name ) {
-            if ( !this.isPlaying( name ) )
-                this.playAnimation( name );
-
-            this._activeAnimations[ name ].loop = 0;
+        setLoopMode: function () {
+            this._loop = 0;
         },
 
-        setLoopNum: function ( name, num ) {
-            if ( !this.isPlaying( name ) )
-                this.playAnimation( name );
-
-            num = ( num === 0 || num < 0 ) ? undefined : num;
-            this._activeAnimations[ name ].loop = num;
+        setLoopONCE: function () {
+            this._loop = 1;
         },
 
-        pauseAnimation: function ( name ) {
-            var anim = this._instanceAnimations[ name ];
-            if ( anim.pause ) {
-                anim.pause = !anim.pause;
-                anim.stopPause = true;
+        togglePause: function () { //Pause the manager's time
+
+            if ( this._pause ) {
+                this._stopPause = true;
             } else {
-                if ( anim.pauseTime === undefined )
-                    anim.pauseTime = 0;
-                anim.pause = true;
-                anim.initPause = true;
+                this._initPause = true;
             }
+            this._pause = !this._pause;
         },
 
-        stopAnimation: function ( name ) {
-            var activeAnimationList = this._activeAnimationList;
-            var i = 0;
-            while ( i < activeAnimationList.length ) {
-                if ( activeAnimationList[ i ].name === name ) {
-                    this.removeActiveChannels( this._instanceAnimations[ name ] );
-                    this._activeAnimations[ name ] = undefined;
-                    activeAnimationList.splice( i, 1 );
-                    return;
+        getSimulationTime: function ( nv ) {
+
+            var t = nv.getFrameStamp().getSimulationTime();
+
+            if ( this._initPause ) {
+                this._initPause = false;
+                this._startPause = this._startLocal = t;
+                this._startLocal -= this._pauseTime;
+                this._simulationTime = 0;
+            } else if ( this._stopPause ) {
+                this._stopPause = false;
+                this._pauseTime += ( t - this._startPause );
+            }
+
+            return ( !this._pause ) ? t - this._pauseTime : this._simulationTime || this._startLocal;
+        },
+
+        setSimulationTime: function ( ratio ) {
+
+            if ( this._pause ) {
+                var animationList = this._animationsList;
+                if ( animationList.length > 0 ) {
+                    this._simulationTime = ratio * animationList[ 0 ].duration;
                 }
             }
         },
+
+        // stopAnimation: function ( name ) {
+        //     var activeAnimationList = this._activeAnimationList;
+        //     var i = 0;
+        //     while ( i < activeAnimationList.length ) {
+        //         if ( activeAnimationList[ i ].name === name ) {
+        //             this.removeActiveChannels( this._instanceAnimations[ name ] );
+        //             this._activeAnimations[ name ] = undefined;
+        //             activeAnimationList.splice( i, 1 );
+        //             return;
+        //         }
+        //     }
+        // },
 
         stopAllAnimation: function () {
             var activeAnimationList = this._activeAnimationList;
@@ -532,7 +521,7 @@ define( [
             if ( obj.priority === undefined ) obj.priority = 0;
             if ( obj.weight === undefined ) obj.weight = 1.0;
             if ( obj.timeFactor === undefined ) obj.timeFactor = 1.0;
-            if ( obj.loop === undefined ) obj.loop = 0;
+            if ( obj.loop === undefined ) obj.loop = this._loop;
 
             this._startAnimations[ obj.name ] = obj;
         },
