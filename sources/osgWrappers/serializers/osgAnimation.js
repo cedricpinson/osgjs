@@ -411,14 +411,24 @@ define( [
     osgAnimationWrapper.RigGeometry = function ( input, rigGeom ) {
         var jsonObj = input.getJSON();
 
-        if ( !jsonObj.BoneMap ) // check boneMap
+        if ( !jsonObj.BoneMap || !jsonObj.SourceGeometry ) // check boneMap
             return P.reject();
 
-        var promise = osgWrapper.Geometry( input, rigGeom );
-
+        //Import rigGeometry as Geometry + BoneMap
+        var rigPromise = osgWrapper.Geometry( input, rigGeom );
         rigGeom._boneNameID = jsonObj.BoneMap;
 
-        return promise;
+        //Import source geometry and merge it with the rigGeometry
+        var sourceGeometry = jsonObj.SourceGeometry[ 'osg.Geometry' ];
+        var geomPromise;
+        if ( sourceGeometry ) {
+            input.setJSON( sourceGeometry );
+            geomPromise = osgWrapper.Geometry( input, rigGeom );
+        }
+
+        return P.all( [ rigPromise, geomPromise ] ).then( function () {
+            return rigGeom;
+        } );
     };
 
     return osgAnimationWrapper;
