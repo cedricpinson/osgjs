@@ -40,7 +40,7 @@ define( [
             return;
         }
 
-        var i1 = channelInstance.key;
+        var i1 = 0;
         while ( times[ i1 + 1 ] < t ) i1++;
 
 
@@ -85,7 +85,7 @@ define( [
             return;
         }
 
-        var i1 = channelInstance.key;
+        var i1 = 0;
         while ( times[ i1 + 1 ] < t ) i1++;
 
 
@@ -140,7 +140,7 @@ define( [
             return;
         }
 
-        var i1 = channelInstance.key;
+        var i1 = 0;
         while ( times[ i1 + 1 ] < t ) i1++;
 
 
@@ -177,7 +177,7 @@ define( [
             return;
         }
 
-        var i = channelInstance.key;
+        var i = 0;
         while ( times[ i + 1 ] < t ) i++;
 
         var tt = ( t - times[ i ] ) / ( times[ i + 1 ] - times[ i ] );
@@ -216,7 +216,7 @@ define( [
             return;
         }
 
-        var i = channelInstance.key;
+        var i = 0;
         while ( times[ i + 1 ] < t ) i++;
 
         var tt = ( t - times[ i ] ) / ( times[ i + 1 ] - times[ i ] );
