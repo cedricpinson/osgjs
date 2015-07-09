@@ -99,7 +99,8 @@ define( [
         return Channel.createVec3Channel( keys, times );
     };
 
-    var createFloatKeyframes = function () {
+    var createFloatKeyframes
+     = function () {
         var keys = [
             1, 0, 3
         ];

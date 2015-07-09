@@ -39,12 +39,12 @@ define( [
 
             var animations = basicAnimationManager.getAnimations();
             var animationName = Object.keys( animations )[ 0 ];
+            basicAnimationManager.setLoopONCE(); // activate it and change loop mode (=> play ONCE)
             basicAnimationManager.playAnimation( animationName );
             ok( basicAnimationManager._startAnimations[ animationName ] !== undefined, 'check start animation queue' );
 
             basicAnimationManager._dirty = false;
             basicAnimationManager.update( null, nv );
-            basicAnimationManager.setLoopNum( animationName, 1 ); // activate it and change loop mode (=> play ONCE)
             ok( basicAnimationManager._activeAnimations[ animationName ] !== undefined, 'check animation ' + animationName + ' is playing' );
 
             // .x comes from the mockup anmation name
