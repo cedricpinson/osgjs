@@ -39,8 +39,7 @@ define( [
 
             var animations = basicAnimationManager.getAnimations();
             var animationName = Object.keys( animations )[ 0 ];
-            basicAnimationManager.setLoopONCE(); // activate it and change loop mode (=> play ONCE)
-            basicAnimationManager.playAnimation( animationName );
+            basicAnimationManager.playAnimation( animationName, false );
             ok( basicAnimationManager._startAnimations[ animationName ] !== undefined, 'check start animation queue' );
 
             basicAnimationManager._dirty = false;
