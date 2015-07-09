@@ -73,7 +73,7 @@ define( [
     //     value: Vec3.create(),
     //     targetID: int,
     //     key: 0,
-    //     t: 0,
+    //     t: 0, //global start time
     // }
     var createInstanceVec3Channel = function ( channel ) {
         return {
@@ -94,7 +94,7 @@ define( [
             targetID: 0,
             weight: 1,
             key: 0,
-            start: 0.0,
+            start: 0.0, //Local start time
             end: 0.0
         };
     };
@@ -106,8 +106,8 @@ define( [
             targetID: 0,
             weight: 1,
             key: 0,
-            start: 0.0, // global time when the animation has started
-            end: 0.0 // global time when the animation will be finished
+            start: 0.0,
+            end: 0.0
         };
     };
 
