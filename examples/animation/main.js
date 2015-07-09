@@ -64,10 +64,9 @@
 
         //init controller
         controller.count = 0;
-        controller.speed = 1.0;
+        controller.timeFactor = 1.0;
         controller.isPlaying = false;
         //controller.times = config.time;
-        controller.manual = false;
 
         // var root = new osg.MatrixTransform();
         osg.Matrix.makeRotate( Math.PI * 0.5, 1, 0, 0, root.getMatrix() );
@@ -135,7 +134,6 @@
                         animationManager.togglePause();
                     };
                     controller.bind = function () {
-                        controller.manual = false;
                         animationManager.stopAllAnimation();
                         animationManager.bindModel();
                     };
@@ -144,7 +142,6 @@
 
                     if ( config[ 'time' ] ) {
                         animationManager.updateManager( 0 );
-                        controller.manual = true;
 
                         //Find this current anim
                         var animationList = window.animationManager._animationsList;
@@ -204,10 +201,9 @@
             pause: function () {},
             bind: function () {},
             count: 0,
-            speed: 1.0,
+            timeFactor: 1.0,
             isPlaying: false,
             times: 0.0,
-            manual: false,
             models: {
                 '_4x4_anim': '4x4_anim.osgjs',
                 'brindherbetrs': 'brindherbetrs.osgjs',
@@ -242,7 +238,7 @@
             var filename = this._config[ 'url' ].replace( /^.*[\\\/]/, '' ).replace( ' ', '_' );
             var dot = filename.indexOf( '.' );
             if ( dot !== -1 ) filename = filename.substring( 0, dot );
-            models[ filename ] = overrideURL;
+            this.models[ filename ] = overrideURL;
             defaultChoice = filename;
         }
 
@@ -261,7 +257,7 @@
         var modelController = gui.add( this._controller, 'models', Object.keys( this._controller.models ) );
         modelController.listen();
 
-        var load = function ( value ) {
+        var load = function ( /*value*/) {
             root.removeChildren();
             createScene( viewer, root, this.models[ this._controller.models ], this._config, this._controller );
         };
@@ -282,39 +278,23 @@
 
         gui.add( this._controller, 'bind' );
 
-        var countCursor = gui.add( this._controller, 'count', 0, 10 ).step( 1 ).listen();
-        countCursor.onFinishChange( function ( value ) {
-            if ( !window.animationManager ) return;
-            window.animationManager.setLoopNum( currentAnim, value );
+        var speed = gui.add( this._controller, 'timeFactor' );
+        speed.onFinishChange( function ( value ) {
+            window.animationManager.setTimeFactor( value );
         } );
 
-        var speed = gui.add( this._controller, 'speed', -10, 10 );
-
-        var manu = gui.add( this._controller, 'manual' );
-        manu.listen();
-        manu.onFinishChange( function ( /*value*/) {
-            var activeAnimation = window.animationManager._activeAnimations;
-            var keys = Object.keys( activeAnimation );
-
-            var unCheck = true;
-
-            for ( var a = 0, l = keys.length; a < l; a++ ) {
-                var key = keys[ a ];
-                var anim = activeAnimation[ key ];
-                if ( anim ) {
-                    unCheck = false;
-                    break;
-                }
-            }
-            if ( unCheck ) window.manual = false;
-            window.times = 0;
-        } );
-
-        var times = gui.add( this._controller, 'times', 0, 1000 ).step( 1 ).listen();
+        var times = gui.add( this._controller, 'times', 0, 10 ).listen();
         times.onFinishChange( function ( value ) {
             var activeAnimation = window.animationManager._activeAnimationList[ 0 ];
-            if ( activeAnimation )
-                console.log( 'Manual time : ' + value / 100 );
+            var animation = window.animationManager._instanceAnimations[ activeAnimation.name ];
+            var ratio = value / 10.0;
+            var offset = animation.start;
+            var animationTime = offset + ratio * animation.duration;
+            var startAnimation = animation.start;
+            var currentTime = animationTime - startAnimation;
+            var timeFactor = window.animationManager.getTimeFactor();
+            console.log( currentTime );
+            window.animationManager.setSimulationTime( currentTime / timeFactor ); // * timeFactor );
         } );
 
         gui.add( this._controller, 'isPlaying' ).listen();
@@ -326,44 +306,6 @@
         };
         update();
 
-
-        //Override function for custom behavior
-        // osgAnimation.BasicAnimationManager.prototype.update = function ( node, nv ) {
-
-        //     if ( this._dirty ) {
-        //         this.findAnimationUpdateCallback( node );
-        //         this.assignTargetToAnimationCallback();
-        //         this._dirty = false;
-        //     }
-
-        //     if ( !controller.manual ) {
-        //         var t = nv.getFrameStamp().getSimulationTime();
-        //         var mult = ( controller.speed < 0 ) ? 1.0 / -controller.speed : controller.speed;
-        //         this.updateManager( t * mult );
-        //         if ( !!!animationManager._instanceAnimations[ config.currentAnim ].pause && animationManager.isPlaying( config.currentAnim ) )
-        //             controller.times = ( ( t * mult ) - this._activeAnimationList[ 0 ].channels[ 0 ].t ) * 100;
-        //     } else {
-
-        //         var resetActiveChannelType = function ( channels ) {
-        //             for ( var c = 0, l = channels.length; c < l; c++ ) {
-        //                 channels[ c ].key = 0;
-        //             }
-        //         };
-
-        //         resetActiveChannelType( this._quatActiveChannels );
-        //         resetActiveChannelType( this._vec3ActiveChannels );
-        //         resetActiveChannelType( this._floatActiveChannels );
-        //         resetActiveChannelType( this._floatCubicBezierActiveChannels );
-        //         resetActiveChannelType( this._vec3CubicBezierActiveChannels );
-
-        //         var activeAnimation = this._activeAnimationList[ 0 ];
-        //         if ( activeAnimation )
-        //             this.updateManager( ( controller.times / 100 ) /* activeAnimation.duration*/ + ( activeAnimation.channels[ 0 ].t ) );
-        //     }
-
-
-        //     return true;
-        // };
     };
 
     window.addEventListener( 'load', onLoad, true );

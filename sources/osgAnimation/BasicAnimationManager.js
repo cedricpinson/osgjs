@@ -38,7 +38,10 @@ define( [
     var BasicAnimationManager = function () {
         BaseObject.call( this );
 
-        this._lastUpdate = undefined;
+        this._simulationTime = 0.0;
+        this._pauseTime = 0.0;
+        this._timeFactor = 1.0;
+        this._startTime = 0.0;
 
         // original animation list to initialize the manager
         this._animationsList = [];
@@ -124,10 +127,6 @@ define( [
 
         //Pause status (true / false)
         this._pause = false;
-        this._pauseTime = 0;
-
-        this._loop = 0; //Loop mode for start animation
-        this._speed = 1; //Playing speed
 
         this._dirty = true;
     };
@@ -275,10 +274,15 @@ define( [
                 this._dirty = false;
             }
 
-            var sim = this.getSimulationTime( nv );
-            this.updateManager( sim );
-            //console.log( sim );
+            var t = nv.getFrameStamp().getSimulationTime();
 
+            if ( !this._pause ) {
+                this._simulationTime = this._startTime + ( t - this._pauseTime );
+            } else {
+                this._pauseTime = ( t - this._simulationTime + this._startTime );
+            }
+
+            this.updateManager( this._simulationTime * this._timeFactor );
             return true;
         },
 
@@ -315,13 +319,14 @@ define( [
             for ( var c = 0, l = channels.length; c < l; c++ ) {
                 var channel = channels[ c ];
                 var instanceAnimation = channel.instanceAnimation;
-                var activeAnimation = this._activeAnimations[ instanceAnimation.name ];
-                var timeFactor = activeAnimation.timeFactor;
-                var loop = activeAnimation.loop;
-                if ( loop === 1 ) // Play Once
-                    interpolator( t * timeFactor - channel.t, channel );
-                else
-                    interpolator( ( t * timeFactor - channel.t ) % instanceAnimation.duration, channel );
+                var loop = instanceAnimation.loop;
+
+                var tLocal = t - channel.t;
+
+                // handle loop
+                if ( loop ) tLocal = tLocal % instanceAnimation.duration;
+
+                interpolator( tLocal, channel );
             }
         },
 
@@ -330,8 +335,8 @@ define( [
             this._activeAnimations[ cmd.name ] = cmd; // set animation in the list of active one
 
             var instanceAnimation = this._instanceAnimations[ cmd.name ];
-            cmd.start = t;
-            cmd.end = t + instanceAnimation.duration;
+            instanceAnimation.start = t;
+            instanceAnimation.end = t + instanceAnimation.duration;
             this.addActiveChannels( t, instanceAnimation );
 
             // keep track of instance animation active in a list
@@ -405,9 +410,8 @@ define( [
             while ( i < activeAnimationList.length ) {
                 var instanceAnimation = activeAnimationList[ i ];
                 var name = instanceAnimation.name;
-                var cmd = this._activeAnimations[ name ];
 
-                if ( t > cmd.end && cmd.loop === 1 ) {
+                if ( t > instanceAnimation.end && instanceAnimation.loop === false ) {
                     this.removeActiveChannels( instanceAnimation );
                     this._activeAnimations[ name ] = undefined;
                     activeAnimationList.splice( i, 1 );
@@ -417,66 +421,17 @@ define( [
             }
         },
 
-        setLoopMode: function () {
-            this._loop = 0;
-        },
-
-        setLoopONCE: function () {
-            this._loop = 1;
-        },
-
         togglePause: function () { //Pause the manager's time
-
-            if ( this._pause ) {
-                this._stopPause = true;
-            } else {
-                this._initPause = true;
-            }
             this._pause = !this._pause;
         },
 
-        getSimulationTime0: function ( nv ) {
 
-            var t = nv.getFrameStamp().getSimulationTime();
-
-            if ( this._initPause ) {
-                this._initPause = false;
-                this._startPause = this._startLocal = t;
-                this._startLocal -= this._pauseTime;
-                this._simulationTime = 0;
-            } else if ( this._stopPause ) {
-                this._stopPause = false;
-                // var instanceAnimation = this._instanceAnimations[ Object.keys( this._instanceAnimations )[ 0 ] ];
-                // var duration = instanceAnimation.duration;
-                // var offset = this._simulationTime ? ( ( this._simulationTime - instanceAnimation.channels[ 0 ].t ) - this._startPause % duration ) : 0;
-                this._pauseTime += ( t - this._startPause ) + this._simulationTime; //+ offset;
-            }
-
-            return ( ( !this._pause ) ? t - this._pauseTime : ( this._simulationTime || this._startLocal ) ) * this._speed;
+        getSimulationTime: function () {
+            return this._simulationTime;
         },
 
-        getSimulationTime: function ( nv ) {
-
-            var t = nv.getFrameStamp().getSimulationTime();
-
-            if ( this._initPause ) {
-                this._initPause = false;
-                this._startPause = this._startLocal = t;
-                this._startLocal -= this._pauseTime;
-                this._simulationTime = 0;
-            } else if ( this._stopPause ) {
-                this._stopPause = false;
-                // var instanceAnimation = this._instanceAnimations[ Object.keys( this._instanceAnimations )[ 0 ] ];
-                // var duration = instanceAnimation.duration;
-                // var offset = this._simulationTime ? ( ( this._simulationTime - instanceAnimation.channels[ 0 ].t ) - this._startPause % duration ) : 0;
-                this._pauseTime += ( t - this._startPause ) + this._simulationTime; //+ offset;
-            }
-
-            return ( ( !this._pause ) ? t - this._pauseTime : ( this._simulationTime || this._startLocal ) ) * this._speed;
-        },
-
-        setSimulationTime: function ( t ) { //Set the simulation time for the first anim
-                this._simulationTime = t;
+        setSimulationTime: function ( t ) {
+            this._simulationTime = t;
         },
 
         stopAnimation: function ( name ) {
@@ -503,14 +458,16 @@ define( [
             }
         },
 
-        setSpeed: function ( speed ) {
-            this._speed = speed;
+        setTimeFactor: function ( timeFactor ) {
+            var tf = timeFactor / this._timeFactor;
+            this._startTime += ( this._simulationTime - this._simulationTime * tf ) / tf;
+
+            // if pause fix it
+            this._timeFactor = timeFactor;
         },
 
-        setTimeFactor: function ( name, timeFactor ) {
-            var animation = this._activeAnimations[ name ];
-            if ( animation )
-                animation.timeFactor = timeFactor;
+        getTimeFactor: function () {
+            return this._timeFactor;
         },
 
         isPlaying: function ( name ) {
@@ -538,8 +495,7 @@ define( [
         //     name: string,
         //     priority: 0,
         //     weight: 1.0,
-        //     timeFactor: 1.0,
-        //     loop: 0 // 0 means infinite, 1 means play once
+        //     loop: true / false
         // }
         playAnimationObject: function ( obj ) {
 
@@ -551,27 +507,27 @@ define( [
 
             if ( this.isPlaying( obj.name ) ) return;
 
-            if ( obj.priority === undefined ) obj.priority = 0;
-            if ( obj.weight === undefined ) obj.weight = 1.0;
-            if ( obj.timeFactor === undefined ) obj.timeFactor = 1.0;
-            if ( obj.loop === undefined ) obj.loop = this._loop;
+            anim.priority = ( obj.priority === undefined ) ? 0 : obj.priority;
+            anim.weight = ( obj.weight === undefined ) ? 1.0 : obj.weight;
+            anim.loop = ( obj.loop === undefined ) ? true : obj.loop;
 
-            this._startAnimations[ obj.name ] = obj;
+            this._startAnimations[ anim.name ] = anim;
         },
 
 
         // if first argument is an object
         // playAnimationObject is called instead
-        playAnimation: function ( name, priority, weight ) {
+        playAnimation: function ( name, loop, priority, weight ) {
 
             var animationObject;
             if ( typeof name === 'object' )
                 animationObject = name;
             else {
                 animationObject = {
-                    'name': name,
-                    'priority': priority,
-                    'weight': weight
+                    name: name,
+                    priority: priority,
+                    weight: weight,
+                    loop: loop
                 };
             }
 
