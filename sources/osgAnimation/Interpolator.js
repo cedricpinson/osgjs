@@ -40,8 +40,11 @@ define( [
             return;
         }
 
-        var i1 = 0;
-        while ( times[ i1 + 1 ] < t ) i1++;
+        var i1 = channelInstance.key;
+        if ( t > channelInstance.channel.times[ i1 ] )
+            while ( times[ i1 + 1 ] < t ) i1++;
+        else
+            while ( times[ i1 - 1 ] > t ) i1--;
 
 
         var t1 = times[ i1 ];
@@ -85,8 +88,11 @@ define( [
             return;
         }
 
-        var i1 = 0;
-        while ( times[ i1 + 1 ] < t ) i1++;
+        var i1 = channelInstance.key;
+        if ( t > channelInstance.channel.times[ i1 ] )
+            while ( times[ i1 + 1 ] < t ) i1++;
+        else
+            while ( times[ i1 - 1 ] > t ) i1--;
 
 
         var t1 = times[ i1 ];
@@ -140,8 +146,11 @@ define( [
             return;
         }
 
-        var i1 = 0;
-        while ( times[ i1 + 1 ] < t ) i1++;
+        var i1 = channelInstance.key;
+        if ( t > channelInstance.channel.times[ i1 ] )
+            while ( times[ i1 + 1 ] < t ) i1++;
+        else
+            while ( times[ i1 - 1 ] > t ) i1--;
 
 
         var t1 = times[ i1 ];
@@ -177,8 +186,11 @@ define( [
             return;
         }
 
-        var i = 0;
-        while ( times[ i + 1 ] < t ) i++;
+        var i = channelInstance.key;
+        if ( t > channelInstance.channel.times[ i ] )
+            while ( times[ i + 1 ] < t ) i++;
+        else
+            while ( times[ i - 1 ] > t ) i--;
 
         var tt = ( t - times[ i ] ) / ( times[ i + 1 ] - times[ i ] );
         var oneMinusT = 1.0 - tt;
@@ -216,8 +228,11 @@ define( [
             return;
         }
 
-        var i = 0;
-        while ( times[ i + 1 ] < t ) i++;
+        var i = channelInstance.key;
+        if ( t > channelInstance.channel.times[ i ] )
+            while ( times[ i + 1 ] < t ) i++;
+        else
+            while ( times[ i - 1 ] > t ) i--;
 
         var tt = ( t - times[ i ] ) / ( times[ i + 1 ] - times[ i ] );
         var oneMinusT = 1.0 - tt;
