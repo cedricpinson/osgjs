@@ -1176,6 +1176,9 @@ define( [
             } );
             roots.push( glPointSize );
 
+            // Because of a weird bug on iOS
+            // glPosition should be computed in the vertex shader before some varyings
+            roots.push( glPosition );
 
             var vars = Object.keys( this._varyings );
             for ( var j = 0, jl = vars.length; j < jl; j++ ) {
@@ -1187,8 +1190,6 @@ define( [
                 }
             }
 
-            // last the position
-            roots.push( glPosition );
             return roots;
 
         },
