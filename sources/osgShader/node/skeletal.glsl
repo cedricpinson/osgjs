@@ -30,7 +30,7 @@ mat4 getMat4FromVec4( const int index ) {
 }
 
 //http://http.developer.nvidia.com/GPUGems/gpugems_ch04.html
-mat4 skeletalTransform(  const in vec4 weightsVec, const in vec4 bonesIdx )
+mat4 skeletalTransform( const in vec4 weightsVec, const in vec4 bonesIdx )
 {
     ivec4 idx =  3 * ivec4(bonesIdx);
 
