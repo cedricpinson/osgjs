@@ -214,5 +214,210 @@ define( [
             ok( true, 'ok' );
 
         } );
+
+        QUnit.test( 'BasicAnimationManager Controls', function () {
+
+            var animation = mockup.createAnimation();
+            var duration = 4;
+
+            var basicAnimationManager = new BasicAnimationManager();
+            basicAnimationManager.init( [ animation ] );
+            var managerTime = 0.0;
+            var pauseTime;
+
+            basicAnimationManager.updateManager = function ( t ) {
+                managerTime = t;
+            };
+
+            var pause = false;
+            var togglePause = function () {
+                pause = !pause;
+                basicAnimationManager.togglePause();
+                if ( pause )
+                    pauseTime = time;
+            };
+
+            //mockup a node visitor
+            var time = 0.0;
+            var nv = {
+                getFrameStamp: function () {
+                    return {
+                        getSimulationTime: function () {
+                            return time;
+                        }
+                    };
+                }
+            };
+
+            //play animation
+            basicAnimationManager.playAnimation( 'Test Controls' );
+            basicAnimationManager._dirty = false;
+
+
+            //Simple Pause
+            basicAnimationManager.update( null, nv );
+            ok( managerTime === 0, 'Manager time at 0' );
+
+            //
+            time = 1;
+            basicAnimationManager.update( null, nv );
+
+            togglePause();
+            ok( ( managerTime % duration ) === time, 'Pause at ' + time );
+
+            //
+            time = 2;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === pauseTime, 'Time on pause at ' + time );
+
+            //
+            time = 6;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === pauseTime, 'Time on pause at ' + time );
+
+            //
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === pauseTime, 'Time after pause at ' + time );
+
+            time = 7;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === pauseTime + 1, 'Time after pause at ' + time );
+
+
+            //Pause + setTime()
+            time = 10;
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === ( time % duration ), 'Pause at ' + time );
+
+            basicAnimationManager.setSimulationTime( 3 );
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 3, 'Simulation time at ' + 3 );
+
+            time = 11;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 3, 'Simulation time at ' + 3 + ' t + 1' );
+
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 3, 'Value after pause for simulation time at 3' );
+
+            time = 14;
+            basicAnimationManager.update( null, nv );
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === ( time % duration ), 'Pause at ' + time );
+
+            basicAnimationManager.setSimulationTime( 0.5 );
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 0.5, 'Simulation time at ' + 0.5 );
+
+            basicAnimationManager.setSimulationTime( 1.5 );
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 1.5, 'Simulation time at ' + 1.5 );
+
+            time = 15;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 1.5, 'Simulation time at ' + 1.5 + ' t + 1' );
+
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 1.5, 'Value after pause for simulation time at 1.5' );
+
+            //Time factor on play
+            var t;
+            var timeFactor;
+
+            time = 17;
+            timeFactor = 0.3;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t ), 'Value after set time factor at ' + timeFactor );
+
+            time = 18;
+            timeFactor = 0.5;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time = 18.5;
+            timeFactor = 4.4;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time = 22.5;
+            timeFactor = 0.8;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time = 26;
+            timeFactor = 1;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            //Time Factor on pause
+            var t;
+            var timeFactor;
+
+            togglePause();
+            ok( true, 'Toggle Pause at ' + time );
+
+            time += 1;
+            timeFactor = 0.3;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time += 0.5;
+            timeFactor = 0.5;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time += 2;
+            timeFactor = 4.4;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time += 1;
+            timeFactor = 0.8;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time += 0.3;
+            timeFactor = 1;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            start();
+        } );
+
     };
 } );
