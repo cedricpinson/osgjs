@@ -9,6 +9,9 @@ define( [
 
     'use strict';
 
+    var Mabs = Math.abs;
+    var NMIN_VALUE = Number.MIN_VALUE;
+
     /** @class Matrix Operations */
     var Matrix = {
 
@@ -52,18 +55,14 @@ define( [
             return matrix[ row * 4 + col ];
         },
 
-        makeIdentity: function ( matrix ) {
-            if ( matrix === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                return Matrix.create();
-            }
-            Matrix.copy( Matrix.identity, matrix );
 
-            // explaining comment
-            //Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
-            //Matrix.setRow( matrix, 1, 0.0, 1.0, 0.0, 0.0 );
-            //Matrix.setRow( matrix, 2, 0.0, 0.0, 1.0, 0.0 );
-            //Matrix.setRow( matrix, 3, 0.0, 0.0, 0.0, 1.0 );
+        // explaining comment
+        //Matrix.setRow( matrix, 0, 1.0, 0.0, 0.0, 0.0 );
+        //Matrix.setRow( matrix, 1, 0.0, 1.0, 0.0, 0.0 );
+        //Matrix.setRow( matrix, 2, 0.0, 0.0, 1.0, 0.0 );
+        //Matrix.setRow( matrix, 3, 0.0, 0.0, 0.0, 1.0 );
+        makeIdentity: function ( matrix ) {
+            Matrix.copy( Matrix.identity, matrix );
             return matrix;
         },
 
@@ -768,11 +767,8 @@ define( [
                 return result;
             };
         } )(),
+
         copy: function ( matrix, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no matrix destination !' );
-                result = Matrix.create();
-            }
             result[ 0 ] = matrix[ 0 ];
             result[ 1 ] = matrix[ 1 ];
             result[ 2 ] = matrix[ 2 ];
@@ -1421,7 +1417,7 @@ define( [
 
         setRotateFromQuat: function ( matrix, quat ) {
             var length2 = Quat.length2( quat );
-            if ( Math.abs( length2 ) <= Number.MIN_VALUE ) {
+            if ( Mabs( length2 ) <= NMIN_VALUE ) {
                 matrix[ 0 ] = 0.0;
                 matrix[ 1 ] = 0.0;
                 matrix[ 2 ] = 0.0;

@@ -113,6 +113,8 @@ define( [
                 } else if ( type === 'ShadowCastAttribute' ) {
                     this._isShadowCast = attributes[ i ].isEnabled();
                     this._shadowCastAttribute = attributes[ i ];
+                } else if ( type === 'AnimationAttribute' ) {
+                    this._animation = attributes[ i ];
                 }
             }
         },
@@ -268,7 +270,7 @@ define( [
         },
 
 
-        getOrCreateUniform: function ( type, varname ) {
+        getOrCreateUniform: function ( type, varname, size ) {
 
             var nameID = varname;
 
@@ -280,19 +282,19 @@ define( [
                 nameID = uniform.getName();
 
             } else if ( nameID === undefined ) {
-
-                var len = Object.keys( this._variables ).length;
-                nameID = 'tmp_' + len;
-
+                Notify.error( 'Cannot create unamed Uniform' );
             }
 
             var exist = this._variables[ nameID ];
             if ( exist ) {
                 // see comment in Variable function
+                if ( exist.getType() !== type ) {
+                    Notify.error( 'Same uniform, but different type' );
+                }
                 return exist;
             }
 
-            var v = factory.getNode( 'Uniform', type, nameID );
+            var v = factory.getNode( 'Uniform', type, nameID, size );
             this._variables[ nameID ] = v;
             return v;
         },
@@ -305,6 +307,9 @@ define( [
 
             var exist = this._variables[ nameID ];
             if ( exist ) {
+                if ( exist.getType() !== type ) {
+                    Notify.error( 'Same attribute, but different type' );
+                }
                 return exist;
             }
 
@@ -331,6 +336,9 @@ define( [
 
                 var exist = this._variables[ nameID ];
                 if ( exist ) {
+                    if ( exist.getType() !== type ) {
+                        Notify.error( 'Same constant name, but different type' );
+                    }
                     // see comment in Variable function
                     return exist;
                 }
@@ -649,8 +657,10 @@ define( [
                 if ( !texture )
                     continue;
 
-                if ( texture.getType() === 'Texture' )
-                    this.declareTexture( t, texture );
+                if ( texture.getType() === 'Texture' ) {
+
+                    this.declareTexture( this.getTexCoordUnit( t ), texture );
+                }
 
             }
         },
@@ -965,6 +975,37 @@ define( [
             for ( var j = 0, jl = nodes.length; j < jl; j++ ) {
                 this.traverse( func, nodes[ j ] );
             }
+
+
+            // Attribute 0 Must Be vertex
+            // perf warning in console otherwiser in opengl Desktop
+            if ( func._text.length ) {
+                // sort in alphabetical order
+                // attr, unif, sample, varying
+                func._text.sort();
+                // now sort Attributes
+                // making sure Vertex is always coming first
+                var toShift = [];
+                for ( j = 0; j < func._text.length; j++ ) {
+                    // found vertex, break
+                    if ( func._text[ 0 ].indexOf( 'Vertex' ) !== -1 ) break;
+                    // not yet, keep referenc to push after vertex
+                    toShift.push( func._text.shift() ); // remove
+                }
+                // Add after vertex all the  found attributes
+                func._text.splice( 1, 0, toShift.join( '\n' ) );
+
+                // beautify/formatting with empty line between type of var
+                var type = func._text[ 0 ][ 0 ];
+                var len = func._text.length;
+                for ( j = 0; j < len; j++ ) {
+                    if ( func._text[ j ][ 0 ] !== type ) {
+                        type = func._text[ j ][ 0 ];
+                        func._text.splice( j, 0, '' );
+                        len++;
+                    }
+                }
+            }
             return func._text.join( '\n' );
         },
 
@@ -1019,6 +1060,72 @@ define( [
             return texCoordUnit;
         },
 
+        // reusable BoneMatrix between Vertex, Normal, Tangent
+        // Manadatory: scale animations must be uniform scale
+        getOrCreateBoneMatrix: function () {
+            var boneMatrix = this._variables[ 'boneMatrix' ];
+            if ( boneMatrix ) {
+                return boneMatrix;
+            }
+
+            boneMatrix = this.createVariable( 'mat4', 'boneMatrix' );
+
+            var inputWeights = this.getOrCreateAttribute( 'vec4', 'Weights' );
+            var inputBones = this.getOrCreateAttribute( 'vec4', 'Bones' );
+            var matrixPalette = this.getOrCreateUniform( 'vec4', 'uBones', this._animation.getBoneSize() );
+
+            factory.getNode( 'Animation' ).inputs( {
+                weights: inputWeights,
+                bonesIndex: inputBones,
+                matrixPalette: matrixPalette
+            } ).outputs( {
+                mat4: boneMatrix
+            } );
+
+            return boneMatrix;
+        },
+        createVertexAttribute: function () {
+
+            if ( !this._animation ) {
+                return this.getOrCreateAttribute( 'vec3', 'Vertex' );
+            } else {
+
+                var boneMatrix = this.getOrCreateBoneMatrix();
+                var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
+
+                var positionAnimated = this.createVariable( 'vec4' );
+
+                factory.getNode( 'MatrixMultPosition' ).inputs( {
+                    matrix: boneMatrix,
+                    vec: inputVertex
+                } ).outputs( {
+                    vec: positionAnimated
+                } );
+                return positionAnimated;
+            }
+        },
+        createNormalAttribute: function () {
+
+            if ( !this._animation ) {
+                return this.getOrCreateAttribute( 'vec3', 'Normal' );
+            } else {
+
+
+                var boneMatrix = this.getOrCreateBoneMatrix();
+                var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
+
+                var normalAnimated = this.createVariable( 'vec4' );
+
+                factory.getNode( 'MatrixMultDirection' ).inputs( {
+                    matrix: boneMatrix,
+                    vec: inputNormal
+                } ).outputs( {
+                    vec: normalAnimated
+                } );
+                return normalAnimated;
+            }
+
+        },
         declareVertexTransformShadeless: function ( glPosition ) {
             // No light
             var tempViewSpace = this.createVariable( 'vec4' );
@@ -1026,7 +1133,7 @@ define( [
             //viewSpace
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
-                vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
+                vec: this.createVertexAttribute()
             } ).outputs( {
                 vec: tempViewSpace
             } );
@@ -1040,7 +1147,19 @@ define( [
             } );
 
         },
+        declareVertexTransformLighted: function ( glPosition ) {
 
+            // FragNormal
+            factory.getNode( 'MatrixMultDirection' ).inputs( {
+                matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
+                vec: this.createNormalAttribute()
+            } ).outputs( {
+                vec: this.getOrCreateInputNormal()
+            } );
+
+            this.declareTransformWithEyeSpace( glPosition );
+
+        },
         // Transform Position into NDC
         // but keep intermediary result
         // FragEye which is in Camera/Eye space
@@ -1053,7 +1172,7 @@ define( [
             var tempViewSpace = this.getOrCreateInputPosition();
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
-                vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
+                vec: this.createVertexAttribute()
             } ).outputs( {
                 vec: tempViewSpace
             } );
@@ -1066,25 +1185,12 @@ define( [
                 vec: glPosition
             } );
         },
-        declareVertexTransformLighted: function ( glPosition ) {
-
-
-            // FragNormal
-            factory.getNode( 'MatrixMultDirection' ).inputs( {
-                matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
-                vec: this.getOrCreateAttribute( 'vec3', 'Normal' )
-            } ).outputs( {
-                vec: this.getOrCreateInputNormal()
-            } );
-
-            this.declareTransformWithEyeSpace( glPosition );
-        },
         declareVertexTransformShadowed: function ( /*glPosition*/) {
 
             // worldpos
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' ),
-                vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
+                vec: this.createVertexAttribute()
             } ).outputs( {
                 vec: this.getOrCreateVarying( 'vec4', 'WorldPosition' )
             } );

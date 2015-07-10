@@ -1,26 +1,8 @@
-define( [
-    'osgAnimation/Channel',
-    'osgAnimation/Sampler',
-    'osgAnimation/Interpolator',
-    'osgAnimation/QuatTarget',
-    'osg/Quat'
-], function ( Channel, Sampler, Interpolator, QuatTarget, Quat ) {
+define( [], function () {
 
-    var QuatLerpChannel = function ( keys, target ) {
-        var sampler = new Sampler();
-        if ( !keys ) {
-            keys = [];
-        }
-        if ( !target ) {
-            target = new QuatTarget();
-        }
-        Channel.call( this, sampler, target );
-        sampler.setInterpolator( Interpolator.QuatLerpInterpolator );
-        this.setKeyframes( keys );
-        this._data.value = Quat.copy( target.getValue(), Quat.create() );
-    };
+    'use strict';
 
-    QuatLerpChannel.prototype = Channel.prototype;
+    var QuatLerpChannel = function () {};
 
     return QuatLerpChannel;
 } );

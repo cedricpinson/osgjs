@@ -7,48 +7,37 @@ define( [
 
     /**
      *  UpdateMatrixTransform
-     *  @class UpdateMatrixTransform
      */
     var UpdateMatrixTransform = function () {
         AnimationUpdateCallback.call( this );
+
+        // maybe could have a more generic name and used by all AnimationUpdateCallback
         this._stackedTransforms = [];
+
+        this._matrix = Matrix.create();
     };
 
-    /** @lends AnimationUpdateCallback.prototype */
+
     UpdateMatrixTransform.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.prototype, {
+
         getStackedTransforms: function () {
             return this._stackedTransforms;
         },
-        update: function ( node /*, nv */ ) {
 
-            // not optimized, we could avoid operation the animation did not change
-            // the content of the transform element
-            var matrix = node.getMatrix();
+        computeChannels: function () {
+            var matrix = this._matrix;
             Matrix.makeIdentity( matrix );
             var transforms = this._stackedTransforms;
+
             for ( var i = 0, l = transforms.length; i < l; i++ ) {
                 var transform = transforms[ i ];
-                transform.update();
                 transform.applyToMatrix( matrix );
             }
-            return true;
         },
-        linkChannel: function ( channel ) {
-            var channelName = channel.getName();
-            var transforms = this._stackedTransforms;
-            for ( var i = 0, l = transforms.length; i < l; i++ ) {
-                var transform = transforms[ i ];
-                var elementName = transform.getName();
-                if ( channelName.length > 0 && elementName === channelName ) {
-                    var target = transform.getOrCreateTarget();
-                    if ( target ) {
-                        channel.setTarget( target );
-                        return true;
-                    }
-                }
-            }
-            Notify.log( 'can\'t link channel ' + channelName + ', does not contain a symbolic name that can be linked to TransformElements' );
-            return false;
+
+        update: function ( node /*, nv */ ) {
+            Matrix.copy( this._matrix, node.getMatrix() );
+            return true;
         }
 
     } );

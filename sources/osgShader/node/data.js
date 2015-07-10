@@ -51,8 +51,9 @@ define( [
         }
     } );
 
-    var Uniform = function ( type, prefix ) {
+    var Uniform = function ( type, prefix, size ) {
         Variable.call( this, type, prefix );
+        this._size = size;
     };
 
     Uniform.prototype = MACROUTILS.objectInherit( Variable.prototype, {
@@ -62,7 +63,11 @@ define( [
         },
 
         globalDeclaration: function () {
-            return sprintf( 'uniform %s %s;', [ this._type, this.getVariable() ] );
+            if ( this._size ) {
+                return sprintf( 'uniform %s %s[%s];', [ this._type, this.getVariable(), this._size ] );
+            } else {
+                return sprintf( 'uniform %s %s;', [ this._type, this.getVariable() ] );
+            }
         }
 
     } );
