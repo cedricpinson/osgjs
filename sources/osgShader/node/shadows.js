@@ -13,6 +13,7 @@ define( [
 
     ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'ShadowReceiveNode',
+        validInputs: [ 'lighted', 'shadowTexture', 'shadowTextureMapSize', 'shadowTextureProjectionMatrix', 'shadowTextureViewMatrix', 'shadowTextureDepthRange', 'lightNDL', 'vertexWorld', 'shadowbias' /* 'shadowexponent0', 'shadowexponent1', 'shadowepsilonVSM' */ ],
         validOutputs: [ 'float' ],
 
         globalFunctionDeclaration: function () {
@@ -33,23 +34,20 @@ define( [
         },
         computeShader: function () {
 
+            var inp = this._inputs;
 
             // common inputs
             var inputs = [
-                this._inputs.lighted,
-                this._inputs.shadowTexture,
-                this._inputs.shadowTextureMapSize,
-                this._inputs.shadowTextureProjectionMatrix,
-                this._inputs.shadowTextureViewMatrix,
-                this._inputs.shadowTextureDepthRange,
-                this._inputs.lightEyePos,
-                this._inputs.lightNDL,
-
-                this._inputs.vertexWorld,
-                this._inputs.normal,
-                this._inputs.shadowbias
+                inp.lighted,
+                inp.shadowTexture,
+                inp.shadowTextureMapSize,
+                inp.shadowTextureProjectionMatrix,
+                inp.shadowTextureViewMatrix,
+                inp.shadowTextureDepthRange,
+                inp.lightNDL,
+                inp.vertexWorld,
+                inp.shadowbias
             ];
-
 
             var algo = this._shadow.getAlgorithm();
             if ( algo === 'ESM' ) {
@@ -63,12 +61,8 @@ define( [
                 inputs.push( this._inputs.shadowepsilonVSM );
             }
 
-            return ShaderUtils.callFunction(
-                'computeShadow',
-                this._outputs.float,
-                inputs );
+            return ShaderUtils.callFunction( 'computeShadow', this._outputs.float, inputs );
         }
-
 
     } );
 
@@ -79,32 +73,25 @@ define( [
 
     ShadowCast.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'ShadowCast',
+        validInputs: [ 'exponent0', 'exponent1', 'shadowDepthRange', 'fragEye' ],
         validOutputs: [ 'color' ],
 
         globalFunctionDeclaration: function () {
             return '#pragma include "shadowsCastFrag.glsl"';
         },
-
         setShadowCastAttribute: function ( shadowAttr ) {
             this._shadowCast = shadowAttr;
             return this;
         },
-
         // must return an array of defines
         // because it will be passed to the ShaderGenerator
         getDefines: function () {
             return this._shadowCast.getDefines();
         },
         computeShader: function () {
-            // common inputs
-            var inputs = [];
-
-            return ShaderUtils.callFunction(
-                'computeShadowDepth',
-                this._outputs.color,
-                inputs );
+            var inp = this._inputs;
+            return ShaderUtils.callFunction( 'computeShadowDepth', this._outputs.color, [ inp.fragEye, inp.shadowDepthRange, inp.exponent0, inp.exponent1 ] );
         }
-
 
     } );
 
@@ -112,4 +99,5 @@ define( [
         ShadowCast: ShadowCast,
         ShadowReceive: ShadowReceive
     };
+
 } );
