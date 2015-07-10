@@ -12,28 +12,17 @@ define( [
 
     AnimationNode.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'Animation',
+        validInputs: [ 'weights', 'bonesIndex', 'matrixPalette' ],
         validOutputs: [ 'mat4' ],
 
         globalFunctionDeclaration: function () {
             return '#pragma include "skeletal.glsl"';
         },
 
-
         computeShader: function () {
-
-            // common inputs for func
-            var inputs = [
-                this._inputs.weights,
-                this._inputs.bonesIndex,
-            ];
-
-            return ShaderUtils.callFunction(
-                'skeletalTransform',
-                this._outputs.mat4,
-                inputs );
+            // TODO for now matrixPalette is used as a global (uBones) because an array means a dynamic function signature in the glsl...
+            return ShaderUtils.callFunction( 'skeletalTransform', this._outputs.mat4, [ this._inputs.weights, this._inputs.bonesIndex ] );
         }
-
-
     } );
 
     return {
