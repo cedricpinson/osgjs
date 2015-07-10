@@ -39,7 +39,7 @@ define( [
 
             var animations = basicAnimationManager.getAnimations();
             var animationName = Object.keys( animations )[ 0 ];
-            basicAnimationManager.playAnimation( animationName );
+            basicAnimationManager.playAnimation( animationName, false );
             ok( basicAnimationManager._startAnimations[ animationName ] !== undefined, 'check start animation queue' );
 
             basicAnimationManager._dirty = false;
@@ -74,7 +74,7 @@ define( [
             ok( basicAnimationManager._activeAnimations[ animationName ] === undefined, 'check animation ' + animationName + ' is not active' );
 
 
-        });
+        } );
 
 
         QUnit.test( 'BasicAnimationManager Linking', function () {
@@ -88,7 +88,7 @@ define( [
             var node = new MatrixTransform();
             var animationCallback = new UpdateMatrixTransform();
             animationCallback.setName( 'testUpdateMatrixTransform' );
-            var stackedRotateAxis = new StackedRotateAxis('x');
+            var stackedRotateAxis = new StackedRotateAxis( 'x' );
             animationCallback.getStackedTransforms().push( stackedRotateAxis );
             node.addUpdateCallback( animationCallback );
 
@@ -97,7 +97,7 @@ define( [
             // get keys
             var keys = Object.keys( basicAnimationManager._animationsUpdateCallback );
             equal( keys.length, 1, 'check number of animation callback found' );
-            var animationCB = basicAnimationManager._animationsUpdateCallback[ keys[0] ];
+            var animationCB = basicAnimationManager._animationsUpdateCallback[ keys[ 0 ] ];
             equal( animationCB.getName(), 'testUpdateMatrixTransform', 'check name of the first animation found' );
 
             basicAnimationManager.assignTargetToAnimationCallback();
@@ -129,7 +129,7 @@ define( [
             basicAnimationManager.update( null, nv );
             equal( stackedRotateAxis.getTarget().value, 0.5, 'check target a value at t = ' + time );
 
-            deepEqual( animationCallback._matrix, [0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 'check matrix computed');
+            deepEqual( animationCallback._matrix, [ 0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 'check matrix computed' );
 
         } );
 
@@ -144,11 +144,11 @@ define( [
             var allUpdateCallback = [];
 
             // create an animation with an animation UpdateCallback in a node
-            var createAnimation = function() {
+            var createAnimation = function () {
 
                 var index = animations.length.toString();
                 var targetName = 'testUpdateMatrixTransform_' + index;
-                var animation = mockup.createAnimation( 'AnimationTest_' + index, targetName, 'a_' + index, targetName, 'b_'+ index);
+                var animation = mockup.createAnimation( 'AnimationTest_' + index, targetName, 'a_' + index, targetName, 'b_' + index );
                 animations.push( animation );
 
                 // adds animationUpdateCallback to test compute UpdateMatrixTransform
@@ -156,11 +156,11 @@ define( [
                 var node = new MatrixTransform();
                 root.addChild( node );
                 var animationCallback = new UpdateMatrixTransform();
-                allUpdateCallback.push(animationCallback);
+                allUpdateCallback.push( animationCallback );
                 animationCallback.setName( targetName );
-                var stackedRotateAxis = new StackedRotateAxis('a_' + index);
+                var stackedRotateAxis = new StackedRotateAxis( 'a_' + index );
                 animationCallback.getStackedTransforms().push( stackedRotateAxis );
-                var stackedRotateAxis2 = new StackedRotateAxis('b_' + index);
+                var stackedRotateAxis2 = new StackedRotateAxis( 'b_' + index );
                 animationCallback.getStackedTransforms().push( stackedRotateAxis2 );
                 node.addUpdateCallback( animationCallback );
             };
@@ -200,17 +200,17 @@ define( [
 
             console.time( 'time' );
             for ( var n = 0; n < 100; n++ )
-                for ( var t =0.0; t < 5.0; t+= 0.016 ) {
+                for ( var t = 0.0; t < 5.0; t += 0.016 ) {
                     time = t;
                     basicAnimationManager.update( null, nv );
-                    for ( var k = 0, l = allUpdateCallback.length; k < l; k++)
-                        fakeResult += allUpdateCallback[k]._matrix[0];
+                    for ( var k = 0, l = allUpdateCallback.length; k < l; k++ )
+                        fakeResult += allUpdateCallback[ k ]._matrix[ 0 ];
                 }
 
             console.timeEnd( 'time' );
             console.profileEnd();
             console.log( fakeResult );
-            ok( true , 'ok' );
+            ok( true, 'ok' );
 
         } );
     };

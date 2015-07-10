@@ -41,7 +41,10 @@ define( [
         }
 
         var i1 = channelInstance.key;
-        while ( times[ i1 + 1 ] < t ) i1++;
+        if ( t > channelInstance.channel.times[ i1 ] )
+            while ( times[ i1 + 1 ] < t ) i1++;
+        else
+            while ( times[ i1 - 1 ] > t ) i1--;
 
 
         var t1 = times[ i1 ];
@@ -86,7 +89,10 @@ define( [
         }
 
         var i1 = channelInstance.key;
-        while ( times[ i1 + 1 ] < t ) i1++;
+        if ( t > channelInstance.channel.times[ i1 ] )
+            while ( times[ i1 + 1 ] < t ) i1++;
+        else
+            while ( times[ i1 - 1 ] > t ) i1--;
 
 
         var t1 = times[ i1 ];
@@ -109,6 +115,13 @@ define( [
         value[ 1 ] = y1 + ( y2 - y1 ) * r;
         value[ 2 ] = z1 + ( z2 - z1 ) * r;
         value[ 3 ] = w1 + ( w2 - w1 ) * r;
+
+        var invLength = 1 / Math.sqrt( value[ 0 ] * value[ 0 ] + value[ 1 ] * value[ 1 ] + value[ 2 ] * value[ 2 ] + value[ 3 ] * value[ 3 ] );
+        value[ 0 ] *= invLength;
+        value[ 1 ] *= invLength;
+        value[ 2 ] *= invLength;
+        value[ 3 ] *= invLength;
+
         channelInstance.key = i1;
     };
 
@@ -134,7 +147,10 @@ define( [
         }
 
         var i1 = channelInstance.key;
-        while ( times[ i1 + 1 ] < t ) i1++;
+        if ( t > channelInstance.channel.times[ i1 ] )
+            while ( times[ i1 + 1 ] < t ) i1++;
+        else
+            while ( times[ i1 - 1 ] > t ) i1--;
 
 
         var t1 = times[ i1 ];
@@ -171,7 +187,10 @@ define( [
         }
 
         var i = channelInstance.key;
-        while ( times[ i + 1 ] < t ) i++;
+        if ( t > channelInstance.channel.times[ i ] )
+            while ( times[ i + 1 ] < t ) i++;
+        else
+            while ( times[ i - 1 ] > t ) i--;
 
         var tt = ( t - times[ i ] ) / ( times[ i + 1 ] - times[ i ] );
         var oneMinusT = 1.0 - tt;
@@ -210,7 +229,10 @@ define( [
         }
 
         var i = channelInstance.key;
-        while ( times[ i + 1 ] < t ) i++;
+        if ( t > channelInstance.channel.times[ i ] )
+            while ( times[ i + 1 ] < t ) i++;
+        else
+            while ( times[ i - 1 ] > t ) i--;
 
         var tt = ( t - times[ i ] ) / ( times[ i + 1 ] - times[ i ] );
         var oneMinusT = 1.0 - tt;

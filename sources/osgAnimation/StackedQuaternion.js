@@ -8,6 +8,9 @@ define( [
     /**
      *  StackedQuaternion
      */
+
+    'use strict';
+
     var StackedQuaternion = function ( name, quat ) {
         Object.call( this );
 
@@ -18,6 +21,7 @@ define( [
         this._target = {
             value: value
         };
+        this._bindTransform = value;
 
         this.setName( name );
     };

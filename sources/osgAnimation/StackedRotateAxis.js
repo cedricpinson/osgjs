@@ -21,6 +21,7 @@ define( [
         this._target = {
             value: angle || 0.0
         };
+        this._bindTransform = this._target.value;
         this.setName( name );
 
     };

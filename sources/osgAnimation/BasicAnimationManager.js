@@ -38,7 +38,10 @@ define( [
     var BasicAnimationManager = function () {
         BaseObject.call( this );
 
-        this._lastUpdate = undefined;
+        this._simulationTime = 0.0;
+        this._pauseTime = 0.0;
+        this._timeFactor = 1.0;
+        this._startTime = 0.0;
 
         // original animation list to initialize the manager
         this._animationsList = [];
@@ -121,6 +124,9 @@ define( [
         // animation callback to update
         this._animationsUpdateCallback = {};
         this._animationsUpdateCallbackArray = [];
+
+        //Pause status (true / false)
+        this._pause = false;
 
         this._dirty = true;
     };
@@ -225,6 +231,7 @@ define( [
                 var instanceChannel = instanceChannels[ i ];
                 var type = instanceChannel.channel.type;
                 instanceChannel.t = t; // reset time
+                instanceChannel.instanceAnimation = instanceAnimation; // link with parent animation
                 var targetID = instanceChannel.targetID;
                 this._activeChannelsByTypes[ type ].push( instanceChannel );
                 this._targetID[ targetID ].channels.push( instanceChannel );
@@ -268,9 +275,15 @@ define( [
             }
 
             var t = nv.getFrameStamp().getSimulationTime();
-            this.updateManager( t );
-            return true;
 
+            if ( !this._pause ) {
+                this._simulationTime = this._startTime + ( t - this._pauseTime );
+            } else {
+                this._pauseTime = ( t - this._simulationTime + this._startTime );
+            }
+
+            this.updateManager( this._simulationTime * this._timeFactor );
+            return true;
         },
 
         // blend value from each channels for each target
@@ -305,10 +318,16 @@ define( [
 
             for ( var c = 0, l = channels.length; c < l; c++ ) {
                 var channel = channels[ c ];
-                var tlocal = t - channel.t;
-                interpolator( tlocal, channel );
-            }
+                var instanceAnimation = channel.instanceAnimation;
+                var loop = instanceAnimation.loop;
 
+                var tLocal = t - channel.t;
+
+                // handle loop
+                if ( loop ) tLocal = tLocal % instanceAnimation.duration;
+
+                interpolator( tLocal, channel );
+            }
         },
 
         addActiveAnimation: function ( t, cmd ) {
@@ -316,8 +335,8 @@ define( [
             this._activeAnimations[ cmd.name ] = cmd; // set animation in the list of active one
 
             var instanceAnimation = this._instanceAnimations[ cmd.name ];
-            cmd.start = t;
-            cmd.end = t + instanceAnimation.duration;
+            instanceAnimation.start = t;
+            instanceAnimation.end = t + instanceAnimation.duration;
             this.addActiveChannels( t, instanceAnimation );
 
             // keep track of instance animation active in a list
@@ -379,7 +398,6 @@ define( [
                 animCallback.computeChannels();
             }
 
-
             // check animation finished
             this.removeFinishedAnimation( t );
         },
@@ -392,9 +410,8 @@ define( [
             while ( i < activeAnimationList.length ) {
                 var instanceAnimation = activeAnimationList[ i ];
                 var name = instanceAnimation.name;
-                var cmd = this._activeAnimations[ name ];
 
-                if ( t > cmd.end ) {
+                if ( t > instanceAnimation.end && instanceAnimation.loop === false ) {
                     this.removeActiveChannels( instanceAnimation );
                     this._activeAnimations[ name ] = undefined;
                     activeAnimationList.splice( i, 1 );
@@ -404,19 +421,81 @@ define( [
             }
         },
 
+        togglePause: function () { //Pause the manager's time
+            this._pause = !this._pause;
+        },
+
+
+        getSimulationTime: function () {
+            return this._simulationTime;
+        },
+
+        setSimulationTime: function ( t ) {
+            this._simulationTime = t;
+        },
+
+        stopAnimation: function ( name ) {
+            var activeAnimationList = this._activeAnimationList;
+            var i = 0;
+            while ( i < activeAnimationList.length ) {
+                if ( activeAnimationList[ i ].name === name ) {
+                    this.removeActiveChannels( this._instanceAnimations[ name ] );
+                    this._activeAnimations[ name ] = undefined;
+                    activeAnimationList.splice( i, 1 );
+                    return;
+                }
+            }
+        },
+
+        stopAllAnimation: function () {
+            var activeAnimationList = this._activeAnimationList;
+            var i = 0;
+            while ( i < activeAnimationList.length ) {
+                var name = activeAnimationList[ i ].name;
+                this.removeActiveChannels( this._instanceAnimations[ name ] );
+                this._activeAnimations[ name ] = undefined;
+                activeAnimationList.splice( i, 1 );
+            }
+        },
+
+        setTimeFactor: function ( timeFactor ) {
+            var tf = timeFactor / this._timeFactor;
+            this._startTime += ( this._simulationTime - this._simulationTime * tf ) / tf;
+
+            // if pause fix it
+            this._timeFactor = timeFactor;
+        },
+
+        getTimeFactor: function () {
+            return this._timeFactor;
+        },
+
         isPlaying: function ( name ) {
             if ( this._activeAnimations[ name ] ) return true;
             return false;
         },
 
+        bindModel: function () { //Put the model in bind pose (T pose)
+            var animationsUpdateCallbackArray = this._animationsUpdateCallbackArray;
+            var size = animationsUpdateCallbackArray.length;
+
+            for ( var i = 0; i < size; i++ ) {
+                var up = animationsUpdateCallbackArray[ i ];
+                var stackedTransforms = up._stackedTransforms;
+                for ( var st = 0, l = stackedTransforms.length; st < l; st++ ) {
+                    var stackedTransform = stackedTransforms[ st ];
+                    stackedTransform._target.value = stackedTransform._bindTransform;
+                }
+                up.computeChannels();
+            }
+        },
 
         // play animation using object as config
         // {
         //     name: string,
         //     priority: 0,
         //     weight: 1.0,
-        //     timeFactor: 1.0,
-        //     loop: 0 // 0 means infinite, 1 means play once
+        //     loop: true / false
         // }
         playAnimationObject: function ( obj ) {
 
@@ -428,27 +507,27 @@ define( [
 
             if ( this.isPlaying( obj.name ) ) return;
 
-            if ( obj.priority === undefined ) obj.priority = 0;
-            if ( obj.weight === undefined ) obj.weight = 1.0;
-            if ( obj.timeFactor === undefined ) obj.timeFactor = 1.0;
-            if ( obj.loop === undefined ) obj.loop = 0;
+            anim.priority = ( obj.priority === undefined ) ? 0 : obj.priority;
+            anim.weight = ( obj.weight === undefined ) ? 1.0 : obj.weight;
+            anim.loop = ( obj.loop === undefined ) ? true : obj.loop;
 
-            this._startAnimations[ obj.name ] = obj;
+            this._startAnimations[ anim.name ] = anim;
         },
 
 
         // if first argument is an object
         // playAnimationObject is called instead
-        playAnimation: function ( name, priority, weight ) {
+        playAnimation: function ( name, loop, priority, weight ) {
 
             var animationObject;
             if ( typeof name === 'object' )
                 animationObject = name;
             else {
                 animationObject = {
-                    'name': name,
-                    'priority': priority,
-                    'weight': weight
+                    name: name,
+                    priority: priority,
+                    weight: weight,
+                    loop: loop
                 };
             }
 
@@ -459,7 +538,6 @@ define( [
         getAnimations: function () {
             return this._instanceAnimations;
         }
-
 
     } );
 

@@ -99,7 +99,8 @@ define( [
         return Channel.createVec3Channel( keys, times );
     };
 
-    var createFloatKeyframes = function () {
+    var createFloatKeyframes
+     = function () {
         var keys = [
             1, 0, 3
         ];
@@ -138,6 +139,18 @@ define( [
         ];
         var times = [ 0, 1, 2 ];
         return Channel.createVec3CubicBezierChannel( keys, times );
+    };
+
+    var createQuatLerpKeyFrames = function () {
+        var keys = [ 1.22465e-16, 1.22465e-16, 1.22465e-16, -1,
+            0.300706, 7.99708e-17, 1.53623e-16, - 0.953717,
+            0.382683, 6.62774e-17, 1.60008e-16, -0.92388,
+            0.382683, 6.62774e-17, 1.60008e-16, -0.92388,
+            0.126911, -0.0991929, 0.119115, -0.979727
+        ];
+
+        var times = [ 0, 0.202899, 0.456522, 1.21739, 1.47101 ];
+        return Channel.createQuatChannel( keys, times );
     };
 
 
@@ -275,6 +288,7 @@ define( [
         createFloatKeyframes: createFloatKeyframes,
         createFloatCubicBezierKeyframes: createFloatCubicBezierKeyframes,
         createVec3CubicBezierKeyframes: createVec3CubicBezierKeyframes,
+        createQuatLerpKeyFrames: createQuatLerpKeyFrames,
         createAnimation: createAnimation,
         near: near,
         getBoxScene: getBoxScene,
