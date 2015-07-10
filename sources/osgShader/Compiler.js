@@ -124,7 +124,6 @@ define( [
         },
 
         initTextureAttributes: function () {
-
             // Shadow casting is about casting Depth
             // no need for textures.
             // as we don't support natively
@@ -134,60 +133,53 @@ define( [
 
             var textureAttributes = this._textureAttributes;
             var texturesNum = textureAttributes.length;
-            var textures = this._textures;
-            var shadowTextures = this._shadowsTextures;
-            textures.length = shadowTextures.length = texturesNum;
+            this._textures.length = this._shadowsTextures.length = texturesNum;
 
             for ( var j = 0; j < texturesNum; j++ ) {
-
                 var tu = textureAttributes[ j ];
                 if ( tu === undefined )
                     continue;
-
                 for ( var t = 0, tl = tu.length; t < tl; t++ ) {
-
-                    var tuTarget = tu[ t ];
-
-                    var tType = tuTarget.className();
-
-                    var texUnit;
-                    var tName;
-                    if ( tType === 'Texture' ) {
-
-                        texUnit = j;
-                        tName = tuTarget.getName();
-                        if ( tuTarget.getName() === undefined ) {
-                            tName = tType + texUnit;
-                            tuTarget.setName( tName );
-                        }
-                        textures[ texUnit ] = tuTarget;
-
-
-                        this._texturesByName[ tName ] = {
-                            variable: undefined,
-                            textureUnit: texUnit
-                        };
-
-                    } else if ( tType === 'ShadowTexture' ) {
-
-                        texUnit = j;
-                        tName = tuTarget.getName();
-                        if ( tuTarget.getName() === undefined ) {
-                            tName = tType + texUnit;
-                            tuTarget.setName( tName );
-                        }
-                        shadowTextures[ texUnit ] = tuTarget;
-
-                        this._texturesByName[ tName ] = {
-                            'variable': undefined,
-                            'textureUnit': texUnit,
-                            'shadow': true
-                        };
-                    }
-                    // TODO: cubemap
-
+                    this.registerTextureAttributes( tu[ t ], j );
                 }
             }
+        },
+
+        registerTextureAttributes: function ( tuTarget, tunit ) {
+            var tType = tuTarget.className();
+            if ( tType === 'Texture' ) return this.registerTexture( tuTarget, tunit );
+            if ( tType === 'ShadowTexture' ) return this.registerTextureShadow( tuTarget, tunit );
+        },
+
+        registerTexture: function ( tuTarget, texUnit ) {
+            var tName = tuTarget.getName();
+            if ( !tName ) {
+                tName = 'Texture' + texUnit;
+                tuTarget.setName( tName );
+            }
+            this._textures[ texUnit ] = tuTarget;
+
+            this._texturesByName[ tName ] = {
+                texture: tuTarget,
+                variable: undefined,
+                textureUnit: texUnit
+            };
+        },
+
+        registerTextureShadow: function ( tuTarget, texUnit ) {
+            var tName = tuTarget.getName();
+            if ( !tName ) {
+                tName = 'ShadowTexture' + texUnit;
+                tuTarget.setName( tName );
+            }
+            this._shadowsTextures[ texUnit ] = tuTarget;
+
+            this._texturesByName[ tName ] = {
+                texture: tuTarget,
+                variable: undefined,
+                textureUnit: texUnit,
+                shadow: true
+            };
         },
 
         // global accessor because it modifies
@@ -1113,9 +1105,8 @@ define( [
         // Manadatory: scale animations must be uniform scale
         getOrCreateBoneMatrix: function () {
             var boneMatrix = this._variables[ 'boneMatrix' ];
-            if ( boneMatrix ) {
+            if ( boneMatrix )
                 return boneMatrix;
-            }
 
             boneMatrix = this.createVariable( 'mat4', 'boneMatrix' );
 
@@ -1135,44 +1126,35 @@ define( [
         },
         createVertexAttribute: function () {
 
-            if ( !this._animation ) {
-                return this.getOrCreateAttribute( 'vec3', 'Vertex' );
-            } else {
+            var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
+            if ( !this._animation )
+                return inputVertex;
 
-                var boneMatrix = this.getOrCreateBoneMatrix();
-                var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
+            var positionAnimated = this.createVariable( 'vec4' );
 
-                var positionAnimated = this.createVariable( 'vec4' );
-
-                factory.getNode( 'MatrixMultPosition' ).inputs( {
-                    matrix: boneMatrix,
-                    vec: inputVertex
-                } ).outputs( {
-                    vec: positionAnimated
-                } );
-                return positionAnimated;
-            }
+            factory.getNode( 'MatrixMultPosition' ).inputs( {
+                matrix: this.getOrCreateBoneMatrix(),
+                vec: inputVertex
+            } ).outputs( {
+                vec: positionAnimated
+            } );
+            return positionAnimated;
         },
         createNormalAttribute: function () {
 
-            if ( !this._animation ) {
-                return this.getOrCreateAttribute( 'vec3', 'Normal' );
-            } else {
+            var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
+            if ( !this._animation )
+                return inputNormal;
 
+            var normalAnimated = this.createVariable( 'vec4' );
 
-                var boneMatrix = this.getOrCreateBoneMatrix();
-                var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
-
-                var normalAnimated = this.createVariable( 'vec4' );
-
-                factory.getNode( 'MatrixMultDirection' ).inputs( {
-                    matrix: boneMatrix,
-                    vec: inputNormal
-                } ).outputs( {
-                    vec: normalAnimated
-                } );
-                return normalAnimated;
-            }
+            factory.getNode( 'MatrixMultDirection' ).inputs( {
+                matrix: this.getOrCreateBoneMatrix(),
+                vec: inputNormal
+            } ).outputs( {
+                vec: normalAnimated
+            } );
+            return normalAnimated;
 
         },
         declareVertexTransformShadeless: function ( glPosition ) {
@@ -1526,7 +1508,7 @@ define( [
         createShadowCastFragmentShaderGraph: function () {
             var frag = this.getNode( 'glFragColor' );
             this.getNode( 'ShadowCast' ).setShadowCastAttribute( this._shadowCastAttribute ).inputs( {
-                exponent: this.getOrCreateUniform( 'float', 'exponent0' ),
+                exponent0: this.getOrCreateUniform( 'float', 'exponent0' ),
                 exponent1: this.getOrCreateUniform( 'float', 'exponent1' ),
                 shadowDepthRange: this.getOrCreateUniform( 'vec4', 'Shadow_DepthRange' ),
                 fragEye: this.getOrCreateInputPosition()
