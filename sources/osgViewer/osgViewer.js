@@ -5,6 +5,8 @@ define( [
     'osgViewer/eventProxy/EventProxy'
 ], function ( Renderer, View, Viewer, EventProxy ) {
 
+    'use strict';
+
     var osgViewer = {};
 
     osgViewer.Renderer = Renderer;
