@@ -211,11 +211,11 @@ define( [
                 var type = this._targets[ i ].type;
 
                 // probably it's not a good idea here
-                if ( type === Channel.ChannelType.Vec3 || Channel.ChannelType.Vec3CubicBezier )
+                if ( type === Channel.ChannelType.Vec3 || type === Channel.ChannelType.Vec3CubicBezier )
                     this._targetID.push( createTargetID( i, Vec3.create() ) );
                 else if ( type === Channel.ChannelType.Quat )
                     this._targetID.push( createTargetID( i, Quat.create() ) );
-                else if ( type === Channel.ChannelType.Float || Channel.ChannelType.FloatCubicBezier )
+                else if ( type === Channel.ChannelType.Float || type === Channel.ChannelType.FloatCubicBezier )
                     this._targetID.push( createTargetID( i, 0.0 ) );
                 else
                     Notify.warn( 'osgAnimation.BasicAnimationManager unknown target type' );
