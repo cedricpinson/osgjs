@@ -42,21 +42,37 @@ define( [
         var keys = new Float32Array( size * 3 );
         var times = new Float32Array( size );
 
-        var jsTime = jsonObj.KeyFrames.Time.Array.Float32Array.Elements;
-        var jsKeyX = jsonObj.KeyFrames.Key[ 0 ].Array.Float32Array.Elements;
-        var jsKeyY = jsonObj.KeyFrames.Key[ 1 ].Array.Float32Array.Elements;
-        var jsKeyZ = jsonObj.KeyFrames.Key[ 2 ].Array.Float32Array.Elements;
+        var eTime, eKeyX, eKeyY, eKeyZ;
 
-        for ( var i = 0; i < size; i++ ) {
-            var id = i * 3;
-            times[ i ] = jsTime[ i ];
-            keys[ id++ ] = jsKeyX[ i ];
-            keys[ id++ ] = jsKeyY[ i ];
-            keys[ id ] = jsKeyZ[ i ];
-        }
+        var jsTime = input.setJSON( jsonObj.KeyFrames.Time ).readBufferArray();
+        jsTime.then( function ( buffer ) {
+            eTime = buffer._elements;
+        } );
+        var jsKeyX = input.setJSON( jsonObj.KeyFrames.Key[ 0 ] ).readBufferArray();
+        jsKeyX.then( function ( buffer ) {
+            eKeyX = buffer._elements;
+        } );
+        var jsKeyY = input.setJSON( jsonObj.KeyFrames.Key[ 1 ] ).readBufferArray();
+        jsKeyY.then( function ( buffer ) {
+            eKeyY = buffer._elements;
+        } );
+        var jsKeyZ = input.setJSON( jsonObj.KeyFrames.Key[ 2 ] ).readBufferArray();
+        jsKeyZ.then( function ( buffer ) {
+            eKeyZ = buffer._elements;
+        } );
 
-        creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
-        return P.resolve( channel );
+        return P.all( [ jsTime, jsKeyX, jsKeyY, jsKeyZ ] ).then( function () {
+            for ( var i = 0; i < size; i++ ) {
+                var id = i * 3;
+                times[ i ] = eTime[ i ];
+                keys[ id++ ] = eKeyX[ i ];
+                keys[ id++ ] = eKeyY[ i ];
+                keys[ id ] = eKeyZ[ i ];
+            }
+
+            creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
+            return channel;
+        } );
     };
 
     osgAnimationWrapper.StandardQuatChannel = function ( input, channel, creator ) {
@@ -70,23 +86,41 @@ define( [
         var keys = new Float32Array( size * 4 );
         var times = new Float32Array( size );
 
-        var jsTime = jsonObj.KeyFrames.Time.Array.Float32Array.Elements;
-        var jsKeyX = jsonObj.KeyFrames.Key[ 0 ].Array.Float32Array.Elements;
-        var jsKeyY = jsonObj.KeyFrames.Key[ 1 ].Array.Float32Array.Elements;
-        var jsKeyZ = jsonObj.KeyFrames.Key[ 2 ].Array.Float32Array.Elements;
-        var jsKeyW = jsonObj.KeyFrames.Key[ 3 ].Array.Float32Array.Elements;
+        var eTime, eKeyX, eKeyY, eKeyZ, eKeyW;
 
-        for ( var i = 0; i < size; i++ ) {
-            var id = i * 4;
-            times[ i ] = jsTime[ i ];
-            keys[ id++ ] = jsKeyX[ i ];
-            keys[ id++ ] = jsKeyY[ i ];
-            keys[ id++ ] = jsKeyZ[ i ];
-            keys[ id ] = jsKeyW[ i ];
-        }
+        var jsTime = input.setJSON( jsonObj.KeyFrames.Time ).readBufferArray();
+        jsTime.then( function ( buffer ) {
+            eTime = buffer._elements;
+        } );
+        var jsKeyX = input.setJSON( jsonObj.KeyFrames.Key[ 0 ] ).readBufferArray();
+        jsKeyX.then( function ( buffer ) {
+            eKeyX = buffer._elements;
+        } );
+        var jsKeyY = input.setJSON( jsonObj.KeyFrames.Key[ 1 ] ).readBufferArray();
+        jsKeyY.then( function ( buffer ) {
+            eKeyY = buffer._elements;
+        } );
+        var jsKeyZ = input.setJSON( jsonObj.KeyFrames.Key[ 2 ] ).readBufferArray();
+        jsKeyZ.then( function ( buffer ) {
+            eKeyZ = buffer._elements;
+        } );
+        var jsKeyW = input.setJSON( jsonObj.KeyFrames.Key[ 3 ] ).readBufferArray();
+        jsKeyW.then( function ( buffer ) {
+            eKeyW = buffer._elements;
+        } );
 
-        creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
-        return P.resolve( channel );
+        return P.all( [ jsKeyX, jsKeyY, jsKeyZ, jsKeyW, jsTime ] ).then( function () {
+            for ( var i = 0; i < size; i++ ) {
+                var id = i * 4;
+                times[ i ] = eTime[ i ];
+                keys[ id++ ] = eKeyX[ i ];
+                keys[ id++ ] = eKeyY[ i ];
+                keys[ id++ ] = eKeyZ[ i ];
+                keys[ id ] = eKeyW[ i ];
+            }
+            creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
+            return channel;
+        } );
     };
 
     osgAnimationWrapper.StandardFloatChannel = function ( input, channel, creator ) {
@@ -99,17 +133,26 @@ define( [
         // channels
         var keys = new Float32Array( size );
         var times = new Float32Array( size );
+        var eTime, eKey;
 
-        var jsTime = jsonObj.KeyFrames.Time.Array.Float32Array.Elements;
-        var jsKey = jsonObj.KeyFrames.Key.Array.Float32Array.Elements;
+        var jsTime = input.setJSON( jsonObj.KeyFrames.Time ).readBufferArray();
+        jsTime.then( function ( buffer ) {
+            eTime = buffer._elements;
+        } );
+        var jsKey = input.setJSON( jsonObj.KeyFrames.Key ).readBufferArray();
+        jsKey.then( function ( buffer ) {
+            eKey = buffer._elements;
+        } );
 
-        for ( var i = 0; i < size; i++ ) {
-            times[ i ] = jsTime[ i ];
-            keys[ i ] = jsKey[ i ];
-        }
+        return P.all( [ jsTime, jsKey ] ).then( function () {
+            for ( var i = 0; i < size; i++ ) {
+                times[ i ] = eTime[ i ];
+                keys[ i ] = eKey[ i ];
+            }
 
-        creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
-        return P.resolve( channel );
+            creator( keys, times, jsonObj.TargetName, jsonObj.Name, channel );
+            return channel;
+        } );
     };
 
     osgAnimationWrapper.Vec3LerpChannel = function ( input, channel ) {
