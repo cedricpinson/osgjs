@@ -63,7 +63,7 @@ define( [
         this._isLighted = false; // either shadeless, or no light (beware ibl)
         this._isShadeless = false;
         this._isShadowCast = false;
-
+        this._isBillboard = false;
         // from Attributes to variables
         // to build shader nodes graph from
         this.initAttributes();
@@ -113,6 +113,9 @@ define( [
                 } else if ( type === 'ShadowCastAttribute' ) {
                     this._isShadowCast = attributes[ i ].isEnabled();
                     this._shadowCastAttribute = attributes[ i ];
+                } else if ( type === 'Billboard' ) {
+                    // Shouldn't it be managed by mode ( ON, OFF, OVERRIDE )? 
+                    this._isBillboard = attributes[ i ].isEnabled();
                 }
             }
         },
@@ -1041,6 +1044,18 @@ define( [
 
         },
 
+        declareVertexTransformBillboard: function ( glPosition ) {
+            this.getOrCreateInputPosition();
+            var billboard = [ '%glPosition = %ProjectionMatrix * ( vec4( %Vertex, 1.0 ) + vec4( %ModelViewMatrix[ 3 ].xyz, 0.0 ) );', ];
+            factory.getNode( 'InlineCode' ).code( billboard.join( '\n' ) ).inputs( {
+                ModelViewMatrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
+                Vertex: this.getOrCreateAttribute( 'vec3', 'Vertex' ),
+                ProjectionMatrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' )
+            } ).outputs( {
+                glPosition: glPosition
+            } );
+        },
+
         // Transform Position into NDC
         // but keep intermediary result
         // FragEye which is in Camera/Eye space
@@ -1076,8 +1091,10 @@ define( [
             } ).outputs( {
                 vec: this.getOrCreateInputNormal()
             } );
-
-            this.declareTransformWithEyeSpace( glPosition );
+            if ( this._isBillboard )
+                this.declareVertexTransformBillboard( glPosition );
+            else
+                this.declareTransformWithEyeSpace( glPosition );
         },
         declareVertexTransformShadowed: function ( /*glPosition*/) {
 
@@ -1111,14 +1128,16 @@ define( [
             }
             // Make only necessary operation and varying
             if ( this._isLighted || this._shaderAttributes[ 'Normal' ] ) {
-
                 if ( this.isShadowed() ) {
                     this.declareVertexTransformShadowed( glPosition );
                 }
                 this.declareVertexTransformLighted( glPosition );
 
             } else {
-                this.declareVertexTransformShadeless( glPosition );
+                if ( this._isBillboard )
+                    this.declareVertexTransformBillboard( glPosition );
+                else
+                    this.declareVertexTransformShadeless( glPosition );
             }
         },
 
@@ -1384,6 +1403,10 @@ define( [
                 alphaCompute = '%alpha = %color.a * %texelAlpha.a;';
             else
                 alphaCompute = '%alpha = %color.a;';
+
+            // Discard fragments totally transparents when rendering billboards 
+            if ( this._isBillboard )
+                alphaCompute += 'if ( %alpha == 0.0) discard;';
 
             factory.getNode( 'InlineCode' ).code( alphaCompute ).inputs( {
                 color: materialUniforms.diffuse,

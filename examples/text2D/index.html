@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Text 2D</title>
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
+
+    <!-- Javascript -->
+    <script type="text/javascript" src="../vendors/es5-shim.js"></script>
+    <script type="text/javascript" src="../vendors/es6-shim.js"></script>
+    <script type="text/javascript" src="../vendors/dat.gui.js"></script>
+    <script type="text/javascript" src="../vendors/bluebird.js"></script>
+    <script type="text/javascript" src="../vendors/hammer.js"></script>
+    <script type="text/javascript" src="../vendors/leap.js"></script>
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+
+  </head>
+
+  <style type="text/css">
+    /* Custom CSS goes here */
+    #gui-container {
+      position: relative;
+      float: right;
+      z-index: 10;
+    }
+  </style>
+
+
+  <body class="osgjs-theme-dark">
+    <div id="gui-container" ></div>
+    <div id="ViewContainer" class="osgjs-fullpage">
+      <!-- very important change the size of the parent element instead-->
+      <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
+    </div>
+
+    <div class="osgjs-info osgjs-info-dark">
+
+      <a href="http://osgjs.org/" class="osgjs-powered" title="Powered by OSG.JS">
+        <img src="http://osgjs.org/assets/logo.png" alt="" width="32" height="32">
+        <strong>OSG.JS</strong>
+      </a>
+      <div class="osgjs-description">
+        Text 2D over webGL canvas using a Canvas2D and RTT
+      </div>
+    </div>
+
+  </body>
+
+</html>
