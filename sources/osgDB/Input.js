@@ -16,7 +16,6 @@ define(['bluebird', 'osg/Utils', 'osgNameSpace', 'osgDB/ReaderParser', 'osgDB/Op
             //     promise: true,
             //     onload: undefined
             // } );
-
             this.setOptions(MACROUTILS.objectMix({}, Options));
 
             // {
@@ -205,7 +204,7 @@ define(['bluebird', 'osg/Utils', 'osgNameSpace', 'osgDB/ReaderParser', 'osgDB/Op
                 // recursion call
                 return options.readImageURL.call(this, url, options);
             }
- 
+
             // if image is on inline image skip url computation
             if(url.substr(0, 10) !== 'data:image') {
                 url = this.computeURL(url);
@@ -304,7 +303,6 @@ define(['bluebird', 'osg/Utils', 'osgNameSpace', 'osgDB/ReaderParser', 'osgDB/Op
                     data = JSON.parse(str);
 
                 } catch(error) { // can't parse try with ungzip code path
-
                     Notify.error('cant parse url ' + url + ' try to gunzip');
 
                 }
