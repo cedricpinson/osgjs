@@ -1,17 +1,4 @@
-define( [
-    'bluebird',
-    'osg/Utils',
-    'osgNameSpace',
-    'osgDB/ReaderParser',
-    'osgDB/Options',
-    'osg/Notify',
-    'osg/Image',
-    'osg/BufferArray',
-    'osg/DrawArrays',
-    'osg/DrawArrayLengths',
-    'osg/DrawElements',
-    'osg/PrimitiveSet'
-], function ( P, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
+define( [ 'bluebird', 'osg/Utils', 'osgNameSpace', 'osgDB/ReaderParser', 'osgDB/Options', 'osg/Notify', 'osg/Image', 'osg/BufferArray', 'osg/DrawArrays', 'osg/DrawArrayLengths', 'osg/DrawElements', 'osg/PrimitiveSet' ], function ( P, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     'use strict';
 
@@ -96,10 +83,26 @@ define( [
             return this._defaultOptions.databasePath;
         },
 
+        setimageCrossOrigin: function ( crossOrigin ) {
+            this._defaultOptions.imageCrossOrigin = crossOrigin;
+        },
+
+        getimageCrossOrigin: function () {
+            return this._defaultOptions.imageCrossOrigin;
+        },
+
+        setimageLoadingUsePromise: function ( bool ) {
+            //Path bool as true or false to use promise to load image instead of returning Image
+            this._defaultOptions.imageLoadingUsePromise = bool;
+        },
+
+        getimageLoadingUsePromise: function () {
+            return this._defaultOptions.imageLoadingUsePromise;
+        },
+
         computeURL: function ( url ) {
 
-            if ( typeof this._defaultOptions.prefixURL === 'string' &&
-                this._defaultOptions.prefixURL.length > 0 ) {
+            if ( typeof this._defaultOptions.prefixURL === 'string' && this._defaultOptions.prefixURL.length > 0 ) {
 
                 return this._defaultOptions.prefixURL + url;
             }
@@ -116,8 +119,7 @@ define( [
             req.open( 'GET', url, true );
 
             // handle responseType
-            if ( options && options.responseType )
-                req.responseType = options.responseType;
+            if ( options && options.responseType ) req.responseType = options.responseType;
 
             if ( options && options.progress ) {
                 req.addEventListener( 'progress', options.progress, false );
@@ -129,10 +131,8 @@ define( [
 
             req.addEventListener( 'load', function ( /*oEvent */) {
 
-                if ( req.responseType === 'arraybuffer' )
-                    defer.resolve( req.response );
-                else
-                    defer.resolve( req.responseText );
+                if ( req.responseType === 'arraybuffer' ) defer.resolve( req.response );
+                else defer.resolve( req.responseText );
 
             } );
 
@@ -181,8 +181,7 @@ define( [
                 if ( defer ) {
                     if ( options.imageOnload ) options.imageOnload.call( image );
                     defer.resolve( image );
-                } else if ( options.imageOnload )
-                    options.imageOnload.call( image );
+                } else if ( options.imageOnload ) options.imageOnload.call( image );
 
             };
 
@@ -268,7 +267,8 @@ define( [
                 ReaderParser.parseSceneGraph( data, options ).then( function ( child ) {
                     defer.resolve( child );
                     Notify.log( 'loaded ' + url );
-                } ).catch( defer.reject.bind( defer ) );
+                } ).
+                catch( defer.reject.bind( defer ) );
             };
 
             var ungzipFile = function ( file ) {
@@ -311,8 +311,7 @@ define( [
                 }
 
                 // we have the json, read it
-                if ( data )
-                    return readSceneGraph( data );
+                if ( data ) return readSceneGraph( data );
 
 
                 // no data try with gunzip
@@ -325,7 +324,8 @@ define( [
                     data = JSON.parse( str );
                     readSceneGraph( data );
 
-                } ).catch( function ( status ) {
+                } ).
+                catch( function ( status ) {
 
                     Notify.error( 'cant read file ' + url + ' status ' + status );
                     defer.reject();
@@ -334,7 +334,8 @@ define( [
 
                 return true;
 
-            } ).catch( function ( status ) {
+            } ).
+            catch( function ( status ) {
 
                 Notify.error( 'cant get file ' + url + ' status ' + status );
                 defer.reject();
@@ -396,10 +397,8 @@ define( [
         },
 
         initializeBufferArray: function ( vb, type, buf, options ) {
-            if ( options === undefined )
-                options = this.getOptions();
-            if ( options.initializeBufferArray )
-                return options.initializeBufferArray.call( this, vb, type, buf );
+            if ( options === undefined ) options = this.getOptions();
+            if ( options.initializeBufferArray ) return options.initializeBufferArray.call( this, vb, type, buf );
 
             var url = vb.File;
             var defer = P.defer();
@@ -448,7 +447,8 @@ define( [
 
                 buf.setElements( typedArray );
                 defer.resolve( buf );
-            } ).catch( function () {
+            } ).
+            catch( function () {
                 Notify.warn( 'Can\'t read binary array URL' );
             } );
             return defer.promise;
@@ -466,13 +466,10 @@ define( [
                 }
             }
 
-            if ( options === undefined )
-                options = this.getOptions();
-            if ( options.readBufferArray )
-                return options.readBufferArray.call( this );
+            if ( options === undefined ) options = this.getOptions();
+            if ( options.readBufferArray ) return options.readBufferArray.call( this );
 
-            if ( ( !jsonObj.Elements && !jsonObj.Array ) || !jsonObj.ItemSize || !jsonObj.Type )
-                return P.reject();
+            if ( ( !jsonObj.Elements && !jsonObj.Array ) || !jsonObj.ItemSize || !jsonObj.Type ) return P.reject();
 
             var promise;
 
@@ -562,7 +559,8 @@ define( [
                 this.readBufferArray().then( function ( array ) {
                     obj.setIndices( array );
                     defer.resolve( obj );
-                } ).catch( function () {
+                } ).
+                catch( function () {
                     Notify.warn( 'Error buffer array' );
                 } );
                 this.setJSON( prevJson );
