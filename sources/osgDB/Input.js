@@ -205,7 +205,7 @@ define(['bluebird', 'osg/Utils', 'osgNameSpace', 'osgDB/ReaderParser', 'osgDB/Op
                 // recursion call
                 return options.readImageURL.call(this, url, options);
             }
-
+ 
             // if image is on inline image skip url computation
             if(url.substr(0, 10) !== 'data:image') {
                 url = this.computeURL(url);
