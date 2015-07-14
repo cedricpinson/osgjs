@@ -16,6 +16,7 @@ define(['bluebird', 'osg/Utils', 'osgNameSpace', 'osgDB/ReaderParser', 'osgDB/Op
             //     promise: true,
             //     onload: undefined
             // } );
+
             this.setOptions(MACROUTILS.objectMix({}, Options));
 
             // {
@@ -98,6 +99,7 @@ define(['bluebird', 'osg/Utils', 'osgNameSpace', 'osgDB/ReaderParser', 'osgDB/Op
         getimageLoadingUsePromise: function() {
             return this._defaultOptions.imageLoadingUsePromise;
         },
+
         computeURL: function(url) {
 
             if(typeof this._defaultOptions.prefixURL === 'string' && this._defaultOptions.prefixURL.length > 0) {
@@ -303,6 +305,7 @@ define(['bluebird', 'osg/Utils', 'osgNameSpace', 'osgDB/ReaderParser', 'osgDB/Op
                     data = JSON.parse(str);
 
                 } catch(error) { // can't parse try with ungzip code path
+
                     Notify.error('cant parse url ' + url + ' try to gunzip');
 
                 }
