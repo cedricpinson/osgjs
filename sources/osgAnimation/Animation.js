@@ -100,18 +100,18 @@ define( [
                 var uniqueTargetName = targetName + '.' + name;
 
                 // not yet in the map create an id from the array size
-                if ( targetMap[ uniqueTargetName ] === undefined ) {
-                    var id = array.length;
-                    instanceChannel.targetID = id; // set the target ID in the channel
-                    var target = {
-                        target: uniqueTargetName,
-                        targetID: id,
-                        type: type
-                    };
-                    targetMap[ uniqueTargetName ] = target;
-                    array.push( target );
+                //if ( targetMap[ uniqueTargetName ] === undefined ) {
+                var id = array.length;
+                instanceChannel.targetID = id; // set the target ID in the channel
+                var target = {
+                    target: uniqueTargetName,
+                    targetID: id,
+                    type: type
+                };
+                targetMap[ uniqueTargetName ] = target;
+                array.push( target );
 
-                }
+                // }
             }
         }
 

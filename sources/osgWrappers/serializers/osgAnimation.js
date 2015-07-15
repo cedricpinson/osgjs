@@ -14,19 +14,15 @@ define( [
         if ( !jsonObj.Name || !jsonObj.Channels || jsonObj.Channels.length === 0 )
             return P.reject();
 
-        var channels = [];
-        var cb = channels.push.bind( channels );
-
         var arrayChannelsPromise = [];
 
         // channels
         for ( var i = 0, l = jsonObj.Channels.length; i < l; i++ ) {
             var promise = input.setJSON( jsonObj.Channels[ i ] ).readObject();
-            promise.then( cb );
             arrayChannelsPromise.push( promise );
         }
 
-        return P.all( arrayChannelsPromise ).then( function () {
+        return P.all( arrayChannelsPromise ).then( function ( channels ) {
             return Animation.createAnimation( channels, jsonObj.Name );
         } );
     };
@@ -149,31 +145,20 @@ define( [
             !jsonObj.KeyFrames.ControlPointOut || !jsonObj.KeyFrames.ControlPointIn )
             return P.reject();
 
-        var bezierChannel = {};
-        var arraysPromise = [];
-        var createChannelAttribute = function ( name, jsonAttribute ) {
-            var promise = input.setJSON( jsonAttribute ).readBufferArray().then( function ( buffer ) {
-                bezierChannel[ name ] = buffer._elements;
-            } );
-            arraysPromise.push( promise );
-        };
-
+        var arrayPromise = [];
         var keyFrames = Object.keys( jsonObj.KeyFrames );
-        for ( var i = 0; i < keyFrames.length; i++ ) {
-            var key = keyFrames[ i ];
-            var value = jsonObj.KeyFrames[ key ];
-            createChannelAttribute( key, value );
-        }
+        for ( var i = 0; i < keyFrames.length; i++ )
+            arrayPromise.push( input.setJSON( jsonObj.KeyFrames[ keyFrames[ i ] ] ).readBufferArray() );
 
-        return P.all( arraysPromise ).then( function () {
-            var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
+        return P.all( arrayPromise ).then( function ( pArray ) {
+            var controlPointIn = pArray[ 0 ]._elements;
+            var controlPointOut = pArray[ 1 ]._elements;
+            var position = pArray[ 2 ]._elements;
+            var time = pArray[ 3 ]._elements;
+
+            var size = time.length;
             var keys = new Float32Array( size * 3 );
             var times = new Float32Array( size );
-
-            var controlPointIn = bezierChannel.ControlPointIn;
-            var controlPointOut = bezierChannel.ControlPointOut;
-            var position = bezierChannel.Position;
-            var time = bezierChannel.Time;
 
             for ( var i = 0; i < size; i++ ) {
                 var id = i * 3;
@@ -194,70 +179,36 @@ define( [
         if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Position || !jsonObj.KeyFrames.ControlPointOut || !jsonObj.KeyFrames.ControlPointIn || jsonObj.KeyFrames.Position.length !== 3 || jsonObj.KeyFrames.ControlPointIn.length !== 3 || jsonObj.KeyFrames.ControlPointOut.length !== 3 )
             return P.reject();
 
-        var bezierChannel = {};
-        var arraysPromise = [];
-
-        var createChannelAttribute = function ( name, jsonAttribute ) {
-            var promise;
-
-            if ( name !== 'Time' ) {
-                var bChannel = bezierChannel[ name ] = [];
-
-                promise = input.setJSON( jsonAttribute[ 0 ] ).readBufferArray();
-                promise.then( function ( buffer ) {
-                    bChannel[ 0 ] = buffer._elements;
-                } );
-                arraysPromise.push( promise );
-
-                promise = input.setJSON( jsonAttribute[ 1 ] ).readBufferArray();
-                promise.then( function ( buffer ) {
-                    bChannel[ 1 ] = buffer._elements;
-                } );
-                arraysPromise.push( promise );
-
-                promise = input.setJSON( jsonAttribute[ 2 ] ).readBufferArray();
-                promise.then( function ( buffer ) {
-                    bChannel[ 2 ] = buffer._elements;
-                } );
-                arraysPromise.push( promise );
-            } else {
-                promise = input.setJSON( jsonAttribute ).readBufferArray();
-                promise.then( function ( buffer ) {
-                    bezierChannel.Time = buffer._elements;
-                } );
-                arraysPromise.push( promise );
-            }
-        };
+        var arrayPromise = [];
 
         //Reads all keyframes
         var keyFrames = Object.keys( jsonObj.KeyFrames );
         for ( var i = 0; i < keyFrames.length; i++ ) {
             var key = keyFrames[ i ];
-            var value = jsonObj.KeyFrames[ key ];
-            createChannelAttribute( key, value );
+            var jsonAttribute = jsonObj.KeyFrames[ key ];
+            if ( key !== 'Time' ) {
+                arrayPromise.push( input.setJSON( jsonAttribute[ 0 ] ).readBufferArray() );
+                arrayPromise.push( input.setJSON( jsonAttribute[ 1 ] ).readBufferArray() );
+                arrayPromise.push( input.setJSON( jsonAttribute[ 2 ] ).readBufferArray() );
+            } else
+                arrayPromise.push( input.setJSON( jsonAttribute ).readBufferArray() );
         }
 
-        return P.all( arraysPromise ).then( function () {
-            var size = jsonObj.KeyFrames.Time.Array.Float32Array.Size;
+        return P.all( arrayPromise ).then( function ( pArray ) {
+            var cpi0 = pArray[ 0 ]._elements;
+            var cpi1 = pArray[ 1 ]._elements;
+            var cpi2 = pArray[ 2 ]._elements;
+            var cpo0 = pArray[ 3 ]._elements;
+            var cpo1 = pArray[ 4 ]._elements;
+            var cpo2 = pArray[ 5 ]._elements;
+            var p0 = pArray[ 6 ]._elements;
+            var p1 = pArray[ 7 ]._elements;
+            var p2 = pArray[ 8 ]._elements;
+            var time = pArray[ 9 ]._elements;
+
+            var size = time.length;
             var keys = new Float32Array( size * 9 );
             var times = new Float32Array( size );
-
-            var controlPointIn = bezierChannel.ControlPointIn;
-            var controlPointOut = bezierChannel.ControlPointOut;
-            var position = bezierChannel.Position;
-            var time = bezierChannel.Time;
-
-            var p0 = position[ 0 ];
-            var p1 = position[ 1 ];
-            var p2 = position[ 2 ];
-
-            var cpi0 = controlPointIn[ 0 ];
-            var cpi1 = controlPointIn[ 1 ];
-            var cpi2 = controlPointIn[ 2 ];
-
-            var cpo0 = controlPointOut[ 0 ];
-            var cpo1 = controlPointOut[ 1 ];
-            var cpo2 = controlPointOut[ 2 ];
 
             for ( var i = 0; i < size; i++ ) {
                 var id = i * 9;
@@ -287,19 +238,16 @@ define( [
 
         osgWrapper.Object( input, manager );
 
-        var animations = [];
         var animPromises = [];
-        var pushAnimCb = animations.push.bind( animations ); // <=> function( anim ) { animations.push( anim ); }
 
         for ( var i = 0, l = jsonObj.Animations.length; i < l; i++ ) {
             var prim = input.setJSON( jsonObj.Animations[ i ] ).readObject();
             if ( prim.isRejected() )
                 continue;
             animPromises.push( prim );
-            prim.then( pushAnimCb );
         }
 
-        return P.all( animPromises ).then( function () {
+        return P.all( animPromises ).then( function ( animations ) {
             manager.init( animations );
             return manager;
         } );
@@ -313,22 +261,16 @@ define( [
 
         osgWrapper.Object( input, umt );
 
-        var stack = umt.getStackedTransforms();
-
-        var cb = function ( stackTransfrom ) {
-            stack.push( stackTransfrom );
-        };
-
         var promiseArray = [];
         for ( var i = 0, l = jsonObj.StackedTransforms.length; i < l; i++ ) {
-            var promise = input.setJSON( jsonObj.StackedTransforms[ i ] ).readObject();
-            promise.then( cb );
-            promiseArray.push( promise );
+            promiseArray.push( input.setJSON( jsonObj.StackedTransforms[ i ] ).readObject() );
         }
 
         // when UpdateMatrixTransform is ready
         // compute the default value data
-        return P.all( promiseArray ).then( function () {
+        return P.all( promiseArray ).then( function ( array ) {
+            var stack = umt.getStackedTransforms();
+            for ( var i = 0, l = array.length; i < l; i++ ) stack.push( array[ i ] );
             umt.computeChannels();
             return umt;
         } );
