@@ -251,7 +251,87 @@ define( [
             ok( result.key === 0, 'Check key when time == 5.0' );
         } );
 
+        QUnit.test( 'KeysFinding', function () {
+            var keys = [ 1, 0, 3 ];
+            var times = [ 0, 2.06, 2.5 ];
+            var chan = Channel.createFloatChannel( keys, times );
+            var iChan = Channel.createInstanceFloatChannel( chan );
+            var time;
 
+            //With 3 keys
+            time = 0;
+            iChan.key = 0;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 1;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 2;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
 
+            time = 1;
+            iChan.key = 0;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 1;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 2;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+
+            time = 2.1;
+            iChan.key = 0;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 1, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 1;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 1, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 2;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 1, 'Test at time = ' + time + ' and key = ' + iChan.key );
+
+            time = 2.5;
+            iChan.key = 0;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 1;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 2;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+
+            //with 2 key
+            var keys = [ 1, 0 ];
+            var times = [ 0, 2 ];
+            var chan = Channel.createFloatChannel( keys, times );
+            var iChan = Channel.createInstanceFloatChannel( chan );
+
+            time = 0;
+            iChan.key = 0;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 1;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+
+            time = 1;
+            iChan.key = 0;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 1;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+
+            time = 2;
+            iChan.key = 0;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+            iChan.key = 1;
+            Interpolator.FloatLerpInterpolator( time, iChan );
+            ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
+        } );
     };
 } );
