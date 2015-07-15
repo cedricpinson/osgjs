@@ -129,6 +129,11 @@
                     };
                     controller.stop = function () {
                         animationManager.stopAnimation( config.currentAnim );
+
+                        var animationList = animationManager._activeAnimationList;
+                        var hash = '#PlayingAnimations:';
+                        for ( var i = 0, l = animationList.length; i < l; i++ ) hash += animationList[ i ].name + ';';
+                        window.location.hash = hash;
                     };
                     controller.pause = function () {
                         animationManager.togglePause();
@@ -141,16 +146,47 @@
                     animationManager.playAnimation( config.currentAnim );
 
                     if ( config[ 'time' ] ) {
-                        animationManager.updateManager( 0 );
-
-                        //Find this current anim
-                        var animationList = window.animationManager._animationsList;
-                        for ( var a = 0, m = animationList.length; a < m; a++ )
-                            if ( animationList[ a ].name === config.currentAnim ) break;
-
-                            //controller.times = ( config[ 'time' ] % animationList[ a ].duration ) / animationList[ a ].duration;
-                        controller.times = config.time * 100;
+                        var nv = {
+                            getFrameStamp: function () {
+                                return {
+                                    getSimulationTime: function () {
+                                        return 0;
+                                    }
+                                };
+                            }
+                        };
+                        animationManager._dirty = false;
+                        animationManager.update( null, nv );
+                        animationManager._dirty = true;
+                        animationManager.togglePause();
+                        animationManager.setSimulationTime( config[ 'time' ] );
+                        controller.times = config.time;
                     }
+
+                    var anims = controller.anims = {};
+                    for ( var i = 0, l = animations.length; i < l; i++ ) {
+                        anims[ animations[ i ] ] = animations[ i ];
+                    }
+
+                    var animsController = controller.gui.add( controller, 'anims', Object.keys( controller.anims ) );
+                    animsController.setValue( config.currentAnim );
+                    animsController.onFinishChange( function ( value ) {
+                        //animationManager.stopAnimation( config.currentAnim );
+                        config.currentAnim = value;
+                        controller.play();
+
+                        var animationList = animationManager._activeAnimationList;
+                        var hash = '#PlayingAnimations:';
+                        var found = false;
+                        for ( var i = 0, l = animationList.length; i < l; i++ ) {
+                            var name = animationList[ i ].name;
+                            if ( name === value ) found = true;
+                            hash += name + ';';
+                        }
+                        if ( !found ) hash += value;
+                        window.location.hash = hash;
+                    } );
+
                 }
             }
             //osg.setNotifyLevel( osg.ERROR );
@@ -229,7 +265,7 @@
         }
 
         //GUI SETUP
-        var gui = new window.dat.GUI();
+        var gui = controller.gui = new window.dat.GUI();
 
         var defaultChoice = 'magic';
 
@@ -256,16 +292,27 @@
             window.animationManager.setLoopNum( currentAnim, playMode );
         }
 
+
         var modelController = gui.add( this._controller, 'models', Object.keys( this._controller.models ) );
-        modelController.listen();
+        //modelController.listen();
+        modelController.onFinishChange( function ( value ) {
+            if ( value !== 'undefined' && value != defaultChoice ) {
+                var search = '?url=' + controller.models;
+                var keys = Object.keys( queryDict );
+                window.location.href = window.location.origin + window.location.pathname + search;
+            } else {
+                root.removeChildren();
+                createScene( viewer, root, window.models[ controller.models ], config, controller );
+            }
+        } );
 
         var load = function ( /*value*/) {
             root.removeChildren();
-            createScene( viewer, root, this.models[ this._controller.models ], this._config, this._controller );
+            createScene( viewer, root, window.models[ controller.models ], config, controller );
         };
         load = load.bind( this );
 
-        modelController.onFinishChange( load );
+        //modelController.onFinishChange( load );
         //modelController.setValue( '_44f5d95ddb794570a441fce7513bf5d1' );
         modelController.setValue( defaultChoice );
 
