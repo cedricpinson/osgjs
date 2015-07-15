@@ -187,11 +187,14 @@ define( [
                 inst[ name ] = animation;
                 instanceAnimationList.push( animation );
             }
+        },
+
+        initChannel: function ( animationName ) {
 
             // compute a map and set a targetID for each InstanceChannel
-            Animation.initChannelTargetID( instanceAnimationList, this._targets, this._targetsMap );
+            Animation.initChannelTargetID( [ this._instanceAnimations[ animationName ] ], this._targets, this._targetsMap );
             this._targetID.length = 0;
-            for ( i = 0; i < this._targets.length; i++ ) {
+            for ( var i = 0; i < this._targets.length; i++ ) {
                 var type = this._targets[ i ].type;
 
                 // probably it's not a good idea here
@@ -493,6 +496,8 @@ define( [
 
             if ( this.isPlaying( obj.name ) ) return;
 
+            this.initChannel( anim.name );
+            this._dirty = true;
             anim.priority = ( obj.priority === undefined ) ? 0 : obj.priority;
             anim.weight = ( obj.weight === undefined ) ? 1.0 : obj.weight;
             anim.loop = ( obj.loop === undefined ) ? true : obj.loop;
@@ -519,7 +524,6 @@ define( [
 
             return this.playAnimationObject( animationObject );
         },
-
 
         getAnimations: function () {
             return this._instanceAnimations;
