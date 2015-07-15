@@ -446,8 +446,10 @@ define( [
             var tf = timeFactor / this._timeFactor;
             this._startTime += ( this._simulationTime - this._simulationTime * tf ) / tf;
 
-            // if pause fix it
             this._timeFactor = timeFactor;
+
+            if ( this._pause )
+                this._simulationTime += ( this._simulationTime - this._simulationTime * tf ) / tf;
         },
 
         getTimeFactor: function () {
