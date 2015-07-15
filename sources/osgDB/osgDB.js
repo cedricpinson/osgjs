@@ -3,8 +3,9 @@ define( [
     'osgDB/Input',
     'osgDB/ReaderParser',
     'osgWrappers/serializers/osg',
-    'osgWrappers/serializers/osgAnimation'
-], function ( MACROUTILS, Input, ReaderParser, osgWrappers, osgAnimationWrappers ) {
+    'osgWrappers/serializers/osgAnimation',
+    'osgWrappers/serializers/osgText'
+], function ( MACROUTILS, Input, ReaderParser, osgWrappers, osgAnimationWrappers, osgTextWrappers ) {
 
 
     var osgDB = {};
@@ -12,6 +13,6 @@ define( [
     MACROUTILS.objectMix( osgDB, ReaderParser );
     osgDB.ObjectWrapper.serializers.osg = osgWrappers;
     osgDB.ObjectWrapper.serializers.osgAnimation = osgAnimationWrappers;
-
+    osgDB.ObjectWrapper.serializers.osgText = osgTextWrappers;
     return osgDB;
 } );

@@ -3,13 +3,16 @@
  */
 define( [
     'osg/Utils',
+    'osg/Vec3',
+    'osg/Vec4',
+    'osg/Matrix',
     'osg/MatrixTransform',
     'osg/Shape',
     'osg/Texture',
     'osg/StateAttribute',
     'osg/BillboardAttribute',
     'osg/BlendFunc'
-], function ( MACROUTILS, MatrixTransform, Shape, Texture, StateAttribute, BillboardAttribute, BlendFunc ) {
+], function ( MACROUTILS, Vec3, Vec4, Matrix, MatrixTransform, Shape, Texture, StateAttribute, BillboardAttribute, BlendFunc ) {
 
     'use strict';
 
@@ -21,16 +24,22 @@ define( [
         // create a canvas element
         this._canvas = document.createElement( 'canvas' );
         this._context = this._canvas.getContext( '2d' );
-        this._text = text;
+
+        this._text = '';
+        if ( text !== undefined ) this._text = text;
         this._font = 'monospace';
+        // Vec4 value to load/return
+        this._color = [ 0, 0, 0, 1 ];
         // This determines the text color, it can take a hex value or rgba value (e.g. rgba(255,0,0,0.5))
-        this._fillStyle = '#000000';
+        this._fillStyle = 'rgba( 0, 0, 0, 1 )';
         // This determines the alignment of text, e.g. left, center, right
         this._textAlign = 'center';
         // This determines the baseline of the text, e.g. top, middle, bottom
         this._textBaseLine = 'middle';
         this._fontSize = 20;
         this._geometry = undefined;
+        this._autoRotateToScreen = false;
+        this._position = Vec3.create();
         // Lazy initialization
         this._dirty = false;
         this.init();
@@ -76,22 +85,43 @@ define( [
             this._dirty = true;
         },
 
+        getText: function () {
+            return this._text;
+        },
+
         setFont: function ( font ) {
             this._font = font;
             this._dirty = true;
         },
 
         setColor: function ( color ) {
-            this._fillStyle = color;
-            this._context.fillStyle = color;
+            this._color = color;
+            this._fillStyle = 'rgba(' + color[ 0 ] * 255 + ',' + color[ 1 ] * 255 + ',' + color[ 2 ] * 255 + ',' + color[ 3 ] + ')';
+            this._context.fillStyle = this._fillStyle;
             this._context.fillText( this._text, this._canvas.width / 2, this._canvas.height / 2 );
         },
 
-        setFontSize: function ( size ) {
+        getColor: function () {
+            return this._color;
+        },
+
+        setCharacterSize: function ( size ) {
             this._fontSize = size;
             this._dirty = true;
         },
 
+        getCharacterSize: function () {
+            return this._fontSize;
+        },
+
+        setPosition: function ( position ) {
+            this._position = position;
+            Matrix.makeTranslate( position[ 0 ], position[ 1 ], position[ 2 ], this.getMatrix() );
+        },
+
+        getPosition: function () {
+            return this._position;
+        },
         setTextProperties: function () {
             this._context.fillStyle = this._fillStyle;
             this._context.textAlign = this._textAlign;
@@ -100,6 +130,7 @@ define( [
         },
 
         setAutoRotateToScreen: function ( value ) {
+            this._autoRotateToScreen = value;
             if ( !this._billboardAttribute ) {
                 this._billboardAttribute = new BillboardAttribute();
             }
@@ -113,6 +144,10 @@ define( [
                 this._billboardAttribute.setEnabled( false );
                 stateset.setAttributeAndModes( this._billboardAttribute, StateAttribute.OFF );
             }
+        },
+
+        getAutoRotateToScreen: function () {
+            return this._autoRotateToScreen;
         },
 
         traverse: function ( visitor ) {

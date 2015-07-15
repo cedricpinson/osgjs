@@ -12,7 +12,11 @@
     var Example = function () {
         this.gui = undefined;
         this._textArray = [ 'osgjs rocks!', 'hello world', 'oh yeah!' ];
-        this._textColors = [ 'rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)' ];
+        this._textColors = [
+            [ 1, 0, 0, 0.5 ],
+            [ 0, 1, 0, 0.6 ],
+            [ 0, 0, 1, 1.0 ]
+        ];
     };
 
     Example.prototype = {
@@ -73,8 +77,8 @@
                     var y = Math.random() * 1000;
                     var z = Math.random() * 1000;
                     var size = Math.random() * 50;
-                    text.setFontSize( size );
-                    osg.Matrix.makeTranslate( x, y, z, text.getMatrix() );
+                    text.setCharacterSize( size );
+                    text.setPosition( [ x, y, z ] );
                     //root.addChild( this.setDebugSphere( text, 0.2) );
                     root.addChild( text );
                 }
