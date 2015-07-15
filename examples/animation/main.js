@@ -88,7 +88,7 @@
             root.accept( bfinder );
             var bones = bfinder.getBones();
 
-            if ( window.debug && config[ 'axis' ] ) {
+            if ( config[ 'axis' ] ) {
                 var axisSize = config[ 'axisSize' ];
                 var geom = osg.createAxisGeometry( axisSize );
                 for ( var i = 0, l = bones.length; i < l; i++ ) {
