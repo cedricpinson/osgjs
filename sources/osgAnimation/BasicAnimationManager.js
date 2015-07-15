@@ -43,17 +43,11 @@ define( [
         this._timeFactor = 1.0;
         this._startTime = 0.0;
 
-        // original animation list to initialize the manager
-        this._animationsList = [];
-
-
         // contains a map with instance animation
         this._instanceAnimations = {};
 
-
         // animations to start
         this._startAnimations = {};
-
 
         // map array index ( targetID ) to targets:
         // {
@@ -62,7 +56,6 @@ define( [
         // }
         this._targets = [];
         this._targetsMap = {};
-
 
         // targetID contains an array of all target id valid for this manager
         // [
@@ -85,7 +78,6 @@ define( [
         this._floatTargetID = [];
         this._floatCubicBezierTargetID = [];
         this._vec3CubicBezierTargetID = [];
-
 
         this._targetIDByTypes = [];
         this._targetIDByTypes.length = Object.keys( Channel.ChannelType ).length;
@@ -118,30 +110,18 @@ define( [
         this._activeChannelsByTypes[ Channel.ChannelType.FloatCubicBezier ] = this._floatCubicBezierActiveChannels;
         this._activeChannelsByTypes[ Channel.ChannelType.Vec3CubicBezier ] = this._vec3CubicBezierActiveChannels;
 
-
         // assign all target/channel in animationCallback
         // then they can read it directly
         // animation callback to update
-        this._animationsUpdateCallback = {};
         this._animationsUpdateCallbackArray = [];
 
         //Pause status (true / false)
         this._pause = false;
 
-        this._dirty = true;
+        this._dirty = false;
     };
 
-
     BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype, {
-
-
-        // run a visitor to collect all animationUpdateCallback found in node tree
-        findAnimationUpdateCallback: function ( node ) {
-            var collector = new CollectAnimationUpdateCallbackVisitor();
-            node.accept( collector );
-            this._animationsUpdateCallback = collector.getAnimationUpdateCallbackMap();
-        },
-
 
         // STOP HERE
         // assignTargetToAnimationCallback
@@ -152,14 +132,19 @@ define( [
         // manager we skip it.  It means that it should be called
         // after the animations has been registered into the animation
         // manager
-        assignTargetToAnimationCallback: function () {
+        assignTargetToAnimationCallback: function ( node ) {
+
+            // run a visitor to collect all animationUpdateCallback found in node tree
+            var collector = new CollectAnimationUpdateCallbackVisitor();
+            node.accept( collector );
+            var animationsUpdateCallback = collector.getAnimationUpdateCallbackMap();
 
             this._animationsUpdateCallbackArray.length = 0;
 
-            var keys = Object.keys( this._animationsUpdateCallback );
+            var keys = Object.keys( animationsUpdateCallback );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
                 var key = keys[ i ];
-                var animationUpdateCallback = this._animationsUpdateCallback[ key ];
+                var animationUpdateCallback = animationsUpdateCallback[ key ];
                 var targetName = animationUpdateCallback.getName();
                 // loop over
                 if ( animationUpdateCallback.getStackedTransforms ) {
@@ -193,14 +178,13 @@ define( [
 
         init: function ( animations ) {
 
-            this._animationsList = animations;
-            this._instanceAnimations = {};
+            var inst = this._instanceAnimations;
 
             var instanceAnimationList = [];
             for ( var i = 0; i < animations.length; i++ ) {
                 var animation = Animation.createInstanceAnimation( animations[ i ] );
                 var name = animation.name;
-                this._instanceAnimations[ name ] = animation;
+                inst[ name ] = animation;
                 instanceAnimationList.push( animation );
             }
 
@@ -221,6 +205,7 @@ define( [
                     Notify.warn( 'osgAnimation.BasicAnimationManager unknown target type' );
             }
 
+            this._dirty = true;
         },
 
         // add channels from instance animation to the active channels list
@@ -269,8 +254,7 @@ define( [
         update: function ( node, nv ) {
 
             if ( this._dirty ) {
-                this.findAnimationUpdateCallback( node );
-                this.assignTargetToAnimationCallback();
+                this.assignTargetToAnimationCallback( node );
                 this._dirty = false;
             }
 
