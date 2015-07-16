@@ -286,17 +286,18 @@
         } );
 
         var times = gui.add( this._controller, 'times', 0, 10 ).listen();
-        times.onFinishChange( function ( value ) {
+        times.onChange( function ( value ) {
             var activeAnimation = window.animationManager._activeAnimationList[ 0 ];
             var animation = window.animationManager._instanceAnimations[ activeAnimation.name ];
             var ratio = value / 10.0;
-            var offset = animation.start;
-            var animationTime = offset + ratio * animation.duration;
-            var startAnimation = animation.start;
-            var currentTime = animationTime - startAnimation;
+            var currentTime = ratio * animation.duration + animation.start;
             var timeFactor = window.animationManager.getTimeFactor();
             console.log( currentTime );
-            window.animationManager.setSimulationTime( currentTime / timeFactor ); // * timeFactor );
+            if ( window.animationManager._pause ) {
+                window.animationManager.setSimulationTime( currentTime / timeFactor ); // * timeFactor );
+            } else {
+                window.animationManager.setSeekTime( currentTime / timeFactor ); // * timeFactor );
+            }
         } );
 
         gui.add( this._controller, 'isPlaying' ).listen();

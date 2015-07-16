@@ -119,6 +119,8 @@ define( [
         this._pause = false;
 
         this._dirty = false;
+
+        this._seekTime = -1;
     };
 
     BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype, {
@@ -260,7 +262,11 @@ define( [
 
             var t = nv.getFrameStamp().getSimulationTime();
 
-            if ( !this._pause ) {
+            if ( this._seekTime !== -1 )
+                this._pauseTime = -this._seekTime + this._startTime + t;
+            this._seekTime = -1;
+
+            if ( !this._pause ) { // Not in pause
                 this._simulationTime = this._startTime + ( t - this._pauseTime );
             } else {
                 this._pauseTime = ( t - this._simulationTime + this._startTime );
@@ -407,8 +413,10 @@ define( [
 
         togglePause: function () { //Pause the manager's time
             this._pause = !this._pause;
+            // if we resume an animation we don't want to move forward the animation
+            if ( !this._pause )
+                this._seekTime = this._simulationTime;
         },
-
 
         getSimulationTime: function () {
             return this._simulationTime;
@@ -416,6 +424,11 @@ define( [
 
         setSimulationTime: function ( t ) {
             this._simulationTime = t;
+        },
+
+        setSeekTime: function ( t ) {
+            this._simulationTime = t;
+            this._seekTime = t;
         },
 
         stopAnimation: function ( name ) {
