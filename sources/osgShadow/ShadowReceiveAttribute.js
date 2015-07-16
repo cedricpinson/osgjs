@@ -284,6 +284,9 @@ define( [
 
         apply: function ( /*state*/) {
 
+            if ( !this._enable )
+                return;
+
             var uniformMap = this.getOrCreateUniforms();
 
             uniformMap.bias.set( this._bias );
