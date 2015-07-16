@@ -15,7 +15,7 @@
         this._textColors = [
             [ 1, 0, 0, 0.5 ],
             [ 0, 1, 0, 0.6 ],
-            [ 0, 0, 1, 1.0 ]
+            [ 0, 0, 1, 0.8 ]
         ];
     };
 
@@ -30,7 +30,21 @@
 
             this.params = {
                 text: this._text,
-                rotateToScreen: true
+                rotateToScreen: true,
+                layout: 'LEFT_TO_RIGHT',
+                alignment: 'CENTER_CENTER'
+            };
+            var layouts = [ 'LEFT_TO_RIGHT', 'RIGHT_TO_LEFT' ];
+            var alignments = {
+                CENTER_CENTER: osgText.Text.CENTER_CENTER,
+                LEFT_TOP: osgText.Text.LEFT_TOP,
+                LEFT_CENTER: osgText.Text.LEFT_CENTER,
+                LEFT_BOTTOM: osgText.Text.LEFT_BOTTOM,
+                CENTER_TOP: osgText.Text.CENTER_TOP,
+                CENTER_BOTTOM: osgText.Text.CENTER_BOTTOM,
+                RIGHT_TOP: osgText.Text.RIGHT_TOP,
+                RIGHT_CENTER: osgText.Text.RIGHT_CENTER,
+                RIGHT_BOTTOM: osgText.Text.RIGHT_BOTTOM
             };
 
             var that = this;
@@ -43,6 +57,15 @@
             var rotationController = this.gui.add( this.params, 'rotateToScreen' );
             rotationController.onChange( function ( value ) {
                 that.changeRotateToScreen( value );
+            } );
+
+            var layoutController = this.gui.add( this.params, 'layout', layouts );
+            layoutController.onChange( function ( value ) {
+                that.changeLayout( value );
+            } );
+            var alignmentController = this.gui.add( this.params, 'alignment', alignments );
+            alignmentController.onChange( function ( value ) {
+                that.changeAlignment( value );
             } );
         },
         createTextScene: function () {
@@ -111,6 +134,43 @@
                 apply: function ( node ) {
                     if ( node instanceof osgText.Text ) {
                         node.setAutoRotateToScreen( this._rotateToScreen );
+                    }
+                    this.traverse( node );
+                }
+            } );
+            var tv = new TextVisitor( value );
+            this._scene.accept( tv );
+        },
+
+        changeLayout: function ( value ) {
+            var TextVisitor = function ( value ) {
+                osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
+                if ( value === 'LEFT_TO_RIGHT' )
+                    this._layout = osgText.Text.LEFT_TO_RIGHT;
+                else
+                    this._layout = osgText.Text.RIGHT_TO_LEFT;
+            };
+            TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+                apply: function ( node ) {
+                    if ( node instanceof osgText.Text ) {
+                        node.setLayout( this._layout );
+                    }
+                    this.traverse( node );
+                }
+            } );
+            var tv = new TextVisitor( value );
+            this._scene.accept( tv );
+        },
+
+        changeAlignment: function ( value ) {
+            var TextVisitor = function ( value ) {
+                osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
+                this._alignment = parseInt( value );
+            };
+            TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+                apply: function ( node ) {
+                    if ( node instanceof osgText.Text ) {
+                        node.setAlignment( this._alignment );
                     }
                     this.traverse( node );
                 }

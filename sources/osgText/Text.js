@@ -33,22 +33,45 @@ define( [
         // This determines the text color, it can take a hex value or rgba value (e.g. rgba(255,0,0,0.5))
         this._fillStyle = 'rgba( 0, 0, 0, 1 )';
         // This determines the alignment of text, e.g. left, center, right
-        this._textAlign = 'center';
+        this._context.textAlign = 'center';
+        this._textX = undefined;
         // This determines the baseline of the text, e.g. top, middle, bottom
-        this._textBaseLine = 'middle';
+        this._context.baseLine = 'middle';
+        this._textY = undefined;
+
         this._fontSize = 20;
         this._geometry = undefined;
         this._autoRotateToScreen = false;
         this._position = Vec3.create();
+        this._layout = Text.LEFT_TO_RIGHT;
+        this._alignment = Text.CENTER_CENTER;
         // Lazy initialization
+        this.drawText();
         this._dirty = false;
-        this.init();
     };
 
-    /** @lends BlendColor.prototype */
+    // Layout enum
+    Text.LEFT_TO_RIGHT = 'ltr';
+    Text.RIGHT_TO_LEFT = 'rtl';
+
+    // Alignment enum
+    Text.LEFT_TOP = 0;
+    Text.LEFT_CENTER = 1;
+    Text.LEFT_BOTTOM = 2;
+
+    Text.CENTER_TOP = 3;
+    Text.CENTER_CENTER = 4;
+    Text.CENTER_BOTTOM = 5;
+
+    Text.RIGHT_TOP = 6;
+    Text.RIGHT_CENTER = 7;
+    Text.RIGHT_BOTTOM = 8;
+
+
+    /** @lends Text.prototype */
     Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
-        init: function () {
+        drawText: function () {
             if ( this._geometry !== undefined ) {
                 this.removeChild( this._geometry );
                 // The text could be dynamic, so we need to remove GL objects
@@ -56,11 +79,11 @@ define( [
             }
             this.setTextProperties();
             this._canvas.width = this._nextPowerOfTwo( this._context.measureText( this._text ).width );
-            this._canvas.height = this._nextPowerOfTwo( this._fontSize );
+            this._canvas.height = this._nextPowerOfTwo( this._fontSize * 2 );
             // We need to set the text properties again, as the canvas size could change.
             this.setTextProperties();
             this._context.clearRect( 0, 0, this._canvas.width, this._canvas.height );
-            this._context.fillText( this._text, this._canvas.width / 2, this._canvas.height / 2 );
+            this._context.fillText( this._text, this._textX, this._textY );
             // Right now we set the pivot point to center, to assure the bounding box is correct when rendering billboards.
             // TODO: Possibility to set different pivot point.
             this._geometry = Shape.createTexturedQuadGeometry( -this._canvas.width / 2, -this._canvas.height / 2, 0, this._canvas.width, 0, 0, 0, this._canvas.height, 0 );
@@ -98,7 +121,7 @@ define( [
             this._color = color;
             this._fillStyle = 'rgba(' + color[ 0 ] * 255 + ',' + color[ 1 ] * 255 + ',' + color[ 2 ] * 255 + ',' + color[ 3 ] + ')';
             this._context.fillStyle = this._fillStyle;
-            this._context.fillText( this._text, this._canvas.width / 2, this._canvas.height / 2 );
+            this._context.fillText( this._text, this._textX, this._textY );
         },
 
         getColor: function () {
@@ -122,11 +145,12 @@ define( [
         getPosition: function () {
             return this._position;
         },
+
         setTextProperties: function () {
             this._context.fillStyle = this._fillStyle;
-            this._context.textAlign = this._textAlign;
-            this._context.textBaseline = this._textBaseLine;
+            this._setAlignmentValues( this._alignment );
             this._context.font = this._fontSize + 'px ' + this._font;
+            this._context.direction = this._layout;
         },
 
         setAutoRotateToScreen: function ( value ) {
@@ -150,12 +174,86 @@ define( [
             return this._autoRotateToScreen;
         },
 
+        setLayout: function ( layout ) {
+            this._layout = layout;
+            this._dirty = true;
+        },
+        getLayout: function () {
+            return this._layout;
+        },
+        setAlignment: function ( alignment ) {
+            this._alignment = alignment;
+            this._dirty = true;
+        },
+        getAlignment: function () {
+            return this._alignment;
+        },
         traverse: function ( visitor ) {
             if ( this._dirty ) {
-                this.init();
+                this.drawText();
                 this._dirty = false;
             }
             MatrixTransform.prototype.traverse.call( this, visitor );
+        },
+
+        _setAlignmentValues: function ( alignment ) {
+            // Convert the OSG Api to js API
+            switch ( alignment ) {
+            case Text.LEFT_TOP:
+                this._context.textAlign = 'left';
+                this._textX = 0;
+                this._context.textBaseline = 'top';
+                this._textY = 0;
+                break;
+            case Text.LEFT_CENTER:
+                this._context.textAlign = 'left';
+                this._textX = 0;
+                this._context.textBaseline = 'middle';
+                this._textY = this._canvas.height / 2;
+                break;
+            case Text.LEFT_BOTTOM:
+                this._context.textAlign = 'left';
+                this._textX = 0;
+                this._context.textBaseline = 'bottom';
+                this._textY = this._canvas.height;
+                break;
+            case Text.CENTER_TOP:
+                this._context.textAlign = 'center';
+                this._textX = this._canvas.width / 2;
+                this._context.textBaseline = 'top';
+                this._textY = 0;
+                break;
+            case Text.CENTER_CENTER:
+                this._context.textAlign = 'center';
+                this._textX = this._canvas.width / 2;
+                this._context.textBaseline = 'middle';
+                this._textY = this._canvas.height / 2;
+                break;
+            case Text.CENTER_BOTTOM:
+                this._context.textAlign = 'center';
+                this._textX = this._canvas.width / 2;
+                this._context.textBaseline = 'bottom';
+                this._textY = this._canvas.height;
+                break;
+            case Text.RIGHT_TOP:
+                this._context.textAlign = 'right';
+                this._textX = this._canvas.width;
+                this._context.textBaseline = 'top';
+                this._textY = 0;
+                break;
+            case Text.RIGHT_CENTER:
+                this._context.textAlign = 'right';
+                this._textX = this._canvas.width;
+                this._context.textBaseline = 'middle';
+                this._textY = this._canvas.height / 2;
+                break;
+            case Text.RIGHT_BOTTOM:
+                this._context.textAlign = 'right';
+                this._textX = this._canvas.width;
+                this._context.textBaseline = 'bottom';
+                this._textY = this._canvas.height;
+                break;
+            }
         },
 
         _nextPowerOfTwo: function ( value, pow ) {
