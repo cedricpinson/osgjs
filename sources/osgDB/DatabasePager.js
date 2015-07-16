@@ -26,6 +26,7 @@ define( [
         this._childrenToRemoveList = new Set();
         this._downloadingRequestsNumber = 0;
         this._maxRequestsPerFrame = 10;
+        this._acceptNewRequests = true;
         // In OSG the targetMaximumNumberOfPagedLOD is 300 by default
         // here we set 75 as we need to be more strict with memory in a browser
         // This value can be setted using setTargetMaximumNumberOfPageLOD method.
@@ -117,6 +118,12 @@ define( [
             return this._targetMaximumNumberOfPagedLOD;
         },
 
+        setAcceptNewDatabaseRequests: function ( acceptNewRequests ) {
+            this._acceptNewRequests = acceptNewRequests;
+        },
+        getAcceptNewDatabaseRequests: function () {
+            return this._acceptNewRequests;
+        },
         reset: function () {
             this._pendingRequests = [];
             this._pendingNodes = [];
@@ -126,6 +133,7 @@ define( [
             this._childrenToRemoveList.clear();
             this._downloadingRequestsNumber = 0;
             this._maxRequestsPerFrame = 10;
+            this._acceptNewRequests = true;
             this._targetMaximumNumberOfPagedLOD = 75;
         },
 
@@ -144,10 +152,11 @@ define( [
             // Remove expired nodes
             this.removeExpiredSubgraphs( frameStamp, 0.0025 );
             // Time to do the requests.
-            if ( !this._loading ) this.takeRequests();
+            this.takeRequests();
             // Add the loaded data to the graph
             this.addLoadedDataToSceneGraph( frameStamp, 0.005 );
         },
+
 
         executeProgressCallback: function () {
             if ( this._pendingRequests.length > 0 || this._pendingNodes.length > 0 ) {
@@ -233,6 +242,8 @@ define( [
         },
 
         requestNodeFile: function ( func, url, node, timestamp, priority ) {
+            // Check if we are currently accepting requests.
+            if ( !this._acceptNewRequests ) return undefined;
             // We don't need to determine if the dbrequest is in the queue
             // That is already done in the PagedLOD, so we just create the request
             var dbrequest = new DatabaseRequest();
