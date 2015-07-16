@@ -428,6 +428,7 @@ define( [
                     activeAnimationList.splice( i, 1 );
                     return;
                 }
+                i++;
             }
         },
 

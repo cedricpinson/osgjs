@@ -110,7 +110,9 @@ define( [
                     };
                     targetMap[ uniqueTargetName ] = target;
                     array.push( target );
-
+                } else {
+                    //if there is more than one channel for the same target, we set the targetID already created
+                    instanceChannel.targetID = targetMap[ uniqueTargetName ].targetID;
                 }
             }
         }
