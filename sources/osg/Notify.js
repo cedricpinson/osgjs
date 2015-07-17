@@ -91,14 +91,14 @@ define( [], function () {
         };
 
         var assert = function ( test, str ) {
-            if ( this.console !== undefined ) {
-                this.console.assert( test, str, getStackTrace() );
+            if ( this.console !== undefined && !test ) {
+                this.console.assert( test, str );
             }
         };
 
         var dummy = function () {};
 
-        Notify.assert = dummy;
+        Notify.assert = assert;
         Notify.debug = dummy;
         Notify.info = dummy;
         Notify.log = Notify.notice = dummy;
@@ -107,7 +107,6 @@ define( [], function () {
 
         if ( level <= Notify.DEBUG ) {
             Notify.debug = debug;
-            Notify.assert = assert;
         }
         if ( level <= Notify.INFO ) {
             Notify.info = info;
