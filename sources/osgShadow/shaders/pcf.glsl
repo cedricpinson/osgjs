@@ -10,7 +10,7 @@ float computeShadow(const in bool lighted,
                     const in mat4 shadowViewMatrix,
                     const in vec4 depthRange,
                     const in float N_Dot_L,
-                    const in vec4 vertexWorld,
+                    const in vec3 vertexWorld,
                     const in float bias
     )
 {

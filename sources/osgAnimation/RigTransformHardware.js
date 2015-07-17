@@ -86,10 +86,10 @@ define( [
 
             var st = geom.getStateSetAnimation();
 
-            var animAttrib = new AnimationAttribute();
+
+            var animAttrib = new AnimationAttribute( nbVec4Uniforms );
             st.setAttributeAndModes( animAttrib, StateAttribute.ON );
             animAttrib.setMatrixPalette( this._matrixPalette );
-            animAttrib.setBoneSize( nbVec4Uniforms );
 
             this._needInit = false;
             return true;

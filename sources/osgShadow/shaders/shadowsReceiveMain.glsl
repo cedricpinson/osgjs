@@ -5,7 +5,7 @@
     if (depthRange.x == depthRange.y)
         return 1.;
 
-    vec4 shadowVertexEye = shadowViewMatrix *  vertexWorld;
+    vec4 shadowVertexEye = shadowViewMatrix *  vec4(vertexWorld, 1.0);
     float shadowReceiverZ =  - shadowVertexEye.z;
 
     if( shadowReceiverZ < 0.0)
