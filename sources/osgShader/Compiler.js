@@ -667,14 +667,15 @@ define( [
             // if none, no shadow, hop we go.
             // TODO: harder Link shadowTexture and shadowAttribute ?
             // TODO: multi shadow textures for 1 light
+            var lightNum = light.getLightNumber();
             for ( k = 0; k < this._shadows.length; k++ ) {
                 shadow = this._shadows[ k ];
-                if ( shadow.getLight() !== light ) continue;
+                if ( shadow.getLightNumber() !== lightNum ) continue;
 
                 lightIndex = k;
                 for ( var p = 0; p < this._shadowsTextures.length; p++ ) {
                     shadowTexture = this._shadowsTextures[ p ];
-                    if ( shadowTexture && shadowTexture.getLightUnit() === light.getLightNumber() ) {
+                    if ( shadowTexture && shadowTexture.getLightUnit() === lightNum ) {
                         shadowTextures[ p ] = shadowTexture;
                         hasShadows = true;
                     }

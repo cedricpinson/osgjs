@@ -21,11 +21,8 @@ define( [
             ( function () {
 
                 var light = new Light( 1 );
-                var lightSource = new LightSource();
-                lightSource.setLight( light );
-                var shadowReceiveAttribute = new ShadowReceiveAttribute();
+                var shadowReceiveAttribute = new ShadowReceiveAttribute( light.getLightNumber() );
                 var shadowTexture = new ShadowTexture();
-                shadowReceiveAttribute.setLight( light );
                 shadowTexture.setLightUnit( light.getLightNumber() );
 
                 var material = new Material();

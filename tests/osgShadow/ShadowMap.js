@@ -5,8 +5,9 @@ define( [
     'osg/LightSource',
     'osg/Matrix',
     'osg/Vec3',
-    'osgShadow/ShadowMap'
-], function ( QUnit, BoundingBox, Light, LightSource, Matrix, Vec3, ShadowMap ) {
+    'osgShadow/ShadowMap',
+    'osgShadow/ShadowSettings'
+], function ( QUnit, BoundingBox, Light, LightSource, Matrix, Vec3, ShadowMap, ShadowSettings ) {
 
     'use strict';
 
@@ -24,7 +25,10 @@ define( [
 
         QUnit.test( 'ShadowedMap', function () {
 
-            var shadowMap = new ShadowMap();
+            var shadowSettings = new ShadowSettings();
+            shadowSettings.light = new Light();
+
+            var shadowMap = new ShadowMap( shadowSettings );
             var frustumBound = new BoundingBox();
             var resultView, resultProj, resultNearFar;
 
