@@ -74,11 +74,8 @@ define( [
 
         handleCullCallbacksAndTraverse: function ( node ) {
             var ccb = node.getCullCallback();
-            if ( ccb ) {
-                if ( !ccb.cull( node, this ) ) {
-                    return;
-                }
-            }
+            if ( ccb && !ccb.cull( node, this ) )
+                return;
             this.traverse( node );
         },
 
@@ -483,7 +480,9 @@ define( [
             // using modelview is not a pb because geometry
             // is a leaf node, else traversing the graph would be an
             // issue because we use modelview after
-            this.handleCullCallbacksAndTraverse( node );
+            var ccb = node.getCullCallback();
+            if ( ccb && !ccb.cull( node, this ) )
+                return;
 
             var stateset = node.getStateSet();
             if ( stateset ) this.pushStateSet( stateset );
