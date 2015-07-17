@@ -11,28 +11,33 @@ define( [
      * @class AnimationAttribute
      * @inherits StateAttribute
      */
-    var AnimationAttribute = function ( disable ) {
+    var AnimationAttribute = function ( boneSize, animationID, disable ) {
         StateAttribute.call( this );
+        this._boneSize = boneSize;
         this._enable = !disable;
+
+        this._animationID = animationID;
+        if ( !animationID ) this._animationID = this.getInstanceID();
+
     };
+
 
     AnimationAttribute.uniforms = {};
     AnimationAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
 
         attributeType: 'AnimationAttribute',
-
-        cloneType: function () {
-            return new AnimationAttribute( true );
+        getAnimationID: function () {
+            return this._animationID;
         },
-        setBoneSize: function ( boneSize ) {
-            this._boneSize = boneSize;
+        cloneType: function () {
+            return new AnimationAttribute( this._boneSize, this._animationID, true );
         },
         getBoneSize: function () {
             return this._boneSize;
         },
 
         getTypeMember: function () {
-            return this.attributeType + this.getBoneSize() + '_' + this.getInstanceID();
+            return this.attributeType + '_' + this.getBoneSize() + '_' + this.getAnimationID();
         },
 
         getOrCreateUniforms: function () {

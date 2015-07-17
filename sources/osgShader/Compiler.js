@@ -686,7 +686,7 @@ define( [
             if ( !hasShadows ) return undefined;
 
             // Varyings
-            var vertexWorld = this.getOrCreateVarying( 'vec4', 'WorldPosition' );
+            var vertexWorld = this.getOrCreateVarying( 'vec3', 'WorldPosition' );
 
             // asserted we have a shadow we do the shadow node allocation
             // and mult with lighted output
@@ -1076,13 +1076,16 @@ define( [
 
             return boneMatrix;
         },
-        createVertexAttribute: function () {
+        getOrCreateVertexAttribute: function () {
+            var v = this._variables[ 'vertexAttribute' ];
+            if ( v )
+                return v;
 
             var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
             if ( !this._animation )
                 return inputVertex;
 
-            var positionAnimated = this.createVariable( 'vec4' );
+            var positionAnimated = this.createVariable( 'vec3', 'vertexAttribute' );
 
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
@@ -1092,13 +1095,16 @@ define( [
             } );
             return positionAnimated;
         },
-        createNormalAttribute: function () {
+        getOrCreateNormalAttribute: function () {
+            var v = this._variables[ 'normalAttribute' ];
+            if ( v )
+                return v;
 
             var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
             if ( !this._animation )
                 return inputNormal;
 
-            var normalAnimated = this.createVariable( 'vec4' );
+            var normalAnimated = this.createVariable( 'vec3', 'normalAttribute' );
 
             factory.getNode( 'MatrixMultDirection' ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
@@ -1116,7 +1122,7 @@ define( [
             //viewSpace
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
-                vec: this.createVertexAttribute()
+                vec: this.getOrCreateVertexAttribute()
             } ).outputs( {
                 vec: tempViewSpace
             } );
@@ -1135,7 +1141,7 @@ define( [
             // FragNormal
             factory.getNode( 'MatrixMultDirection' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
-                vec: this.createNormalAttribute()
+                vec: this.getOrCreateNormalAttribute()
             } ).outputs( {
                 vec: this.getOrCreateInputNormal()
             } );
@@ -1155,7 +1161,7 @@ define( [
             var tempViewSpace = this.getOrCreateInputPosition();
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
-                vec: this.createVertexAttribute()
+                vec: this.getOrCreateVertexAttribute()
             } ).outputs( {
                 vec: tempViewSpace
             } );
@@ -1173,9 +1179,9 @@ define( [
             // worldpos
             factory.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' ),
-                vec: this.createVertexAttribute()
+                vec: this.getOrCreateVertexAttribute()
             } ).outputs( {
-                vec: this.getOrCreateVarying( 'vec4', 'WorldPosition' )
+                vec: this.getOrCreateVarying( 'vec3', 'WorldPosition' )
             } );
 
         },
