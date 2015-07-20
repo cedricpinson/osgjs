@@ -84,7 +84,7 @@ define( [
             var matrix = new Float32Array( nbVec4Uniforms * 4 );
             this._matrixPalette = new Uniform.createFloat4Array( matrix, 'uBones' );
 
-            var st = geom.getOrCreateStateSet();
+            var st = geom.getStateSetAnimation();
 
             var animAttrib = new AnimationAttribute();
             st.setAttributeAndModes( animAttrib, StateAttribute.ON );
