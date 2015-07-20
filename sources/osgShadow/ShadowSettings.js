@@ -104,11 +104,11 @@ define( [
             return this.castsShadowBoundsTraversalMask;
         },
 
-        setLightSource: function ( lightSource ) {
-            this.lightSource = lightSource;
+        setLight: function ( light ) {
+            this.light = light;
         },
-        getLightSource: function () {
-            return this.lightSource;
+        getLight: function () {
+            return this.light;
         },
 
         setTextureSize: function ( textureSize ) {
