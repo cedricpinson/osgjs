@@ -202,6 +202,7 @@ define( [
             for ( var n = 0; n < 100; n++ )
                 for ( var t = 0.0; t < 5.0; t += 0.016 ) {
                     time = t;
+                    basicAnimationManager._dirty = false;
                     basicAnimationManager.update( null, nv );
                     for ( var k = 0, l = allUpdateCallback.length; k < l; k++ )
                         fakeResult += allUpdateCallback[ k ]._matrix[ 0 ];
