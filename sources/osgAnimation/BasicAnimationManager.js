@@ -113,6 +113,7 @@ define( [
         // assign all target/channel in animationCallback
         // then they can read it directly
         // animation callback to update
+        this._animationsUpdateCallback = {};
         this._animationsUpdateCallbackArray = [];
 
         //Pause status (true / false)
@@ -125,6 +126,12 @@ define( [
 
     BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype, {
 
+        findAnimationUpdateCallback: function ( node ) {
+            var collector = new CollectAnimationUpdateCallbackVisitor();
+            node.accept( collector );
+            this._animationsUpdateCallback = collector.getAnimationUpdateCallbackMap();
+        },
+
         // STOP HERE
         // assignTargetToAnimationCallback
         //
@@ -134,14 +141,10 @@ define( [
         // manager we skip it.  It means that it should be called
         // after the animations has been registered into the animation
         // manager
-        assignTargetToAnimationCallback: function ( node ) {
-
-            // run a visitor to collect all animationUpdateCallback found in node tree
-            var collector = new CollectAnimationUpdateCallbackVisitor();
-            node.accept( collector );
-            var animationsUpdateCallback = collector.getAnimationUpdateCallbackMap();
+        assignTargetToAnimationCallback: function () {
 
             this._animationsUpdateCallbackArray.length = 0;
+            var animationsUpdateCallback = this._animationsUpdateCallback;
 
             var keys = Object.keys( animationsUpdateCallback );
             for ( var i = 0, l = keys.length; i < l; i++ ) {
@@ -256,7 +259,8 @@ define( [
         update: function ( node, nv ) {
 
             if ( this._dirty ) {
-                this.assignTargetToAnimationCallback( node );
+                this.findAnimationUpdateCallback( node );
+                this.assignTargetToAnimationCallback();
                 this._dirty = false;
             }
 
