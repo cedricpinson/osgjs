@@ -7,13 +7,14 @@ define( [
     'osg/NodeVisitor',
     'osg/Notify',
     'osg/Matrix',
+    'osg/StateSet',
     'osgAnimation/Bone',
     'osgAnimation/UpdateRigGeometry',
     'osgAnimation/VertexInfluenceSet',
     'osgAnimation/RigTransformHardware',
 
 
-], function ( MACROUTILS, BufferArray, Vec3, Node, Geometry, NodeVisitor, Notify, Matrix, Bone, UpdateRigGeometry, VertexInfluenceSet, RigTransformHardware ) {
+], function ( MACROUTILS, BufferArray, Vec3, Node, Geometry, NodeVisitor, Notify, Matrix, StateSet, Bone, UpdateRigGeometry, VertexInfluenceSet, RigTransformHardware ) {
 
     'use strict';
 
@@ -46,11 +47,20 @@ define( [
 
         this._rigTransformImplementation = new RigTransformHardware();
 
+        // RigGeometry have a special stateset that will be pushed at the very end of the culling
+        // this stateSet only represents animation (and shouldn't contain any rendering attributes)
+        // It's a way to make every RigGeometry unique (in term of stateSet stack)
+        this._stateSetAnimation = new StateSet();
+
         this._needToComputeMatrix = true;
 
     };
 
     RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
+
+        getStateSetAnimation: function () {
+            return this._stateSetAnimation;
+        },
 
         getSkeleton: function () {
             return this._root;
