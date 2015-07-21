@@ -75,7 +75,7 @@ define( [
                     value.apply( instance );
                     var t = instance.getType();
 
-                    if ( instance._name === 'Variable' ) {
+                    if ( instance.getName() === 'Variable' || ( instance.isUnique && instance.isUnique() ) ) {
                         variableNodeList.push( instance );
                     } else if ( t && t !== '' ) {
                         realNodeList.push( t );

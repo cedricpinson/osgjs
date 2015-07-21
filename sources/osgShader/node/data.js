@@ -8,7 +8,10 @@ define( [
 
     var sprintf = utils.sprintf;
 
-    // TODO: Add constant, so that we can do setFromNode(constantVar)
+    // Base Class for all variables Nodes
+    // TODO: add precision
+    // type {string} vec3/4/2, float, int, etc.
+    // prefix {string} vec3/4/2, float, int, etc.
     var Variable = function ( type, prefix ) {
         Node.apply( this );
         this._name = 'Variable';
@@ -41,6 +44,8 @@ define( [
         }
     } );
 
+    // Constant Variable
+    // help glsl compiler and make sure no one writes in it :)
     var Constant = function ( type, prefix ) {
         Variable.call( this, type, prefix );
     };
@@ -51,12 +56,13 @@ define( [
         }
     } );
 
+
+    // Uniform, same for Vertex Shader or Fragment Shader
     var Uniform = function ( type, prefix ) {
         Variable.call( this, type, prefix );
     };
 
     Uniform.prototype = MACROUTILS.objectInherit( Variable.prototype, {
-
         declare: function () {
             return undefined;
         },
@@ -67,12 +73,12 @@ define( [
 
     } );
 
+    // Vertex Attribute Variables
     var Attribute = function ( type, prefix ) {
         Variable.call( this, type, prefix );
     };
 
     Attribute.prototype = MACROUTILS.objectInherit( Variable.prototype, {
-
         declare: function () {
             return undefined;
         },
@@ -89,7 +95,6 @@ define( [
     };
 
     Varying.prototype = MACROUTILS.objectInherit( Variable.prototype, {
-
         declare: function () {
             return undefined;
         },
@@ -115,7 +120,6 @@ define( [
     };
 
     Sampler.prototype = MACROUTILS.objectInherit( Variable.prototype, {
-
         declare: function () {
             return undefined;
         },
@@ -126,48 +130,49 @@ define( [
 
     } );
 
+
+    // Graph Root Node Abstract Class
+    // Derive from that for new outputs
+    // gl_FragDepth, etc.
+    var Output = function ( type, wholeName ) {
+        Variable.call( this, type, wholeName );
+    };
+
+    Output.prototype = MACROUTILS.objectInherit( Variable.prototype, {
+        _unique: true,
+        isUnique: function () {
+            return this._unique;
+        },
+        outputs: function () { /* do nothing for variable */
+            return this;
+        },
+        getVariable: function () {
+            return this._prefix;
+        }
+    } );
+
     // Graph Root Nodes
     var glFragColor = function () {
-        Variable.call( this, 'vec4', 'gl_FragColor' );
+        Output.call( this, 'vec4', 'gl_FragColor' );
+        this._name = 'glFragColor';
     };
-    glFragColor.prototype = MACROUTILS.objectInherit( Variable.prototype, {
-
-        outputs: function () { /* do nothing for variable */
-            return this;
-        },
-        getVariable: function () {
-            return this._prefix;
-        }
-    } );
+    glFragColor.prototype = MACROUTILS.objectInherit( Output.prototype, {} );
 
     var glPosition = function () {
-        Variable.call( this, 'vec4', 'gl_Position' );
+        Output.call( this, 'vec4', 'gl_Position' );
+        this._name = 'glPosition';
     };
-    glPosition.prototype = MACROUTILS.objectInherit( Variable.prototype, {
-
-        outputs: function () { /* do nothing for variable */
-            return this;
-        },
-        getVariable: function () {
-            return this._prefix;
-        }
-    } );
+    glPosition.prototype = MACROUTILS.objectInherit( Output.prototype, {} );
 
 
     var glPointSize = function () {
-        Variable.call( this, 'vec4', 'gl_PointSize' );
+        Output.call( this, 'vec4', 'gl_PointSize' );
+        this._name = 'glPointSize';
     };
-    glPointSize.prototype = MACROUTILS.objectInherit( Variable.prototype, {
-
-        outputs: function () { /* do nothing for variable */
-            return this;
-        },
-        getVariable: function () {
-            return this._prefix;
-        }
-    } );
+    glPointSize.prototype = MACROUTILS.objectInherit( Output.prototype, {} );
 
     return {
+        Output: Output,
         glPointSize: glPointSize,
         glPosition: glPosition,
         glFragColor: glFragColor,

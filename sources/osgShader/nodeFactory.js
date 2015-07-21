@@ -39,7 +39,6 @@ define( [
             this._nodes.set( name, constructor );
 
         },
-
         // extra argument are passed to the constructor of the node
         getNode: function ( name ) {
 
@@ -52,7 +51,6 @@ define( [
                 Notify.warn( 'Node ' + name + ' does not exist' );
                 return undefined;
             }
-
 
             // call a constructor with array arguments
             // http://www.ecma-international.org/ecma-262/5.1/#sec-13.2.2
