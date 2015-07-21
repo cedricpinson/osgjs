@@ -28,7 +28,10 @@ define( [
         this._binName = undefined;
         this._binNumber = 0;
 
-        this._shaderGeneratorName = undefined;
+        // put the shader generator name in an AttributePair
+        // so that we can use the mask value
+        this._shaderGeneratorPair = null;
+
         this._updateCallbackList = [];
 
         this.uniforms = new Map();
@@ -41,6 +44,9 @@ define( [
     };
 
     StateSet.AttributePair.prototype = {
+        getShaderGeneratorName: function () {
+            return this._object;
+        },
         getAttribute: function () {
             return this._object;
         },
@@ -206,11 +212,14 @@ define( [
             }
             return list;
         },
-        setShaderGeneratorName: function ( generatorName ) {
-            this._shaderGeneratorName = generatorName;
+        setShaderGeneratorName: function ( generatorName, mask ) {
+            this._shaderGeneratorPair = this.getAttributePair( generatorName, mask );
+        },
+        getShaderGeneratorPair: function () {
+            return this._shaderGeneratorPair;
         },
         getShaderGeneratorName: function () {
-            return this._shaderGeneratorName;
+            return this._shaderGeneratorPair ? this._shaderGeneratorPair.getShaderGeneratorName() : undefined;
         },
         releaseGLObjects: function () {
             for ( var i = 0, j = this.textureAttributeMapList.length; i < j; i++ ) {
