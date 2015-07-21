@@ -5,7 +5,7 @@ define( [
 
     var BillboardAttribute = function () {
         StateAttribute.call( this );
-        this._attributeEnable = true;
+        this._attributeEnable = false;
     };
 
     BillboardAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {

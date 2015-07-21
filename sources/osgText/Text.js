@@ -17,7 +17,17 @@ define( [
     'use strict';
 
     /**
-     *  @class Text: Text 2D using a Canvas2D as a texture for a textured quad.
+     *  @class Text: Text 2D using a Canvas2D as a texture for a textured quad. 
+     *  Notes: The OSGjs Text has been implemented like OSG osgText::Text as much as possible. However there are some
+     *  things that should be noted:
+     *  - This Text is far more simple than OSG ones, it only supports basic functionality.
+     *  - In contrast to OSG, Text inherits from MatrixTransform in osgjs.
+     *  - Supported fonts are not the same in HTML than in OSG/C++.
+     *  - Vertical layout is not supported right now.
+     *  - BaseLine alignments are not supported, instead they are converted to supported ones if parsing a osgjs file.
+     *  - Set the color in the range [ 0 - 1 ], as if you were working with OSG.
+     *  - Texts are generated as a canvas 2D texture sticked in a quad. The size of the texture is the next power of two of the current size of the
+     *    text so the bigger is your characterSize, the more memory it will consume.
      */
     var Text = function ( text ) {
         MatrixTransform.call( this );
@@ -119,8 +129,10 @@ define( [
 
         setColor: function ( color ) {
             this._color = color;
-            this._fillStyle = 'rgba(' + color[ 0 ] * 255 + ',' + color[ 1 ] * 255 + ',' + color[ 2 ] * 255 + ',' + color[ 3 ] + ')';
+            // Convert color to html range
+            this._fillStyle = 'rgba(' + Math.round( color[ 0 ] * 255 ) + ',' + Math.round( color[ 1 ] * 255 ) + ',' + Math.round( color[ 2 ] * 255 ) + ',' + color[ 3 ] + ')';
             this._context.fillStyle = this._fillStyle;
+            // Canvas size does not change so we don't need to redo the quad.
             this._context.fillText( this._text, this._textX, this._textY );
         },
 
@@ -168,6 +180,7 @@ define( [
                 this._billboardAttribute.setEnabled( false );
                 stateset.setAttributeAndModes( this._billboardAttribute, StateAttribute.OFF );
             }
+            this._dirty = true;
         },
 
         getAutoRotateToScreen: function () {
@@ -175,14 +188,22 @@ define( [
         },
 
         setLayout: function ( layout ) {
-            this._layout = layout;
+            if ( typeof layout === 'string' ) {
+                this._layout = Text[ layout ];
+            } else {
+                this._layout = layout;
+            }
             this._dirty = true;
         },
         getLayout: function () {
             return this._layout;
         },
         setAlignment: function ( alignment ) {
-            this._alignment = alignment;
+            if ( typeof alignment === 'string' ) {
+                this._alignment = Text[ alignment ];
+            } else {
+                this._alignment = alignment;
+            }
             this._dirty = true;
         },
         getAlignment: function () {
@@ -255,13 +276,15 @@ define( [
                 break;
             }
         },
-
-        _nextPowerOfTwo: function ( value, pow ) {
-            pow = pow || 1;
-            while ( pow < value ) {
-                pow *= 2;
-            }
-            return pow;
+        _nextPowerOfTwo: function ( v ) {
+            v--;
+            v |= v >> 1;
+            v |= v >> 2;
+            v |= v >> 4;
+            v |= v >> 8;
+            v |= v >> 16;
+            v++;
+            return v;
         }
     } ), 'osgText', 'Text' );
 

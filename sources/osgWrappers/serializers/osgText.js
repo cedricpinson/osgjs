@@ -1,7 +1,9 @@
 define( [
     'bluebird',
-    'osgWrappers/serializers/osg'
-], function ( P, osgWrapper ) {
+    'osgWrappers/serializers/osg',
+    'osg/Notify',
+    'osgText/Text'
+], function ( P, osgWrapper, Notify, Text ) {
     'use strict';
 
     var osgTextWrapper = {};
@@ -18,6 +20,33 @@ define( [
         node.setAutoRotateToScreen( jsonObj.AutoRotateToScreen );
         node.setPosition( jsonObj.Position );
         node.setCharacterSize( jsonObj.CharacterSize );
+
+        if ( jsonObj.Layout === 'VERTICAL' ) {
+            Notify.error( 'Vertical Alignment not supported' );
+            return P.reject();
+        }
+        var alignment = jsonObj.Alignment;
+        if ( jsonObj.Alignment.indexOf( 'BASE_LINE' ) > -1 ) {
+            if ( jsonObj.Alignment === 'LEFT_BASE_LINE' ) {
+                alignment = Text.LEFT_CENTER;
+            } else if ( jsonObj.Alignment === 'CENTER_BASE_LINE' ) {
+                alignment = Text.CENTER_CENTER;
+            } else if ( jsonObj.Alignment === 'RIGHT_BASE_LINE' ) {
+                alignment = Text.RIGHT_CENTER;
+            } else if ( jsonObj.Alignment === 'LEFT_BOTTOM_BASE_LINE' ) {
+                alignment = Text.LEFT_BOTTOM;
+            } else if ( jsonObj.Alignment === 'CENTER_BOTTOM_BASE_LINE' ) {
+                alignment = Text.CENTER_BOTTOM;
+            } else if ( jsonObj.Alignment === 'RIGHT_BOTTOM_BASE_LINE' ) {
+                alignment = Text.RIGHT_BOTTOM;
+            }
+            /* develblock:start */
+            Notify.log( 'Base line alignments not supported, alignment converted' );
+            /* develblock:end */
+        }
+        node.setAlignment( alignment );
+        node.setLayout( jsonObj.Layout );
+
         return promise;
     };
 
