@@ -217,17 +217,17 @@ define( [
             state.applyAttribute( this.viewport );
 
             /*jshint bitwise: false */
-            if ( this.clearMask & gl.COLOR_BUFFER_BIT ) {
-                gl.clearColor( this.clearColor[ 0 ], this.clearColor[ 1 ], this.clearColor[ 2 ], this.clearColor[ 3 ] );
+            if ( this.clearMask !== 0x0 ) {
+                if ( this.clearMask & gl.COLOR_BUFFER_BIT ) {
+                    gl.clearColor( this.clearColor[ 0 ], this.clearColor[ 1 ], this.clearColor[ 2 ], this.clearColor[ 3 ] );
+                }
+                if ( this.clearMask & gl.DEPTH_BUFFER_BIT ) {
+                    gl.depthMask( true );
+                    gl.clearDepth( this.clearDepth );
+                }
+                /*jshint bitwise: true */
+                gl.clear( this.clearMask );
             }
-            if ( this.clearMask & gl.DEPTH_BUFFER_BIT ) {
-                gl.depthMask( true );
-                gl.clearDepth( this.clearDepth );
-            }
-            /*jshint bitwise: true */
-
-            gl.clear( this.clearMask );
-
             if ( this.positionedAttribute.length !== 0 ) {
                 this.applyPositionedAttribute( state, this.positionedAttribute );
             }

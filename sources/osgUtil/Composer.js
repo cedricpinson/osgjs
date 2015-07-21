@@ -13,10 +13,11 @@ define( [
     'osg/Program',
     'osg/Shader',
     'osg/Shape',
+    'osg/StateAttribute',
     'osg/TransformEnums',
     'osg/Vec2',
     'osg/Vec3'
-], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix, Uniform, StateSet, Program, Shader, Shape, TransformEnums, Vec2, Vec3 ) {
+], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix, Uniform, StateSet, Program, Shader, Shape, StateAttribute, TransformEnums, Vec2, Vec3 ) {
 
     'use strict';
 
@@ -183,6 +184,7 @@ define( [
                         textureTarget = Texture.TEXTURE_2D;
                     }
                     camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture, textureTarget );
+
                 }
 
                 var vp = new Viewport( 0, 0, w, h );
@@ -206,6 +208,11 @@ define( [
 
                 camera.addChild( quad );
                 element.filter.getStateSet().addUniform( Uniform.createFloat2( [ w, h ], 'RenderSize' ) );
+
+                // Optimization, no need to clear
+                camera.setClearMask( 0x00000000 );
+
+
                 camera.setName( 'Composer Pass' + i );
                 root.addChild( camera );
             } );
@@ -252,10 +259,9 @@ define( [
         'attribute vec3 Vertex;',
         'attribute vec2 TexCoord0;',
         'varying vec2 FragTexCoord0;',
-        'uniform mat4 ModelViewMatrix;',
         'uniform mat4 ProjectionMatrix;',
         'void main(void) {',
-        '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+        '  gl_Position = ProjectionMatrix * vec4(Vertex,1.0);',
         '  FragTexCoord0 = TexCoord0;',
         '}',
         ''
@@ -376,9 +382,9 @@ define( [
                             var uniformValue = this._uniforms[ uniformName ];
                             if ( uniformType.search( 'sampler' ) !== -1 ) {
                                 this._stateSet.setTextureAttributeAndModes( unitIndex, uniformValue );
-                                uniform = Uniform.createInt1( unitIndex, uniformName );
+                                //uniform = Uniform.createInt1( unitIndex, uniformName );
                                 unitIndex++;
-                                this._stateSet.addUniform( uniform );
+                                //this._stateSet.addUniform( uniform );
                             } else {
                                 if ( Uniform.isUniform( uniformValue ) ) {
                                     uniform = uniformValue;
