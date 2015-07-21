@@ -488,7 +488,16 @@ define( [
                 var stackedTransforms = up._stackedTransforms;
                 for ( var st = 0, l = stackedTransforms.length; st < l; st++ ) {
                     var stackedTransform = stackedTransforms[ st ];
-                    stackedTransform._target.value = stackedTransform._bindTransform;
+                    var id = stackedTransform._target.id;
+                    if ( id === undefined ) continue;
+                    var type = this._targets[ id ].type;
+                    if ( type === Channel.ChannelType.Vec3 || type === Channel.ChannelType.Vec3CubicBezier )
+                        Vec3.copy( stackedTransform._bindTransform, stackedTransform._target.value );
+                    else if ( type === Channel.ChannelType.Quat )
+                        Quat.copy( stackedTransform._bindTransform, stackedTransform._target.value );
+                    else if ( type === Channel.ChannelType.Float || type === Channel.ChannelType.FloatCubicBezier )
+                        stackedTransform._target.value = stackedTransform._bindTransform;
+
                 }
                 up.computeChannels();
             }
