@@ -1107,7 +1107,7 @@ define( [
             var inputBones = this.getOrCreateAttribute( 'vec4', 'Bones' );
             var matrixPalette = this.getOrCreateUniform( 'vec4', 'uBones', this._animation.getBoneSize() );
 
-            factory.getNode( 'Animation' ).inputs( {
+            this.getNode( 'Animation' ).inputs( {
                 weights: inputWeights,
                 bonesIndex: inputBones,
                 matrixPalette: matrixPalette
@@ -1128,7 +1128,7 @@ define( [
 
             var positionAnimated = this.createVariable( 'vec3', 'vertexAttribute' );
 
-            factory.getNode( 'MatrixMultPosition' ).inputs( {
+            this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
                 vec: inputVertex
             } ).outputs( {
@@ -1147,7 +1147,7 @@ define( [
 
             var normalAnimated = this.createVariable( 'vec3', 'normalAttribute' );
 
-            factory.getNode( 'MatrixMultDirection' ).inputs( {
+            this.getNode( 'MatrixMultDirection' ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
                 vec: inputNormal
             } ).outputs( {
@@ -1180,7 +1180,7 @@ define( [
         declareVertexTransformLighted: function ( glPosition ) {
 
             // FragNormal
-            factory.getNode( 'MatrixMultDirection' ).inputs( {
+            this.getNode( 'MatrixMultDirection' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
                 vec: this.getOrCreateNormalAttribute()
             } ).outputs( {
