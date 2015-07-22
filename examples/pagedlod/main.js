@@ -16,6 +16,11 @@
         var viewer;
         var params = undefined;
         var gui = undefined;
+
+        this._config = {
+            lodScale: 0.01,
+            acceptNewRequests: true
+        };
     };
 
     Example.prototype = {
@@ -86,13 +91,15 @@
             this.gui = new window.dat.GUI();
             var self = this;
             // config to let dat.gui change the scale
-            this.params = {
-                lodScale: 0.01
-            };
-            var lodScaleController = this.gui.add( this.params, 'lodScale', 0.01, 3.0 );
+            var lodScaleController = this.gui.add( this._config, 'lodScale', 0.01, 3.0 );
             lodScaleController.onChange( function ( value ) {
                 self.viewer.getCamera().getRenderer().getCullVisitor().setLODScale( value );
             } );
+            var acceptRequestscontroller = this.gui.add( this._config, 'acceptNewRequests' );
+            acceptRequestscontroller.onChange( function ( value ) {
+                self.viewer.getDatabasePager().setAcceptNewDatabaseRequests( value );
+            } );
+
         },
         run: function () {
             // The 3D canvas.
@@ -149,7 +156,7 @@
             this.viewer.getManipulator().setDistance( bs.radius() * 1.5 );
             this.initGui();
             // Cheat dat gui to show at least two decimals and start at 1.0
-            this.params.lodScale = 1.0;
+            this._config.lodScale = 1.0;
             for ( var i in this.gui.__controllers )
                 this.gui.__controllers[ i ].updateDisplay();
             this.viewer.run();

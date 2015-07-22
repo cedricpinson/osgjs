@@ -21,11 +21,8 @@ define( [
             ( function () {
 
                 var light = new Light( 1 );
-                var lightSource = new LightSource();
-                lightSource.setLight( light );
-                var shadowReceiveAttribute = new ShadowReceiveAttribute();
+                var shadowReceiveAttribute = new ShadowReceiveAttribute( light.getLightNumber() );
                 var shadowTexture = new ShadowTexture();
-                shadowReceiveAttribute.setLight( light );
                 shadowTexture.setLightUnit( light.getLightNumber() );
 
                 var material = new Material();
@@ -78,7 +75,7 @@ define( [
                     value.apply( instance );
                     var t = instance.getType();
 
-                    if ( instance._name === 'Variable' ) {
+                    if ( instance.getName() === 'Variable' || ( instance.isUnique && instance.isUnique() ) ) {
                         variableNodeList.push( instance );
                     } else if ( t && t !== '' ) {
                         realNodeList.push( t );

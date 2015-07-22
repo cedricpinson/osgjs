@@ -163,6 +163,8 @@ define( [
 
         this._lightUp = [ 0.0, 0.0, 1.0 ];
 
+        this._light = settings.light;
+
         // data
         this._cameraShadow = new Camera();
         this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
@@ -188,7 +190,8 @@ define( [
         this._casterStateSet.addUniform( Uniform.createFloat1( 0.005, 'bias' ) );
         this._casterStateSet.addUniform( Uniform.createFloat1( 1.0 / this._textureSize, 'texelSize' ) );
 
-        this._shadowReceiveAttribute = new ShadowReceiveAttribute();
+
+        this._shadowReceiveAttribute = new ShadowReceiveAttribute( this._light.getLightNumber() );
         this._casterStateSet.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
 
 
@@ -207,7 +210,6 @@ define( [
 
 
 
-        this._lightSource = undefined;
 
 
         this._worldLightPos = Vec4.create();
@@ -276,12 +278,12 @@ define( [
             if ( !shadowSettings )
                 return;
 
-            var lightSource = shadowSettings.lightSource;
+            this._light = shadowSettings.light;
 
             this.setCastsShadowDrawTraversalMask( shadowSettings.castsShadowDrawTraversalMask );
             this.setCastsShadowBoundsTraversalMask( shadowSettings.castsShadowBoundsTraversalMask );
 
-            this.setLightSource( lightSource );
+            this.setLight( this._light );
             this.setTextureSize( shadowSettings.textureSize );
             this.setTexturePrecision( shadowSettings.textureType );
 
@@ -366,17 +368,8 @@ define( [
             this.dirty();
         },
 
-        /** initialize the ShadowedScene and local cached data structures.*/
-        init: function () {
-
-            if ( !this._shadowedScene ) return;
-
-            this._filledOnce = false;
-
-
-            var light = this._lightSource.getLight();
-            var lightNumber = light.getLightNumber();
-
+        checkLightNumber: function () {
+            var lightNumber = this._light.getLightNumber();
 
             // if light number changed we need to remove cleanly
             // attributes from receiveStateSet
@@ -387,11 +380,26 @@ define( [
                     this._receivingStateset.removeAttribute( this._shadowReceiveAttribute.getTypeMember() );
             }
 
+            /* develblock:start */
+            Notify.assert( this._shadowReceiveAttribute.getTypeMember() === this._shadowReceiveAttribute.attributeType + lightNumber, 'TypeMember isnt reflecting light number' + this._shadowReceiveAttribute.getTypeMember() + ' !== ' + this._shadowReceiveAttribute.attributeType + lightNumber );
+            /* develblock:end */
+
+
             if ( this._texture && this._texture.getLightUnit() !== lightNumber ) {
                 // remove this._texture, but not if it's not this._texture
                 if ( this._receivingStateset.getTextureAttribute( this._textureUnit, this._texture.getTypeMember() ) === this._texture )
                     this._receivingStateset.removeTextureAttribute( this._textureUnit, this._texture.getTypeMember() );
             }
+
+        },
+        /** initialize the ShadowedScene and local cached data structures.*/
+        init: function () {
+
+            if ( !this._shadowedScene ) return;
+
+            this._filledOnce = false;
+
+            this.checkLightNumber();
 
             if ( !this._cameraShadow ) {
                 this._cameraShadow = new Camera();
@@ -402,13 +410,15 @@ define( [
             }
 
             this.initTexture();
+
+            var lightNumber = this._light.getLightNumber();
             this._textureUnit = this._textureUnitBase + lightNumber;
-            this._cameraShadow.setName( 'light_shadow_camera' + light.getName() );
+            this._cameraShadow.setName( 'light_shadow_camera' + this._light.getName() );
 
             this._texture.setLightUnit( lightNumber );
             this._texture.setName( 'ShadowTexture' + this._textureUnit );
 
-            this._shadowReceiveAttribute.setLight( light );
+            this._shadowReceiveAttribute.setLightNumber( lightNumber );
 
             this._receivingStateset.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
 
@@ -617,18 +627,12 @@ define( [
             return this._shadowReceiveAttribute.getAlgorithm();
         },
 
-        setLightSource: function ( lightSource ) {
+        setLight: function ( light ) {
 
-            if ( !lightSource || lightSource === this._lightSource )
+            if ( !light || light === this._light )
                 return;
 
-            this._lightSource = lightSource;
-            var light = lightSource.getLight();
-
-            if ( !light ) {
-                Notify.log( 'ShadowMap.setLightSource no light attached to the lightsource' );
-            }
-
+            this._light = light;
             this.dirty();
         },
 
@@ -799,14 +803,13 @@ define( [
          */
         aimShadowCastingCamera: function ( cullVisitor, frustumBound ) {
 
-            var lightSource = this._lightSource;
+            var light = this._light;
 
-            if ( !lightSource ) {
+            if ( !light ) {
                 this._emptyCasterScene = true;
                 return;
             }
 
-            var light = lightSource.getLight();
             var camera = this._cameraShadow;
 
             var worldLightPos = this._worldLightPos;

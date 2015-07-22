@@ -99,6 +99,7 @@ var gruntTasks = {};
 ( function () {
 
     var webpack = require( 'webpack' );
+    // var ExtractTextPlugin = require( 'extract-text-webpack-plugin' );
 
     var targets = {
         build: {
@@ -106,7 +107,24 @@ var gruntTasks = {};
                 OSG: [ './sources/OSG.js' ],
                 tests: [ './tests/tests.js' ]
             },
-            devtool: 'source-map'
+            devtool: 'source-map',
+
+            module: {
+                loaders: [ {
+                    test: /\.js$/,
+                    loader: 'webpack-strip-block'
+                } ]
+            }
+
+        },
+
+        builddebug: {
+            entry: {
+                OSG: [ './sources/OSG.js' ],
+                tests: [ './tests/tests.js' ]
+            },
+            devtool: 'eval-source-map'
+
         },
 
         buildrelease: {
@@ -118,6 +136,9 @@ var gruntTasks = {};
                 library: 'OSG'
             },
 
+            loaders: [
+                { test: /\.js$/, loader : 'webpack-strip-block' }
+            ],
             // additional plugins for this specific mode
             plugins: [
                 new webpack.optimize.UglifyJsPlugin( {
@@ -139,6 +160,7 @@ var gruntTasks = {};
         options: webpackConfig,
         build: targets.build,
         buildrelease: targets.buildrelease,
+        builddebug: targets.builddebug,
         docs: targets.docs,
         watch: {
             entry: targets.build.entry,
@@ -545,6 +567,7 @@ module.exports = function ( grunt ) {
 
     grunt.registerTask( 'build', [ 'copyto', 'webpack:build' ] );
     grunt.registerTask( 'build-release', [ 'copyto', 'webpack:buildrelease' ] );
+    grunt.registerTask( 'build-debug', [ 'copyto', 'webpack:builddebug' ] );
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
     grunt.registerTask( 'serve', [ 'build', 'connect:dist:keepalive' ] );

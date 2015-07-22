@@ -1169,7 +1169,7 @@
 
             // need to set lightSource rather than light pos
             // as there is no link in Light to get current Matrix.
-            shadowSettings.setLightSource( lightSource );
+            shadowSettings.setLight( light );
             ///////////////////////////////
 
             this._shadowSettings.push( shadowSettings );

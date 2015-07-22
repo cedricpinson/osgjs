@@ -24,6 +24,7 @@ define( [
         this._centerMode = Lod.USER_DEFINED_CENTER;
         this._frameNumberOfLastTraversal = 0;
         this._databasePath = '';
+        this._numChildrenThatCannotBeExpired = 0;
     };
 
     /**
@@ -107,10 +108,17 @@ define( [
         setFrameNumber: function ( childNo, frameNumber ) {
             this._perRangeDataList[ childNo ].frameNumber = frameNumber;
         },
+        setNumChildrenThatCannotBeExpired: function ( num ) {
+            this._numChildrenThatCannotBeExpired = num;
+        },
+        getNumChildrenThatCannotBeExpired: function () {
+            return this._numChildrenThatCannotBeExpired;
+        },
         getDatabaseRequest: function ( childNo ) {
             return this._perRangeDataList[ childNo ].dbrequest;
         },
         removeExpiredChildren: function ( expiryTime, expiryFrame, removedChildren ) {
+            if ( this.children.length <= this._numChildrenThatCannotBeExpired ) return;
             var i = this.children.length - 1;
             var timed, framed;
             timed = this._perRangeDataList[ i ].timeStamp + this._expiryTime;
@@ -122,7 +130,6 @@ define( [
                 this._perRangeDataList[ i ].loaded = false;
                 if ( this._perRangeDataList[ i ].dbrequest !== undefined ) {
                     this._perRangeDataList[ i ].dbrequest._groupExpired = true;
-                    //this._perRangeDataList[ i ].dbrequest = undefined;
                 }
             }
         },
@@ -221,6 +228,9 @@ define( [
                                 if ( this._perRangeDataList[ numChildren ].dbrequest !== undefined ) {
                                     this._perRangeDataList[ numChildren ].dbrequest._timeStamp = visitor.getFrameStamp().getSimulationTime();
                                     this._perRangeDataList[ numChildren ].dbrequest._priority = priority;
+                                } else {
+                                    // The DB request is undefined, so the DBPager was not accepting requests, we need to ask for the child again.
+                                    this._perRangeDataList[ numChildren ].loaded = false;
                                 }
                             }
                         }

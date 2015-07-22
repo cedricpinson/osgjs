@@ -5,8 +5,8 @@
     "url": "git@github.com:cedricpinson/osgjs.git"
   },
   "description": "OpenSceneGraph implementation in javascript",
-  "license": "LGPL V3+ (https://spdx.org/licenses/LGPL-3.0+)",
-  "author": "Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)",
+  "license": "MIT",
+  "author": "Cedric Pinson <trigrou@trigrou.com> (http://cedricpinson.com)",
   "version": "0.2.3",
   "contributors": [
     "Tuan.kuranes <tuan.kuranes@gmail.com>",
@@ -41,6 +41,7 @@
     "grunt-docco": "~0.3.2",
     "grunt-jsbeautifier": "^0.2.10",
     "grunt-plato": "~0.2.1",
-    "grunt-release": "^0.10.0"
+    "grunt-release": "^0.10.0",
+    "webpack-strip-block": "0.0.1"
   }
 }

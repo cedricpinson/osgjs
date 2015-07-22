@@ -9,6 +9,7 @@ define( [
 
     var sprintf = utils.sprintf;
 
+    // Abstract class
     // base operator contains helper for the constructor
     // it helps to do that:
     // arg0 = output
@@ -25,6 +26,7 @@ define( [
     // Add support this syntax:
     // new Add( output, input0, input1, ... )
     // new Add( output, [ inputs ] )
+    // glsl code output = input0 + input1 +...
     var Add = function () {
         BaseOperator.apply( this );
     };
@@ -64,6 +66,7 @@ define( [
 
 
     // Mult works like Add
+    // glsl code output = input0 * input1 * ...
     var Mult = function () {
         Add.apply( this );
     };
@@ -74,14 +77,18 @@ define( [
     } );
 
     // basic assignement alias: output = input
+    // glsl code output = input0
     var SetFromNode = function () {
         Add.apply( this );
     };
-
     SetFromNode.prototype = MACROUTILS.objectInherit( Add.prototype, {
         type: 'SetFromNode'
     } );
-    // Mult Matrix * vector
+
+    // Mult Matrix * vector4
+    // making the cast vector4(input.xyz, 0)
+    // if needed
+    // glsl code output = matrix * vector4(vec.xyz, 0)
     var MatrixMultDirection = function () {
         Add.apply( this );
     };
@@ -122,6 +129,7 @@ define( [
     } );
 
     // override only for complement.
+    // glsl code output = matrix * vector4(vec.xyz, 1)
     var MatrixMultPosition = function () {
         MatrixMultDirection.apply( this );
     };
@@ -131,7 +139,18 @@ define( [
     } );
 
 
-    // add Code with variable input/output replace
+
+    // For all you custom needs.
+    //
+    // call Code() with variable input/output replace
+    // indexed by the '%'
+    // getNode( 'InlineCode' ).code( '%out = %input;' ).inputs( {
+    //             input: this.getOrCreateConstant( 'float', 'unitFloat' ).setValue( '1.0' )
+    //        } ).outputs( {
+    //            out: this.getNode( 'glPointSize' )
+    // }
+    // glsl code glPointSize = unitFloat;
+    //
     var InlineCode = function () {
         Node.apply( this );
     };
@@ -172,8 +191,9 @@ define( [
             return text;
         }
     } );
-    // output = vec4( color.rgb, alpha )
 
+
+    // glsl code  output = vec4( color.rgb, alpha )
     var SetAlpha = function () {
         BaseOperator.apply( this );
     };
@@ -194,7 +214,7 @@ define( [
 
 
     // alpha is optional, if not provided the following operation is generated:
-    // output.rgb = color.rgb * color.a;
+    // glsl code output.rgb = color.rgb * color.a;
     var PreMultAlpha = function () {
         BaseOperator.apply( this );
     };

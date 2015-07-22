@@ -11,6 +11,9 @@ define( [
         this._attributes = attributes;
         this._textureAttributes = textureAttributes;
 
+        this._activeNodeList = {};
+        this._compiledNodeList = {};
+
         this._variables = {};
         this._varyings = {};
         this._vertexShader = [];
@@ -186,11 +189,45 @@ define( [
                 }
             }
         },
+
         // global accessor because it modifies
         // globally the compiler behavbiour
         isShadowCast: function () {
             return this._isShadowCast;
         },
+
+        // cache all requested node, so that we can list
+        // and log unused Node that where called
+        // or/cache unique or predefined node
+        // thus avoid mutiple getNode of a
+        // Node that HAS to be unique
+        getNode: function ( /*name, arg1, etc*/) {
+
+            // check unique Node
+            // for predefined GL variables
+            // gl_FragCoord, gl_Position, etc
+            // Extend to Varying
+            var n = factory.getNode.apply( factory, arguments );
+            var cacheID = n.getID();
+            this._activeNodeList[ cacheID ] = n;
+            return n;
+        },
+        // during compilation we pop
+        // all node we do encounter
+        // so that we can warn about
+        // "leftover" once compilation
+        // is finished
+        // Note: same node may be marked multiple time
+        // do not use it as a "once and for all mark thing"
+        markNodeAsVisited: function ( n ) {
+            var cacheID = n.getID();
+            if ( this._activeNodeList[ cacheID ] === n ) {
+                this._compiledNodeList[ cacheID ] = n;
+            } else {
+                Notify.warn( 'Node not requested by using Compiler getNode and/or not registered in nodeFactory' );
+            }
+        },
+
         getVariable: function ( nameID ) {
             return this._variables[ nameID ];
         },
@@ -204,7 +241,6 @@ define( [
             return undefined;
 
         },
-
 
 
         // TODO: add Precision qualifier
@@ -237,7 +273,7 @@ define( [
 
             }
 
-            var v = factory.getNode( 'Variable', type, nameID );
+            var v = this.getNode( 'Variable', type, nameID );
             this._variables[ nameID ] = v;
             return v;
         },
@@ -270,7 +306,7 @@ define( [
             return this.getOrCreateUniformFromUniformMap( uniforms, prefix );
         },
 
-
+        // make sure we get correct Node
         getOrCreateUniform: function ( type, varname ) {
 
             var nameID = varname;
@@ -295,11 +331,12 @@ define( [
                 return exist;
             }
 
-            var v = factory.getNode( 'Uniform', type, nameID );
+            var v = this.getNode( 'Uniform', type, nameID );
             this._variables[ nameID ] = v;
             return v;
         },
 
+        // make sure we get correct Node
         getOrCreateAttribute: function ( type, nameID ) {
 
             if ( this._fragmentShaderMode ) {
@@ -316,7 +353,7 @@ define( [
             // and that varying data will be available accordingly
             this._shaderAttributes[ nameID ] = true;
 
-            var v = factory.getNode( 'Attribute', type, nameID );
+            var v = this.getNode( 'Attribute', type, nameID );
             this._variables[ nameID ] = v;
             return v;
         },
@@ -339,17 +376,17 @@ define( [
                 }
 
             }
-            var v = factory.getNode( 'Constant', type, nameID );
+            var v = this.getNode( 'Constant', type, nameID );
             this._variables[ nameID ] = v;
             return v;
         },
 
-
+        // make sure we get correct Node
         getOrCreateVarying: function ( type, nameID ) {
 
             // make sure you don't create varying out of thin air
             if ( nameID === undefined ) {
-                Notify.error( 'Error: better name varying as you need to retrieve them...' );
+                Notify.error( 'Error: Mandatory to name varying (as you need to retrieve them)' );
             }
 
             var exist = this._variables[ nameID ];
@@ -359,7 +396,7 @@ define( [
                     Notify.error( 'Error: requesting a varying not declared with getOrCreateVarying previously' );
                 }
                 if ( exist.getType() !== type ) {
-                    Notify.error( 'Same varying, but different type' );
+                    Notify.error( 'Error: Same varying, but different type' );
                 }
                 // see comment in Variable function
                 return exist;
@@ -370,6 +407,8 @@ define( [
                     // just add it to variables cache.
                     // as that cache is not shared between VS and PS
                     this._variables[ nameID ] = exist;
+                    // ensure we have it in active node list, could come from VS varying list
+                    this._activeNodeList[ exist.getID() ] = exist;
                     return exist;
                 }
             }
@@ -381,13 +420,14 @@ define( [
                 Notify.error( 'Error: requesting a varying not declared in Vertex Shader Graph.( if a Custom Vertex Shader in a custom processor, add this._customVertexShader to your custom processor)' );
             }
 
-            var v = factory.getNode( 'Varying', type, nameID );
+            var v = this.getNode( 'Varying', type, nameID );
             this._variables[ nameID ] = v;
             this._varyings[ nameID ] = v;
+
             return v;
         },
 
-
+        // make sure we get correct Node
         getOrCreateSampler: function ( type, varname ) {
 
             var nameID = varname;
@@ -405,8 +445,9 @@ define( [
                 }
 
             }
-            var v = factory.getNode( 'Sampler', type, nameID );
+            var v = this.getNode( 'Sampler', type, nameID );
             this._variables[ nameID ] = v;
+
             return v;
         },
 
@@ -419,7 +460,7 @@ define( [
             var inputNormal = this.getOrCreateInputNormal();
             var frontNormal = this.createVariable( 'vec3', 'frontNormal' );
 
-            factory.getNode( 'FrontNormal' ).inputs( {
+            this.getNode( 'FrontNormal' ).inputs( {
                 normal: inputNormal
             } ).outputs( {
                 normal: frontNormal
@@ -442,29 +483,27 @@ define( [
             if ( normal )
                 return normal;
             var out = this.createVariable( 'vec3', 'normal' );
-            factory.getNode( 'Normalize' ).inputs( {
+            this.getNode( 'Normalize' ).inputs( {
                 vec: this.getOrCreateFrontNormal()
             } ).outputs( {
                 vec: out
             } );
             return out;
         },
-
-
         getOrCreateNormalizedPosition: function () {
             var eye = this._variables[ 'eyeVector' ];
             if ( eye )
                 return eye;
             var nor = this.createVariable( 'vec3' );
             var castEye = this.createVariable( 'vec3' );
-            factory.getNode( 'SetFromNode' ).inputs( this.getOrCreateInputPosition() ).outputs( castEye );
-            factory.getNode( 'Normalize' ).inputs( {
+            this.getNode( 'SetFromNode' ).inputs( this.getOrCreateInputPosition() ).outputs( castEye );
+            this.getNode( 'Normalize' ).inputs( {
                 vec: castEye
             } ).outputs( {
                 vec: nor
             } );
             var out = this.createVariable( 'vec3', 'eyeVector' );
-            factory.getNode( 'Mult' ).inputs( nor, this.createVariable( 'float' ).setValue( '-1.0' ) ).outputs( out );
+            this.getNode( 'Mult' ).inputs( nor, this.createVariable( 'float' ).setValue( '-1.0' ) ).outputs( out );
             return out;
         },
 
@@ -475,7 +514,7 @@ define( [
 
             var premultAlpha = this.createVariable( 'vec4' );
 
-            factory.getNode( 'PreMultAlpha' ).inputs( {
+            this.getNode( 'PreMultAlpha' ).inputs( {
                 color: finalColor,
                 alpha: alpha
             } ).outputs( {
@@ -488,7 +527,7 @@ define( [
 
         getColorsRGB: function ( finalColor ) {
             var finalSrgbColor = this.createVariable( 'vec3' );
-            factory.getNode( 'LinearTosRGB' ).inputs( {
+            this.getNode( 'LinearTosRGB' ).inputs( {
                 color: finalColor
             } ).outputs( {
                 color: finalSrgbColor
@@ -517,7 +556,7 @@ define( [
                 '  %color *= %vertexColor.rgba;'
             ].join( '\n' );
 
-            factory.getNode( 'InlineCode' ).code( str ).inputs( {
+            this.getNode( 'InlineCode' ).code( str ).inputs( {
                 diffuse: diffuseColor,
                 hasVertexColor: vertexColorUniform,
                 vertexColor: vertexColor
@@ -553,7 +592,7 @@ define( [
 
                 var texAccum = this.createVariable( 'vec3', 'texDiffuseAccum' );
 
-                factory.getNode( 'Mult' ).inputs( texturesInput ).outputs( texAccum );
+                this.getNode( 'Mult' ).inputs( texturesInput ).outputs( texAccum );
                 return texAccum;
 
             } else if ( texturesInput.length === 1 ) {
@@ -670,14 +709,15 @@ define( [
             // if none, no shadow, hop we go.
             // TODO: harder Link shadowTexture and shadowAttribute ?
             // TODO: multi shadow textures for 1 light
+            var lightNum = light.getLightNumber();
             for ( k = 0; k < this._shadows.length; k++ ) {
                 shadow = this._shadows[ k ];
-                if ( shadow.getLight() !== light ) continue;
+                if ( shadow.getLightNumber() !== lightNum ) continue;
 
                 lightIndex = k;
                 for ( var p = 0; p < this._shadowsTextures.length; p++ ) {
                     shadowTexture = this._shadowsTextures[ p ];
-                    if ( shadowTexture && shadowTexture.getLightUnit() === light.getLightNumber() ) {
+                    if ( shadowTexture && shadowTexture.getLightUnit() === lightNum ) {
                         shadowTextures[ p ] = shadowTexture;
                         hasShadows = true;
                     }
@@ -720,12 +760,12 @@ define( [
 
             }
             // TODO: shadow Attributes in node, is this the legit way
-            factory.getNode( 'ShadowReceive' ).inputs( inputs ).outputs( {
+            this.getNode( 'ShadowReceive' ).inputs( inputs ).outputs( {
                 float: shadowedOutput
             } ).setShadowAttribute( shadow );
 
             var lightAndShadowTempOutput = this.createVariable( 'vec3', 'lightAndShadowTempOutput' );
-            factory.getNode( 'Mult' ).inputs( lightedOutput, shadowedOutput ).outputs( lightAndShadowTempOutput );
+            this.getNode( 'Mult' ).inputs( lightedOutput, shadowedOutput ).outputs( lightAndShadowTempOutput );
             return lightAndShadowTempOutput;
 
         },
@@ -786,7 +826,7 @@ define( [
                 if ( !inputs.eyeVector )
                     inputs.eyeVector = this.getOrCreateNormalizedPosition();
 
-                factory.getNode( nodeName ).inputs( inputs ).outputs( {
+                this.getNode( nodeName ).inputs( inputs ).outputs( {
                     color: lightedOutput
                 } );
 
@@ -799,7 +839,7 @@ define( [
 
                 var lightMatAmbientOutput = this.createVariable( 'vec3', 'lightMatAmbientOutput' );
 
-                factory.getNode( 'Mult' ).inputs( inputs.materialambient, lightUniforms.lightambient ).outputs( lightMatAmbientOutput );
+                this.getNode( 'Mult' ).inputs( inputs.materialambient, lightUniforms.lightambient ).outputs( lightMatAmbientOutput );
 
 
                 lightOutputVarList.push( lightMatAmbientOutput );
@@ -811,7 +851,7 @@ define( [
             if ( lightOutputVarList.length === 0 )
                 lightOutputVarList.push( this.createVariable( 'vec3' ).setValue( 'vec3(0.0)' ) );
 
-            factory.getNode( 'Add' ).inputs( lightOutputVarList ).outputs( output );
+            this.getNode( 'Add' ).inputs( lightOutputVarList ).outputs( output );
 
             return output;
         },
@@ -822,7 +862,7 @@ define( [
         createTextureRGBA: function ( texture, textureSampler, texCoord ) {
 
             var texel = this.createVariable( 'vec4' );
-            factory.getNode( 'TextureRGBA' ).inputs( {
+            this.getNode( 'TextureRGBA' ).inputs( {
                 sampler: textureSampler,
                 uv: texCoord
             } ).outputs( {
@@ -856,6 +896,9 @@ define( [
                 }
             }
             functor.call( functor, node );
+
+            // keep trace we visited.
+            this.markNodeAsVisited( node );
         },
 
         // Gather a particular output field
@@ -876,7 +919,7 @@ define( [
 
                 var idx = node.getType();
                 if ( idx === undefined || idx === '' ) {
-                    Notify.error( 'Your node ' + node + ' has not type' );
+                    Notify.error( 'Your node ' + node + ' has no type' );
                 }
                 if ( node[ field ] && this._map[ idx ] === undefined ) {
 
@@ -914,7 +957,7 @@ define( [
                 var idx = node.getType();
 
                 if ( idx === undefined || idx === '' ) {
-                    Notify.error( 'Your node ' + node + ' has not type' );
+                    Notify.error( 'Your node ' + node + ' has no type' );
                 }
                 if ( node.globalFunctionDeclaration &&
                     this._map[ idx ] === undefined ) {
@@ -1027,7 +1070,7 @@ define( [
             var tempViewSpace = this.createVariable( 'vec4' );
 
             //viewSpace
-            factory.getNode( 'MatrixMultPosition' ).inputs( {
+            this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
                 vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
             } ).outputs( {
@@ -1035,7 +1078,7 @@ define( [
             } );
 
             //glpos
-            factory.getNode( 'MatrixMultPosition' ).inputs( {
+            this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' ),
                 vec: tempViewSpace
             } ).outputs( {
@@ -1043,7 +1086,6 @@ define( [
             } );
 
         },
-
         declareVertexTransformBillboard: function ( glPosition ) {
             this.getOrCreateInputPosition();
             var billboard = [ '%glPosition = %ProjectionMatrix * ( vec4( %Vertex, 1.0 ) + vec4( %ModelViewMatrix[ 3 ].xyz, 0.0 ) );', ];
@@ -1066,15 +1108,16 @@ define( [
             // FragEye
             // need vec4 for linearization of depth
             var tempViewSpace = this.getOrCreateInputPosition();
-            factory.getNode( 'MatrixMultPosition' ).inputs( {
+            this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
                 vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
             } ).outputs( {
                 vec: tempViewSpace
             } );
 
-            // glposition
-            factory.getNode( 'MatrixMultPosition' ).inputs( {
+
+            //glpos
+            this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' ),
                 vec: tempViewSpace
             } ).outputs( {
@@ -1085,7 +1128,7 @@ define( [
 
 
             // FragNormal
-            factory.getNode( 'MatrixMultDirection' ).inputs( {
+            this.getNode( 'MatrixMultDirection' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
                 vec: this.getOrCreateAttribute( 'vec3', 'Normal' )
             } ).outputs( {
@@ -1099,7 +1142,7 @@ define( [
         declareVertexTransformShadowed: function ( /*glPosition*/) {
 
             // worldpos
-            factory.getNode( 'MatrixMultPosition' ).inputs( {
+            this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' ),
                 vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
             } ).outputs( {
@@ -1149,7 +1192,7 @@ define( [
                 if ( texCoordUnit === undefined || texCoordMap[ texCoordUnit ] !== undefined )
                     continue;
 
-                factory.getNode( 'SetFromNode' ).inputs( this.getOrCreateAttribute( 'vec2', 'TexCoord' + texCoordUnit ) ).outputs(
+                this.getNode( 'SetFromNode' ).inputs( this.getOrCreateAttribute( 'vec2', 'TexCoord' + texCoordUnit ) ).outputs(
                     this.getOrCreateVarying( 'vec2', 'FragTexCoord' + texCoordUnit )
                 );
 
@@ -1159,10 +1202,16 @@ define( [
 
         declareVertexMain: function () {
 
-            var glPosition = factory.getNode( 'glPosition' );
+            // the mandatory output is glPosition
+            var glPosition = this.getNode( 'glPosition' );
 
+            // shader graph can have multiple output (glPointsize, varyings)
+            // here named roots
+            // all outputs must be pushed inside
             var roots = [];
 
+
+            // roots is
             this.declareVertexTransforms( glPosition, roots );
             this.declareVertexTextureCoords( glPosition, roots );
 
@@ -1175,7 +1224,7 @@ define( [
                     '    %VertexColor = vec4(1.0,1.0,1.0,1.0);'
                 ];
 
-                factory.getNode( 'InlineCode' ).code( vertexDynamicColoring.join( '\n' ) ).inputs( {
+                this.getNode( 'InlineCode' ).code( vertexDynamicColoring.join( '\n' ) ).inputs( {
                     ArrayColorEnabled: this.getOrCreateUniform( 'float', 'ArrayColorEnabled' ),
                     Color: this.getOrCreateAttribute( 'vec4', 'Color' )
                 } ).outputs( {
@@ -1187,8 +1236,8 @@ define( [
 
             // TODO: add this for POINT RENDERING ONLY
             var str = '%out = %input;';
-            var glPointSize = factory.getNode( 'glPointSize' );
-            factory.getNode( 'InlineCode' ).code( str ).inputs( {
+            var glPointSize = this.getNode( 'glPointSize' );
+            this.getNode( 'InlineCode' ).code( str ).inputs( {
                 input: this.getOrCreateConstant( 'float', 'unitFloat' ).setValue( '1.0' )
             } ).outputs( {
                 out: glPointSize
@@ -1217,11 +1266,13 @@ define( [
             return this.declareVertexMain();
         },
 
+        // The Compiler Main Code
+        // called on Vertex or Fragment Shader Graph
         createShaderFromGraphs: function ( roots, type ) {
+            this._compiledNodeList = {};
 
-
+            // list all vars
             var vars = Object.keys( this._variables );
-
             var variables = [];
             for ( var j = 0, jl = vars.length; j < jl; j++ ) {
 
@@ -1251,37 +1302,66 @@ define( [
                 shaderStack.push( variables.join( ' ' ) );
                 shaderStack.push( '\n// end vars\n' );
             }
+            // make sure we have at least one output
             if ( roots.length === 0 ) {
-                Notify.error( 'shader without output' );
+                Notify.error( 'shader without any final Node output (need at least one)' );
             }
             shaderStack.push( this.evaluate( roots ) );
 
             shaderStack.push( '}' );
 
+            // Shader Graph has been outputed an array of string
+            // we concatenate it to a shader string program
             var shaderStr = shaderStack.join( '\n' );
+
+            // Process defines, add precision, resolve include pragma
             var shader = this._shaderProcessor.processShader( shaderStr, defines, extensions, type );
 
+            // Check
+            var compiledNodes = Object.keys( this._compiledNodeList );
+            var activeNodes = Object.keys( this._activeNodeList );
+            activeNodes.filter( function ( i ) {
+                var found = compiledNodes.indexOf( i ) !== -1;
+                if ( !found ) {
+                    var node = this._activeNodeList[ i ];
+                    var name = node.getName();
+                    if ( name === 'Variable' ) name += ' ' + node.getVariable() + ' (' + node.getType() + ')';
+                    Notify.warn( 'Nodes requested, but not compiled: ' + i + ' ' + name + ' ' + node.toString() );
+                }
+                return found;
+            }, this );
+
+
+            // return the complete shader string.
+            // now is compilable by gl driver
             return shader;
         },
         createVertexShader: function () {
 
-            // Call to specialised inhenrited shader Compiler
+
             // start with clean slate
             this._variables = {};
+            this._activeNodeList = {};
             this._fragmentShaderMode = false;
 
+            // Call to specialised inhenrited shader Compiler
             var roots = this.createVertexShaderGraph();
             var vname = this.getVertexShaderName();
             if ( vname )
-                roots.push( factory.getNode( 'Define', 'SHADER_NAME' ).setValue( vname ) );
+                roots.push( this.getNode( 'Define', 'SHADER_NAME' ).setValue( vname ) );
 
+            // call the graph compiler itself
             var shader = this.createShaderFromGraphs( roots, 'vertex' );
+
             Notify.debug( shader );
 
-            // reset for next
+            // reset for next, but not empty, keep varyings
             this._variables = {};
+            this._activeNodeList = {};
             this._fragmentShaderMode = true;
-
+            // we want to keep list of varying
+            // to be able to validate fragment shader
+            // requiring varyings
             var vars = Object.keys( this._varyings );
             for ( var j = 0, jl = vars.length; j < jl; j++ ) {
                 var varying = this._varyings[ vars[ j ] ];
@@ -1289,6 +1369,11 @@ define( [
                     // make sure we clean input/output
                     // of varying for fragment shader graph
                     varying.reset();
+                    // add it back to variables list
+                    // so that we can detect
+                    // when varing is computed in VS but not in FS
+                    this._activeNodeList[ varying.getID() ] = varying;
+                    this._variables[ varying.getID() ] = varying;
                 }
             }
 
@@ -1296,7 +1381,6 @@ define( [
             return shader;
         },
         evaluateDefines: function ( roots ) {
-
             return this.evaluateAndGatherField( roots, 'getDefines' );
         },
         evaluateExtensions: function ( roots ) {
@@ -1305,7 +1389,10 @@ define( [
         createFragmentShader: function () {
 
             // start with clean slate
-            this._variables = {};
+            if ( this._customVertexShader ) {
+                this._variables = {};
+                this._activeNodeList = {};
+            }
             this._fragmentShaderMode = true;
 
             this.declareTextures();
@@ -1314,7 +1401,7 @@ define( [
             var roots = this.createFragmentShaderGraph();
             var fname = this.getFragmentShaderName();
             if ( fname )
-                roots.push( factory.getNode( 'Define', 'SHADER_NAME' ).setValue( fname ) );
+                roots.push( this.getNode( 'Define', 'SHADER_NAME' ).setValue( fname ) );
 
             var shader = this.createShaderFromGraphs( roots, 'fragment' );
             Notify.debug( shader );
@@ -1322,6 +1409,7 @@ define( [
             // reset for next
             this._variables = {};
             this._fragmentShaderMode = false;
+            this._activeNodeList = {};
 
             return shader;
         },
@@ -1332,16 +1420,16 @@ define( [
         // you could change the default behavior
         createDefaultFragmentShaderGraph: function () {
             var fofd = this.getOrCreateConstant( 'vec4', 'fofd' ).setValue( 'vec4(1.0, 0.0, 1.0, 0.7)' );
-            var fragCol = factory.getNode( 'glFragColor' );
-            factory.getNode( 'SetFromNode' ).inputs( fofd ).outputs( fragCol );
+            var fragCol = this.getNode( 'glFragColor' );
+            this.getNode( 'SetFromNode' ).inputs( fofd ).outputs( fragCol );
             return fragCol;
         },
 
         // Depth Shadow Map Casted from Light Pov
         // Depth encoded in color buffer
         createShadowCastFragmentShaderGraph: function () {
-            var frag = factory.getNode( 'glFragColor' );
-            factory.getNode( 'ShadowCast' ).setShadowCastAttribute( this._shadowCastAttribute ).inputs( {
+            var frag = this.getNode( 'glFragColor' );
+            this.getNode( 'ShadowCast' ).setShadowCastAttribute( this._shadowCastAttribute ).inputs( {
                 exponent: this.getOrCreateUniform( 'float', 'exponent0' ),
                 exponent1: this.getOrCreateUniform( 'float', 'exponent1' ),
                 shadowDepthRange: this.getOrCreateUniform( 'vec4', 'Shadow_DepthRange' ),
@@ -1357,6 +1445,9 @@ define( [
         // you could inherit and override this function
         createFragmentShaderGraph: function () {
 
+            // shader graph can have multiple output (glPointsize, varyings)
+            // here named roots
+            // all outputs must be pushed inside
             var roots = [];
 
             // depth cast
@@ -1382,7 +1473,7 @@ define( [
 
             } else {
 
-                factory.getNode( 'InlineCode' ).code( '%color.rgb *= %diffuse.rgb;' ).inputs( {
+                this.getNode( 'InlineCode' ).code( '%color.rgb *= %diffuse.rgb;' ).inputs( {
                     diffuse: materialUniforms.diffuse
                 } ).outputs( {
                     color: diffuseColor
@@ -1438,20 +1529,20 @@ define( [
             if ( materialUniforms.emission ) {
                 // add emission if any
                 var outputDiffEm = this.createVariable( 'vec3' ).setValue( 'vec3(0.0)' );
-                factory.getNode( 'Add' ).inputs( finalColor, materialUniforms.emission ).outputs( outputDiffEm );
+                this.getNode( 'Add' ).inputs( finalColor, materialUniforms.emission ).outputs( outputDiffEm );
                 finalColor = outputDiffEm;
             }
 
             // premult alpha
             finalColor = this.getPremultAlpha( finalColor, alpha );
 
-            var fragColor = factory.getNode( 'glFragColor' );
+            var fragColor = this.getNode( 'glFragColor' );
 
 
             // todo add gamma corrected color, but it would also
             // mean to handle correctly srgb texture. So it should be done
             // at the same time. see osg.Tetxure to implement srgb
-            factory.getNode( 'SetAlpha' ).inputs( {
+            this.getNode( 'SetAlpha' ).inputs( {
                 color: finalColor,
                 alpha: alpha
             } ).outputs( {

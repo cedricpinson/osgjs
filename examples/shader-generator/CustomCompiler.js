@@ -41,7 +41,7 @@ var CustomCompiler;
             var roots = [];
 
             // that's the final result of the shader graph
-            var fragColor = factory.getNode( 'glFragColor' );
+            var fragColor = this.getNode( 'glFragColor' );
 
 
             // diffuse color
@@ -57,7 +57,7 @@ var CustomCompiler;
 
             } else {
 
-                factory.getNode( 'InlineCode' ).code( '%color.rgb *= %diffuse.rgb;' ).inputs( {
+                this.getNode( 'InlineCode' ).code( '%color.rgb *= %diffuse.rgb;' ).inputs( {
                     diffuse: materialUniforms.diffuse
                 } ).outputs( {
                     color: diffuseColor
@@ -81,7 +81,7 @@ var CustomCompiler;
                 var rampAttribute = this.getAttributeType( 'Ramp' );
                 if ( rampAttribute && rampAttribute.getAttributeEnable() ) {
 
-                    factory.getNode( 'Ramp' ).inputs( {
+                    this.getNode( 'Ramp' ).inputs( {
                         color: lightedOutput
                     } ).outputs( {
                         color: rampResult
@@ -101,7 +101,7 @@ var CustomCompiler;
                 var negatifAttribute = this.getAttributeType( 'Negatif' );
                 if ( negatifAttribute ) {
 
-                    factory.getNode( 'Negatif' ).inputs( {
+                    this.getNode( 'Negatif' ).inputs( {
                         color: rampResult,
                         enable: this.getOrCreateUniform( negatifAttribute.getOrCreateUniforms().enable )
                     } ).outputs( {
@@ -116,7 +116,7 @@ var CustomCompiler;
 
                 // get final color
                 // use the rampResult from previous node
-                factory.getNode( 'InlineCode' ).code( '%color = vec4(%emit.rgb + %negatif, 1.0);' ).inputs( {
+                this.getNode( 'InlineCode' ).code( '%color = vec4(%emit.rgb + %negatif, 1.0);' ).inputs( {
                     emit: materialUniforms.emission,
                     negatif: negatifResult
                 } ).outputs( {
@@ -126,7 +126,7 @@ var CustomCompiler;
             } else {
 
                 // no lights use a default behaviour
-                factory.getNode( 'InlineCode' ).code( '%color = vec4(%diffuse, 1.0);' ).inputs( {
+                this.getNode( 'InlineCode' ).code( '%color = vec4(%diffuse, 1.0);' ).inputs( {
                     diffuse: diffuseColor
                 } ).outputs( {
                     color: fragColor

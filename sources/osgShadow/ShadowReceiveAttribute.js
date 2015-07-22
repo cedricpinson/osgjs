@@ -17,25 +17,13 @@ define( [
      * @class ShadowReceiveAttribute
      * @inherits StateAttribute
      */
-    var ShadowReceiveAttribute = function ( lightNumber, disable ) {
+    var ShadowReceiveAttribute = function ( lightNum, disable ) {
         StateAttribute.call( this );
 
+        this._lightNumber = lightNum;
 
-        //this._lightNumber // (might be broken by light reordering change) // yeah agree
-
-        // just in case
-        // the object in case of change in ordering ?
-        // need to be able to link in compiler the light uniforms as we use light uniforms in shadow shader code
-        // well it's not supposed to be a problem, but yeah the ordering is an issue, so maybe it's better to link to
-        // the light attribute, in this case we dont need anymore the _lightNumber
-        // but re ordering light seems to not be a good practice in osg, it's still a risk
-        this._light = undefined;
-        // that could be more generic to have the unit instead of the object
 
         // see shadowSettings.js header for shadow algo param explanations
-
-        this._lightNumber = lightNumber !== undefined ? lightNumber : 0;
-
         // hash change var
         this._algoType = 'NONE';
 
@@ -130,12 +118,9 @@ define( [
         getPrecision: function () {
             return this._precision;
         },
-        getLight: function () {
-            return this._light;
-        },
-        setLight: function ( light ) {
-            this._light = light;
-            this._lightNumber = light.getLightNumber();
+
+        setLightNumber: function ( lightNum ) {
+            this._lightNumber = lightNum;
             this.dirty();
         },
 
@@ -283,6 +268,9 @@ define( [
         },
 
         apply: function ( /*state*/) {
+
+            if ( !this._enable )
+                return;
 
             var uniformMap = this.getOrCreateUniforms();
 
