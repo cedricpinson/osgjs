@@ -330,9 +330,9 @@ define( [
         var vertexes = new MACROUTILS.Float32Array( [ -1.0, -1.0, -1.0, 4.0, 4.0, -1.0 ] );
 
         var indexes = new MACROUTILS.Uint16Array( 3 );
-        indexes[ 0 ] = 0;
+        indexes[ 0 ] = 2;
         indexes[ 1 ] = 1;
-        indexes[ 2 ] = 2;
+        indexes[ 2 ] = 0;
 
         // Further optim: no index, no uv (uv.xy = position.xy in vertex shader)
         g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, vertexes, 2 );

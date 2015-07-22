@@ -2,6 +2,7 @@ define( [
     'osg/Notify',
     'osg/Utils',
     'osg/Node',
+    'osg/CullFace',
     'osg/Depth',
     'osg/Texture',
     'osg/Camera',
@@ -17,7 +18,7 @@ define( [
     'osg/TransformEnums',
     'osg/Vec2',
     'osg/Vec3'
-], function ( Notify, MACROUTILS, Node, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix, Uniform, StateSet, Program, Shader, Shape, StateAttribute, TransformEnums, Vec2, Vec3 ) {
+], function ( Notify, MACROUTILS, Node, CullFace, Depth, Texture, Camera, FrameBufferObject, Viewport, Matrix, Uniform, StateSet, Program, Shader, Shape, StateAttribute, TransformEnums, Vec2, Vec3 ) {
 
     'use strict';
 
@@ -55,6 +56,10 @@ define( [
         this._stack = [];
         this._renderToScreen = false;
         this._dirty = false;
+
+        this._textureRTT = [];
+        this._cameraRTT = [];
+
         var UpdateCallback = function () {
 
         };
@@ -67,7 +72,9 @@ define( [
             }
         };
         this.setUpdateCallback( new UpdateCallback() );
+        // disable unecessarry drawing/states/check
         this.getOrCreateStateSet().setAttributeAndModes( new Depth( 'DISABLE' ) );
+        this.getOrCreateStateSet().setAttributeAndModes( new CullFace( 'BACK' ) );
     };
 
     Composer.prototype = MACROUTILS.objectInherit( Node.prototype, {
@@ -104,7 +111,9 @@ define( [
             this._renderToScreenWidth = w;
             this._renderToScreenHeight = h;
         },
-
+        getResultTexture: function () {
+            return this._resultTexture;
+        },
         isDirty: function () {
             for ( var i = 0, l = this._stack.length; i < l; i++ ) {
                 if ( this._stack[ i ].filter.isDirty() ) {
@@ -114,22 +123,51 @@ define( [
             return false;
         },
 
+        /* develblock:start */
+        // debug only check for specific bad condition:
+        // in webgl 1.0 you cannot read and write on the same texture
+        // so you shouldn't bind a FOB texture as input and output
+        debugCheckRttNotReadWrite: function ( textureResult, stateSet ) {
+
+            for ( var k = 0, lt = stateSet.getNumTextureAttributeLists(); k < lt; k++ ) {
+                var textureBinded = stateSet.getTextureAttribute( k, 'Texture' );
+                Notify.assert( textureResult !== textureBinded, 'Composer: write/read at the same time on a texture is undefined behavior' );
+
+            }
+        },
+        /* develblock:end */
+
         build: function () {
 
-            var root = this;
+            var self = this;
+
+            // keep some references
+            // TODO: use for reuse/cache/invalidation
+            self._textureRTT = [];
+            self._cameraRTT = [];
+
+
             this.removeChildren();
             var lastTextureResult;
-            var self = this;
 
             this._stack.forEach( function ( element, i, array ) {
 
+                // update filter internal due to user change on filter
                 if ( element.filter.isDirty() ) {
                     element.filter.build();
+                }
+
+                // this filter need a special setup that composer build cannot do
+                if ( element.filter.interConnectFilters ) {
+                    lastTextureResult = element.filter.interConnectFilters( self, i, array );
+                    // goto next filter directly
+                    return;
                 }
 
                 var stateSet = element.filter.getStateSet();
                 var w, h;
 
+                // compute filter render texture size
                 if ( element.texture !== undefined ) {
 
                     w = element.texture.getWidth();
@@ -165,57 +203,81 @@ define( [
                     }
                 }
 
-                // check if we want to render on screen
+                // build the filter into a Camera and a StateSet
                 var camera = new Camera();
-                camera.setStateSet( element.filter.getStateSet() );
+                self._cameraRTT.push( camera );
+                camera.setStateSet( stateSet );
 
-                var texture;
-                var quad;
+
+                var textureResult;
+                // check if we want to render on screen
                 if ( lastFilterRenderToScreen === true ) {
                     w = self._renderToScreenWidth;
                     h = self._renderToScreenHeight;
                 } else {
+                    // Or in a offscreen Framebuffer
                     camera.setRenderOrder( Camera.PRE_RENDER, 0 );
-                    texture = element.texture;
+                    textureResult = element.texture;
                     var textureTarget = element.textureTarget;
-                    if ( texture === undefined ) {
-                        texture = new Texture();
-                        texture.setTextureSize( w, h );
+                    // if no user provided render target texture, create one
+                    if ( textureResult === undefined ) {
+                        textureResult = new Texture();
+                        textureResult.setName( 'composer Rtt ' + element.filter.getFragmentName() );
+                        textureResult.setTextureSize( w, h );
                         textureTarget = Texture.TEXTURE_2D;
+                        self._textureRTT.push( textureResult );
                     }
-                    camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture, textureTarget );
-
+                    // Attach the render texture target as FBO
+                    // Note: node depth attachment because we're in 2D
+                    camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, textureResult, textureTarget );
                 }
 
                 var vp = new Viewport( 0, 0, w, h );
                 camera.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
                 camera.setViewport( vp );
+
+                // FIXME: not really useful, but osgjs keep pushing projection matrix
+                // and maybe some old code still use it
                 Matrix.makeOrtho( 0, 1, 0, 1, -5, 5, camera.getProjectionMatrix() );
 
-                quad = Shape.createTexturedFullScreenFakeQuadGeometry();
+                var quad = Shape.createTexturedFullScreenFakeQuadGeometry();
 
-                if ( element.filter.buildGeometry !== undefined )
+                if ( element.filter.buildGeometry )
                     quad = element.filter.buildGeometry( quad );
 
                 quad.setName( 'composer layer' );
 
-                lastTextureResult = texture;
+                // if rendering into texture framebuffer
+                if ( textureResult ) {
 
-                // assign the result texture to the next stateset
-                if ( i + 1 < array.length ) {
-                    array[ i + 1 ].filter.getStateSet().setTextureAttributeAndModes( 0, lastTextureResult );
+                    /* develblock:start */
+                    self.debugCheckRttNotReadWrite( textureResult, stateSet );
+                    /* develblock:end */
+
+                    // assign the result texture to the next stateset
+                    if ( i + 1 < array.length ) {
+                        array[ i + 1 ].filter.getStateSet().setTextureAttributeAndModes( 0, textureResult );
+                    }
+
                 }
+                lastTextureResult = textureResult;
+
 
                 camera.addChild( quad );
                 element.filter.getStateSet().addUniform( Uniform.createFloat2( [ w, h ], 'RenderSize' ) );
 
-                // Optimization, no need to clear
-                camera.setClearMask( 0x00000000 );
+                // Optimization, no need to clear,
+                // unless we know we'll have transparent parts
+                // which is a special case rather than the default
+                camera.setClearMask( 0 );
 
 
                 camera.setName( 'Composer Pass' + i );
-                root.addChild( camera );
+                // add to composer
+                self.addChild( camera );
             } );
+            // reference to the resulting texture
+            // undefined if rendering directly to screen
             this._resultTexture = lastTextureResult;
         }
     } );
@@ -231,8 +293,14 @@ define( [
         setFragmentName: function ( fname ) {
             this._fragmentName = fname;
         },
+        getFragmentName: function () {
+            return this._fragmentName;
+        },
         setVertexName: function ( vname ) {
             this._vertexName = vname;
+        },
+        getVertexName: function () {
+            return this._vertexName;
         },
         getDefineFragmentName: function () {
             return '\n#define SHADER_NAME ' + this._fragmentName + '\n';
@@ -254,19 +322,18 @@ define( [
         }
     };
 
-
+    // default means you do use the special optimized full screen triangle
+    // dubbed fakeFullscreenQuad
+    // no need of modelView, projection, nor texcoord
     Composer.Filter.defaultVertexShader = [
         'attribute vec3 Vertex;',
-        'attribute vec2 TexCoord0;',
         'varying vec2 FragTexCoord0;',
-        'uniform mat4 ProjectionMatrix;',
         'void main(void) {',
-        '  gl_Position = ProjectionMatrix * vec4(Vertex,1.0);',
-        '  FragTexCoord0 = TexCoord0;',
+        '  gl_Position = vec4(Vertex*2.0 - 1.0,1.0);',
+        '  FragTexCoord0 = Vertex.xy;',
         '}',
         ''
     ].join( '\n' );
-
     Composer.Filter.defaultFragmentShaderHeader = [
         '#ifdef GL_FRAGMENT_PRECISION_HIGH\n precision highp float;\n #else\n precision mediump float;\n#endif',
         'varying vec2 FragTexCoord0;',
@@ -361,48 +428,185 @@ define( [
     };
 
     Composer.Filter.Custom.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
+        setFragmentShader: function ( f ) {
+            this._fragmentShader = f;
+        },
+        setVertexShader: function ( v ) {
+            this._vertexShader = v;
+        },
+        autoBindFragmentUniformStateSet: function ( stateSet, fragmentShader, uniforms ) {
+
+            var unitIndex = 0;
+
+            // TODO: check if not a better place Utils
+            // and reuse (we already do this in shader)
+            // At least DEFINE the regexp somewhere somehow
+            var r = fragmentShader.match( /uniform\s+\w+\s+\w+/g );
+            if ( !r ) return;
+
+            for ( var i = 0, l = r.length; i < l; i++ ) {
+
+                var match = r[ i ].match( /uniform\s+(\w+)\s+(\w+)/ );
+                var uniformType = match[ 1 ];
+                var uniformName = match[ 2 ];
+                var uniform;
+
+                if ( !uniforms[ uniformName ] ) continue;
+
+                var uniformValue = uniforms[ uniformName ];
+
+                if ( uniformType.search( 'sampler' ) !== -1 ) {
+
+                    // STRONG IMPLICIT LINKING HERE:
+                    // Texture Unit Linked directly to declaration order in fragment Shader
+                    stateSet.setTextureAttributeAndModes( unitIndex, uniformValue );
+                    uniform = Uniform.createInt1( unitIndex, uniformName );
+                    unitIndex++;
+                    stateSet.addUniform( uniform );
+
+                } else {
+
+                    if ( Uniform.isUniform( uniformValue ) ) {
+                        uniform = uniformValue;
+                    } else {
+                        uniform = Uniform[ uniformType ]( uniforms[ uniformName ], uniformName );
+                    }
+                    stateSet.addUniform( uniform );
+
+                }
+
+            }
+        },
         build: function () {
 
-            var program = new Program(
+            this._program = new Program(
                 new Shader( Shader.VERTEX_SHADER, this._vertexShader + this.getDefineVertexName() ),
                 new Shader( Shader.FRAGMENT_SHADER, this._fragmentShader + this.getDefineFragmentName() ) );
 
             if ( this._uniforms ) {
-                var unitIndex = 0;
-
-                var r = this._fragmentShader.match( /uniform\s+\w+\s+\w+/g );
-                if ( r !== null ) {
-                    for ( var i = 0, l = r.length; i < l; i++ ) {
-                        var match = r[ i ].match( /uniform\s+(\w+)\s+(\w+)/ );
-                        var uniformType = match[ 1 ];
-                        var uniformName = match[ 2 ];
-                        var uniform;
-
-                        if ( this._uniforms[ uniformName ] !== undefined ) {
-                            var uniformValue = this._uniforms[ uniformName ];
-                            if ( uniformType.search( 'sampler' ) !== -1 ) {
-                                this._stateSet.setTextureAttributeAndModes( unitIndex, uniformValue );
-                                //uniform = Uniform.createInt1( unitIndex, uniformName );
-                                unitIndex++;
-                                //this._stateSet.addUniform( uniform );
-                            } else {
-                                if ( Uniform.isUniform( uniformValue ) ) {
-                                    uniform = uniformValue;
-                                } else {
-                                    uniform = Uniform[ uniformType ]( this._uniforms[ uniformName ], uniformName );
-                                }
-                                this._stateSet.addUniform( uniform );
-                            }
-                        }
-                    }
-                }
+                this.autoBindFragmentUniformStateSet( this._stateSet, this._fragmentShader, this._uniforms );
             }
-            this._stateSet.setAttributeAndModes( program );
+            this._stateSet.setAttributeAndModes( this._program );
             this._dirty = false;
+
         }
     } );
 
 
+    // filter that switch its render target and its input at each frame
+    // allowing to get input for last frame render.
+    Composer.Filter.PingPong = function ( cameraRtt0, rtt0, cameraRtt1, rtt1, fragmentShader, uniforms ) {
+        Composer.Filter.Custom.apply( this, [ fragmentShader, uniforms ] );
+
+        this._cameraRtt0 = cameraRtt0;
+        this._rtt0 = rtt0;
+
+        this._cameraRtt1 = cameraRtt1;
+        this._rtt1 = rtt1;
+
+        this._fragmentName = 'PingPong';
+    };
+
+    Composer.Filter.PingPong.prototype = MACROUTILS.objectInherit( Composer.Filter.Custom.prototype, {
+
+        // Constraints:
+        // - Next Filter: texture unit 0 === rtt0 && texture unit 1 === rtt1
+        // - Previous Filter: the output of the previous filter if any
+        //      will be binded to texture unit 0 of both camera stateset
+        interConnectFilters: function ( composer, i, array ) {
+
+            var filterStateSet = this.getStateSet();
+
+            var st0 = this._cameraRtt0.getOrCreateStateSet();
+            var st1 = this._cameraRtt1.getOrCreateStateSet();
+
+            // copy filter program and uniforms on the 2 cameras
+            st0.setAttributeAndModes( this._program );
+            st1.setAttributeAndModes( this._program );
+
+            if ( this._uniforms ) {
+
+                for ( var k = 0, l = this._uniforms.length; k < l; k++ ) {
+                    st0.addUniform( this._uniforms[ k ] );
+                    st1.addUniform( this._uniforms[ k ] );
+                }
+
+            }
+
+            var uniformTU0 = Uniform.createInt1( 0, 'Texture0' );
+            var uniformTU1 = Uniform.createInt1( 1, 'Texture1' );
+
+            st0.addUniform( uniformTU0 );
+            st0.addUniform( uniformTU1 );
+
+            st1.addUniform( uniformTU0 );
+            st1.addUniform( uniformTU1 );
+
+            // copy input on both camera
+            // Composer::Build set the last render into the current filter stateset texture unit 0
+            // we copy that into each camera as Texture unit 0
+            var inputTexture = filterStateSet.getTextureAttribute( 0, 'Texture' );
+            st0.setTextureAttributeAndModes( 0, inputTexture );
+            st1.setTextureAttributeAndModes( 0, inputTexture );
+
+            st0.setTextureAttributeAndModes( 1, this._rtt1 );
+            st1.setTextureAttributeAndModes( 1, this._rtt0 );
+
+            // if not the last filter
+            // bind both result to next filter
+            // rtt0 to texture unit 0
+            // rtt0 to texture unit 1
+            if ( i !== array.length - 1 ) {
+
+                // just translate stateset to the next filter
+                var nextSt = array[ i + 1 ].filter.getStateSet();
+
+                nextSt.setTextureAttributeAndModes( 0, this._rtt0 );
+                nextSt.setTextureAttributeAndModes( 1, this._rtt1 );
+
+                nextSt.addUniform( uniformTU0 );
+                nextSt.addUniform( uniformTU1 );
+
+            }
+
+            var quad = Shape.createTexturedFullScreenFakeQuadGeometry();
+
+            if ( this.buildGeometry )
+                quad = this.buildGeometry( quad );
+
+            quad.setName( 'composer layer' );
+
+            this._cameraRtt0.addChild( quad );
+            this._cameraRtt1.addChild( quad );
+
+            composer.addChild( this._cameraRtt0 );
+            composer.addChild( this._cameraRtt1 );
+
+            composer._textureRTT.push( this._rtt0 );
+            composer._textureRTT.push( this._rtt1 );
+
+            composer._cameraRTT.push( this._cameraRtt0 );
+            composer._cameraRTT.push( this._cameraRtt1 );
+
+            // hide one of the two pass, as we will render only one each frame
+            this._cameraRtt1.setNodeMask( ~0x0 );
+
+            // last texture result, only one possible so the first will do
+            return this._rtt0;
+
+        },
+
+        // PingPong
+        switch: function () {
+
+            var nodeMask0 = this._cameraRtt0.getNodeMask();
+            var nodeMask1 = this._cameraRtt1.getNodeMask();
+            this._cameraRtt0.setNodeMask( nodeMask1 );
+            this._cameraRtt1.setNodeMask( nodeMask0 );
+
+        }
+
+    } );
 
     Composer.Filter.AverageHBlur = function ( nbSamplesOpt, linear, unpack, pack ) {
         Composer.Filter.call( this );

@@ -228,6 +228,7 @@ define( [
                 /*jshint bitwise: true */
                 gl.clear( this.clearMask );
             }
+
             if ( this.positionedAttribute.length !== 0 ) {
                 this.applyPositionedAttribute( state, this.positionedAttribute );
             }

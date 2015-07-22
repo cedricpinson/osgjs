@@ -1221,7 +1221,7 @@ define( [
 
 
             //glpos
-            factory.getNode( 'MatrixMultPosition' ).inputs( {
+            this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateProjectionMatrix(),
                 vec: tempViewSpace
             } ).outputs( {
