@@ -72,11 +72,12 @@ define( [
         this.initAttributes();
         this.initTextureAttributes();
 
-        // Basic inference, any Compiler inheriting better check those
-        this._isShadeless = !this._isShadowCast || !this._material;
-        this._isLighted = !this._isShadowCast || ( !this._isShadeless && this._lights.length > 0 );
+        // no need to test light
+        var hasMaterial = !!this._material;
+        this._isLighted = hasMaterial && !this._isShadowCast && this._lights.length > 0;
+
         // backup shader, FS just output 'fofd'
-        this._isVertexColored = !this._isShadowCast && !!this._material;
+        this._isVertexColored = hasMaterial && !this._isShadowCast;
 
         // Important: if not using Compiler for Both VS and FS
         // Check either of those
@@ -209,6 +210,7 @@ define( [
             this._activeNodeList[ cacheID ] = n;
             return n;
         },
+
         // during compilation we pop
         // all node we do encounter
         // so that we can warn about
@@ -221,7 +223,7 @@ define( [
             if ( this._activeNodeList[ cacheID ] === n ) {
                 this._compiledNodeList[ cacheID ] = n;
             } else {
-                Notify.warn( 'Node not requested by using Compiler getNode and/or not registered in nodeFactory' );
+                Notify.warn( 'Node not requested by using Compiler getNode and/or not registered in nodeFactory ' + n.toString() );
             }
         },
 
@@ -400,12 +402,17 @@ define( [
             } else {
                 exist = this._varyings[ nameID ];
                 if ( exist ) {
+
                     // varying was declared in Vertex Shader
                     // just add it to variables cache.
                     // as that cache is not shared between VS and PS
                     this._variables[ nameID ] = exist;
+
                     // ensure we have it in active node list, could come from VS varying list
-                    this._activeNodeList[ exist.getID() ] = exist;
+                    if ( this._fragmentShaderMode && !this._customVertexShader && ( !this._activeNodeList[ exist.getID() ] || this._activeNodeList[ exist.getID() ] !== exist ) ) {
+
+                        Notify.error( 'Error: Varying in Fragment not declared in Vertex shader: ' + nameID + ' ' + type );
+                    }
                     return exist;
                 }
             }
@@ -414,7 +421,7 @@ define( [
             // if it's not in Varying Cache, but requested from fragment shader
             // it means => error
             if ( this._fragmentShaderMode && !this._customVertexShader ) {
-                Notify.error( 'Error: requesting a varying not declared in Vertex Shader Graph.( if a Custom Vertex Shader in a custom processor, add this._customVertexShader to your custom processor)' );
+                Notify.error( 'Error: requesting a varying not declared in Vertex Shader Graph.( if a Custom Vertex Shader in a custom processor, add this._customVertexShader to your custom processor): ' + nameID + ' ' + type );
             }
 
             var v = this.getNode( 'Varying', type, nameID );
@@ -1444,6 +1451,7 @@ define( [
             }
 
             var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material );
+
 
             // diffuse color
             var diffuseColor = this.getDiffuseColorFromTextures();
