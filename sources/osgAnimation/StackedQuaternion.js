@@ -21,12 +21,17 @@ define( [
         this._target = {
             value: value
         };
-        this._bindTransform = value;
+        this._defaultValue = Quat.create();
 
         this.setName( name );
     };
 
     StackedQuaternion.prototype = MACROUTILS.objectInherit( Object.prototype, {
+
+        init: function ( q ) {
+            this.setQuaternion( q );
+            Quat.copy( q, this._defaultValue );
+        },
 
         setQuaternion: function ( q ) {
             Quat.copy( q, this._target.value );
@@ -38,6 +43,10 @@ define( [
 
         getTarget: function () {
             return this._target;
+        },
+
+        resetDefaultValue: function () {
+            this.setQuaternion( this._defaultValue );
         },
 
         applyToMatrix: ( function () {
