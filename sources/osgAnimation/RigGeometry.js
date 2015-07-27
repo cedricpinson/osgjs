@@ -11,13 +11,10 @@ define( [
     'osgAnimation/Bone',
     'osgAnimation/UpdateRigGeometry',
     'osgAnimation/VertexInfluenceSet',
-    'osgAnimation/RigTransformHardware',
-
-
+    'osgAnimation/RigTransformHardware'
 ], function ( MACROUTILS, BufferArray, Vec3, Node, Geometry, NodeVisitor, Notify, Matrix, StateSet, Bone, UpdateRigGeometry, VertexInfluenceSet, RigTransformHardware ) {
 
     'use strict';
-
 
     // RigGeometry is a Geometry deformed by bones
     // To connect bones to RigGeometry it requires:

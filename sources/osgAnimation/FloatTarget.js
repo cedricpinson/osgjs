@@ -3,6 +3,8 @@ define( [
     'osgAnimation/Target'
 ], function ( MACROUTILS, Target ) {
 
+    'use strict';
+
     var FloatTarget = function ( value ) {
         Target.call( this );
         this._target = [ value ];

@@ -4,6 +4,8 @@ define( [
     'osg/Object'
 ], function ( Notify, MACROUTILS, Object ) {
 
+    'use strict';
+
     /**
      *  AnimationUpdateCallback
      *  @class AnimationUpdateCallback
