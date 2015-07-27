@@ -6,18 +6,16 @@ define( [
     'use strict';
 
     var Vec3CopyKeyFrame = function ( i, keys, result ) {
-        var index = i;
-        result[ 0 ] = keys[ index++ ];
-        result[ 1 ] = keys[ index++ ];
-        result[ 2 ] = keys[ index++ ];
+        result[ 0 ] = keys[ i++ ];
+        result[ 1 ] = keys[ i++ ];
+        result[ 2 ] = keys[ i++ ];
     };
 
     var Vec4CopyKeyFrame = function ( i, keys, result ) {
-        var index = i;
-        result[ 0 ] = keys[ index++ ];
-        result[ 1 ] = keys[ index++ ];
-        result[ 2 ] = keys[ index++ ];
-        result[ 3 ] = keys[ index++ ];
+        result[ 0 ] = keys[ i++ ];
+        result[ 1 ] = keys[ i++ ];
+        result[ 2 ] = keys[ i++ ];
+        result[ 3 ] = keys[ i++ ];
     };
 
     var Vec3LerpInterpolator = function ( t, channelInstance ) {
@@ -92,7 +90,6 @@ define( [
             while ( times[ i1 + 1 ] < t ) i1++;
         else if ( t < times[ i1 ] )
             while ( times[ i1 ] > t ) i1--;
-
 
         var t1 = times[ i1 ];
         var t2 = times[ i1 + 1 ];
@@ -208,53 +205,56 @@ define( [
         channelInstance.value = value;
     };
 
-    var Vec3CubicBezierInterpolator = function ( t, channelInstance ) {
-        var channel = channelInstance.channel;
-        var value = channelInstance.value;
-        var start = channel.start;
-        var end = channel.end;
-        var keys = channel.keys;
-        var times = channel.times;
+    var Vec3CubicBezierInterpolator = ( function () {
+        var v0 = Vec3.create();
+        var v1 = Vec3.create();
+        var v2 = Vec3.create();
+        var v3 = Vec3.create();
 
-        if ( t >= end ) {
-            channelInstance.key = 0;
-            Vec3CopyKeyFrame( keys.length - 9, keys, value );
-            return;
+        return function ( t, channelInstance ) {
+            var channel = channelInstance.channel;
+            var value = channelInstance.value;
+            var start = channel.start;
+            var end = channel.end;
+            var keys = channel.keys;
+            var times = channel.times;
 
-        } else if ( t <= start ) {
-            channelInstance.key = 0;
-            Vec3CopyKeyFrame( 0, keys, value );
-            return;
-        }
+            if ( t >= end ) {
+                channelInstance.key = 0;
+                Vec3CopyKeyFrame( keys.length - 9, keys, value );
+                return;
 
-        var i = channelInstance.key;
-        if ( t > times[ i ] )
-            while ( times[ i + 1 ] < t ) i++;
-        else if ( t < times[ i ] )
-            while ( times[ i ] > t ) i--;
+            } else if ( t <= start ) {
+                channelInstance.key = 0;
+                Vec3CopyKeyFrame( 0, keys, value );
+                return;
+            }
 
-        var tt = ( t - times[ i ] ) / ( times[ i + 1 ] - times[ i ] );
-        var oneMinusT = 1.0 - tt;
-        var oneMinusT2 = oneMinusT * oneMinusT;
-        var oneMinusT3 = oneMinusT2 * oneMinusT;
-        var t2 = tt * tt;
+            var i = channelInstance.key;
+            if ( t > times[ i ] )
+                while ( times[ i + 1 ] < t ) i++;
+            else if ( t < times[ i ] )
+                while ( times[ i ] > t ) i--;
 
-        var v0 = Vec3.create(),
-            v1 = Vec3.create(),
-            v2 = Vec3.create(),
-            v3 = Vec3.create();
+            var tt = ( t - times[ i ] ) / ( times[ i + 1 ] - times[ i ] );
+            var oneMinusT = 1.0 - tt;
+            var oneMinusT2 = oneMinusT * oneMinusT;
+            var oneMinusT3 = oneMinusT2 * oneMinusT;
+            var t2 = tt * tt;
 
-        var id = i * 9;
-        Vec3.mult( [ keys[ id++ ], keys[ id++ ], keys[ id++ ] ], oneMinusT3, v0 );
-        Vec3.mult( [ keys[ id++ ], keys[ id++ ], keys[ id++ ] ], ( 3.0 * tt * oneMinusT2 ), v1 );
-        Vec3.mult( [ keys[ id++ ], keys[ id++ ], keys[ id++ ] ], ( 3.0 * t2 * oneMinusT ), v2 );
-        Vec3.mult( [ keys[ id++ ], keys[ id++ ], keys[ id++ ] ], ( t2 * tt ), v3 );
+            var id = i * 9;
+            Vec3.mult( Vec3.set( keys[ id++ ], keys[ id++ ], keys[ id++ ], v0 ), oneMinusT3, v0 );
+            Vec3.mult( Vec3.set( keys[ id++ ], keys[ id++ ], keys[ id++ ], v1 ), ( 3.0 * tt * oneMinusT2 ), v1 );
+            Vec3.mult( Vec3.set( keys[ id++ ], keys[ id++ ], keys[ id++ ], v2 ), ( 3.0 * t2 * oneMinusT ), v2 );
+            Vec3.mult( Vec3.set( keys[ id++ ], keys[ id++ ], keys[ id++ ], v3 ), ( t2 * tt ), v3 );
 
-        value[ 0 ] = v0[ 0 ] + v1[ 0 ] + v2[ 0 ] + v3[ 0 ];
-        value[ 1 ] = v0[ 1 ] + v1[ 1 ] + v2[ 1 ] + v3[ 1 ];
-        value[ 2 ] = v0[ 2 ] + v1[ 2 ] + v2[ 2 ] + v3[ 2 ];
-        channelInstance.key = i;
-    };
+            value[ 0 ] = v0[ 0 ] + v1[ 0 ] + v2[ 0 ] + v3[ 0 ];
+            value[ 1 ] = v0[ 1 ] + v1[ 1 ] + v2[ 1 ] + v3[ 1 ];
+            value[ 2 ] = v0[ 2 ] + v1[ 2 ] + v2[ 2 ] + v3[ 2 ];
+            channelInstance.key = i;
+        };
+
+    } )();
 
     return {
         Vec3LerpInterpolator: Vec3LerpInterpolator,
