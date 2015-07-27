@@ -4,6 +4,8 @@ define( [
     'osg/Matrix'
 ], function ( MACROUTILS, Target, Matrix ) {
 
+    'use strict';
+
     var MatrixTarget = function ( target ) {
         Target.call( this );
         if ( !target )

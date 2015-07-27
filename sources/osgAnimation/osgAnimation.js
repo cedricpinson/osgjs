@@ -32,8 +32,9 @@ define( [
     'osgAnimation/FloatCubicBezierChannel',
     'osgAnimation/Vec3CubicBezierChannel',
     'osgAnimation/RigGeometry'
-
 ], function ( MACROUTILS, Animation, AnimationAttribute, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, CollectAnimationUpdateCallbackVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedScaleElement, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target, Skeleton, UpdateSkeleton, UpdateBone, StackedMatrixElement, MatrixTarget, Bone, FloatCubicBezierChannel, Vec3CubicBezierChannel, RigGeometry ) {
+
+    'use strict';
 
     var osgAnimation = {};
 

@@ -32,6 +32,37 @@
         }
     } );
 
+    var HideCullCallback = function () {};
+    HideCullCallback.prototype = {
+        cull: function () {
+            return false;
+        }
+    };
+    var hideCullCallback = new HideCullCallback();
+
+    var HideBBVisitor = function () {
+        osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
+    };
+    HideBBVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+        apply: function ( node ) {
+            if ( node instanceof osgAnimation.RigGeometry ) {
+                node.boundingSphereComputed = true;
+                node._boundingBoxComputed = true;
+            } else if ( node instanceof osg.Geometry ) {
+                var parents = node.getParents();
+                for ( var i = 0, nbParents = parents.length; i < nbParents; ++i ) {
+                    if ( parents[ i ].getName().indexOf( 'AABB_' ) !== -1 ) {
+                        node.setCullCallback( hideCullCallback );
+                        break;
+                    }
+                }
+            }
+            this.traverse( node );
+        }
+    } );
+
+
+
     var FindBoneVisitor = function () {
         osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
         this._bones = [];
@@ -60,6 +91,20 @@
         }
     } );
 
+    var FindSkeletonVisitor = function () {
+        osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
+    };
+    FindSkeletonVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+        apply: function ( node ) {
+            if ( node instanceof osgAnimation.Skeleton ) {
+                this.skl = node;
+                return;
+            }
+            this.traverse( node );
+        }
+    } );
+
+
     var createScene = function ( viewer, root, url, config, controller ) {
 
         //init controller
@@ -79,43 +124,52 @@
         //var request = osgDB.readNodeURL( '../media/models/animation/mixamo fuse_w_blendshapes waving.osgjs' );
 
         var request = osgDB.readNodeURL( '../media/models/animation/' + url );
+        root.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ) );
+
+        var i = 0;
+        var l = 0;
 
         request.then( function ( node ) {
             root.addChild( node );
 
-
             var bfinder = new FindBoneVisitor();
             root.accept( bfinder );
+            node.accept( new HideBBVisitor() );
+
             var bones = bfinder.getBones();
 
             if ( config[ 'axis' ] ) {
                 var axisSize = config[ 'axisSize' ];
                 var geom = osg.createAxisGeometry( axisSize );
-                for ( var i = 0, l = bones.length; i < l; i++ ) {
+                for ( i = 0, l = bones.length; i < l; i++ ) {
                     var bone = bones[ i ];
                     console.log( bone.getName() );
                     var tnode = new osg.Node();
                     tnode.addChild( geom );
-                    //tnode.addChild( osg.createTexturedBoxGeometry() );
+                    //tnode.addChild( osg.createTexturedBoxGeometry(100) );
                     bone.addChild( tnode );
                 }
             }
 
             window.listBones = function () {
-                for ( var i = 0, l = bones.length; i < l; i++ ) {
+                for ( i = 0, l = bones.length; i < l; i++ ) {
                     var bone = bones[ i ];
                     console.log( bone.getName(), bone.getMatrix() );
                 }
 
             };
 
-            viewer.getCamera().setComputeNearFar( false );
+            // viewer.getCamera().setComputeNearFar( false );
 
             viewer.getManipulator().computeHomePosition();
             var finder = new FindAnimationManagerVisitor();
             node.accept( finder );
 
             var animationManager = finder.getAnimationManager();
+
+            var skletonFinder = new FindSkeletonVisitor();
+            node.accept( skletonFinder );
+            var skl = skletonFinder.skl;
 
 
             if ( animationManager ) {
@@ -140,7 +194,7 @@
                     };
                     controller.bind = function () {
                         animationManager.stopAllAnimation();
-                        animationManager.bindModel();
+                        skl.setRestPose();
                     };
                     window.animationManager = animationManager;
                     animationManager.playAnimation( config.currentAnim );
@@ -164,7 +218,8 @@
                     }
 
                     var anims = controller.anims = {};
-                    for ( var i = 0, l = animations.length; i < l; i++ ) {
+                    l = animations.length;
+                    for ( i = 0, l = animations.length; i < l; i++ ) {
                         anims[ animations[ i ] ] = animations[ i ];
                     }
 
@@ -178,7 +233,7 @@
                         var animationList = animationManager._activeAnimationList;
                         var hash = '#PlayingAnimations:';
                         var found = false;
-                        for ( var i = 0, l = animationList.length; i < l; i++ ) {
+                        for ( i = 0, l = animationList.length; i < l; i++ ) {
                             var name = animationList[ i ].name;
                             if ( name === value ) found = true;
                             hash += name + ';';
@@ -296,9 +351,8 @@
         var modelController = gui.add( this._controller, 'models', Object.keys( this._controller.models ) );
         //modelController.listen();
         modelController.onFinishChange( function ( value ) {
-            if ( value !== 'undefined' && value != defaultChoice ) {
+            if ( value !== 'undefined' && value !== defaultChoice ) {
                 var search = '?url=' + controller.models;
-                var keys = Object.keys( queryDict );
                 window.location.href = window.location.origin + window.location.pathname + search;
             } else {
                 root.removeChildren();

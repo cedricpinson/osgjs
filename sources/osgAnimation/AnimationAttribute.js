@@ -3,8 +3,8 @@ define( [
     'osg/Utils',
     'osg/StateAttribute'
 ], function ( Map, MACROUTILS, StateAttribute ) {
-    'use strict';
 
+    'use strict';
 
     /**
      * AnimationAttribute encapsulate Animation State

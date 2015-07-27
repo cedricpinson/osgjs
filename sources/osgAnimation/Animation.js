@@ -5,6 +5,8 @@ define( [
 
 ], function ( MACROUTILS, Object, Channel ) {
 
+    'use strict';
+
     // create Animation data
     // Animation {
     //     channels: [],

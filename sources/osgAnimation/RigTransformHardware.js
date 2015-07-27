@@ -10,7 +10,6 @@ define( [
     'osg/Uniform',
     'osgAnimation/AnimationAttribute',
     'osgAnimation/CollectBoneVisitor'
-
 ], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, StateAttribute, Uniform, AnimationAttribute, CollectBoneVisitor ) {
 
     'use strict';

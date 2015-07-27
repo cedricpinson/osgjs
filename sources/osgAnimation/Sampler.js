@@ -1,5 +1,7 @@
 define( [], function () {
 
+    'use strict';
+
     /**
      *  Sampler is responsible to interpolate keys
      *  @class Sampler

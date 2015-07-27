@@ -6,6 +6,7 @@ define( [
     'osg/Quat'
 ], function ( MACROUTILS, Object, Matrix, Vec3, Quat ) {
 
+    'use strict';
 
     /**
      *  StackedRotateAxis
@@ -21,12 +22,18 @@ define( [
         this._target = {
             value: angle || 0.0
         };
-        this._bindTransform = this._target.value;
         this.setName( name );
+        this._defaultValue = this._target.value;
 
     };
 
     StackedRotateAxis.prototype = MACROUTILS.objectInherit( Object.prototype, {
+
+        init: function ( axis, angle ) {
+            if ( axis )
+                this.setAxis( axis );
+            this._defaultValue = angle;
+        },
 
         setAxis: function ( axis ) {
             Vec3.copy( axis, this._axis );
@@ -42,6 +49,10 @@ define( [
 
         getTarget: function () {
             return this._target;
+        },
+
+        resetDefaultValue: function () {
+            this.setAngle( this._defaultValue );
         },
 
         applyToMatrix: ( function () {
