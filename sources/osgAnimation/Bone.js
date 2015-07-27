@@ -39,9 +39,6 @@ define( [
         },
 
         getBoneParent: function () {
-            if ( this.getParents() === [] )
-                return undefined;
-
             var parents = this.getParents();
             for ( var i = 0, l = parents.length; i < l; i++ ) {
                 var typeID = parents[ i ].getTypeID();
@@ -53,11 +50,7 @@ define( [
         },
 
         setDefaultUpdateCallback: function ( name ) {
-            var cbName = name;
-            if ( name !== undefined ) {
-                cbName = this.getName();
-            }
-            this.setUpdateCallback( new UpdateBone( cbName ) );
+            this.setUpdateCallback( new UpdateBone( ( name !== undefined ) ? name : this.getName() ) );
         }
     } ), 'osgAnimation', 'Bone' );
     MACROUTILS.setTypeID( Bone );
