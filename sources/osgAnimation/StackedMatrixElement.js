@@ -21,12 +21,17 @@ define( [
         this._target = {
             value: value
         };
-        this._bindTransform = value;
+        this._defaultValue = Matrix.create();
 
         this.setName( name );
     };
 
     StackedMatrixElement.prototype = MACROUTILS.objectInherit( Object.prototype, {
+
+        init: function ( matrix ) {
+            this.setMatrix( matrix );
+            Matrix.copy( matrix, this._defaultValue );
+        },
 
         setTarget: function ( target ) {
             this._target = target;
@@ -44,10 +49,13 @@ define( [
             Matrix.copy( m, this._target.value );
         },
 
+        resetToDefaultValue: function () {
+            this.setMatrix( this._defaultValue );
+        },
+
         applyToMatrix: function ( m ) {
             Matrix.preMult( m, this._target.value );
         }
-
 
     } );
 

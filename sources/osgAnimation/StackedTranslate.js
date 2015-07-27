@@ -19,12 +19,17 @@ define( [
         this._target = {
             value: value
         };
-        this._bindTransform = value;
+        this._defaultValue = Vec3.create();
         if ( name ) this.setName( name );
     };
 
 
     StackedTranslate.prototype = MACROUTILS.objectInherit( Object.prototype, {
+
+        init: function ( translate ) {
+            this.setTranslate( translate );
+            Vec3.copy( translate, this._defaultValue );
+        },
 
         setTranslate: function ( translate ) {
             Vec3.copy( translate, this._target.value );
@@ -36,6 +41,10 @@ define( [
 
         getTarget: function () {
             return this._target;
+        },
+
+        resetToDefaultValue: function () {
+            this.setTranslate( this._defaultValue );
         },
 
         applyToMatrix: function ( m ) {
