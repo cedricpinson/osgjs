@@ -5,6 +5,8 @@ define( [
     'osgAnimation/AnimationUpdateCallback'
 ], function ( MACROUTILS, Notify, Matrix, AnimationUpdateCallback ) {
 
+    'use strict';
+
     /**
      *  UpdateMatrixTransform
      */

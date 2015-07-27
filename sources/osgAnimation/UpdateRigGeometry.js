@@ -7,7 +7,6 @@ define( [
 
     'use strict';
 
-
     // converted from C++ probably it could be merged into RigGeometry
     // it could probably inlined into RigGeometry code
     var UpdateRigGeometry = function () {

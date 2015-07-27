@@ -6,7 +6,7 @@ define( [
     'osgAnimation/AnimationUpdateCallback'
 ], function ( Notify, MACROUTILS, NodeVisitor, Object, AnimationUpdateCallback ) {
 
-
+    'use strict';
 
     // search into a subgraph all target
     var CollectAnimationUpdateCallbackVisitor = function () {
@@ -21,24 +21,18 @@ define( [
         },
 
         apply: function ( node ) {
-
             var cbs = node.getUpdateCallbackList();
 
             // collect and remove animation update callback
-            var i = 0;
-            while ( i < cbs.length ) {
-
+            for ( var i = 0, cbsLength = cbs.length; i < cbsLength; i++ ) {
                 var cb = cbs[ i ];
                 if ( cb instanceof AnimationUpdateCallback ) {
                     this._animationUpdateCallback[ cb.getInstanceID() ] = cb;
                     //node.removeUpdateCallback( cb );
                 }
-                i++;
             }
-
             this.traverse( node );
         }
-
 
     } );
 

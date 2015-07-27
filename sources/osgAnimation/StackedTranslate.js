@@ -6,6 +6,7 @@ define( [
     'osg/Vec3'
 ], function ( MACROUTILS, Object, Matrix, Vec3Target, Vec3 ) {
 
+    'use strict';
 
     /**
      *  StackedTranslate

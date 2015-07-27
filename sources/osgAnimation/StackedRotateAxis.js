@@ -6,6 +6,7 @@ define( [
     'osg/Quat'
 ], function ( MACROUTILS, Object, Matrix, Vec3, Quat ) {
 
+    'use strict';
 
     /**
      *  StackedRotateAxis

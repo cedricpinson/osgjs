@@ -4,7 +4,6 @@ define( [
     'osg/Matrix',
     'osg/Quat'
 ], function ( MACROUTILS, Object, Matrix, Quat ) {
-
     /**
      *  StackedQuaternion
      */
