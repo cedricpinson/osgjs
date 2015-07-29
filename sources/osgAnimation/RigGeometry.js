@@ -49,6 +49,10 @@ define( [
         // It's a way to make every RigGeometry unique (in term of stateSet stack)
         this._stateSetAnimation = new StateSet();
 
+        // invalid/no bound by default
+        this.boundingSphereComputed = true;
+        this._boundingBoxComputed = true;
+
         this._needToComputeMatrix = true;
 
     };
