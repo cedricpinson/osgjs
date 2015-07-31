@@ -453,7 +453,7 @@ define( [
     // function call after the push state in the geometry apply function
     // the idea is to avoid heavy copy-paste for the rigGeometry apply
     // since the only difference is that we want to push an additional state
-    // Maybe it will be useful when we'll add morph target geometry or something... 
+    // Maybe it will be useful when we'll add morph target geometry or something...
     var postPushGeometry = function ( cull, node ) {
         if ( node.typeID === RigGeometry.typeID ) {
             var sta = node.getStateSetAnimation();
@@ -501,7 +501,7 @@ define( [
                 depth = this.distance( bb.center( tempVec ), modelview );
             }
             if ( isNaN( depth ) ) {
-                Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + bb.center() );
+                Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec );
             } else {
 
                 leaf.init( this._currentStateGraph,

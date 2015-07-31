@@ -317,8 +317,8 @@ define( [
 
                 var tLocal = t - channel.t;
 
-                // handle loop
-                if ( loop ) tLocal = tLocal % instanceAnimation.duration;
+                // handle loop, careful in case animation is one frame
+                if ( loop && instanceAnimation.duration > 0.0 ) tLocal = tLocal % instanceAnimation.duration;
 
                 interpolator( tLocal, channel );
             }
