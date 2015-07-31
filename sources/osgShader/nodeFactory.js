@@ -1,5 +1,6 @@
 define( [
     'osg/Notify',
+    'osgShader/node/animation',
     'osgShader/node/data',
     'osgShader/node/functions',
     'osgShader/node/lights',
@@ -7,13 +8,14 @@ define( [
     'osgShader/node/operations',
     'osgShader/node/textures',
 
-], function ( Notify, data, functions, lights, shadows, operations, textures ) {
+], function ( Notify, animation, data, functions, lights, shadows, operations, textures ) {
     'use strict';
 
     var Factory = function () {
 
         this._nodes = new Map();
 
+        this.registerNodes( animation );
         this.registerNodes( data );
         this.registerNodes( textures );
         this.registerNodes( functions );

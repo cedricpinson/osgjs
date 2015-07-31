@@ -1,5 +1,7 @@
 define( [], function () {
 
+    'use strict';
+
     var createVec3Keyframe = function ( t, array ) {
         var k = array.slice( 0 );
         k.t = t;
