@@ -1,9 +1,10 @@
 define( [
     'bluebird',
+    'osg/Notify',
     'osgWrappers/serializers/osg',
     'osgAnimation/Channel',
     'osgAnimation/Animation'
-], function ( P, osgWrapper, Channel, Animation ) {
+], function ( P, Notify, osgWrapper, Channel, Animation ) {
 
     'use strict';
 
@@ -11,7 +12,7 @@ define( [
 
     osgAnimationWrapper.Animation = function ( input ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.Name || !jsonObj.Channels || jsonObj.Channels.length === 0 )
+        if ( jsonObj.Name === undefined || !jsonObj.Channels || jsonObj.Channels.length === 0 )
             return P.reject();
 
         var arrayChannelsPromise = [];
@@ -29,7 +30,7 @@ define( [
 
     osgAnimationWrapper.StandardVec3Channel = function ( input, channel, creator ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Key || jsonObj.KeyFrames.Key.length !== 3 )
+        if ( jsonObj.TargetName === undefined || !jsonObj.KeyFrames || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Key || jsonObj.KeyFrames.Key.length !== 3 )
             return P.reject();
 
         var jsTime = input.setJSON( jsonObj.KeyFrames.Time ).readBufferArray();
@@ -62,7 +63,7 @@ define( [
 
     osgAnimationWrapper.StandardQuatChannel = function ( input, channel, creator ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Key || jsonObj.KeyFrames.Key.length !== 4 )
+        if ( jsonObj.TargetName === undefined || !jsonObj.KeyFrames || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Key || jsonObj.KeyFrames.Key.length !== 4 )
             return P.reject();
 
         var jsTime = input.setJSON( jsonObj.KeyFrames.Time ).readBufferArray();
@@ -97,7 +98,7 @@ define( [
 
     osgAnimationWrapper.StandardFloatChannel = function ( input, channel, creator ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Key )
+        if ( jsonObj.TargetName === undefined || !jsonObj.KeyFrames || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Key )
             return P.reject();
 
         var jsTime = input.setJSON( jsonObj.KeyFrames.Time ).readBufferArray();
@@ -140,7 +141,7 @@ define( [
     osgAnimationWrapper.FloatCubicBezierChannel = function ( input, channel ) {
         var jsonObj = input.getJSON();
 
-        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name ||
+        if ( jsonObj.TargetName === undefined || !jsonObj.KeyFrames || !jsonObj.Name ||
             !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Position ||
             !jsonObj.KeyFrames.ControlPointOut || !jsonObj.KeyFrames.ControlPointIn )
             return P.reject();
@@ -176,7 +177,7 @@ define( [
     osgAnimationWrapper.Vec3CubicBezierChannel = function ( input, channel ) {
         var jsonObj = input.getJSON();
 
-        if ( !jsonObj.KeyFrames || !jsonObj.TargetName || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Position || !jsonObj.KeyFrames.ControlPointOut || !jsonObj.KeyFrames.ControlPointIn || jsonObj.KeyFrames.Position.length !== 3 || jsonObj.KeyFrames.ControlPointIn.length !== 3 || jsonObj.KeyFrames.ControlPointOut.length !== 3 )
+        if ( jsonObj.TargetName === undefined || !jsonObj.KeyFrames || !jsonObj.Name || !jsonObj.KeyFrames.Time || !jsonObj.KeyFrames.Position || !jsonObj.KeyFrames.ControlPointOut || !jsonObj.KeyFrames.ControlPointIn || jsonObj.KeyFrames.Position.length !== 3 || jsonObj.KeyFrames.ControlPointIn.length !== 3 || jsonObj.KeyFrames.ControlPointOut.length !== 3 )
             return P.reject();
 
         var arrayPromise = [];
@@ -242,8 +243,10 @@ define( [
 
         for ( var i = 0, l = jsonObj.Animations.length; i < l; i++ ) {
             var prim = input.setJSON( jsonObj.Animations[ i ] ).readObject();
-            if ( prim.isRejected() )
+            if ( prim.isRejected() ) {
+                Notify.warn( 'An Animation failed on the parsing!' );
                 continue;
+            }
             animPromises.push( prim );
         }
 
@@ -369,8 +372,11 @@ define( [
     osgAnimationWrapper.RigGeometry = function ( input, rigGeom ) {
         var jsonObj = input.getJSON();
 
-        if ( !jsonObj.BoneMap || !jsonObj.SourceGeometry ) // check boneMap
+        if ( !jsonObj.SourceGeometry ) // check boneMap
             return P.reject();
+
+        if ( !jsonObj.BoneMap )
+            Notify.warn( 'No boneMap found in a RigGeometry !' );
 
         //Import rigGeometry as Geometry + BoneMap
         var rigPromise = osgWrapper.Geometry( input, rigGeom );
