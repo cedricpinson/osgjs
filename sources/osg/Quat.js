@@ -5,6 +5,10 @@ define( [
 
     'use strict';
 
+    var Msqrt = Math.sqrt;
+    var Mcos = Math.cos;
+    var Msin = Math.sin;
+
     /** @class Quaternion Operations */
     var Quat = {
         create: function () {
@@ -69,20 +73,15 @@ define( [
         },
 
         makeRotate: function ( angle, x, y, z, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no quat destination !' );
-                result = this.create();
-            }
-
             var epsilon = 0.0000001;
-            var length = Math.sqrt( x * x + y * y + z * z );
+            var length = Msqrt( x * x + y * y + z * z );
             if ( length < epsilon ) {
                 return this.init( result );
             }
 
             var inversenorm = 1.0 / length;
-            var coshalfangle = Math.cos( 0.5 * angle );
-            var sinhalfangle = Math.sin( 0.5 * angle );
+            var coshalfangle = Mcos( 0.5 * angle );
+            var sinhalfangle = Msin( 0.5 * angle );
 
             result[ 0 ] = x * sinhalfangle * inversenorm;
             result[ 1 ] = y * sinhalfangle * inversenorm;

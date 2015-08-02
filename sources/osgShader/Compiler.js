@@ -117,12 +117,13 @@ define( [
                 } else if ( type === 'ShadowCastAttribute' ) {
                     this._isShadowCast = attributes[ i ].isEnabled();
                     this._shadowCastAttribute = attributes[ i ];
+                } else if ( type === 'AnimationAttribute' ) {
+                    this._animation = attributes[ i ];
                 }
             }
         },
 
         initTextureAttributes: function () {
-
             // Shadow casting is about casting Depth
             // no need for textures.
             // as we don't support natively
@@ -132,60 +133,53 @@ define( [
 
             var textureAttributes = this._textureAttributes;
             var texturesNum = textureAttributes.length;
-            var textures = this._textures;
-            var shadowTextures = this._shadowsTextures;
-            textures.length = shadowTextures.length = texturesNum;
+            this._textures.length = this._shadowsTextures.length = texturesNum;
 
             for ( var j = 0; j < texturesNum; j++ ) {
-
                 var tu = textureAttributes[ j ];
                 if ( tu === undefined )
                     continue;
-
                 for ( var t = 0, tl = tu.length; t < tl; t++ ) {
-
-                    var tuTarget = tu[ t ];
-
-                    var tType = tuTarget.className();
-
-                    var texUnit;
-                    var tName;
-                    if ( tType === 'Texture' ) {
-
-                        texUnit = j;
-                        tName = tuTarget.getName();
-                        if ( tuTarget.getName() === undefined ) {
-                            tName = tType + texUnit;
-                            tuTarget.setName( tName );
-                        }
-                        textures[ texUnit ] = tuTarget;
-
-
-                        this._texturesByName[ tName ] = {
-                            variable: undefined,
-                            textureUnit: texUnit
-                        };
-
-                    } else if ( tType === 'ShadowTexture' ) {
-
-                        texUnit = j;
-                        tName = tuTarget.getName();
-                        if ( tuTarget.getName() === undefined ) {
-                            tName = tType + texUnit;
-                            tuTarget.setName( tName );
-                        }
-                        shadowTextures[ texUnit ] = tuTarget;
-
-                        this._texturesByName[ tName ] = {
-                            'variable': undefined,
-                            'textureUnit': texUnit,
-                            'shadow': true
-                        };
-                    }
-                    // TODO: cubemap
-
+                    this.registerTextureAttributes( tu[ t ], j );
                 }
             }
+        },
+
+        registerTextureAttributes: function ( tuTarget, tunit ) {
+            var tType = tuTarget.className();
+            if ( tType === 'Texture' ) return this.registerTexture( tuTarget, tunit );
+            if ( tType === 'ShadowTexture' ) return this.registerTextureShadow( tuTarget, tunit );
+        },
+
+        registerTexture: function ( tuTarget, texUnit ) {
+            var tName = tuTarget.getName();
+            if ( !tName ) {
+                tName = 'Texture' + texUnit;
+                tuTarget.setName( tName );
+            }
+            this._textures[ texUnit ] = tuTarget;
+
+            this._texturesByName[ tName ] = {
+                texture: tuTarget,
+                variable: undefined,
+                textureUnit: texUnit
+            };
+        },
+
+        registerTextureShadow: function ( tuTarget, texUnit ) {
+            var tName = tuTarget.getName();
+            if ( !tName ) {
+                tName = 'ShadowTexture' + texUnit;
+                tuTarget.setName( tName );
+            }
+            this._shadowsTextures[ texUnit ] = tuTarget;
+
+            this._texturesByName[ tName ] = {
+                texture: tuTarget,
+                variable: undefined,
+                textureUnit: texUnit,
+                shadow: true
+            };
         },
 
         // global accessor because it modifies
@@ -305,8 +299,7 @@ define( [
             return this.getOrCreateUniformFromUniformMap( uniforms, prefix );
         },
 
-        // make sure we get correct Node
-        getOrCreateUniform: function ( type, varname ) {
+        getOrCreateUniform: function ( type, varname, size ) {
 
             var nameID = varname;
 
@@ -318,19 +311,19 @@ define( [
                 nameID = uniform.getName();
 
             } else if ( nameID === undefined ) {
-
-                var len = Object.keys( this._variables ).length;
-                nameID = 'tmp_' + len;
-
+                Notify.error( 'Cannot create unamed Uniform' );
             }
 
             var exist = this._variables[ nameID ];
             if ( exist ) {
                 // see comment in Variable function
+                if ( exist.getType() !== type ) {
+                    Notify.error( 'Same uniform, but different type' );
+                }
                 return exist;
             }
 
-            var v = this.getNode( 'Uniform', type, nameID );
+            var v = this.getNode( 'Uniform', type, nameID, size );
             this._variables[ nameID ] = v;
             return v;
         },
@@ -344,6 +337,9 @@ define( [
 
             var exist = this._variables[ nameID ];
             if ( exist ) {
+                if ( exist.getType() !== type ) {
+                    Notify.error( 'Same attribute, but different type' );
+                }
                 return exist;
             }
 
@@ -370,6 +366,9 @@ define( [
 
                 var exist = this._variables[ nameID ];
                 if ( exist ) {
+                    if ( exist.getType() !== type ) {
+                        Notify.error( 'Same constant name, but different type' );
+                    }
                     // see comment in Variable function
                     return exist;
                 }
@@ -695,8 +694,10 @@ define( [
                 if ( !texture )
                     continue;
 
-                if ( texture.getType() === 'Texture' )
-                    this.declareTexture( t, texture );
+                if ( texture.getType() === 'Texture' ) {
+
+                    this.declareTexture( this.getTexCoordUnit( t ), texture );
+                }
 
             }
         },
@@ -730,7 +731,7 @@ define( [
             if ( !hasShadows ) return undefined;
 
             // Varyings
-            var vertexWorld = this.getOrCreateVarying( 'vec4', 'WorldPosition' );
+            var vertexWorld = this.getOrCreateVarying( 'vec3', 'WorldPosition' );
 
             // asserted we have a shadow we do the shadow node allocation
             // and mult with lighted output
@@ -1015,6 +1016,37 @@ define( [
             for ( var j = 0, jl = nodes.length; j < jl; j++ ) {
                 this.traverse( func, nodes[ j ] );
             }
+
+
+            // Attribute 0 Must Be vertex
+            // perf warning in console otherwiser in opengl Desktop
+            if ( func._text.length ) {
+                // sort in alphabetical order
+                // attr, unif, sample, varying
+                func._text.sort();
+                // now sort Attributes
+                // making sure Vertex is always coming first
+                var toShift = [];
+                for ( j = 0; j < func._text.length; j++ ) {
+                    // found vertex, break
+                    if ( func._text[ 0 ].indexOf( 'Vertex' ) !== -1 ) break;
+                    // not yet, keep referenc to push after vertex
+                    toShift.push( func._text.shift() ); // remove
+                }
+                // Add after vertex all the  found attributes
+                func._text.splice( 1, 0, toShift.join( '\n' ) );
+
+                // beautify/formatting with empty line between type of var
+                var type = func._text[ 0 ][ 0 ];
+                var len = func._text.length;
+                for ( j = 0; j < len; j++ ) {
+                    if ( func._text[ j ][ 0 ] !== type ) {
+                        type = func._text[ j ][ 0 ];
+                        func._text.splice( j, 0, '' );
+                        len++;
+                    }
+                }
+            }
             return func._text.join( '\n' );
         },
 
@@ -1069,6 +1101,68 @@ define( [
             return texCoordUnit;
         },
 
+        // reusable BoneMatrix between Vertex, Normal, Tangent
+        // Manadatory: scale animations must be uniform scale
+        getOrCreateBoneMatrix: function () {
+            var boneMatrix = this._variables[ 'boneMatrix' ];
+            if ( boneMatrix )
+                return boneMatrix;
+
+            boneMatrix = this.createVariable( 'mat4', 'boneMatrix' );
+
+            var inputWeights = this.getOrCreateAttribute( 'vec4', 'Weights' );
+            var inputBones = this.getOrCreateAttribute( 'vec4', 'Bones' );
+            var matrixPalette = this.getOrCreateUniform( 'vec4', 'uBones', this._animation.getBoneSize() );
+
+            this.getNode( 'Animation' ).inputs( {
+                weights: inputWeights,
+                bonesIndex: inputBones,
+                matrixPalette: matrixPalette
+            } ).outputs( {
+                mat4: boneMatrix
+            } );
+
+            return boneMatrix;
+        },
+        getOrCreateVertexAttribute: function () {
+            var v = this._variables[ 'vertexAttribute' ];
+            if ( v )
+                return v;
+
+            var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
+            if ( !this._animation )
+                return inputVertex;
+
+            var positionAnimated = this.createVariable( 'vec3', 'vertexAttribute' );
+
+            this.getNode( 'MatrixMultPosition' ).inputs( {
+                matrix: this.getOrCreateBoneMatrix(),
+                vec: inputVertex
+            } ).outputs( {
+                vec: positionAnimated
+            } );
+            return positionAnimated;
+        },
+        getOrCreateNormalAttribute: function () {
+            var v = this._variables[ 'normalAttribute' ];
+            if ( v )
+                return v;
+
+            var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
+            if ( !this._animation )
+                return inputNormal;
+
+            var normalAnimated = this.createVariable( 'vec3', 'normalAttribute' );
+
+            this.getNode( 'MatrixMultDirection' ).inputs( {
+                matrix: this.getOrCreateBoneMatrix(),
+                vec: inputNormal
+            } ).outputs( {
+                vec: normalAnimated
+            } );
+            return normalAnimated;
+
+        },
         declareVertexTransformShadeless: function ( glPosition ) {
             // No light
             var tempViewSpace = this.createVariable( 'vec4' );
@@ -1076,7 +1170,7 @@ define( [
             //viewSpace
             this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
-                vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
+                vec: this.getOrCreateVertexAttribute()
             } ).outputs( {
                 vec: tempViewSpace
             } );
@@ -1088,6 +1182,19 @@ define( [
             } ).outputs( {
                 vec: glPosition
             } );
+
+        },
+        declareVertexTransformLighted: function ( glPosition ) {
+
+            // FragNormal
+            this.getNode( 'MatrixMultDirection' ).inputs( {
+                matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
+                vec: this.getOrCreateNormalAttribute()
+            } ).outputs( {
+                vec: this.getOrCreateInputNormal()
+            } );
+
+            this.declareTransformWithEyeSpace( glPosition );
 
         },
         // Transform Position into NDC
@@ -1102,7 +1209,7 @@ define( [
             var tempViewSpace = this.getOrCreateInputPosition();
             this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
-                vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
+                vec: this.getOrCreateVertexAttribute()
             } ).outputs( {
                 vec: tempViewSpace
             } );
@@ -1116,27 +1223,15 @@ define( [
                 vec: glPosition
             } );
         },
-        declareVertexTransformLighted: function ( glPosition ) {
 
-
-            // FragNormal
-            this.getNode( 'MatrixMultDirection' ).inputs( {
-                matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
-                vec: this.getOrCreateAttribute( 'vec3', 'Normal' )
-            } ).outputs( {
-                vec: this.getOrCreateInputNormal()
-            } );
-
-            this.declareTransformWithEyeSpace( glPosition );
-        },
         declareVertexTransformShadowed: function ( /*glPosition*/) {
 
             // worldpos
             this.getNode( 'MatrixMultPosition' ).inputs( {
                 matrix: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' ),
-                vec: this.getOrCreateAttribute( 'vec3', 'Vertex' )
+                vec: this.getOrCreateVertexAttribute()
             } ).outputs( {
-                vec: this.getOrCreateVarying( 'vec4', 'WorldPosition' )
+                vec: this.getOrCreateVarying( 'vec3', 'WorldPosition' )
             } );
 
         },
@@ -1146,6 +1241,7 @@ define( [
             if ( !this._isLighted )
                 return false;
             for ( var i = 0, ll = this._shadowsTextures.length; i < ll; i++ ) {
+
                 if ( this._shadowsTextures[ i ] !== undefined )
                     return true;
             }
@@ -1418,7 +1514,7 @@ define( [
         createShadowCastFragmentShaderGraph: function () {
             var frag = this.getNode( 'glFragColor' );
             this.getNode( 'ShadowCast' ).setShadowCastAttribute( this._shadowCastAttribute ).inputs( {
-                exponent: this.getOrCreateUniform( 'float', 'exponent0' ),
+                exponent0: this.getOrCreateUniform( 'float', 'exponent0' ),
                 exponent1: this.getOrCreateUniform( 'float', 'exponent1' ),
                 shadowDepthRange: this.getOrCreateUniform( 'vec4', 'Shadow_DepthRange' ),
                 fragEye: this.getOrCreateInputPosition()

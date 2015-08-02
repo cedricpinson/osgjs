@@ -1,5 +1,7 @@
 define( [], function () {
 
+    'use strict';
+
     var easeOutQuad = function ( t ) {
         return -( t * ( t - 2.0 ) );
     };

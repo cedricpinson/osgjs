@@ -4,6 +4,7 @@ define( [
     'osg/Quat'
 ], function ( MACROUTILS, Target, Quat ) {
 
+    'use strict';
 
     var QuatTarget = function () {
         Target.call( this );

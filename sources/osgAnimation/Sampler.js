@@ -1,13 +1,12 @@
 define( [], function () {
 
+    'use strict';
+
     /**
      *  Sampler is responsible to interpolate keys
      *  @class Sampler
      */
     var Sampler = function ( keys, interpolator ) {
-        if ( !keys ) {
-            keys = [];
-        }
         this._keys = keys;
         this._interpolator = interpolator;
     };

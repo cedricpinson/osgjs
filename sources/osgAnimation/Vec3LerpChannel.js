@@ -1,26 +1,8 @@
-define( [
-    'osgAnimation/Channel',
-    'osgAnimation/Sampler',
-    'osgAnimation/Interpolator',
-    'osgAnimation/Vec3Target',
-    'osg/Vec3'
-], function ( Channel, Sampler, Interpolator, Vec3Target, Vec3 ) {
+define( [], function () {
 
-    var Vec3LerpChannel = function ( keys, target ) {
-        var sampler = new Sampler();
-        if ( !keys ) {
-            keys = [];
-        }
-        if ( !target ) {
-            target = new Vec3Target();
-        }
-        Channel.call( this, sampler, target );
-        sampler.setInterpolator( Interpolator.Vec3LerpInterpolator );
-        this.setKeyframes( keys );
-        this._data.value = Vec3.copy( target.getValue(), [ 0.0, 0.0, 0.0 ] );
-    };
+    'use strict';
 
-    Vec3LerpChannel.prototype = Channel.prototype;
+    var Vec3LerpChannel = function () {};
 
     return Vec3LerpChannel;
 } );

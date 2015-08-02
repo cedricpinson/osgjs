@@ -53,13 +53,11 @@ define( [
 
         apply: function ( node ) {
 
-            var typeID = node.getTypeID();
-
-            if ( typeID === MatrixTransform.getTypeID() ) {
+            if ( node instanceof MatrixTransform ) {
                 this.applyTransform( node );
                 return;
 
-            } else if ( typeID === Geometry.getTypeID() ) {
+            } else if ( node instanceof Geometry ) {
                 this.applyBoundingBox( node.getBoundingBox() );
                 return;
             }
