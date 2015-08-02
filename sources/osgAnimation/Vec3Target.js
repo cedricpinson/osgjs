@@ -4,6 +4,8 @@ define( [
     'osg/Vec3'
 ], function ( MACROUTILS, Target, Vec3 ) {
 
+    'use strict';
+
     var Vec3Target = function () {
         Target.call( this );
         this._target = [ 0, 0, 0 ];

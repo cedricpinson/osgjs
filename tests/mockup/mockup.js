@@ -1,9 +1,11 @@
 define( [
     'jquery',
     'tests/mockup/scene',
-    'tests/mockup/box'
+    'tests/mockup/box',
+    'osgAnimation/Channel',
+    'osgAnimation/Animation'
 
-], function ( $, getScene, getBoxScene ) {
+], function ( $, getScene, getBoxScene, Channel, Animation ) {
 
     'use strict';
 
@@ -85,6 +87,83 @@ define( [
             }
         };
         return obj;
+    };
+
+    var createVec3Keyframes = function () {
+        var keys = [
+            1, 1, 1,
+            0, 0, 0,
+            3, 3, 3
+        ];
+        var times = [ 0, 1, 2 ];
+        return Channel.createVec3Channel( keys, times );
+    };
+
+    var createFloatKeyframes = function () {
+        var keys = [
+            1, 0, 3
+        ];
+
+        var start = 0;
+        if ( arguments.length > 0 ) // offset time keyframes
+            start = arguments[ 0 ];
+
+        var times = [ start + 0, start + 1, start + 2 ];
+        return Channel.createFloatChannel( keys, times );
+    };
+
+    var createFloatCubicBezierKeyframes = function () {
+        var keys = [
+            1, 2, 3,
+            0, 1, 3,
+            3, 4, 5
+        ];
+        var times = [ 0, 1, 2 ];
+        return Channel.createFloatCubicBezierChannel( keys, times );
+    };
+
+    var createVec3CubicBezierKeyframes = function () {
+        var keys = [
+            1, 1, 1,
+            2, 2, 2,
+            5, 5, 5,
+
+            6, 6, 6,
+            9, 9, 9,
+            8, 8, 8,
+
+            6, 6, 6,
+            6, 6, 6,
+            6, 6, 6
+        ];
+        var times = [ 0, 1, 2 ];
+        return Channel.createVec3CubicBezierChannel( keys, times );
+    };
+
+    var createQuatLerpKeyFrames = function () {
+        var keys = [ 1.22465e-16, 1.22465e-16, 1.22465e-16, -1,
+            0.300706, 7.99708e-17, 1.53623e-16, -0.953717,
+            0.382683, 6.62774e-17, 1.60008e-16, -0.92388,
+            0.382683, 6.62774e-17, 1.60008e-16, -0.92388,
+            0.126911, -0.0991929, 0.119115, -0.979727
+        ];
+
+        var times = [ 0, 0.202899, 0.456522, 1.21739, 1.47101 ];
+        return Channel.createQuatChannel( keys, times );
+    };
+
+
+    var createAnimation = function ( name, target1, name1, target2, name2 ) {
+
+        var a = createFloatKeyframes();
+        a.target = target1 || 'a';
+        a.name = name1 || 'x';
+
+        var b = createFloatKeyframes( 2 );
+        b.target = target2 || 'b';
+        b.name = name2 || 'x';
+
+        return Animation.createAnimation( [ a, b ], name );
     };
 
     var createCanvas = function () {
@@ -204,6 +283,12 @@ define( [
         createFakeRenderer: createFakeRenderer,
         removeCanvas: removeCanvas,
         createCanvas: createCanvas,
+        createVec3Keyframes: createVec3Keyframes,
+        createFloatKeyframes: createFloatKeyframes,
+        createFloatCubicBezierKeyframes: createFloatCubicBezierKeyframes,
+        createVec3CubicBezierKeyframes: createVec3CubicBezierKeyframes,
+        createQuatLerpKeyFrames: createQuatLerpKeyFrames,
+        createAnimation: createAnimation,
         near: near,
         getBoxScene: getBoxScene,
         getScene: getScene

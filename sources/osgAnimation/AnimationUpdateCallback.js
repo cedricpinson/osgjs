@@ -4,11 +4,15 @@ define( [
     'osg/Object'
 ], function ( Notify, MACROUTILS, Object ) {
 
+    'use strict';
+
     /**
      *  AnimationUpdateCallback
      *  @class AnimationUpdateCallback
      */
-    var AnimationUpdateCallback = function () {};
+    var AnimationUpdateCallback = function () {
+        Object.call( this );
+    };
 
     /** @lends AnimationUpdateCallback.prototype */
     AnimationUpdateCallback.prototype = MACROUTILS.objectInherit( Object.prototype, {

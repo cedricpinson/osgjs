@@ -223,7 +223,7 @@ define( [
                     // tricky: change push be before isculled, and pop in case of culling
                     // strange bug for now on frustum culling sample with that
 
-                    if ( node.getTypeID() === MatrixTransform.typeID ) {
+                    if ( node instanceof MatrixTransform ) {
                         // tricky: MatrixTransform getBound is already transformed to
                         // its local space whereas nodepath also have its matrix ...
                         // so to get world space, you HAVE to remove that matrix from nodePATH
@@ -232,8 +232,6 @@ define( [
                     } else {
                         matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath );
                     }
-
-
 
                     Matrix.transformBoundingSphere( matrix, node.getBound(), bsWorld );
                     return this.getCurrentCullingSet().isBoundingSphereCulled( bsWorld );
