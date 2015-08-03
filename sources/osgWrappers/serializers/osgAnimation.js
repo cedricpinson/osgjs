@@ -281,38 +281,36 @@ define( [
 
     osgAnimationWrapper.StackedTranslate = function ( input, st ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.Name )
+        if ( !jsonObj.Name || !jsonObj.Translate )
             return P.reject();
 
         osgWrapper.Object( input, st );
 
-        if ( jsonObj.Translate )
-            st.init( jsonObj.Translate );
+        st.init( jsonObj.Translate );
 
         return P.resolve( st );
     };
 
     osgAnimationWrapper.StackedQuaternion = function ( input, st ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.Name )
+        if ( !jsonObj.Name || !jsonObj.Quaternion )
             return P.reject();
 
         osgWrapper.Object( input, st );
 
-        if ( jsonObj.Quaternion )
-            st.init( jsonObj.Quaternion );
+        st.init( jsonObj.Quaternion );
 
         return P.resolve( st );
     };
 
     osgAnimationWrapper.StackedRotateAxis = function ( input, st ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.Axis )
+        if ( !jsonObj.Axis || jsonObj.Angle === undefined )
             return P.reject();
 
         osgWrapper.Object( input, st );
 
-        st.init( jsonObj.Axis, jsonObj.Angle || 0 );
+        st.init( jsonObj.Axis, jsonObj.Angle );
 
         return P.resolve( st );
     };
@@ -343,20 +341,16 @@ define( [
 
     osgAnimationWrapper.Bone = function ( input, bone ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.InvBindMatrixInSkeletonSpace )
+        if ( !jsonObj.InvBindMatrixInSkeletonSpace || !jsonObj.BoundingBox )
             return P.reject();
 
         var promise = osgWrapper.MatrixTransform( input, bone );
 
         bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
 
-        var AABBonBone = jsonObj.AABBonBone;
-        if ( AABBonBone ) {
-            bone.BoundingBox = {
-                min: AABBonBone.min,
-                max: AABBonBone.max
-            };
-        }
+        // It is mandatory because we need it for shadows and culling
+        bone.setBoneBoundingBox( jsonObj.BoundingBox );
+
         return promise;
     };
 

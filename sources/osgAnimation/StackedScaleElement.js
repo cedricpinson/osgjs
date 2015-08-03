@@ -13,7 +13,7 @@ define( [
     var StackedScale = function ( name, scale ) {
         Object.call( this );
 
-        var value = Vec3.create();
+        var value = Vec3.set( 1.0, 1.0, 1.0, Vec3.create() );
         if ( scale ) Vec3.copy( scale, value );
 
         this._target = {
@@ -27,8 +27,7 @@ define( [
     StackedScale.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
         init: function ( scale ) {
-            if ( scale )
-                this.setScale( scale );
+            this.setScale( scale );
             Vec3.copy( scale, this._defaultValue );
         },
 

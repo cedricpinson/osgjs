@@ -30,9 +30,9 @@ define( [
     StackedRotateAxis.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
         init: function ( axis, angle ) {
-            if ( axis )
-                this.setAxis( axis );
+            this.setAxis( axis );
             this._defaultValue = angle;
+            this.setAngle( angle );
         },
 
         setAxis: function ( axis ) {

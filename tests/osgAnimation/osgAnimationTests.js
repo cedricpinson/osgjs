@@ -3,7 +3,8 @@ define( [
     'tests/osgAnimation/BasicAnimationManager',
     'tests/osgAnimation/Channel',
     'tests/osgAnimation/Interpolator',
-], function ( Animation, BasicAnimationManager, Channel, Interpolator ) {
+    'tests/osgAnimation/StackedTransform'
+], function ( Animation, BasicAnimationManager, Channel, Interpolator, StackedTransform ) {
 
     'use strict';
 
@@ -12,5 +13,6 @@ define( [
         BasicAnimationManager();
         Channel();
         Interpolator();
+        StackedTransform();
     };
 } );

@@ -18,9 +18,18 @@ define( [
         MatrixTransform.call( this );
         this._invBindInSkeletonSpace = Matrix.create();
         this._boneInSkeletonSpace = Matrix.create();
+        this._boneBoundingBox = undefined;
     };
 
     Bone.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
+
+        getBoneBoundingBox: function () {
+            return this._boneBoundingBox;
+        },
+
+        setBoneBoundingBox: function ( bb ) {
+            this._boneBoundingBox = bb;
+        },
 
         getMatrixInSkeletonSpace: function () {
             return this._boneInSkeletonSpace;
