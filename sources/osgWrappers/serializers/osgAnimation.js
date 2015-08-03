@@ -341,15 +341,19 @@ define( [
 
     osgAnimationWrapper.Bone = function ( input, bone ) {
         var jsonObj = input.getJSON();
-        if ( !jsonObj.InvBindMatrixInSkeletonSpace || !jsonObj.BoundingBox )
+        if ( !jsonObj.InvBindMatrixInSkeletonSpace )
             return P.reject();
 
         var promise = osgWrapper.MatrixTransform( input, bone );
 
         bone.setInvBindMatrixInSkeletonSpace( jsonObj.InvBindMatrixInSkeletonSpace );
 
-        // It is mandatory because we need it for shadows and culling
-        bone.setBoneBoundingBox( jsonObj.BoundingBox );
+        if ( jsonObj.BoundingBox ) {
+            // It is mandatory because we need it for shadows and culling
+            var bbox = bone.getBoneBoundingBox();
+            bbox.setMax( jsonObj.BoundingBox.max );
+            bbox.setMin( jsonObj.BoundingBox.min );
+        }
 
         return promise;
     };

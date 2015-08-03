@@ -123,6 +123,16 @@ define( [
             return this._max;
         },
 
+        setMin: function ( min ) {
+            Vec3.copy( min, this._min );
+            return this;
+        },
+
+        setMax: function ( max ) {
+            Vec3.copy( max, this._max );
+            return this;
+        },
+
         corner: function ( pos, resultVec ) {
             /*jshint bitwise: false */
             var ret = resultVec;

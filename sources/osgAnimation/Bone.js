@@ -1,9 +1,10 @@
 define( [
     'osg/Utils',
+    'osg/BoundingBox',
     'osg/Matrix',
     'osg/MatrixTransform',
     'osgAnimation/UpdateBone'
-], function ( MACROUTILS, Matrix, MatrixTransform, UpdateBone ) {
+], function ( MACROUTILS, BoundingBox, Matrix, MatrixTransform, UpdateBone ) {
 
     'use strict';
 
@@ -18,7 +19,7 @@ define( [
         MatrixTransform.call( this );
         this._invBindInSkeletonSpace = Matrix.create();
         this._boneInSkeletonSpace = Matrix.create();
-        this._boneBoundingBox = undefined;
+        this._boneBoundingBox = new BoundingBox();
     };
 
     Bone.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
