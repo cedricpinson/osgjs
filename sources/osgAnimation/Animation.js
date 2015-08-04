@@ -80,9 +80,9 @@ define( [
     //   "bone1",
     //   ... ]
     //
-    var initChannelTargetID = function ( animations, targetList, targetMap ) {
+    var registerChannelTargetID = function ( animations, targetList, targetMap ) {
 
-        var array = targetList;
+        var newTargetAdded = [];
 
         for ( var i = 0; i < animations.length; i++ ) {
 
@@ -102,8 +102,8 @@ define( [
                 var uniqueTargetName = targetName + '.' + name;
 
                 // not yet in the map create an id from the array size
-                if ( targetMap[ uniqueTargetName ] === undefined ) {
-                    var id = array.length;
+                if ( !targetMap[ uniqueTargetName ] ) {
+                    var id = targetList.length;
                     instanceChannel.targetID = id; // set the target ID in the channel
                     var target = {
                         target: uniqueTargetName,
@@ -111,7 +111,8 @@ define( [
                         type: type
                     };
                     targetMap[ uniqueTargetName ] = target;
-                    array.push( target );
+                    targetList.push( target );
+                    newTargetAdded.push( target );
                 } else {
                     //if there is more than one channel for the same target, we set the targetID already created
                     instanceChannel.targetID = targetMap[ uniqueTargetName ].targetID;
@@ -119,14 +120,14 @@ define( [
             }
         }
 
-        return array;
+        return newTargetAdded;
     };
 
     var Animation = function () {};
 
     Animation.createAnimation = createAnimation;
     Animation.createInstanceAnimation = createInstanceAnimation;
-    Animation.initChannelTargetID = initChannelTargetID;
+    Animation.registerChannelTargetID = registerChannelTargetID;
 
     return Animation;
 } );

@@ -27,9 +27,20 @@ define( [
         },
         init: function () {
             return 0.0;
+        },
+        create: function () {
+            return 0.0;
         }
     };
 
+
+    var ResultType = [];
+    ResultType.length = Channel.ChannelType.Count;
+    ResultType[ Channel.ChannelType.Vec3 ] = Vec3;
+    ResultType[ Channel.ChannelType.Quat ] = Quat;
+    ResultType[ Channel.ChannelType.Float ] = Float;
+    ResultType[ Channel.ChannelType.FloatCubicBezier ] = Float;
+    ResultType[ Channel.ChannelType.Vec3CubicBezier ] = Vec3;
 
     /**
      *  BasicAnimationManager
@@ -43,7 +54,7 @@ define( [
         this._timeFactor = 1.0;
         this._startTime = 0.0;
 
-        // contains a map with instance animation
+        // contains a map with instance animations
         this._instanceAnimations = {};
 
         // animations to start
@@ -73,20 +84,11 @@ define( [
         //   Quat: [ targetID2, targetID3,  ... ]
         //   Float: [ ... ]
         // ]
-        this._quatTargetID = [];
-        this._vec3TargetID = [];
-        this._floatTargetID = [];
-        this._floatCubicBezierTargetID = [];
-        this._vec3CubicBezierTargetID = [];
-
         this._targetIDByTypes = [];
-        this._targetIDByTypes.length = Object.keys( Channel.ChannelType ).length;
-        this._targetIDByTypes[ Channel.ChannelType.Vec3 ] = this._vec3TargetID;
-        this._targetIDByTypes[ Channel.ChannelType.Quat ] = this._quatTargetID;
-        this._targetIDByTypes[ Channel.ChannelType.Float ] = this._floatTargetID;
-
-        this._targetIDByTypes[ Channel.ChannelType.FloatCubicBezier ] = this._floatCubicBezierTargetID;
-        this._targetIDByTypes[ Channel.ChannelType.Vec3CubicBezier ] = this._vec3CubicBezierTargetID;
+        this._targetIDByTypes.length = Channel.ChannelType.Count;
+        for ( var i = 0; i < this._targetIDByTypes.length; i++ ) {
+            this._targetIDByTypes[ i ] = [];
+        }
 
         // current playing animations
         this._activeAnimations = {};
@@ -96,19 +98,11 @@ define( [
         //   [ chanel0, channel1, ... ] // Vec3 type
         //   [ chanel2, channel3, ... ] // Quat type
         //   [ chanel5, channel6, ... ] // Float type
-        this._quatActiveChannels = [];
-        this._vec3ActiveChannels = [];
-        this._floatActiveChannels = [];
-        this._floatCubicBezierActiveChannels = [];
-        this._vec3CubicBezierActiveChannels = [];
-
         this._activeChannelsByTypes = [];
-        this._activeChannelsByTypes.length = Object.keys( Channel.ChannelType ).length;
-        this._activeChannelsByTypes[ Channel.ChannelType.Vec3 ] = this._vec3ActiveChannels;
-        this._activeChannelsByTypes[ Channel.ChannelType.Quat ] = this._quatActiveChannels;
-        this._activeChannelsByTypes[ Channel.ChannelType.Float ] = this._floatActiveChannels;
-        this._activeChannelsByTypes[ Channel.ChannelType.FloatCubicBezier ] = this._floatCubicBezierActiveChannels;
-        this._activeChannelsByTypes[ Channel.ChannelType.Vec3CubicBezier ] = this._vec3CubicBezierActiveChannels;
+        this._activeChannelsByTypes.length = Channel.ChannelType.Count;
+        for ( i = 0; i < this._activeChannelsByTypes.length; i++ ) {
+            this._activeChannelsByTypes[ i ] = [];
+        }
 
         // assign all target/channel in animationCallback
         // then they can read it directly
@@ -126,141 +120,68 @@ define( [
 
     BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype, {
 
-        findAnimationUpdateCallback: function ( node ) {
-            var collector = new CollectAnimationUpdateCallbackVisitor();
-            node.accept( collector );
-            this._animationsUpdateCallback = collector.getAnimationUpdateCallbackMap();
-        },
-
-        // STOP HERE
-        // assignTargetToAnimationCallback
-        //
-        // check all animationUpdateCallback collected and try to
-        // assign the channel instance registered in the manager. If a
-        // animationUpdateCallback contains channels not known by the
-        // manager we skip it.  It means that it should be called
-        // after the animations has been registered into the animation
-        // manager
-        assignTargetToAnimationCallback: function () {
-
-            this._animationsUpdateCallbackArray.length = 0;
-            var animationsUpdateCallback = this._animationsUpdateCallback;
-
-            var keys = Object.keys( animationsUpdateCallback );
-            for ( var i = 0, l = keys.length; i < l; i++ ) {
-                var key = keys[ i ];
-                var animationUpdateCallback = animationsUpdateCallback[ key ];
-                var targetName = animationUpdateCallback.getName();
-                // loop over
-                if ( animationUpdateCallback.getStackedTransforms ) {
-                    var channels = animationUpdateCallback.getStackedTransforms();
-
-                    var nbChannelsRegistered = 0;
-                    for ( var a = 0; a < channels.length; a++ ) {
-                        var channel = channels[ a ];
-                        var name = channels[ a ].getName();
-                        var uniqueTargetName = targetName + '.' + name;
-
-                        // if not target id in animation manager skip
-                        var target = this._targetsMap[ uniqueTargetName ];
-                        if ( target === undefined ) {
-                            Notify.warn( 'target id ' + uniqueTargetName + ' (' + name + ') not found in manager' );
-                            continue;
-                        }
-                        nbChannelsRegistered++;
-                        // assign the channel instance with value into the animation update callback
-                        channel.setTarget( this._targetID[ target.targetID ] );
-                    }
-
-                    // keep list of updateCallback to update if they contains channel to compute
-                    if ( nbChannelsRegistered ) this._animationsUpdateCallbackArray.push( animationUpdateCallback );
-
-                } else {
-                    Notify.warn( 'animation callback type not recognized' );
-                }
-            }
-        },
-
         init: function ( animations ) {
 
-            var inst = this._instanceAnimations;
+            // reset all
+            this._simulationTime = 0.0;
+            this._pauseTime = 0.0;
+            this._timeFactor = 1.0;
+            this._startTime = 0.0;
 
-            var instanceAnimationList = [];
-            for ( var i = 0; i < animations.length; i++ ) {
-                var animation = Animation.createInstanceAnimation( animations[ i ] );
-                var name = animation.name;
-                inst[ name ] = animation;
-                instanceAnimationList.push( animation );
-            }
+            // contains a map with instance animations
+            this._instanceAnimations = {};
 
-            // compute a map and set a targetID for each InstanceChannel
-            Animation.initChannelTargetID( instanceAnimationList, this._targets, this._targetsMap );
+            // animations to start
+            this._startAnimations = {};
+
+            this._targets.length = 0;
+            this._targetsMap = {};
+
             this._targetID.length = 0;
-            for ( i = 0; i < this._targets.length; i++ ) {
-                var type = this._targets[ i ].type;
 
-                // probably it's not a good idea here
-                if ( type === Channel.ChannelType.Vec3 || type === Channel.ChannelType.Vec3CubicBezier )
-                    this._targetID.push( createTargetID( i, Vec3.create() ) );
-                else if ( type === Channel.ChannelType.Quat )
-                    this._targetID.push( createTargetID( i, Quat.create() ) );
-                else if ( type === Channel.ChannelType.Float || type === Channel.ChannelType.FloatCubicBezier )
-                    this._targetID.push( createTargetID( i, 0.0 ) );
-                else
-                    Notify.warn( 'osgAnimation.BasicAnimationManager unknown target type' );
+            var i;
+            for ( i = 0; i < this._targetIDByTypes.length; i++ )
+                this._targetIDByTypes[ i ].length = 0;
+
+            this._activeAnimations = {};
+            this._activeAnimationList.length = 0;
+
+            for ( i = 0; i < this._activeChannelsByTypes; i++ )
+                this._activeChannelsByTypes[ i ].length = 0;
+
+            this._animationsUpdateCallback = {};
+            this._animationsUpdateCallbackArray.length = 0;
+
+            this._pause = false;
+            this._seekTime = -1;
+
+            // add animations
+            this.addAnimations( animations );
+        },
+
+        addAnimations: function ( animations ) {
+
+            // instanceAnimation added
+            var instanceAnimationList = this._addAnimation( animations );
+
+            // compute a map and set a targetID for each InstanceChannel from
+            // instanceAnimationList
+            var newTargetAdded = Animation.registerChannelTargetID( instanceAnimationList, this._targets, this._targetsMap );
+
+            // register targetID per type
+            for ( var i = 0; i < newTargetAdded.length; i++ ) {
+                var type = this._targets[ i ].type;
+                this._targetID.push( createTargetID( i, ResultType[ type ].create() ) );
             }
 
             this._dirty = true;
         },
 
-        // add channels from instance animation to the active channels list
-        addActiveChannels: function ( t, instanceAnimation ) {
-
-            var instanceChannels = instanceAnimation.channels;
-            for ( var i = 0, l = instanceChannels.length; i < l; i++ ) {
-                var instanceChannel = instanceChannels[ i ];
-                var type = instanceChannel.channel.type;
-                instanceChannel.t = t; // reset time
-                instanceChannel.instanceAnimation = instanceAnimation; // link with parent animation
-                var targetID = instanceChannel.targetID;
-                this._activeChannelsByTypes[ type ].push( instanceChannel );
-                this._targetID[ targetID ].channels.push( instanceChannel );
-                this._targetIDByTypes[ type ].push( targetID );
-            }
-
-        },
-
-        removeActiveChannels: function ( instanceAnimation ) {
-
-            var instanceChannels = instanceAnimation.channels;
-            for ( var i = 0, l = instanceChannels.length; i < l; i++ ) {
-                var instanceChannel = instanceChannels[ i ];
-                var type = instanceChannel.channel.type;
-                var targetID = instanceChannel.targetID;
-
-                // remove channel instance from targetID channel list
-                var targetChannelsList = this._targetID[ targetID ].channels;
-                var index = targetChannelsList.indexOf( instanceChannel );
-                targetChannelsList.splice( index, 1 );
-
-                // remove targetID from this._targetIDByTypes
-                var targetIDListForType = this._targetIDByTypes[ type ];
-                index = targetIDListForType.indexOf( targetID );
-                targetIDListForType.splice( index, 1 );
-
-                // remove channel from active channels
-                var channelTypeList = this._activeChannelsByTypes[ type ];
-                var channelIndex = channelTypeList.indexOf( instanceChannel );
-                channelTypeList.splice( channelIndex, 1 );
-            }
-
-        },
-
         update: function ( node, nv ) {
 
             if ( this._dirty ) {
-                this.findAnimationUpdateCallback( node );
-                this.assignTargetToAnimationCallback();
+                this._findAnimationUpdateCallback( node );
+                this._assignTargetToAnimationCallback();
                 this._dirty = false;
             }
 
@@ -280,139 +201,38 @@ define( [
             return true;
         },
 
-        // blend value from each channels for each target
-        updateTargetType: function ( targetIDList, lerp, init ) {
-
-            for ( var i = 0, l = targetIDList.length; i < l; i++ ) {
-
-                var targetID = targetIDList[ i ];
-                var target = this._targetID[ targetID ];
-
-                var affectedChannels = target.channels;
-                if ( affectedChannels.length === 0 )
-                    continue;
-
-                target.value = init( target.value );
-                var accumulatedWeight = 0.0;
-
-                for ( var ac = 0; ac < affectedChannels.length; ac++ ) {
-
-                    var achannel = affectedChannels[ ac ];
-                    var weight = achannel.weight;
-                    accumulatedWeight += weight;
-                    var ratio = weight / accumulatedWeight;
-                    target.value = lerp( ratio, target.value, achannel.value, target.value );
-                }
-
-            }
-
-        },
-
-        updateChannelsType: function ( t, channels, interpolator ) {
-
-            for ( var c = 0, l = channels.length; c < l; c++ ) {
-                var channel = channels[ c ];
-                var instanceAnimation = channel.instanceAnimation;
-                var loop = instanceAnimation.loop;
-
-                var tLocal = t - channel.t;
-
-                // handle loop, careful in case animation is one frame
-                if ( loop && instanceAnimation.duration > 0.0 ) tLocal = tLocal % instanceAnimation.duration;
-
-                interpolator( tLocal, channel );
-            }
-        },
-
-        addActiveAnimation: function ( t, cmd ) {
-
-            this._activeAnimations[ cmd.name ] = cmd; // set animation in the list of active one
-
-            var instanceAnimation = this._instanceAnimations[ cmd.name ];
-            instanceAnimation.start = t;
-            instanceAnimation.end = t + instanceAnimation.duration;
-            this.addActiveChannels( t, instanceAnimation );
-
-            // keep track of instance animation active in a list
-            this._activeAnimationList.push( instanceAnimation );
-        },
-
-        // execute start animations events
-        // during the updateManager
-        processStartAnimation: function ( t ) {
-
-            var animations = this._startAnimations;
-            var keys = Object.keys( animations );
-            for ( var i = 0, l = keys.length; i < l; i++ ) {
-                var key = keys[ i ];
-                var cmd = animations[ key ];
-                var name = cmd.name;
-
-                if ( this.isPlaying( name ) )
-                    continue;
-
-                this.addActiveAnimation( t, cmd );
-            }
-
-            if ( keys.length ) this._startAnimations = {};
-        },
-
-
         updateManager: function ( t ) {
 
 
             // adds active animations / channels requested
             //
-            this.processStartAnimation( t );
+            this._processStartAnimation( t );
 
+            var i, l = Channel.ChannelType.Count;
             // update all actives channels by type
             //
-            this.updateChannelsType( t, this._vec3ActiveChannels, Interpolator.Vec3LerpInterpolator );
-            this.updateChannelsType( t, this._quatActiveChannels, Interpolator.QuatLerpInterpolator );
-            this.updateChannelsType( t, this._floatActiveChannels, Interpolator.FloatLerpInterpolator );
-
-            this.updateChannelsType( t, this._floatCubicBezierActiveChannels, Interpolator.FloatCubicBezierInterpolator );
-            this.updateChannelsType( t, this._vec3CubicBezierActiveChannels, Interpolator.Vec3CubicBezierInterpolator );
-
+            for ( i = 0; i < l; i++ ) {
+                var activeChannelType = this._activeChannelsByTypes[ i ];
+                this._updateChannelsType( t, activeChannelType, Interpolator[ i ] );
+            }
 
             // update targets
             //
-            this.updateTargetType( this._quatTargetID, Quat.lerp, Quat.init );
-            this.updateTargetType( this._vec3TargetID, Vec3.lerp, Vec3.init );
-            this.updateTargetType( this._floatTargetID, Float.lerp, Float.init );
-
-            this.updateTargetType( this._floatCubicBezierTargetID, Float.lerp, Float.init );
-            this.updateTargetType( this._vec3CubicBezierTargetID, Vec3.lerp, Vec3.init );
+            for ( i = 0; i < l; i++ ) {
+                var targetType = this._targetIDByTypes[ i ];
+                this._updateTargetType( targetType, ResultType[ i ].lerp, ResultType[ i ].init );
+            }
 
 
             // update all animation callback
             // expect to have UpdateMatrixTransform
-            for ( var i = 0, l = this._animationsUpdateCallbackArray.length; i < l; i++ ) {
+            for ( i = 0, l = this._animationsUpdateCallbackArray.length; i < l; i++ ) {
                 var animCallback = this._animationsUpdateCallbackArray[ i ];
                 animCallback.computeChannels();
             }
 
             // check animation finished
-            this.removeFinishedAnimation( t );
-        },
-
-        removeFinishedAnimation: function ( t ) {
-
-            var activeAnimationList = this._activeAnimationList;
-
-            var i = 0;
-            while ( i < activeAnimationList.length ) {
-                var instanceAnimation = activeAnimationList[ i ];
-                var name = instanceAnimation.name;
-
-                if ( t > instanceAnimation.end && instanceAnimation.loop === false ) {
-                    this.removeActiveChannels( instanceAnimation );
-                    this._activeAnimations[ name ] = undefined;
-                    activeAnimationList.splice( i, 1 );
-                } else {
-                    i++;
-                }
-            }
+            this._removeFinishedAnimation( t );
         },
 
         togglePause: function () { //Pause the manager's time
@@ -440,7 +260,7 @@ define( [
             var i = 0;
             while ( i < activeAnimationList.length ) {
                 if ( activeAnimationList[ i ].name === name ) {
-                    this.removeActiveChannels( this._instanceAnimations[ name ] );
+                    this._removeActiveChannels( this._instanceAnimations[ name ] );
                     this._activeAnimations[ name ] = undefined;
                     activeAnimationList.splice( i, 1 );
                     return;
@@ -454,7 +274,7 @@ define( [
             var i = 0;
             while ( i < activeAnimationList.length ) {
                 var name = activeAnimationList[ i ].name;
-                this.removeActiveChannels( this._instanceAnimations[ name ] );
+                this._removeActiveChannels( this._instanceAnimations[ name ] );
                 this._activeAnimations[ name ] = undefined;
                 activeAnimationList.splice( i, 1 );
             }
@@ -503,7 +323,6 @@ define( [
             this._startAnimations[ anim.name ] = anim;
         },
 
-
         // if first argument is an object
         // playAnimationObject is called instead
         playAnimation: function ( name, loop, priority, weight ) {
@@ -523,10 +342,224 @@ define( [
             return this.playAnimationObject( animationObject );
         },
 
-
         getAnimations: function () {
             return this._instanceAnimations;
+        },
+
+
+        _findAnimationUpdateCallback: function ( node ) {
+            var collector = new CollectAnimationUpdateCallbackVisitor();
+            node.accept( collector );
+            this._animationsUpdateCallback = collector.getAnimationUpdateCallbackMap();
+        },
+
+
+        // assignTargetToAnimationCallback
+        //
+        // check all animationUpdateCallback collected and try to
+        // assign the channel instance registered in the manager. If a
+        // animationUpdateCallback contains channels not known by the
+        // manager we skip it.  It means that it should be called
+        // after the animations has been registered into the animation
+        // manager
+        _assignTargetToAnimationCallback: function () {
+
+            this._animationsUpdateCallbackArray.length = 0;
+            var animationsUpdateCallback = this._animationsUpdateCallback;
+
+            var keys = Object.keys( animationsUpdateCallback );
+            for ( var i = 0, l = keys.length; i < l; i++ ) {
+                var key = keys[ i ];
+                var animationUpdateCallback = animationsUpdateCallback[ key ];
+                var targetName = animationUpdateCallback.getName();
+                // loop over
+                if ( animationUpdateCallback.getStackedTransforms ) {
+                    var channels = animationUpdateCallback.getStackedTransforms();
+
+                    var nbChannelsRegistered = 0;
+                    for ( var a = 0; a < channels.length; a++ ) {
+                        var channel = channels[ a ];
+                        var name = channels[ a ].getName();
+                        var uniqueTargetName = targetName + '.' + name;
+
+                        // if not target id in animation manager skip
+                        var target = this._targetsMap[ uniqueTargetName ];
+                        if ( target === undefined ) {
+                            Notify.warn( 'target id ' + uniqueTargetName + ' (' + name + ') not found in manager' );
+                            continue;
+                        }
+                        nbChannelsRegistered++;
+                        // assign the channel instance with value into the animation update callback
+                        channel.setTarget( this._targetID[ target.targetID ] );
+                    }
+
+                    // keep list of updateCallback to update if they contains channel to compute
+                    if ( nbChannelsRegistered ) this._animationsUpdateCallbackArray.push( animationUpdateCallback );
+
+                } else {
+                    Notify.warn( 'animation callback type not recognized' );
+                }
+            }
+        },
+
+        _addAnimation: function ( animations ) {
+
+            var instanceAnimationList = [];
+            for ( var i = 0; i < animations.length; i++ ) {
+
+                var animation = animations[ i ];
+                var animationName = animation.name;
+
+                if ( this._instanceAnimations[ animationName ] )
+                    continue;
+
+                var instanceAnimation = Animation.createInstanceAnimation( animation );
+                this._instanceAnimations[ animationName ] = instanceAnimation;
+                instanceAnimationList.push( instanceAnimation );
+            }
+
+            return instanceAnimationList;
+        },
+
+        // add channels from instance animation to the active channels list
+        _addActiveChannels: function ( t, instanceAnimation ) {
+
+            var instanceChannels = instanceAnimation.channels;
+            for ( var i = 0, l = instanceChannels.length; i < l; i++ ) {
+                var instanceChannel = instanceChannels[ i ];
+                var type = instanceChannel.channel.type;
+                instanceChannel.t = t; // reset time
+                instanceChannel.instanceAnimation = instanceAnimation; // link with parent animation
+                var targetID = instanceChannel.targetID;
+                this._activeChannelsByTypes[ type ].push( instanceChannel );
+                this._targetID[ targetID ].channels.push( instanceChannel );
+                this._targetIDByTypes[ type ].push( targetID );
+            }
+
+        },
+
+        _removeActiveChannels: function ( instanceAnimation ) {
+
+            var instanceChannels = instanceAnimation.channels;
+            for ( var i = 0, l = instanceChannels.length; i < l; i++ ) {
+                var instanceChannel = instanceChannels[ i ];
+                var type = instanceChannel.channel.type;
+                var targetID = instanceChannel.targetID;
+
+                // remove channel instance from targetID channel list
+                var targetChannelsList = this._targetID[ targetID ].channels;
+                var index = targetChannelsList.indexOf( instanceChannel );
+                targetChannelsList.splice( index, 1 );
+
+                // remove targetID from this._targetIDByTypes
+                var targetIDListForType = this._targetIDByTypes[ type ];
+                index = targetIDListForType.indexOf( targetID );
+                targetIDListForType.splice( index, 1 );
+
+                // remove channel from active channels
+                var channelTypeList = this._activeChannelsByTypes[ type ];
+                var channelIndex = channelTypeList.indexOf( instanceChannel );
+                channelTypeList.splice( channelIndex, 1 );
+            }
+
+        },
+
+        // blend value from each channels for each target
+        _updateTargetType: function ( targetIDList, lerp, init ) {
+
+            for ( var i = 0, l = targetIDList.length; i < l; i++ ) {
+
+                var targetID = targetIDList[ i ];
+                var target = this._targetID[ targetID ];
+
+                var affectedChannels = target.channels;
+                if ( affectedChannels.length === 0 )
+                    continue;
+
+                target.value = init( target.value );
+                var accumulatedWeight = 0.0;
+
+                for ( var ac = 0; ac < affectedChannels.length; ac++ ) {
+
+                    var achannel = affectedChannels[ ac ];
+                    var weight = achannel.weight;
+                    accumulatedWeight += weight;
+                    var ratio = weight / accumulatedWeight;
+                    target.value = lerp( ratio, target.value, achannel.value, target.value );
+                }
+
+            }
+
+        },
+
+        _updateChannelsType: function ( t, channels, interpolator ) {
+
+            for ( var c = 0, l = channels.length; c < l; c++ ) {
+                var channel = channels[ c ];
+                var instanceAnimation = channel.instanceAnimation;
+                var loop = instanceAnimation.loop;
+
+                var tLocal = t - channel.t;
+
+                // handle loop, careful in case animation is one frame
+                if ( loop && instanceAnimation.duration > 0.0 ) tLocal = tLocal % instanceAnimation.duration;
+
+                interpolator( tLocal, channel );
+            }
+        },
+
+        _removeFinishedAnimation: function ( t ) {
+
+            var activeAnimationList = this._activeAnimationList;
+
+            var i = 0;
+            while ( i < activeAnimationList.length ) {
+                var instanceAnimation = activeAnimationList[ i ];
+                var name = instanceAnimation.name;
+
+                if ( t > instanceAnimation.end && instanceAnimation.loop === false ) {
+                    this._removeActiveChannels( instanceAnimation );
+                    this._activeAnimations[ name ] = undefined;
+                    activeAnimationList.splice( i, 1 );
+                } else {
+                    i++;
+                }
+            }
+        },
+
+        _addActiveAnimation: function ( t, cmd ) {
+
+            this._activeAnimations[ cmd.name ] = cmd; // set animation in the list of active one
+
+            var instanceAnimation = this._instanceAnimations[ cmd.name ];
+            instanceAnimation.start = t;
+            instanceAnimation.end = t + instanceAnimation.duration;
+            this._addActiveChannels( t, instanceAnimation );
+
+            // keep track of instance animation active in a list
+            this._activeAnimationList.push( instanceAnimation );
+        },
+
+        // execute start animations events
+        // during the updateManager
+        _processStartAnimation: function ( t ) {
+
+            var animations = this._startAnimations;
+            var keys = Object.keys( animations );
+            for ( var i = 0, l = keys.length; i < l; i++ ) {
+                var key = keys[ i ];
+                var cmd = animations[ key ];
+                var name = cmd.name;
+
+                if ( this.isPlaying( name ) )
+                    continue;
+
+                this._addActiveAnimation( t, cmd );
+            }
+
+            if ( keys.length ) this._startAnimations = {};
         }
+
 
     } );
 

@@ -92,7 +92,7 @@ define( [
             animationCallback.getStackedTransforms().push( stackedRotateAxis );
             node.addUpdateCallback( animationCallback );
 
-            basicAnimationManager.findAnimationUpdateCallback( node );
+            basicAnimationManager._findAnimationUpdateCallback( node );
             console.log( basicAnimationManager._animationsUpdateCallback );
             // get keys
             var keys = Object.keys( basicAnimationManager._animationsUpdateCallback );
@@ -100,7 +100,7 @@ define( [
             var animationCB = basicAnimationManager._animationsUpdateCallback[ keys[ 0 ] ];
             equal( animationCB.getName(), 'testUpdateMatrixTransform', 'check name of the first animation found' );
 
-            basicAnimationManager.assignTargetToAnimationCallback();
+            basicAnimationManager._assignTargetToAnimationCallback();
             equal( basicAnimationManager._animationsUpdateCallbackArray.length, 1, 'check channel assigned to animation callback' );
 
 
@@ -171,8 +171,8 @@ define( [
             }
 
             basicAnimationManager.init( animations );
-            basicAnimationManager.findAnimationUpdateCallback( root );
-            basicAnimationManager.assignTargetToAnimationCallback();
+            basicAnimationManager._findAnimationUpdateCallback( root );
+            basicAnimationManager._assignTargetToAnimationCallback();
 
             console.log( 'nb animations ' + Object.keys( basicAnimationManager._animationsUpdateCallback ).length );
 
