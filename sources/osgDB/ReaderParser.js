@@ -64,8 +64,8 @@ define( [
             if ( key ) {
                 var obj = {};
                 obj[ key ] = node[ key ];
-                var Input = require( 'osgDB/Input' );
-                var input = new Input( obj );
+                var input = ReaderParser.registry().clone();
+                input.setJSON( obj );
 
                 // copy global options and override with user options
                 var opt = MACROUTILS.objectMix( MACROUTILS.objectMix( {}, ReaderParser.registry().getOptions() ), options || {} );

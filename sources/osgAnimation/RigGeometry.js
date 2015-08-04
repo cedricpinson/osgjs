@@ -10,9 +10,8 @@ define( [
     'osg/StateSet',
     'osgAnimation/Bone',
     'osgAnimation/UpdateRigGeometry',
-    'osgAnimation/VertexInfluenceSet',
     'osgAnimation/RigTransformHardware'
-], function ( MACROUTILS, BufferArray, Vec3, Node, Geometry, NodeVisitor, Notify, Matrix, StateSet, Bone, UpdateRigGeometry, VertexInfluenceSet, RigTransformHardware ) {
+], function ( MACROUTILS, BufferArray, Vec3, Node, Geometry, NodeVisitor, Notify, Matrix, StateSet, Bone, UpdateRigGeometry, RigTransformHardware ) {
 
     'use strict';
 

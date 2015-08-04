@@ -492,7 +492,9 @@ define( [
                     } ]
                 }
             };
-            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
+            var input = ReaderParser.registry().clone();
+
+            input.setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.getUpdateCallbackList().length === 1, 'check update callback' );
                 ok( result.getUpdateCallback().getAnimations()[ 'Take 001' ] !== undefined, 'check animation list' );
                 var animation = result.getUpdateCallback().getAnimations()[ 'Take 001' ];
@@ -535,7 +537,9 @@ define( [
                 }
             };
 
-            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
+            var input = ReaderParser.registry().clone();
+
+            input.setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.keys.length === 28, 'Check keys FloatLerpChannel' );
                 ok( result.times.length === 28, 'Check times FloatLerpChannel' );
                 ok( result.target === 'Cube', 'Check TargetName FloatLerpChannel' );
@@ -600,7 +604,9 @@ define( [
                     }
                 }
             };
-            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
+            var input = ReaderParser.registry().clone();
+
+            input.setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.keys.length === 28, 'Check keys QuatSlerpChannel' );
                 ok( result.times.length === 7, 'Check times QuatSlerpChannel' );
                 ok( result.target === 'Cube', 'Check TargetName QuatSlerpChannel' );
@@ -666,7 +672,9 @@ define( [
                 }
             };
 
-            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
+            var input = ReaderParser.registry().clone();
+
+            input.setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.keys.length === 28, 'Check keys QuatSlerpChannel' );
                 ok( result.times.length === 7, 'Check times QuatSlerpChannel' );
                 ok( result.target === 'Cube', 'Check TargetName QuatSlerpChannel' );
@@ -727,7 +735,9 @@ define( [
                 }
             };
 
-            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
+            var input = ReaderParser.registry().clone();
+
+            input.setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.keys.length === 3, 'Check keys FloatCubicBezierChannel' );
                 ok( result.times.length === 1, 'Check times FloatCubicBezierChannel' );
                 ok( mockup.checkNear( result.keys[ 0 ], 3.5708 ), 'Ckeck Position' );
@@ -843,7 +853,9 @@ define( [
                 }
             };
 
-            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
+            var input = ReaderParser.registry().clone();
+
+            input.setJSON( tree ).readObject().then( function ( result ) {
                 ok( result.keys.length === 27, 'Check keys Vec3CubicBezierChannel' );
                 ok( result.times.length === 3, 'Check times Vec3CubicBezierChannel' );
                 ok( mockup.checkNear( result.keys[ 15 ], 0.92923402 ), 'Check value' );
