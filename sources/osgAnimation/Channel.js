@@ -15,7 +15,8 @@ define( [
         Float: 2,
         FloatCubicBezier: 3,
         Vec3CubicBezier: 4,
-        Count: 5
+        QuatSlerp: 5,
+        Count: 6
     };
 
     var Channel = {};
@@ -52,6 +53,10 @@ define( [
 
     var createQuatChannel = function ( keys, times, targetName, channelName, chan ) {
         return initChannel( ChannelType.Quat, keys, times, targetName, channelName, chan || {} );
+    };
+
+    var createQuatSlerpChannel = function ( keys, times, targetName, channelName, chan ) {
+        return initChannel( ChannelType.QuatSlerp, keys, times, targetName, channelName, chan || {} );
     };
 
     var createFloatCubicBezierChannel = function ( keys, times, targetName, channelName, chan ) {
@@ -250,18 +255,21 @@ define( [
     Channel.createInstanceChannel = createInstanceChannel;
     Channel.createInstanceVec3Channel = createInstanceVec3Channel;
     Channel.createInstanceQuatChannel = createInstanceQuatChannel;
+    Channel.createInstanceQuatSlerpChannel = createInstanceQuatChannel;
     Channel.createInstanceFloatChannel = createInstanceFloatChannel;
     Channel.createInstanceFloatCubicBezierChannel = createInstanceFloatCubicBezierChannel;
     Channel.createInstanceVec3CubicBezierChannel = createInstanceVec3CubicBezierChannel;
 
     Channel.createVec3Channel = createVec3Channel;
     Channel.createQuatChannel = createQuatChannel;
+    Channel.createQuatSlerpChannel = createQuatSlerpChannel;
     Channel.createFloatChannel = createFloatChannel;
     Channel.createFloatCubicBezierChannel = createFloatCubicBezierChannel;
     Channel.createVec3CubicBezierChannel = createVec3CubicBezierChannel;
 
     Channel[ ChannelType.Vec3 ] = createInstanceVec3Channel;
     Channel[ ChannelType.Quat ] = createInstanceQuatChannel;
+    Channel[ ChannelType.QuatSlerp ] = createInstanceQuatChannel;
     Channel[ ChannelType.Float ] = createInstanceFloatChannel;
     Channel[ ChannelType.FloatCubicBezier ] = createInstanceFloatCubicBezierChannel;
     Channel[ ChannelType.Vec3CubicBezier ] = createInstanceVec3CubicBezierChannel;

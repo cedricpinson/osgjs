@@ -141,7 +141,9 @@ define( [
     };
 
     osgAnimationWrapper.QuatSlerpChannel = function ( input, channel ) {
+        // nlerp is less expensive than slerp
         return osgAnimationWrapper.StandardQuatChannel( input, channel, Channel.createQuatChannel );
+        // return osgAnimationWrapper.StandardQuatChannel( input, channel, Channel.createQuatSlerpChannel );
     };
 
     osgAnimationWrapper.FloatLerpChannel = function ( input, channel ) {

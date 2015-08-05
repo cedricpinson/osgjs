@@ -38,6 +38,7 @@ define( [
     ResultType.length = Channel.ChannelType.Count;
     ResultType[ Channel.ChannelType.Vec3 ] = Vec3;
     ResultType[ Channel.ChannelType.Quat ] = Quat;
+    ResultType[ Channel.ChannelType.QuatSlerp ] = Quat;
     ResultType[ Channel.ChannelType.Float ] = Float;
     ResultType[ Channel.ChannelType.FloatCubicBezier ] = Float;
     ResultType[ Channel.ChannelType.Vec3CubicBezier ] = Vec3;

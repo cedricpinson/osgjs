@@ -1,8 +1,9 @@
 define( [
     'osg/Vec3',
+    'osg/Quat',
     'osgAnimation/Channel'
 
-], function ( Vec3, Channel ) {
+], function ( Vec3, Quat, Channel ) {
 
     'use strict';
 
@@ -66,61 +67,111 @@ define( [
     };
 
 
-    var QuatLerpInterpolator = function ( t, channelInstance ) {
+    var QuatLerpInterpolator = ( function () {
 
-        var channel = channelInstance.channel;
-        var value = channelInstance.value;
-        var start = channel.start;
-        var end = channel.end;
-        var keys = channel.keys;
-        var times = channel.times;
+        var q0 = [ 0.0, 0.0, 0.0, 0.0 ];
+        var q1 = [ 0.0, 0.0, 0.0, 0.0 ];
 
-        if ( t >= end ) {
-            channelInstance.key = 0;
-            Vec4CopyKeyFrame( keys.length - 4, keys, value );
-            return;
+        return function ( t, channelInstance ) {
 
-        } else if ( t <= start ) {
-            channelInstance.key = 0;
-            Vec4CopyKeyFrame( 0, keys, value );
-            return;
-        }
+            var channel = channelInstance.channel;
+            var value = channelInstance.value;
+            var start = channel.start;
+            var end = channel.end;
+            var keys = channel.keys;
+            var times = channel.times;
 
-        var i1 = channelInstance.key;
-        if ( t > times[ i1 ] )
-            while ( times[ i1 + 1 ] < t ) i1++;
-        else if ( t < times[ i1 ] )
-            while ( times[ i1 ] > t ) i1--;
+            if ( t >= end ) {
+                channelInstance.key = 0;
+                Vec4CopyKeyFrame( keys.length - 4, keys, value );
+                return;
 
-        var t1 = times[ i1 ];
-        var t2 = times[ i1 + 1 ];
+            } else if ( t <= start ) {
+                channelInstance.key = 0;
+                Vec4CopyKeyFrame( 0, keys, value );
+                return;
+            }
 
-        var index = i1 * 4;
-        var x1 = keys[ index++ ];
-        var y1 = keys[ index++ ];
-        var z1 = keys[ index++ ];
-        var w1 = keys[ index++ ];
+            var i1 = channelInstance.key;
+            if ( t > times[ i1 ] )
+                while ( times[ i1 + 1 ] < t ) i1++;
+            else if ( t < times[ i1 ] )
+                while ( times[ i1 ] > t ) i1--;
 
-        var x2 = keys[ index++ ];
-        var y2 = keys[ index++ ];
-        var z2 = keys[ index++ ];
-        var w2 = keys[ index++ ];
+            var t1 = times[ i1 ];
+            var t2 = times[ i1 + 1 ];
 
-        var r = ( t - t1 ) / ( t2 - t1 );
+            var index = i1 * 4;
+            q0[ 0 ] = keys[ index++ ];
+            q0[ 1 ] = keys[ index++ ];
+            q0[ 2 ] = keys[ index++ ];
+            q0[ 3 ] = keys[ index++ ];
 
-        value[ 0 ] = x1 + ( x2 - x1 ) * r;
-        value[ 1 ] = y1 + ( y2 - y1 ) * r;
-        value[ 2 ] = z1 + ( z2 - z1 ) * r;
-        value[ 3 ] = w1 + ( w2 - w1 ) * r;
+            q1[ 0 ] = keys[ index++ ];
+            q1[ 1 ] = keys[ index++ ];
+            q1[ 2 ] = keys[ index++ ];
+            q1[ 3 ] = keys[ index++ ];
 
-        var invLength = 1 / Math.sqrt( value[ 0 ] * value[ 0 ] + value[ 1 ] * value[ 1 ] + value[ 2 ] * value[ 2 ] + value[ 3 ] * value[ 3 ] );
-        value[ 0 ] *= invLength;
-        value[ 1 ] *= invLength;
-        value[ 2 ] *= invLength;
-        value[ 3 ] *= invLength;
+            var r = ( t - t1 ) / ( t2 - t1 );
 
-        channelInstance.key = i1;
-    };
+            Quat.nlerp( r, q0, q1, value );
+            channelInstance.key = i1;
+        };
+
+    } )();
+
+    var QuatSlerpInterpolator = ( function () {
+
+        var q0 = [ 0.0, 0.0, 0.0, 0.0 ];
+        var q1 = [ 0.0, 0.0, 0.0, 0.0 ];
+
+        return function ( t, channelInstance ) {
+
+            var channel = channelInstance.channel;
+            var value = channelInstance.value;
+            var start = channel.start;
+            var end = channel.end;
+            var keys = channel.keys;
+            var times = channel.times;
+
+            if ( t >= end ) {
+                channelInstance.key = 0;
+                Vec4CopyKeyFrame( keys.length - 4, keys, value );
+                return;
+
+            } else if ( t <= start ) {
+                channelInstance.key = 0;
+                Vec4CopyKeyFrame( 0, keys, value );
+                return;
+            }
+
+            var i1 = channelInstance.key;
+            if ( t > times[ i1 ] )
+                while ( times[ i1 + 1 ] < t ) i1++;
+            else if ( t < times[ i1 ] )
+                while ( times[ i1 ] > t ) i1--;
+
+            var t1 = times[ i1 ];
+            var t2 = times[ i1 + 1 ];
+
+            var index = i1 * 4;
+            q0[ 0 ] = keys[ index++ ];
+            q0[ 1 ] = keys[ index++ ];
+            q0[ 2 ] = keys[ index++ ];
+            q0[ 3 ] = keys[ index++ ];
+
+            q1[ 0 ] = keys[ index++ ];
+            q1[ 1 ] = keys[ index++ ];
+            q1[ 2 ] = keys[ index++ ];
+            q1[ 3 ] = keys[ index++ ];
+
+            var r = ( t - t1 ) / ( t2 - t1 );
+
+            Quat.slerp( r, q0, q1, value );
+
+            channelInstance.key = i1;
+        };
+    } )();
 
 
     var FloatLerpInterpolator = function ( t, channelInstance ) {
@@ -265,12 +316,14 @@ define( [
     // refrence interpolator by channe enum id
     module[ ChannelType.Vec3 ] = Vec3LerpInterpolator;
     module[ ChannelType.Quat ] = QuatLerpInterpolator;
+    module[ ChannelType.QuatSlerp ] = QuatSlerpInterpolator;
     module[ ChannelType.Float ] = FloatLerpInterpolator;
     module[ ChannelType.FloatCubicBezier ] = FloatCubicBezierInterpolator;
-    module[ ChannelType.Vec3CubicBezierInterpolator ] = Vec3CubicBezierInterpolator;
+    module[ ChannelType.Vec3CubicBezier ] = Vec3CubicBezierInterpolator;
 
     module.Vec3LerpInterpolator = Vec3LerpInterpolator;
     module.QuatLerpInterpolator = QuatLerpInterpolator;
+    module.QuatSlerpInterpolator = QuatSlerpInterpolator;
     module.FloatLerpInterpolator = FloatLerpInterpolator;
     module.FloatCubicBezierInterpolator = FloatCubicBezierInterpolator;
     module.Vec3CubicBezierInterpolator = Vec3CubicBezierInterpolator;

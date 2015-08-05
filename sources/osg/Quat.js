@@ -91,49 +91,76 @@ define( [
         },
 
         lerp: function ( t, a, b, r ) {
-            r[ 0 ] = a[ 0 ] + ( b[ 0 ] - a[ 0 ] ) * t;
-            r[ 1 ] = a[ 1 ] + ( b[ 1 ] - a[ 1 ] ) * t;
-            r[ 2 ] = a[ 2 ] + ( b[ 2 ] - a[ 2 ] ) * t;
-            r[ 3 ] = a[ 3 ] + ( b[ 3 ] - a[ 3 ] ) * t;
+            var at = 1.0 - t;
+            r[ 0 ] = a[ 0 ] * at + b[ 0 ] * t;
+            r[ 1 ] = a[ 1 ] * at + b[ 1 ] * t;
+            r[ 2 ] = a[ 2 ] * at + b[ 2 ] * t;
+            r[ 3 ] = a[ 3 ] * at + b[ 3 ] * t;
             return r;
         },
 
-        slerp: function ( t, from, to, result ) {
+
+        // http://physicsforgames.blogspot.fr/2010/02/quaternions.html
+        nlerp: function ( t, a, b, r ) {
+            var dot = this.dot( a, b );
+            var at = 1.0 - t;
+
+            if ( dot < 0.0 ) {
+
+                // this.neg( b, r );
+                r[ 0 ] = a[ 0 ] * at - r[ 0 ] * t;
+                r[ 1 ] = a[ 1 ] * at - r[ 1 ] * t;
+                r[ 2 ] = a[ 2 ] * at - r[ 2 ] * t;
+                r[ 3 ] = a[ 3 ] * at - r[ 3 ] * t;
+
+            } else {
+                r[ 0 ] = a[ 0 ] * at + b[ 0 ] * t;
+                r[ 1 ] = a[ 1 ] * at + b[ 1 ] * t;
+                r[ 2 ] = a[ 2 ] * at + b[ 2 ] * t;
+                r[ 3 ] = a[ 3 ] * at + b[ 3 ] * t;
+            }
+
+            return this.normalize( r, r );
+        },
+
+        slerp: ( function () {
+
+            var b2 = [ 0.0, 0.0, 0.0, 0.0 ];
             var epsilon = 0.00001;
 
-            var quatTo = to;
-            var cosomega = this.dot( from, quatTo );
-            if ( cosomega < 0.0 ) {
-                cosomega = -cosomega;
-                this.neg( to, quatTo );
-            }
+            return function ( t, a, b, r ) {
 
-            var omega;
-            var sinomega;
-            var scaleFrom;
-            var scaleTo;
-            if ( ( 1.0 - cosomega ) > epsilon ) {
-                omega = Math.acos( cosomega ); // 0 <= omega <= Pi (see man acos)
-                sinomega = Math.sin( omega ); // this sinomega should always be +ve so
-                // could try sinomega=sqrt(1-cosomega*cosomega) to avoid a sin()?
-                scaleFrom = Math.sin( ( 1.0 - t ) * omega ) / sinomega;
-                scaleTo = Math.sin( t * omega ) / sinomega;
-            } else {
-                /* --------------------------------------------------
-             The ends of the vectors are very close
-             we can use simple linear interpolation - no need
-             to worry about the 'spherical' interpolation
-             -------------------------------------------------- */
-                scaleFrom = 1.0 - t;
-                scaleTo = t;
-            }
+                var cos = this.dot( a, b );
+                var b3 = b;
+                if ( cos < 0.0 ) {
+                    b3 = this.neg( b, b2 );
+                    cos = -cos;
+                }
 
-            result[ 0 ] = from[ 0 ] * scaleFrom + quatTo[ 0 ] * scaleTo;
-            result[ 1 ] = from[ 1 ] * scaleFrom + quatTo[ 1 ] * scaleTo;
-            result[ 2 ] = from[ 2 ] * scaleFrom + quatTo[ 2 ] * scaleTo;
-            result[ 3 ] = from[ 3 ] * scaleFrom + quatTo[ 3 ] * scaleTo;
-            return result;
-        },
+                var ta, tb;
+                if ( cos > 1.0 - epsilon ) {
+                    ta = 1.0 - t;
+                    tb = t;
+                } else {
+                    var sin = Math.sqrt( 1.0 - cos * cos );
+
+                    // which one is better ?
+                    var angle = Math.atan2( sin, cos );
+                    //var angle = Math.acos( cos ); // 0 <= omega <= Pi (see man acos)
+
+                    var oneOverSin = 1.0 / sin;
+                    ta = Math.sin( ( 1.0 - t ) * angle ) * oneOverSin;
+                    tb = Math.sin( t * angle ) * oneOverSin;
+                }
+
+                r[ 0 ] = a[ 0 ] * ta + b3[ 0 ] * tb;
+                r[ 1 ] = a[ 1 ] * ta + b3[ 1 ] * tb;
+                r[ 2 ] = a[ 2 ] * ta + b3[ 2 ] * tb;
+                r[ 3 ] = a[ 3 ] * ta + b3[ 3 ] * tb;
+                return r;
+            };
+
+        } )(),
 
         transformVec3: function ( q, a, result ) {
             var x = a[ 0 ];
