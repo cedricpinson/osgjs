@@ -3,12 +3,22 @@ define( [
     'osg/Notify',
     'osgWrappers/serializers/osg',
     'osgAnimation/Channel',
-    'osgAnimation/Animation'
-], function ( P, Notify, osgWrapper, Channel, Animation ) {
+    'osgAnimation/Animation',
+    'osgDB/ReaderParser'
+], function ( P, Notify, osgWrapper, Channel, Animation, ReaderParser ) {
 
     'use strict';
 
     var osgAnimationWrapper = {};
+
+    var channelCtor = function () {};
+
+    ReaderParser.registry().registerObject( 'osgAnimation.Vec3LerpChannel', channelCtor );
+    ReaderParser.registry().registerObject( 'osgAnimation.FloatLerpChannel', channelCtor );
+    ReaderParser.registry().registerObject( 'osgAnimation.QuatSlerpChannel', channelCtor );
+    ReaderParser.registry().registerObject( 'osgAnimation.QuatLerpChannel', channelCtor );
+    ReaderParser.registry().registerObject( 'osgAnimation.FloatCubicBezierChannel', channelCtor );
+    ReaderParser.registry().registerObject( 'osgAnimation.Vec3CubicBezierChannel', channelCtor );
 
     osgAnimationWrapper.Animation = function ( input ) {
         var jsonObj = input.getJSON();

@@ -2,9 +2,8 @@ define( [
     'osg/Utils',
     'osg/Object',
     'osg/Matrix',
-    'osgAnimation/Vec3Target',
     'osg/Vec3'
-], function ( MACROUTILS, Object, Matrix, Vec3Target, Vec3 ) {
+], function ( MACROUTILS, Object, Matrix, Vec3 ) {
 
     'use strict';
 

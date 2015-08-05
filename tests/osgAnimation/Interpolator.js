@@ -2,10 +2,9 @@ define( [
     'qunit',
     'tests/mockup/mockup',
     'osg/Vec3',
-    'osgAnimation/Keyframe',
     'osgAnimation/Interpolator',
     'osgAnimation/Channel'
-], function ( QUnit, mockup, Vec3, Keyframe, Interpolator, Channel ) {
+], function ( QUnit, mockup, Vec3, Interpolator, Channel ) {
 
     'use strict';
 
@@ -304,10 +303,10 @@ define( [
             ok( iChan.key === 0, 'Test at time = ' + time + ' and key = ' + iChan.key );
 
             //with 2 key
-            var keys = [ 1, 0 ];
-            var times = [ 0, 2 ];
-            var chan = Channel.createFloatChannel( keys, times );
-            var iChan = Channel.createInstanceFloatChannel( chan );
+            keys = [ 1, 0 ];
+            times = [ 0, 2 ];
+            chan = Channel.createFloatChannel( keys, times );
+            iChan = Channel.createInstanceFloatChannel( chan );
 
             time = 0;
             iChan.key = 0;

@@ -257,27 +257,24 @@ define( [
 
         stopAnimation: function ( name ) {
             var activeAnimationList = this._activeAnimationList;
-            var i = 0;
-            while ( i < activeAnimationList.length ) {
+            for ( var i = 0, nbAnim = activeAnimationList.length; i < nbAnim; ++i ) {
                 if ( activeAnimationList[ i ].name === name ) {
                     this._removeActiveChannels( this._instanceAnimations[ name ] );
                     this._activeAnimations[ name ] = undefined;
                     activeAnimationList.splice( i, 1 );
                     return;
                 }
-                i++;
             }
         },
 
         stopAllAnimation: function () {
             var activeAnimationList = this._activeAnimationList;
-            var i = 0;
-            while ( i < activeAnimationList.length ) {
+            for ( var i = 0, nbAnim = activeAnimationList.length; i < nbAnim; ++i ) {
                 var name = activeAnimationList[ i ].name;
                 this._removeActiveChannels( this._instanceAnimations[ name ] );
                 this._activeAnimations[ name ] = undefined;
-                activeAnimationList.splice( i, 1 );
             }
+            activeAnimationList.length = 0;
         },
 
         setTimeFactor: function ( timeFactor ) {

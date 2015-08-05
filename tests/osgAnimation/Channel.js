@@ -1,10 +1,7 @@
 define( [
     'qunit',
-    'tests/mockup/mockup',
-    'osgAnimation/Keyframe',
-    'osgAnimation/Vec3LerpChannel',
-    'osgAnimation/FloatLerpChannel'
-], function ( QUnit, mockup, Keyframe, Vec3LerpChannel, FloatLerpChannel ) {
+    'tests/mockup/mockup'
+], function ( QUnit, mockup ) {
 
     'use strict';
 
@@ -15,7 +12,7 @@ define( [
         QUnit.test( 'Channel', function () {
             var keys = mockup.createVec3Keyframes();
 
-            ok( true, 'no tests' );
+            ok( keys === keys, 'no tests' );
         } );
     };
 } );
