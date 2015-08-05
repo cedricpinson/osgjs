@@ -110,7 +110,9 @@ define( [
             setViewMatrix: function ( matrix ) {
                 this.modelviewMatrix = matrix;
             },
-
+            setViewMatrixAsLookAt: function ( eye, center, up ) {
+                Matrix.makeLookAt( eye, center, up, this.getViewMatrix() );
+            },
             setProjectionMatrix: function ( matrix ) {
                 this.projectionMatrix = matrix;
             },
