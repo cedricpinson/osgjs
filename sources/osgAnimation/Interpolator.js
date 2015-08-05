@@ -1,7 +1,8 @@
 define( [
-    'osg/Vec3'
+    'osg/Vec3',
+    'osgAnimation/Channel'
 
-], function ( Vec3 ) {
+], function ( Vec3, Channel ) {
 
     'use strict';
 
@@ -256,11 +257,24 @@ define( [
 
     } )();
 
-    return {
-        Vec3LerpInterpolator: Vec3LerpInterpolator,
-        QuatLerpInterpolator: QuatLerpInterpolator,
-        FloatLerpInterpolator: FloatLerpInterpolator,
-        FloatCubicBezierInterpolator: FloatCubicBezierInterpolator,
-        Vec3CubicBezierInterpolator: Vec3CubicBezierInterpolator
-    };
+    // must be sync wiht Interpolator Type
+    var ChannelType = Channel.ChannelType;
+
+    var module = {};
+
+    // refrence interpolator by channe enum id
+    module[ ChannelType.Vec3 ] = Vec3LerpInterpolator;
+    module[ ChannelType.Quat ] = QuatLerpInterpolator;
+    module[ ChannelType.Float ] = FloatLerpInterpolator;
+    module[ ChannelType.FloatCubicBezier ] = FloatCubicBezierInterpolator;
+    module[ ChannelType.Vec3CubicBezierInterpolator ] = Vec3CubicBezierInterpolator;
+
+    module.Vec3LerpInterpolator = Vec3LerpInterpolator;
+    module.QuatLerpInterpolator = QuatLerpInterpolator;
+    module.FloatLerpInterpolator = FloatLerpInterpolator;
+    module.FloatCubicBezierInterpolator = FloatCubicBezierInterpolator;
+    module.Vec3CubicBezierInterpolator = Vec3CubicBezierInterpolator;
+
+    return module;
+
 } );

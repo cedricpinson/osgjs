@@ -8,12 +8,14 @@ define( [
 
     'use strict';
 
+    // must be sync wiht Interpolator Type
     var ChannelType = {
         Vec3: 0,
         Quat: 1,
         Float: 2,
         FloatCubicBezier: 3,
-        Vec3CubicBezier: 4
+        Vec3CubicBezier: 4,
+        Count: 5
     };
 
     var Channel = {};
