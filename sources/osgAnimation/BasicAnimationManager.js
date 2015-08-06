@@ -171,7 +171,7 @@ define( [
 
             // register targetID per type
             for ( var i = 0; i < newTargetAdded.length; i++ ) {
-                var type = this._targets[ i ].type;
+                var type = newTargetAdded[ i ].type;
                 this._targetID.push( createTargetID( i, ResultType[ type ].create() ) );
             }
 
