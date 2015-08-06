@@ -170,6 +170,12 @@ define( [
         getChildren: function () {
             return this.children;
         },
+        getNumChildren: function () {
+            return this.children.length;
+        },
+        getChild: function ( num ) {
+            return this.children[ num ];
+        },
         getParents: function () {
             return this.parents;
         },
