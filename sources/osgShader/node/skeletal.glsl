@@ -1,29 +1,10 @@
 
 mat4 getMat4FromVec4( const int index, inout mat4 myMat ) {
-    vec4 l1 = uBones[ index  ];
-    vec4 l2 = uBones[ index + 1 ];
-    vec4 l3 = uBones[ index + 2 ];
-
-    myMat[ 0 ][ 0 ] = l1[ 0 ];
-    myMat[ 0 ][ 1 ] = l2[ 0 ];
-    myMat[ 0 ][ 2 ] = l3[ 0 ];
-    // myMat[ 0 ][ 3 ] = 0.;
-
-    myMat[ 1 ][ 0 ] = l1[ 1 ];
-    myMat[ 1 ][ 1 ] = l2[ 1 ];
-    myMat[ 1 ][ 2 ] = l3[ 1 ];
-    // myMat[ 1 ][ 3 ] = 0.;
-
-    myMat[ 2 ][ 0 ] = l1[ 2 ];
-    myMat[ 2 ][ 1 ] = l2[ 2 ];
-    myMat[ 2 ][ 2 ] = l3[ 2 ];
-    // myMat[ 2 ][ 3 ] = 0.;
-
-    myMat[ 3 ][ 0 ] = l1[ 3 ];
-    myMat[ 3 ][ 1 ] = l2[ 3 ];
-    myMat[ 3 ][ 2 ] = l3[ 3 ];
-    myMat[ 3 ][ 3 ] = 1.;
-
+    // TODO no uBones globally ...
+    // matrix is transpose so we should do vec * matrix 
+    myMat[0] = uBones[ index ];
+    myMat[1] = uBones[ index + 1];
+    myMat[2] = uBones[ index + 2];
     return myMat;
 }
 
