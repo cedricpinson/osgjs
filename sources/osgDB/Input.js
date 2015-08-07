@@ -57,12 +57,8 @@ define( [
 
         clone: function () {
             var input = new Input();
-
-            var keys = Object.keys( this );
-            for ( var i = 0, size = keys.length; i < size; i++ ) {
-                var key = keys[ i ];
-                input[ key ] = this[ key ];
-            }
+            input._objectRegistry = this._objectRegistry;
+            input._cacheReadObject = this._cacheReadObject;
             return input;
         },
 
