@@ -39,7 +39,8 @@ float chebyshevUpperBound(const in vec2 moments, const in float mean, const in f
     return clamp(max(p, pMax), 0.0, 1.0);
 }
 
-
+// might be included for EVSM
+#ifdef _VSM
 float computeShadow(const in bool lighted,
                     const in sampler2D tex,
                     const in vec4 shadowMapSize,
@@ -54,5 +55,6 @@ float computeShadow(const in bool lighted,
 {
 #pragma include "shadowsReceiveMain.glsl" "_VSM"
 }
+#endif // _VSM
 
 // end VSM

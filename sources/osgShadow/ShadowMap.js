@@ -288,6 +288,7 @@ define( [
             this.setTexturePrecision( shadowSettings.textureType );
 
             this.setFakePCF( shadowSettings.fakePCF );
+            this.setRotateOffset( shadowSettings.rotateOffset );
             this.setKernelSizePCF( shadowSettings.kernelSizePCF );
             this.setAlgorithm( shadowSettings.algorithm );
             this.setBias( shadowSettings.bias );
@@ -362,6 +363,15 @@ define( [
             }
         },
 
+        getRotateOffset: function () {
+            return this._shadowReceiveAttribute.getRotateOffset();
+        },
+        setRotateOffset: function ( value ) {
+            if ( this._shadowReceiveAttribute.getRotateOffset() !== value ) {
+                this._shadowReceiveAttribute.setRotateOffset( value );
+            }
+        },
+
         setShadowedScene: function ( shadowedScene ) {
             ShadowTechnique.prototype.setShadowedScene.call( this, shadowedScene );
             this._receivingStateset = this._shadowedScene.getOrCreateStateSet();
@@ -421,31 +431,37 @@ define( [
             this._shadowReceiveAttribute.setLightNumber( lightNumber );
 
 
+            // Idea is to make sure the null texture is "binded" to all shadow casting scene
+            // so we override all existing texture bind in the scene, preventing any texture bind.
+            // When user implements alpha mask casting, they use PROTECTED to prevent OVERRIDE to remove their alpha mask texture needed.
+            var fullOverride = StateAttribute.OVERRIDE | StateAttribute.ON;
 
-            this._receivingStateset.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.OVERRIDE | StateAttribute.ON );
 
+            this._receivingStateset.setAttributeAndModes( this._shadowReceiveAttribute, fullOverride );
 
+            // prevent unnecessary texture bindings
             this._preventTextureBindingDuringShadowCasting();
 
             // Mandatory: prevent binding shadow textures themselves
-            // (shadowedScene stateSet is applied  just above in stateset hierarchy)
+            // ( ShadowedScene StateSet is applied  just above in StateSet hierarchy)
             // that would mean undefined values as it would be read/write access...
-            // So we force it against Texture.null binding done juste above (PROTECTED)
-            // and Prevent any under hieratchy bind with OVERRIDE
+            // So we force it against Texture.null binding done just above (PROTECTED)
+            // and Prevent any under hierarchy bind with OVERRIDE
             // must be done AFTER the prevent binding.
-            this._casterStateSet.setTextureAttributeAndModes( this._textureUnit, Texture.textureNull, StateAttribute.ON | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
+            this._casterStateSet.setTextureAttributeAndModes( this._textureUnit, Texture.textureNull, StateAttribute.PROTECTED );
+
 
             // add shadow texture to the receivers
             // should make sure somehow that
-            // alpha blender transparent receiver doens't use it
+            // alpha blender transparent receiver doesn't use it
             // compiler wise at least
-            this._receivingStateset.setTextureAttributeAndModes( this._textureUnit, this._texture, StateAttribute.OVERRIDE | StateAttribute.ON );
+            this._receivingStateset.setTextureAttributeAndModes( this._textureUnit, this._texture, fullOverride );
 
             this._dirty = false;
         },
-        // Make sure we don't bind texture and thus make gpu work for nothing
+        // Make sure we don't bind texture and thus make GPU work for nothing
         // as shadow casting just output Depth ( no color )
-        // os we set a null texture and OVERRIDE stateAttribute flag
+        // os we set a null texture and OVERRIDE StateAttribute flag
         // only case you want to use a texture is
         // alpha masked material, then you have StateAttribute to 'PROTECTED'
         _preventTextureBindingDuringShadowCasting: function () {
@@ -454,7 +470,7 @@ define( [
             // TODO: actually get the real max texture unit from webglCaps
             var shouldGetMaxTextureUnits = 32;
             for ( var k = 0; k < shouldGetMaxTextureUnits; k++ ) {
-                // bind  null texture which osgjs will not bind,
+                // bind  null texture which OSGJS will not bind,
                 // effectively preventing any other texture bind
                 // just not touching texture unit state.
                 this._casterStateSet.setTextureAttributeAndModes( k, Texture.textureNull, StateAttribute.OVERRIDE | StateAttribute.ON );

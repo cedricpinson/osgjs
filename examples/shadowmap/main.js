@@ -32,6 +32,7 @@
             'fov': 50,
             'kernelSizePCF': '1Tap(4texFetch)',
             'fakePCF': false,
+            'rotateOffset': false,
             'exponent': 80.0,
             'exponent1': 0.33,
 
@@ -393,6 +394,9 @@
             controller = pcfFolder.add( this._config, 'fakePCF' );
             controller.onChange( this.updateShadow.bind( this ) );
 
+            controller = pcfFolder.add( this._config, 'rotateOffset' );
+            controller.onChange( this.updateShadow.bind( this ) );
+
 
             if ( this._debugOtherTechniques ) {
 
@@ -715,18 +719,18 @@
                     this._config[ 'exponent' ] = 0.66;
                     this._config[ 'exponent1' ] = 20.0;
 
-                    this._groundNode.setNodeMask( this._castsShadowTraversalMask );
+                    //this._groundNode.setNodeMask( this._castsShadowTraversalMask );
                     break;
                 case 'EVSM':
                     this._config[ 'exponent' ] = 146;
                     this._config[ 'exponent1' ] = 1.0;
                     this._config[ 'bias' ] = 0.05;
                     this._config[ 'textureType' ] = 'FLOAT';
-                    this._groundNode.setNodeMask( this._castsShadowTraversalMask );
+                    //this._groundNode.setNodeMask( this._castsShadowTraversalMask );
                     break;
                 case 'VSM':
                     this._config[ 'epsilonVSM' ] = 0.0001;
-                    this._groundNode.setNodeMask( this._castsShadowTraversalMask );
+                    //this._groundNode.setNodeMask( this._castsShadowTraversalMask );
                     break;
                 default:
                     break;
@@ -753,6 +757,7 @@
                 shadowSettings.epsilonVSM = this._config[ 'epsilonVSM' ];
                 shadowSettings.kernelSizePCF = this._config[ 'kernelSizePCF' ];
                 shadowSettings.fakePCF = this._config[ 'fakePCF' ];
+                shadowSettings.rotateOffset = this._config[ 'rotateOffset' ];
             }
 
 

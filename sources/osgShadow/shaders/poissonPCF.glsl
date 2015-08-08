@@ -21,10 +21,10 @@ float getShadowPCF(const in sampler2D tex, const in vec4 size, const in vec2 uv,
 #define TSF_FIXED(i) TSF_BASE(i, 1.0)
 
     // rand  using screenpos: No banding,"moves" camera
-#define TSF_SCREEN(i) TSF_BASE(i, hashNormalized22( float(i)*gl_FragCoord.xy ))
+#define TSF_SCREEN(i) TSF_BASE(i, hashSin22( float(i)*gl_FragCoord.xy ))
 
 //rand using worl proj +depth as world psace xyez
-#define TSF_SPACE(i)  TSF_BASE(i, hashNormalized41(vec4(uv.xy, shadowZ, float(i))))
+#define TSF_SPACE(i)  TSF_BASE(i, hashSin41(vec4(uv.xy, shadowZ, float(i))))
 
 #define TSF(k) TSF_SPACE(k)
 

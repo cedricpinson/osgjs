@@ -20,7 +20,16 @@ vec4 shadowDepthToEVSM(const in float depth, const in float expo0, const in floa
 #endif // _EVSM
 
 
-vec4 computeShadowDepth(const in vec4 fragEye, const in vec4 shadowRange, const in float expo0, const in float expo1) {
+#if defined(_NONE) ||  defined(_PCF)
+vec4 computeShadowDepth(const in vec4 fragEye,
+                        const in vec4 shadowRange)
+#else
+vec4 computeShadowDepth(const in vec4 fragEye,
+                        const in vec4 shadowRange,
+                        const in float expo0,
+                        const in float expo1)
+#endif
+{
     // distance to camera
     float depth =  -fragEye.z * fragEye.w;
 
@@ -51,6 +60,7 @@ vec4 computeShadowDepth(const in vec4 fragEye, const in vec4 shadowRange, const 
     outputFrag = encodeHalfFloatRGBA(vec2(depth, depth* depth));
 #else // NONE
     outputFrag = encodeFloatRGBA(depth);
+
 #endif
 
     return outputFrag;

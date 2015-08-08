@@ -77,17 +77,19 @@ define( [
 
             }.bind( this ) );
 
-
-            var name = 'ShadowTexture' + unit;
+            // Dual Uniform of texture, needs:
+            // - Sampler (type of texture)
+            // - Int (texture unit)
+            // tells Shader Program where to find it
+            var name = 'Texture' + unit;
             var uniform = Uniform.createInt1( unit, name );
-            uniforms[ 'ShadowTexture' + unit ] = uniform;
+            uniforms[ name ] = uniform;
 
+            // Per Class Uniform Cache
             obj.uniforms[ unit ] = new Map( uniforms );
 
-            this.latestUnit = unit;
             return obj.uniforms[ unit ];
         },
-
         setViewMatrix: function ( viewMatrix ) {
             this._viewMatrix = viewMatrix;
         },

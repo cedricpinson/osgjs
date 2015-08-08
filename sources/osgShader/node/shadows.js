@@ -13,7 +13,7 @@ define( [
 
     ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'ShadowReceiveNode',
-        validInputs: [ 'lighted', 'shadowTexture', 'shadowTextureMapSize', 'shadowTextureProjectionMatrix', 'shadowTextureViewMatrix', 'shadowTextureDepthRange', 'lightNDL', 'vertexWorld', 'shadowbias' /* 'shadowexponent0', 'shadowexponent1', 'shadowepsilonVSM' */ ],
+        validInputs: [ 'lighted', 'shadowTexture', 'shadowTextureMapSize', 'shadowTextureProjectionMatrix', 'shadowTextureViewMatrix', 'shadowTextureDepthRange', 'lightNDL', 'vertexWorld', 'shadowbias', /* 'shadowexponent0', 'shadowexponent1', 'shadowepsilonVSM' */ ],
         validOutputs: [ 'float' ],
 
         globalFunctionDeclaration: function () {
@@ -90,6 +90,12 @@ define( [
         },
         computeShader: function () {
             var inp = this._inputs;
+
+            var algo = this._shadowCast.getAlgorithm();
+            if ( algo === 'NONE' || algo === 'PCF' ) {
+                return ShaderUtils.callFunction( 'computeShadowDepth', this._outputs.color, [ inp.fragEye, inp.shadowDepthRange ] );
+            }
+
             return ShaderUtils.callFunction( 'computeShadowDepth', this._outputs.color, [ inp.fragEye, inp.shadowDepthRange, inp.exponent0, inp.exponent1 ] );
         }
 
