@@ -10,17 +10,13 @@ define( [
     var Mcos = Math.cos;
     var Msin = Math.sin;
 
-    /** @class Quaternion Operations */
     var Quat = {
+
         create: function () {
             return [ 0.0, 0.0, 0.0, 1.0 ];
         },
 
-
         makeIdentity: function ( element ) {
-            return Quat.init( element );
-        },
-        zeroRotation: function ( element ) {
             return Quat.init( element );
         },
 
@@ -378,6 +374,8 @@ define( [
             return out;
         }
     };
+
+    Quat.identity = [ 0.0, 0.0, 0.0, 1.0 ];
 
     return Quat;
 } );

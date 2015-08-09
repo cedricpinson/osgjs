@@ -16,14 +16,21 @@ define( [
         QUnit.test( 'BasicAnimationManager', function () {
 
             var animation = mockup.createAnimation( 'AnimationTest' );
+            var cbMap = mockup.createAnimationUpdateCallback( [animation ] );
+
+
             var basicAnimationManager = new BasicAnimationManager();
             basicAnimationManager.init( [ animation ] );
+            basicAnimationManager._animationsUpdateCallback = cbMap;
+            basicAnimationManager._registerTargetFoundInAnimationCallback();
+            basicAnimationManager._registerAnimations();
+
 
             ok( basicAnimationManager.getAnimations()[ 'AnimationTest' ] !== undefined, 'Check animation test' );
 
 
-            equal( basicAnimationManager._targetID[ 0 ].id, 0, 'check target ID [0] created' );
-            equal( basicAnimationManager._targetID[ 1 ].id, 1, 'check target ID [1] created' );
+            equal( basicAnimationManager._targets[ 0 ].id, 0, 'check target ID [0] created' );
+            equal( basicAnimationManager._targets[ 1 ].id, 1, 'check target ID [1] created' );
 
             //
             var time = 0.0;
@@ -47,30 +54,27 @@ define( [
             ok( basicAnimationManager._activeAnimations[ animationName ] !== undefined, 'check animation ' + animationName + ' is playing' );
 
             // .x comes from the mockup anmation name
-            equal( basicAnimationManager._targets[ 0 ].target, 'a.x', 'check target a name' );
-            equal( basicAnimationManager._targets[ 1 ].target, 'b.x', 'check target b name' );
-
-            equal( basicAnimationManager._targetID[ 0 ].value, 1, 'check target a value at t = ' + time );
-            equal( basicAnimationManager._targetID[ 1 ].value, 1, 'check target b value at t = ' + time );
+            equal( basicAnimationManager._targets[ 0 ].value, 1, 'check target a value at t = ' + time );
+            equal( basicAnimationManager._targets[ 1 ].value, 1, 'check target b value at t = ' + time );
 
             time = 0.5;
             basicAnimationManager.update( null, nv );
-            equal( basicAnimationManager._targetID[ 0 ].value, 0.5, 'check target a value at t = ' + time );
-            equal( basicAnimationManager._targetID[ 1 ].value, 1, 'check target b value at t = ' + time );
+            equal( basicAnimationManager._targets[ 0 ].value, 0.5, 'check target a value at t = ' + time );
+            equal( basicAnimationManager._targets[ 1 ].value, 1, 'check target b value at t = ' + time );
 
 
             time = 3.5;
             basicAnimationManager.update( null, nv );
-            equal( basicAnimationManager._targetID[ 0 ].value, 3, 'check target a value at t = ' + time );
-            equal( basicAnimationManager._targetID[ 1 ].value, 1.5, 'check target b value at t = ' + time );
+            equal( basicAnimationManager._targets[ 0 ].value, 3, 'check target a value at t = ' + time );
+            equal( basicAnimationManager._targets[ 1 ].value, 1.5, 'check target b value at t = ' + time );
 
             time = 6.0;
             basicAnimationManager.update( null, nv );
-            equal( basicAnimationManager._targetID[ 0 ].value, 3, 'check target a value at t = ' + time );
-            equal( basicAnimationManager._targetID[ 1 ].value, 3, 'check target b value at t = ' + time );
+            equal( basicAnimationManager._targets[ 0 ].value, 3, 'check target a value at t = ' + time );
+            equal( basicAnimationManager._targets[ 1 ].value, 3, 'check target b value at t = ' + time );
 
-            ok( basicAnimationManager._targetID[ 0 ].channels.length === 0, 'check target has not channels' );
-            ok( basicAnimationManager._targetID[ 1 ].channels.length === 0, 'check target has not channels' );
+            ok( basicAnimationManager._targets[ 0 ].channels.length === 0, 'check target has not channels' );
+            ok( basicAnimationManager._targets[ 1 ].channels.length === 0, 'check target has not channels' );
             ok( basicAnimationManager._activeAnimations[ animationName ] === undefined, 'check animation ' + animationName + ' is not active' );
 
 
@@ -88,19 +92,21 @@ define( [
             var node = new MatrixTransform();
             var animationCallback = new UpdateMatrixTransform();
             animationCallback.setName( 'testUpdateMatrixTransform' );
-            var stackedRotateAxis = new StackedRotateAxis( 'x' );
+            var stackedRotateAxis = new StackedRotateAxis( 'rotateX' );
             animationCallback.getStackedTransforms().push( stackedRotateAxis );
             node.addUpdateCallback( animationCallback );
 
             basicAnimationManager._findAnimationUpdateCallback( node );
-            console.log( basicAnimationManager._animationsUpdateCallback );
+            basicAnimationManager._registerTargetFoundInAnimationCallback();
+            basicAnimationManager._registerAnimations();
+
+
             // get keys
             var keys = Object.keys( basicAnimationManager._animationsUpdateCallback );
             equal( keys.length, 1, 'check number of animation callback found' );
             var animationCB = basicAnimationManager._animationsUpdateCallback[ keys[ 0 ] ];
             equal( animationCB.getName(), 'testUpdateMatrixTransform', 'check name of the first animation found' );
 
-            basicAnimationManager._assignTargetToAnimationCallback();
             equal( basicAnimationManager._animationsUpdateCallbackArray.length, 1, 'check channel assigned to animation callback' );
 
 
@@ -120,8 +126,6 @@ define( [
             var animationName = Object.keys( animations )[ 0 ];
             basicAnimationManager.playAnimation( animationName );
 
-            basicAnimationManager._dirty = false;
-
             time = 0.0;
             basicAnimationManager.update( null, nv );
 
@@ -138,31 +142,16 @@ define( [
         QUnit.test( 'BasicAnimationManager Performance', function () {
 
             var basicAnimationManager = new BasicAnimationManager();
-            basicAnimationManager._dirty = false;
             var animations = [];
-            var root = new MatrixTransform();
-            var allUpdateCallback = [];
 
             // create an animation with an animation UpdateCallback in a node
             var createAnimation = function () {
 
                 var index = animations.length.toString();
                 var targetName = 'testUpdateMatrixTransform_' + index;
-                var animation = mockup.createAnimation( 'AnimationTest_' + index, targetName, 'a_' + index, targetName, 'b_' + index );
+                var animation = mockup.createAnimation( 'AnimationTest_' + index, targetName, targetName );
                 animations.push( animation );
 
-                // adds animationUpdateCallback to test compute UpdateMatrixTransform
-                // create a dumy tree with simple animation update callback
-                var node = new MatrixTransform();
-                root.addChild( node );
-                var animationCallback = new UpdateMatrixTransform();
-                allUpdateCallback.push( animationCallback );
-                animationCallback.setName( targetName );
-                var stackedRotateAxis = new StackedRotateAxis( 'a_' + index );
-                animationCallback.getStackedTransforms().push( stackedRotateAxis );
-                var stackedRotateAxis2 = new StackedRotateAxis( 'b_' + index );
-                animationCallback.getStackedTransforms().push( stackedRotateAxis2 );
-                node.addUpdateCallback( animationCallback );
             };
 
             var maxAnimations = 50;
@@ -170,9 +159,13 @@ define( [
                 createAnimation();
             }
 
+            var cbMap = mockup.createAnimationUpdateCallback( animations );
+
             basicAnimationManager.init( animations );
-            basicAnimationManager._findAnimationUpdateCallback( root );
-            basicAnimationManager._assignTargetToAnimationCallback();
+            basicAnimationManager._animationsUpdateCallback = cbMap;
+            basicAnimationManager._registerTargetFoundInAnimationCallback();
+            basicAnimationManager._registerAnimations();
+
 
             console.log( 'nb animations ' + Object.keys( basicAnimationManager._animationsUpdateCallback ).length );
 
@@ -199,13 +192,12 @@ define( [
             console.profile();
 
             console.time( 'time' );
-            for ( var n = 0; n < 100; n++ )
+            for ( var n = 0; n < 200; n++ )
                 for ( var t = 0.0; t < 5.0; t += 0.016 ) {
                     time = t;
-                    basicAnimationManager._dirty = false;
                     basicAnimationManager.update( null, nv );
-                    for ( var k = 0, l = allUpdateCallback.length; k < l; k++ )
-                        fakeResult += allUpdateCallback[ k ]._matrix[ 0 ];
+                    for ( var k = 0, l = basicAnimationManager._animationsUpdateCallbackArray.length; k < l; k++ )
+                        fakeResult += basicAnimationManager._animationsUpdateCallbackArray[ k ]._matrix[ 0 ];
                 }
 
             console.timeEnd( 'time' );
@@ -220,8 +212,14 @@ define( [
             var animation = mockup.createAnimation();
             var duration = 4;
 
+            var cbMap = mockup.createAnimationUpdateCallback( [animation ] );
+
             var basicAnimationManager = new BasicAnimationManager();
             basicAnimationManager.init( [ animation ] );
+            basicAnimationManager._animationsUpdateCallback = cbMap;
+            basicAnimationManager._registerTargetFoundInAnimationCallback();
+            basicAnimationManager._registerAnimations();
+
             var managerTime = 0.0;
             var pauseTime;
 
@@ -251,7 +249,6 @@ define( [
 
             //play animation
             basicAnimationManager.playAnimation( 'Test Controls' );
-            basicAnimationManager._dirty = false;
 
 
             //Simple Pause

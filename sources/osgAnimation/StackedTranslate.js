@@ -2,8 +2,9 @@ define( [
     'osg/Utils',
     'osg/Object',
     'osg/Matrix',
-    'osg/Vec3'
-], function ( MACROUTILS, Object, Matrix, Vec3 ) {
+    'osg/Vec3',
+    'osgAnimation/Target'
+], function ( MACROUTILS, Object, Matrix, Vec3, Target ) {
 
     'use strict';
 
@@ -12,14 +13,7 @@ define( [
      */
     var StackedTranslate = function ( name, translate ) {
         Object.call( this );
-
-        var value = Vec3.create();
-        if ( translate ) Vec3.copy( translate, value );
-
-        this._target = {
-            value: value
-        };
-        this._defaultValue = Vec3.create();
+        this._target = Target.createVec3Target( translate || Vec3.zero );
         if ( name ) this.setName( name );
     };
 
@@ -28,15 +22,11 @@ define( [
 
         init: function ( translate ) {
             this.setTranslate( translate );
-            Vec3.copy( translate, this._defaultValue );
+            Vec3.copy( translate, this._target.defaultValue );
         },
 
         setTranslate: function ( translate ) {
             Vec3.copy( translate, this._target.value );
-        },
-
-        setTarget: function ( target ) {
-            this._target = target;
         },
 
         getTarget: function () {
@@ -44,7 +34,7 @@ define( [
         },
 
         resetToDefaultValue: function () {
-            this.setTranslate( this._defaultValue );
+            this.setTranslate( this._target.defaultValue );
         },
 
         applyToMatrix: function ( m ) {
