@@ -327,7 +327,7 @@ define( [
         return P.resolve( st );
     };
 
-    osgAnimationWrapper.StackedMatrixElement = function ( input, sme ) {
+    osgAnimationWrapper.StackedMatrix = function ( input, sme ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.Name || !jsonObj.Matrix )
             return P.reject();
@@ -339,7 +339,7 @@ define( [
         return P.resolve( sme );
     };
 
-    osgAnimationWrapper.StackedScaleElement = function ( input, stc ) {
+    osgAnimationWrapper.StackedScale = function ( input, stc ) {
         var jsonObj = input.getJSON();
         if ( !jsonObj.Name || !jsonObj.Scale )
             return P.reject();

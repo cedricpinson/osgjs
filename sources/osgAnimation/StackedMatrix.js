@@ -7,11 +7,11 @@ define( [
     'use strict';
 
     /**
-     *  StackedMatrixElement
-     *  @class StackedMatrixElement
+     *  StackedMatrix
+     *  @class StackedMatrix
      */
 
-    var StackedMatrixElement = function ( name, matrix ) {
+    var StackedMatrix = function ( name, matrix ) {
         Object.call( this );
 
         var value = Matrix.create();
@@ -26,7 +26,7 @@ define( [
         this.setName( name );
     };
 
-    StackedMatrixElement.prototype = MACROUTILS.objectInherit( Object.prototype, {
+    StackedMatrix.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
         init: function ( matrix ) {
             this.setMatrix( matrix );
@@ -59,5 +59,5 @@ define( [
 
     } );
 
-    return StackedMatrixElement;
+    return StackedMatrix;
 } );
