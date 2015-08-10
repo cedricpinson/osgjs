@@ -11,15 +11,15 @@ define( [
     'osgAnimation/Interpolator',
     'osgAnimation/RigGeometry',
     'osgAnimation/Skeleton',
-    'osgAnimation/StackedMatrixElement',
+    'osgAnimation/StackedMatrix',
     'osgAnimation/StackedQuaternion',
     'osgAnimation/StackedRotateAxis',
-    'osgAnimation/StackedScaleElement',
+    'osgAnimation/StackedScale',
     'osgAnimation/StackedTranslate',
     'osgAnimation/UpdateBone',
     'osgAnimation/UpdateMatrixTransform',
     'osgAnimation/UpdateSkeleton'
-], function ( MACROUTILS, Animation, AnimationAttribute, AnimationUpdateCallback, BasicAnimationManager, Bone, Channel, CollectAnimationUpdateCallbackVisitor, Easing, Interpolator, RigGeometry, Skeleton, StackedMatrixElement, StackedQuaternion, StackedRotateAxis, StackedScaleElement, StackedTranslate, UpdateBone, UpdateMatrixTransform, UpdateSkeleton ) {
+], function ( MACROUTILS, Animation, AnimationAttribute, AnimationUpdateCallback, BasicAnimationManager, Bone, Channel, CollectAnimationUpdateCallbackVisitor, Easing, Interpolator, RigGeometry, Skeleton, StackedMatrix, StackedQuaternion, StackedRotateAxis, StackedScale, StackedTranslate, UpdateBone, UpdateMatrixTransform, UpdateSkeleton ) {
 
     'use strict';
 
@@ -36,10 +36,10 @@ define( [
     osgAnimation.CollectAnimationUpdateCallbackVisitor = CollectAnimationUpdateCallbackVisitor;
     osgAnimation.RigGeometry = RigGeometry;
     osgAnimation.Skeleton = Skeleton;
-    osgAnimation.StackedMatrixElement = StackedMatrixElement;
+    osgAnimation.StackedMatrix = StackedMatrix;
     osgAnimation.StackedQuaternion = StackedQuaternion;
     osgAnimation.StackedRotateAxis = StackedRotateAxis;
-    osgAnimation.StackedScaleElement = StackedScaleElement;
+    osgAnimation.StackedScale = StackedScale;
     osgAnimation.StackedTranslate = StackedTranslate;
     osgAnimation.UpdateBone = UpdateBone;
     osgAnimation.UpdateMatrixTransform = UpdateMatrixTransform;
