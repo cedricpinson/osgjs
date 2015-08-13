@@ -17,7 +17,7 @@ define( [
     'use strict';
 
     /**
-     *  @class Text: Text 2D using a Canvas2D as a texture for a textured quad. 
+     *  @class Text: Text 2D using a Canvas2D as a texture for a textured quad.
      *  Notes: The OSGjs Text has been implemented like OSG osgText::Text as much as possible. However there are some
      *  things that should be noted:
      *  - This Text is far more simple than OSG ones, it only supports basic functionality.
@@ -28,6 +28,7 @@ define( [
      *  - Set the color in the range [ 0 - 1 ], as if you were working with OSG.
      *  - Texts are generated as a canvas 2D texture sticked in a quad. The size of the texture is the next power of two of the current size of the
      *    text so the bigger is your characterSize, the more memory it will consume.
+     *  - The only supported CharacterSizeMode is OBJECT_COORDS, others should be addresed in the future.
      */
     var Text = function ( text ) {
         MatrixTransform.call( this );
@@ -48,8 +49,10 @@ define( [
         // This determines the baseline of the text, e.g. top, middle, bottom
         this._context.baseLine = 'middle';
         this._textY = undefined;
-
-        this._fontSize = 20;
+        // Size of the textured quad in meters.
+        this._charactherSize = 1;
+        // Font resolution
+        this._fontSize = 32;
         this._geometry = undefined;
         this._autoRotateToScreen = false;
         this._position = Vec3.create();
@@ -77,7 +80,6 @@ define( [
     Text.RIGHT_CENTER = 7;
     Text.RIGHT_BOTTOM = 8;
 
-
     /** @lends Text.prototype */
     Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
@@ -88,15 +90,18 @@ define( [
                 this._geometry.releaseGLObjects();
             }
             this.setTextProperties();
-            this._canvas.width = this._nextPowerOfTwo( this._context.measureText( this._text ).width );
-            this._canvas.height = this._nextPowerOfTwo( this._fontSize * 2 );
+            this._canvas.width = this._context.measureText( this._text ).width;
+            this._canvas.height = this._fontSize * 2;
             // We need to set the text properties again, as the canvas size could change.
             this.setTextProperties();
             this._context.clearRect( 0, 0, this._canvas.width, this._canvas.height );
             this._context.fillText( this._text, this._textX, this._textY );
+            //this._context.fillRect( 0, 0, this._canvas.width, this._canvas.height );
             // Right now we set the pivot point to center, to assure the bounding box is correct when rendering billboards.
-            // TODO: Possibility to set different pivot point.
-            this._geometry = Shape.createTexturedQuadGeometry( -this._canvas.width / 2, -this._canvas.height / 2, 0, this._canvas.width, 0, 0, 0, this._canvas.height, 0 );
+            // TODO: Possibility to set different pivot point so we can have missing alignments.
+            var aspectRatio = this._canvas.width / this._canvas.height;
+            var quadWidth = this._charactherSize * aspectRatio;
+            this._geometry = Shape.createTexturedQuadGeometry( -quadWidth / 2, -this._charactherSize / 2, 0, quadWidth, 0, 0, 0, this._charactherSize, 0 );
             // create a texture to attach the canvas2D
             var texture = new Texture();
             texture.setTextureSize( this._canvas.width, this._canvas.height );
@@ -141,11 +146,20 @@ define( [
         },
 
         setCharacterSize: function ( size ) {
-            this._fontSize = size;
+            this._charactherSize = size;
             this._dirty = true;
         },
 
         getCharacterSize: function () {
+            return this._charactherSize;
+        },
+
+        setFontResolution: function ( resolution ) {
+            this._fontSize = resolution;
+            this._dirty = true;
+        },
+
+        getFontResolution: function () {
             return this._fontSize;
         },
 

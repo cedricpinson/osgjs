@@ -16,8 +16,11 @@ define( [
     'osg/PagedLOD',
     'osg/Camera',
     'osg/TransformEnums',
-    'osg/Vec3'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderLeaf, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec3 ) {
+    'osg/Vec3',
+    'osgAnimation/Skeleton',
+    'osgAnimation/RigGeometry',
+    'osgAnimation/Bone'
+], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderLeaf, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec3, Skeleton, RigGeometry, Bone ) {
     'use strict';
 
     /**
@@ -71,11 +74,8 @@ define( [
 
         handleCullCallbacksAndTraverse: function ( node ) {
             var ccb = node.getCullCallback();
-            if ( ccb ) {
-                if ( !ccb.cull( node, this ) ) {
-                    return;
-                }
-            }
+            if ( ccb && !ccb.cull( node, this ) )
+                return;
             this.traverse( node );
         },
 
@@ -207,7 +207,7 @@ define( [
         },
 
         apply: function ( node ) {
-            this[ node.typeID ].call( this, node );
+            this[ node.typeID ]( node );
         },
 
         createOrReuseRenderLeaf: function () {
@@ -447,11 +447,27 @@ define( [
         if ( stateset ) this.popStateSet();
     };
 
+    // function call after the push state in the geometry apply function
+    // the idea is to avoid heavy copy-paste for the rigGeometry apply
+    // since the only difference is that we want to push an additional state
+    // Maybe it will be useful when we'll add morph target geometry or something...
+    var postPushGeometry = function ( cull, node ) {
+        if ( node.typeID === RigGeometry.typeID ) {
+            var sta = node.getStateSetAnimation();
+            if ( sta ) cull.pushStateSet( sta );
+        }
+    };
+
+    // same comment as above (postPushGeometry)
+    var prePopGeometry = function ( cull, node ) {
+        if ( node.typeID === RigGeometry.typeID && node.getStateSetAnimation() )
+            cull.popStateSet();
+    };
+
     CullVisitor.prototype[ Geometry.typeID ] = ( function () {
         var tempVec = Vec3.create();
 
         return function ( node ) {
-
 
             var modelview = this.getCurrentModelViewMatrix();
             var bb = node.getBoundingBox();
@@ -461,14 +477,17 @@ define( [
                 }
             }
 
-            var stateset = node.getStateSet();
-            if ( stateset ) this.pushStateSet( stateset );
-
-
             // using modelview is not a pb because geometry
             // is a leaf node, else traversing the graph would be an
             // issue because we use modelview after
-            this.handleCullCallbacksAndTraverse( node );
+            var ccb = node.getCullCallback();
+            if ( ccb && !ccb.cull( node, this ) )
+                return;
+
+            var stateset = node.getStateSet();
+            if ( stateset ) this.pushStateSet( stateset );
+
+            postPushGeometry( this, node );
 
             var leafs = this._currentStateGraph.leafs;
             if ( leafs.length === 0 ) {
@@ -481,7 +500,7 @@ define( [
                 depth = this.distance( bb.center( tempVec ), modelview );
             }
             if ( isNaN( depth ) ) {
-                Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + bb.center() );
+                Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec );
             } else {
 
                 leaf.init( this._currentStateGraph,
@@ -495,10 +514,16 @@ define( [
                 leafs.push( leaf );
             }
 
+            prePopGeometry( this, node );
             if ( stateset ) this.popStateSet();
-
         };
     } )();
+
+    CullVisitor.prototype[ Skeleton.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
+
+    CullVisitor.prototype[ RigGeometry.typeID ] = CullVisitor.prototype[ Geometry.typeID ];
+
+    CullVisitor.prototype[ Bone.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
 
     return CullVisitor;
 } );

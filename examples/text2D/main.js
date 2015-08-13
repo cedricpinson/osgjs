@@ -32,7 +32,9 @@
                 text: this._text,
                 rotateToScreen: true,
                 layout: 'LEFT_TO_RIGHT',
-                alignment: 'CENTER_CENTER'
+                alignment: 'CENTER_CENTER',
+                fontResolution: 32,
+                characterSize: 1,
             };
             var layouts = [ 'LEFT_TO_RIGHT', 'RIGHT_TO_LEFT' ];
             var alignments = {
@@ -67,6 +69,16 @@
             alignmentController.onChange( function ( value ) {
                 that.changeAlignment( value );
             } );
+
+            var fontResController = this.gui.add( this.params, 'fontResolution', 2, 128 );
+            fontResController.onChange( function ( value ) {
+                that.changeFontresolution( value );
+            } );
+
+            var CharSizeController = this.gui.add( this.params, 'characterSize', 1, 10 );
+            CharSizeController.onChange( function ( value ) {
+                that.changeCharacterSize( value );
+            } );
         },
         createTextScene: function () {
             var model = this.createItems( 20 );
@@ -96,10 +108,10 @@
                     var text = new osgText.Text( rand );
                     text.setColor( randColor );
                     text.setAutoRotateToScreen( true );
-                    var x = Math.random() * 1000;
-                    var y = Math.random() * 1000;
-                    var z = Math.random() * 1000;
-                    var size = Math.random() * 50;
+                    var x = Math.random() * 100;
+                    var y = Math.random() * 100;
+                    var z = Math.random() * 100;
+                    var size = Math.random() * 5;
                     text.setCharacterSize( size );
                     text.setPosition( [ x, y, z ] );
                     //root.addChild( this.setDebugSphere( text, 0.2) );
@@ -122,6 +134,40 @@
                 }
             } );
             var tv = new TextVisitor( text );
+            this._scene.accept( tv );
+        },
+
+        changeFontresolution: function ( value ) {
+            var TextVisitor = function ( value ) {
+                osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
+                this._fontResolution = value;
+            };
+            TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+                apply: function ( node ) {
+                    if ( node instanceof osgText.Text ) {
+                        node.setFontResolution( this._fontResolution );
+                    }
+                    this.traverse( node );
+                }
+            } );
+            var tv = new TextVisitor( value );
+            this._scene.accept( tv );
+        },
+
+        changeCharacterSize: function ( value ) {
+            var TextVisitor = function ( value ) {
+                osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
+                this._characterSize = value;
+            };
+            TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+                apply: function ( node ) {
+                    if ( node instanceof osgText.Text ) {
+                        node.setCharacterSize( this._characterSize );
+                    }
+                    this.traverse( node );
+                }
+            } );
+            var tv = new TextVisitor( value );
             this._scene.accept( tv );
         },
 

@@ -11,6 +11,22 @@ define( [
 
         QUnit.module( 'osg' );
 
+
+        // shared const
+        var id = Quat.create(); // inited with identity
+        var sqrt2 = Math.sqrt( 0.5 );
+
+        // remarquable quaternion list
+        var Y90Rot = [ sqrt2, 0.0, sqrt2, 0.0 ];
+        var Y90RotNeg = [ -sqrt2, 0.0, -sqrt2, 0.0 ];
+        var Y90RotNegX180Rot = [ 0.0, sqrt2, 0.0, sqrt2 ];
+        var Y180Rot = [ 0.0, 0.0, 1.0, 0.0 ];
+        var Y180X90NegRot = [ 0.0, 0.0, sqrt2, sqrt2 ];
+        var Y45Rot = [ 0.5, 0, 0.5, 0.7071067811865475 ];
+        var Y45RotNeg = [ -0.5, 0, -0.5, 0.7071067811865475 ];
+        //[ 0, 0.38, 0, 0.92 ];
+
+
         QUnit.test( 'Quat.init', function () {
             var q = [];
             Quat.init( q );
@@ -64,15 +80,88 @@ define( [
             var qr2 = [];
             Matrix.getRotate( mr, qr2 );
             mockup.near( qr, qr2 );
-            // consistenty
+            // consistency
 
             mockup.near( Quat.mult( q2, Quat.mult( q1, q0, [] ), [] ), [ 0.653281, 0.270598, -0.653281, 0.270598 ] );
         } );
 
         QUnit.test( 'Quat.slerp', function () {
-            var q = [];
-            Quat.slerp( 0.5, [ 0, 0.707107, 0, 0.707107 ], [ 0, 0, 0.382683, 0.92388 ], q );
-            mockup.near( q, [ 0, 0.388863, 0.210451, 0.896937 ] );
+
+            var res = [ 0.0, 0.0, 0.0, 0.0 ];
+
+            // t = 0.5, half the angle between Y90RotNegX180Rot and ?Z90Rot?
+            Quat.slerp( 0.5, Y90RotNegX180Rot, [ 0, 0, 0.382683, 0.92388 ], res );
+            mockup.near( res, [ 0, 0.388863, 0.210451, 0.896937 ] );
+
+            Quat.slerp( 0.0, id, Y90Rot, res );
+            mockup.near( res, id, 1e-5, 't = 0' );
+
+            Quat.slerp( 1.0, id, Y90Rot, res );
+            mockup.near( res, Y90Rot, 1e-5, 't = 1' );
+
+            Quat.slerp( 0.5, id, Y90Rot, res );
+            mockup.near( res, Y45Rot, 1e-5, '0 -> 90; t:0.5' );
+
+            Quat.slerp( 0.5, Y90Rot, id, res );
+            mockup.near( res, Y45Rot, 1e-5, '90 -> 0 t:0.5' );
+
+            Quat.slerp( 0.5, id, Y90RotNeg, res );
+            mockup.near( res, Y45RotNeg, 1e-5, 'shortest path t:0.5' );
+
+            Quat.slerp( 0.5, Y90RotNeg, id, res );
+            mockup.near( res, Y45RotNeg, 1e-5, 'shortest path inverted t:0.5' );
+
+            Quat.slerp( 0.5, Y90Rot, Y90Rot, res );
+            mockup.near( res, Y90Rot, 1e-5, 'same input t:0.5' );
+
+            Quat.slerp( 0.5, id, Y180Rot, res );
+            mockup.near( res, Y180X90NegRot, 1e-5, '0 to 180 t:0.5' );
+
+            Quat.slerp( 0.5, id, [ 0.0, 0.0, 0.0, 0.999 ], res );
+            mockup.near( res, id, 1e4, 'a~n, t:0.5' ); // less prec than nlerp
+
+            Quat.slerp( 0.5, id, [ 0.0, 0.0, 0.0, -1.0 ], res );
+            mockup.near( res, id, 1e-5, 'opposite sign, t:0.5' );
+        } );
+
+        QUnit.test( 'Quat.nlerp', function () {
+
+            var res = [ 0.0, 0.0, 0.0, 0.0 ];
+
+            // t = 0.5, half the angle between Y90RotNegX180Rot and ?Z90Rot?
+            Quat.nlerp( 0.5, Y90RotNegX180Rot, [ 0, 0, 0.382683, 0.92388 ], res );
+            mockup.near( res, [ 0, 0.388863, 0.210451, 0.896937 ] );
+
+            Quat.nlerp( 0.0, id, Y90Rot, res );
+            mockup.near( res, id, 1e-5, 't = 0' );
+
+            Quat.nlerp( 1.0, id, Y90Rot, res );
+            mockup.near( res, Y90Rot, 1e-5, 't = 1' );
+
+            Quat.nlerp( 0.5, id, Y90Rot, res );
+            mockup.near( res, Y45Rot, 1e-5, '0 -> 90; t:0.5' );
+
+            Quat.nlerp( 0.5, Y90Rot, id, res );
+            mockup.near( res, Y45Rot, 1e-5, '90 -> 0 t:0.5' );
+
+            Quat.nlerp( 0.5, id, Y90RotNeg, res );
+            mockup.near( res, Y45RotNeg, 1e-5, 'shortest path t:0.5' );
+
+            Quat.nlerp( 0.5, Y90RotNeg, id, res );
+            mockup.near( res, Y45RotNeg, 1e-5, 'shortest path inverted t:0.5' );
+
+            Quat.nlerp( 0.5, Y90Rot, Y90Rot, res );
+            mockup.near( res, Y90Rot, 1e-5, 'same input t:0.5' );
+
+            Quat.nlerp( 0.5, id, Y180Rot, res );
+            mockup.near( res, Y180X90NegRot, 1e-5, '0 to 180 t:0.5' );
+
+            Quat.nlerp( 0.5, id, [ 0.0, 0.0, 0.0, 0.999 ], res );
+            mockup.near( res, id, 1e-5, 'a~n, t:0.5' );
+
+            Quat.nlerp( 0.5, id, [ 0.0, 0.0, 0.0, -1.0 ], res );
+            mockup.near( res, id, 1e-5, 'opposite sign, t:0.5' );
+
         } );
 
         QUnit.test( 'Quat.transformVec3', function () {

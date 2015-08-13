@@ -38,9 +38,7 @@ define( [
         },
 
         toString: function () {
-            return this._name +
-                ' : { inputs: ' + ( this._inputs ? this._inputs.toString() : '' ) + ' },' +
-                'outputs: { ' + ( this._outputs ? this._outputs.toString() : '' ) + ' } ';
+            return 'name : ' + this._name + ', type : ' + this.type;
         },
 
         getInputs: function () {

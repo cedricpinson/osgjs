@@ -15,6 +15,7 @@ define( [
     var DefaultsAcceptAttributeTypes = [
         'ShadowCast',
         'ShadowReceive',
+        'AnimationAttribute',
         'ShadowTexture',
         'Texture',
         'Light',
@@ -63,7 +64,7 @@ define( [
         // filter input types and write the result in the outputs array
         filterAttributeTypes: function ( attribute ) {
 
-            if ( attribute.libraryName() !== 'osg' && attribute.libraryName() !== 'osgShadow' )
+            if ( attribute.libraryName() !== 'osg' && attribute.libraryName() !== 'osgShadow' && attribute.libraryName() !== 'osgAnimation' )
                 return true;
 
             var attributeType = attribute.getType();

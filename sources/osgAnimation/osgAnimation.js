@@ -1,51 +1,49 @@
 define( [
     'osg/Utils',
     'osgAnimation/Animation',
+    'osgAnimation/AnimationAttribute',
     'osgAnimation/AnimationUpdateCallback',
     'osgAnimation/BasicAnimationManager',
+    'osgAnimation/Bone',
     'osgAnimation/Channel',
+    'osgAnimation/CollectAnimationUpdateCallbackVisitor',
     'osgAnimation/Easing',
-    'osgAnimation/FloatLerpChannel',
-    'osgAnimation/FloatTarget',
     'osgAnimation/Interpolator',
-    'osgAnimation/Keyframe',
-    'osgAnimation/LinkVisitor',
-    'osgAnimation/QuatLerpChannel',
-    'osgAnimation/QuatSlerpChannel',
-    'osgAnimation/QuatTarget',
-    'osgAnimation/Sampler',
+    'osgAnimation/RigGeometry',
+    'osgAnimation/Skeleton',
+    'osgAnimation/StackedMatrixElement',
     'osgAnimation/StackedQuaternion',
     'osgAnimation/StackedRotateAxis',
+    'osgAnimation/StackedScaleElement',
     'osgAnimation/StackedTranslate',
-    'osgAnimation/Target',
+    'osgAnimation/UpdateBone',
     'osgAnimation/UpdateMatrixTransform',
-    'osgAnimation/Vec3LerpChannel',
-    'osgAnimation/Vec3Target'
-], function ( MACROUTILS, Animation, AnimationUpdateCallback, BasicAnimationManager, Channel, Easing, FloatLerpChannel, FloatTarget, Interpolator, Keyframe, LinkVisitor, QuatLerpChannel, QuatSlerpChannel, QuatTarget, Sampler, StackedQuaternion, StackedRotateAxis, StackedTranslate, Target, UpdateMatrixTransform, Vec3LerpChannel, Vec3Target ) {
+    'osgAnimation/UpdateSkeleton'
+], function ( MACROUTILS, Animation, AnimationAttribute, AnimationUpdateCallback, BasicAnimationManager, Bone, Channel, CollectAnimationUpdateCallbackVisitor, Easing, Interpolator, RigGeometry, Skeleton, StackedMatrixElement, StackedQuaternion, StackedRotateAxis, StackedScaleElement, StackedTranslate, UpdateBone, UpdateMatrixTransform, UpdateSkeleton ) {
+
+    'use strict';
 
     var osgAnimation = {};
 
+    MACROUTILS.objectMix( osgAnimation, Easing );
+    MACROUTILS.objectMix( osgAnimation, Interpolator );
     osgAnimation.Animation = Animation;
+    osgAnimation.AnimationAttribute = AnimationAttribute;
     osgAnimation.AnimationUpdateCallback = AnimationUpdateCallback;
     osgAnimation.BasicAnimationManager = BasicAnimationManager;
+    osgAnimation.Bone = Bone;
     osgAnimation.Channel = Channel;
-    MACROUTILS.objectMix( osgAnimation, Easing );
-    osgAnimation.FloatLerpChannel = FloatLerpChannel;
-    osgAnimation.FloatTarget = FloatTarget;
-    MACROUTILS.objectMix( osgAnimation, Interpolator );
-    MACROUTILS.objectMix( osgAnimation, Keyframe );
-    osgAnimation.LinkVisitor = LinkVisitor;
-    osgAnimation.QuatLerpChannel = QuatLerpChannel;
-    osgAnimation.QuatSlerpChannel = QuatSlerpChannel;
-    osgAnimation.QuatTarget = QuatTarget;
-    osgAnimation.Sampler = Sampler;
+    osgAnimation.CollectAnimationUpdateCallbackVisitor = CollectAnimationUpdateCallbackVisitor;
+    osgAnimation.RigGeometry = RigGeometry;
+    osgAnimation.Skeleton = Skeleton;
+    osgAnimation.StackedMatrixElement = StackedMatrixElement;
     osgAnimation.StackedQuaternion = StackedQuaternion;
     osgAnimation.StackedRotateAxis = StackedRotateAxis;
+    osgAnimation.StackedScaleElement = StackedScaleElement;
     osgAnimation.StackedTranslate = StackedTranslate;
-    osgAnimation.Target = Target;
+    osgAnimation.UpdateBone = UpdateBone;
     osgAnimation.UpdateMatrixTransform = UpdateMatrixTransform;
-    osgAnimation.Vec3LerpChannel = Vec3LerpChannel;
-    osgAnimation.Vec3Target = Vec3Target;
+    osgAnimation.UpdateSkeleton = UpdateSkeleton;
 
     return osgAnimation;
 } );

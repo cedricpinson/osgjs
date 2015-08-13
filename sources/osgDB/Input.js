@@ -2,7 +2,6 @@ define( [
     'bluebird',
     'osg/Utils',
     'osgNameSpace',
-    'osgDB/ReaderParser',
     'osgDB/Options',
     'osg/Notify',
     'osg/Image',
@@ -11,7 +10,7 @@ define( [
     'osg/DrawArrayLengths',
     'osg/DrawElements',
     'osg/PrimitiveSet'
-], function ( P, MACROUTILS, osgNameSpace, ReaderParser, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
+], function ( P, MACROUTILS, osgNameSpace, Options, Notify, Image, BufferArray, DrawArrays, DrawArrayLengths, DrawElements, PrimitiveSet ) {
 
     'use strict';
 
@@ -23,6 +22,9 @@ define( [
         }
         this._identifierMap = map;
         this._objectRegistry = {};
+
+        this._cacheReadObject = {}; //wrappers
+
         // this._progressXHRCallback = undefined;
         // this._prefixURL = '';
         // this.setImageLoadingOptions( {
@@ -52,6 +54,13 @@ define( [
     }
 
     Input.prototype = {
+
+        clone: function () {
+            var input = new Input();
+            input._objectRegistry = this._objectRegistry;
+            input._cacheReadObject = this._cacheReadObject;
+            return input;
+        },
 
         setOptions: function ( options ) {
             this._defaultOptions = options;
@@ -141,7 +150,7 @@ define( [
         },
 
         getObjectWrapper: function ( path ) {
-            if ( this._objectRegistry[ path ] !== undefined ) {
+            if ( this._objectRegistry[ path ] ) {
                 return new( this._objectRegistry[ path ] )();
             }
 
@@ -154,9 +163,9 @@ define( [
                 }
                 scope = obj;
             }
-            var ClassName = scope;
+            this._objectRegistry[ path ] = scope;
             // create the new obj
-            return new( ClassName )();
+            return new( scope )();
         },
 
         fetchImage: function ( image, url, options, defer ) {
@@ -631,20 +640,29 @@ define( [
             }
 
             var obj = this.getObjectWrapper( prop );
+
             if ( !obj ) {
                 Notify.warn( 'can\'t instanciate object ' + prop );
                 return P.reject();
             }
+
             var ReaderParser = require( 'osgDB/ReaderParser' );
             var scope = ReaderParser.ObjectWrapper.serializers;
-            var splittedPath = prop.split( '.' );
-            for ( var i = 0, l = splittedPath.length; i < l; i++ ) {
-                var reader = scope[ splittedPath[ i ] ];
-                if ( reader === undefined ) {
-                    Notify.warn( 'can\'t find function to read object ' + prop + ' - undefined' );
-                    return P.reject();
+
+            if ( this._cacheReadObject[ prop ] ) {
+                scope = this._cacheReadObject[ prop ];
+            } else {
+
+                var splittedPath = prop.split( '.' );
+                for ( var i = 0, l = splittedPath.length; i < l; i++ ) {
+                    var reader = scope[ splittedPath[ i ] ];
+                    if ( reader === undefined ) {
+                        Notify.warn( 'can\'t find function to read object ' + prop + ' - undefined' );
+                        return P.reject();
+                    }
+                    scope = reader;
                 }
-                scope = reader;
+                this._cacheReadObject[ prop ] = scope;
             }
 
             var promise = scope( this.setJSON( jsonObj[ prop ] ), obj );

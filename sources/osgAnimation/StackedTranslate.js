@@ -2,49 +2,53 @@ define( [
     'osg/Utils',
     'osg/Object',
     'osg/Matrix',
-    'osgAnimation/Vec3Target',
     'osg/Vec3'
-], function ( MACROUTILS, Object, Matrix, Vec3Target, Vec3 ) {
+], function ( MACROUTILS, Object, Matrix, Vec3 ) {
 
+    'use strict';
 
     /**
      *  StackedTranslate
-     *  @class StackedTranslate
      */
     var StackedTranslate = function ( name, translate ) {
         Object.call( this );
-        if ( !translate ) {
-            translate = [ 0, 0, 0 ];
-        }
-        this._translate = translate;
-        this._target = undefined;
-        this.setName( name );
+
+        var value = Vec3.create();
+        if ( translate ) Vec3.copy( translate, value );
+
+        this._target = {
+            value: value
+        };
+        this._defaultValue = Vec3.create();
+        if ( name ) this.setName( name );
     };
 
-    /** @lends StackedTranslate.prototype */
+
     StackedTranslate.prototype = MACROUTILS.objectInherit( Object.prototype, {
-        setTranslate: function ( translate ) {
-            Vec3.copy( translate, this._translate );
+
+        init: function ( translate ) {
+            this.setTranslate( translate );
+            Vec3.copy( translate, this._defaultValue );
         },
+
+        setTranslate: function ( translate ) {
+            Vec3.copy( translate, this._target.value );
+        },
+
         setTarget: function ( target ) {
             this._target = target;
         },
+
         getTarget: function () {
             return this._target;
         },
-        update: function () {
-            if ( this._target !== undefined ) {
-                Vec3.copy( this._target.getValue(), this._translate );
-            }
+
+        resetToDefaultValue: function () {
+            this.setTranslate( this._defaultValue );
         },
-        getOrCreateTarget: function () {
-            if ( !this._target ) {
-                this._target = new Vec3Target( this._translate );
-            }
-            return this._target;
-        },
+
         applyToMatrix: function ( m ) {
-            Matrix.preMultTranslate( m, this._translate );
+            Matrix.preMultTranslate( m, this._target.value );
         }
     } );
 

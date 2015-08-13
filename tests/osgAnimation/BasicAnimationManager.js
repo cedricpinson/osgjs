@@ -1,12 +1,11 @@
 define( [
     'qunit',
     'tests/mockup/mockup',
+    'osg/MatrixTransform',
     'osgAnimation/BasicAnimationManager',
-    'osg/Utils',
-    'osg/NodeVisitor',
-    'osgDB/ReaderParser',
-    'osgAnimation/LinkVisitor'
-], function ( QUnit, mockup, BasicAnimationManager, MACROUTILS, NodeVisitor, ReaderParser, LinkVisitor ) {
+    'osgAnimation/UpdateMatrixTransform',
+    'osgAnimation/StackedRotateAxis',
+], function ( QUnit, mockup, MatrixTransform, BasicAnimationManager, UpdateMatrixTransform, StackedRotateAxis ) {
 
     'use strict';
 
@@ -14,203 +13,411 @@ define( [
 
         QUnit.module( 'osgAnimation' );
 
-        QUnit.asyncTest( 'BasicAnimationManager', function () {
-            var tree = {
-                'Generator': 'OpenSceneGraph 3.1.0',
-                'Version': 1,
-                'osg.Node': {
-                    'Children': [ {
-                        'osg.Node': {
-                            'Name': 'Root',
-                            'UpdateCallbacks': [ {
-                                'osgAnimation.BasicAnimationManager': {
-                                    'Animations': [ {
-                                        'osgAnimation.Animation': {
-                                            'Name': 'Cube',
-                                            'Channels': [ {
-                                                'osgAnimation.Vec3LerpChannel': {
-                                                    'Name': 'translate',
-                                                    'TargetName': 'Cube',
-                                                    'KeyFrames': [
-                                                        [ -0.04, 0, 0, 0 ],
-                                                        [ 0, 0.0232, 0, 0 ],
-                                                        [ 0.76, 4.0612, 0, 0 ]
-                                                    ]
-                                                }
-                                            }, {
-                                                'osgAnimation.FloatLerpChannel': {
-                                                    'Name': 'euler_x',
-                                                    'TargetName': 'Cube',
-                                                    'KeyFrames': [
-                                                        [ -0.04, 0 ],
-                                                        [ 0, 0 ],
-                                                        [ 0.76, 1.5708 ]
-                                                    ]
-                                                }
-                                            }, {
-                                                'osgAnimation.FloatLerpChannel': {
-                                                    'Name': 'euler_y',
-                                                    'TargetName': 'Cube',
-                                                    'KeyFrames': [
-                                                        [ -0.04, 0 ],
-                                                        [ 0, 0 ],
-                                                        [ 0.76, -0 ]
-                                                    ]
-                                                }
-                                            }, {
-                                                'osgAnimation.FloatLerpChannel': {
-                                                    'Name': 'euler_z',
-                                                    'TargetName': 'Cube',
-                                                    'KeyFrames': [
-                                                        [ -0.04, 0 ],
-                                                        [ 0, 0 ],
-                                                        [ 0.76, 0 ]
-                                                    ]
-                                                }
-                                            } ]
-                                        }
-                                    } ]
-                                }
-                            } ],
-                            'Children': [ {
-                                'osg.MatrixTransform': {
-                                    'Name': 'Cube',
-                                    'Matrix': [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ],
-                                    'UpdateCallbacks': [ {
-                                        'osgAnimation.UpdateMatrixTransform': {
-                                            'Name': 'Cube',
-                                            'StackedTransforms': [ {
-                                                'osgAnimation.StackedTranslate': {
-                                                    'Name': 'translate',
-                                                    'Translate': [ 0, 0, 0 ]
-                                                }
-                                            }, {
-                                                'osgAnimation.StackedRotateAxis': {
-                                                    'Name': 'euler_z',
-                                                    'Angle': 0,
-                                                    'Axis': [ 0, 0, 1 ]
-                                                }
-                                            }, {
-                                                'osgAnimation.StackedRotateAxis': {
-                                                    'Name': 'euler_y',
-                                                    'Angle': 0,
-                                                    'Axis': [ 0, 1, 0 ]
-                                                }
-                                            }, {
-                                                'osgAnimation.StackedRotateAxis': {
-                                                    'Name': 'euler_x',
-                                                    'Angle': 0,
-                                                    'Axis': [ 1, 0, 0 ]
-                                                }
-                                            } ]
-                                        }
-                                    } ],
-                                    'Children': [ {
-                                        'osg.Node': {
-                                            'Name': 'GeodeCube',
-                                            'Children': [ {
-                                                'osg.Geometry': {
-                                                    'Name': 'Cube',
-                                                    'StateSet': {
-                                                        'osg.StateSet': {
-                                                            'Name': 'Material',
-                                                            'AttributeList': [ {
-                                                                'osg.Material': {
-                                                                    'Name': 'Material',
-                                                                    'Ambient': [ 0.8, 0.8, 0.8, 1 ],
-                                                                    'Diffuse': [ 0.64, 0.64, 0.64, 1 ],
-                                                                    'Emission': [ 0, 0, 0, 1 ],
-                                                                    'Shininess': 12.5,
-                                                                    'Specular': [ 0.5, 0.5, 0.5, 1 ]
-                                                                }
-                                                            } ]
-                                                        }
-                                                    },
-                                                    'PrimitiveSetList': [ {
-                                                        'DrawElementUShort': {
-                                                            'Indices': {
-                                                                'Elements': [ 0, 1, 3, 1, 2, 3, 4, 5, 7, 5, 6, 7, 8, 9, 11, 9, 10, 11, 12, 13, 15, 13, 14, 15, 16, 17, 19, 17, 18, 19, 20, 21, 23, 21, 22, 23 ],
-                                                                'ItemSize': 1,
-                                                                'Type': 'ELEMENT_ARRAY_BUFFER'
-                                                            },
-                                                            'Mode': 'TRIANGLES'
-                                                        }
-                                                    } ],
-                                                    'VertexAttributeList': {
-                                                        'Normal': {
-                                                            'Elements': [ 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, -0, 1, 0, -0, 1, 0, -0, 1, 0, -0, 1, 1, -0, 0, 1, -0, 0, 1, -0, 0, 1, -0, 0, -0, -1, -0, -0, -1, -0, -0, -1, -0, -0, -1, -0, -1, 0, -0, -1, 0, -0, -1, 0, -0, -1, 0, -0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0 ],
-                                                            'ItemSize': 3,
-                                                            'Type': 'ARRAY_BUFFER'
-                                                        },
-                                                        'Vertex': {
-                                                            'Elements': [ 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, 1, 1 ],
-                                                            'ItemSize': 3,
-                                                            'Type': 'ARRAY_BUFFER'
-                                                        }
-                                                    }
-                                                }
-                                            } ]
-                                        }
-                                    } ]
-                                }
-                            } ]
+        QUnit.test( 'BasicAnimationManager', function () {
+
+            var animation = mockup.createAnimation( 'AnimationTest' );
+            var basicAnimationManager = new BasicAnimationManager();
+            basicAnimationManager.init( [ animation ] );
+
+            ok( basicAnimationManager.getAnimations()[ 'AnimationTest' ] !== undefined, 'Check animation test' );
+
+
+            equal( basicAnimationManager._targetID[ 0 ].id, 0, 'check target ID [0] created' );
+            equal( basicAnimationManager._targetID[ 1 ].id, 1, 'check target ID [1] created' );
+
+            //
+            var time = 0.0;
+            var nv = {
+                getFrameStamp: function () {
+                    return {
+                        getSimulationTime: function () {
+                            return time;
                         }
-                    } ]
+                    };
                 }
             };
 
-            ( function () {
-                ReaderParser.parseSceneGraph( tree ).then( function ( result ) {
+            var animations = basicAnimationManager.getAnimations();
+            var animationName = Object.keys( animations )[ 0 ];
+            basicAnimationManager.playAnimation( animationName, false );
+            ok( basicAnimationManager._startAnimations[ animationName ] !== undefined, 'check start animation queue' );
 
-                    var FindAnimationManagerVisitor = function () {
-                        NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
-                        this._cb = undefined;
-                    };
-                    FindAnimationManagerVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
-                        init: function () {
-                            this.found = [];
-                        },
-                        apply: function ( node ) {
-                            var cbs = node.getUpdateCallbackList();
-                            for ( var i = 0, l = cbs.length; i < l; i++ ) {
-                                if ( cbs[ 0 ] instanceof BasicAnimationManager ) {
-                                    this._cb = cbs[ 0 ];
-                                    return;
-                                }
-                            }
-                            this.traverse( node );
-                        }
-                    } );
-                    var finder = new FindAnimationManagerVisitor();
-                    result.accept( finder );
-                    var animationManager = finder._cb;
-                    var lv = new LinkVisitor();
-                    lv.setAnimationMap( animationManager.getAnimationMap() );
-                    result.accept( lv );
-                    animationManager.buildTargetList();
-                    ok( animationManager._targets.length === 4, 'Check targets' );
+            basicAnimationManager._dirty = false;
+            basicAnimationManager.update( null, nv );
+            ok( basicAnimationManager._activeAnimations[ animationName ] !== undefined, 'check animation ' + animationName + ' is playing' );
 
-                    animationManager.playAnimation( 'Cube' );
-                    animationManager.updateManager( 0 );
-                    animationManager.updateManager( 0.5 );
-                    //Notify.log( 'value ' + animationManager._targets[ 0 ].getValue() );
-                    animationManager.updateManager( 1.0 );
-                    ok( mockup.checkNear( animationManager._targets[ 0 ].getValue(), [ 1.085831578947368, 0, 0 ] ), 'Check animation loop result' );
+            // .x comes from the mockup anmation name
+            equal( basicAnimationManager._targets[ 0 ].target, 'a.x', 'check target a name' );
+            equal( basicAnimationManager._targets[ 1 ].target, 'b.x', 'check target b name' );
 
-                    animationManager.stopAnimation( 'Cube' );
-                    animationManager.updateManager( 2.0 );
-                    animationManager.playAnimation( {
-                        name: 'Cube',
-                        loop: 1
-                    } );
-                    animationManager.updateManager( 2.5 );
-                    //Notify.log( 'value ' + animationManager._targets[ 0 ].getValue() );
-                    animationManager.updateManager( 3.0 );
-                    ok( animationManager.isPlaying( 'Cube' ), false, 'Check animation is not active' );
-                    ok( mockup.checkNear( animationManager._targets[ 0 ].getValue(), [ 2.6797789473684217, 0, 0 ] ), 'Check animation once result' );
-                    start();
-                } );
-            } )();
+            equal( basicAnimationManager._targetID[ 0 ].value, 1, 'check target a value at t = ' + time );
+            equal( basicAnimationManager._targetID[ 1 ].value, 1, 'check target b value at t = ' + time );
+
+            time = 0.5;
+            basicAnimationManager.update( null, nv );
+            equal( basicAnimationManager._targetID[ 0 ].value, 0.5, 'check target a value at t = ' + time );
+            equal( basicAnimationManager._targetID[ 1 ].value, 1, 'check target b value at t = ' + time );
+
+
+            time = 3.5;
+            basicAnimationManager.update( null, nv );
+            equal( basicAnimationManager._targetID[ 0 ].value, 3, 'check target a value at t = ' + time );
+            equal( basicAnimationManager._targetID[ 1 ].value, 1.5, 'check target b value at t = ' + time );
+
+            time = 6.0;
+            basicAnimationManager.update( null, nv );
+            equal( basicAnimationManager._targetID[ 0 ].value, 3, 'check target a value at t = ' + time );
+            equal( basicAnimationManager._targetID[ 1 ].value, 3, 'check target b value at t = ' + time );
+
+            ok( basicAnimationManager._targetID[ 0 ].channels.length === 0, 'check target has not channels' );
+            ok( basicAnimationManager._targetID[ 1 ].channels.length === 0, 'check target has not channels' );
+            ok( basicAnimationManager._activeAnimations[ animationName ] === undefined, 'check animation ' + animationName + ' is not active' );
+
+
         } );
+
+
+        QUnit.test( 'BasicAnimationManager Linking', function () {
+
+            var animation = mockup.createAnimation( 'AnimationTest', 'testUpdateMatrixTransform' );
+            var basicAnimationManager = new BasicAnimationManager();
+            basicAnimationManager.init( [ animation ] );
+
+            // adds animationUpdateCallback to test compute UpdateMatrixTransform
+            // create a dumy tree with simple animation update callback
+            var node = new MatrixTransform();
+            var animationCallback = new UpdateMatrixTransform();
+            animationCallback.setName( 'testUpdateMatrixTransform' );
+            var stackedRotateAxis = new StackedRotateAxis( 'x' );
+            animationCallback.getStackedTransforms().push( stackedRotateAxis );
+            node.addUpdateCallback( animationCallback );
+
+            basicAnimationManager._findAnimationUpdateCallback( node );
+            console.log( basicAnimationManager._animationsUpdateCallback );
+            // get keys
+            var keys = Object.keys( basicAnimationManager._animationsUpdateCallback );
+            equal( keys.length, 1, 'check number of animation callback found' );
+            var animationCB = basicAnimationManager._animationsUpdateCallback[ keys[ 0 ] ];
+            equal( animationCB.getName(), 'testUpdateMatrixTransform', 'check name of the first animation found' );
+
+            basicAnimationManager._assignTargetToAnimationCallback();
+            equal( basicAnimationManager._animationsUpdateCallbackArray.length, 1, 'check channel assigned to animation callback' );
+
+
+            //
+            var time = 0.0;
+            var nv = {
+                getFrameStamp: function () {
+                    return {
+                        getSimulationTime: function () {
+                            return time;
+                        }
+                    };
+                }
+            };
+
+            var animations = basicAnimationManager.getAnimations();
+            var animationName = Object.keys( animations )[ 0 ];
+            basicAnimationManager.playAnimation( animationName );
+
+            basicAnimationManager._dirty = false;
+
+            time = 0.0;
+            basicAnimationManager.update( null, nv );
+
+            time = 0.5;
+            basicAnimationManager.update( null, nv );
+            equal( stackedRotateAxis.getTarget().value, 0.5, 'check target a value at t = ' + time );
+
+            deepEqual( animationCallback._matrix, [ 0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 'check matrix computed' );
+
+        } );
+
+
+
+        QUnit.test( 'BasicAnimationManager Performance', function () {
+
+            var basicAnimationManager = new BasicAnimationManager();
+            basicAnimationManager._dirty = false;
+            var animations = [];
+            var root = new MatrixTransform();
+            var allUpdateCallback = [];
+
+            // create an animation with an animation UpdateCallback in a node
+            var createAnimation = function () {
+
+                var index = animations.length.toString();
+                var targetName = 'testUpdateMatrixTransform_' + index;
+                var animation = mockup.createAnimation( 'AnimationTest_' + index, targetName, 'a_' + index, targetName, 'b_' + index );
+                animations.push( animation );
+
+                // adds animationUpdateCallback to test compute UpdateMatrixTransform
+                // create a dumy tree with simple animation update callback
+                var node = new MatrixTransform();
+                root.addChild( node );
+                var animationCallback = new UpdateMatrixTransform();
+                allUpdateCallback.push( animationCallback );
+                animationCallback.setName( targetName );
+                var stackedRotateAxis = new StackedRotateAxis( 'a_' + index );
+                animationCallback.getStackedTransforms().push( stackedRotateAxis );
+                var stackedRotateAxis2 = new StackedRotateAxis( 'b_' + index );
+                animationCallback.getStackedTransforms().push( stackedRotateAxis2 );
+                node.addUpdateCallback( animationCallback );
+            };
+
+            var maxAnimations = 50;
+            for ( var i = 0; i < maxAnimations; i++ ) {
+                createAnimation();
+            }
+
+            basicAnimationManager.init( animations );
+            basicAnimationManager._findAnimationUpdateCallback( root );
+            basicAnimationManager._assignTargetToAnimationCallback();
+
+            console.log( 'nb animations ' + Object.keys( basicAnimationManager._animationsUpdateCallback ).length );
+
+            //
+            var time = 0.0;
+            var nv = {
+                getFrameStamp: function () {
+                    return {
+                        getSimulationTime: function () {
+                            return time;
+                        }
+                    };
+                }
+            };
+
+            var animationMap = basicAnimationManager.getAnimations();
+            for ( var j = 0; j < maxAnimations; j++ ) {
+                var animationName = Object.keys( animationMap )[ j ];
+                basicAnimationManager.playAnimation( animationName );
+            }
+
+            // add a simple operation to be sure the jit will not discard our code
+            var fakeResult = 0.0;
+            console.profile();
+
+            console.time( 'time' );
+            for ( var n = 0; n < 100; n++ )
+                for ( var t = 0.0; t < 5.0; t += 0.016 ) {
+                    time = t;
+                    basicAnimationManager._dirty = false;
+                    basicAnimationManager.update( null, nv );
+                    for ( var k = 0, l = allUpdateCallback.length; k < l; k++ )
+                        fakeResult += allUpdateCallback[ k ]._matrix[ 0 ];
+                }
+
+            console.timeEnd( 'time' );
+            console.profileEnd();
+            console.log( fakeResult );
+            ok( true, 'ok' );
+
+        } );
+
+        QUnit.test( 'BasicAnimationManager Controls', function () {
+
+            var animation = mockup.createAnimation();
+            var duration = 4;
+
+            var basicAnimationManager = new BasicAnimationManager();
+            basicAnimationManager.init( [ animation ] );
+            var managerTime = 0.0;
+            var pauseTime;
+
+            basicAnimationManager.updateManager = function ( t ) {
+                managerTime = t;
+            };
+
+            var pause = false;
+            var togglePause = function () {
+                pause = !pause;
+                basicAnimationManager.togglePause();
+                if ( pause )
+                    pauseTime = time;
+            };
+
+            //mockup a node visitor
+            var time = 0.0;
+            var nv = {
+                getFrameStamp: function () {
+                    return {
+                        getSimulationTime: function () {
+                            return time;
+                        }
+                    };
+                }
+            };
+
+            //play animation
+            basicAnimationManager.playAnimation( 'Test Controls' );
+            basicAnimationManager._dirty = false;
+
+
+            //Simple Pause
+            basicAnimationManager.update( null, nv );
+            ok( managerTime === 0, 'Manager time at 0' );
+
+            //
+            time = 1;
+            basicAnimationManager.update( null, nv );
+
+            togglePause();
+            ok( ( managerTime % duration ) === time, 'Pause at ' + time );
+
+            //
+            time = 2;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === pauseTime, 'Time on pause at ' + time );
+
+            //
+            time = 6;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === pauseTime, 'Time on pause at ' + time );
+
+            //
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === pauseTime, 'Time after pause at ' + time );
+
+            time = 7;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === pauseTime + 1, 'Time after pause at ' + time );
+
+
+            //Pause + setTime()
+            time = 10;
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === ( time % duration ), 'Pause at ' + time );
+
+            basicAnimationManager.setSimulationTime( 3 );
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 3, 'Simulation time at ' + 3 );
+
+            time = 11;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 3, 'Simulation time at ' + 3 + ' t + 1' );
+
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 3, 'Value after pause for simulation time at 3' );
+
+            time = 14;
+            basicAnimationManager.update( null, nv );
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === ( time % duration ), 'Pause at ' + time );
+
+            basicAnimationManager.setSimulationTime( 0.5 );
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 0.5, 'Simulation time at ' + 0.5 );
+
+            basicAnimationManager.setSimulationTime( 1.5 );
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 1.5, 'Simulation time at ' + 1.5 );
+
+            time = 15;
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 1.5, 'Simulation time at ' + 1.5 + ' t + 1' );
+
+            togglePause();
+            basicAnimationManager.update( null, nv );
+            ok( ( managerTime % duration ) === 1.5, 'Value after pause for simulation time at 1.5' );
+
+            //Time factor on play
+            var t;
+            var timeFactor;
+
+            time = 17;
+            timeFactor = 0.3;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t ), 'Value after set time factor at ' + timeFactor );
+
+            time = 18;
+            timeFactor = 0.5;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time = 18.5;
+            timeFactor = 4.4;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time = 22.5;
+            timeFactor = 0.8;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time = 26;
+            timeFactor = 1;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            //Time Factor on pause
+            var t;
+            var timeFactor;
+
+            togglePause();
+            ok( true, 'Toggle Pause at ' + time );
+
+            time += 1;
+            timeFactor = 0.3;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time += 0.5;
+            timeFactor = 0.5;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time += 2;
+            timeFactor = 4.4;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time += 1;
+            timeFactor = 0.8;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            time += 0.3;
+            timeFactor = 1;
+            basicAnimationManager.update( null, nv );
+            t = managerTime;
+            basicAnimationManager.setTimeFactor( timeFactor );
+            basicAnimationManager.update( null, nv );
+            ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            start();
+        } );
+
     };
 } );

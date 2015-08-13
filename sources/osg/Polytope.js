@@ -2,8 +2,9 @@ define( [
     'osg/Matrix',
     'osg/Notify',
     'osg/Plane',
-    'osg/Utils'
-], function ( Matrix, Notify, Plane, MACROUTILS ) {
+    'osg/Utils',
+    'osg/Vec4'
+], function ( Matrix, Notify, Plane, MACROUTILS, Vec4 ) {
     /*jshint bitwise: false */
     'use strict';
     /**
@@ -49,12 +50,12 @@ define( [
             if ( withFar === undefined ) withFar = true;
 
             this._planeList.length = 0;
-            this._planeList.push( Plane.create().set( 1.0, 0.0, 0.0, 1.0 ) ); // left plane.
-            this._planeList.push( Plane.create().set( -1.0, 0.0, 0.0, 1.0 ) ); // right plane.
-            this._planeList.push( Plane.create().set( 0.0, 1.0, 0.0, 1.0 ) ); // bottom plane.
-            this._planeList.push( Plane.create().set( 0.0, -1.0, 0.0, 1.0 ) ); // top plane.
-            if ( withNear ) this._planeList.push( Plane.create().set( 0.0, 0.0, 1.0, 1.0 ) ); // near plane
-            if ( withFar ) this._planeList.push( Plane.create().set( 0.0, 0.0, -1.0, 1.0 ) ); // far plane
+            this._planeList.push( Vec4.set( 1.0, 0.0, 0.0, 1.0, Plane.create() ) ); // left plane.
+            this._planeList.push( Vec4.set( -1.0, 0.0, 0.0, 1.0, Plane.create() ) ); // right plane.
+            this._planeList.push( Vec4.set( 0.0, 1.0, 0.0, 1.0, Plane.create() ) ); // bottom plane.
+            this._planeList.push( Vec4.set( 0.0, -1.0, 0.0, 1.0, Plane.create() ) ); // top plane.
+            if ( withNear ) this._planeList.push( Vec4.set( 0.0, 0.0, 1.0, 1.0, Plane.create() ) ); // near plane
+            if ( withFar ) this._planeList.push( Vec4.set( 0.0, 0.0, -1.0, 1.0, Plane.create() ) ); // far plane
             this.setupMask();
         },
 
@@ -62,12 +63,12 @@ define( [
         /** Create a Polytope which is a equivalent to BoundingBox.*/
         setToBoundingBox: function ( bb ) {
             this._planeList.length = 0;
-            this._planeList.push( Plane.create().set( 1.0, 0.0, 0.0, -bb.getMin()[ 0 ] ) ); // left plane.
-            this._planeList.push( Plane.create().set( -1.0, 0.0, 0.0, bb.getMax()[ 0 ] ) ); // right plane.
-            this._planeList.push( Plane.create().set( 0.0, 1.0, 0.0, -bb.getMin()[ 1 ] ) ); // bottom plane.
-            this._planeList.push( Plane.create().set( 0.0, -1.0, 0.0, bb.getMax()[ 1 ] ) ); // top plane.
-            this._planeList.push( Plane.create().set( 0.0, 0.0, 1.0, -bb.getMin()[ 2 ] ) ); // near plane
-            this._planeList.push( Plane.create().set( 0.0, 0.0, -1.0, bb.getMax()[ 2 ] ) ); // far plane
+            this._planeList.push( Vec4.set( 1.0, 0.0, 0.0, -bb.getMin()[ 0 ], Plane.create() ) ); // left plane.
+            this._planeList.push( Vec4.set( -1.0, 0.0, 0.0, bb.getMax()[ 0 ], Plane.create() ) ); // right plane.
+            this._planeList.push( Vec4.set( 0.0, 1.0, 0.0, -bb.getMin()[ 1 ], Plane.create() ) ); // bottom plane.
+            this._planeList.push( Vec4.set( 0.0, -1.0, 0.0, bb.getMax()[ 1 ], Plane.create() ) ); // top plane.
+            this._planeList.push( Vec4.set( 0.0, 0.0, 1.0, -bb.getMin()[ 2 ], Plane.create() ) ); // near plane
+            this._planeList.push( Vec4.set( 0.0, 0.0, -1.0, bb.getMax()[ 2 ], Plane.create() ) ); // far plane
             this.setupMask();
         },
 

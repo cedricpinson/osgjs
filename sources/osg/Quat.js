@@ -1,22 +1,22 @@
 define( [
     'osg/Vec3',
+    'osg/Vec4',
     'osg/Notify'
-], function ( Vec3, Notify ) {
+], function ( Vec3, Vec4, Notify ) {
 
     'use strict';
+
+    var Msqrt = Math.sqrt;
+    var Mcos = Math.cos;
+    var Msin = Math.sin;
 
     /** @class Quaternion Operations */
     var Quat = {
         create: function () {
             return [ 0.0, 0.0, 0.0, 1.0 ];
         },
-        copy: function ( s, d ) {
-            d[ 0 ] = s[ 0 ];
-            d[ 1 ] = s[ 1 ];
-            d[ 2 ] = s[ 2 ];
-            d[ 3 ] = s[ 3 ];
-            return d;
-        },
+
+
         makeIdentity: function ( element ) {
             return Quat.init( element );
         },
@@ -32,57 +32,34 @@ define( [
             return element;
         },
 
-        sub: function ( a, b, result ) {
-            result[ 0 ] = a[ 0 ] - b[ 0 ];
-            result[ 1 ] = a[ 1 ] - b[ 1 ];
-            result[ 2 ] = a[ 2 ] - b[ 2 ];
-            result[ 3 ] = a[ 3 ] - b[ 3 ];
-            return result;
-        },
-
-        add: function ( a, b, result ) {
-            result[ 0 ] = a[ 0 ] + b[ 0 ];
-            result[ 1 ] = a[ 1 ] + b[ 1 ];
-            result[ 2 ] = a[ 2 ] + b[ 2 ];
-            result[ 3 ] = a[ 3 ] + b[ 3 ];
-            return result;
-        },
-
-        dot: function ( a, b ) {
-            return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ] + a[ 2 ] * b[ 2 ] + a[ 3 ] * b[ 3 ];
-        },
+        // reuse Vec4 methods
+        copy: Vec4.copy,
+        set: Vec4.set,
+        sub: Vec4.sub,
+        add: Vec4.add,
+        dot: Vec4.dot,
+        neg: Vec4.neg,
+        lerp: Vec4.lerp,
 
         length2: function ( a ) {
             return a[ 0 ] * a[ 0 ] + a[ 1 ] * a[ 1 ] + a[ 2 ] * a[ 2 ] + a[ 3 ] * a[ 3 ];
         },
 
+
         length: function ( a ) {
             return Math.sqrt( a[ 0 ] * a[ 0 ] + a[ 1 ] * a[ 1 ] + a[ 2 ] * a[ 2 ] + a[ 3 ] * a[ 3 ] );
         },
 
-        neg: function ( a, result ) {
-            result[ 0 ] = -a[ 0 ];
-            result[ 1 ] = -a[ 1 ];
-            result[ 2 ] = -a[ 2 ];
-            result[ 3 ] = -a[ 3 ];
-            return result;
-        },
-
         makeRotate: function ( angle, x, y, z, result ) {
-            if ( result === undefined ) {
-                Notify.warn( 'no quat destination !' );
-                result = this.create();
-            }
-
             var epsilon = 0.0000001;
-            var length = Math.sqrt( x * x + y * y + z * z );
+            var length = Msqrt( x * x + y * y + z * z );
             if ( length < epsilon ) {
                 return this.init( result );
             }
 
             var inversenorm = 1.0 / length;
-            var coshalfangle = Math.cos( 0.5 * angle );
-            var sinhalfangle = Math.sin( 0.5 * angle );
+            var coshalfangle = Mcos( 0.5 * angle );
+            var sinhalfangle = Msin( 0.5 * angle );
 
             result[ 0 ] = x * sinhalfangle * inversenorm;
             result[ 1 ] = y * sinhalfangle * inversenorm;
@@ -91,50 +68,115 @@ define( [
             return result;
         },
 
-        lerp: function ( t, a, b, r ) {
-            r[ 0 ] = a[ 0 ] + ( b[ 0 ] - a[ 0 ] ) * t;
-            r[ 1 ] = a[ 1 ] + ( b[ 1 ] - a[ 1 ] ) * t;
-            r[ 2 ] = a[ 2 ] + ( b[ 2 ] - a[ 2 ] ) * t;
-            r[ 3 ] = a[ 3 ] + ( b[ 3 ] - a[ 3 ] ) * t;
-            return r;
-        },
 
-        slerp: function ( t, from, to, result ) {
-            var epsilon = 0.00001;
+        // http://physicsforgames.blogspot.fr/2010/02/quaternions.html
+        // called quatBlend
+        //
+        // NLERP is supposed to be
+        // - Commutative,
+        // - NOT Constant velocity
+        // - Torque minimal
+        //
+        // a and be must be normalized
+        // (otherwise they're not rotation...)
+        // t must be between 0 and 1
+        nlerp: function ( t, a, b, r ) {
+            var dot = this.dot( a, b );
+            var at = 1.0 - t;
 
-            var quatTo = to;
-            var cosomega = this.dot( from, quatTo );
-            if ( cosomega < 0.0 ) {
-                cosomega = -cosomega;
-                this.neg( to, quatTo );
-            }
+            // shortest path
+            if ( dot < 0.0 ) {
 
-            var omega;
-            var sinomega;
-            var scaleFrom;
-            var scaleTo;
-            if ( ( 1.0 - cosomega ) > epsilon ) {
-                omega = Math.acos( cosomega ); // 0 <= omega <= Pi (see man acos)
-                sinomega = Math.sin( omega ); // this sinomega should always be +ve so
-                // could try sinomega=sqrt(1-cosomega*cosomega) to avoid a sin()?
-                scaleFrom = Math.sin( ( 1.0 - t ) * omega ) / sinomega;
-                scaleTo = Math.sin( t * omega ) / sinomega;
+                // negates directly b in the 4 equation
+                // this.neg( b, r );
+                r[ 0 ] = a[ 0 ] * at - b[ 0 ] * t;
+                r[ 1 ] = a[ 1 ] * at - b[ 1 ] * t;
+                r[ 2 ] = a[ 2 ] * at - b[ 2 ] * t;
+                r[ 3 ] = a[ 3 ] * at - b[ 3 ] * t;
+
             } else {
-                /* --------------------------------------------------
-             The ends of the vectors are very close
-             we can use simple linear interpolation - no need
-             to worry about the 'spherical' interpolation
-             -------------------------------------------------- */
-                scaleFrom = 1.0 - t;
-                scaleTo = t;
+                r[ 0 ] = a[ 0 ] * at + b[ 0 ] * t;
+                r[ 1 ] = a[ 1 ] * at + b[ 1 ] * t;
+                r[ 2 ] = a[ 2 ] * at + b[ 2 ] * t;
+                r[ 3 ] = a[ 3 ] * at + b[ 3 ] * t;
             }
 
-            result[ 0 ] = from[ 0 ] * scaleFrom + quatTo[ 0 ] * scaleTo;
-            result[ 1 ] = from[ 1 ] * scaleFrom + quatTo[ 1 ] * scaleTo;
-            result[ 2 ] = from[ 2 ] * scaleFrom + quatTo[ 2 ] * scaleTo;
-            result[ 3 ] = from[ 3 ] * scaleFrom + quatTo[ 3 ] * scaleTo;
-            return result;
+            return this.normalize( r, r );
         },
+
+        //
+        // MUST READ on SLERP, NLERP, LOG-LERP
+        // http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/
+        // with a slerp implementation (robust)
+        //
+        // MUST READ Howto enhance lerp, slerp and q normalize
+        // http://number-none.com/product/Hacking%20Quaternions/
+        //
+        // MUST READ The book:
+        // Essential Mathematics for Games and Interactive Applications page
+        // ( from 10.6.1 Linear Interpolation to 10.6.3 Performance Improvements )
+        //
+        //  SLERP is:
+        // - NOT commutative
+        // - constant velocity
+        // - torque minimal
+        //
+        // so not to be used when blending multiple non ordered rotations
+        // (as in multiple animation)
+        //
+        slerp: ( function () {
+
+            var b2 = [ 0.0, 0.0, 0.0, 0.0 ];
+            var epsilon = 0.00001;
+            // a and be must be normalized
+            // (otherwise they're not rotation...)
+            // t must be between 0 and 1
+            return function ( t, a, b, r ) {
+
+                var cos = this.dot( a, b );
+                var b3 = b;
+
+                // shortest path
+                if ( cos < 0.0 ) {
+                    b3 = this.neg( b, b2 );
+                    cos = -cos;
+                }
+
+                var ta, tb;
+                if ( cos > 1.0 - epsilon ) {
+                    // negligible rotation: optimize by just a lerp
+                    // a line rather than a rotation.
+                    ta = 1.0 - t;
+                    tb = t;
+
+                } else {
+
+                    var sin = Math.sqrt( 1.0 - cos * cos );
+
+                    // which one is better ?
+
+                    // Atan2:
+                    //  sin != 0 && cos !f= 0
+                    //  Atan2 returns the angle between -π and π radians (equivalent to -180 and 180 degrees)
+                    var angle = Math.atan2( sin, cos );
+                    // Acos:
+                    // need clamp(-1,1) on input Cos to avoid NaN but we make it lerp anyway
+                    // acos returns the angle between 0 and π radians (equivalent to 0 and 180 degrees)
+                    //var angle = Math.acos( cos ); / / 0 <= omega <= Pi( see man acos )
+
+                    var oneOverSin = 1.0 / sin;
+                    ta = Math.sin( ( 1.0 - t ) * angle ) * oneOverSin;
+                    tb = Math.sin( t * angle ) * oneOverSin;
+                }
+
+                r[ 0 ] = a[ 0 ] * ta + b3[ 0 ] * tb;
+                r[ 1 ] = a[ 1 ] * ta + b3[ 1 ] * tb;
+                r[ 2 ] = a[ 2 ] * ta + b3[ 2 ] * tb;
+                r[ 3 ] = a[ 3 ] * ta + b3[ 3 ] * tb;
+                return r;
+            };
+
+        } )(),
 
         transformVec3: function ( q, a, result ) {
             var x = a[ 0 ];
@@ -166,6 +208,7 @@ define( [
             return qr;
         },
 
+        // conjugate
         // we suppose to have unit quaternion
         conj: function ( a, result ) {
             result[ 0 ] = -a[ 0 ];
@@ -175,6 +218,8 @@ define( [
             return result;
         },
 
+        // only if you don't have unit quaternion
+        // otherwise use conjugate
         inverse: function ( a, result ) {
             var div = 1.0 / this.length2( a );
             this.conj( a, result );

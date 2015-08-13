@@ -148,7 +148,7 @@ define( [
 
             var typeID = node.getTypeID();
 
-            if ( typeID === MatrixTransform.getTypeID() ) {
+            if ( node instanceof MatrixTransform ) {
                 this.applyTransform( node );
                 return;
 

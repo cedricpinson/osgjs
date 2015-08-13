@@ -89,6 +89,17 @@ define( [
             return this._shaderGeneratorProxy;
         },
 
+        pushCheckOverride: function ( stack, object, maskValue ) {
+            // object can be a Uniform, an Attribute, or a shader generator name
+            if ( stack.values().length === 0 ) {
+                stack.push( this.getObjectPair( object, maskValue ) );
+            } else if ( ( stack.back().value & StateAttribute.OVERRIDE ) && !( maskValue & StateAttribute.PROTECTED ) ) {
+                stack.push( stack.back() );
+            } else {
+                stack.push( this.getObjectPair( object, maskValue ) );
+            }
+        },
+
         pushStateSet: function ( stateset ) {
             this.stateSets.push( stateset );
 
@@ -111,10 +122,9 @@ define( [
             if ( stateset.uniforms ) {
                 this.pushUniformsList( this.uniforms, stateset.uniforms );
             }
-            var generatorName = stateset.getShaderGeneratorName();
-            if ( generatorName !== undefined ) {
-                this._shaderGeneratorNames.push( generatorName );
-            }
+            var generatorPair = stateset.getShaderGeneratorPair();
+            if ( generatorPair )
+                this.pushCheckOverride( this._shaderGeneratorNames, generatorPair.getShaderGeneratorName(), generatorPair.getValue() );
         },
 
         getStateSetStackSize: function () {
@@ -307,7 +317,7 @@ define( [
                 this.popUniformsList( this.uniforms, stateset.uniforms );
             }
 
-            if ( stateset.getShaderGeneratorName() !== undefined ) {
+            if ( stateset.getShaderGeneratorPair() ) {
                 this._shaderGeneratorNames.pop();
             }
         },
@@ -450,9 +460,9 @@ define( [
             }
         },
 
-        getObjectPair: function ( uniform, value ) {
+        getObjectPair: function ( object, value ) {
             return {
-                object: uniform,
+                object: object,
                 value: value
             };
         },
@@ -474,16 +484,8 @@ define( [
                     uniformMap[ name ].globalDefault = uniform;
                     uniformMap.dirty();
                 }
-                var value = uniformPair.getValue();
-                var stack = uniformMap[ name ];
-                var length = stack.values().length;
-                if ( length === 0 ) {
-                    stack.push( this.getObjectPair( uniform, value ) );
-                } else if ( ( stack.back().value & StateAttribute.OVERRIDE ) && !( value & StateAttribute.PROTECTED ) ) {
-                    stack.push( stack.back() );
-                } else {
-                    stack.push( this.getObjectPair( uniform, value ) );
-                }
+
+                this.pushCheckOverride( uniformMap[ name ], uniform, uniformPair.getValue() );
             }
             /*jshint bitwise: true */
         },
@@ -627,18 +629,8 @@ define( [
                     attributeMap.dirty();
                 }
 
-                var value = attributePair.getValue();
-
                 attributeStack = attributeMap[ type ];
-                var length = attributeStack.values().length;
-                if ( length === 0 ) {
-                    attributeStack.push( this.getObjectPair( attribute, value ) );
-                } else if ( ( attributeStack.back().value & StateAttribute.OVERRIDE ) && !( value & StateAttribute.PROTECTED ) ) {
-                    attributeStack.push( attributeStack.back() );
-                } else {
-                    attributeStack.push( this.getObjectPair( attribute, value ) );
-                }
-
+                this.pushCheckOverride( attributeStack, attribute, attributePair.getValue() );
                 attributeStack.asChanged = true;
             }
             /*jshint bitwise: true */
@@ -753,7 +745,7 @@ define( [
                 }
 
                 vertexAttribMap[ attrib ] = array;
-                gl.vertexAttribPointer( attrib, array._itemSize, gl.FLOAT, normalize, 0, 0 );
+                gl.vertexAttribPointer( attrib, array._itemSize, array._glBind, normalize, 0, 0 );
             }
         },
 
@@ -919,8 +911,8 @@ define( [
             // no custom program look into the stack of ShaderGenerator name
             // what we should use to generate a program
 
-            var generatorName = this._shaderGeneratorNames.back();
-            var shaderGenerator = this._shaderGeneratorProxy.getShaderGenerator( generatorName );
+            var last = this._shaderGeneratorNames.back();
+            var shaderGenerator = this._shaderGeneratorProxy.getShaderGenerator( last ? last.object : undefined );
 
             var program = shaderGenerator.getOrCreateProgram( this );
             this.applyAttribute( program );
