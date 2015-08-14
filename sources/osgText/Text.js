@@ -58,6 +58,8 @@ define( [
         this._position = Vec3.create();
         this._layout = Text.LEFT_TO_RIGHT;
         this._alignment = Text.CENTER_CENTER;
+        // NPOT textures
+        this._forcePowerOfTwo = false;
         // Lazy initialization
         this.drawText();
         this._dirty = false;
@@ -92,6 +94,12 @@ define( [
             this.setTextProperties();
             this._canvas.width = this._context.measureText( this._text ).width;
             this._canvas.height = this._fontSize * 2;
+            // For devices not supporting NPOT textures
+            if ( this._forcePowerOfTwo )
+            {
+                this._canvas.width = this._nextPowerOfTwo( this._canvas.width );
+                this._canvas.height = this._nextPowerOfTwo( this._canvas.height );
+            }
             // We need to set the text properties again, as the canvas size could change.
             this.setTextProperties();
             this._context.clearRect( 0, 0, this._canvas.width, this._canvas.height );
@@ -289,6 +297,12 @@ define( [
                 this._textY = this._canvas.height;
                 break;
             }
+        },
+        setForcePowerOfTwo: function( value ) {
+            this._forcePowerOfTwo = value;
+        },
+        getForcePowerOfTwo: function () {
+            return this._forcePowerOfTwo;
         },
         _nextPowerOfTwo: function ( v ) {
             v--;
