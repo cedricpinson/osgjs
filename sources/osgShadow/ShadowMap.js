@@ -420,49 +420,47 @@ define( [
 
             this._shadowReceiveAttribute.setLightNumber( lightNumber );
 
-            this._receivingStateset.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
 
 
+            this._receivingStateset.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.OVERRIDE | StateAttribute.ON );
 
-            // prevent unnecessary texture bindings
 
-            if ( !ShadowMap.BlankTexture ) {
-                ShadowMap.BlankTexture = new Texture();
-                ShadowMap.BlankTexture.setName( 'emptyTex' );
-            }
-            var blankTexture = ShadowMap.BlankTexture;
+            this._preventTextureBindingDuringShadowCasting();
 
-            // Mandatory: prevent binding shadow textures themselves (shadowedScene stateSet is applied
-            // just above in stateset hierarchy
+            // Mandatory: prevent binding shadow textures themselves
+            // (shadowedScene stateSet is applied  just above in stateset hierarchy)
             // that would mean undefined values as it would be read/write access...
-            this._casterStateSet.setTextureAttributeAndModes( this._textureUnit, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
-
-            // TODO: optimize: have a "don't touch current Texture stateAttribute"
-            // on ALL texture unit but alpha max texture for Depth/Normal/etc renders
-
-            // TODO: actually get the real max texture unit from webglCaps
-            //var shouldGetMaxTextureUnits = 32;
-            //
-            // TODO:: Should handle the alpha_mask that uses a texture
-            // case somehow...
-            // deduce from shader compil ?
-            //for ( var k = 0; k < shouldGetMaxTextureUnits; k++ ) {
-            //    this._casterStateSet.setTextureAttributeAndModes( k, blankTexture, StateAttribute.OFF | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
-            //}
-
-
-            //            var casterProgram = this.getShadowCasterShaderProgram();
-            //            this.setShadowCasterShaderProgram( casterProgram );
+            // So we force it against Texture.null binding done juste above (PROTECTED)
+            // and Prevent any under hieratchy bind with OVERRIDE
+            // must be done AFTER the prevent binding.
+            this._casterStateSet.setTextureAttributeAndModes( this._textureUnit, Texture.textureNull, StateAttribute.ON | StateAttribute.OVERRIDE | StateAttribute.PROTECTED );
 
             // add shadow texture to the receivers
             // should make sure somehow that
             // alpha blender transparent receiver doens't use it
             // compiler wise at least
-            this._receivingStateset.setTextureAttributeAndModes( this._textureUnit, this._texture, StateAttribute.ON | StateAttribute.OVERRIDE );
+            this._receivingStateset.setTextureAttributeAndModes( this._textureUnit, this._texture, StateAttribute.OVERRIDE | StateAttribute.ON );
 
             this._dirty = false;
         },
+        // Make sure we don't bind texture and thus make gpu work for nothing
+        // as shadow casting just output Depth ( no color )
+        // os we set a null texture and OVERRIDE stateAttribute flag
+        // only case you want to use a texture is
+        // alpha masked material, then you have StateAttribute to 'PROTECTED'
+        _preventTextureBindingDuringShadowCasting: function () {
 
+            // prevent unnecessary texture bindings on all texture unit
+            // TODO: actually get the real max texture unit from webglCaps
+            var shouldGetMaxTextureUnits = 32;
+            for ( var k = 0; k < shouldGetMaxTextureUnits; k++ ) {
+                // bind  null texture which osgjs will not bind,
+                // effectively preventing any other texture bind
+                // just not touching texture unit state.
+                this._casterStateSet.setTextureAttributeAndModes( k, Texture.textureNull, StateAttribute.OVERRIDE | StateAttribute.ON );
+            }
+
+        },
         valid: function () {
             // checks
             return true;
