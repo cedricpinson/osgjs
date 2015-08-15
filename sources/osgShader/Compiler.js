@@ -1135,7 +1135,7 @@ define( [
 
             var positionAnimated = this.createVariable( 'vec3', 'vertexAttribute' );
 
-            this.getNode( 'MatrixMultPosition' ).inputs( {
+            this.getNode( 'MatrixMultPosition' ).setInverse( true ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
                 vec: inputVertex
             } ).outputs( {
@@ -1154,7 +1154,7 @@ define( [
 
             var normalAnimated = this.createVariable( 'vec3', 'normalAttribute' );
 
-            this.getNode( 'MatrixMultDirection' ).inputs( {
+            this.getNode( 'MatrixMultDirection' ).setInverse( true ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
                 vec: inputNormal
             } ).outputs( {
