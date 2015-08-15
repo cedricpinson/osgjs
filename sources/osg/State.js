@@ -356,6 +356,8 @@ define( [
         },
 
         applyTextureAttribute: function ( unit, attribute ) {
+
+
             var gl = this.getGraphicContext();
             gl.activeTexture( gl.TEXTURE0 + unit );
             var key = attribute.getTypeMember();
@@ -380,7 +382,14 @@ define( [
             if ( attributeStack.lastApplied !== attribute ) {
 
                 if ( attribute.apply ) {
-                    attribute.apply( this, unit );
+
+                    // save gl calls not calling bind(null)
+                    // as per specification https://www.khronos.org/registry/gles/specs/2.0/es_full_spec_2.0.25.pdf#nameddest=section-3.7.13
+                    // those calls are silently ignored
+                    if ( !attribute.isTextureNull() ) {
+
+                        attribute.apply( this, unit );
+                    }
                 }
                 attributeStack.lastApplied = attribute;
                 attributeStack.asChanged = true;
@@ -515,8 +524,13 @@ define( [
             // if the the stack has changed but the last applied attribute is the same
             // then we dont need to apply it again
             if ( attributeStack.lastApplied !== attribute ) {
-                gl.activeTexture( gl.TEXTURE0 + textureUnit );
-                attribute.apply( this, textureUnit );
+                // save gl calls not calling bind(null)
+                // as per specification https://www.khronos.org/registry/gles/specs/2.0/es_full_spec_2.0.25.pdf#nameddest=section-3.7.13
+                // those calls are silently ignored
+                if ( !attribute.isTextureNull() ) {
+                    gl.activeTexture( gl.TEXTURE0 + textureUnit );
+                    attribute.apply( this, textureUnit );
+                }
                 attributeStack.lastApplied = attribute;
             }
 
