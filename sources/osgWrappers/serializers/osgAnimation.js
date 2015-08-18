@@ -4,8 +4,10 @@ define( [
     'osgWrappers/serializers/osg',
     'osgAnimation/Channel',
     'osgAnimation/Animation',
-    'osgDB/ReaderParser'
-], function ( P, Notify, osgWrapper, Channel, Animation, ReaderParser ) {
+    'osgDB/ReaderParser',
+    'osgAnimation/StackedMatrix', // for backward compatibility
+    'osgAnimation/StackedScale' // for backward compatibility
+], function ( P, Notify, osgWrapper, Channel, Animation, ReaderParser, StackedMatrix, StackedScale ) {
 
     'use strict';
 
@@ -404,6 +406,13 @@ define( [
             return rigGeom;
         } );
     };
+
+    osgAnimationWrapper.StackedMatrixElement = osgAnimationWrapper.StackedMatrix;
+    osgAnimationWrapper.StackedScaleElement = osgAnimationWrapper.StackedScale;
+
+    // needs to be cleaned in c++
+    ReaderParser.registry().registerObject( 'osgAnimation.StackedMatrixElement', StackedMatrix );
+    ReaderParser.registry().registerObject( 'osgAnimation.StackedScaleElement', StackedScale );
 
     return osgAnimationWrapper;
 } );
