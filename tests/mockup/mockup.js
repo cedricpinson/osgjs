@@ -3,9 +3,15 @@ define( [
     'tests/mockup/scene',
     'tests/mockup/box',
     'osgAnimation/Channel',
-    'osgAnimation/Animation'
+    'osgAnimation/Animation',
+    'osgAnimation/UpdateMatrixTransform',
+    'osgAnimation/StackedRotateAxis',
+    'osgAnimation/StackedScale',
+    'osgAnimation/StackedQuaternion',
+    'osgAnimation/StackedTranslate',
+    'osgAnimation/StackedMatrix'
 
-], function ( $, getScene, getBoxScene, Channel, Animation ) {
+], function ( $, getScene, getBoxScene, Channel, Animation, UpdateMatrixTransform, StackedRotateAxis,  StackedScale, StackedQuaternion, StackedTranslate, StackedMatrix) {
 
     'use strict';
 
@@ -99,6 +105,16 @@ define( [
         return Channel.createVec3Channel( keys, times );
     };
 
+    var createQuatKeyframes = function () {
+        var keys = [
+            0, 0, 0, 1,
+            0, 0, 0, 1,
+            0, 0, 0, 1
+        ];
+        var times = [ 0, 1, 2 ];
+        return Channel.createQuatChannel( keys, times );
+    };
+
     var createFloatKeyframes = function () {
         var keys = [
             1, 0, 3
@@ -153,17 +169,76 @@ define( [
     };
 
 
-    var createAnimation = function ( name, target1, name1, target2, name2 ) {
+    var createAnimation = function ( name, target1, target2 ) {
 
         var a = createFloatKeyframes();
         a.target = target1 || 'a';
-        a.name = name1 || 'x';
+        a.name = 'rotateX';
 
         var b = createFloatKeyframes( 2 );
         b.target = target2 || 'b';
-        b.name = name2 || 'x';
+        b.name = 'rotateY';
 
         return Animation.createAnimation( [ a, b ], name );
+    };
+
+
+    var createAnimationAllType = function() {
+
+        var a = createFloatKeyframes();
+        a.target = 'target0';
+        a.name = 'rotateX';
+
+        var b = createQuatKeyframes();
+        a.target = 'target0';
+        a.name = 'quat';
+
+        var c = createVec3Keyframes();
+        a.target = 'target0';
+        a.name = 'translate';
+
+        var d = createVec3Keyframes();
+        a.target = 'target0';
+        a.name = 'scale';
+
+        return Animation.createAnimation( [ a, b, c, d ], 'animation' );
+    };
+
+
+    var stackedElement = {
+        translate : StackedTranslate,
+        rotate : StackedRotateAxis,
+        rotateX : StackedRotateAxis,
+        rotateY : StackedRotateAxis,
+        rotateZ : StackedRotateAxis,
+        matrix : StackedMatrix,
+        scale : StackedScale,
+        quat : StackedQuaternion
+    };
+
+    var createAnimationUpdateCallback = function( animations ) {
+        var cbMap = {};
+
+        for ( var a = 0; a < animations.length; a++) {
+            var animation = animations[a];
+            for ( var i = 0; i < animation.channels.length; i++) {
+                var channel = animation.channels[i];
+
+                var target = channel.target;
+                var name = channel.name;
+
+                var ucb = cbMap [ target ];
+                if (!ucb ) {
+                    cbMap [ target ] = new UpdateMatrixTransform();
+                    ucb = cbMap [ target ];
+                    ucb.setName( target );
+                }
+                var stacked = ucb.getStackedTransforms();
+                var st = new stackedElement[name](name);
+                stacked.push( st );
+            }
+        }
+        return cbMap;
     };
 
     var createCanvas = function () {
@@ -289,6 +364,7 @@ define( [
         createVec3CubicBezierKeyframes: createVec3CubicBezierKeyframes,
         createQuatLerpKeyFrames: createQuatLerpKeyFrames,
         createAnimation: createAnimation,
+        createAnimationUpdateCallback: createAnimationUpdateCallback,
         near: near,
         getBoxScene: getBoxScene,
         getScene: getScene

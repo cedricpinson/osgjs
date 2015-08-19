@@ -62,72 +62,10 @@ define( [
     };
 
 
-
-
-    // create an targetID for all target used by animations
-    // use an array of instance animation in inputs
-    // [ {
-    //     channels: [],
-    //     duration: 0.0;
-    //     start: 0.0,
-    //     end: 1.0
-    // }, ... ]
-    //
-    // return an array that contains targetName
-    // id is the index of the array
-    //
-    // [ "bone0",
-    //   "bone1",
-    //   ... ]
-    //
-    var registerChannelTargetID = function ( animations, targetList, targetMap ) {
-
-        var newTargetAdded = [];
-
-        for ( var i = 0; i < animations.length; i++ ) {
-
-            var animation = animations[ i ];
-            var instanceChannels = animation.channels;
-
-            for ( var c = 0; c < instanceChannels.length; c++ ) {
-
-                var instanceChannel = instanceChannels[ c ];
-                var channel = instanceChannel.channel;
-
-                var targetName = channel.target;
-                var name = channel.name; // translate, rotateX, rotateY, rotateZ, ...
-                var type = channel.type;
-
-                // compute a unique name for targetID
-                var uniqueTargetName = targetName + '.' + name;
-
-                // not yet in the map create an id from the array size
-                if ( !targetMap[ uniqueTargetName ] ) {
-                    var id = targetList.length;
-                    instanceChannel.targetID = id; // set the target ID in the channel
-                    var target = {
-                        target: uniqueTargetName,
-                        targetID: id,
-                        type: type
-                    };
-                    targetMap[ uniqueTargetName ] = target;
-                    targetList.push( target );
-                    newTargetAdded.push( target );
-                } else {
-                    //if there is more than one channel for the same target, we set the targetID already created
-                    instanceChannel.targetID = targetMap[ uniqueTargetName ].targetID;
-                }
-            }
-        }
-
-        return newTargetAdded;
-    };
-
     var Animation = function () {};
 
     Animation.createAnimation = createAnimation;
     Animation.createInstanceAnimation = createInstanceAnimation;
-    Animation.registerChannelTargetID = registerChannelTargetID;
 
     return Animation;
 } );

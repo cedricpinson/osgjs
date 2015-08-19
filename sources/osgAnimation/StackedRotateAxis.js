@@ -3,36 +3,26 @@ define( [
     'osg/Object',
     'osg/Matrix',
     'osg/Vec3',
-    'osg/Quat'
-], function ( MACROUTILS, Object, Matrix, Vec3, Quat ) {
+    'osg/Quat',
+    'osgAnimation/Target',
+], function ( MACROUTILS, Object, Matrix, Vec3, Quat, Target ) {
 
     'use strict';
 
-    /**
-     *  StackedRotateAxis
-     */
     var StackedRotateAxis = function ( name, axis, angle ) {
         Object.call( this );
-
-        this._axis = Vec3.set( 0.0, 0.0, 1.0, Vec3.create() );
-
-        if ( axis )
-            this._axis = Vec3.copy( axis, this._axis );
-
-        this._target = {
-            value: angle || 0.0
-        };
-        this.setName( name );
-        this._defaultValue = this._target.value;
-
+        this._axis = Vec3.set( 0, 0, 1, Vec3.create() );
+        if ( axis ) Vec3.copy( axis, this._axis );
+        this._target = Target.createFloatTarget( typeof angle === 'number' ? angle : 0.0 );
+        if ( name ) this.setName( name );
     };
 
     StackedRotateAxis.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
         init: function ( axis, angle ) {
             this.setAxis( axis );
-            this._defaultValue = angle;
             this.setAngle( angle );
+            this._target.defaultValue = angle;
         },
 
         setAxis: function ( axis ) {
@@ -43,16 +33,12 @@ define( [
             this._target.value = angle;
         },
 
-        setTarget: function ( target ) {
-            this._target = target;
-        },
-
         getTarget: function () {
             return this._target;
         },
 
         resetToDefaultValue: function () {
-            this.setAngle( this._defaultValue );
+            this.setAngle( this._target.defaultValue );
         },
 
         applyToMatrix: ( function () {

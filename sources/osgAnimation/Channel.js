@@ -2,22 +2,13 @@ define( [
     'osg/Utils',
     'osg/Object',
     'osg/Vec3',
-    'osg/Quat'
+    'osg/Quat',
+    'osgAnimation/Target',
+    'osgAnimation/channelType',
 
-], function ( MACROUTILS, Object, Vec3, Quat ) {
+], function ( MACROUTILS, Object, Vec3, Quat, Target, channelType ) {
 
     'use strict';
-
-    // must be sync wiht Interpolator Type
-    var ChannelType = {
-        Vec3: 0,
-        Quat: 1,
-        Float: 2,
-        FloatCubicBezier: 3,
-        Vec3CubicBezier: 4,
-        QuatSlerp: 5,
-        Count: 6
-    };
 
     var Channel = {};
 
@@ -44,27 +35,27 @@ define( [
     };
 
     var createVec3Channel = function ( keys, times, targetName, channelName, chan ) {
-        return initChannel( ChannelType.Vec3, keys, times, targetName, channelName, chan || {} );
+        return initChannel( channelType.Vec3, keys, times, targetName, channelName, chan || {} );
     };
 
     var createFloatChannel = function ( keys, times, targetName, channelName, chan ) {
-        return initChannel( ChannelType.Float, keys, times, targetName, channelName, chan || {} );
+        return initChannel( channelType.Float, keys, times, targetName, channelName, chan || {} );
     };
 
     var createQuatChannel = function ( keys, times, targetName, channelName, chan ) {
-        return initChannel( ChannelType.Quat, keys, times, targetName, channelName, chan || {} );
+        return initChannel( channelType.Quat, keys, times, targetName, channelName, chan || {} );
     };
 
     var createQuatSlerpChannel = function ( keys, times, targetName, channelName, chan ) {
-        return initChannel( ChannelType.QuatSlerp, keys, times, targetName, channelName, chan || {} );
+        return initChannel( channelType.QuatSlerp, keys, times, targetName, channelName, chan || {} );
     };
 
     var createFloatCubicBezierChannel = function ( keys, times, targetName, channelName, chan ) {
-        return initChannel( ChannelType.FloatCubicBezier, keys, times, targetName, channelName, chan || {} );
+        return initChannel( channelType.FloatCubicBezier, keys, times, targetName, channelName, chan || {} );
     };
 
     var createVec3CubicBezierChannel = function ( keys, times, targetName, channelName, chan ) {
-        return initChannel( ChannelType.Vec3CubicBezier, keys, times, targetName, channelName, chan || {} );
+        return initChannel( channelType.Vec3CubicBezier, keys, times, targetName, channelName, chan || {} );
     };
 
 
@@ -82,64 +73,43 @@ define( [
     //     key: 0,
     //     t: 0, //global start time
     // }
-    var createInstanceVec3Channel = function ( channel ) {
+
+    var Float = {
+        create: function () {
+            return 0;
+        }
+    };
+
+    var createInstanceChannelType = function ( operator, channel ) {
         return {
             channel: channel,
-            value: Vec3.create(),
-            targetID: 0,
-            weight: 1,
+            value: operator.create(),
+            targetID: Target.InvalidTargetID,
+            weight: 1.0,
             key: 0,
             start: 0.0,
             end: 0.0
         };
+    };
+
+    var createInstanceVec3Channel = function ( channel ) {
+        return createInstanceChannelType( Vec3, channel );
     };
 
     var createInstanceQuatChannel = function ( channel ) {
-        return {
-            channel: channel,
-            value: Quat.create(),
-            targetID: 0,
-            weight: 1,
-            key: 0,
-            start: 0.0, //Local start time
-            end: 0.0
-        };
+        return createInstanceChannelType( Quat, channel );
     };
 
     var createInstanceFloatChannel = function ( channel ) {
-        return {
-            channel: channel,
-            value: 0.0,
-            targetID: 0,
-            weight: 1,
-            key: 0,
-            start: 0.0,
-            end: 0.0
-        };
+        return createInstanceChannelType( Float, channel );
     };
 
     var createInstanceFloatCubicBezierChannel = function ( channel ) {
-        return {
-            channel: channel,
-            value: 0.0,
-            targetID: 0,
-            weight: 1,
-            key: 0,
-            start: 0.0,
-            end: 0.0
-        };
+        return createInstanceChannelType( Float, channel );
     };
 
     var createInstanceVec3CubicBezierChannel = function ( channel ) {
-        return {
-            channel: channel,
-            value: Vec3.create(),
-            targetID: 0,
-            weight: 1,
-            key: 0,
-            start: 0.0,
-            end: 0.0
-        };
+        return createInstanceChannelType( Vec3, channel );
     };
 
 
@@ -267,14 +237,14 @@ define( [
     Channel.createFloatCubicBezierChannel = createFloatCubicBezierChannel;
     Channel.createVec3CubicBezierChannel = createVec3CubicBezierChannel;
 
-    Channel[ ChannelType.Vec3 ] = createInstanceVec3Channel;
-    Channel[ ChannelType.Quat ] = createInstanceQuatChannel;
-    Channel[ ChannelType.QuatSlerp ] = createInstanceQuatChannel;
-    Channel[ ChannelType.Float ] = createInstanceFloatChannel;
-    Channel[ ChannelType.FloatCubicBezier ] = createInstanceFloatCubicBezierChannel;
-    Channel[ ChannelType.Vec3CubicBezier ] = createInstanceVec3CubicBezierChannel;
+    Channel[ channelType.Vec3 ] = createInstanceVec3Channel;
+    Channel[ channelType.Quat ] = createInstanceQuatChannel;
+    Channel[ channelType.QuatSlerp ] = createInstanceQuatChannel;
+    Channel[ channelType.Float ] = createInstanceFloatChannel;
+    Channel[ channelType.FloatCubicBezier ] = createInstanceFloatCubicBezierChannel;
+    Channel[ channelType.Vec3CubicBezier ] = createInstanceVec3CubicBezierChannel;
 
-    Channel.ChannelType = ChannelType;
+    Channel.ChannelType = channelType;
 
 
     return Channel;

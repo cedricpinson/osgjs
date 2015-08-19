@@ -7,7 +7,7 @@ define( [ 'qunit',
     'osgAnimation/StackedScale',
     'osgAnimation/StackedMatrix',
     'osgAnimation/StackedQuaternion'
-], function ( QUnit, mockup, Matrix, Quat, StackedRotateAxis, StackedTranslate, StackedScaleElement, StackedMatrix, StackedQuaternion ) {
+], function ( QUnit, mockup, Matrix, Quat, StackedRotateAxis, StackedTranslate, StackedScale, StackedMatrix, StackedQuaternion ) {
 
     'use strict';
 
@@ -41,7 +41,7 @@ define( [ 'qunit',
         } );
         QUnit.test( 'StackedScale', function () {
 
-            var st = new StackedScaleElement( 'scale' );
+            var st = new StackedScale( 'scale' );
             ok( st.getName() === 'scale', 'Ckeck Name' );
             ok( mockup.checkNear( st._target.value, [ 1.0, 1.0, 1.0 ] ), 'Check scale default value' );
 

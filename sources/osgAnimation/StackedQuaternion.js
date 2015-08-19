@@ -2,42 +2,27 @@ define( [
     'osg/Utils',
     'osg/Object',
     'osg/Matrix',
-    'osg/Quat'
-], function ( MACROUTILS, Object, Matrix, Quat ) {
-    /**
-     *  StackedQuaternion
-     */
+    'osg/Quat',
+    'osgAnimation/Target'
+], function ( MACROUTILS, Object, Matrix, Quat, Target ) {
 
     'use strict';
 
     var StackedQuaternion = function ( name, quat ) {
         Object.call( this );
-
-        var value = Quat.create();
-
-        if ( quat ) Quat.copy( quat, value );
-
-        this._target = {
-            value: value
-        };
-        this._defaultValue = Quat.create();
-
-        this.setName( name );
+        this._target = Target.createQuatTarget( quat || Quat.identity );
+        if ( name ) this.setName( name );
     };
 
     StackedQuaternion.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
         init: function ( q ) {
             this.setQuaternion( q );
-            Quat.copy( q, this._defaultValue );
+            Quat.copy( q, this._target.defaultValue );
         },
 
         setQuaternion: function ( q ) {
             Quat.copy( q, this._target.value );
-        },
-
-        setTarget: function ( target ) {
-            this._target = target;
         },
 
         getTarget: function () {
@@ -45,7 +30,7 @@ define( [
         },
 
         resetToDefaultValue: function () {
-            this.setQuaternion( this._defaultValue );
+            this.setQuaternion( this._target.defaultValue );
         },
 
         applyToMatrix: ( function () {
