@@ -530,7 +530,7 @@ define( [
                 // handle loop, careful in case animation is one frame
                 if ( loop && instanceAnimation.duration > 0.0 ) tLocal = tLocal % instanceAnimation.duration;
 
-                interpolator( tLocal, channel );
+                interpolator( tLocal + instanceAnimation.firstKeyTime, channel );
             }
         },
 

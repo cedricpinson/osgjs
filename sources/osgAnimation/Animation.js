@@ -33,7 +33,8 @@ define( [
         return {
             channels: channels,
             duration: duration,
-            name: animationName
+            name: animationName,
+            start: min
         };
     };
 
@@ -57,7 +58,8 @@ define( [
             channels: channels,
             duration: animation.duration,
             start: 0.0,
-            name: animation.name
+            name: animation.name,
+            firstKeyTime: animation.start
         };
     };
 

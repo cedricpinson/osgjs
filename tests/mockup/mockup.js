@@ -11,7 +11,7 @@ define( [
     'osgAnimation/StackedTranslate',
     'osgAnimation/StackedMatrix'
 
-], function ( $, getScene, getBoxScene, Channel, Animation, UpdateMatrixTransform, StackedRotateAxis,  StackedScale, StackedQuaternion, StackedTranslate, StackedMatrix) {
+], function ( $, getScene, getBoxScene, Channel, Animation, UpdateMatrixTransform, StackedRotateAxis, StackedScale, StackedQuaternion, StackedTranslate, StackedMatrix ) {
 
     'use strict';
 
@@ -182,8 +182,20 @@ define( [
         return Animation.createAnimation( [ a, b ], name );
     };
 
+    var createAnimationWithNegativeKey = function ( name, target1, target2 ) {
 
-    var createAnimationAllType = function() {
+        var a = createFloatKeyframes( -10 );
+        a.target = target1 || 'a';
+        a.name = 'rotateX';
+
+        var b = createFloatKeyframes( 10 );
+        b.target = target2 || 'b';
+        b.name = 'rotateY';
+
+        return Animation.createAnimation( [ a, b ], name );
+    };
+
+    var createAnimationAllType = function () {
 
         var a = createFloatKeyframes();
         a.target = 'target0';
@@ -206,35 +218,35 @@ define( [
 
 
     var stackedElement = {
-        translate : StackedTranslate,
-        rotate : StackedRotateAxis,
-        rotateX : StackedRotateAxis,
-        rotateY : StackedRotateAxis,
-        rotateZ : StackedRotateAxis,
-        matrix : StackedMatrix,
-        scale : StackedScale,
-        quat : StackedQuaternion
+        translate: StackedTranslate,
+        rotate: StackedRotateAxis,
+        rotateX: StackedRotateAxis,
+        rotateY: StackedRotateAxis,
+        rotateZ: StackedRotateAxis,
+        matrix: StackedMatrix,
+        scale: StackedScale,
+        quat: StackedQuaternion
     };
 
-    var createAnimationUpdateCallback = function( animations ) {
+    var createAnimationUpdateCallback = function ( animations ) {
         var cbMap = {};
 
-        for ( var a = 0; a < animations.length; a++) {
-            var animation = animations[a];
-            for ( var i = 0; i < animation.channels.length; i++) {
-                var channel = animation.channels[i];
+        for ( var a = 0; a < animations.length; a++ ) {
+            var animation = animations[ a ];
+            for ( var i = 0; i < animation.channels.length; i++ ) {
+                var channel = animation.channels[ i ];
 
                 var target = channel.target;
                 var name = channel.name;
 
-                var ucb = cbMap [ target ];
-                if (!ucb ) {
-                    cbMap [ target ] = new UpdateMatrixTransform();
-                    ucb = cbMap [ target ];
+                var ucb = cbMap[ target ];
+                if ( !ucb ) {
+                    cbMap[ target ] = new UpdateMatrixTransform();
+                    ucb = cbMap[ target ];
                     ucb.setName( target );
                 }
                 var stacked = ucb.getStackedTransforms();
-                var st = new stackedElement[name](name);
+                var st = new stackedElement[ name ]( name );
                 stacked.push( st );
             }
         }
@@ -364,6 +376,7 @@ define( [
         createVec3CubicBezierKeyframes: createVec3CubicBezierKeyframes,
         createQuatLerpKeyFrames: createQuatLerpKeyFrames,
         createAnimation: createAnimation,
+        createAnimationWithNegativeKey: createAnimationWithNegativeKey,
         createAnimationUpdateCallback: createAnimationUpdateCallback,
         near: near,
         getBoxScene: getBoxScene,
