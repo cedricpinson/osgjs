@@ -138,6 +138,8 @@ define( [
             this._zoomKey = 83; // s
             this._panKey = 68; // d
 
+            this._autoPushTarget = true; // if we hit the min distance and can't zoom anymore, maybe we still want to move on
+
             // instance of controller
             var self = this;
 
@@ -312,20 +314,31 @@ define( [
             this.zoom( dz );
         },
 
-        zoom: function ( ratio ) {
-            var newValue = this._distance * ratio;
-            if ( this._minDistance > 0.0 ) {
+        setAutoPushTarget: function ( bool ) {
+            this._autoPushTarget = bool;
+        },
+
+        zoom: ( function () {
+            var dir = Vec3.create();
+            return function ( ratio ) {
+                var newValue = this._distance * ratio;
                 if ( newValue < this._minDistance ) {
+                    if ( this._autoPushTarget ) {
+                        // push the target instead of zooming on it
+                        Vec3.sub( this._target, this.getEyePosition( dir ), dir );
+                        Vec3.normalize( dir, dir );
+                        Vec3.mult( dir, this._minDistance - newValue, dir );
+                        Vec3.add( this._target, dir, this._target );
+                    }
                     newValue = this._minDistance;
                 }
-            }
-            if ( this._maxDistance > 0.0 ) {
-                if ( newValue > this._maxDistance ) {
+
+                if ( newValue > this._maxDistance )
                     newValue = this._maxDistance;
-                }
-            }
-            this._distance = newValue;
-        },
+
+                this._distance = newValue;
+            };
+        } )(),
 
         getRotateInterpolator: function () {
             return this._rotate;
@@ -337,8 +350,7 @@ define( [
             return this._zoom;
         },
         getTarget: function ( target ) {
-            Vec3.copy( this._target, target );
-            return target;
+            return Vec3.copy( this._target, target );
         },
         getEyePosition: function ( eye ) {
             this.computeEyePosition( this._target, this._distance, eye );
