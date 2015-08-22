@@ -3,14 +3,13 @@ define( [
     'osg/Vec3',
     'osg/Matrix',
     'osgGA/Manipulator',
-    'osgGA/OrbitManipulatorLeapMotionController',
-    'osgGA/OrbitManipulatorMouseKeyboardController',
-    'osgGA/OrbitManipulatorHammerController',
-    'osgGA/OrbitManipulatorGamePadController',
     'osgGA/OrbitManipulatorDeviceOrientationController',
-    'osgGA/OrbitManipulatorOculusController',
-
-], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController ) {
+    'osgGA/OrbitManipulatorGamePadController',
+    'osgGA/OrbitManipulatorHammerController',
+    'osgGA/OrbitManipulatorLeapMotionController',
+    'osgGA/OrbitManipulatorStandardMouseKeyboardController',
+    'osgGA/OrbitManipulatorOculusController'
+], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorDeviceOrientationController, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorStandardMouseKeyboardController, OrbitManipulatorOculusController ) {
 
     'use strict';
 
@@ -403,29 +402,12 @@ define( [
         } )()
     } );
 
-    ( function ( module ) {
-        module.LeapMotion = OrbitManipulatorLeapMotionController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.StandardMouseKeyboard = OrbitManipulatorMouseKeyboardController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.Hammer = OrbitManipulatorHammerController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.GamePad = OrbitManipulatorGamePadController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.DeviceOrientation = OrbitManipulatorDeviceOrientationController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.Oculus = OrbitManipulatorOculusController;
-    } )( OrbitManipulator );
+    OrbitManipulator.DeviceOrientation = OrbitManipulatorDeviceOrientationController;
+    OrbitManipulator.GamePad = OrbitManipulatorGamePadController;
+    OrbitManipulator.Hammer = OrbitManipulatorHammerController;
+    OrbitManipulator.LeapMotion = OrbitManipulatorLeapMotionController;
+    OrbitManipulator.Oculus = OrbitManipulatorOculusController;
+    OrbitManipulator.StandardMouseKeyboard = OrbitManipulatorStandardMouseKeyboardController;
 
     return OrbitManipulator;
 } );

@@ -2,12 +2,14 @@ define( [
     'osgGA/OrbitManipulatorEnums'
 ], function ( OrbitManipulatorEnums ) {
 
-    var OrbitManipulatorMouseKeyboardController = function ( manipulator ) {
+    'use strict';
+
+    var OrbitManipulatorStandardMouseKeyboardController = function ( manipulator ) {
         this._manipulator = manipulator;
         this.init();
     };
 
-    OrbitManipulatorMouseKeyboardController.prototype = {
+    OrbitManipulatorStandardMouseKeyboardController.prototype = {
         init: function () {
             this.releaseButton();
             this._rotateKey = 65; // a
@@ -153,5 +155,5 @@ define( [
         }
 
     };
-    return OrbitManipulatorMouseKeyboardController;
+    return OrbitManipulatorStandardMouseKeyboardController;
 } );
