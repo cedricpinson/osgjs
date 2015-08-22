@@ -18,6 +18,7 @@ define( [
             this._rotateFactorY = -this._rotateFactorX;
             this._zoomFactor = 5.0;
 
+            this._lastScale = 0;
             this._nbPointerLast = 0; // to check if we the number of pointers has changed
             this._delay = 0.15;
         },
@@ -101,7 +102,6 @@ define( [
                 Notify.debug( 'drag end, ' + dragCB( gesture ) );
             };
 
-            var toucheScale;
             this._cbPinchStart = function ( event ) {
                 var manipulator = self._manipulator;
                 if ( !manipulator || event.pointerType === 'mouse' ) {
@@ -110,9 +110,9 @@ define( [
                 self._transformStarted = true;
                 var gesture = event;
 
-                toucheScale = gesture.scale;
+                self._lastScale = gesture.scale;
                 manipulator.getZoomInterpolator().reset();
-                manipulator.getZoomInterpolator().set( toucheScale );
+                manipulator.getZoomInterpolator().set( self._lastScale );
                 event.preventDefault();
                 Notify.debug( 'zoom start, ' + dragCB( gesture ) );
             };
@@ -131,10 +131,12 @@ define( [
                     return;
                 }
                 var gesture = event;
-                var scale = ( gesture.scale - toucheScale ) * self._zoomFactor;
-                toucheScale = gesture.scale;
-                var target = manipulator.getZoomInterpolator().getTarget()[ 0 ];
-                manipulator.getZoomInterpolator().setTarget( target - scale );
+                var scale = ( gesture.scale - self._lastScale ) * self._zoomFactor;
+                self._lastScale = gesture.scale;
+
+                var target = manipulator.getZoomInterpolator().getTarget()[ 0 ] - scale;
+                // make the dezoom faster
+                manipulator.getZoomInterpolator().setTarget( target > 0.0 ? target * 4.0 : target );
                 Notify.debug( 'zoom, ' + dragCB( gesture ) );
             };
 
