@@ -16,7 +16,7 @@ define( [
         QUnit.test( 'BasicAnimationManager', function () {
 
             var animation = mockup.createAnimation( 'AnimationTest' );
-            var cbMap = mockup.createAnimationUpdateCallback( [animation ] );
+            var cbMap = mockup.createAnimationUpdateCallback( [ animation ] );
 
 
             var basicAnimationManager = new BasicAnimationManager();
@@ -212,7 +212,7 @@ define( [
             var animation = mockup.createAnimation();
             var duration = 4;
 
-            var cbMap = mockup.createAnimationUpdateCallback( [animation ] );
+            var cbMap = mockup.createAnimationUpdateCallback( [ animation ] );
 
             var basicAnimationManager = new BasicAnimationManager();
             basicAnimationManager.init( [ animation ] );
@@ -367,9 +367,6 @@ define( [
             ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
 
             //Time Factor on pause
-            var t;
-            var timeFactor;
-
             togglePause();
             ok( true, 'Toggle Pause at ' + time );
 
@@ -412,6 +409,71 @@ define( [
             basicAnimationManager.setTimeFactor( timeFactor );
             basicAnimationManager.update( null, nv );
             ok( mockup.checkNear( managerTime % duration, t % duration ), 'Value after set time factor at ' + timeFactor );
+
+            start();
+        } );
+
+        QUnit.test( 'BasicAnimationManager Negative time in animation key', function () {
+
+
+            var animation = mockup.createAnimationWithNegativeKey( 'NegativeKeys' );
+
+            var cbMap = mockup.createAnimationUpdateCallback( [ animation ] );
+
+            var basicAnimationManager = new BasicAnimationManager();
+            basicAnimationManager.init( [ animation ] );
+            basicAnimationManager._animationsUpdateCallback = cbMap;
+            basicAnimationManager._registerTargetFoundInAnimationCallback();
+            basicAnimationManager._registerAnimations();
+
+            //mockup a node visitor
+            var time = 0.0;
+            var nv = {
+                getFrameStamp: function () {
+                    return {
+                        getSimulationTime: function () {
+                            return time;
+                        }
+                    };
+                }
+            };
+
+            //play animation
+            basicAnimationManager.playAnimation( 'NegativeKeys' );
+
+            //Collect targets
+            var a = basicAnimationManager._targetMap[ 'a.rotateX' ];
+            var b = basicAnimationManager._targetMap[ 'b.rotateY' ];
+
+
+            basicAnimationManager.update( null, nv ); //time == 0
+
+            ok( a.value === 1, 'Check channel a at t = ' + time );
+            ok( b.value === 1, 'Check channel b at t = ' + time );
+
+            time = 0.5;
+            basicAnimationManager.update( null, nv ); //time == 0.5
+
+            ok( a.value === 0.5, 'Check channel a at t = ' + time );
+            ok( b.value === 1, 'Check channel b at t = ' + time );
+
+            time = -1;
+            basicAnimationManager.update( null, nv ); //time == -1
+
+            ok( a.value === 1, 'Check channel a at t = ' + time );
+            ok( b.value === 1, 'Check channel b at t = ' + time );
+
+            time = 2;
+            basicAnimationManager.update( null, nv ); //time == 2
+
+            ok( a.value === 3, 'Check channel a at t = ' + time );
+            ok( b.value === 1, 'Check channel b at t = ' + time );
+
+            time = 50;
+            basicAnimationManager.update( null, nv ); //time == 50
+
+            ok( a.value === 3, 'Check channel a at t = ' + time );
+            ok( b.value === 1, 'Check channel b at t = ' + time );
 
             start();
         } );
