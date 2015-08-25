@@ -4,13 +4,14 @@ define( [
     'osg/Object',
     'osg/Quat',
     'osg/Vec3',
+    'osg/Matrix',
     'osgAnimation/Channel',
     'osgAnimation/Animation',
     'osgAnimation/Interpolator',
     'osgAnimation/CollectAnimationUpdateCallbackVisitor',
     'osgAnimation/Target',
 
-], function ( Notify, MACROUTILS, BaseObject, Quat, Vec3, Channel, Animation, Interpolator, CollectAnimationUpdateCallbackVisitor, Target ) {
+], function ( Notify, MACROUTILS, BaseObject, Quat, Vec3, Matrix, Channel, Animation, Interpolator, CollectAnimationUpdateCallbackVisitor, Target ) {
 
     'use strict';
 
@@ -38,6 +39,7 @@ define( [
     ResultType[ Channel.ChannelType.Float ] = Float;
     ResultType[ Channel.ChannelType.FloatCubicBezier ] = Float;
     ResultType[ Channel.ChannelType.Vec3CubicBezier ] = Vec3;
+    ResultType[ Channel.ChannelType.Matrix ] = Matrix;
 
     /**
      *  BasicAnimationManager
