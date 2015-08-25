@@ -5,7 +5,8 @@ define( [
     'osgAnimation/BasicAnimationManager',
     'osgAnimation/UpdateMatrixTransform',
     'osgAnimation/StackedRotateAxis',
-], function ( QUnit, mockup, MatrixTransform, BasicAnimationManager, UpdateMatrixTransform, StackedRotateAxis ) {
+    "osgAnimation/StackedMatrix"
+], function ( QUnit, mockup, MatrixTransform, BasicAnimationManager, UpdateMatrixTransform, StackedRotateAxis, StackedMatrix ) {
 
     'use strict';
 
@@ -94,6 +95,8 @@ define( [
             animationCallback.setName( 'testUpdateMatrixTransform' );
             var stackedRotateAxis = new StackedRotateAxis( 'rotateX' );
             animationCallback.getStackedTransforms().push( stackedRotateAxis );
+            
+            animationCallback.getStackedTransforms().push( new StackedMatrix( 'matrix' ) );
             node.addUpdateCallback( animationCallback );
 
             basicAnimationManager._findAnimationUpdateCallback( node );
