@@ -208,7 +208,7 @@ define( [
                 var zoom = this._zoom.update();
 
                 var timeFactor = this._stepFactor * factor * vFov * dt;
-                var directFactor = this._stepFactor * factor * vFov * 0.002;
+                var directFactor = this._stepFactor * factor * vFov * 0.005;
 
                 this.moveForward( vec[ 0 ] * timeFactor - zoom[ 0 ] * directFactor * 20.0 );
                 this.strafe( vec[ 1 ] * timeFactor - pan[ 0 ] * directFactor );
