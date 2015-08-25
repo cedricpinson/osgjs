@@ -131,12 +131,12 @@ define( [
                     return;
                 }
                 var gesture = event;
-                var scale = ( gesture.scale - self._lastScale ) * self._zoomFactor;
+                // make the dezoom faster
+                var zoomFactor = gesture.scale > self._lastScale ? self._zoomFactor : self._zoomFactor * 4.0;
+                var scale = ( gesture.scale - self._lastScale ) * zoomFactor;
                 self._lastScale = gesture.scale;
 
-                var target = manipulator.getZoomInterpolator().getTarget()[ 0 ] - scale;
-                // make the dezoom faster
-                manipulator.getZoomInterpolator().setTarget( target > 0.0 ? target * 4.0 : target );
+                manipulator.getZoomInterpolator().setTarget( manipulator.getZoomInterpolator().getTarget()[ 0 ] - scale );
                 Notify.debug( 'zoom, ' + dragCB( gesture ) );
             };
 
