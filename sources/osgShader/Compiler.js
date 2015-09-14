@@ -1112,7 +1112,7 @@ define( [
 
             var inputWeights = this.getOrCreateAttribute( 'vec4', 'Weights' );
             var inputBones = this.getOrCreateAttribute( 'vec4', 'Bones' );
-            var matrixPalette = this.getOrCreateUniform( 'vec4', 'uBones', this._animation.getBoneSize() );
+            var matrixPalette = this.getOrCreateUniform( 'vec4', 'uBones', this._animation.getBoneUniformSize() );
 
             this.getNode( 'Animation' ).inputs( {
                 weights: inputWeights,
