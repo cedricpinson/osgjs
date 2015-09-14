@@ -11,6 +11,7 @@
 
     var Example = function () {
         this.gui = undefined;
+        this._mobileDevice = /(iPad|iPhone|iPod|Android)/g.test( navigator.userAgent );
         this._textArray = [ 'osgjs rocks!', 'hello world', 'oh yeah!' ];
         this._textColors = [
             [ 1, 0, 0, 0.5 ],
@@ -108,6 +109,8 @@
                     var text = new osgText.Text( rand );
                     text.setColor( randColor );
                     text.setAutoRotateToScreen( true );
+                    // Check if we need to force POT Textures
+                    if ( this._mobileDevice ) text.setForcePowerOfTwo( true );
                     var x = Math.random() * 100;
                     var y = Math.random() * 100;
                     var z = Math.random() * 100;

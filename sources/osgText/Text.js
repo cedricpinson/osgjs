@@ -95,8 +95,7 @@ define( [
             this._canvas.width = this._context.measureText( this._text ).width;
             this._canvas.height = this._fontSize * 2;
             // For devices not supporting NPOT textures
-            if ( this._forcePowerOfTwo )
-            {
+            if ( this._forcePowerOfTwo ) {
                 this._canvas.width = this._nextPowerOfTwo( this._canvas.width );
                 this._canvas.height = this._nextPowerOfTwo( this._canvas.height );
             }
@@ -298,7 +297,7 @@ define( [
                 break;
             }
         },
-        setForcePowerOfTwo: function( value ) {
+        setForcePowerOfTwo: function ( value ) {
             this._forcePowerOfTwo = value;
         },
         getForcePowerOfTwo: function () {
