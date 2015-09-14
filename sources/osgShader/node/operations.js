@@ -91,6 +91,7 @@ define( [
     // glsl code output = matrix * vector4(vec.xyz, 0)
     var MatrixMultDirection = function () {
         Add.apply( this );
+        this._inverseOp = false;
     };
 
     MatrixMultDirection.prototype = MACROUTILS.objectInherit( Add.prototype, {
@@ -99,6 +100,10 @@ define( [
         validInputs: [ 'vec', 'matrix' ],
         validOutputs: [ 'vec' ],
         complement: '0.',
+        setInverse: function ( bool ) {
+            this._inverseOp = bool;
+            return this;
+        },
         computeShader: function () {
             // force inputs type to be all the same from the output
             // and handle vector complement
@@ -117,7 +122,10 @@ define( [
                 strCasted = 'vec4(' + strCasted + '.xyz, ' + this.complement + ')';
             }
 
-            strOut += this._inputs.matrix.getVariable() + this.operator + strCasted;
+            if ( this._inverseOp )
+                strOut += strCasted + this.operator + this._inputs.matrix.getVariable();
+            else
+                strOut += this._inputs.matrix.getVariable() + this.operator + strCasted;
 
             if ( outputType !== 'vec4' ) {
                 strOut += ')';
@@ -137,8 +145,6 @@ define( [
         type: 'MatrixMultPosition',
         complement: '1.'
     } );
-
-
 
     // For all you custom needs.
     //

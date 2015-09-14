@@ -3,6 +3,8 @@ define( [
     'osg/StateAttribute'
 ], function ( MACROUTILS, StateAttribute ) {
 
+    'use strict';
+
     var BillboardAttribute = function () {
         StateAttribute.call( this );
         this._attributeEnable = false;

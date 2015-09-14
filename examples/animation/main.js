@@ -172,6 +172,7 @@
                 config.currentAnim = config.anim || firstAnimation;
                 if ( config.currentAnim ) {
                     controller.play = function () {
+                        animationManager.stopAllAnimation();
                         animationManager.playAnimation( config.currentAnim );
                     };
                     controller.stop = function () {

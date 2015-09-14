@@ -5,10 +5,11 @@ define( [
     'osg/Matrix',
     'osg/Vec2',
     'osg/Vec3',
-    'osgGA/FirstPersonManipulatorMouseKeyboardController',
+    'osgGA/FirstPersonManipulatorDeviceOrientationController',
+    'osgGA/FirstPersonManipulatorHammerController',
     'osgGA/FirstPersonManipulatorOculusController',
-    'osgGA/FirstPersonManipulatorDeviceOrientationController'
-], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorMouseKeyboardController, FirstPersonManipulatorOculusController, FirstPersonManipulatorDeviceOrientationController ) {
+    'osgGA/FirstPersonManipulatorStandardMouseKeyboardController'
+], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorDeviceOrientationController, FirstPersonManipulatorHammerController, FirstPersonManipulatorOculusController, FirstPersonManipulatorStandardMouseKeyboardController ) {
 
     'use strict';
 
@@ -27,8 +28,8 @@ define( [
         this.init();
     };
 
-    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation' ];
-    FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation' ];
+    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation', 'Hammer' ];
+    FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation', 'Hammer' ];
 
     /** @lends FirstPersonManipulator.prototype */
     FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
@@ -36,9 +37,9 @@ define( [
             var bs = this.getHomeBound( useBoundingBox );
             if ( !bs ) return;
 
-            this._radius = this.getHomeDistance( bs );
+            this._distance = this.getHomeDistance( bs );
             var cen = bs.center();
-            Vec3.mult( this._direction, -this._radius, this._eye );
+            Vec3.mult( this._direction, -this._distance, this._eye );
             Vec3.add( cen, this._eye, this._eye );
             this.setTarget( cen );
         },
@@ -50,6 +51,11 @@ define( [
             this._forward = new OrbitManipulator.Interpolator( 1 );
             this._side = new OrbitManipulator.Interpolator( 1 );
             this._lookPosition = new OrbitManipulator.Interpolator( 2 );
+
+            // direct pan interpolator (not based on auto-move)
+            this._pan = new OrbitManipulator.Interpolator( 2 );
+            this._zoom = new OrbitManipulator.Interpolator( 1 );
+
             this._stepFactor = 1.0; // meaning radius*stepFactor to move
             this._target = [ 0.0, 0.0, 0.0 ];
             this._angleVertical = 0.0;
@@ -119,8 +125,18 @@ define( [
         getSideInterpolator: function () {
             return this._side;
         },
-        getFowardInterpolator: function () {
+        getForwardInterpolator: function () {
             return this._forward;
+        },
+        getPanInterpolator: function () {
+            return this._pan;
+        },
+        getZoomInterpolator: function () {
+            return this._zoom;
+        },
+        getRotateInterpolator: function () {
+            // for compatibility with orbit hammer controllers
+            return this._lookPosition;
         },
 
         computeRotation: ( function () {
@@ -175,17 +191,28 @@ define( [
 
                 this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
 
+                // TDOO why check with epsilon ?
+                var factor = this._distance < 1e-3 ? 1e-3 : this._distance;
+
+                // see comment in orbitManipulator for fov modulation speed
+                var proj = this._camera.getProjectionMatrix();
+                var vFov = proj[ 15 ] === 1 ? 1.0 : 2.00 / proj[ 5 ];
+
+                // time based displacement vector
                 vec[ 0 ] = this._forward.getCurrent()[ 0 ];
                 vec[ 1 ] = this._side.getCurrent()[ 0 ];
-                if ( Vec2.length( vec ) > 1.0 ) {
-                    Vec2.normalize( vec, vec );
-                }
-                var factor = this._distance;
-                if ( this._distance < 1e-3 ) {
-                    factor = 1.0;
-                }
-                this.moveForward( vec[ 0 ] * factor * this._stepFactor * dt );
-                this.strafe( vec[ 1 ] * factor * this._stepFactor * dt );
+                if ( Vec2.length( vec ) > 1.0 ) Vec2.normalize( vec, vec );
+
+                // direct displacement vectors
+                var pan = this._pan.update();
+                var zoom = this._zoom.update();
+
+                var timeFactor = this._stepFactor * factor * vFov * dt;
+                var directFactor = this._stepFactor * factor * vFov * 0.005;
+
+                this.moveForward( vec[ 0 ] * timeFactor - zoom[ 0 ] * directFactor * 20.0 );
+                this.strafe( vec[ 1 ] * timeFactor - pan[ 0 ] * directFactor );
+                this.strafeVertical( -pan[ 1 ] * directFactor );
 
                 Vec3.add( this._eye, this._direction, this._target );
 
@@ -213,20 +240,22 @@ define( [
                 Vec3.mult( tmp, distance, tmp );
                 Vec3.add( this._eye, tmp, this._eye );
             };
-        } )()
+        } )(),
+
+        strafeVertical: ( function () {
+            var tmp = [ 0.0, 0.0, 0.0 ];
+            return function ( distance ) {
+                Vec3.normalize( this._up, tmp );
+                Vec3.mult( tmp, distance, tmp );
+                Vec3.add( this._eye, tmp, this._eye );
+            };
+        } )(),
     } );
 
-    ( function ( module ) {
-        module.StandardMouseKeyboard = FirstPersonManipulatorMouseKeyboardController;
-    } )( FirstPersonManipulator );
-
-    ( function ( module ) {
-        module.Oculus = FirstPersonManipulatorOculusController;
-    } )( FirstPersonManipulator );
-
-    ( function ( module ) {
-        module.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;
-    } )( FirstPersonManipulator );
+    FirstPersonManipulator.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;
+    FirstPersonManipulator.Hammer = FirstPersonManipulatorHammerController;
+    FirstPersonManipulator.Oculus = FirstPersonManipulatorOculusController;
+    FirstPersonManipulator.StandardMouseKeyboard = FirstPersonManipulatorStandardMouseKeyboardController;
 
     return FirstPersonManipulator;
 } );

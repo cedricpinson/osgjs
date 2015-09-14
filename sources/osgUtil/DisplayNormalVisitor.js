@@ -74,24 +74,35 @@ define( [
             this._normalStateSet.setAttribute( new Depth( bool ? Depth.LESS : Depth.NEVER ) );
         },
         apply: function ( node ) {
-            if ( node instanceof Geometry === false ) {
-                this.traverse( node );
-                return;
-            }
-            var vertices = node.getAttributes().Vertex;
-            if ( !vertices || node._isVisitedNormalDebug )
+            if ( node._isVisitedNormalDebug )
                 return;
             node._isVisitedNormalDebug = true;
+
+            if ( node instanceof Geometry === false )
+                return this.traverse( node );
+
+            var vertices = node.getAttributes().Vertex;
+            if ( !vertices )
+                return;
+
+            var i = 0;
+            var parents = node.getParents();
+            var nbParents = parents.length;
+
             var norm = this.createDebugGeom( node.getAttributes().Normal, vertices );
             if ( norm ) {
+                norm._isVisitedNormalDebug = true;
                 norm.setStateSet( this._normalStateSet );
-                node.addChild( norm );
+                for ( i = 0; i < nbParents; ++i )
+                    parents[ i ].addChild( norm );
             }
 
             var tang = this.createDebugGeom( node.getAttributes().Tangent, vertices );
             if ( tang ) {
+                tang._isVisitedNormalDebug = true;
                 tang.setStateSet( this._tangentStateSet );
-                node.addChild( tang );
+                for ( i = 0; i < nbParents; ++i )
+                    parents[ i ].addChild( tang );
             }
         },
         createDebugGeom: function ( dispVec, vertices ) {

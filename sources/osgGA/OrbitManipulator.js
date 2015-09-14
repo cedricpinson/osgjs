@@ -3,14 +3,13 @@ define( [
     'osg/Vec3',
     'osg/Matrix',
     'osgGA/Manipulator',
-    'osgGA/OrbitManipulatorLeapMotionController',
-    'osgGA/OrbitManipulatorMouseKeyboardController',
-    'osgGA/OrbitManipulatorHammerController',
-    'osgGA/OrbitManipulatorGamePadController',
     'osgGA/OrbitManipulatorDeviceOrientationController',
-    'osgGA/OrbitManipulatorOculusController',
-
-], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorLeapMotionController, OrbitManipulatorMouseKeyboardController, OrbitManipulatorHammerController, OrbitManipulatorGamePadController, OrbitManipulatorDeviceOrientationController, OrbitManipulatorOculusController ) {
+    'osgGA/OrbitManipulatorGamePadController',
+    'osgGA/OrbitManipulatorHammerController',
+    'osgGA/OrbitManipulatorLeapMotionController',
+    'osgGA/OrbitManipulatorStandardMouseKeyboardController',
+    'osgGA/OrbitManipulatorOculusController'
+], function ( MACROUTILS, Vec3, Matrix, Manipulator, OrbitManipulatorDeviceOrientationController, OrbitManipulatorGamePadController, OrbitManipulatorHammerController, OrbitManipulatorLeapMotionController, OrbitManipulatorStandardMouseKeyboardController, OrbitManipulatorOculusController ) {
 
     'use strict';
 
@@ -138,6 +137,8 @@ define( [
             this._rotateKey = 65; // a
             this._zoomKey = 83; // s
             this._panKey = 68; // d
+
+            this._autoPushTarget = true; // if we hit the min distance and can't zoom anymore, maybe we still want to move on
 
             // instance of controller
             var self = this;
@@ -313,20 +314,31 @@ define( [
             this.zoom( dz );
         },
 
-        zoom: function ( ratio ) {
-            var newValue = this._distance * ratio;
-            if ( this._minDistance > 0.0 ) {
+        setAutoPushTarget: function ( bool ) {
+            this._autoPushTarget = bool;
+        },
+
+        zoom: ( function () {
+            var dir = Vec3.create();
+            return function ( ratio ) {
+                var newValue = this._distance * ratio;
                 if ( newValue < this._minDistance ) {
+                    if ( this._autoPushTarget ) {
+                        // push the target instead of zooming on it
+                        Vec3.sub( this._target, this.getEyePosition( dir ), dir );
+                        Vec3.normalize( dir, dir );
+                        Vec3.mult( dir, this._minDistance - newValue, dir );
+                        Vec3.add( this._target, dir, this._target );
+                    }
                     newValue = this._minDistance;
                 }
-            }
-            if ( this._maxDistance > 0.0 ) {
-                if ( newValue > this._maxDistance ) {
+
+                if ( newValue > this._maxDistance )
                     newValue = this._maxDistance;
-                }
-            }
-            this._distance = newValue;
-        },
+
+                this._distance = newValue;
+            };
+        } )(),
 
         getRotateInterpolator: function () {
             return this._rotate;
@@ -338,8 +350,7 @@ define( [
             return this._zoom;
         },
         getTarget: function ( target ) {
-            Vec3.copy( this._target, target );
-            return target;
+            return Vec3.copy( this._target, target );
         },
         getEyePosition: function ( eye ) {
             this.computeEyePosition( this._target, this._distance, eye );
@@ -403,29 +414,12 @@ define( [
         } )()
     } );
 
-    ( function ( module ) {
-        module.LeapMotion = OrbitManipulatorLeapMotionController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.StandardMouseKeyboard = OrbitManipulatorMouseKeyboardController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.Hammer = OrbitManipulatorHammerController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.GamePad = OrbitManipulatorGamePadController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.DeviceOrientation = OrbitManipulatorDeviceOrientationController;
-    } )( OrbitManipulator );
-
-    ( function ( module ) {
-        module.Oculus = OrbitManipulatorOculusController;
-    } )( OrbitManipulator );
+    OrbitManipulator.DeviceOrientation = OrbitManipulatorDeviceOrientationController;
+    OrbitManipulator.GamePad = OrbitManipulatorGamePadController;
+    OrbitManipulator.Hammer = OrbitManipulatorHammerController;
+    OrbitManipulator.LeapMotion = OrbitManipulatorLeapMotionController;
+    OrbitManipulator.Oculus = OrbitManipulatorOculusController;
+    OrbitManipulator.StandardMouseKeyboard = OrbitManipulatorStandardMouseKeyboardController;
 
     return OrbitManipulator;
 } );

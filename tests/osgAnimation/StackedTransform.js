@@ -4,10 +4,10 @@ define( [ 'qunit',
     'osg/Quat',
     'osgAnimation/StackedRotateAxis',
     'osgAnimation/StackedTranslate',
-    'osgAnimation/StackedScaleElement',
-    'osgAnimation/StackedMatrixElement',
+    'osgAnimation/StackedScale',
+    'osgAnimation/StackedMatrix',
     'osgAnimation/StackedQuaternion'
-], function ( QUnit, mockup, Matrix, Quat, StackedRotateAxis, StackedTranslate, StackedScaleElement, StackedMatrixElement, StackedQuaternion ) {
+], function ( QUnit, mockup, Matrix, Quat, StackedRotateAxis, StackedTranslate, StackedScale, StackedMatrix, StackedQuaternion ) {
 
     'use strict';
 
@@ -41,7 +41,7 @@ define( [ 'qunit',
         } );
         QUnit.test( 'StackedScale', function () {
 
-            var st = new StackedScaleElement( 'scale' );
+            var st = new StackedScale( 'scale' );
             ok( st.getName() === 'scale', 'Ckeck Name' );
             ok( mockup.checkNear( st._target.value, [ 1.0, 1.0, 1.0 ] ), 'Check scale default value' );
 
@@ -50,9 +50,9 @@ define( [ 'qunit',
 
         } );
 
-        QUnit.test( 'StackedMatrixElement', function () {
+        QUnit.test( 'StackedMatrix', function () {
 
-            var st = new StackedMatrixElement( 'matrix' );
+            var st = new StackedMatrix( 'matrix' );
             ok( st.getName() === 'matrix', 'Check Name' );
             ok( Matrix.isIdentity( st._target.value ), 'Check default matrix' );
 

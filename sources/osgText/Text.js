@@ -103,7 +103,6 @@ define( [
             this.setTextProperties();
             this._context.clearRect( 0, 0, this._canvas.width, this._canvas.height );
             this._context.fillText( this._text, this._textX, this._textY );
-            //this._context.fillRect( 0, 0, this._canvas.width, this._canvas.height );
             // Right now we set the pivot point to center, to assure the bounding box is correct when rendering billboards.
             // TODO: Possibility to set different pivot point so we can have missing alignments.
             var aspectRatio = this._canvas.width / this._canvas.height;

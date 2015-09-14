@@ -77,10 +77,10 @@ define( [], function () {
             }
         },
         getHomeBound: function ( useBoundingBox ) {
-            this.getCurrentManipulator().getHomeBound( useBoundingBox );
+            return this.getCurrentManipulator().getHomeBound( useBoundingBox );
         },
         getHomeDistance: function ( bs ) {
-            this.getCurrentManipulator().getHomeDistance( bs );
+            return this.getCurrentManipulator().getHomeDistance( bs );
         }
     };
 

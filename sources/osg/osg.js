@@ -71,6 +71,7 @@ define( [
     'osg/Viewport',
     'osgUtil/osgPool',
     'osg/TransformEnums',
+    'osg/Timer',
     'osg/WebGLCaps'
 
 ], function (
@@ -146,6 +147,7 @@ define( [
     Viewport,
     osgPool,
     TransformEnums,
+    Timer,
     WebGLCaps ) {
 
     'use strict';
@@ -229,8 +231,9 @@ define( [
 
     osg.Transform.RELATIVE_RF = TransformEnums.RELATIVE_RF;
     osg.Transform.ABSOLUTE_RF = TransformEnums.ABSOLUTE_RF;
-
+    osg.Timer = Timer;
     osg.WebGLCaps = WebGLCaps;
+
 
     return osg;
 } );

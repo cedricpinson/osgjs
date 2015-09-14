@@ -82,7 +82,7 @@ module.exports = {
     plugins: [
         new webpack.BannerPlugin( [
             'OSGJS',
-            'Cedric Pinson <trigrou@gmail.com> (http://cedricpinson.com)'
+            'Cedric Pinson <trigrou@trigrou.com> (http://cedricpinson.com)'
         ].join( '\n' ) )
     ]
 

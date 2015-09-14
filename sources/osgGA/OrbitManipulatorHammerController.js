@@ -18,7 +18,8 @@ define( [
             this._rotateFactorY = -this._rotateFactorX;
             this._zoomFactor = 5.0;
 
-            this._pan = false;
+            this._lastScale = 0;
+            this._nbPointerLast = 0; // to check if we the number of pointers has changed
             this._delay = 0.15;
         },
         setEventProxy: function ( proxy ) {
@@ -54,12 +55,10 @@ define( [
                     return;
                 }
                 var gesture = event;
-                if ( computeTouches( gesture ) === 2 ) {
-                    self._pan = true;
-                }
-
                 self._dragStarted = true;
-                if ( self._pan ) {
+                self._nbPointerLast = computeTouches( gesture );
+
+                if ( self._nbPointerLast === 2 ) {
                     manipulator.getPanInterpolator().reset();
                     manipulator.getPanInterpolator().set( event.center.x * self._panFactorX, event.center.y * self._panFactorY );
                 } else {
@@ -75,7 +74,15 @@ define( [
                     return;
                 }
                 var gesture = event;
-                if ( self._pan ) {
+                var nbPointers = computeTouches( gesture );
+                // prevent sudden big changes in the event.center variables
+                if ( self._nbPointerLast !== nbPointers ) {
+                    if ( nbPointers === 2 ) manipulator.getPanInterpolator().reset();
+                    else manipulator.getRotateInterpolator().reset();
+                    self._nbPointerLast = nbPointers;
+                }
+
+                if ( nbPointers === 2 ) {
                     manipulator.getPanInterpolator().setTarget( event.center.x * self._panFactorX, event.center.y * self._panFactorY );
                     Notify.debug( 'pan, ' + dragCB( gesture ) );
                 } else {
@@ -92,11 +99,9 @@ define( [
                 }
                 self._dragStarted = false;
                 var gesture = event;
-                self._pan = false;
                 Notify.debug( 'drag end, ' + dragCB( gesture ) );
             };
 
-            var toucheScale;
             this._cbPinchStart = function ( event ) {
                 var manipulator = self._manipulator;
                 if ( !manipulator || event.pointerType === 'mouse' ) {
@@ -105,9 +110,9 @@ define( [
                 self._transformStarted = true;
                 var gesture = event;
 
-                toucheScale = gesture.scale;
+                self._lastScale = gesture.scale;
                 manipulator.getZoomInterpolator().reset();
-                manipulator.getZoomInterpolator().set( toucheScale );
+                manipulator.getZoomInterpolator().set( self._lastScale );
                 event.preventDefault();
                 Notify.debug( 'zoom start, ' + dragCB( gesture ) );
             };
@@ -126,10 +131,12 @@ define( [
                     return;
                 }
                 var gesture = event;
-                var scale = ( gesture.scale - toucheScale ) * self._zoomFactor;
-                toucheScale = gesture.scale;
-                var target = manipulator.getZoomInterpolator().getTarget()[ 0 ];
-                manipulator.getZoomInterpolator().setTarget( target - scale );
+                // make the dezoom faster
+                var zoomFactor = gesture.scale > self._lastScale ? self._zoomFactor : self._zoomFactor * 4.0;
+                var scale = ( gesture.scale - self._lastScale ) * zoomFactor;
+                self._lastScale = gesture.scale;
+
+                manipulator.getZoomInterpolator().setTarget( manipulator.getZoomInterpolator().getTarget()[ 0 ] - scale );
                 Notify.debug( 'zoom, ' + dragCB( gesture ) );
             };
 
