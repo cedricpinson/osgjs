@@ -11,6 +11,7 @@ var glob = require( 'glob' );
 
 var jshintrc = JSON.parse( fs.readFileSync( './.jshintrc' ).toString() );
 
+
 // Base paths used by the tasks.
 // They always have to finish with a '/'.
 //
@@ -60,6 +61,8 @@ var gruntTasks = {};
     gruntTasks.jshint = {
         options: jshintrc
     };
+
+    gruntTasks.eslint = {};
 
     //build/bundle
     gruntTasks.copy = {
@@ -136,9 +139,10 @@ var gruntTasks = {};
                 library: 'OSG'
             },
 
-            loaders: [
-                { test: /\.js$/, loader : 'webpack-strip-block' }
-            ],
+            loaders: [ {
+                test: /\.js$/,
+                loader: 'webpack-strip-block'
+            } ],
             // additional plugins for this specific mode
             plugins: [
                 new webpack.optimize.UglifyJsPlugin( {
@@ -211,6 +215,34 @@ var gruntTasks = {};
     }
 
 } )();
+
+
+// ## ESLint
+//
+// Will check the Gruntfile and every "*.js" file in the "statics/sources/" folder.
+//
+( function () {
+
+    gruntTasks.eslint = {
+        options: {
+            configFile: '.eslintrc'
+                //, rulePaths: [ 'node_modules' ]
+        },
+        target: srcFiles.filter( function ( pathName ) {
+            return pathName.indexOf( 'vendors' ) === -1 &&
+                pathName.indexOf( 'Hammer.js' ) === -1 &&
+                pathName.indexOf( 'webgl-debug.js' ) === -1 &&
+                pathName.indexOf( 'webgl-utils.js' ) === -1;
+        } ).map( function ( pathname ) {
+            return path.join( SOURCE_PATH, pathname );
+        } )
+    };
+
+
+} )();
+
+
+
 
 
 ( function () {
@@ -543,6 +575,7 @@ module.exports = function ( grunt ) {
 
     grunt.loadNpmTasks( 'grunt-docco' );
     grunt.loadNpmTasks( 'grunt-plato' );
+    grunt.loadNpmTasks( 'grunt-eslint' );
     grunt.loadNpmTasks( 'grunt-contrib-jshint' );
     grunt.loadNpmTasks( 'grunt-contrib-copy' );
     grunt.loadNpmTasks( 'grunt-contrib-clean' );
@@ -559,6 +592,7 @@ module.exports = function ( grunt ) {
 
     grunt.registerTask( 'watch', [ 'webpack:watch' ] );
     grunt.registerTask( 'check', [ 'jsbeautifier:check', 'jshint:self', 'jshint:sources' ] );
+    grunt.registerTask( 'lint', [ 'eslint' ] );
     grunt.registerTask( 'beautify', [ 'jsbeautifier:default' ] );
 
     grunt.registerTask( 'test', [ 'connect:server', 'qunit:all' ] );
