@@ -42,6 +42,13 @@ define( [
 
     } );
 
+    var compareBone = function ( x, y ) {
+        var a = x instanceof Bone ? 0 : 1;
+        var b = y instanceof Bone ? 0 : 1;
+
+        return a - b;
+    };
+
     /**
      *  UpdateSkeleton
      *  @class UpdateSkeleton
@@ -54,6 +61,7 @@ define( [
         needToValidate: function () {
             return this._needValidate;
         },
+
         update: function ( node, nv ) {
             if ( this._needValidate && nv.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
                 if ( node.className && node.className() === 'Skeleton' ) {
@@ -63,6 +71,10 @@ define( [
                         var child = children[ i ];
                         child.accept( validateSkeletonVisitor );
                     }
+
+                    //Re-order skeleton children to force correct bones update, we should put bones first
+                    children.sort( compareBone );
+
                     this._needValidate = false;
                 }
             }
