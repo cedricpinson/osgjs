@@ -35,11 +35,11 @@ module.exports = {
             amd: 'zlib'
         }
     }, {
-        'q': {
-            root: 'Q',
-            commonjs2: 'q',
-            commonjs: 'q',
-            amd: 'q'
+        'bluebird': {
+            root: 'P',
+            commonjs2: 'bluebird',
+            commonjs: 'bluebird',
+            amd: 'bluebird'
         }
     }, {
         'hammer': {
