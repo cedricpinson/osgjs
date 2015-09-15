@@ -101,7 +101,7 @@ define( [
         'Oculus',
     ];
 
-    var DOT_LIMIT = 0.95; // angle limit around the pole
+    var DOT_LIMIT = 0.99; // angle limit around the pole
 
     /** @lends OrbitManipulator.prototype */
     OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
