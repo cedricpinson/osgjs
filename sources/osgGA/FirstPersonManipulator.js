@@ -142,9 +142,12 @@ define( [
         computeRotation: ( function () {
             var upy = [ 0.0, 1.0, 0.0 ];
             var upz = [ 0.0, 0.0, 1.0 ];
+            var LIMIT = Math.PI * 0.5;
             return function ( dx, dy ) {
                 this._angleVertical += dy * 0.01;
                 this._angleHorizontal -= dx * 0.01;
+                if ( this._angleVertical > LIMIT ) this._angleVertical = LIMIT;
+                else if ( this._angleVertical < -LIMIT ) this._angleVertical = -LIMIT;
 
                 var first = this._tmpComputeRotation1;
                 var second = this._tmpComputeRotation2;
