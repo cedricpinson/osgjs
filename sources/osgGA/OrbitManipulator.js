@@ -230,15 +230,24 @@ define( [
         setMaxDistance: function ( d ) {
             this._maxDistance = d;
         },
+        getMaxDistance: function () {
+            return this._maxDistance;
+        },
+
         setMinDistance: function ( d ) {
             this._minDistance = d;
         },
+        getMinDistance: function () {
+            return this._minDistance;
+        },
+
         setDistance: function ( d ) {
             this._distance = d;
         },
         getDistance: function () {
             return this._distance;
         },
+
         setRotationBaseFromQuat: function ( quat ) {
             Matrix.makeRotateFromQuat( quat, this._rotBase );
         },
