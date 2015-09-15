@@ -123,11 +123,24 @@ define( [
         },
 
         draw: function ( state, previousRenderLeaf ) {
+
             var previousLeaf = this.drawPreRenderStages( state, previousRenderLeaf );
+
             previousLeaf = this.drawImplementation( state, previousLeaf );
 
             previousLeaf = this.drawPostRenderStages( state, previousLeaf );
+
+            if ( this.camera && this.camera.getFinalDrawCallback() ) {
+
+                // if we have a camera with a final callback invoke it.
+                var cb = this.camera.getFinalDrawCallback();
+
+                cb( state );
+
+            }
+
             return previousLeaf;
+
         },
 
         sort: function () {

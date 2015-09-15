@@ -449,7 +449,6 @@ define( [
         beginFrame: function () {
             this._startFrameTick = Timer.instance().tick();
         },
-
         endFrame: function () {
 
             var frameNumber = this.getFrameStamp().getFrameNumber();
@@ -467,6 +466,7 @@ define( [
                 Texture.getTextureManager( this.getGraphicContext() ).updateStats( frameNumber );
                 this._canvasStats.update();
             }
+
         },
 
         checkNeedToDoFrame: function () {
