@@ -185,7 +185,9 @@ define( [
 
             state.resetCacheFrame(); // important because cache are used in cullvisitor
 
+            this._renderStage.setCamera( this._camera );
             this._renderStage.draw( state );
+            this._renderStage.setCamera( undefined );
 
             state.applyDefault();
 
