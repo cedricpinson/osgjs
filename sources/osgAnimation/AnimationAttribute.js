@@ -59,7 +59,7 @@ define( [
             this._matrixPalette = matrixPalette;
             // update max bone size
             if ( this._boneUniformSize === undefined ) {
-                AnimationAttribute.maxBoneUniformSize = Math.max( AnimationAttribute.maxBoneUniformSize, matrixPalette.length / 3 );
+                AnimationAttribute.maxBoneUniformSize = Math.max( AnimationAttribute.maxBoneUniformSize, matrixPalette.length / 4 );
                 AnimationAttribute.maxBoneUniformSize = Math.min( AnimationAttribute.maxBoneUniformAllowed, AnimationAttribute.maxBoneUniformSize );
             }
         },
