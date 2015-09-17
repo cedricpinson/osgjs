@@ -383,13 +383,16 @@ define( [
 
                 if ( attribute.apply ) {
 
-                    // save gl calls not calling bind(null)
-                    // as per specification https://www.khronos.org/registry/gles/specs/2.0/es_full_spec_2.0.25.pdf#nameddest=section-3.7.13
-                    // those calls are silently ignored
-                    if ( !attribute.isTextureNull() ) {
+                    // there is a texture we bind it.
+                    attribute.apply( this, unit );
 
-                        attribute.apply( this, unit );
-                    }
+                    // TODO: optimization:
+                    // if attribute.isTextureNull()
+                    // only bind if last Framebuffer Texture Binded
+                    // are the same as those we try to write from
+                    // need rewrite of the fbo attachments system to keep history
+                    // and state to keep last fbo textures binded.
+                    // (applyTextureAttributeStack concerned too)
                 }
                 attributeStack.lastApplied = attribute;
                 attributeStack.asChanged = true;
@@ -536,13 +539,10 @@ define( [
             // if the the stack has changed but the last applied attribute is the same
             // then we dont need to apply it again
             if ( attributeStack.lastApplied !== attribute ) {
-                // save gl calls not calling bind(null)
-                // as per specification https://www.khronos.org/registry/gles/specs/2.0/es_full_spec_2.0.25.pdf#nameddest=section-3.7.13
-                // those calls are silently ignored
-                if ( !attribute.isTextureNull() ) {
-                    gl.activeTexture( gl.TEXTURE0 + textureUnit );
-                    attribute.apply( this, textureUnit );
-                }
+
+                gl.activeTexture( gl.TEXTURE0 + textureUnit );
+                attribute.apply( this, textureUnit );
+
                 attributeStack.lastApplied = attribute;
             }
 

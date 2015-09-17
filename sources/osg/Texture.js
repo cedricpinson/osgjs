@@ -607,7 +607,7 @@ define( [
                 }
 
             } else if ( this._textureNull ) {
-                Notify.log( 'useless gl call' );
+
                 gl.bindTexture( this._textureTarget, null );
 
             } else {
