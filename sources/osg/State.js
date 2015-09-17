@@ -400,6 +400,18 @@ define( [
             return this.attributeMap.Program.lastApplied;
         },
 
+        applyDefault: function () {
+            // reset GL State To Default
+            // we skip the textures/uniforms/shaders call since they are not necessary
+
+            // noticed that we accumulate lot of stack, maybe because of the stateGraph
+            // CP: ^^ really ? check it / report an issue
+            this.popAllStateSets();
+
+            this.applyAttributeMap( this.attributeMap );
+            this.applyTextureAttributeMapList( this.textureAttributeMapList );
+        },
+
         apply: function () {
 
             var lastProgram = this.getLastProgramApplied();

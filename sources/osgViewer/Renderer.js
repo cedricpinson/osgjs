@@ -187,10 +187,7 @@ define( [
 
             this._renderStage.draw( state );
 
-            // noticed that we accumulate lot of stack, maybe because of the stateGraph
-            // CP: ^^ really ? check it / report an issue
-            state.popAllStateSets();
-            state.apply();
+            state.applyDefault();
 
         }
 
