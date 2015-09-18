@@ -1139,6 +1139,11 @@ define( [
             return texCoordUnit;
         },
 
+
+        getOrCreateProjectionMatrix: function () {
+            return this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' );
+        },
+
         // reusable BoneMatrix between Vertex, Normal, Tangent
         // Manadatory: scale animations must be uniform scale
         getOrCreateBoneMatrix: function () {
@@ -1215,7 +1220,7 @@ define( [
 
             //glpos
             this.getNode( 'MatrixMultPosition' ).inputs( {
-                matrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' ),
+                matrix: this.getOrCreateProjectionMatrix(),
                 vec: tempViewSpace
             } ).outputs( {
                 vec: glPosition
@@ -1255,7 +1260,7 @@ define( [
 
             //glpos
             this.getNode( 'MatrixMultPosition' ).inputs( {
-                matrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' ),
+                matrix: this.getOrCreateProjectionMatrix(),
                 vec: tempViewSpace
             } ).outputs( {
                 vec: glPosition

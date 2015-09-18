@@ -1,15 +1,13 @@
-'use strict';
-var CustomCompiler;
 ( function () {
+    'use strict';
 
     var osgShader = window.OSG.osgShader;
     var osg = window.OSG.osg;
-    var factory = osgShader.nodeFactory;
 
 
     // this compiler use basic lighting and add a node to demonstrate how to
     // customize the shader compiler
-    CustomCompiler = function () {
+    var CustomCompiler = function () {
         osgShader.Compiler.apply( this, arguments );
     };
 
@@ -140,5 +138,7 @@ var CustomCompiler;
         }
 
     } );
+
+    window.CustomCompiler = CustomCompiler;
 
 } )();

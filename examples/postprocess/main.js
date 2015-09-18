@@ -131,9 +131,9 @@
         quad.getOrCreateStateSet().setTextureAttributeAndModes( 0, finalTexture );
 
         var postScenes = [
+            window.getPostSceneVignette( sceneTexture ),
             window.getPostSceneToneMapping(),
             window.getPostSceneBlur( sceneTexture ),
-            window.getPostSceneVignette( sceneTexture ),
             window.getPostSceneBloom( sceneTexture ),
             window.getPostSceneSharpen( sceneTexture ),
             window.getPostSceneChromaticAberration()

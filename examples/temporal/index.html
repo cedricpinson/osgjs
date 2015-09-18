@@ -2,23 +2,10 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Example Title</title>
-
+    <title>SuperSampling</title>
     <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
 
-    <style type="text/css">
-    /* Custom CSS goes here */
-    <!-- #ViewContainer { -->
-    <!--   position: absolute; -->
-    <!-- } -->
-    <!-- #View { -->
-    <!--   display: block; -->
-    <!-- } -->
-    </style>
-
-
     <!-- Javascript -->
-    <!-- Dependencies -->
     <script type="text/javascript" src="../vendors/es5-shim.js"></script>
     <script type="text/javascript" src="../vendors/es6-shim.js"></script>
     <script type="text/javascript" src="../vendors/jquery-2.1.1.js"></script>
@@ -26,13 +13,12 @@
     <script type="text/javascript" src="../vendors/bluebird.js"></script>
     <script type="text/javascript" src="../vendors/hammer.js"></script>
     <script type="text/javascript" src="../vendors/leap.js"></script>
-    <!-- OGSJ main library -->
     <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
 
-    <!-- Example Base Class -->
+    <script type="text/javascript" src="CustomCompiler.js"></script>
+    <script type="text/javascript" src="Temporal.js"></script>
+        
     <script type="text/javascript" src="../templates/Example.js"></script>
-
-    <!-- User/Example code-->
     <script type="text/javascript" src="main.js"></script>
 
 </head>
@@ -54,10 +40,12 @@
     </a>
 
     <div class="osgjs-description">
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua.
-      <a href="#">Read the blog post for more info</a>
-    </div>
+Static SuperSampling by reusing frames: Rotate scene on interesting angle, stop rotation, then check "Enable" to make supersample active.
+Use Camera Zoom to check on border/aliased things.
+Compare to "Real" image using the show scene CheckBox.
+Motion Blur by accumulating frame: check rotate and then enable motion. try change angle for impact visualisation
+
+</div>
 
   </div>
 

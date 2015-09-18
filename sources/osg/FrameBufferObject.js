@@ -134,6 +134,13 @@ define( [
                             gl.framebufferRenderbuffer( gl.FRAMEBUFFER, attachment.attachment, gl.RENDERBUFFER, rb );
                             hasRenderBuffer = true;
 
+                            /* develblock:start */
+                            // only visible with webgl-insector enabled
+                            if ( gl.rawgl !== undefined ) {
+                                Notify.log( 'FBO: renderBuffer: ' + this._fbo.trackedObject.defaultName );
+                            }
+                            /* develblock:end */
+
                         } else {
 
                             // use texture
@@ -141,8 +148,16 @@ define( [
                             // apply on unit 0 to init it
                             state.applyTextureAttribute( 1, texture );
 
+
                             gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment.attachment, attachment.textureTarget, texture.getTextureObject().id(), 0 );
 
+                            /* develblock:start */
+                            // only visible with webgl-insector enabled
+                            // allow trace debug (fb<->texture link)
+                            if ( gl.rawgl !== undefined ) {
+                                Notify.log( 'FBO: texture: ' + texture.getName() + ' : ' + texture.getTextureObject().id().trackedObject.defaultName + ' fbo: ' + this._fbo.trackedObject.defaultName );
+                            }
+                            /* develblock:end */
                         }
 
                     }

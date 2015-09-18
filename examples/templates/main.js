@@ -1,71 +1,54 @@
-'use strict';
+( function () {
+    'use strict';
 
-var Example = function () {};
+    // globals
+    var P = window.P;
+    var $ = window.$;
 
-Example.prototype = {
-
-    run: function () {
-
-
-        var OSG = window.OSG;
-        var osgViewer = OSG.osgViewer;
-        var osg = OSG.osg;
-
-
-        var canvas = document.getElementById( 'View' );
-
-        var viewer;
-        viewer = new osgViewer.Viewer( canvas );
-        viewer.init();
-
-        viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+    // various osg shortcuts
+    var OSG = window.OSG;
+    var osg = OSG.osg;
+    var osgViewer = OSG.osgViewer;
+    var osgShader = OSG.osgShader;
+    var osgUtil = OSG.osgUtil;
+    var osgDB = OSG.osgDB;
+    var osgGA = OSG.osgGA;
 
 
-        // the root node
-        var scene = new osg.Node();
 
-        // instanciate a node that contains matrix to transform the subgraph
-        var matrixTransform = new osg.MatrixTransform();
-
-        // create the model
-        var model = this.createModel();
-
-        // the scene is a child of the transform so everything that
-        // change the transform will affect its children
-        matrixTransform.addChild( model );
-
-
-        // config to let data gui change the scale
-        var config = {
-            scale: 1.0
+    // inherits for the ExampleOSGJS prototype
+    var Example = function () {
+        // can be overriden with url parm ?&scale=1
+        this._config = {
+            scale: 0.1
         };
-        var gui = new window.dat.GUI();
-        var controller = gui.add( config, 'scale', 0.1, 2.0 );
-        controller.onChange( function ( value ) {
-            // change the matrix
-            osg.Matrix.makeScale( value, value, value, matrixTransform.getMatrix() );
-            matrixTransform.dirtyBound();
-        } );
+    };
+
+    Example.prototype = osg.objectInherit( ExampleOSGJS.prototype, {
 
 
-        scene.addChild( matrixTransform );
+        initDatGUI: function () {
 
-        viewer.setSceneData( scene );
-        viewer.setupManipulator();
-        viewer.getManipulator().computeHomePosition();
+            // config to let data gui change the scale
+            this._gui = new window.dat.GUI();
+            // use of scale from config default value or url parm ?&scale=1
+            var controller = this._gui.add( this._config, 'scale', 0.1, 2.0 );
+            var self = this;
+            controller.onChange( function ( value ) {
+                // change the matrix
+                osg.Matrix.makeScale( value, value, value, self._model.getMatrix() );
+                self._model.dirtyBound();
+            } );
 
-        viewer.run();
-    },
-
-    createModel: function () {
-        var osg = window.OSG.osg;
-        return osg.createTexturedBoxGeometry();
-    }
-};
+        }
 
 
+    } );
 
-window.addEventListener( 'load', function () {
-    var example = new Example();
-    example.run();
-}, true );
+
+    window.addEventListener( 'load', function () {
+        var example = new Example();
+        example.run();
+    }, true );
+
+} )();
