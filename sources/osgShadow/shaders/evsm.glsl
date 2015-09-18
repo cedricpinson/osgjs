@@ -20,9 +20,9 @@ float computeShadow(const in bool lighted,
                     const in vec4 depthRange,
                     const in float N_Dot_L,
                     const in vec3 vertexWorld,
-                    const in float bias
+                    const in float bias,
                     const in float epsilonVSM,
-                    const in float exponent,
+                    const in float exponent0,
                     const in float exponent1
     )
 {

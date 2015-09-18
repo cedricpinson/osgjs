@@ -100,7 +100,7 @@ define( [
         // recursively  handle #include external glsl
         // files (for now in the same folder.)
         preprocess: function ( content, sourceID, includeList, inputsDefines ) {
-            var _self = this;
+            var self = this;
             return content.replace( this._includeCondR, function ( _, name ) {
                 var includeOpt = name.split( ' ' );
                 var includeName = includeOpt[ 0 ].replace( /"/g, '' );
@@ -116,7 +116,8 @@ define( [
                     // if not defined we do not include
                     var found = false;
                     var defines = inputsDefines.map( function ( defineString ) {
-                        return _self._defineR.test( defineString ) && defineString.split( ' ' )[ 1 ];
+                        // find '#define', remove duplicate whitespace, split on space and return the define Text
+                        return self._defineR.test( defineString ) && defineString.replace( /\s+/g, ' ' ).split( ' ' )[ 1 ];
                     } );
 
                     for ( var i = 1; i < includeOpt.length && !found; i++ ) {

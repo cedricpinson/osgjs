@@ -15,4 +15,7 @@ float computeShadow(const in bool lighted,
     )
 {
     #pragma include "shadowsReceiveMain.glsl" "_PCF" "_NONE"
+
+
+
 }

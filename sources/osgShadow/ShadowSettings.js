@@ -48,6 +48,8 @@ define( [
         // but do use the fake Texture2DShadow
         // http://codeflow.org/entries/2013/feb/15/soft-shadow-mapping/#interpolated-shadowing
         this._fakePCF = false;
+        //
+        this._rotateOffset = false;
         // for prefilterable technique (ESM/VSM/EVSM)
         this.superSample = 0;
         this.blur = false;

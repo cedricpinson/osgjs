@@ -25,7 +25,9 @@ define( [
 
     // debug utility: set it to one to have verbose in shaders
     lib.debugShaderNode = false;
-
+    /*develblock:end*/
+    lib.debugShaderNode = true;
+    /*develblock:end*/
 
     return lib;
 } );

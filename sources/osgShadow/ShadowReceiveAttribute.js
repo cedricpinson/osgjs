@@ -31,18 +31,21 @@ define( [
         // and viewer camera space projection introduce its bias
         this._bias = 0.001;
         // algo dependant
-        // Exponential shadow maps use exponentials
+        // Exponential shadow maps use exponential
         // to allows fuzzy depth
         this._exponent0 = 0.001;
         this._exponent1 = 0.001;
         // Variance Shadow mapping use One more epsilon
         this._epsilonVSM = 0.001;
-        // shader compilation differnet upon texture precision
+        // shader compilation different upon texture precision
         this._precision = 'UNSIGNED_BYTE';
         // kernel size & type for pcf
         this._kernelSizePCF = undefined;
 
         this._fakePCF = true;
+
+        this._rotateOffset = false;
+
         this._enable = !disable;
 
     };
@@ -67,7 +70,12 @@ define( [
             var prefix = this.getType() + this.getLightNumber().toString();
             return prefix + '_uniform_' + name;
         },
-
+        getRotateOffset: function () {
+            return this._rotateOffset;
+        },
+        setRotateOffset: function ( v ) {
+            this._rotateOffset = v;
+        },
         setAlgorithm: function ( algo ) {
             this._algoType = algo;
         },
@@ -258,12 +266,15 @@ define( [
             }
 
             if ( isFloat ) {
-                defines.push( '#define  _FLOATTEX' );
+                defines.push( '#define _FLOATTEX' );
             }
             if ( isLinearFloat ) {
-                defines.push( '#define  _FLOATLINEAR' );
+                defines.push( '#define _FLOATLINEAR' );
             }
 
+            if ( this.getRotateOffset() ) {
+                defines.push( '#define _ROTATE_OFFSET' );
+            }
             return defines;
         },
 
@@ -294,7 +305,7 @@ define( [
         },
         getHash: function () {
 
-            return this.getTypeMember() + '_' + this.getAlgorithm() + '_' + this.getKernelSizePCF() + '_' + this.getFakePCF();
+            return this.getTypeMember() + '_' + this.getAlgorithm() + '_' + this.getKernelSizePCF() + '_' + this.getFakePCF() + '_' + this.getRotateOffset();
 
         }
 

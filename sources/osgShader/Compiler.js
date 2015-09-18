@@ -169,7 +169,7 @@ define( [
         registerTextureShadow: function ( tuTarget, texUnit ) {
             var tName = tuTarget.getName();
             if ( !tName ) {
-                tName = 'ShadowTexture' + texUnit;
+                tName = 'Texture' + texUnit;
                 tuTarget.setName( tName );
             }
             this._shadowsTextures[ texUnit ] = tuTarget;
@@ -314,14 +314,23 @@ define( [
                 Notify.error( 'Cannot create unamed Uniform' );
             }
 
+
             var exist = this._variables[ nameID ];
             if ( exist ) {
                 // see comment in Variable function
-                if ( exist.getType() !== type ) {
+                if ( exist.getType() === type ) {
+                    return exist;
+                }
+                /*develblock:start*/
+                // texture has a particular "dual" type of uniform
+                // a sampler2D
+                // a int pointing to the texture unit the sampler2D represents
+                if ( exist.getType() === 'sampler2D' && type !== 'sampler2D' ) {
                     Notify.error( 'Same uniform, but different type' );
                 }
-                return exist;
+                /*develblock:end*/
             }
+
 
             var v = this.getNode( 'Uniform', type, nameID, size );
             this._variables[ nameID ] = v;
@@ -337,9 +346,13 @@ define( [
 
             var exist = this._variables[ nameID ];
             if ( exist ) {
+
+                /*develblock:start*/
                 if ( exist.getType() !== type ) {
                     Notify.error( 'Same attribute, but different type' );
                 }
+                /*develblock:end*/
+
                 return exist;
             }
 
@@ -366,9 +379,13 @@ define( [
 
                 var exist = this._variables[ nameID ];
                 if ( exist ) {
+
+                    /*develblock:start*/
                     if ( exist.getType() !== type ) {
                         Notify.error( 'Same constant name, but different type' );
                     }
+                    /*develblock:end*/
+
                     // see comment in Variable function
                     return exist;
                 }
@@ -389,13 +406,17 @@ define( [
 
             var exist = this._variables[ nameID ];
             if ( exist ) {
+
+                /*develblock:start*/
                 // something went wrong: you created a variable and try to access it like a varying
-                if ( !this._varyings[ nameID ] ) {
+                if ( !this._varyings[ nameID ] )
                     Notify.error( 'Error: requesting a varying not declared with getOrCreateVarying previously' );
-                }
+
                 if ( exist.getType() !== type ) {
                     Notify.error( 'Error: Same varying, but different type' );
                 }
+                /*develblock:end*/
+
                 // see comment in Variable function
                 return exist;
             } else {
@@ -416,12 +437,13 @@ define( [
                 }
             }
 
-
+            /*develblock:start*/
             // if it's not in Varying Cache, but requested from fragment shader
             // it means => error
             if ( this._fragmentShaderMode && !this._customVertexShader ) {
                 Notify.error( 'Error: requesting a varying not declared in Vertex Shader Graph.( if a Custom Vertex Shader in a custom processor, add this._customVertexShader to your custom processor): ' + nameID + ' ' + type );
             }
+            /*develblock:end*/
 
             var v = this.getNode( 'Varying', type, nameID );
             this._variables[ nameID ] = v;
@@ -627,21 +649,21 @@ define( [
 
             var samplerName = 'Texture' + unit.toString();
             var textureSampler = this.getVariable( samplerName );
-
-            if ( textureSampler === undefined ) {
-
+            if ( !textureSampler ) {
                 if ( texture.className() === 'Texture' ) {
                     textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
                 } else if ( texture.className() === 'TextureCubeMap' ) {
                     textureSampler = this.getOrCreateSampler( 'samplerCube', samplerName );
                 } else if ( texture.className() === 'ShadowTexture' ) {
-                    textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
-                    // return now to prevent creation of useless FragTexCoord
-                    //( shadow creates its own texcoord)
+                    // don't pre-declare texture for shadow
+                    // as it's uniform node caching/get/compilation must not
+                    // get the dual int/sampler2D thing.
+
+                    //textureSampler = this.getOrCreateSampler( 'sampler2D', samplerName );
+                    // return;
+
                     return;
                 }
-
-
             }
 
             // texture coordinates are automatically mapped to unit texture number
@@ -739,28 +761,14 @@ define( [
 
             // shadow Attribute uniforms
             var shadowUniforms = this.getOrCreateStateAttributeUniforms( this._shadows[ lightIndex ], 'shadow' );
-            inputs = MACROUTILS.objectMix( inputs, shadowUniforms );
+            var shadowInputs = MACROUTILS.objectMix( inputs, shadowUniforms );
 
             // shadowTexture  Attribute uniforms AND varying
-            var tex;
             // TODO: better handle multi texture shadow (CSM/PSM/etc.)
             for ( k = 0; k < shadowTextures.length; k++ ) {
-
                 shadowTexture = shadowTextures[ k ];
                 if ( shadowTexture ) {
-                    tex = this.getOrCreateSampler( 'sampler2D', shadowTexture.getName() );
-                    inputs.shadowTexture = tex;
-
-                    // per texture uniforms
-                    var shadowTextureUniforms = this.getOrCreateTextureStateAttributeUniforms( shadowTexture, 'shadowTexture', k );
-                    inputs = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
-
-                    var shadowVarying = {
-                        vertexWorld: vertexWorld,
-                        lightEyeDir: inputs.lightEyeDir,
-                        lightNDL: inputs.lightNDL
-                    };
-                    inputs = MACROUTILS.objectMix( inputs, shadowVarying );
+                    shadowInputs = this.createShadowTextureInputVarying( shadowTexture, shadowInputs, vertexWorld, k );
                 }
 
             }
@@ -775,6 +783,36 @@ define( [
 
         },
 
+        createShadowTextureInputVarying: function ( shadowTexture, inputs, vertexWorld, tUnit ) {
+            var shadowTexSamplerName = 'Texture' + tUnit;
+
+            // per texture uniforms
+            var shadowTextureUniforms = this.getOrCreateTextureStateAttributeUniforms( shadowTexture, 'shadowTexture', tUnit );
+
+            // UGLY REMOVAL: special case of the sampler texture as method above create
+            // unforms for all shadow texture uniform,
+            // including texture unit Int 'Texture0' which becomes
+            // 'shadowTextureTexture0' which we won't use
+            // so we remove it from adding it here
+            var id = shadowTextureUniforms[ 'shadowTexture' + shadowTexSamplerName ].getID();
+            shadowTextureUniforms[ 'shadowTexture' + shadowTexSamplerName ] = undefined;
+            this._variables[ shadowTexSamplerName ] = undefined;
+            delete this._activeNodeList[ id ];
+            // end UGLY REMOVAL
+
+            var inputsShadow = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
+
+            var tex = this.getOrCreateSampler( 'sampler2D', shadowTexSamplerName );
+            inputsShadow.shadowTexture = tex;
+
+            var shadowVarying = {
+                vertexWorld: vertexWorld,
+                lightEyeDir: inputsShadow.lightEyeDir,
+                lightNDL: inputsShadow.lightNDL
+            };
+            inputsShadow = MACROUTILS.objectMix( inputsShadow, shadowVarying );
+            return inputsShadow;
+        },
         // Shared var between lights and shadows
         createCommonLightingVars: function ( materials, enumLights, numLights ) {
 
@@ -1401,6 +1439,7 @@ define( [
             // Process defines, add precision, resolve include pragma
             var shader = this._shaderProcessor.processShader( shaderStr, defines, extensions, type );
 
+            /*develblock:start*/
             // Check
             var compiledNodes = Object.keys( this._compiledNodeList );
             var activeNodes = Object.keys( this._activeNodeList );
@@ -1414,7 +1453,7 @@ define( [
                 }
                 return found;
             }, this );
-
+            /*develblock:end*/
 
             // return the complete shader string.
             // now is compilable by gl driver
