@@ -1,7 +1,8 @@
 define( [
-    'osgShader/ShaderGenerator'
+    'osgShader/ShaderGenerator',
+    'osgShadow/ShadowCastShaderGenerator'
 
-], function ( ShaderGenerator ) {
+], function ( ShaderGenerator, ShadowCastShaderGenerator ) {
     'use strict';
 
     var ShaderGeneratorProxy = function () {
@@ -9,6 +10,7 @@ define( [
         // object of shader generators
         this._generators = new Map();
         this.addShaderGenerator( 'default', new ShaderGenerator() );
+        this.addShaderGenerator( 'ShadowCast', new ShadowCastShaderGenerator() );
 
         return this;
     };

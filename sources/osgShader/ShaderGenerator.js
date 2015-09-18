@@ -13,7 +13,6 @@ define( [
     // if you need to adjust for your need provide or modify this list
     // if you still need more fine tuning to the filter, override the filterAttributeTypes
     var DefaultsAcceptAttributeTypes = [
-        'ShadowCast',
         'ShadowReceive',
         'AnimationAttribute',
         'ShadowTexture',
@@ -64,6 +63,10 @@ define( [
         // filter input types and write the result in the outputs array
         filterAttributeTypes: function ( attribute ) {
 
+            // TODO: use same mechanism as acceptAttributesTypes ?
+            // with a default set in a var and use overwrittable Set
+            // when inheriting the class
+            // Faster && Flexiblier
             if ( attribute.libraryName() !== 'osg' && attribute.libraryName() !== 'osgShadow' && attribute.libraryName() !== 'osgAnimation' )
                 return true;
 
@@ -211,9 +214,22 @@ define( [
                     return cache;
                 }
 
+
                 // use ShaderCompiler, it can be overrided by a custom one
                 var ShaderCompiler = this._ShaderCompiler;
                 var shaderGen = new ShaderCompiler( attributes, textureAttributes, this._shaderProcessor );
+
+                /** develblock: start*/
+                // Logs hash, attributes and compiler
+                Notify.log( 'New Compilation ', false, true );
+                Notify.log( {
+                    Attributes: attributes,
+                    Texture: textureAttributes,
+                    Hash: hash,
+                    Compiler: shaderGen.getFragmentShaderName()
+                }, false, true );
+                /** develblock: end*/
+
                 var vertexshader = shaderGen.createVertexShader();
                 var fragmentshader = shaderGen.createFragmentShader();
 
