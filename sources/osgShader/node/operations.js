@@ -82,7 +82,7 @@ define( [
         Add.apply( this );
     };
     SetFromNode.prototype = MACROUTILS.objectInherit( Add.prototype, {
-        type: 'SetFromeNode'
+        type: 'SetFromNode'
     } );
 
     // Mult Matrix * vector4

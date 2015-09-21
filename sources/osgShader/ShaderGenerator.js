@@ -19,7 +19,8 @@ define( [
         'ShadowTexture',
         'Texture',
         'Light',
-        'Material'
+        'Material',
+        'Billboard'
     ];
 
     var ShaderGenerator = function () {

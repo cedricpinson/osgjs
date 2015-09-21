@@ -1,4 +1,5 @@
 define( [
+    'osg/BillboardAttribute',
     'osg/BlendColor',
     'osg/BlendFunc',
     'osg/BoundingBox',
@@ -74,6 +75,7 @@ define( [
     'osg/WebGLCaps'
 
 ], function (
+    BillboardAttribute,
     BlendColor,
     BlendFunc,
     BoundingBox,
@@ -151,7 +153,7 @@ define( [
     'use strict';
 
     var osg = {};
-
+    osg.BillboardAttribute = BillboardAttribute;
     osg.BlendColor = BlendColor;
     osg.BlendFunc = BlendFunc;
     osg.BoundingBox = BoundingBox;

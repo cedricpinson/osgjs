@@ -1021,6 +1021,31 @@ define( [
             } );
         } );
 
+        QUnit.asyncTest( 'Text', function () {
+            var tree = {
+                'osgText.Text': {
+                           'UniqueID': 1,
+                           'Text': 'test',
+                           'AutoRotateToScreen': 1,
+                           'CharacterSize': 20,
+                           'Color': [ 1, 1, 0, 1],
+                           'Position': [ 50, 974, 0],
+                           'Layout': 'LEFT_TO_RIGHT',
+                           'Alignment': 'CENTER_BOTTOM'
+                }
+            };
+            ( new Input() ).setJSON( tree ).readObject().then( function ( result ) {
+                ok( result.getText() === 'test', 'check text' );
+                ok( result.getAutoRotateToScreen() === 1, 'check autoRotateToScreen' );
+                ok( result.getCharacterSize() === 20, 'check characterSize' );
+                ok( result.getPosition()[ 0 ] === 50, 'check Position' );
+                ok( result.getColor()[ 0 ] === 1, 'check Color' );
+                ok( result.getLayout()  === 'ltr', 'check Layout' );
+                ok( result.getAlignment() === 5, 'check Alignment' );
+                start();
+            } );
+        } );
+
         QUnit.asyncTest( 'PagedLOD', function () {
             var tree = {
                 'osg.PagedLOD': {
