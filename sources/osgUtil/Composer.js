@@ -590,7 +590,7 @@ define( [
             composer._cameraRTT.push( this._cameraRtt1 );
 
             // hide one of the two pass, as we will render only one each frame
-            this._cameraRtt1.setNodeMask( ~0x0 );
+            this._cameraRtt1.setNodeMask( 0x0 );
 
             // last texture result, only one possible so the first will do
             return this._rtt0;
@@ -602,6 +602,7 @@ define( [
 
             var nodeMask0 = this._cameraRtt0.getNodeMask();
             var nodeMask1 = this._cameraRtt1.getNodeMask();
+
             this._cameraRtt0.setNodeMask( nodeMask1 );
             this._cameraRtt1.setNodeMask( nodeMask0 );
 
