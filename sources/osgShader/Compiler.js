@@ -114,10 +114,12 @@ define( [
                     shadows.push( attributes[ i ] );
 
                 } else if ( type === 'Billboard' ) {
-                    // Shouldn't it be managed by mode ( ON, OFF, OVERRIDE )? 
+                    // Shouldn't it be managed by mode ( ON, OFF, OVERRIDE )?
                     this._isBillboard = attributes[ i ].isEnabled();
-                } else if ( type === 'AnimationAttribute' ) {
-                    this._animation = attributes[ i ];
+                } else if ( type === 'SkinningAttribute' ) {
+                    this._skinningAttribute = attributes[ i ];
+                } else if ( type === 'MorphAttribute' ) {
+                    this._morphAttribute = attributes[ i ];
                 }
             }
         },
@@ -1137,9 +1139,9 @@ define( [
 
             var inputWeights = this.getOrCreateAttribute( 'vec4', 'Weights' );
             var inputBones = this.getOrCreateAttribute( 'vec4', 'Bones' );
-            var matrixPalette = this.getOrCreateUniform( 'vec4', 'uBones', this._animation.getBoneUniformSize() );
+            var matrixPalette = this.getOrCreateUniform( 'vec4', 'uBones', this._skinningAttribute.getBoneUniformSize() );
 
-            this.getNode( 'Animation' ).inputs( {
+            this.getNode( 'Skinning' ).inputs( {
                 weights: inputWeights,
                 bonesIndex: inputBones,
                 matrixPalette: matrixPalette
@@ -1149,24 +1151,57 @@ define( [
 
             return boneMatrix;
         },
-        getOrCreateVertexAttribute: function () {
-            var v = this._variables[ 'vertexAttribute' ];
-            if ( v )
-                return v;
+        morphTransform: function ( inputVertex, outputVertex ) {
+            var inputs = {
+                vertex: inputVertex,
+                weights: this.getOrCreateUniform( 'vec4', 'uTargetWeights' )
+            };
+            var numTargets = this._morphAttribute.getNumTargets();
+            for ( var i = 1; i <= numTargets; i++ )
+                inputs[ 'target' + i ] = this.getOrCreateAttribute( 'vec3', inputVertex.getVariable() + '_' + i );
 
-            var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
-            if ( !this._animation )
-                return inputVertex;
-
-            var positionAnimated = this.createVariable( 'vec3', 'vertexAttribute' );
-
+            this.getNode( 'Morph' ).inputs( inputs ).outputs( {
+                out: outputVertex
+            } );
+            return outputVertex;
+        },
+        skinTransformVertex: function ( inputVertex, outputVertex ) {
             this.getNode( 'MatrixMultPosition' ).setInverse( true ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
                 vec: inputVertex
             } ).outputs( {
-                vec: positionAnimated
+                vec: outputVertex
             } );
-            return positionAnimated;
+            return outputVertex;
+        },
+        getOrCreateVertexAttribute: function () {
+            var v = this.getVariable( 'vertexAttribute' );
+            if ( v )
+                return v;
+
+            var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
+            if ( !this._skinningAttribute && !this._morphAttribute )
+                return inputVertex;
+
+            var posOut = this.createVariable( 'vec3', 'vertexAttribute' );
+
+            if ( this._morphAttribute && !this._skinningAttribute )
+                return this.morphTransform( inputVertex, posOut );
+            else if ( !this._morphAttribute && this._skinningAttribute )
+                return this.skinTransformVertex( inputVertex, posOut );
+
+            var tmpMorph = this.createVariable( 'vec3', 'vertexMorphAttribute' );
+            this.morphTransform( inputVertex, tmpMorph );
+            return this.skinTransformVertex( tmpMorph, posOut );
+        },
+        skinTransformNormal: function ( inputVertex, outputVertex ) {
+            this.getNode( 'MatrixMultDirection' ).setInverse( true ).inputs( {
+                matrix: this.getOrCreateBoneMatrix(),
+                vec: inputVertex
+            } ).outputs( {
+                vec: outputVertex
+            } );
+            return outputVertex;
         },
         getOrCreateNormalAttribute: function () {
             var v = this._variables[ 'normalAttribute' ];
@@ -1174,19 +1209,19 @@ define( [
                 return v;
 
             var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
-            if ( !this._animation )
+            if ( !this._skinningAttribute && !this._morphAttribute )
                 return inputNormal;
 
-            var normalAnimated = this.createVariable( 'vec3', 'normalAttribute' );
+            var posOut = this.createVariable( 'vec3', 'normalAttribute' );
 
-            this.getNode( 'MatrixMultDirection' ).setInverse( true ).inputs( {
-                matrix: this.getOrCreateBoneMatrix(),
-                vec: inputNormal
-            } ).outputs( {
-                vec: normalAnimated
-            } );
-            return normalAnimated;
+            if ( this._morphAttribute && !this._skinningAttribute )
+                return this.morphTransform( inputNormal, posOut );
+            else if ( !this._morphAttribute && this._skinningAttribute )
+                return this.skinTransformNormal( inputNormal, posOut );
 
+            var tmpMorph = this.createVariable( 'vec3', 'normalMorphAttribute' );
+            this.morphTransform( inputNormal, tmpMorph );
+            return this.skinTransformNormal( tmpMorph, posOut );
         },
         declareVertexTransformShadeless: function ( glPosition ) {
             // No light
@@ -1598,7 +1633,7 @@ define( [
             else
                 alphaCompute = '%alpha = %color.a;';
 
-            // Discard fragments totally transparents when rendering billboards 
+            // Discard fragments totally transparents when rendering billboards
             if ( this._isBillboard )
                 alphaCompute += 'if ( %alpha == 0.0) discard;';
 

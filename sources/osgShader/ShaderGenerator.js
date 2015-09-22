@@ -14,7 +14,8 @@ define( [
     // if you still need more fine tuning to the filter, override the filterAttributeTypes
     var DefaultsAcceptAttributeTypes = [
         'ShadowReceive',
-        'AnimationAttribute',
+        'Skinning',
+        'Morph',
         'ShadowTexture',
         'Texture',
         'Light',
