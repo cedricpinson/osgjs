@@ -8,9 +8,9 @@ define( [
     'osg/Shader',
     'osg/StateAttribute',
     'osg/Uniform',
-    'osgAnimation/AnimationAttribute',
+    'osgAnimation/SkinningAttribute',
     'osgAnimation/CollectBoneVisitor'
-], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, StateAttribute, Uniform, AnimationAttribute, CollectBoneVisitor ) {
+], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, StateAttribute, Uniform, SkinningAttribute, CollectBoneVisitor ) {
 
     'use strict';
 
@@ -80,7 +80,7 @@ define( [
 
             // matrix are 4x3
             var nbVec4Uniforms = this._bones.length * 3;
-            var animAttrib = this._animationAttribute = new AnimationAttribute();
+            var animAttrib = this._skinningAttribute = new SkinningAttribute();
             animAttrib.setMatrixPalette( new Float32Array( nbVec4Uniforms * 4 ) );
             geom.getStateSetAnimation().setAttributeAndModes( animAttrib, StateAttribute.ON );
 
@@ -96,7 +96,7 @@ define( [
             return function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
 
                 var bones = this._bones;
-                var matPalette = this._animationAttribute.getMatrixPalette();
+                var matPalette = this._skinningAttribute.getMatrixPalette();
                 var uniformIndex = 0;
 
                 for ( var i = 0, l = bones.length; i < l; i++ ) {

@@ -456,6 +456,7 @@ define( [
         arrayPromise.push( osgWrapper.Geometry( input, morphGeom ) );
 
         for ( var i = 0, l = morphTargets.length; i < l; i++ ) {
+            if ( i >= 4 ) break; //Clamps the targets count
             var promise = input.setJSON( morphTargets[ i ] ).readObject();
             arrayPromise.push( promise );
         }
@@ -465,21 +466,16 @@ define( [
             var geomAttr = geom.attributes;
             var targets = geom._targets;
             for ( var i = 1, l = pArray.length; i < l; i++ ) {
-                var target = pArray[ i ];
 
-                //Here we merge also Vertex and Normal, Tangent probably we should merge
-                //more attributes like UV, ...
-                //Note that more attributes are not supported by the compiler now
+                var target = pArray[ i ];
                 var attributes = target.attributes;
-                if ( attributes.Vertex ) {
-                    geomAttr[ 'Vertex_' + i ] = attributes.Vertex;
+                var keys = Object.keys( attributes );
+
+                for ( var j = 0, k = keys.length; j < k; j++ ) {
+                    var key = keys[ j ];
+                    geomAttr[ key + '_' + i ] = attributes[ key ];
                 }
-                if ( attributes.Normal ) {
-                    geomAttr[ 'Normal_' + i ] = attributes.Normal;
-                }
-                if ( attributes.Tangent ) {
-                    geomAttr[ 'Tangent_' + i ] = attributes.Tangent;
-                }
+
                 targets.push( target );
             }
             return morphGeom;
@@ -496,7 +492,7 @@ define( [
         var keys = Object.keys( jsonObj.TargetMap );
         for ( var i = 0, l = keys.length; i < l; i++ ) {
             var key = keys[ i ];
-            updateMorph.addTarget( jsonObj.TargetMap[ key ], parseInt( key ) );
+            updateMorph.addTarget( jsonObj.TargetMap[ key ], parseInt( key, 10 ) );
         }
 
         return P.resolve( updateMorph );
