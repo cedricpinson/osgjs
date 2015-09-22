@@ -54,23 +54,57 @@ float D_GGX( const in float NdotH, const in float alpha)
 }
 
 
+// Dave Hoskins: hash without sin
+#define MOD2 vec2(443.8975,397.2973)
+//----------------------------------------------------------------------------------------
+//  1 out, 1 in...
+//note: normalized uniform random, [0;1[
+float hash11(const in float p)
+{
+    vec2 p2 = fract(vec2(p) * MOD2);
+    p2 += dot(p2.yx, p2.xy+19.19);
+    return fract(p2.x * p2.y);
+}
+
+// note: [-1;1]
+// iq: https://www.shadertoy.com/view/Xsl3Dl
+// note: value noise
+//  2 out, 2 in...
+vec2 hashSin22( const in vec2 n )
+{
+    return fract(sin(dot(n.xy, vec2(12.9898, 78.233)))* vec2(43758.5453,35458.5734));
+}
+
 float rand2(const in vec2 co)
 {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
+
+vec2 uniformSample(const in int i )
+{
+    float sqrtSample = sqrt(float(NB_SAMPLES));
+    float indexSample = float(i);
+    float m = mod( indexSample, sqrtSample);
+    float x = m/sqrtSample;
+    float y = floor(indexSample/sqrtSample)/sqrtSample;
+    return vec2(x,y);
+}
+
 vec2 getSample(const in int i )
 {
     vec2 u;
-    u[0] = rand2(vec2( float(i) * 1.0 ) );
-    u[1] = rand2(vec2( float(i) * 3.5 ) );
-    return u;
+    float sqrtSample = sqrt(float(NB_SAMPLES));
+    float indexSample = float(i);
+    float m = mod( indexSample, sqrtSample);
+    float x = m/sqrtSample;
+    float y = floor(indexSample/sqrtSample)/sqrtSample;
+    return hashSin22(vec2(x,y)*0.5 + vec2(0.5));
 }
 
 vec3 evaluateDiffuseIBL( const in vec3 N,
                          const in vec3 V,
-                         const in vec3 tangentX,
-                         const in vec3 tangentY)
+                         const in mat3 tangentToWorld)
 {
 
     vec3 contrib = vec3(0.0);
@@ -85,7 +119,8 @@ vec3 evaluateDiffuseIBL( const in vec3 N,
         float phi = PI_2*u.x;
         float cosT = sqrt( 1.0 - u.y );
         float sinT = sqrt( 1.0 - cosT * cosT );
-        vec3 L = sinT* cos(phi ) * tangentX + ( sinT* sin(phi) ) * tangentY + cosT * N;
+        vec3 L = tangentToWorld * vec3( sinT* cos(phi), sinT* sin(phi), cosT );
+        // vec3 L = sinT* cos(phi ) * tangentX + ( sinT* sin(phi) ) * tangentY + cosT * N;
 
         float NdotL = dot( L, N );
 
@@ -110,9 +145,7 @@ vec3 evaluateDiffuseIBL( const in vec3 N,
 
 vec3 evaluateSpecularIBL( const in vec3 N,
                           const in vec3 V,
-                          const in vec3 tangentX,
-                          const in vec3 tangentY,
-
+                          const in mat3 tangentToWorld,
                           float linRoughness,
                           const in vec3 specular )
 {
@@ -149,13 +182,12 @@ vec3 evaluateSpecularIBL( const in vec3 N,
 
         // Importance sampling GGX NDF sampling
         float cosThetaH = sqrt( (1.0-u.y) / (1.0 + alpha2Minus1 * u.y) ); // ue4
-        // float cosThetaH = sqrt( (1.0-u.y) / (1.0 + alphaMinus1 * u.y) ); // frostbite
         float sinThetaH = sqrt(1.0 - min(cosThetaH*cosThetaH,1.0) );
         float phiH = u.x * PI_2;
 
         // Convert sample from half angle to incident angle
         H = normalize( vec3( sinThetaH*cos(phiH), sinThetaH*sin(phiH), cosThetaH ) );
-        H = normalize(tangentX * H.x + tangentY * H.y + N * H.z);
+        H = tangentToWorld * H;
 
         L = normalize(2.0 * dot(V, H) * H - V);
 
@@ -252,14 +284,12 @@ vec3 evaluateSpecularIBL( const in vec3 N,
 }
 
 
-void computeTangentFrame( const in vec4 tangent, const in vec3 normal,
-                          out vec3 tangentx,
-                          out vec3 tangenty )
+mat3 computeTangentFrame( const in vec4 tangent, const in vec3 normal)
 {
-
+    vec3 tangentx, tangenty;
     // Build local referential
 #ifdef NO_TANGENT
-    vec3 upVector = abs(normal.x) < 0.999 ? vec3(1.0,0.0,0.0) : vec3(0.0,0.0,1.0);
+    vec3 upVector = abs(normal.y) < 0.999999 ? vec3(0.0,1.0,0.0) : vec3(0.0,0.0,1.0);
     tangentx = normalize( cross( upVector, normal ) );
     tangenty = cross( normal, tangentx );
 
@@ -270,7 +300,7 @@ void computeTangentFrame( const in vec4 tangent, const in vec3 normal,
     tangentx = normalize(tang - normal*dot(tang, normal)); // local tangent
     tangenty = normalize(binormal  - normal*dot(binormal, normal)  - tang*dot(binormal, tangentx)); // local bitange
 #endif
-
+    return mat3(tangentx,tangenty,normal);
 }
 
 vec3 computeIBL( const in vec4 tangent,
@@ -282,8 +312,7 @@ vec3 computeIBL( const in vec4 tangent,
 {
 
     //vectors used for importance sampling
-    vec3 tangentX, tangentY;
-    computeTangentFrame(tangent, normal, tangentX, tangentY );
+    mat3 tangentToWorld = computeTangentFrame(tangent, normal );
 
     vec3 color = vec3(0.0);
     if ( albedo != color ) { // skip if no diffuse
@@ -293,8 +322,7 @@ vec3 computeIBL( const in vec4 tangent,
 
     color += evaluateSpecularIBL(normal,
                                  view,
-                                 tangentX,
-                                 tangentY,
+                                 tangentToWorld,
                                  roughness,
                                  specular);
 
@@ -311,21 +339,18 @@ vec3 referenceIBL( const in vec4 tangent,
 {
 
     //vectors used for importance sampling
-    vec3 tangentX, tangentY;
-    computeTangentFrame(tangent, normal, tangentX, tangentY );
+    mat3 tangentToWorld = computeTangentFrame(tangent, normal );
 
     vec3 color = vec3(0.0);
     if ( albedo != color ) { // skip if no diffuse
         color += albedo * evaluateDiffuseIBL(normal,
                                              view,
-                                             tangentX,
-                                             tangentY);
+                                             tangentToWorld);
     }
 
     color += evaluateSpecularIBL(normal,
                                  view,
-                                 tangentX,
-                                 tangentY,
+                                 tangentToWorld,
                                  roughness,
                                  specular);
 

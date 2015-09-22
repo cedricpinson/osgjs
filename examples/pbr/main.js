@@ -1059,6 +1059,33 @@
             //            var environment = 'textures/bus_garageb/';
             var environment = 'textures/industrial_room/';
             var environment = 'textures/deinterleave/';
+            var environment = 'textures/parking_65k_nomipmap/';
+            var environment = 'textures/parking_2k_mipmap/';
+            var environment = 'textures/parking_4k_mipmap/';
+            var environment = 'textures/parking_8k_mipmap/';
+            var environment = 'textures/parking_2k_1024_mipmap/';
+            var environment = 'textures/parking_8k_1024_mipmap/';
+            var environment = 'textures/parking_8k_bias1_1024_mipmap/';
+            var environment = 'textures/parking_2k_bias1_1024_mipmap/';
+            var environment = 'textures/parking_2k_constant_sample_bias1_1024_mipmap/';
+            var environment = 'textures/city_night_lights/';
+            var environment = 'textures/city_night_lights2/';
+            var environment = 'textures/city_night_lights3/';
+            var environment = 'textures/city_night_lights4/';
+            //var environment = 'textures/city_night_lights_cl/';
+            var environment = 'textures/city_night_lights_cl2/';
+            var environment = 'textures/city_night_lights_cl3/';
+            var environment = 'textures/city_night_lights_cl4/';
+            var environment = 'textures/city_night_lights_cl5/';
+            var environment = 'textures/city_night_lights4/';
+            var environment = 'textures/city_night_lights_cl7/';
+            var environment = 'textures/city_night_lights_cl8/';
+            var environment = 'textures/city_night_lights_cl9/';
+            var environment = 'textures/city_night_lights_cla/';
+            var environment = 'textures/city_night_lights_clb/';
+            var environment = 'textures/city_night_lights_clc/';
+
+
             //var environment = 'textures/bus_garage5/';
             //var environment = 'textures/walk_of_fame/';
             //var environment = 'textures/airport/';

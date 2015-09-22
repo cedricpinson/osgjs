@@ -103,18 +103,7 @@ float computeLODPanorama(const in vec3 Ln, float p, const in int nbSamples, cons
 }
 
 #ifdef CUBEMAP_LOD
-
 #pragma include "cubemapSampler.glsl"
-
-float computeLODCubemap( float p, const in int nbSamples, const in float maxLod)
-{
-    // from sebastien lagarde - frosbite paper
-    float ds = 1.0/ ( float(nbSamples) * p );
-    float dp = 4.0 * PI / ( 6.0 * uEnvironmentSize[0] * uEnvironmentSize[0] );
-
-    float lod = 0.5 * log2(ds/dp);
-    return clamp(lod, 0.0, maxLod);
-}
 #endif
 
 
@@ -143,10 +132,24 @@ vec3 getReferenceTexelEnvironmentLod( const in vec3 dirLocal, const in float pdf
     vec3 direction = environmentTransform * dirLocal;
 
 #ifdef CUBEMAP_LOD
-    float lod = computeLODCubemap( pdf, int(NB_SAMPLES), uEnvironmentLodRange[1]);
+
+    // from sebastien lagarde - frosbite paper
+    // and https://placeholderart.wordpress.com/2015/07/28/implementation-notes-runtime-environment-map-filtering-for-image-based-lighting/
+    float maxLod = float(uEnvironmentLodRange[1]);
+    float textureSize = float(uEnvironmentSize[0]);
+    float ds = 1.0/ ( float(NB_SAMPLES) * pdf );
+    float dp = 4.0 * PI / ( 6.0 * textureSize * textureSize );
+
+    // Original paper suggest biasing the mip to improve the results
+    const float mipmapBias = 1.0;
+    float lod = max( 0.5 * log2(ds/dp) + mipmapBias, 0.0 );
+
     //return textureCubeLodEXTFixed(uEnvironmentCube, direction, lod );
     return textureCubemapLod( uEnvironmentCube, direction, lod ).rgb;
+#else
+    return vec3(1.0,0.0,1.0);
 #endif
+
 }
 
 #ifdef UE4
