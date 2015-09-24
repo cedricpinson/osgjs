@@ -194,9 +194,9 @@ define( [
         this._shadowReceiveAttribute = new ShadowReceiveAttribute( this._light.getLightNumber() );
         this._casterStateSet.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
 
+        // default name, overridable with shadow settings
+        this._shadowCastShaderGeneratorName = 'ShadowCast';
 
-        var shadowStateAttribute = new ShadowCastAttribute( false, this._shadowReceiveAttribute );
-        this._casterStateSet.setAttributeAndModes( shadowStateAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
 
 
         var near = 0.001;
@@ -207,7 +207,6 @@ define( [
         this._depthRange[ 2 ] = far - near;
         this._depthRange[ 3 ] = 1.0 / ( far - near );
         this._casterStateSet.addUniform( Uniform.createFloat4( this._depthRange, 'Shadow_DepthRange' ) );
-
 
 
 
@@ -228,6 +227,7 @@ define( [
         this._tmpVecBis = Vec3.create();
         this._tmpVecTercio = Vec3.create();
         this._tmpMatrix = Matrix.create();
+
         if ( settings )
             this.setShadowSettings( settings );
 
@@ -240,6 +240,10 @@ define( [
 
 
         this._infiniteFrustum = true;
+        var shadowStateAttribute = new ShadowCastAttribute( false, this._shadowReceiveAttribute );
+        this._casterStateSet.setAttributeAndModes( shadowStateAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
+        this._casterStateSet.setShaderGeneratorName( this._shadowCastShaderGeneratorName, StateAttribute.OVERRIDE | StateAttribute.ON );
+
     };
 
 
@@ -279,6 +283,7 @@ define( [
                 return;
 
             this._light = shadowSettings.light;
+            this._shadowCastShaderGeneratorName = shadowSettings.getShadowCastShaderGeneratorName();
 
             this.setCastsShadowDrawTraversalMask( shadowSettings.castsShadowDrawTraversalMask );
             this.setCastsShadowBoundsTraversalMask( shadowSettings.castsShadowBoundsTraversalMask );
@@ -295,6 +300,7 @@ define( [
             this.setExponent0( shadowSettings.exponent );
             this.setExponent1( shadowSettings.exponent1 );
             this.setEpsilonVSM( shadowSettings.epsilonVSM );
+
 
         },
 

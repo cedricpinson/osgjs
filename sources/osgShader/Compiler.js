@@ -65,7 +65,6 @@ define( [
         // (material?)
         this._isLighted = false; // either shadeless, or no light (beware ibl)
         this._isShadeless = false;
-        this._isShadowCast = false;
         this._isBillboard = false;
         // from Attributes to variables
         // to build shader nodes graph from
@@ -74,10 +73,10 @@ define( [
 
         // no need to test light
         var hasMaterial = !!this._material;
-        this._isLighted = hasMaterial && !this._isShadowCast && this._lights.length > 0;
+        this._isLighted = hasMaterial && this._lights.length > 0;
 
         // backup shader, FS just output 'fofd'
-        this._isVertexColored = hasMaterial && !this._isShadowCast;
+        this._isVertexColored = hasMaterial;
 
         // Important: if not using Compiler for Both VS and FS
         // Check either of those
@@ -114,9 +113,6 @@ define( [
 
                     shadows.push( attributes[ i ] );
 
-                } else if ( type === 'ShadowCastAttribute' ) {
-                    this._isShadowCast = attributes[ i ].isEnabled();
-                    this._shadowCastAttribute = attributes[ i ];
                 } else if ( type === 'Billboard' ) {
                     // Shouldn't it be managed by mode ( ON, OFF, OVERRIDE )? 
                     this._isBillboard = attributes[ i ].isEnabled();
@@ -127,12 +123,6 @@ define( [
         },
 
         initTextureAttributes: function () {
-            // Shadow casting is about casting Depth
-            // no need for textures.
-            // as we don't support natively
-            // shadow of aplha Blending or Masking Materials
-            if ( this._isShadowCast )
-                return;
 
             var textureAttributes = this._textureAttributes;
             var texturesNum = textureAttributes.length;
@@ -183,12 +173,6 @@ define( [
                 textureUnit: texUnit,
                 shadow: true
             };
-        },
-
-        // global accessor because it modifies
-        // globally the compiler behavbiour
-        isShadowCast: function () {
-            return this._isShadowCast;
         },
 
         // cache all requested node, so that we can list
@@ -1311,11 +1295,7 @@ define( [
         // - check Precision qualifier on vertex Attributes
         // - check Precision qualifier on vertex Attributes Varying
         declareVertexTransforms: function ( glPosition ) {
-            // Fast Path, only Depth
-            if ( this._isShadowCast ) {
-                this.declareTransformWithEyeSpace( glPosition );
-                return;
-            }
+
             // Make only necessary operation and varying
             if ( this._isLighted || this._shaderAttributes[ 'Normal' ] ) {
                 if ( this.isShadowed() ) {
@@ -1573,21 +1553,6 @@ define( [
             return fragCol;
         },
 
-        // Depth Shadow Map Casted from Light Pov
-        // Depth encoded in color buffer
-        createShadowCastFragmentShaderGraph: function () {
-            var frag = this.getNode( 'glFragColor' );
-            this.getNode( 'ShadowCast' ).setShadowCastAttribute( this._shadowCastAttribute ).inputs( {
-                exponent0: this.getOrCreateUniform( 'float', 'exponent0' ),
-                exponent1: this.getOrCreateUniform( 'float', 'exponent1' ),
-                shadowDepthRange: this.getOrCreateUniform( 'vec4', 'Shadow_DepthRange' ),
-                fragEye: this.getOrCreateInputPosition()
-            } ).outputs( {
-                color: frag
-            } );
-            return frag;
-        },
-
         // this is the main function that will generate the
         // fragment shader. If you need to improve / add your own
         // you could inherit and override this function
@@ -1597,12 +1562,6 @@ define( [
             // here named roots
             // all outputs must be pushed inside
             var roots = [];
-
-            // depth cast
-            if ( this._isShadowCast ) {
-                roots.push( this.createShadowCastFragmentShaderGraph() );
-                return roots;
-            }
 
             // no material then return a default shader
             if ( !this._material ) {
@@ -1703,7 +1662,6 @@ define( [
             return roots;
         },
         getFragmentShaderName: function () {
-            if ( this.isShadowCast() ) return 'ShadowCastClassic';
             return this._material ? 'CompilerOSGJS' : 'NoMaterialCompilerOSGJS';
         },
         getVertexShaderName: function () {

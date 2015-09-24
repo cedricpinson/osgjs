@@ -84,6 +84,9 @@ define( [
         this.exponent = 40;
         this.exponent1 = 10;
 
+        // defaut shader generator name for shadow casting
+        this.shadowCastShaderGeneratorName = 'ShadowCast';
+
         // if url options override url options
         MACROUTILS.objectMix( this, options );
     };
@@ -136,6 +139,12 @@ define( [
         },
         getAlgorithm: function () {
             return this.algorithm;
+        },
+        setShadowCastShaderGeneratorName: function ( n ) {
+            this.shadowCastShaderGeneratorName = n;
+        },
+        getShadowCastShaderGeneratorName: function () {
+            return this.shadowCastShaderGeneratorName;
         }
 
     };
