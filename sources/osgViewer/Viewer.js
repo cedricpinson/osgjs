@@ -449,7 +449,9 @@ define( [
         beginFrame: function () {
             this._startFrameTick = Timer.instance().tick();
         },
-
+        setEndFrameCallBack: function ( u ) {
+            this._userEndFrameCallback = u;
+        },
         endFrame: function () {
 
             var frameNumber = this.getFrameStamp().getFrameNumber();
@@ -467,6 +469,7 @@ define( [
                 Texture.getTextureManager( this.getGraphicContext() ).updateStats( frameNumber );
                 this._canvasStats.update();
             }
+            if ( this._userEndFrameCallback ) this._userEndFrameCallback();
         },
 
         checkNeedToDoFrame: function () {
