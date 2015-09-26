@@ -66,6 +66,17 @@ define( [
                 this._renderer = renderer;
             },
 
+            getFinalDrawCallback: function () {
+
+                return this._finalDrawCallback;
+
+            },
+
+            setFinalDrawCallback: function ( cb ) {
+
+                this._finalDrawCallback = cb;
+
+            },
 
             getAttachments: function () {
                 return this._attachments;
