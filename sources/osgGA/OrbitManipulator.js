@@ -121,23 +121,13 @@ define( [
             this._rotate = new OrbitManipulator.Interpolator( 2 );
             this._pan = new OrbitManipulator.Interpolator( 2 );
             this._zoom = new OrbitManipulator.Interpolator( 1 );
-            this._zoom.reset = function () {
-                OrbitManipulator.Interpolator.prototype.reset.call( this );
-                this._start = 0.0;
-            };
 
-            this._buttonup = true;
-
-            this._scale = 10.0;
             this._maxDistance = Infinity;
             this._minDistance = 1e-10; // min distance allowed between eye and target
             this._minSpeed = 1e-10; // set a limit to pan/zoom speed
             this._scaleMouseMotion = 1.0;
 
             this._inverseMatrix = Matrix.create();
-            this._rotateKey = 65; // a
-            this._zoomKey = 83; // s
-            this._panKey = 68; // d
 
             // if we hit the min distance and can't zoom anymore, maybe we still want to move on
             // with a very low _minDistance, it's like a fps manipulator as long as you don't unzoom

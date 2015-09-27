@@ -62,9 +62,6 @@ define( [
             this._angleHorizontal = 0.0;
 
             // tmp value use for computation
-            this._tmpComputeRotation1 = Matrix.create();
-            this._tmpComputeRotation2 = Matrix.create();
-            this._tmpComputeRotation3 = Matrix.create();
             this._tmpGetTargetDir = [ 0.0, 0.0, 0.0 ];
 
             this._rotBase = Matrix.create();
@@ -140,6 +137,10 @@ define( [
         },
 
         computeRotation: ( function () {
+            var first = Matrix.create();
+            var second = Matrix.create();
+            var rotMat = Matrix.create();
+
             var upy = [ 0.0, 1.0, 0.0 ];
             var upz = [ 0.0, 0.0, 1.0 ];
             var LIMIT = Math.PI * 0.5;
@@ -149,9 +150,6 @@ define( [
                 if ( this._angleVertical > LIMIT ) this._angleVertical = LIMIT;
                 else if ( this._angleVertical < -LIMIT ) this._angleVertical = -LIMIT;
 
-                var first = this._tmpComputeRotation1;
-                var second = this._tmpComputeRotation2;
-                var rotMat = this._tmpComputeRotation3;
                 Matrix.makeRotate( -this._angleVertical, 1.0, 0.0, 0.0, first );
                 Matrix.makeRotate( -this._angleHorizontal, 0.0, 0.0, 1.0, second );
                 Matrix.mult( second, first, rotMat );
