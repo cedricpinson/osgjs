@@ -524,13 +524,14 @@ define( [
             st0.setAttributeAndModes( this._program );
             st1.setAttributeAndModes( this._program );
 
-            if ( this._uniforms ) {
-
-                for ( var k = 0, l = this._uniforms.length; k < l; k++ ) {
-                    st0.addUniform( this._uniforms[ k ] );
-                    st1.addUniform( this._uniforms[ k ] );
+            var uniforms = this._uniforms;
+            if ( uniforms ) {
+                var keys = Object.keys( uniforms );
+                for ( var k = 0, l = keys.length; k < l; k++ ) {
+                    var unif = uniforms[ keys[ k ] ];
+                    st0.addUniform( unif );
+                    st1.addUniform( unif );
                 }
-
             }
 
             var uniformTU0 = Uniform.createInt1( 0, 'Texture0' );
