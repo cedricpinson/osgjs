@@ -2,6 +2,7 @@ define( [
     'osgShadow/ShadowCastAttribute',
     'osgShadow/ShadowCastCompiler',
     'osgShadow/ShadowCastShaderGenerator',
+    'osgShadow/ShadowCasterVisitor',
     'osgShadow/ShadowFrustumIntersection',
     'osgShadow/ShadowMap',
     'osgShadow/ShadowReceiveAttribute',
@@ -9,7 +10,8 @@ define( [
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowTexture',
     'osgShadow/ShadowedScene'
-], function ( ShadowCastAttribute, ShadowCastCompiler, ShadowCastShaderGenerator, ShadowFrustumIntersection, ShadowMap, ShadowReceiveAttribute, ShadowSettings, ShadowTechnique, ShadowTexture, ShadowedScene ) {
+], function ( ShadowCastAttribute,  ShadowCastCompiler, ShadowCastShaderGenerator, ShadowCasterVisitor, ShadowFrustumIntersection, ShadowMap, ShadowReceiveAttribute, ShadowSettings, ShadowTechnique, ShadowTexture, ShadowedScene ) {
+
     'use strict';
 
     var osgShadow = {};
@@ -17,6 +19,7 @@ define( [
     osgShadow.ShadowCastAttribute = ShadowCastAttribute;
     osgShadow.ShadowCastCompiler = ShadowCastCompiler;
     osgShadow.ShadowReceiveAttribute = ShadowReceiveAttribute;
+    osgShadow.ShadowCasterVisitor = ShadowCasterVisitor;
     osgShadow.ShadowFrustumIntersection = ShadowFrustumIntersection;
     osgShadow.ShadowMap = ShadowMap;
     osgShadow.ShadowedScene = ShadowedScene;
