@@ -3,19 +3,22 @@ define( [], function () {
     // user performance if available or fallback
 
     var now = ( function () {
+
+        var w = window || global;
+
         // if no window.performance
-        if ( window.performance === undefined ) {
+        if ( w.performance === undefined ) {
             return function () {
                 return Date.now();
             };
         }
 
-        var fn = window.performance.now || window.performance.mozNow || window.performance.msNow || window.performance.oNow || window.performance.webkitNow ||
+        var fn = w.performance.now || w.performance.mozNow || w.performance.msNow || w.performance.oNow || w.performance.webkitNow ||
             function () {
                 return Date.now();
             };
         return function () {
-            return fn.apply( window.performance, arguments );
+            return fn.apply( w.performance, arguments );
         };
     } )();
 
