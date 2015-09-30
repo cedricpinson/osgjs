@@ -3,9 +3,10 @@ define( [
     'osg/Matrix',
     'osg/Node',
     'osg/NodeVisitor',
+    'osg/StateSet',
     'osg/Utils',
-    'osg/Vec4',
-], function ( CullVisitor, Matrix, Node, NodeVisitor, MACROUTILS, Vec4 ) {
+    'osg/Vec4'
+], function ( CullVisitor, Matrix, Node, NodeVisitor, StateSet, MACROUTILS, Vec4 ) {
 
     'use strict';
 
@@ -26,14 +27,24 @@ define( [
         this._frustumReceivers = [ Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create(), Vec4.create() ];
 
         this._tmpMat = Matrix.create();
+
+        this._receivingStateset = new StateSet();
+
     };
 
     /** @lends ShadowedScene.prototype */
     ShadowedScene.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.prototype, {
 
+        getReceivingStateSet: function () {
+
+            return this._receivingStateset;
+
+        },
+
         getShadowTechniques: function () {
             return this._shadowTechniques;
         },
+
         addShadowTechnique: function ( technique ) {
             if ( this._shadowTechniques.length > 0 ) {
                 if ( this._shadowTechniques.indexOf( technique ) !== -1 ) return;
@@ -124,9 +135,9 @@ define( [
             //var traversalMask = cullVisitor.getTraversalMask();
             //cullVisitor.setTraversalMask( this.getReceivesShadowTraversalMask() );
 
-            if ( this.stateset ) cullVisitor.pushStateSet( this.stateset );
+            if ( this._receivingStateset ) cullVisitor.pushStateSet( this._receivingStateset );
             this.nodeTraverse( cullVisitor );
-            if ( this.stateset ) cullVisitor.popStateSet();
+            if ( this._receivingStateset ) cullVisitor.popStateSet();
 
         }
 
