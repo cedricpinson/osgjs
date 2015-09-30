@@ -10,8 +10,8 @@ define( [
     'osgAnimation/Interpolator',
     'osgAnimation/CollectAnimationUpdateCallbackVisitor',
     'osgAnimation/Target',
-
-], function ( Notify, MACROUTILS, BaseObject, Quat, Vec3, Matrix, Channel, Animation, Interpolator, CollectAnimationUpdateCallbackVisitor, Target ) {
+    'osgAnimation/UpdateMorph'
+], function ( Notify, MACROUTILS, BaseObject, Quat, Vec3, Matrix, Channel, Animation, Interpolator, CollectAnimationUpdateCallbackVisitor, Target, UpdateMorph ) {
 
     'use strict';
 
@@ -391,10 +391,32 @@ define( [
 
             this._resetTargets();
 
+            var targetID = 0;
             var targetMap = this._targetMap;
             var targets = this._targets;
 
-            var targetID = 0;
+            var registerTarget = function ( uniqueTargetName, target, name ) {
+                if ( !targetMap[ uniqueTargetName ] ) {
+                    targetMap[ uniqueTargetName ] = target;
+                    // assign an id that will be an index into a array
+                    target.id = targetID++;
+                    targets.push( target );
+
+                    var type = target.type; // split by type
+                    this._targetsByTypes[ type ].push( target );
+                } else {
+                    // detect differents target instance with same
+                    // unique target name. It's a problem
+                    if ( target !== targetMap[ uniqueTargetName ] )
+                        Notify.warn( 'detected differents target instance with the same name (' + name + ')' );
+                }
+            }.bind( this );
+
+
+            var target;
+            var name;
+            var uniqueTargetName;
+
             var animationCallbackMap = this._animationsUpdateCallback;
             var keys = Object.keys( animationCallbackMap );
             for ( var i = 0, ni = keys.length; i < ni; i++ ) {
@@ -408,24 +430,19 @@ define( [
                     var stackedTransforms = animationCallback.getStackedTransforms();
                     for ( var j = 0, nj = stackedTransforms.length; j < nj; j++ ) {
                         var stackedTransform = stackedTransforms[ j ];
-                        var target = stackedTransform.getTarget();
-                        var name = stackedTransform.getName();
-                        var uniqueTargetName = animationCallback.getName() + '.' + name;
+                        target = stackedTransform.getTarget();
+                        name = stackedTransform.getName();
+                        uniqueTargetName = animationCallback.getName() + '.' + name;
 
-                        if ( !targetMap[ uniqueTargetName ] ) {
-                            targetMap[ uniqueTargetName ] = target;
-                            // assign an id that will be an index into a array
-                            target.id = targetID++;
-                            targets.push( target );
+                        registerTarget( uniqueTargetName, target, name );
+                    }
+                } else if ( animationCallback instanceof UpdateMorph ) {
+                    for ( var t = 0, numTarget = animationCallback.getNumTarget(); t < numTarget; t++ ) {
+                        name = animationCallback.getTargetName( t );
+                        uniqueTargetName = name + '.' + t;
+                        target = animationCallback.getTarget( t );
 
-                            var type = target.type; // split by type
-                            this._targetsByTypes[ type ].push( target );
-                        } else {
-                            // detect differents target instance with same
-                            // unique target name. It's a problem
-                            if ( target !== targetMap[ uniqueTargetName ] )
-                                Notify.warn( 'detected differents target instance with the same name (' + name + ')' );
-                        }
+                        registerTarget( uniqueTargetName, target, name );
                     }
                 }
             }

@@ -6,8 +6,10 @@ define( [
     'osgAnimation/Animation',
     'osgDB/ReaderParser',
     'osgAnimation/StackedMatrix', // for backward compatibility
-    'osgAnimation/StackedScale' // for backward compatibility
-], function ( P, Notify, osgWrapper, Channel, Animation, ReaderParser, StackedMatrix, StackedScale ) {
+    'osgAnimation/StackedScale', // for backward compatibility
+    'osgAnimation/MorphGeometry',
+    'osg/Geometry'
+], function ( P, Notify, osgWrapper, Channel, Animation, ReaderParser, StackedMatrix, StackedScale, MorphGeometry, Geometry ) {
 
     'use strict';
 
@@ -15,12 +17,16 @@ define( [
 
     var channelCtor = function () {};
 
-    ReaderParser.registry().registerObject( 'osgAnimation.Vec3LerpChannel', channelCtor );
-    ReaderParser.registry().registerObject( 'osgAnimation.FloatLerpChannel', channelCtor );
-    ReaderParser.registry().registerObject( 'osgAnimation.QuatSlerpChannel', channelCtor );
-    ReaderParser.registry().registerObject( 'osgAnimation.QuatLerpChannel', channelCtor );
-    ReaderParser.registry().registerObject( 'osgAnimation.FloatCubicBezierChannel', channelCtor );
-    ReaderParser.registry().registerObject( 'osgAnimation.Vec3CubicBezierChannel', channelCtor );
+    var registry = ReaderParser.registry();
+    registry.registerObject( 'osgAnimation.Vec3LerpChannel', channelCtor );
+    registry.registerObject( 'osgAnimation.FloatLerpChannel', channelCtor );
+    registry.registerObject( 'osgAnimation.QuatSlerpChannel', channelCtor );
+    registry.registerObject( 'osgAnimation.QuatLerpChannel', channelCtor );
+    registry.registerObject( 'osgAnimation.FloatCubicBezierChannel', channelCtor );
+    registry.registerObject( 'osgAnimation.Vec3CubicBezierChannel', channelCtor );
+    // needs to be cleaned in c++
+    registry.registerObject( 'osgAnimation.StackedMatrixElement', StackedMatrix );
+    registry.registerObject( 'osgAnimation.StackedScaleElement', StackedScale );
 
     osgAnimationWrapper.Animation = function ( input ) {
         var jsonObj = input.getJSON();
@@ -394,25 +400,106 @@ define( [
         var rigPromise = osgWrapper.Geometry( input, rigGeom );
         rigGeom._boneNameID = jsonObj.BoneMap;
 
+        var mergeGeometry = function ( from, to ) {
+            // Merge rigGeometry and sourceGeometry, we keep source instance and adds
+            // some references to the rigGeometry
+
+            //Merge primitives
+            to.primitives = from.primitives;
+
+            //Merge Attributes
+            var keys = Object.keys( from.attributes );
+            for ( var i = 0, l = keys.length; i < l; i++ ) {
+                var key = keys[ i ];
+                to.attributes[ key ] = from.attributes[ key ];
+            }
+
+            //Merge state set
+            to.stateset = from.stateset;
+
+            //@TODO Think to merge more stuff here
+        };
+
         //Import source geometry and merge it with the rigGeometry
         var sourceGeometry = jsonObj.SourceGeometry[ 'osg.Geometry' ];
         var geomPromise;
         if ( sourceGeometry ) {
             input.setJSON( sourceGeometry );
-            geomPromise = osgWrapper.Geometry( input, rigGeom );
+            rigGeom.setSourceGeometry( new Geometry() );
+            geomPromise = osgWrapper.Geometry( input, rigGeom.getSourceGeometry() );
+        } else {
+            sourceGeometry = jsonObj.SourceGeometry[ 'osgAnimation.MorphGeometry' ];
+            if ( sourceGeometry ) {
+                input.setJSON( sourceGeometry );
+                rigGeom.setSourceGeometry( new MorphGeometry() );
+                geomPromise = osgAnimationWrapper.MorphGeometry( input, rigGeom.getSourceGeometry() );
+            } else {
+                Notify.warn( 'SourceGeometry type no recognized' );
+            }
         }
 
-        return P.all( [ rigPromise, geomPromise ] ).then( function () {
+        return P.all( [ rigPromise, geomPromise ] ).then( function ( promises ) {
+            mergeGeometry( promises[ 0 ].getSourceGeometry(), promises[ 0 ] );
             return rigGeom;
         } );
     };
 
+    osgAnimationWrapper.MorphGeometry = function ( input, morphGeom ) {
+        var jsonObj = input.getJSON();
+
+        if ( /*!jsonObj.Name ||*/ !jsonObj.MorphTargets )
+            return P.reject();
+
+        var morphTargets = jsonObj.MorphTargets;
+        var arrayPromise = [];
+
+        arrayPromise.push( osgWrapper.Geometry( input, morphGeom ) );
+
+        for ( var i = 0, l = morphTargets.length; i < l; i++ ) {
+            if ( i >= 4 ) break; //Clamps the targets count
+            var promise = input.setJSON( morphTargets[ i ] ).readObject();
+            arrayPromise.push( promise );
+        }
+
+        return P.all( arrayPromise ).then( function ( pArray ) {
+            var geom = pArray[ 0 ];
+            var geomAttr = geom.attributes;
+            var targets = geom._targets;
+            for ( var i = 1, l = pArray.length; i < l; i++ ) {
+
+                var target = pArray[ i ];
+                var attributes = target.attributes;
+                var keys = Object.keys( attributes );
+
+                for ( var j = 0, k = keys.length; j < k; j++ ) {
+                    var key = keys[ j ];
+                    geomAttr[ key + '_' + i ] = attributes[ key ];
+                }
+
+                targets.push( target );
+            }
+            return morphGeom;
+        } );
+    };
+
+    osgAnimationWrapper.UpdateMorph = function ( input, updateMorph ) {
+        var jsonObj = input.getJSON();
+        if ( !jsonObj.TargetMap )
+            return P.reject();
+
+        osgWrapper.Object( input, updateMorph );
+
+        var keys = Object.keys( jsonObj.TargetMap );
+        for ( var i = 0, l = keys.length; i < l; i++ ) {
+            var key = keys[ i ];
+            updateMorph.addTarget( jsonObj.TargetMap[ key ], parseInt( key, 10 ) );
+        }
+
+        return P.resolve( updateMorph );
+    };
+
     osgAnimationWrapper.StackedMatrixElement = osgAnimationWrapper.StackedMatrix;
     osgAnimationWrapper.StackedScaleElement = osgAnimationWrapper.StackedScale;
-
-    // needs to be cleaned in c++
-    ReaderParser.registry().registerObject( 'osgAnimation.StackedMatrixElement', StackedMatrix );
-    ReaderParser.registry().registerObject( 'osgAnimation.StackedScaleElement', StackedScale );
 
     return osgAnimationWrapper;
 } );
