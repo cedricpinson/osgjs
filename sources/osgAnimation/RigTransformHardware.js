@@ -19,7 +19,7 @@ define( [
      *
      */
     var RigTransformHardware = function () {
-        this._needInit = true;
+        this._isInitialized = false;
 
         // bones are sorted to be used directly by
         // computeMatrixPalette
@@ -84,7 +84,7 @@ define( [
             animAttrib.setMatrixPalette( new Float32Array( nbVec4Uniforms * 4 ) );
             geom.getStateSetAnimation().setAttributeAndModes( animAttrib, StateAttribute.ON );
 
-            this._needInit = false;
+            this._isInitialized = true;
             return true;
         },
 
@@ -134,7 +134,7 @@ define( [
 
         update: function ( geom ) {
 
-            if ( this._needInit )
+            if ( !this._isInitialized )
                 this.init( geom );
 
             this.computeMatrixPalette( geom.getMatrixFromSkeletonToGeometry(), geom.getInvMatrixFromSkeletonToGeometry() );
