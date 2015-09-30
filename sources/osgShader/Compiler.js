@@ -1157,7 +1157,7 @@ define( [
                 weights: this.getOrCreateUniform( 'vec4', 'uTargetWeights' )
             };
             var numTargets = this._morphAttribute.getNumTargets();
-            for ( var i = 1; i <= numTargets; i++ )
+            for ( var i = 0; i < numTargets; i++ )
                 inputs[ 'target' + i ] = this.getOrCreateAttribute( 'vec3', inputVertex.getVariable() + '_' + i );
 
             this.getNode( 'Morph' ).inputs( inputs ).outputs( {

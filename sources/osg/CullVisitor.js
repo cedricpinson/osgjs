@@ -453,30 +453,54 @@ define( [
     // since the only difference is that we want to push an additional state
     // Maybe it will be useful when we'll add morph target geometry or something...
     var postPushGeometry = function ( cull, node ) {
-        var sta;
+
+        var sourceGeometry;
+        var geometryStateSetAnimation;
 
         if ( node instanceof RigGeometry ) {
-            sta = node.getStateSetAnimation();
-            if ( sta ) cull.pushStateSet( sta );
-            if ( node.getSourceGeometry() instanceof MorphGeometry ) {
-                sta = node.getSourceGeometry().getStateSetAnimation();
-                if ( sta ) cull.pushStateSet( sta );
+
+            geometryStateSetAnimation = node.getStateSetAnimation();
+            if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
+
+            sourceGeometry = node.getSourceGeometry();
+
+            if ( sourceGeometry instanceof MorphGeometry ) {
+
+                geometryStateSetAnimation = sourceGeometry.getStateSetAnimation();
+                if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
+
             }
+
         } else if ( node instanceof MorphGeometry ) {
-            sta = node.getStateSetAnimation();
-            if ( sta ) cull.pushStateSet( sta );
+
+            geometryStateSetAnimation = node.getStateSetAnimation();
+            if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
+
         }
+
     };
 
     // same comment as above (postPushGeometry)
     var prePopGeometry = function ( cull, node ) {
+
         if ( node instanceof RigGeometry ) {
-            var source = node.getSourceGeometry();
-            if ( source instanceof MorphGeometry && source.getStateSetAnimation() ) cull.popStateSet();
+
+            var sourceGeometry = node.getSourceGeometry();
+
+            if ( sourceGeometry instanceof MorphGeometry ) {
+
+                if ( sourceGeometry.getStateSetAnimation() ) cull.popStateSet();
+
+            }
+
             if ( node.getStateSetAnimation() ) cull.popStateSet();
+
         } else if ( node instanceof MorphGeometry && node.getStateSetAnimation() ) {
+
             cull.popStateSet();
+
         }
+
     };
 
     CullVisitor.prototype[ Geometry.typeID ] = ( function () {

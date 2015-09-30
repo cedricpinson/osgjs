@@ -6,6 +6,7 @@ define( [
     'osg/StateAttribute',
     'osgAnimation/Target'
 ], function ( MACROUTILS, Geometry, StateSet, MorphAttribute, StateAttribute ) {
+
     'use strict';
 
     /**
@@ -50,7 +51,21 @@ define( [
 
         getTargetsWeight: function () {
             return this._targetWeights;
+        },
+
+        mergeChildrenVertexAttributeList: function () {
+
+            var target;
+
+            for ( var i = 0, l = this._targets.length; i < l; i++ ) {
+
+                target = this._targets[ i ];
+                Geometry.appendVertexAttributeToList( target.getVertexAttributeList(), this.getVertexAttributeList(), i );
+
+            }
+
         }
+
 
     } ), 'osgAnimation', 'MorphGeometry' );
 

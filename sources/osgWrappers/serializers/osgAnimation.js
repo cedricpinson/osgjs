@@ -13,6 +13,8 @@ define( [
 
     'use strict';
 
+    /*eslint new-cap: [2, {"capIsNewExceptions": ["Geometry", "MatrixTransform", "StandardVec3Channel", "StandardQuatChannel", "StandardFloatChannel", "MorphGeometry"]}]*/
+
     var osgAnimationWrapper = {};
 
     var channelCtor = function () {};
@@ -400,26 +402,6 @@ define( [
         var rigPromise = osgWrapper.Geometry( input, rigGeom );
         rigGeom._boneNameID = jsonObj.BoneMap;
 
-        var mergeGeometry = function ( from, to ) {
-            // Merge rigGeometry and sourceGeometry, we keep source instance and adds
-            // some references to the rigGeometry
-
-            //Merge primitives
-            to.primitives = from.primitives;
-
-            //Merge Attributes
-            var keys = Object.keys( from.attributes );
-            for ( var i = 0, l = keys.length; i < l; i++ ) {
-                var key = keys[ i ];
-                to.attributes[ key ] = from.attributes[ key ];
-            }
-
-            //Merge state set
-            to.stateset = from.stateset;
-
-            //@TODO Think to merge more stuff here
-        };
-
         //Import source geometry and merge it with the rigGeometry
         var sourceGeometry = jsonObj.SourceGeometry[ 'osg.Geometry' ];
         var geomPromise;
@@ -438,47 +420,44 @@ define( [
             }
         }
 
-        return P.all( [ rigPromise, geomPromise ] ).then( function ( promises ) {
-            mergeGeometry( promises[ 0 ].getSourceGeometry(), promises[ 0 ] );
+        return P.all( [ rigPromise, geomPromise ] ).then( function () {
+
+            rigGeom.mergeChildrenData();
             return rigGeom;
+
         } );
+
     };
 
-    osgAnimationWrapper.MorphGeometry = function ( input, morphGeom ) {
+    osgAnimationWrapper.MorphGeometry = function ( input, morphGeometry ) {
+
         var jsonObj = input.getJSON();
 
-        if ( /*!jsonObj.Name ||*/ !jsonObj.MorphTargets )
+        if ( !jsonObj.MorphTargets )
             return P.reject();
 
         var morphTargets = jsonObj.MorphTargets;
         var arrayPromise = [];
 
-        arrayPromise.push( osgWrapper.Geometry( input, morphGeom ) );
+        // arrayPromise[0] is the morphGeometry
+        arrayPromise.push( osgWrapper.Geometry( input, morphGeometry ) );
 
-        for ( var i = 0, l = morphTargets.length; i < l; i++ ) {
-            if ( i >= 4 ) break; //Clamps the targets count
-            var promise = input.setJSON( morphTargets[ i ] ).readObject();
-            arrayPromise.push( promise );
-        }
+        var maxNumTarget = Math.min( 4, morphTargets.length );
 
-        return P.all( arrayPromise ).then( function ( pArray ) {
-            var geom = pArray[ 0 ];
-            var geomAttr = geom.attributes;
-            var targets = geom._targets;
-            for ( var i = 1, l = pArray.length; i < l; i++ ) {
+        for ( var i = 0, l = maxNumTarget; i < l; i++ )
+            arrayPromise.push( input.setJSON( morphTargets[ i ] ).readObject() );
 
-                var target = pArray[ i ];
-                var attributes = target.attributes;
-                var keys = Object.keys( attributes );
+        return P.all( arrayPromise ).then( function ( promiseResultArray ) {
 
-                for ( var j = 0, k = keys.length; j < k; j++ ) {
-                    var key = keys[ j ];
-                    geomAttr[ key + '_' + i ] = attributes[ key ];
-                }
+            var morphGeometryResolved = promiseResultArray[ 0 ];
 
-                targets.push( target );
-            }
-            return morphGeom;
+            var targets = morphGeometryResolved.getMorphTargets();
+            for ( var j = 1, jn = promiseResultArray.length; j < jn; j++ )
+                targets.push( promiseResultArray[ j ] );
+
+            morphGeometryResolved.mergeChildrenVertexAttributeList();
+            return morphGeometryResolved;
+
         } );
     };
 

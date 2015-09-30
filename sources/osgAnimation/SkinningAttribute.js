@@ -58,7 +58,7 @@ define( [
             this._matrixPalette = matrixPalette;
             // update max bone size
             if ( this._boneUniformSize === undefined ) {
-                SkinningAttribute.maxBoneUniformSize = Math.max( SkinningAttribute.maxBoneUniformSize, matrixPalette.length / 3 );
+                SkinningAttribute.maxBoneUniformSize = Math.max( SkinningAttribute.maxBoneUniformSize, matrixPalette.length / 4 );
                 SkinningAttribute.maxBoneUniformSize = Math.min( SkinningAttribute.maxBoneUniformAllowed, SkinningAttribute.maxBoneUniformSize );
             }
         },
