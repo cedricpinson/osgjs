@@ -163,17 +163,6 @@
 
     Example.prototype = {
 
-        setPredefineMaterial: function ( stateSet, roughness, name ) {
-            var roughnessTexture = this.createTextureFromColor( [ roughness, roughness, roughness, 1.0 ], false );
-            if ( !PredefinedMaterials[ name ] ) {
-                console.log( 'configuration not gound for material', name );
-            }
-            var specular = this.createTextureFromColor( PredefinedMaterials[ name ], true );
-
-            this.setMaterial( stateSet, this.getTexture0000(), roughnessTexture, specular );
-            this._materialDefines = [ '#define SPECULAR' ];
-        },
-
         setMaterial: function ( stateSet, albedo, roughness, specular ) {
 
             stateSet.setTextureAttributeAndModes( window.ALBEDO_TEXTURE_UNIT, albedo );
@@ -566,7 +555,7 @@
         },
 
         updateRowModelsSpecularMetal: function () {
-            var specularTexture = this._specularMetalTexture = this.createTextureFromColor( PredefinedMaterials[ this._config.material ], false, this._specularMetalTexture );
+            var specularTexture = this._specularMetalTexture = this.createTextureFromColor( PredefinedMaterials[ this._config.material ], true, this._specularMetalTexture );
             return specularTexture;
         },
 
@@ -1084,6 +1073,7 @@
             var environment = 'textures/city_night_lights_cla/';
             var environment = 'textures/city_night_lights_clb/';
             var environment = 'textures/city_night_lights_clc/';
+            var environment = 'textures/city_night_lights_cld/';
 
 
             //var environment = 'textures/bus_garage5/';
