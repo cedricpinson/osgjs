@@ -23,98 +23,14 @@ define( [
     'osg/Viewport',
     'osgShader/ShaderProcessor',
     'osgShadow/ShadowReceiveAttribute',
+    'osgShadow/ShadowCasterVisitor',
     'osgShadow/ShadowFrustumIntersection',
     'osgShadow/ShadowCastAttribute',
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowTexture'
-], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, Depth, FrameBufferObject, Light, LightSource, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowReceiveAttribute, ShadowFrustumIntersection, ShadowCastAttribute, ShadowTechnique, ShadowTexture ) {
+], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, Depth, FrameBufferObject, Light, LightSource, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowReceiveAttribute, ShadowCasterVisitor, ShadowFrustumIntersection, ShadowCastAttribute, ShadowTechnique, ShadowTexture ) {
 
     'use strict';
-
-    /*
-     * Remove nodes that shouldn't not be culled when casting
-     * like lights, camera with render texture targets,
-     * transparent (alphablended) geometries
-     * (otherwise it might break things)
-     * visits whole underlying scene recursively
-     */
-    var RemoveNodesNeverCastingVisitor = function ( mask ) {
-        NodeVisitor.call( this );
-        // mask setting to avoid casting shadows
-        this._noCastMask = mask;
-        this._nodeList = [];
-    };
-    RemoveNodesNeverCastingVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
-        reset: function () {
-            this._nodeList = [];
-        },
-        removeNodeFromCasting: function ( node ) {
-            /*jshint bitwise: false */
-            var nm = node.getNodeMask();
-            // ~0x0 as not to be processed
-            if ( nm === ~0x0 ) {
-                // set to avoid casting shadow
-                nm = this._noCastMask;
-                node.setNodeMask( nm );
-                this._nodeList.push( node );
-            } else if ( ( nm & ~( this._noCastMask ) ) !== 0 ) {
-                // set to avoid casting shadow
-                node.setNodeMask( nm | this._noCastMask );
-                this._nodeList.push( node );
-            }
-            /*jshint bitwise: true */
-        },
-        // Visiting whole casting scene recursively
-        apply: function ( node ) {
-
-            // check that and other things ?
-            // TODO: should check whole hierarchy to check for override/protected/etc
-            // Depth, BlendFunc Attributes...
-            var st = node.getStateSet();
-            if ( st ) {
-
-                // check for transparency not casting shadows
-                // as no alpha blending transparency shadow (no transmittance support)
-                var blend = st.getAttribute( 'BlendFunc' );
-                if ( blend !== undefined && blend.getSource() !== BlendFunc.DISABLE ) {
-                    var depth = st.getAttribute( 'Depth' );
-                    if ( depth && ( depth.getFunc() === Depth.DISABLE || depth.getWriteMask() === false ) ) {
-                        this.removeNodeFromCasting( node );
-                        return;
-                    }
-                }
-            }
-
-            // check for lights, as lights are positionned attributes
-            if ( node.getTypeID() === Light.typeID || node.getTypeID() === LightSource.typeID ) {
-                this.removeNodeFromCasting( node );
-                return;
-            } else if ( node.getTypeID() === Camera.typeID && node.isRenderToTextureCamera() ) {
-                // no "Subrender" when rendering the shadow map as from light point of view
-                this.removeNodeFromCasting( node );
-                return;
-            }
-            this.traverse( node );
-        },
-
-        setNoCastMask: function ( mask ) {
-            this._noCastMask = mask;
-        },
-        // restore to any previous mask avoiding any breaks
-        // in other application mask usage.
-        restore: function () {
-            var node, i = this._nodeList.length;
-            while ( i-- ) {
-                node = this._nodeList[ i ];
-                var nm = node.getNodeMask();
-                if ( nm === this._noCastMask ) node.setNodeMask( ~0x0 );
-                else node.setNodeMask( nm & ~this._noCastMask );
-            }
-        }
-
-    } );
-
-
 
     // Custom camera cull callback
     // we customize it just to avoid to add extra 'virtual' function
@@ -236,11 +152,19 @@ define( [
 
         // Overridable Visitor so that user can override the visitor to enable disable
         // in its own shadowmap implementation
-        this._removeNodesNeverCastingVisitor = new RemoveNodesNeverCastingVisitor( this._castsShadowTraversalMask );
+        // settings.userShadowCasterVisitor:
+        // - undefined means using default
+        // - false means no removal visitor needed
+        // - otherwise must be an instance of a class inherited from shadowCaster
+        if ( settings.userShadowCasterVisitor !== false ) {
 
+            this._removeNodesNeverCastingVisitor = settings.userShadowCasterVisitor || new ShadowCasterVisitor( this._castsShadowTraversalMask );
+
+        }
 
         this._infiniteFrustum = true;
         var shadowStateAttribute = new ShadowCastAttribute( false, this._shadowReceiveAttribute );
+
         this._casterStateSet.setAttributeAndModes( shadowStateAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
         this._casterStateSet.setShaderGeneratorName( this._shadowCastShaderGeneratorName, StateAttribute.OVERRIDE | StateAttribute.ON );
 
@@ -949,6 +873,7 @@ define( [
             this._depthRange[ 3 ] = 0.0;
 
             var castUniforms = this._casterStateSet.getUniformList();
+
             castUniforms[ 'Shadow_DepthRange' ].getUniform().set( this._depthRange );
             this._texture.setDepthRange( this._depthRange );
 
@@ -971,10 +896,13 @@ define( [
 
             var bbox;
 
+            if ( this._removeNodesNeverCastingVisitor ) {
 
-            this._removeNodesNeverCastingVisitor.setNoCastMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
-            this._removeNodesNeverCastingVisitor.reset();
-            this.getShadowedScene().accept( this._removeNodesNeverCastingVisitor );
+                this._removeNodesNeverCastingVisitor.setNoCastMask( ~( this._castsShadowBoundsTraversalMask | this._castsShadowDrawTraversalMask ) );
+                this._removeNodesNeverCastingVisitor.reset();
+                this.getShadowedScene().accept( this._removeNodesNeverCastingVisitor );
+
+            }
 
 
             this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
@@ -983,13 +911,20 @@ define( [
             bbox = this._computeBoundsVisitor.getBoundingBox();
 
             if ( !bbox.valid() ) {
+
                 // nothing to draw Early out.
                 this.noDraw();
 
-                // remove our flags changes on any bitmask
-                // not to break things
-                this._removeNodesNeverCastingVisitor.restore();
+                if ( this._removeNodesNeverCastingVisitor ) {
+
+                    // remove our flags changes on any bitmask
+                    // not to break things
+                    this._removeNodesNeverCastingVisitor.restore();
+
+                }
+
                 return;
+
             }
 
             // HERE we get the shadowedScene Current World Matrix
@@ -1006,10 +941,16 @@ define( [
                 //console.log( 'shadow early OUT' );
                 this.noDraw();
 
-                // remove our flags changes on any bitmask
-                // not to break things
-                this._removeNodesNeverCastingVisitor.restore();
+                if ( this._removeNodesNeverCastingVisitor ) {
+
+                    // remove our flags changes on any bitmask
+                    // not to break things
+                    this._removeNodesNeverCastingVisitor.restore();
+
+                }
+
                 return;
+
             }
 
 
@@ -1045,9 +986,13 @@ define( [
             // (as in clamped too tight projection)
             this._cameraShadow.setComputeNearFar( false );
 
-            // remove our flags changes on any bitmask
-            // not to break things
-            this._removeNodesNeverCastingVisitor.restore();
+            if ( this._removeNodesNeverCastingVisitor ) {
+
+                // remove our flags changes on any bitmask
+                // not to break things
+                this._removeNodesNeverCastingVisitor.restore();
+
+            }
 
             cullVisitor.popStateSet();
 
