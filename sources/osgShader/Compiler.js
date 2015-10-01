@@ -1151,18 +1151,38 @@ define( [
 
             return boneMatrix;
         },
-        morphTransform: function ( inputVertex, outputVertex ) {
+        getOrCreateDoMorph: function () {
+            var doMorph = this._variables[ 'doMorph' ];
+            if ( doMorph ) return doMorph;
+
+            doMorph = this.createVariable( 'bool', 'doMorph' );
+
+            this.getNode( 'InlineCode' ).code( '%doMorph = any(notEqual(%weights, vec4(0.0)));' ).inputs( {
+                weights: this.getOrCreateUniform( 'vec4', 'uTargetWeights' )
+            } ).outputs( {
+                doMorph: doMorph
+            } );
+
+            return doMorph;
+        },
+        getTarget: function ( name, i ) {
+            return this.getOrCreateAttribute( 'vec3', name + '_' + i );
+        },
+        morphTransformVec3: function ( inputVertex, outputVertex, targetName ) {
             var inputs = {
+                doMorph: this.getOrCreateDoMorph(),
                 vertex: inputVertex,
                 weights: this.getOrCreateUniform( 'vec4', 'uTargetWeights' )
             };
+
             var numTargets = this._morphAttribute.getNumTargets();
             for ( var i = 0; i < numTargets; i++ )
-                inputs[ 'target' + i ] = this.getOrCreateAttribute( 'vec3', inputVertex.getVariable() + '_' + i );
+                inputs[ 'target' + i ] = this.getTarget( targetName || inputVertex.getVariable(), i );
 
             this.getNode( 'Morph' ).inputs( inputs ).outputs( {
                 out: outputVertex
             } );
+
             return outputVertex;
         },
         skinTransformVertex: function ( inputVertex, outputVertex ) {
@@ -1174,26 +1194,6 @@ define( [
             } );
             return outputVertex;
         },
-        getOrCreateVertexAttribute: function () {
-            var v = this.getVariable( 'vertexAttribute' );
-            if ( v )
-                return v;
-
-            var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
-            if ( !this._skinningAttribute && !this._morphAttribute )
-                return inputVertex;
-
-            var posOut = this.createVariable( 'vec3', 'vertexAttribute' );
-
-            if ( this._morphAttribute && !this._skinningAttribute )
-                return this.morphTransform( inputVertex, posOut );
-            else if ( !this._morphAttribute && this._skinningAttribute )
-                return this.skinTransformVertex( inputVertex, posOut );
-
-            var tmpMorph = this.createVariable( 'vec3', 'vertexMorphAttribute' );
-            this.morphTransform( inputVertex, tmpMorph );
-            return this.skinTransformVertex( tmpMorph, posOut );
-        },
         skinTransformNormal: function ( inputVertex, outputVertex ) {
             this.getNode( 'MatrixMultDirection' ).setInverse( true ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
@@ -1203,25 +1203,51 @@ define( [
             } );
             return outputVertex;
         },
+        getOrCreateVertexAttribute: function () {
+            var vecOut = this.getVariable( 'vertexAttribute' );
+            if ( vecOut ) return vecOut;
+
+            var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
+            if ( !this._skinningAttribute && !this._morphAttribute ) return inputVertex;
+
+            vecOut = this.createVariable( 'vec3', 'vertexAttribute' );
+
+            if ( this._morphAttribute && !this._skinningAttribute ) return this.morphTransformVec3( inputVertex, vecOut );
+            else if ( !this._morphAttribute && this._skinningAttribute ) return this.skinTransformVertex( inputVertex, vecOut );
+
+            var tmpMorph = this.createVariable( 'vec3' );
+            this.morphTransformVec3( inputVertex, tmpMorph );
+            return this.skinTransformVertex( tmpMorph, vecOut );
+        },
         getOrCreateNormalAttribute: function () {
-            var v = this._variables[ 'normalAttribute' ];
-            if ( v )
-                return v;
+            var vecOut = this.getVariable( 'normalAttribute' );
+            if ( vecOut ) return vecOut;
 
             var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
-            if ( !this._skinningAttribute && !this._morphAttribute )
-                return inputNormal;
+            if ( !this._skinningAttribute && !this._morphAttribute ) return inputNormal;
 
-            var posOut = this.createVariable( 'vec3', 'normalAttribute' );
+            var tmpAnim;
 
-            if ( this._morphAttribute && !this._skinningAttribute )
-                return this.morphTransform( inputNormal, posOut );
-            else if ( !this._morphAttribute && this._skinningAttribute )
-                return this.skinTransformNormal( inputNormal, posOut );
+            // we name the morph variable in case we want to infer the tangent from the morph normal
+            if ( this._morphAttribute && !this._skinningAttribute ) {
+                tmpAnim = this.morphTransformVec3( inputNormal, this.createVariable( 'vec3', 'normalMorph' ) );
+            } else if ( !this._morphAttribute && this._skinningAttribute ) {
+                tmpAnim = this.skinTransformNormal( inputNormal, this.createVariable( 'vec3', 'normalSkin' ) );
+            } else {
 
-            var tmpMorph = this.createVariable( 'vec3', 'normalMorphAttribute' );
-            this.morphTransform( inputNormal, tmpMorph );
-            return this.skinTransformNormal( tmpMorph, posOut );
+                tmpAnim = this.morphTransformVec3( inputNormal, this.createVariable( 'vec3', 'normalMorph' ) );
+                tmpAnim = this.skinTransformNormal( tmpAnim, this.createVariable( 'vec3', 'normalSkin' ) );
+
+            }
+
+            vecOut = this.createVariable( 'vec3', 'normalAttribute' );
+            this.getNode( 'Normalize' ).inputs( {
+                vec: tmpAnim
+            } ).outputs( {
+                vec: vecOut
+            } );
+
+            return vecOut;
         },
         declareVertexTransformShadeless: function ( glPosition ) {
             // No light

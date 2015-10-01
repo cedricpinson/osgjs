@@ -14,11 +14,12 @@ mat4 skeletalTransform( const in vec4 weightsVec, const in vec4 bonesIdx ) {
     mat4 tmpMat = mat4(1.0);
     mat4 outMat = mat4(0.0);
 
+    // we handle negative weights
     if(all(equal(weightsVec, vec4(0.0)))) return tmpMat;
 
-    if(weightsVec.x > 0.0) outMat += weightsVec.x * getMat4FromVec4( idx.x, tmpMat );
-    if(weightsVec.y > 0.0) outMat += weightsVec.y * getMat4FromVec4( idx.y, tmpMat );
-    if(weightsVec.z > 0.0) outMat += weightsVec.z * getMat4FromVec4( idx.z, tmpMat );
-    if(weightsVec.w > 0.0) outMat += weightsVec.w * getMat4FromVec4( idx.w, tmpMat );
+    if(weightsVec.x != 0.0) outMat += weightsVec.x * getMat4FromVec4( idx.x, tmpMat );
+    if(weightsVec.y != 0.0) outMat += weightsVec.y * getMat4FromVec4( idx.y, tmpMat );
+    if(weightsVec.z != 0.0) outMat += weightsVec.z * getMat4FromVec4( idx.z, tmpMat );
+    if(weightsVec.w != 0.0) outMat += weightsVec.w * getMat4FromVec4( idx.w, tmpMat );
     return outMat;
 }

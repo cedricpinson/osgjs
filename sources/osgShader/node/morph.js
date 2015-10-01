@@ -10,55 +10,65 @@ define( [
         Node.apply( this );
     };
 
+    var getVec3 = function ( vec ) {
+        return vec.getType() === 'vec4' ? vec.getVariable() + '.rgb' : vec;
+    };
+
     Morph.prototype = MACROUTILS.objectInherit( Node.prototype, {
         type: 'Morph',
-        validInputs: [ 'weights', 'vertex', 'target0', /*'target1','target2','target3'*/ ],
+        validInputs: [ 'doMorph', 'weights', 'vertex', 'target0', /*'target1','target2','target3'*/ ],
         validOutputs: [ 'out' ],
 
         globalFunctionDeclaration: function () {
 
-            //vec3 morphTransform( const in vec4 weightsTarget,  const in vec3 vertex, const in vec3 target0, const in vec3 target1, const in vec3 target2 ) {
-            //  if( length( weightsTarget ) == 0.0 ) return vertex;
-            //  vec4 weight = normalize( weightsTarget );
-            //  return vertex * (1.0 - ( + weight[0] + weight[1] + weight[2])) +  + target0 * weight[0] + target1 * weight[1] + target2 * weight[2];
+            //vec3 morphTransform( const in vec4 weights,  const in vec3 vertex, const in vec3 target0, const in vec3 target1, const in vec3 target2 ) {
+            //  if( length( weights ) == 0.0 ) return vertex;
+            //  return vertex * (1.0 - ( + weights[0] + weights[1] + weights[2])) + target0 * weights[0] + target1 * weights[1] + target2 * weights[2];
             //}
-            var nbTargets = Object.keys( this._inputs ).length - 2;
+            var nbTargets = Object.keys( this._inputs ).length - 3;
             var i = 0;
 
             // TODO: this should be rewrote with sprintf
-            var str = 'vec3 morphTransform( const in vec4 weightsTarget,  const in vec3 vertex, ';
-
-            str += 'const in vec3 target0';
+            ////// Signature
+            var str = 'vec3 morphTransform( const in bool doMorph, const in vec4 weights,  const in vec3 vertex, const in vec3 target0';
             for ( i = 1; i < nbTargets; ++i )
                 str += ', const in vec3 target' + i;
             str += ' ) { \n';
 
-            str += '\tif( length( weightsTarget ) == 0.0 ) return vertex;\n';
-            if ( nbTargets > 1 )
-                str += '\tvec4 weight = normalize( weightsTarget );\n';
-            var weightVar = nbTargets > 1 ? 'weight' : 'weightsTarget';
+            ////// Check length
+            str += '\tif( doMorph == false ) return vertex;\n';
 
-            str += '\treturn vertex * (1.0 - (';
-            for ( i = 0; i < nbTargets; ++i )
-                str += ' + ' + weightVar + '[' + i + ']';
+            ////// Morphing
+            if ( nbTargets === 1 ) {
 
-            str += ')) ';
-            for ( i = 0; i < nbTargets; ++i )
-                str += ' + target' + i + ' * ' + weightVar + '[' + i + ']';
+                str += 'return mix(vertex, target0, weights[0])';
+
+            } else {
+
+                str += '\tvec3 vecOut = vertex * (1.0 - ( weights[0]';
+                for ( i = 1; i < nbTargets; ++i )
+                    str += ' + weights[' + i + ']';
+                str += '));\n';
+
+                for ( i = 0; i < nbTargets; ++i )
+                    str += '\tvecOut += target' + i + ' * weights[' + i + '];\n';
+
+                str += '\treturn vecOut';
+            }
 
             str += ';\n}\n';
             return str;
-
         },
 
         computeShader: function () {
 
-            var inputs = [ this._inputs.weights, this._inputs.vertex ];
+            var inps = this._inputs;
+            var inputs = [ inps.doMorph, inps.weights, getVec3( inps.vertex ) ];
 
             for ( var i = 0; i < 4; i++ ) {
 
-                if ( !this._inputs[ 'target' + i ] ) break;
-                inputs.push( this._inputs[ 'target' + i ] );
+                if ( !inps[ 'target' + i ] ) break;
+                inputs.push( getVec3( inps[ 'target' + i ] ) );
 
             }
 

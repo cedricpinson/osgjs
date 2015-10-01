@@ -86,6 +86,7 @@
             var model = this.getOrCreateModel( this._modelPath + this.models[ this._config.currentModel ] );
 
             this._root.addChild( model );
+            this._viewer.getManipulator().computeHomePosition();
 
             return this._root;
         },
