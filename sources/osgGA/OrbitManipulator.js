@@ -121,24 +121,17 @@ define( [
             this._rotate = new OrbitManipulator.Interpolator( 2 );
             this._pan = new OrbitManipulator.Interpolator( 2 );
             this._zoom = new OrbitManipulator.Interpolator( 1 );
-            this._zoom.reset = function () {
-                OrbitManipulator.Interpolator.prototype.reset.call( this );
-                this._start = 0.0;
-            };
 
-            this._buttonup = true;
-
-            this._scale = 10.0;
             this._maxDistance = Infinity;
-            this._minDistance = 1e-10;
+            this._minDistance = 1e-10; // min distance allowed between eye and target
+            this._minSpeed = 1e-10; // set a limit to pan/zoom speed
             this._scaleMouseMotion = 1.0;
 
             this._inverseMatrix = Matrix.create();
-            this._rotateKey = 65; // a
-            this._zoomKey = 83; // s
-            this._panKey = 68; // d
 
-            this._autoPushTarget = true; // if we hit the min distance and can't zoom anymore, maybe we still want to move on
+            // if we hit the min distance and can't zoom anymore, maybe we still want to move on
+            // with a very low _minDistance, it's like a fps manipulator as long as you don't unzoom
+            this._autoPushTarget = true;
 
             // instance of controller
             var self = this;
@@ -235,10 +228,17 @@ define( [
         },
 
         setMinDistance: function ( d ) {
-            this._minDistance = d;
+            this._minDistance = Math.max( 1e-10, d );
         },
         getMinDistance: function () {
             return this._minDistance;
+        },
+
+        setMinSpeed: function ( s ) {
+            this._minSpeed = s;
+        },
+        getMinSpeed: function () {
+            return this._minSpeed;
         },
 
         setDistance: function ( d ) {
@@ -251,6 +251,9 @@ define( [
         setRotationBaseFromQuat: function ( quat ) {
             Matrix.makeRotateFromQuat( quat, this._rotBase );
         },
+        getSpeedFactor: function () {
+            return Math.max( this._distance, this._minSpeed );
+        },
         computePan: ( function () {
             var inv = Matrix.create();
             var x = [ 0.0, 0.0, 0.0 ];
@@ -262,8 +265,9 @@ define( [
                 // TODO : manipulators in osgjs don't support well true orthographic camera anyway because they
                 // manage the view matrix (and you need to edit the projection matrix to 'zoom' for true ortho camera) 
                 var vFov = proj[ 15 ] === 1 ? 1.0 : 2.00 / proj[ 5 ];
-                dy *= this._distance * vFov;
-                dx *= this._distance * vFov;
+                var speed = this.getSpeedFactor() * vFov;
+                dy *= speed;
+                dx *= speed;
 
                 Matrix.inverse( this._rotation, inv );
                 x[ 0 ] = Matrix.get( inv, 0, 0 );
@@ -330,7 +334,8 @@ define( [
         zoom: ( function () {
             var dir = Vec3.create();
             return function ( ratio ) {
-                var newValue = this._distance * ratio;
+                var newValue = this._distance + this.getSpeedFactor() * ( ratio - 1.0 );
+
                 if ( newValue < this._minDistance ) {
                     if ( this._autoPushTarget ) {
                         // push the target instead of zooming on it

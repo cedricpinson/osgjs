@@ -956,7 +956,12 @@ define( [
                 result[ 2 ] = r01 * r12 - r02 * r11;
 
                 // Compute determinant of rot from 3 elements just computed
-                var oneOverDet = 1.0 / ( r00 * result[ 0 ] + r10 * result[ 1 ] + r20 * result[ 2 ] );
+                var det = ( r00 * result[ 0 ] + r10 * result[ 1 ] + r20 * result[ 2 ] );
+                if ( Math.abs( det ) < Number.EPSILON ) {
+                    Notify.log( 'Warning can\'t inverse matrix ' + matrix );
+                    return false;
+                }
+                var oneOverDet = 1.0 / det;
                 r00 *= oneOverDet;
                 r10 *= oneOverDet;
                 r20 *= oneOverDet; // Saves on later computations
@@ -995,7 +1000,12 @@ define( [
                     tx = matrix[ 12 ];
                     ty = matrix[ 13 ];
                     tz = matrix[ 14 ];
-                    var oneOverS = 1.0 / ( d - ( tx * px + ty * py + tz * pz ) );
+                    det = ( d - ( tx * px + ty * py + tz * pz ) );
+                    if ( Math.abs( det ) < Number.EPSILON ) {
+                        Notify.log( 'Warning can\'t inverse matrix ' + matrix );
+                        return false;
+                    }
+                    var oneOverS = 1.0 / det;
 
                     tx *= oneOverS;
                     ty *= oneOverS;
