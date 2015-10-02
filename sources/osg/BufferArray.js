@@ -22,31 +22,45 @@ define( [
 
     /**
      * BufferArray manage vertex / normal / ... array used by webgl.
+     * osgjs automatically converts array buffers to Float32Array and
+     * element array buffers to Uint16Array if not said explicitly with 
+     * preserveArrayType variable in constructor.
      * @class BufferArray
      */
-    var BufferArray = function ( type, elements, itemSize ) {
+    var BufferArray = function ( type, elements, itemSize, preserveArrayType ) {
+
         GLObject.call( this );
         // maybe could inherit from Object
         this._instanceID = Object.getInstanceID();
-
         this.dirty();
-
         this._itemSize = itemSize;
-        if ( typeof ( type ) === 'string' ) {
+        if ( typeof ( type ) === 'string' )
             type = BufferArray[ type ];
-        }
         this._type = type;
         this._glBind = undefined;
 
         if ( elements !== undefined ) {
-            var typedArray;
-            if ( this._type === BufferArray.ELEMENT_ARRAY_BUFFER ) {
-                typedArray = elements instanceof MACROUTILS.Uint16Array ? elements : new MACROUTILS.Uint16Array( elements );
-            } else {
-                typedArray = elements instanceof MACROUTILS.Float32Array ? elements : new MACROUTILS.Float32Array( elements );
+
+            var typedArray = elements;
+
+            if ( !preserveArrayType ) {
+
+                if ( this._type === BufferArray.ELEMENT_ARRAY_BUFFER ) {
+
+                    typedArray = elements instanceof MACROUTILS.Uint16Array ? elements : new MACROUTILS.Uint16Array( elements );
+
+                } else {
+
+                    typedArray = elements instanceof MACROUTILS.Float32Array ? elements : new MACROUTILS.Float32Array( elements );
+
+                }
+
             }
+
             this.setElements( typedArray );
+
         }
+
     };
 
     BufferArray.ELEMENT_ARRAY_BUFFER = 0x8893;
