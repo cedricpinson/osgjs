@@ -36,9 +36,13 @@ define( [
 
         // must be optimized
         applyToMatrix: function ( m ) {
+
             var scale = this._target.value;
-            Matrix.preMult( m, Matrix.makeScale( scale[ 0 ], scale[ 1 ], scale[ 2 ], Matrix.create() ) );
+
+            Matrix.multScale( scale[ 0 ], scale[ 1 ], scale[ 2 ], m, m );
+
         }
+
     } );
 
     return StackedScale;
