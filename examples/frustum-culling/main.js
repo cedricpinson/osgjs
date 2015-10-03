@@ -407,8 +407,24 @@ bs.getOrCreateStateSet().setTextureAttributeAndModes( 0, new osg.Texture(), osg.
             var fgt = [
                 osgUtil.Composer.Filter.defaultFragmentShaderHeader, 'void main (void)', '{', '  gl_FragColor = texture2D(Texture0,FragTexCoord0);', '}', ''
             ].join( '\n' );
+
+
+            var vertexShader = [
+                '',
+                'attribute vec3 Vertex;',
+                'attribute vec2 TexCoord0;',
+                'varying vec2 FragTexCoord0;',
+                'uniform mat4 ModelViewMatrix;',
+                'uniform mat4 ProjectionMatrix;',
+                'void main(void) {',
+                '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+                '  FragTexCoord0 = TexCoord0;',
+                '}',
+                ''
+            ].join( '\n' );
+
             var program = new osg.Program(
-                new osg.Shader( 'VERTEX_SHADER', osgUtil.Composer.Filter.defaultVertexShader ), new osg.Shader( 'FRAGMENT_SHADER', fgt ) );
+                new osg.Shader( 'VERTEX_SHADER', vertexShader ), new osg.Shader( 'FRAGMENT_SHADER', fgt ) );
 
             stateset = this._ComposerdebugNode.getOrCreateStateSet();
             if ( !optionsDebug.fullscreen )
