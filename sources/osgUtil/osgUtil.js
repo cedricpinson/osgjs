@@ -1,5 +1,6 @@
 define( [
     'osgUtil/Composer',
+    'osgUtil/DebugHashAttributes',
     'osgUtil/DisplayNormalVisitor',
     'osgUtil/DisplayGeometryVisitor',
     'osgUtil/DisplayNodeGraphVisitor',
@@ -16,6 +17,7 @@ define( [
     'osgUtil/WebVR',
 
 ], function ( Composer,
+    DebugHashAttribute,
     DisplayNormalVisitor,
     DisplayGeometryVisitor,
     DisplayNodeGraphVisitor,
@@ -36,6 +38,7 @@ define( [
     var osgUtil = {};
 
     osgUtil.Composer = Composer;
+    osgUtil.DebugHashAttribute = DebugHashAttribute;
     osgUtil.DisplayNormalVisitor = DisplayNormalVisitor;
     osgUtil.DisplayGeometryVisitor = DisplayGeometryVisitor;
     osgUtil.DisplayNodeGraphVisitor = DisplayNodeGraphVisitor;

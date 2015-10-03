@@ -1,10 +1,11 @@
 define( [
+    'osg/Hash',
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Vec4',
     'osg/Uniform',
     'osg/Map'
-], function ( MACROUTILS, StateAttribute, Vec4, Uniform, Map ) {
+], function ( Hash, MACROUTILS, StateAttribute, Vec4, Uniform, Map ) {
     'use strict';
 
     // Define a material attribute
@@ -15,6 +16,8 @@ define( [
         this._specular = [ 0.0, 0.0, 0.0, 1.0 ];
         this._emission = [ 0.0, 0.0, 0.0, 1.0 ];
         this._shininess = 12.5;
+
+        this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
     };
 
     Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
@@ -48,7 +51,6 @@ define( [
 
         setEmission: function ( a ) {
             Vec4.copy( a, this._emission );
-            this._dirty = true;
         },
 
         getEmission: function () {
@@ -58,7 +60,6 @@ define( [
 
         setAmbient: function ( a ) {
             Vec4.copy( a, this._ambient );
-            this._dirty = true;
         },
 
         getAmbient: function () {
@@ -68,7 +69,6 @@ define( [
 
         setSpecular: function ( a ) {
             Vec4.copy( a, this._specular );
-            this._dirty = true;
         },
 
         getSpecular: function () {
@@ -78,7 +78,6 @@ define( [
 
         setDiffuse: function ( a ) {
             Vec4.copy( a, this._diffuse );
-            this._dirty = true;
         },
 
         getDiffuse: function () {
@@ -88,25 +87,19 @@ define( [
 
         setShininess: function ( a ) {
             this._shininess = a;
-            this._dirty = true;
         },
 
         getShininess: function () {
             return this._shininess;
         },
 
-
-
         setTransparency: function ( a ) {
             this._diffuse[ 3 ] = 1.0 - a;
-            this._dirty = true;
         },
 
         getTransparency: function () {
             return this._diffuse[ 3 ];
         },
-
-
 
         apply: function ( /*state*/) {
             var uniforms = this.getOrCreateUniforms();

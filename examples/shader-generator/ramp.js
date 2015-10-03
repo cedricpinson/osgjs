@@ -8,8 +8,9 @@
 
     var RampAttribute = window.RampAttribute = function () {
         osg.StateAttribute.call( this );
-
         this._attributeEnable = false;
+
+        this._hash = osg.hashComputeCodeFromString( this.getHashString() );
     };
     RampAttribute.prototype = osg.objectLibraryClass( osg.objectInherit( osg.StateAttribute.prototype, {
         attributeType: 'Ramp',
@@ -32,7 +33,7 @@
         // up to how you want to handle your shaders
         // if you dont want to trigger rebuild of shader then instead you an use a
         // uniform and keep always the same hash
-        getHash: function () {
+        getHashString: function () {
             return this.getType() + this._attributeEnable.toString();
         }
 

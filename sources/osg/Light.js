@@ -1,4 +1,5 @@
 define( [
+    'osg/Hash',
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Uniform',
@@ -7,14 +8,12 @@ define( [
     'osg/Vec4',
     'osg/Map',
     'osg/Notify'
-], function ( MACROUTILS, StateAttribute, Uniform, Matrix, Vec3, Vec4, Map, Notify ) {
+], function ( Hash, MACROUTILS, StateAttribute, Uniform, Matrix, Vec3, Vec4, Map, Notify ) {
     'use strict';
 
 
     // use the same kind of opengl lights
     // see http://www.glprogramming.com/red/chapter05.html
-
-
     var Light = function ( lightNumber, disable ) {
         StateAttribute.call( this );
 
@@ -47,6 +46,7 @@ define( [
 
         this._enable = !disable;
 
+        this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
         this.dirty();
 
     };
@@ -74,7 +74,7 @@ define( [
             return prefix + '_uniform_' + name;
         },
 
-        getHash: function () {
+        getHashString: function () {
             return this.getTypeMember() + this.getLightType() + this.isEnabled().toString();
         },
 
@@ -140,7 +140,6 @@ define( [
         // colors
         setAmbient: function ( a ) {
             Vec4.copy( a, this._ambient );
-            this.dirty();
         },
         getAmbient: function () {
             return this._ambient;
@@ -148,7 +147,6 @@ define( [
 
         setDiffuse: function ( a ) {
             Vec4.copy( a, this._diffuse );
-            this.dirty();
         },
         getDiffuse: function () {
             return this._diffuse;
@@ -156,7 +154,6 @@ define( [
 
         setSpecular: function ( a ) {
             Vec4.copy( a, this._specular );
-            this.dirty();
         },
         getSpecular: function () {
             return this._specular;
@@ -168,7 +165,6 @@ define( [
         // see creating lightsources http://www.glprogramming.com/red/chapter05.html
         setPosition: function ( a ) {
             Vec4.copy( a, this._position );
-            this.dirty();
         },
         getPosition: function () {
             return this._position;
@@ -177,7 +173,6 @@ define( [
         // unused for directional
         setDirection: function ( a ) {
             Vec3.copy( a, this._direction );
-            this.dirty();
         },
         getDirection: function () {
             return this._direction;
@@ -186,7 +181,7 @@ define( [
 
         setSpotCutoff: function ( a ) {
             this._spotCutoff = a;
-            this.dirty();
+
         },
         getSpotCutoff: function () {
             return this._spotCutoff;
@@ -194,7 +189,7 @@ define( [
 
         setSpotBlend: function ( a ) {
             this._spotBlend = a;
-            this.dirty();
+
         },
         getSpotBlend: function () {
             return this._spotBlend;
@@ -203,7 +198,6 @@ define( [
         // set/get the color of the ground
         setGround: function ( a ) {
             Vec3.copy( a, this._ground );
-            this.dirty();
         },
         getGround: function () {
             return this._ground;
@@ -212,7 +206,6 @@ define( [
         // attenuation coeff
         setConstantAttenuation: function ( value ) {
             this._attenuation[ 0 ] = value;
-            this.dirty();
         },
         getConstantAttenuation: function () {
             return this._attenuation[ 0 ];
@@ -220,7 +213,6 @@ define( [
 
         setLinearAttenuation: function ( value ) {
             this._attenuation[ 1 ] = value;
-            this.dirty();
         },
         getLinearAttenuation: function () {
             return this._attenuation[ 1 ];
@@ -228,7 +220,6 @@ define( [
 
         setQuadraticAttenuation: function ( value ) {
             this._attenuation[ 2 ] = value;
-            this.dirty();
         },
         getQuadraticAttenuation: function () {
             return this._attenuation[ 2 ];

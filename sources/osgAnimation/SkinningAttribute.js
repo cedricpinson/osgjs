@@ -1,9 +1,10 @@
 define( [
+    'osg/Hash',
     'osg/Map',
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Uniform'
-], function ( Map, MACROUTILS, StateAttribute, Uniform ) {
+], function ( Hash, Map, MACROUTILS, StateAttribute, Uniform ) {
 
     'use strict';
 
@@ -18,6 +19,8 @@ define( [
         // optional, if it's not provided, it will fall back to the maximum bone uniform size
         // boneUniformSize represents the number of vec4 (uniform) used in the shader for all the bones
         this._boneUniformSize = boneUniformSize;
+
+        this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
     };
 
     SkinningAttribute.uniforms = {};
@@ -56,6 +59,7 @@ define( [
                 SkinningAttribute.maxBoneUniformSize = Math.max( SkinningAttribute.maxBoneUniformSize, matrixPalette.length / 4 );
                 SkinningAttribute.maxBoneUniformSize = Math.min( SkinningAttribute.maxBoneUniformAllowed, SkinningAttribute.maxBoneUniformSize );
             }
+            this.dirty();
         },
         getMatrixPalette: function () {
             return this._matrixPalette;
@@ -65,7 +69,7 @@ define( [
         isEnabled: function () {
             return this._enable;
         },
-        getHash: function () {
+        getHashString: function () {
             // bonesize is important, as the shader itself
             // has a different code and uniform are not shared
             // geoms have each their own bones matrix palette

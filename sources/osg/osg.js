@@ -23,6 +23,7 @@ define( [
     'osg/FrameStamp',
     'osg/Geometry',
     'osg/GLObject',
+    'osg/Hash',
     'osg/Image',
     'osg/ImageStream',
     'osg/KdTree',
@@ -100,6 +101,7 @@ define( [
     FrameStamp,
     Geometry,
     GLObject,
+    Hash,
     Image,
     ImageStream,
     KdTree,
@@ -182,6 +184,7 @@ define( [
     osg.FrameStamp = FrameStamp;
     osg.Geometry = Geometry;
     osg.GLObject = GLObject;
+    osg.Hash = Hash;
     osg.Image = Image;
     osg.ImageStream = ImageStream;
     osg.KdTree = KdTree;

@@ -109,12 +109,8 @@ define( [
 
 
         this._shadowReceiveAttribute = new ShadowReceiveAttribute( this._light.getLightNumber() );
-        this._casterStateSet.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
-
         // default name, overridable with shadow settings
         this._shadowCastShaderGeneratorName = 'ShadowCast';
-
-
 
         var near = 0.001;
         var far = 1000;
