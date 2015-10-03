@@ -1,4 +1,5 @@
 'use strict';
+var Hash = require( 'osg/Hash' );
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Vec4 = require( 'osg/Vec4' );
@@ -13,6 +14,8 @@ var Material = function () {
     this._specular = [ 0.0, 0.0, 0.0, 1.0 ];
     this._emission = [ 0.0, 0.0, 0.0, 1.0 ];
     this._shininess = 12.5;
+
+    this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
 };
 
 Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
@@ -46,7 +49,6 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
 
     setEmission: function ( a ) {
         Vec4.copy( a, this._emission );
-        this._dirty = true;
     },
 
     getEmission: function () {
@@ -56,7 +58,6 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
 
     setAmbient: function ( a ) {
         Vec4.copy( a, this._ambient );
-        this._dirty = true;
     },
 
     getAmbient: function () {
@@ -66,7 +67,6 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
 
     setSpecular: function ( a ) {
         Vec4.copy( a, this._specular );
-        this._dirty = true;
     },
 
     getSpecular: function () {
@@ -76,7 +76,6 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
 
     setDiffuse: function ( a ) {
         Vec4.copy( a, this._diffuse );
-        this._dirty = true;
     },
 
     getDiffuse: function () {
@@ -86,25 +85,19 @@ Material.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
 
     setShininess: function ( a ) {
         this._shininess = a;
-        this._dirty = true;
     },
 
     getShininess: function () {
         return this._shininess;
     },
 
-
-
     setTransparency: function ( a ) {
         this._diffuse[ 3 ] = 1.0 - a;
-        this._dirty = true;
     },
 
     getTransparency: function () {
         return this._diffuse[ 3 ];
     },
-
-
 
     apply: function ( /*state*/) {
         var uniforms = this.getOrCreateUniforms();

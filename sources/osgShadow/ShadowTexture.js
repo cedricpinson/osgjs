@@ -1,4 +1,5 @@
 'use strict';
+var Hash = require( 'osg/Hash' );
 var Map = require( 'osg/Map' );
 var Notify = require( 'osg/Notify' );
 var Texture = require( 'osg/Texture' );
@@ -16,10 +17,14 @@ var Vec4 = require( 'osg/Vec4' );
  * @inherits StateAttribute
  */
 var ShadowTexture = function () {
+
     Texture.call( this );
     this._uniforms = {};
     this._mapSize = Vec4.create();
     this._lightUnit = -1; // default for a valid cloneType
+
+    this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
+
 };
 
 ShadowTexture.uniforms = {};
@@ -32,6 +37,7 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
     setLightUnit: function ( lun ) {
         this._lightUnit = lun;
+        this.dirty();
     },
     getLightUnit: function () {
         return this._lightUnit;
@@ -124,8 +130,7 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
         this.setDirty( false );
     },
-
-    getHash: function () {
+    getHashString: function () {
 
         return this.getTypeMember() + '_' + this._lightUnit + '_' +
             this._type;

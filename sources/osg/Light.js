@@ -1,4 +1,5 @@
 'use strict';
+var Hash = require( 'osg/Hash' );
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
@@ -11,8 +12,6 @@ var Notify = require( 'osg/Notify' );
 
 // use the same kind of opengl lights
 // see http://www.glprogramming.com/red/chapter05.html
-
-
 var Light = function ( lightNumber, disable ) {
     StateAttribute.call( this );
 
@@ -45,6 +44,7 @@ var Light = function ( lightNumber, disable ) {
 
     this._enable = !disable;
 
+    this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
     this.dirty();
 
 };
@@ -72,7 +72,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
         return prefix + '_uniform_' + name;
     },
 
-    getHash: function () {
+    getHashString: function () {
         return this.getTypeMember() + this.getLightType() + this.isEnabled().toString();
     },
 
@@ -138,7 +138,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // colors
     setAmbient: function ( a ) {
         Vec4.copy( a, this._ambient );
-        this.dirty();
     },
     getAmbient: function () {
         return this._ambient;
@@ -146,7 +145,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     setDiffuse: function ( a ) {
         Vec4.copy( a, this._diffuse );
-        this.dirty();
     },
     getDiffuse: function () {
         return this._diffuse;
@@ -154,7 +152,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     setSpecular: function ( a ) {
         Vec4.copy( a, this._specular );
-        this.dirty();
     },
     getSpecular: function () {
         return this._specular;
@@ -166,7 +163,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // see creating lightsources http://www.glprogramming.com/red/chapter05.html
     setPosition: function ( a ) {
         Vec4.copy( a, this._position );
-        this.dirty();
     },
     getPosition: function () {
         return this._position;
@@ -175,7 +171,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // unused for directional
     setDirection: function ( a ) {
         Vec3.copy( a, this._direction );
-        this.dirty();
     },
     getDirection: function () {
         return this._direction;
@@ -184,7 +179,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     setSpotCutoff: function ( a ) {
         this._spotCutoff = a;
-        this.dirty();
+
     },
     getSpotCutoff: function () {
         return this._spotCutoff;
@@ -192,7 +187,7 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     setSpotBlend: function ( a ) {
         this._spotBlend = a;
-        this.dirty();
+
     },
     getSpotBlend: function () {
         return this._spotBlend;
@@ -201,7 +196,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // set/get the color of the ground
     setGround: function ( a ) {
         Vec3.copy( a, this._ground );
-        this.dirty();
     },
     getGround: function () {
         return this._ground;
@@ -210,7 +204,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // attenuation coeff
     setConstantAttenuation: function ( value ) {
         this._attenuation[ 0 ] = value;
-        this.dirty();
     },
     getConstantAttenuation: function () {
         return this._attenuation[ 0 ];
@@ -218,7 +211,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     setLinearAttenuation: function ( value ) {
         this._attenuation[ 1 ] = value;
-        this.dirty();
     },
     getLinearAttenuation: function () {
         return this._attenuation[ 1 ];
@@ -226,7 +218,6 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     setQuadraticAttenuation: function ( value ) {
         this._attenuation[ 2 ] = value;
-        this.dirty();
     },
     getQuadraticAttenuation: function () {
         return this._attenuation[ 2 ];

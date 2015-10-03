@@ -1001,7 +1001,7 @@ var Matrix = {
                 tz = matrix[ 14 ];
                 det = ( d - ( tx * px + ty * py + tz * pz ) );
                 if ( Math.abs( det ) < Number.EPSILON ) {
-                    Notify.log( 'Warning can\'t inverse matrix ' + matrix );
+                    Notify.log( 'Warning can\'t inverse matrix ' + matrix, false, true );
                     return false;
                 }
                 var oneOverS = 1.0 / det;

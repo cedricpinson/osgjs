@@ -1,5 +1,7 @@
 'use strict';
+
 var Composer = require( 'osgUtil/Composer' );
+var DebugHashAttributes = require( 'osgUtil/DebugHashAttributes' );
 var DisplayNormalVisitor = require( 'osgUtil/DisplayNormalVisitor' );
 var DisplayGeometryVisitor = require( 'osgUtil/DisplayGeometryVisitor' );
 var DisplayGraph = require( 'osgUtil/DisplayGraph' );
@@ -19,6 +21,7 @@ var WebVR = require( 'osgUtil/WebVR' );
 var osgUtil = {};
 
 osgUtil.Composer = Composer;
+osgUtil.DebugHashAttributes = DebugHashAttributes;
 osgUtil.DisplayNormalVisitor = DisplayNormalVisitor;
 osgUtil.DisplayGeometryVisitor = DisplayGeometryVisitor;
 osgUtil.DisplayGraph = DisplayGraph;

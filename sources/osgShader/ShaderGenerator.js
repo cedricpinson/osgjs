@@ -1,5 +1,5 @@
 'use strict';
-var Notify = require( 'osg/Notify' );
+
 var Hash = require( 'osg/Hash' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
@@ -7,7 +7,6 @@ var Map = require( 'osg/Map' );
 var Compiler = require( 'osgShader/Compiler' );
 var ShaderProcessor = require( 'osgShader/ShaderProcessor' );
 var DebugHashAttributes = require( 'osgUtil/DebugHashAttributes' );
-
 
 // this is the list of attributes type we support by default to generate shader
 // if you need to adjust for your need provide or modify this list
@@ -108,6 +107,7 @@ ShaderGenerator.prototype = {
                 continue;
 
             if ( attr.getHash ) {
+
                 this.pushToHashStack( attr.getHash() );
                 /*develblock:start*/
                 DebugHashAttributes.debugDirtyAttributes( attr );
@@ -147,17 +147,15 @@ ShaderGenerator.prototype = {
                 if ( this.filterAttributeTypes( attr ) )
                     continue;
 
-                if ( attr.isTextureNull() )
-                    continue;
-
                 if ( attr.getHash ) {
+
                     this.pushToHashStack( attr.getHash() );
                     /*develblock:start*/
                     DebugHashAttributes.debugDirtyAttributes( attr );
                     /*develblock:end*/
 
                 } else {
-                    this.pushToHashStack( hash.hashComputeCodeFromString( attr.getType() ) );
+                    this.pushToHashStack( Hash.hashComputeCodeFromString( attr.getType() ) );
                 }
                 list[ i ].push( attr );
             }
@@ -243,8 +241,9 @@ ShaderGenerator.prototype = {
             var ShaderCompiler = this._ShaderCompiler;
             var shaderGen = new ShaderCompiler( attributes, textureAttributes, this._shaderProcessor );
 
-            /*develblock:start*/
+            /*develblock:start*
             // Logs hash, attributes and compiler
+            var Notify = require( 'osg/Notify' );
             Notify.log( 'New Compilation ', false, true );
             Notify.log( {
                 Attributes: attributes,
