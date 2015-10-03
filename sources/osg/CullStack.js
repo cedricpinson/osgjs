@@ -215,7 +215,7 @@ define( [
                     if ( this.getCurrentCullingSet().getCurrentResultMask() === 0 )
                         return false; // father bounding sphere totally inside
 
-                    var matrix = this._getReservedMatrix();;
+                    var matrix = this._getReservedMatrix();
 
                     // TODO: Perf just get World Matrix at each node transform
                     // store it in a World Transform Node Path (only world matrix change)
