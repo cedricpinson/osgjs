@@ -53,6 +53,8 @@ define( [
             var m = this._reserveMatrixStack[ this._reserveMatrixStack.current++ ];
             if ( this._reserveMatrixStack.current === this._reserveMatrixStack.length ) {
                 this._reserveMatrixStack.push( Matrix.create() );
+            } else {
+                Matrix.makeIdentity( m );
             }
             return m;
         },
@@ -213,7 +215,7 @@ define( [
                     if ( this.getCurrentCullingSet().getCurrentResultMask() === 0 )
                         return false; // father bounding sphere totally inside
 
-                    var matrix;
+                    var matrix = this._getReservedMatrix();;
 
                     // TODO: Perf just get World Matrix at each node transform
                     // store it in a World Transform Node Path (only world matrix change)
@@ -224,13 +226,17 @@ define( [
                     // strange bug for now on frustum culling sample with that
 
                     if ( node instanceof MatrixTransform ) {
+
                         // tricky: MatrixTransform getBound is already transformed to
                         // its local space whereas nodepath also have its matrix ...
                         // so to get world space, you HAVE to remove that matrix from nodePATH
                         // TODO: GC Perf of array slice creating new array
-                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath.slice( 0, nodePath.length - 1 ) );
+                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath.slice( 0, nodePath.length - 1 ), true, matrix );
+
                     } else {
-                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath );
+
+                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath, true, matrix );
+
                     }
 
                     Matrix.transformBoundingSphere( matrix, node.getBound(), bsWorld );

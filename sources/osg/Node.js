@@ -266,7 +266,8 @@ define( [
             return bSphere;
         },
 
-        getWorldMatrices: function ( halt ) {
+        // matrixCreate allow user handling of garbage collection of matrices
+        getWorldMatrices: function ( halt, matrixCreate ) {
             var CollectParentPaths = function ( halt ) {
                 this.nodePaths = [];
                 this.halt = halt;
@@ -286,15 +287,38 @@ define( [
             this.accept( collected );
             var matrixList = [];
 
+            var matrixGenerator = matrixCreate ? matrixCreate : Matrix.create;
             for ( var i = 0, l = collected.nodePaths.length; i < l; i++ ) {
                 var np = collected.nodePaths[ i ];
-                if ( np.length === 0 ) {
-                    matrixList.push( Matrix.create() );
-                } else {
-                    matrixList.push( ComputeMatrixFromNodePath.computeLocalToWorld( np ) );
+                var m = matrixGenerator();
+                if ( np.length !== 0 ) {
+                    ComputeMatrixFromNodePath.computeLocalToWorld( np, true, m );
                 }
+                matrixList.push( m );
             }
+
             return matrixList;
+
+        },
+
+        // same as getWorldMatrix GC: Perf WIN
+        getWorldMatrix: function ( halt, matrix ) {
+
+            var matrixList = this.getWorldMatrix( halt, Node._getReservedMatrix );
+
+            if ( matrixList.length === 0 ) {
+
+                Matrix.makeIdentity( matrix );
+
+            } else {
+
+                Matrix.copy( matrixList[ 0 ], matrix );
+
+            }
+
+            Node._resetReservedMatrix();
+            return matrix;
+
         },
 
         setCullingActive: function ( value ) {
@@ -341,10 +365,41 @@ define( [
 
         releaseGLObjects: function () {
             if ( this.stateset !== undefined ) this.stateset.releaseGLObjects();
+        },
+
+        _getReservedMatrix: function () {
+
+            var m = Node._reserveMatrixStack[ Node._reserveMatrixStackCurrent++ ];
+
+            if ( Node._reserveMatrixStackCurrent === Node._reserveMatrixStack.length ) {
+
+                Node._reserveMatrixStack.push( Matrix.create() );
+
+            } else {
+
+                Matrix.makeIdentity( m );
+
+            }
+
+            return m;
+
+        },
+
+        _resetReservedMatrix: function () {
+
+            Node._reserveMatrixStackCurrent = 0;
+
         }
+
 
     } ), 'osg', 'Node' );
     MACROUTILS.setTypeID( Node );
+
+
+    Node._reserveMatrixStack = [
+        Matrix.create()
+    ];
+    Node._reserveMatrixStackCurrent = 0;
 
     return Node;
 } );

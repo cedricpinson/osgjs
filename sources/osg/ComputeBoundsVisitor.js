@@ -13,6 +13,13 @@ define( [
     var ComputeBoundsVisitor = function ( traversalMode ) {
         NodeVisitor.call( this, traversalMode );
 
+        // keep a matrix in memory to avoid to create matrix
+        this._reserveMatrixStack = [
+            Matrix.create()
+        ];
+        this._reserveMatrixStack.current = 0;
+
+
         this._matrixStack = [];
         this._bb = new BoundingBox();
     };
@@ -20,6 +27,7 @@ define( [
     ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
         reset: function () {
+            this._reserveMatrixStack.current = 0;
             this._matrixStack.length = 0;
             this._bb.init();
         },
@@ -36,7 +44,7 @@ define( [
 
         applyTransform: function ( transform ) {
 
-            var matrix = Matrix.create();
+            var matrix = this._getReservedMatrix();
             var stackLength = this._matrixStack.length;
 
             if ( stackLength )
@@ -95,6 +103,23 @@ define( [
 
         getMatrixStack: function () {
             return this._matrixStack;
+        },
+
+        _getReservedMatrix: function () {
+
+            var m = this._reserveMatrixStack[ this._reserveMatrixStack.current++ ];
+
+            if ( this._reserveMatrixStack.current === this._reserveMatrixStack.length ) {
+
+                this._reserveMatrixStack.push( Matrix.create() );
+
+            } else {
+
+                Matrix.makeIdentity( m );
+
+            }
+
+            return m;
         }
 
     } ), 'osg', 'ComputeBoundsVisitor' );
