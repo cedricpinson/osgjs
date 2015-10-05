@@ -61,7 +61,6 @@ define( [
         this._frameStamp = new FrameStamp();
         this._lightingMode = undefined;
         this._manipulator = undefined;
-        this._webGLCaps = undefined;
         this._canvasWidth = 0;
         this._canvasHeight = 0;
 
@@ -104,13 +103,15 @@ define( [
             return this.getCamera().getRenderer().getState().getGraphicContext();
         },
 
-        getWebGLCaps: function () {
-            return this._webGLCaps;
-        },
 
         initWebGLCaps: function ( gl ) {
-            this._webGLCaps = new WebGLCaps( gl );
-            this._webGLCaps.init();
+
+            var glCaps = WebGLCaps.instance();
+
+            if ( glCaps ) {
+                glCaps.initWebGLExtensions( gl );
+            }
+
         },
 
         computeCanvasSize: ( function () {

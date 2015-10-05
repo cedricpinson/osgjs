@@ -21,6 +21,7 @@ define( [
     'osg/Vec3',
     'osg/Vec4',
     'osg/Viewport',
+    'osg/WebGLCaps',
     'osgShader/ShaderProcessor',
     'osgShadow/ShadowReceiveAttribute',
     'osgShadow/ShadowCasterVisitor',
@@ -28,7 +29,7 @@ define( [
     'osgShadow/ShadowCastAttribute',
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowTexture'
-], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, Depth, FrameBufferObject, Light, LightSource, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowReceiveAttribute, ShadowCasterVisitor, ShadowFrustumIntersection, ShadowCastAttribute, ShadowTechnique, ShadowTexture ) {
+], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, Depth, FrameBufferObject, Light, LightSource, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, WebGLCaps, ShaderProcessor, ShadowReceiveAttribute, ShadowCasterVisitor, ShadowFrustumIntersection, ShadowCastAttribute, ShadowTechnique, ShadowTexture ) {
 
     'use strict';
 
@@ -398,7 +399,7 @@ define( [
 
             // prevent unnecessary texture bindings on all texture unit
             // TODO: actually get the real max texture unit from webglCaps
-            var shouldGetMaxTextureUnits = 32;
+            var shouldGetMaxTextureUnits = WebGLCaps.instance().getWebGLParameter( 'MAX_TEXTURE_IMAGE_UNITS' );
             for ( var k = 0; k < shouldGetMaxTextureUnits; k++ ) {
                 // bind  null texture which OSGJS will not bind,
                 // effectively preventing any other texture bind
