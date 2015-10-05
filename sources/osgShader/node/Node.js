@@ -86,7 +86,8 @@ define( [
             for ( var i = 0, l = arguments.length; i < l; i++ ) {
 
                 var input = arguments[ i ];
-                if ( input === undefined ) {
+                if ( !input ) {
+                    Notify.error( 'Shader node ' + this.type + ' input number ' + l + ' is undefined ' );
                     break;
                 }
 
