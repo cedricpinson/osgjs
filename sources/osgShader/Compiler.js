@@ -442,23 +442,17 @@ define( [
         // make sure we get correct Node
         getOrCreateSampler: function ( type, varname ) {
 
-            var nameID = varname;
-            if ( nameID === undefined ) {
-
-                var len = Object.keys( this._variables ).length;
-                nameID = 'sampler_' + len;
-
-            } else {
-
-                var exist = this._variables[ nameID ];
-                if ( exist ) {
-                    // see comment in Variable function
-                    return exist;
-                }
-
+            if ( varname === undefined ) {
+                Notify.error( 'No name given for sampler type : ' + type );
             }
-            var v = this.getNode( 'Sampler', type, nameID );
-            this._variables[ nameID ] = v;
+
+            var exist = this._variables[ varname ];
+            if ( exist ) {
+                return exist; // see comment in Variable function
+            }
+
+            var v = this.getNode( 'Sampler', type, varname );
+            this._variables[ varname ] = v;
 
             return v;
         },
@@ -466,7 +460,6 @@ define( [
         getOrCreateInputNormal: function () {
             return this.getOrCreateVarying( 'vec3', 'FragNormal' );
         },
-
 
         getOrCreateFrontNormal: function () {
             var inputNormal = this.getOrCreateInputNormal();
@@ -773,6 +766,9 @@ define( [
         createShadowTextureInputVarying: function ( shadowTexture, inputs, vertexWorld, tUnit ) {
             var shadowTexSamplerName = 'Texture' + tUnit;
 
+            // we declare first this uniform so that the Int one 
+            var tex = this.getOrCreateSampler( 'sampler2D', shadowTexSamplerName );
+
             // per texture uniforms
             var shadowTextureUniforms = this.getOrCreateTextureStateAttributeUniforms( shadowTexture, 'shadowTexture', tUnit );
 
@@ -783,13 +779,12 @@ define( [
             // so we remove it from adding it here
             var id = shadowTextureUniforms[ 'shadowTexture' + shadowTexSamplerName ].getID();
             shadowTextureUniforms[ 'shadowTexture' + shadowTexSamplerName ] = undefined;
-            this._variables[ shadowTexSamplerName ] = undefined;
+            this._variables[ shadowTexSamplerName ] = tex; // the uniform Int overrided our sampler2D, so we add it back
             delete this._activeNodeList[ id ];
             // end UGLY REMOVAL
 
             var inputsShadow = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
 
-            var tex = this.getOrCreateSampler( 'sampler2D', shadowTexSamplerName );
             inputsShadow.shadowTexture = tex;
 
             var shadowVarying = {
