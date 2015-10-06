@@ -17,6 +17,9 @@ define( [
         StateAttribute.call( this );
         this._nbTarget = nbTarget;
         this._enable = !disable;
+
+        this._targetNames = {};
+        this._hashNames = ''; // compute only once target hash names
     };
 
     MorphAttribute.uniforms = {};
@@ -30,6 +33,24 @@ define( [
 
         getTypeMember: function () {
             return this.attributeType + '_' + this.getNumTargets();
+        },
+
+        hasTarget: function ( name ) {
+            return !!this._targetNames[ name ];
+        },
+
+        copyTargetNames: function ( names ) {
+            var tNames = this._targetNames;
+            var hash = '';
+            var nbNames = tNames.length = names.length;
+
+            for ( var i = 0; i < nbNames; ++i ) {
+                var att = names[ i ];
+                tNames[ att ] = true;
+                hash += att;
+            }
+
+            this._hashNames = hash;
         },
 
         getOrCreateUniforms: function () {
@@ -58,7 +79,7 @@ define( [
             return this._enable;
         },
         getHash: function () {
-            return this.getTypeMember() + this.isEnabled();
+            return this.getTypeMember() + this._hashNames + this.isEnabled();
         },
 
         apply: function () {

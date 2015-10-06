@@ -1,11 +1,12 @@
 define( [
     'osg/Utils',
+    'osg/Notify',
     'osg/Geometry',
     'osg/StateSet',
     'osgAnimation/MorphAttribute',
     'osg/StateAttribute',
     'osgAnimation/Target'
-], function ( MACROUTILS, Geometry, StateSet, MorphAttribute, StateAttribute ) {
+], function ( MACROUTILS, Notify, Geometry, StateSet, MorphAttribute, StateAttribute ) {
 
     'use strict';
 
@@ -32,6 +33,11 @@ define( [
             var animAttrib = new MorphAttribute( this.getMorphTargets().length );
             st.setAttributeAndModes( animAttrib, StateAttribute.ON );
             animAttrib.setTargetWeights( this.getTargetsWeight() );
+
+            if ( this._targets[ 0 ] )
+                animAttrib.copyTargetNames( Object.keys( this._targets[ 0 ].getVertexAttributeList() ) );
+            else
+                Notify.error( 'No Targets in the MorphGeometry !' );
 
             this._isInitialized = true;
             return true;

@@ -1207,13 +1207,15 @@ define( [
             var vecOut = this.getVariable( 'vertexAttribute' );
             if ( vecOut ) return vecOut;
 
+            var hasMorph = this._morphAttribute && this._morphAttribute.hasTarget( 'Vertex' );
+
             var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
-            if ( !this._skinningAttribute && !this._morphAttribute ) return inputVertex;
+            if ( !this._skinningAttribute && !hasMorph ) return inputVertex;
 
             vecOut = this.createVariable( 'vec3', 'vertexAttribute' );
 
-            if ( this._morphAttribute && !this._skinningAttribute ) return this.morphTransformVec3( inputVertex, vecOut );
-            else if ( !this._morphAttribute && this._skinningAttribute ) return this.skinTransformVertex( inputVertex, vecOut );
+            if ( hasMorph && !this._skinningAttribute ) return this.morphTransformVec3( inputVertex, vecOut );
+            else if ( !hasMorph && this._skinningAttribute ) return this.skinTransformVertex( inputVertex, vecOut );
 
             var tmpMorph = this.createVariable( 'vec3' );
             this.morphTransformVec3( inputVertex, tmpMorph );
@@ -1223,15 +1225,17 @@ define( [
             var vecOut = this.getVariable( 'normalAttribute' );
             if ( vecOut ) return vecOut;
 
+            var hasMorph = this._morphAttribute && this._morphAttribute.hasTarget( 'Normal' );
+
             var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
-            if ( !this._skinningAttribute && !this._morphAttribute ) return inputNormal;
+            if ( !this._skinningAttribute && !hasMorph ) return inputNormal;
 
             var tmpAnim;
 
             // we name the morph variable in case we want to infer the tangent from the morph normal
-            if ( this._morphAttribute && !this._skinningAttribute ) {
+            if ( hasMorph && !this._skinningAttribute ) {
                 tmpAnim = this.morphTransformVec3( inputNormal, this.createVariable( 'vec3', 'normalMorph' ) );
-            } else if ( !this._morphAttribute && this._skinningAttribute ) {
+            } else if ( !hasMorph && this._skinningAttribute ) {
                 tmpAnim = this.skinTransformNormal( inputNormal, this.createVariable( 'vec3', 'normalSkin' ) );
             } else {
 
