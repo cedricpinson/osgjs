@@ -29,9 +29,8 @@ define( [
     MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
 
         init: function () {
-            var st = this.getStateSetAnimation();
             var animAttrib = new MorphAttribute( this.getMorphTargets().length );
-            st.setAttributeAndModes( animAttrib, StateAttribute.ON );
+            this.getStateSetAnimation().setAttributeAndModes( animAttrib, StateAttribute.ON );
             animAttrib.setTargetWeights( this.getTargetsWeight() );
 
             if ( this._targets[ 0 ] )

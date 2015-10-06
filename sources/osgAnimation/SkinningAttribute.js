@@ -28,7 +28,7 @@ define( [
 
         attributeType: 'Skinning',
         cloneType: function () {
-            return new SkinningAttribute( true, this._boneUniformSize );
+            return new SkinningAttribute( true );
         },
         setBoneUniformSize: function ( boneUniformSize ) {
             this._boneUniformSize = boneUniformSize;
@@ -37,22 +37,17 @@ define( [
             return this._boneUniformSize !== undefined ? this._boneUniformSize : SkinningAttribute.maxBoneUniformSize;
         },
 
-        getTypeMember: function () {
-            return this.attributeType + '_' + this.getBoneUniformSize();
-        },
-
         getOrCreateUniforms: function () {
-            // uniform are once per CLASS attribute, not per instance
             var obj = SkinningAttribute;
-            var typeMember = this.getTypeMember();
+            var unifHash = this.getBoneUniformSize();
 
-            if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
+            if ( obj.uniforms[ unifHash ] ) return obj.uniforms[ unifHash ];
 
             var uniforms = {};
-            uniforms[ 'uBones' ] = new Uniform.createFloat4Array( [], 'uBones' );
-            obj.uniforms[ typeMember ] = new Map( uniforms );
+            uniforms[ 'uBones' ] = new Uniform.createFloat4Array( new Float32Array( unifHash * 4 ), 'uBones' );
+            obj.uniforms[ unifHash ] = new Map( uniforms );
 
-            return obj.uniforms[ typeMember ];
+            return obj.uniforms[ unifHash ];
         },
         setMatrixPalette: function ( matrixPalette ) {
             this._matrixPalette = matrixPalette;
@@ -78,15 +73,14 @@ define( [
             // same bone matrix palette
             // as uniform array size must be statically declared
             // in shader code
-            return this.getTypeMember() + this.isEnabled();
+            return this.getTypeMember() + this.getBoneUniformSize() + this.isEnabled();
         },
 
         apply: function () {
             if ( !this._enable )
                 return;
 
-            var uniformMap = this.getOrCreateUniforms();
-            uniformMap.uBones.glData = uniformMap.uBones.data = this._matrixPalette; // hack to avoid copy
+            this.getOrCreateUniforms().uBones.set( this._matrixPalette );
 
             this.setDirty( false );
         }

@@ -28,11 +28,7 @@ define( [
 
         attributeType: 'Morph',
         cloneType: function () {
-            return new MorphAttribute( this._nbTarget, true );
-        },
-
-        getTypeMember: function () {
-            return this.attributeType + '_' + this.getNumTargets();
+            return new MorphAttribute( undefined, true );
         },
 
         hasTarget: function ( name ) {
@@ -54,17 +50,16 @@ define( [
         },
 
         getOrCreateUniforms: function () {
-            // uniform are once per CLASS attribute, not per instance
             var obj = MorphAttribute;
-            var typeMember = this.getTypeMember();
+            var unifHash = this.getNumTargets();
 
-            if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
+            if ( obj.uniforms[ unifHash ] ) return obj.uniforms[ unifHash ];
 
             var uniforms = {};
             uniforms[ 'uTargetWeights' ] = new Uniform.createFloat4( 'uTargetWeights' );
-            obj.uniforms[ typeMember ] = new Map( uniforms );
+            obj.uniforms[ unifHash ] = new Map( uniforms );
 
-            return obj.uniforms[ typeMember ];
+            return obj.uniforms[ unifHash ];
         },
         getNumTargets: function () {
             return this._nbTarget;
@@ -79,7 +74,7 @@ define( [
             return this._enable;
         },
         getHash: function () {
-            return this.getTypeMember() + this._hashNames + this.isEnabled();
+            return this.getTypeMember() + this._hashNames + this.getNumTargets() + this.isEnabled();
         },
 
         apply: function () {
