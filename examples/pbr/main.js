@@ -29,12 +29,26 @@
     var CameraPresets = {
         CameraGold: {
             target: [ 80.0, 0.0, 80.0 ],
-            eye: [ 80.0, 155.0, 120.0 ]
+            eye: [ 80.0, -155.0, 120.0 ]
         },
         CameraMetal: {
             target: [ 80.0, 0.0, 40.0 ],
-            eye: [ 80.0, 155.0, 80.0 ]
+            eye: [ 80.0, -155.0, 80.0 ]
+        },
+        CameraCenter: {
+            target: [ 80.0, 0.0, 20.0 ],
+            eye: [ 80.0, -215.0, 20.0 ]
+        },
+        CameraPBR: {
+            target: [ 160.0, 0.0, 80.0 ],
+            eye: [ 160.0, -100.0, 80.0 ]
+        },
+        CameraSamples: {
+            target: [ 46.0, 20.0, 80.0 ],
+            eye: [ 46.0, -62.5, 80.0 ]
         }
+
+
     };
 
 
@@ -90,21 +104,21 @@
     var modelList = [ 'sphere', 'model' ].concat( modelsPBR );
 
 
-
     var Example = function () {
+
         this._shaderPath = 'shaders/';
 
         this._config = {
-            envRotation: 0.01,
+            envRotation: Math.PI,
             lod: 0.01,
-            albedo: '#bdaaeb',
+            albedo: '#c8c8c8',
             nbSamples: 8,
             environmentType: 'cubemapSeamless',
             brightness: 1.0,
             normalAA: false,
             specularPeak: false,
             occlusionHorizon: false,
-            cameraPreset: Object.keys( CameraPresets )[ 0 ],
+            cameraPreset: 'CameraSamples', //'CameraCenter',
 
             roughness: 0.5,
             material: 'Gold',
@@ -997,6 +1011,8 @@
 
 
                 this._viewer.getManipulator().computeHomePosition( true );
+                this.updateCameraPreset();
+
 
             }.bind( this ) );
 
@@ -1025,7 +1041,7 @@
         run: function ( canvas ) {
 
             //osgGA.Manipulator.DEFAULT_SETTINGS = osgGA.Manipulator.DEFAULT_SETTINGS | osgGA.Manipulator.COMPUTE_HOME_USING_BBOX;
-            var viewer = this._viewer = new osgViewer.Viewer( canvas );
+            var viewer = this._viewer = new osgViewer.Viewer( canvas, { preserveDrawingBuffer: true, premultipliedAlpha: false } );
             viewer.init();
 
             var gl = viewer.getState().getGraphicContext();
@@ -1074,6 +1090,12 @@
             var environment = 'textures/city_night_lights_clb/';
             var environment = 'textures/city_night_lights_clc/';
             var environment = 'textures/city_night_lights_cld/';
+            var environment = 'textures/city_night_bg_highres/';
+            var environment = 'textures/parking_2k_constant_sample_bias1_1024_mipmap/';
+            var environment = 'textures/city_night_reference/';
+            //var environment = 'textures/parking_reference/';
+            var environment = 'textures/city_night_reference_1024/';
+            var environment = 'textures/city_night_reference_2048/';
 
 
             //var environment = 'textures/bus_garage5/';
@@ -1120,7 +1142,7 @@
 
                 viewer.run();
 
-                osg.Matrix.makePerspective( 40, canvas.width / canvas.height, 0.1, 1000, viewer.getCamera().getProjectionMatrix() );
+                osg.Matrix.makePerspective( 30, canvas.width / canvas.height, 0.1, 1000, viewer.getCamera().getProjectionMatrix() );
 
                 var gui = new window.dat.GUI();
                 var controller;
@@ -1257,7 +1279,7 @@
             }
 
             this.setBackgroundEnvironment();
-
+            this.updateEnvironmentRotation();
             this.updateShaderPBR();
         },
 
