@@ -583,7 +583,8 @@ define( [
                 var initialize = true;
                 var argDevice = {};
                 if ( argumentEventBackend && ( argumentEventBackend[ device ] !== undefined ) ) {
-                    initialize = argumentEventBackend[ device ].enable || true;
+                    var bool = argumentEventBackend[ device ].enable;
+                    initialize = bool !== undefined ? bool : true;
                     argDevice = argumentEventBackend[ device ];
                 }
 
