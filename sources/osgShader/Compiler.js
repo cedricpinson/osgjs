@@ -114,8 +114,7 @@ define( [
                     shadows.push( attributes[ i ] );
 
                 } else if ( type === 'Billboard' ) {
-                    // Shouldn't it be managed by mode ( ON, OFF, OVERRIDE )?
-                    this._isBillboard = attributes[ i ].isEnabled();
+                    this._isBillboard = !!attributes[ i ];
                 } else if ( type === 'SkinningAttribute' ) {
                     this._skinningAttribute = attributes[ i ];
                 } else if ( type === 'MorphAttribute' ) {
