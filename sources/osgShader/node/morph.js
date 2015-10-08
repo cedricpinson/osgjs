@@ -30,13 +30,10 @@ define( [
 
             // TODO: this should be rewrote with sprintf
             ////// Signature
-            var str = 'vec3 morphTransform( const in bool doMorph, const in vec4 weights,  const in vec3 vertex, const in vec3 target0';
+            var str = 'vec3 morphTransform( const in vec4 weights,  const in vec3 vertex, const in vec3 target0';
             for ( i = 1; i < nbTargets; ++i )
                 str += ', const in vec3 target' + i;
             str += ' ) { \n';
-
-            ////// Check length
-            str += '\tif( doMorph == false ) return vertex;\n';
 
             ////// Morphing
             if ( nbTargets === 1 ) {
@@ -63,7 +60,7 @@ define( [
         computeShader: function () {
 
             var inps = this._inputs;
-            var inputs = [ inps.doMorph, inps.weights, getVec3( inps.vertex ) ];
+            var inputs = [ inps.weights, getVec3( inps.vertex ) ];
 
             for ( var i = 0; i < 4; i++ ) {
 
@@ -72,7 +69,14 @@ define( [
 
             }
 
-            return ShaderUtils.callFunction( 'morphTransform', this._outputs.out, inputs );
+            ////// Check length
+            var str = 'if( doMorph == false ){\n';
+            str += this._outputs.out.getVariable() + ' =  ' + inps.vertex.getVariable() + '.rgb;\n';
+            str += '} else {\n';
+            str += ShaderUtils.callFunction( 'morphTransform', this._outputs.out, inputs );
+            str += '}\n';
+
+            return str;
 
         }
     } );
