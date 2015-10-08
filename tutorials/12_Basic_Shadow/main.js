@@ -33,47 +33,50 @@ window.addEventListener( 'load',
 
         // 1 light for 4 boxes and a ground
         var mainNode = new osg.Node();
-        var lightnew = new osg.Light( 0 );
+        var lightNew = new osg.Light( 0 );
 
         // pretty spotlight fallof showing
         // clearly directions
         var spot = false;
         if ( spot ) {
-            lightnew.setSpotCutoff( 25 );
-            lightnew.setSpotBlend( 1.0 );
-            lightnew.setPosition( [ 0, 0, 0, 1 ] );
-            lightnew.setLightType( osg.Light.SPOT );
+            lightNew.setSpotCutoff( 25 );
+            lightNew.setSpotBlend( 1.0 );
+            lightNew.setPosition( [ 0, 0, 0, 1 ] );
+            lightNew.setLightType( osg.Light.SPOT );
         } else {
-            lightnew.setSpotCutoff( 190 );
-            lightnew.setPosition( [ 0, 0, 0, 0 ] );
-            lightnew.setLightType( osg.Light.DIRECTION );
+            lightNew.setSpotCutoff( 190 );
+            lightNew.setPosition( [ 0, 0, 0.0, 0 ] );
+            lightNew.setLightType( osg.Light.DIRECTION );
         }
 
-        lightnew.setConstantAttenuation( 0 );
-        lightnew.setLinearAttenuation( 0.005 );
-        lightnew.setQuadraticAttenuation( 0 );
+        lightNew.setConstantAttenuation( 0 );
+        lightNew.setLinearAttenuation( 0.005 );
+        lightNew.setQuadraticAttenuation( 0 );
 
-        lightnew.setName( 'light0' );
-        lightnew._enabled = true;
+        lightNew.setName( 'light0' );
+        lightNew._enabled = true;
 
         // light source is a node handling the light
         var lightSourcenew = new osg.LightSource();
         lightSourcenew.setName( 'lightNode0' );
-        lightSourcenew.setLight( lightnew );
+        lightSourcenew.setLight( lightNew );
 
         // node helping position the light
-        var lightNodemodelNodeParent = new osg.MatrixTransform();
+        var lightNodeModelNodeParent = new osg.MatrixTransform();
 
+        lightNodeModelNodeParent.addChild( lightSourcenew );
         // Important: set the light as attribute so that it's inhered by all node under/attached the mainNode
-        mainNode.getOrCreateStateSet().setAttributeAndModes( lightnew );
+
+        mainNode.getOrCreateStateSet().setAttributeAndModes( lightNew );
+        mainNode.addChild( lightNodeModelNodeParent );
 
         // setting light, each above its cube
-        lightNodemodelNodeParent.setMatrix( osg.Matrix.makeTranslate( -10, -10, 10, osg.Matrix.create() ) );
+        lightNodeModelNodeParent.setMatrix( osg.Matrix.makeTranslate( -10, -10, 10, osg.Matrix.create() ) );
 
         // red light
-        lightnew.setAmbient( [ 0.0, 0, 0.0, 1.0 ] );
-        lightnew.setDiffuse( [ 1.0, 0, 0.0, 1.0 ] );
-        lightnew.setSpecular( [ 1.0, 0, 0.0, 1.0 ] );
+        lightNew.setAmbient( [ 0.0, 0, 0.0, 1.0 ] );
+        lightNew.setDiffuse( [ 1.0, 0, 0.0, 1.0 ] );
+        lightNew.setSpecular( [ 1.0, 0, 0.0, 1.0 ] );
 
         /////////////////// Shadow
         var shadowedScene = new osgShadow.ShadowedScene();
@@ -81,7 +84,7 @@ window.addEventListener( 'load',
 
         var shadowSettings = new osgShadow.ShadowSettings();
 
-        shadowSettings.setLightSource( lightSourcenew );
+        shadowSettings.setLight( lightNew );
 
         var shadowMap = new osgShadow.ShadowMap( shadowSettings );
         shadowedScene.addShadowTechnique( shadowMap );
