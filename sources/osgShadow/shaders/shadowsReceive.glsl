@@ -5,7 +5,7 @@
 // see shadowSettings.js header for shadow algo param explanations
 
 // end Float codec
-float getSingleFloatFromTex(sampler2D depths, vec2 uv){
+float getSingleFloatFromTex(const in sampler2D depths, const in vec2 uv){
 #ifndef _FLOATTEX
     return  decodeFloatRGBA(texture2D(depths, uv));
 #else
@@ -13,7 +13,7 @@ float getSingleFloatFromTex(sampler2D depths, vec2 uv){
 #endif
 }
 
-vec2 getDoubleFloatFromTex(sampler2D depths, vec2 uv){
+vec2 getDoubleFloatFromTex(const in sampler2D depths, const in vec2 uv){
 #ifndef _FLOATTEX
     return decodeHalfFloatRGBA(texture2D(depths, uv));
 #else
@@ -21,7 +21,7 @@ vec2 getDoubleFloatFromTex(sampler2D depths, vec2 uv){
 #endif
 }
 
-vec4 getQuadFloatFromTex(sampler2D depths, vec2 uv){
+vec4 getQuadFloatFromTex(const in sampler2D depths, const in vec2 uv){
     return texture2D(depths, uv).xyzw;
 }
 // end Float codec
