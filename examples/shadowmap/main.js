@@ -19,7 +19,7 @@
             'textureSize': 1024,
             'shadow': 'PCF',
             'textureType': 'UNSIGNED_BYTE',
-            'lightNum': 1,
+            'lightNum': 3,
             'lightType': 'Spot',
             'bias': 0.005,
             'epsilonVSM': 0.0008,
@@ -145,19 +145,31 @@
 
         // default & change debug
         var queryDict = {};
+
         window.location.search.substr( 1 ).split( '&' ).forEach( function ( item ) {
             queryDict[ item.split( '=' )[ 0 ] ] = item.split( '=' )[ 1 ];
         } );
         if ( queryDict[ 'debug' ] ) {
+
             this._debugOtherTechniques = true;
             this._debugFrustum = true;
             this._debugPrefilter = true;
+
         }
 
         var keys = Object.keys( queryDict );
+
         for ( var i = 0; i < keys.length; i++ ) {
+
             var property = keys[ i ];
-            this._config[ property ] = queryDict[ property ];
+            var n = queryDict[ property ];
+
+            if ( !isNaN( parseFloat( n ) ) && isFinite( n ) ) {
+                n = parseFloat( n );
+            }
+
+            this._config[ property ] = n;
+
         }
     };
 
