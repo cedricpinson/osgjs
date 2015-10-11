@@ -81,7 +81,7 @@
 
             this.createFinalTexture();
             var MotionBlurFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'motionBlur' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/motionBlur.glsl' ), {
                     'Texture0': this._sceneTexture,
                     'Texture1': this._sceneTexture2
                 }
@@ -89,7 +89,8 @@
             this._composer = new osgUtil.Composer();
             this._composer.addPass( MotionBlurFilter, this._finalTexture );
             this._composer.build();
-            MotionBlurFilter.camera.setClearColor( [ 1.0, 0.0, 0.0, 1.0 ] );
+
+            this._composer.getChildren()[ this._composer.getChildren().length - 1 ].setClearColor( [ 1.0, 0.0, 0.0, 1.0 ] );
             this._effectRoot.addChild( this._composer );
 
         },
@@ -104,4 +105,5 @@
 
 
     window.postScenes.push( MotionBlurEffect );
+
 } )();

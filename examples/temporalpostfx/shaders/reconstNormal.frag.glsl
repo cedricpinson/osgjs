@@ -1,6 +1,6 @@
 #extension GL_OES_standard_derivatives : require
 
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 uniform mat4 ProjectionMatrix;
 

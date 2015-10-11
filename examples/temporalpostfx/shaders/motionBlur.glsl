@@ -23,7 +23,7 @@ vec4 motionBlur(sampler2D tex, vec2 texCoord, vec2 velocityFact)
 
 }
 
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 
 uniform sampler2D Texture0;

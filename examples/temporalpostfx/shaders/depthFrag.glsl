@@ -1,6 +1,6 @@
 precision highp float;
 
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 varying vec4 FragPosition;
 uniform vec2 NearFar;

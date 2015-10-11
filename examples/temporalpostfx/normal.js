@@ -64,7 +64,7 @@
 
 
             var NormalReconstructionFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'showNormal.frag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/showNormal.frag.glsl' ), {
                     'Texture0': this._sceneTexture,
                     'ProjectionMatrix': this._projectionMatrix
                 }
@@ -106,7 +106,7 @@
 
 
             var NormalReconstructionFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'showNormal.frag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/showNormal.frag.glsl' ), {
                     'Texture0': this._sceneTexture,
                     'ProjectionMatrix': this._projectionMatrix
                 }
@@ -143,7 +143,7 @@
 
 
             var NormalReconstructionFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'showNormal.frag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/showNormal.frag.glsl' ), {
                     'Texture0': this._sceneTexture,
                     'ProjectionMatrix': this._projectionMatrix
                 }
@@ -180,7 +180,7 @@
 
 
             var NormalReconstructionFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'reconstNormal.frag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/reconstNormal.frag.glsl' ), {
                     'Texture0': this._sceneTexture,
                     'ProjectionMatrix': this._projectionMatrix
                 }

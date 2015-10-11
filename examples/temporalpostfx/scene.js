@@ -23,9 +23,12 @@
         },
 
         updateCamera: function ( projection, view ) {
-            osg.Matrix.copy( projection, this._cameraRTT.getProjectionMatrix() );
-            osg.Matrix.copy( view, this._cameraRTT.getViewMatrix() );
+            if ( this._cameraRTT ) {
+                osg.Matrix.copy( projection, this._cameraRTT.getProjectionMatrix() );
+                osg.Matrix.copy( view, this._cameraRTT.getViewMatrix() );
+            }
         },
+
         update: function () {
             // nothing.
         },
@@ -68,11 +71,13 @@
         name: 'SSAA 2x',
         scale: 2
     } );
+
     window.postScenes.push( sceneX2 );
     var sceneX4 = osg.objectInherit( sceneEffect, {
         name: 'SSAA 4x',
         scale: 4
     } );
+
     window.postScenes.push( sceneX4 );
     var sceneX8 = osg.objectInherit( sceneEffect, {
         name: 'SSAA 8x',
@@ -80,4 +85,5 @@
     } );
 
     window.postScenes.push( sceneX8 );
+
 } )();

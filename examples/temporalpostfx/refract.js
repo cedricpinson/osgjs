@@ -90,7 +90,7 @@
 
 
             var alphaBlendFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'add.frag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/add.frag.glsl' ), {
                     'Texture3': this._sceneTexture,
                     'Texture4': this._sceneTexture2
                 }

@@ -1,6 +1,6 @@
 #extension GL_OES_standard_derivatives : require
 
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 varying vec4 FragNormal;
 varying vec4 FragPosition;

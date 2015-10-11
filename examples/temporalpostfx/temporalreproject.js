@@ -51,7 +51,7 @@ function getTemporalReproject() {
 
 
             var Filter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'baseFrag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/baseFrag.glsl' ), {
                     'Texture0': sceneTexture
                 }
             );

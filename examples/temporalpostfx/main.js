@@ -1,17 +1,16 @@
 ( function () {
     'use strict';
 
-    window.OSG.globalify();
-
-    var osg = window.osg;
-    //var osgUtil = window.osgUtil;
-    var osgViewer = window.osgViewer;
-    var osgShader = window.osgShader;
-    var osgShadow = window.osgShadow;
     var $ = window.$;
-    var Q = window.Q;
-    var osgDB = window.osgDB;
+    var P = window.P;
 
+    var OSG = window.OSG;
+    var osg = OSG.osg;
+    var osgViewer = OSG.osgViewer;
+    var osgShader = OSG.osgShader;
+    var osgShadow = OSG.osgShadow;
+    //var osgUtil = OSG.osgUtil;
+    //var osgDB = window.osgDB;
 
     window.postScenes = [];
     var CustomCompiler = window.CustomCompiler;
@@ -37,31 +36,134 @@
         }
     } );
 
+    ////////////////////////////////////////////
+    //////////////////////////////////////////////
+    // reprojection
+
+    var reprojCullCallback = function () {
+        this.cull = function ( node, nv ) {
+
+            //  multi-Father Proofness by hashing node path traversal
+            var historyNodePath = node.getUserData();
+            if ( !historyNodePath ) {
+                historyNodePath = {};
+                node.setUserData( historyNodePath );
+
+            }
+            var hash = '';
+            nv.getNodePath().forEach( function ( a ) {
+                hash = a.getInstanceID() + '_'; // without the _ you get hash collisions
+            } );
+
+
+            // actual prev Frame store
+            var history = historyNodePath[ hash ];
+            if ( !history ) {
+
+                history = {};
+                historyNodePath[ hash ] = history;
+
+                history.view = osg.Matrix.create();
+                history.prevView = osg.Matrix.create();
+                history.proj = osg.Matrix.create();
+                history.prevProj = osg.Matrix.create();
+
+            }
+
+            var view = history.view;
+            var prevView = history.prevView;
+            var proj = history.proj;
+            var prevProj = history.prevProj;
+
+            // we do projection prev because near/far changes...
+            // It also impact depth buffer read...
+            osg.Matrix.copy( view, prevView );
+            osg.Matrix.copy( nv.getCurrentModelViewMatrix(), view );
+            osg.Matrix.copy( proj, prevProj );
+            osg.Matrix.copy( nv.getCurrentProjectionMatrix(), proj );
+
+            return true;
+        };
+    };
+
+
+
+    var UpdatePrevMatrixCallback = function ( prevModelViewMatrixU, prevProjectionMatrixU ) {
+        this.update = function ( node, nv ) {
+
+            var hash = '';
+            nv.getNodePath().forEach( function ( a ) {
+                hash = a.getInstanceID() + '_'; // without the _ you get hash collisions
+            } );
+
+            var historyNodePath = node.getUserData();
+            if ( !historyNodePath ) return true;
+            var history = historyNodePath[ hash ];
+            if ( !history ) return true;
+
+            // update node StateSet
+
+            // var view = history.view;
+            // var proj = history.proj;
+            // prevModelViewMatrixU.set( view );
+            // prevProjectionMatrixU.set( proj );
+
+            var prevView = history.prevView;
+            var prevProj = history.prevProj;
+            prevModelViewMatrixU.set( prevView );
+            prevProjectionMatrixU.set( prevProj );
+
+            return true;
+        };
+    };
+
+    // each geom should get that
+    //geom.setUpdateCallback( new UpdatePrevMatrixCallback() );
+
+    ////////// Reprojection end /////////////////////
+    /////////////////////////////////////////
 
 
     var Example = function () {
         this._config = {};
 
-        // default & change config with URL params
-        var queryDict = {};
-        window.location.search.substr( 1 ).split( '&' ).forEach( function ( item ) {
-            queryDict[ item.split( '=' )[ 0 ] ] = item.split( '=' )[ 1 ];
-        } );
-        if ( queryDict[ 'debug' ] ) {
-            this._debugOtherTechniques = true;
-            this._debugFrustum = true;
-            this._debugPrefilter = true;
-        }
+        ExampleOSGJS.call( this );
 
-        var keys = Object.keys( queryDict );
-        for ( var i = 0; i < keys.length; i++ ) {
-            var property = keys[ i ];
-            this._config[ property ] = queryDict[ property ];
+        this._shaderNames = [
+            'add.frag',
+            'baseVert',
+            'baseFrag',
+            'diffFrag',
+            'fxaa',
+            'hbao.frag',
+            'normal.vert',
+            'normal.frag',
+            'showNormal.frag',
+            'reconstNormal.frag',
+            'reconstFrag',
+            'refractVert',
+            'refractFrag',
+            'reflect.frag',
+            'reflectOpt.frag',
+            'UVVert',
+            'UVFrag',
+            'depthVert',
+            'depthFrag',
+            'motionBlurDepth',
+            'motionBlurVelocity',
+            'ssaa_node',
+            'velocity_node',
+            //            'colorEncode',
+            'raytrace'
+        ];
+        for ( var i = 0, l = this._shaderNames.length; i < l; i++ ) {
+            this._shaderNames[ i ] = 'shaders/' + this._shaderNames[ i ] + '.glsl';
         }
     };
 
 
-    Example.prototype = {
+    Example.prototype = osg.objectInherit( ExampleOSGJS.prototype, {
+
 
         getShaderBackground: function () {
             var vertexshader = [
@@ -82,7 +184,7 @@
                 '  osg_TexCoord0 = TexCoord0;',
                 '  osg_FragEye = vec3(ModelViewMatrix * vec4(Vertex,1.0));',
                 '  osg_FragNormal = vec3(NormalMatrix * vec4(Normal, 1.0));',
-                '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);',
+                '  gl_Position = ProjectionMatrix * (ModelViewMatrix * vec4(Vertex,1.0));',
                 '}'
             ].join( '\n' );
 
@@ -121,7 +223,7 @@
             var texture = new osg.TextureCubeMap();
             this._cubemapTexture = texture;
 
-            Q.all( [
+            P.all( [
                 osgDB.readImage( '../cubemap/textures/posx.jpg' ),
                 osgDB.readImage( '../cubemap/textures/negx.jpg' ),
 
@@ -223,10 +325,10 @@
             var modelTrans = new osg.MatrixTransform();
             modelTrans.setName( 'ModelTrans' );
             model.addChild( modelTrans );
-            /*
-                        var modelName = '../ssao/raceship.osgjs';
-                        osg.Matrix.makeRotate( Math.PI, 0, 0, 1, modelTrans.getMatrix() );
-            */
+
+            //var modelName = '../ssao/raceship.osgjs';
+            //osg.Matrix.makeRotate( Math.PI, 0, 0, 1, modelTrans.getMatrix() );
+
 
             var modelName = '../media/models/material-test/file.osgjs';
             osg.Matrix.makeScale( 0.3, 0.3, 0.3, modelTrans.getMatrix() );
@@ -244,8 +346,6 @@
 
                 loadedModel.setName( 'model' );
 
-
-
                 modelTrans.addChild( loadedModel );
 
 
@@ -253,7 +353,12 @@
             modelTrans.getOrCreateStateSet().setTextureAttributeAndModes( 6, this._cubemapTexture );
             modelTrans.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 6, 'Texture6' ) );
 
-
+            var PrevModelViewMatrixU = osg.Uniform.createMat4( osg.Matrix.create(), 'PrevModelViewMatrix' );
+            var PrevProjectionMatrixU = osg.Uniform.createMat4( osg.Matrix.create(), 'PrevProjectionMatrix' );
+            modelTrans.getOrCreateStateSet().addUniform( PrevModelViewMatrixU );
+            modelTrans.getOrCreateStateSet().addUniform( PrevProjectionMatrixU );
+            modelTrans.setUpdateCallback( new UpdatePrevMatrixCallback( PrevModelViewMatrixU, PrevProjectionMatrixU ) );
+            modelTrans.setCullCallback( new reprojCullCallback() );
 
             // add a node to animate the scene
             var rootModel = new osg.MatrixTransform();
@@ -279,6 +384,16 @@
                     groundSubNodeTrans.setName( 'groundSubNode_' + wG + '_' + wH );
                     groundSubNodeTrans.addChild( ground );
                     groundNode.addChild( groundSubNodeTrans );
+
+
+                    PrevModelViewMatrixU = osg.Uniform.createMat4( osg.Matrix.create(), 'PrevModelViewMatrix' );
+                    PrevProjectionMatrixU = osg.Uniform.createMat4( osg.Matrix.create(), 'PrevProjectionMatrix' );
+                    groundSubNodeTrans.getOrCreateStateSet().addUniform( PrevModelViewMatrixU );
+                    groundSubNodeTrans.getOrCreateStateSet().addUniform( PrevProjectionMatrixU );
+                    groundSubNodeTrans.setUpdateCallback( new UpdatePrevMatrixCallback( PrevModelViewMatrixU, PrevProjectionMatrixU ) );
+
+                    groundSubNodeTrans.setCullCallback( new reprojCullCallback() );
+
                 }
             }
             rootModel.addChild( groundNode );
@@ -419,63 +534,6 @@
 
 
 
-        readShaders: function () {
-            var defer = Q.defer();
-            this._shaderProcessor = new osgShader.ShaderProcessor();
-
-            var shaders = [
-                'add.frag',
-                'baseVert',
-                'baseFrag',
-                'diffFrag',
-                'fxaa',
-                'hbao.frag',
-                'normal.vert',
-                'normal.frag',
-                'showNormal.frag',
-                'reconstNormal.frag',
-                'reconstFrag',
-                'refractVert',
-                'refractFrag',
-                'reflect.frag',
-                'reflectOpt.frag',
-                'UVVert',
-                'UVFrag',
-                'depthVert',
-                'depthFrag',
-                'motionBlurDepth',
-                'motionBlurVelocity',
-                'ssaa_node',
-                'velocity_node',
-                'colorEncode',
-                'raytrace',
-                'smaa.all',
-                'smaa'
-            ];
-
-            var promises = [];
-            var shadersLib = {};
-            shaders.forEach( function ( shader ) {
-                var promise = Q( $.get( 'shaders/' + shader + '.glsl?' + Math.random() ) );
-                promise.then( function ( shaderText ) {
-                    if ( shader && shaderText ) {
-                        shadersLib[ shader ] = shaderText;
-                    }
-                } );
-                promises.push( promise );
-            } );
-
-            var _self = this;
-            Q.all( promises ).then( function () {
-                _self._shaderProcessor.addShaders( shadersLib );
-                defer.resolve();
-            } );
-
-            return defer.promise;
-        },
-
-
-
         getShaderProgram: function ( vs, ps, defines, useCache ) {
 
             var hash;
@@ -488,8 +546,8 @@
                     return this._cache[ hash ];
             }
 
-            var vertexshader = this._shaderProcessor.getShader( vs, defines );
-            var fragmentshader = this._shaderProcessor.getShader( ps, defines );
+            var vertexshader = this._shaderProcessor.getShader( 'shaders/' + vs + '.glsl', defines );
+            var fragmentshader = this._shaderProcessor.getShader( 'shaders/' + ps + '.glsl', defines );
 
             var program = new osg.Program(
                 new osg.Shader( 'VERTEX_SHADER', vertexshader ), new osg.Shader( 'FRAGMENT_SHADER', fragmentshader ) );
@@ -737,7 +795,11 @@
 
             var textureScale = 1.0;
 
-            this._rttSize = [ this._canvas.width * textureScale, this._canvas.height * textureScale, 1.0 / this._canvas.width * textureScale, 1.0 / this._canvas.height * textureScale ];
+            this._rttSize = [ this._canvas.width * textureScale,
+                this._canvas.height * textureScale,
+                1.0 / this._canvas.width * textureScale,
+                1.0 / this._canvas.height * textureScale
+            ];
             // cannot add same model multiple in same grap
             // it would break previousframe matrix saves
 
@@ -746,13 +808,9 @@
             this._root = new osg.Node();
             this._root.setName( 'rootcreateScene' );
 
-            this.sampleXUnif = osg.Uniform.createFloat1( 0.0, 'SampleX' );
-            this.sampleYUnif = osg.Uniform.createFloat1( 0.0, 'SampleY' );
             this.frameNumUnif = osg.Uniform.createFloat1( 0.0, 'FrameNum' );
             this.factorRenderUnif = osg.Uniform.createFloat1( textureScale, 'FactorRender' );
 
-            this._root.getOrCreateStateSet().addUniform( this.sampleXUnif );
-            this._root.getOrCreateStateSet().addUniform( this.sampleYUnif );
             this._root.getOrCreateStateSet().addUniform( this.frameNumUnif );
             this._root.getOrCreateStateSet().addUniform( this.factorRenderUnif );
 
@@ -766,9 +824,8 @@
             this._renderSize = osg.Uniform.createFloat4( this._rttSize, 'renderSize' );
             this._root.getOrCreateStateSet().addUniform( this._renderSize );
 
-
-
             // create a quad on main camera which will be applied the postprocess effects
+            // with debug/diff capabilites
             var quadSize = [ 16 / 9, 1 ];
             this._quad = osg.createTexturedQuadGeometry( -quadSize[ 0 ] / 2.0, 0, -quadSize[ 1 ] / 2.0,
                 quadSize[ 0 ], 0, 0,
@@ -786,7 +843,6 @@
 
             this._scene = new osg.MatrixTransform();
             this._scene.setName( 'sceneFinalTV' );
-
 
             this._postScenes = window.postScenes;
 
@@ -824,10 +880,10 @@
 
             var filter0 = this._config[ 'filter0' ];
             if ( !filter0 ) filter0 = this._globalGui.filter0;
-            else this._globalGui.filter1 = filter0;
+            else this._globalGui.filter0 = filter0;
 
             var filter1 = this._config[ 'filter1' ];
-            if ( !filter1 ) filter1 = this._globalGui.filter0;
+            if ( !filter1 ) filter1 = this._globalGui.filter1;
             else this._globalGui.filter1 = filter1;
 
             var pxlRatio = parseFloat( this._config[ 'pxlRatio' ] );
@@ -839,6 +895,7 @@
                     _self._gui.close();
                 },
                 50 );
+
             this.setComposers( filter0,
                 filter1,
                 parseFloat( pxlRatio ) );
@@ -879,7 +936,6 @@
 
                     }
 
-
                     _self._effect0.update();
                     if ( _self._notSame ) _self._effect1.update();
 
@@ -913,6 +969,9 @@
 
         run: function () {
 
+            // get url parameter to override default _config values
+            this.setConfigFromOptionsURL();
+
             // osg.ReportWebGLError = true;
             this._canvas = document.getElementById( 'View' );
             this._canvas.style.width = this._canvas.width = window.innerWidth;
@@ -922,6 +981,7 @@
             this._viewer = new osgViewer.Viewer( this._canvas, {
                 antialias: false
             } );
+
             // we'll do it ourself
             this._viewer.setLightingMode( osgViewer.View.LightingMode.NO_LIGHT );
             this._viewer.init();
@@ -930,6 +990,7 @@
             rotate.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
             this._viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+
 
             this._viewer.setSceneData( rotate );
             this._viewer.setupManipulator();
@@ -940,20 +1001,15 @@
 
             var _self = this;
             this.readShaders().then( function () {
+
                 _self.installCustomShaders();
                 rotate.addChild( _self.createScene() );
-                /*
-        visitor = new osgUtil.DisplayNodeGraphVisitor();
-        rotate.accept( visitor );
-        visitor.createGraph();
-                 */
-
 
             } );
 
-
         }
-    };
+
+    } );
 
 
     window.addEventListener( 'load', function () {

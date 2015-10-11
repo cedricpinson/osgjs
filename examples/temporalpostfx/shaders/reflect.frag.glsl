@@ -1,6 +1,6 @@
 #extension GL_OES_standard_derivatives : require
 
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 float Fresnel(float NdotL, float fresnelBias, float fresnelPow)
 {

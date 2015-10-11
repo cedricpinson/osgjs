@@ -1,5 +1,6 @@
 'use strict';
 
+
 var TemporalAttribute;
 var TemporalNode;
 
@@ -68,11 +69,11 @@ var TemporalNode;
         // it's a global declaration
         // you can make your include here or your global variable
         globalFunctionDeclaration: function () {
-            return '#pragma include "ssaa_node"';
+            return '#pragma include "shaders/ssaa_node.glsl"';
         },
 
         // call the glsl function with input/output of the node
-        computeFragment: function () {
+        computeShader: function () {
             return osgShader.utils.callFunction( 'temporal', undefined, [
                 this._inputs.enable,
                 this._inputs.color,

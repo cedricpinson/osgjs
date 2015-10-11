@@ -1,5 +1,5 @@
 
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 
 /** Morgan McGuire Deep G-buffer

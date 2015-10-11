@@ -1,7 +1,7 @@
 #extension GL_OES_standard_derivatives : require
 
-#pragma include "colorEncode"
-#pragma include "raytrace"
+#pragma include "colorEncode.glsl"
+#pragma include "shaders/raytrace.glsl"
 
 
 

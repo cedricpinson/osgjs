@@ -1,4 +1,4 @@
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 // Sample the color buffer along the velocity vector.
 vec4 motionBlur(sampler2D tex, vec2 texCoord, vec2 velocityFact)

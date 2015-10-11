@@ -148,7 +148,7 @@
             st.addUniform( this._nearFar );
 
             var alphaBlendFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'add.frag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/add.frag.glsl' ), {
                     'Texture3': this._sceneTexture1,
                     'Texture4': this._sceneTexture2
                 }

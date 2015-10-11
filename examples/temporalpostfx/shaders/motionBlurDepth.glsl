@@ -1,6 +1,6 @@
 precision highp float;
 
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 
 // Sample the color buffer along the velocity vector.
@@ -44,7 +44,7 @@ vec2 getVelocity(sampler2D tex, vec2 pos)
     return vel;
 }
 
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 
 uniform sampler2D Texture0;

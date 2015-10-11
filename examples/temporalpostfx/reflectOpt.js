@@ -182,7 +182,7 @@
             st.addUniform( osg.Uniform.createInt1( 3, 'Texture3' ) );
 
             var alphaBlendFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'add.frag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/add.frag.glsl' ), {
                     'Texture3': this._sceneTexture2,
                     'Texture4': this._sceneTexture3
                 }

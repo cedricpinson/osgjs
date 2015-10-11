@@ -87,7 +87,7 @@
 
             var defines;
             var HBAOReconstructionFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'hbao.frag', defines ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/hbao.frag.glsl', defines ), {
                     'Texture0': this._sceneTexture,
                     'ProjectionMatrix': this._projectionMatrix,
                     'NearFar': this._nearFar

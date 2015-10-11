@@ -57,7 +57,7 @@
                 this.createScene();
 
                 var FXAAFilter = new osgUtil.Composer.Filter.Custom(
-                    osgShader.ShaderProcessor.instance.getShader( 'fxaa' ), {
+                    osgShader.ShaderProcessor.instance.getShader( 'shaders/fxaa.glsl' ), {
                         'Texture0': this._sceneTexture,
                         'subpixel_aa': 0.75,
                         'contrast_treshold': 0.1,

@@ -87,7 +87,7 @@
             this._nearFar = [ 0.0001, 200.0 ];
 
             var DepthReconstructionFilter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'reconstFrag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shaders/reconstFrag.glsl' ), {
                     'Texture0': this._sceneTexture,
                     'ProjectionMatrix': this._projectionMatrix,
                     'NearFar': this._nearFar

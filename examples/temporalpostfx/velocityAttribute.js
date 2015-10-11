@@ -11,9 +11,12 @@ var VelocityNode;
     var factory = osgShader.nodeFactory;
 
     VelocityAttribute = function () {
+
         osg.StateAttribute.call( this );
         this._attributeEnable = false;
+
     };
+
     VelocityAttribute.prototype = osg.objectLibraryClass( osg.objectInherit( osg.StateAttribute.prototype, {
         attributeType: 'Velocity',
 
@@ -68,14 +71,19 @@ var VelocityNode;
         // it's a global declaration
         // you can make your include here or your global variable
         globalFunctionDeclaration: function () {
-            return '#pragma include "velocity_node"';
+
+            return '#pragma include "shaders/velocity_node.glsl"';
+
         },
 
         // call the glsl function with input/output of the node
-        computeFragment: function () {
+        computeShader: function () {
+
             return osgShader.utils.callFunction( 'velocity', undefined, [
+
                 this._inputs.enable,
                 this._outputs.color
+
             ] );
         }
 

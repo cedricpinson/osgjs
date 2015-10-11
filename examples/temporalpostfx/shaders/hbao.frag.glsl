@@ -1,6 +1,6 @@
 #extension GL_OES_standard_derivatives : require
 
-#pragma include "colorEncode"
+#pragma include "colorEncode.glsl"
 
 #define PI 3.1415926535897932384626433832795
 

@@ -146,13 +146,14 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
                 draw: function ( state, previousRenderLeaf ) {
 
-                    var previousLeaf = this.drawPreRenderStages( state, previousRenderLeaf );
+                        var previousLeaf = this.drawPreRenderStages( state, previousRenderLeaf );
 
-                    previousLeaf = this.drawImplementation( state, previousLeaf );
+                        previousLeaf = this.drawImplementation( state, previousLeaf );
 
-                    previousLeaf = this.drawPostRenderStages( state, previousLeaf );
+                    } else if ( a.texture !== undefined ) {
 
-                    if ( this.camera && this.camera.getFinalDrawCallback() ) {
+                        attach.texture = a.texture;
+                        attach.textureTarget = a.textureTarget;
 
                         // if we have a camera with a final callback invoke it.
                         var cb = this.camera.getFinalDrawCallback();
@@ -161,200 +162,200 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
                     }
 
-                    return previousLeaf;
+                return previousLeaf;
 
-                },
+            },
 
-                sort: function () {
-                    for ( var i = 0, l = this.preRenderList.length; i < l; ++i ) {
-                        this.preRenderList[ i ].renderStage.sort();
-                    }
+            sort: function () {
+                for ( var i = 0, l = this.preRenderList.length; i < l; ++i ) {
+                    this.preRenderList[ i ].renderStage.sort();
+                }
 
-                    RenderBin.prototype.sort.call( this );
+                RenderBin.prototype.sort.call( this );
 
-                    for ( var j = 0, k = this.postRenderList.length; j < k; ++j ) {
-                        this.postRenderList[ j ].renderStage.sort();
-                    }
-                },
+                for ( var j = 0, k = this.postRenderList.length; j < k; ++j ) {
+                    this.postRenderList[ j ].renderStage.sort();
+                }
+            },
 
-                drawPostRenderStages: function ( state, previousRenderLeaf ) {
-                    var previousLeaf = previousRenderLeaf;
-                    for ( var i = 0, l = this.postRenderList.length; i < l; ++i ) {
-                        var sg = this.postRenderList[ i ].renderStage;
-                        previousLeaf = sg.draw( state, previousLeaf );
-                    }
-                    return previousLeaf;
-                },
+            drawPostRenderStages: function ( state, previousRenderLeaf ) {
+                var previousLeaf = previousRenderLeaf;
+                for ( var i = 0, l = this.postRenderList.length; i < l; ++i ) {
+                    var sg = this.postRenderList[ i ].renderStage;
+                    previousLeaf = sg.draw( state, previousLeaf );
+                }
+                return previousLeaf;
+            },
 
-                applyCamera: function ( state ) {
-                        var gl = state.getGraphicContext();
-                        if ( this.camera === undefined ) {
-                            gl.bindFramebuffer( gl.FRAMEBUFFER, null );
-                            return;
-                        }
-                        var viewport = this.camera.getViewport();
-                        var fbo = this.camera.frameBufferObject;
+            applyCamera: function ( state ) {
+                var gl = state.getGraphicContext();
+                if ( this.camera === undefined ) {
+                    gl.bindFramebuffer( gl.FRAMEBUFFER, null );
+                    return;
+                }
+                var viewport = this.camera.getViewport();
+                var fbo = this.camera.frameBufferObject;
 
-                        if ( !fbo ) {
-                            fbo = new FrameBufferObject();
-                            this.camera.frameBufferObject = fbo;
-                        }
+                if ( !fbo ) {
+                    fbo = new FrameBufferObject();
+                    this.camera.frameBufferObject = fbo;
+                }
 
-                        if ( fbo.isDirty() ) {
+                if ( fbo.isDirty() ) {
 
-                            var attachments = this.camera.getAttachments();
-                            // we should use a map in camera to avoid to regenerate the keys
-                            // each time. But because we dont have a lot of camera I guess
-                            // it does not change a lot
-                            var keys = window.Object.keys( attachments );
+                    var attachments = this.camera.getAttachments();
+                    // we should use a map in camera to avoid to regenerate the keys
+                    // each time. But because we dont have a lot of camera I guess
+                    // it does not change a lot
+                    var keys = window.Object.keys( attachments );
 
-                            if ( keys.length ) {
+                    if ( keys.length ) {
 
-                                for ( var i = 0, l = keys.length; i < l; i++ ) {
-                                    var key = keys[ i ];
-                                    var a = attachments[ key ];
+                        for ( var i = 0, l = keys.length; i < l; i++ ) {
+                            var key = keys[ i ];
+                            var a = attachments[ key ];
 
-                                    var attach = {};
-                                    attach.attachment = a.attachment;
+                            var attach = {};
+                            attach.attachment = a.attachment;
 
-                                    if ( a.texture === undefined ) { //renderbuffer
+                            if ( a.texture === undefined ) { //renderbuffer
 
-                                        attach.format = a.format;
-                                        attach.width = viewport.width();
-                                        attach.height = viewport.height();
+                                attach.format = a.format;
+                                attach.width = viewport.width();
+                                attach.height = viewport.height();
 
-                                        drawPreRenderStages: function ( state, previousRenderLeaf ) {
-                                                var previousLeaf = previousRenderLeaf;
-                                                for ( var i = 0, l = this.preRenderList.length; i < l; ++i ) {
-                                                    var sg = this.preRenderList[ i ].renderStage;
-                                                    previousLeaf = sg.draw( state, previousLeaf );
-                                                }
-                                                return previousLeaf;
-                                            },
+                                drawPreRenderStages: function ( state, previousRenderLeaf ) {
+                                        var previousLeaf = previousRenderLeaf;
+                                        for ( var i = 0, l = this.preRenderList.length; i < l; ++i ) {
+                                            var sg = this.preRenderList[ i ].renderStage;
+                                            previousLeaf = sg.draw( state, previousLeaf );
+                                        }
+                                        return previousLeaf;
+                                    },
 
-                                            draw: function ( state, previousRenderLeaf ) {
+                                    draw: function ( state, previousRenderLeaf ) {
 
-                                                var previousLeaf = this.drawPreRenderStages( state, previousRenderLeaf );
+                                        var previousLeaf = this.drawPreRenderStages( state, previousRenderLeaf );
 
-                                                previousLeaf = this.drawImplementation( state, previousLeaf );
+                                        previousLeaf = this.drawImplementation( state, previousLeaf );
 
-                                                previousLeaf = this.drawPostRenderStages( state, previousLeaf );
+                                        previousLeaf = this.drawPostRenderStages( state, previousLeaf );
 
-                                                if ( this.camera && this.camera.getFinalDrawCallback() ) {
+                                        if ( this.camera && this.camera.getFinalDrawCallback() ) {
 
-                                                    // if we have a camera with a final callback invoke it.
-                                                    var cb = this.camera.getFinalDrawCallback();
+                                            // if we have a camera with a final callback invoke it.
+                                            var cb = this.camera.getFinalDrawCallback();
 
-                                                    cb( state );
+                                            cb( state );
 
-                                                }
+                                        }
 
-                                                return previousLeaf;
+                                        return previousLeaf;
 
-                                            },
+                                    },
 
-                                            sort: function () {
-                                                for ( var i = 0, l = this.preRenderList.length; i < l; ++i ) {
-                                                    this.preRenderList[ i ].renderStage.sort();
-                                                }
+                                    sort: function () {
+                                        for ( var i = 0, l = this.preRenderList.length; i < l; ++i ) {
+                                            this.preRenderList[ i ].renderStage.sort();
+                                        }
 
-                                                RenderBin.prototype.sort.call( this );
+                                        RenderBin.prototype.sort.call( this );
 
-                                                for ( var j = 0, k = this.postRenderList.length; j < k; ++j ) {
-                                                    this.postRenderList[ j ].renderStage.sort();
-                                                }
-                                            },
+                                        for ( var j = 0, k = this.postRenderList.length; j < k; ++j ) {
+                                            this.postRenderList[ j ].renderStage.sort();
+                                        }
+                                    },
 
-                                            drawPostRenderStages: function ( state, previousRenderLeaf ) {
-                                                var previousLeaf = previousRenderLeaf;
-                                                for ( var i = 0, l = this.postRenderList.length; i < l; ++i ) {
-                                                    var sg = this.postRenderList[ i ].renderStage;
-                                                    previousLeaf = sg.draw( state, previousLeaf );
-                                                }
-                                                return previousLeaf;
-                                            },
+                                    drawPostRenderStages: function ( state, previousRenderLeaf ) {
+                                        var previousLeaf = previousRenderLeaf;
+                                        for ( var i = 0, l = this.postRenderList.length; i < l; ++i ) {
+                                            var sg = this.postRenderList[ i ].renderStage;
+                                            previousLeaf = sg.draw( state, previousLeaf );
+                                        }
+                                        return previousLeaf;
+                                    },
 
-                                            applyCamera: function ( state ) {
-                                                var gl = state.getGraphicContext();
-                                                if ( this.camera === undefined ) {
-                                                    gl.bindFramebuffer( gl.FRAMEBUFFER, null );
-                                                    return;
-                                                }
-                                                var viewport = this.camera.getViewport();
-                                                var fbo = this.camera.frameBufferObject;
+                                    applyCamera: function ( state ) {
+                                        var gl = state.getGraphicContext();
+                                        if ( this.camera === undefined ) {
+                                            gl.bindFramebuffer( gl.FRAMEBUFFER, null );
+                                            return;
+                                        }
+                                        var viewport = this.camera.getViewport();
+                                        var fbo = this.camera.frameBufferObject;
 
-                                                if ( !fbo ) {
-                                                    fbo = new FrameBufferObject();
-                                                    this.camera.frameBufferObject = fbo;
-                                                }
+                                        if ( !fbo ) {
+                                            fbo = new FrameBufferObject();
+                                            this.camera.frameBufferObject = fbo;
+                                        }
 
-                                                if ( fbo.isDirty() ) {
+                                        if ( fbo.isDirty() ) {
 
-                                                    var attachments = this.camera.getAttachments();
-                                                    // we should use a map in camera to avoid to regenerate the keys
-                                                    // each time. But because we dont have a lot of camera I guess
-                                                    // it does not change a lot
-                                                    var keys = window.Object.keys( attachments );
+                                            var attachments = this.camera.getAttachments();
+                                            // we should use a map in camera to avoid to regenerate the keys
+                                            // each time. But because we dont have a lot of camera I guess
+                                            // it does not change a lot
+                                            var keys = window.Object.keys( attachments );
 
-                                                    if ( keys.length ) {
+                                            if ( keys.length ) {
 
-                                                        for ( var i = 0, l = keys.length; i < l; i++ ) {
-                                                            var key = keys[ i ];
-                                                            var a = attachments[ key ];
+                                                for ( var i = 0, l = keys.length; i < l; i++ ) {
+                                                    var key = keys[ i ];
+                                                    var a = attachments[ key ];
 
-                                                            var attach = {};
-                                                            attach.attachment = a.attachment;
+                                                    var attach = {};
+                                                    attach.attachment = a.attachment;
 
-                                                            if ( a.texture === undefined ) { //renderbuffer
+                                                    if ( a.texture === undefined ) { //renderbuffer
 
-                                                                attach.format = a.format;
-                                                                attach.width = viewport.width();
-                                                                attach.height = viewport.height();
+                                                        attach.format = a.format;
+                                                        attach.width = viewport.width();
+                                                        attach.height = viewport.height();
 
-                                                            } else if ( a.texture !== undefined ) {
+                                                    } else if ( a.texture !== undefined ) {
 
-                                                                attach.texture = a.texture;
-                                                                attach.textureTarget = a.textureTarget;
+                                                        attach.texture = a.texture;
+                                                        attach.textureTarget = a.textureTarget;
 
-                                                                if ( a.format ) {
-                                                                    attach.format = a.format;
-                                                                }
-                                                            }
-
-                                                            fbo.setAttachment( attach );
+                                                        if ( a.format ) {
+                                                            attach.format = a.format;
                                                         }
                                                     }
+
+                                                    fbo.setAttachment( attach );
                                                 }
-                                                fbo.apply( state );
-                                            },
+                                            }
+                                        }
+                                        fbo.apply( state );
+                                    },
 
-                                            drawImplementation: function ( state, previousRenderLeaf ) {
-                                                var gl = state.getGraphicContext();
+                                    drawImplementation: function ( state, previousRenderLeaf ) {
+                                        var gl = state.getGraphicContext();
 
-                                                this.applyCamera( state );
+                                        this.applyCamera( state );
 
-                                                if ( this.viewport === undefined ) {
-                                                    Notify.log( 'RenderStage does not have a valid viewport' );
-                                                }
+                                        if ( this.viewport === undefined ) {
+                                            Notify.log( 'RenderStage does not have a valid viewport' );
+                                        }
 
-                                                state.applyAttribute( this.viewport );
+                                        state.applyAttribute( this.viewport );
 
-                                                /*jshint bitwise: false */
-                                                if ( this.clearMask !== 0x0 ) {
-                                                    if ( this.clearMask & gl.COLOR_BUFFER_BIT ) {
-                                                        gl.clearColor( this.clearColor[ 0 ], this.clearColor[ 1 ], this.clearColor[ 2 ], this.clearColor[ 3 ] );
-                                                    }
-                                                    if ( this.clearMask & gl.DEPTH_BUFFER_BIT ) {
-                                                        gl.depthMask( true );
-                                                        gl.clearDepth( this.clearDepth );
-                                                    }
-                                                    /*jshint bitwise: true */
-                                                    gl.clear( this.clearMask );
-                                                }
+                                        /*jshint bitwise: false */
+                                        if ( this.clearMask !== 0x0 ) {
+                                            if ( this.clearMask & gl.COLOR_BUFFER_BIT ) {
+                                                gl.clearColor( this.clearColor[ 0 ], this.clearColor[ 1 ], this.clearColor[ 2 ], this.clearColor[ 3 ] );
+                                            }
+                                            if ( this.clearMask & gl.DEPTH_BUFFER_BIT ) {
+                                                gl.depthMask( true );
+                                                gl.clearDepth( this.clearDepth );
+                                            }
+                                            /*jshint bitwise: true */
+                                            gl.clear( this.clearMask );
+                                        }
 
-                                                if ( this.positionedAttribute.length !== 0 ) {
-                                                    this.applyPositionedAttribute( state, this.positionedAttribute );
-                                                }
+                                        if ( this.positionedAttribute.length !== 0 ) {
+                                            this.applyPositionedAttribute( state, this.positionedAttribute );
+                                        }
 
-                                                return RenderStage;
-                                            } );
+                                        return RenderStage;
+                                    } );

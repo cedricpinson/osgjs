@@ -40,6 +40,7 @@ function getTemporalAA() {
             NearFarCallback.prototype = {
 
                 cull: function ( node, nv ) {
+
                     // cull
                     config.near = nv._computedNear + '';
                     config.far = nv._computedFar + '';
@@ -50,7 +51,7 @@ function getTemporalAA() {
 
 
             var Filter = new osgUtil.Composer.Filter.Custom(
-                osgShader.ShaderProcessor.instance.getShader( 'baseFrag' ), {
+                osgShader.ShaderProcessor.instance.getShader( 'shader/baseFrag.glsl' ), {
                     'Texture0': sceneTexture
                 }
             );
