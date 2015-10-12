@@ -74,6 +74,27 @@
     };
 
 
+    var optionsURL = {};
+    ( function ( options ) {
+        var vars = [],
+            hash;
+        var indexOptions = window.location.href.indexOf( '?' );
+        if ( indexOptions < 0 ) return;
+
+        var hashes = window.location.href.slice( indexOptions + 1 ).split( '&' );
+        for ( var i = 0; i < hashes.length; i++ ) {
+            hash = hashes[ i ].split( '=' );
+            var element = hash[ 0 ];
+            vars.push( element );
+            var result = hash[ 1 ];
+            if ( result === undefined ) {
+                result = '1';
+            }
+            options[ element ] = result;
+        }
+    } )( optionsURL );
+
+
     var linear2Srgb = function ( value, gamma ) {
         if ( !gamma ) gamma = 2.2;
         var result = 0.0;
@@ -96,8 +117,7 @@
     window.SPECULAR_TEXTURE_UNIT = 4;
 
 
-    var formatList = [ 'FLOAT', 'RGBE', 'RGBM', 'LUV' ];
-    window.formatList = formatList;
+    window.formatList = [ 'FLOAT', 'RGBE', 'RGBM', 'LUV' ];
 
     var modelsPBR = [ 'cerberus', 'c3po', 'devastator' ];
 
@@ -108,6 +128,9 @@
 
         this._shaderPath = 'shaders/';
 
+        if ( optionsURL.colorEncoding )
+            window.formatList = [ optionsURL.colorEncoding ];
+
         this._config = {
             envRotation: Math.PI,
             lod: 0.01,
@@ -115,16 +138,16 @@
             nbSamples: 8,
             environmentType: 'cubemapSeamless',
             brightness: 1.0,
-            normalAA: false,
-            specularPeak: false,
-            occlusionHorizon: false,
-            cameraPreset: 'CameraSamples', //'CameraCenter',
+            normalAA: Boolean( optionsURL.normalAA ),
+            specularPeak: Boolean( optionsURL.specularPeak ),
+            occlusionHorizon: Boolean( optionsURL.occlusionHorizon ),
+            cameraPreset: optionsURL.camera ? Object.keys( CameraPresets )[ optionsURL.camera ] : 'CameraCenter',
 
             roughness: 0.5,
             material: 'Gold',
 
             pbr: 'ImportanceSampling',
-            format: formatList[ 0 ],
+            format: window.formatList[ 0 ],
             model: modelList[ 0 ],
             mobile: isMobileDevice()
         };
@@ -157,7 +180,7 @@
         this._envBrightnessUniform = osg.Uniform.createFloat1( 1.0, 'uBrightness' );
 
         this._normalAA = osg.Uniform.createInt1( 0, 'uNormalAA' );
-        this._specularPeak = osg.Uniform.createInt1( 0, 'uSpecularPeak' );
+        this._specularPeak = osg.Uniform.createInt1( this._config.specularPeak ? 1 : 0, 'uSpecularPeak' );
 
         this._occlusionHorizon = osg.Uniform.createInt1( 0, 'uOcclusionHorizon' );
 
@@ -1097,6 +1120,8 @@
             var environment = 'textures/city_night_reference_1024/';
             var environment = 'textures/city_night_reference_2048/';
 
+            var environment = 'textures/' + ( optionsURL.env ? optionsURL.env : 'parking_reference' ) + '/';
+
 
             //var environment = 'textures/bus_garage5/';
             //var environment = 'textures/walk_of_fame/';
@@ -1174,7 +1199,7 @@
                 controller = gui.add( this._config, 'pbr', [ this._config.pbr, 'UE4', ] ).listen();
                 controller.onChange( this.updateEnvironment.bind( this ) ); // is also call updatePBR
 
-                controller = gui.add( this._config, 'format', formatList ).listen();
+                controller = gui.add( this._config, 'format', window.formatList ).listen();
                 controller.onChange( this.updateEnvironment.bind( this ) );
 
 

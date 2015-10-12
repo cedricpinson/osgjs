@@ -21,7 +21,7 @@
 
     Environment.prototype = {
 
-        getFirstImage: function ( type, encoding, format ) {
+        getImage: function ( type, encoding, format ) {
 
             var results = this.getTextures( type, encoding, format );
 
@@ -47,25 +47,27 @@
             this._config = config;
 
             var ready = this._promises;
-
+            var size;
+            var cubemapPackedFloat;
+            var mipmapTexture;
 
             //var spherical = environment + 'spherical';
-            var mipmapTexture = this.getFirstImage( 'mipmap', 'float', 'cubemap' );
-            var cubemapPackedFloat = environment + mipmapTexture.file;
-            var size = mipmapTexture.width;
+            if ( formatList.FLOAT ) {
+                mipmapTexture = this.getImage( 'mipmap', 'float', 'cubemap' );
+                cubemapPackedFloat = environment + mipmapTexture.file;
+                size = mipmapTexture.width;
+                this._cubemapPackedFloat = new EnvironmentCubeMap( cubemapPackedFloat, size, config );
+            }
 
-            var brdfTexture = this.getFirstImage( 'brdf_ue4', 'rg16', 'lut' );
+            var brdfTexture = this.getImage( 'brdf_ue4', 'rg16', 'lut' );
             var integrateBRDF = environment + brdfTexture.file;
-
-            //this._cubemapIrradiance = new EnvironmentCubeMap( cubemapIrradiance );
-            this._cubemapPackedFloat = new EnvironmentCubeMap( cubemapPackedFloat, size, config );
 
 
             // read all panorama format U4
             formatList.forEach( function ( key ) {
                 var str = key.toLowerCase();
 
-                var texture = this.getFirstImage( 'specular_ue4', str, 'panorama' );
+                var texture = this.getImage( 'specular_ue4', str, 'panorama' );
 
                 if ( texture === undefined ) return;
 
@@ -80,7 +82,7 @@
             // read all cubemap format U4
             formatList.forEach( function ( key ) {
                 var str = key.toLowerCase();
-                var texture = this.getFirstImage( 'specular_ue4', str, 'cubemap' );
+                var texture = this.getImage( 'specular_ue4', str, 'cubemap' );
                 if ( texture === undefined ) return;
 
                 var file = texture.file;
@@ -95,7 +97,7 @@
             // read all background cubemap
             formatList.forEach( function ( key ) {
                 var str = key.toLowerCase();
-                var texture = this.getFirstImage( 'background', str, 'cubemap' );
+                var texture = this.getImage( 'background', str, 'cubemap' );
                 if ( texture === undefined ) return;
                 var file = texture.file;
                 var size = texture.width;
@@ -112,7 +114,9 @@
 
             this._spherical = new EnvironmentSphericalHarmonics( config.diffuseSPH );
 
-            ready.push( this._cubemapPackedFloat.loadPacked() );
+            if ( this._cubemapPackedFloat )
+                ready.push( this._cubemapPackedFloat.loadPacked() );
+
             ready.push( this._integrateBRDF.loadPacked() );
 
             return this.getPromise();
