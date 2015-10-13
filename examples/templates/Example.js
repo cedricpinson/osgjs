@@ -55,6 +55,7 @@
             this._viewer = new osgViewer.Viewer( this._canvas );
             this._viewer.init();
             this._viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+            this._viewer.setupManipulator();
 
             // add all nodes under this._root
             this.createScene();
@@ -63,7 +64,6 @@
 
             // basic setup
             this._viewer.setSceneData( this._root );
-            this._viewer.setupManipulator();
             this._viewer.getManipulator().computeHomePosition();
 
 
