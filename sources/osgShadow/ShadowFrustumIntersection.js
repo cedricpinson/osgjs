@@ -7,6 +7,7 @@ define( [
     'osg/Geometry',
     'osg/Light',
     'osg/Matrix',
+    'osg/MatrixMemoryPool',
     'osg/MatrixTransform',
     'osg/Node',
     'osg/NodeVisitor',
@@ -16,21 +17,18 @@ define( [
     'osg/Utils',
     'osg/Vec3'
 ], function (
-    BoundingBox, BoundingSphere, Camera, ComputeMatrixFromNodePath, CullVisitor, Geometry, Light, Matrix, MatrixTransform, Node, NodeVisitor, Notify, Object, Plane, MACROUTILS ) {
+    BoundingBox, BoundingSphere, Camera, ComputeMatrixFromNodePath, CullVisitor, Geometry, Light, Matrix, MatrixMemoryPool, MatrixTransform, Node, NodeVisitor, Notify, Object, Plane, MACROUTILS ) {
     'use strict';
     /**
      * [ComputeFrustumBoundsVisitor get a scene bounds limited by a light and camera frustum]
      */
     var ComputeMultiFrustumBoundsVisitor = function () {
+
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
         this._matrixStack = [ Matrix.create() ];
+        this._reservedMatrixStack = new MatrixMemoryPool();
         this._bb = new BoundingBox();
         this._bs = new BoundingSphere();
-        // keep a matrix in memory to avoid to create matrix
-        this._reserveMatrixStack = [
-            Matrix.create()
-        ];
-        this._reserveMatrixStack.current = 0;
 
     };
 
@@ -48,7 +46,7 @@ define( [
             // what plane to exclude from shadowedscene
             this.getCameraPlaneMaskForLightNear( worldLightPos, cameraFrustum, cameraNearFar ? 6 : 4 );
 
-            this._reserveMatrixStack.current = 0;
+            this._reservedMatrixStack.reset();
             this._matrixStack.length = 1;
             this._bb.init();
         },
@@ -84,17 +82,10 @@ define( [
             cameraFrustum.pushCurrentMask( resultMask );
             return resultMask;
         },
-        _getReservedMatrix: function () {
-            var m = this._reserveMatrixStack[ this._reserveMatrixStack.current++ ];
-            if ( this._reserveMatrixStack.current === this._reserveMatrixStack.length ) {
-                this._reserveMatrixStack.push( Matrix.create() );
-            }
-            return m;
-        },
 
         applyTransform: function ( transform ) {
 
-            var matrix = this._getReservedMatrix();
+            var matrix = this._reservedMatrixStack.get();
             var stackLength = this._matrixStack.length;
             Matrix.copy( this._matrixStack[ stackLength - 1 ], matrix );
             transform.computeLocalToWorldMatrix( matrix, this );

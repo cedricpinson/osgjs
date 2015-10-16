@@ -6,9 +6,10 @@ define( [
     'osg/StateSet',
     'osg/NodeVisitor',
     'osg/Matrix',
+    'osg/MatrixMemoryPool',
     'osg/ComputeMatrixFromNodePath',
     'osg/TransformEnums'
-], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, ComputeMatrixFromNodePath, TransformEnums ) {
+], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, MatrixMemoryPool, ComputeMatrixFromNodePath, TransformEnums ) {
 
     'use strict';
 
@@ -304,7 +305,8 @@ define( [
         // same as getWorldMatrix GC: Perf WIN
         getWorldMatrix: function ( halt, matrix ) {
 
-            var matrixList = this.getWorldMatrix( halt, Node._getReservedMatrix );
+            // pass allocator on master
+            var matrixList = this.getWorldMatrix( halt, Node._reservedMatrixStack.get );
 
             if ( matrixList.length === 0 ) {
 
@@ -316,7 +318,7 @@ define( [
 
             }
 
-            Node._resetReservedMatrix();
+            Node._reservedMatrixStack.reset();
             return matrix;
 
         },
@@ -365,41 +367,13 @@ define( [
 
         releaseGLObjects: function () {
             if ( this.stateset !== undefined ) this.stateset.releaseGLObjects();
-        },
-
-        _getReservedMatrix: function () {
-
-            var m = Node._reserveMatrixStack[ Node._reserveMatrixStackCurrent++ ];
-
-            if ( Node._reserveMatrixStackCurrent === Node._reserveMatrixStack.length ) {
-
-                Node._reserveMatrixStack.push( Matrix.create() );
-
-            } else {
-
-                Matrix.makeIdentity( m );
-
-            }
-
-            return m;
-
-        },
-
-        _resetReservedMatrix: function () {
-
-            Node._reserveMatrixStackCurrent = 0;
-
         }
 
 
     } ), 'osg', 'Node' );
     MACROUTILS.setTypeID( Node );
 
-
-    Node._reserveMatrixStack = [
-        Matrix.create()
-    ];
-    Node._reserveMatrixStackCurrent = 0;
+    Node._reservedMatrixStack = new MatrixMemoryPool();
 
     return Node;
 } );

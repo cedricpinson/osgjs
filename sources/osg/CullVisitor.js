@@ -239,8 +239,8 @@ define( [
         var stateset = camera.getStateSet();
         if ( stateset ) this.pushStateSet( stateset );
 
-        var modelview = this._getReservedMatrix();
-        var projection = this._getReservedMatrix();
+        var modelview = this._reservedMatrixStack.get();
+        var projection = this._reservedMatrixStack.get();
 
         if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
 
@@ -358,7 +358,7 @@ define( [
         // push the culling mode.
         this.pushCurrentMask();
 
-        var matrix = this._getReservedMatrix();
+        var matrix = this._reservedMatrixStack.get();
 
         if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF ) {
 
@@ -390,7 +390,7 @@ define( [
 
     CullVisitor.prototype[ Projection.typeID ] = function ( node ) {
         var lastMatrixStack = this.getCurrentProjectionMatrix();
-        var matrix = this._getReservedMatrix();
+        var matrix = this._reservedMatrixStack.get();
         Matrix.mult( lastMatrixStack, node.getProjectionMatrix(), matrix );
         this.pushProjectionMatrix( matrix );
 

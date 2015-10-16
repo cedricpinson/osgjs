@@ -2,11 +2,12 @@ define( [
     'osg/BoundingBox',
     'osg/Geometry',
     'osg/Matrix',
+    'osg/MatrixMemoryPool',
     'osg/MatrixTransform',
     'osg/NodeVisitor',
     'osg/Utils'
 
-], function ( BoundingBox, Geometry, Matrix, MatrixTransform, NodeVisitor, MACROUTILS ) {
+], function ( BoundingBox, Geometry, Matrix, MatrixMemoryPool, MatrixTransform, NodeVisitor, MACROUTILS ) {
 
     'use strict';
 
@@ -14,12 +15,9 @@ define( [
         NodeVisitor.call( this, traversalMode );
 
         // keep a matrix in memory to avoid to create matrix
-        this._reserveMatrixStack = [
-            Matrix.create()
-        ];
-        this._reserveMatrixStack.current = 0;
+        this._reservedMatrixStack = new MatrixMemoryPool();
 
-
+        // Matrix stack along path traversal
         this._matrixStack = [];
         this._bb = new BoundingBox();
     };
@@ -27,7 +25,7 @@ define( [
     ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
         reset: function () {
-            this._reserveMatrixStack.current = 0;
+            this._reservedMatrixStack.reset();
             this._matrixStack.length = 0;
             this._bb.init();
         },
@@ -44,7 +42,7 @@ define( [
 
         applyTransform: function ( transform ) {
 
-            var matrix = this._getReservedMatrix();
+            var matrix = this._reservedMatrixStack.get();
             var stackLength = this._matrixStack.length;
 
             if ( stackLength )
@@ -103,24 +101,8 @@ define( [
 
         getMatrixStack: function () {
             return this._matrixStack;
-        },
-
-        _getReservedMatrix: function () {
-
-            var m = this._reserveMatrixStack[ this._reserveMatrixStack.current++ ];
-
-            if ( this._reserveMatrixStack.current === this._reserveMatrixStack.length ) {
-
-                this._reserveMatrixStack.push( Matrix.create() );
-
-            } else {
-
-                Matrix.makeIdentity( m );
-
-            }
-
-            return m;
         }
+
 
     } ), 'osg', 'ComputeBoundsVisitor' );
 
