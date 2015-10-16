@@ -750,6 +750,10 @@ define( [
             vertexAttribMap._disable[ attrib ] = false;
             var gl = this._graphicContext;
             var binded = false;
+
+            if ( array.getActiveArray )
+                array = array.getActiveArray();
+
             if ( array.isDirty() ) {
                 array.bind( gl );
                 array.compile( gl );
