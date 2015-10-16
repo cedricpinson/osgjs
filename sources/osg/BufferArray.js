@@ -31,6 +31,8 @@ define( [
 
         this.dirty();
 
+        this._activeArray = this; // make it possible to map another array to keep the same shader/VertexAttrib location, etc...
+
         this._itemSize = itemSize;
         if ( typeof ( type ) === 'string' ) {
             type = BufferArray[ type ];
@@ -150,6 +152,12 @@ define( [
             this._elements = elements;
             this._glBind = getAttributeType( elements );
             this._dirty = true;
+        },
+        getActiveArray: function () {
+            return this._activeArray;
+        },
+        setActiveArray: function ( array ) {
+            this._activeArray = array;
         }
     } );
 

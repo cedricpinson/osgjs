@@ -23,23 +23,31 @@ define( [
         this._stateSetAnimation = new StateSet(); // StateSet to handle morphAttribute
         this._targetWeights = new Float32Array( 4 ); // Fixed length array feed by UpdateMorph
 
+        this._morphTargetNames = undefined;
+
         this._isInitialized = false;
     };
 
     MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
 
         init: function () {
-            var animAttrib = new MorphAttribute( this.getMorphTargets().length );
+            var animAttrib = new MorphAttribute( Math.min( 4, this.getMorphTargets().length ) );
             this.getStateSetAnimation().setAttributeAndModes( animAttrib, StateAttribute.ON );
             animAttrib.setTargetWeights( this.getTargetsWeight() );
 
+            this._morphTargetNames = Object.keys( this._targets[ 0 ].getVertexAttributeList() );
+
             if ( this._targets[ 0 ] )
-                animAttrib.copyTargetNames( Object.keys( this._targets[ 0 ].getVertexAttributeList() ) );
+                animAttrib.copyTargetNames( this._morphTargetNames );
             else
                 Notify.error( 'No Targets in the MorphGeometry !' );
 
             this._isInitialized = true;
             return true;
+        },
+
+        getMorphTargetNames: function () {
+            return this._morphTargetNames;
         },
 
         getStateSetAnimation: function () {
