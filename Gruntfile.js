@@ -406,7 +406,7 @@ var generateVersionFile = function () {
                 //Bluebird:
                 {
                     cwd: './',
-                    src: 'examples/vendors/bluebird-2.9.25.js',
+                    src: 'examples/vendors/bluebird-2.10.2.js',
                     dest: 'examples/vendors/bluebird.js'
                 },
                 //es5-shim:
