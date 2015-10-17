@@ -166,9 +166,7 @@ define( [
         getExtensions: function () {
             var algo = this.getAlgorithm();
             if ( algo === 'PCF' ) {
-                return [];
-                // looks like derivative is broken on some mac + intel cg ...
-                // return [ '#extension GL_OES_standard_derivatives : enable' ];
+                return [ '#extension GL_OES_standard_derivatives : enable' ];
             } else {
                 return [];
             }

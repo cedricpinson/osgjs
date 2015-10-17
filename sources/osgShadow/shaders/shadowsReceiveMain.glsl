@@ -69,13 +69,13 @@
 
 
 // looks like derivative is broken on some mac + intel cg ...
-// #ifdef GL_OES_standard_derivatives
+#ifdef GL_OES_standard_derivatives
 
-//     shadowBiasPCF.x +=  dFdx(shadowUV.xy).x * shadowMapSize.z;
-//     shadowBiasPCF.y +=  dFdy(shadowUV.xy).y * shadowMapSize.w;
+     shadowBiasPCF.x +=  dFdx(shadowUV.xy).x * shadowMapSize.z;
+     shadowBiasPCF.y +=  dFdy(shadowUV.xy).y * shadowMapSize.w;
 //     //shadowBias += dFdx(shadowReceiverZ);
 
-// #endif
+#endif
 
 
     shadow = getShadowPCF(tex, shadowMapSize, shadowUV, shadowReceiverZ, shadowBiasPCF);
