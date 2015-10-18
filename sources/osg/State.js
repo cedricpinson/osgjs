@@ -1037,11 +1037,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var uniformStack = uniformMapStack[ name ];
             location = programUniformMap[ name ];
             var uniform;
-
             if ( uniformStack !== undefined ) {
-
                 if ( uniformStack.values().length === 0 ) {
                     uniform = uniformStack.globalDefault;
+                    Notify.warn( 'Uniform Default Not attached to a StateSet in Scene Hierarchy: ' + uniformStack.globalDefault.getName() );
                 } else {
                     uniform = uniformStack.back().object;
                 }
