@@ -78,7 +78,16 @@ define( [
             var ext = this._webGLParameters;
 
             // derivatives gives strange results on Shadow Shaders
-            this._bugsDB[ 'OES_standard_derivatives' ] = ( p.Apple && ext.UNMASKED_VENDOR_WEBGL === undefined ) || ( ext.UNMASKED_VENDOR_WEBGL.indexOf( 'Intel' ) !== -1 && p.Apple );
+            if ( p.Apple ) {
+
+                if ( !ext.UNMASKED_VENDOR_WEBGL || ext.UNMASKED_VENDOR_WEBGL.indexOf( 'Intel' ) !== -1 ) {
+                    // bug is on INTEL GPU on APPLE
+                    // we disable the ext on Apple if we cannot get GPU info
+                    this._bugsDB[ 'OES_standard_derivatives' ] = true;
+
+                }
+
+            }
 
         },
         initPlatformSupport: function () {
@@ -86,6 +95,7 @@ define( [
             var p = this._webGLPlatforms;
 
             p.Apple = navigator.vendor.indexOf( 'Apple' ) !== -1 || navigator.vendor.indexOf( 'OS X' ) !== -1;
+
             // degrades complexity on handhelds.
             p.Mobile = /Mobi/.test( navigator.userAgent ) || /ablet/.test( navigator.userAgent );
 
