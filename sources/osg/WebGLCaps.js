@@ -1,7 +1,8 @@
 define( [
+    'osg/Notify',
     'osg/Texture',
     'osgViewer/webgl-utils'
-], function ( Texture, WebGLUtils ) {
+], function ( Notify, Texture, WebGLUtils ) {
 
     'use strict';
 
@@ -22,17 +23,24 @@ define( [
         if ( !WebGLCaps._instance ) {
 
             var c = document.createElement( 'canvas' );
+
             c.width = 32;
             c.height = 32;
 
             var gl = WebGLUtils.setupWebGL( c );
 
-            // gracefully handle non webgl
-            // like nodejs, phantomjs
+            WebGLCaps._instance = new WebGLCaps();
             if ( gl ) {
 
-                WebGLCaps._instance = new WebGLCaps();
                 WebGLCaps._instance.init( gl );
+
+            } else {
+
+                // gracefully handle non webgl
+                // like nodejs, phantomjs
+                // warns but no error so that nodejs/phantomjs
+                // can still has some webglcaps object
+                Notify.warn( 'no support for webgl context detected.' );
 
             }
 
@@ -103,13 +111,14 @@ define( [
         },
         checkSupportRTT: function ( gl, typeFloat, typeTexture ) {
 
-            if ( !gl ) return false;
-
             var key = typeFloat + ',' + typeTexture;
 
             // check once only
             if ( this._checkRTT[ key ] !== undefined )
                 return this._checkRTT[ key ];
+
+            // no cached results, need gl context
+            if ( !gl ) return false;
 
             // from http://codeflow.org/entries/2013/feb/22/how-to-write-portable-webgl/#how-can-i-detect-if-i-can-render-to-floating-point-textures
 
