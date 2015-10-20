@@ -436,14 +436,13 @@ define( [
             var deltaS = Timer.instance().deltaS( this._startTick, Timer.instance().tick() );
             frameStamp.setReferenceTime( deltaS );
 
-            // reference time
-            if ( sTime === Number.MAX_VALUE )
-                frameStamp.setSimulationTime( frameStamp.getReferenceTime() );
-            else
-                frameStamp.setSimulationTime( sTime );
+            var lastSimulationTime = frameStamp.getSimulationTime();
+            frameStamp.setSimulationTime( sTime === Number.MAX_VALUE ? deltaS : sTime ); // set simul time
+            frameStamp.setDeltaTime( frameStamp.getSimulationTime() - lastSimulationTime ); // compute delta since last tick
 
             var deltaFrameTime = frameStamp.getReferenceTime() - previousReferenceTime;
-            this.getViewerStats().setAttribute( previousFrameNumber, 'Frame rate', 1.0 / deltaFrameTime );
+            if ( deltaFrameTime !== 0.0 )
+                this.getViewerStats().setAttribute( previousFrameNumber, 'Frame rate', 1.0 / deltaFrameTime );
         },
 
         beginFrame: function () {

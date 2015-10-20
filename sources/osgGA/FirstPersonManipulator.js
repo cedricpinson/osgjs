@@ -179,16 +179,11 @@ define( [
         update: ( function () {
             var vec = [ 0.0, 0.0 ];
             return function ( nv ) {
-                var t = nv.getFrameStamp().getSimulationTime();
-                if ( this._lastUpdate === undefined ) {
-                    this._lastUpdate = t;
-                }
-                var dt = t - this._lastUpdate;
-                this._lastUpdate = t;
+                var dt = nv.getFrameStamp().getDeltaTime();
 
-                this._forward.update();
-                this._side.update();
-                var delta = this._lookPosition.update();
+                this._forward.update( dt );
+                this._side.update( dt );
+                var delta = this._lookPosition.update( dt );
 
                 this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
 
@@ -202,11 +197,12 @@ define( [
                 // time based displacement vector
                 vec[ 0 ] = this._forward.getCurrent()[ 0 ];
                 vec[ 1 ] = this._side.getCurrent()[ 0 ];
-                if ( Vec2.length( vec ) > 1.0 ) Vec2.normalize( vec, vec );
+                var len2 = Vec2.length2( vec );
+                if ( len2 > 1.0 ) Vec2.mult( vec, 1.0 / Math.sqrt( len2 ), vec );
 
                 // direct displacement vectors
-                var pan = this._pan.update();
-                var zoom = this._zoom.update();
+                var pan = this._pan.update( dt );
+                var zoom = this._zoom.update( dt );
 
                 var timeFactor = this._stepFactor * factor * vFov * dt;
                 var directFactor = this._stepFactor * factor * vFov * 0.005;

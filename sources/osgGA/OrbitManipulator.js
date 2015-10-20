@@ -38,13 +38,16 @@ define( [
         },
         reset: function () {
             for ( var i = 0, l = this._current.length; i < l; i++ ) {
-                this._current[ i ] = this._target[ i ] = 0;
+                this._current[ i ] = this._target[ i ] = 0.0;
             }
             this._reset = true;
         },
-        update: function () {
+        update: function ( dt ) {
+            // assume 60 fps to be consistent with the old _delay values for backward compatibility
+            // (otherwise we'd have to adjust the _delay values by multiplying to 60 )
+            var dtDelay = this._delay * dt * 60.0;
             for ( var i = 0, l = this._current.length; i < l; i++ ) {
-                var d = ( this._target[ i ] - this._current[ i ] ) * this._delay;
+                var d = ( this._target[ i ] - this._current[ i ] ) * dtDelay;
                 this._delta[ i ] = d;
                 this._current[ i ] += d;
             }
@@ -385,25 +388,19 @@ define( [
         update: ( function () {
             var eye = [ 0.0, 0.0, 0.0 ];
             return function ( nv ) {
-                var t = nv.getFrameStamp().getSimulationTime();
-                if ( this._lastUpdate === undefined ) {
-                    this._lastUpdate = t;
-                }
-                //var dt = t - this._lastUpdate;
-                this._lastUpdate = t;
+                var dt = nv.getFrameStamp().getDeltaTime();
 
                 var delta;
                 var mouseFactor = 0.1;
-                delta = this._rotate.update();
+                delta = this._rotate.update( dt );
                 this.computeRotation( -delta[ 0 ] * mouseFactor * this._scaleMouseMotion, -delta[ 1 ] * mouseFactor * this._scaleMouseMotion );
 
-
                 var panFactor = 0.002;
-                delta = this._pan.update();
+                delta = this._pan.update( dt );
                 this.computePan( -delta[ 0 ] * panFactor, -delta[ 1 ] * panFactor );
 
 
-                delta = this._zoom.update();
+                delta = this._zoom.update( dt );
                 this.computeZoom( 1.0 + delta[ 0 ] / 10.0 );
 
                 var target = this._target;
