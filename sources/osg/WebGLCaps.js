@@ -27,6 +27,18 @@ define( [
             c.width = 32;
             c.height = 32;
 
+            // make sure we don't break webglinspector
+            // with our webglcaps canvas
+            var webglInspector = typeof window !== undefined && window.gli;
+            var oldWebGLInspector;
+
+            if ( webglInspector ) {
+
+                oldWebGLInspector = window.gli.host.inspectContext;
+                window.gli.host.inspectContext = false;
+
+            }
+
             var gl = WebGLUtils.setupWebGL( c );
 
             WebGLCaps._instance = new WebGLCaps();
@@ -41,6 +53,12 @@ define( [
                 // warns but no error so that nodejs/phantomjs
                 // can still has some webglcaps object
                 Notify.warn( 'no support for webgl context detected.' );
+
+            }
+
+            if ( webglInspector ) {
+
+                window.gli.host.inspectContext = oldWebGLInspector;
 
             }
 
