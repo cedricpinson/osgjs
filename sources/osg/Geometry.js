@@ -147,7 +147,7 @@ define( [
         computeBoundingBox: function ( boundingBox ) {
 
             var vertexArray = this.getVertexAttributeList().Vertex;
-            var v = [ 0.0, 0.0, 0.0 ];
+            var v = Vec3.create();
             if ( vertexArray !== undefined &&
                 vertexArray.getElements() !== undefined &&
                 vertexArray.getItemSize() > 2 ) {

@@ -10,9 +10,10 @@ define( [
     'osg/Texture',
     'osg/Transform',
     'osg/Uniform',
+    'osg/Vec4',
     'osg/Viewport',
     'osgUtil/Composer'
-], function ( Camera, FrameBufferObject, Matrix, Node, Program, Projection, Shader, Shape, Texture, Transform, Uniform, Viewport, Composer ) {
+], function ( Camera, FrameBufferObject, Matrix, Node, Program, Projection, Shader, Shape, Texture, Transform, Uniform, Vec4, Viewport, Composer ) {
 
     'use strict';
 
@@ -130,7 +131,7 @@ define( [
         camera.setName( 'rtt camera' );
         camera.setViewport( new Viewport( 0.0, 0.0, texture.getWidth(), texture.getHeight() ) );
         camera.setProjectionMatrix( projection );
-        camera.setClearColor( [ 0.3, 0.3, 0.3, 0.0 ] );
+        camera.setClearColor( Vec4.createAndSet( 0.3, 0.3, 0.3, 0.0 ) );
         camera.setRenderOrder( Camera.PRE_RENDER, 0 );
         camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture, 0 );
         camera.attachRenderBuffer( FrameBufferObject.DEPTH_ATTACHMENT, FrameBufferObject.DEPTH_COMPONENT16 );

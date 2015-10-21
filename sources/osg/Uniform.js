@@ -1,6 +1,10 @@
 define( [
-    'osg/Utils'
-], function ( MACROUTILS ) {
+    'osg/Utils',
+    'osg/Matrix',
+    'osg/Vec2',
+    'osg/Vec3',
+    'osg/Vec4'
+], function ( MACROUTILS, Matrix, Vec2, Vec3, Vec4 ) {
 
     'use strict';
 
@@ -162,7 +166,7 @@ define( [
         var name = uniformName;
         if ( name === undefined ) {
             name = value;
-            value = [ 0, 0 ];
+            value = Vec2.create();
         }
         var uniform = new Uniform();
         uniform.data = value;
@@ -187,7 +191,7 @@ define( [
         var name = uniformName;
         if ( name === undefined ) {
             name = value;
-            value = [ 0, 0, 0 ];
+            value = Vec3.create();
         }
         var uniform = new Uniform();
         uniform.data = value;
@@ -212,7 +216,7 @@ define( [
         var name = uniformName;
         if ( name === undefined ) {
             name = value;
-            value = [ 0, 0, 0, 0 ];
+            value = Vec4.create();
         }
         var uniform = new Uniform();
         uniform.data = value;
@@ -351,7 +355,7 @@ define( [
         var name = uniformName;
         if ( name === undefined ) {
             name = value;
-            value = [ 1, 0, 0, 1 ];
+            value = Vec4.createAndSet( 1.0, 0.0, 0.0, 1.0 );
         }
         var uniform = new Uniform();
         uniform.data = value;
@@ -374,7 +378,7 @@ define( [
         var name = uniformName;
         if ( name === undefined ) {
             name = value;
-            value = [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ];
+            value = [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ];
         }
         var uniform = new Uniform();
         uniform.data = value;
@@ -397,7 +401,7 @@ define( [
         var name = uniformName;
         if ( name === undefined ) {
             name = value;
-            value = [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ];
+            value = Matrix.create();
         }
         var uniform = new Uniform();
         uniform.data = value;

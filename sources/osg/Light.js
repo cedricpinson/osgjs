@@ -22,24 +22,24 @@ define( [
             lightNumber = 0;
         }
 
-        this._ambient = [ 0.2, 0.2, 0.2, 1.0 ];
-        this._diffuse = [ 0.8, 0.8, 0.8, 1.0 ];
-        this._specular = [ 0.2, 0.2, 0.2, 1.0 ];
+        this._ambient = Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 );
+        this._diffuse = Vec4.createAndSet( 0.8, 0.8, 0.8, 1.0 );
+        this._specular = Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 );
 
         // Default is directional as postion[3] is 0
-        this._position = [ 0.0, 0.0, 1.0, 0.0 ];
-        this._direction = [ 0.0, 0.0, -1.0 ];
+        this._position = Vec4.createAndSet( 0.0, 0.0, 1.0, 0.0 );
+        this._direction = Vec3.createAndSet( 0.0, 0.0, -1.0 );
 
         // TODO : refactor lights management w=1.0 (isHemi), w=-1.0
         // (isNotHemi) _ground contains the color but w says if it's
         // an hemi or not
-        this._ground = [ 0.2, 0.2, 0.2, -1.0 ];
+        this._ground = Vec4.createAndSet( 0.2, 0.2, 0.2, -1.0 );
 
         this._spotCutoff = 180.0;
         this._spotBlend = 0.01;
 
         // the array contains constant, linear, quadratic factor
-        this._attenuation = [ 1.0, 0.0, 0.0, 0.0 ];
+        this._attenuation = Vec4.createAndSet( 1.0, 0.0, 0.0, 0.0 );
 
         this._lightUnit = lightNumber;
 

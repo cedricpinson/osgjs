@@ -78,7 +78,7 @@ define( [
         this._projectionMatrix = Matrix.create();
         this._viewMatrix = Matrix.create();
 
-        this._lightUp = [ 0.0, 0.0, 1.0 ];
+        this._lightUp = Vec3.createAndSet( 0.0, 0.0, 1.0 );
 
         this._light = settings.light;
 
@@ -87,7 +87,7 @@ define( [
         this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
         this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
         this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
-        this._cameraShadow.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
+        this._cameraShadow.setClearColor( Vec4.createAndSet( 1.0, 1.0, 1.0, 1.0 ) );
 
         this._texture = new ShadowTexture();
         this._textureUnitBase = 4;
@@ -347,7 +347,7 @@ define( [
                 this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
                 this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
                 this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
-                this._cameraShadow.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
+                this._cameraShadow.setClearColor( Vec4.createAndSet( 1.0, 1.0, 1.0, 1.0 ) );
             }
 
             this.initTexture();
@@ -586,11 +586,11 @@ define( [
 
             // compute a up vector ensuring avoiding parallel vectors
             // also might reverting to it once got the change here done once
-            // [ 0.0, 0.0, 1.0 ];
+            // Vec3.createAndSet( 0.0, 0.0, 1.0 );
 
             if ( Math.abs( Vec3.dot( this._lightUp, dir ) ) >= 1.0 ) {
                 // another camera up
-                // [ 1.0, 0.0, 0.0 ];
+                // Vec3.createAndSet( 1.0, 0.0, 0.0 );
                 if ( this._lightUp[ 0 ] === 1.0 ) {
                     this._lightUp[ 0 ] = 0.0;
                     this._lightUp[ 1 ] = 1.0;

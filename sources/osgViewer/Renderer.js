@@ -7,10 +7,11 @@ define( [
     'osg/RenderStage',
     'osg/State',
     'osg/StateGraph',
+    'osg/Vec4',
 
     'osgShader/osgShader',
 
-], function ( MACROUTILS, CullSettings, CullVisitor, Matrix, Object, RenderStage, State, StateGraph, osgShader ) {
+], function ( MACROUTILS, CullSettings, CullVisitor, Matrix, Object, RenderStage, State, StateGraph, Vec4, osgShader ) {
 
     'use strict';
 
@@ -38,7 +39,7 @@ define( [
             this._renderStage = new RenderStage();
             this._stateGraph = new StateGraph();
 
-            this.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
+            this.getCamera().setClearColor( Vec4.create() );
 
 
             var osg = require( 'osg/osg' );

@@ -5,8 +5,9 @@ define( [
     'osg/FrameBufferObject',
     'osg/Notify',
     'osg/RenderBin',
+    'osg/Vec4'
 
-], function ( MACROUTILS, Camera, FrameBufferObject, Notify, RenderBin ) {
+], function ( MACROUTILS, Camera, FrameBufferObject, Notify, RenderBin, Vec4 ) {
 
     'use strict';
 
@@ -24,7 +25,7 @@ define( [
         RenderBin.call( this );
         this.positionedAttribute = [];
         this.clearDepth = 1.0;
-        this.clearColor = [ 0.0, 0.0, 0.0, 1.0 ];
+        this.clearColor = Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 );
         /*jshint bitwise: false */
         this.clearMask = Camera.COLOR_BUFFER_BIT | Camera.DEPTH_BUFFER_BIT;
         /*jshint bitwise: true */

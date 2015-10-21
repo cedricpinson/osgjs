@@ -9,8 +9,10 @@ define( [
     'osg/Texture',
     'osg/Transform',
     'osg/Uniform',
+    'osg/Vec2',
+    'osg/Vec4',
     'osg/Viewport'
-], function ( Camera, FrameBufferObject, Matrix, Node, Program, Shader, Shape, Texture, Transform, Uniform, Viewport ) {
+], function ( Camera, FrameBufferObject, Matrix, Node, Program, Shader, Shape, Texture, Transform, Uniform, Vec2, Vec4, Viewport ) {
 
     'use strict';
 
@@ -57,12 +59,12 @@ define( [
         oculusMatrices.viewLeft = Matrix.makeTranslate( worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, Matrix.create() );
         oculusMatrices.viewRight = Matrix.makeTranslate( -worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, Matrix.create() );
 
-        oculusUniforms.lensCenterLeft = [ lensShift, 0.0 ];
-        oculusUniforms.lensCenterRight = [ -lensShift, 0.0 ];
+        oculusUniforms.lensCenterLeft = Vec2.createAndSet( lensShift, 0.0 );
+        oculusUniforms.lensCenterRight = Vec2.createAndSet( -lensShift, 0.0 );
         oculusUniforms.hmdWarpParam = HMD.distortionK;
         oculusUniforms.chromAbParam = HMD.chromaAbParameter;
-        oculusUniforms.scaleIn = [ 1.0, 1.0 / aspect ];
-        oculusUniforms.scale = [ 1.0 / distScale, 1.0 * aspect / distScale ];
+        oculusUniforms.scaleIn = Vec2.createAndSet( 1.0, 1.0 / aspect );
+        oculusUniforms.scale = Vec2.createAndSet( 1.0 / distScale, 1.0 * aspect / distScale );
     };
 
     var getOculusShader = function () {
@@ -182,7 +184,7 @@ define( [
         camera.setName( 'rtt camera' );
         camera.setViewport( new Viewport( 0, 0, texture.getWidth(), texture.getHeight() ) );
         camera.setProjectionMatrix( projMatrix );
-        camera.setClearColor( [ 0.3, 0.3, 0.3, 0.0 ] );
+        camera.setClearColor( Vec4.createAndSet( 0.3, 0.3, 0.3, 0.0 ) );
         camera.setRenderOrder( Camera.POST_RENDER, 0 );
         camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture );
         camera.attachRenderBuffer( FrameBufferObject.DEPTH_ATTACHMENT, FrameBufferObject.DEPTH_COMPONENT16 );
@@ -194,10 +196,10 @@ define( [
 
     Oculus.createScene = function ( viewer, rttScene, HMDconfig ) {
         var HMD = Oculus.getDefaultConfig( HMDconfig );
-        var rttSize = [ HMD.hResolution, HMD.vResolution ];
-        var viewportSize = [ HMD.hResolution * 0.5, HMD.vResolution ];
+        var rttSize = Vec2.createAndSet( HMD.hResolution, HMD.vResolution );
+        var viewportSize = Vec2.createAndSet( HMD.hResolution * 0.5, HMD.vResolution );
         var vp = viewer.getCamera().getViewport();
-        var canvasSize = [ vp.width(), vp.height() ];
+        var canvasSize = Vec2.createAndSet( vp.width(), vp.height() );
 
         var canvas = viewer.getGraphicContext().canvas;
         if ( HMD.isCardboard ) {
@@ -254,8 +256,8 @@ define( [
             interpupillaryDistance: 0.064,
             lensSeparationDistance: 0.0635,
             eyeToScreenDistance: 0.04,
-            distortionK: [ 1.0, 0.22, 0.13, 0.02 ],
-            chromaAbParameter: [ 0.996, -0.004, 1.014, 0.0 ],
+            distortionK: Vec4.createAndSet( 1.0, 0.22, 0.13, 0.02 ),
+            chromaAbParameter: Vec4.createAndSet( 0.996, -0.004, 1.014, 0.0 ),
             isCardboard: false
         };
         if ( hmdConfig === 2 || hmdConfig === undefined )
@@ -268,7 +270,7 @@ define( [
             hmd.vScreenSize = 0.0936;
             hmd.lensSeparationDistance = 0.064;
             hmd.eyeToScreenDistance = 0.041;
-            hmd.distortionK = [ 1.0, 0.22, 0.24, 0.0 ];
+            hmd.distortionK = Vec4.createAndSet( 1.0, 0.22, 0.24, 0.0 );
             return hmd;
         }
         // custom param

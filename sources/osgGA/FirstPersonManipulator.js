@@ -44,9 +44,9 @@ define( [
             this.setTarget( cen );
         },
         init: function () {
-            this._direction = [ 0.0, 1.0, 0.0 ];
-            this._eye = [ 0.0, 25.0, 10.0 ];
-            this._up = [ 0.0, 0.0, 1.0 ];
+            this._direction = Vec3.createAndSet( 0.0, 1.0, 0.0 );
+            this._eye = Vec3.createAndSet( 0.0, 25.0, 10.0 );
+            this._up = Vec3.createAndSet( 0.0, 0.0, 1.0 );
             this._distance = 1.0;
             this._forward = new OrbitManipulator.Interpolator( 1 );
             this._side = new OrbitManipulator.Interpolator( 1 );
@@ -57,12 +57,12 @@ define( [
             this._zoom = new OrbitManipulator.Interpolator( 1 );
 
             this._stepFactor = 1.0; // meaning radius*stepFactor to move
-            this._target = [ 0.0, 0.0, 0.0 ];
+            this._target = Vec3.create();
             this._angleVertical = 0.0;
             this._angleHorizontal = 0.0;
 
             // tmp value use for computation
-            this._tmpGetTargetDir = [ 0.0, 0.0, 0.0 ];
+            this._tmpGetTargetDir = Vec3.create();
 
             this._rotBase = Matrix.create();
 
@@ -141,8 +141,8 @@ define( [
             var second = Matrix.create();
             var rotMat = Matrix.create();
 
-            var upy = [ 0.0, 1.0, 0.0 ];
-            var upz = [ 0.0, 0.0, 1.0 ];
+            var upy = Vec3.createAndSet( 0.0, 1.0, 0.0 );
+            var upz = Vec3.createAndSet( 0.0, 0.0, 1.0 );
             var LIMIT = Math.PI * 0.5;
             return function ( dx, dy ) {
                 this._angleVertical += dy * 0.01;
@@ -177,7 +177,7 @@ define( [
         },
 
         update: ( function () {
-            var vec = [ 0.0, 0.0 ];
+            var vec = Vec2.createAndSet( 0.0, 0.0 );
             return function ( nv ) {
                 var dt = nv.getFrameStamp().getDeltaTime();
 
@@ -221,7 +221,7 @@ define( [
         },
 
         moveForward: ( function () {
-            var tmp = [ 0.0, 0.0, 0.0 ];
+            var tmp = Vec3.create();
             return function ( distance ) {
                 Vec3.normalize( this._direction, tmp );
                 Vec3.mult( tmp, distance, tmp );
@@ -230,7 +230,7 @@ define( [
         } )(),
 
         strafe: ( function () {
-            var tmp = [ 0.0, 0.0, 0.0 ];
+            var tmp = Vec3.create();
             return function ( distance ) {
                 Vec3.cross( this._direction, this._up, tmp );
                 Vec3.normalize( tmp, tmp );
@@ -240,7 +240,7 @@ define( [
         } )(),
 
         strafeVertical: ( function () {
-            var tmp = [ 0.0, 0.0, 0.0 ];
+            var tmp = Vec3.create();
             return function ( distance ) {
                 Vec3.normalize( this._up, tmp );
                 Vec3.mult( tmp, distance, tmp );

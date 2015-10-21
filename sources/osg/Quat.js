@@ -16,6 +16,10 @@ define( [
             return [ 0.0, 0.0, 0.0, 1.0 ];
         },
 
+        createAndSet: function ( x, y, z, w ) {
+            return [ x, y, z, w ];
+        },
+
         makeIdentity: function ( element ) {
             return Quat.init( element );
         },
@@ -122,7 +126,7 @@ define( [
         //
         slerp: ( function () {
 
-            var b2 = [ 0.0, 0.0, 0.0, 0.0 ];
+            var b2 = [ 0.0, 0.0, 0.0, 1.0 ];
             var epsilon = 0.00001;
             // a and be must be normalized
             // (otherwise they're not rotation...)
@@ -375,7 +379,7 @@ define( [
         }
     };
 
-    Quat.identity = [ 0.0, 0.0, 0.0, 1.0 ];
+    Quat.identity = Quat.create();
 
     return Quat;
 } );

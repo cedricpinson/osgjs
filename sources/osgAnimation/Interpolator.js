@@ -69,8 +69,8 @@ define( [
 
     var QuatLerpInterpolator = ( function () {
 
-        var q0 = [ 0.0, 0.0, 0.0, 0.0 ];
-        var q1 = [ 0.0, 0.0, 0.0, 0.0 ];
+        var q0 = Quat.create();
+        var q1 = Quat.create();
 
         return function ( t, channelInstance ) {
 
@@ -122,8 +122,8 @@ define( [
 
     var QuatSlerpInterpolator = ( function () {
 
-        var q0 = [ 0.0, 0.0, 0.0, 0.0 ];
-        var q1 = [ 0.0, 0.0, 0.0, 0.0 ];
+        var q0 = Quat.create();
+        var q1 = Quat.create();
 
         return function ( t, channelInstance ) {
 
