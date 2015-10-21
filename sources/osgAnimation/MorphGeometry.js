@@ -1,12 +1,13 @@
 define( [
     'osg/Utils',
+    'osg/BufferArrayProxy',
     'osg/Notify',
     'osg/Geometry',
     'osg/StateSet',
     'osgAnimation/MorphAttribute',
     'osg/StateAttribute',
     'osgAnimation/Target'
-], function ( MACROUTILS, Notify, Geometry, StateSet, MorphAttribute, StateAttribute ) {
+], function ( MACROUTILS, BufferArrayProxy, Notify, Geometry, StateSet, MorphAttribute, StateAttribute ) {
 
     'use strict';
 
@@ -73,6 +74,23 @@ define( [
             for ( var i = 0, l = this._targets.length; i < l; i++ ) {
 
                 target = this._targets[ i ];
+
+                // change BufferArray to BufferArrayProxy
+                var attributeList = target.getVertexAttributeList();
+                var names = Object.keys( attributeList );
+                for ( var j = 0, jn = names.length; j < jn; j++ ) {
+
+                    var name = names[ j ];
+                    var att = attributeList[ name ];
+                    // check it's a buffer array before swtiching to proxy
+                    if ( att && !att.getBufferArray ) {
+
+                        attributeList[ name ] = new BufferArrayProxy( att );
+
+                    }
+
+                }
+
                 Geometry.appendVertexAttributeToList( target.getVertexAttributeList(), this.getVertexAttributeList(), i );
 
             }

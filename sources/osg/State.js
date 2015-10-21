@@ -751,31 +751,30 @@ define( [
             var gl = this._graphicContext;
             var binded = false;
 
-            if ( array.getActiveArray )
-                array = array.getActiveArray();
-
             if ( array.isDirty() ) {
                 array.bind( gl );
                 array.compile( gl );
                 binded = true;
             }
 
-            if ( vertexAttribMap[ attrib ] !== array ) {
+            var currentArray = vertexAttribMap[ attrib ];
+            if ( currentArray !== array ) {
 
                 if ( !binded ) {
                     array.bind( gl );
                 }
 
-                if ( !vertexAttribMap[ attrib ] ) {
+                if ( !currentArray ) {
                     gl.enableVertexAttribArray( attrib );
 
-                    if ( vertexAttribMap[ attrib ] === undefined ) {
+                    // can be === false (so undefined check is important)
+                    if ( currentArray === undefined )
                         vertexAttribMap._keys.push( attrib );
-                    }
+
                 }
 
                 vertexAttribMap[ attrib ] = array;
-                gl.vertexAttribPointer( attrib, array._itemSize, array._glBind, normalize, 0, 0 );
+                gl.vertexAttribPointer( attrib, array.getItemSize(), array.getType(), normalize, 0, 0 );
             }
         },
 

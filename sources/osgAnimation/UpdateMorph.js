@@ -91,7 +91,7 @@ define( [
                     for ( var k = 0, nbNames = morphNames.length; k < nbNames; ++k ) {
 
                         var attName = morphNames[ k ];
-                        vAttrs[ attName + strI ].setActiveArray( vAttrs[ attName + strIndex ] );
+                        vAttrs[ attName + strI ].setBufferArray( vAttrs[ attName + strIndex ].getInitialBufferArray() );
 
                     }
                 }
@@ -134,7 +134,7 @@ define( [
             }
 
             // map on last index target
-            attrs[ attName + '_3' ].setActiveArray( vAttr._cpuMorph );
+            attrs[ attName + '_3' ].setBufferArray( vAttr._cpuMorph );
             vAttr._cpuMorph.dirty();
         },
 
@@ -181,8 +181,8 @@ define( [
                     var name = morphNames[ j ];
                     var attr = vAttrs[ name ];
                     // skip if the bufferArray is shared in another morphGeometry and has already been cpu morphed
-                    if ( !attr || processed[ attr._instanceID ] ) continue;
-                    processed[ attr._instanceID ] = true;
+                    if ( !attr || processed[ attr.getInstanceID() ] ) continue;
+                    processed[ attr.getInstanceID() ] = true;
 
                     this._mergeExtraMorphTarget( vAttrs, name, extraWeightSum );
                 }
