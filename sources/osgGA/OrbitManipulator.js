@@ -19,7 +19,7 @@ define( [
      */
     var OrbitManipulator = function () {
         Manipulator.call( this );
-        this._homePosition = [ 0.0, 0.0, 0.0 ];
+        this._homePosition = Vec3.create();
         this._frustum = {};
         this.init();
     };
@@ -38,13 +38,16 @@ define( [
         },
         reset: function () {
             for ( var i = 0, l = this._current.length; i < l; i++ ) {
-                this._current[ i ] = this._target[ i ] = 0;
+                this._current[ i ] = this._target[ i ] = 0.0;
             }
             this._reset = true;
         },
-        update: function () {
+        update: function ( dt ) {
+            // assume 60 fps to be consistent with the old _delay values for backward compatibility
+            // (otherwise we'd have to adjust the _delay values by multiplying to 60 )
+            var dtDelay = this._delay * dt * 60.0;
             for ( var i = 0, l = this._current.length; i < l; i++ ) {
-                var d = ( this._target[ i ] - this._current[ i ] ) * this._delay;
+                var d = ( this._target[ i ] - this._current[ i ] ) * dtDelay;
                 this._delta[ i ] = d;
                 this._current[ i ] += d;
             }
@@ -107,8 +110,8 @@ define( [
     OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         init: function () {
             this._distance = 25.0;
-            this._target = [ 0.0, 0.0, 0.0 ];
-            this._upz = [ 0.0, 0.0, 1.0 ];
+            this._target = Vec3.create();
+            this._upz = Vec3.createAndSet( 0.0, 0.0, 1.0 );
             Vec3.init( this._target );
 
             var rot1 = Matrix.makeRotate( -Math.PI, 0.0, 0.0, 1.0, Matrix.create() );
@@ -147,14 +150,14 @@ define( [
         },
         setTarget: function ( target ) {
             Vec3.copy( target, this._target );
-            var eyePos = [ 0.0, 0.0, 0.0 ];
+            var eyePos = Vec3.create();
             this.getEyePosition( eyePos );
             this._distance = Vec3.distance( eyePos, target );
         },
         setEyePosition: ( function () {
-            var f = [ 0.0, 0.0, 0.0 ];
-            var s = [ 0.0, 0.0, 0.0 ];
-            var u = [ 0.0, 0.0, 0.0 ];
+            var f = Vec3.create();
+            var s = Vec3.create();
+            var u = Vec3.create();
             return function ( eye ) {
                 var result = this._rotation;
                 var center = this._target;
@@ -256,8 +259,8 @@ define( [
         },
         computePan: ( function () {
             var inv = Matrix.create();
-            var x = [ 0.0, 0.0, 0.0 ];
-            var y = [ 0.0, 0.0, 0.0 ];
+            var x = Vec3.create();
+            var y = Vec3.create();
             return function ( dx, dy ) {
                 var proj = this._camera.getProjectionMatrix();
                 // modulate panning speed with verticalFov value
@@ -291,8 +294,8 @@ define( [
             var r = Matrix.create();
             var r2 = Matrix.create();
             var inv = Matrix.create();
-            var tmp = [ 0.0, 0.0, 0.0 ];
-            var tmpDist = [ 0.0, 0.0, 0.0 ];
+            var tmp = Vec3.create();
+            var tmpDist = Vec3.create();
             var radLimit = Math.acos( DOT_LIMIT ) * 2.0;
             return function ( dx, dy ) {
                 Matrix.makeRotate( -dx / 10.0, 0.0, 0.0, 1.0, of );
@@ -372,7 +375,7 @@ define( [
         },
 
         computeEyePosition: ( function () {
-            var tmpDist = [ 0.0, 0.0, 0.0 ];
+            var tmpDist = Vec3.create();
             var tmpInverse = Matrix.create();
             return function ( target, distance, eye ) {
                 Matrix.inverse( this._rotation, tmpInverse );
@@ -383,27 +386,21 @@ define( [
         } )(),
 
         update: ( function () {
-            var eye = [ 0.0, 0.0, 0.0 ];
+            var eye = Vec3.create();
             return function ( nv ) {
-                var t = nv.getFrameStamp().getSimulationTime();
-                if ( this._lastUpdate === undefined ) {
-                    this._lastUpdate = t;
-                }
-                //var dt = t - this._lastUpdate;
-                this._lastUpdate = t;
+                var dt = nv.getFrameStamp().getDeltaTime();
 
                 var delta;
                 var mouseFactor = 0.1;
-                delta = this._rotate.update();
+                delta = this._rotate.update( dt );
                 this.computeRotation( -delta[ 0 ] * mouseFactor * this._scaleMouseMotion, -delta[ 1 ] * mouseFactor * this._scaleMouseMotion );
 
-
                 var panFactor = 0.002;
-                delta = this._pan.update();
+                delta = this._pan.update( dt );
                 this.computePan( -delta[ 0 ] * panFactor, -delta[ 1 ] * panFactor );
 
 
-                delta = this._zoom.update();
+                delta = this._zoom.update( dt );
                 this.computeZoom( 1.0 + delta[ 0 ] / 10.0 );
 
                 var target = this._target;

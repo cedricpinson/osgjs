@@ -7,6 +7,7 @@ define( [
     'osg/Uniform',
     'osg/Vec2',
     'osg/Vec3',
+    'osg/Vec4',
     'osg/Matrix',
     'osg/Quat',
     'osgUtil/IntersectionVisitor',
@@ -14,7 +15,7 @@ define( [
     'osgUtil/GizmoGeometry',
     'osg/TransformEnums',
     'osg/Utils'
-], function ( Node, MatrixTransform, Depth, BlendFunc, CullFace, Uniform, Vec2, Vec3, Matrix, Quat, IntersectionVisitor, LineSegmentIntersector, GizmoGeometry, TransformEnums, MACROUTILS ) {
+], function ( Node, MatrixTransform, Depth, BlendFunc, CullFace, Uniform, Vec2, Vec3, Vec4, Matrix, Quat, IntersectionVisitor, LineSegmentIntersector, GizmoGeometry, TransformEnums, MACROUTILS ) {
 
     'use strict';
 
@@ -275,7 +276,7 @@ define( [
             var unif = node.getStateSet().getUniform( 'uColor' );
             this._hoverNode = node;
             this._keepHoverColor = unif.get();
-            unif.set( [ 1.0, 1.0, 0.0, 1.0 ] );
+            unif.set( Vec4.createAndSet( 1.0, 1.0, 0.0, 1.0 ) );
         },
         initNodeRotate: function () {
             var drawArcXYZ = GizmoGeometry.createTorusGeometry( 1.0, 0.01, 6, 64, Math.PI * 2 );
@@ -311,15 +312,15 @@ define( [
             mtY.addChild( hideNode );
             mtZ.addChild( hideNode );
 
-            mtXYZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 0.2, 0.2, 0.2, 1.0 ], 'uColor' ) );
-            mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 1.0, 0.0, 0.0, 1.0 ], 'uColor' ) );
-            mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 0.0, 1.0, 0.0, 1.0 ], 'uColor' ) );
-            mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 0.0, 0.0, 1.0, 1.0 ], 'uColor' ) );
+            mtXYZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 ), 'uColor' ) );
+            mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 1.0, 0.0, 0.0, 1.0 ), 'uColor' ) );
+            mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 1.0, 0.0, 1.0 ), 'uColor' ) );
+            mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 0.0, 1.0, 1.0 ), 'uColor' ) );
 
             var showAngle = this._showAngle;
             showAngle.getOrCreateStateSet().setAttributeAndModes( blendAttribute );
             showAngle.setNodeMask( 0x0 );
-            showAngle.getOrCreateStateSet().addUniform( Uniform.createFloat3( [ 1.0, 0.0, 0.0 ], 'uBase' ) );
+            showAngle.getOrCreateStateSet().addUniform( Uniform.createFloat3( Vec3.createAndSet( 1.0, 0.0, 0.0 ), 'uBase' ) );
             showAngle.getOrCreateStateSet().addUniform( Uniform.createFloat( 0.0, 'uAngle' ) );
             showAngle.addChild( GizmoGeometry.createQuadCircleGeometry() );
 
@@ -383,9 +384,9 @@ define( [
             mtY.addChild( hideNode );
             mtZ.addChild( hideNode );
 
-            mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 1.0, 0.0, 0.0, 1.0 ], 'uColor' ) );
-            mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 0.0, 1.0, 0.0, 1.0 ], 'uColor' ) );
-            mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 0.0, 0.0, 1.0, 1.0 ], 'uColor' ) );
+            mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 1.0, 0.0, 0.0, 1.0 ), 'uColor' ) );
+            mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 1.0, 0.0, 1.0 ), 'uColor' ) );
+            mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 0.0, 1.0, 1.0 ), 'uColor' ) );
 
             var translate = this._translateNode;
             translate.setNodeMask( NodeGizmo.PICK_ARROW );
@@ -420,9 +421,9 @@ define( [
             mtY.addChild( mtPlane );
             mtZ.addChild( mtPlane );
 
-            mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 1.0, 0.0, 0.0, 0.3 ], 'uColor' ) );
-            mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 0.0, 1.0, 0.0, 0.3 ], 'uColor' ) );
-            mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( [ 0.0, 0.0, 1.0, 0.3 ], 'uColor' ) );
+            mtX.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 1.0, 0.0, 0.0, 0.3 ), 'uColor' ) );
+            mtY.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 1.0, 0.0, 0.3 ), 'uColor' ) );
+            mtZ.getOrCreateStateSet().addUniform( Uniform.createFloat4( Vec4.createAndSet( 0.0, 0.0, 1.0, 0.3 ), 'uColor' ) );
 
             var plane = this._planeNode;
             plane.setNodeMask( NodeGizmo.PICK_PLANE );
@@ -832,7 +833,7 @@ define( [
 
                 // project 2D point on the 3d line
                 var lsi = new LineCustomIntersector();
-                lsi.set( [ coordx, coordy, 0.0 ], [ coordx, coordy, 1.0 ] );
+                lsi.set( Vec3.createAndSet( coordx, coordy, 0.0 ), Vec3.createAndSet( coordx, coordy, 1.0 ) );
                 var iv = new IntersectionVisitor();
                 iv.setTraversalMask( this._hoverNode.getNodeMask() | NodeGizmo.PICK_ARROW );
                 iv.setIntersector( lsi );
@@ -861,7 +862,7 @@ define( [
 
             // project 2D point on the 3d plane
             var lsi = new LineCustomIntersector( true );
-            lsi.set( [ coordx, coordy, 0.0 ], [ coordx, coordy, 1.0 ] );
+            lsi.set( Vec3.createAndSet( coordx, coordy, 0.0 ), Vec3.createAndSet( coordx, coordy, 1.0 ) );
             var iv = new IntersectionVisitor();
             iv.setTraversalMask( this._hoverNode.getNodeMask() | NodeGizmo.PICK_PLANE );
             iv.setIntersector( lsi );

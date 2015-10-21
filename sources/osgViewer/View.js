@@ -14,6 +14,7 @@ define( [
     'osg/Texture',
     'osg/Program',
     'osg/Shader',
+    'osg/Vec3',
     'osg/Viewport',
     'osg/WebGLCaps',
 
@@ -39,6 +40,7 @@ define( [
     Texture,
     Program,
     Shader,
+    Vec3,
     Viewport,
     WebGLCaps,
 
@@ -170,7 +172,7 @@ define( [
             this._camera.setViewport( new Viewport( 0, 0, width, height ) );
 
             this._camera.setGraphicContext( this.getGraphicContext() );
-            Matrix.makeLookAt( [ 0, 0, -10 ], [ 0, 0, 0 ], [ 0, 1, 0 ], this._camera.getViewMatrix() );
+            Matrix.makeLookAt( Vec3.createAndSet( 0.0, 0.0, -10.0 ), Vec3.create(), Vec3.createAndSet( 0.0, 1.0, 0.0 ), this._camera.getViewMatrix() );
             Matrix.makePerspective( 55, ratio, 1.0, 1000.0, this._camera.getProjectionMatrix() );
 
 
@@ -190,7 +192,7 @@ define( [
             }
             /*jshint bitwise: true */
             var lsi = new LineSegmentIntersector();
-            lsi.set( [ x, y, 0.0 ], [ x, y, 1.0 ] );
+            lsi.set( Vec3.createAndSet( x, y, 0.0 ), Vec3.createAndSet( x, y, 1.0 ) );
             var iv = new IntersectionVisitor();
             iv.setTraversalMask( traversalMask );
             iv.setIntersector( lsi );

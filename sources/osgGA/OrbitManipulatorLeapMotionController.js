@@ -1,7 +1,10 @@
 define( [
     'osg/Notify',
+    'osg/Vec2',
     'osg/Vec3'
-], function ( Notify, Vec3 ) {
+], function ( Notify, Vec2, Vec3 ) {
+
+    'use strict';
 
     var OrbitManipulatorLeapMotionController = function ( manipulator ) {
         this._manipulator = manipulator;
@@ -38,12 +41,12 @@ define( [
 
     OrbitManipulatorLeapMotionController.prototype = {
         init: function () {
-            this._virtualCursor = [ 0.0, 0.0 ];
-            this._targetPosition = [ 0.0, 0.0 ];
+            this._virtualCursor = Vec2.createAndSet( 0.0, 0.0 );
+            this._targetPosition = Vec2.createAndSet( 0.0, 0.0 );
             this._previousFrame = undefined;
-            this._displacement = [ 0.0, 0.0 ];
-            this._top = [ 0, 1, 0 ];
-            this._motion = [ 0.0, 0.0 ];
+            this._displacement = Vec2.createAndSet( 0.0, 0.0 );
+            this._top = Vec2.createAndSet( 0.0, 1.0, 0.0 );
+            this._motion = Vec2.createAndSet( 0.0, 0.0 );
             this._delay = 0.05;
             this._threshold = 0.08;
             this._directionDotThreshold = 0.5;

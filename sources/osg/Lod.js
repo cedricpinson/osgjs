@@ -8,9 +8,12 @@ define( [
     'osg/Node',
     'osg/NodeVisitor',
     'osg/Matrix',
+    'osg/Vec2',
     'osg/Vec3',
     'osg/BoundingSphere'
-], function ( MACROUTILS, Node, NodeVisitor, Matrix, Vec3, BoundingSphere ) {
+], function ( MACROUTILS, Node, NodeVisitor, Matrix, Vec2, Vec3, BoundingSphere ) {
+
+    'use strict';
     /**
      *  Lod that can contains child node
      *  @class Lod
@@ -102,7 +105,7 @@ define( [
                 var max = 0.0;
                 if ( this._range.lenght > 0 )
                     max = this._range[ this._range.length - 1 ][ 1 ];
-                r.push( [ max, max ] );
+                r.push( Vec2.createAndSet( max, max ) );
                 this._range.push( r );
             }
             return true;
@@ -113,7 +116,7 @@ define( [
 
             if ( this.children.length > this._range.length ) {
                 var r = [];
-                r.push( [ min, min ] );
+                r.push( Vec2.createAndSet( min, min ) );
                 this._range.push( r );
             }
             this._range[ this.children.length - 1 ][ 0 ] = min;
