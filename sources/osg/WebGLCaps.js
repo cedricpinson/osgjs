@@ -1,7 +1,8 @@
 define( [
+    'osg/Notify',
     'osg/Texture',
     'osgViewer/webgl-utils'
-], function ( Texture, WebGLUtils ) {
+], function ( Notify, Texture, WebGLUtils ) {
 
     'use strict';
 
@@ -22,17 +23,42 @@ define( [
         if ( !WebGLCaps._instance ) {
 
             var c = document.createElement( 'canvas' );
+
             c.width = 32;
             c.height = 32;
 
+            // make sure we don't break webglinspector
+            // with our webglcaps canvas
+            var webglInspector = typeof window !== undefined && window.gli;
+            var oldWebGLInspector;
+
+            if ( webglInspector ) {
+
+                oldWebGLInspector = window.gli.host.inspectContext;
+                window.gli.host.inspectContext = false;
+
+            }
+
             var gl = WebGLUtils.setupWebGL( c );
 
-            // gracefully handle non webgl
-            // like nodejs, phantomjs
+            WebGLCaps._instance = new WebGLCaps();
             if ( gl ) {
 
-                WebGLCaps._instance = new WebGLCaps();
                 WebGLCaps._instance.init( gl );
+
+            } else {
+
+                // gracefully handle non webgl
+                // like nodejs, phantomjs
+                // warns but no error so that nodejs/phantomjs
+                // can still has some webglcaps object
+                Notify.warn( 'no support for webgl context detected.' );
+
+            }
+
+            if ( webglInspector ) {
+
+                window.gli.host.inspectContext = oldWebGLInspector;
 
             }
 
@@ -70,7 +96,16 @@ define( [
             var ext = this._webGLParameters;
 
             // derivatives gives strange results on Shadow Shaders
-            this._bugsDB[ 'OES_standard_derivatives' ] = ( p.Apple && ext.UNMASKED_VENDOR_WEBGL === undefined ) || ( ext.UNMASKED_VENDOR_WEBGL.indexOf( 'Intel' ) !== -1 && p.Apple );
+            if ( p.Apple ) {
+
+                if ( !ext.UNMASKED_VENDOR_WEBGL || ext.UNMASKED_VENDOR_WEBGL.indexOf( 'Intel' ) !== -1 ) {
+                    // bug is on INTEL GPU on APPLE
+                    // we disable the ext on Apple if we cannot get GPU info
+                    this._bugsDB[ 'OES_standard_derivatives' ] = true;
+
+                }
+
+            }
 
         },
         initPlatformSupport: function () {
@@ -78,6 +113,7 @@ define( [
             var p = this._webGLPlatforms;
 
             p.Apple = navigator.vendor.indexOf( 'Apple' ) !== -1 || navigator.vendor.indexOf( 'OS X' ) !== -1;
+
             // degrades complexity on handhelds.
             p.Mobile = /Mobi/.test( navigator.userAgent ) || /ablet/.test( navigator.userAgent );
 
@@ -103,13 +139,14 @@ define( [
         },
         checkSupportRTT: function ( gl, typeFloat, typeTexture ) {
 
-            if ( !gl ) return false;
-
             var key = typeFloat + ',' + typeTexture;
 
             // check once only
             if ( this._checkRTT[ key ] !== undefined )
                 return this._checkRTT[ key ];
+
+            // no cached results, need gl context
+            if ( !gl ) return false;
 
             // from http://codeflow.org/entries/2013/feb/22/how-to-write-portable-webgl/#how-can-i-detect-if-i-can-render-to-floating-point-textures
 
