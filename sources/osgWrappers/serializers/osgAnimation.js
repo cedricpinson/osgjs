@@ -442,9 +442,7 @@ define( [
         // arrayPromise[0] is the morphGeometry
         arrayPromise.push( osgWrapper.Geometry( input, morphGeometry ) );
 
-        var maxNumTarget = Math.min( 4, morphTargets.length );
-
-        for ( var i = 0, l = maxNumTarget; i < l; i++ )
+        for ( var i = 0, l = morphTargets.length; i < l; i++ )
             arrayPromise.push( input.setJSON( morphTargets[ i ] ).readObject() );
 
         return P.all( arrayPromise ).then( function ( promiseResultArray ) {
