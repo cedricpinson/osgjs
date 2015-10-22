@@ -10,7 +10,7 @@ define( [
         this.setShaderCompiler( ShadowCompiler );
         // only one attribute makes change to the compilation
         // ignore all others
-        this._acceptAttributeTypes = new window.Set( [ 'ShadowCast', 'AnimationAttribute' ] );
+        this._acceptAttributeTypes = new window.Set( [ 'ShadowCast', 'Skinning', 'Morph' ] );
 
     };
 

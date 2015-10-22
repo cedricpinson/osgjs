@@ -27,8 +27,9 @@ define( [
     'tests/osg/UpdateVisitor',
     'tests/osg/Uniform',
     'tests/osg/Vec2',
-    'tests/osg/PrimitiveFunctor'
-], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeBoundsVisitor, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Plane, Quat, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2, PrimitiveFunctor ) {
+    'tests/osg/PrimitiveFunctor',
+    'tests/osg/WebGLCaps'
+], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeBoundsVisitor, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Plane, Quat, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2, PrimitiveFunctor, WebGLCaps ) {
 
     'use strict';
 
@@ -62,5 +63,6 @@ define( [
         Uniform();
         Vec2();
         PrimitiveFunctor();
+        WebGLCaps();
     };
 } );

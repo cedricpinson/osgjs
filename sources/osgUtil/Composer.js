@@ -264,7 +264,7 @@ define( [
 
 
                 camera.addChild( quad );
-                element.filter.getStateSet().addUniform( Uniform.createFloat2( [ w, h ], 'RenderSize' ) );
+                element.filter.getStateSet().addUniform( Uniform.createFloat2( Vec2.createAndSet( w, h ), 'RenderSize' ) );
 
                 // Optimization, no need to clear,
                 // unless we know we'll have transparent parts
@@ -1032,7 +1032,7 @@ define( [
     // http://en.wikipedia.org/wiki/Sobel_operator
     Composer.Filter.SobelFilter = function () {
         Composer.Filter.call( this );
-        this._color = Uniform.createFloat3( [ 1.0, 1.0, 1.0 ], 'color' );
+        this._color = Uniform.createFloat3( Vec3.createAndSet( 1.0, 1.0, 1.0 ), 'color' );
         this._factor = Uniform.createFloat( 1.0, 'factor' );
         this._fragmentName = 'SobelFilter';
     };
@@ -1228,7 +1228,7 @@ define( [
 
         var w = textureNormal.getWidth();
         var h = textureNormal.getHeight();
-        this._size = [ w, h ];
+        this._size = Vec2.create( w, h );
 
         stateSet.setTextureAttributeAndModes( 0, textureNormal );
         stateSet.setTextureAttributeAndModes( 1, texturePosition );
@@ -1243,7 +1243,7 @@ define( [
             var sizeNoise = this._noiseTextureSize;
             var noise = new Array( sizeNoise * sizeNoise * 3 );
             ( function ( array ) {
-                var n = [ 0.0, 0.0 ];
+                var n = Vec2.createAndSet( 0.0, 0.0 );
                 for ( var i = 0; i < sizeNoise * sizeNoise; i++ ) {
                     n[ 0 ] = 2.0 * ( Math.random() - 0.5 );
                     n[ 1 ] = 2.0 * ( Math.random() - 0.5 );
@@ -1296,7 +1296,7 @@ define( [
             var nbSamples = this._nbSamples;
             var kernel = new Array( nbSamples * 4 );
             ( function ( array ) {
-                var v = [ 0.0, 0.0, 0.0 ];
+                var v = Vec3.create();
                 for ( var i = 0; i < nbSamples; i++ ) {
                     v[ 0 ] = 2.0 * ( Math.random() - 0.5 );
                     v[ 1 ] = 2.0 * ( Math.random() - 0.5 );
@@ -1316,10 +1316,10 @@ define( [
             stateSet.setTextureAttributeAndModes( 2, this._noiseTexture );
             var uniform = stateSet.getUniform( 'noiseSampling' );
             if ( uniform === undefined ) {
-                uniform = Uniform.createFloat2( [ this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ], 'noiseSampling' );
+                uniform = Uniform.createFloat2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ), 'noiseSampling' );
                 stateSet.addUniform( uniform );
             } else {
-                uniform.set( [ this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ] );
+                uniform.set( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
                 uniform.dirty();
             }
             var vertexShader = [
@@ -1437,7 +1437,7 @@ define( [
             var kernel = new Array( nbSamples * 4 );
             //var angleLimit = this._angleLimit;
             ( function ( array ) {
-                var v = [ 0.0, 0.0, 0.0 ];
+                var v = Vec3.create();
                 for ( var i = 0; i < nbSamples; i++ ) {
                     v[ 0 ] = 2.0 * ( Math.random() - 0.5 );
                     v[ 1 ] = 2.0 * ( Math.random() - 0.5 );
@@ -1457,10 +1457,10 @@ define( [
             stateSet.setTextureAttributeAndModes( 2, this._noiseTexture );
             var uniform = stateSet.getUniform( 'noiseSampling' );
             if ( uniform === undefined ) {
-                uniform = Uniform.createFloat2( [ this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ], 'noiseSampling' );
+                uniform = Uniform.createFloat2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ), 'noiseSampling' );
                 stateSet.addUniform( uniform );
             } else {
-                uniform.set( [ this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ] );
+                uniform.set( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
                 uniform.dirty();
             }
             var vertexShader = [

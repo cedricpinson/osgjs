@@ -370,9 +370,9 @@ define( [
         },
 
         makeLookFromDirection: ( function () {
-            var s = [ 0.0, 0.0, 0.0 ];
-            var u = [ 0.0, 0.0, 0.0 ];
-            var neg = [ 0.0, 0.0, 0.0 ];
+            var s = Vec3.create();
+            var u = Vec3.create();
+            var neg = Vec3.create();
 
             return function ( eye, eyeDir, up, result ) {
                 if ( result === undefined ) {
@@ -413,7 +413,7 @@ define( [
             };
         } )(),
         makeLookAt: ( function () {
-            var f = [ 0.0, 0.0, 0.0 ];
+            var f = Vec3.create();
 
             return function ( eye, center, up, result ) {
                 if ( result === undefined ) {
@@ -448,7 +448,7 @@ define( [
 
         getLookAt: ( function () {
             var inv = [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ];
-            var v1 = [ 0.0, 0.0, 0.0 ];
+            var v1 = Vec3.create();
             var v2 = [ 0.0, 1.0, 0.0 ];
             var v3 = [ 0.0, 0.0, -1.0 ];
 
@@ -625,7 +625,7 @@ define( [
         },
 
         transformVec3: ( function () {
-            var tmpVec = [ 0.0, 0.0, 0.0 ];
+            var tmpVec = Vec3.create();
 
             return function ( matrix, vector, result ) {
                 if ( result === undefined ) {

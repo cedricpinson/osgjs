@@ -9,6 +9,10 @@ define( [], function () {
             return [ 0.0, 0.0, 0.0 ];
         },
 
+        createAndSet: function ( x, y, z ) {
+            return [ x, y, z ];
+        },
+
         init: function ( a ) {
             a[ 0 ] = 0.0;
             a[ 1 ] = 0.0;
@@ -131,10 +135,10 @@ define( [], function () {
 
     };
 
-    Vec3.zero = [ 0.0, 0.0, 0.0 ];
-    Vec3.one = [ 1.0, 1.0, 1.0 ];
-    Vec3.infinity = [ Infinity, Infinity, Infinity ];
-    Vec3.negativeInfinity = [ -Infinity, -Infinity, -Infinity ];
+    Vec3.zero = Vec3.create();
+    Vec3.one = Vec3.createAndSet( 1.0, 1.0, 1.0 );
+    Vec3.infinity = Vec3.createAndSet( Infinity, Infinity, Infinity );
+    Vec3.negativeInfinity = Vec3.createAndSet( -Infinity, -Infinity, -Infinity );
 
     return Vec3;
 } );

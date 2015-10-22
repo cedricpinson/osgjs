@@ -5,8 +5,9 @@ define( [
     'osg/Program',
     'osg/Uniform',
     'osg/Shader',
-    'osg/StateSet'
-], function ( MACROUTILS, NodeVisitor, Geometry, Program, Uniform, Shader, StateSet ) {
+    'osg/StateSet',
+    'osg/Vec3'
+], function ( MACROUTILS, NodeVisitor, Geometry, Program, Uniform, Shader, StateSet, Vec3 ) {
 
     'use strict';
 
@@ -55,7 +56,7 @@ define( [
                     var st = new StateSet();
                     node._originalStateSet = node.getStateSet();
                     node.setStateSet( st );
-                    st.addUniform( Uniform.createFloat3( [ Math.random(), Math.random(), Math.random() ], 'uColorDebug' ) );
+                    st.addUniform( Uniform.createFloat3( Vec3.createAndSet( Math.random(), Math.random(), Math.random() ), 'uColorDebug' ) );
                     st.setAttributeAndModes( GeometryColorDebugVisitor.getShader() );
                 } else {
                     node.setStateSet( node._originalStateSet );

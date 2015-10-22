@@ -114,10 +114,11 @@ define( [
                     shadows.push( attributes[ i ] );
 
                 } else if ( type === 'Billboard' ) {
-                    // Shouldn't it be managed by mode ( ON, OFF, OVERRIDE )? 
-                    this._isBillboard = attributes[ i ].isEnabled();
-                } else if ( type === 'AnimationAttribute' ) {
-                    this._animation = attributes[ i ];
+                    this._isBillboard = !!attributes[ i ];
+                } else if ( type === 'SkinningAttribute' ) {
+                    this._skinningAttribute = attributes[ i ];
+                } else if ( type === 'MorphAttribute' ) {
+                    this._morphAttribute = attributes[ i ];
                 }
             }
         },
@@ -442,23 +443,17 @@ define( [
         // make sure we get correct Node
         getOrCreateSampler: function ( type, varname ) {
 
-            var nameID = varname;
-            if ( nameID === undefined ) {
-
-                var len = Object.keys( this._variables ).length;
-                nameID = 'sampler_' + len;
-
-            } else {
-
-                var exist = this._variables[ nameID ];
-                if ( exist ) {
-                    // see comment in Variable function
-                    return exist;
-                }
-
+            if ( varname === undefined ) {
+                Notify.error( 'No name given for sampler type : ' + type );
             }
-            var v = this.getNode( 'Sampler', type, nameID );
-            this._variables[ nameID ] = v;
+
+            var exist = this._variables[ varname ];
+            if ( exist ) {
+                return exist; // see comment in Variable function
+            }
+
+            var v = this.getNode( 'Sampler', type, varname );
+            this._variables[ varname ] = v;
 
             return v;
         },
@@ -466,7 +461,6 @@ define( [
         getOrCreateInputNormal: function () {
             return this.getOrCreateVarying( 'vec3', 'FragNormal' );
         },
-
 
         getOrCreateFrontNormal: function () {
             var inputNormal = this.getOrCreateInputNormal();
@@ -773,6 +767,9 @@ define( [
         createShadowTextureInputVarying: function ( shadowTexture, inputs, vertexWorld, tUnit ) {
             var shadowTexSamplerName = 'Texture' + tUnit;
 
+            // we declare first this uniform so that the Int one 
+            var tex = this.getOrCreateSampler( 'sampler2D', shadowTexSamplerName );
+
             // per texture uniforms
             var shadowTextureUniforms = this.getOrCreateTextureStateAttributeUniforms( shadowTexture, 'shadowTexture', tUnit );
 
@@ -783,13 +780,12 @@ define( [
             // so we remove it from adding it here
             var id = shadowTextureUniforms[ 'shadowTexture' + shadowTexSamplerName ].getID();
             shadowTextureUniforms[ 'shadowTexture' + shadowTexSamplerName ] = undefined;
-            this._variables[ shadowTexSamplerName ] = undefined;
+            this._variables[ shadowTexSamplerName ] = tex; // the uniform Int overrided our sampler2D, so we add it back
             delete this._activeNodeList[ id ];
             // end UGLY REMOVAL
 
             var inputsShadow = MACROUTILS.objectMix( inputs, shadowTextureUniforms );
 
-            var tex = this.getOrCreateSampler( 'sampler2D', shadowTexSamplerName );
             inputsShadow.shadowTexture = tex;
 
             var shadowVarying = {
@@ -1142,9 +1138,9 @@ define( [
 
             var inputWeights = this.getOrCreateAttribute( 'vec4', 'Weights' );
             var inputBones = this.getOrCreateAttribute( 'vec4', 'Bones' );
-            var matrixPalette = this.getOrCreateUniform( 'vec4', 'uBones', this._animation.getBoneUniformSize() );
+            var matrixPalette = this.getOrCreateUniform( 'vec4', 'uBones', this._skinningAttribute.getBoneUniformSize() );
 
-            this.getNode( 'Animation' ).inputs( {
+            this.getNode( 'Skinning' ).inputs( {
                 weights: inputWeights,
                 bonesIndex: inputBones,
                 matrixPalette: matrixPalette
@@ -1154,44 +1150,107 @@ define( [
 
             return boneMatrix;
         },
-        getOrCreateVertexAttribute: function () {
-            var v = this._variables[ 'vertexAttribute' ];
-            if ( v )
-                return v;
+        getOrCreateDoMorph: function () {
+            var doMorph = this._variables[ 'doMorph' ];
+            if ( doMorph ) return doMorph;
 
-            var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
-            if ( !this._animation )
-                return inputVertex;
+            doMorph = this.createVariable( 'bool', 'doMorph' );
 
-            var positionAnimated = this.createVariable( 'vec3', 'vertexAttribute' );
+            this.getNode( 'InlineCode' ).code( '%doMorph = any(notEqual(%weights, vec4(0.0)));' ).inputs( {
+                weights: this.getOrCreateUniform( 'vec4', 'uTargetWeights' )
+            } ).outputs( {
+                doMorph: doMorph
+            } );
 
+            return doMorph;
+        },
+        getTarget: function ( name, i ) {
+            return this.getOrCreateAttribute( 'vec3', name + '_' + i );
+        },
+        morphTransformVec3: function ( inputVertex, outputVertex, targetName ) {
+            var inputs = {
+                doMorph: this.getOrCreateDoMorph(),
+                vertex: inputVertex,
+                weights: this.getOrCreateUniform( 'vec4', 'uTargetWeights' )
+            };
+
+            var numTargets = this._morphAttribute.getNumTargets();
+            for ( var i = 0; i < numTargets; i++ )
+                inputs[ 'target' + i ] = this.getTarget( targetName || inputVertex.getVariable(), i );
+
+            this.getNode( 'Morph' ).inputs( inputs ).outputs( {
+                out: outputVertex
+            } );
+
+            return outputVertex;
+        },
+        skinTransformVertex: function ( inputVertex, outputVertex ) {
             this.getNode( 'MatrixMultPosition' ).setInverse( true ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
                 vec: inputVertex
             } ).outputs( {
-                vec: positionAnimated
+                vec: outputVertex
             } );
-            return positionAnimated;
+            return outputVertex;
         },
-        getOrCreateNormalAttribute: function () {
-            var v = this._variables[ 'normalAttribute' ];
-            if ( v )
-                return v;
-
-            var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
-            if ( !this._animation )
-                return inputNormal;
-
-            var normalAnimated = this.createVariable( 'vec3', 'normalAttribute' );
-
+        skinTransformNormal: function ( inputVertex, outputVertex ) {
             this.getNode( 'MatrixMultDirection' ).setInverse( true ).inputs( {
                 matrix: this.getOrCreateBoneMatrix(),
-                vec: inputNormal
+                vec: inputVertex
             } ).outputs( {
-                vec: normalAnimated
+                vec: outputVertex
             } );
-            return normalAnimated;
+            return outputVertex;
+        },
+        getOrCreateVertexAttribute: function () {
+            var vecOut = this.getVariable( 'vertexAttribute' );
+            if ( vecOut ) return vecOut;
 
+            var hasMorph = this._morphAttribute && this._morphAttribute.hasTarget( 'Vertex' );
+
+            var inputVertex = this.getOrCreateAttribute( 'vec3', 'Vertex' );
+            if ( !this._skinningAttribute && !hasMorph ) return inputVertex;
+
+            vecOut = this.createVariable( 'vec3', 'vertexAttribute' );
+
+            if ( hasMorph && !this._skinningAttribute ) return this.morphTransformVec3( inputVertex, vecOut );
+            else if ( !hasMorph && this._skinningAttribute ) return this.skinTransformVertex( inputVertex, vecOut );
+
+            var tmpMorph = this.createVariable( 'vec3' );
+            this.morphTransformVec3( inputVertex, tmpMorph );
+            return this.skinTransformVertex( tmpMorph, vecOut );
+        },
+        getOrCreateNormalAttribute: function () {
+            var vecOut = this.getVariable( 'normalAttribute' );
+            if ( vecOut ) return vecOut;
+
+            var hasMorph = this._morphAttribute && this._morphAttribute.hasTarget( 'Normal' );
+
+            var inputNormal = this.getOrCreateAttribute( 'vec3', 'Normal' );
+            if ( !this._skinningAttribute && !hasMorph ) return inputNormal;
+
+            var tmpAnim;
+
+            // we name the morph variable in case we want to infer the tangent from the morph normal
+            if ( hasMorph && !this._skinningAttribute ) {
+                tmpAnim = this.morphTransformVec3( inputNormal, this.createVariable( 'vec3', 'normalMorph' ) );
+            } else if ( !hasMorph && this._skinningAttribute ) {
+                tmpAnim = this.skinTransformNormal( inputNormal, this.createVariable( 'vec3', 'normalSkin' ) );
+            } else {
+
+                tmpAnim = this.morphTransformVec3( inputNormal, this.createVariable( 'vec3', 'normalMorph' ) );
+                tmpAnim = this.skinTransformNormal( tmpAnim, this.createVariable( 'vec3', 'normalSkin' ) );
+
+            }
+
+            vecOut = this.createVariable( 'vec3', 'normalAttribute' );
+            this.getNode( 'Normalize' ).inputs( {
+                vec: tmpAnim
+            } ).outputs( {
+                vec: vecOut
+            } );
+
+            return vecOut;
         },
         declareVertexTransformShadeless: function ( glPosition ) {
             // No light
@@ -1603,7 +1662,7 @@ define( [
             else
                 alphaCompute = '%alpha = %color.a;';
 
-            // Discard fragments totally transparents when rendering billboards 
+            // Discard fragments totally transparents when rendering billboards
             if ( this._isBillboard )
                 alphaCompute += 'if ( %alpha == 0.0) discard;';
 

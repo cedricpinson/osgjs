@@ -10,7 +10,6 @@ define( [
         this._dirty = true;
     };
 
-
     StateAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
 
         isDirty: function () {
@@ -29,6 +28,8 @@ define( [
             return this.attributeType;
         },
 
+        // basically, if you want two StateAttribute with the same attributeType in a stateSet/State
+        // their typeMember should be different
         getTypeMember: function () {
             return this.attributeType;
         },

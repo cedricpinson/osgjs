@@ -44,9 +44,9 @@ define( [
             this.setTarget( cen );
         },
         init: function () {
-            this._direction = [ 0.0, 1.0, 0.0 ];
-            this._eye = [ 0.0, 25.0, 10.0 ];
-            this._up = [ 0.0, 0.0, 1.0 ];
+            this._direction = Vec3.createAndSet( 0.0, 1.0, 0.0 );
+            this._eye = Vec3.createAndSet( 0.0, 25.0, 10.0 );
+            this._up = Vec3.createAndSet( 0.0, 0.0, 1.0 );
             this._distance = 1.0;
             this._forward = new OrbitManipulator.Interpolator( 1 );
             this._side = new OrbitManipulator.Interpolator( 1 );
@@ -57,12 +57,12 @@ define( [
             this._zoom = new OrbitManipulator.Interpolator( 1 );
 
             this._stepFactor = 1.0; // meaning radius*stepFactor to move
-            this._target = [ 0.0, 0.0, 0.0 ];
+            this._target = Vec3.create();
             this._angleVertical = 0.0;
             this._angleHorizontal = 0.0;
 
             // tmp value use for computation
-            this._tmpGetTargetDir = [ 0.0, 0.0, 0.0 ];
+            this._tmpGetTargetDir = Vec3.create();
 
             this._rotBase = Matrix.create();
 
@@ -141,8 +141,8 @@ define( [
             var second = Matrix.create();
             var rotMat = Matrix.create();
 
-            var upy = [ 0.0, 1.0, 0.0 ];
-            var upz = [ 0.0, 0.0, 1.0 ];
+            var upy = Vec3.createAndSet( 0.0, 1.0, 0.0 );
+            var upz = Vec3.createAndSet( 0.0, 0.0, 1.0 );
             var LIMIT = Math.PI * 0.5;
             return function ( dx, dy ) {
                 this._angleVertical += dy * 0.01;
@@ -177,18 +177,13 @@ define( [
         },
 
         update: ( function () {
-            var vec = [ 0.0, 0.0 ];
+            var vec = Vec2.createAndSet( 0.0, 0.0 );
             return function ( nv ) {
-                var t = nv.getFrameStamp().getSimulationTime();
-                if ( this._lastUpdate === undefined ) {
-                    this._lastUpdate = t;
-                }
-                var dt = t - this._lastUpdate;
-                this._lastUpdate = t;
+                var dt = nv.getFrameStamp().getDeltaTime();
 
-                this._forward.update();
-                this._side.update();
-                var delta = this._lookPosition.update();
+                this._forward.update( dt );
+                this._side.update( dt );
+                var delta = this._lookPosition.update( dt );
 
                 this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
 
@@ -202,11 +197,12 @@ define( [
                 // time based displacement vector
                 vec[ 0 ] = this._forward.getCurrent()[ 0 ];
                 vec[ 1 ] = this._side.getCurrent()[ 0 ];
-                if ( Vec2.length( vec ) > 1.0 ) Vec2.normalize( vec, vec );
+                var len2 = Vec2.length2( vec );
+                if ( len2 > 1.0 ) Vec2.mult( vec, 1.0 / Math.sqrt( len2 ), vec );
 
                 // direct displacement vectors
-                var pan = this._pan.update();
-                var zoom = this._zoom.update();
+                var pan = this._pan.update( dt );
+                var zoom = this._zoom.update( dt );
 
                 var timeFactor = this._stepFactor * factor * vFov * dt;
                 var directFactor = this._stepFactor * factor * vFov * 0.005;
@@ -225,7 +221,7 @@ define( [
         },
 
         moveForward: ( function () {
-            var tmp = [ 0.0, 0.0, 0.0 ];
+            var tmp = Vec3.create();
             return function ( distance ) {
                 Vec3.normalize( this._direction, tmp );
                 Vec3.mult( tmp, distance, tmp );
@@ -234,7 +230,7 @@ define( [
         } )(),
 
         strafe: ( function () {
-            var tmp = [ 0.0, 0.0, 0.0 ];
+            var tmp = Vec3.create();
             return function ( distance ) {
                 Vec3.cross( this._direction, this._up, tmp );
                 Vec3.normalize( tmp, tmp );
@@ -244,7 +240,7 @@ define( [
         } )(),
 
         strafeVertical: ( function () {
-            var tmp = [ 0.0, 0.0, 0.0 ];
+            var tmp = Vec3.create();
             return function ( distance ) {
                 Vec3.normalize( this._up, tmp );
                 Vec3.mult( tmp, distance, tmp );

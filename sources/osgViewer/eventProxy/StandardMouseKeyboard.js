@@ -1,4 +1,8 @@
-define( [], function () {
+define( [
+    'osg/Vec2'
+], function ( Vec2 ) {
+
+    'use strict';
 
     var StandardMouseKeyboard = function ( viewer ) {
         this._enable = true;
@@ -9,7 +13,7 @@ define( [], function () {
         this._wheelEventNode = undefined;
         this._keyboardEventNode = undefined;
         this._eventList = [ 'mousedown', 'mouseup', 'mouseout', 'mousemove', 'dblclick' ];
-        this._mousePosition = [ 0, 0 ];
+        this._mousePosition = Vec2.create( 0, 0 );
     };
 
     StandardMouseKeyboard.prototype = {

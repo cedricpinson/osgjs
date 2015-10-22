@@ -1,4 +1,6 @@
-define( [], function () {
+define( [
+    'osg/Vec2'
+], function ( Vec2 ) {
 
     'use strict';
 
@@ -77,10 +79,10 @@ define( [], function () {
                 var pan = this._manipulator.getPanInterpolator();
                 var panTarget = pan.getTarget();
                 var delta = {
-                    12: [ 0, -1 ],
-                    13: [ 0, 1 ],
-                    14: [ -1, 0 ],
-                    15: [ 1, 0 ]
+                    12: Vec2.createAndSet( 0, -1 ),
+                    13: Vec2.createAndSet( 0, 1 ),
+                    14: Vec2.createAndSet( -1, 0 ),
+                    15: Vec2.createAndSet( 1, 0 )
                 }[ event.button ];
                 pan.setDelay( this._delay );
                 pan.setTarget( panTarget[ 0 ] - delta[ 0 ] * 10, panTarget[ 1 ] + delta[ 1 ] * 10 );

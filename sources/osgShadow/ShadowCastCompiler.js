@@ -29,8 +29,12 @@ define( [
 
                 if ( type === 'ShadowCastAttribute' ) {
                     this._shadowCastAttribute = attributes[ i ];
-                } else if ( type === 'AnimationAttribute' ) {
-                    this._animation = attributes[ i ];
+                } else if ( type === 'Billboard' ) {
+                    this._isBillboard = !!attributes[ i ];
+                } else if ( type === 'SkinningAttribute' ) {
+                    this._skinningAttribute = attributes[ i ];
+                } else if ( type === 'MorphAttribute' ) {
+                    this._morphAttribute = attributes[ i ];
                 }
             }
         },

@@ -29,7 +29,7 @@ define( [
         set: function ( start, end ) {
             this._start = start;
             this._end = end;
-            this._dir = Vec3.sub( end, start, [ 0.0, 0.0, 0.0 ] );
+            this._dir = Vec3.sub( end, start, Vec3.create() );
             this._length = Vec3.length( this._dir );
             this._invLength = 1.0 / this._length;
             Vec3.mult( this._dir, this._invLength, this._dir );
@@ -119,7 +119,7 @@ define( [
                     ratio: r,
                     nodepath: this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
                     TriangleIntersection: new TriangleIntersection( this._index - 1, normal.slice( 0 ), r0, v0.slice( 0 ), r1, v1.slice( 0 ), r2, v2.slice( 0 ) ),
-                    point: [ interX, interY, interZ ]
+                    point: Vec3.createAndSet( interX, interY, interZ )
                 } );
                 this.hit = true;
             };

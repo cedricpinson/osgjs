@@ -21,6 +21,7 @@ define( [
     'osg/Vec3',
     'osg/Vec4',
     'osg/Viewport',
+    'osg/WebGLCaps',
     'osgShader/ShaderProcessor',
     'osgShadow/ShadowReceiveAttribute',
     'osgShadow/ShadowCasterVisitor',
@@ -28,7 +29,7 @@ define( [
     'osgShadow/ShadowCastAttribute',
     'osgShadow/ShadowTechnique',
     'osgShadow/ShadowTexture'
-], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, Depth, FrameBufferObject, Light, LightSource, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, ShaderProcessor, ShadowReceiveAttribute, ShadowCasterVisitor, ShadowFrustumIntersection, ShadowCastAttribute, ShadowTechnique, ShadowTexture ) {
+], function ( BoundingBox, BlendFunc, Camera, ComputeBoundsVisitor, Depth, FrameBufferObject, Light, LightSource, Matrix, Notify, NodeVisitor, Program, Shader, StateAttribute, StateSet, Texture, Transform, Uniform, MACROUTILS, Vec3, Vec4, Viewport, WebGLCaps, ShaderProcessor, ShadowReceiveAttribute, ShadowCasterVisitor, ShadowFrustumIntersection, ShadowCastAttribute, ShadowTechnique, ShadowTexture ) {
 
     'use strict';
 
@@ -77,7 +78,7 @@ define( [
         this._projectionMatrix = Matrix.create();
         this._viewMatrix = Matrix.create();
 
-        this._lightUp = [ 0.0, 0.0, 1.0 ];
+        this._lightUp = Vec3.createAndSet( 0.0, 0.0, 1.0 );
 
         this._light = settings.light;
 
@@ -86,7 +87,7 @@ define( [
         this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
         this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
         this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
-        this._cameraShadow.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
+        this._cameraShadow.setClearColor( Vec4.createAndSet( 1.0, 1.0, 1.0, 1.0 ) );
 
         this._texture = new ShadowTexture();
         this._textureUnitBase = 4;
@@ -304,7 +305,7 @@ define( [
 
         setShadowedScene: function ( shadowedScene ) {
             ShadowTechnique.prototype.setShadowedScene.call( this, shadowedScene );
-            this._receivingStateset = this._shadowedScene.getOrCreateStateSet();
+            this._receivingStateset = this._shadowedScene.getReceivingStateSet();
             this.dirty();
         },
 
@@ -346,7 +347,7 @@ define( [
                 this._cameraShadow.setCullCallback( new CameraCullCallback( this ) );
                 this._cameraShadow.setRenderOrder( Camera.PRE_RENDER, 0 );
                 this._cameraShadow.setReferenceFrame( Transform.ABSOLUTE_RF );
-                this._cameraShadow.setClearColor( [ 1.0, 1.0, 1.0, 1.0 ] );
+                this._cameraShadow.setClearColor( Vec4.createAndSet( 1.0, 1.0, 1.0, 1.0 ) );
             }
 
             this.initTexture();
@@ -398,7 +399,7 @@ define( [
 
             // prevent unnecessary texture bindings on all texture unit
             // TODO: actually get the real max texture unit from webglCaps
-            var shouldGetMaxTextureUnits = 32;
+            var shouldGetMaxTextureUnits = WebGLCaps.instance().getWebGLParameter( 'MAX_TEXTURE_IMAGE_UNITS' );
             for ( var k = 0; k < shouldGetMaxTextureUnits; k++ ) {
                 // bind  null texture which OSGJS will not bind,
                 // effectively preventing any other texture bind
@@ -585,11 +586,11 @@ define( [
 
             // compute a up vector ensuring avoiding parallel vectors
             // also might reverting to it once got the change here done once
-            // [ 0.0, 0.0, 1.0 ];
+            // Vec3.createAndSet( 0.0, 0.0, 1.0 );
 
             if ( Math.abs( Vec3.dot( this._lightUp, dir ) ) >= 1.0 ) {
                 // another camera up
-                // [ 1.0, 0.0, 0.0 ];
+                // Vec3.createAndSet( 1.0, 0.0, 0.0 );
                 if ( this._lightUp[ 0 ] === 1.0 ) {
                     this._lightUp[ 0 ] = 0.0;
                     this._lightUp[ 1 ] = 1.0;

@@ -46,11 +46,11 @@ define( [
             // Now we are only supporting WINDOW coordinate frame, so must change this if we decide to support
             // other types of Coordinate Frame
             this.setPolytope( [
-                [ 1.0, 0.0, 0.0, -xMin ],
-                [ -1.0, 0.0, 0.0, xMax ],
-                [ 0.0, 1.0, 0.0, -yMin ],
-                [ 0.0, -1.0, 0.0, yMax ],
-                [ 0.0, 0.0, 1.0, 0.0 ]
+                Vec4.createAndSet( 1.0, 0.0, 0.0, -xMin ),
+                Vec4.createAndSet( -1.0, 0.0, 0.0, xMax ),
+                Vec4.createAndSet( 0.0, 1.0, 0.0, -yMin ),
+                Vec4.createAndSet( 0.0, -1.0, 0.0, yMax ),
+                Vec4.createAndSet( 0.0, 0.0, 1.0, 0.0 )
             ] );
         },
 

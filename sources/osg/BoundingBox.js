@@ -104,7 +104,7 @@ define( [
         },
 
         radius2: ( function () {
-            var cache = [ 0.0, 0.0, 0.0 ];
+            var cache = Vec3.create();
             return function () {
                 var min = this._min;
                 var max = this._max;
@@ -161,7 +161,7 @@ define( [
             /*jshint bitwise: false */
             var ret = resultVec;
             if ( ret === undefined )
-                ret = [ 0.0, 0.0, 0.0 ];
+                ret = Vec3.create();
 
             if ( pos & 1 ) {
                 ret[ 0 ] = this._max[ 0 ];

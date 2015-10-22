@@ -23,29 +23,19 @@
     bool outFrustum = any(bvec4 ( shadowUV.x > 1., shadowUV.x < 0., shadowUV.y > 1., shadowUV.y < 0. ));
     if (outFrustum )
         return 1.0;// limits of light frustum
-
-    // inv linearize done in vertex shader
-    // to [0,1]
-    //shadowReceiverZ =  (shadowReceiverZ - depthRange.x)* depthRange.w;
-    shadowReceiverZ =  shadowReceiverZ / depthRange.y;
+    // most precision near 0, make sure we are near 0 and in [0,1]
+    shadowReceiverZ =  (shadowReceiverZ - depthRange.x)* depthRange.w;
 
     // depth bias: fighting shadow acne (depth imprecsion z-fighting)
     float shadowBias = 0.0;
-
-
-    //float shadowBias = 0.005*tan(acos(N_Dot_L)); // cosTheta is dot( n, l ), clamped between 0 and 1
+    // cosTheta is dot( n, l ), clamped between 0 and 1
+    //float shadowBias = 0.005*tan(acos(N_Dot_L));
     // same but 4 cycles instead of 15
     shadowBias += 0.05 *  sqrt( 1. -  N_Dot_L*N_Dot_L) / N_Dot_L;
-    //shadowBias += 0.005 * sqrt( 1. -  N_Dot_L*N_Dot_L) / N_Dot_L;
 
-    //normal offset aka Exploding Shadow Receivers
-    //if(shadowVertexProjected.w != 1.0){
-    // only relevant for perspective, not orthogonal
-    // use shadowViewNormal
-    //shadowBias *= ShadowViewNormal.z * ( shadowReceiverZ*depthRange.y * shadowBias * shadowMapSize.z);
-    //}
-    shadowBias = clamp(shadowBias, 0.,  bias);
-
+    //That makes sure that plane perpendicular to light doesn't flicker due to
+    //selfshadowing and 1 = dot(Normal, Light) using a min bias
+    shadowBias = clamp(shadowBias, 0.00005,  bias);
 
     // shadowZ must be clamped to [0,1]
     // otherwise it's not comparable to
@@ -65,9 +55,6 @@
     // return 0.0 for black;
     // return 1.0 for light;
 
-
-    // pcf pbias to add on offset
-    vec2 shadowBiasPCF = vec2(0.);
 #ifdef _NONE
 
     float shadowDepth = getSingleFloatFromTex(tex, shadowUV.xy);
@@ -77,16 +64,18 @@
     shadow = ( shadowReceiverZ > shadowDepth ) ? 0.0 : 1.0;
 
 #elif defined( _PCF )
+    // pcf pbias to add on offset
+    vec2 shadowBiasPCF = vec2(0.);
 
 
 // looks like derivative is broken on some mac + intel cg ...
-// #ifdef GL_OES_standard_derivatives
+#ifdef GL_OES_standard_derivatives
 
-//     shadowBiasPCF.x +=  dFdx(shadowUV.xy).x * shadowMapSize.z;
-//     shadowBiasPCF.y +=  dFdy(shadowUV.xy).y * shadowMapSize.w;
+     shadowBiasPCF.x +=  dFdx(shadowUV.xy).x * shadowMapSize.z;
+     shadowBiasPCF.y +=  dFdy(shadowUV.xy).y * shadowMapSize.w;
 //     //shadowBias += dFdx(shadowReceiverZ);
 
-// #endif
+#endif
 
 
     shadow = getShadowPCF(tex, shadowMapSize, shadowUV, shadowReceiverZ, shadowBiasPCF);

@@ -19,7 +19,7 @@
             'textureSize': 1024,
             'shadow': 'PCF',
             'textureType': 'UNSIGNED_BYTE',
-            'lightNum': 1,
+            'lightNum': 3,
             'lightType': 'Spot',
             'bias': 0.005,
             'epsilonVSM': 0.0008,
@@ -145,19 +145,31 @@
 
         // default & change debug
         var queryDict = {};
+
         window.location.search.substr( 1 ).split( '&' ).forEach( function ( item ) {
             queryDict[ item.split( '=' )[ 0 ] ] = item.split( '=' )[ 1 ];
         } );
         if ( queryDict[ 'debug' ] ) {
+
             this._debugOtherTechniques = true;
             this._debugFrustum = true;
             this._debugPrefilter = true;
+
         }
 
         var keys = Object.keys( queryDict );
+
         for ( var i = 0; i < keys.length; i++ ) {
+
             var property = keys[ i ];
-            this._config[ property ] = queryDict[ property ];
+            var n = queryDict[ property ];
+
+            if ( !isNaN( parseFloat( n ) ) && isFinite( n ) ) {
+                n = parseFloat( n );
+            }
+
+            this._config[ property ] = n;
+
         }
     };
 
@@ -296,11 +308,11 @@
             var gui = new window.dat.GUI();
 
             var textureTypes = [ 'UNSIGNED_BYTE' ];
-            if ( this._hasAnyFloatTexSupport ) {
-                if ( this._halfFloatTexSupport ) textureTypes.push( 'HALF_FLOAT' );
-                if ( this._halfFloatLinearTexSupport ) textureTypes.push( 'HALF_FLOAT_LINEAR' );
-                if ( this._floatLinearTexSupport ) textureTypes.push( 'FLOAT_LINEAR' );
-                if ( this._floatTexSupport ) textureTypes.push( 'FLOAT' );
+            if ( this._hasAnyFloatTextureSupport ) {
+                if ( this._halfFloatTextureSupport ) textureTypes.push( 'HALF_FLOAT' );
+                if ( this._halfFloatLinearTextureSupport ) textureTypes.push( 'HALF_FLOAT_LINEAR' );
+                if ( this._floatLinearTextureSupport ) textureTypes.push( 'FLOAT_LINEAR' );
+                if ( this._floatTextureSupport ) textureTypes.push( 'FLOAT' );
             }
 
 
@@ -322,14 +334,14 @@
             controller = gui.add( this._config, 'textureType', textureTypes );
             controller.onChange( this.updateShadow.bind( this ) );
 
-            var texSizes = [];
-            var maxTexSize = this._maxTexSize;
-            var texSize = 16;
-            while ( texSize <= maxTexSize ) {
-                texSizes.push( texSize );
-                texSize *= 2;
+            var textureSizes = [];
+            var maxTextureSize = this._maxTextureSize;
+            var textureSize = 16;
+            while ( textureSize <= maxTextureSize ) {
+                textureSizes.push( textureSize );
+                textureSize *= 2;
             }
-            controller = gui.add( this._config, 'textureSize', texSizes );
+            controller = gui.add( this._config, 'textureSize', textureSizes );
             controller.onChange( this.updateShadow.bind( this ) );
 
             // shaders has to have under max varying decl
@@ -1272,14 +1284,14 @@
 
             this._glContext = viewer.getGraphicContext();
 
-            this._maxVaryings = this._viewer.getWebGLCaps().getWebGLParameter( 'MAX_VARYING_VECTORS' );
-            this._maxTexSize = this._viewer.getWebGLCaps().getWebGLParameter( 'MAX_TEXTURE_SIZE' );
+            this._maxVaryings = osg.WebGLCaps.instance().getWebGLParameter( 'MAX_VARYING_VECTORS' );
+            this._maxTextureSize = osg.WebGLCaps.instance().getWebGLParameter( 'MAX_TEXTURE_SIZE' );
 
-            this._floatLinearTexSupport = this._viewer.getWebGLCaps().hasRTTLinearFloat();
-            this._floatTexSupport = this._viewer.getWebGLCaps().hasRTTLinearFloat();
-            this._halfFloatLinearTexSupport = this._viewer.getWebGLCaps().hasRTTHalfFloat();
-            this._halfFloatTexSupport = this._viewer.getWebGLCaps().hasRTTLinearHalfFloat();
-            this._hasAnyFloatTexSupport = this._floatLinearTexSupport || this._floatTexSupport || this._halfFloatLinearTexSupport || this._halfFloatTexSupport;
+            this._floatLinearTextureSupport = osg.WebGLCaps.instance().hasLinearFloatRTT();
+            this._floatTextureSupport = osg.WebGLCaps.instance().hasFloatRTT();
+            this._halfFloatLinearTextureSupport = osg.WebGLCaps.instance().hasHalfFloatRTT();
+            this._halfFloatTextureSupport = osg.WebGLCaps.instance().hasLinearHalfFloatRTT();
+            this._hasAnyFloatTextureSupport = this._floatLinearTextureSupport || this._floatTextureSupport || this._halfFloatLinearTextureSupport || this._halfFloatTextureSupport;
 
             var scene = this.createScene();
 
@@ -1301,6 +1313,9 @@
     };
     // execute loaded code when ready
     window.addEventListener( 'load', function () {
+
+        osg.log( osg.WebGLCaps.instance().getWebGLParameters() );
+
         var example = new Example();
         var canvas = document.getElementById( 'View' );
         example.run( canvas );

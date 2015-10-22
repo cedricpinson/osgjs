@@ -41,7 +41,7 @@ define( [
         if ( text !== undefined ) this._text = text;
         this._font = 'monospace';
         // Vec4 value to load/return
-        this._color = [ 0, 0, 0, 1 ];
+        this._color = Vec4.createAndSet( 0.0, 0.0, 0.0, 1.0 );
         // This determines the text color, it can take a hex value or rgba value (e.g. rgba(255,0,0,0.5))
         this._fillStyle = 'rgba( 0, 0, 0, 1 )';
         // This determines the alignment of text, e.g. left, center, right

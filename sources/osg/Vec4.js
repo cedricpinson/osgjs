@@ -9,6 +9,10 @@ define( [], function () {
             return [ 0.0, 0.0, 0.0, 0.0 ];
         },
 
+        createAndSet: function ( x, y, z, w ) {
+            return [ x, y, z, w ];
+        },
+
         init: function ( a ) {
             a[ 0 ] = 0.0;
             a[ 1 ] = 0.0;

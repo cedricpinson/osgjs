@@ -11,7 +11,7 @@ define( [
     'osg/Plane',
     'osg/TransformEnums',
     'osg/Vec3'
-], function ( MACROUTILS, BoundingSphere, Camera, ComputeMatrixFromNodePath, CullSettings, CullingSet, Matrix, MatrixTransform, Notify, Plane, TransformEnums ) {
+], function ( MACROUTILS, BoundingSphere, Camera, ComputeMatrixFromNodePath, CullSettings, CullingSet, Matrix, MatrixTransform, Notify, Plane, TransformEnums, Vec3 ) {
     'use strict';
 
     var CullStack = function () {
@@ -148,7 +148,7 @@ define( [
         },
         getLookVectorLocal: function () {
             var m = this.getCurrentModelViewMatrix();
-            return [ -m[ 2 ], -m[ 6 ], -m[ 10 ] ];
+            return Vec3.createAndSet( -m[ 2 ], -m[ 6 ], -m[ 10 ] );
         },
         pushViewport: function ( vp ) {
             this._viewportStack.push( vp );
@@ -297,11 +297,11 @@ define( [
             if ( this._modelViewMatrixStack.length !== 0 ) {
                 lookVector = this.getLookVectorLocal();
             } else {
-                lookVector = [ 0, 0, -1 ];
+                lookVector = Vec3.createAndSet( 0.0, 0.0, -1.0 );
             }
 
             /*jshint bitwise: false */
-            this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
+            this._bbCornerFar = ( lookVector[ 0 ] >= 0.0 ? 1.0 : 0.0 ) | ( lookVector[ 1 ] >= 0 ? 2.0 : 0.0 ) | ( lookVector[ 2 ] >= 0 ? 4.0 : 0.0 );
             this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
             /*jshint bitwise: true */
 
