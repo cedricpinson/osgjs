@@ -13,7 +13,7 @@ define( [
         this._wheelEventNode = undefined;
         this._keyboardEventNode = undefined;
         this._eventList = [ 'mousedown', 'mouseup', 'mouseout', 'mousemove', 'dblclick' ];
-        this._mousePosition = Vec2.create( 0, 0 );
+        this._mousePosition = Vec2.create();
     };
 
     StandardMouseKeyboard.prototype = {
@@ -158,8 +158,8 @@ define( [
                 //returnValue = true,
                 deltaX = 0,
                 deltaY = 0;
-            //event = $.event.fix(orgEvent);
-            event.type = 'mousewheel';
+            if ( event.type !== 'mousewheel' )
+                event.type = 'mousewheel';
 
             // Old school scrollwheel delta
             if ( event.wheelDelta ) {
