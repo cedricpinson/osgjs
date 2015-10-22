@@ -4,6 +4,7 @@ define( [
     'tests/osg/BoundingBox',
     'tests/osg/BoundingSphere',
     'tests/osg/BufferArray',
+    'tests/osg/BufferArrayProxy',
     'tests/osg/Camera',
     'tests/osg/ComputeBoundsVisitor',
     'tests/osg/ComputeMatrixFromNodePath',
@@ -29,7 +30,7 @@ define( [
     'tests/osg/Vec2',
     'tests/osg/PrimitiveFunctor',
     'tests/osg/WebGLCaps'
-], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, Camera, ComputeBoundsVisitor, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Plane, Quat, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2, PrimitiveFunctor, WebGLCaps ) {
+], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, BufferArrayProxy, Camera, ComputeBoundsVisitor, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Plane, Quat, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2, PrimitiveFunctor, WebGLCaps ) {
 
     'use strict';
 
@@ -39,6 +40,7 @@ define( [
         BoundingBox();
         BoundingSphere();
         BufferArray();
+        BufferArrayProxy();
         Camera();
         ComputeBoundsVisitor();
         ComputeMatrixFromNodePath();

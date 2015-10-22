@@ -95,7 +95,8 @@ define( [
 
                     // dont display the geometry if missing data
                     generated += 'attr = this.attributes[\'' + key + '\'];\n';
-                    generated += 'if (!attr.isValid()) { return; }\n';
+                    generated += 'if (attr.getBufferArray) attr = attr.getBufferArray();\n';
+                    generated += 'if (!attr.isValid()) return;\n';
                     generated += 'state.setVertexAttribArray(' + attribute + ', attr, false);\n';
                 }
                 generated += 'state.applyDisablingOfVertexAttributes();\n';
