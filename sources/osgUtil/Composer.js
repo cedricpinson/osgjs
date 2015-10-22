@@ -1228,7 +1228,7 @@ define( [
 
         var w = textureNormal.getWidth();
         var h = textureNormal.getHeight();
-        this._size = Vec2.create( w, h );
+        this._size = Vec2.createAndSet( w, h );
 
         stateSet.setTextureAttributeAndModes( 0, textureNormal );
         stateSet.setTextureAttributeAndModes( 1, texturePosition );
