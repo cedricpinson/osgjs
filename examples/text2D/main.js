@@ -32,6 +32,7 @@
             this.params = {
                 text: this._text,
                 rotateToScreen: true,
+                font: 'monospace',
                 layout: 'LEFT_TO_RIGHT',
                 alignment: 'CENTER_CENTER',
                 fontResolution: 32,
@@ -49,7 +50,7 @@
                 RIGHT_CENTER: osgText.Text.RIGHT_CENTER,
                 RIGHT_BOTTOM: osgText.Text.RIGHT_BOTTOM
             };
-
+            var fonts = [ 'monospace', 'Andale Mono', 'Arial', 'Comic Sans MS', 'Courier New', ' Lucida Console', 'Impact, fantasy' ];
             var that = this;
 
             var textController = this.gui.add( this.params, 'text' );
@@ -62,10 +63,16 @@
                 that.changeRotateToScreen( value );
             } );
 
+            var fontController = this.gui.add( this.params, 'font', fonts );
+            fontController.onChange( function ( value ) {
+                that.changeFontFamily( value );
+            } );
+
             var layoutController = this.gui.add( this.params, 'layout', layouts );
             layoutController.onChange( function ( value ) {
                 that.changeLayout( value );
             } );
+
             var alignmentController = this.gui.add( this.params, 'alignment', alignments );
             alignmentController.onChange( function ( value ) {
                 that.changeAlignment( value );
@@ -174,6 +181,22 @@
             this._scene.accept( tv );
         },
 
+        changeFontFamily: function ( value ) {
+            var TextVisitor = function ( value ) {
+                osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
+                this._fontFamily = value;
+            };
+            TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+                apply: function ( node ) {
+                    if ( node instanceof osgText.Text ) {
+                        node.setFont( this._fontFamily );
+                    }
+                    this.traverse( node );
+                }
+            } );
+            var tv = new TextVisitor( value );
+            this._scene.accept( tv );
+        },
         changeRotateToScreen: function ( value ) {
             var TextVisitor = function ( value ) {
                 osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
