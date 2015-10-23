@@ -31,7 +31,6 @@ define( [
      *  - The only supported CharacterSizeMode is OBJECT_COORDS, others should be addresed in the future.
      */
     var Text = function ( text ) {
-
         MatrixTransform.call( this );
         // create a canvas element
         this._canvas = document.createElement( 'canvas' );
@@ -64,7 +63,6 @@ define( [
         // Lazy initialization
         this.drawText();
         this._dirty = false;
-
     };
 
     // Layout enum
@@ -85,17 +83,13 @@ define( [
     Text.RIGHT_BOTTOM = 8;
 
     /** @lends Text.prototype */
-
     Text.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         drawText: function () {
-
             if ( this._geometry !== undefined ) {
-
                 this.removeChild( this._geometry );
                 // The text could be dynamic, so we need to remove GL objects
                 this._geometry.releaseGLObjects();
-
             }
             if ( !this._text ) return;
             this.setTextProperties();
@@ -103,218 +97,148 @@ define( [
             this._canvas.height = this._fontSize * 2;
             // For devices not supporting NPOT textures
             if ( this._forcePowerOfTwo ) {
-
                 this._canvas.width = this._nextPowerOfTwo( this._canvas.width );
                 this._canvas.height = this._nextPowerOfTwo( this._canvas.height );
-
             }
-            // We need to set the text properties again, as the canvas size could change.
+            // We need to set the text properties again, as the canvas size cold change.
             this.setTextProperties();
             this._context.clearRect( 0, 0, this._canvas.width, this._canvas.height );
             this._context.fillText( this._text, this._textX, this._textY );
             // Right now we set the pivot point to center, to assure the bounding box is correct when rendering billboards.
             // TODO: Possibility to set different pivot point so we can have missing alignments.
             var aspectRatio = this._canvas.width / this._canvas.height;
-
             var quadWidth = this._charactherSize * aspectRatio;
-
             this._geometry = Shape.createTexturedQuadGeometry( -quadWidth / 2, -this._charactherSize / 2, 0, quadWidth, 0, 0, 0, this._charactherSize, 0 );
             // create a texture to attach the canvas2D
             var texture = new Texture();
-
             texture.setTextureSize( this._canvas.width, this._canvas.height );
             texture.setMinFilter( 'LINEAR' );
             texture.setMagFilter( 'LINEAR' );
             texture.setImage( this._canvas );
             // Transparency stuff
             var stateset = this._geometry.getOrCreateStateSet();
-
             stateset.setTextureAttributeAndModes( 0, texture );
             stateset.setRenderingHint( 'TRANSPARENT_BIN' );
             stateset.setAttributeAndModes( new BlendFunc( BlendFunc.ONE, BlendFunc.ONE_MINUS_SRC_ALPHA ) );
             this.addChild( this._geometry );
             this.dirtyBound();
-
         },
 
         setText: function ( text ) {
-
             this._text = text;
             // Canvas size could change so we need to make it dirty.
             this._dirty = true;
-
         },
 
         getText: function () {
-
             return this._text;
-
         },
 
         setFont: function ( font ) {
-
             this._font = font;
             this._dirty = true;
-
         },
 
         setColor: function ( color ) {
-
             this._color = color;
             // Convert color to html range
             this._fillStyle = 'rgba(' + Math.round( color[ 0 ] * 255 ) + ',' + Math.round( color[ 1 ] * 255 ) + ',' + Math.round( color[ 2 ] * 255 ) + ',' + color[ 3 ] + ')';
             this._context.fillStyle = this._fillStyle;
             // Canvas size does not change so we don't need to redo the quad.
             this._context.fillText( this._text, this._textX, this._textY );
-
         },
 
         getColor: function () {
-
             return this._color;
-
         },
 
         setCharacterSize: function ( size ) {
-
             this._charactherSize = size;
             this._dirty = true;
-
         },
 
         getCharacterSize: function () {
-
             return this._charactherSize;
-
         },
 
         setFontResolution: function ( resolution ) {
-
             this._fontSize = resolution;
             this._dirty = true;
-
         },
 
         getFontResolution: function () {
-
             return this._fontSize;
-
         },
 
         setPosition: function ( position ) {
-
             this._position = position;
             Matrix.makeTranslate( position[ 0 ], position[ 1 ], position[ 2 ], this.getMatrix() );
-
         },
 
         getPosition: function () {
-
             return this._position;
-
         },
 
         setTextProperties: function () {
-
             this._context.fillStyle = this._fillStyle;
             this._setAlignmentValues( this._alignment );
             this._context.font = this._fontSize + 'px ' + this._font;
             this._context.direction = this._layout;
-
         },
 
         setAutoRotateToScreen: function ( value ) {
-
             this._autoRotateToScreen = value;
             if ( !this._billboardAttribute ) {
-
                 this._billboardAttribute = new BillboardAttribute();
-
             }
             var stateset = this.getOrCreateStateSet();
-
             if ( value ) {
-
                 // Temporary hack because StateAttribute.ON does not work right now
                 this._billboardAttribute.setEnabled( true );
                 stateset.setAttributeAndModes( this._billboardAttribute, StateAttribute.ON );
-
             } else {
-
                 // Temporary hack because StateAttribute.OFF does not work right now
                 this._billboardAttribute.setEnabled( false );
                 stateset.setAttributeAndModes( this._billboardAttribute, StateAttribute.OFF );
-
             }
-
             this._dirty = true;
-
         },
 
         getAutoRotateToScreen: function () {
-
             return this._autoRotateToScreen;
-
         },
 
         setLayout: function ( layout ) {
-
             if ( typeof layout === 'string' ) {
-
                 this._layout = Text[ layout ];
-
             } else {
-
                 this._layout = layout;
-
             }
-
             this._dirty = true;
-
         },
-
         getLayout: function () {
-
             return this._layout;
-
         },
-
         setAlignment: function ( alignment ) {
-
             if ( typeof alignment === 'string' ) {
-
                 this._alignment = Text[ alignment ];
-
             } else {
-
                 this._alignment = alignment;
-
             }
-
             this._dirty = true;
-
         },
-
         getAlignment: function () {
-
             return this._alignment;
-
         },
-
         traverse: function ( visitor ) {
-
             if ( this._dirty ) {
-
                 this.drawText();
                 this._dirty = false;
-
             }
             MatrixTransform.prototype.traverse.call( this, visitor );
-
         },
 
         _setAlignmentValues: function ( alignment ) {
-
             // Convert the OSG Api to js API
             switch ( alignment ) {
             case Text.LEFT_TOP:
@@ -372,24 +296,15 @@ define( [
                 this._textY = this._canvas.height;
                 break;
             }
-
         },
-
         setForcePowerOfTwo: function ( value ) {
-
             this._forcePowerOfTwo = value;
-
         },
-
         getForcePowerOfTwo: function () {
-
             return this._forcePowerOfTwo;
-
         },
         _nextPowerOfTwo: function ( value ) {
-
             var v = value;
-
             v--;
             v |= v >> 1;
             v |= v >> 2;
@@ -398,11 +313,8 @@ define( [
             v |= v >> 16;
             v++;
             return v;
-
         }
-
     } ), 'osgText', 'Text' );
 
     return Text;
-
 } );
