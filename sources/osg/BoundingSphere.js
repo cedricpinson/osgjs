@@ -82,7 +82,7 @@ define( [
         },
 
         expandByVec3: ( function () {
-            var dv = [ 0.0, 0.0, 0.0 ];
+            var dv = Vec3.create();
             return function ( v ) {
                 if ( this.valid() ) {
                     Vec3.sub( v, this.center( dv ), dv );

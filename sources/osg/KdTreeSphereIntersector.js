@@ -22,9 +22,9 @@ define( [
     KdTreeSphereIntersector.prototype = MACROUTILS.objectInherit( KdTreeRayIntersector.prototype, {
         intersect: ( function () {
 
-            var v0 = [ 0.0, 0.0, 0.0 ];
-            var v1 = [ 0.0, 0.0, 0.0 ];
-            var v2 = [ 0.0, 0.0, 0.0 ];
+            var v0 = Vec3.create();
+            var v1 = Vec3.create();
+            var v2 = Vec3.create();
 
             return function ( node ) {
                 var first = node._first;

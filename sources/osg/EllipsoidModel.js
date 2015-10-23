@@ -4,6 +4,8 @@ define( [
     'osg/Vec3'
 ], function ( Notify, Matrix, Vec3 ) {
 
+    'use strict';
+
     var EllipsoidModel = function () {
         this._radiusEquator = EllipsoidModel.WGS_84_RADIUS_EQUATOR;
         this._radiusPolar = EllipsoidModel.WGS_84_RADIUS_POLAR;
@@ -31,7 +33,7 @@ define( [
         convertLatLongHeightToXYZ: function ( latitude, longitude, height, result ) {
             if ( result === undefined ) {
                 Notify.warn( 'deprecated, use this signature convertLatLongHeightToXYZ( latitude, longitude, height, result )' );
-                result = [ 0.0, 0.0, 0.0 ];
+                result = Vec3.create();
             }
             var sinLatitude = Math.sin( latitude );
             var cosLatitude = Math.cos( latitude );
@@ -47,7 +49,7 @@ define( [
         convertXYZToLatLongHeight: function ( X, Y, Z, result ) {
             if ( result === undefined ) {
                 Notify.warn( 'deprecated, use this signature convertXYZToLatLongHeight( X,  Y,  Z , result)' );
-                result = [ 0.0, 0.0, 0.0 ];
+                result = Vec3.create();
             }
             // http://www.colorado.edu/geography/gcraft/notes/datum/gif/xyzllh.gif
             var p = Math.sqrt( X * X + Y * Y );
@@ -111,9 +113,9 @@ define( [
             return m;
         },
         computeCoordinateFrame: ( function () {
-            var up = [ 0.0, 0.0, 0.0 ];
-            var east = [ 0.0, 0.0, 0.0 ];
-            var north = [ 0.0, 0.0, 0.0 ];
+            var up = Vec3.create();
+            var east = Vec3.create();
+            var north = Vec3.create();
             return function ( latitude, longitude, localToWorld ) {
                 // Compute up vector
                 up[ 0 ] = Math.cos( longitude ) * Math.cos( latitude );

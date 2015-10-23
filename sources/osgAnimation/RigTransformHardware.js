@@ -8,9 +8,9 @@ define( [
     'osg/Shader',
     'osg/StateAttribute',
     'osg/Uniform',
-    'osgAnimation/AnimationAttribute',
+    'osgAnimation/SkinningAttribute',
     'osgAnimation/CollectBoneVisitor'
-], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, StateAttribute, Uniform, AnimationAttribute, CollectBoneVisitor ) {
+], function ( MACROUTILS, NodeVisitor, Notify, Matrix, Program, Shader, StateAttribute, Uniform, SkinningAttribute, CollectBoneVisitor ) {
 
     'use strict';
 
@@ -19,7 +19,7 @@ define( [
      *
      */
     var RigTransformHardware = function () {
-        this._needInit = true;
+        this._isInitialized = false;
 
         // bones are sorted to be used directly by
         // computeMatrixPalette
@@ -80,11 +80,11 @@ define( [
 
             // matrix are 4x3
             var nbVec4Uniforms = this._bones.length * 3;
-            var animAttrib = this._animationAttribute = new AnimationAttribute();
+            var animAttrib = this._skinningAttribute = new SkinningAttribute();
             animAttrib.setMatrixPalette( new Float32Array( nbVec4Uniforms * 4 ) );
             geom.getStateSetAnimation().setAttributeAndModes( animAttrib, StateAttribute.ON );
 
-            this._needInit = false;
+            this._isInitialized = true;
             return true;
         },
 
@@ -96,7 +96,7 @@ define( [
             return function ( transformFromSkeletonToGeometry, invTransformFromSkeletonToGeometry ) {
 
                 var bones = this._bones;
-                var matPalette = this._animationAttribute.getMatrixPalette();
+                var matPalette = this._skinningAttribute.getMatrixPalette();
                 var uniformIndex = 0;
 
                 for ( var i = 0, l = bones.length; i < l; i++ ) {
@@ -134,7 +134,7 @@ define( [
 
         update: function ( geom ) {
 
-            if ( this._needInit )
+            if ( !this._isInitialized )
                 this.init( geom );
 
             this.computeMatrixPalette( geom.getMatrixFromSkeletonToGeometry(), geom.getInvMatrixFromSkeletonToGeometry() );

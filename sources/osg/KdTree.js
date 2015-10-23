@@ -58,7 +58,7 @@ define( [
         this._bb = new BoundingBox();
         this._primitiveIndices = null; // Uint32Array
         this._centers = null; // Float32Array
-        this._axisOrder = [ 0, 0, 0 ];
+        this._axisOrder = Vec3.create();
         this._stackLength = 0;
     };
 

@@ -8,6 +8,10 @@ define( [], function () {
             return [ 0.0, 0.0 ];
         },
 
+        createAndSet: function ( x, y ) {
+            return [ x, y ];
+        },
+
         copy: function ( a, r ) {
             r[ 0 ] = a[ 0 ];
             r[ 1 ] = a[ 1 ];

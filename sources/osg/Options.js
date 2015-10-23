@@ -47,7 +47,7 @@ define( [
 
         getString: function ( key ) {
             var val = this[ key ];
-            if ( val ) return this[ key ].toString();
+            if ( val !== undefined ) return this[ key ].toString();
             return undefined;
         }
 

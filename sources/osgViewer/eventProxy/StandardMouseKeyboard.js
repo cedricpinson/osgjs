@@ -1,4 +1,8 @@
-define( [], function () {
+define( [
+    'osg/Vec2'
+], function ( Vec2 ) {
+
+    'use strict';
 
     var StandardMouseKeyboard = function ( viewer ) {
         this._enable = true;
@@ -9,7 +13,7 @@ define( [], function () {
         this._wheelEventNode = undefined;
         this._keyboardEventNode = undefined;
         this._eventList = [ 'mousedown', 'mouseup', 'mouseout', 'mousemove', 'dblclick' ];
-        this._mousePosition = [ 0, 0 ];
+        this._mousePosition = Vec2.create();
     };
 
     StandardMouseKeyboard.prototype = {
@@ -154,8 +158,8 @@ define( [], function () {
                 //returnValue = true,
                 deltaX = 0,
                 deltaY = 0;
-            //event = $.event.fix(orgEvent);
-            event.type = 'mousewheel';
+            if ( event.type !== 'mousewheel' )
+                event.type = 'mousewheel';
 
             // Old school scrollwheel delta
             if ( event.wheelDelta ) {

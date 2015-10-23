@@ -30,3 +30,4 @@ examples/vendors/es5-shim.js
 examples/vendors/es6-shim.js
 examples/vendors/hammer.js
 sources/version.js
+examples/media/*

@@ -4,8 +4,9 @@ define( [
     'osg/CullSettings',
     'osg/Matrix',
     'osg/Texture',
-    'osg/TransformEnums'
-], function ( MACROUTILS, Transform, CullSettings, Matrix, Texture, TransformEnums ) {
+    'osg/TransformEnums',
+    'osg/Vec4'
+], function ( MACROUTILS, Transform, CullSettings, Matrix, Texture, TransformEnums, Vec4 ) {
 
     'use strict';
 
@@ -20,7 +21,7 @@ define( [
 
         this.viewport = undefined;
         this._graphicContext = undefined;
-        this.setClearColor( [ 0, 0, 0, 1.0 ] );
+        this.setClearColor( Vec4.createAndSet( 0, 0, 0, 1.0 ) );
         this.setClearDepth( 1.0 );
 
         /*jshint bitwise: false */

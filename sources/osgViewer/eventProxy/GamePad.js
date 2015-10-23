@@ -69,6 +69,9 @@ define( [
         update: function () {
             // we poll instead
 
+            if ( !this.isValid() )
+                return;
+
             var gamepad = this.gamepadPoll();
             if ( !gamepad )
                 return;

@@ -91,6 +91,8 @@ define( [
     // glsl code output = matrix * vector4(vec.xyz, 0)
     var MatrixMultDirection = function () {
         Add.apply( this );
+        this._overwriteW = true; // if set to false, we copy the input alpha in the output alpha
+        this._forceComplement = true;
         this._inverseOp = false;
     };
 
@@ -104,34 +106,43 @@ define( [
             this._inverseOp = bool;
             return this;
         },
+        setForceComplement: function ( bool ) {
+            this._forceComplement = bool;
+            return this;
+        },
+        setOverwriteW: function ( bool ) {
+            this._overwriteW = bool;
+            return this;
+        },
         computeShader: function () {
             // force inputs type to be all the same from the output
             // and handle vector complement
+            var vecIn = this._inputs.vec.getVariable();
+            var matrix = this._inputs.matrix.getVariable();
+            var vecOut = this._outputs.vec.getVariable();
 
-            var strOut = this._outputs.vec.getVariable() + ' = ';
-
-            var outputType = this._outputs.vec.getType();
-            if ( outputType !== 'vec4' ) {
-                strOut += outputType + '(';
-            }
-
-            var strCasted = this._inputs.vec.getVariable();
             var inputType = this._inputs.vec.getType();
+            var outputType = this._outputs.vec.getType();
 
-            if ( inputType !== 'vec4' ) {
-                strCasted = 'vec4(' + strCasted + '.xyz, ' + this.complement + ')';
-            }
+            var strOut = vecOut + ' = ';
 
-            if ( this._inverseOp )
-                strOut += strCasted + this.operator + this._inputs.matrix.getVariable();
-            else
-                strOut += this._inputs.matrix.getVariable() + this.operator + strCasted;
+            if ( outputType !== 'vec4' )
+                strOut += outputType + '(';
 
-            if ( outputType !== 'vec4' ) {
+            var strCasted = vecIn;
+            if ( this._forceComplement || inputType !== 'vec4' )
+                strCasted = 'vec4(' + vecIn + '.xyz, ' + this.complement + ')';
+
+            strOut += this._inverseOp ? strCasted + this.operator + matrix : matrix + this.operator + strCasted;
+
+            if ( outputType !== 'vec4' )
                 strOut += ')';
-            }
 
             strOut += ';';
+
+            if ( !this._overwriteW && inputType === 'vec4' )
+                strOut += '\n' + vecOut + '.a = ' + vecIn + '.a;';
+
             return strOut;
         }
     } );
@@ -140,6 +151,7 @@ define( [
     // glsl code output = matrix * vector4(vec.xyz, 1)
     var MatrixMultPosition = function () {
         MatrixMultDirection.apply( this );
+        this._forceComplement = false;
     };
     MatrixMultPosition.prototype = MACROUTILS.objectInherit( MatrixMultDirection.prototype, {
         type: 'MatrixMultPosition',
@@ -209,10 +221,11 @@ define( [
         validInputs: [ 'color', 'alpha' ],
         validOuputs: [ 'color' ],
         computeShader: function () {
+            var alpha = this._inputs.alpha;
             return sprintf( '%s = vec4( %s.rgb, %s );', [
                 this._outputs.color.getVariable(),
                 this._inputs.color.getVariable(),
-                this._inputs.alpha.getVariable()
+                alpha.getType() !== 'float' ? alpha.getVariable() + '.a' : alpha.getVariable()
             ] );
         }
     } );

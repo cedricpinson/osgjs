@@ -9,9 +9,10 @@ define( [
     'osg/Matrix',
     'osg/StateSet',
     'osgAnimation/Bone',
+    'osgAnimation/MorphGeometry',
     'osgAnimation/UpdateRigGeometry',
     'osgAnimation/RigTransformHardware'
-], function ( MACROUTILS, BufferArray, Vec3, Node, Geometry, NodeVisitor, Notify, Matrix, StateSet, Bone, UpdateRigGeometry, RigTransformHardware ) {
+], function ( MACROUTILS, BufferArray, Vec3, Node, Geometry, NodeVisitor, Notify, Matrix, StateSet, Bone, MorphGeometry, UpdateRigGeometry, RigTransformHardware ) {
 
     'use strict';
 
@@ -109,6 +110,33 @@ define( [
 
         setSourceGeometry: function ( geometry ) {
             this._geometry = geometry;
+        },
+
+        mergeChildrenVertexAttributeList: function () {
+
+            if ( this._geometry instanceof MorphGeometry )
+                this._geometry.mergeChildrenVertexAttributeList();
+
+            var sourceGeometryVertexAttributeList = this._geometry.getVertexAttributeList();
+
+            Geometry.appendVertexAttributeToList( sourceGeometryVertexAttributeList, this.getVertexAttributeList() );
+
+        },
+
+        mergeChildrenData: function () {
+
+            // move to the rig the vertex attributes, the primitives and the stateset
+
+            this.mergeChildrenVertexAttributeList();
+            var primitiveSetList = this._geometry.getPrimitiveSetList();
+
+            this.getPrimitiveSetList().length = 0;
+            for ( var i = 0, il = primitiveSetList.length; i < il; i++ )
+                this.getPrimitiveSetList()[ i ] = primitiveSetList[ i ];
+
+            if ( this.getStateSet() )
+                console.error( 'A stateset in the rig is already present : ' + this.getStateSet() );
+            this.setStateSet( this._geometry.getStateSet() );
         },
 
         update: function () {

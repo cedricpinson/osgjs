@@ -17,6 +17,7 @@
     "sub": true,
 
     "browser": true,
+    "node": true,
     "devel": true,
 
     "globals": {

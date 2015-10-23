@@ -27,40 +27,30 @@ define( [
      * preserveArrayType variable in constructor.
      * @class BufferArray
      */
-    var BufferArray = function ( type, elements, itemSize, preserveArrayType ) {
+
+    var BufferArray = function ( target, elements, itemSize, preserveArrayType ) {
 
         GLObject.call( this );
         // maybe could inherit from Object
         this._instanceID = Object.getInstanceID();
+
         this.dirty();
+
         this._itemSize = itemSize;
-        if ( typeof ( type ) === 'string' )
-            type = BufferArray[ type ];
-        this._type = type;
-        this._glBind = undefined;
+        this._target = typeof target === 'string' ? BufferArray[ target ] : target;
+        this._type = undefined;
 
         if ( elements !== undefined ) {
-
             var typedArray = elements;
-
             if ( !preserveArrayType ) {
-
                 if ( this._type === BufferArray.ELEMENT_ARRAY_BUFFER ) {
-
                     typedArray = elements instanceof MACROUTILS.Uint16Array ? elements : new MACROUTILS.Uint16Array( elements );
-
                 } else {
-
                     typedArray = elements instanceof MACROUTILS.Float32Array ? elements : new MACROUTILS.Float32Array( elements );
-
                 }
-
             }
-
             this.setElements( typedArray );
-
         }
-
     };
 
     BufferArray.ELEMENT_ARRAY_BUFFER = 0x8893;
@@ -91,8 +81,7 @@ define( [
             deleteList.splice( i, 1 );
             elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
         }
-        availableTime -= elapsedTime;
-        return availableTime;
+        return availableTime - elapsedTime;
     };
 
     BufferArray.flushAllDeletedGLBufferArrays = function ( gl ) {
@@ -107,6 +96,9 @@ define( [
 
     /** @lends BufferArray.prototype */
     BufferArray.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
+        getInstanceID: function () {
+            return this._instanceID;
+        },
         setItemSize: function ( size ) {
             this._itemSize = size;
         },
@@ -127,18 +119,18 @@ define( [
 
         bind: function ( gl ) {
             if ( !this._gl ) this.setGraphicContext( gl );
-            var type = this._type;
+            var target = this._target;
             var buffer = this._buffer;
 
             if ( buffer ) {
-                gl.bindBuffer( type, buffer );
+                gl.bindBuffer( target, buffer );
                 return;
             }
 
             if ( !buffer && this._elements.length > 0 ) {
                 this._buffer = gl.createBuffer();
                 this._numItems = this._elements.length / this._itemSize;
-                gl.bindBuffer( type, this._buffer );
+                gl.bindBuffer( target, this._buffer );
             }
         },
         getItemSize: function () {
@@ -153,7 +145,7 @@ define( [
         compile: function ( gl ) {
             if ( this._dirty ) {
                 MACROUTILS.timeStamp( 'osgjs.metrics:bufferData' );
-                gl.bufferData( this._type, this._elements, gl.STATIC_DRAW );
+                gl.bufferData( this._target, this._elements, gl.STATIC_DRAW );
                 this._dirty = false;
             }
         },
@@ -162,9 +154,13 @@ define( [
         },
         setElements: function ( elements ) {
             this._elements = elements;
-            this._glBind = getAttributeType( elements );
+            this._type = getAttributeType( elements );
             this._dirty = true;
+        },
+        getType: function () {
+            return this._type;
         }
+
     } );
 
     BufferArray.create = function ( type, elements, itemSize ) {

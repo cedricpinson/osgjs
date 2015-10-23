@@ -1,23 +1,130 @@
 define( [
-    'osg/Texture'
-], function ( Texture ) {
+    'osg/Notify',
+    'osg/Texture',
+    'osgViewer/webgl-utils'
+], function ( Notify, Texture, WebGLUtils ) {
 
     'use strict';
 
-    var WebGLCaps = function ( gl ) {
-        this._gl = gl;
+    var WebGLCaps = function () {
+
         this._checkRTT = {};
         this._webGLExtensions = {};
         this._webGLParameters = {};
         this._webGLShaderMaxInt = 'NONE';
         this._webGLShaderMaxFloat = 'NONE';
+
+        this._bugsDB = {};
+        this._webGLPlatforms = {};
+    };
+
+    WebGLCaps.instance = function () {
+
+        if ( !WebGLCaps._instance ) {
+
+            var c = document.createElement( 'canvas' );
+
+            c.width = 32;
+            c.height = 32;
+
+            // make sure we don't break webglinspector
+            // with our webglcaps canvas
+            var webglInspector = typeof window !== undefined && window.gli;
+            var oldWebGLInspector;
+
+            if ( webglInspector ) {
+
+                oldWebGLInspector = window.gli.host.inspectContext;
+                window.gli.host.inspectContext = false;
+
+            }
+
+            var gl = WebGLUtils.setupWebGL( c );
+
+            WebGLCaps._instance = new WebGLCaps();
+            if ( gl ) {
+
+                WebGLCaps._instance.init( gl );
+
+            } else {
+
+                // gracefully handle non webgl
+                // like nodejs, phantomjs
+                // warns but no error so that nodejs/phantomjs
+                // can still has some webglcaps object
+                Notify.warn( 'no support for webgl context detected.' );
+
+            }
+
+            if ( webglInspector ) {
+
+                window.gli.host.inspectContext = oldWebGLInspector;
+
+            }
+
+            //delete c;
+
+        }
+        return WebGLCaps._instance;
     };
 
     WebGLCaps.prototype = {
-        init: function () {
-            this.initWebGLParameters();
-            this.initWebGLExtensions();
+        init: function ( gl ) {
+
+            // get capabilites
+            this.initWebGLParameters( gl );
+
+            // order is important
+            // to allow webgl extensions filtering
+            this.initPlatformSupport();
+            this.initBugDB();
+
+            // get extension
+            this.initWebGLExtensions( gl );
+
+            // get float support
+            this.hasLinearHalfFloatRTT( gl );
+            this.hasLinearFloatRTT( gl );
+            this.hasHalfFloatRTT( gl );
+            this.hasFloatRTT( gl );
+
         },
+        // inevitable bugs per platform (browser/OS/GPU)
+        initBugDB: function () {
+
+            var p = this._webGLPlatforms;
+            var ext = this._webGLParameters;
+
+            // derivatives gives strange results on Shadow Shaders
+            if ( p.Apple ) {
+
+                if ( !ext.UNMASKED_VENDOR_WEBGL || ext.UNMASKED_VENDOR_WEBGL.indexOf( 'Intel' ) !== -1 ) {
+                    // bug is on INTEL GPU on APPLE
+                    // we disable the ext on Apple if we cannot get GPU info
+                    this._bugsDB[ 'OES_standard_derivatives' ] = true;
+
+                }
+
+            }
+
+        },
+        initPlatformSupport: function () {
+
+            var p = this._webGLPlatforms;
+
+            p.Apple = navigator.vendor.indexOf( 'Apple' ) !== -1 || navigator.vendor.indexOf( 'OS X' ) !== -1;
+
+            // degrades complexity on handhelds.
+            p.Mobile = /Mobi/.test( navigator.userAgent ) || /ablet/.test( navigator.userAgent );
+
+        },
+        getWebGLPlatform: function ( str ) {
+            return this._webGLPlatforms[ str ];
+        },
+        getWebGLPlatforms: function () {
+            return this._webGLPlatforms;
+        },
+
         getWebGLParameter: function ( str ) {
             return this._webGLParameters[ str ];
         },
@@ -30,13 +137,17 @@ define( [
         getShaderMaxPrecisionInt: function () {
             return this._webGLParameters.MAX_SHADER_PRECISION_INT;
         },
-        checkRTTSupport: function ( typeFloat, typeTexture ) {
-            var gl = this._gl;
-            if ( gl === undefined )
-                return false;
+        checkSupportRTT: function ( gl, typeFloat, typeTexture ) {
+
             var key = typeFloat + ',' + typeTexture;
+
+            // check once only
             if ( this._checkRTT[ key ] !== undefined )
                 return this._checkRTT[ key ];
+
+            // no cached results, need gl context
+            if ( !gl ) return false;
+
             // from http://codeflow.org/entries/2013/feb/22/how-to-write-portable-webgl/#how-can-i-detect-if-i-can-render-to-floating-point-textures
 
             // setup the texture
@@ -62,23 +173,20 @@ define( [
 
             return status;
         },
-        hasRTTLinearHalfFloat: function () {
-            return this._webGLExtensions[ 'OES_texture_half_float_linear' ] && this.checkRTTSupport( Texture.HALF_FLOAT, Texture.LINEAR );
+        hasLinearHalfFloatRTT: function ( gl ) {
+            return this._webGLExtensions[ 'OES_texture_half_float_linear' ] && this.checkSupportRTT( gl, Texture.HALF_FLOAT, Texture.LINEAR );
         },
-        hasRTTLinearFloat: function () {
-            return this._webGLExtensions[ 'OES_texture_float_linear' ] && this.checkRTTSupport( Texture.FLOAT, Texture.LINEAR );
+        hasLinearFloatRTT: function ( gl ) {
+            return this._webGLExtensions[ 'OES_texture_float_linear' ] && this.checkSupportRTT( gl, Texture.FLOAT, Texture.LINEAR );
         },
-        hasRTTHalfFloat: function () {
-            return this._webGLExtensions[ 'OES_texture_half_float' ] && this.checkRTTSupport( Texture.HALF_FLOAT, Texture.NEAREST );
+        hasHalfFloatRTT: function ( gl ) {
+            return this._webGLExtensions[ 'OES_texture_half_float' ] && this.checkSupportRTT( gl, Texture.HALF_FLOAT, Texture.NEAREST );
         },
-        hasRTTFloat: function () {
-            return this._webGLExtensions[ 'OES_texture_float' ] && this.checkRTTSupport( Texture.FLOAT, Texture.NEAREST );
+        hasFloatRTT: function ( gl ) {
+            return this._webGLExtensions[ 'OES_texture_float' ] && this.checkSupportRTT( gl, Texture.FLOAT, Texture.NEAREST );
         },
-        initWebGLParameters: function () {
-            var gl = this._gl;
-            if ( gl === undefined )
-                return;
-
+        initWebGLParameters: function ( gl ) {
+            if ( !gl ) return;
             var limits = [
                 'MAX_COMBINED_TEXTURE_IMAGE_UNITS',
                 'MAX_CUBE_MAP_TEXTURE_SIZE',
@@ -132,6 +240,14 @@ define( [
                 params.MAX_SHADER_PRECISION_INT = 'none';
             }
 
+            // get GPU, Angle or not, Opengl/directx, etc.
+            //  ffx && chrome only
+            var debugInfo = gl.getExtension( 'WEBGL_debug_renderer_info' );
+            if ( debugInfo ) {
+                params.UNMASKED_RENDERER_WEBGL = gl.getParameter( debugInfo.UNMASKED_VENDOR_WEBGL );
+                params.UNMASKED_VENDOR_WEBGL = gl.getParameter( debugInfo.UNMASKED_RENDERER_WEBGL );
+
+            }
             // TODO ?
             // try to compile a small shader to test the spec is respected
         },
@@ -141,15 +257,26 @@ define( [
         getWebGLExtensions: function () {
             return this._webGLExtensions;
         },
-        initWebGLExtensions: function () {
-            var gl = this._gl;
-            if ( gl === undefined )
-                return;
+        initWebGLExtensions: function ( gl, filterBugs ) {
+
+            // nodejs, phantomjs
+            if ( !gl ) return;
+
+            var doFilter = filterBugs;
+            if ( doFilter === undefined )
+                doFilter = true;
+
             var supported = gl.getSupportedExtensions();
             var ext = this._webGLExtensions;
             // we load all the extensions
             for ( var i = 0, len = supported.length; i < len; ++i ) {
                 var sup = supported[ i ];
+
+                if ( doFilter && this._bugsDB[ sup ] ) {
+                    // bugs on that configuration, do not enable
+                    continue;
+                }
+
                 ext[ sup ] = gl.getExtension( sup );
             }
 

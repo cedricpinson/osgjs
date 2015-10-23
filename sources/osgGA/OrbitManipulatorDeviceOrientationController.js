@@ -1,4 +1,6 @@
-define( [ 'osg/Quat' ], function ( Quat ) {
+define( [
+    'osg/Quat'
+], function ( Quat ) {
 
     'use strict';
 
@@ -28,7 +30,7 @@ define( [ 'osg/Quat' ], function ( Quat ) {
     var computeQuaternion = ( function () {
 
         var screenTransform = Quat.create();
-        var worldTransform = [ -Math.sqrt( 0.5 ), 0, 0, Math.sqrt( 0.5 ) ]; // - PI/2 around the x-axis
+        var worldTransform = Quat.createAndSet( -Math.sqrt( 0.5 ), 0.0, 0.0, Math.sqrt( 0.5 ) ); // - PI/2 around the x-axis
         var minusHalfAngle = 0;
 
         return function ( quat, deviceOrientation, screenOrientation ) {

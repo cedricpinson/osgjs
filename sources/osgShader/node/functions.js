@@ -44,19 +44,18 @@ define( [
 
         type: 'sRGBToLinear',
 
-        validInputs: [ 'color' /*, 'gamma'*/ ],
+        validInputs: [ 'color' ],
         validOuputs: [ 'color' ],
 
         computeShader: function () {
             return this.computeConversion( 'sRGBToLinear' );
         },
         computeConversion: function ( funcName ) {
-            var gamma = this._inputs.gamma ? this._inputs.gamma : 'DefaultGamma';
             var out = this._outputs.color;
             var color = this._inputs.color;
             var rgb = out.getType() !== color.getType() ? '.rgb' : '';
 
-            return utils.callFunction( funcName, out.getVariable() + rgb, [ color.getVariable() + rgb, gamma ] );
+            return utils.callFunction( funcName, out.getVariable() + rgb, [ color.getVariable() + rgb ] );
         }
 
     } );

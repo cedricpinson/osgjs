@@ -1,103 +1,45 @@
-#define DefaultGamma 2.4
+// references
+// https://www.khronos.org/registry/gles/extensions/EXT/EXT_sRGB.txt
 
-// coding style should be camel case except for acronyme like SRGB or HDR
-float linearTosRGB(const in float c, const in float gamma)
+// approximation
+// http://chilliant.blogspot.fr/2012/08/srgb-approximations-for-hlsl.html
+float linearTosRGB(const in float c)
 {
-  float v = 0.0;
-  if(c < 0.0031308) {
-    if ( c > 0.0)
-      v = c * 12.92;
-  } else {
-    v = 1.055 * pow(c, 1.0/gamma) - 0.055;
-  }
-  return v;
+    float S1 = sqrt(c);
+    float S2 = sqrt(S1);
+    float S3 = sqrt(S2);
+    return 0.662002687 * S1 + 0.684122060 * S2 - 0.323583601 * S3 - 0.0225411470 * c;
 }
 
-vec3 linearTosRGB(const in vec3 c, const in float gamma)
+vec3 linearTosRGB(const in vec3 c)
 {
-  vec3 v = vec3(0.0);
-  if(all(lessThan(c, vec3(0.0031308))))
-  {
-    if ( all(greaterThan(c, vec3(0.0))))
-    {
-      v = c * 12.92;
-    }
-  }
-  else
-  {
-    v = 1.055 * pow(c, vec3(1.0/gamma)) - 0.055;
-  }
-  return v;
+    vec3 S1 = sqrt(c);
+    vec3 S2 = sqrt(S1);
+    vec3 S3 = sqrt(S2);
+    return 0.662002687 * S1 + 0.684122060 * S2 - 0.323583601 * S3 - 0.0225411470 * c;
 }
 
-vec4 linearTosRGB(const in vec4 c, const in float gamma)
+vec4 linearTosRGB(const in vec4 c)
 {
-  vec4 v = vec4(0.0);
-  v.a = c.a;
-  if(all(lessThan(c.rgb, vec3(0.0031308))))
-  {
-    if ( all(greaterThan(c.rgb, vec3(0.0))))
-    {
-      v.rgb = c.rgb * 12.92;
-    }
-  }
-  else
-  {
-    v.rgb = 1.055 * pow(c.rgb, vec3(1.0/gamma)) - 0.055;
-  }
-  return v;
+    vec3 S1 = sqrt(c.rgb);
+    vec3 S2 = sqrt(S1);
+    vec3 S3 = sqrt(S2);
+    return vec4(0.662002687 * S1 + 0.684122060 * S2 - 0.323583601 * S3 - 0.0225411470 * c.rgb, c.a);
 }
 
-float sRGBToLinear(const in float c, const in float gamma)
+float sRGBToLinear(const in float c)
 {
-  float v = 0.0;
-  if ( c < 0.04045 )
-  {
-    if ( c >= 0.0 )
-      v = c * ( 1.0 / 12.92 );
-  }
-  else
-  {
-    v = pow( ( c + 0.055 ) * ( 1.0 / 1.055 ), gamma );
-  }
-  return v;
+    return c * (c * (c * 0.305306011 + 0.682171111) + 0.012522878);
 }
 
-
-vec3 sRGBToLinear(const in vec3 c, const in float gamma)
+vec3 sRGBToLinear(const in vec3 c)
 {
-
-  vec3 v = vec3(0.0);
-  if ( all(lessThan(c, vec3(0.04045)) ))
-  {
-    if ( all(greaterThanEqual(c, vec3(0.0))) )
-      {
-        v = c * ( 1.0 / 12.92 );
-      }
-  }
-  else
-  {
-      v = pow( ( c + 0.055 ) * ( 1.0 / 1.055 ), vec3(gamma) );
-  }
-  return v;
+    return c * (c * (c * 0.305306011 + 0.682171111) + 0.012522878);
 }
 
-vec4 sRGBToLinear(const in vec4 c, const in float gamma)
+vec4 sRGBToLinear(const in vec4 c)
 {
-  vec4 v = vec4(0.0);
-  v.a = c.a;
-  if ( all(lessThan(c.rgb, vec3(0.04045)) ))
-  {
-    if ( all(greaterThanEqual(c.rgb, vec3(0.0))) )
-    {
-      v.rgb = c.rgb * ( 1.0 / 12.92 );
-    }
-  }
-  else
-  {
-     v.rgb = pow( ( c.rgb + 0.055 ) * ( 1.0 / 1.055 ), vec3(gamma) );
-  }
-  return v;
+    return vec4(c.rgb * (c.rgb * (c.rgb * 0.305306011 + 0.682171111) + 0.012522878), c.a);
 }
 
 //http://graphicrants.blogspot.fr/2009/04/rgbm-color-encoding.html

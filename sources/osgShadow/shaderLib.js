@@ -1,5 +1,4 @@
 define( [
-    'osgShadow/shaders/shadowsCastVert.glsl',
     'osgShadow/shaders/shadowsCastFrag.glsl',
     'osgShadow/shaders/shadowsReceive.glsl',
     'osgShadow/shaders/shadowsReceiveMain.glsl',
@@ -13,11 +12,10 @@ define( [
     'osgShadow/shaders/esm.glsl',
     'osgShadow/shaders/vsm.glsl',
     'osgShadow/shaders/evsm.glsl'
-], function ( shadowsCastVert, shadowsCastFrag, shadowsReceive, shadowsReceiveMain, shadowLinearSoft, pcf, bandPCF, tapPCF, hash, arrayPoisson, poissonPCF, esm, vsm, evsm ) {
+], function ( shadowsCastFrag, shadowsReceive, shadowsReceiveMain, shadowLinearSoft, pcf, bandPCF, tapPCF, hash, arrayPoisson, poissonPCF, esm, vsm, evsm ) {
     'use strict';
 
     return {
-        'shadowsCastVert.glsl': shadowsCastVert,
         'shadowsCastFrag.glsl': shadowsCastFrag,
         'shadowsReceive.glsl': shadowsReceive,
         'shadowsReceiveMain.glsl': shadowsReceiveMain,

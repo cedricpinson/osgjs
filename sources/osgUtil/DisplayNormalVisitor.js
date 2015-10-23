@@ -9,8 +9,9 @@ define( [
     'osg/Uniform',
     'osg/Depth',
     'osg/Program',
-    'osg/Shader'
-], function ( MACROUTILS, NodeVisitor, Geometry, BufferArray, DrawArrays, PrimitiveSet, StateSet, Uniform, Depth, Program, Shader ) {
+    'osg/Shader',
+    'osg/Vec3'
+], function ( MACROUTILS, NodeVisitor, Geometry, BufferArray, DrawArrays, PrimitiveSet, StateSet, Uniform, Depth, Program, Shader, Vec3 ) {
 
     'use strict';
 
@@ -23,13 +24,13 @@ define( [
 
         var ns = this._normalStateSet = new StateSet();
         ns.setAttribute( DisplayNormalVisitor.getShader() );
-        ns.addUniform( Uniform.createFloat3( [ 1.0, 0.0, 0.0 ], 'uColorDebug' ) );
+        ns.addUniform( Uniform.createFloat3( Vec3.createAndSet( 1.0, 0.0, 0.0 ), 'uColorDebug' ) );
         ns.addUniform( this._unifScale );
         ns.setAttribute( new Depth( Depth.NEVER ) );
 
         var ts = this._tangentStateSet = new StateSet();
         ts.setAttribute( DisplayNormalVisitor.getShader() );
-        ts.addUniform( Uniform.createFloat3( [ 0.0, 1.0, 0.0 ], 'uColorDebug' ) );
+        ts.addUniform( Uniform.createFloat3( Vec3.createAndSet( 0.0, 1.0, 0.0 ), 'uColorDebug' ) );
         ts.addUniform( this._unifScale );
         ts.setAttribute( new Depth( Depth.NEVER ) );
     };
