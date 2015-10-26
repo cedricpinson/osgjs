@@ -12,7 +12,8 @@ var BUILD_PATH = path.join( ROOT_PATH, 'builds/dist/' );
 module.exports = {
     entry: {
         OSG: [ './sources/OSG.js' ],
-        tests: [ './tests/tests.js' ]
+        tests: [ './tests/tests.js' ],
+        benchmarks: [ './benchmarks/benchmarks.js' ]
     },
     output: {
         path: BUILD_PATH,
