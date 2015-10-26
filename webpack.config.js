@@ -12,7 +12,8 @@ var BUILD_PATH = path.join( ROOT_PATH, 'builds/dist/' );
 module.exports = {
     entry: {
         OSG: [ './sources/OSG.js' ],
-        tests: [ './tests/tests.js' ]
+        tests: [ './tests/tests.js' ],
+        performance: [ './tests/performance.js' ]
     },
     output: {
         path: BUILD_PATH,
@@ -26,6 +27,13 @@ module.exports = {
             commonjs2: 'qunit',
             commonjs: 'qunit',
             amd: 'qunit'
+        }
+    }, {
+        'benchmark': {
+            root: 'Benchmark',
+            commonjs2: 'benchmark',
+            commonjs: 'benchmark',
+            amd: 'benchmark'
         }
     }, {
         'zlib': {

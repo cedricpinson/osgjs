@@ -108,7 +108,8 @@ var gruntTasks = {};
         build: {
             entry: {
                 OSG: [ './sources/OSG.js' ],
-                tests: [ './tests/tests.js' ]
+                tests: [ './tests/tests.js' ],
+                performance: [ './tests/performance.js' ]
             },
             devtool: 'source-map',
 
@@ -124,7 +125,8 @@ var gruntTasks = {};
         builddebug: {
             entry: {
                 OSG: [ './sources/OSG.js' ],
-                tests: [ './tests/tests.js' ]
+                tests: [ './tests/tests.js' ],
+                performance: [ './tests/performance.js' ]
             },
             devtool: 'eval-source-map'
 
