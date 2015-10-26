@@ -199,7 +199,7 @@ define( [
             weights[ 0 ] = weights[ 1 ] = weights[ 2 ] = weights[ 3 ] = 0.0;
 
             // no need to swap VA or to use CPU morph
-            if ( nbTargets === 4 ) {
+            if ( nbTargets <= 4 ) {
                 for ( i = 0; i < nbTargets; ++i ) {
                     weights[ i ] = targets[ i ].value;
                 }
