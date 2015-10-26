@@ -1,10 +1,8 @@
 define( [
     'qunit',
     'tests/mockup/mockup',
-    'osg/BufferArray',
-    'osgShader/ShaderGeneratorProxy',
-    'osg/State'
-], function ( QUnit, mockup, BufferArray, ShaderGeneratorProxy, State ) {
+    'osg/BufferArray'
+], function ( QUnit, mockup, BufferArray ) {
 
     'use strict';
 
@@ -29,6 +27,10 @@ define( [
                 ok( b._buffer !== undefined, 'Check we created gl buffer' );
                 b.releaseGLObjects();
                 ok( b._buffer === undefined, 'Check we released gl buffer' );
+
+                equal( b.getType(), 0x1406, 'Check the type set is float 32' );
+                equal( b.getItemSize(), 3, 'Check item size is 3' );
+
             } )();
         } );
     };

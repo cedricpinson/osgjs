@@ -23,7 +23,7 @@ define( [
     /**
      * BufferArray manage vertex / normal / ... array used by webgl.
      * osgjs automatically converts array buffers to Float32Array and
-     * element array buffers to Uint16Array if not said explicitly with 
+     * element array buffers to Uint16Array if not said explicitly with
      * preserveArrayType variable in constructor.
      * @class BufferArray
      */
@@ -38,12 +38,14 @@ define( [
 
         this._itemSize = itemSize;
         this._target = typeof target === 'string' ? BufferArray[ target ] : target;
+
+        // initialized by setElements
         this._type = undefined;
 
         if ( elements !== undefined ) {
             var typedArray = elements;
             if ( !preserveArrayType ) {
-                if ( this._type === BufferArray.ELEMENT_ARRAY_BUFFER ) {
+                if ( this._target === BufferArray.ELEMENT_ARRAY_BUFFER ) {
                     typedArray = elements instanceof MACROUTILS.Uint16Array ? elements : new MACROUTILS.Uint16Array( elements );
                 } else {
                     typedArray = elements instanceof MACROUTILS.Float32Array ? elements : new MACROUTILS.Float32Array( elements );
