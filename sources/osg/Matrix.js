@@ -1,11 +1,12 @@
 define( [
-    'osg/BoundingBox',
     'osg/Notify',
+    'osg/Math',
+    'osg/BoundingBox',
     'osg/Plane',
     'osg/Quat',
     'osg/Vec3',
     'osg/Vec4'
-], function ( BoundingBox, Notify, Plane, Quat, Vec3, Vec4 ) {
+], function ( Notify, osgMath, BoundingBox, Plane, Quat, Vec3, Vec4 ) {
 
     'use strict';
 
@@ -28,7 +29,7 @@ define( [
         },
         valid: function ( matrix ) {
             for ( var i = 0; i < 16; i++ ) {
-                if ( isNaN( matrix[ i ] ) ) {
+                if ( osgMath.isNaN( matrix[ i ] ) ) {
                     return false;
                 }
             }

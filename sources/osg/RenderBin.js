@@ -2,9 +2,10 @@ define( [
     'osg/Utils',
 
     'osg/Notify',
-    'osg/Object'
+    'osg/Object',
+    'osg/Math'
 
-], function ( MACROUTILS, Notify, Object ) {
+], function ( MACROUTILS, Notify, Object, osgMath ) {
 
     'use strict';
 
@@ -62,7 +63,7 @@ define( [
                 var leafs = this.stateGraphList[ i ].leafs;
                 for ( var j = 0, k = leafs.length; j < k; j++ ) {
                     var leaf = leafs[ j ];
-                    if ( isNaN( leaf._depth ) ) {
+                    if ( osgMath.isNaN( leaf._depth ) ) {
                         detectedNaN = true;
                     } else {
                         this._leafs.push( leaf );

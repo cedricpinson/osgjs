@@ -1,5 +1,7 @@
 define( [], function () {
 
+    'use strict';
+
     var clamp = function ( x, min, max ) {
         // http://jsperf.com/math-clamp
         // http://jsperf.com/clamping-methods/2
@@ -11,8 +13,16 @@ define( [], function () {
         return t * t * ( 3.0 - 2.0 * t );
     };
 
+    // native isNaN is slow (e.g: https://jsperf.com/isnan-performance/2)
+    // note : native isNaN will return true for undefined but
+    // this function assume that x is a number
+    var isNaN = function ( x ) {
+        return x !== x;
+    };
+
     return {
         clamp: clamp,
-        smoothStep: smoothStep
+        smoothStep: smoothStep,
+        isNaN: isNaN
     };
 } );

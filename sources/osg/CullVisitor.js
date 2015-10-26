@@ -1,6 +1,7 @@
 define( [
     'osg/Notify',
     'osg/Utils',
+    'osg/Math',
     'osg/NodeVisitor',
     'osg/CullSettings',
     'osg/CullStack',
@@ -21,7 +22,7 @@ define( [
     'osgAnimation/RigGeometry',
     'osgAnimation/Bone',
     'osgAnimation/MorphGeometry'
-], function ( Notify, MACROUTILS, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderLeaf, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec3, Skeleton, RigGeometry, Bone, MorphGeometry ) {
+], function ( Notify, MACROUTILS, osgMath, NodeVisitor, CullSettings, CullStack, Matrix, MatrixTransform, Projection, LightSource, Geometry, RenderLeaf, RenderStage, Node, Lod, PagedLOD, Camera, TransformEnums, Vec3, Skeleton, RigGeometry, Bone, MorphGeometry ) {
     'use strict';
 
     /**
@@ -538,7 +539,7 @@ define( [
             if ( bb.valid() ) {
                 depth = this.distance( bb.center( tempVec ), modelview );
             }
-            if ( isNaN( depth ) ) {
+            if ( osgMath.isNaN( depth ) ) {
                 Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec );
             } else {
 
