@@ -1,5 +1,5 @@
 define( [
-    'osg/Matrix',
+    'osg/Matrix'
 ], function ( Matrix ) {
 
     'use strict';
