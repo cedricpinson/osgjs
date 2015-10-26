@@ -91,6 +91,7 @@ define( [
                 // The text could be dynamic, so we need to remove GL objects
                 this._geometry.releaseGLObjects();
             }
+            if ( !this._text ) return;
             this.setTextProperties();
             this._canvas.width = this._context.measureText( this._text ).width;
             this._canvas.height = this._fontSize * 2;
@@ -99,7 +100,7 @@ define( [
                 this._canvas.width = this._nextPowerOfTwo( this._canvas.width );
                 this._canvas.height = this._nextPowerOfTwo( this._canvas.height );
             }
-            // We need to set the text properties again, as the canvas size could change.
+            // We need to set the text properties again, as the canvas size cold change.
             this.setTextProperties();
             this._context.clearRect( 0, 0, this._canvas.width, this._canvas.height );
             this._context.fillText( this._text, this._textX, this._textY );
@@ -302,7 +303,8 @@ define( [
         getForcePowerOfTwo: function () {
             return this._forcePowerOfTwo;
         },
-        _nextPowerOfTwo: function ( v ) {
+        _nextPowerOfTwo: function ( value ) {
+            var v = value;
             v--;
             v |= v >> 1;
             v |= v >> 2;
