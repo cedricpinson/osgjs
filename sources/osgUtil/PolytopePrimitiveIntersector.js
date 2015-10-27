@@ -4,9 +4,12 @@
 
 define( [
     'osg/Utils',
+    'osg/Math',
     'osg/Vec3',
     'osg/PrimitiveFunctor'
-], function ( MACROUTILS, Vec3, PrimitiveFunctor ) {
+], function ( MACROUTILS, osgMath, Vec3, PrimitiveFunctor ) {
+
+    'use strict';
 
     var PolytopeIntersection = function ( index, candidates, candidatesMasks, referencePlane, nodePath ) {
         this._index = index - 1; ///< primitive index
@@ -389,7 +392,7 @@ define( [
                         Vec3.cross( lineDirection, normal1, searchDirection );
                         //-plane2.distance(point1)/(searchDirection*normal2);
                         var searchDist = -this.distance( this._planes[ jt ], point1 ) / Vec3.dot( searchDirection, normal2 );
-                        if ( isNaN( searchDist ) ) continue;
+                        if ( osgMath.isNaN( searchDist ) ) continue;
                         Vec3.mult( searchDirection, searchDist, linePoint );
                         Vec3.add( point1, lineDirection, lineDirection );
                         this._lines.push( new PlanesLine( selectorMask | subSelectorMask, Vec3.copy( linePoint, Vec3.create() ), Vec3.copy( lineDirection, Vec3.create() ) ) );

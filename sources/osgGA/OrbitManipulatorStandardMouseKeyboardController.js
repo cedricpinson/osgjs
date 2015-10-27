@@ -1,6 +1,7 @@
 define( [
+    'osg/Math',
     'osgGA/OrbitManipulatorEnums'
-], function ( OrbitManipulatorEnums ) {
+], function ( osgMath, OrbitManipulatorEnums ) {
 
     'use strict';
 
@@ -37,7 +38,7 @@ define( [
             }
             var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
             var manipulator = this._manipulator;
-            if ( isNaN( pos[ 0 ] ) === false && isNaN( pos[ 1 ] ) === false ) {
+            if ( osgMath.isNaN( pos[ 0 ] ) === false && osgMath.isNaN( pos[ 1 ] ) === false ) {
 
                 var mode = this.getMode();
                 if ( mode === OrbitManipulatorEnums.ROTATE ) {

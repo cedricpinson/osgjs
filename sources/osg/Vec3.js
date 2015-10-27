@@ -1,4 +1,6 @@
-define( [], function () {
+define( [
+    'osg/Math'
+], function ( osgMath ) {
 
     'use strict';
 
@@ -45,15 +47,9 @@ define( [], function () {
         },
 
         valid: function ( a ) {
-            if ( isNaN( a[ 0 ] ) ) {
-                return false;
-            }
-            if ( isNaN( a[ 1 ] ) ) {
-                return false;
-            }
-            if ( isNaN( a[ 2 ] ) ) {
-                return false;
-            }
+            if ( osgMath.isNaN( a[ 0 ] ) ) return false;
+            if ( osgMath.isNaN( a[ 1 ] ) ) return false;
+            if ( osgMath.isNaN( a[ 2 ] ) ) return false;
             return true;
         },
 
