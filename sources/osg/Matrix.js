@@ -1224,43 +1224,29 @@ define( [
             };
         } )(),
 
-        multScale: function ( x, y, z, m, res ) {
+        preMultScale: function ( m, scale ) {
 
-            if ( !res ) {
+            var x = scale[ 0 ];
+            var y = scale[ 1 ];
+            var z = scale[ 2 ];
 
-                Notify.warn( 'no matrix destination !' );
-                res = Matrix.create();
+            m[ 0 ] *= x;
+            m[ 4 ] *= y;
+            m[ 8 ] *= z;
 
-            }
+            m[ 1 ] *= x;
+            m[ 5 ] *= y;
+            m[ 9 ] *= z;
 
-            // Optimize real case
-            // which is in place scale
-            // less often scale to new matrix
-            // is less optimized
-            if ( m !== res ) {
+            m[ 2 ] *= x;
+            m[ 6 ] *= y;
+            m[ 10 ] *= z;
 
-                // fill CPU cache L1
-                Matrix.copy( m, res );
+            m[ 3 ] *= x;
+            m[ 7 ] *= y;
+            m[ 11 ] *= z;
 
-            }
-
-            res[ 0 ] *= x;
-            res[ 4 ] *= y;
-            res[ 8 ] *= z;
-
-            res[ 1 ] *= x;
-            res[ 5 ] *= y;
-            res[ 9 ] *= z;
-
-            res[ 2 ] *= x;
-            res[ 6 ] *= y;
-            res[ 10 ] *= z;
-
-            res[ 3 ] *= x;
-            res[ 7 ] *= y;
-            res[ 11 ] *= z;
-
-            return res;
+            return m;
 
         },
 

@@ -39,7 +39,7 @@ define( [
 
             var scale = this._target.value;
 
-            Matrix.multScale( scale[ 0 ], scale[ 1 ], scale[ 2 ], m, m );
+            Matrix.preMultScale( m, scale );
 
         }
 
