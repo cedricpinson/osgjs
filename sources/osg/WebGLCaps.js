@@ -16,6 +16,24 @@ define( [
 
         this._bugsDB = {};
         this._webGLPlatforms = {};
+
+        // webgl minimum requirements as per webgl specs
+        // useful for nodejs env
+        this._webGLParameters[ 'MAX_COMBINED_TEXTURE_IMAGE_UNITS' ] = 8;
+        this._webGLParameters[ 'MAX_CUBE_MAP_TEXTURE_SIZE' ] = 16;
+        this._webGLParameters[ 'MAX_FRAGMENT_UNIFORM_VECTORS' ] = 16;
+        this._webGLParameters[ 'MAX_RENDERBUFFER_SIZE' ] = 1;
+        this._webGLParameters[ 'MAX_TEXTURE_IMAGE_UNITS' ] = 8;
+        this._webGLParameters[ 'MAX_TEXTURE_SIZE' ] = 64;
+        this._webGLParameters[ 'MAX_VARYING_VECTORS' ] = 8;
+        this._webGLParameters[ 'MAX_VERTEX_ATTRIBS' ] = 8;
+        this._webGLParameters[ 'MAX_VERTEX_TEXTURE_IMAGE_UNITS' ] = 0;
+        this._webGLParameters[ 'MAX_VERTEX_UNIFORM_VECTORS' ] = 128;
+        this._webGLParameters[ 'MAX_VIEWPORT_DIMS' ] = [ 1, 1 ];
+        this._webGLParameters[ 'NUM_COMPRESSED_TEXTURE_FORMATS' ] = 0;
+        this._webGLParameters[ 'MAX_SHADER_PRECISION_FLOAT' ] = 'none';
+        this._webGLParameters[ 'MAX_SHADER_PRECISION_INT' ] = 'none';
+
     };
 
     WebGLCaps.instance = function () {
@@ -225,8 +243,6 @@ define( [
                 params.MAX_SHADER_PRECISION_FLOAT = 'medium';
             } else if ( gl.getShaderPrecisionFormat( gl.FRAGMENT_SHADER, gl.LOW_FLOAT ).precision !== 0 ) {
                 params.MAX_SHADER_PRECISION_FLOAT = 'low';
-            } else {
-                params.MAX_SHADER_PRECISION_FLOAT = 'none';
             }
 
             //shader precisions for float
@@ -236,8 +252,6 @@ define( [
                 params.MAX_SHADER_PRECISION_INT = 'medium';
             } else if ( gl.getShaderPrecisionFormat( gl.FRAGMENT_SHADER, gl.LOW_INT ).precision !== 0 ) {
                 params.MAX_SHADER_PRECISION_INT = 'low';
-            } else {
-                params.MAX_SHADER_PRECISION_INT = 'none';
             }
 
             // get GPU, Angle or not, Opengl/directx, etc.
