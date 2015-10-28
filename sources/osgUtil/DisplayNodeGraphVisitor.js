@@ -1,8 +1,9 @@
 define( [
     'osg/Utils',
-    'osg/NodeVisitor'
+    'osg/NodeVisitor',
+    'osgAnimation/MorphGeometry'
 
-], function ( MACROUTILS, NodeVisitor ) {
+], function ( MACROUTILS, NodeVisitor, MorphGeometry ) {
 
     'use strict';
 
@@ -68,9 +69,9 @@ define( [
     var DisplayNodeGraphVisitor = function () {
         NodeVisitor.call( this, NodeVisitor.TRAVERSE_ALL_CHILDREN );
 
-        this._fullNodeList = [];
-        this._nodeList = [];
-        this._linkList = [];
+        this._fullNodeList = []; // indexed with instanceID, references nodes, stateSet, sourceGeometry...
+        this._nodeList = []; // array with all the nodes
+        this._linkList = []; // edges
         this._focusedElement = 'graph';
 
         this._idToDomElement = new window.Map();
@@ -93,28 +94,7 @@ define( [
                 return;
 
             if ( this._fullNodeList[ node.getInstanceID() ] !== node ) {
-
-                var nodeMatrix = '';
-                if ( node.getMatrix ) {
-                    nodeMatrix = this.createMatrixGrid( node, nodeMatrix, node.getMatrix() );
-                }
-
-                var stateset = '';
-                if ( node.getStateSet() ) {
-                    stateset = this.createStateset( node );
-                    this._fullNodeList[ stateset.name ] = node.getStateSet();
-                }
-
-                this._fullNodeList[ node.getInstanceID() ] = node;
-
-                this._nodeList.push( {
-                    name: node.getName(),
-                    className: node.className(),
-                    instanceID: node.getInstanceID(),
-                    stateset: stateset,
-                    matrix: nodeMatrix
-                } );
-
+                this._nodeList.push( node );
             }
 
             if ( this.nodePath.length >= 2 ) {
@@ -282,41 +262,106 @@ define( [
         },
         // Subfunction of createGraph, will iterate to create all the node and link in dagre
         generateNodeAndLink: function ( g ) {
-            var nodeLength = this._nodeList.length;
-            for ( var i = 0; i < nodeLength; i++ ) {
-                var element = this._nodeList[ i ];
 
-                g.addNode( element.instanceID, {
-                    label: element.className + ( element.name ? '\n' + element.name : '' ),
-                    description: ( element.matrix !== '' ? '<br /><br />' : '' ) + element.matrix
+            var fullNodeList = this._fullNodeList;
+            var nodeList = this._nodeList;
+            var i = 0;
+            var nodeLength = nodeList.length;
+
+            for ( i = 0; i < nodeLength; i++ ) {
+                var node = nodeList[ i ];
+
+                fullNodeList[ node.getInstanceID() ] = node;
+
+                var description = '';
+                if ( node.getMatrix && node.getMatrix() ) {
+                    description += '<br /><br />' + this.createMatrixGrid( node, node.getMatrix() );
+                }
+
+                g.addNode( node.getInstanceID(), {
+                    label: node.className() + ( node.getName() ? '\n' + node.getName() : '' ),
+                    description: description,
+                    style: 'fill: ' + this.getColorFromClassName( node.className() ) + ';stroke-width: 0px;'
                 } );
 
-                if ( element.stateset ) {
+                //////////////////
+                // STATESET
+                //////////////////
+                var stateSet = node.getStateSet();
+                if ( stateSet ) {
 
-                    if ( !g.hasNode( element.stateset.name ) ) {
-                        g.addNode( element.stateset.name, {
+                    var stateSetID = stateSet.getInstanceID();
+                    fullNodeList[ stateSetID ] = stateSet;
+
+                    if ( !g.hasNode( stateSetID ) ) {
+                        g.addNode( stateSetID, {
                             label: 'StateSet',
-                            description: 'numTexture : ' + element.stateset.numTexture,
-                            style: 'fill: #0099FF;stroke-width: 0px;'
+                            description: 'numTexture : ' + stateSet.getNumTextureAttributeLists(),
+                            style: 'fill: ' + this.getColorFromClassName( stateSet.className() ) + ';stroke-width: 0px;'
                         } );
                     }
 
-                    g.addEdge( null, element.instanceID, element.stateset.name, {
-                        style: 'stroke: #0099FF;'
+                    g.addEdge( null, node.getInstanceID(), stateSetID, {
+                        style: 'stroke: ' + this.getColorFromClassName( stateSet.className() ) + ';'
+                    } );
+                }
+
+                //////////////////
+                // SOURCE GEOMETRY
+                //////////////////
+                var sourceGeom = node.getSourceGeometry && node.getSourceGeometry();
+                if ( sourceGeom && sourceGeom instanceof MorphGeometry ) {
+
+                    var sourceGeomID = sourceGeom.getInstanceID();
+                    fullNodeList[ sourceGeomID ] = stateSet;
+
+                    g.addNode( sourceGeomID, {
+                        label: sourceGeom.className() + ( sourceGeom.getName() ? '\n' + sourceGeom.getName() : '' ),
+                        style: 'fill: ' + this.getColorFromClassName( sourceGeom.className() ) + ';stroke-width: 0px;'
+                    } );
+
+                    g.addEdge( null, node.getInstanceID(), sourceGeomID, {
+                        style: 'stroke: ' + this.getColorFromClassName( sourceGeom.className() ) + ';'
                     } );
                 }
             }
 
+            var linkList = this._linkList;
             var linkLength = this._linkList.length;
             for ( i = 0; i < linkLength; i++ ) {
-                g.addEdge( null, this._linkList[ i ].parentNode, this._linkList[ i ].childrenNode );
+                g.addEdge( null, linkList[ i ].parentNode, linkList[ i ].childrenNode );
             }
 
             return g;
         },
 
+        getColorFromClassName: function ( name ) {
+            switch ( name ) {
+            case 'Geometry':
+                return '#FFCC55';
+            case 'RigGeometry':
+                return '#DD8800';
+            case 'MorphGeometry':
+                return '#AA5500';
+            case 'MatrixTransform':
+                return '#CE697E';
+            case 'StateSet':
+                return '#0099FF';
+            case 'Skeleton':
+                return '#96999E';
+            case 'Bone':
+                return '#A9DEAA';
+            case 'Node':
+                return '#FFFFFF';
+            default:
+                return '#FF00AA';
+            }
+        },
+
         // Create an array to display the matrix
-        createMatrixGrid: function ( node, nodeMatrix, matrixArray ) {
+        createMatrixGrid: function ( node, matrixArray ) {
+
+            var nodeMatrix = '';
 
             nodeMatrix += '<table><tr><td>' + matrixArray[ 0 ] + '</td>';
             nodeMatrix += '<td>' + matrixArray[ 4 ] + '</td>';
@@ -339,16 +384,6 @@ define( [
             nodeMatrix += '<td>' + matrixArray[ 15 ] + '</td></tr></table>';
 
             return nodeMatrix;
-        },
-
-        // Get the stateset and create the stateset display structure
-        createStateset: function ( node ) {
-            return {
-                name: node.getStateSet().getInstanceID(),
-                parentID: node.getInstanceID(),
-                stateset: node.getStateSet(),
-                numTexture: node.getStateSet().getNumTextureAttributeLists()
-            };
         },
 
         getFullNodeList: function () {

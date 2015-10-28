@@ -155,11 +155,8 @@ define( [
             var orgEvent = event || window.event,
                 args = [].slice.call( arguments, 1 ),
                 delta = 0,
-                //returnValue = true,
                 deltaX = 0,
                 deltaY = 0;
-            if ( event.type !== 'mousewheel' )
-                event.type = 'mousewheel';
 
             // Old school scrollwheel delta
             if ( event.wheelDelta ) {
