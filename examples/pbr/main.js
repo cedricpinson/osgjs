@@ -95,7 +95,8 @@
     } )( optionsURL );
 
 
-    var linear2Srgb = function ( value, gamma ) {
+    var linear2Srgb = function ( value, gammaIn ) {
+        var gamma = gammaIn;
         if ( !gamma ) gamma = 2.2;
         var result = 0.0;
         if ( value < 0.0031308 ) {
@@ -121,7 +122,10 @@
 
     var modelsPBR = [ 'cerberus', 'c3po', 'devastator' ];
 
-    var modelList = [ 'sphere', 'model' ].concat( modelsPBR );
+    var modelList = [ 'sphere', 'model' ];
+    if ( window.useExternalModels ) {
+        modelList = modelList.concat( modelsPBR );
+    }
 
 
     var Example = function () {
@@ -151,6 +155,11 @@
             model: modelList[ 0 ],
             mobile: isMobileDevice()
         };
+
+        if ( window.useExternalModels )
+            $( '#model-list' )[ 0 ].innerHTML = 'Cerberus by Andrew Maximov / Devastator by Pasha GubaInsania / C3PO by Christian Hecht / <a href=\'https://github.com/lighttransport/lighttransportequation-orb\'>lighttransportequation orb</a> by Syoyo Fujita';
+        else
+            $( '#model-list' )[ 0 ].innerHTML = '<a href=\'https://github.com/lighttransport/lighttransportequation-orb\'>lighttransportequation orb</a> by Syoyo Fujita';
 
         this.updateAlbedo();
 
@@ -222,7 +231,8 @@
             return this._texture1111;
         },
 
-        createTextureFromColor: function ( colorInput, srgb, textureOutput ) {
+        createTextureFromColor: function ( colorArg, srgb, textureOutput ) {
+            var colorInput = colorArg;
             var albedo = new osg.Uint8Array( 4 );
 
             if ( typeof colorInput === 'number' ) {
@@ -279,7 +289,7 @@
 
                 'sphericalHarmonics.glsl',
                 'sphericalHarmonicsVertex.glsl',
-                'sphericalHarmonicsFragment.glsl',
+                'sphericalHarmonicsFragment.glsl'
 
             ];
 
@@ -292,7 +302,7 @@
             var promises = [];
             shaders.forEach( function ( shader ) {
                 promises.push( P.resolve( $.get( shader ) ) );
-            }.bind( this ) );
+            } );
 
 
             P.all( promises ).then( function ( args ) {
@@ -306,7 +316,7 @@
 
                 defer.resolve();
 
-            }.bind( this ) );
+            } );
 
             return defer.promise;
         },
@@ -437,7 +447,9 @@
             // create the environment sphere
             var size = 500;
             //var geom = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
-            var geom = osg.createTexturedSphereGeometry( size / 2, 20, 20 ); // to use the same shader panorama
+
+             // to use the same shader panorama
+            var geom = osg.createTexturedSphereGeometry( size / 2, 20, 20 );
             var ss = geom.getOrCreateStateSet();
             geom.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
             geom.getOrCreateStateSet().setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
@@ -481,7 +493,7 @@
             var info = {};
             var proj = [];
             var UpdateCallback = function () {
-                this.update = function ( /*node, nv*/) {
+                this.update = function () {
                     var rootCam = self._viewer.getCamera();
 
                     osg.Matrix.getPerspective( rootCam.getProjectionMatrix(), info );
@@ -866,7 +878,6 @@
             }
 
 
-
             var texture;
             if ( this._config.pbr === 'UE4' ) {
                 texture = this._currentEnvironment.getCubemapUE4()[ this._config.format ].getTexture();
@@ -901,7 +912,7 @@
                 // set the stateSet of the environment geometry
                 this._environmentStateSet.setAttributeAndModes(
                     this.createShaderCubemap( [
-                        '#define ' + this._config.format,
+                        '#define ' + this._config.format
                     ] ) );
 
                 var textureBackground = this._currentEnvironment.getBackgroundCubemap()[ this._config.format ].getTexture();
@@ -912,36 +923,34 @@
             }
             return;
 
+            // if ( false ) {
+            //     // set the stateSet of the environment geometry
+            //     this._environmentStateSet.setAttributeAndModes(
+            //         this.createShaderCubemap( [
+            //             '#define ' + this._config.format
+            //         ] ) );
+            // }
 
+            // this._environmentStateSet.setAttributeAndModes(
+            //     this.createShaderPanorama( [
+            //         '#define PANORAMA',
+            //         '#define BACKGROUND'
+            //     ] ) );
 
-            if ( false ) {
-                // set the stateSet of the environment geometry
-                this._environmentStateSet.setAttributeAndModes(
-                    this.createShaderCubemap( [
-                        '#define ' + this._config.format,
-                    ] ) );
-            }
+            // var url = this._currentEnvironment.getBackgroundPanorama()[ 'srgb' ].getFile();
+            // var img = osgDB.readImageURL( url, {
+            //     imageLoadingUsePromise: true
+            // } );
 
-            this._environmentStateSet.setAttributeAndModes(
-                this.createShaderPanorama( [
-                    '#define PANORAMA',
-                    '#define BACKGROUND'
-                ] ) );
+            // img.then( function ( image ) {
 
-            var url = this._currentEnvironment.getBackgroundPanorama()[ 'srgb' ].getFile();
-            var img = osgDB.readImageURL( url, {
-                imageLoadingUsePromise: true
-            } );
+            //     var texture = this._currentEnvironment.getBackgroundPanorama()[ 'srgb' ].createRGB( image );
+            //     this._environmentStateSet.setTextureAttributeAndModes( 0, texture );
+            //     var w = texture.getWidth();
+            //     this._environmentStateSet.addUniform( osg.Uniform.createFloat2( [ w, w / 2 ], 'uEnvironmentSize' ) );
+            //     this._environmentStateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironment' ) );
 
-            img.then( function ( image ) {
-
-                var texture = this._currentEnvironment.getBackgroundPanorama()[ 'srgb' ].createRGB( image );
-                this._environmentStateSet.setTextureAttributeAndModes( 0, texture );
-                var w = texture.getWidth();
-                this._environmentStateSet.addUniform( osg.Uniform.createFloat2( [ w, w / 2 ], 'uEnvironmentSize' ) );
-                this._environmentStateSet.addUniform( osg.Uniform.createInt1( 0, 'uEnvironment' ) );
-
-            }.bind( this ) );
+            // }.bind( this ) );
 
         },
 
@@ -1039,24 +1048,20 @@
 
             }.bind( this ) );
 
-
-
             return root;
-
         },
 
         readEnvConfig: function ( file ) {
 
             var d = P.defer();
-
             var p = P.resolve( $.get( file ) );
 
             p.then( function ( text ) {
-                var config = text;
 
+                var config = text;
                 d.resolve( config );
 
-            }.bind( this ) );
+            } );
 
             return d.promise;
         },
@@ -1077,50 +1082,9 @@
 
             var ready = [];
 
-            //var environment = 'textures/parking/';
-            //var environment = 'textures/path/';
-            //var environment = 'textures/field/';
-            //var environment = 'textures/bus_garage3/';
-            //            var environment = 'textures/bus_garage8/';
-            //            var environment = 'textures/bus_garage9/';
-            //            var environment = 'textures/bus_garagea/';
-            //            var environment = 'textures/bus_garageb/';
-            var environment = 'textures/industrial_room/';
-            var environment = 'textures/deinterleave/';
-            var environment = 'textures/parking_65k_nomipmap/';
-            var environment = 'textures/parking_2k_mipmap/';
-            var environment = 'textures/parking_4k_mipmap/';
-            var environment = 'textures/parking_8k_mipmap/';
-            var environment = 'textures/parking_2k_1024_mipmap/';
-            var environment = 'textures/parking_8k_1024_mipmap/';
-            var environment = 'textures/parking_8k_bias1_1024_mipmap/';
-            var environment = 'textures/parking_2k_bias1_1024_mipmap/';
-            var environment = 'textures/parking_2k_constant_sample_bias1_1024_mipmap/';
-            var environment = 'textures/city_night_lights/';
-            var environment = 'textures/city_night_lights2/';
-            var environment = 'textures/city_night_lights3/';
-            var environment = 'textures/city_night_lights4/';
-            //var environment = 'textures/city_night_lights_cl/';
-            var environment = 'textures/city_night_lights_cl2/';
-            var environment = 'textures/city_night_lights_cl3/';
-            var environment = 'textures/city_night_lights_cl4/';
-            var environment = 'textures/city_night_lights_cl5/';
-            var environment = 'textures/city_night_lights4/';
-            var environment = 'textures/city_night_lights_cl7/';
-            var environment = 'textures/city_night_lights_cl8/';
-            var environment = 'textures/city_night_lights_cl9/';
-            var environment = 'textures/city_night_lights_cla/';
-            var environment = 'textures/city_night_lights_clb/';
-            var environment = 'textures/city_night_lights_clc/';
-            var environment = 'textures/city_night_lights_cld/';
-            var environment = 'textures/city_night_bg_highres/';
-            var environment = 'textures/parking_2k_constant_sample_bias1_1024_mipmap/';
-            var environment = 'textures/city_night_reference/';
-            //var environment = 'textures/parking_reference/';
-            var environment = 'textures/city_night_reference_1024/';
-            var environment = 'textures/city_night_reference_2048/';
-
-            var environment = 'textures/' + ( optionsURL.env ? optionsURL.env : 'parking_reference' ) + '/';
+            var environment;
+            // environment = 'textures/city_night_reference_2048/';
+            environment = 'textures/' + ( optionsURL.env ? optionsURL.env : 'parking_reference' ) + '/';
 
 
             //var environment = 'textures/bus_garage5/';
@@ -1238,7 +1202,8 @@
         },
 
         // http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
-        computeHammersleyReverse: function ( a ) {
+        computeHammersleyReverse: function ( b ) {
+            var a = b;
             a = ( a << 16 | a >>> 16 ) >>> 0;
             a = ( ( a & 1431655765 ) << 1 | ( a & 2863311530 ) >>> 1 ) >>> 0;
             a = ( ( a & 858993459 ) << 2 | ( a & 3435973836 ) >>> 2 ) >>> 0;
@@ -1312,16 +1277,19 @@
 
             var r, g, b;
 
-            if ( color.length === 3 ) { // rgb [255, 255, 255]
+            // rgb [255, 255, 255]
+            if ( color.length === 3 ) {
                 r = color[ 0 ];
                 g = color[ 1 ];
                 b = color[ 2 ];
 
-            } else if ( color.length === 7 ) { // hex (24 bits style) '#ffaabb'
+            } else if ( color.length === 7 ) {
+
+                // hex (24 bits style) '#ffaabb'
                 var intVal = parseInt( color.slice( 1 ), 16 );
-                r = ( intVal >> 16 );
-                g = ( intVal >> 8 & 0xff );
-                b = ( intVal & 0xff );
+                r = intVal >> 16;
+                g = intVal >> 8 & 0xff;
+                b = intVal & 0xff;
             }
 
             var result = [ 0, 0, 0, 1 ];
@@ -1393,7 +1361,7 @@
                 '}',
                 ''
             ].join( '\n' ), {
-                'source': sourceTexture
+                source: sourceTexture
             } );
 
             composer.addPass( reduce, destinationTexture, textureTarget );
@@ -1420,8 +1388,6 @@
 
 
     } );
-
-
 
 
     window.addEventListener( 'load', function () {
