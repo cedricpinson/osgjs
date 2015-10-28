@@ -108,7 +108,8 @@ var gruntTasks = {};
         build: {
             entry: {
                 OSG: [ './sources/OSG.js' ],
-                tests: [ './tests/tests.js' ]
+                tests: [ './tests/tests.js' ],
+                benchmarks: [ './benchmarks/benchmarks.js' ]
             },
             devtool: 'source-map',
 
@@ -124,7 +125,8 @@ var gruntTasks = {};
         builddebug: {
             entry: {
                 OSG: [ './sources/OSG.js' ],
-                tests: [ './tests/tests.js' ]
+                tests: [ './tests/tests.js' ],
+                benchmarks: [ './benchmarks/benchmarks.js' ]
             },
             devtool: 'eval-source-map'
 
@@ -468,6 +470,10 @@ var generateVersionFile = function () {
             }, {
                 expand: true,
                 src: [ 'tests/**' ],
+                dest: path.join( BUILD_PATH, 'web/' )
+            }, {
+                expand: true,
+                src: [ 'benchmarks/**' ],
                 dest: path.join( BUILD_PATH, 'web/' )
             }, {
                 expand: true,

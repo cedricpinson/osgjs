@@ -35,6 +35,7 @@ define( [
     'osg/Material',
     'osg/Math',
     'osg/Matrix',
+    'osg/MatrixMemoryPool',
     'osg/MatrixTransform',
     'osg/Node',
     'osg/NodeVisitor',
@@ -111,6 +112,7 @@ define( [
     Material,
     Math,
     Matrix,
+    MatrixMemoryPool,
     MatrixTransform,
     Node,
     NodeVisitor,
@@ -193,6 +195,7 @@ define( [
     MACROUTILS.objectMix( osg, Math );
     osg.Matrix = Matrix;
     osg.MatrixTransform = MatrixTransform;
+    osg.MatrixMemoryPool = MatrixMemoryPool;
     osg.Node = Node;
     osg.NodeVisitor = NodeVisitor;
     MACROUTILS.objectMix( osg, Notify );

@@ -2,17 +2,22 @@ define( [
     'osg/BoundingBox',
     'osg/Geometry',
     'osg/Matrix',
+    'osg/MatrixMemoryPool',
     'osg/MatrixTransform',
     'osg/NodeVisitor',
     'osg/Utils'
 
-], function ( BoundingBox, Geometry, Matrix, MatrixTransform, NodeVisitor, MACROUTILS ) {
+], function ( BoundingBox, Geometry, Matrix, MatrixMemoryPool, MatrixTransform, NodeVisitor, MACROUTILS ) {
 
     'use strict';
 
     var ComputeBoundsVisitor = function ( traversalMode ) {
         NodeVisitor.call( this, traversalMode );
 
+        // keep a matrix in memory to avoid to create matrix
+        this._reservedMatrixStack = new MatrixMemoryPool();
+
+        // Matrix stack along path traversal
         this._matrixStack = [];
         this._bb = new BoundingBox();
     };
@@ -20,6 +25,7 @@ define( [
     ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
         reset: function () {
+            this._reservedMatrixStack.reset();
             this._matrixStack.length = 0;
             this._bb.init();
         },
@@ -36,7 +42,7 @@ define( [
 
         applyTransform: function ( transform ) {
 
-            var matrix = Matrix.create();
+            var matrix = this._reservedMatrixStack.get();
             var stackLength = this._matrixStack.length;
 
             if ( stackLength )
@@ -96,6 +102,7 @@ define( [
         getMatrixStack: function () {
             return this._matrixStack;
         }
+
 
     } ), 'osg', 'ComputeBoundsVisitor' );
 

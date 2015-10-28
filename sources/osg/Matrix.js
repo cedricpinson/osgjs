@@ -1224,6 +1224,32 @@ define( [
             };
         } )(),
 
+        preMultScale: function ( m, scale ) {
+
+            var x = scale[ 0 ];
+            var y = scale[ 1 ];
+            var z = scale[ 2 ];
+
+            m[ 0 ] *= x;
+            m[ 4 ] *= y;
+            m[ 8 ] *= z;
+
+            m[ 1 ] *= x;
+            m[ 5 ] *= y;
+            m[ 9 ] *= z;
+
+            m[ 2 ] *= x;
+            m[ 6 ] *= y;
+            m[ 10 ] *= z;
+
+            m[ 3 ] *= x;
+            m[ 7 ] *= y;
+            m[ 11 ] *= z;
+
+            return m;
+
+        },
+
         makeScale: function ( x, y, z, result ) {
             if ( result === undefined ) {
                 Notify.warn( 'no matrix destination !' );

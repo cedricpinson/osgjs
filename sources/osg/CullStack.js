@@ -6,12 +6,13 @@ define( [
     'osg/CullSettings',
     'osg/CullingSet',
     'osg/Matrix',
+    'osg/MatrixMemoryPool',
     'osg/MatrixTransform',
     'osg/Notify',
     'osg/Plane',
     'osg/TransformEnums',
     'osg/Vec3'
-], function ( MACROUTILS, BoundingSphere, Camera, ComputeMatrixFromNodePath, CullSettings, CullingSet, Matrix, MatrixTransform, Notify, Plane, TransformEnums, Vec3 ) {
+], function ( MACROUTILS, BoundingSphere, Camera, ComputeMatrixFromNodePath, CullSettings, CullingSet, Matrix, MatrixMemoryPool, MatrixTransform, Notify, Plane, TransformEnums, Vec3 ) {
     'use strict';
 
     var CullStack = function () {
@@ -24,16 +25,12 @@ define( [
         this._bbCornerNear = 0;
 
         // keep a matrix in memory to avoid to create matrix
-        this._reserveMatrixStack = [
-            Matrix.create()
-        ];
-        this._reserveMatrixStack.current = 0;
+        this._reservedMatrixStack = new MatrixMemoryPool();
 
         this._reserveCullingSetStack = [
             new CullingSet()
         ];
         this._reserveCullingSetStack.current = 0;
-
 
 
         // data for caching camera matrix inverse for computation of world/view
@@ -49,14 +46,6 @@ define( [
 
     CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
 
-        _getReservedMatrix: function () {
-            var m = this._reserveMatrixStack[ this._reserveMatrixStack.current++ ];
-            if ( this._reserveMatrixStack.current === this._reserveMatrixStack.length ) {
-                this._reserveMatrixStack.push( Matrix.create() );
-            }
-            return m;
-        },
-
         _getReservedCullingSet: function () {
             var m = this._reserveCullingSetStack[ this._reserveCullingSetStack.current++ ];
             if ( this._reserveCullingSetStack.current === this._reserveCullingSetStack.length ) {
@@ -69,8 +58,7 @@ define( [
             this._projectionMatrixStack.length = 0;
             this._cullingSetStack.length = 0;
 
-            this._reserveMatrixStack.current = 0;
-            this._reserveCullingSetStack.current = 0;
+            this._reservedMatrixStack.reset();
 
             this._cameraModelViewIndexStack.length = 0;
             this._cameraIndexStack.length = 0;
@@ -111,7 +99,7 @@ define( [
             if ( this._cameraMatrixInverse[ id ] === undefined ) {
                 var indexInModelViewMatrixStack = this._cameraModelViewIndexStack[ this._cameraModelViewIndexStack.length - 1 ];
                 var mat = this._modelViewMatrixStack[ indexInModelViewMatrixStack ];
-                var matInverse = this._getReservedMatrix();
+                var matInverse = this._reservedMatrixStack.get();
                 Matrix.inverse( mat, matInverse );
                 this._cameraMatrixInverse[ id ] = matInverse;
             }
@@ -122,7 +110,7 @@ define( [
             // Improvment could be to cache more things
             // and / or use this method only if the shader use it
             var invMatrix = this.getCameraInverseMatrix();
-            var m = this._getReservedMatrix();
+            var m = this._reservedMatrixStack.get();
             var world = Matrix.mult( invMatrix, this.getCurrentModelViewMatrix(), m );
             return world;
         },
@@ -213,7 +201,7 @@ define( [
                     if ( this.getCurrentCullingSet().getCurrentResultMask() === 0 )
                         return false; // father bounding sphere totally inside
 
-                    var matrix;
+                    var matrix = this._reservedMatrixStack.get();
 
                     // TODO: Perf just get World Matrix at each node transform
                     // store it in a World Transform Node Path (only world matrix change)
@@ -224,13 +212,17 @@ define( [
                     // strange bug for now on frustum culling sample with that
 
                     if ( node instanceof MatrixTransform ) {
+
                         // tricky: MatrixTransform getBound is already transformed to
                         // its local space whereas nodepath also have its matrix ...
                         // so to get world space, you HAVE to remove that matrix from nodePATH
                         // TODO: GC Perf of array slice creating new array
-                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath.slice( 0, nodePath.length - 1 ) );
+                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath.slice( 0, nodePath.length - 1 ), true, matrix );
+
                     } else {
-                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath );
+
+                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( nodePath, true, matrix );
+
                     }
 
                     Matrix.transformBoundingSphere( matrix, node.getBound(), bsWorld );
@@ -262,7 +254,7 @@ define( [
             var np = this.getNodePath();
             var length = np.length;
             if ( !length ) { // root
-                var matInverse = this._getReservedMatrix();
+                var matInverse = this._reservedMatrixStack.get();
                 Matrix.inverse( matrix, matInverse );
                 this._cameraMatrixInverse[ -1 ] = matInverse;
             } else {

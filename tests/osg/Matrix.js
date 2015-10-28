@@ -302,5 +302,6 @@ define( [
             var res = Matrix.makePerspective( 60, 800 / 600, 1.0, 1000 );
             ok( mockup.checkNear( res, m ), 'makePerspective should be ' + m + ' and is ' + res );
         } );
+
     };
 } );

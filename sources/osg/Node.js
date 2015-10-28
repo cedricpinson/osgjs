@@ -6,9 +6,10 @@ define( [
     'osg/StateSet',
     'osg/NodeVisitor',
     'osg/Matrix',
+    'osg/MatrixMemoryPool',
     'osg/ComputeMatrixFromNodePath',
     'osg/TransformEnums'
-], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, ComputeMatrixFromNodePath, TransformEnums ) {
+], function ( MACROUTILS, Object, BoundingBox, BoundingSphere, StateSet, NodeVisitor, Matrix, MatrixMemoryPool, ComputeMatrixFromNodePath, TransformEnums ) {
 
     'use strict';
 
@@ -266,7 +267,8 @@ define( [
             return bSphere;
         },
 
-        getWorldMatrices: function ( halt ) {
+        // matrixCreate allow user handling of garbage collection of matrices
+        getWorldMatrices: function ( halt, matrixCreate ) {
             var CollectParentPaths = function ( halt ) {
                 this.nodePaths = [];
                 this.halt = halt;
@@ -286,15 +288,39 @@ define( [
             this.accept( collected );
             var matrixList = [];
 
+            var matrixGenerator = matrixCreate ? matrixCreate : Matrix.create;
             for ( var i = 0, l = collected.nodePaths.length; i < l; i++ ) {
                 var np = collected.nodePaths[ i ];
-                if ( np.length === 0 ) {
-                    matrixList.push( Matrix.create() );
-                } else {
-                    matrixList.push( ComputeMatrixFromNodePath.computeLocalToWorld( np ) );
+                var m = matrixGenerator();
+                if ( np.length !== 0 ) {
+                    ComputeMatrixFromNodePath.computeLocalToWorld( np, true, m );
                 }
+                matrixList.push( m );
             }
+
             return matrixList;
+
+        },
+
+        // same as getWorldMatrix GC: Perf WIN
+        getWorldMatrix: function ( halt, matrix ) {
+
+            // pass allocator on master
+            var matrixList = this.getWorldMatrix( halt, Node._reservedMatrixStack.get );
+
+            if ( matrixList.length === 0 ) {
+
+                Matrix.makeIdentity( matrix );
+
+            } else {
+
+                Matrix.copy( matrixList[ 0 ], matrix );
+
+            }
+
+            Node._reservedMatrixStack.reset();
+            return matrix;
+
         },
 
         setCullingActive: function ( value ) {
@@ -343,8 +369,11 @@ define( [
             if ( this.stateset !== undefined ) this.stateset.releaseGLObjects();
         }
 
+
     } ), 'osg', 'Node' );
     MACROUTILS.setTypeID( Node );
+
+    Node._reservedMatrixStack = new MatrixMemoryPool();
 
     return Node;
 } );
