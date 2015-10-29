@@ -95,7 +95,7 @@ define( [
             animationCallback.setName( 'testUpdateMatrixTransform' );
             var stackedRotateAxis = new StackedRotateAxis( 'rotateX' );
             animationCallback.getStackedTransforms().push( stackedRotateAxis );
-            
+
             animationCallback.getStackedTransforms().push( new StackedMatrix( 'matrix' ) );
             node.addUpdateCallback( animationCallback );
 
@@ -137,76 +137,6 @@ define( [
             equal( stackedRotateAxis.getTarget().value, 0.5, 'check target a value at t = ' + time );
 
             deepEqual( animationCallback._matrix, [ 0.8775825618903726, 0.4794255386042031, 0, 0, -0.4794255386042031, 0.8775825618903726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], 'check matrix computed' );
-
-        } );
-
-
-
-        QUnit.test( 'BasicAnimationManager Performance', function () {
-
-            var basicAnimationManager = new BasicAnimationManager();
-            var animations = [];
-
-            // create an animation with an animation UpdateCallback in a node
-            var createAnimation = function () {
-
-                var index = animations.length.toString();
-                var targetName = 'testUpdateMatrixTransform_' + index;
-                var animation = mockup.createAnimation( 'AnimationTest_' + index, targetName, targetName );
-                animations.push( animation );
-
-            };
-
-            var maxAnimations = 50;
-            for ( var i = 0; i < maxAnimations; i++ ) {
-                createAnimation();
-            }
-
-            var cbMap = mockup.createAnimationUpdateCallback( animations );
-
-            basicAnimationManager.init( animations );
-            basicAnimationManager._animationsUpdateCallback = cbMap;
-            basicAnimationManager._registerTargetFoundInAnimationCallback();
-            basicAnimationManager._registerAnimations();
-
-
-            console.log( 'nb animations ' + Object.keys( basicAnimationManager._animationsUpdateCallback ).length );
-
-            //
-            var time = 0.0;
-            var nv = {
-                getFrameStamp: function () {
-                    return {
-                        getSimulationTime: function () {
-                            return time;
-                        }
-                    };
-                }
-            };
-
-            var animationMap = basicAnimationManager.getAnimations();
-            for ( var j = 0; j < maxAnimations; j++ ) {
-                var animationName = Object.keys( animationMap )[ j ];
-                basicAnimationManager.playAnimation( animationName );
-            }
-
-            // add a simple operation to be sure the jit will not discard our code
-            var fakeResult = 0.0;
-            console.profile();
-
-            console.time( 'time' );
-            for ( var n = 0; n < 200; n++ )
-                for ( var t = 0.0; t < 5.0; t += 0.016 ) {
-                    time = t;
-                    basicAnimationManager.update( null, nv );
-                    for ( var k = 0, l = basicAnimationManager._animationsUpdateCallbackArray.length; k < l; k++ )
-                        fakeResult += basicAnimationManager._animationsUpdateCallbackArray[ k ]._matrix[ 0 ];
-                }
-
-            console.timeEnd( 'time' );
-            console.profileEnd();
-            console.log( fakeResult );
-            ok( true, 'ok' );
 
         } );
 
