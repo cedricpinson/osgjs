@@ -19,14 +19,15 @@ define( [
 
 ], function ( OSG, osg ) {
 
+    // start test when require finished its job
+    QUnit.load();
+    QUnit.start();
+
     // hack because of osgPool
     OSG.osg.init();
 
     osg();
 
-    // start test when require finished its job
-    QUnit.load();
-    QUnit.start();
 
 
 } );
