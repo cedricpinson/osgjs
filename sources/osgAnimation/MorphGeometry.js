@@ -36,12 +36,14 @@ define( [
             this.getStateSetAnimation().setAttributeAndModes( animAttrib, StateAttribute.ON );
             animAttrib.setTargetWeights( this.getTargetsWeight() );
 
-            this._morphTargetNames = Object.keys( this._targets[ 0 ].getVertexAttributeList() );
 
-            if ( this._targets[ 0 ] )
+            if ( this._targets[ 0 ] ) {
+                this._morphTargetNames = Object.keys( this._targets[ 0 ].getVertexAttributeList() );
                 animAttrib.copyTargetNames( this._morphTargetNames );
-            else
+            } else {
+                this._morphTargetNames = [];
                 Notify.error( 'No Targets in the MorphGeometry !' );
+            }
 
             this._isInitialized = true;
             return true;

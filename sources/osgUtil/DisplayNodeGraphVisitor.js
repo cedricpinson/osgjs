@@ -94,6 +94,7 @@ define( [
                 return;
 
             if ( this._fullNodeList[ node.getInstanceID() ] !== node ) {
+                this._fullNodeList[ node.getInstanceID() ] = node;
                 this._nodeList.push( node );
             }
 
@@ -237,22 +238,22 @@ define( [
             var identifier = $( target.getAttribute( 'title' ) )[ 0 ].innerHTML;
             var fnl = this._fullNodeList;
 
-            if ( this.lastStateSet )
-                this.lastStateSet.childNodes[ 0 ].style.fill = '#09f';
-            if ( this.lastNode )
-                this.lastNode.childNodes[ 0 ].style.fill = '#fff';
-            this.lastStateSet = this.lastNode = null;
+            // color the node back (should be handled with pure css ...)
+            if ( this.lastNode ) {
+                var last = fnl[ $( this.lastNode.getAttribute( 'title' ) )[ 0 ].innerHTML ];
+                this.lastNode.childNodes[ 0 ].style.fill = this.getColorFromClassName( last.className() );
+            }
+            this.lastNode = target;
+
             target.childNodes[ 0 ].style.fill = '#f00';
 
             var elt = fnl[ identifier ];
 
             if ( elt.className() !== 'StateSet' ) {
-                this.lastNode = target;
                 window.activeNode = elt;
                 console.log( 'window.activeNode is set.' );
                 console.log( window.activeNode );
             } else {
-                this.lastStateSet = target;
                 window.activeStateset = elt;
                 console.log( 'window.activeStateset is set.' );
                 console.log( window.activeStateset );
