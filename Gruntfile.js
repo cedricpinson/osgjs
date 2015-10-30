@@ -349,6 +349,14 @@ var generateVersionFile = function () {
                     'http://127.0.0.1:9001/tests/index.html'
                 ]
             }
+        },
+        bench: {
+            options: {
+                timeout: 30000,
+                urls: [
+                    'http://127.0.0.1:9001/benchmarks/index.html'
+                ]
+            }
         }
     };
 
@@ -602,6 +610,7 @@ module.exports = function ( grunt ) {
     grunt.registerTask( 'beautify', [ 'jsbeautifier:default' ] );
 
     grunt.registerTask( 'test', [ 'connect:server', 'qunit:all' ] );
+    grunt.registerTask( 'benchmarks', [ 'connect:server', 'qunit:bench' ] );
 
     grunt.registerTask( 'docs', [ 'webpack:docs', 'docco' ] );
 

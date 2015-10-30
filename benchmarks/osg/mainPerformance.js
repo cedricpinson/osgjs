@@ -119,8 +119,8 @@ define( [
             console.profileEnd();
 
             timed = Timer.instance().tick() - timed;
-
-            ok( true, 'perf is: ' + ( timed / nCount ).toFixed() + ' ms' );
+            console.log( 'perf Main Cullvisitor scene  Loop is: ' + ( timed / nCount ).toFixed() + ' ms' );
+            ok( false, 'perf Main Loop CullVisitor is: ' + ( timed / nCount ).toFixed() + ' ms' );
         } );
 
         test( 'CullVisitor Heavy Static Scene with Frustum culling (Worst Cases as Scene is Flat) ', function () {
@@ -167,7 +167,8 @@ define( [
 
             timed = Timer.instance().tick() - timed;
 
-            ok( true, 'perf is: ' + ( timed / nCount ).toFixed() + ' ms' );
+            console.log( 'perf Main CullVisitor Loop scene + culling is: ' + ( timed / nCount ).toFixed() + ' ms' );
+            ok( false, 'perf is: ' + ( timed / nCount ).toFixed() + ' ms' );
         } );
         test( 'CullVisitor Heavy Static Scene with 1 light And Shadows ', function () {
 
@@ -213,7 +214,8 @@ define( [
 
             timed = Timer.instance().tick() - timed;
 
-            ok( true, 'perf is: ' + ( timed / nCount ).toFixed() + ' ms' );
+            console.log( 'perf Main CullVisitor Loop scene + shadow Loop is: ' + ( timed / nCount ).toFixed() + ' ms' );
+            ok( false, 'perf is: ' + ( timed / nCount ).toFixed() + ' ms' );
         } );
     };
 } );
