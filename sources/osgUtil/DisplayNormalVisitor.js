@@ -8,14 +8,100 @@ define( [
     'osg/StateSet',
     'osg/Uniform',
     'osg/Depth',
-    'osg/Program',
-    'osg/Shader',
-    'osg/Vec3'
-], function ( MACROUTILS, NodeVisitor, Geometry, BufferArray, DrawArrays, PrimitiveSet, StateSet, Uniform, Depth, Program, Shader, Vec3 ) {
+    'osg/Vec3',
+
+    'osgShader/ShaderGenerator',
+    'osgShader/Compiler',
+
+    'osgAnimation/RigGeometry',
+    'osgAnimation/MorphGeometry',
+    'osgAnimation/UpdateMorph'
+
+], function ( MACROUTILS, NodeVisitor, Geometry, BufferArray, DrawArrays, PrimitiveSet, StateSet, Uniform, Depth, Vec3, ShaderGenerator, Compiler, RigGeometry, MorphGeometry, UpdateMorph ) {
 
     'use strict';
 
-    var program;
+    ////////////////////////
+    // COMPILER OFFSET NORMAL
+    ////////////////////////
+    var CompilerOffsetNormal = function () {
+        Compiler.apply( this, arguments );
+        this._isVertexColored = false;
+    };
+
+    CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
+        getFragmentShaderName: function () {
+            return 'CompilerOffsetNormal';
+        },
+        initTextureAttributes: function () {},
+        createFragmentShaderGraph: function () {
+            var frag = this.getNode( 'glFragColor' );
+
+            this.getNode( 'SetAlpha' ).inputs( {
+                color: this.getOrCreateUniform( 'vec3', 'uColorDebug' ),
+                alpha: this.createVariable( 'float' ).setValue( '1.0' )
+            } ).outputs( {
+                color: frag
+            } );
+
+            return [ frag ];
+        },
+        _getOffsetVec: function () {
+            return this.getOrCreateNormalAttribute();
+        },
+        getOrCreateVertexAttribute: function () {
+            var vertexOffset = this.getVariable( 'vertexOffset' );
+            if ( vertexOffset ) return vertexOffset;
+
+            vertexOffset = this.createVariable( 'vec3', 'vertexOffset' );
+
+            var str = '%out = %offset == 1.0 ? %vertex + normalize(%vecOffset.xyz) * %scale : %vertex;';
+            this.getNode( 'InlineCode' ).code( str ).inputs( {
+                offset: this.getOrCreateAttribute( 'float', 'Offset' ),
+                vecOffset: this._getOffsetVec(),
+                vertex: Compiler.prototype.getOrCreateVertexAttribute.call( this ),
+                scale: this.getOrCreateUniform( 'float', 'uScale' )
+            } ).outputs( {
+                out: vertexOffset
+            } );
+
+            return vertexOffset;
+        },
+        declareVertexTransforms: Compiler.prototype.declareVertexTransformShadeless
+    } );
+
+    var ShaderGeneratorCompilerOffsetNormal = function () {
+        ShaderGenerator.apply( this, arguments );
+        this.setShaderCompiler( CompilerOffsetNormal );
+    };
+    ShaderGeneratorCompilerOffsetNormal.prototype = ShaderGenerator.prototype;
+
+    ////////////////////////
+    // COMPILER OFFSET TANGENT
+    ////////////////////////
+    var CompilerOffsetTangent = function () {
+        CompilerOffsetNormal.apply( this, arguments );
+    };
+
+    CompilerOffsetTangent.prototype = MACROUTILS.objectInherit( CompilerOffsetNormal.prototype, {
+        getFragmentShaderName: function () {
+            return 'CompilerOffsetTangent';
+        },
+        _getOffsetVec: function () {
+            return this.getOrCreateTangentAttribute();
+        }
+    } );
+
+    var ShaderGeneratorCompilerOffsetTangent = function () {
+        ShaderGenerator.apply( this, arguments );
+        this.setShaderCompiler( CompilerOffsetTangent );
+    };
+    ShaderGeneratorCompilerOffsetTangent.prototype = ShaderGenerator.prototype;
+
+
+    ////////////////////////
+    // DISPLAY NORMAL VISITOR
+    ////////////////////////
 
     var DisplayNormalVisitor = function () {
         NodeVisitor.call( this );
@@ -23,46 +109,22 @@ define( [
         this._unifScale = Uniform.createFloat( 1.0, 'uScale' );
 
         var ns = this._normalStateSet = new StateSet();
-        ns.setAttribute( DisplayNormalVisitor.getShader() );
         ns.addUniform( Uniform.createFloat3( Vec3.createAndSet( 1.0, 0.0, 0.0 ), 'uColorDebug' ) );
         ns.addUniform( this._unifScale );
         ns.setAttribute( new Depth( Depth.NEVER ) );
+        ns.setShaderGeneratorName( 'debugNormal' );
 
         var ts = this._tangentStateSet = new StateSet();
-        ts.setAttribute( DisplayNormalVisitor.getShader() );
         ts.addUniform( Uniform.createFloat3( Vec3.createAndSet( 0.0, 1.0, 0.0 ), 'uColorDebug' ) );
         ts.addUniform( this._unifScale );
         ts.setAttribute( new Depth( Depth.NEVER ) );
+        ts.setShaderGeneratorName( 'debugTangent' );
     };
 
-    DisplayNormalVisitor.getShader = function () {
-        if ( program ) return program;
-        var vertexshader = [
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'attribute vec3 Vertex;',
-            'attribute vec3 Normal;',
-            'uniform float uScale;',
-            'uniform mat4 ModelViewMatrix;',
-            'uniform mat4 ProjectionMatrix;',
-            'void main(void) {',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex + Normal * uScale, 1.0);',
-            '}'
-        ].join( '\n' );
-
-        var fragmentshader = [
-            '#ifdef GL_ES',
-            'precision highp float;',
-            '#endif',
-            'uniform vec3 uColorDebug;',
-            'void main(void) {',
-            '  gl_FragColor = vec4(uColorDebug, 1.0);',
-            '}'
-        ].join( '\n' );
-        program = new Program( new Shader( Shader.VERTEX_SHADER, vertexshader ), new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
-        return program;
-    };
+    DisplayNormalVisitor.CompilerOffsetNormal = CompilerOffsetNormal;
+    DisplayNormalVisitor.CompilerOffsetTangent = CompilerOffsetTangent;
+    DisplayNormalVisitor.ShaderGeneratorCompilerOffsetNormal = ShaderGeneratorCompilerOffsetNormal;
+    DisplayNormalVisitor.ShaderGeneratorCompilerOffsetTangent = ShaderGeneratorCompilerOffsetTangent;
 
     DisplayNormalVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         setScale: function ( scale ) {
@@ -75,69 +137,141 @@ define( [
             this._normalStateSet.setAttribute( new Depth( bool ? Depth.LESS : Depth.NEVER ) );
         },
         apply: function ( node ) {
+            var list = node.getUpdateCallbackList();
+            // dirty the UpdateMorph so that they detect the normal/tangent geometry and update the target/weights correctly
+            for ( var i = 0, nbCB = list.length; i < nbCB; ++i ) {
+                if ( list[ i ] instanceof UpdateMorph ) {
+                    list[ i ]._isInitialized = false;
+                }
+            }
+
             if ( node._isVisitedNormalDebug )
                 return;
+
             node._isVisitedNormalDebug = true;
 
             if ( node instanceof Geometry === false )
                 return this.traverse( node );
 
-            var vertices = node.getAttributes().Vertex;
+            this._createDebugGeom( node, 'Normal', this._normalStateSet );
+            this._createDebugGeom( node, 'Tangent', this._tangentStateSet );
+        },
+        _createDoubleOffsetArray: function ( nbVertices ) {
+            // 0 means original vertex pos
+            // 1 means offseted vertex
+            var elts = new Float32Array( nbVertices * 2 );
+            for ( var i = 0; i < nbVertices; ++i ) {
+                elts[ i * 2 ] = 1.0;
+            }
+            return new BufferArray( BufferArray.ARRAY_BUFFER, elts, 1 );
+        },
+        _createDoubledBufferArray: function ( bufferArray ) {
+            // in case of morphs
+            if ( bufferArray.getInitialBufferArray )
+                bufferArray = bufferArray.getInitialBufferArray();
+
+            var itemSize = bufferArray.getItemSize();
+            var elements = bufferArray.getElements();
+            var nbElements = elements.length / itemSize;
+
+            var ctor = elements.constructor;
+            var elementsDouble = new ctor( elements.length * 2 );
+            for ( var i = 0; i < nbElements; ++i ) {
+                var iSize = i * itemSize;
+                var iSize2 = iSize * 2;
+
+                for ( var j = 0; j < itemSize; ++j ) {
+                    elementsDouble[ iSize2 + j ] = elementsDouble[ iSize2 + j + itemSize ] = elements[ iSize + j ];
+                }
+            }
+
+            return new BufferArray( BufferArray.ARRAY_BUFFER, elementsDouble, itemSize );
+        },
+        _addMorphTargets: function ( originMorph, morph, vecName ) {
+            var targets = morph.getMorphTargets();
+            morph.setName( originMorph.getName() ); // for the UpdateMorph
+
+            var originTargets = originMorph.getMorphTargets();
+            for ( var i = 0, nbTarget = originTargets.length; i < nbTarget; ++i ) {
+                var origTarget = originTargets[ i ];
+                var origAttrs = origTarget.getVertexAttributeList();
+
+                var newTarget = new Geometry();
+                newTarget.setName( origTarget.getName() ); // for the UpdateMorph
+                var newAttrs = newTarget.getVertexAttributeList();
+
+                newAttrs.Vertex = this._createDoubledBufferArray( origAttrs.Vertex );
+                if ( origAttrs[ vecName ] ) newAttrs[ vecName ] = this._createDoubledBufferArray( origAttrs[ vecName ] );
+
+                targets.push( newTarget );
+            }
+
+            morph.mergeChildrenVertexAttributeList();
+            return morph;
+        },
+        _createDebugGeom: function ( node, vecName, stateSet ) {
+            var attrs = node.getAttributes();
+            var dispVec = attrs[ vecName ];
+            if ( !dispVec )
+                return;
+
+            var vertices = attrs.Vertex;
             if ( !vertices )
                 return;
 
-            var i = 0;
+            var originMorph;
+            if ( node instanceof MorphGeometry ) originMorph = node;
+            else if ( node.getSourceGeometry && node.getSourceGeometry() instanceof MorphGeometry ) originMorph = node.getSourceGeometry();
+
+            var nbVertices = vertices.getElements().length / vertices.getItemSize();
+
+            // vertex and normals
+            var source = originMorph ? new MorphGeometry() : new Geometry();
+            source.getAttributes().Vertex = this._createDoubledBufferArray( vertices );
+            source.getAttributes().Offset = this._createDoubleOffsetArray( nbVertices );
+            source.getAttributes()[ vecName ] = this._createDoubledBufferArray( dispVec );
+
+            // primitive
+            source.getPrimitives().push( new DrawArrays( PrimitiveSet.LINES, 0, nbVertices * 2 ) );
+
+            if ( originMorph )
+                this._addMorphTargets( originMorph, source, vecName );
+
+            var geom;
+            if ( node instanceof RigGeometry ) {
+
+                var rig = new RigGeometry();
+                rig.setSourceGeometry( source );
+
+                rig.getVertexAttributeList().Bones = this._createDoubledBufferArray( attrs.Bones );
+                rig.getVertexAttributeList().Weights = this._createDoubledBufferArray( attrs.Weights );
+
+                // we can simply share the rig-animated stateSet attributes
+                // (unlike morph, the stateSet and update animation doesn't operate at per vertex level)
+                rig._rigTransformImplementation = node._rigTransformImplementation;
+                rig._stateSetAnimation = node._stateSetAnimation;
+
+                rig.mergeChildrenData();
+                geom = rig;
+
+            } else {
+                geom = source;
+            }
+
+
+            // add geom to the graph
             var parents = node.getParents();
             var nbParents = parents.length;
+            geom._isVisitedNormalDebug = true;
+            geom._isNormalDebug = true;
+            geom.setStateSet( stateSet );
+            for ( var i = 0; i < nbParents; ++i )
+                parents[ i ].addChild( geom );
 
-            var norm = this.createDebugGeom( node.getAttributes().Normal, vertices );
-            if ( norm ) {
-                norm._isVisitedNormalDebug = true;
-                norm.setStateSet( this._normalStateSet );
-                for ( i = 0; i < nbParents; ++i )
-                    parents[ i ].addChild( norm );
-            }
-
-            var tang = this.createDebugGeom( node.getAttributes().Tangent, vertices );
-            if ( tang ) {
-                tang._isVisitedNormalDebug = true;
-                tang.setStateSet( this._tangentStateSet );
-                for ( i = 0; i < nbParents; ++i )
-                    parents[ i ].addChild( tang );
-            }
-        },
-        createDebugGeom: function ( dispVec, vertices ) {
-            if ( !dispVec )
-                return;
-            var vSize = vertices.getItemSize();
-            var dSize = dispVec.getItemSize();
-            dispVec = dispVec.getElements();
-            vertices = vertices.getElements();
-
-            var nbVertices = vertices.length / vSize;
-            var lineVertices = new Float32Array( nbVertices * 2 * 3 );
-            var lineNormals = new Float32Array( nbVertices * 2 * 3 );
-            for ( var i = 0; i < nbVertices; ++i ) {
-                var idl = i * 6;
-                var idv = i * vSize;
-                var idd = i * dSize;
-
-                lineVertices[ idl ] = lineVertices[ idl + 3 ] = vertices[ idv ];
-                lineVertices[ idl + 1 ] = lineVertices[ idl + 4 ] = vertices[ idv + 1 ];
-                lineVertices[ idl + 2 ] = lineVertices[ idl + 5 ] = vertices[ idv + 2 ];
-                lineNormals[ idl + 3 ] = dispVec[ idd ];
-                lineNormals[ idl + 4 ] = dispVec[ idd + 1 ];
-                lineNormals[ idl + 5 ] = dispVec[ idd + 2 ];
-            }
-            var g = new Geometry();
-            g._isNormalDebug = true;
-            g.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, lineVertices, 3 );
-            g.getAttributes().Normal = new BufferArray( BufferArray.ARRAY_BUFFER, lineNormals, 3 );
-            var primitive = new DrawArrays( PrimitiveSet.LINES, 0, nbVertices * 2 );
-            g.getPrimitives().push( primitive );
-            return g;
+            return geom;
         }
     } );
+
 
     return DisplayNormalVisitor;
 } );

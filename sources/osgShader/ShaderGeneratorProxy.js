@@ -1,8 +1,9 @@
 define( [
     'osgShader/ShaderGenerator',
-    'osgShadow/ShadowCastShaderGenerator'
+    'osgShadow/ShadowCastShaderGenerator',
+    'osgUtil/DisplayNormalVisitor'
 
-], function ( ShaderGenerator, ShadowCastShaderGenerator ) {
+], function ( ShaderGenerator, ShadowCastShaderGenerator, DisplayNormalVisitor ) {
     'use strict';
 
     var ShaderGeneratorProxy = function () {
@@ -11,6 +12,8 @@ define( [
         this._generators = new Map();
         this.addShaderGenerator( 'default', new ShaderGenerator() );
         this.addShaderGenerator( 'ShadowCast', new ShadowCastShaderGenerator() );
+        this.addShaderGenerator( 'debugNormal', new DisplayNormalVisitor.ShaderGeneratorCompilerOffsetNormal() );
+        this.addShaderGenerator( 'debugTangent', new DisplayNormalVisitor.ShaderGeneratorCompilerOffsetTangent() );
 
         return this;
     };
