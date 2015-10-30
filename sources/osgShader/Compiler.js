@@ -458,6 +458,22 @@ define( [
             return v;
         },
 
+        getOrCreateInputTangent: function () {
+            return this.getOrCreateVarying( 'vec4', 'FragTangent' );
+        },
+
+        getOrCreateFrontTangent: function () {
+            var frontTangent = this.createVariable( 'vec4', 'frontTangent' );
+
+            this.getNode( 'FrontNormal' ).inputs( {
+                normal: this.getOrCreateInputTangent()
+            } ).outputs( {
+                normal: frontTangent
+            } );
+
+            return frontTangent;
+        },
+
         getOrCreateInputNormal: function () {
             return this.getOrCreateVarying( 'vec3', 'FragNormal' );
         },
@@ -1165,9 +1181,44 @@ define( [
             return doMorph;
         },
         getTarget: function ( name, i ) {
-            return this.getOrCreateAttribute( 'vec3', name + '_' + i );
+            var type = name.indexOf( 'Tangent' ) !== -1 ? 'vec4' : 'vec3';
+            return this.getOrCreateAttribute( type, name + '_' + i );
+        },
+        morphTangentApproximation: function ( inputVertex, outputVertex ) {
+            var normalizedMorph;
+            // kind of tricky, here we retrieve the normalized normal after morphing
+            // if there is no rigging we do not recompute it
+            if ( this._skinningAttribute ) {
+
+                normalizedMorph = this.createVariable( 'vec3' );
+                this.getNode( 'Normalize' ).inputs( {
+                    vec: this.getVariable( 'normalMorph' )
+                } ).outputs( {
+                    vec: normalizedMorph
+                } );
+
+            } else {
+                normalizedMorph = this.getVariable( 'normalAttribute' );
+            }
+
+            this.getNode( 'InlineCode' ).code( '%out = %tangent.rgb - dot(%tangent.rgb, %normal) * %normal;' ).inputs( {
+                tangent: inputVertex,
+                normal: normalizedMorph
+            } ).outputs( {
+                out: outputVertex
+            } );
+
+            return outputVertex;
         },
         morphTransformVec3: function ( inputVertex, outputVertex, targetName ) {
+
+            var approx = false; // on mobile ?
+            var morph = this._morphAttribute;
+            // compute morph tangent (getOrCreateNormalAttribute will create the 'normalMorph' variable)
+            if ( approx && targetName === 'Tangent' && this.getOrCreateNormalAttribute() && morph && morph.hasTarget( 'Normal' ) ) {
+                return this.morphTangentApproximation( inputVertex, outputVertex );
+            }
+
             var inputs = {
                 doMorph: this.getOrCreateDoMorph(),
                 vertex: inputVertex,
@@ -1252,6 +1303,47 @@ define( [
 
             return vecOut;
         },
+        getOrCreateTangentAttribute: function () {
+            var vecOut = this.getVariable( 'tangentAttribute' );
+            if ( vecOut ) return vecOut;
+
+            var hasMorph = this._morphAttribute && this._morphAttribute.hasTarget( 'Tangent' );
+
+            var inputTangent = this.getOrCreateAttribute( 'vec4', 'Tangent' );
+            if ( !this._skinningAttribute && !hasMorph ) return inputTangent;
+
+            var tmpAnim;
+
+            if ( hasMorph && !this._skinningAttribute ) {
+                tmpAnim = this.morphTransformVec3( inputTangent, this.createVariable( 'vec3', 'tangentMorph' ) );
+            } else if ( !hasMorph && this._skinningAttribute ) {
+                tmpAnim = this.skinTransformNormal( inputTangent, this.createVariable( 'vec3', 'tangentSkin' ) );
+            } else {
+
+                tmpAnim = this.morphTransformVec3( inputTangent, this.createVariable( 'vec3', 'tangentMorph' ), 'Tangent' );
+                tmpAnim = this.skinTransformNormal( tmpAnim, this.createVariable( 'vec3', 'tangentSkin' ) );
+
+            }
+
+            // normalize
+            var tangNorm = this.createVariable( 'vec3' );
+            this.getNode( 'Normalize' ).inputs( {
+                vec: tmpAnim
+            } ).outputs( {
+                vec: tangNorm
+            } );
+
+            // apply back the alpha
+            vecOut = this.createVariable( 'vec4', 'tangentAttribute' );
+            this.getNode( 'SetAlpha' ).inputs( {
+                color: tangNorm,
+                alpha: inputTangent
+            } ).outputs( {
+                color: vecOut
+            } );
+
+            return vecOut;
+        },
         declareVertexTransformShadeless: function ( glPosition ) {
             // No light
             var tempViewSpace = this.createVariable( 'vec4' );
@@ -1286,6 +1378,10 @@ define( [
             } );
         },
 
+        needTangent: function () {
+            // the application choose whether or not to use tangent
+            return false;
+        },
         declareVertexTransformLighted: function ( glPosition ) {
             // FragNormal
             this.getNode( 'MatrixMultDirection' ).inputs( {
@@ -1294,6 +1390,15 @@ define( [
             } ).outputs( {
                 vec: this.getOrCreateInputNormal()
             } );
+
+            if ( this.needTangent() ) {
+                this.getNode( 'MatrixMultDirection' ).setForceComplement( false ).inputs( {
+                    matrix: this.getOrCreateUniform( 'mat4', 'NormalMatrix' ),
+                    vec: this.getOrCreateTangentAttribute()
+                } ).outputs( {
+                    vec: this.getOrCreateVarying( 'vec4', 'FragTangent' )
+                } );
+            }
 
             if ( this._isBillboard )
                 this.declareVertexTransformBillboard( glPosition );
