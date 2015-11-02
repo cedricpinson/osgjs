@@ -241,7 +241,7 @@ ShaderGenerator.prototype = {
             var ShaderCompiler = this._ShaderCompiler;
             var shaderGen = new ShaderCompiler( attributes, textureAttributes, this._shaderProcessor );
 
-            /*develblock:start*
+            /*develblock:start*/
             // Logs hash, attributes and compiler
             var Notify = require( 'osg/Notify' );
             Notify.log( 'New Compilation ', false, true );

@@ -17,7 +17,6 @@ var TangentSpaceGenerator = require( 'osgUtil/TangentSpaceGenerator' );
 var TriangleIntersect = require( 'osgUtil/TriangleIntersector' );
 var WebVR = require( 'osgUtil/WebVR' );
 
-
 var osgUtil = {};
 
 osgUtil.Composer = Composer;

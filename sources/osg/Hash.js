@@ -47,9 +47,9 @@ define( [
             hash = -hash;
         }
 
-        /*develblock:start*/
+        /* develblock:start */
         DebugHashAttributes.debugHashCollisionString( str, hash, hashStringCache );
-        /*develblock:end*/
+        /* develblock:end */
 
         hashStringCache.set( str, hash );
 
@@ -104,9 +104,9 @@ define( [
 
         var hash = hashBase( intList, current );
 
-        /*develblock:start*/
+        /* develblock:start */
         DebugHashAttributes.debugHashCollisionIntList( intList, current, hash );
-        /*develblock:end*/
+        /* develblock:end */
 
         return hash;
 

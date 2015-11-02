@@ -1,6 +1,6 @@
 'use strict';
 
-/*develblock:start*/
+/* develblock:start */
 var Notify = require( 'osg/Notify' );
 
 
@@ -56,4 +56,4 @@ DebugHashAttributes.debugHashCollisionIntList = function ( intList, current, has
 
 
 module.exports = DebugHashAttributes;
-/*develblock:end*/
+/* develblock:end */
