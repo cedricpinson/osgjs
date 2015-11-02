@@ -1,10 +1,13 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
+var Hash = require( 'osg/Hash' );
 var Program = require( 'osg/Program' );
 var Shader = require( 'osg/Shader' );
 var Map = require( 'osg/Map' );
 var Compiler = require( 'osgShader/Compiler' );
 var ShaderProcessor = require( 'osgShader/ShaderProcessor' );
+var DebugHashAttributes = require( 'osgUtil/DebugHashAttributes' );
+
 
 // this is the list of attributes type we support by default to generate shader
 // if you need to adjust for your need provide or modify this list
@@ -30,6 +33,8 @@ var ShaderGenerator = function () {
 
     // ShaderCompiler Object to instanciate
     this._ShaderCompiler = Compiler;
+    this._hashStack = [];
+    this._hashStackCurrent = 0;
 };
 
 ShaderGenerator.prototype = {
@@ -89,7 +94,7 @@ ShaderGenerator.prototype = {
     // get actives attribute that comes from state
     getActiveAttributeList: function ( state, list ) {
 
-        var hash = '';
+
         var attributeMap = state.attributeMap;
         var attributeMapKeys = attributeMap.getKeys();
 
@@ -103,18 +108,21 @@ ShaderGenerator.prototype = {
                 continue;
 
             if ( attr.getHash ) {
-                hash += attr.getHash();
+                this.pushToHashStack( attr.getHash() );
+                /*develblock:start*/
+                DebugHashAttributes.debugDirtyAttributes( attr );
+                /*develblock:end*/
             } else {
-                hash += attr.getType();
+                this.pushToHashStack( Hash.hashComputeCodeFromString( attr.getType() ) );
             }
+
             list.push( attr );
         }
-        return hash;
+
     },
 
     // get actives texture attribute that comes from state
     getActiveTextureAttributeList: function ( state, list ) {
-        var hash = '';
         var attributeMapList = state.textureAttributeMapList;
         var i, l;
 
@@ -143,14 +151,17 @@ ShaderGenerator.prototype = {
                     continue;
 
                 if ( attr.getHash ) {
-                    hash += attr.getHash();
+                    this.pushToHashStack( attr.getHash() );
+                    /*develblock:start*/
+                    DebugHashAttributes.debugDirtyAttributes( attr );
+                    /*develblock:end*/
+
                 } else {
-                    hash += attr.getType();
+                    this.pushToHashStack( hash.hashComputeCodeFromString( attr.getType() ) );
                 }
                 list[ i ].push( attr );
             }
         }
-        return hash;
     },
 
     getActiveUniforms: function ( state, attributeList, textureAttributeList ) {
@@ -193,21 +204,36 @@ ShaderGenerator.prototype = {
         return new Map( uniforms );
     },
 
+
+    pushToHashStack: function ( hash ) {
+
+        if ( this._hashStackCurrent === this._hashStack.length ) {
+            this._hashStack.push( hash );
+        } else {
+            this._hashStack[ this._hashStackCurrent ] = hash;
+        }
+        this._hashStackCurrent++;
+
+    },
+
     getOrCreateProgram: ( function () {
         // TODO: double check GC impact of this stack
-        // TODO: find a way to get a hash dirty/cache on stateAttribute
         var textureAttributes = [];
         var attributes = [];
 
         return function ( state ) {
             // extract valid attributes
-            var hash = '';
+
+            this._hashStackCurrent = 0;
+
             attributes.length = 0;
             textureAttributes.length = 0;
-            hash += this.getActiveAttributeList( state, attributes );
-            hash += this.getActiveTextureAttributeList( state, textureAttributes );
+            this.getActiveAttributeList( state, attributes );
+            this.getActiveTextureAttributeList( state, textureAttributes );
 
+            var hash = Hash.hashComputeCodeFromIntList( this._hashStack, this._hashStackCurrent );
             var cache = this._cache.get( hash );
+
             if ( cache !== undefined ) {
                 return cache;
             }
@@ -217,7 +243,7 @@ ShaderGenerator.prototype = {
             var ShaderCompiler = this._ShaderCompiler;
             var shaderGen = new ShaderCompiler( attributes, textureAttributes, this._shaderProcessor );
 
-            /* develblock:start */
+            /*develblock:start*/
             // Logs hash, attributes and compiler
             Notify.log( 'New Compilation ', false, true );
             Notify.log( {
@@ -226,7 +252,7 @@ ShaderGenerator.prototype = {
                 Hash: hash,
                 Compiler: shaderGen.getFragmentShaderName()
             }, false, true );
-            /* develblock:end */
+            /*develblock:end*/
 
             var vertexshader = shaderGen.createVertexShader();
             var fragmentshader = shaderGen.createFragmentShader();

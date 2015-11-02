@@ -22,8 +22,8 @@ lib.utils = utils;
 
 // debug utility: set it to one to have verbose in shaders
 lib.debugShaderNode = false;
-/*develblock:end*/
+/* develblock:start */
 lib.debugShaderNode = true;
-/*develblock:end*/
+/* develblock:end */
 
 module.exports = lib;
