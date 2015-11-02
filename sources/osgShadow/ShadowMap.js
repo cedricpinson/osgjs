@@ -311,9 +311,9 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
                 this._receivingStateset.removeAttribute( this._shadowReceiveAttribute.getTypeMember() );
         }
 
-        /* develblock:start */
+        /*develblock:start*/
         Notify.assert( this._shadowReceiveAttribute.getTypeMember() === this._shadowReceiveAttribute.attributeType + lightNumber, 'TypeMember isnt reflecting light number' + this._shadowReceiveAttribute.getTypeMember() + ' !== ' + this._shadowReceiveAttribute.attributeType + lightNumber );
-        /* develblock:end */
+        /*develblock:end*/
 
 
         if ( this._texture && this._texture.getLightUnit() !== lightNumber ) {

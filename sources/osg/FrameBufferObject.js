@@ -33,7 +33,6 @@ FrameBufferObject.deleteGLFrameBuffer = function ( gl, fb ) {
     FrameBufferObject._sDeletedGLFrameBufferCache.get( gl ).push( fb );
 };
 
-
 // static method to flush all the cached glFrameBuffers which need to be deleted in the GL context specified
 FrameBufferObject.flushDeletedGLFrameBuffers = function ( gl, availableTime ) {
     // if no time available don't try to flush objects.
