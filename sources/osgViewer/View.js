@@ -82,6 +82,14 @@ View.prototype = {
 
     },
 
+    // check Each frame because HTML standard inconsistencies
+    // - mobile full-screen, device orientation, etc
+    // peculiarity of webgl canvas resizing here some details
+    // http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+    // screen size
+    // http://tripleodeon.com/2011/12/first-understand-your-screen/
+    // touchy is touchy: many things to know
+    // http://webglfundamentals.org/webgl/lessons/webgl-anti-patterns.html
     computeCanvasSize: ( function () {
         return function ( canvas ) {
 
