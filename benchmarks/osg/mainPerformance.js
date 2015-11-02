@@ -1,6 +1,7 @@
 define( [
     'qunit',
     'tests/mockup/mockup',
+    'benchmarks/reportStats',
     'osg/Light',
     'osg/LightSource',
     'osg/Matrix',
@@ -13,7 +14,7 @@ define( [
     'osgShadow/ShadowMap',
     'osgShadow/ShadowedScene',
     'osgShadow/ShadowSettings',
-], function ( QUnit, mockup, Light, LightSource, Matrix, MatrixTransform, Node, Notify, Shape, Timer, Viewer, ShadowMap, ShadowedScene, ShadowSettings ) {
+], function ( QUnit, mockup, reportStats, Light, LightSource, Matrix, MatrixTransform, Node, Notify, Shape, Timer, Viewer, ShadowMap, ShadowedScene, ShadowSettings ) {
 
     'use strict';
 
@@ -119,8 +120,9 @@ define( [
             console.profileEnd();
 
             timed = Timer.instance().tick() - timed;
-            console.log( 'perf Main Cullvisitor scene  Loop is: ' + ( timed / nCount ).toFixed() + ' ms' );
-            ok( false, 'perf Main Loop CullVisitor is: ' + ( timed / nCount ).toFixed() + ' ms' );
+
+            reportStats( timed, 'Main CullVisitor Loop scene' );
+
         } );
 
         test( 'CullVisitor Heavy Static Scene with Frustum culling (Worst Cases as Scene is Flat) ', function () {
@@ -167,8 +169,8 @@ define( [
 
             timed = Timer.instance().tick() - timed;
 
-            console.log( 'perf Main CullVisitor Loop scene + culling is: ' + ( timed / nCount ).toFixed() + ' ms' );
-            ok( false, 'perf is: ' + ( timed / nCount ).toFixed() + ' ms' );
+            reportStats( timed, 'Main CullVisitor Loop scene + culling' );
+
         } );
         test( 'CullVisitor Heavy Static Scene with 1 light And Shadows ', function () {
 
@@ -214,8 +216,8 @@ define( [
 
             timed = Timer.instance().tick() - timed;
 
-            console.log( 'perf Main CullVisitor Loop scene + shadow Loop is: ' + ( timed / nCount ).toFixed() + ' ms' );
-            ok( false, 'perf is: ' + ( timed / nCount ).toFixed() + ' ms' );
+            reportStats( timed, 'Main CullVisitor Loop scene + shadow Loop' );
+
         } );
     };
 } );

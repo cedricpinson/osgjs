@@ -1,10 +1,11 @@
 define( [
     'qunit',
     'tests/mockup/mockup',
+    'benchmarks/reportStats',
     'osg/MatrixTransform',
     'osg/Timer',
     'osgAnimation/BasicAnimationManager'
-], function ( QUnit, mockup, MatrixTransform, Timer, BasicAnimationManager ) {
+], function ( QUnit, mockup, reportStats, MatrixTransform, Timer, BasicAnimationManager ) {
 
     'use strict';
 
@@ -81,9 +82,8 @@ define( [
             timed = Timer.instance().tick() - timed;
 
             console.log( fakeResult );
-            console.log( 'perf Animation Loop is: ' + ( timed / nCount ).toFixed() + ' ms' );
 
-            ok( false, 'perf is: ' + ( timed / nCount ).toFixed() + ' ms' );
+            reportStats( timed, 'Animation Loop' );
 
         } );
 
