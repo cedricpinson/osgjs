@@ -1,16 +1,13 @@
-define( [
-    'tests/osgUtil/LineSegmentIntersector',
-    'tests/osgUtil/TriangleIntersector',
-    'tests/osgUtil/PolytopeIntersector',
-    'tests/osgUtil/IntersectionVisitor'
-], function ( LineSegmentIntersector, TriangleIntersector, PolytopeIntersector, IntersectionVisitor ) {
+'use strict';
+var LineSegmentIntersector = require( 'tests/osgUtil/LineSegmentIntersector' );
+var TriangleIntersector = require( 'tests/osgUtil/TriangleIntersector' );
+var PolytopeIntersector = require( 'tests/osgUtil/PolytopeIntersector' );
+var IntersectionVisitor = require( 'tests/osgUtil/IntersectionVisitor' );
 
-    'use strict';
 
-    return function () {
-        LineSegmentIntersector();
-        TriangleIntersector();
-        PolytopeIntersector();
-        IntersectionVisitor();
-    };
-} );
+module.exports = function () {
+    LineSegmentIntersector();
+    TriangleIntersector();
+    PolytopeIntersector();
+    IntersectionVisitor();
+};

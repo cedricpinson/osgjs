@@ -1,13 +1,12 @@
-define( [ 'qunit' ], function ( QUnit ) {
+'use strict';
+var QUnit = require( 'qunit' );
 
-    'use strict';
 
-    return function () {
+module.exports = function () {
 
-        QUnit.module( 'osgAnimation' );
+    QUnit.module( 'osgAnimation' );
 
-        QUnit.test( 'Animation', function () {
-            ok( true );
-        } );
-    };
-} );
+    QUnit.test( 'Animation', function () {
+        ok( true );
+    } );
+};

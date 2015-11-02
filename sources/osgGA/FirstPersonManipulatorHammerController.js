@@ -1,9 +1,5 @@
-define( [
-    'osgGA/OrbitManipulatorHammerController',
-], function ( OrbitManipulatorHammerController ) {
+'use strict';
+var OrbitManipulatorHammerController = require( 'osgGA/OrbitManipulatorHammerController' );
 
-    'use strict';
 
-    return OrbitManipulatorHammerController;
-
-} );
+module.exports = OrbitManipulatorHammerController;

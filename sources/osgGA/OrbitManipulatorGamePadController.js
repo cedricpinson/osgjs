@@ -1,116 +1,113 @@
-define( [
-    'osg/Vec2'
-], function ( Vec2 ) {
-
-    'use strict';
-
-    var OrbitManipulatorGamePadController = function ( manipulator ) {
-        this._manipulator = manipulator;
-        this.init();
-    };
-
-    OrbitManipulatorGamePadController.prototype = {
-        init: function () {
-            this._delay = 0.15;
-            this._threshold = 0.08;
-            this._mode = 0;
-            this._padFactor = 10.0;
-            this._zoomFactor = 0.5;
-            this._rotateFactor = 5.0;
-        },
+'use strict';
+var Vec2 = require( 'osg/Vec2' );
 
 
-        addPan: function ( pan, x, y ) {
-            pan.setDelay( this._delay );
-            pan.addTarget( x * this._padFactor, y * this._padFactor );
-        },
+var OrbitManipulatorGamePadController = function ( manipulator ) {
+    this._manipulator = manipulator;
+    this.init();
+};
 
-        addZoom: function ( zoom, z ) {
-            zoom.setDelay( this._delay );
-            zoom.addTarget( z * this._zoomFactor );
-        },
+OrbitManipulatorGamePadController.prototype = {
+    init: function () {
+        this._delay = 0.15;
+        this._threshold = 0.08;
+        this._mode = 0;
+        this._padFactor = 10.0;
+        this._zoomFactor = 0.5;
+        this._rotateFactor = 5.0;
+    },
 
-        addRotate: function ( rotate, x, y ) {
-            rotate.setDelay( this._delay );
-            //var rotateTarget = rotate.getTarget();
-            rotate.addTarget( x * this._rotateFactor, y * this._rotateFactor );
-        },
 
-        gamepadaxes: function ( axes ) {
+    addPan: function ( pan, x, y ) {
+        pan.setDelay( this._delay );
+        pan.addTarget( x * this._padFactor, y * this._padFactor );
+    },
 
-            // Block badly balanced controllers
-            var AXIS_THRESHOLD = 0.005;
+    addZoom: function ( zoom, z ) {
+        zoom.setDelay( this._delay );
+        zoom.addTarget( z * this._zoomFactor );
+    },
 
-            //var rotateTarget, panTarget;
-            var rotate = this._manipulator.getRotateInterpolator();
-            var zoom = this._manipulator.getZoomInterpolator();
-            var pan = this._manipulator.getPanInterpolator();
-            // Regular gamepads
-            if ( axes.length === 4 ) {
+    addRotate: function ( rotate, x, y ) {
+        rotate.setDelay( this._delay );
+        //var rotateTarget = rotate.getTarget();
+        rotate.addTarget( x * this._rotateFactor, y * this._rotateFactor );
+    },
 
-                if ( Math.abs( axes[ 0 ] ) > AXIS_THRESHOLD || Math.abs( axes[ 1 ] ) > AXIS_THRESHOLD ) {
-                    this.addRotate( rotate, -axes[ 0 ], axes[ 1 ] );
-                }
-                if ( Math.abs( axes[ 3 ] ) > AXIS_THRESHOLD ) {
-                    this.addZoom( zoom, -axes[ 3 ] );
-                }
+    gamepadaxes: function ( axes ) {
 
-                //SpaceNavigator & 6-axis controllers
-            } else if ( axes.length >= 5 ) {
-                //Notify.log(axes);
-                if ( Math.abs( axes[ 0 ] ) > AXIS_THRESHOLD || Math.abs( axes[ 1 ] ) > AXIS_THRESHOLD ) {
-                    this.addPan( pan, -axes[ 0 ], axes[ 1 ] );
-                }
+        // Block badly balanced controllers
+        var AXIS_THRESHOLD = 0.005;
 
-                if ( Math.abs( axes[ 2 ] ) > AXIS_THRESHOLD ) {
-                    this.addZoom( zoom, -axes[ 2 ] );
-                }
+        //var rotateTarget, panTarget;
+        var rotate = this._manipulator.getRotateInterpolator();
+        var zoom = this._manipulator.getZoomInterpolator();
+        var pan = this._manipulator.getPanInterpolator();
+        // Regular gamepads
+        if ( axes.length === 4 ) {
 
-                if ( Math.abs( axes[ 3 ] ) > AXIS_THRESHOLD || Math.abs( axes[ 4 ] ) > AXIS_THRESHOLD ) {
-                    this.addRotate( rotate, axes[ 4 ], axes[ 3 ] );
-                }
+            if ( Math.abs( axes[ 0 ] ) > AXIS_THRESHOLD || Math.abs( axes[ 1 ] ) > AXIS_THRESHOLD ) {
+                this.addRotate( rotate, -axes[ 0 ], axes[ 1 ] );
+            }
+            if ( Math.abs( axes[ 3 ] ) > AXIS_THRESHOLD ) {
+                this.addZoom( zoom, -axes[ 3 ] );
             }
 
-        },
-
-        gamepadbuttondown: function ( event /*, pressed */ ) {
-            // Buttons 12 to 15 are the d-pad.
-            if ( event.button >= 12 && event.button <= 15 ) {
-                var pan = this._manipulator.getPanInterpolator();
-                var panTarget = pan.getTarget();
-                var delta = {
-                    12: Vec2.createAndSet( 0, -1 ),
-                    13: Vec2.createAndSet( 0, 1 ),
-                    14: Vec2.createAndSet( -1, 0 ),
-                    15: Vec2.createAndSet( 1, 0 )
-                }[ event.button ];
-                pan.setDelay( this._delay );
-                pan.setTarget( panTarget[ 0 ] - delta[ 0 ] * 10, panTarget[ 1 ] + delta[ 1 ] * 10 );
-            }
-        },
-
-        update: function ( gm ) {
-            if ( !gm ) {
-                return;
+            //SpaceNavigator & 6-axis controllers
+        } else if ( axes.length >= 5 ) {
+            //Notify.log(axes);
+            if ( Math.abs( axes[ 0 ] ) > AXIS_THRESHOLD || Math.abs( axes[ 1 ] ) > AXIS_THRESHOLD ) {
+                this.addPan( pan, -axes[ 0 ], axes[ 1 ] );
             }
 
-            var axis = gm.axes;
-            var buttons = gm.buttons;
+            if ( Math.abs( axes[ 2 ] ) > AXIS_THRESHOLD ) {
+                this.addZoom( zoom, -axes[ 2 ] );
+            }
 
-            this.gamepadaxes( axis );
-
-            // Dummy event wrapper
-            var emptyFunc = function () {};
-            for ( var i = 0; i < buttons.length; i++ ) {
-                if ( buttons[ i ] ) {
-                    this.gamepadbuttondown( {
-                        preventDefault: emptyFunc,
-                        gamepad: gm,
-                        button: i
-                    }, !!buttons[ i ] );
-                }
+            if ( Math.abs( axes[ 3 ] ) > AXIS_THRESHOLD || Math.abs( axes[ 4 ] ) > AXIS_THRESHOLD ) {
+                this.addRotate( rotate, axes[ 4 ], axes[ 3 ] );
             }
         }
-    };
-    return OrbitManipulatorGamePadController;
-} );
+
+    },
+
+    gamepadbuttondown: function ( event /*, pressed */ ) {
+        // Buttons 12 to 15 are the d-pad.
+        if ( event.button >= 12 && event.button <= 15 ) {
+            var pan = this._manipulator.getPanInterpolator();
+            var panTarget = pan.getTarget();
+            var delta = {
+                12: Vec2.createAndSet( 0, -1 ),
+                13: Vec2.createAndSet( 0, 1 ),
+                14: Vec2.createAndSet( -1, 0 ),
+                15: Vec2.createAndSet( 1, 0 )
+            }[ event.button ];
+            pan.setDelay( this._delay );
+            pan.setTarget( panTarget[ 0 ] - delta[ 0 ] * 10, panTarget[ 1 ] + delta[ 1 ] * 10 );
+        }
+    },
+
+    update: function ( gm ) {
+        if ( !gm ) {
+            return;
+        }
+
+        var axis = gm.axes;
+        var buttons = gm.buttons;
+
+        this.gamepadaxes( axis );
+
+        // Dummy event wrapper
+        var emptyFunc = function () {};
+        for ( var i = 0; i < buttons.length; i++ ) {
+            if ( buttons[ i ] ) {
+                this.gamepadbuttondown( {
+                    preventDefault: emptyFunc,
+                    gamepad: gm,
+                    button: i
+                }, !!buttons[ i ] );
+            }
+        }
+    }
+};
+module.exports = OrbitManipulatorGamePadController;

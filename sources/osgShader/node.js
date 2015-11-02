@@ -1,36 +1,32 @@
-define( [
-    'osgShader/node/skinning',
-    'osgShader/node/morph',
-    'osgShader/node/data',
-    'osgShader/node/textures',
-    'osgShader/node/functions',
-    'osgShader/node/lights',
-    'osgShader/node/operations'
+'use strict';
 
-], function ( /*skinning, morph, data, textures, functions, lights, operations */) {
-    'use strict';
+var subnamespace = [
+    require( 'osgShader/node/skinning' ),
+    require( 'osgShader/node/morph' ),
+    require( 'osgShader/node/data' ),
+    require( 'osgShader/node/textures' ),
+    require( 'osgShader/node/functions' ),
+    require( 'osgShader/node/lights' ),
+    require( 'osgShader/node/operations' )
+];
 
-    var lib = {};
+var lib = {};
 
-    // use sublib except _ of course
-    var subnamespace = Array.prototype.slice.call( arguments, 0 );
+// add all sub component to root level of the lib
+subnamespace.forEach( function ( component /*, index */ ) {
 
-    // add all sub component to root level of the lib
-    subnamespace.forEach( function ( component /*, index */ ) {
+    window.Object.keys( component ).forEach( function ( key ) {
 
-        Object.keys( component ).forEach( function ( key ) {
+        var element = component[ key ];
 
-            var element = component[ key ];
+        if ( this[ key ] !== undefined ) { // if exist throw exception
+            throw 'duplicate entry in node library';
+        }
 
-            if ( this[ key ] !== undefined ) { // if exist throw exception
-                throw 'duplicate entry in node library';
-            }
+        this[ key ] = element;
 
-            this[ key ] = element;
+    }, this );
 
-        }, this );
+}, lib );
 
-    }, lib );
-
-    return lib;
-} );
+module.exports = lib;

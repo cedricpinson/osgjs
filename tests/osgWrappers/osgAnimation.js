@@ -1,33 +1,27 @@
-define( [
-    'qunit',
-    'q',
-    'osgDB/Input',
-    'osg/Notify',
-    'osg/Image'
-], function ( QUnit, Q, Input, Notify, Image ) {
+'use strict';
+var QUnit = require( 'qunit' );
+var Input = require( 'osgDB/Input' );
+var Notify = require( 'osg/Notify' );
 
-    'use strict';
+module.exports = function () {
 
-    return function () {
+    QUnit.module( 'osgWrapper' );
 
-        QUnit.module( 'osgWrapper' );
+    QUnit.asyncTest( 'osgAnimation', function () {
 
-        QUnit.asyncTest( 'osgAnimation', function () {
+        var input = new Input();
+        input.readNodeURL( '../examples/media/models/material-test/file.osgjs' ).then( function ( scene ) {
 
-            var input = new Input();
-            input.readNodeURL( '../examples/media/models/material-test/file.osgjs').then( function( scene ) {
+            ok( scene !== undefined, true );
 
-                ok( scene !== undefined, true );
-
-                start();
+            start();
 
 
-            }).fail( function( error ) {
-                Notify.error( error );
-            });
-
-
+        } ).fail( function ( error ) {
+            Notify.error( error );
         } );
 
-    };
-} );
+
+    } );
+
+};

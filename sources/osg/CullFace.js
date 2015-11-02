@@ -1,53 +1,50 @@
-define( [
-    'osg/Utils',
-    'osg/StateAttribute'
-], function ( MACROUTILS, StateAttribute ) {
+'use strict';
+var MACROUTILS = require( 'osg/Utils' );
+var StateAttribute = require( 'osg/StateAttribute' );
 
-    'use strict';
 
-    /**
-     *  Manage CullFace attribute
-     *  @class CullFace
-     */
-    var CullFace = function ( mode ) {
-        StateAttribute.call( this );
-        if ( mode === undefined ) {
-            mode = CullFace.BACK;
+/**
+ *  Manage CullFace attribute
+ *  @class CullFace
+ */
+var CullFace = function ( mode ) {
+    StateAttribute.call( this );
+    if ( mode === undefined ) {
+        mode = CullFace.BACK;
+    }
+    this.setMode( mode );
+};
+
+CullFace.DISABLE = 0x0;
+CullFace.FRONT = 0x0404;
+CullFace.BACK = 0x0405;
+CullFace.FRONT_AND_BACK = 0x0408;
+
+/** @lends CullFace.prototype */
+CullFace.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+    attributeType: 'CullFace',
+    cloneType: function () {
+        return new CullFace();
+    },
+    setMode: function ( mode ) {
+        if ( typeof mode === 'string' ) {
+            mode = CullFace[ mode ];
         }
-        this.setMode( mode );
-    };
-
-    CullFace.DISABLE = 0x0;
-    CullFace.FRONT = 0x0404;
-    CullFace.BACK = 0x0405;
-    CullFace.FRONT_AND_BACK = 0x0408;
-
-    /** @lends CullFace.prototype */
-    CullFace.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
-        attributeType: 'CullFace',
-        cloneType: function () {
-            return new CullFace();
-        },
-        setMode: function ( mode ) {
-            if ( typeof mode === 'string' ) {
-                mode = CullFace[ mode ];
-            }
-            this._mode = mode;
-        },
-        getMode: function () {
-            return this._mode;
-        },
-        apply: function ( state ) {
-            var gl = state.getGraphicContext();
-            if ( this._mode === CullFace.DISABLE ) {
-                gl.disable( gl.CULL_FACE );
-            } else {
-                gl.enable( gl.CULL_FACE );
-                gl.cullFace( this._mode );
-            }
-            this._dirty = false;
+        this._mode = mode;
+    },
+    getMode: function () {
+        return this._mode;
+    },
+    apply: function ( state ) {
+        var gl = state.getGraphicContext();
+        if ( this._mode === CullFace.DISABLE ) {
+            gl.disable( gl.CULL_FACE );
+        } else {
+            gl.enable( gl.CULL_FACE );
+            gl.cullFace( this._mode );
         }
-    } ), 'osg', 'CullFace' );
+        this._dirty = false;
+    }
+} ), 'osg', 'CullFace' );
 
-    return CullFace;
-} );
+module.exports = CullFace;

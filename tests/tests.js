@@ -1,51 +1,39 @@
-// polyfill for phantomjs
+'use strict';
+
 require( 'tests/vendors/es5-shim' );
 require( 'tests/vendors/es6-shim' );
 
-
 // add missing class for phantom js execution context
 if ( window.HTMLVideoElement === undefined ) {
-    // dummy class
-    window.HTMLVideoElement = function() {
-    };
+    window.HTMLVideoElement = function () {}; // dummy class
 }
 
+var QUnit = require( 'qunit' );
+var OSG = require( 'OSG' );
+var osg = require( 'tests/osg/osgTests' );
+var osgAnimation = require( 'tests/osgAnimation/osgAnimationTests' );
+var osgDB = require( 'tests/osgDB/osgDBTests' );
+var osgGA = require( 'tests/osgGA/osgGATests' );
+var osgUtil = require( 'tests/osgUtil/osgUtilTests' );
+var osgViewer = require( 'tests/osgViewer/osgViewerTests' );
+var osgShader = require( 'tests/osgShader/osgShaderTests' );
+var osgShadow = require( 'tests/osgShadow/osgShadowTests' );
+var osgText = require( 'tests/osgText/osgTextTests' );
+var osgWrappers = require( 'tests/osgWrappers/osgWrappersTests' );
 
-/*global QUnit,define,module,test,ok */
-QUnit.config.testTimeout = 5000;
+// hack because of osgPool
+OSG.osg.init();
 
-define( [
-    'OSG',
-
-    'tests/osg/osgTests',
-    'tests/osgAnimation/osgAnimationTests',
-    'tests/osgDB/osgDBTests',
-    'tests/osgGA/osgGATests',
-    'tests/osgUtil/osgUtilTests',
-    'tests/osgViewer/osgViewerTests',
-    'tests/osgShader/osgShaderTests',
-    'tests/osgShadow/osgShadowTests',
-    'tests/osgText/osgTextTests',
-    'tests/osgWrappers/osgWrappersTests'
-
-], function ( OSG, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer, osgShader, osgShadow, osgText, osgWrappers ) {
-
-    // hack because of osgPool
-    OSG.osg.init();
-
-    osg();
-    osgDB();
-    osgAnimation();
-    osgGA();
-    osgUtil();
-    osgViewer();
-    osgShader();
-    osgShadow();
-    osgText();
-    osgWrappers();
-    // start test when require finished its job
-    QUnit.load();
-    QUnit.start();
-
-
-} );
+osg();
+osgDB();
+osgAnimation();
+osgGA();
+osgUtil();
+osgViewer();
+osgShader();
+osgShadow();
+osgText();
+osgWrappers();
+// start test when require finished its job
+QUnit.load();
+QUnit.start();

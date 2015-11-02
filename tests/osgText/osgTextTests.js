@@ -1,10 +1,7 @@
-define( [
-    'tests/osgText/Text',
-], function ( Text ) {
+'use strict';
+var Text = require( 'tests/osgText/Text' );
 
-    'use strict';
 
-    return function () {
-        Text();
-    };
-} );
+module.exports = function () {
+    Text();
+};

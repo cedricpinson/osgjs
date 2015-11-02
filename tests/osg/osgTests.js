@@ -1,70 +1,67 @@
-define( [
-    'tests/osg/Image',
-    'tests/osg/BlendColor',
-    'tests/osg/BoundingBox',
-    'tests/osg/BoundingSphere',
-    'tests/osg/BufferArray',
-    'tests/osg/BufferArrayProxy',
-    'tests/osg/Camera',
-    'tests/osg/ComputeBoundsVisitor',
-    'tests/osg/ComputeMatrixFromNodePath',
-    'tests/osg/CullFace',
-    'tests/osg/CullVisitor',
-    'tests/osg/Depth',
-    'tests/osg/KdTree',
-    'tests/osg/Light',
-    'tests/osg/Matrix',
-    'tests/osg/MatrixTransform',
-    'tests/osg/Node',
-    'tests/osg/NodeVisitor',
-    'tests/osg/PagedLOD',
-    'tests/osg/Plane',
-    'tests/osg/Quat',
-    'tests/osg/State',
-    'tests/osg/StateSet',
-    'tests/osg/Texture',
-    'tests/osg/TextureCubeMap',
-    'tests/osg/TextureManager',
-    'tests/osg/UpdateVisitor',
-    'tests/osg/Uniform',
-    'tests/osg/Vec2',
-    'tests/osg/PrimitiveFunctor',
-    'tests/osg/WebGLCaps'
-], function ( Image, BlendColor, BoundingBox, BoundingSphere, BufferArray, BufferArrayProxy, Camera, ComputeBoundsVisitor, ComputeMatrixFromNodePath, CullFace, CullVisitor, Depth, KdTree, Light, Matrix, MatrixTransform, Node, NodeVisitor, PagedLOD, Plane, Quat, State, StateSet, Texture, TextureCubeMap, TextureManager, UpdateVisitor, Uniform, Vec2, PrimitiveFunctor, WebGLCaps ) {
+'use strict';
+var Image = require( 'tests/osg/Image' );
+var BlendColor = require( 'tests/osg/BlendColor' );
+var BoundingBox = require( 'tests/osg/BoundingBox' );
+var BoundingSphere = require( 'tests/osg/BoundingSphere' );
+var BufferArray = require( 'tests/osg/BufferArray' );
+var BufferArrayProxy = require( 'tests/osg/BufferArrayProxy' );
+var Camera = require( 'tests/osg/Camera' );
+var ComputeBoundsVisitor = require( 'tests/osg/ComputeBoundsVisitor' );
+var ComputeMatrixFromNodePath = require( 'tests/osg/ComputeMatrixFromNodePath' );
+var CullFace = require( 'tests/osg/CullFace' );
+var CullVisitor = require( 'tests/osg/CullVisitor' );
+var Depth = require( 'tests/osg/Depth' );
+var KdTree = require( 'tests/osg/KdTree' );
+var Light = require( 'tests/osg/Light' );
+var Matrix = require( 'tests/osg/Matrix' );
+var MatrixTransform = require( 'tests/osg/MatrixTransform' );
+var Node = require( 'tests/osg/Node' );
+var NodeVisitor = require( 'tests/osg/NodeVisitor' );
+var PagedLOD = require( 'tests/osg/PagedLOD' );
+var Plane = require( 'tests/osg/Plane' );
+var Quat = require( 'tests/osg/Quat' );
+var State = require( 'tests/osg/State' );
+var StateSet = require( 'tests/osg/StateSet' );
+var Texture = require( 'tests/osg/Texture' );
+var TextureCubeMap = require( 'tests/osg/TextureCubeMap' );
+var TextureManager = require( 'tests/osg/TextureManager' );
+var UpdateVisitor = require( 'tests/osg/UpdateVisitor' );
+var Uniform = require( 'tests/osg/Uniform' );
+var Vec2 = require( 'tests/osg/Vec2' );
+var PrimitiveFunctor = require( 'tests/osg/PrimitiveFunctor' );
+var WebGLCaps = require( 'tests/osg/WebGLCaps' );
 
-    'use strict';
 
-    return function () {
-        Image();
-        BlendColor();
-        BoundingBox();
-        BoundingSphere();
-        BufferArray();
-        BufferArrayProxy();
-        Camera();
-        ComputeBoundsVisitor();
-        ComputeMatrixFromNodePath();
-        CullVisitor();
-        CullFace();
-        Depth();
-        KdTree();
-        Light();
-        Matrix();
-        MatrixTransform();
-        Node();
-        NodeVisitor();
-        Plane();
-        PagedLOD();
-        Quat();
-        State();
-        StateSet();
-        Texture();
-        TextureCubeMap();
-        TextureManager();
-        UpdateVisitor();
-        Uniform();
-        Vec2();
-        PrimitiveFunctor();
-        WebGLCaps();
-    };
-} );
+module.exports = function () {
+    Image();
+    BlendColor();
+    BoundingBox();
+    BoundingSphere();
+    BufferArray();
+    BufferArrayProxy();
+    Camera();
+    ComputeBoundsVisitor();
+    ComputeMatrixFromNodePath();
+    CullVisitor();
+    CullFace();
+    Depth();
+    KdTree();
+    Light();
+    Matrix();
+    MatrixTransform();
+    Node();
+    NodeVisitor();
+    Plane();
+    PagedLOD();
+    Quat();
+    State();
+    StateSet();
+    Texture();
+    TextureCubeMap();
+    TextureManager();
+    UpdateVisitor();
+    Uniform();
+    Vec2();
+    PrimitiveFunctor();
+    WebGLCaps();
+};

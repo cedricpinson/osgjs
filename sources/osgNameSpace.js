@@ -1,5 +1,3 @@
-define( [
-    'version'
-], function ( version ) {
-    return version;
-} );
+'use strict';
+var version = require( 'version' );
+module.exports = version;

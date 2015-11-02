@@ -20,6 +20,7 @@
     "node": true,
     "devel": true,
 
+    "predef": [ "-Object", "-Node", "-Image", "-Map", "-Text" ],
     "globals": {
         "define": false,
         "require": false,
@@ -31,6 +32,11 @@
         "equal": false,
         "start": false,
         "deepEqual": false,
-        "__dirname": false
+        "__dirname": false,
+        "Object": true,
+        "Node": true,
+        "Image": true,
+        "Map": true,
+        "Text": true
     }
 }

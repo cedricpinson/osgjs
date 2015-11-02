@@ -1,23 +1,19 @@
-define( [], function () {
+'use strict';
 
-    'use strict';
+// Base class for GLResources: Textures, Buffers, Programs, Shaders, FrameBuffers and RenderBuffers
+// It holds a reference to the graphic context that is needed for resource deletion
 
-    // Base class for GLResources: Textures, Buffers, Programs, Shaders, FrameBuffers and RenderBuffers
-    // It holds a reference to the graphic context that is needed for resource deletion
+var GLObject = function () {
+    this._gl = undefined;
+};
 
-    var GLObject = function () {
-        this._gl = undefined;
-    };
+GLObject.prototype = {
+    setGraphicContext: function ( gl ) {
+        this._gl = gl;
+    },
+    getGraphicContext: function () {
+        return this._gl;
+    }
+};
 
-    GLObject.prototype = {
-        setGraphicContext: function ( gl ) {
-            this._gl = gl;
-        },
-        getGraphicContext: function () {
-            return this._gl;
-        }
-    };
-
-    return GLObject;
-
-} );
+module.exports = GLObject;

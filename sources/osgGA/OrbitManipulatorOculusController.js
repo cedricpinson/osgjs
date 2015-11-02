@@ -1,20 +1,17 @@
-define( [], function () {
+'use strict';
 
-    'use strict';
+var OrbitManipulatorOculusController = function ( manipulator ) {
+    this._manipulator = manipulator;
+    this.init();
+};
 
-    var OrbitManipulatorOculusController = function ( manipulator ) {
-        this._manipulator = manipulator;
-        this.init();
-    };
+OrbitManipulatorOculusController.prototype = {
+    init: function () {},
+    update: function ( quaternion ) {
 
-    OrbitManipulatorOculusController.prototype = {
-        init: function () {},
-        update: function ( quaternion ) {
+        this._manipulator.setRotationBaseFromQuat( quaternion );
+    },
 
-            this._manipulator.setRotationBaseFromQuat( quaternion );
-        },
+};
 
-    };
-
-    return OrbitManipulatorOculusController;
-} );
+module.exports = OrbitManipulatorOculusController;

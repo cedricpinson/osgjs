@@ -1,41 +1,38 @@
-define( [
-    'osgNameSpace',
-    'osg/osg',
-    'osgAnimation/osgAnimation',
-    'osgDB/osgDB',
-    'osgGA/osgGA',
-    'osgUtil/osgUtil',
-    'osgViewer/osgViewer',
-    'osgShader/osgShader',
-    'osgShadow/osgShadow',
-    'osgText/osgText',
-    'osgWrappers/osgWrappers'
-], function ( osgNameSpace, osg, osgAnimation, osgDB, osgGA, osgUtil, osgViewer, osgShader, osgShadow, osgText, osgWrappers ) {
-
-    'use strict';
-
-    var openSceneGraph = osgNameSpace;
-
-    openSceneGraph.osg = osg;
-    openSceneGraph.osgAnimation = osgAnimation;
-    openSceneGraph.osgDB = osgDB;
-    openSceneGraph.osgGA = osgGA;
-    openSceneGraph.osgUtil = osgUtil;
-    openSceneGraph.osgViewer = osgViewer;
-    openSceneGraph.osgShader = osgShader;
-    openSceneGraph.osgShadow = osgShadow;
-    openSceneGraph.osgText = osgText;
-    openSceneGraph.osgWrappers = osgWrappers;
-
-    var namespaces = [ 'osg', 'osgAnimation', 'osgDB', 'osgGA', 'osgUtil', 'osgViewer', 'osgShader', 'osgShadow', 'osgText', 'osgWrappers' ];
+'use strict';
+var osgNameSpace = require( 'osgNameSpace' );
+var osg = require( 'osg/osg' );
+var osgAnimation = require( 'osgAnimation/osgAnimation' );
+var osgDB = require( 'osgDB/osgDB' );
+var osgGA = require( 'osgGA/osgGA' );
+var osgUtil = require( 'osgUtil/osgUtil' );
+var osgViewer = require( 'osgViewer/osgViewer' );
+var osgShader = require( 'osgShader/osgShader' );
+var osgShadow = require( 'osgShadow/osgShadow' );
+var osgText = require( 'osgText/osgText' );
+var osgWrappers = require( 'osgWrappers/osgWrappers' );
 
 
-    // for backward compatibility
-    openSceneGraph.globalify = function () {
-        namespaces.forEach( function ( namespace ) {
-            window[ namespace ] = openSceneGraph[ namespace ];
-        } );
-    };
+var openSceneGraph = osgNameSpace;
 
-    return openSceneGraph;
-} );
+openSceneGraph.osg = osg;
+openSceneGraph.osgAnimation = osgAnimation;
+openSceneGraph.osgDB = osgDB;
+openSceneGraph.osgGA = osgGA;
+openSceneGraph.osgUtil = osgUtil;
+openSceneGraph.osgViewer = osgViewer;
+openSceneGraph.osgShader = osgShader;
+openSceneGraph.osgShadow = osgShadow;
+openSceneGraph.osgText = osgText;
+openSceneGraph.osgWrappers = osgWrappers;
+
+var namespaces = [ 'osg', 'osgAnimation', 'osgDB', 'osgGA', 'osgUtil', 'osgViewer', 'osgShader', 'osgShadow', 'osgText', 'osgWrappers' ];
+
+
+// for backward compatibility
+openSceneGraph.globalify = function () {
+    namespaces.forEach( function ( namespace ) {
+        window[ namespace ] = openSceneGraph[ namespace ];
+    } );
+};
+
+module.exports = openSceneGraph;

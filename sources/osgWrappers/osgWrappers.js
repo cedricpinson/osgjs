@@ -1,14 +1,11 @@
-define( [
-    'osgWrappers/serializers/osg',
-    'osgWrappers/serializers/osgAnimation'
-], function ( osg, osgAnimation ) {
+'use strict';
+var osg = require( 'osgWrappers/serializers/osg' );
+var osgAnimation = require( 'osgWrappers/serializers/osgAnimation' );
 
-    'use strict';
 
-    var osgWrappers = {};
+var osgWrappers = {};
 
-    osgWrappers.osg = osg;
-    osgWrappers.osgAnimation = osgAnimation;
+osgWrappers.osg = osg;
+osgWrappers.osgAnimation = osgAnimation;
 
-    return osgWrappers;
-} );
+module.exports = osgWrappers;
