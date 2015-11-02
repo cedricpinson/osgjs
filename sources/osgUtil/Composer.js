@@ -123,7 +123,7 @@ define( [
             return false;
         },
 
-        /* develblock:start */
+        /*develblock:start*/
         // debug only check for specific bad condition:
         // in webgl 1.0 you cannot read and write on the same texture
         // so you shouldn't bind a FOB texture as input and output
@@ -135,7 +135,7 @@ define( [
 
             }
         },
-        /* develblock:end */
+        /*develblock:end*/
 
         build: function () {
 
@@ -250,9 +250,9 @@ define( [
                 // if rendering into texture framebuffer
                 if ( textureResult ) {
 
-                    /* develblock:start */
+                    /*develblock:start*/
                     self.debugCheckRttNotReadWrite( textureResult, stateSet );
-                    /* develblock:end */
+                    /*develblock:end*/
 
                     // assign the result texture to the next stateset
                     if ( i + 1 < array.length ) {

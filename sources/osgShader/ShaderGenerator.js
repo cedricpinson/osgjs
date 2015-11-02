@@ -220,7 +220,7 @@ define( [
                 var ShaderCompiler = this._ShaderCompiler;
                 var shaderGen = new ShaderCompiler( attributes, textureAttributes, this._shaderProcessor );
 
-                /* develblock:start */
+                /*develblock:start*/
                 // Logs hash, attributes and compiler
                 Notify.log( 'New Compilation ', false, true );
                 Notify.log( {
@@ -229,7 +229,7 @@ define( [
                     Hash: hash,
                     Compiler: shaderGen.getFragmentShaderName()
                 }, false, true );
-                /* develblock:end */
+                /*develblock:end*/
 
                 var vertexshader = shaderGen.createVertexShader();
                 var fragmentshader = shaderGen.createFragmentShader();
