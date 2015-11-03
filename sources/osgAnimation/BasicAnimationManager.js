@@ -515,24 +515,38 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
 
             var target = targetList[ i ];
             var affectedChannels = target.channels;
-            if ( affectedChannels.length === 0 ) { // no blending ?
+            var nbChannels = affectedChannels.length;
+            // note operatorType operations doesn't always operate on arrays (float)
+            // so we can't simply assume that target.value is an array so we need
+            // to write "target.value = ..."
+
+            if ( nbChannels === 0 ) { // no blending ?
                 target.value = operatorType.copy( target.defaultValue, target.value );
-                continue;
-            }
 
-            target.value = operatorType.init( target.value );
-            var accumulatedWeight = 0.0;
+            } else if ( nbChannels === 1 ) {
+                target.value = operatorType.copy( affectedChannels[ 0 ].value, target.value );
 
-            for ( var j = 0, nj = affectedChannels.length; j < nj; j++ ) {
+            } else {
 
-                var achannel = affectedChannels[ j ];
-                var weight = achannel.weight;
-                accumulatedWeight += weight;
-                var ratio = weight / accumulatedWeight;
-                target.value = operatorType.lerp( ratio, target.value, achannel.value, target.value );
+                // blend between multiple channels
+                target.value = operatorType.init( target.value );
+                var accumulatedWeight = 0.0;
+
+                // it's the same as targetOut = (v0 * w0 + v1 * w1 + ...) / (w0 + w1 + ...)
+                for ( var j = 0, nj = affectedChannels.length; j < nj; j++ ) {
+
+                    var achannel = affectedChannels[ j ];
+                    var weight = achannel.weight;
+                    accumulatedWeight += weight;
+                    // avoid divide by zero and useless lerp
+                    if ( accumulatedWeight === 0.0 || weight === 0.0 )
+                        continue;
+
+                    var ratio = weight / accumulatedWeight;
+                    target.value = operatorType.lerp( ratio, target.value, achannel.value, target.value );
+                }
             }
         }
-
     },
 
     _updateChannelsType: function ( t, channels, interpolator ) {
