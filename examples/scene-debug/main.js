@@ -78,9 +78,9 @@
             var rotate = new osg.MatrixTransform();
             var root = this.createScene();
 
-            var visitor = new osgUtil.DisplayNodeGraphVisitor();
-            root.accept( visitor );
-            visitor.createGraph();
+            var displayGraph = osgUtil.DisplayGraph.instance();
+            displayGraph.setDisplayGraphRenderer( true );
+            displayGraph.createGraph( root );
 
             rotate.addChild( root );
 

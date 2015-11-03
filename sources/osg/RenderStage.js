@@ -71,6 +71,12 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
     getPositionedAttribute: function () {
         return this.positionedAttribute;
     },
+    getPreRenderStageList: function () {
+        return this.preRenderList;
+    },
+    getPostRenderStageList: function () {
+        return this.postRenderList;
+    },
     addPreRenderStage: function ( rs, order ) {
         for ( var i = 0, l = this.preRenderList.length; i < l; i++ ) {
             var render = this.preRenderList[ i ];

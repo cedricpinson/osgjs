@@ -8,6 +8,7 @@ var State = require( 'osg/State' );
 var StateGraph = require( 'osg/StateGraph' );
 var Vec4 = require( 'osg/Vec4' );
 var osgShader = require( 'osgShader/osgShader' );
+var DisplayGraph = require( 'osgUtil/DisplayGraph' );
 
 
 var Renderer = function ( camera ) {
@@ -22,6 +23,8 @@ var Renderer = function ( camera ) {
 
     this.setDefaults();
 };
+
+Renderer.debugGraph = false;
 
 Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
 
@@ -144,7 +147,6 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         this._cullVisitor.pushViewport( camera.getViewport() );
 
 
-
         this._renderStage.setClearDepth( camera.getClearDepth() );
         this._renderStage.setClearColor( camera.getClearColor() );
         this._renderStage.setClearMask( camera.getClearMask() );
@@ -179,10 +181,17 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
         var state = this.getState();
 
-        state.resetCacheFrame(); // important because cache are used in cullvisitor
+        // important because cache are used in cullvisitor
+        state.resetCacheFrame();
 
         this._renderStage.setCamera( this._camera );
         this._renderStage.draw( state );
+
+        if ( Renderer.debugGraph ) {
+            DisplayGraph.instance().createRenderGraph( this._renderStage );
+            Renderer.debugGraph = false;
+        }
+
         this._renderStage.setCamera( undefined );
 
         state.applyDefault();
