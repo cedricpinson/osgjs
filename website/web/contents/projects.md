@@ -29,6 +29,5 @@ examples:
     -
         title: PointCloudViz
         image: assets/img/pointcloudviz.jpg
-        link: http://server.pointcloudviz.com:9090
-    -
+        link: http://server.pointcloudviz.com
 ---

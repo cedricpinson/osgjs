@@ -13,21 +13,30 @@ OSGJS is a WebGL framework based on OpenSceneGraph concepts. It allows an indivi
 
 The mailing list is available here: http://groups.google.com/group/osgjs
 
-If you are interested in contributing, contact us on the IRC channels #webgl on Freenode, or by e-mail at contact@osgjs.org. Follow @trigrou on twitter to get news and update
+If you are interested in contributing, contact us on the osgjs gitter channel ( https://gitter.im/cedricpinson/osgjs ) or on the IRC channel #osgjs on Freenode. Also by e-mail at contact@osgjs.org. Follow @trigrou on twitter to get news and updates.
 
 
 How to build your own osgjs
 ----------------------------
 
-
 First, clone a copy of the main git repo by running:
-
 
     git clone git://github.com/cedricpinson/osgjs.git
     cd osgjs
-    npm install # before you may need to npm install -g grunt-cli
-    grunt build
 
+Install required node dependencies:
+
+    npm install # before you may need to execute npm install -g grunt-cli ( using sudo if you are running linux )
+
+Compile:
+
+    grunt build
+    Alternatively you can use webpack -d
+
+Compile whenever watched files change:
+
+    grunt watch
+    Alternatively use webpack -w  // faster than grunt watch because it uses webpack's incremental builds
 
 The built version of osgjs will be put in the `build/` subdirectory.
 
@@ -38,7 +47,14 @@ Simply type in the command-line:
 
     grunt serve
 
-It should open a browser pointing to the examples directory.
+It should open a browser pointing to the root source directory, then navigate to examples or tutorials folder.
+
+Executing unitary tests
+-----------------------
+
+Launch:
+
+    grunt test
 
 OpenSceneGraph osgjs plugin
 ----------------------------
