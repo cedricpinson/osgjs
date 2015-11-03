@@ -29,7 +29,7 @@ define( [
     // be deleted in the correct GL context.
     FrameBufferObject._sDeletedGLFrameBufferCache = new Map();
 
-    // static method to delete FrameBuffers 
+    // static method to delete FrameBuffers
     FrameBufferObject.deleteGLBufferArray = function ( gl, fb ) {
         if ( !FrameBufferObject._sDeletedGLFrameBufferCache.has( gl ) )
             FrameBufferObject._sDeletedGLFrameBufferCache.set( gl, [] );
@@ -134,12 +134,12 @@ define( [
                             gl.framebufferRenderbuffer( gl.FRAMEBUFFER, attachment.attachment, gl.RENDERBUFFER, rb );
                             hasRenderBuffer = true;
 
-                            /* develblock:start */
+                            /*develblock:start*/
                             // only visible with webgl-insector enabled
                             if ( gl.rawgl !== undefined ) {
                                 Notify.log( 'FBO: renderBuffer: ' + this._fbo.trackedObject.defaultName );
                             }
-                            /* develblock:end */
+                            /*develblock:end*/
 
                         } else {
 
@@ -151,13 +151,13 @@ define( [
 
                             gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment.attachment, attachment.textureTarget, texture.getTextureObject().id(), 0 );
 
-                            /* develblock:start */
+                            /*develblock:start*/
                             // only visible with webgl-insector enabled
                             // allow trace debug (fb<->texture link)
                             if ( gl.rawgl !== undefined ) {
                                 Notify.log( 'FBO: texture: ' + texture.getName() + ' : ' + texture.getTextureObject().id().trackedObject.defaultName + ' fbo: ' + this._fbo.trackedObject.defaultName );
                             }
-                            /* develblock:end */
+                            /*develblock:end*/
                         }
 
                     }

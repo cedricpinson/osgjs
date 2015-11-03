@@ -1,4 +1,5 @@
 define( [
+    'osg/Hash',
     'osg/Map',
     'osg/Matrix',
     'osg/Notify',
@@ -7,7 +8,7 @@ define( [
     'osg/Uniform',
     'osg/Utils',
     'osg/Vec4'
-], function ( Map, Matrix, Notify, StateAttribute, Texture, Uniform, MACROUTILS, Vec4 ) {
+], function ( Hash, Map, Matrix, Notify, StateAttribute, Texture, Uniform, MACROUTILS, Vec4 ) {
     'use strict';
 
 
@@ -20,10 +21,14 @@ define( [
      * @inherits StateAttribute
      */
     var ShadowTexture = function () {
+
         Texture.call( this );
         this._uniforms = {};
         this._mapSize = Vec4.create();
         this._lightUnit = -1; // default for a valid cloneType
+
+        this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
+
     };
 
     ShadowTexture.uniforms = {};
@@ -36,6 +41,7 @@ define( [
 
         setLightUnit: function ( lun ) {
             this._lightUnit = lun;
+            this.dirty();
         },
         getLightUnit: function () {
             return this._lightUnit;
@@ -129,7 +135,7 @@ define( [
             this.setDirty( false );
         },
 
-        getHash: function () {
+        getHashString: function () {
 
             return this.getTypeMember() + '_' + this._lightUnit + '_' +
                 this._type;

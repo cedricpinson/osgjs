@@ -1,10 +1,11 @@
 define( [
+    'osg/Hash',
     'osg/Utils',
     'osg/Map',
     'osg/Vec4',
     'osg/StateAttribute',
     'osg/Uniform'
-], function ( MACROUTILS, Map, Vec4, StateAttribute, Uniform ) {
+], function ( Hash, MACROUTILS, Map, Vec4, StateAttribute, Uniform ) {
 
     'use strict';
 
@@ -20,6 +21,8 @@ define( [
 
         this._targetNames = {};
         this._hashNames = ''; // compute only once target hash names
+
+        this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
     };
 
     MorphAttribute.uniforms = {};
@@ -47,6 +50,8 @@ define( [
             }
 
             this._hashNames = hash;
+            this.dirty();
+
         },
 
         getOrCreateUniforms: function () {
@@ -73,7 +78,7 @@ define( [
         isEnabled: function () {
             return this._enable;
         },
-        getHash: function () {
+        getHashString: function () {
             return this.getTypeMember() + this._hashNames + this.getNumTargets() + this.isEnabled();
         },
 

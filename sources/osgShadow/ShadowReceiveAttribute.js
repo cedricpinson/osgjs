@@ -1,4 +1,5 @@
 define( [
+    'osg/Hash',
     'osg/Utils',
     'osg/StateAttribute',
     'osg/Texture',
@@ -8,7 +9,7 @@ define( [
     'osg/Vec4',
     'osg/Map',
     'osg/Notify'
-], function ( MACROUTILS, StateAttribute, Texture, Uniform, Matrix, Vec3, Vec4, Map, Notify ) {
+], function ( Hash, MACROUTILS, StateAttribute, Texture, Uniform, Matrix, Vec3, Vec4, Map, Notify ) {
     'use strict';
 
 
@@ -48,6 +49,7 @@ define( [
 
         this._enable = !disable;
 
+        this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
     };
 
     ShadowReceiveAttribute.uniforms = {};
@@ -301,7 +303,7 @@ define( [
             Notify.log( 'ShadowAttribute.isEnable() is deprecated, use isEnabled() instead' );
             return this.isEnabled();
         },
-        getHash: function () {
+        getHashString: function () {
 
             return this.getTypeMember() + '_' + this.getAlgorithm() + '_' + this.getKernelSizePCF() + '_' + this.getFakePCF() + '_' + this.getRotateOffset();
 

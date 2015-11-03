@@ -109,12 +109,8 @@ define( [
 
 
         this._shadowReceiveAttribute = new ShadowReceiveAttribute( this._light.getLightNumber() );
-        this._casterStateSet.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
-
         // default name, overridable with shadow settings
         this._shadowCastShaderGeneratorName = 'ShadowCast';
-
-
 
         var near = 0.001;
         var far = 1000;
@@ -321,9 +317,9 @@ define( [
                     this._receivingStateset.removeAttribute( this._shadowReceiveAttribute.getTypeMember() );
             }
 
-            /* develblock:start */
+            /*develblock:start*/
             Notify.assert( this._shadowReceiveAttribute.getTypeMember() === this._shadowReceiveAttribute.attributeType + lightNumber, 'TypeMember isnt reflecting light number' + this._shadowReceiveAttribute.getTypeMember() + ' !== ' + this._shadowReceiveAttribute.attributeType + lightNumber );
-            /* develblock:end */
+            /*develblock:end*/
 
 
             if ( this._texture && this._texture.getLightUnit() !== lightNumber ) {
