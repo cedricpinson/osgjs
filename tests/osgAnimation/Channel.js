@@ -1,18 +1,15 @@
-define( [
-    'qunit',
-    'tests/mockup/mockup'
-], function ( QUnit, mockup ) {
+'use strict';
+var QUnit = require( 'qunit' );
+var mockup = require( 'tests/mockup/mockup' );
 
-    'use strict';
 
-    return function () {
+module.exports = function () {
 
-        QUnit.module( 'osgAnimation' );
+    QUnit.module( 'osgAnimation' );
 
-        QUnit.test( 'Channel', function () {
-            var keys = mockup.createVec3Keyframes();
+    QUnit.test( 'Channel', function () {
+        var keys = mockup.createVec3Keyframes();
 
-            ok( keys === keys, 'no tests' );
-        } );
-    };
-} );
+        ok( keys === keys, 'no tests' );
+    } );
+};

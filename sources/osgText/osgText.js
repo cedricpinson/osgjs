@@ -1,9 +1,7 @@
-define( [
-    'osgText/Text'
-], function ( Text ) {
+'use strict';
+var Text = require( 'osgText/Text' );
 
-    var osgText = {};
-    osgText.Text = Text;
+var osgText = {};
+osgText.Text = Text;
 
-    return osgText;
-} );
+module.exports = osgText;

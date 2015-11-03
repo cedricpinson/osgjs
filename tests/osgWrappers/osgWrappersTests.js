@@ -1,22 +1,13 @@
-define( [
-    'tests/osgWrappers/osgAnimation',
-    'osgWrappers/serializers/osgAnimation',
-    'osgDB/Input',
-    'qunit',
-    'tests/mockup/mockup'
-], function ( osgAnimation, osgAnimationWrapper, Input, QUnit, mockup ) {
+'use strict';
+var QUnit = require( 'qunit' );
 
-    'use strict';
+module.exports = function () {
 
-    return function () {
+    QUnit.module( 'osgWrapper' );
 
-        QUnit.module( 'osgWrapper' );
+    QUnit.asyncTest( 'osgWrapperTest', function () {
+        ok( true, 'No tests' );
+        start();
+    } );
 
-        QUnit.asyncTest( 'osgWrapperTest', function () {
-            ok(true , 'No tests');
-            start();
-        } );
-
-    };
-
-} );
+};

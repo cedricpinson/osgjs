@@ -1,108 +1,104 @@
-define( [
-    'osg/Utils',
-    'osg/BufferArrayProxy',
-    'osg/Notify',
-    'osg/Geometry',
-    'osg/StateSet',
-    'osgAnimation/MorphAttribute',
-    'osg/StateAttribute',
-    'osgAnimation/Target'
-], function ( MACROUTILS, BufferArrayProxy, Notify, Geometry, StateSet, MorphAttribute, StateAttribute ) {
-
-    'use strict';
-
-    /**
-     * MorphGeometry manage up to 4 morphTargets
-     * @class MorphGeometry
-     * @inherits Geometry
-     */
-
-    var MorphGeometry = function () {
-        Geometry.call( this );
-
-        this._targets = []; // Target list (Geometry)
-        this._stateSetAnimation = new StateSet(); // StateSet to handle morphAttribute
-        this._targetWeights = new Float32Array( 4 ); // Fixed length array feed by UpdateMorph
-
-        this._morphTargetNames = undefined;
-
-        this._isInitialized = false;
-    };
-
-    MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
-
-        init: function () {
-            var animAttrib = new MorphAttribute( Math.min( 4, this.getMorphTargets().length ) );
-            this.getStateSetAnimation().setAttributeAndModes( animAttrib, StateAttribute.ON );
-            animAttrib.setTargetWeights( this.getTargetsWeight() );
+'use strict';
+var MACROUTILS = require( 'osg/Utils' );
+var BufferArrayProxy = require( 'osg/BufferArrayProxy' );
+var Notify = require( 'osg/Notify' );
+var Geometry = require( 'osg/Geometry' );
+var StateSet = require( 'osg/StateSet' );
+var MorphAttribute = require( 'osgAnimation/MorphAttribute' );
+var StateAttribute = require( 'osg/StateAttribute' );
 
 
-            if ( this._targets[ 0 ] ) {
-                this._morphTargetNames = Object.keys( this._targets[ 0 ].getVertexAttributeList() );
-                animAttrib.copyTargetNames( this._morphTargetNames );
-            } else {
-                this._morphTargetNames = [];
-                Notify.error( 'No Targets in the MorphGeometry !' );
-            }
+/**
+ * MorphGeometry manage up to 4 morphTargets
+ * @class MorphGeometry
+ * @inherits Geometry
+ */
 
-            this._isInitialized = true;
-            return true;
-        },
+var MorphGeometry = function () {
+    Geometry.call( this );
 
-        getMorphTargetNames: function () {
-            return this._morphTargetNames;
-        },
+    this._targets = []; // Target list (Geometry)
+    this._stateSetAnimation = new StateSet(); // StateSet to handle morphAttribute
+    this._targetWeights = new Float32Array( 4 ); // Fixed length array feed by UpdateMorph
 
-        getStateSetAnimation: function () {
-            return this._stateSetAnimation;
-        },
+    this._morphTargetNames = undefined;
 
-        getMorphTargets: function () {
-            return this._targets;
-        },
+    this._isInitialized = false;
+};
 
-        isInitialized: function () {
-            return this._isInitialized;
-        },
+MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Geometry.prototype, {
 
-        getTargetsWeight: function () {
-            return this._targetWeights;
-        },
+    init: function () {
+        var animAttrib = new MorphAttribute( Math.min( 4, this.getMorphTargets().length ) );
+        this.getStateSetAnimation().setAttributeAndModes( animAttrib, StateAttribute.ON );
+        animAttrib.setTargetWeights( this.getTargetsWeight() );
 
-        mergeChildrenVertexAttributeList: function () {
 
-            var target;
+        if ( this._targets[ 0 ] ) {
+            this._morphTargetNames = window.Object.keys( this._targets[ 0 ].getVertexAttributeList() );
+            animAttrib.copyTargetNames( this._morphTargetNames );
+        } else {
+            this._morphTargetNames = [];
+            Notify.error( 'No Targets in the MorphGeometry !' );
+        }
 
-            for ( var i = 0, l = this._targets.length; i < l; i++ ) {
+        this._isInitialized = true;
+        return true;
+    },
 
-                target = this._targets[ i ];
+    getMorphTargetNames: function () {
+        return this._morphTargetNames;
+    },
 
-                // change BufferArray to BufferArrayProxy
-                var attributeList = target.getVertexAttributeList();
-                var names = Object.keys( attributeList );
-                for ( var j = 0, jn = names.length; j < jn; j++ ) {
+    getStateSetAnimation: function () {
+        return this._stateSetAnimation;
+    },
 
-                    var name = names[ j ];
-                    var att = attributeList[ name ];
-                    // check it's a buffer array before swtiching to proxy
-                    if ( att && !att.getBufferArray ) {
+    getMorphTargets: function () {
+        return this._targets;
+    },
 
-                        attributeList[ name ] = new BufferArrayProxy( att );
+    isInitialized: function () {
+        return this._isInitialized;
+    },
 
-                    }
+    getTargetsWeight: function () {
+        return this._targetWeights;
+    },
+
+    mergeChildrenVertexAttributeList: function () {
+
+        var target;
+
+        for ( var i = 0, l = this._targets.length; i < l; i++ ) {
+
+            target = this._targets[ i ];
+
+            // change BufferArray to BufferArrayProxy
+            var attributeList = target.getVertexAttributeList();
+            var names = window.Object.keys( attributeList );
+            for ( var j = 0, jn = names.length; j < jn; j++ ) {
+
+                var name = names[ j ];
+                var att = attributeList[ name ];
+                // check it's a buffer array before swtiching to proxy
+                if ( att && !att.getBufferArray ) {
+
+                    attributeList[ name ] = new BufferArrayProxy( att );
 
                 }
 
-                Geometry.appendVertexAttributeToList( target.getVertexAttributeList(), this.getVertexAttributeList(), i );
-
             }
+
+            Geometry.appendVertexAttributeToList( target.getVertexAttributeList(), this.getVertexAttributeList(), i );
 
         }
 
+    }
 
-    } ), 'osgAnimation', 'MorphGeometry' );
 
-    MACROUTILS.setTypeID( MorphGeometry );
+} ), 'osgAnimation', 'MorphGeometry' );
 
-    return MorphGeometry;
-} );
+MACROUTILS.setTypeID( MorphGeometry );
+
+module.exports = MorphGeometry;

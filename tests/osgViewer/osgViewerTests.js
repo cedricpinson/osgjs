@@ -1,12 +1,9 @@
-define( [
-    'tests/osgViewer/View',
-    'tests/osgViewer/Viewer'
-], function ( View, Viewer ) {
+'use strict';
+var View = require( 'tests/osgViewer/View' );
+var Viewer = require( 'tests/osgViewer/Viewer' );
 
-    'use strict';
 
-    return function () {
-        View();
-        Viewer();
-    };
-} );
+module.exports = function () {
+    View();
+    Viewer();
+};

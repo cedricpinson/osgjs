@@ -17,6 +17,7 @@ var jshintrc = JSON.parse( fs.readFileSync( './.jshintrc' ).toString() );
 //
 var SOURCE_PATH = 'sources/';
 var BUILD_PATH = 'builds/';
+var TEST_PATH = 'tests/';
 var DIST_PATH = path.join( BUILD_PATH, 'dist/' );
 var DOCS_PATH = path.join( BUILD_PATH, 'docs/' );
 
@@ -45,6 +46,10 @@ var find = function ( cwd, pattern ) {
 
 // get source file once and for all, caching results.
 var srcFiles = find( SOURCE_PATH, '**/*.js' ).map( function ( pathname ) {
+    return pathname;
+} );
+
+var testsFiles = find( TEST_PATH, '**/*.js' ).map( function ( pathname ) {
     return pathname;
 } );
 
@@ -211,6 +216,20 @@ var gruntTasks = {};
         } )
     };
 
+    gruntTasks.jshint.tests = {
+        options: {
+            globals: {
+                define: true,
+                require: true
+            }
+        },
+        src: testsFiles.filter( function ( pathName ) {
+            return pathName.indexOf( 'vendors' ) === -1;
+        } ).map( function ( pathname ) {
+            return path.join( SOURCE_PATH, pathname );
+        } )
+    };
+
     // add another output from envvar to have better error tracking in emacs
     if ( process.env.GRUNT_EMACS_REPORTER !== undefined ) {
         gruntTasks.jshint.sources.options.reporter = process.env.GRUNT_EMACS_REPORTER;
@@ -251,14 +270,14 @@ var gruntTasks = {};
 
     gruntTasks.jsbeautifier = {
         default: {
-            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js' ],
+            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js', 'tests/**/*.js', '!tests/vendors/**/*.js' ],
             options: {
                 config: './.jsbeautifyrc'
             }
         },
 
         check: {
-            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js' ],
+            src: [ 'sources/**/*.js', 'examples/**/*.js', '!examples/vendors/*.js', 'tests/**/*.js', '!tests/vendors/**/*.js' ],
             // config: './.jsbeautifyrc',
             options: {
                 mode: 'VERIFY_ONLY',
@@ -605,7 +624,7 @@ module.exports = function ( grunt ) {
     grunt.loadNpmTasks( 'grunt-webpack' );
 
     grunt.registerTask( 'watch', [ 'webpack:watch' ] );
-    grunt.registerTask( 'check', [ 'jsbeautifier:check', 'jshint:self', 'jshint:sources' ] );
+    grunt.registerTask( 'check', [ 'jsbeautifier:check', 'jshint:self', 'jshint:sources', 'jshint:tests' ] );
     grunt.registerTask( 'lint', [ 'eslint' ] );
     grunt.registerTask( 'beautify', [ 'jsbeautifier:default' ] );
 

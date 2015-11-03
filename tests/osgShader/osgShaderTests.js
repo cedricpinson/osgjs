@@ -1,12 +1,9 @@
-define( [
-    'tests/osgShader/Compiler',
-    'tests/osgShader/ShaderGenerator',
-], function ( Compiler, ShaderGenerator ) {
+'use strict';
+var Compiler = require( 'tests/osgShader/Compiler' );
+var ShaderGenerator = require( 'tests/osgShader/ShaderGenerator' );
 
-    'use strict';
 
-    return function () {
-        Compiler();
-        ShaderGenerator();
-    };
-} );
+module.exports = function () {
+    Compiler();
+    ShaderGenerator();
+};

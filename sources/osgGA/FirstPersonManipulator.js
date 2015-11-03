@@ -1,258 +1,255 @@
-define( [
-    'osg/Utils',
-    'osgGA/Manipulator',
-    'osgGA/OrbitManipulator',
-    'osg/Matrix',
-    'osg/Vec2',
-    'osg/Vec3',
-    'osgGA/FirstPersonManipulatorDeviceOrientationController',
-    'osgGA/FirstPersonManipulatorHammerController',
-    'osgGA/FirstPersonManipulatorOculusController',
-    'osgGA/FirstPersonManipulatorStandardMouseKeyboardController'
-], function ( MACROUTILS, Manipulator, OrbitManipulator, Matrix, Vec2, Vec3, FirstPersonManipulatorDeviceOrientationController, FirstPersonManipulatorHammerController, FirstPersonManipulatorOculusController, FirstPersonManipulatorStandardMouseKeyboardController ) {
+'use strict';
+var MACROUTILS = require( 'osg/Utils' );
+var Manipulator = require( 'osgGA/Manipulator' );
+var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
+var Matrix = require( 'osg/Matrix' );
+var Vec2 = require( 'osg/Vec2' );
+var Vec3 = require( 'osg/Vec3' );
+var FirstPersonManipulatorDeviceOrientationController = require( 'osgGA/FirstPersonManipulatorDeviceOrientationController' );
+var FirstPersonManipulatorHammerController = require( 'osgGA/FirstPersonManipulatorHammerController' );
+var FirstPersonManipulatorOculusController = require( 'osgGA/FirstPersonManipulatorOculusController' );
+var FirstPersonManipulatorStandardMouseKeyboardController = require( 'osgGA/FirstPersonManipulatorStandardMouseKeyboardController' );
 
-    'use strict';
 
-    /**
-     * Authors:
-     *  Matt Fontaine <tehqin@gmail.com>
-     *  Cedric Pinson <trigrou@gmail.com>
-     */
+/**
+ * Authors:
+ *  Matt Fontaine <tehqin@gmail.com>
+ *  Cedric Pinson <trigrou@gmail.com>
+ */
 
-    /**
-     *  FirstPersonManipulator
-     *  @class
-     */
-    var FirstPersonManipulator = function () {
-        Manipulator.call( this );
-        this.init();
-    };
+/**
+ *  FirstPersonManipulator
+ *  @class
+ */
+var FirstPersonManipulator = function () {
+    Manipulator.call( this );
+    this.init();
+};
 
-    FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation', 'Hammer' ];
-    FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation', 'Hammer' ];
+FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation', 'Hammer' ];
+FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation', 'Hammer' ];
 
-    /** @lends FirstPersonManipulator.prototype */
-    FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
-        computeHomePosition: function ( useBoundingBox ) {
-            var bs = this.getHomeBound( useBoundingBox );
-            if ( !bs ) return;
+/** @lends FirstPersonManipulator.prototype */
+FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
+    computeHomePosition: function ( useBoundingBox ) {
+        var bs = this.getHomeBound( useBoundingBox );
+        if ( !bs ) return;
 
-            this._distance = this.getHomeDistance( bs );
-            var cen = bs.center();
-            Vec3.mult( this._direction, -this._distance, this._eye );
-            Vec3.add( cen, this._eye, this._eye );
-            this.setTarget( cen );
-        },
-        init: function () {
-            this._direction = Vec3.createAndSet( 0.0, 1.0, 0.0 );
-            this._eye = Vec3.createAndSet( 0.0, 25.0, 10.0 );
-            this._up = Vec3.createAndSet( 0.0, 0.0, 1.0 );
-            this._distance = 1.0;
-            this._forward = new OrbitManipulator.Interpolator( 1 );
-            this._side = new OrbitManipulator.Interpolator( 1 );
-            this._lookPosition = new OrbitManipulator.Interpolator( 2 );
+        this._distance = this.getHomeDistance( bs );
+        var cen = bs.center();
+        Vec3.mult( this._direction, -this._distance, this._eye );
+        Vec3.add( cen, this._eye, this._eye );
+        this.setTarget( cen );
+    },
+    init: function () {
+        this._direction = Vec3.createAndSet( 0.0, 1.0, 0.0 );
+        this._eye = Vec3.createAndSet( 0.0, 25.0, 10.0 );
+        this._up = Vec3.createAndSet( 0.0, 0.0, 1.0 );
+        this._distance = 1.0;
+        this._forward = new OrbitManipulator.Interpolator( 1 );
+        this._side = new OrbitManipulator.Interpolator( 1 );
+        this._lookPosition = new OrbitManipulator.Interpolator( 2 );
 
-            // direct pan interpolator (not based on auto-move)
-            this._pan = new OrbitManipulator.Interpolator( 2 );
-            this._zoom = new OrbitManipulator.Interpolator( 1 );
+        // direct pan interpolator (not based on auto-move)
+        this._pan = new OrbitManipulator.Interpolator( 2 );
+        this._zoom = new OrbitManipulator.Interpolator( 1 );
 
-            this._stepFactor = 1.0; // meaning radius*stepFactor to move
-            this._target = Vec3.create();
-            this._angleVertical = 0.0;
-            this._angleHorizontal = 0.0;
+        this._stepFactor = 1.0; // meaning radius*stepFactor to move
+        this._target = Vec3.create();
+        this._angleVertical = 0.0;
+        this._angleHorizontal = 0.0;
 
-            // tmp value use for computation
-            this._tmpGetTargetDir = Vec3.create();
+        // tmp value use for computation
+        this._tmpGetTargetDir = Vec3.create();
 
-            this._rotBase = Matrix.create();
+        this._rotBase = Matrix.create();
 
-            var self = this;
+        var self = this;
 
-            this._controllerList = {};
-            FirstPersonManipulator.ControllerList.forEach( function ( value ) {
-                if ( FirstPersonManipulator[ value ] !== undefined ) {
-                    self._controllerList[ value ] = new FirstPersonManipulator[ value ]( self );
-                }
-            } );
-
-        },
-
-        getEyePosition: function ( eye ) {
-            eye[ 0 ] = this._eye[ 0 ];
-            eye[ 1 ] = this._eye[ 1 ];
-            eye[ 2 ] = this._eye[ 2 ];
-            return eye;
-        },
-
-        setEyePosition: function ( eye ) {
-            this._eye[ 0 ] = eye[ 0 ];
-            this._eye[ 1 ] = eye[ 1 ];
-            this._eye[ 2 ] = eye[ 2 ];
-            return this;
-        },
-
-        getTarget: function ( pos ) {
-            var dir = Vec3.mult( this._direction, this._distance, this._tmpGetTargetDir );
-            Vec3.add( this._eye, dir, pos );
-            return pos;
-        },
-
-        setTarget: function ( pos ) {
-            this._target[ 0 ] = pos[ 0 ];
-            this._target[ 1 ] = pos[ 1 ];
-            this._target[ 2 ] = pos[ 2 ];
-            var dir = this._tmpGetTargetDir;
-            Vec3.sub( pos, this._eye, dir );
-            dir[ 2 ] = 0.0;
-            Vec3.normalize( dir, dir );
-            this._angleHorizontal = Math.acos( dir[ 1 ] );
-            if ( dir[ 0 ] < 0.0 ) {
-                this._angleHorizontal = -this._angleHorizontal;
+        this._controllerList = {};
+        FirstPersonManipulator.ControllerList.forEach( function ( value ) {
+            if ( FirstPersonManipulator[ value ] !== undefined ) {
+                self._controllerList[ value ] = new FirstPersonManipulator[ value ]( self );
             }
-            Vec3.sub( pos, this._eye, dir );
-            Vec3.normalize( dir, dir );
+        } );
 
-            this._angleVertical = -Math.asin( dir[ 2 ] );
-            Vec3.copy( dir, this._direction );
-        },
+    },
 
-        getLookPositionInterpolator: function () {
-            return this._lookPosition;
-        },
-        getSideInterpolator: function () {
-            return this._side;
-        },
-        getForwardInterpolator: function () {
-            return this._forward;
-        },
-        getPanInterpolator: function () {
-            return this._pan;
-        },
-        getZoomInterpolator: function () {
-            return this._zoom;
-        },
-        getRotateInterpolator: function () {
-            // for compatibility with orbit hammer controllers
-            return this._lookPosition;
-        },
+    getEyePosition: function ( eye ) {
+        eye[ 0 ] = this._eye[ 0 ];
+        eye[ 1 ] = this._eye[ 1 ];
+        eye[ 2 ] = this._eye[ 2 ];
+        return eye;
+    },
 
-        computeRotation: ( function () {
-            var first = Matrix.create();
-            var second = Matrix.create();
-            var rotMat = Matrix.create();
+    setEyePosition: function ( eye ) {
+        this._eye[ 0 ] = eye[ 0 ];
+        this._eye[ 1 ] = eye[ 1 ];
+        this._eye[ 2 ] = eye[ 2 ];
+        return this;
+    },
 
-            var upy = Vec3.createAndSet( 0.0, 1.0, 0.0 );
-            var upz = Vec3.createAndSet( 0.0, 0.0, 1.0 );
-            var LIMIT = Math.PI * 0.5;
-            return function ( dx, dy ) {
-                this._angleVertical += dy * 0.01;
-                this._angleHorizontal -= dx * 0.01;
-                if ( this._angleVertical > LIMIT ) this._angleVertical = LIMIT;
-                else if ( this._angleVertical < -LIMIT ) this._angleVertical = -LIMIT;
+    getTarget: function ( pos ) {
+        var dir = Vec3.mult( this._direction, this._distance, this._tmpGetTargetDir );
+        Vec3.add( this._eye, dir, pos );
+        return pos;
+    },
 
-                Matrix.makeRotate( -this._angleVertical, 1.0, 0.0, 0.0, first );
-                Matrix.makeRotate( -this._angleHorizontal, 0.0, 0.0, 1.0, second );
-                Matrix.mult( second, first, rotMat );
+    setTarget: function ( pos ) {
+        this._target[ 0 ] = pos[ 0 ];
+        this._target[ 1 ] = pos[ 1 ];
+        this._target[ 2 ] = pos[ 2 ];
+        var dir = this._tmpGetTargetDir;
+        Vec3.sub( pos, this._eye, dir );
+        dir[ 2 ] = 0.0;
+        Vec3.normalize( dir, dir );
+        this._angleHorizontal = Math.acos( dir[ 1 ] );
+        if ( dir[ 0 ] < 0.0 ) {
+            this._angleHorizontal = -this._angleHorizontal;
+        }
+        Vec3.sub( pos, this._eye, dir );
+        Vec3.normalize( dir, dir );
 
-                // TOTO refactor the way the rotation matrix is managed
-                Matrix.preMult( rotMat, this._rotBase );
+        this._angleVertical = -Math.asin( dir[ 2 ] );
+        Vec3.copy( dir, this._direction );
+    },
 
-                Matrix.transformVec3( rotMat, upy, this._direction );
-                Vec3.normalize( this._direction, this._direction );
+    getLookPositionInterpolator: function () {
+        return this._lookPosition;
+    },
+    getSideInterpolator: function () {
+        return this._side;
+    },
+    getForwardInterpolator: function () {
+        return this._forward;
+    },
+    getPanInterpolator: function () {
+        return this._pan;
+    },
+    getZoomInterpolator: function () {
+        return this._zoom;
+    },
+    getRotateInterpolator: function () {
+        // for compatibility with orbit hammer controllers
+        return this._lookPosition;
+    },
 
-                Matrix.transformVec3( rotMat, upz, this._up );
-            };
-        } )(),
-        reset: function () {
-            this.init();
-        },
-        setDistance: function ( d ) {
-            this._distance = d;
-        },
-        getDistance: function () {
-            return this._distance;
-        },
-        setStepFactor: function ( t ) {
-            this._stepFactor = t;
-        },
+    computeRotation: ( function () {
+        var first = Matrix.create();
+        var second = Matrix.create();
+        var rotMat = Matrix.create();
 
-        update: ( function () {
-            var vec = Vec2.createAndSet( 0.0, 0.0 );
-            return function ( nv ) {
-                var dt = nv.getFrameStamp().getDeltaTime();
+        var upy = Vec3.createAndSet( 0.0, 1.0, 0.0 );
+        var upz = Vec3.createAndSet( 0.0, 0.0, 1.0 );
+        var LIMIT = Math.PI * 0.5;
+        return function ( dx, dy ) {
+            this._angleVertical += dy * 0.01;
+            this._angleHorizontal -= dx * 0.01;
+            if ( this._angleVertical > LIMIT ) this._angleVertical = LIMIT;
+            else if ( this._angleVertical < -LIMIT ) this._angleVertical = -LIMIT;
 
-                this._forward.update( dt );
-                this._side.update( dt );
-                var delta = this._lookPosition.update( dt );
+            Matrix.makeRotate( -this._angleVertical, 1.0, 0.0, 0.0, first );
+            Matrix.makeRotate( -this._angleHorizontal, 0.0, 0.0, 1.0, second );
+            Matrix.mult( second, first, rotMat );
 
-                this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
+            // TOTO refactor the way the rotation matrix is managed
+            Matrix.preMult( rotMat, this._rotBase );
 
-                // TDOO why check with epsilon ?
-                var factor = this._distance < 1e-3 ? 1e-3 : this._distance;
+            Matrix.transformVec3( rotMat, upy, this._direction );
+            Vec3.normalize( this._direction, this._direction );
 
-                // see comment in orbitManipulator for fov modulation speed
-                var proj = this._camera.getProjectionMatrix();
-                var vFov = proj[ 15 ] === 1 ? 1.0 : 2.00 / proj[ 5 ];
+            Matrix.transformVec3( rotMat, upz, this._up );
+        };
+    } )(),
+    reset: function () {
+        this.init();
+    },
+    setDistance: function ( d ) {
+        this._distance = d;
+    },
+    getDistance: function () {
+        return this._distance;
+    },
+    setStepFactor: function ( t ) {
+        this._stepFactor = t;
+    },
 
-                // time based displacement vector
-                vec[ 0 ] = this._forward.getCurrent()[ 0 ];
-                vec[ 1 ] = this._side.getCurrent()[ 0 ];
-                var len2 = Vec2.length2( vec );
-                if ( len2 > 1.0 ) Vec2.mult( vec, 1.0 / Math.sqrt( len2 ), vec );
+    update: ( function () {
+        var vec = Vec2.createAndSet( 0.0, 0.0 );
+        return function ( nv ) {
+            var dt = nv.getFrameStamp().getDeltaTime();
 
-                // direct displacement vectors
-                var pan = this._pan.update( dt );
-                var zoom = this._zoom.update( dt );
+            this._forward.update( dt );
+            this._side.update( dt );
+            var delta = this._lookPosition.update( dt );
 
-                var timeFactor = this._stepFactor * factor * vFov * dt;
-                var directFactor = this._stepFactor * factor * vFov * 0.005;
+            this.computeRotation( -delta[ 0 ] * 0.5, -delta[ 1 ] * 0.5 );
 
-                this.moveForward( vec[ 0 ] * timeFactor - zoom[ 0 ] * directFactor * 20.0 );
-                this.strafe( vec[ 1 ] * timeFactor - pan[ 0 ] * directFactor );
-                this.strafeVertical( -pan[ 1 ] * directFactor );
+            // TDOO why check with epsilon ?
+            var factor = this._distance < 1e-3 ? 1e-3 : this._distance;
 
-                Vec3.add( this._eye, this._direction, this._target );
+            // see comment in orbitManipulator for fov modulation speed
+            var proj = this._camera.getProjectionMatrix();
+            var vFov = proj[ 15 ] === 1 ? 1.0 : 2.00 / proj[ 5 ];
 
-                Matrix.makeLookAt( this._eye, this._target, this._up, this._inverseMatrix );
-            };
-        } )(),
-        setRotationBaseFromQuat: function ( quat ) {
-            Matrix.makeRotateFromQuat( quat, this._rotBase );
-        },
+            // time based displacement vector
+            vec[ 0 ] = this._forward.getCurrent()[ 0 ];
+            vec[ 1 ] = this._side.getCurrent()[ 0 ];
+            var len2 = Vec2.length2( vec );
+            if ( len2 > 1.0 ) Vec2.mult( vec, 1.0 / Math.sqrt( len2 ), vec );
 
-        moveForward: ( function () {
-            var tmp = Vec3.create();
-            return function ( distance ) {
-                Vec3.normalize( this._direction, tmp );
-                Vec3.mult( tmp, distance, tmp );
-                Vec3.add( this._eye, tmp, this._eye );
-            };
-        } )(),
+            // direct displacement vectors
+            var pan = this._pan.update( dt );
+            var zoom = this._zoom.update( dt );
 
-        strafe: ( function () {
-            var tmp = Vec3.create();
-            return function ( distance ) {
-                Vec3.cross( this._direction, this._up, tmp );
-                Vec3.normalize( tmp, tmp );
-                Vec3.mult( tmp, distance, tmp );
-                Vec3.add( this._eye, tmp, this._eye );
-            };
-        } )(),
+            var timeFactor = this._stepFactor * factor * vFov * dt;
+            var directFactor = this._stepFactor * factor * vFov * 0.005;
 
-        strafeVertical: ( function () {
-            var tmp = Vec3.create();
-            return function ( distance ) {
-                Vec3.normalize( this._up, tmp );
-                Vec3.mult( tmp, distance, tmp );
-                Vec3.add( this._eye, tmp, this._eye );
-            };
-        } )(),
-    } );
+            this.moveForward( vec[ 0 ] * timeFactor - zoom[ 0 ] * directFactor * 20.0 );
+            this.strafe( vec[ 1 ] * timeFactor - pan[ 0 ] * directFactor );
+            this.strafeVertical( -pan[ 1 ] * directFactor );
 
-    FirstPersonManipulator.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;
-    FirstPersonManipulator.Hammer = FirstPersonManipulatorHammerController;
-    FirstPersonManipulator.Oculus = FirstPersonManipulatorOculusController;
-    FirstPersonManipulator.StandardMouseKeyboard = FirstPersonManipulatorStandardMouseKeyboardController;
+            Vec3.add( this._eye, this._direction, this._target );
 
-    return FirstPersonManipulator;
+            Matrix.makeLookAt( this._eye, this._target, this._up, this._inverseMatrix );
+        };
+    } )(),
+    setRotationBaseFromQuat: function ( quat ) {
+        Matrix.makeRotateFromQuat( quat, this._rotBase );
+    },
+
+    moveForward: ( function () {
+        var tmp = Vec3.create();
+        return function ( distance ) {
+            Vec3.normalize( this._direction, tmp );
+            Vec3.mult( tmp, distance, tmp );
+            Vec3.add( this._eye, tmp, this._eye );
+        };
+    } )(),
+
+    strafe: ( function () {
+        var tmp = Vec3.create();
+        return function ( distance ) {
+            Vec3.cross( this._direction, this._up, tmp );
+            Vec3.normalize( tmp, tmp );
+            Vec3.mult( tmp, distance, tmp );
+            Vec3.add( this._eye, tmp, this._eye );
+        };
+    } )(),
+
+    strafeVertical: ( function () {
+        var tmp = Vec3.create();
+        return function ( distance ) {
+            Vec3.normalize( this._up, tmp );
+            Vec3.mult( tmp, distance, tmp );
+            Vec3.add( this._eye, tmp, this._eye );
+        };
+    } )(),
 } );
+
+FirstPersonManipulator.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;
+FirstPersonManipulator.Hammer = FirstPersonManipulatorHammerController;
+FirstPersonManipulator.Oculus = FirstPersonManipulatorOculusController;
+FirstPersonManipulator.StandardMouseKeyboard = FirstPersonManipulatorStandardMouseKeyboardController;
+
+module.exports = FirstPersonManipulator;

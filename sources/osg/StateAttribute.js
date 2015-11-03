@@ -1,59 +1,56 @@
-define( [
-    'osg/Utils',
-    'osg/Object'
-], function ( MACROUTILS, Object ) {
+'use strict';
+var MACROUTILS = require( 'osg/Utils' );
+var Object = require( 'osg/Object' );
 
-    'use strict';
 
-    var StateAttribute = function () {
-        Object.call( this );
+var StateAttribute = function () {
+    Object.call( this );
+    this._dirty = true;
+};
+
+StateAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+
+    isDirty: function () {
+        return this._dirty;
+    },
+
+    dirty: function () {
         this._dirty = true;
-    };
+    },
 
-    StateAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+    setDirty: function ( dirty ) {
+        this._dirty = dirty;
+    },
 
-        isDirty: function () {
-            return this._dirty;
-        },
+    getType: function () {
+        return this.attributeType;
+    },
 
-        dirty: function () {
-            this._dirty = true;
-        },
+    // basically, if you want two StateAttribute with the same attributeType in a stateSet/State
+    // their typeMember should be different
+    getTypeMember: function () {
+        return this.attributeType;
+    },
 
-        setDirty: function ( dirty ) {
-            this._dirty = dirty;
-        },
+    apply: function () {},
 
-        getType: function () {
-            return this.attributeType;
-        },
+    // getHash is used by the compiler to know if a change in a StateAttribute
+    // must trigger a shader build
+    // If you create your own attribute you will have to customize this function
+    // a good rule is to that if you change uniform it should not rebuild a shader
+    // but if you change a type or representation of your StateAttribute, then it should
+    // if it impact the rendering.
+    // check other attributes for examples
+    getHash: function () {
+        return this.getTypeMember();
+    }
 
-        // basically, if you want two StateAttribute with the same attributeType in a stateSet/State
-        // their typeMember should be different
-        getTypeMember: function () {
-            return this.attributeType;
-        },
+} ), 'osg', 'StateAttribute' );
 
-        apply: function () {},
+StateAttribute.OFF = 0;
+StateAttribute.ON = 1;
+StateAttribute.OVERRIDE = 2;
+StateAttribute.PROTECTED = 4;
+StateAttribute.INHERIT = 8;
 
-        // getHash is used by the compiler to know if a change in a StateAttribute
-        // must trigger a shader build
-        // If you create your own attribute you will have to customize this function
-        // a good rule is to that if you change uniform it should not rebuild a shader
-        // but if you change a type or representation of your StateAttribute, then it should
-        // if it impact the rendering.
-        // check other attributes for examples
-        getHash: function () {
-            return this.getTypeMember();
-        }
-
-    } ), 'osg', 'StateAttribute' );
-
-    StateAttribute.OFF = 0;
-    StateAttribute.ON = 1;
-    StateAttribute.OVERRIDE = 2;
-    StateAttribute.PROTECTED = 4;
-    StateAttribute.INHERIT = 8;
-
-    return StateAttribute;
-} );
+module.exports = StateAttribute;

@@ -1,14 +1,11 @@
-define( [
-    'tests/osgDB/Input',
-    'tests/osgDB/ReaderParser',
-    'tests/osgDB/DatabasePager'
-], function ( Input, ReaderParser, DatabasePager ) {
+'use strict';
+var Input = require( 'tests/osgDB/Input' );
+var ReaderParser = require( 'tests/osgDB/ReaderParser' );
+var DatabasePager = require( 'tests/osgDB/DatabasePager' );
 
-    'use strict';
 
-    return function () {
-        Input();
-        ReaderParser();
-        DatabasePager();
-    };
-} );
+module.exports = function () {
+    Input();
+    ReaderParser();
+    DatabasePager();
+};

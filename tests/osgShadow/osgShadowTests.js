@@ -1,12 +1,9 @@
-define( [
-    'tests/osgShadow/ShadowMap',
-    'tests/osgShadow/ShadowedScene'
-], function ( ShadowMap, ShadowedScene ) {
+'use strict';
+var ShadowMap = require( 'tests/osgShadow/ShadowMap' );
+var ShadowedScene = require( 'tests/osgShadow/ShadowedScene' );
 
-    'use strict';
 
-    return function () {
-        ShadowMap();
-        ShadowedScene();
-    };
-} );
+module.exports = function () {
+    ShadowMap();
+    ShadowedScene();
+};

@@ -1,46 +1,43 @@
-define( [
-    'osg/Utils',
-    'osg/Object',
-    'osg/Matrix',
-    'osgAnimation/Target',
-], function ( MACROUTILS, Object, Matrix, Target ) {
+'use strict';
+var MACROUTILS = require( 'osg/Utils' );
+var Object = require( 'osg/Object' );
+var Matrix = require( 'osg/Matrix' );
+var Target = require( 'osgAnimation/Target' );
 
-    'use strict';
 
-    var StackedMatrix = function ( name, matrix ) {
-        Object.call( this );
-        this._target = Target.createMatrixTarget( matrix || Matrix.identity );
-        if ( name ) this.setName( name );
-    };
+var StackedMatrix = function ( name, matrix ) {
+    Object.call( this );
+    this._target = Target.createMatrixTarget( matrix || Matrix.identity );
+    if ( name ) this.setName( name );
+};
 
-    StackedMatrix.prototype = MACROUTILS.objectInherit( Object.prototype, {
+StackedMatrix.prototype = MACROUTILS.objectInherit( Object.prototype, {
 
-        init: function ( matrix ) {
-            this.setMatrix( matrix );
-            Matrix.copy( matrix, this._target.defaultValue );
-        },
+    init: function ( matrix ) {
+        this.setMatrix( matrix );
+        Matrix.copy( matrix, this._target.defaultValue );
+    },
 
-        getTarget: function () {
-            return this._target;
-        },
+    getTarget: function () {
+        return this._target;
+    },
 
-        getMatrix: function () {
-            return this._target.value;
-        },
+    getMatrix: function () {
+        return this._target.value;
+    },
 
-        setMatrix: function ( m ) {
-            Matrix.copy( m, this._target.value );
-        },
+    setMatrix: function ( m ) {
+        Matrix.copy( m, this._target.value );
+    },
 
-        resetToDefaultValue: function () {
-            this.setMatrix( this._target.defaultValue );
-        },
+    resetToDefaultValue: function () {
+        this.setMatrix( this._target.defaultValue );
+    },
 
-        applyToMatrix: function ( m ) {
-            Matrix.preMult( m, this._target.value );
-        }
+    applyToMatrix: function ( m ) {
+        Matrix.preMult( m, this._target.value );
+    }
 
-    } );
-
-    return StackedMatrix;
 } );
+
+module.exports = StackedMatrix;

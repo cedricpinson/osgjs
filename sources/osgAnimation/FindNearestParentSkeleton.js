@@ -1,33 +1,28 @@
-define( [
-    'osg/Utils',
-    'osg/NodeVisitor',
-    'osgAnimation/Skeleton'
+'use strict';
+var MACROUTILS = require( 'osg/Utils' );
+var NodeVisitor = require( 'osg/NodeVisitor' );
+var Skeleton = require( 'osgAnimation/Skeleton' );
 
-], function ( MACROUTILS, NodeVisitor, Skeleton ) {
 
-    'use strict';
+/**
+ * FindNearestParentSkeleton
+ */
 
-    /**
-     * FindNearestParentSkeleton
-     */
+var FindNearestParentSkeleton = function () {
+    NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
+    this._root = undefined;
+};
 
-    var FindNearestParentSkeleton = function () {
-        NodeVisitor.call( this, NodeVisitor.TRAVERSE_PARENTS );
-        this._root = undefined;
-    };
+FindNearestParentSkeleton.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
 
-    FindNearestParentSkeleton.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+    apply: function ( node ) {
 
-        apply: function ( node ) {
+        if ( this._root ) return;
 
-            if ( this._root ) return;
+        if ( node.typeID === Skeleton.typeID ) this._root = node;
 
-            if ( node.typeID === Skeleton.typeID ) this._root = node;
-
-            this.traverse( node );
-        }
-    } );
-
-    return FindNearestParentSkeleton;
-
+        this.traverse( node );
+    }
 } );
+
+module.exports = FindNearestParentSkeleton;

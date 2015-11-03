@@ -1,27 +1,23 @@
-define( [
-    'qunit',
-    'tests/mockup/mockup',
-    'osg/Texture',
-    'osg/WebGLCaps'
-], function ( QUnit, mockup, Texture, WebGLCaps ) {
+'use strict';
+var QUnit = require( 'qunit' );
+var Texture = require( 'osg/Texture' );
+var WebGLCaps = require( 'osg/WebGLCaps' );
 
-    'use strict';
 
-    return function () {
+module.exports = function () {
 
-        QUnit.module( 'osg' );
+    QUnit.module( 'osg' );
 
-        QUnit.test( 'WebGLCaps', function () {
+    QUnit.test( 'WebGLCaps', function () {
 
-            var webglCaps = WebGLCaps.instance();
+        var webglCaps = WebGLCaps.instance();
 
-            //var canvas = createCanvas();
-            //var gl = canvas.getContext();
+        //var canvas = createCanvas();
+        //var gl = canvas.getContext();
 
-            webglCaps.getWebGLExtensions()[ 'OES_texture_float' ] = true,
-                webglCaps._checkRTT[ Texture.FLOAT + ',' + Texture.NEAREST ] = true;
+        webglCaps.getWebGLExtensions()[ 'OES_texture_float' ] = true;
+        webglCaps._checkRTT[ Texture.FLOAT + ',' + Texture.NEAREST ] = true;
 
-            ok( webglCaps.hasFloatRTT(), 'float detect' );
-        } );
-    };
-} );
+        ok( webglCaps.hasFloatRTT(), 'float detect' );
+    } );
+};

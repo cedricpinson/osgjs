@@ -1,12 +1,9 @@
-define( [
-    'tests/osgGA/FirstPersonManipulator',
-    'tests/osgGA/OrbitManipulator'
-], function ( FirstPersonManipulator, OrbitManipulator ) {
+'use strict';
+var FirstPersonManipulator = require( 'tests/osgGA/FirstPersonManipulator' );
+var OrbitManipulator = require( 'tests/osgGA/OrbitManipulator' );
 
-    'use strict';
 
-    return function () {
-        FirstPersonManipulator();
-        OrbitManipulator();
-    };
-} );
+module.exports = function () {
+    FirstPersonManipulator();
+    OrbitManipulator();
+};
