@@ -88,15 +88,6 @@ var gruntTasks = {};
 
     gruntTasks.connect = {};
 
-    // static website
-    gruntTasks.gitclone = {};
-    gruntTasks.gitpush = {};
-    gruntTasks.shell = {};
-    gruntTasks.gitcommit = {};
-
-    // duck the camel. (case)
-    gruntTasks[ 'wintersmith_compile' ] = {};
-
 } )();
 
 
@@ -261,9 +252,6 @@ var gruntTasks = {};
 
 
 } )();
-
-
-
 
 
 ( function () {
@@ -456,29 +444,6 @@ var generateVersionFile = function () {
 
 } )();
 
-// ## WinterSmith:
-// (static site gen for osgjs.org)
-( function () {
-
-    gruntTasks[ 'wintersmith_compile' ] = {
-        build: {
-            options: {
-                config: './website/web/config.json',
-                output: path.join( BUILD_PATH, 'web' )
-            }
-        },
-        preview: {
-            options: {
-                action: 'preview',
-                config: './website/web/config.json',
-                output: path.join( BUILD_PATH, 'web' )
-            }
-        }
-    };
-
-} )();
-
-
 ( function () {
     gruntTasks.copy = {
         staticWeb: {
@@ -515,63 +480,6 @@ var generateVersionFile = function () {
             } ]
         }
     };
-} )();
-
-// ## git:
-// (static site upload)
-( function () {
-    //git clone -b my-branch git@github.com:cedricpinson/osgjs.git
-    gruntTasks.gitclone = {
-        staticWeb: {
-            options: {
-                branch: 'gh-pages',
-                repository: 'git@github.com:cedricpinson/osgjs.git',
-                directory: path.join( BUILD_PATH, 'web' )
-                    //, depth: -1 // cannot push from a shallow clone
-            }
-        }
-    };
-
-
-    // missing add --all
-    gruntTasks.shell = {
-        staticWeb: {
-            options: {
-                execOptions: {
-                    cwd: path.join( BUILD_PATH, 'web' )
-                }
-            },
-            command: 'git add -A -v'
-        }
-    };
-
-    gruntTasks.gitcommit = {
-        staticWeb: {
-            options: {
-                branch: 'gh-pages',
-                repository: 'git@github.com:cedricpinson/osgjs.git',
-                message: 'website update to latest develop',
-                cwd: path.join( BUILD_PATH, 'web' ),
-                verbose: true
-            }
-        },
-        files: {
-            src: ''
-        }
-    };
-
-
-    gruntTasks.gitpush = {
-        staticWeb: {
-            options: {
-                branch: 'gh-pages',
-                repository: 'git@github.com:cedricpinson/osgjs.git',
-                cwd: path.join( BUILD_PATH, 'web' ),
-                verbose: true
-            }
-        }
-    };
-
 } )();
 
 
@@ -615,11 +523,7 @@ module.exports = function ( grunt ) {
 
     grunt.loadNpmTasks( 'grunt-jsbeautifier' );
 
-    // windows not supporting link in git repo
     grunt.loadNpmTasks( 'grunt-copy-to' );
-    //static site
-    grunt.loadNpmTasks( 'grunt-wintersmith-compile' );
-    grunt.loadNpmTasks( 'grunt-git' );
     grunt.loadNpmTasks( 'grunt-shell' );
     grunt.loadNpmTasks( 'grunt-webpack' );
 
@@ -639,8 +543,6 @@ module.exports = function ( grunt ) {
 
     grunt.registerTask( 'default', [ 'check', 'build' ] );
     grunt.registerTask( 'serve', [ 'build', 'connect:dist:keepalive' ] );
-    grunt.registerTask( 'website_only', [ 'clean:staticWeb', 'gitclone:staticWeb', 'copy:staticWeb', 'wintersmith_compile:build', 'shell:staticWeb', 'gitcommit:staticWeb', 'gitpush:staticWeb' ] );
-    grunt.registerTask( 'website', [ 'default', 'docs', 'website_only' ] );
 
 
 };
