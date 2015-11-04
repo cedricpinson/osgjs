@@ -1,14 +1,10 @@
-define( [
-    'benchmarks/osg/mainPerformance',
-    'benchmarks/osgAnimation/mainPerformance'
-], function ( MainPerformance, Animations ) {
+'use strict';
+var MainPerformance = require( 'benchmarks/osg/mainPerformance' );
+var Animations = require( 'benchmarks/osgAnimation/mainPerformance' );
 
-    'use strict';
+module.exports = function () {
 
-    return function () {
+    MainPerformance();
+    Animations();
 
-        MainPerformance();
-        Animations();
-
-    };
-} );
+};

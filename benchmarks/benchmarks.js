@@ -13,21 +13,14 @@ if ( window.HTMLVideoElement === undefined ) {
 /*global QUnit,define,module,test,ok */
 QUnit.config.testTimeout = 5000;
 
-define( [
-    'OSG',
-    'benchmarks/osg/osgBenchmarks'
+var OSG = require( 'OSG' );
+var osgBenchmarks = require( 'benchmarks/osg/osgBenchmarks' );
 
-], function ( OSG, osg ) {
+// start test when require finished its job
+QUnit.load();
+QUnit.start();
 
-    // start test when require finished its job
-    QUnit.load();
-    QUnit.start();
+// hack because of osgPool
+OSG.osg.init();
 
-    // hack because of osgPool
-    OSG.osg.init();
-
-    osg();
-
-
-
-} );
+osgBenchmarks();
