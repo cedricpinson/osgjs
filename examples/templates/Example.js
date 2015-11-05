@@ -161,14 +161,10 @@
         },
 
         // get the model
+        createModel: function ( modelName ) {
 
-        getOrCreateModel: function ( modelName ) {
+            var model = new osg.MatrixTransform();
 
-            if ( !this._model ) {
-                this._model = new osg.MatrixTransform();
-            } else {
-                this._model.removeChildren();
-            }
             if ( modelName ) {
 
                 // TODO: a generic model loader that fills also the Dat.gui
@@ -177,18 +173,32 @@
                 var request = osgDB.readNodeURL( modelName );
                 request.then( function ( node ) {
 
-                    this._model.addChild( node );
+                    model.addChild( node );
 
                 } );
+
             } else {
 
                 var size = 10;
                 var geom = osg.createTexturedBoxGeometry( 0, 0, 0,
                     size, size, size );
-                this._model.addChild( geom );
+                model.addChild( geom );
 
             }
 
+            return model;
+        },
+
+        // get the model
+        getOrCreateModel: function ( modelName ) {
+
+            if ( !this._model ) {
+                this._model = new osg.MatrixTransform();
+            } else {
+                this._model.removeChildren();
+            }
+
+            this._model.addChild( this.createModel( modelName ) );
             return this._model;
         },
 
