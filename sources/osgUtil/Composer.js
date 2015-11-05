@@ -521,9 +521,15 @@ Composer.Filter.PingPong.prototype = MACROUTILS.objectInherit( Composer.Filter.C
         st0.setAttributeAndModes( this._program );
         st1.setAttributeAndModes( this._program );
 
+        // PingPong filter is a peculiar Filter where user provides the Camera
+        // instead of compose::build creating them, and allowing user to provide
+        // them in the ctor
+        // To make sure we don't forget any uniform
+        // we make sure to get uniform from the filter itself and the uniform
+        // from the parameters
         var k, l, keys, unif, uniforms = this.getStateSet().getUniformList();
         if ( uniforms ) {
-            keys = Object.keys( uniforms );
+            keys = window.Object.keys( uniforms );
             for ( k = 0, l = keys.length; k < l; k++ ) {
                 unif = uniforms[ keys[ k ] ];
                 st0.addUniform( unif );
@@ -533,88 +539,88 @@ Composer.Filter.PingPong.prototype = MACROUTILS.objectInherit( Composer.Filter.C
 
         uniforms = this._uniforms;
         if ( uniforms ) {
-            keys = Object.keys( uniforms );
+            keys = window.Object.keys( uniforms );
             for ( k = 0, l = keys.length; k < l; k++ ) {
                 unif = uniforms[ keys[ k ] ];
                 st0.addUniform( unif );
                 st1.addUniform( unif );
             }
         }
-    }
+
 
         var uniformTU0 = Uniform.createInt1( 0, 'Texture0' );
-    var uniformTU1 = Uniform.createInt1( 1, 'Texture1' );
+        var uniformTU1 = Uniform.createInt1( 1, 'Texture1' );
 
-    st0.addUniform( uniformTU0 );
-    st0.addUniform( uniformTU1 );
+        st0.addUniform( uniformTU0 );
+        st0.addUniform( uniformTU1 );
 
-    st1.addUniform( uniformTU0 );
-    st1.addUniform( uniformTU1 );
+        st1.addUniform( uniformTU0 );
+        st1.addUniform( uniformTU1 );
 
-    // copy input on both camera
-    // Composer::Build set the last render into the current filter stateset texture unit 0
-    // we copy that into each camera as Texture unit 0
-    var inputTexture = filterStateSet.getTextureAttribute( 0, 'Texture' );
-    st0.setTextureAttributeAndModes( 0, inputTexture );
-    st1.setTextureAttributeAndModes( 0, inputTexture );
+        // copy input on both camera
+        // Composer::Build set the last render into the current filter stateset texture unit 0
+        // we copy that into each camera as Texture unit 0
+        var inputTexture = filterStateSet.getTextureAttribute( 0, 'Texture' );
+        st0.setTextureAttributeAndModes( 0, inputTexture );
+        st1.setTextureAttributeAndModes( 0, inputTexture );
 
-    st0.setTextureAttributeAndModes( 1, this._rtt1 );
-    st1.setTextureAttributeAndModes( 1, this._rtt0 );
+        st0.setTextureAttributeAndModes( 1, this._rtt1 );
+        st1.setTextureAttributeAndModes( 1, this._rtt0 );
 
-    // if not the last filter
-    // bind both result to next filter
-    // rtt0 to texture unit 0
-    // rtt0 to texture unit 1
-    if ( i !== array.length - 1 ) {
+        // if not the last filter
+        // bind both result to next filter
+        // rtt0 to texture unit 0
+        // rtt0 to texture unit 1
+        if ( i !== array.length - 1 ) {
 
-        // just translate stateset to the next filter
-        var nextSt = array[ i + 1 ].filter.getStateSet();
+            // just translate stateset to the next filter
+            var nextSt = array[ i + 1 ].filter.getStateSet();
 
-        nextSt.setTextureAttributeAndModes( 0, this._rtt0 );
-        nextSt.setTextureAttributeAndModes( 1, this._rtt1 );
+            nextSt.setTextureAttributeAndModes( 0, this._rtt0 );
+            nextSt.setTextureAttributeAndModes( 1, this._rtt1 );
 
-        nextSt.addUniform( uniformTU0 );
-        nextSt.addUniform( uniformTU1 );
+            nextSt.addUniform( uniformTU0 );
+            nextSt.addUniform( uniformTU1 );
+
+        }
+
+        var quad = Shape.createTexturedFullScreenFakeQuadGeometry();
+
+        if ( this.buildGeometry )
+            quad = this.buildGeometry( quad );
+
+        quad.setName( 'composer layer' );
+
+        this._cameraRtt0.addChild( quad );
+        this._cameraRtt1.addChild( quad );
+
+        composer.addChild( this._cameraRtt0 );
+        composer.addChild( this._cameraRtt1 );
+
+        composer._textureRTT.push( this._rtt0 );
+        composer._textureRTT.push( this._rtt1 );
+
+        composer._cameraRTT.push( this._cameraRtt0 );
+        composer._cameraRTT.push( this._cameraRtt1 );
+
+        // hide one of the two pass, as we will render only one each frame
+        this._cameraRtt1.setNodeMask( 0x0 );
+
+        // last texture result, only one possible so the first will do
+        return this._rtt0;
+
+    },
+
+    // PingPong
+    switch: function () {
+
+        var nodeMask0 = this._cameraRtt0.getNodeMask();
+        var nodeMask1 = this._cameraRtt1.getNodeMask();
+
+        this._cameraRtt0.setNodeMask( nodeMask1 );
+        this._cameraRtt1.setNodeMask( nodeMask0 );
 
     }
-
-    var quad = Shape.createTexturedFullScreenFakeQuadGeometry();
-
-    if ( this.buildGeometry )
-        quad = this.buildGeometry( quad );
-
-    quad.setName( 'composer layer' );
-
-    this._cameraRtt0.addChild( quad );
-    this._cameraRtt1.addChild( quad );
-
-    composer.addChild( this._cameraRtt0 );
-    composer.addChild( this._cameraRtt1 );
-
-    composer._textureRTT.push( this._rtt0 );
-    composer._textureRTT.push( this._rtt1 );
-
-    composer._cameraRTT.push( this._cameraRtt0 );
-    composer._cameraRTT.push( this._cameraRtt1 );
-
-    // hide one of the two pass, as we will render only one each frame
-    this._cameraRtt1.setNodeMask( 0x0 );
-
-    // last texture result, only one possible so the first will do
-    return this._rtt0;
-
-},
-
-// PingPong
-switch: function () {
-
-    var nodeMask0 = this._cameraRtt0.getNodeMask();
-    var nodeMask1 = this._cameraRtt1.getNodeMask();
-
-    this._cameraRtt0.setNodeMask( nodeMask1 );
-    this._cameraRtt1.setNodeMask( nodeMask0 );
-
-}
 
 } );
 
