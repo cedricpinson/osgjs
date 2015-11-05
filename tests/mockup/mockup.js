@@ -119,13 +119,31 @@ var createFakeRenderer = function () {
         enableVertexAttribArray: function () {},
         vertexAttribPointer: function () {},
         createTexture: function () {},
+        createFramebuffer: function () {
+            return 1;
+        },
+        deleteFramebuffer: function () {},
         bindFramebuffer: function () {},
+        framebufferTexture2D: function () {},
+        checkFramebufferStatus: function () {
+            return 0x8CD5;
+        },
+        createRenderbuffer: function () {
+            return 1;
+        },
+        deleteRenderbuffer: function () {},
+        bindRenderbuffer: function () {},
+        renderbufferStorage: function () {},
+        framebufferRenderbuffer: function () {},
         clear: function () {},
         viewport: function () {},
         cullFace: function () {},
         texImage2D: function () {},
         texParameteri: function () {},
-        createShader: function () {},
+        createShader: function () {
+            return 1;
+        },
+        deleteShader: function () {},
         shaderSource: function () {},
         compileShader: function () {},
         getShaderParameter: function () {
@@ -133,7 +151,10 @@ var createFakeRenderer = function () {
         },
         isContextLost: function () {},
         getShaderInfoLog: function () {},
-        createProgram: function () {},
+        createProgram: function () {
+            return 1;
+        },
+        deleteProgram: function () {},
         attachShader: function () {},
         validateProgram: function () {},
         linkProgram: function () {},

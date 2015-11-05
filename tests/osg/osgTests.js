@@ -11,6 +11,7 @@ var ComputeMatrixFromNodePath = require( 'tests/osg/ComputeMatrixFromNodePath' )
 var CullFace = require( 'tests/osg/CullFace' );
 var CullVisitor = require( 'tests/osg/CullVisitor' );
 var Depth = require( 'tests/osg/Depth' );
+var FrameBufferObject = require( 'tests/osg/FrameBufferObject' );
 var KdTree = require( 'tests/osg/KdTree' );
 var Light = require( 'tests/osg/Light' );
 var Matrix = require( 'tests/osg/Matrix' );
@@ -45,6 +46,7 @@ module.exports = function () {
     CullVisitor();
     CullFace();
     Depth();
+    FrameBufferObject();
     KdTree();
     Light();
     Matrix();
