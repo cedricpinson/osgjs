@@ -154,8 +154,26 @@ Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         detachAll: function () {
             this._attachments = {};
 
-            if ( this.frameBufferObject )
+            if ( this.frameBufferObject ) {
                 this.frameBufferObject.dirty();
+            }
+        },
+
+        // TODO: fix in case of shared fbo
+        // TODO: fix adding a resize case
+        resetAttachments: function () {
+
+
+            if ( this.frameBufferObject ) {
+
+                this.frameBufferObject.reset();
+                // remove framebuffer
+                this.frameBufferObject = 0;
+            }
+
+            // removes camera attachement
+            this._attachments = {};
+
         },
 
         attachTexture: function ( bufferComponent, texture, textureTarget ) {
