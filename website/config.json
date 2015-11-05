@@ -6,6 +6,6 @@
   	    "wintersmith-nunjucks"
     ],
     "nunjucks": {
-        "escape": false
+        "autoescape": false
     }
 }
