@@ -2,7 +2,7 @@
 var Composer = require( 'osgUtil/Composer' );
 var DisplayNormalVisitor = require( 'osgUtil/DisplayNormalVisitor' );
 var DisplayGeometryVisitor = require( 'osgUtil/DisplayGeometryVisitor' );
-var DisplayNodeGraphVisitor = require( 'osgUtil/DisplayNodeGraphVisitor' );
+var DisplayGraph = require( 'osgUtil/DisplayGraph' );
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
 var NodeGizmo = require( 'osgUtil/NodeGizmo' );
@@ -21,7 +21,7 @@ var osgUtil = {};
 osgUtil.Composer = Composer;
 osgUtil.DisplayNormalVisitor = DisplayNormalVisitor;
 osgUtil.DisplayGeometryVisitor = DisplayGeometryVisitor;
-osgUtil.DisplayNodeGraphVisitor = DisplayNodeGraphVisitor;
+osgUtil.DisplayGraph = DisplayGraph;
 osgUtil.IntersectionVisitor = IntersectionVisitor;
 osgUtil.LineSegmentIntersector = LineSegmentIntersector;
 osgUtil.NodeGizmo = NodeGizmo;
