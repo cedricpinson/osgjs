@@ -1,0 +1,11 @@
+{
+    "locals": {
+        "title": "OSG.JS"
+    },
+    "plugins": [
+  	    "wintersmith-nunjucks"
+    ],
+    "nunjucks": {
+        "autoescape": false
+    }
+}
