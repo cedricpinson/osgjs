@@ -2,6 +2,7 @@
 var ShaderGenerator = require( 'osgShader/ShaderGenerator' );
 var ShadowCastShaderGenerator = require( 'osgShadow/ShadowCastShaderGenerator' );
 var DisplayNormalVisitor = require( 'osgUtil/DisplayNormalVisitor' );
+var DisplayGeometryVisitor = require( 'osgUtil/DisplayGeometryVisitor' );
 
 var ShaderGeneratorProxy = function () {
 
@@ -11,6 +12,7 @@ var ShaderGeneratorProxy = function () {
     this.addShaderGenerator( 'ShadowCast', new ShadowCastShaderGenerator() );
     this.addShaderGenerator( 'debugNormal', new DisplayNormalVisitor.ShaderGeneratorCompilerOffsetNormal() );
     this.addShaderGenerator( 'debugTangent', new DisplayNormalVisitor.ShaderGeneratorCompilerOffsetTangent() );
+    this.addShaderGenerator( 'debugGeometry', new DisplayGeometryVisitor.ShaderGeneratorCompilerColorGeometry() );
 
     return this;
 };
