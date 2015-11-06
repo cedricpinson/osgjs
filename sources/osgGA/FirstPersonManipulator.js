@@ -75,6 +75,14 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
 
     },
 
+    setDelay: function ( dt ) {
+        this._forward.setDelay( dt );
+        this._side.setDelay( dt );
+        this._lookPosition.setDelay( dt );
+        this._pan.setDelay( dt );
+        this._zoom.setDelay( dt );
+    },
+
     getEyePosition: function ( eye ) {
         eye[ 0 ] = this._eye[ 0 ];
         eye[ 1 ] = this._eye[ 1 ];

@@ -43,7 +43,7 @@ OrbitManipulator.Interpolator.prototype = {
     update: function ( dt ) {
         // assume 60 fps to be consistent with the old _delay values for backward compatibility
         // (otherwise we'd have to adjust the _delay values by multiplying to 60 )
-        var dtDelay = this._delay * dt * 60.0;
+        var dtDelay = Math.min( 1.0, this._delay * dt * 60.0 );
         for ( var i = 0, l = this._current.length; i < l; i++ ) {
             var d = ( this._target[ i ] - this._current[ i ] ) * dtDelay;
             this._delta[ i ] = d;
@@ -142,6 +142,11 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
                 self._controllerList[ value ] = new OrbitManipulator[ value ]( self );
             }
         } );
+    },
+    setDelay: function ( dt ) {
+        this._rotate.setDelay( dt );
+        this._pan.setDelay( dt );
+        this._zoom.setDelay( dt );
     },
     reset: function () {
         this.init();
