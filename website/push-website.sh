@@ -14,4 +14,4 @@ git checkout gh-pages
 git add -Av .
 git commit -m"Update website"
 git remote add origin git@github.com:cedricpinson/osgjs-website.git
-git push -u origin gh-pages
+git push -u origin gh-pages --force
