@@ -175,11 +175,11 @@ View.prototype = {
 
         if ( !this._iv ) {
             this._iv = new IntersectionVisitor();
-            this._iv.setTraversalMask( traversalMask );
             this._iv.setIntersector( this._lsi );
         } else {
             this._iv.reset();
         }
+        this._iv.setTraversalMask( traversalMask );
         this._camera.accept( this._iv );
 
         return this._lsi.getIntersections();

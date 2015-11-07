@@ -158,8 +158,10 @@ BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
     corner: function ( pos, resultVec ) {
         /*jshint bitwise: false */
         var ret = resultVec;
-        if ( ret === undefined )
+        if ( ret === undefined ) {
+            Notify.warn( 'no Vector destination !' );
             ret = Vec3.create();
+        }
 
         if ( pos & 1 ) {
             ret[ 0 ] = this._max[ 0 ];

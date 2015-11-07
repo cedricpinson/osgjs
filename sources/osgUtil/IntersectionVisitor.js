@@ -66,7 +66,7 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         this._windowStack.push( matrix );
     },
     pushWindowMatrixUsingViewport: function ( viewport ) {
-        this._windowStack.push( viewport.computeWindowMatrix() );
+        this._windowStack.push( viewport.computeWindowMatrix( IntersectionVisitor._reservedMatrixStack.get() ) );
     },
     getWindowMatrix: function () {
         return ( this._windowStack.length ) ? this._windowStack[ this._windowStack.length - 1 ] : undefined;

@@ -15,6 +15,7 @@ SphereIntersector.prototype = {
     set: function ( center, radius ) {
         Vec3.copy( center, this._center );
         this._radius = radius;
+        this.reset();
     },
     setCenter: function ( center ) {
         Vec3.copy( center, this._center );
@@ -37,29 +38,33 @@ SphereIntersector.prototype = {
         return Vec3.distance2( this._iCenter, bsphere.center() ) <= r * r;
     },
 
-    intersect: function ( iv, node ) {
-        var kdtree = node.getShape();
-        if ( kdtree ) {
-            // Use KDTREES
-            return kdtree.intersectSphere( this._iCenter, this._radius, this._intersections, iv.nodePath );
-        } else {
-            var ti = new TriangleSphereIntersector();
-            ti.setNodePath( iv.nodePath );
-            ti.set( this._iCenter, this._radius );
-            ti.apply( node );
-            var l = ti._intersections.length;
-            if ( l > 0 ) {
-                // Intersection/s exists
-                for ( var i = 0; i < l; i++ ) {
-                    this._intersections.push( ti._intersections[ i ] );
+    intersect: ( function () {
+
+        var ti = new TriangleSphereIntersector();
+
+        return function ( iv, node ) {
+            var kdtree = node.getShape();
+            if ( kdtree ) {
+                // Use KDTREES
+                return kdtree.intersectSphere( this._iCenter, this._radius, this._intersections, iv.nodePath );
+            } else {
+                ti.setNodePath( iv.nodePath );
+                ti.set( this._iCenter, this._radius );
+                ti.apply( node );
+                var l = ti._intersections.length;
+                if ( l > 0 ) {
+                    // Intersection/s exists
+                    for ( var i = 0; i < l; i++ ) {
+                        this._intersections.push( ti._intersections[ i ] );
+                    }
+                    return true;
                 }
-                return true;
+                // No intersection found
+                return false;
             }
-            // No intersection found
             return false;
-        }
-        return false;
-    },
+        };
+    } )(),
     getIntersections: function () {
         return this._intersections;
     },

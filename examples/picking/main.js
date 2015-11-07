@@ -29,7 +29,7 @@
             '  vInter = vec3( ModelViewMatrix * vec4( uCenterPicking, 1.0 ) );',
             '  vNormal = normalize(vec3( NormalMatrix * vec4( Normal, 1.0 )) );',
             '  vVertex = vec3( ModelViewMatrix * vec4( Vertex, 1.0 ) );',
-            '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4( Vertex, 1.0 );',
+            '  gl_Position = ProjectionMatrix * (ModelViewMatrix * vec4( Vertex, 1.0 ));',
             '}'
         ].join( '\n' );
 
@@ -126,18 +126,26 @@
         return root;
     };
 
-    var projectToScreen = function ( cam, hit ) {
-        var mat = osg.Matrix.create();
-        osg.Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix() : osg.Matrix.create() );
-        osg.Matrix.preMult( mat, cam.getProjectionMatrix() );
-        osg.Matrix.preMult( mat, cam.getViewMatrix() );
-        // Node 0 in nodepath is the Camera of the Viewer, so we take next child
-        osg.Matrix.preMult( mat, osg.computeLocalToWorld( hit.nodepath.slice( 1 ) ) );
+    var myReservedMatrixStack = new osg.MatrixMemoryPool();
 
-        var pt = [ 0.0, 0.0, 0.0 ];
-        osg.Matrix.transformVec3( mat, hit.point, pt );
-        return pt;
-    };
+    var projectToScreen = ( function () {
+        var mat = osg.Matrix.create();
+        var winMat = osg.Matrix.create();
+        return function ( cam, hit ) {
+            osg.Matrix.makeIdentity( mat );
+            osg.Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix( winMat ) : winMat );
+            osg.Matrix.preMult( mat, cam.getProjectionMatrix() );
+            osg.Matrix.preMult( mat, cam.getViewMatrix() );
+
+            myReservedMatrixStack.reset();
+            // Node 0 in nodepath is the Camera of the Viewer, so we take next child
+            osg.Matrix.preMult( mat, osg.computeLocalToWorld( hit.nodepath.slice( 1 ), true, myReservedMatrixStack.get() ) );
+
+            var pt = [ 0.0, 0.0, 0.0 ];
+            osg.Matrix.transformVec3( mat, hit.point, pt );
+            return pt;
+        };
+    } )();
 
     var onMouseMove = function ( canvas, viewer, unifs, ev ) {
         // TODO maybe doing some benchmark with a lot of geometry,
@@ -169,22 +177,28 @@
         var ptx = parseInt( pt[ 0 ], 10 ) / ratioX;
         var pty = parseInt( canvas.height - pt[ 1 ], 10 ) / ratioY;
         var d = document.getElementById( 'picking' );
-        d.innerText = 'x: ' + ptx + ' ' + 'y: ' + pty + '\n' + ptFixed;
+        d.textContent = 'x: ' + ptx.toFixed( 2 ) + ' y: ' + pty.toFixed( 2 ) + '\n' + ptFixed;
+
         d.style.transform = 'translate3d(' + ptx + 'px,' + pty + 'px,0)';
 
-        // // sphere intersection
-        // var si = new osgUtil.SphereIntersector();
+        // sphere intersection
+        var runSphere = true;
+        if ( runSphere ) {
+            var osgUtil = OSG.osgUtil;
+            var si = new osgUtil.SphereIntersector();
+            //compute world point
+            //for sphere intersection
+            var worldPoint = osg.Vec3.create();
+            myReservedMatrixStack.reset();
+            osg.Matrix.transformVec3( osg.computeLocalToWorld( hits[ 0 ].nodepath.slice( 1 ), true, myReservedMatrixStack.get() ), point, worldPoint );
 
-        // // compute world point for sphere intersection
-        // var worldPoint = osg.Vec3.create();
-        // osg.Matrix.transformVec3( osg.computeLocalToWorld( hits[ 0 ].nodepath.slice( 1 ) ), point, worldPoint );
-
-        // si.set( worldPoint, 5.0 );
-        // var iv = new osgUtil.IntersectionVisitor();
-        // iv.setIntersector( si );
-        // viewer.getSceneData().accept( iv );
-        // var hitsSphere = si.getIntersections();
-        // console.log( hitsSphere.length );
+            si.set( worldPoint, 5.0 );
+            var iv = new osgUtil.IntersectionVisitor();
+            iv.setIntersector( si );
+            viewer.getSceneData().accept( iv );
+            var hitsSphere = si.getIntersections();
+            console.log( hitsSphere.length );
+        }
     };
 
     var onLoad = function () {

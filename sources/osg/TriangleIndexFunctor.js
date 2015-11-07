@@ -1,15 +1,24 @@
 'use strict';
 var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var Notify = require( 'osg/Notify' );
 
 // This class can be used to visit all the triangles of a geometry
-// You feed it with a callback that will be called for each triangle
-// (with the 3 indexes of vertices as arguments)
-var TriangleIndexFunctor = function ( geom, cb ) {
-    this._geom = geom;
-    this._cb = cb;
+var TriangleIndexFunctor = function () {
+
+    if ( arguments && arguments.length ) {
+        Notify.warn( 'using ctor as initialiser is deprecated, use init(geom, cb)' );
+    }
+
 };
 
 TriangleIndexFunctor.prototype = {
+
+    // You feed it with a callback that will be called for each triangle
+    // (with the 3 indexes of vertices as arguments)
+    init: function ( geom, cb ) {
+        this._geom = geom;
+        this._cb = cb;
+    },
     applyDrawElementsTriangles: function ( count, indexes ) {
         var cb = this._cb;
         for ( var i = 0; i < count; i += 3 ) {

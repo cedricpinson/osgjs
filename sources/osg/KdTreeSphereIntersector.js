@@ -5,19 +5,24 @@ var KdTreeRayIntersector = require( 'osg/KdTreeRayIntersector' );
 var TriangleSphereIntersector = require( 'osgUtil/TriangleSphereIntersector' );
 
 
-var KdTreeSphereIntersector = function ( vertices, nodes, triangles, intersections, center, radius, nodePath ) {
-    this._vertices = vertices;
-    this._kdNodes = nodes;
-    this._triangles = triangles;
+var KdTreeSphereIntersector = function () {
+
     this._intersector = new TriangleSphereIntersector();
-    this._intersector._intersections = intersections;
-    this._intersector.setNodePath( nodePath );
-    this._intersector.set( center, radius );
-    this._center = center;
-    this._radius = radius;
+
 };
 
 KdTreeSphereIntersector.prototype = MACROUTILS.objectInherit( KdTreeRayIntersector.prototype, {
+
+    init: function ( intersections, center, radius, nodePath ) {
+
+        this._intersector._intersections = intersections;
+        this._intersector.setNodePath( nodePath );
+        this._intersector.set( center, radius );
+        this._center = center;
+        this._radius = radius;
+
+    },
+
     intersect: ( function () {
 
         var v0 = Vec3.create();
