@@ -151,18 +151,38 @@ View.prototype = {
      * Y = 0 at the BOTTOM
      */
     computeIntersections: function ( x, y, traversalMask ) {
+
         /*jshint bitwise: false */
         if ( traversalMask === undefined ) {
             traversalMask = ~0;
         }
         /*jshint bitwise: true */
-        var lsi = new LineSegmentIntersector();
-        lsi.set( Vec3.createAndSet( x, y, 0.0 ), Vec3.createAndSet( x, y, 1.0 ) );
-        var iv = new IntersectionVisitor();
-        iv.setTraversalMask( traversalMask );
-        iv.setIntersector( lsi );
-        this._camera.accept( iv );
-        return lsi.getIntersections();
+
+
+        if ( !this._lsi ) {
+            this._lsi = new LineSegmentIntersector();
+        } else {
+            this._lsi.reset();
+        }
+
+        if ( !this._origIntersect ) {
+            this._origIntersect = Vec3.create();
+            this._dstIntersect = Vec3.create();
+        }
+
+        this._lsi.set( Vec3.set( x, y, 0.0, this._origIntersect ), Vec3.set( x, y, 1.0, this._dstIntersect ) );
+
+
+        if ( !this._iv ) {
+            this._iv = new IntersectionVisitor();
+            this._iv.setTraversalMask( traversalMask );
+            this._iv.setIntersector( this._lsi );
+        } else {
+            this._iv.reset();
+        }
+        this._camera.accept( this._iv );
+
+        return this._lsi.getIntersections();
     },
 
     setFrameStamp: function ( frameStamp ) {
