@@ -15,7 +15,8 @@ var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
 var Renderer = require( 'osgViewer/Renderer' );
 var Scene = require( 'osgViewer/Scene' );
-
+var DisplayGraph = require( 'osgUtil/DisplayGraph' );
+var Notify = require( 'osg/Notify' );
 
 
 // View is normally inherited from osg/View. In osgjs we dont need it yet
@@ -143,6 +144,21 @@ View.prototype = {
 
         if ( options && options.enableFrustumCulling )
             this.getCamera().getRenderer().getCullVisitor().setEnableFrustumCulling( true );
+
+
+        // add a function to refresh the graph from the console
+        if ( options && options.debugGraph ) {
+
+            var camera = this.getCamera();
+            DisplayGraph.instance().refreshGraph = function () {
+                var displayGraph = DisplayGraph.instance();
+                displayGraph.setDisplayGraphRenderer( true );
+                displayGraph.createGraph( camera );
+            };
+
+            Notify.log( 'to refresh the graphs type in the console:\nOSG.osgUtil.DisplayGraph.instance().refreshGraph()' );
+
+        }
 
     },
 
