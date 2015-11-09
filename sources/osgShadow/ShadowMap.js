@@ -95,6 +95,7 @@ var ShadowMap = function ( settings ) {
     this._casterStateSet.addUniform( Uniform.createFloat1( 0, 'exponent1' ) );
     this._casterStateSet.addUniform( Uniform.createFloat1( 0.005, 'bias' ) );
     this._casterStateSet.addUniform( Uniform.createFloat1( 1.0 / this._textureSize, 'texelSize' ) );
+    this._casterStateSet.addUniform( Uniform.createFloat2( [ this._textureSize, this._textureSize ], 'RenderSize' ) );
 
 
     this._shadowReceiveAttribute = new ShadowReceiveAttribute( this._light.getLightNumber() );
