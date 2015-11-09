@@ -1311,18 +1311,18 @@
 
             var scene = this.createScene();
 
-            var wantToSeeAShadowSceneGraph = false;
-            if ( wantToSeeAShadowSceneGraph ) {
-                var visitor = new osgUtil.DisplayNodeGraphVisitor();
-                scene.accept( visitor );
-                visitor.createGraph();
-            }
             viewer.setSceneData( scene );
             viewer.setupManipulator();
             viewer.getManipulator().computeHomePosition();
             viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
 
             viewer.run();
+
+            var wantToSeeAShadowSceneGraph = false;
+            if ( wantToSeeAShadowSceneGraph ) {
+                var graphDebug = new osgUtil.DisplayGraph();
+                graphDebug.createGraph( scene );
+            }
 
             this.initDatGUI();
         }

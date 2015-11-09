@@ -240,11 +240,10 @@
             }
             //osg.setNotifyLevel( osg.ERROR );
 
-            var visitor = window.visitor;
-            visitor.reset();
+            var graphDebug = window.graphDebug;
+            graphDebug.reset();
             if ( controller.debugScene ) {
-                root.accept( visitor );
-                visitor.createGraph();
+                graphDebug.createGraph( root );
             }
         } );
 
@@ -319,7 +318,7 @@
             defaultChoice = filename;
         }
 
-        this.visitor = new osgUtil.DisplayNodeGraphVisitor();
+        this.graphDebug = new osgUtil.DisplayGraph();
 
         var currentAnim = this._config[ 'currentAnim' ];
         this._config.currentAnim = this._config[ 'anim' ];
