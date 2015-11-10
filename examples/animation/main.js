@@ -14,9 +14,6 @@
         this._cb = undefined;
     };
     FindAnimationManagerVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
-        init: function () {
-            this.found = [];
-        },
         getAnimationManager: function () {
             return this._cb;
         },

@@ -687,4 +687,6 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
 
 } );
 
+BasicAnimationManager.TypeToSize = TypeToSize;
+
 module.exports = BasicAnimationManager;
