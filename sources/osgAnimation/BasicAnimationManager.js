@@ -28,6 +28,15 @@ var Float = {
     }
 };
 
+var TypeToSize = [];
+TypeToSize[ Channel.ChannelType.Float ] = 1;
+TypeToSize[ Channel.ChannelType.FloatCubicBezier ] = 1;
+TypeToSize[ Channel.ChannelType.Vec3 ] = 3;
+TypeToSize[ Channel.ChannelType.Vec3CubicBezier ] = 3;
+TypeToSize[ Channel.ChannelType.Quat ] = 4;
+TypeToSize[ Channel.ChannelType.QuatSlerp ] = 4;
+TypeToSize[ Channel.ChannelType.Matrix ] = 16;
+
 
 var ResultType = [];
 ResultType.length = Channel.ChannelType.Count;
@@ -629,8 +638,52 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
             this._targetsByTypes[ i ].length = 0;
         }
 
-    }
+    },
 
+    setAnimationLerpEndStart: function ( anim, lerpDuration ) {
+        var channels = anim.channels;
+        if ( anim.originalDuration === undefined )
+            anim.originalDuration = anim.duration;
+
+        anim.duration = anim.originalDuration + lerpDuration;
+
+        for ( var i = 0, nbChannels = channels.length; i < nbChannels; ++i ) {
+            var ch = channels[ i ].channel;
+
+            // update channel end time
+            if ( ch.originalEnd === undefined )
+                ch.originalEnd = ch.end;
+
+            if ( ch.originalEnd !== anim.originalDuration )
+                continue;
+
+            ch.end = ch.originalEnd + lerpDuration;
+
+            // add or remove additonal key and time
+
+            var sizeElt = TypeToSize[ ch.type ];
+            var size = ch.times.buffer.byteLength / 4;
+
+            // no lerp between end and start
+            if ( lerpDuration === 0.0 ) {
+
+                ch.keys = new Float32Array( ch.keys.buffer, 0, ( size - 1 ) * sizeElt );
+                ch.times = new Float32Array( ch.times.buffer, 0, size - 1 );
+
+            } else {
+
+                // take full size of buffer (with additional keys)
+                ch.keys = new Float32Array( ch.keys.buffer, 0, size * sizeElt );
+                // copy first key
+                var idLast = ( size - 1 ) * sizeElt;
+                for ( var j = 0; j < sizeElt; ++j )
+                    ch.keys[ idLast + j ] = ch.keys[ j ];
+
+                ch.times = new Float32Array( ch.times.buffer, 0, size );
+                ch.times[ size - 1 ] = ch.times[ size - 2 ] + lerpDuration;
+            }
+        }
+    }
 
 } );
 
