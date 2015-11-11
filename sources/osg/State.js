@@ -264,10 +264,13 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var mu = this.projectionMatrix;
 
         var mul = program._uniformsCache[ mu.name ];
-        Matrix.copy( matrix, mu.get() );
-        mu.dirty();
-        mu.apply( this.getGraphicContext(), mul );
+        if ( mul ) {
 
+            Matrix.copy( matrix, mu.get() );
+            mu.dirty();
+            mu.apply( this.getGraphicContext(), mul );
+
+        }
     },
 
     applyStateSet: function ( stateset ) {
