@@ -56,6 +56,7 @@ var CullVisitor = function () {
     this._identityMatrix = Matrix.create();
 
     this._renderer = undefined;
+    this._renderStageType = RenderStage;
 };
 
 /** @lends CullVisitor.prototype */
@@ -301,7 +302,8 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
         var previousStage = renderBin.getStage();
 
         // use render to texture stage
-        var rtts = new RenderStage();
+        var RenderStageType = this._renderStageType;
+        var rtts = new RenderStageType();
         rtts.setCamera( camera );
         rtts.setClearDepth( camera.getClearDepth() );
         rtts.setClearColor( camera.getClearColor() );

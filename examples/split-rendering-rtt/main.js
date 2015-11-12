@@ -1,15 +1,194 @@
 ( function () {
     'use strict';
 
-    var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
-    var osgViewer = OSG.osgViewer;
-    var osgDB = OSG.osgDB;
-    var osgShader = OSG.osgShader;
+    var osgUtil = OSG.osgUtil;
     var ExampleOSGJS = window.ExampleOSGJS;
 
-    var $ = window.$;
+    var composeFragmentShader = [
+        osgUtil.Composer.Filter.defaultFragmentShaderHeader,
+        'uniform sampler2D Texture1;',
+        'void main (void)',
+        '{',
+        '  vec4 transp = texture2D(Texture1, FragTexCoord0 );',
+        '  vec4 opaque = texture2D(Texture0, FragTexCoord0 );',
+        '  gl_FragColor = transp + opaque;',
+        '}'
+    ].join( '\n' );
+
+
+    var sortBin = function ( a, b ) {
+        return a._binNum - b._binNum;
+    };
+
+    var RenderStageSplitter = function () {
+        osg.RenderStage.apply( this, arguments );
+    };
+    RenderStageSplitter.prototype = osg.objectInherit( osg.RenderStage.prototype, {
+
+        isMainCamera: function () {
+
+            var camera = this.getCamera();
+            if ( camera && camera.getName() === 'MainCamera' ) return true;
+            return false;
+
+        },
+
+        drawImplementationRenderBin: function ( state, previousRenderLeaf ) {
+
+            var previousLeaf = previousRenderLeaf;
+            var binsKeys = window.Object.keys( this._bins );
+            var bins = this._bins;
+
+            var binsArray = [];
+
+            for ( var i = 0, l = binsKeys.length; i < l; i++ ) {
+                var k = binsKeys[ i ];
+                binsArray.push( bins[ k ] );
+            }
+
+            binsArray.sort( sortBin );
+
+            var current = 0;
+            var end = binsArray.length;
+
+            var bin;
+            // draw pre bins
+            for ( ; current < end; current++ ) {
+                bin = binsArray[ current ];
+                if ( bin.getBinNumber() > 0 ) break;
+
+                previousLeaf = bin.draw( state, previousLeaf );
+            }
+
+            // draw leafs
+            previousLeaf = this.drawLeafs( state, previousLeaf );
+
+            var transparentBin = 10;
+
+            // draw post bins
+            for ( ; current < end; current++ ) {
+                bin = binsArray[ current ];
+
+                // handle transparency on different RTT
+                if ( bin.getBinNumber() === transparentBin ) {
+                    this.useTransparencyRTT( state );
+                    previousLeaf = bin.draw( state, previousLeaf );
+                    this.useOpaqueRTT( state );
+                } else {
+                    previousLeaf = bin.draw( state, previousLeaf );
+                }
+            }
+
+            return previousLeaf;
+        },
+
+        useTransparencyRTT: function ( state ) {
+            this.getCamera().frameBufferObjectTransparent.apply( state );
+        },
+
+        useOpaqueRTT: function ( state ) {
+            this.getCamera().frameBufferObject.apply( state );
+        },
+
+
+        createFBO: function ( state, texture ) {
+
+            var viewport = this.getViewport();
+            var gl = state.getGraphicContext();
+
+
+            var fbo = new osg.FrameBufferObject();
+
+            fbo.createFrameBufferObject( gl );
+            gl.bindFramebuffer( gl.FRAMEBUFFER, fbo.getFrameBufferObject() );
+
+
+            // set the depth render buffer
+            var renderBufferDepth = this._renderBufferDepth;
+            if ( !renderBufferDepth ) {
+                renderBufferDepth = fbo.createRenderBuffer( gl, osg.FrameBufferObject.DEPTH_COMPONENT16, viewport.width(), viewport.height() );
+                this._renderBufferDepth = renderBufferDepth;
+            }
+            fbo.framebufferRenderBuffer( gl, osg.FrameBufferObject.DEPTH_ATTACHMENT, renderBufferDepth );
+
+            // apply and assign texture
+            state.applyTextureAttribute( 1, texture );
+            fbo.framebufferTexture2D( gl, osg.FrameBufferObject.COLOR_ATTACHMENT0, osg.Texture.TEXTURE_2D, texture );
+
+            var status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
+            if ( status !== 0x8CD5 ) fbo._reportFrameBufferError( status );
+
+            fbo.setDirty( false );
+
+            return fbo;
+        },
+
+
+        createCamera2RTT: function ( state ) {
+
+            var fbo;
+
+            fbo = this.createFBO( state, this.getCamera()._textureOpaque );
+            this.getCamera().frameBufferObject = fbo;
+
+            fbo = this.createFBO( state, this.getCamera()._textureTransparent );
+            this.getCamera().frameBufferObjectTransparent = fbo;
+
+        },
+
+        clearCamera: function ( gl ) {
+
+            if ( this.clearMask !== 0x0 ) {
+                if ( this.clearMask & gl.COLOR_BUFFER_BIT ) {
+                    gl.clearColor( this.clearColor[ 0 ], this.clearColor[ 1 ], this.clearColor[ 2 ], this.clearColor[ 3 ] );
+                }
+                if ( this.clearMask & gl.DEPTH_BUFFER_BIT ) {
+                    gl.depthMask( true );
+                    gl.clearDepth( this.clearDepth );
+                }
+                /*jshint bitwise: true */
+                gl.clear( this.clearMask );
+            }
+
+        },
+
+        drawImplementation: function ( state, previousRenderLeaf ) {
+
+            if ( !this.isMainCamera() ) {
+                return osg.RenderStage.prototype.drawImplementation.call( this, state, previousRenderLeaf );
+            }
+
+            var gl = state.getGraphicContext();
+
+            // check / init FBO
+            var fbo = this.getCamera().frameBufferObject;
+            if ( !fbo ) this.createCamera2RTT( state );
+
+            if ( this.viewport === undefined )
+                osg.log( 'RenderStage does not have a valid viewport' );
+
+            state.applyAttribute( this.viewport );
+
+            // clear transparency
+            this.useTransparencyRTT( state );
+            this.clearCamera( gl );
+
+            // clear opaque
+            this.useOpaqueRTT( state );
+            this.clearCamera( gl );
+
+            if ( this.positionedAttribute.length !== 0 ) {
+                this.applyPositionedAttribute( state, this.positionedAttribute );
+            }
+
+
+            var previousLeaf = this.drawImplementationRenderBin( state, previousRenderLeaf );
+
+            return previousLeaf;
+        }
+    } );
 
 
     var Example = function () {
@@ -20,25 +199,30 @@
 
     Example.prototype = osg.objectInherit( ExampleOSGJS.prototype, {
 
-        createCameraRTT: function ( texture, is3D ) {
+        createCameraRTT: function ( textureOpaque, textureTranparent ) {
             var camera = new osg.Camera();
-            camera.setName( is3D ? 'MainCamera' : 'composer2D' );
+            camera.setName( 'MainCamera' );
             camera.setViewport( new osg.Viewport( 0, 0, this._canvas.width, this._canvas.height ) );
 
             camera.setRenderOrder( osg.Camera.PRE_RENDER, 0 );
-            camera.attachTexture( osg.FrameBufferObject.COLOR_ATTACHMENT0, texture, 0 );
 
-            //
+            // hack, our custom RenderStage will create FBO from those two textures
+            camera._textureOpaque = textureOpaque;
+            camera._textureTransparent = textureTranparent;
+
+            camera.setClearColor( osg.Vec4.create( [ 0.0, 0.0, 0.1, 1.0 ] ) );
+            return camera;
+        },
+
+        createCamera: function ( texture ) {
+            var camera = new osg.Camera();
+            camera.setName( 'composer2D' );
             camera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
 
-            if ( is3D ) {
-                camera.attachRenderBuffer( osg.FrameBufferObject.DEPTH_ATTACHMENT, osg.FrameBufferObject.DEPTH_COMPONENT16 );
-                camera.setClearColor( osg.Vec4.create( [ 0.0, 0.0, 0.1, 1.0 ] ) );
-            } else {
+            var geometry = osg.createTexturedQuadGeometry( -1, -1, 0, 2, 0, 0, 0, 2, 0 );
+            geometry.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
+            camera.addChild( geometry );
 
-                camera.setClearMask( 0 );
-
-            }
             return camera;
         },
 
@@ -56,79 +240,81 @@
             return texture;
         },
 
+        hideDebugTextureList: function () {
+            this._debugNodeRTT.setNodeMask( 0x0 );
+        },
+
+        showDebugTextureList: function () {
+            this._debugNodeRTT.setNodeMask( ~0x0 );
+        },
+
         // show the renderTexture as ui quad on left bottom screen
         // in fact show all texture inside this._rtt
-        showHideFrameBuffers: function ( optionalArgs ) {
+        createDebugTextureList: function ( textureList, optionalArgs ) {
 
-            // debug Scene
-            if ( !this._rttDebugNode ) {
-                this._rttDebugNode = new osg.Node();
-                this._rttDebugNode.setName( '_rttDebugNode' );
-                this._root.addChild( this._rttDebugNode );
-            } else if ( this._rttDebugNode.getChildren().length !== 0 ) {
-                this._rttDebugNode.removeChildren();
-                return;
-            }
-
-            var ComposerdebugNode = new osg.Node();
-            ComposerdebugNode.setName( 'debugComposerNode' );
-            ComposerdebugNode.setCullingActive( false );
-            var ComposerdebugCamera = new osg.Camera();
-            ComposerdebugCamera.setName( '_ComposerdebugCamera' );
-            this._rttDebugNode.addChild( ComposerdebugCamera );
+            // 20% of the resolution size
+            var defaultRatio = 0.3;
+            var screenRatio = this._canvas.width / this._canvas.height;
+            var defaultWidth = Math.floor( this._canvas.width * defaultRatio );
+            var defaultHeight = Math.floor( defaultWidth / screenRatio );
 
             var optionsDebug = {
                 x: 0,
                 y: 100,
-                w: 100,
-                h: 80,
+                w: defaultWidth,
+                h: defaultHeight,
                 horizontal: true,
-                screenW: 1024,
-                screenH: 768,
-                fullscreen: false
+                screenW: this._canvas.width,
+                screenH: this._canvas.height
             };
+
             if ( optionalArgs )
                 osg.extend( optionsDebug, optionalArgs );
 
-            var matrixDest = ComposerdebugCamera.getProjectionMatrix();
-            osg.Matrix.makeOrtho( 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5, matrixDest );
+            var debugNodeRTT = this._debugNodeRTT;
+            debugNodeRTT.setNodeMask( ~0x0 );
+            debugNodeRTT.removeChildren();
 
-            // not really needed until we do matrix caches
-            ComposerdebugCamera.setProjectionMatrix( matrixDest );
+            var debugComposerNode = new osg.Node();
+            debugComposerNode.setName( 'debugComposerNode' );
+            debugComposerNode.setCullingActive( false );
 
-            matrixDest = ComposerdebugCamera.getViewMatrix();
-            osg.Matrix.makeTranslate( 0, 0, 0, matrixDest );
-            ComposerdebugCamera.setViewMatrix( matrixDest );
-            ComposerdebugCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
-            ComposerdebugCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
-            ComposerdebugCamera.addChild( ComposerdebugNode );
+            // camera
+            var debugComposerCamera = new osg.Camera();
+            debugComposerCamera.setName( 'composerDebugCamera' );
+            debugNodeRTT.addChild( debugComposerCamera );
 
-            var texture;
+            // create camera to setup RTT in overlay
+            var cameraProjection = debugComposerCamera.getProjectionMatrix();
+            osg.Matrix.makeOrtho( 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5, cameraProjection );
+
+            var cameraView = debugComposerCamera.getViewMatrix();
+            osg.Matrix.makeTranslate( 0, 0, 0, cameraView );
+
+            debugComposerCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
+            debugComposerCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+            debugComposerCamera.addChild( debugComposerNode );
+
             var xOffset = optionsDebug.x;
             var yOffset = optionsDebug.y;
-            ComposerdebugNode.removeChildren();
 
-            var stateset;
 
-            stateset = ComposerdebugNode.getOrCreateStateSet();
+            // why if no in fullscreen we would need to disable depth ?
+            debugComposerNode.getOrCreateStateSet().setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
 
-            if ( !optionsDebug.fullscreen ) {
-                stateset.setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
-            }
+            // iterate on each texture to add them as thumbnails
+            for ( var i = 0, l = textureList.length; i < l; i++ ) {
+                var texture = textureList[ i ];
 
-            for ( var i = 0, l = this._renderTextures.length; i < l; i++ ) {
-                texture = this._renderTextures[ i ];
                 if ( texture ) {
                     var quad = osg.createTexturedQuadGeometry( xOffset, yOffset, 0, optionsDebug.w, 0, 0, 0, optionsDebug.h, 0 );
 
-                    stateset = quad.getOrCreateStateSet();
+                    var stateSet = quad.getOrCreateStateSet();
+                    quad.setName( 'debugComposerGeometry' + i );
 
-                    quad.setName( 'debugCompoGeom' + i );
+                    stateSet.setTextureAttributeAndModes( 0, texture );
 
-                    stateset.setTextureAttributeAndModes( 0, texture );
-                    stateset.setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
-
-                    ComposerdebugNode.addChild( quad );
+                    debugComposerNode.addChild( quad );
 
                     if ( optionsDebug.horizontal ) {
                         xOffset += optionsDebug.w + 2;
@@ -137,17 +323,19 @@
                     }
                 }
             }
+
         },
 
         createScene: function () {
 
+
             // the root node
-            this._root = new osg.Node();
             var scene = new osg.Node();
 
             // camera RTT
-            var texture = this.createTextureRTT( 'mainScene', osg.Texture.NEAREST, osg.Texture.UNSIGNED_BYTE );
-            var camera = this.createCameraRTT( texture, true );
+            var opaque = this.createTextureRTT( 'mainSceneOpaque', osg.Texture.NEAREST, osg.Texture.UNSIGNED_BYTE );
+            var transparent = this.createTextureRTT( 'mainSceneTransparent', osg.Texture.NEAREST, osg.Texture.UNSIGNED_BYTE );
+            var camera = this.createCameraRTT( opaque, transparent );
             camera.addChild( scene );
             this._root.addChild( camera );
 
@@ -171,20 +359,45 @@
             scene.addChild( model1 );
 
             // create textured quad with the texture rtt
-            var geometry = osg.createTexturedFullScreenFakeQuadGeometry();
-            geometry.getOrCreateStateSet().setTextureAttributeAndModes( 0, texture );
-            this._root.addChild( geometry );
+            // var cameraScreen = this.createCamera( opaque );
+            // this._root.addChild( cameraScreen );
 
-            return this._root;
+            // composer
+            var composer = new osgUtil.Composer();
+            var blendPass = new osgUtil.Composer.Filter.Custom( composeFragmentShader, {
+                Texture1: transparent,
+                Texture0: opaque
+            } );
+
+            blendPass.getOrCreateStateSet().setTextureAttributeAndModes( 1, transparent );
+            blendPass.getOrCreateStateSet().setTextureAttributeAndModes( 0, opaque );
+            composer.addPass( blendPass );
+            composer.renderToScreen( this._canvas.width, this._canvas.height );
+
+            this._root.addChild( composer );
+
+            var textureListDebug = [ opaque, transparent ];
+
+            var refreshDebugTextureList = function () {
+                this.createDebugTextureList( textureListDebug, {
+                    horizontal: false
+                } );
+            }.bind( this );
+
+            refreshDebugTextureList();
+            window.refreshDebugTextureList = refreshDebugTextureList;
+
+
+            // hook RenderStage
+            this._viewer.getCamera().getRenderer().getCullVisitor()._renderStageType = RenderStageSplitter;
         }
 
     } );
 
-    window.Example = Example;
-
     window.addEventListener( 'load', function () {
         var example = new Example();
         example.run();
+        window.example = example;
     }, true );
 
 } )();
