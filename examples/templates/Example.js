@@ -37,9 +37,15 @@
         this._viewer = undefined;
         this._gui = undefined;
         this._shaderProcessor = undefined;
-        this._root = undefined;
         this._canvas = undefined;
 
+        this._root = new osg.Node();
+        this._root.setName( 'root' );
+
+        this._debugNodeRTT = new osg.Node();
+        this._debugNodeRTT.setName( 'debugNodeRTT' );
+        this._debugNodeRTT.getOrCreateStateSet().setRenderBinDetails( 1000, 'RenderBin' );
+        this._root.addChild( this._debugNodeRTT );
 
     };
 
@@ -205,15 +211,9 @@
 
         createScene: function () {
 
-            // the root node
-            this._root = new osg.Node();
-
             // create the model
-            var model = this.getOrCreateModel();
+            this._root.addChild( this.getOrCreateModel() );
 
-            this._root.addChild( model );
-
-            return this._root;
         }
 
     };
