@@ -62,9 +62,11 @@ osgAnimationWrapper.StandardVec3Channel = function ( input, channel, creator ) {
         var eKeyY = pArray[ 2 ].getElements();
         var eKeyZ = pArray[ 3 ].getElements();
 
+        // the keys and time array are always create with a slightly biffer array buffer
+        // (one additional element) in case we want to lerp between end and start
         var size = eTime.length;
-        var keys = new Float32Array( size * 3 );
-        var times = new Float32Array( size );
+        var keys = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) * 3 ), 0, size * 3 );
+        var times = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) ), 0, size );
 
         for ( var i = 0; i < size; i++ ) {
             var id = i * 3;
@@ -98,8 +100,8 @@ osgAnimationWrapper.StandardQuatChannel = function ( input, channel, creator ) {
         var eKeyW = pArray[ 4 ].getElements();
 
         var size = eTime.length;
-        var times = new Float32Array( size );
-        var keys = new Float32Array( size * 4 );
+        var keys = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) * 4 ), 0, size * 4 );
+        var times = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) ), 0, size );
 
         for ( var i = 0; i < size; i++ ) {
             var id = i * 4;
@@ -127,8 +129,8 @@ osgAnimationWrapper.StandardFloatChannel = function ( input, channel, creator ) 
         var eKey = pArray[ 1 ].getElements();
 
         var size = eTime.length;
-        var times = new Float32Array( size );
-        var keys = new Float32Array( size );
+        var keys = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) ), 0, size );
+        var times = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) ), 0, size );
 
         for ( var i = 0; i < size; i++ ) {
             times[ i ] = eTime[ i ];
@@ -178,8 +180,8 @@ osgAnimationWrapper.FloatCubicBezierChannel = function ( input, channel ) {
         var time = pArray[ 3 ].getElements();
 
         var size = time.length;
-        var keys = new Float32Array( size * 3 );
-        var times = new Float32Array( size );
+        var keys = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) * 3 ), 0, size * 3 );
+        var times = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) ), 0, size );
 
         for ( var i = 0; i < size; i++ ) {
             var id = i * 3;
@@ -228,8 +230,8 @@ osgAnimationWrapper.Vec3CubicBezierChannel = function ( input, channel ) {
         var time = pArray[ 9 ].getElements();
 
         var size = time.length;
-        var keys = new Float32Array( size * 9 );
-        var times = new Float32Array( size );
+        var keys = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) * 9 ), 0, size * 9 );
+        var times = new Float32Array( new ArrayBuffer( 4 * ( size + 1 ) ), 0, size );
 
         for ( var i = 0; i < size; i++ ) {
             var id = i * 9;
