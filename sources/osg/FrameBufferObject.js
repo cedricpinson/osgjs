@@ -151,23 +151,61 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
 
     },
 
+    getFrameBufferObject: function () {
+        return this._fbo;
+    },
+
+    createFrameBufferObject: function ( gl ) {
+        this._fbo = gl.createFramebuffer();
+    },
+
+    createRenderBuffer: function ( gl, format, width, height ) {
+
+        var renderBuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer( gl.RENDERBUFFER, renderBuffer );
+        gl.renderbufferStorage( gl.RENDERBUFFER, format, width, height );
+
+        return renderBuffer;
+    },
+
+    framebufferRenderBuffer: function ( gl, attachment, renderBuffer ) {
+        gl.framebufferRenderbuffer( gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, renderBuffer );
+
+        /* develblock:start */
+        // only visible with webgl-insector enabled
+        if ( gl.rawgl !== undefined ) {
+            Notify.log( 'FBO: renderBuffer: ' + this._fbo.trackedObject.defaultName );
+        }
+        /* develblock:end */
+    },
+
+    framebufferTexture2D: function ( gl, attachment, textureTarget, texture ) {
+        gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment, textureTarget, texture.getTextureObject().id(), 0 );
+
+        /* develblock:start */
+        // only visible with webgl-insector enabled
+        // allow trace debug (fb<->texture link)
+        if ( gl.rawgl !== undefined ) {
+            Notify.log( 'FBO: texture: ' + texture.getName() + ' : ' + texture.getTextureObject().id().trackedObject.defaultName + ' fbo: ' + this._fbo.trackedObject.defaultName );
+        }
+        /* develblock:end */
+    },
+
     apply: function ( state ) {
 
-        if ( !this._gl ) {
-            this.setGraphicContext( state.getGraphicContext() );
-        }
+        if ( !this._gl ) this.setGraphicContext( state.getGraphicContext() );
+
         var gl = this._gl;
         var status;
 
         var attachments = this._attachments;
 
-        if ( attachments.length > 0 ) {
+        if ( attachments.length > 0 || this._fbo ) {
 
             if ( this.isDirty() ) {
 
-                if ( !this._fbo ) {
-                    this._fbo = gl.createFramebuffer();
-                }
+                if ( !this._fbo )
+                    this._fbo = this.createFrameBufferObject( gl );
 
                 gl.bindFramebuffer( gl.FRAMEBUFFER, this._fbo );
                 var hasRenderBuffer = false;
@@ -179,36 +217,19 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                     // render buffer
                     if ( attachment.texture === undefined ) {
 
-                        this._rbo = gl.createRenderbuffer();
-                        gl.bindRenderbuffer( gl.RENDERBUFFER, this._rbo );
-                        gl.renderbufferStorage( gl.RENDERBUFFER, attachment.format, attachment.width, attachment.height );
-                        gl.framebufferRenderbuffer( gl.FRAMEBUFFER, attachment.attachment, gl.RENDERBUFFER, this._rbo );
+                        this._rbo = this.createRenderBuffer( gl, attachment.format, attachment.width, attachment.height );
+                        this.framebufferRenderBuffer( gl, attachment.attachment, this._rbo );
                         hasRenderBuffer = true;
-
-                        /* develblock:start */
-                        // only visible with webgl-insector enabled
-                        if ( gl.rawgl !== undefined ) {
-                            Notify.log( 'FBO: renderBuffer: ' + this._fbo.trackedObject.defaultName );
-                        }
-                        /* develblock:end */
 
                     } else {
 
                         // use texture
                         var texture = attachment.texture;
-                        // apply on unit 0 to init it
+
+                        // apply on unit 1 to init it
                         state.applyTextureAttribute( 1, texture );
+                        this.framebufferTexture2D( gl, attachment.attachment, attachment.textureTarget, texture );
 
-
-                        gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment.attachment, attachment.textureTarget, texture.getTextureObject().id(), 0 );
-
-                        /* develblock:start */
-                        // only visible with webgl-insector enabled
-                        // allow trace debug (fb<->texture link)
-                        if ( gl.rawgl !== undefined ) {
-                            Notify.log( 'FBO: texture: ' + texture.getName() + ' : ' + texture.getTextureObject().id().trackedObject.defaultName + ' fbo: ' + this._fbo.trackedObject.defaultName );
-                        }
-                        /* develblock:end */
                     }
 
                 }
