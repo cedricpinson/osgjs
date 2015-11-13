@@ -1,4 +1,5 @@
 'use strict';
+var AutoTransform = require( 'osg/AutoTransform' );
 var BillboardAttribute = require( 'osg/BillboardAttribute' );
 var BlendColor = require( 'osg/BlendColor' );
 var BlendFunc = require( 'osg/BlendFunc' );
@@ -77,6 +78,7 @@ var WebGLCaps = require( 'osg/WebGLCaps' );
 
 
 var osg = {};
+osg.AutoTransform = AutoTransform;
 osg.BillboardAttribute = BillboardAttribute;
 osg.BlendColor = BlendColor;
 osg.BlendFunc = BlendFunc;

@@ -37,6 +37,7 @@
                 alignment: 'CENTER_CENTER',
                 fontResolution: 32,
                 characterSize: 1,
+                characterSizeMode: 'OBJECT_COORDS'
             };
             var layouts = [ 'LEFT_TO_RIGHT', 'RIGHT_TO_LEFT' ];
             var alignments = {
@@ -50,6 +51,12 @@
                 RIGHT_CENTER: osgText.Text.RIGHT_CENTER,
                 RIGHT_BOTTOM: osgText.Text.RIGHT_BOTTOM
             };
+
+            var characterSizeModes = {
+                OBJECT_COORDS: osgText.Text.OBJECT_COORDS,
+                SCREEN_COORDS: osgText.Text.SCREEN_COORDS,
+                SCREEN_SIZE_CAPPED: osgText.Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT,
+            }
             var fonts = [ 'monospace', 'Andale Mono', 'Arial', 'Comic Sans MS', 'Courier New', ' Lucida Console', 'Impact, fantasy' ];
             var that = this;
 
@@ -86,6 +93,11 @@
             var CharSizeController = this.gui.add( this.params, 'characterSize', 1, 10 );
             CharSizeController.onChange( function ( value ) {
                 that.changeCharacterSize( value );
+            } );
+
+            var characterSizeModeController = this.gui.add( this.params, 'characterSizeMode', characterSizeModes );
+            characterSizeModeController.onChange( function ( value ) {
+                that.changeCharacterSizeMode( value );
             } );
         },
         createTextScene: function () {
@@ -243,6 +255,23 @@
                 apply: function ( node ) {
                     if ( node instanceof osgText.Text ) {
                         node.setAlignment( this._alignment );
+                    }
+                    this.traverse( node );
+                }
+            } );
+            var tv = new TextVisitor( value );
+            this._scene.accept( tv );
+        },
+
+        changeCharacterSizeMode: function ( value ) {
+            var TextVisitor = function ( value ) {
+                osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
+                this._characterSizeMode = parseInt( value );
+            };
+            TextVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
+                apply: function ( node ) {
+                    if ( node instanceof osgText.Text ) {
+                        node.setCharacterSizeMode( this._characterSizeMode );
                     }
                     this.traverse( node );
                 }

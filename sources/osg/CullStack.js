@@ -7,7 +7,7 @@ var CullSettings = require( 'osg/CullSettings' );
 var CullingSet = require( 'osg/CullingSet' );
 var Matrix = require( 'osg/Matrix' );
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
-var MatrixTransform = require( 'osg/MatrixTransform' );
+var Transform = require( 'osg/Transform' );
 var Notify = require( 'osg/Notify' );
 var TransformEnums = require( 'osg/TransformEnums' );
 var Vec3 = require( 'osg/Vec3' );
@@ -210,7 +210,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
                 // tricky: change push be before isculled, and pop in case of culling
                 // strange bug for now on frustum culling sample with that
 
-                if ( node instanceof MatrixTransform ) {
+                if ( node instanceof Transform ) {
 
                     // tricky: MatrixTransform getBound is already transformed to
                     // its local space whereas nodepath also have its matrix ...

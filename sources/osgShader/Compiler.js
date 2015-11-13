@@ -102,14 +102,9 @@ Compiler.prototype = {
 
 
             } else if ( type === 'Material' ) {
-
                 this._material = attributes[ i ];
-
-
             } else if ( type === 'ShadowReceiveAttribute' ) {
-
                 shadows.push( attributes[ i ] );
-
             } else if ( type === 'Billboard' ) {
                 this._isBillboard = !!attributes[ i ];
             } else if ( type === 'SkinningAttribute' ) {
@@ -1345,18 +1340,16 @@ Compiler.prototype = {
         } ).outputs( {
             vec: glPosition
         } );
-
     },
 
     declareVertexTransformBillboard: function ( glPosition ) {
         this.getOrCreateInputPosition();
-        var billboard = [ '%glPosition = %ProjectionMatrix * ( vec4( %Vertex, 1.0 ) + vec4( %ModelViewMatrix[ 3 ].xyz, 0.0 ) );', ];
-        this.getNode( 'InlineCode' ).code( billboard.join( '\n' ) ).inputs( {
-            ModelViewMatrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
+        this.getNode( 'Billboard' ).inputs( {
             Vertex: this.getOrCreateAttribute( 'vec3', 'Vertex' ),
+            ModelViewMatrix: this.getOrCreateUniform( 'mat4', 'ModelViewMatrix' ),
             ProjectionMatrix: this.getOrCreateUniform( 'mat4', 'ProjectionMatrix' )
         } ).outputs( {
-            glPosition: glPosition
+            vec: glPosition
         } );
     },
 
@@ -1391,7 +1384,7 @@ Compiler.prototype = {
     // Transform Position into NDC
     // but keep intermediary result
     // FragEye which is in Camera/Eye space
-    // (most light computation are in eye space)
+    // (most light computation is in eye space)
     // (better precision, particulary if camera is far from World 0.0.0)
     declareTransformWithEyeSpace: function ( glPosition ) {
 
