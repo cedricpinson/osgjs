@@ -48,8 +48,8 @@ FrameBufferObject.flushDeletedGLFrameBuffers = function ( gl, availableTime ) {
         deleteList.splice( i, 1 );
         elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
     }
-    availableTime -= elapsedTime;
-    return availableTime;
+    this._fbo = undefined;
+    // TODO: we probably need to delete also the renderBuffer
 };
 
 FrameBufferObject.flushAllDeletedGLFrameBuffers = function ( gl ) {

@@ -1,4 +1,5 @@
 'use strict';
+var Hash = require( 'osg/Hash' );
 var MACROUTILS = require( 'osg/Utils' );
 var Map = require( 'osg/Map' );
 var Vec4 = require( 'osg/Vec4' );
@@ -18,6 +19,8 @@ var MorphAttribute = function ( nbTarget, disable ) {
 
     this._targetNames = {};
     this._hashNames = ''; // compute only once target hash names
+
+    this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
 };
 
 MorphAttribute.uniforms = {};
@@ -45,6 +48,7 @@ MorphAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         }
 
         this._hashNames = hash;
+        this.dirty();
     },
 
     getOrCreateUniforms: function () {
@@ -71,7 +75,7 @@ MorphAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
     isEnabled: function () {
         return this._enable;
     },
-    getHash: function () {
+    getHashString: function () {
         return this.getTypeMember() + this._hashNames + this.getNumTargets() + this.isEnabled();
     },
 

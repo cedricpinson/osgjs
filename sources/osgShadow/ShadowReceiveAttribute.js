@@ -1,4 +1,5 @@
 'use strict';
+var Hash = require( 'osg/Hash' );
 var MACROUTILS = require( 'osg/Utils' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
@@ -13,9 +14,6 @@ var Notify = require( 'osg/Notify' );
  */
 var ShadowReceiveAttribute = function ( lightNum, disable ) {
     StateAttribute.call( this );
-
-    this._lightNumber = lightNum;
-
 
     // see shadowSettings.js header for shadow algo param explanations
     // hash change var
@@ -42,6 +40,11 @@ var ShadowReceiveAttribute = function ( lightNum, disable ) {
 
     this._enable = !disable;
 
+    this._lightNumber = lightNum;
+
+    this._hash = Hash.hashComputeCodeFromString( this.getHashString() );
+
+    this.dirty();
 };
 
 ShadowReceiveAttribute.uniforms = {};
@@ -295,7 +298,7 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         Notify.log( 'ShadowAttribute.isEnable() is deprecated, use isEnabled() instead' );
         return this.isEnabled();
     },
-    getHash: function () {
+    getHashString: function () {
 
         return this.getTypeMember() + '_' + this.getAlgorithm() + '_' + this.getKernelSizePCF() + '_' + this.getFakePCF() + '_' + this.getRotateOffset();
 

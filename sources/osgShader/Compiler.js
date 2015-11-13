@@ -306,14 +306,14 @@ Compiler.prototype = {
             if ( exist.getType() === type ) {
                 return exist;
             }
-            /*develblock:start*/
+            /* develblock:start */
             // texture has a particular "dual" type of uniform
             // a sampler2D
             // a int pointing to the texture unit the sampler2D represents
             if ( exist.getType() === 'sampler2D' && type !== 'sampler2D' ) {
                 Notify.error( 'Same uniform, but different type' );
             }
-            /*develblock:end*/
+            /* develblock:end */
         }
 
 
@@ -332,11 +332,11 @@ Compiler.prototype = {
         var exist = this._variables[ nameID ];
         if ( exist ) {
 
-            /*develblock:start*/
+            /* develblock:start */
             if ( exist.getType() !== type ) {
                 Notify.error( 'Same attribute, but different type' );
             }
-            /*develblock:end*/
+            /* develblock:end */
 
             return exist;
         }
@@ -365,11 +365,11 @@ Compiler.prototype = {
             var exist = this._variables[ nameID ];
             if ( exist ) {
 
-                /*develblock:start*/
+                /* develblock:start */
                 if ( exist.getType() !== type ) {
                     Notify.error( 'Same constant name, but different type' );
                 }
-                /*develblock:end*/
+                /* develblock:end */
 
                 // see comment in Variable function
                 return exist;
@@ -392,7 +392,7 @@ Compiler.prototype = {
         var exist = this._variables[ nameID ];
         if ( exist ) {
 
-            /*develblock:start*/
+            /* develblock:start */
             // something went wrong: you created a variable and try to access it like a varying
             if ( !this._varyings[ nameID ] )
                 Notify.error( 'Error: requesting a varying not declared with getOrCreateVarying previously' );
@@ -400,7 +400,7 @@ Compiler.prototype = {
             if ( exist.getType() !== type ) {
                 Notify.error( 'Error: Same varying, but different type' );
             }
-            /*develblock:end*/
+            /* develblock:end */
 
             // see comment in Variable function
             return exist;
@@ -422,13 +422,13 @@ Compiler.prototype = {
             }
         }
 
-        /*develblock:start*/
+        /* develblock:start */
         // if it's not in Varying Cache, but requested from fragment shader
         // it means => error
         if ( this._fragmentShaderMode && !this._customVertexShader ) {
             Notify.error( 'Error: requesting a varying not declared in Vertex Shader Graph.( if a Custom Vertex Shader in a custom processor, add this._customVertexShader to your custom processor): ' + nameID + ' ' + type );
         }
-        /*develblock:end*/
+        /* develblock:end */
 
         var v = this.getNode( 'Varying', type, nameID );
         this._variables[ nameID ] = v;
@@ -780,7 +780,7 @@ Compiler.prototype = {
     createShadowTextureInputVarying: function ( shadowTexture, inputs, vertexWorld, tUnit ) {
         var shadowTexSamplerName = 'Texture' + tUnit;
 
-        // we declare first this uniform so that the Int one 
+        // we declare first this uniform so that the Int one
         var tex = this.getOrCreateSampler( 'sampler2D', shadowTexSamplerName );
 
         // per texture uniforms
@@ -1605,7 +1605,7 @@ Compiler.prototype = {
         // Process defines, add precision, resolve include pragma
         var shader = this._shaderProcessor.processShader( shaderStr, defines, extensions, type );
 
-        /*develblock:start*/
+        /* develblock:start */
         // Check
         var compiledNodes = window.Object.keys( this._compiledNodeList );
         var activeNodes = window.Object.keys( this._activeNodeList );
@@ -1619,7 +1619,7 @@ Compiler.prototype = {
             }
             return found;
         }, this );
-        /*develblock:end*/
+        /* develblock:end */
 
         // return the complete shader string.
         // now is compilable by gl driver

@@ -112,6 +112,9 @@ var gruntTasks = {};
             module: {
                 loaders: [ {
                     test: /\.js$/,
+                    loader: 'webpack-strip?strip[]=console.assert,strip[]=DebugHashAttributes.debugHashCollision,strip[]=DebugHashAttributes.debugDirtyAttributes'
+                }, {
+                    test: /\.js$/,
                     loader: 'webpack-strip-block'
                 } ]
             }
@@ -124,8 +127,14 @@ var gruntTasks = {};
                 tests: [ './tests/tests.js' ],
                 benchmarks: [ './benchmarks/benchmarks.js' ]
             },
-            devtool: 'eval-source-map'
+            devtool: 'eval-source-map',
+            module: {
+                loaders: [ {
+                    test: /\.js$/,
+                    loader: 'webpack-strip?strip[]=DebugHashAttributes.debugHashCollision,strip[]=DebugHashAttributes.debugDirtyAttributes'
+                } ]
 
+            }
         },
 
         buildrelease: {
@@ -136,11 +145,15 @@ var gruntTasks = {};
                 libraryTarget: 'umd',
                 library: 'OSG'
             },
-
-            loaders: [ {
-                test: /\.js$/,
-                loader: 'webpack-strip-block'
-            } ],
+            module: {
+                loaders: [ {
+                    test: /\.js$/,
+                    loader: 'webpack-strip-block'
+                }, {
+                    test: /\.js$/,
+                    loader: 'webpack-strip?strip[]=strip[]=console.assert,DebugHashAttributes.debugHashCollision,strip[]=DebugHashAttributes.debugDirtyAttributes'
+                } ]
+            },
             // additional plugins for this specific mode
             plugins: [
                 new webpack.optimize.UglifyJsPlugin( {

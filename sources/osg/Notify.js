@@ -48,14 +48,22 @@ function getStackTrace( err ) {
     return callstack;
 }
 
+var logCache = new window.Map();
+
 /** logging with readability in mind.
  * @param { str } actual log text
  * @param { fold  }  sometimes you want to hide looooong text
  * @param { noTrace  } where that log came from ?
  * @param { level  } what severity is that log (gives text color too )
  */
+
+
 function logSub( str, level, fold, noTrace ) {
+
     if ( Notify.console !== undefined ) {
+
+        if ( logCache.get( str ) ) return;
+
         if ( fold && Notify.console.groupCollapsed ) Notify.console.groupCollapsed();
         if ( noTrace ) {
             Notify.console[ level ]( str );
@@ -63,6 +71,8 @@ function logSub( str, level, fold, noTrace ) {
             Notify.console[ level ]( str, getStackTrace() );
         }
         if ( fold && Notify.console.groupEnd ) Notify.console.groupEnd();
+
+        logCache.set( str, 1 );
     }
 }
 

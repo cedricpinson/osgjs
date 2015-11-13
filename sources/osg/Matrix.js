@@ -846,7 +846,7 @@ var Matrix = {
 
         var d1 = ( matrix[ 0 ] * t0 + matrix[ 4 ] * t1 + matrix[ 8 ] * t2 + matrix[ 12 ] * t3 );
         if ( Math.abs( d1 ) < Number.EPSILON ) {
-            Notify.log( 'Warning can\'t inverse matrix ' + matrix );
+            Notify.log( 'Warning can\'t inverse matrix ' + matrix, false, true );
             return false;
         }
         var d = 1.0 / d1;
@@ -957,7 +957,7 @@ var Matrix = {
             // Compute determinant of rot from 3 elements just computed
             var det = ( r00 * result[ 0 ] + r10 * result[ 1 ] + r20 * result[ 2 ] );
             if ( Math.abs( det ) < Number.EPSILON ) {
-                Notify.log( 'Warning can\'t inverse matrix ' + matrix );
+                Notify.log( 'Warning can\'t inverse matrix ' + matrix, false, true );
                 return false;
             }
             var oneOverDet = 1.0 / det;
@@ -1001,7 +1001,7 @@ var Matrix = {
                 tz = matrix[ 14 ];
                 det = ( d - ( tx * px + ty * py + tz * pz ) );
                 if ( Math.abs( det ) < Number.EPSILON ) {
-                    Notify.log( 'Warning can\'t inverse matrix ' + matrix );
+                    Notify.log( 'Warning can\'t inverse matrix ' + matrix, false, true );
                     return false;
                 }
                 var oneOverS = 1.0 / det;
@@ -1307,7 +1307,7 @@ var Matrix = {
     clampProjectionMatrix: function ( projection, znear, zfar, nearFarRatio, resultNearFar ) {
         var epsilon = 1e-6;
         if ( zfar < znear - epsilon ) {
-            Notify.log( 'clampProjectionMatrix not applied, invalid depth range, znear = ' + znear + '  zfar = ' + zfar );
+            Notify.log( 'clampProjectionMatrix not applied, invalid depth range, znear = ' + znear + '  zfar = ' + zfar, false, true );
             return false;
         }
 

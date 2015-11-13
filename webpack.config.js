@@ -77,6 +77,10 @@ module.exports = {
             // shaders
             test: /\.(frag|vert|glsl)$/,
             loader: 'raw-loader'
+        }, {
+            test: /\.js$/,
+            //loader: 'webpack-strip?strip[]='
+            loader: 'webpack-strip?strip[]=DebugHashAttributes.debugHashCollisionIntList,DebugHashAttributes.debugHashCollisionString,strip[]=DebugHashAttributes.debugDirtyAttributes'
         } ]
     },
     devtool: 'eval',

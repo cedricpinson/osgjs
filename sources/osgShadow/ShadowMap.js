@@ -99,13 +99,8 @@ var ShadowMap = function ( settings ) {
 
 
     this._shadowReceiveAttribute = new ShadowReceiveAttribute( this._light.getLightNumber() );
-    this._casterStateSet.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
-
     // default name, overridable with shadow settings
     this._shadowCastShaderGeneratorName = 'ShadowCast';
-
-
-
     var near = 0.001;
     var far = 1000;
     this._depthRange = Vec4.create();
@@ -114,9 +109,6 @@ var ShadowMap = function ( settings ) {
     this._depthRange[ 2 ] = far - near;
     this._depthRange[ 3 ] = 1.0 / ( far - near );
     this._casterStateSet.addUniform( Uniform.createFloat4( this._depthRange, 'Shadow_DepthRange' ) );
-
-
-
 
     this._worldLightPos = Vec4.create();
     this._worldLightPos[ 3 ] = 0;
