@@ -23,8 +23,45 @@
     };
 
 
+    var getInsertPosition = function ( state, previous ) {
+        var sg = previous ? previous._parent : undefined;
+        var num = 0;
+        // need to pop back all statesets and matrices.
+        while ( sg ) {
+            if ( sg.stateset )
+                num++;
+            sg = sg.parent;
+        }
+
+        if ( num > 1 )
+            num--;
+        return state.getStateSetStackSize() - num;
+    };
+
+    // opaque post earlyz
+    var stateSetDepthEqual = new osg.StateSet();
+    stateSetDepthEqual.setAttributeAndModes( new osg.Depth( osg.Depth.EQUAL, 0.0, 1.0, false ), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+    // transparent post earlyz
+    var stateSetDepthLEqual = new osg.StateSet();
+    stateSetDepthLEqual.setAttributeAndModes( new osg.Depth( osg.Depth.LEQUAL, 0.0, 1.0, false ), osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON );
+
+    var stateSetEarlyZ = ( function () {
+        var fullOverride = osg.StateAttribute.OVERRIDE | osg.StateAttribute.ON;
+
+        var stateSet = new osg.StateSet();
+        stateSet.setAttributeAndModes( new osg.Depth( osg.Depth.LESS ), fullOverride );
+        stateSet.setAttributeAndModes( new osg.BlendFunc(), fullOverride );
+        // disable it to debug and see ff00ff color if bad depth
+        stateSet.setAttributeAndModes( new osg.ColorMask( false, false, false, false ), fullOverride );
+
+        return stateSet;
+    } )();
+
+
     var RenderStageSplitter = function () {
         osg.RenderStage.apply( this, arguments );
+        this._binArraySorted = [];
     };
 
     RenderStageSplitter.prototype = osg.objectInherit( osg.RenderStage.prototype, {
@@ -39,13 +76,14 @@
 
         },
 
-        drawImplementationRenderBin: function ( state, previousRenderLeaf ) {
 
-            var previousLeaf = previousRenderLeaf;
+        sortBinArray: function () {
+
             var binsKeys = window.Object.keys( this._bins );
             var bins = this._bins;
 
-            var binsArray = [];
+            var binsArray = this._binArraySorted;
+            binsArray.length = 0;
 
             for ( var i = 0, l = binsKeys.length; i < l; i++ ) {
                 var k = binsKeys[ i ];
@@ -53,6 +91,12 @@
             }
 
             binsArray.sort( sortBin );
+        },
+
+        drawImplementationRenderBin: function ( state, previousRenderLeaf ) {
+
+            var previousLeaf = previousRenderLeaf;
+            var binsArray = this._binArraySorted;
 
             var current = 0;
             var end = binsArray.length;
@@ -82,6 +126,71 @@
                 } else {
                     previousLeaf = bin.draw( state, previousLeaf );
                 }
+            }
+
+            return previousLeaf;
+        },
+
+        // transparent
+        drawImplementationRenderBinBackToFront: function ( state, previousRenderLeaf ) {
+
+            var previousLeaf = previousRenderLeaf;
+
+            var binsArray = this._binArraySorted;
+
+            var current = 0;
+            var end = binsArray.length;
+
+            // handle transparency on different RTT
+            this.useTransparencyRTT( state );
+
+            var bin;
+
+            // draw pre bins
+            for ( ; current < end; current++ ) {
+                bin = binsArray[ current ];
+                // sort mode is used as transparent
+                if ( bin.getSortMode() === osg.RenderBin.SORT_BACK_TO_FRONT )
+                    previousLeaf = bin.draw( state, previousLeaf );
+            }
+
+            this.useOpaqueRTT( state );
+            return previousLeaf;
+        },
+
+        // opaque
+        drawImplementationRenderBinFrontToBack: function ( state, previousRenderLeaf ) {
+
+            var previousLeaf = previousRenderLeaf;
+
+            var binsArray = this._binArraySorted;
+
+            var current = 0;
+            var end = binsArray.length;
+
+            var bin;
+
+            // transparency by default are renderbin num 10 and sort mode back to front
+
+            // draw pre bins
+            for ( ; current < end; current++ ) {
+                bin = binsArray[ current ];
+                if ( bin.getBinNumber() > 0 ) break;
+                // we dont test the sort mode here because transparency hint
+                // is 10 + sort back to front
+                // in some special case you could want to sort back to front with
+                // render bin num < 0
+                previousLeaf = bin.draw( state, previousLeaf );
+            }
+
+            // draw leafs
+            previousLeaf = this.drawLeafs( state, previousLeaf );
+
+            // draw post bins
+            for ( ; current < end; current++ ) {
+                bin = binsArray[ current ];
+                if ( bin.getSortMode() !== osg.RenderBin.SORT_BACK_TO_FRONT )
+                    previousLeaf = bin.draw( state, previousLeaf );
             }
 
             return previousLeaf;
@@ -141,20 +250,46 @@
 
         },
 
-        clearCamera: function ( gl ) {
+        clearCameraColorDepth: function ( gl ) {
 
-            if ( this.clearMask !== 0x0 ) {
-                if ( this.clearMask & gl.COLOR_BUFFER_BIT ) {
-                    gl.clearColor( this.clearColor[ 0 ], this.clearColor[ 1 ], this.clearColor[ 2 ], this.clearColor[ 3 ] );
-                }
-                if ( this.clearMask & gl.DEPTH_BUFFER_BIT ) {
-                    gl.depthMask( true );
-                    gl.clearDepth( this.clearDepth );
-                }
-                /*jshint bitwise: true */
-                gl.clear( this.clearMask );
-            }
+            gl.clearColor( 0.0, 0.0, 0.0, 0.0 );
+            gl.depthMask( true );
+            gl.clearDepth( this.clearDepth );
+            gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
+        },
+
+        clearCameraColor: function ( gl ) {
+
+            gl.clear( gl.COLOR_BUFFER_BIT );
+
+        },
+
+        drawImplementationEarlyZ: function ( state, previousLeaf ) {
+
+            var previous = previousLeaf;
+
+
+            var insertStateSetPosition = getInsertPosition( state, previous );
+
+            // draw zbuffer only
+            state.insertStateSet( insertStateSetPosition, stateSetEarlyZ );
+            previous = this.drawImplementationRenderBinFrontToBack( state, previous );
+            state.removeStateSet( insertStateSetPosition );
+
+
+            // opaque
+            state.insertStateSet( insertStateSetPosition, stateSetDepthEqual );
+            previous = this.drawImplementationRenderBinFrontToBack( state, previous );
+            state.removeStateSet( insertStateSetPosition );
+
+            // transparent
+            state.insertStateSet( insertStateSetPosition, stateSetDepthLEqual );
+            previous = this.drawImplementationRenderBinBackToFront( state, previous );
+            state.removeStateSet( insertStateSetPosition );
+
+
+            return previous;
         },
 
         drawImplementation: function ( state, previousRenderLeaf ) {
@@ -176,20 +311,22 @@
 
             // clear transparency
             this.useTransparencyRTT( state );
-            this.clearCamera( gl );
+            this.clearCameraColorDepth( gl );
 
             // clear opaque
             this.useOpaqueRTT( state );
-            this.clearCamera( gl );
+            this.clearCameraColor( gl );
 
             if ( this.positionedAttribute.length !== 0 ) {
                 this.applyPositionedAttribute( state, this.positionedAttribute );
             }
 
+            this.sortBinArray();
 
-            var previousLeaf = this.drawImplementationRenderBin( state, previousRenderLeaf );
-
-            return previousLeaf;
+            var previous = previousRenderLeaf;
+            //previous = this.drawImplementationEarlyZ( state, previous );
+            previous = this.drawImplementationRenderBin( state, previous );
+            return previous;
         }
     } );
 
@@ -355,6 +492,7 @@
             material.setTransparency( 0.4 );
 
             stateSet.setRenderingHint( 'TRANSPARENT_BIN' );
+            stateSet.setAttributeAndModes( new osg.Depth( osg.Depth.LEQUAL, 0.0, 1.0, false ) );
             stateSet.setAttributeAndModes( new osg.BlendFunc( 'ONE', 'ONE_MINUS_SRC_ALPHA' ) );
             stateSet.setAttributeAndModes( material );
 
@@ -389,7 +527,6 @@
 
             refreshDebugTextureList();
             window.refreshDebugTextureList = refreshDebugTextureList;
-
 
             // hook RenderStage
             this._viewer.getCamera().getRenderer().setRenderStage( new RenderStageSplitter() );
