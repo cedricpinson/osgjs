@@ -34,14 +34,13 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
         this._cullVisitor = new CullVisitor();
         this._cullVisitor.setRenderer( this );
-        this._renderStage = new RenderStage();
         this._stateGraph = new StateGraph();
 
         this.getCamera().setClearColor( Vec4.create() );
-
+        this.setRenderStage( new RenderStage() );
 
         var osg = require( 'osg/osg' );
-        var stateSet = this.getCamera().getOrCreateStateSet(); //new osg.StateSet();
+        var stateSet = this.getCamera().getOrCreateStateSet();
         stateSet.setAttributeAndModes( new osg.Material() );
         stateSet.setAttributeAndModes( new osg.Depth() );
         stateSet.setAttributeAndModes( new osg.BlendFunc() );
@@ -56,6 +55,10 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
     setCullVisitor: function ( cv ) {
         if ( cv && !cv.getRenderer() ) cv.setRenderer( this );
         this._cullVisitor = cv;
+    },
+
+    setRenderStage: function ( rs ) {
+        this._renderStage = rs;
     },
 
     getCamera: function () {

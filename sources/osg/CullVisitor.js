@@ -197,7 +197,7 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
         CullStack.prototype.popProjectionMatrix.call( this );
     },
 
-    popCameraModelViewProjectionMatrix: function ( /*camera*/) {
+    popCameraModelViewProjectionMatrix: function () {
         this.popModelViewMatrix();
         this.popProjectionMatrix();
     },
@@ -302,8 +302,7 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
         var previousStage = renderBin.getStage();
 
         // use render to texture stage
-        var RenderStageType = this._renderStageType;
-        var rtts = new RenderStageType();
+        var rtts = this._rootRenderStage ? this._rootRenderStage.cloneType() : new RenderStage();
         rtts.setCamera( camera );
         rtts.setClearDepth( camera.getClearDepth() );
         rtts.setClearColor( camera.getClearColor() );

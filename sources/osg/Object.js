@@ -13,23 +13,34 @@ var Object = function () {
 
 /** @lends Object.prototype */
 Object.prototype = MACROUTILS.objectLibraryClass( {
-        getInstanceID: function () {
-            return this._instanceID;
-        },
-        setName: function ( name ) {
-            this._name = name;
-        },
-        getName: function () {
-            return this._name;
-        },
-        setUserData: function ( data ) {
-            this._userdata = data;
-        },
-        getUserData: function () {
-            return this._userdata;
-        }
+
+    // this method works only if constructor is set correctly
+    // see issue https://github.com/cedricpinson/osgjs/issues/494
+    cloneType: function () {
+        var Constructor = this.constructor;
+        return new Constructor();
     },
-    'osg', 'Object' );
+
+    getInstanceID: function () {
+        return this._instanceID;
+    },
+
+    setName: function ( name ) {
+        this._name = name;
+    },
+
+    getName: function () {
+        return this._name;
+    },
+
+    setUserData: function ( data ) {
+        this._userdata = data;
+    },
+
+    getUserData: function () {
+        return this._userdata;
+    }
+}, 'osg', 'Object' );
 
 
 // get an instanceID for each object

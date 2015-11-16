@@ -22,10 +22,14 @@
         return a._binNum - b._binNum;
     };
 
+
     var RenderStageSplitter = function () {
         osg.RenderStage.apply( this, arguments );
     };
+
     RenderStageSplitter.prototype = osg.objectInherit( osg.RenderStage.prototype, {
+
+        constructor: RenderStageSplitter,
 
         isMainCamera: function () {
 
@@ -65,14 +69,13 @@
             // draw leafs
             previousLeaf = this.drawLeafs( state, previousLeaf );
 
-            var transparentBin = 10;
-
             // draw post bins
             for ( ; current < end; current++ ) {
                 bin = binsArray[ current ];
 
                 // handle transparency on different RTT
-                if ( bin.getBinNumber() === transparentBin ) {
+                // sort mode is used as transparent
+                if ( bin.getSortMode() === osg.RenderBin.SORT_BACK_TO_FRONT ) {
                     this.useTransparencyRTT( state );
                     previousLeaf = bin.draw( state, previousLeaf );
                     this.useOpaqueRTT( state );
@@ -389,7 +392,7 @@
 
 
             // hook RenderStage
-            this._viewer.getCamera().getRenderer().getCullVisitor()._renderStageType = RenderStageSplitter;
+            this._viewer.getCamera().getRenderer().setRenderStage( new RenderStageSplitter() );
         }
 
     } );
