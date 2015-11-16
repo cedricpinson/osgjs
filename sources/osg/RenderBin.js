@@ -4,8 +4,15 @@ var Notify = require( 'osg/Notify' );
 var Object = require( 'osg/Object' );
 var osgMath = require( 'osg/Math' );
 
-
-var RenderBin = function () {
+/**
+ * RenderBin base class. Renderbin contains geometries to be rendered as a group,
+ * renderbins are rendered once each.  They can improve efficiency or
+ * use different rendering algorithms.
+ * A renderBin can contain further renderBins producing a tree hierarchy of renderBins.
+ *
+ * https://github.com/openscenegraph/osg/blob/master/include/osgUtil/RenderBin#L27-L32
+ */
+var RenderBin = function ( sortMode ) {
     Object.call( this );
 
     this._leafs = [];
@@ -17,7 +24,7 @@ var RenderBin = function () {
     this._binNum = 0;
 
     this._sorted = false;
-    this._sortMode = RenderBin.defaultSortMode;
+    this._sortMode = sortMode !== undefined ? sortMode : RenderBin.defaultSortMode;
 
     this._drawCallback = undefined;
 };
@@ -34,22 +41,41 @@ RenderBin.BinPrototypes = {
         return new RenderBin();
     },
     DepthSortedBin: function () {
-        var rb = new RenderBin();
-        rb._sortMode = RenderBin.SORT_BACK_TO_FRONT;
-        return rb;
+        return new RenderBin( RenderBin.SORT_BACK_TO_FRONT );
     }
 };
 
+
+var sortBackToFrontFunction = function ( a, b ) {
+    return b._depth - a._depth;
+};
+
+
+var sortFrontToBackFunction = function ( a, b ) {
+    return a._depth - b._depth;
+};
+
+var sortBinNumberFunction = function ( a, b ) {
+    return a._binNum - b._binNum;
+};
+
+
 RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
     _createRenderBin: function ( binName ) {
-        if ( binName === undefined || RenderBin.BinPrototypes[ binName ] === undefined ) {
-            return RenderBin.BinPrototypes.RenderBin();
-        }
-        return RenderBin.BinPrototypes[ binName ]();
+
+        // default render bin constructor
+        var renderBinConstructor = RenderBin.BinPrototypes.RenderBin;
+
+        if ( binName && RenderBin.BinPrototypes[ binName ] )
+            renderBinConstructor = RenderBin.BinPrototypes[ binName ];
+
+        return renderBinConstructor();
     },
+
     getStateGraphList: function () {
         return this.stateGraphList;
     },
+
     copyLeavesFromStateGraphListToRenderLeafList: function () {
 
         this._leafs.splice( 0, this._leafs.length );
@@ -74,30 +100,19 @@ RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( O
         this.stateGraphList.splice( 0, this.stateGraphList.length );
     },
 
+    getSortMode: function () {
+        return this._sortMode;
+    },
 
     sortBackToFront: function () {
-
         this.copyLeavesFromStateGraphListToRenderLeafList();
-
-        var cmp = function ( a, b ) {
-            return b._depth - a._depth;
-        };
-
-        this._leafs.sort( cmp );
+        this._leafs.sort( sortBackToFrontFunction );
     },
-
 
     sortFrontToBack: function () {
-
         this.copyLeavesFromStateGraphListToRenderLeafList();
-
-        var cmp = function ( a, b ) {
-            return a._depth - b._depth;
-        };
-
-        this._leafs.sort( cmp );
+        this._leafs.sort( sortFrontToBackFunction );
     },
-
 
     sortImplementation: function () {
         var SortMode = RenderBin;
@@ -132,29 +147,37 @@ RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( O
     setParent: function ( parent ) {
         this._parent = parent;
     },
+
     getParent: function () {
         return this._parent;
     },
+
     getBinNumber: function () {
         return this._binNum;
     },
+
     findOrInsert: function ( binNum, binName ) {
         var bin = this._bins[ binNum ];
-        if ( bin === undefined ) {
+
+        if ( !bin ) {
             bin = this._createRenderBin( binName );
             bin._parent = this;
             bin._binNum = binNum;
             bin._renderStage = this._renderStage;
             this._bins[ binNum ] = bin;
         }
+
         return bin;
     },
+
     getStage: function () {
         return this._renderStage;
     },
+
     addStateGraph: function ( sg ) {
         this.stateGraphList.push( sg );
     },
+
     reset: function () {
         this.stateGraphList.length = 0;
         this._bins = {};
@@ -162,7 +185,6 @@ RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( O
         this._leafs.length = 0;
         this._sorted = false;
     },
-
 
     draw: function ( state, previousRenderLeaf ) {
 
@@ -204,11 +226,7 @@ RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( O
             binsArray.push( bins[ k ] );
         }
 
-        var cmp = function ( a, b ) {
-            return a._binNum - b._binNum;
-        };
-
-        binsArray.sort( cmp );
+        binsArray.sort( sortBinNumberFunction );
 
         var current = 0;
         var end = binsArray.length;
