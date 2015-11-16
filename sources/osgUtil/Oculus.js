@@ -14,28 +14,43 @@ var Vec4 = require( 'osg/Vec4' );
 var Viewport = require( 'osg/Viewport' );
 
 
-var UpdateRttCameraCallback = function ( rootView, offsetView, canvas, orthoCam, isLeft, isCardboard ) {
-    this._rootView = rootView;
-    this._offsetView = offsetView;
+var Oculus = {};
+
+// no smart resize, we just recreate everything
+var UpdateRecreateOnResize = function ( viewer, rttScene, hmdConfig, root, canvas ) {
+    this._viewer = viewer;
+    this._rttScene = rttScene;
+    this._hmdConfig = hmdConfig;
+    this._root = root;
     this._canvas = canvas;
     this._width = canvas.width;
     this._height = canvas.height;
-    this._isLeft = isLeft;
-    this._orthoCam = orthoCam;
-    this._isCardboard = isCardboard;
 };
 
-UpdateRttCameraCallback.prototype = {
-    update: function ( node /*, nv */ ) {
+UpdateRecreateOnResize.prototype = {
+    update: function () {
         var canvas = this._canvas;
-        if ( this._isCardboard && ( canvas.width !== this._width || canvas.height !== this._height ) ) {
-            this._width = canvas.width;
-            this._height = canvas.height;
-            if ( this._isLeft )
-                this._orthoCam.setViewport( new Viewport( 0.0, 0.0, this._width / 2.0, this._height ) );
-            else
-                this._orthoCam.setViewport( new Viewport( this._width / 2.0, 0.0, this._width / 2.0, this._height ) );
+        if ( canvas.width !== this._width || canvas.height !== this._height ) {
+            this._root.removeChildren();
+
+            var hmdConfig = this._hmdConfig;
+            if ( hmdConfig && hmdConfig.isCardboard ) {
+                hmdConfig.hResolution = screen.width * 2;
+                hmdConfig.vResolution = screen.height * 2;
+            }
+            Oculus.createScene( this._viewer, this._rttScene, hmdConfig, this._root );
         }
+        return true;
+    }
+};
+
+var UpdateOffsetCamera = function ( rootView, offsetView ) {
+    this._rootView = rootView;
+    this._offsetView = offsetView;
+};
+
+UpdateOffsetCamera.prototype = {
+    update: function ( node ) {
         var nodeView = node.getViewMatrix();
         Matrix.mult( this._offsetView, this._rootView, nodeView );
         return true;
@@ -190,9 +205,7 @@ var createCameraRtt = function ( texture, projMatrix ) {
     return camera;
 };
 
-var Oculus = {};
-
-Oculus.createScene = function ( viewer, rttScene, HMDconfig ) {
+Oculus.createScene = function ( viewer, rttScene, HMDconfig, root ) {
     var HMD = Oculus.getDefaultConfig( HMDconfig );
     var rttSize = Vec2.createAndSet( HMD.hResolution, HMD.vResolution );
     var viewportSize = Vec2.createAndSet( HMD.hResolution * 0.5, HMD.vResolution );
@@ -205,26 +218,27 @@ Oculus.createScene = function ( viewer, rttScene, HMDconfig ) {
         canvasSize[ 1 ] = canvas.height;
     }
 
-    var worldFactor = 1.0; //world unit
+    var worldFactor = 1.0; // world unit
     var oculusUniforms = {};
     var oculusMatrices = {};
     setupOculus( worldFactor, HMD, oculusUniforms, oculusMatrices );
 
     var rootViewMatrix = viewer.getCamera().getViewMatrix();
 
-    var root = new Node();
+    root = root || new Node();
+    root.setUpdateCallback( new UpdateRecreateOnResize( viewer, rttScene, HMDconfig, root, canvas ) );
 
     var rttTextureLeft = createTextureRtt( rttSize );
     var rttCamLeft = createCameraRtt( rttTextureLeft, oculusMatrices.projectionLeft );
     var quadTextLeft = createQuadRtt( true, rttTextureLeft, oculusUniforms );
     var orthoCameraLeft = createOrthoRtt( true, viewportSize, canvasSize, HMD.isCardboard );
-    rttCamLeft.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, oculusMatrices.viewLeft, canvas, orthoCameraLeft, true, HMD.isCardboard ) );
+    rttCamLeft.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, oculusMatrices.viewLeft ) );
 
     var rttTextureRight = createTextureRtt( rttSize );
     var rttCamRight = createCameraRtt( rttTextureRight, oculusMatrices.projectionRight );
     var quadTextRight = createQuadRtt( false, rttTextureRight, oculusUniforms );
     var orthoCameraRight = createOrthoRtt( false, viewportSize, canvasSize, HMD.isCardboard );
-    rttCamRight.setUpdateCallback( new UpdateRttCameraCallback( rootViewMatrix, oculusMatrices.viewRight, canvas, orthoCameraRight, false, HMD.isCardboard ) );
+    rttCamRight.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, oculusMatrices.viewRight ) );
 
     rttCamLeft.addChild( rttScene );
     rttCamRight.addChild( rttScene );
