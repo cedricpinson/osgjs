@@ -208,31 +208,23 @@
         createFBO: function ( state, texture ) {
 
             var viewport = this.getViewport();
-            var gl = state.getGraphicContext();
-
-
             var fbo = new osg.FrameBufferObject();
 
-            fbo.createFrameBufferObject( gl );
-            gl.bindFramebuffer( gl.FRAMEBUFFER, fbo.getFrameBufferObject() );
-
+            fbo.createFrameBufferObject( state );
+            fbo.bindFrameBufferObject();
 
             // set the depth render buffer
             var renderBufferDepth = this._renderBufferDepth;
             if ( !renderBufferDepth ) {
-                renderBufferDepth = fbo.createRenderBuffer( gl, osg.FrameBufferObject.DEPTH_COMPONENT16, viewport.width(), viewport.height() );
+                renderBufferDepth = fbo.createRenderBuffer( osg.FrameBufferObject.DEPTH_COMPONENT16, viewport.width(), viewport.height() );
                 this._renderBufferDepth = renderBufferDepth;
             }
-            fbo.framebufferRenderBuffer( gl, osg.FrameBufferObject.DEPTH_ATTACHMENT, renderBufferDepth );
+            fbo.framebufferRenderBuffer( osg.FrameBufferObject.DEPTH_ATTACHMENT, renderBufferDepth );
 
             // apply and assign texture
-            state.applyTextureAttribute( 1, texture );
-            fbo.framebufferTexture2D( gl, osg.FrameBufferObject.COLOR_ATTACHMENT0, osg.Texture.TEXTURE_2D, texture );
+            fbo.framebufferTexture2D( state, osg.FrameBufferObject.COLOR_ATTACHMENT0, osg.Texture.TEXTURE_2D, texture );
 
-            var status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
-            if ( status !== 0x8CD5 ) fbo._reportFrameBufferError( status );
-
-            fbo.setDirty( false );
+            fbo.checkStatus();
 
             return fbo;
         },

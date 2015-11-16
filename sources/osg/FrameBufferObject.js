@@ -105,13 +105,17 @@ FrameBufferObject.flushAllDeletedGLRenderBuffers = function ( gl ) {
 
 /** @lends FrameBufferObject.prototype */
 FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
+
     attributeType: 'FrameBufferObject',
+
     cloneType: function () {
         return new FrameBufferObject();
     },
+
     setAttachment: function ( attachment ) {
         this._attachments.push( attachment );
     },
+
     releaseGLObjects: function () {
 
         if ( this._fbo !== undefined && this._gl !== undefined ) {
@@ -125,6 +129,7 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
         this._rbo = undefined;
 
     },
+
     _reportFrameBufferError: function ( code ) {
         switch ( code ) {
         case 0x8CD6:
@@ -145,22 +150,21 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
     },
 
     reset: function () {
-
         this.releaseGLObjects();
         this._attachments = [];
-
     },
 
     getFrameBufferObject: function () {
         return this._fbo;
     },
 
-    createFrameBufferObject: function ( gl ) {
-        this._fbo = gl.createFramebuffer();
+    createFrameBufferObject: function ( state ) {
+        this.setGraphicContext( state.getGraphicContext() );
+        this._fbo = this._gl.createFramebuffer();
     },
 
-    createRenderBuffer: function ( gl, format, width, height ) {
-
+    createRenderBuffer: function ( format, width, height ) {
+        var gl = this._gl;
         var renderBuffer = gl.createRenderbuffer();
         gl.bindRenderbuffer( gl.RENDERBUFFER, renderBuffer );
         gl.renderbufferStorage( gl.RENDERBUFFER, format, width, height );
@@ -168,7 +172,10 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
         return renderBuffer;
     },
 
-    framebufferRenderBuffer: function ( gl, attachment, renderBuffer ) {
+    framebufferRenderBuffer: function ( attachment, renderBuffer ) {
+
+        var gl = this._gl;
+        gl.bindRenderbuffer( gl.RENDERBUFFER, renderBuffer );
         gl.framebufferRenderbuffer( gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, renderBuffer );
 
         /* develblock:start */
@@ -179,7 +186,13 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
         /* develblock:end */
     },
 
-    framebufferTexture2D: function ( gl, attachment, textureTarget, texture ) {
+    framebufferTexture2D: function ( state, attachment, textureTarget, texture ) {
+
+        var gl = this._gl;
+
+        // apply on unit 1 to init it
+        state.applyTextureAttribute( 1, texture );
+
         gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment, textureTarget, texture.getTextureObject().id(), 0 );
 
         /* develblock:start */
@@ -191,23 +204,38 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
         /* develblock:end */
     },
 
+    bindFrameBufferObject: function () {
+        var gl = this._gl;
+        gl.bindFramebuffer( gl.FRAMEBUFFER, this._fbo );
+    },
+
+    checkStatus: function () {
+
+        var gl = this._gl;
+        var status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
+        if ( status !== 0x8CD5 ) {
+            this._reportFrameBufferError( status );
+        }
+
+    },
+
     apply: function ( state ) {
 
         if ( !this._gl ) this.setGraphicContext( state.getGraphicContext() );
-
         var gl = this._gl;
-        var status;
 
         var attachments = this._attachments;
 
+        // if the fbo is created manually, we want to just bind it
         if ( attachments.length > 0 || this._fbo ) {
 
             if ( this.isDirty() ) {
 
                 if ( !this._fbo )
-                    this._fbo = this.createFrameBufferObject( gl );
+                    this.createFrameBufferObject( state );
 
-                gl.bindFramebuffer( gl.FRAMEBUFFER, this._fbo );
+                this.bindFrameBufferObject();
+
                 var hasRenderBuffer = false;
 
                 for ( var i = 0, l = attachments.length; i < l; ++i ) {
@@ -215,33 +243,27 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                     var attachment = attachments[ i ];
 
                     // render buffer
-                    if ( attachment.texture === undefined ) {
+                    if ( !attachment.texture ) {
 
-                        this._rbo = this.createRenderBuffer( gl, attachment.format, attachment.width, attachment.height );
-                        this.framebufferRenderBuffer( gl, attachment.attachment, this._rbo );
+                        this._rbo = this.createRenderBuffer( attachment.format, attachment.width, attachment.height );
+                        this.framebufferRenderBuffer( attachment.attachment, this._rbo );
                         hasRenderBuffer = true;
 
                     } else {
 
                         // use texture
                         var texture = attachment.texture;
-
-                        // apply on unit 1 to init it
-                        state.applyTextureAttribute( 1, texture );
-                        this.framebufferTexture2D( gl, attachment.attachment, attachment.textureTarget, texture );
+                        this.framebufferTexture2D( state, attachment.attachment, attachment.textureTarget, texture );
 
                     }
 
                 }
 
-                status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
-                if ( status !== 0x8CD5 ) {
-                    this._reportFrameBufferError( status );
-                }
+                this.checkStatus();
 
-                if ( hasRenderBuffer ) { // set it to null only if used renderbuffer
+                // set it to null only if used renderbuffer
+                if ( hasRenderBuffer )
                     gl.bindRenderbuffer( gl.RENDERBUFFER, null );
-                }
 
                 this.setDirty( false );
 
@@ -249,13 +271,8 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
 
                 gl.bindFramebuffer( gl.FRAMEBUFFER, this._fbo );
 
-                if ( Notify.reportWebGLError === true ) {
-
-                    status = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
-                    if ( status !== 0x8CD5 ) {
-                        this._reportFrameBufferError( status );
-                    }
-                }
+                if ( Notify.reportWebGLError === true )
+                    this.checkStatus();
 
             }
 
