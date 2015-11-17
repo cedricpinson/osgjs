@@ -256,6 +256,7 @@ View.prototype = {
         availableTime = Program.flushDeletedGLPrograms( gl, availableTime );
         availableTime = Shader.flushDeletedGLShaders( gl, availableTime );
         availableTime = FrameBufferObject.flushDeletedGLFrameBuffers( gl, availableTime );
+        availableTime = FrameBufferObject.flushDeletedGLRenderBuffers( gl, availableTime );
     },
 
     flushAllDeletedGLObjects: function () {
@@ -266,6 +267,7 @@ View.prototype = {
         Program.flushAllDeletedGLPrograms( gl );
         Shader.flushAllDeletedGLShaders( gl );
         FrameBufferObject.flushAllDeletedGLFrameBuffers( gl );
+        FrameBufferObject.flushAllDeletedGLRenderBuffers( gl );
     }
 };
 
