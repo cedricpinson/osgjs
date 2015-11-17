@@ -31,10 +31,11 @@ function perspectiveMatrixFromVRFieldOfView( fov, zNear, zFar ) {
 
     var matrix = new Matrix.create();
 
-    var upTan = Math.tan( fov.upDegrees * Math.PI / 180.0 );
-    var downTan = Math.tan( fov.downDegrees * Math.PI / 180.0 );
-    var leftTan = Math.tan( fov.leftDegrees * Math.PI / 180.0 );
-    var rightTan = Math.tan( fov.rightDegrees * Math.PI / 180.0 );
+    var degToRad = Math.PI / 180.0;
+    var upTan = Math.tan( fov.upDegrees * degToRad );
+    var downTan = Math.tan( fov.downDegrees * degToRad );
+    var leftTan = Math.tan( fov.leftDegrees * degToRad );
+    var rightTan = Math.tan( fov.rightDegrees * degToRad );
 
     var xScale = 2.0 / ( leftTan + rightTan );
     var yScale = 2.0 / ( upTan + downTan );
@@ -138,34 +139,20 @@ var createCameraRtt = function ( texture, projection ) {
 
 var getHMDOptions = function ( hmdDevice ) {
 
-    /* WebVR API state as of 22/07/2014
-    Firefox {
-        getCurrentEyeFieldOfView()
-        getMaximumEyeFieldOfView()
-        getRecommendedEyeFieldOfView()
-        getEyeTranslation()
-    },
-    Chrome {
-        getCurrentEyeFieldOfView()
-        getMaximumEyeFieldOfView()
-        getRecommendedEyeFieldOfView()
-        getEyeTranslation()
-        getRecommendedRenderTargetSize()
-    }*/
+    // http://mozvr.github.io/webvr-spec/webvr.html
+    var left = hmdDevice.getEyeParameters( 'left' );
+    var right = hmdDevice.getEyeParameters( 'right' );
 
     var hmd = {
-
-        fovLeft: hmdDevice.getRecommendedEyeFieldOfView( 'left' ),
-        fovRight: hmdDevice.getRecommendedEyeFieldOfView( 'right' ),
-        eyeOffsetLeft: hmdDevice.getEyeTranslation( 'left' ),
-        eyeOffsetRight: hmdDevice.getEyeTranslation( 'right' ),
+        fovLeft: left.recommendedFieldOfView,
+        fovRight: right.recommendedFieldOfView,
+        eyeOffsetLeft: left.eyeTranslation,
+        eyeOffsetRight: right.eyeTranslation,
         rttResolution: {
-            width: 1920,
-            height: 1080
+            width: left.renderRect.width,
+            height: left.renderRect.height
         },
     };
-    if ( hmdDevice.getRecommendedRenderTargetSize )
-        hmd.rttResolution = hmdDevice.getRecommendedRenderTargetSize();
 
     // On Mac (FF+Chromium), the Left and Right angles of both eyes are inverted
     // Left Eye must see more to the Left than to the Right (Left angle > Right angle)
@@ -204,7 +191,7 @@ WebVR.createScene = function ( viewer, rttScene, HMDdevice ) {
 
     // Each eye is rendered on a texture whose width is half of the final combined texture
     var eyeTextureSize = {
-        width: hmd.rttResolution.width / 2.0,
+        width: hmd.rttResolution.width,
         height: hmd.rttResolution.height
     };
 

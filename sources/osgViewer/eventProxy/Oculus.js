@@ -18,7 +18,7 @@ Oculus.prototype = {
 
         var self = this;
 
-        function vrDeviceCallback( vrDevices ) {
+        var vrDeviceCallback = function ( vrDevices ) {
 
             var i;
 
@@ -40,7 +40,7 @@ Oculus.prototype = {
 
             if ( self._hmd && self._sensor )
                 Notify.log( 'Found a HMD and Sensor' );
-        }
+        };
 
         if ( navigator.getVRDevices ) {
             navigator.getVRDevices().then( vrDeviceCallback );
