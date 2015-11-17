@@ -62,27 +62,27 @@ FrameBufferObject.flushAllDeletedGLFrameBuffers = function ( gl ) {
     }
 };
 
-var RenderBufferObject = {};
+
 // static cache of glRenderBuffer flagged for deletion, which will actually
 // be deleted in the correct GL context.
-RenderBufferObject._sDeletedGLRenderBufferCache = new window.Map();
+FrameBufferObject._sDeletedGLRenderBufferCache = new window.Map();
 
 // static method to delete RenderBuffers
-RenderBufferObject.deleteGLRenderBuffer = function ( gl, fb ) {
-    if ( !RenderBufferObject._sDeletedGLRenderBufferCache.has( gl ) )
-        RenderBufferObject._sDeletedGLRenderBufferCache.set( gl, [] );
-    RenderBufferObject._sDeletedGLRenderBufferCache.get( gl ).push( fb );
+FrameBufferObject.deleteGLRenderBuffer = function ( gl, fb ) {
+    if ( !FrameBufferObject._sDeletedGLRenderBufferCache.has( gl ) )
+        FrameBufferObject._sDeletedGLRenderBufferCache.set( gl, [] );
+    FrameBufferObject._sDeletedGLRenderBufferCache.get( gl ).push( fb );
 };
 
 
 // static method to flush all the cached glRenderBuffers which need to be deleted in the GL context specified
-RenderBufferObject.flushDeletedGLRenderBuffers = function ( gl, availableTime ) {
+FrameBufferObject.flushDeletedGLRenderBuffers = function ( gl, availableTime ) {
     // if no time available don't try to flush objects.
     if ( availableTime <= 0.0 ) return availableTime;
-    if ( !RenderBufferObject._sDeletedGLRenderBufferCache.has( gl ) ) return availableTime;
+    if ( !FrameBufferObject._sDeletedGLRenderBufferCache.has( gl ) ) return availableTime;
     var elapsedTime = 0.0;
     var beginTime = Timer.instance().tick();
-    var deleteList = RenderBufferObject._sDeletedGLRenderBufferCache.get( gl );
+    var deleteList = FrameBufferObject._sDeletedGLRenderBufferCache.get( gl );
     var numBuffers = deleteList.length;
     for ( var i = numBuffers - 1; i >= 0 && elapsedTime < availableTime; i-- ) {
         gl.deleteRenderbuffer( deleteList[ i ] );
@@ -93,9 +93,9 @@ RenderBufferObject.flushDeletedGLRenderBuffers = function ( gl, availableTime ) 
     return availableTime;
 };
 
-RenderBufferObject.flushAllDeletedGLRenderBuffers = function ( gl ) {
-    if ( !RenderBufferObject._sDeletedGLRenderBufferCache.has( gl ) ) return;
-    var deleteList = RenderBufferObject._sDeletedGLRenderBufferCache.get( gl );
+FrameBufferObject.flushAllDeletedGLRenderBuffers = function ( gl ) {
+    if ( !FrameBufferObject._sDeletedGLRenderBufferCache.has( gl ) ) return;
+    var deleteList = FrameBufferObject._sDeletedGLRenderBufferCache.get( gl );
     var numBuffers = deleteList.length;
     for ( var i = numBuffers - 1; i >= 0; i-- ) {
         gl.deleteRenderbuffer( deleteList[ i ] );
@@ -120,7 +120,7 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
         this._fbo = undefined;
 
         if ( this._rbo !== undefined && this._gl !== undefined ) {
-            RenderBufferObject.deleteGLRenderBuffer( this._gl, this._rbo );
+            FrameBufferObject.deleteGLRenderBuffer( this._gl, this._rbo );
         }
         this._rbo = undefined;
 
@@ -243,5 +243,6 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
         }
     }
 } ) );
+
 
 module.exports = FrameBufferObject;
