@@ -3,7 +3,7 @@ var GamePad = require( 'osgViewer/eventProxy/GamePad' );
 var HammerOsg = require( 'osgViewer/eventProxy/Hammer' );
 var LeapMotion = require( 'osgViewer/eventProxy/LeapMotion' );
 var StandardMouseKeyboard = require( 'osgViewer/eventProxy/StandardMouseKeyboard' );
-var Oculus = require( 'osgViewer/eventProxy/Oculus' );
+var WebVR = require( 'osgViewer/eventProxy/WebVR' );
 var DeviceOrientation = require( 'osgViewer/eventProxy/DeviceOrientation' );
 
 module.exports = {
@@ -11,6 +11,6 @@ module.exports = {
     Hammer: HammerOsg,
     LeapMotion: LeapMotion,
     StandardMouseKeyboard: StandardMouseKeyboard,
-    Oculus: Oculus,
+    WebVR: WebVR,
     DeviceOrientation: DeviceOrientation
 };
