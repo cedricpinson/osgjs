@@ -36,6 +36,7 @@
             'supersample.glsl',
             'passthrough.glsl',
         ];
+        this._renderTextures = [];
         this._filterCheck = osg.Texture.NEAREST;
         //_filterCheck = osg.Texture.LINEAR,
 
@@ -484,8 +485,6 @@
             this._rotate.addChild( this.createScene() );
             this._lastUpdate = 0.0;
 
-            this._root = new osg.Node();
-
             // rotating cube  scene
             this._rttScene = this.createTextureRTT( 'sceneRTT',
                 this._filterCheck,
@@ -514,8 +513,8 @@
                     RenderSize: osg.Uniform.createFloat2( renderSize, 'RenderSize' )
                 };
 
-                this._root.getOrCreateStateSet().addUniform( this._uniforms.halton );
-                this._root.getOrCreateStateSet().addUniform( this._uniforms.RenderSize );
+                this.getRootNode().getOrCreateStateSet().addUniform( this._uniforms.halton );
+                this.getRootNode().getOrCreateStateSet().addUniform( this._uniforms.RenderSize );
 
                 temporalAttribute.setAttributeEnable( true );
 
@@ -544,15 +543,15 @@
                 self._quad.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
 
                 // add in correct order !
-                self._root.addChild( cameraScene );
-                self._root.addChild( nodeCompo );
+                self.getRootNode().addChild( cameraScene );
+                self.getRootNode().addChild( nodeCompo );
 
-                self._root.addChild( self._quad );
+                self.getRootNode().addChild( self._quad );
 
 
                 self._viewer.getCamera().setClearColor( [ 0.0, 0.0, 0.0, 0.0 ] );
                 //self._viewer.getCamera().setClearMask( 0 );
-                self._viewer.setSceneData( self._root );
+                self._viewer.setSceneData( self.getRootNode() );
 
 
                 self.initDatGUI();

@@ -7,6 +7,7 @@
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
     var osgAnimation = OSG.osgAnimation;
+    var ExampleOSGJS = window.ExampleOSGJS;
 
     var FindAnimationManagerVisitor = function () {
         osg.NodeVisitor.call( this, osg.NodeVisitor.TRAVERSE_ALL_CHILDREN );
@@ -31,6 +32,8 @@
 
     // inherits for the ExampleOSGJS prototype
     var Example = function () {
+        ExampleOSGJS.call( this );
+
         // can be overriden with url parm ?&scale=1
         this._config = {
             models: {
@@ -45,7 +48,7 @@
         this._modelPath = '../media/models/animation/';
     };
 
-    Example.prototype = osg.objectInherit( window.ExampleOSGJS.prototype, {
+    Example.prototype = osg.objectInherit( ExampleOSGJS.prototype, {
 
 
         initDatGUI: function () {
@@ -80,15 +83,15 @@
         createScene: function () {
 
             // the root node
-            this._root = new osg.Node();
+            var root = new osg.Node();
 
             // create the model
             var model = this.getOrCreateModel( this._modelPath + this.models[ this._config.currentModel ] );
 
-            this._root.addChild( model );
+            root.addChild( model );
             this._viewer.getManipulator().computeHomePosition();
 
-            return this._root;
+            this.getRootNode().addChild( root );
         },
 
         getOrCreateModel: function ( modelName ) {
