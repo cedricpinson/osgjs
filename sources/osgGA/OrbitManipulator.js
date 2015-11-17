@@ -8,7 +8,7 @@ var OrbitManipulatorGamePadController = require( 'osgGA/OrbitManipulatorGamePadC
 var OrbitManipulatorHammerController = require( 'osgGA/OrbitManipulatorHammerController' );
 var OrbitManipulatorLeapMotionController = require( 'osgGA/OrbitManipulatorLeapMotionController' );
 var OrbitManipulatorStandardMouseKeyboardController = require( 'osgGA/OrbitManipulatorStandardMouseKeyboardController' );
-var OrbitManipulatorOculusController = require( 'osgGA/OrbitManipulatorOculusController' );
+var OrbitManipulatorWebVRController = require( 'osgGA/OrbitManipulatorWebVRController' );
 
 
 /**
@@ -91,7 +91,7 @@ OrbitManipulator.AvailableControllerList = [ 'StandardMouseKeyboard',
     'GamePad',
     'Hammer',
     'DeviceOrientation',
-    'Oculus',
+    'WebVR'
 ];
 
 OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
@@ -99,7 +99,7 @@ OrbitManipulator.ControllerList = [ 'StandardMouseKeyboard',
     'GamePad',
     'Hammer',
     'DeviceOrientation',
-    'Oculus',
+    'WebVR'
 ];
 
 var DOT_LIMIT = 0.99; // angle limit around the pole
@@ -432,7 +432,7 @@ OrbitManipulator.DeviceOrientation = OrbitManipulatorDeviceOrientationController
 OrbitManipulator.GamePad = OrbitManipulatorGamePadController;
 OrbitManipulator.Hammer = OrbitManipulatorHammerController;
 OrbitManipulator.LeapMotion = OrbitManipulatorLeapMotionController;
-OrbitManipulator.Oculus = OrbitManipulatorOculusController;
+OrbitManipulator.WebVR = OrbitManipulatorWebVRController;
 OrbitManipulator.StandardMouseKeyboard = OrbitManipulatorStandardMouseKeyboardController;
 
 module.exports = OrbitManipulator;

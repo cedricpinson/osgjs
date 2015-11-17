@@ -69,9 +69,9 @@
             // The modelNode will be attached to it
             if ( !vrNode ) {
                 if ( navigator.getVRDevices || navigator.mozGetVRDevices )
-                    vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus.getHmd() );
+                    vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.WebVR.getHmd() );
                 else
-                    vrNode = osgUtil.Oculus.createScene( viewer, modelNode, {
+                    vrNode = osgUtil.WebVRCustom.createScene( viewer, modelNode, {
                         isCardboard: true
                     } );
             }
@@ -122,7 +122,7 @@
 
         if ( fullscreen === false )
             launchFullscreen( canvas, {
-                vrDisplay: viewer._eventProxy.Oculus.getHmd()
+                vrDisplay: viewer._eventProxy.WebVR.getHmd()
             } );
         else
             exitFullscreen();

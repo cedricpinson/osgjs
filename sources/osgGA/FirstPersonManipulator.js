@@ -7,7 +7,7 @@ var Vec2 = require( 'osg/Vec2' );
 var Vec3 = require( 'osg/Vec3' );
 var FirstPersonManipulatorDeviceOrientationController = require( 'osgGA/FirstPersonManipulatorDeviceOrientationController' );
 var FirstPersonManipulatorHammerController = require( 'osgGA/FirstPersonManipulatorHammerController' );
-var FirstPersonManipulatorOculusController = require( 'osgGA/FirstPersonManipulatorOculusController' );
+var FirstPersonManipulatorWebVRController = require( 'osgGA/FirstPersonManipulatorWebVRController' );
 var FirstPersonManipulatorStandardMouseKeyboardController = require( 'osgGA/FirstPersonManipulatorStandardMouseKeyboardController' );
 
 
@@ -26,8 +26,8 @@ var FirstPersonManipulator = function () {
     this.init();
 };
 
-FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation', 'Hammer' ];
-FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'Oculus', 'DeviceOrientation', 'Hammer' ];
+FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'WebVR', 'DeviceOrientation', 'Hammer' ];
+FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'WebVR', 'DeviceOrientation', 'Hammer' ];
 
 /** @lends FirstPersonManipulator.prototype */
 FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
@@ -257,7 +257,7 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
 
 FirstPersonManipulator.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;
 FirstPersonManipulator.Hammer = FirstPersonManipulatorHammerController;
-FirstPersonManipulator.Oculus = FirstPersonManipulatorOculusController;
+FirstPersonManipulator.WebVR = FirstPersonManipulatorWebVRController;
 FirstPersonManipulator.StandardMouseKeyboard = FirstPersonManipulatorStandardMouseKeyboardController;
 
 module.exports = FirstPersonManipulator;

@@ -14,7 +14,7 @@ var Vec4 = require( 'osg/Vec4' );
 var Viewport = require( 'osg/Viewport' );
 
 
-var Oculus = {};
+var WebVRCustom = {};
 
 // no smart resize, we just recreate everything
 var UpdateRecreateOnResize = function ( viewer, rttScene, hmdConfig, root, canvas ) {
@@ -38,7 +38,7 @@ UpdateRecreateOnResize.prototype = {
                 hmdConfig.hResolution = screen.width * 2;
                 hmdConfig.vResolution = screen.height * 2;
             }
-            Oculus.createScene( this._viewer, this._rttScene, hmdConfig, this._root );
+            WebVRCustom.createScene( this._viewer, this._rttScene, hmdConfig, this._root );
         }
         return true;
     }
@@ -57,7 +57,7 @@ UpdateOffsetCamera.prototype = {
     }
 };
 
-var setupOculus = function ( worldFactor, HMD, oculusUniforms, oculusMatrices ) {
+var setupWebVR = function ( worldFactor, HMD, webVRUniforms, webVRMatrices ) {
     var aspect = HMD.hResolution / ( 2.0 * HMD.vResolution );
     var r = -1.0 - ( 4.0 * ( HMD.hScreenSize * 0.25 - HMD.lensSeparationDistance * 0.5 ) / HMD.hScreenSize );
     var distScale = ( HMD.distortionK[ 0 ] + HMD.distortionK[ 1 ] * Math.pow( r, 2 ) + HMD.distortionK[ 2 ] * Math.pow( r, 4 ) + HMD.distortionK[ 3 ] * Math.pow( r, 6 ) );
@@ -67,20 +67,20 @@ var setupOculus = function ( worldFactor, HMD, oculusUniforms, oculusMatrices ) 
     var hOffset = 4.0 * ( HMD.hScreenSize * 0.25 - HMD.interpupillaryDistance * 0.5 ) / HMD.hScreenSize;
     var lensShift = 4.0 * ( HMD.hScreenSize * 0.25 - HMD.lensSeparationDistance * 0.5 ) / HMD.hScreenSize;
 
-    oculusMatrices.projectionLeft = Matrix.preMult( Matrix.makeTranslate( hOffset, 0.0, 0.0, Matrix.create() ), proj );
-    oculusMatrices.projectionRight = Matrix.preMult( Matrix.makeTranslate( -hOffset, 0.0, 0.0, Matrix.create() ), proj );
-    oculusMatrices.viewLeft = Matrix.makeTranslate( worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, Matrix.create() );
-    oculusMatrices.viewRight = Matrix.makeTranslate( -worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, Matrix.create() );
+    webVRMatrices.projectionLeft = Matrix.preMult( Matrix.makeTranslate( hOffset, 0.0, 0.0, Matrix.create() ), proj );
+    webVRMatrices.projectionRight = Matrix.preMult( Matrix.makeTranslate( -hOffset, 0.0, 0.0, Matrix.create() ), proj );
+    webVRMatrices.viewLeft = Matrix.makeTranslate( worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, Matrix.create() );
+    webVRMatrices.viewRight = Matrix.makeTranslate( -worldFactor * HMD.interpupillaryDistance * 0.5, 0.0, 0.0, Matrix.create() );
 
-    oculusUniforms.lensCenterLeft = Vec2.createAndSet( lensShift, 0.0 );
-    oculusUniforms.lensCenterRight = Vec2.createAndSet( -lensShift, 0.0 );
-    oculusUniforms.hmdWarpParam = HMD.distortionK;
-    oculusUniforms.chromAbParam = HMD.chromaAbParameter;
-    oculusUniforms.scaleIn = Vec2.createAndSet( 1.0, 1.0 / aspect );
-    oculusUniforms.scale = Vec2.createAndSet( 1.0 / distScale, 1.0 * aspect / distScale );
+    webVRUniforms.lensCenterLeft = Vec2.createAndSet( lensShift, 0.0 );
+    webVRUniforms.lensCenterRight = Vec2.createAndSet( -lensShift, 0.0 );
+    webVRUniforms.hmdWarpParam = HMD.distortionK;
+    webVRUniforms.chromAbParam = HMD.chromaAbParameter;
+    webVRUniforms.scaleIn = Vec2.createAndSet( 1.0, 1.0 / aspect );
+    webVRUniforms.scale = Vec2.createAndSet( 1.0 / distScale, 1.0 * aspect / distScale );
 };
 
-var getOculusShader = function () {
+var getWebVRShader = function () {
     var vertexshader = [
         '',
         '#ifdef GL_ES',
@@ -160,7 +160,7 @@ var createQuadRtt = function ( isLeftCam, texture, ocUnifs ) {
     var quad = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0 );
     var orStateSet = quad.getOrCreateStateSet();
     orStateSet.setTextureAttributeAndModes( 0, texture );
-    orStateSet.setAttributeAndModes( getOculusShader() );
+    orStateSet.setAttributeAndModes( getWebVRShader() );
     orStateSet.addUniform( new Uniform.createFloat2( ocUnifs.scale, 'uScale' ) );
     orStateSet.addUniform( new Uniform.createFloat2( ocUnifs.scaleIn, 'uScaleIn' ) );
     orStateSet.addUniform( new Uniform.createFloat2( isLeftCam ? ocUnifs.lensCenterLeft : ocUnifs.lensCenterRight, 'uLensCenter' ) );
@@ -205,8 +205,8 @@ var createCameraRtt = function ( texture, projMatrix ) {
     return camera;
 };
 
-Oculus.createScene = function ( viewer, rttScene, HMDconfig, root ) {
-    var HMD = Oculus.getDefaultConfig( HMDconfig );
+WebVRCustom.createScene = function ( viewer, rttScene, HMDconfig, rootOverride ) {
+    var HMD = WebVRCustom.getDefaultConfig( HMDconfig );
     var rttSize = Vec2.createAndSet( HMD.hResolution, HMD.vResolution );
     var viewportSize = Vec2.createAndSet( HMD.hResolution * 0.5, HMD.vResolution );
     var vp = viewer.getCamera().getViewport();
@@ -219,26 +219,26 @@ Oculus.createScene = function ( viewer, rttScene, HMDconfig, root ) {
     }
 
     var worldFactor = 1.0; // world unit
-    var oculusUniforms = {};
-    var oculusMatrices = {};
-    setupOculus( worldFactor, HMD, oculusUniforms, oculusMatrices );
+    var webVRUniforms = {};
+    var webVRMatrices = {};
+    setupWebVR( worldFactor, HMD, webVRUniforms, webVRMatrices );
 
     var rootViewMatrix = viewer.getCamera().getViewMatrix();
 
-    root = root || new Node();
+    var root = rootOverride || new Node();
     root.setUpdateCallback( new UpdateRecreateOnResize( viewer, rttScene, HMDconfig, root, canvas ) );
 
     var rttTextureLeft = createTextureRtt( rttSize );
-    var rttCamLeft = createCameraRtt( rttTextureLeft, oculusMatrices.projectionLeft );
-    var quadTextLeft = createQuadRtt( true, rttTextureLeft, oculusUniforms );
+    var rttCamLeft = createCameraRtt( rttTextureLeft, webVRMatrices.projectionLeft );
+    var quadTextLeft = createQuadRtt( true, rttTextureLeft, webVRUniforms );
     var orthoCameraLeft = createOrthoRtt( true, viewportSize, canvasSize, HMD.isCardboard );
-    rttCamLeft.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, oculusMatrices.viewLeft ) );
+    rttCamLeft.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, webVRMatrices.viewLeft ) );
 
     var rttTextureRight = createTextureRtt( rttSize );
-    var rttCamRight = createCameraRtt( rttTextureRight, oculusMatrices.projectionRight );
-    var quadTextRight = createQuadRtt( false, rttTextureRight, oculusUniforms );
+    var rttCamRight = createCameraRtt( rttTextureRight, webVRMatrices.projectionRight );
+    var quadTextRight = createQuadRtt( false, rttTextureRight, webVRUniforms );
     var orthoCameraRight = createOrthoRtt( false, viewportSize, canvasSize, HMD.isCardboard );
-    rttCamRight.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, oculusMatrices.viewRight ) );
+    rttCamRight.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, webVRMatrices.viewRight ) );
 
     rttCamLeft.addChild( rttScene );
     rttCamRight.addChild( rttScene );
@@ -255,7 +255,7 @@ Oculus.createScene = function ( viewer, rttScene, HMDconfig, root ) {
     return root;
 };
 
-Oculus.getDefaultConfig = function ( hmdConfig ) {
+WebVRCustom.getDefaultConfig = function ( hmdConfig ) {
     // FOV: 103.506416
     // vScreenCenter: 0.03645
 
@@ -272,8 +272,10 @@ Oculus.getDefaultConfig = function ( hmdConfig ) {
         chromaAbParameter: Vec4.createAndSet( 0.996, -0.004, 1.014, 0.0 ),
         isCardboard: false
     };
+
     if ( hmdConfig === 2 || hmdConfig === undefined )
         return hmd;
+
     if ( hmdConfig === 1 ) {
         // Oculus Rift DK1
         hmd.hResolution = 1280;
@@ -285,6 +287,7 @@ Oculus.getDefaultConfig = function ( hmdConfig ) {
         hmd.distortionK = Vec4.createAndSet( 1.0, 0.22, 0.24, 0.0 );
         return hmd;
     }
+
     // custom param
     if ( hmdConfig.hResolution !== undefined ) hmd.hResolution = hmdConfig.hResolution;
     if ( hmdConfig.vResolution !== undefined ) hmd.vResolution = hmdConfig.vResolution;
@@ -300,4 +303,4 @@ Oculus.getDefaultConfig = function ( hmdConfig ) {
     return hmd;
 };
 
-module.exports = Oculus;
+module.exports = WebVRCustom;

@@ -3,16 +3,16 @@ var Notify = require( 'osg/Notify' );
 var Quat = require( 'osg/Quat' );
 
 
-var Oculus = function ( viewer ) {
+var WebVR = function ( viewer ) {
     this._viewer = viewer;
-    this._type = 'Oculus';
+    this._type = 'WebVR';
     this._enable = true;
     this._hmd = undefined;
     this._sensor = undefined;
     this._quat = Quat.create();
 };
 
-Oculus.prototype = {
+WebVR.prototype = {
 
     init: function () {
 
@@ -108,4 +108,4 @@ Oculus.prototype = {
         return this._hmd;
     }
 };
-module.exports = Oculus;
+module.exports = WebVR;
