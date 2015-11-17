@@ -28,6 +28,7 @@ var TextureCubeMap = require( 'tests/osg/TextureCubeMap' );
 var TextureManager = require( 'tests/osg/TextureManager' );
 var UpdateVisitor = require( 'tests/osg/UpdateVisitor' );
 var Uniform = require( 'tests/osg/Uniform' );
+var Utils = require( 'tests/osg/Utils' );
 var Vec2 = require( 'tests/osg/Vec2' );
 var PrimitiveFunctor = require( 'tests/osg/PrimitiveFunctor' );
 var WebGLCaps = require( 'tests/osg/WebGLCaps' );
@@ -63,6 +64,7 @@ module.exports = function () {
     TextureManager();
     UpdateVisitor();
     Uniform();
+    Utils();
     Vec2();
     PrimitiveFunctor();
     WebGLCaps();

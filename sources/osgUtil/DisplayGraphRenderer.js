@@ -1,5 +1,6 @@
 'use strict';
 var DisplayGraphNode = require( 'osgUtil/DisplayGraphNode' );
+var RenderBin = require( 'osg/RenderBin' );
 
 var DisplayGraphRenderer = function ( selectables ) {
 
@@ -184,10 +185,16 @@ DisplayGraphRenderer.prototype = {
         var label = rb.className() + ' ( ' + rb.getInstanceID() + ' )';
         if ( rb.getName() ) label += '\n' + rb.getName();
 
+        var sortMode = '';
+        if ( rb.getSortMode() === RenderBin.SORT_BACK_TO_FRONT )
+            sortMode = 'SortMode: BackToFront';
+
+        var description = 'BinNumber: ' + rb.getBinNumber() + '\n' + sortMode;
+
         this._selectables.set( rb.getInstanceID().toString(), rb );
         g.addNode( rb.getInstanceID(), {
             label: label,
-            description: '',
+            description: description,
             style: 'fill: ' + this.getColorFromClassName( rb.className() ) + ';stroke-width: 0px;'
         } );
 

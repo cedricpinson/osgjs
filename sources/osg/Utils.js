@@ -119,6 +119,7 @@ Utils.objectInherit = function ( base /*, extras*/ ) {
     }
     return obj;
 };
+
 Utils.objectInehrit = function () {
     console.warn( 'please use objectInherit instead of objectInehrit' );
 };
@@ -156,14 +157,24 @@ Utils.objectLibraryClass = function ( object, libName, className ) {
 
     return object;
 };
+
 Utils.setTypeID = function ( classObject ) {
-    var className = classObject.prototype.className();
+    var className = classObject.prototype.libraryClassName();
     var typeID = Utils.objectType.generate( className );
     var getTypeID = function () {
         return typeID;
     };
     classObject.typeID = classObject.prototype.typeID = typeID;
     classObject.getTypeID = classObject.prototype.getTypeID = getTypeID;
+};
+
+Utils.createPrototypeClass = function ( Constructor, prototype, libraryName, className ) {
+
+    Constructor.prototype = prototype;
+    prototype.constructor = Constructor;
+
+    Utils.objectLibraryClass( prototype, libraryName, className );
+    Utils.setTypeID( Constructor );
 };
 
 Utils.Float32Array = typeof Float32Array !== 'undefined' ? Float32Array : null;

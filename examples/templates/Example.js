@@ -27,7 +27,6 @@
         this._texturesNames = [];
         this._meshNames = [];
         this._shaderNames = [];
-        this._renderTextures = [];
 
         // defines
         this._mediaPath = '../media/';
@@ -37,9 +36,15 @@
         this._viewer = undefined;
         this._gui = undefined;
         this._shaderProcessor = undefined;
-        this._root = undefined;
         this._canvas = undefined;
 
+        this._root = new osg.Node();
+        this._root.setName( 'root' );
+
+        this._debugNodeRTT = new osg.Node();
+        this._debugNodeRTT.setName( 'debugNodeRTT' );
+        this._debugNodeRTT.getOrCreateStateSet().setRenderBinDetails( 1000, 'RenderBin' );
+        this._root.addChild( this._debugNodeRTT );
 
     };
 
@@ -72,9 +77,11 @@
         },
 
         initDatGUI: function () {
-
             this._gui = new window.dat.GUI();
+        },
 
+        getRootNode: function () {
+            return this._root;
         },
 
         setConfigFromOptionsURL: function () {
@@ -160,15 +167,104 @@
             return program;
         },
 
-        // get the model
+        hideDebugTextureList: function () {
+            this._debugNodeRTT.setNodeMask( 0x0 );
+        },
 
-        getOrCreateModel: function ( modelName ) {
+        showDebugTextureList: function () {
+            this._debugNodeRTT.setNodeMask( ~0x0 );
+        },
 
-            if ( !this._model ) {
-                this._model = new osg.MatrixTransform();
-            } else {
-                this._model.removeChildren();
+        toggleShowHideDebugTextureList: function () {
+            if ( this._debugNodeRTT.getNodeMask() === 0 ) {
+                this.showDebugTextureList();
+            } else
+                this.hideDebugTextureList();
+        },
+
+        // show the renderTexture as ui quad on left bottom screen
+        // in fact show all texture inside this._rtt
+        createDebugTextureList: function ( textureList, optionalArgs ) {
+
+            // 20% of the resolution size
+            var defaultRatio = 0.3;
+            var screenRatio = this._canvas.width / this._canvas.height;
+            var defaultWidth = Math.floor( this._canvas.width * defaultRatio );
+            var defaultHeight = Math.floor( defaultWidth / screenRatio );
+
+            var optionsDebug = {
+                x: 0,
+                y: 100,
+                w: defaultWidth,
+                h: defaultHeight,
+                horizontal: true,
+                screenW: this._canvas.width,
+                screenH: this._canvas.height
+            };
+
+            if ( optionalArgs )
+                osg.extend( optionsDebug, optionalArgs );
+
+            var debugNodeRTT = this._debugNodeRTT;
+            debugNodeRTT.setNodeMask( ~0x0 );
+            debugNodeRTT.removeChildren();
+
+            var debugComposerNode = new osg.Node();
+            debugComposerNode.setName( 'debugComposerNode' );
+            debugComposerNode.setCullingActive( false );
+
+            // camera
+            var debugComposerCamera = new osg.Camera();
+            debugComposerCamera.setName( 'composerDebugCamera' );
+            debugNodeRTT.addChild( debugComposerCamera );
+
+            // create camera to setup RTT in overlay
+            var cameraProjection = debugComposerCamera.getProjectionMatrix();
+            osg.Matrix.makeOrtho( 0, optionsDebug.screenW, 0, optionsDebug.screenH, -5, 5, cameraProjection );
+
+            var cameraView = debugComposerCamera.getViewMatrix();
+            osg.Matrix.makeTranslate( 0, 0, 0, cameraView );
+
+            debugComposerCamera.setRenderOrder( osg.Camera.NESTED_RENDER, 0 );
+            debugComposerCamera.setReferenceFrame( osg.Transform.ABSOLUTE_RF );
+            debugComposerCamera.addChild( debugComposerNode );
+
+            var xOffset = optionsDebug.x;
+            var yOffset = optionsDebug.y;
+
+
+            // why if no in fullscreen we would need to disable depth ?
+            debugComposerNode.getOrCreateStateSet().setAttributeAndModes( new osg.Depth( 'DISABLE' ) );
+
+            // iterate on each texture to add them as thumbnails
+            for ( var i = 0, l = textureList.length; i < l; i++ ) {
+                var texture = textureList[ i ];
+
+                if ( texture ) {
+                    var quad = osg.createTexturedQuadGeometry( xOffset, yOffset, 0, optionsDebug.w, 0, 0, 0, optionsDebug.h, 0 );
+
+                    var stateSet = quad.getOrCreateStateSet();
+                    quad.setName( 'debugComposerGeometry' + i );
+
+                    stateSet.setTextureAttributeAndModes( 0, texture );
+
+                    debugComposerNode.addChild( quad );
+
+                    if ( optionsDebug.horizontal ) {
+                        xOffset += optionsDebug.w + 2;
+                    } else {
+                        yOffset += optionsDebug.h + 2;
+                    }
+                }
             }
+
+        },
+
+        // get the model
+        createModel: function ( modelName ) {
+
+            var model = new osg.MatrixTransform();
+
             if ( modelName ) {
 
                 // TODO: a generic model loader that fills also the Dat.gui
@@ -177,33 +273,41 @@
                 var request = osgDB.readNodeURL( modelName );
                 request.then( function ( node ) {
 
-                    this._model.addChild( node );
+                    model.addChild( node );
 
                 } );
+
             } else {
 
                 var size = 10;
                 var geom = osg.createTexturedBoxGeometry( 0, 0, 0,
                     size, size, size );
-                this._model.addChild( geom );
+                model.addChild( geom );
 
             }
 
+            return model;
+        },
+
+        // get the model
+        getOrCreateModel: function ( modelName ) {
+
+            if ( !this._model ) {
+                this._model = new osg.MatrixTransform();
+            } else {
+                this._model.removeChildren();
+            }
+
+            this._model.addChild( this.createModel( modelName ) );
             return this._model;
         },
 
 
         createScene: function () {
 
-            // the root node
-            this._root = new osg.Node();
-
             // create the model
-            var model = this.getOrCreateModel();
+            this._root.addChild( this.getOrCreateModel() );
 
-            this._root.addChild( model );
-
-            return this._root;
         }
 
     };

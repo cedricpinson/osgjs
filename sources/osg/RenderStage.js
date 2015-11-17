@@ -33,50 +33,68 @@ var RenderStage = function () {
 };
 
 RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( RenderBin.prototype, {
+
+    // temporary, Utils.createPrototypeClass will solve this
+    constructor: RenderStage,
+
     reset: function () {
         RenderBin.prototype.reset.call( this );
         this.preRenderList.length = 0;
         this.postRenderList.length = 0;
     },
+
     setClearDepth: function ( depth ) {
         this.clearDepth = depth;
     },
+
     getClearDepth: function () {
         return this.clearDepth;
     },
+
     setClearColor: function ( color ) {
         this.clearColor = color;
     },
+
     getClearColor: function () {
         return this.clearColor;
     },
+
     setClearMask: function ( mask ) {
         this.clearMask = mask;
     },
+
     getClearMask: function () {
         return this.clearMask;
     },
+
     setViewport: function ( vp ) {
         this.viewport = vp;
     },
+
     getViewport: function () {
         return this.viewport;
     },
+
     setCamera: function ( camera ) {
         this.camera = camera;
     },
+
     getCamera: function () {
         return this.camera;
     },
+
     getPositionedAttribute: function () {
         return this.positionedAttribute;
     },
+
     getPreRenderStageList: function () {
         return this.preRenderList;
     },
+
     getPostRenderStageList: function () {
         return this.postRenderList;
     },
+
     addPreRenderStage: function ( rs, order ) {
         for ( var i = 0, l = this.preRenderList.length; i < l; i++ ) {
             var render = this.preRenderList[ i ];
@@ -96,6 +114,7 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             } );
         }
     },
+
     addPostRenderStage: function ( rs, order ) {
         for ( var i = 0, l = this.postRenderList.length; i < l; i++ ) {
             var render = this.postRenderList[ i ];
