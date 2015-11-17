@@ -110,6 +110,7 @@ var WebGLUtils = function () {
         /** function:(msg) */
         opt_onError ) {
         function handleCreationError( msg ) {
+            if ( msg.indexOf( 'WebGL2' ) !== -1 ) return;
             var container = document.getElementsByTagName( "body" )[ 0 ];
             //var container = canvas.parentNode;
             if ( container ) {
@@ -149,7 +150,14 @@ var WebGLUtils = function () {
      * @return {!WebGLContext} The created context.
      */
     var create3DContext = function ( canvas, opt_attribs ) {
-        var names = [ "webgl", "experimental-webgl", "webkit-3d", "moz-webgl" ];
+
+        // only try to enable if URl options ?webgl2=1
+        var names = [];
+        if ( opt_attribs && opt_attribs.webgl2 ) {
+            names = names.concat( [ "webgl2", "experimental-webgl2" ] );
+        }
+        names = names.concat( [ "webgl", "experimental-webgl", "webkit-3d", "moz-webgl" ] );
+
         var context = null;
         for ( var ii = 0; ii < names.length; ++ii ) {
             try {

@@ -31,7 +31,6 @@ var WebGLCaps = function () {
     this._webGLParameters[ 'NUM_COMPRESSED_TEXTURE_FORMATS' ] = 0;
     this._webGLParameters[ 'MAX_SHADER_PRECISION_FLOAT' ] = 'none';
     this._webGLParameters[ 'MAX_SHADER_PRECISION_INT' ] = 'none';
-
 };
 
 WebGLCaps.instance = function () {
@@ -47,7 +46,6 @@ WebGLCaps.instance = function () {
         // with our webglcaps canvas
         var webglInspector = typeof window !== undefined && window.gli;
         var oldWebGLInspector;
-
         if ( webglInspector ) {
 
             oldWebGLInspector = window.gli.host.inspectContext;
@@ -98,12 +96,48 @@ WebGLCaps.prototype = {
         // get extension
         this.initWebGLExtensions( gl );
 
+        this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
+
+        if ( this._isGL2 ) {
+
+            // osgjs code is webgl1, so we fake webgl2 capabilities
+            // and calls for retrocompatibility with webgl1
+            this._checkRTT[ Texture.FLOAT + ',' + Texture.NEAREST ] = true;
+            this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.NEAREST ] = true;
+            this._checkRTT[ Texture.FLOAT + ',' + Texture.LINEAR ] = true;
+            this._checkRTT[ Texture.HALF_FLOAT + ',' + Texture.LINEAR ] = true;
+
+            var nativeExtension = [
+                'OES_element_index_uint',
+                'EXT_sRGB',
+                'EXT_blend_minmax',
+                'EXT_frag_depth',
+                'WEBGL_depth_texture',
+                'EXT_shader_texture_lod',
+                'OES_standard_derivatives',
+                'OES_texture_float',
+                'OES_texture_half_float',
+                'OES_vertex_array_object',
+                'WEBGL_draw_buffers',
+                'OES_fbo_render_mipmap',
+                'ANGLE_instanced_arrays'
+            ];
+
+            var ext = WebGLCaps._instance.getWebGLExtensions();
+            for ( var i = 0, l = nativeExtension.length; i < l; i++ ) {
+                ext[ nativeExtension[ i ] ] = function () {};
+            }
+        }
+
         // get float support
         this.hasLinearHalfFloatRTT( gl );
         this.hasLinearFloatRTT( gl );
         this.hasHalfFloatRTT( gl );
         this.hasFloatRTT( gl );
 
+    },
+    isWebGL2: function () {
+        return this._isGL2;
     },
     // inevitable bugs per platform (browser/OS/GPU)
     initBugDB: function () {
