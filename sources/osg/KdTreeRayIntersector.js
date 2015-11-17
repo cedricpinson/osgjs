@@ -1,35 +1,47 @@
 'use strict';
 var Vec3 = require( 'osg/Vec3' );
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
+var Notify = require( 'osg/Notify' );
 
+var KdTreeRayIntersector = function () {
 
-var KdTreeRayIntersector = function ( vertices, nodes, triangles, intersections, start, end, nodePath ) {
-    this._vertices = vertices;
-    this._kdNodes = nodes;
-    this._triangles = triangles;
+    if ( arguments && arguments.length ) {
+        Notify.warn( 'using ctor as initialiser is deprecated, use init(intersections, start, end, nodePath) and/or     setKdtree: function ( vertices, nodes, triangles )' );
+    }
+
     this._intersector = new TriangleIntersector();
-    this._dinvX = Vec3.create();
-    this._dinvY = Vec3.create();
-    this._dinvZ = Vec3.create();
-    this.init( intersections, start, end, nodePath );
+    this._dInvX = Vec3.create();
+    this._dInvY = Vec3.create();
+    this._dInvZ = Vec3.create();
+
 };
 
 KdTreeRayIntersector.prototype = {
-    init: function ( intersections, start, end, nodePath ) {
-        var d = Vec3.sub( end, start, Vec3.create() );
-        var len = Vec3.length( d );
-        var invLen = 0.0;
-        if ( len !== 0.0 )
-            invLen = 1.0 / len;
-        Vec3.mult( d, invLen, d );
-        if ( d[ 0 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 0 ], this._dinvX );
-        if ( d[ 1 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 1 ], this._dinvY );
-        if ( d[ 2 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 2 ], this._dinvZ );
-
-        this._intersector._intersections = intersections;
-        this._intersector.setNodePath( nodePath );
-        this._intersector.set( start, end );
+    setKdtree: function ( vertices, nodes, triangles ) {
+        this._vertices = vertices;
+        this._kdNodes = nodes;
+        this._triangles = triangles;
     },
+    init: ( function () {
+
+        var dir = Vec3.create();
+
+        return function ( intersections, start, end, nodePath ) {
+            var d = Vec3.sub( end, start, dir );
+            var len = Vec3.length( d );
+            var invLen = 0.0;
+            if ( len !== 0.0 )
+                invLen = 1.0 / len;
+            Vec3.mult( d, invLen, d );
+            if ( d[ 0 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 0 ], this._dInvX );
+            if ( d[ 1 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 1 ], this._dInvY );
+            if ( d[ 2 ] !== 0.0 ) Vec3.mult( d, 1.0 / d[ 2 ], this._dInvZ );
+
+            this._intersector._intersections = intersections;
+            this._intersector.setNodePath( nodePath );
+            this._intersector.set( start, end );
+        };
+    } )(),
     // Classic ray intersection test
     // If it's a leaf it does ray-triangles intersection with the triangles in the cell
     // If it's not a leaf, it descend in the tree in a recursive way as long as the ray
@@ -110,9 +122,9 @@ KdTreeRayIntersector.prototype = {
             var ymax = max[ 1 ];
             var zmax = max[ 2 ];
 
-            var invX = this._dinvX;
-            var invY = this._dinvY;
-            var invZ = this._dinvZ;
+            var invX = this._dInvX;
+            var invY = this._dInvY;
+            var invZ = this._dInvZ;
 
             if ( s[ 0 ] <= e[ 0 ] ) {
                 // trivial reject of segment wholely outside.

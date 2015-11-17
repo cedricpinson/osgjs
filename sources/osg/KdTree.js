@@ -24,8 +24,8 @@ var KdTreeSphereIntersector = require( 'osg/KdTreeSphereIntersector' );
 // The result are two sets, one for each half-space (left and right).
 
 // Then, for the current node, the splitting-plane position (or the median-point) and depth is saved.
-// Finally, if the point-set has more than n point and the tree depth is below m 
-// (with n,m chosen by the user, as build options), two child-nodes (L/R one for each point-set) 
+// Finally, if the point-set has more than n point and the tree depth is below m
+// (with n,m chosen by the user, as build options), two child-nodes (L/R one for each point-set)
 // are created which themselfs repeat the pocedure.
 
 // The split-axis gets alternated at each depth, the split order is computed by checking the main
@@ -102,7 +102,6 @@ BuildKdTree.prototype = {
             triangleOrdered[ j + 2 ] = triangles[ id + 2 ];
         }
         this._kdTree.setTriangles( triangleOrdered );
-
         return this._kdTree.getNodes().length > 0;
     },
     // The function first gather all the triangles of the geometry
@@ -135,8 +134,11 @@ BuildKdTree.prototype = {
             next += 3;
         };
 
-        var tif = new TriangleIndexFunctor( geom, cb );
+
+        var tif = new TriangleIndexFunctor();
+        tif.init( geom, cb );
         tif.apply();
+
         indices = indices.subarray( 0, next );
 
         var nbTriangles = indices.length;
@@ -399,8 +401,13 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
         }
 
         var numIntersectionsBefore = intersections.length;
-        var intersector = new KdTreeRayIntersector( this._vertices, this._kdNodes, this._triangles, intersections, start, end, nodePath );
-        intersector.intersect( this.getNodes()[ 0 ], start, end );
+
+        if ( !this._rayIntersector ) {
+            this._rayIntersector = new KdTreeRayIntersector();
+            this._rayIntersector.setKdtree( this._vertices, this._kdNodes, this._triangles );
+        }
+        this._rayIntersector.init( intersections, start, end, nodePath );
+        this._rayIntersector.intersect( this.getNodes()[ 0 ], start, end );
 
         return numIntersectionsBefore !== intersections.length;
     },
@@ -410,8 +417,13 @@ KdTree.prototype = MACROUTILS.objectLibraryClass( {
         }
 
         var numIntersectionsBefore = intersections.length;
-        var intersector = new KdTreeSphereIntersector( this._vertices, this._kdNodes, this._triangles, intersections, center, radius, nodePath );
-        intersector.intersect( this.getNodes()[ 0 ] );
+
+        if ( !this._sphereIntersector ) {
+            this._sphereIntersector = new KdTreeSphereIntersector();
+            this._sphereIntersector.setKdtree( this._vertices, this._kdNodes, this._triangles );
+        }
+        this._sphereIntersector.init( intersections, center, radius, nodePath );
+        this._sphereIntersector.intersect( this.getNodes()[ 0 ] );
 
         return numIntersectionsBefore !== intersections.length;
     }

@@ -2,6 +2,7 @@
 var MACROUTILS = require( 'osg/Utils' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var Matrix = require( 'osg/Matrix' );
+var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
 var TransformEnums = require( 'osg/TransformEnums' );
 
 
@@ -17,6 +18,9 @@ var IntersectionVisitor = function () {
 };
 
 IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+    reset: function () {
+        IntersectionVisitor._reservedMatrixStack.reset();
+    },
     setIntersector: function ( intersector ) {
         this._intersector = intersector;
     },
@@ -62,7 +66,7 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         this._windowStack.push( matrix );
     },
     pushWindowMatrixUsingViewport: function ( viewport ) {
-        this._windowStack.push( viewport.computeWindowMatrix() );
+        this._windowStack.push( viewport.computeWindowMatrix( IntersectionVisitor._reservedMatrixStack.get() ) );
     },
     getWindowMatrix: function () {
         return ( this._windowStack.length ) ? this._windowStack[ this._windowStack.length - 1 ] : undefined;
@@ -116,14 +120,14 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         var projection, view, model;
         if ( camera.getReferenceFrame() === TransformEnums.RELATIVE_RF && this.getViewMatrix() && this.getProjectionMatrix() ) {
             // relative
-            projection = Matrix.mult( this.getProjectionMatrix(), camera.getProjectionMatrix(), Matrix.create() );
+            projection = Matrix.mult( this.getProjectionMatrix(), camera.getProjectionMatrix(), IntersectionVisitor._reservedMatrixStack.get() );
             view = this.getViewMatrix();
-            model = Matrix.mult( this.getModelMatrix(), camera.getViewMatrix(), Matrix.create() );
+            model = Matrix.mult( this.getModelMatrix(), camera.getViewMatrix(), IntersectionVisitor._reservedMatrixStack.get() );
         } else {
             // absolute
             projection = camera.getProjectionMatrix();
             view = camera.getViewMatrix();
-            model = Matrix.create();
+            model = IntersectionVisitor._reservedMatrixStack.get();
         }
 
         this.pushProjectionMatrix( projection );
@@ -161,10 +165,10 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         if ( !this.enter( node ) ) return;
         // Accumulate Transform
         if ( node.getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
-            this.pushViewMatrix( Matrix.create() );
+            this.pushViewMatrix( IntersectionVisitor._reservedMatrixStack.get() );
             this.pushModelMatrix( node.getMatrix() );
         } else if ( this._modelStack.length > 0 ) {
-            var m = Matrix.copy( this.getModelMatrix(), Matrix.create() );
+            var m = Matrix.copy( this.getModelMatrix(), IntersectionVisitor._reservedMatrixStack.get() );
             Matrix.preMult( m, node.getMatrix() );
             this.pushModelMatrix( m );
         } else {
@@ -181,5 +185,7 @@ IntersectionVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype,
         this._intersector.setCurrentTransformation( this.getTransformation() );
     }
 } );
+
+IntersectionVisitor._reservedMatrixStack = new MatrixMemoryPool();
 
 module.exports = IntersectionVisitor;

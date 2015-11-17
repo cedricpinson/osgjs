@@ -1,7 +1,7 @@
 'use strict';
 var Vec3 = require( 'osg/Vec3' );
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
-
+var Notify = require( 'osg/Notify' );
 
 var TriangleIntersection = function ( index, normal, r1, v1, r2, v2, r3, v3 ) {
     this.index = index;
@@ -15,9 +15,15 @@ var TriangleIntersection = function ( index, normal, r1, v1, r2, v2, r3, v3 ) {
 };
 
 var TriangleIntersector = function () {
+
+    if ( arguments && arguments.length ) {
+        Notify.warn( 'using ctor as initialiser is deprecated, use set(start, end)' );
+    }
+
     this._intersections = [];
     this._nodePath = [];
     this._index = 0;
+    this._dir = Vec3.create();
 };
 
 TriangleIntersector.prototype = {
@@ -27,43 +33,55 @@ TriangleIntersector.prototype = {
     set: function ( start, end ) {
         this._start = start;
         this._end = end;
-        this._dir = Vec3.sub( end, start, Vec3.create() );
+        this._dir = Vec3.sub( end, start, this._dir );
         this._length = Vec3.length( this._dir );
         this._invLength = 1.0 / this._length;
         Vec3.mult( this._dir, this._invLength, this._dir );
     },
 
-    apply: function ( node ) {
-        if ( !node.getAttributes().Vertex ) {
-            return;
-        }
-        var vertices = node.getAttributes().Vertex.getElements();
-        var self = this;
+    apply: ( function () {
+
         var v1 = Vec3.create();
         var v2 = Vec3.create();
         var v3 = Vec3.create();
-        var cb = function ( i1, i2, i3 ) {
-            if ( i1 === i2 || i1 === i3 || i2 === i3 )
+        var tif = new TriangleIndexFunctor();
+
+        return function ( node ) {
+
+            if ( !node.getAttributes().Vertex ) {
                 return;
-            var j = i1 * 3;
-            v1[ 0 ] = vertices[ j ];
-            v1[ 1 ] = vertices[ j + 1 ];
-            v1[ 2 ] = vertices[ j + 2 ];
-            j = i2 * 3;
-            v2[ 0 ] = vertices[ j ];
-            v2[ 1 ] = vertices[ j + 1 ];
-            v2[ 2 ] = vertices[ j + 2 ];
-            j = i3 * 3;
-            v3[ 0 ] = vertices[ j ];
-            v3[ 1 ] = vertices[ j + 1 ];
-            v3[ 2 ] = vertices[ j + 2 ];
-            self.intersect( v1, v2, v3 );
+            }
+            var vertices = node.getAttributes().Vertex.getElements();
+            var self = this;
+
+            var cb = function ( i1, i2, i3 ) {
+
+                if ( i1 === i2 || i1 === i3 || i2 === i3 )
+                    return;
+
+                var j = i1 * 3;
+                v1[ 0 ] = vertices[ j ];
+                v1[ 1 ] = vertices[ j + 1 ];
+                v1[ 2 ] = vertices[ j + 2 ];
+                j = i2 * 3;
+                v2[ 0 ] = vertices[ j ];
+                v2[ 1 ] = vertices[ j + 1 ];
+                v2[ 2 ] = vertices[ j + 2 ];
+                j = i3 * 3;
+                v3[ 0 ] = vertices[ j ];
+                v3[ 1 ] = vertices[ j + 1 ];
+                v3[ 2 ] = vertices[ j + 2 ];
+                self.intersect( v1, v2, v3 );
+
+            };
+            tif.init( node, cb );
+            tif.apply();
+
         };
-        var tif = new TriangleIndexFunctor( node, cb );
-        tif.apply();
-    },
+    } )(),
 
     intersect: ( function () {
+
         var normal = Vec3.create();
         var e2 = Vec3.create();
         var e1 = Vec3.create();
@@ -71,7 +89,9 @@ TriangleIntersector.prototype = {
         var pvec = Vec3.create();
         var qvec = Vec3.create();
         var epsilon = 1E-20;
+
         return function ( v0, v1, v2 ) {
+
             this._index++;
             var d = this._dir;
 
@@ -113,6 +133,7 @@ TriangleIntersector.prototype = {
             Vec3.cross( e1, e2, normal );
             Vec3.normalize( normal, normal );
 
+            // GC TriangleIntersection & Point
             this._intersections.push( {
                 ratio: r,
                 nodepath: this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer

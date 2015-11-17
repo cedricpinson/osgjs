@@ -37,6 +37,12 @@ var LineCustomIntersector = function ( testPlane ) {
     LineSegmentIntersector.call( this );
 };
 LineCustomIntersector.prototype = MACROUTILS.objectInherit( LineSegmentIntersector.prototype, {
+    setTestPlane: function ( testPlane ) {
+        this._testPlane = testPlane; // intersection plane or line
+    },
+    getTranslateDistance: function () {
+        return this._inter;
+    },
     enter: ( function () {
         var axis = Vec3.create();
         var dir = Vec3.create();
@@ -141,6 +147,13 @@ var NodeGizmo = function ( viewer ) {
 
     this._attachedNode = null;
     this.attachToGeometry( null );
+
+    // Intersectors
+    this._lsi = new LineCustomIntersector();
+    this._origIntersect = Vec3.create();
+    this._dstIntersect = Vec3.create();
+    this._iv = new IntersectionVisitor();
+    this._iv.setIntersector( this._lsi );
 
     this.init();
 };
@@ -830,19 +843,20 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( canvas.height / canvas.clientHeight );
 
             // project 2D point on the 3d line
-            var lsi = new LineCustomIntersector();
-            lsi.set( Vec3.createAndSet( coordx, coordy, 0.0 ), Vec3.createAndSet( coordx, coordy, 1.0 ) );
-            var iv = new IntersectionVisitor();
-            iv.setTraversalMask( this._hoverNode.getNodeMask() | NodeGizmo.PICK_ARROW );
-            iv.setIntersector( lsi );
+            this._lsi.reset();
+            this._lsi.setTestPlane( false );
+            this._lsi.set( Vec3.set( coordx, coordy, 0.0, this._origIntersect ), Vec3.set( coordx, coordy, 1.0, this._dstIntersect ) );
+            this._iv.reset();
+            this._iv.setTraversalMask( this._hoverNode.getNodeMask() | NodeGizmo.PICK_ARROW );
+
 
             Matrix.copy( this._editWorldTrans, this.getMatrix() );
 
             this.setOnlyGizmoPicking();
-            this._viewer._camera.accept( iv );
+            this._viewer._camera.accept( this._iv );
             this.setOnlyScenePicking();
 
-            Matrix.transformVec3( this._editInvWorldScaleRot, lsi._inter, tra );
+            Matrix.transformVec3( this._editInvWorldScaleRot, this._lsi.getTranslateDistance(), tra );
             Matrix.multTranslate( this._editLocal, tra, this._attachedNode.getMatrix() );
 
             this._attachedNode.dirtyBound();
@@ -858,20 +872,22 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         var coordx = vec[ 0 ] * ( canvas.width / canvas.clientWidth );
         var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( canvas.height / canvas.clientHeight );
 
-        // project 2D point on the 3d plane
-        var lsi = new LineCustomIntersector( true );
-        lsi.set( Vec3.createAndSet( coordx, coordy, 0.0 ), Vec3.createAndSet( coordx, coordy, 1.0 ) );
-        var iv = new IntersectionVisitor();
-        iv.setTraversalMask( this._hoverNode.getNodeMask() | NodeGizmo.PICK_PLANE );
-        iv.setIntersector( lsi );
+
+        // project 2D point on the 3d plane        
+        this._lsi.reset();
+        this._lsi.setTestPlane( true );
+        this._lsi.set( Vec3.set( coordx, coordy, 0.0, this._origIntersect ), Vec3.set( coordx, coordy, 1.0, this._dstIntersect ) );
+        this._iv.reset();
+        this._iv.setTraversalMask( this._hoverNode.getNodeMask() | NodeGizmo.PICK_PLANE );
+
 
         Matrix.copy( this._editWorldTrans, this.getMatrix() );
 
         this.setOnlyGizmoPicking();
-        this._viewer._camera.accept( iv );
+        this._viewer._camera.accept( this._iv );
         this.setOnlyScenePicking();
 
-        Matrix.transformVec3( this._editInvWorldScaleRot, lsi._inter, vec );
+        Matrix.transformVec3( this._editInvWorldScaleRot, this._lsi.getTranslateDistance(), vec );
         Matrix.multTranslate( this._editLocal, vec, this._attachedNode.getMatrix() );
 
         this._attachedNode.dirtyBound();
