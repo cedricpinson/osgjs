@@ -12,6 +12,7 @@ var Uniform = require( 'osg/Uniform' );
 var Vec2 = require( 'osg/Vec2' );
 var Vec4 = require( 'osg/Vec4' );
 var Viewport = require( 'osg/Viewport' );
+var Composer = require( 'osgUtil/Composer' );
 
 
 var WebVRCustom = {};
@@ -81,27 +82,6 @@ var setupWebVR = function ( worldFactor, HMD, webVRUniforms, webVRMatrices ) {
 };
 
 var getWebVRShader = function () {
-    var vertexshader = [
-        '',
-        '#ifdef GL_ES',
-        'precision highp float;',
-        '#endif',
-
-        'attribute vec3 Vertex;',
-        'attribute vec3 Normal;',
-        'attribute vec2 TexCoord0;',
-
-        'uniform mat4 ModelViewMatrix;',
-        'uniform mat4 ProjectionMatrix;',
-        'uniform mat4 NormalMatrix;',
-
-        'varying vec2 vTexCoord;',
-
-        'void main(void) {',
-        '  vTexCoord = TexCoord0;',
-        '  gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex, 1.0);',
-        '}'
-    ].join( '\n' );
 
     var fragmentshader = [
         '',
@@ -116,11 +96,11 @@ var getWebVRShader = function () {
         'uniform vec4 uChromAbParam;',
         'uniform sampler2D Texture0;',
 
-        'varying vec2 vTexCoord;',
+        'varying vec2 FragTexCoord0;',
 
         // from http://paradise.untergrund.net/tmp/demoshit/examples/js/effects/OculusRiftEffect.js
         'void main(void) {',
-        '  vec2 uv = (vTexCoord * 2.0) - 1.0;', // range from [0,1] to [-1,1]
+        '  vec2 uv = (FragTexCoord0 * 2.0) - 1.0;', // range from [0,1] to [-1,1]
         '  vec2 theta = (uv - uLensCenter) * uScaleIn;',
         '  float rSq = theta.x * theta.x + theta.y * theta.y;',
         '  vec2 rvector = theta * (uHmdWarpParam.x + uHmdWarpParam.y * rSq + uHmdWarpParam.z * rSq * rSq + uHmdWarpParam.w * rSq * rSq * rSq);',
@@ -141,11 +121,9 @@ var getWebVRShader = function () {
         ''
     ].join( '\n' );
 
-    var program = new Program(
-        new Shader( Shader.VERTEX_SHADER, vertexshader ),
+    return new Program(
+        new Shader( Shader.VERTEX_SHADER, Composer.Filter.defaultVertexShader ),
         new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
-
-    return program;
 };
 
 var createTextureRtt = function ( rttSize ) {
@@ -156,20 +134,7 @@ var createTextureRtt = function ( rttSize ) {
     return rttTexture;
 };
 
-var createQuadRtt = function ( isLeftCam, texture, ocUnifs ) {
-    var quad = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0, 1, 0, 0, 0, 1, 0 );
-    var orStateSet = quad.getOrCreateStateSet();
-    orStateSet.setTextureAttributeAndModes( 0, texture );
-    orStateSet.setAttributeAndModes( getWebVRShader() );
-    orStateSet.addUniform( new Uniform.createFloat2( ocUnifs.scale, 'uScale' ) );
-    orStateSet.addUniform( new Uniform.createFloat2( ocUnifs.scaleIn, 'uScaleIn' ) );
-    orStateSet.addUniform( new Uniform.createFloat2( isLeftCam ? ocUnifs.lensCenterLeft : ocUnifs.lensCenterRight, 'uLensCenter' ) );
-    orStateSet.addUniform( new Uniform.createFloat4( ocUnifs.hmdWarpParam, 'uHmdWarpParam' ) );
-    orStateSet.addUniform( new Uniform.createFloat4( ocUnifs.chromAbParam, 'uChromAbParam' ) );
-    return quad;
-};
-
-var createOrthoRtt = function ( left, viewportSize, canvasSize, cardboard ) {
+var createOrthoRtt = function ( left, viewportSize, canvasSize, cardboard, texture, webVRUniforms ) {
     var orthoCamera = new Camera();
     var vw = viewportSize[ 0 ];
     var vh = viewportSize[ 1 ];
@@ -189,6 +154,16 @@ var createOrthoRtt = function ( left, viewportSize, canvasSize, cardboard ) {
     Matrix.makeOrtho( -0.5, 0.5, -0.5, 0.5, -5, 5, orthoCamera.getProjectionMatrix() );
     orthoCamera.setRenderOrder( Camera.NESTED_RENDER, 0 );
     orthoCamera.setReferenceFrame( Transform.ABSOLUTE_RF );
+
+    var stateSet = orthoCamera.getOrCreateStateSet();
+    stateSet.setTextureAttributeAndModes( 0, texture );
+    stateSet.setAttributeAndModes( getWebVRShader() );
+    stateSet.addUniform( new Uniform.createFloat2( webVRUniforms.scale, 'uScale' ) );
+    stateSet.addUniform( new Uniform.createFloat2( webVRUniforms.scaleIn, 'uScaleIn' ) );
+    stateSet.addUniform( new Uniform.createFloat2( left ? webVRUniforms.lensCenterLeft : webVRUniforms.lensCenterRight, 'uLensCenter' ) );
+    stateSet.addUniform( new Uniform.createFloat4( webVRUniforms.hmdWarpParam, 'uHmdWarpParam' ) );
+    stateSet.addUniform( new Uniform.createFloat4( webVRUniforms.chromAbParam, 'uChromAbParam' ) );
+
     return orthoCamera;
 };
 
@@ -230,24 +205,23 @@ WebVRCustom.createScene = function ( viewer, rttScene, HMDconfig, rootOverride )
 
     var rttTextureLeft = createTextureRtt( rttSize );
     var rttCamLeft = createCameraRtt( rttTextureLeft, webVRMatrices.projectionLeft );
-    var quadTextLeft = createQuadRtt( true, rttTextureLeft, webVRUniforms );
-    var orthoCameraLeft = createOrthoRtt( true, viewportSize, canvasSize, HMD.isCardboard );
+    var orthoCameraLeft = createOrthoRtt( true, viewportSize, canvasSize, HMD.isCardboard, rttTextureLeft, webVRUniforms );
     rttCamLeft.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, webVRMatrices.viewLeft ) );
 
     var rttTextureRight = createTextureRtt( rttSize );
     var rttCamRight = createCameraRtt( rttTextureRight, webVRMatrices.projectionRight );
-    var quadTextRight = createQuadRtt( false, rttTextureRight, webVRUniforms );
-    var orthoCameraRight = createOrthoRtt( false, viewportSize, canvasSize, HMD.isCardboard );
+    var orthoCameraRight = createOrthoRtt( false, viewportSize, canvasSize, HMD.isCardboard, rttTextureRight, webVRUniforms );
     rttCamRight.setUpdateCallback( new UpdateOffsetCamera( rootViewMatrix, webVRMatrices.viewRight ) );
 
     rttCamLeft.addChild( rttScene );
     rttCamRight.addChild( rttScene );
 
-    orthoCameraLeft.addChild( quadTextLeft );
-    orthoCameraRight.addChild( quadTextRight );
+    orthoCameraLeft.addChild( Shape.createTexturedFullScreenFakeQuadGeometry() );
+    orthoCameraRight.addChild( Shape.createTexturedFullScreenFakeQuadGeometry() );
 
     root.addChild( rttCamLeft );
     root.addChild( rttCamRight );
+
 
     root.addChild( orthoCameraLeft );
     root.addChild( orthoCameraRight );

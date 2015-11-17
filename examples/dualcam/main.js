@@ -68,12 +68,19 @@
             // If no vrNode (first time vr is toggled), create one
             // The modelNode will be attached to it
             if ( !vrNode ) {
-                if ( navigator.getVRDevices || navigator.mozGetVRDevices )
+                if ( navigator.getVRDevices || navigator.mozGetVRDevices ) {
+
+                    viewer._eventProxy.WebVR._enable = true;
                     vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.WebVR.getHmd() );
-                else
+
+                } else {
+
+                    viewer._eventProxy.DeviceOrientation._enable = true;
                     vrNode = osgUtil.WebVRCustom.createScene( viewer, modelNode, {
                         isCardboard: true
                     } );
+
+                }
             }
 
             // Attach the vrNode to sceneData instead of the model
@@ -81,6 +88,8 @@
         }
         // Disable VR
         else {
+            viewer._eventProxy.WebVR._enable = false;
+            viewer._eventProxy.DeviceOrientation._enable = false;
             // Detach the vrNode and reattach the modelNode
             sceneData.removeChild( vrNode );
             sceneData.addChild( modelNode );

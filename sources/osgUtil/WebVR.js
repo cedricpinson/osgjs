@@ -8,7 +8,6 @@ var Shader = require( 'osg/Shader' );
 var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
-var Uniform = require( 'osg/Uniform' );
 var Vec4 = require( 'osg/Vec4' );
 var Viewport = require( 'osg/Viewport' );
 var Composer = require( 'osgUtil/Composer' );
@@ -27,7 +26,7 @@ UpdateRttCameraCallback.prototype = {
     }
 };
 
-function perspectiveMatrixFromVRFieldOfView( fov, zNear, zFar ) {
+var perspectiveMatrixFromVRFieldOfView = function ( fov, zNear, zFar ) {
 
     var matrix = new Matrix.create();
 
@@ -40,16 +39,14 @@ function perspectiveMatrixFromVRFieldOfView( fov, zNear, zFar ) {
     var xScale = 2.0 / ( leftTan + rightTan );
     var yScale = 2.0 / ( upTan + downTan );
 
-    // return Matrix.makeFrustum( xmin, xmax, ymin, ymax, znear, zfar, result );
-
     matrix[ 0 ] = xScale;
     matrix[ 4 ] = 0.0;
-    matrix[ 8 ] = -( ( leftTan - rightTan ) * xScale * 0.5 );
+    matrix[ 8 ] = -( leftTan - rightTan ) * xScale * 0.5;
     matrix[ 12 ] = 0.0;
 
     matrix[ 1 ] = 0.0;
     matrix[ 5 ] = yScale;
-    matrix[ 9 ] = ( ( upTan - downTan ) * yScale * 0.5 );
+    matrix[ 9 ] = ( upTan - downTan ) * yScale * 0.5;
     matrix[ 13 ] = 0.0;
 
     matrix[ 2 ] = 0.0;
@@ -63,8 +60,7 @@ function perspectiveMatrixFromVRFieldOfView( fov, zNear, zFar ) {
     matrix[ 15 ] = 0.0;
 
     return matrix;
-}
-
+};
 
 var createTexture = function ( size ) {
     var texture = new Texture();
@@ -74,21 +70,21 @@ var createTexture = function ( size ) {
     return texture;
 };
 
-function getAssembleShader() {
+var getAssembleShader = function () {
 
     var fragmentShader = [
         '#ifdef GL_ES',
         '   precision highp float;',
         '#endif',
         'varying vec2 FragTexCoord0;',
-        'uniform sampler2D leftEyeTexture;',
-        'uniform sampler2D rightEyeTexture;',
+        'uniform sampler2D Texture0;',
+        'uniform sampler2D Texture1;',
 
         'void main() {',
         '   if (FragTexCoord0.x < 0.5)',
-        '       gl_FragColor = texture2D(leftEyeTexture, vec2(FragTexCoord0.x * 2.0, FragTexCoord0.y));',
+        '       gl_FragColor = texture2D(Texture0, vec2(FragTexCoord0.x * 2.0, FragTexCoord0.y));',
         '   else',
-        '       gl_FragColor = texture2D(rightEyeTexture, vec2(FragTexCoord0.x * 2.0 - 1.0, FragTexCoord0.y));',
+        '       gl_FragColor = texture2D(Texture1, vec2(FragTexCoord0.x * 2.0 - 1.0, FragTexCoord0.y));',
         '}',
     ].join( '\n' );
 
@@ -96,29 +92,23 @@ function getAssembleShader() {
         new Shader( Shader.VERTEX_SHADER, Composer.Filter.defaultVertexShader ),
         new Shader( Shader.FRAGMENT_SHADER, fragmentShader )
     );
-}
+};
 
 // This camera will render both textures on the canvas in a single pass
 var createCameraCanvas = function ( leftEyeTexture, rightEyeTexture, viewport ) {
 
     var orthoCamera = new Camera();
     orthoCamera.setViewport( viewport );
-    orthoCamera.setRenderOrder( Camera.POST_RENDER, 0 );
+    orthoCamera.setRenderOrder( Camera.NESTED_RENDER, 0 );
     orthoCamera.setReferenceFrame( Transform.ABSOLUTE_RF );
-    Matrix.makeOrtho( -0.5, 0.5, -0.5, 0.5, -5.0, 5.0, orthoCamera.getProjectionMatrix() );
+    Matrix.makeOrtho( 0.0, 1.0, 0.0, 1.0, -5.0, 5.0, orthoCamera.getProjectionMatrix() );
 
-    var quad = Shape.createTexturedQuadGeometry( -0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0 );
-    var stateSet = quad.getOrCreateStateSet();
-    var samplerLeft = Uniform.createInt1( 0, 'leftEyeTexture' );
-    var samplerRight = Uniform.createInt1( 1, 'rightEyeTexture' );
-
+    var stateSet = orthoCamera.getOrCreateStateSet();
     stateSet.setTextureAttributeAndModes( 0, leftEyeTexture );
     stateSet.setTextureAttributeAndModes( 1, rightEyeTexture );
     stateSet.setAttributeAndModes( getAssembleShader() );
-    stateSet.addUniform( samplerLeft );
-    stateSet.addUniform( samplerRight );
 
-    orthoCamera.addChild( quad );
+    orthoCamera.addChild( Shape.createTexturedFullScreenFakeQuadGeometry() );
 
     return orthoCamera;
 };
@@ -130,8 +120,8 @@ var createCameraRtt = function ( texture, projection ) {
     camera.setViewport( new Viewport( 0.0, 0.0, texture.getWidth(), texture.getHeight() ) );
     camera.setProjectionMatrix( projection );
     camera.setClearColor( Vec4.createAndSet( 0.3, 0.3, 0.3, 0.0 ) );
-    camera.setRenderOrder( Camera.PRE_RENDER, 0 );
-    camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture, 0 );
+    camera.setRenderOrder( Camera.POST_RENDER, 0 );
+    camera.attachTexture( FrameBufferObject.COLOR_ATTACHMENT0, texture );
     camera.attachRenderBuffer( FrameBufferObject.DEPTH_ATTACHMENT, FrameBufferObject.DEPTH_COMPONENT16 );
     camera.setReferenceFrame( Transform.ABSOLUTE_RF );
     return camera;
@@ -176,9 +166,9 @@ var getHMDOptions = function ( hmdDevice ) {
 
 var WebVR = {};
 
-WebVR.createScene = function ( viewer, rttScene, HMDdevice ) {
+WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride ) {
 
-    var root = new Node();
+    var root = rootOverride || new Node();
     var worldFactor = 1.0;
 
     var hmd = getHMDOptions( HMDdevice );
