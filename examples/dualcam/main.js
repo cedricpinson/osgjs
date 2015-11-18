@@ -10,6 +10,8 @@
     var osgUtil = OSG.osgUtil;
     var osgViewer = OSG.osgViewer;
 
+    var canvas;
+
     function loadScene( viewer ) {
         var root = new osg.MatrixTransform();
         osg.Matrix.makeRotate( Math.PI, 0, 0, 1, root.getMatrix() );
@@ -77,7 +79,9 @@
 
                     viewer._eventProxy.DeviceOrientation.setEnable( true );
                     vrNode = osgUtil.WebVRCustom.createScene( viewer, modelNode, {
-                        isCardboard: true
+                        isCardboard: true,
+                        vResolution: canvas.height,
+                        hResolution: canvas.width
                     } );
 
                 }
@@ -127,14 +131,16 @@
             osg.log( 'WebVR Api is not supported by your navigator' );
         }
 
-        var canvas = viewer.getGraphicContext().canvas;
+        canvas = viewer.getGraphicContext().canvas;
 
-        if ( fullscreen === false )
-            launchFullscreen( canvas, {
-                vrDisplay: viewer._eventProxy.WebVR.getHmd()
-            } );
-        else
+        if ( fullscreen === false ) {
+            toggleVR();
+            // launchFullscreen( canvas, {
+            //     vrDisplay: viewer._eventProxy.WebVR.getHmd()
+            // } );
+        } else {
             exitFullscreen();
+        }
 
         // var fullscreenRect = canvas.getBoundingClientRect();
         // console.log(fullscreenRect.width, fullscreenRect.height);

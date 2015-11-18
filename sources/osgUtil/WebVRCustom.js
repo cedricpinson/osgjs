@@ -31,14 +31,20 @@ var UpdateRecreateOnResize = function ( viewer, rttScene, hmdConfig, root, canva
 UpdateRecreateOnResize.prototype = {
     update: function () {
         var canvas = this._canvas;
-        if ( canvas.width !== this._width || canvas.height !== this._height ) {
+        var width = canvas.width;
+        var height = canvas.height;
+
+        if ( width !== this._width || height !== this._height ) {
             this._root.removeChildren();
 
             var hmdConfig = this._hmdConfig;
             if ( hmdConfig && hmdConfig.isCardboard ) {
-                hmdConfig.hResolution = screen.width * 2;
-                hmdConfig.vResolution = screen.height * 2;
+                hmdConfig.hResolution = width;
+                hmdConfig.vResolution = height;
             }
+            this._width = width;
+            this._height = height;
+
             WebVRCustom.createScene( this._viewer, this._rttScene, hmdConfig, this._root );
         }
         return true;
