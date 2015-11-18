@@ -19,10 +19,7 @@ module.exports = ( function () {
         var isCli = reportStats();
         var logMsg = msg;
         if ( logMsg === undefined ) {
-            logMsg = ' perf ' + ( perfTarget ? ' of ' + perfTarget : '' ) + ' is: ' + ( timed ).toFixed() + ' ms';
-        }
-        if ( isCli ) {
-            console.log( logMsg );
+            logMsg = 'perf' + ( perfTarget ? ' of ' + perfTarget : '' ) + ' is: ' + ( timed ).toFixed() + ' ms';
         }
 
         ok( isCli, logMsg );

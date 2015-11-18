@@ -12,10 +12,18 @@ if ( window.HTMLVideoElement === undefined ) {
 
 /*global QUnit,define,module,test,ok */
 QUnit.config.testTimeout = 5000;
+var cliOutputBenchs = [];
+QUnit.log( function ( details ) {
+    cliOutputBenchs.push( details.message );
+} );
+QUnit.done( function () {
+    console.log( '' );
+    console.log( cliOutputBenchs.join( '\n' ) );
+} );
 
 var OSG = require( 'OSG' );
 var osgBenchmarks = require( 'benchmarks/osg/osgBenchmarks' );
-
+OSG.osg.setNotifyLevel( OSG.osg.ERROR );
 // start test when require finished its job
 QUnit.load();
 QUnit.start();

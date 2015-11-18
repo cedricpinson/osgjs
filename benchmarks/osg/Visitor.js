@@ -106,7 +106,7 @@ module.exports = function () {
         console.profileEnd();
         timed = Timer.instance().tick() - timed;
 
-        console.log( accum );
+        module.accum = accum; // keep the variable on a scope to avoid JIT otimimization and remove code
         reportStats( timed, 'IntersectVisitor Visiting' );
     } );
 
