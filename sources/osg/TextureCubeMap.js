@@ -36,11 +36,12 @@ TextureCubeMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         return new TextureCubeMap();
     },
 
-    setImage: function ( face, img, imageFormat ) {
+    setImage: function ( imageFace, img, imageFormat ) {
 
-        if ( typeof ( face ) === 'string' ) {
+        var face = imageFace;
+
+        if ( typeof face === 'string' )
             face = Texture[ face ];
-        }
 
         this._images[ face ].setImage( img, imageFormat );
 
@@ -73,7 +74,6 @@ TextureCubeMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
         return true;
     },
-
 
     // handle mipmap logic, if images for mipmap are provided or not
     generateMipmap: function ( gl, target ) {
@@ -110,15 +110,11 @@ TextureCubeMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
         var faceImage = this._images[ target ];
 
-        if ( !faceImage.getImage() )
-            return 0;
+        if ( !faceImage.getImage() ) return 0;
 
-        if ( !faceImage.isReady() ) {
-            return 0;
-        }
+        if ( !faceImage.isReady() ) return 0;
 
-        if ( !faceImage.isDirty() )
-            return 1;
+        if ( !faceImage.isDirty() ) return 1;
 
         this.setTextureSize( faceImage.getWidth(), faceImage.getHeight() );
 
@@ -155,8 +151,8 @@ TextureCubeMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         return 1;
     },
 
-
     initCubemapContentImage: function ( gl ) {
+
         var internalFormat = this._internalFormat;
         var valid = 0;
         valid += this.applyImageTarget( gl, internalFormat, gl.TEXTURE_CUBE_MAP_POSITIVE_X );
@@ -173,8 +169,6 @@ TextureCubeMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
 
         return false;
     },
-
-
 
     apply: function ( state ) {
 
@@ -222,7 +216,7 @@ TextureCubeMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
             }
 
             if ( valid ) {
-                this.setDirty( false );
+                this._dirty = false;
                 this.applyFilterParameter( gl, this._textureTarget );
                 this.generateMipmap( gl, this._textureTarget );
             }

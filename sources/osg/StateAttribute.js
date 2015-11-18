@@ -5,22 +5,9 @@ var Object = require( 'osg/Object' );
 
 var StateAttribute = function () {
     Object.call( this );
-    this._dirty = true;
 };
 
 StateAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
-
-    isDirty: function () {
-        return this._dirty;
-    },
-
-    dirty: function () {
-        this._dirty = true;
-    },
-
-    setDirty: function ( dirty ) {
-        this._dirty = dirty;
-    },
 
     getType: function () {
         return this.attributeType;

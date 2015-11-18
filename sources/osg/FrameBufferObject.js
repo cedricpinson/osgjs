@@ -16,7 +16,7 @@ var FrameBufferObject = function () {
     this._fbo = undefined;
     this._rbo = undefined;
     this._attachments = [];
-    this.dirty();
+    this._dirty = true;
 };
 
 FrameBufferObject.COLOR_ATTACHMENT0 = 0x8CE0;
@@ -28,33 +28,42 @@ FrameBufferObject._sDeletedGLFrameBufferCache = new window.Map();
 
 // static method to delete FrameBuffers
 FrameBufferObject.deleteGLFrameBuffer = function ( gl, fb ) {
+
     if ( !FrameBufferObject._sDeletedGLFrameBufferCache.has( gl ) )
         FrameBufferObject._sDeletedGLFrameBufferCache.set( gl, [] );
+
     FrameBufferObject._sDeletedGLFrameBufferCache.get( gl ).push( fb );
 };
 
 // static method to flush all the cached glFrameBuffers which need to be deleted in the GL context specified
 FrameBufferObject.flushDeletedGLFrameBuffers = function ( gl, availableTime ) {
+
     // if no time available don't try to flush objects.
     if ( availableTime <= 0.0 ) return availableTime;
+
     if ( !FrameBufferObject._sDeletedGLFrameBufferCache.has( gl ) ) return availableTime;
+
     var elapsedTime = 0.0;
     var beginTime = Timer.instance().tick();
     var deleteList = FrameBufferObject._sDeletedGLFrameBufferCache.get( gl );
     var numBuffers = deleteList.length;
+
     for ( var i = numBuffers - 1; i >= 0 && elapsedTime < availableTime; i-- ) {
         gl.deleteFramebuffer( deleteList[ i ] );
         deleteList.splice( i, 1 );
         elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
     }
-    availableTime -= elapsedTime;
-    return availableTime;
+
+    return availableTime - elapsedTime;
 };
 
 FrameBufferObject.flushAllDeletedGLFrameBuffers = function ( gl ) {
+
     if ( !FrameBufferObject._sDeletedGLFrameBufferCache.has( gl ) ) return;
+
     var deleteList = FrameBufferObject._sDeletedGLFrameBufferCache.get( gl );
     var numBuffers = deleteList.length;
+
     for ( var i = numBuffers - 1; i >= 0; i-- ) {
         gl.deleteFramebuffer( deleteList[ i ] );
         deleteList.splice( i, 1 );
@@ -68,34 +77,43 @@ FrameBufferObject._sDeletedGLRenderBufferCache = new window.Map();
 
 // static method to delete RenderBuffers
 FrameBufferObject.deleteGLRenderBuffer = function ( gl, fb ) {
+
     if ( !FrameBufferObject._sDeletedGLRenderBufferCache.has( gl ) )
         FrameBufferObject._sDeletedGLRenderBufferCache.set( gl, [] );
+
     FrameBufferObject._sDeletedGLRenderBufferCache.get( gl ).push( fb );
 };
 
 
 // static method to flush all the cached glRenderBuffers which need to be deleted in the GL context specified
 FrameBufferObject.flushDeletedGLRenderBuffers = function ( gl, availableTime ) {
+
     // if no time available don't try to flush objects.
     if ( availableTime <= 0.0 ) return availableTime;
+
     if ( !FrameBufferObject._sDeletedGLRenderBufferCache.has( gl ) ) return availableTime;
+
     var elapsedTime = 0.0;
     var beginTime = Timer.instance().tick();
     var deleteList = FrameBufferObject._sDeletedGLRenderBufferCache.get( gl );
     var numBuffers = deleteList.length;
+
     for ( var i = numBuffers - 1; i >= 0 && elapsedTime < availableTime; i-- ) {
         gl.deleteRenderbuffer( deleteList[ i ] );
         deleteList.splice( i, 1 );
         elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
     }
-    availableTime -= elapsedTime;
-    return availableTime;
+
+    return availableTime - elapsedTime;
 };
 
 FrameBufferObject.flushAllDeletedGLRenderBuffers = function ( gl ) {
+
     if ( !FrameBufferObject._sDeletedGLRenderBufferCache.has( gl ) ) return;
+
     var deleteList = FrameBufferObject._sDeletedGLRenderBufferCache.get( gl );
     var numBuffers = deleteList.length;
+
     for ( var i = numBuffers - 1; i >= 0; i-- ) {
         gl.deleteRenderbuffer( deleteList[ i ] );
         deleteList.splice( i, 1 );
@@ -109,6 +127,14 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
 
     cloneType: function () {
         return new FrameBufferObject();
+    },
+
+    dirty: function () {
+        this._dirty = true;
+    },
+
+    isDirty: function () {
+        return this._dirty;
     },
 
     setAttachment: function ( attachment ) {
@@ -264,7 +290,7 @@ FrameBufferObject.prototype = MACROUTILS.objectInherit( GLObject.prototype, MACR
                 if ( hasRenderBuffer )
                     gl.bindRenderbuffer( gl.RENDERBUFFER, null );
 
-                this.setDirty( false );
+                this._dirty = false;
 
             } else {
 

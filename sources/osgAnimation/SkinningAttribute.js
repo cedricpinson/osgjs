@@ -25,12 +25,15 @@ SkinningAttribute.maxBoneUniformAllowed = Infinity; // can be overriden by appli
 SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
 
     attributeType: 'Skinning',
+
     cloneType: function () {
         return new SkinningAttribute( true );
     },
+
     setBoneUniformSize: function ( boneUniformSize ) {
         this._boneUniformSize = boneUniformSize;
     },
+
     getBoneUniformSize: function () {
         return this._boneUniformSize !== undefined ? this._boneUniformSize : SkinningAttribute.maxBoneUniformSize;
     },
@@ -47,6 +50,7 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
 
         return obj.uniforms[ unifHash ];
     },
+
     setMatrixPalette: function ( matrixPalette ) {
         this._matrixPalette = matrixPalette;
         // update max bone size
@@ -55,14 +59,17 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
             SkinningAttribute.maxBoneUniformSize = Math.min( SkinningAttribute.maxBoneUniformAllowed, SkinningAttribute.maxBoneUniformSize );
         }
     },
+
     getMatrixPalette: function () {
         return this._matrixPalette;
     },
+
     // need a isEnabled to let the ShaderGenerator to filter
     // StateAttribute from the shader compilation
     isEnabled: function () {
         return this._enable;
     },
+
     getHash: function () {
         // bonesize is important, as the shader itself
         // has a different code and uniform are not shared
@@ -75,12 +82,11 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
     },
 
     apply: function () {
-        if ( !this._enable )
-            return;
+
+        if ( !this._enable ) return;
 
         this.getOrCreateUniforms().uBones.set( this._matrixPalette );
 
-        this.setDirty( false );
     }
 
 } ), 'osgAnimation', 'SkinningAttribute' );

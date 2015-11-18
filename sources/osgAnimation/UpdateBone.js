@@ -16,17 +16,20 @@ var UpdateBone = function () {
 
 /** @lends UpdateBone.prototype */
 UpdateBone.prototype = MACROUTILS.objectInherit( UpdateMatrixTransform.prototype, {
+
     update: function ( node, nv ) {
+
         if ( nv.getVisitorType() === NodeVisitor.UPDATE_VISITOR ) {
+
             if ( node.className && node.className() !== 'Bone' ) {
                 Notify.warn( 'Warning: UpdateBone set on non-Bone object.' );
-                return;
+                return false;
             }
 
             var bone = node;
 
             UpdateMatrixTransform.prototype.update.call( this, node );
-            bone.setMatrix( bone.getMatrix() ); //Update dirty()
+            bone.setMatrix( bone.getMatrix() );
             var matrix = bone.getMatrix();
             var parent = bone.getBoneParent();
 
@@ -38,6 +41,7 @@ UpdateBone.prototype = MACROUTILS.objectInherit( UpdateMatrixTransform.prototype
         }
         return true;
     }
+
 } );
 
 module.exports = UpdateBone;
