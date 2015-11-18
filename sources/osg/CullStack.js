@@ -13,6 +13,7 @@ var TransformEnums = require( 'osg/TransformEnums' );
 var Vec3 = require( 'osg/Vec3' );
 
 var CullStack = function () {
+
     this._modelViewMatrixStack = [];
     this._projectionMatrixStack = [];
     this._viewportStack = [];
@@ -56,6 +57,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
         this._cullingSetStack.length = 0;
 
         this._reservedMatrixStack.reset();
+        this._reserveCullingSetStack.current = 0;
 
         this._cameraModelViewIndexStack.length = 0;
         this._cameraIndexStack.length = 0;
