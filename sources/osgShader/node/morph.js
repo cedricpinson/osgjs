@@ -13,16 +13,15 @@ var getVec3 = function ( vec ) {
 
 Morph.prototype = MACROUTILS.objectInherit( Node.prototype, {
     type: 'Morph',
-    validInputs: [ 'doMorph', 'weights', 'vertex', 'target0', /*'target1','target2','target3'*/ ],
+    validInputs: [ 'weights', 'vertex', 'target0', /*'target1','target2','target3'*/ ],
     validOutputs: [ 'out' ],
 
     globalFunctionDeclaration: function () {
 
         //vec3 morphTransform( const in vec4 weights,  const in vec3 vertex, const in vec3 target0, const in vec3 target1, const in vec3 target2 ) {
-        //  if( length( weights ) == 0.0 ) return vertex;
         //  return vertex * (1.0 - ( + weights[0] + weights[1] + weights[2])) + target0 * weights[0] + target1 * weights[1] + target2 * weights[2];
         //}
-        var nbTargets = window.Object.keys( this._inputs ).length - 3;
+        var nbTargets = window.Object.keys( this._inputs ).length - 2;
         var i = 0;
 
         // TODO: this should be rewrote with sprintf
@@ -66,14 +65,7 @@ Morph.prototype = MACROUTILS.objectInherit( Node.prototype, {
 
         }
 
-        ////// Check length
-        var str = 'if( doMorph == false ){\n';
-        str += this._outputs.out.getVariable() + ' =  ' + inps.vertex.getVariable() + '.rgb;\n';
-        str += '} else {\n';
-        str += ShaderUtils.callFunction( 'morphTransform', this._outputs.out, inputs );
-        str += '}\n';
-
-        return str;
+        return ShaderUtils.callFunction( 'morphTransform', this._outputs.out, inputs );
 
     }
 } );
