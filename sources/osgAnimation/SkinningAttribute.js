@@ -42,7 +42,7 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
         if ( obj.uniforms[ unifHash ] ) return obj.uniforms[ unifHash ];
 
         var uniforms = {};
-        uniforms[ 'uBones' ] = new Uniform.createFloat4Array( new Float32Array( unifHash * 4 ), 'uBones' );
+        uniforms.uBones = Uniform.createFloat4Array( new Float32Array( unifHash * 4 ), 'uBones' );
         obj.uniforms[ unifHash ] = new Map( uniforms );
 
         return obj.uniforms[ unifHash ];

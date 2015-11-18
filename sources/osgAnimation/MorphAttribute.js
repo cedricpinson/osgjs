@@ -54,7 +54,7 @@ MorphAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         if ( obj.uniforms[ unifHash ] ) return obj.uniforms[ unifHash ];
 
         var uniforms = {};
-        uniforms[ 'uTargetWeights' ] = new Uniform.createFloat4( 'uTargetWeights' );
+        uniforms.uTargetWeights = Uniform.createFloat4( 'uTargetWeights' );
         obj.uniforms[ unifHash ] = new Map( uniforms );
 
         return obj.uniforms[ unifHash ];

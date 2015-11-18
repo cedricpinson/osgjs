@@ -12,6 +12,15 @@ var HammerController = function ( viewer ) {
 };
 
 HammerController.prototype = {
+
+    setEnable: function ( bool ) {
+        this._enable = bool;
+    },
+
+    getEnable: function () {
+        return this._enable;
+    },
+
     init: function ( options ) {
 
         /*jshint camelcase: false */
