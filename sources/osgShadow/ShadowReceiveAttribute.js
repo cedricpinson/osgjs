@@ -56,6 +56,7 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
     getTypeMember: function () {
         return this.attributeType + this.getLightNumber();
     },
+
     getLightNumber: function () {
         return this._lightNumber;
     },
@@ -64,15 +65,19 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         var prefix = this.getType() + this.getLightNumber().toString();
         return prefix + '_uniform_' + name;
     },
+
     getRotateOffset: function () {
         return this._rotateOffset;
     },
+
     setRotateOffset: function ( v ) {
         this._rotateOffset = v;
     },
+
     setAlgorithm: function ( algo ) {
         this._algoType = algo;
     },
+
     getAlgorithm: function () {
         return this._algoType;
     },
@@ -80,50 +85,61 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
     setBias: function ( bias ) {
         this._bias = bias;
     },
+
     getBias: function () {
         return this._bias;
     },
+
     setExponent0: function ( exp ) {
         this._exponent0 = exp;
     },
+
     getExponent0: function () {
         return this._exponent0;
     },
+
     setExponent1: function ( exp ) {
         this._exponent1 = exp;
     },
+
     getExponent1: function () {
         return this._exponent1;
     },
+
     setEpsilonVSM: function ( epsilon ) {
         this._epsilonVSM = epsilon;
     },
+
     getEpsilonVSM: function () {
         return this._epsilonVSM;
     },
+
     getKernelSizePCF: function () {
         return this._kernelSizePCF;
     },
+
     setKernelSizePCF: function ( v ) {
         this._kernelSizePCF = v;
     },
+
     getFakePCF: function () {
         return this._fakePCF;
     },
+
     setFakePCF: function ( v ) {
         this._fakePCF = v;
     },
+
     setPrecision: function ( precision ) {
         this._precision = precision;
-        this.dirty();
     },
+
     getPrecision: function () {
         return this._precision;
     },
 
     setLightNumber: function ( lightNum ) {
         this._lightNumber = lightNum;
-        this.dirty();
     },
 
     getOrCreateUniforms: function () {
@@ -136,10 +152,10 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
 
         // Variance Shadow mapping use One more epsilon
         var uniformList = {
-            'bias': 'createFloat',
-            'exponent0': 'createFloat',
-            'exponent1': 'createFloat',
-            'epsilonVSM': 'createFloat'
+            bias: 'createFloat',
+            exponent0: 'createFloat',
+            exponent1: 'createFloat',
+            epsilonVSM: 'createFloat'
         };
 
         var uniforms = {};
@@ -161,9 +177,8 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         var algo = this.getAlgorithm();
         if ( algo === 'PCF' ) {
             return [ '#extension GL_OES_standard_derivatives : enable' ];
-        } else {
-            return [];
         }
+        return [];
     },
 
     // Here to be common between  caster and receiver
@@ -260,6 +275,7 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         if ( isFloat ) {
             defines.push( '#define _FLOATTEX' );
         }
+
         if ( isLinearFloat ) {
             defines.push( '#define _FLOATLINEAR' );
         }
@@ -267,13 +283,13 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         if ( this.getRotateOffset() ) {
             defines.push( '#define _ROTATE_OFFSET' );
         }
+
         return defines;
     },
 
-    apply: function ( /*state*/) {
+    apply: function () {
 
-        if ( !this._enable )
-            return;
+        if ( !this._enable ) return;
 
         var uniformMap = this.getOrCreateUniforms();
 
@@ -282,7 +298,6 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
         uniformMap.exponent1.set( this._exponent1 );
         uniformMap.epsilonVSM.set( this._epsilonVSM );
 
-        this.setDirty( false );
     },
 
     // need a isEnabled to let the ShaderGenerator to filter
@@ -290,13 +305,14 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
     isEnabled: function () {
         return this._enable;
     },
+
     // Deprecated methods, should be removed in the future
     isEnable: function () {
         Notify.log( 'ShadowAttribute.isEnable() is deprecated, use isEnabled() instead' );
         return this.isEnabled();
     },
-    getHash: function () {
 
+    getHash: function () {
         return this.getTypeMember() + '_' + this.getAlgorithm() + '_' + this.getKernelSizePCF() + '_' + this.getFakePCF() + '_' + this.getRotateOffset();
 
     }

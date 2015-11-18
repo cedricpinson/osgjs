@@ -327,6 +327,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         }
 
     },
+
     /** initialize the ShadowedScene and local cached data structures.*/
     init: function () {
 
@@ -507,9 +508,8 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this._textureMagFilter = texFilterMag;
         this._textureMinFilter = texFilterMin;
 
-        //this._texture.dirty();
-
     },
+
     // internal texture allocation
     // handle any change like resize, filter param, etc.
     initTexture: function () {
@@ -884,10 +884,10 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         this._filledOnce = true;
     },
+
     // Defines the frustum from light param.
     //
     cullShadowCasting: function ( cullVisitor ) {
-
 
         var bbox;
 
@@ -898,7 +898,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             this.getShadowedScene().accept( this._removeNodesNeverCastingVisitor );
 
         }
-
 
         this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
         this._computeBoundsVisitor.reset();
@@ -945,7 +944,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             }
 
             return;
-
         }
 
 
@@ -963,7 +961,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         // (as in clamped too tight projection)
         var needNearFar = this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask;
         this._cameraShadow.setComputeNearFar( needNearFar );
-
 
 
         // do RTT from the camera traversal mimicking light pos/orient

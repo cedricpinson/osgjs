@@ -30,16 +30,14 @@ ColorMask.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             this._colorMask[ 1 ] = green;
             this._colorMask[ 2 ] = blue;
             this._colorMask[ 3 ] = alpha;
-
-            this.dirty();
         }
     },
 
     apply: function ( state ) {
         var gl = state.getGraphicContext();
-        gl.colorMask( this._colorMask[ 0 ], this._colorMask[ 1 ], this._colorMask[ 2 ], this._colorMask[ 3 ] );
-        this._dirty = false;
+        gl.colorMask.apply( null, this._colorMask );
     }
+
 } ), 'osg', 'ColorMask' );
 
 module.exports = ColorMask;

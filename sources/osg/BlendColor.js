@@ -35,7 +35,6 @@ BlendColor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( 
             this._constantColor[ 1 ],
             this._constantColor[ 2 ],
             this._constantColor[ 3 ] );
-        this._dirty = false;
     }
 } ), 'osg', 'BlendColor' );
 

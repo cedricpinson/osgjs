@@ -9,6 +9,7 @@ var BillboardAttribute = function () {
 };
 
 BillboardAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+
     attributeType: 'Billboard',
 
     cloneType: function () {
@@ -17,16 +18,14 @@ BillboardAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectI
 
     setEnabled: function ( state ) {
         this._attributeEnable = state;
-        this.dirty();
     },
 
     isEnabled: function () {
         return this._attributeEnable;
     },
 
-    apply: function ( /*state*/) {
-        this.setDirty( false );
-    }
+    apply: function () {}
+
 } ), 'osg', 'Billboard' );
 
 module.exports = BillboardAttribute;

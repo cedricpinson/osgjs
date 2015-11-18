@@ -27,9 +27,11 @@ var isPowerOf2 = function ( x ) {
  * @inherits StateAttribute
  */
 var Texture = function () {
+
     StateAttribute.call( this );
     GLObject.call( this );
     this.setDefaultParameters();
+    this._dirty = true;
     this._dirtyMipmap = true;
     this._applyTexImage2DCallbacks = [];
     this._textureObject = undefined;
@@ -38,11 +40,14 @@ var Texture = function () {
 };
 
 var checkAndFixEnum = function ( mode, fallback ) {
+
     var value = Texture[ mode ];
+
     if ( value === undefined ) {
         Notify.warn( 'bad Texture enum argument ' + mode + '\n' + 'fallback to ' + fallback );
         return fallback;
     }
+
     return value;
 };
 
@@ -121,29 +126,45 @@ Texture._sTextureManager = new window.Map();
 
 // Getter for textureManager
 Texture.getTextureManager = function ( gl ) {
+
     if ( !Texture._sTextureManager.has( gl ) )
         Texture._sTextureManager.set( gl, new TextureManager() );
+
     return Texture._sTextureManager.get( gl );
 };
 
 Texture.getEnumFromString = function ( v ) {
+
     var value = v;
-    if ( typeof ( value ) === 'string' ) {
+
+    if ( typeof ( value ) === 'string' )
         value = checkAndFixEnum( value, v );
-    }
+
     return value;
 };
 
 Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLObject.prototype, MACROUTILS.objectInherit( StateAttribute.prototype, {
+
     attributeType: 'Texture',
 
     cloneType: function () {
         return new Texture();
     },
+
+    dirty: function () {
+        this._dirty = true;
+    },
+
+    isDirty: function () {
+        return this._dirty;
+    },
+
     isTextureNull: function () {
         return this._textureNull;
     },
+
     getOrCreateUniforms: function ( unit ) {
+
         if ( Texture.uniforms === undefined ) {
             Texture.uniforms = [];
         }
@@ -207,10 +228,13 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     getTextureTarget: function () {
         return this._textureTarget;
     },
+
     getTextureObject: function () {
         return this._textureObject;
     },
+
     setTextureSize: function ( w, h ) {
+
         if ( w !== undefined ) this._textureWidth = w;
         if ( h !== undefined ) this._textureHeight = h;
 
@@ -218,7 +242,9 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     init: function ( state ) {
+
         if ( !this._gl ) this.setGraphicContext( state.getGraphicContext() );
+
         if ( !this._textureObject ) {
             this._textureObject = Texture.getTextureManager( this._gl ).generateTextureObject( this._gl,
                 this,
@@ -234,25 +260,31 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     addApplyTexImage2DCallback: function ( callback ) {
+
         var index = this._applyTexImage2DCallbacks.indexOf( callback );
         if ( index < 0 ) {
             this._applyTexImage2DCallbacks.push( callback );
         }
     },
+
     removeApplyTexImage2DCallback: function ( callback ) {
+
         var index = this._applyTexImage2DCallbacks.indexOf( callback );
         if ( index >= 0 ) {
             this._applyTexImage2DCallbacks.splice( index, 1 );
         }
     },
+
     getWidth: function () {
         return this._textureWidth;
     },
+
     getHeight: function () {
         return this._textureHeight;
     },
 
     releaseGLObjects: function () {
+
         if ( this._textureObject !== undefined && this._textureObject !== null && this._gl !== undefined ) {
             Texture.getTextureManager( this._gl ).releaseTextureObject( this._textureObject );
         }
@@ -262,18 +294,16 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     getWrapT: function () {
         return this._wrapT;
     },
+
     getWrapS: function () {
         return this._wrapS;
     },
 
     setWrapS: function ( value ) {
 
-        if ( typeof ( value ) === 'string' ) {
-
+        if ( typeof value === 'string' ) {
             this._wrapS = checkAndFixEnum( value, Texture.CLAMP_TO_EDGE );
-
         } else {
-
             this._wrapS = value;
         }
 
@@ -283,12 +313,9 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
     setWrapT: function ( value ) {
 
-        if ( typeof ( value ) === 'string' ) {
-
+        if ( typeof value === 'string' ) {
             this._wrapT = checkAndFixEnum( value, Texture.CLAMP_TO_EDGE );
-
         } else {
-
             this._wrapT = value;
         }
 
@@ -316,6 +343,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     getMinFilter: function () {
         return this._minFilter;
     },
+
     getMagFilter: function () {
         return this._magFilter;
     },
@@ -332,11 +360,13 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
     // some value enable mipmapping
     setMinFilter: function ( value ) {
+
         if ( typeof ( value ) === 'string' ) {
             this._minFilter = checkAndFixEnum( value, Texture.LINEAR );
         } else {
             this._minFilter = value;
         }
+
         this.dirtyTextureParameters();
     },
 
@@ -348,6 +378,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         } else {
             this._magFilter = value;
         }
+
         this.dirtyTextureParameters();
     },
 
@@ -377,11 +408,14 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         return this._image;
     },
 
-    setImageFormat: function ( imageFormat ) {
+    setImageFormat: function ( format ) {
+
+        var imageFormat = format;
         if ( imageFormat ) {
-            if ( typeof ( imageFormat ) === 'string' ) {
+
+            if ( typeof imageFormat === 'string' )
                 imageFormat = Texture[ imageFormat ];
-            }
+
             this._imageFormat = imageFormat;
         } else {
             this._imageFormat = Texture.RGBA;
@@ -394,12 +428,14 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     setInternalFormatType: function ( value ) {
-        if ( typeof ( value ) === 'string' ) {
+
+        if ( typeof value === 'string' ) {
             this._type = Texture[ value ];
         } else {
             this._type = value;
         }
     },
+
     getInternalFormatType: function () {
         return this._type;
     },
@@ -409,6 +445,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     checkIsCompressed: function ( format ) {
+
         var fo = format || this._internalFormat;
         switch ( fo ) {
         case Texture.COMPRESSED_RGB_S3TC_DXT1_EXT:
@@ -430,12 +467,15 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     setInternalFormat: function ( formatSource ) {
+
         var format = formatSource;
         if ( format ) {
-            if ( typeof ( format ) === 'string' ) {
+
+            if ( typeof format === 'string' )
                 format = Texture[ format ];
-            }
+
             this._isCompressed = this.checkIsCompressed( format );
+
         } else {
             this._isCompressed = false;
             format = Texture.RGBA;
@@ -451,6 +491,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     isDirtyMipmap: function () {
         return this._dirtyMipmap;
     },
+
     // Will cause the mipmaps to be regenerated on the next bind of the texture
     // Nothing will be done if the minFilter is not of the form XXX_MIPMAP_XXX
     // TODO : not to be used if the texture is compressed !
@@ -459,7 +500,6 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     applyFilterParameter: function ( gl, target ) {
-
 
         var powerOfTwo = isPowerOf2( this._textureWidth ) && isPowerOf2( this._textureHeight );
         if ( !powerOfTwo ) {
@@ -516,13 +556,15 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
     // return true if contains a mipmap filter
     hasMipmapFilter: function () {
-        return ( this._minFilter === Texture.NEAREST_MIPMAP_NEAREST ||
+
+        return this._minFilter === Texture.NEAREST_MIPMAP_NEAREST ||
             this._minFilter === Texture.LINEAR_MIPMAP_NEAREST ||
             this._minFilter === Texture.NEAREST_MIPMAP_LINEAR ||
-            this._minFilter === Texture.LINEAR_MIPMAP_LINEAR );
+            this._minFilter === Texture.LINEAR_MIPMAP_LINEAR;
     },
 
     applyTexImage2D: function ( gl ) {
+
         var args = Array.prototype.slice.call( arguments, 1 );
         MACROUTILS.timeStamp( 'osgjs.metrics:Texture.texImage2d' );
 
@@ -543,6 +585,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     computeTextureFormat: function () {
+
         if ( !this._internalFormat ) {
             this._internalFormat = this._imageFormat || Texture.RGBA;
             this._imageFormat = this._internalFormat;
@@ -637,7 +680,7 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                         this._image = undefined;
                     }
 
-                    this.setDirty( false );
+                    this._dirty = false;
 
                 } else {
                     gl.bindTexture( this._textureTarget, null );
@@ -656,10 +699,11 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
                 this.applyFilterParameter( gl, this._textureTarget );
                 this.generateMipmap( gl, this._textureTarget );
-                this.setDirty( false );
+                this._dirty = false;
             }
         }
     }
+
 } ) ), 'osg', 'Texture' );
 
 MACROUTILS.setTypeID( Texture );
