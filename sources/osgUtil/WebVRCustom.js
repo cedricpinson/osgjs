@@ -158,11 +158,11 @@ var createOrthoRtt = function ( left, viewportSize, canvasSize, cardboard, textu
     var stateSet = orthoCamera.getOrCreateStateSet();
     stateSet.setTextureAttributeAndModes( 0, texture );
     stateSet.setAttributeAndModes( getWebVRShader() );
-    stateSet.addUniform( new Uniform.createFloat2( webVRUniforms.scale, 'uScale' ) );
-    stateSet.addUniform( new Uniform.createFloat2( webVRUniforms.scaleIn, 'uScaleIn' ) );
-    stateSet.addUniform( new Uniform.createFloat2( left ? webVRUniforms.lensCenterLeft : webVRUniforms.lensCenterRight, 'uLensCenter' ) );
-    stateSet.addUniform( new Uniform.createFloat4( webVRUniforms.hmdWarpParam, 'uHmdWarpParam' ) );
-    stateSet.addUniform( new Uniform.createFloat4( webVRUniforms.chromAbParam, 'uChromAbParam' ) );
+    stateSet.addUniform( Uniform.createFloat2( webVRUniforms.scale, 'uScale' ) );
+    stateSet.addUniform( Uniform.createFloat2( webVRUniforms.scaleIn, 'uScaleIn' ) );
+    stateSet.addUniform( Uniform.createFloat2( left ? webVRUniforms.lensCenterLeft : webVRUniforms.lensCenterRight, 'uLensCenter' ) );
+    stateSet.addUniform( Uniform.createFloat4( webVRUniforms.hmdWarpParam, 'uHmdWarpParam' ) );
+    stateSet.addUniform( Uniform.createFloat4( webVRUniforms.chromAbParam, 'uChromAbParam' ) );
 
     return orthoCamera;
 };

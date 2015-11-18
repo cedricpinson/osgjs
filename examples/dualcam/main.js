@@ -70,12 +70,12 @@
             if ( !vrNode ) {
                 if ( navigator.getVRDevices || navigator.mozGetVRDevices ) {
 
-                    viewer._eventProxy.WebVR._enable = true;
+                    viewer._eventProxy.WebVR.setEnable( true );
                     vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.WebVR.getHmd() );
 
                 } else {
 
-                    viewer._eventProxy.DeviceOrientation._enable = true;
+                    viewer._eventProxy.DeviceOrientation.setEnable( true );
                     vrNode = osgUtil.WebVRCustom.createScene( viewer, modelNode, {
                         isCardboard: true
                     } );
@@ -88,8 +88,8 @@
         }
         // Disable VR
         else {
-            viewer._eventProxy.WebVR._enable = false;
-            viewer._eventProxy.DeviceOrientation._enable = false;
+            viewer._eventProxy.WebVR.setEnable( false );
+            viewer._eventProxy.DeviceOrientation.setEnable( false );
             // Detach the vrNode and reattach the modelNode
             sceneData.removeChild( vrNode );
             sceneData.addChild( modelNode );

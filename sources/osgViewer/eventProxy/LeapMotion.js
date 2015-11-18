@@ -9,6 +9,15 @@ var LeapMotion = function ( viewer ) {
 };
 
 LeapMotion.prototype = {
+
+    setEnable: function ( bool ) {
+        this._enable = bool;
+    },
+
+    getEnable: function () {
+        return this._enable;
+    },
+
     init: function ( args ) {
 
         // add condition if no leap in global space
