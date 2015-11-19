@@ -1,169 +1,174 @@
 ( function () {
     'use strict';
 
-    var viewer;
-
     var OSG = window.OSG;
     var osg = OSG.osg;
-    var osgGA = OSG.osgGA;
     var osgDB = OSG.osgDB;
     var osgUtil = OSG.osgUtil;
-    var osgViewer = OSG.osgViewer;
+    var ExampleOSGJS = window.ExampleOSGJS;
+    var $ = window.$;
 
-    var canvas;
+    var Example = function () {
 
-    function loadScene( viewer ) {
-        var root = new osg.MatrixTransform();
-        osg.Matrix.makeRotate( Math.PI, 0, 0, 1, root.getMatrix() );
-        viewer.setSceneData( root );
+        ExampleOSGJS.call( this );
 
-        osgDB.readNodeURL( '../media/models/material-test/file.osgjs' ).then( function ( model ) {
-            root.addChild( model );
+        $( '#button-enter-fullscreen' ).click( function () {
+            this.requestFullScreenVR();
+        }.bind( this ) );
 
-            // setup manipulator
-            // viewer.setupManipulator( new osgGA.FirstPersonManipulator() );
-            viewer.setupManipulator( new osgGA.OrbitManipulator() );
-            viewer.getManipulator().setNode( viewer.getSceneData() );
-            viewer.getManipulator().computeHomePosition();
-        } );
-    }
+        $( '#button-exit-fullscreen' ).click( function () {
+            this.exitFullScreenVR();
+        }.bind( this ) );
 
-    // Find the right method, call on correct element
-    function launchFullscreen( element, hmd ) {
-        if ( element.requestFullscreen ) {
-            element.requestFullscreen( hmd );
-        } else if ( element.mozRequestFullScreen ) {
-            element.mozRequestFullScreen( hmd );
-        } else if ( element.webkitRequestFullscreen ) {
-            element.webkitRequestFullscreen( hmd );
-        } else if ( element.msRequestFullscreen ) {
-            element.msRequestFullscreen( hmd );
-        }
-    }
+    };
 
-    function exitFullscreen() {
-        if ( document.exitFullscreen ) {
-            document.exitFullscreen();
-        } else if ( document.mozCancelFullScreen ) {
-            document.mozCancelFullScreen();
-        } else if ( document.webkitExitFullscreen ) {
-            document.webkitExitFullscreen();
-        }
-    }
+    Example.prototype = osg.objectInherit( ExampleOSGJS.prototype, {
 
-    var vrNode;
-    var modelNode;
-    var vrState = false;
-    var fullscreen = false;
+        run: function () {
 
-    function toggleVR() {
+            ExampleOSGJS.prototype.run.call( this );
 
-        var sceneData = viewer.getSceneData();
+            if ( window.screenfull ) {
+                document.addEventListener( window.screenfull.raw.fullscreenchange, function () {
+                    console.log( 'toggle VR mode' );
 
-        // Enable VR
-        if ( !vrState ) {
-
-            // Detach the model from sceneData and cache it
-            modelNode = sceneData.getChildren()[ 0 ];
-            sceneData.removeChild( modelNode );
-
-            // If no vrNode (first time vr is toggled), create one
-            // The modelNode will be attached to it
-            if ( !vrNode ) {
-                if ( navigator.getVRDevices || navigator.mozGetVRDevices ) {
-
-                    viewer._eventProxy.WebVR.setEnable( true );
-                    vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.WebVR.getHmd() );
-
-                } else {
-
-                    viewer._eventProxy.DeviceOrientation.setEnable( true );
-                    vrNode = osgUtil.WebVRCustom.createScene( viewer, modelNode, {
-                        isCardboard: true,
-                        vResolution: canvas.height,
-                        hResolution: canvas.width
+                    this.toggleVR( {
+                        vrDisplay: this._viewer._eventProxy.WebVR.getHmd()
                     } );
-
-                }
+                }.bind( this ) );
             }
 
-            // Attach the vrNode to sceneData instead of the model
-            sceneData.addChild( vrNode );
+        },
+
+        toggleVR: function () {
+
+            var viewer = this._viewer;
+
+            // Enable VR
+            if ( !this._vrState ) {
+
+                // Detach the model from scene and cache it
+                this.getRootNode().removeChild( this._modelNode );
+
+                // If no vrNode (first time vr is toggled), create one
+                // The modelNode will be attached to it
+                if ( !this._vrNode ) {
+                    if ( navigator.getVRDevices || navigator.mozGetVRDevices ) {
+
+                        viewer._eventProxy.WebVR.setEnable( true );
+                        this._vrNode = osgUtil.WebVR.createScene( viewer, this._modelNode, viewer._eventProxy.WebVR.getHmd() );
+
+                    } else {
+
+                        viewer._eventProxy.DeviceOrientation.setEnable( true );
+                        this._vrNode = osgUtil.WebVRCustom.createScene( viewer, this._modelNode, {
+                            isCardboard: true,
+                            vResolution: this._canvas.height,
+                            hResolution: this._canvas.width
+                        } );
+
+                    }
+                }
+
+                // Attach the vrNode to scene instead of the model
+                this.getRootNode().addChild( this._vrNode );
+
+                $( '#button-enter-fullscreen' ).hide();
+                $( '#button-exit-fullscreen' ).show();
+            } else {
+
+                // Disable VR
+                viewer._eventProxy.WebVR.setEnable( false );
+                viewer._eventProxy.DeviceOrientation.setEnable( false );
+                // Detach the vrNode and reattach the modelNode
+                this.getRootNode().removeChild( this._vrNode );
+                this.getRootNode().addChild( this._modelNode );
+
+                $( '#button-enter-fullscreen' ).show();
+                $( '#button-exit-fullscreen' ).hide();
+            }
+
+            this._vrState = !this._vrState;
+        },
+
+        requestFullScreenVR: function () {
+
+            if ( !navigator.getVRDevices && !navigator.mozGetVRDevices )
+                osg.warn( 'WebVR Api is not supported by your navigator' );
+
+            if ( window.screenfull ) {
+                window.screenfull.request( this._canvas, {
+                    vrDisplay: this._viewer._eventProxy.WebVR.getHmd()
+                } );
+
+            } else {
+                // no fullscreen use the canvas
+                this.toggleVR();
+            }
+            $( '#button-enter-fullscreen' ).hide();
+            $( '#button-exit-fullscreen' ).show();
+        },
+
+        exitFullScreenVR: function () {
+
+            if ( window.screenfull ) {
+                window.screenfull.exit();
+            } else {
+                this.toggleVR();
+            }
+        },
+
+        initFullscreenEvent: function () {
+
+            if ( window.screenfull && window.screenfull.enabled ) {
+                document.addEventListener( window.screenfull.raw.fullscreenchange, function () {
+                    console.log( 'Am I fullscreen? ' + ( window.screenfull.isFullscreen ? 'Yes' : 'No' ) );
+                    this.toggleVR( {
+                        vrDisplay: this._viewer._eventProxy.WebVR.getHmd()
+                    } );
+                } );
+            }
+        },
+
+        createScene: function () {
+
+            var root = new osg.MatrixTransform();
+            this._modelNode = root;
+            osg.Matrix.makeRotate( Math.PI, 0, 0, 1, root.getMatrix() );
+
+            osgDB.readNodeURL( '../media/models/material-test/file.osgjs' ).then( function ( model ) {
+                root.addChild( model );
+
+                // setup manipulator
+                // disable easing for VR
+                var manipulator = this._viewer.getManipulator();
+
+                manipulator.setDelay( 1.0 );
+                // it's not really clear how the controllers are overriding (or not) the
+                // delay property of the manipulators
+                var ctrls = manipulator._controllerList;
+                var ctrlNames = Object.keys( ctrls );
+                for ( var i = 0, nbCtrlNames = ctrlNames.length; i < nbCtrlNames; ++i ) {
+                    var ct = ctrls[ ctrlNames[ i ] ];
+                    if ( ct._delay !== undefined )
+                        ct._delay = 1.0;
+                }
+
+                manipulator.setNode( root );
+                manipulator.computeHomePosition();
+
+            }.bind( this ) );
+
+            this.getRootNode().addChild( root );
+
         }
-        // Disable VR
-        else {
-            viewer._eventProxy.WebVR.setEnable( false );
-            viewer._eventProxy.DeviceOrientation.setEnable( false );
-            // Detach the vrNode and reattach the modelNode
-            sceneData.removeChild( vrNode );
-            sceneData.addChild( modelNode );
-        }
 
-        vrState = !vrState;
-    }
-
-    // On some platforms, (chrome * android), this event is fired too early
-    // And the WebVR retrieve the canvas size before the canvas gets resized to fullscreen
-    // So we could add a little delay via setTimeout to ensure we get the fullscreen size
-
-    // Prefixed on Firefox up to v33
-    document.addEventListener( 'mozfullscreenchange', function () {
-        toggleVR();
-        fullscreen = !fullscreen;
     } );
-    // Prefixed on Chrome up to v38
-    document.addEventListener( 'webkitfullscreenchange', function () {
-        setTimeout( toggleVR, 500 );
-        fullscreen = !fullscreen;
-    } );
-    document.addEventListener( 'msfullscreenchange', function () {
-        toggleVR();
-        fullscreen = !fullscreen;
-    }, false );
-    document.addEventListener( 'fullscreenchange', function () {
-        toggleVR();
-        fullscreen = !fullscreen;
-    } );
 
-    function requestVRFullscreen() {
+    window.addEventListener( 'load', function () {
+        var example = new Example();
+        example.run();
+        window.example = example;
+    }, true );
 
-        if ( !navigator.getVRDevices && !navigator.mozGetVRDevices ) {
-            osg.log( 'WebVR Api is not supported by your navigator' );
-        }
-
-        canvas = viewer.getGraphicContext().canvas;
-
-        if ( fullscreen === false ) {
-            toggleVR();
-            // launchFullscreen( canvas, {
-            //     vrDisplay: viewer._eventProxy.WebVR.getHmd()
-            // } );
-        } else {
-            exitFullscreen();
-        }
-
-        // var fullscreenRect = canvas.getBoundingClientRect();
-        // console.log(fullscreenRect.width, fullscreenRect.height);
-    }
-
-    function init() {
-
-        var canvas = document.getElementById( 'View' );
-
-        viewer = new osgViewer.Viewer( canvas );
-        viewer.init();
-        loadScene( viewer );
-        viewer.run();
-
-        var button = document.getElementById( 'button' );
-        button.addEventListener( 'click', requestVRFullscreen, false );
-
-        window.addEventListener( 'keypress', function ( event ) {
-            if ( event.charCode === 'f'.charCodeAt( 0 ) )
-                requestVRFullscreen();
-        }, true );
-
-    }
-
-    window.addEventListener( 'load', init, true );
 } )();
