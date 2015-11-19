@@ -1163,20 +1163,6 @@ Compiler.prototype = {
 
         return boneMatrix;
     },
-    getOrCreateDoMorph: function () {
-        var doMorph = this._variables[ 'doMorph' ];
-        if ( doMorph ) return doMorph;
-
-        doMorph = this.createVariable( 'bool', 'doMorph' );
-
-        this.getNode( 'InlineCode' ).code( '%doMorph = any(notEqual(%weights, vec4(0.0)));' ).inputs( {
-            weights: this.getOrCreateUniform( 'vec4', 'uTargetWeights' )
-        } ).outputs( {
-            doMorph: doMorph
-        } );
-
-        return doMorph;
-    },
     getTarget: function ( name, i ) {
         var type = name.indexOf( 'Tangent' ) !== -1 ? 'vec4' : 'vec3';
         return this.getOrCreateAttribute( type, name + '_' + i );
@@ -1217,7 +1203,6 @@ Compiler.prototype = {
         }
 
         var inputs = {
-            doMorph: this.getOrCreateDoMorph(),
             vertex: inputVertex,
             weights: this.getOrCreateUniform( 'vec4', 'uTargetWeights' )
         };
