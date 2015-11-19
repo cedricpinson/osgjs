@@ -18,6 +18,14 @@ var DisplayGraphNode = function ( selectables ) {
 DisplayGraphNode.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
     getColorFromClassName: function ( name ) {
         switch ( name ) {
+        case 'ShadowedScene':
+            return '#3D3D3D';
+        case 'Camera':
+            return '#AB7BCF';
+        case 'RenderBin':
+            return '#59778B';
+        case 'LightSource':
+            return '#53967D';
         case 'RenderStage':
             return '#DDCC55';
         case 'RenderLeaf':

@@ -1,17 +1,17 @@
 'use strict';
 
-var OrbitManipulatorOculusController = function ( manipulator ) {
+var OrbitManipulatorWebVRController = function ( manipulator ) {
     this._manipulator = manipulator;
     this.init();
 };
 
-OrbitManipulatorOculusController.prototype = {
+OrbitManipulatorWebVRController.prototype = {
     init: function () {},
     update: function ( quaternion ) {
 
         this._manipulator.setRotationBaseFromQuat( quaternion );
-    },
+    }
 
 };
 
-module.exports = OrbitManipulatorOculusController;
+module.exports = OrbitManipulatorWebVRController;

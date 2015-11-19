@@ -68,12 +68,19 @@
             // If no vrNode (first time vr is toggled), create one
             // The modelNode will be attached to it
             if ( !vrNode ) {
-                if ( navigator.getVRDevices || navigator.mozGetVRDevices )
-                    vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.Oculus.getHmd() );
-                else
-                    vrNode = osgUtil.Oculus.createScene( viewer, modelNode, {
+                if ( navigator.getVRDevices || navigator.mozGetVRDevices ) {
+
+                    viewer._eventProxy.WebVR.setEnable( true );
+                    vrNode = osgUtil.WebVR.createScene( viewer, modelNode, viewer._eventProxy.WebVR.getHmd() );
+
+                } else {
+
+                    viewer._eventProxy.DeviceOrientation.setEnable( true );
+                    vrNode = osgUtil.WebVRCustom.createScene( viewer, modelNode, {
                         isCardboard: true
                     } );
+
+                }
             }
 
             // Attach the vrNode to sceneData instead of the model
@@ -81,6 +88,8 @@
         }
         // Disable VR
         else {
+            viewer._eventProxy.WebVR.setEnable( false );
+            viewer._eventProxy.DeviceOrientation.setEnable( false );
             // Detach the vrNode and reattach the modelNode
             sceneData.removeChild( vrNode );
             sceneData.addChild( modelNode );
@@ -122,7 +131,7 @@
 
         if ( fullscreen === false )
             launchFullscreen( canvas, {
-                vrDisplay: viewer._eventProxy.Oculus.getHmd()
+                vrDisplay: viewer._eventProxy.WebVR.getHmd()
             } );
         else
             exitFullscreen();

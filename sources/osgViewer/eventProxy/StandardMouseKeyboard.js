@@ -15,6 +15,15 @@ var StandardMouseKeyboard = function ( viewer ) {
 };
 
 StandardMouseKeyboard.prototype = {
+
+    setEnable: function ( bool ) {
+        this._enable = bool;
+    },
+
+    getEnable: function () {
+        return this._enable;
+    },
+
     init: function ( options ) {
 
         this.removeEventListeners( this._mouseEventNode, this._wheelEventNode, this._keyboardEventNode );

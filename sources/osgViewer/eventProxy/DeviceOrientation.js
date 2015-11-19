@@ -16,6 +16,14 @@ var DeviceOrientation = function ( viewer ) {
 
 DeviceOrientation.prototype = {
 
+    setEnable: function ( bool ) {
+        this._enable = bool;
+    },
+
+    getEnable: function () {
+        return this._enable;
+    },
+
     init: function () {
 
         var self = this;
