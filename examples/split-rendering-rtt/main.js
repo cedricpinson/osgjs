@@ -13,7 +13,7 @@
         '{',
         '  vec4 transp = texture2D(Texture1, FragTexCoord0 );',
         '  vec4 opaque = texture2D(Texture0, FragTexCoord0 );',
-        '  gl_FragColor = transp + opaque;',
+        '  gl_FragColor = opaque * (1.0 - transp.a) + transp.rgba;',
         '}'
     ].join( '\n' );
 
@@ -316,8 +316,8 @@
             this.sortBinArray();
 
             var previous = previousRenderLeaf;
-            //previous = this.drawImplementationEarlyZ( state, previous );
-            previous = this.drawImplementationRenderBin( state, previous );
+            previous = this.drawImplementationEarlyZ( state, previous );
+            // previous = this.drawImplementationRenderBin( state, previous );
             return previous;
         }
     } );
