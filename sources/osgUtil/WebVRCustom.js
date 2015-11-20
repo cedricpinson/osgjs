@@ -188,7 +188,7 @@ var createCameraRtt = function ( texture, projMatrix ) {
 
 WebVRCustom.createScene = function ( viewer, rttScene, HMDconfig, rootOverride ) {
     var HMD = WebVRCustom.getDefaultConfig( HMDconfig );
-    var rttSize = Vec2.createAndSet( HMD.hResolution, HMD.vResolution );
+    var rttSize = Vec2.createAndSet( HMD.hResolution * 0.5, HMD.vResolution );
     var viewportSize = Vec2.createAndSet( HMD.hResolution * 0.5, HMD.vResolution );
     var vp = viewer.getCamera().getViewport();
     var canvasSize = Vec2.createAndSet( vp.width(), vp.height() );
