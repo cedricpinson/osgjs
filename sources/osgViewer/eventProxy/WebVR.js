@@ -3,22 +3,30 @@ var Notify = require( 'osg/Notify' );
 var Quat = require( 'osg/Quat' );
 
 
-var Oculus = function ( viewer ) {
+var WebVR = function ( viewer ) {
     this._viewer = viewer;
-    this._type = 'Oculus';
-    this._enable = true;
+    this._type = 'WebVR';
+    this._enable = false;
     this._hmd = undefined;
     this._sensor = undefined;
     this._quat = Quat.create();
 };
 
-Oculus.prototype = {
+WebVR.prototype = {
+
+    setEnable: function ( bool ) {
+        this._enable = bool;
+    },
+
+    getEnable: function () {
+        return this._enable;
+    },
 
     init: function () {
 
         var self = this;
 
-        function vrDeviceCallback( vrDevices ) {
+        var vrDeviceCallback = function ( vrDevices ) {
 
             var i;
 
@@ -40,7 +48,7 @@ Oculus.prototype = {
 
             if ( self._hmd && self._sensor )
                 Notify.log( 'Found a HMD and Sensor' );
-        }
+        };
 
         if ( navigator.getVRDevices ) {
             navigator.getVRDevices().then( vrDeviceCallback );
@@ -108,4 +116,4 @@ Oculus.prototype = {
         return this._hmd;
     }
 };
-module.exports = Oculus;
+module.exports = WebVR;
