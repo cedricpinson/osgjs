@@ -466,9 +466,9 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 attribute = attributeStack.back().object;
             }
 
-            /* develblock:start */
+            /*develblock:start*/
             Notify.assert( key === attribute.getTypeMember(), 'State:applyAttributeMap attribute key ' + key + ' !== ' + attribute.getTypeMember() );
-            /* develblock:end */
+            /*develblock:end*/
 
 
             if ( attributeStack.lastApplied !== attribute ) {

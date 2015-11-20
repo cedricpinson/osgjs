@@ -38,9 +38,9 @@ osgTextWrapper.Text = function ( input, node ) {
         } else if ( jsonObj.Alignment === 'RIGHT_BOTTOM_BASE_LINE' ) {
             alignment = Text.RIGHT_BOTTOM;
         }
-        /* develblock:start */
+        /*develblock:start*/
         Notify.log( 'Base line alignments not supported, alignment converted' );
-        /* develblock:end */
+        /*develblock:end*/
     }
     node.setAlignment( alignment );
     node.setLayout( jsonObj.Layout );

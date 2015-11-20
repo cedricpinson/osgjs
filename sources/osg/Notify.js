@@ -55,7 +55,9 @@ function getStackTrace( err ) {
  * @param { level  } what severity is that log (gives text color too )
  */
 function logSub( str, level, fold, noTrace ) {
+
     if ( Notify.console !== undefined ) {
+
         if ( fold && Notify.console.groupCollapsed ) Notify.console.groupCollapsed();
         if ( noTrace ) {
             Notify.console[ level ]( str );
@@ -63,6 +65,7 @@ function logSub( str, level, fold, noTrace ) {
             Notify.console[ level ]( str, getStackTrace() );
         }
         if ( fold && Notify.console.groupEnd ) Notify.console.groupEnd();
+
     }
 }
 

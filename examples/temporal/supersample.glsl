@@ -51,11 +51,11 @@ vec4 supersample(const in vec4 currFragColor,  const in sampler2D tex, const in 
         return res;
 
     }
-    /* develblock:start */
+    /*develblock:start*/
     // debug
     // check dual color alternance
     //res +=  mod(n, 2.0) == 1.0 ? vec4(1.0, 0.0, 0.0, 1.0) : vec4(0.0, 1.0, 0.0, 1.0);
-    /* develblock:end */
+    /*develblock:end*/
     return res;
 }
 

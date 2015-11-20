@@ -511,7 +511,7 @@ var prePopGeometry = function ( cull, node ) {
 
 CullVisitor.prototype[ Geometry.typeID ] = ( function () {
     var tempVec = Vec3.create();
-
+    var loggedOnce = false;
     return function ( node ) {
 
         var modelview = this.getCurrentModelViewMatrix();
@@ -545,7 +545,12 @@ CullVisitor.prototype[ Geometry.typeID ] = ( function () {
             depth = this.distance( bb.center( tempVec ), modelview );
         }
         if ( osgMath.isNaN( depth ) ) {
-            Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec );
+
+            if ( !loggedOnce ) {
+                Notify.warn( 'warning geometry has a NaN depth, ' + modelview + ' center ' + tempVec );
+                loggedOnce = true;
+            }
+
         } else {
 
             leaf.init( this._currentStateGraph,
