@@ -122,7 +122,7 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         uniformMap.DepthRange.set( this._depthRange );
         uniformMap.MapSize.set( this._mapSize );
 
-        this.setDirty( false );
+        this._dirty = false;
     },
 
     getHash: function () {
