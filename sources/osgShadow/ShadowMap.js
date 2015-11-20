@@ -1,6 +1,8 @@
 'use strict';
 var Camera = require( 'osg/Camera' );
+var BlendFunc = require( 'osg/BlendFunc' );
 var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
+var Depth = require( 'osg/Depth' );
 var FrameBufferObject = require( 'osg/FrameBufferObject' );
 var Matrix = require( 'osg/Matrix' );
 var Notify = require( 'osg/Notify' );
@@ -87,7 +89,6 @@ var ShadowMap = function ( settings ) {
     this._textureMinFilter = undefined;
     this._textureSize = 256;
 
-
     this._receivingStateset = undefined;
 
     this._casterStateSet = new StateSet();
@@ -97,13 +98,16 @@ var ShadowMap = function ( settings ) {
     this._casterStateSet.addUniform( Uniform.createFloat1( 1.0 / this._textureSize, 'texelSize' ) );
     this._casterStateSet.addUniform( Uniform.createFloat2( [ this._textureSize, this._textureSize ], 'RenderSize' ) );
 
+    // make sure no unintended blend happens
+    // if casting semi-transparent (alphablend material with full opaque pixels) shadow
+    this._casterStateSet.setAttributeAndModes( new Depth( Depth.LESS ), StateAttribute.ON | StateAttribute.OVERRIDE );
+    this._casterStateSet.setAttributeAndModes( new BlendFunc(), StateAttribute.ON | StateAttribute.OVERRIDE );
 
     this._shadowReceiveAttribute = new ShadowReceiveAttribute( this._light.getLightNumber() );
     this._casterStateSet.setAttributeAndModes( this._shadowReceiveAttribute, StateAttribute.ON | StateAttribute.OVERRIDE );
 
     // default name, overridable with shadow settings
     this._shadowCastShaderGeneratorName = 'ShadowCast';
-
 
 
     var near = 0.001;
