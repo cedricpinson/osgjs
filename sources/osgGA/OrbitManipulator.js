@@ -296,9 +296,7 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         var of = Matrix.create();
         var r = Matrix.create();
         var r2 = Matrix.create();
-        var inv = Matrix.create();
         var tmp = Vec3.create();
-        var tmpDist = Vec3.create();
         var radLimit = Math.acos( DOT_LIMIT ) * 2.0;
         return function ( dx, dy ) {
             Matrix.makeRotate( -dx / 10.0, 0.0, 0.0, 1.0, of );
@@ -311,18 +309,9 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             Matrix.makeRotate( -dy, 1.0, 0.0, 0.0, of );
             Matrix.mult( of, r, r2 );
 
-            // test that the eye is not too up and not too down to not kill
-            // the rotation matrix
-            Matrix.inverse( r2, inv );
-            tmpDist[ 1 ] = this._distance;
-            Matrix.transformVec3( inv, tmpDist, tmp );
-
-            Vec3.neg( tmp, tmp );
-            Vec3.normalize( tmp, tmp );
-
-            var p = Vec3.dot( tmp, this._upz );
-            if ( Math.abs( p ) > DOT_LIMIT ) {
-                //discard rotation on y
+            // prevent going on the other side of the sphere (block y)
+            Matrix.transformVec3( r2, this._upz, tmp );
+            if ( Math.abs( tmp[ 1 ] ) > DOT_LIMIT ) {
                 Matrix.copy( r, this._rotation );
                 return;
             }
