@@ -448,7 +448,7 @@
             var size = 500;
             //var geom = osg.createTexturedBoxGeometry( 0, 0, 0, size, size, size );
 
-             // to use the same shader panorama
+            // to use the same shader panorama
             var geom = osg.createTexturedSphereGeometry( size / 2, 20, 20 );
             var ss = geom.getOrCreateStateSet();
             geom.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( 'DISABLE' ) );
@@ -1069,7 +1069,10 @@
         run: function ( canvas ) {
 
             //osgGA.Manipulator.DEFAULT_SETTINGS = osgGA.Manipulator.DEFAULT_SETTINGS | osgGA.Manipulator.COMPUTE_HOME_USING_BBOX;
-            var viewer = this._viewer = new osgViewer.Viewer( canvas, { preserveDrawingBuffer: true, premultipliedAlpha: false } );
+            var viewer = this._viewer = new osgViewer.Viewer( canvas, {
+                preserveDrawingBuffer: true,
+                premultipliedAlpha: false
+            } );
             viewer.init();
 
             var gl = viewer.getState().getGraphicContext();
@@ -1115,7 +1118,7 @@
                     formatListEnvironment[ texture.encoding ] = true;
                 } );
                 formatListEnvironment = Object.keys( formatListEnvironment );
-                if ( formatListEnvironment.indexOf ( this._config.format.toLowerCase() ) === -1 ) {
+                if ( formatListEnvironment.indexOf( this._config.format.toLowerCase() ) === -1 ) {
                     this._config.format = 'LUV';
                 }
 
