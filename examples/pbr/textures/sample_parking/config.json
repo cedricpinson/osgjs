@@ -1,0 +1,157 @@
+{
+    "diffuseSPH": [
+        0.778867,
+        0.977935,
+        1.26247,
+        -0.209277,
+        -0.334996,
+        -0.520795,
+        -0.502087,
+        -0.618039,
+        -0.742351,
+        -0.0074904,
+        -0.00782756,
+        -0.010102,
+        -0.00200987,
+        -0.000911473,
+        0.000171637,
+        0.155184,
+        0.193846,
+        0.238248,
+        0.176738,
+        0.205517,
+        0.225296,
+        0.00121583,
+        0.00142769,
+        -0.000711894,
+        -0.0184003,
+        -0.0264319,
+        -0.0426878,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1.11719e-05,
+        -7.65436e-05,
+        -0.00026322,
+        0.000692629,
+        0.000702071,
+        0.000550432,
+        -0.000245052,
+        -0.000237779,
+        -0.000308129,
+        -0.0298117,
+        -0.0354056,
+        -0.0409848,
+        -0.00941485,
+        -0.00931981,
+        -0.00769792,
+        -0.000128274,
+        -6.19919e-05,
+        0.000254201,
+        0.0125206,
+        0.016062,
+        0.0208847,
+        -0.000322026,
+        -0.000533672,
+        -0.000770327,
+        0.000345193,
+        0.00140382,
+        0.00356188
+    ],
+    "textures": [
+        {
+            "encoding": "srgb",
+            "format": "panorama",
+            "images": [
+                {
+                    "file": "thumbnail_256.jpg",
+                    "height": 128,
+                    "width": 256
+                }
+            ],
+            "type": "thumbnail"
+        },
+        {
+            "encoding": "luv",
+            "format": "cubemap",
+            "images": [
+                {
+                    "blur": 0.1,
+                    "file": "background_cubemap_256_0.1_luv.bin.gz",
+                    "height": 256,
+                    "samples": 4096,
+                    "sizeCompressed": 284648,
+                    "sizeUncompressed": 1572864,
+                    "width": 256
+                }
+            ],
+            "type": "background"
+        },
+        {
+            "encoding": "luv",
+            "format": "panorama",
+            "images": [
+                {
+                    "file": "specular_panorama_ue4_1024_luv.bin.gz",
+                    "height": 1024,
+                    "samples": 65536,
+                    "sizeCompressed": 703053,
+                    "sizeUncompressed": 4194304,
+                    "width": 1024
+                }
+            ],
+            "limitSize": 32,
+            "type": "specular_ue4"
+        },
+        {
+            "encoding": "luv",
+            "format": "cubemap",
+            "images": [
+                {
+                    "file": "specular_cubemap_ue4_256_luv.bin.gz",
+                    "height": 256,
+                    "samples": 65536,
+                    "sizeCompressed": 660521,
+                    "sizeUncompressed": 2097144,
+                    "width": 256
+                }
+            ],
+            "limitSize": 8,
+            "type": "specular_ue4"
+        },
+        {
+            "encoding": "rg16",
+            "format": "lut",
+            "images": [
+                {
+                    "file": "brdf_ue4.bin.gz",
+                    "height": 128,
+                    "samples": 65536,
+                    "sizeCompressed": 58481,
+                    "sizeUncompressed": 65536,
+                    "width": 128
+                }
+            ],
+            "type": "brdf_ue4"
+        }
+    ],
+    "writeByChannel": true
+}

@@ -1084,7 +1084,7 @@
 
             var environment;
             // environment = 'textures/city_night_reference_2048/';
-            environment = 'textures/' + ( optionsURL.env ? optionsURL.env : 'parking_reference' ) + '/';
+            environment = 'textures/' + ( optionsURL.env ? optionsURL.env : 'sample_parking' ) + '/';
 
 
             //var environment = 'textures/bus_garage5/';
@@ -1109,6 +1109,15 @@
             var promise = this.readEnvConfig( environment + 'config.json' );
             promise.then( function ( config ) {
 
+                // adjust format requested from environment config and fallback on LUV
+                var formatListEnvironment = {};
+                config.textures.forEach( function ( texture ) {
+                    formatListEnvironment[ texture.encoding ] = true;
+                } );
+                formatListEnvironment = Object.keys( formatListEnvironment );
+                if ( formatListEnvironment.indexOf ( this._config.format.toLowerCase() ) === -1 ) {
+                    this._config.format = 'LUV';
+                }
 
                 this._currentEnvironment.init( environment, config );
 
