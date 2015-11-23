@@ -31,7 +31,7 @@
     // cosTheta is dot( n, l ), clamped between 0 and 1
     //float shadowBias = 0.005*tan(acos(N_Dot_L));
     // same but 4 cycles instead of 15
-    shadowBias += 0.05 *  sqrt( 1. -  N_Dot_L*N_Dot_L) / N_Dot_L;
+    shadowBias += 0.05 *  sqrt( 1. -  N_Dot_L*N_Dot_L) / clamp(N_Dot_L, 0.0005,  1.0);
 
     //That makes sure that plane perpendicular to light doesn't flicker due to
     //selfshadowing and 1 = dot(Normal, Light) using a min bias
@@ -71,9 +71,10 @@
 // looks like derivative is broken on some mac + intel cg ...
 #ifdef GL_OES_standard_derivatives
 
-     shadowBiasPCF.x +=  dFdx(shadowUV.xy).x * shadowMapSize.z;
-     shadowBiasPCF.y +=  dFdy(shadowUV.xy).y * shadowMapSize.w;
-//     //shadowBias += dFdx(shadowReceiverZ);
+     float deriv = dFdx(shadowReceiverZ);
+
+     shadowBiasPCF.x +=  deriv * shadowMapSize.z;
+     shadowBiasPCF.y +=  deriv * shadowMapSize.w;
 
 #endif
 
