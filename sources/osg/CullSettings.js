@@ -1,34 +1,54 @@
 'use strict';
-var Vec3 = require( 'osg/Vec3' );
 
 
 var CullSettings = function () {
-    this._computeNearFar = true;
-    this._nearFarRatio = 0.005;
 
-    var lookVector = Vec3.createAndSet( 0.0, 0.0, -1.0 );
-    /*jshint bitwise: false */
-    this.bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
-    this.bbCornerNear = ( ~this.bbCornerFar ) & 7;
-    /*jshint bitwise: true */
-    this._enableFrustumCulling = false;
+    // Not doing a this.reset()
+    // because of multiple inheritance
+    // it will call the wrong reset
+    // cullstack reset for isntance()
+    CullSettings.prototype.reset.apply( this );
 
-    // who sets the parameter
-    // if it's cullvisitor
-    // it's an OVERRIDER for enableFrustumCulling
-    // allowing for global EnableFrustimCulling
-    this._settingsSourceOverrider = this;
-    //LOD bias for the CullVisitor to use
-    this._LODScale = 1.0;
 };
 
 CullSettings.prototype = {
+    reset: function () {
+
+        this._computeNearFar = true;
+        this._nearFarRatio = 0.005;
+
+        // Magic numbers 3 & 4
+        this.bbCornerFar = 3;
+        this.bbCornerNear = 4;
+        // see code below for for the
+        // Code simplification origin
+        // var Vec3 = require( 'osg/Vec3' );
+        // var lookVector = Vec3.createAndSet( 0.0, 0.0, -1.0 );
+        // /*jshint bitwise: false */
+        // this.bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
+        // this.bbCornerNear = ( ~this.bbCornerFar ) & 7;
+        // /*jshint bitwise: true */
+        // is equivalent to
+
+        this._enableFrustumCulling = false;
+
+        // who sets the parameter
+        // if it's cullvisitor
+        // it's an OVERRIDER for enableFrustumCulling
+        // allowing for global EnableFrustimCulling
+        this._settingsSourceOverrider = this;
+        //LOD bias for the CullVisitor to use
+        this._LODScale = 1.0;
+
+    },
+
     setCullSettings: function ( settings ) {
         this._computeNearFar = settings._computeNearFar;
         this._nearFarRatio = settings._nearFarRatio;
         this._enableFrustumCulling = settings._enableFrustumCulling;
         this._settingsSourceOverrider = settings._settingsSourceOverrider;
     },
+
     setNearFarRatio: function ( ratio ) {
         this._nearFarRatio = ratio;
     },

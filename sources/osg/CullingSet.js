@@ -2,14 +2,18 @@
 var Polytope = require( 'osg/Polytope' );
 
 var CullingSet = function () {
+
     this._mask = CullingSet.DEFAULT_CULLING;
     this._frustum = new Polytope();
-
 
 };
 
 CullingSet.prototype = {
 
+    reset: function () {
+        this._mask = CullingSet.DEFAULT_CULLING;
+        this._frustum.clear();
+    },
     setCullingMask: function ( mask ) {
         this._mask = mask;
     },

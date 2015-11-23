@@ -48,7 +48,10 @@ var CullVisitor = function () {
     /*jshint bitwise: true */
 
     this._reserveLeafStack = [ new RenderLeaf() ];
-    this._reserveLeafStack.current = 0;
+    this._reserveLeafStackCurrent = 0;
+
+    this._reserveCullSettingsStack = [ new CullSettings() ];
+    this._reserveCullSettingsStackCurrent = 0;
 
     this._renderBinStack = [];
     this.visitorType = NodeVisitor.CULL_VISITOR;
@@ -144,7 +147,10 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
         // Reseting elements and refilling them later is faster than create new elements
         // That's the reason to have a leafStack, see http://jsperf.com/refill/2
         this.resetRenderLeafStack();
-        this._reserveLeafStack.current = 0;
+        this._reserveLeafStackCurrent = 0;
+
+        this.resetCullSettingsStack();
+        this._reserveCullSettingsStackCurrent = 0;
 
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
@@ -218,16 +224,33 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
     },
 
     createOrReuseRenderLeaf: function () {
-        var l = this._reserveLeafStack[ this._reserveLeafStack.current++ ];
-        if ( this._reserveLeafStack.current === this._reserveLeafStack.length ) {
+        var l = this._reserveLeafStack[ this._reserveLeafStackCurrent++ ];
+        if ( this._reserveLeafStackCurrent === this._reserveLeafStack.length ) {
             this._reserveLeafStack.push( new RenderLeaf() );
         }
         return l;
     },
 
     resetRenderLeafStack: function () {
-        for ( var i = 0, j = this._reserveLeafStack.current; i <= j; i++ ) {
+        for ( var i = 0, j = this._reserveLeafStackCurrent; i <= j; i++ ) {
             this._reserveLeafStack[ i ].reset();
+        }
+    },
+
+    createOrReuseCullSettings: function () {
+        var l = this._reserveCullSettingsStack[ this._reserveCullSettingsStackCurrent++ ];
+
+        if ( this._reserveCullSettingsStackCurrent === this._reserveCullSettingsStack.length ) {
+
+            this._reserveCullSettingsStack.push( new CullSettings() );
+
+        }
+        return l;
+    },
+
+    resetCullSettingsStack: function () {
+        for ( var i = 0, j = this._reserveCullSettingsStackCurrent; i <= j; i++ ) {
+            this._reserveCullSettingsStack[ i ].reset();
         }
     }
 
@@ -271,7 +294,7 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
     // save cullSettings
     // TODO Perf: why it's not a stack
     // and is pollutin  GC ?
-    var previousCullsettings = new CullSettings();
+    var previousCullsettings = this.createOrReuseCullSettings();
     previousCullsettings.setCullSettings( this );
 
     this._computedNear = Number.POSITIVE_INFINITY;

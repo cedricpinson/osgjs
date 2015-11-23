@@ -21,6 +21,8 @@ var Renderer = function ( camera ) {
 
     this._frameStamp = undefined;
 
+    this._previousCullsettings = new CullSettings();
+
     this.setDefaults();
 };
 
@@ -113,10 +115,10 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         this._cullVisitor.pushStateSet( camera.getStateSet() );
 
         // save cullSettings
-        var previousCullsettings = new CullSettings();
-        previousCullsettings.setCullSettings( this._cullVisitor );
+        this._previousCullsettings.reset();
+        this._previousCullsettings.setCullSettings( this._cullVisitor );
         this._cullVisitor.setCullSettings( camera );
-        if ( previousCullsettings.getSettingSourceOverrider() === this._cullVisitor && previousCullsettings.getEnableFrustumCulling() ) {
+        if ( this._previousCullsettings.getSettingSourceOverrider() === this._cullVisitor && this._previousCullsettings.getEnableFrustumCulling() ) {
             this._cullVisitor.setEnableFrustumCulling( true );
         }
 
@@ -171,7 +173,7 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
 
         // restore previous state of the camera
-        this._cullVisitor.setCullSettings( previousCullsettings );
+        this._cullVisitor.setCullSettings( this._previousCullsettings );
 
         this._cullVisitor.popViewport();
         this._cullVisitor.popStateSet();
