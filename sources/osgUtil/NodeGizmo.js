@@ -599,7 +599,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
     getCanvasPositionFromWorldPoint: function ( worldPoint, out ) {
         var cam = this._viewer.getCamera();
         var mat = Matrix.create();
-        Matrix.preMult( mat, cam.getViewport() ? cam.getViewport().computeWindowMatrix() : Matrix.create() );
+        if ( cam.getViewport() ) cam.getViewport().computeWindowMatrix( mat );
         Matrix.preMult( mat, cam.getProjectionMatrix() );
         if ( this.getReferenceFrame() === TransformEnums.RELATIVE_RF )
             Matrix.preMult( mat, cam.getViewMatrix() );
