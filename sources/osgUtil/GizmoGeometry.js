@@ -135,12 +135,12 @@ var createDebugLineGeometry = function () {
     return g;
 };
 
-var createTorusGeometry = function ( radiusOut, radiusWidth, nbRadial, nbTubular, arc ) {
-    radiusOut = radiusOut !== undefined ? radiusOut : 1.0;
-    radiusWidth = radiusWidth !== undefined ? radiusWidth : 0.2;
-    nbRadial = nbRadial !== undefined ? nbRadial : 6;
-    nbTubular = nbTubular !== undefined ? nbTubular : 64;
-    arc = arc !== undefined ? arc : Math.PI * 2;
+var createTorusGeometry = function ( argRadiusOut, argRadiusWidth, argNbRadial, argNbTubular, argArc ) {
+    var radiusOut = argRadiusOut !== undefined ? argRadiusOut : 1.0;
+    var radiusWidth = argRadiusWidth !== undefined ? argRadiusWidth : 0.2;
+    var nbRadial = argNbRadial !== undefined ? argNbRadial : 6;
+    var nbTubular = argNbTubular !== undefined ? argNbTubular : 64;
+    var arc = argArc !== undefined ? argArc : Math.PI * 2;
 
     var nbVertices = ( nbRadial + 1 ) * ( nbTubular + 1 );
     var nbTriangles = nbRadial * nbTubular * 2;
@@ -180,14 +180,14 @@ var createTorusGeometry = function ( radiusOut, radiusWidth, nbRadial, nbTubular
     return g;
 };
 
-var createCylinderGeometry = function ( radiusTop, radiusBottom, height, radialSegments, heightSegments, topCap, lowCap ) {
-    radiusTop = radiusTop !== undefined ? radiusTop : 1.0;
-    radiusBottom = radiusBottom !== undefined ? radiusBottom : 1.0;
-    height = height !== undefined ? height : 5.0;
-    radialSegments = radialSegments !== undefined ? radialSegments : 32;
-    heightSegments = heightSegments !== undefined ? heightSegments : 1;
-    topCap = topCap !== undefined ? topCap : true;
-    lowCap = lowCap !== undefined ? lowCap : true;
+var createCylinderGeometry = function ( argRadiusTop, argRadiusBottom, argHeight, argRadialSegments, argHeightSegments, argTopCap, argLowCap ) {
+    var radiusTop = argRadiusTop !== undefined ? argRadiusTop : 1.0;
+    var radiusBottom = argRadiusBottom !== undefined ? argRadiusBottom : 1.0;
+    var height = argHeight !== undefined ? argHeight : 5.0;
+    var radialSegments = argRadialSegments !== undefined ? argRadialSegments : 32;
+    var heightSegments = argHeightSegments !== undefined ? argHeightSegments : 1;
+    var topCap = argTopCap !== undefined ? argTopCap : true;
+    var lowCap = argLowCap !== undefined ? argLowCap : true;
 
     topCap = topCap && radiusTop > 0.0;
     lowCap = lowCap && radiusBottom > 0.0;
@@ -268,13 +268,13 @@ var createCylinderGeometry = function ( radiusTop, radiusBottom, height, radialS
     return g;
 };
 
-var createCircleGeometry = function ( nbVertices, radius, arc ) {
+var createCircleGeometry = function ( nbVertices, radius, argArc ) {
     var g = new Geometry();
     var vertices = new Float32Array( nbVertices * 3 );
-    arc = arc || Math.PI * 2;
+    var arc = argArc || Math.PI * 2;
     for ( var i = 0; i < nbVertices; ++i ) {
         var j = i * 3;
-        var segment = ( arc * i ) / nbVertices;
+        var segment = arc * i / nbVertices;
         vertices[ j ] = Math.cos( segment ) * radius;
         vertices[ j + 1 ] = Math.sin( segment ) * radius;
     }
