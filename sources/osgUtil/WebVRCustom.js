@@ -186,7 +186,7 @@ var createCameraRtt = function ( texture, projMatrix ) {
     return camera;
 };
 
-WebVRCustom.createScene = function ( viewer, rttScene, HMDconfig, rootOverride ) {
+WebVRCustom.createScene = function ( viewer, rttScene, HMDconfig, rootOverride, worldFactorOverride ) {
     var HMD = WebVRCustom.getDefaultConfig( HMDconfig );
     var rttSize = Vec2.createAndSet( HMD.hResolution * 0.5, HMD.vResolution );
     var viewportSize = Vec2.createAndSet( HMD.hResolution * 0.5, HMD.vResolution );
@@ -199,7 +199,7 @@ WebVRCustom.createScene = function ( viewer, rttScene, HMDconfig, rootOverride )
         canvasSize[ 1 ] = canvas.height;
     }
 
-    var worldFactor = 1.0; // world unit
+    var worldFactor = worldFactorOverride !== undefined ? worldFactor : 1.0;
     var webVRUniforms = {};
     var webVRMatrices = {};
     setupWebVR( worldFactor, HMD, webVRUniforms, webVRMatrices );
