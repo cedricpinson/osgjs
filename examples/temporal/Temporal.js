@@ -28,7 +28,6 @@
 
         setAttributeEnable: function ( state ) {
             this._attributeEnable = state;
-            this.dirty();
         },
 
         getAttributeEnable: function () {
@@ -38,9 +37,7 @@
         apply: function ( /*state*/) {
             var uniforms = this.getOrCreateUniforms();
             var value = this._attributeEnable ? 1 : 0;
-            uniforms.enable.set( value );
-
-            this.setDirty( false );
+            uniforms.enable.setFloat( value );
         }
 
     } ), 'osg', 'Temporal' );

@@ -79,7 +79,7 @@
             child.getOrCreateStateSet().addUniform( unifs.center );
             child.getOrCreateStateSet().addUniform( unifs.radius2 );
             child.getOrCreateStateSet().addUniform( unifs.time );
-            unifs.radius2.set( child.getBound().radius2() * 0.02 );
+            unifs.radius2.setFloat( child.getBound().radius2() * 0.02 );
 
             // console.time( 'build' );
             var treeBuilder = new osg.KdTreeBuilder( {
@@ -96,11 +96,11 @@
         osg.log( 'loading ' + url );
         var req = new XMLHttpRequest();
         req.open( 'GET', url, true );
-        req.onload = function ( /*aEvt*/) {
+        req.onload = function () {
             loadModel( JSON.parse( req.responseText ), viewer, node, unifs );
             osg.log( 'success ' + url );
         };
-        req.onerror = function ( /*aEvt */) {
+        req.onerror = function () {
             osg.log( 'error ' + url );
         };
         req.send( null );
@@ -113,10 +113,10 @@
         loadUrl( '../media/models/raceship.osgjs', viewer, root, unifs );
         root.getOrCreateStateSet().setAttributeAndModes( new osg.CullFace( osg.CullFace.DISABLE ) );
 
-        var UpdateCallback = function ( /*base*/) {
+        var UpdateCallback = function () {
             this.baseTime_ = ( new Date() ).getTime();
-            this.update = function ( /*node, nv*/) {
-                unifs.time.set( ( new Date() ).getTime() - this.baseTime_ );
+            this.update = function () {
+                unifs.time.setFloat( ( new Date() ).getTime() - this.baseTime_ );
                 return true;
             };
         };
@@ -170,7 +170,7 @@
         var ptFixed = [ point[ 0 ].toFixed( 2 ), point[ 1 ].toFixed( 2 ), point[ 2 ].toFixed( 2 ) ];
 
         //update shader uniform
-        unifs.center.set( new Float32Array( point ) );
+        unifs.center.setVec3( point );
 
         var pt = projectToScreen( viewer.getCamera(), hits[ 0 ] );
 

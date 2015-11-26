@@ -231,11 +231,7 @@
 
             this._halton[ 3 ] = this._frameNum;
 
-            this._uniforms.halton.dirty();
-
         },
-
-
 
 
         rotateNode: function ( nv ) {
@@ -255,7 +251,6 @@
 
             return true;
         },
-
 
 
         pingPongFrame: function ( nv ) {
@@ -396,7 +391,6 @@
                     self._halton[ 2 ] = 0.0;
 
                 }
-                self._uniforms.halton.dirty();
 
             };
             // start/stop motion blur accumulation
@@ -414,7 +408,6 @@
                     self._halton[ 2 ] = 0.0;
 
                 }
-                self._uniforms.halton.dirty();
 
             };
             // show the framebuffers as ui quad on left bottom screen

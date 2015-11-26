@@ -2,10 +2,9 @@
 var Matrix = require( 'osg/Matrix' );
 
 
-
 var CacheUniformApply = function ( state, program ) {
-    this.modelWorldUniform = program._uniformsCache[ state.modelWorldMatrix.name ];
-    this.viewUniform = program._uniformsCache[ state.viewMatrix.name ];
+    this.modelWorldUniform = program._uniformsCache[ state.modelWorldMatrix.getName() ];
+    this.viewUniform = program._uniformsCache[ state.viewMatrix.getName() ];
 
     this.apply = undefined;
     this.Matrix = Matrix;
@@ -25,8 +24,7 @@ CacheUniformApply.prototype = {
         if ( this.modelWorldUniform !== undefined ) {
             functionStr.push( 'if ( matrixModelViewChanged ) {' );
             functionStr.push( '    var modelWorldMatrix = state.modelWorldMatrix;' );
-            functionStr.push( '    this.Matrix.copy(modelworld, modelWorldMatrix.get() );' );
-            functionStr.push( '    modelWorldMatrix.dirty();' );
+            functionStr.push( '    this.Matrix.copy(modelworld, modelWorldMatrix.getArray() );' );
             functionStr.push( '    modelWorldMatrix.apply( gl, this.modelWorldUniform);' );
             functionStr.push( '};' );
         }
@@ -34,8 +32,7 @@ CacheUniformApply.prototype = {
         if ( this.viewUniform !== undefined ) {
             functionStr.push( 'if ( matrixModelViewChanged ) {' );
             functionStr.push( '    var viewMatrix = state.viewMatrix;' );
-            functionStr.push( '    this.Matrix.copy(view, viewMatrix.get() );' );
-            functionStr.push( '    viewMatrix.dirty();' );
+            functionStr.push( '    this.Matrix.copy(view, viewMatrix.getArray() );' );
             functionStr.push( '    viewMatrix.apply( gl, this.viewUniform);' );
             functionStr.push( '};' );
         }

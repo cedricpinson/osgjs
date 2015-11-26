@@ -208,10 +208,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var program = this.getLastProgramApplied();
 
             var mu = this.modelViewMatrix;
-            var mul = program._uniformsCache[ mu.name ];
+            var mul = program._uniformsCache[ mu.getName() ];
             if ( mul ) {
-                Matrix.copy( matrix, mu.get() );
-                mu.dirty();
+                // TODO check to remove the copy, it should not be a problem at all
+                Matrix.copy( matrix, mu.getArray() );
                 mu.apply( this.getGraphicContext(), mul );
             }
 
@@ -233,7 +233,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
             if ( sendNormal ) {
                 mu = this.normalMatrix;
-                mul = program._uniformsCache[ mu.name ];
+                mul = program._uniformsCache[ mu.getName() ];
                 if ( mul ) {
                     Matrix.copy( matrix, normal );
 
@@ -244,8 +244,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                     Matrix.inverse( normal, normal );
                     Matrix.transpose( normal, normal );
 
-                    Matrix.copy( normal, mu.get() );
-                    mu.dirty();
+                    Matrix.copy( normal, mu.getArray() );
                     mu.apply( this.getGraphicContext(), mul );
                 }
             }
@@ -263,11 +262,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var program = this.getLastProgramApplied();
         var mu = this.projectionMatrix;
 
-        var mul = program._uniformsCache[ mu.name ];
+        var mul = program._uniformsCache[ mu.getName() ];
         if ( mul ) {
 
-            Matrix.copy( matrix, mu.get() );
-            mu.dirty();
+            Matrix.copy( matrix, mu.getArray() );
             mu.apply( this.getGraphicContext(), mul );
 
         }
@@ -502,7 +500,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var key = stateSetUniformMapKeys[ i ];
             var uniformPair = stateSetUniformMap[ key ];
             uniform = uniformPair.getUniform();
-            name = uniform.name;
+            name = uniform.getName();
             if ( uniformMap[ name ] === undefined ) {
                 uniformMap[ name ] = new Stack();
                 uniformMap[ name ].globalDefault = uniform;
@@ -736,11 +734,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
 
         if ( hasColorAttrib ) {
-            uniform.get()[ 0 ] = 1.0;
+            uniform.setFloat( 1.0 );
         } else {
-            uniform.get()[ 0 ] = 0.0;
+            uniform.setFloat( 0.0 );
         }
-        uniform.dirty();
         uniform.apply( gl, program._uniformsCache.ArrayColorEnabled );
 
     },
@@ -861,9 +858,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         for ( var i = 0, l = activeUniformsList.length; i < l; i++ ) {
             var u = activeUniformsList[ i ];
-            var loc = gl.getUniformLocation( program._program, u.name );
+            var uniformName = u.getName();
+            var loc = gl.getUniformLocation( program._program, uniformName );
             if ( loc !== undefined && loc !== null ) {
-                uniformsFinal[ u.name ] = u;
+                uniformsFinal[ uniformName ] = u;
             }
         }
         uniformsFinal.dirty();
@@ -949,25 +947,31 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     _computeForeignUniforms: function ( programUniformMap, activeUniformMap ) {
+
         var uniformMapKeys = programUniformMap.getKeys();
         var uniformMap = programUniformMap;
 
         var foreignUniforms = [];
         for ( var i = 0, l = uniformMapKeys.length; i < l; i++ ) {
+
             var name = uniformMapKeys[ i ];
             var location = uniformMap[ name ];
+
             if ( location !== undefined && activeUniformMap[ name ] === undefined ) {
+
                 // filter 'standard' uniform matrix that will be applied for all shader
-                if ( name !== this.modelViewMatrix.name &&
-                    name !== this.modelWorldMatrix.name &&
-                    name !== this.viewMatrix.name &&
-                    name !== this.projectionMatrix.name &&
-                    name !== this.normalMatrix.name &&
+                if ( name !== this.modelViewMatrix.getName() &&
+                    name !== this.modelWorldMatrix.getName() &&
+                    name !== this.viewMatrix.getName() &&
+                    name !== this.projectionMatrix.getName() &&
+                    name !== this.normalMatrix.getName() &&
                     name !== 'ArrayColorEnabled' ) {
                     foreignUniforms.push( name );
                 }
             }
+
         }
+
         return foreignUniforms;
     },
 
@@ -984,7 +988,6 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             }
         }
     },
-
 
 
     _cacheUniformsForGeneratedProgram: function ( program ) {

@@ -293,10 +293,10 @@ ShadowReceiveAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.obj
 
         var uniformMap = this.getOrCreateUniforms();
 
-        uniformMap.bias.set( this._bias );
-        uniformMap.exponent0.set( this._exponent0 );
-        uniformMap.exponent1.set( this._exponent1 );
-        uniformMap.epsilonVSM.set( this._epsilonVSM );
+        uniformMap.bias.setFloat( this._bias );
+        uniformMap.exponent0.setFloat( this._exponent0 );
+        uniformMap.exponent1.setFloat( this._exponent1 );
+        uniformMap.epsilonVSM.setFloat( this._epsilonVSM );
 
     },
 

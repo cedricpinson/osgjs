@@ -382,8 +382,7 @@
                 // overwrite matrix, remove translate so environment is always at camera origin
                 osg.Matrix.setTrans( nv.getCurrentModelViewMatrix(), 0, 0, 0 );
                 var m = nv.getCurrentModelViewMatrix();
-                osg.Matrix.copy( m, cubemapTransform.get() );
-                cubemapTransform.dirty();
+                osg.Matrix.copy( m, cubemapTransform.getArray() );
                 return true;
             };
         };
@@ -497,10 +496,10 @@
 
         // gui
         document.getElementById( 'rangeExposure' ).onchange = function () {
-            uniformCenter.set( parseFloat( this.value ) );
+            uniformCenter.setFloat( parseFloat( this.value ) );
         };
         document.getElementById( 'rangeGamma' ).onchange = function () {
-            uniformGamma.set( parseFloat( this.value ) );
+            uniformGamma.setFloat( parseFloat( this.value ) );
         };
         document.getElementById( 'texture' ).onchange = function () {
             setEnvironment( this.value, background, ground );

@@ -144,8 +144,8 @@
 
                 var bloom = {
                     scene: [ 'Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg' ],
-                    threshold: threshold.get()[ 0 ],
-                    factor: factor.get()[ 0 ],
+                    threshold: threshold.getArray()[ 0 ],
+                    factor: factor.getArray()[ 0 ]
                 };
 
                 var sceneCtrl = folder.add( bloom, 'scene', bloom.scene );
@@ -153,11 +153,11 @@
                 var factorCtrl = folder.add( bloom, 'factor', 0.0, 1.0 );
 
                 thresholdCtrl.onChange( function ( value ) {
-                    threshold.set( value );
+                    threshold.setFloat( value );
                 } );
 
                 factorCtrl.onChange( function ( value ) {
-                    factor.set( value );
+                    factor.setFloat( value );
                 } );
 
                 sceneCtrl.onChange( function ( value ) {

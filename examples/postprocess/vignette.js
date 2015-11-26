@@ -60,21 +60,19 @@
                 folder.open();
 
                 var vignette = {
-                    innerRadius: lensRadius.get()[ 1 ],
-                    outerRadius: lensRadius.get()[ 0 ]
+                    innerRadius: lensRadius.getArray()[ 1 ],
+                    outerRadius: lensRadius.getArray()[ 0 ]
                 };
 
                 var innerCtrl = folder.add( vignette, 'innerRadius', 0, 1 );
                 var outerCtrl = folder.add( vignette, 'outerRadius', 0, 1 );
 
                 innerCtrl.onChange( function ( value ) {
-                    lensRadius.get()[ 1 ] = value;
-                    lensRadius.dirty();
+                    lensRadius.getArray()[ 1 ] = value;
                 } );
 
                 outerCtrl.onChange( function ( value ) {
-                    lensRadius.get()[ 0 ] = value;
-                    lensRadius.dirty();
+                    lensRadius.getArray()[ 0 ] = value;
                 } );
             }
         };

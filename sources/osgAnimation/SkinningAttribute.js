@@ -85,7 +85,7 @@ SkinningAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectIn
 
         if ( !this._enable ) return;
 
-        this.getOrCreateUniforms().uBones.set( this._matrixPalette );
+        this.getOrCreateUniforms().uBones.setArray( this._matrixPalette );
 
     }
 
