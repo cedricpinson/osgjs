@@ -80,22 +80,21 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
         if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
 
         var uniformList = {
-            'ambient': 'createFloat4',
-            'diffuse': 'createFloat4',
-            'specular': 'createFloat4',
+            ambient: 'createFloat4',
+            diffuse: 'createFloat4',
+            specular: 'createFloat4',
 
-            'attenuation': 'createFloat4',
-            'position': 'createFloat4',
-            'direction': 'createFloat3',
+            attenuation: 'createFloat4',
+            position: 'createFloat4',
+            direction: 'createFloat3',
 
-            'spotCutOff': 'createFloat1',
-            'spotBlend': 'createFloat1',
+            spotCutOff: 'createFloat1',
+            spotBlend: 'createFloat1',
 
-            'ground': 'createFloat3',
+            ground: 'createFloat4',
 
-            'matrix': 'createMatrix4',
-            'invMatrix': 'createMatrix4'
-
+            matrix: 'createMatrix4',
+            invMatrix: 'createMatrix4'
         };
 
         var uniforms = {};
@@ -304,18 +303,19 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     applyPositionedUniform: function ( matrix ) {
 
         var uniformMap = this.getOrCreateUniforms();
-        Matrix.copy( matrix, uniformMap.matrix.get() );
-        uniformMap.matrix.dirty();
 
-        Matrix.copy( matrix, uniformMap.invMatrix.get() );
-        uniformMap.invMatrix.get()[ 12 ] = 0;
-        uniformMap.invMatrix.get()[ 13 ] = 0;
-        uniformMap.invMatrix.get()[ 14 ] = 0;
+        var matrixArray = uniformMap.matrix.getArray();
+        var invMatrixArray = uniformMap.invMatrix.getArray();
 
-        Matrix.inverse( uniformMap.invMatrix.get(), uniformMap.invMatrix.get() );
-        Matrix.transpose( uniformMap.invMatrix.get(), uniformMap.invMatrix.get() );
+        Matrix.copy( matrix, matrixArray );
+        Matrix.copy( matrix, invMatrixArray );
 
-        uniformMap.invMatrix.dirty();
+        invMatrixArray[ 12 ] = 0.0;
+        invMatrixArray[ 13 ] = 0.0;
+        invMatrixArray[ 14 ] = 0.0;
+
+        Matrix.inverse( invMatrixArray, invMatrixArray );
+        Matrix.transpose( invMatrixArray, invMatrixArray );
     },
 
     apply: function () {
@@ -324,38 +324,22 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
         var uniformMap = this.getOrCreateUniforms();
 
-        Vec4.copy( this._position, uniformMap.position.get() );
-        uniformMap.position.dirty();
+        uniformMap.position.setArray( this._position );
 
         if ( this.isSpotLight() ) {
             var spotsize = Math.cos( this._spotCutoff * Math.PI / 180.0 );
-            uniformMap.spotCutOff.get()[ 0 ] = spotsize;
-            uniformMap.spotCutOff.dirty();
-
-            uniformMap.spotBlend.get()[ 0 ] = ( 1.0 - spotsize ) * this._spotBlend;
-            uniformMap.spotBlend.dirty();
-
-            Vec3.copy( this._direction, uniformMap.direction.get() );
-            uniformMap.direction.dirty();
+            uniformMap.spotCutOff.setFloat( spotsize );
+            uniformMap.spotBlend.setFloat( ( 1.0 - spotsize ) * this._spotBlend );
+            uniformMap.direction.setArray( this._direction );
         }
 
-        if ( this.isHemiLight() ) {
-            Vec3.copy( this._ground, uniformMap.ground.get() );
-            uniformMap.ground.dirty();
-        }
+        if ( this.isHemiLight() )
+            uniformMap.ground.setArray( this._ground );
 
-        Vec4.copy( this._attenuation, uniformMap.attenuation.get() );
-        uniformMap.attenuation.dirty();
-
-        Vec4.copy( this._diffuse, uniformMap.diffuse.get() );
-        uniformMap.diffuse.dirty();
-
-        Vec4.copy( this._specular, uniformMap.specular.get() );
-        uniformMap.specular.dirty();
-
-        Vec4.copy( this._ambient, uniformMap.ambient.get() );
-        uniformMap.ambient.dirty();
-
+        uniformMap.attenuation.setArray( this._attenuation );
+        uniformMap.diffuse.setArray( this._diffuse );
+        uniformMap.specular.setArray( this._specular );
+        uniformMap.ambient.setArray( this._ambient );
     }
 
 } ), 'osg', 'Light' );

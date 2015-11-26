@@ -58,7 +58,7 @@
                 backgroundColor: colorFloatTo255( self.viewer.getCamera().getClearColor() ),
                 reset: function () {
                     self.resetHeightAndGui();
-                },
+                }
             };
 
             var modelController = this.gui.add( this.params, 'model', [ 'file.osgjs', 'sphere' ] );

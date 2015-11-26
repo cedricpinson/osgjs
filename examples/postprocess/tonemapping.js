@@ -240,15 +240,15 @@
                 folder.open();
                 var param = {
                     'scene': Object.keys( scenes )[ 0 ],
-                    'tonemapping': methods[ method.get()[ 0 ] - 1 ],
-                    'gamma': gamma.get()[ 0 ],
-                    'exposure': exposure.get()[ 0 ],
-                    'brightness': brightness.get()[ 0 ],
-                    'contrast': contrast.get()[ 0 ],
-                    'saturation': saturation.get()[ 0 ],
-                    'locality': locality.get()[ 0 ],
-                    'middleGrey': middleGrey.get()[ 0 ],
-                    'whitePoint': whitePoint.get()[ 0 ],
+                    'tonemapping': methods[ method.getArray()[ 0 ] - 1 ],
+                    'gamma': gamma.getArray()[ 0 ],
+                    'exposure': exposure.getArray()[ 0 ],
+                    'brightness': brightness.getArray()[ 0 ],
+                    'contrast': contrast.getArray()[ 0 ],
+                    'saturation': saturation.getArray()[ 0 ],
+                    'locality': locality.getArray()[ 0 ],
+                    'middleGrey': middleGrey.getArray()[ 0 ],
+                    'whitePoint': whitePoint.getArray()[ 0 ]
                 };
 
                 var sceneCtrl = folder.add( param, 'scene', Object.keys( scenes ) );
@@ -258,49 +258,49 @@
 
                 var exposureCtrl = folder.add( param, 'exposure', 0.0, 2.0 );
                 exposureCtrl.onChange( function ( value ) {
-                    exposure.set( value );
+                    exposure.setFloat( value );
                 } );
 
                 var brightnessCtrl = folder.add( param, 'brightness', -2.0, 2.0 );
                 brightnessCtrl.onChange( function ( value ) {
-                    brightness.set( value );
+                    brightness.setFloat( value );
                 } );
 
                 var contrastCtrl = folder.add( param, 'contrast', -1.0, 1.0 );
                 contrastCtrl.onChange( function ( value ) {
-                    contrast.set( value );
+                    contrast.setFloat( value );
                 } );
 
                 var saturationCtrl = folder.add( param, 'saturation', 0.0, 5.0 );
                 saturationCtrl.onChange( function ( value ) {
-                    saturation.set( value );
+                    saturation.setFloat( value );
                 } );
 
                 var gammaCtrl = folder.add( param, 'gamma', 0, 3 );
                 gammaCtrl.onChange( function ( value ) {
-                    gamma.set( value );
+                    gamma.setFloat( value );
                 } );
 
                 var methodCtrl = folder.add( param, 'tonemapping', methods );
                 methodCtrl.onChange( function ( value ) {
-                    method.set( methods.indexOf( value ) + 1 );
+                    method.setFloat( methods.indexOf( value ) + 1 );
                 } );
 
                 var reinhardt = folder.addFolder( 'Reinhardt' );
 
                 var middleGreyCtrl = reinhardt.add( param, 'middleGrey', 0.01, 1 );
                 middleGreyCtrl.onChange( function ( value ) {
-                    middleGrey.set( value );
+                    middleGrey.setFloat( value );
                 } );
 
                 var localityCtrl = reinhardt.add( param, 'locality', 0.0, 11.0 );
                 localityCtrl.onChange( function ( value ) {
-                    locality.set( value );
+                    locality.setFloat( value );
                 } );
 
                 var whitePointCtrl = reinhardt.add( param, 'whitePoint', 0.01, 10 );
                 whitePointCtrl.onChange( function ( value ) {
-                    whitePoint.set( value );
+                    whitePoint.setFloat( value );
                 } );
 
                 mainGui.remember( param );

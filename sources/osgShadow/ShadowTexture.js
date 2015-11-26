@@ -117,19 +117,16 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
         // update Uniforms
         var uniformMap = this.getOrCreateUniforms( texUnit );
-        uniformMap.ViewMatrix.set( this._viewMatrix );
-        uniformMap.ProjectionMatrix.set( this._projectionMatrix );
-        uniformMap.DepthRange.set( this._depthRange );
-        uniformMap.MapSize.set( this._mapSize );
+        uniformMap.ViewMatrix.setArray( this._viewMatrix );
+        uniformMap.ProjectionMatrix.setArray( this._projectionMatrix );
+        uniformMap.DepthRange.setArray( this._depthRange );
+        uniformMap.MapSize.setArray( this._mapSize );
 
         this._dirty = false;
     },
 
     getHash: function () {
-
-        return this.getTypeMember() + '_' + this._lightUnit + '_' +
-            this._type;
-
+        return this.getTypeMember() + '_' + this._lightUnit + '_' + this._type;
     }
 
 } ), 'osgShadow', 'ShadowTexture' );

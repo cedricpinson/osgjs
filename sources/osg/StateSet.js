@@ -65,7 +65,7 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
             mode = StateAttribute.ON;
         }
 
-        var name = uniform.name;
+        var name = uniform.getName();
         this.uniforms[ name ] = this.getAttributePair( uniform, mode );
         this.uniforms.dirty();
     },
@@ -224,7 +224,7 @@ StateSet.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         }
         var list = this.getAttributeList();
         for ( i = 0, j = list.length; i < j; i++ ) {
-            // Remove only if we have releaseGLObject method. 
+            // Remove only if we have releaseGLObject method.
             if ( list[ i ]._object.releaseGLObjects ) {
                 list[ i ]._object.releaseGLObjects();
             }

@@ -531,7 +531,7 @@ Composer.Filter.PingPong.prototype = MACROUTILS.objectInherit( Composer.Filter.C
         if ( uniforms ) {
             keys = window.Object.keys( uniforms );
             for ( k = 0, l = keys.length; k < l; k++ ) {
-                unif = uniforms[ keys[ k ] ];
+                unif = uniforms[ keys[ k ] ].getUniform();
                 st0.addUniform( unif );
                 st1.addUniform( unif );
             }

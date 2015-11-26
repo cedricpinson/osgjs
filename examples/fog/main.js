@@ -69,11 +69,11 @@
         var gui = new window.dat.GUI();
 
         var param = {
-            'density': density.get()[ 0 ],
+            density: density.getArray()[ 0 ]
         };
 
         gui.add( param, 'density', 0, 0.006 ).onChange( function ( value ) {
-            density.set( value );
+            density.setFloat( value );
         } );
 
         ground.getOrCreateStateSet().addUniform( density );

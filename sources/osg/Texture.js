@@ -176,7 +176,6 @@ Texture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                 texture: uniform
             } );
 
-            uniform.dirty();
             Texture.uniforms[ unit ] = uniformMap;
         }
 

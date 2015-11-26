@@ -12,7 +12,7 @@
     */
     window.getPostSceneSharpen = function () {
 
-        // Discrete Laplace convolution kernels from 
+        // Discrete Laplace convolution kernels from
         // http://en.wikipedia.org/wiki/Laplace_filter#Implementation_in_Image_Processing
         function laplace( x ) {
             return [ 0, -x, 0, -x, x * 4, -x, 0, -x, 0 ];
@@ -31,9 +31,9 @@
         function updateKernel() {
 
             if ( useDiagonal )
-                kernel.set( laplaceDiagonal( factor ) );
+                kernel.setMatrix3( laplaceDiagonal( factor ) );
             else
-                kernel.set( laplace( factor ) );
+                kernel.setMatrix3( laplace( factor ) );
         }
 
         // 3x3 tap, 9 textures fetches
@@ -99,7 +99,7 @@
                 folder.open();
 
                 var kernel = {
-                    'kernel': 0,
+                    kernel: 0,
                     'sample diagonal': false
                 };
 

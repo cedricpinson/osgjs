@@ -1,7 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Map = require( 'osg/Map' );
-var Vec4 = require( 'osg/Vec4' );
 var StateAttribute = require( 'osg/StateAttribute' );
 var Uniform = require( 'osg/Uniform' );
 
@@ -86,8 +85,7 @@ MorphAttribute.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInher
         if ( !this._enable ) return;
 
         var uniformMap = this.getOrCreateUniforms();
-        Vec4.copy( this._targetWeights, uniformMap.uTargetWeights.get() );
-        uniformMap.uTargetWeights.dirty();
+        uniformMap.uTargetWeights.setArray( this._targetWeights );
 
     }
 

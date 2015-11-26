@@ -23,7 +23,7 @@
             if ( obj.uniforms ) return obj.uniforms;
 
             obj.uniforms = new osg.Map( {
-                'enable': osg.Uniform.createInt1( 0, 'negatifEnable' )
+                enable: osg.Uniform.createInt1( 0, 'negatifEnable' )
             } );
 
             return obj.uniforms;
@@ -31,24 +31,20 @@
 
         setAttributeEnable: function ( state ) {
             this._attributeEnable = state;
-            this.dirty();
         },
 
         getAttributeEnable: function () {
             return this._attributeEnable;
         },
 
-        apply: function ( /*state*/) {
+        apply: function () {
             var uniforms = this.getOrCreateUniforms();
             var value = this._attributeEnable ? 1 : 0;
-            uniforms.enable.set( value );
-
-            this.setDirty( false );
+            uniforms.enable.setFloat( value );
         }
 
 
     } ), 'osg', 'Negatif' );
-
 
 
     // this node will call a function negatif in the shader
