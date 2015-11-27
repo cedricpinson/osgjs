@@ -186,8 +186,24 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
         var state = this.getState();
 
+        var gl = state.getGraphicContext();
+
+
+        if ( this.firstFrames === undefined ) this.firstFrames = 0;
+        this.firstFrames++;
+
+        if ( gl.isAsync && gl.isRecording() && this.firstFrames > 100 ) {
+            gl.replayCalls();
+            return;
+        }
+
+        if ( gl.isRecording ) {
+            gl.resetCalls();
+        }
+
         // important because cache are used in cullvisitor
         state.resetCacheFrame();
+
 
         this._renderStage.setCamera( this._camera );
         this._renderStage.draw( state );
@@ -201,6 +217,9 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
         state.applyDefault();
 
+        if ( gl.isAsync && gl.isRecording() ) {
+            gl.replayCalls();
+        }
     }
 
 

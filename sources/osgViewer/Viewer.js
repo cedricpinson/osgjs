@@ -13,7 +13,7 @@ var EventProxy = require( 'osgViewer/eventProxy/EventProxy' );
 var View = require( 'osgViewer/View' );
 var WebGLUtils = require( 'osgViewer/webgl-utils' );
 var WebGLDebugUtils = require( 'osgViewer/webgl-debug' );
-
+var WebGLStateCache = require( 'osgViewer/webgl-state' );
 
 var OptionsURL = ( function () {
     var options = {};
@@ -185,6 +185,11 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
         if ( Notify.reportWebGLError || options.get( 'reportWebGLError' ) ) {
             gl = WebGLDebugUtils.makeDebugContext( gl );
+        }
+
+        if ( options.get( 'stateCache' ) ) {;
+            gl = new WebGLStateCache( gl, true, options.get( 'stateRecord' ), options.get( 'stateSync' ) );
+
         }
 
         this.initWebGLCaps( gl );
@@ -398,6 +403,8 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
             var tick2 = Timer.instance().tick();
             this.getViewerStats().setAttribute( frameNumber, 'Draw duration', Timer.instance().deltaS( tick1, tick2 ) );
+
+
         }
     },
 
