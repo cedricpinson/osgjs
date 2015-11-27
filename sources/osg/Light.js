@@ -27,7 +27,7 @@ var Light = function ( lightNum, disable ) {
     this._direction = Vec3.createAndSet( 0.0, 0.0, -1.0 );
 
     // TODO : refactor lights management w=1.0 (isHemi), w=-1.0
-    // (isNotHemi) _ground contains the color but w says if it's
+    // (isNotHemi), w=0.0 (isEnv) _ground contains the color but w says if it's
     // an hemi or not
     this._ground = Vec4.createAndSet( 0.2, 0.2, 0.2, -1.0 );
 
@@ -49,6 +49,8 @@ Light.DIRECTION = 'DIRECTION';
 Light.SPOT = 'SPOT';
 Light.POINT = 'POINT';
 Light.HEMI = 'HEMI';
+Light.ENV = 'ENV';
+
 
 Light.uniforms = {};
 Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
@@ -231,22 +233,33 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     },
 
     setLightType: function ( type ) {
-        if ( type === Light.DIRECTION )
+
+        switch ( type ) {
+        case Light.DIRECTION:
             return this.setLightAsDirection();
-        else if ( type === Light.SPOT )
+        case Light.SPOT:
             return this.setLightAsSpot();
-        else if ( type === Light.HEMI )
+        case Light.HEMI:
             return this.setLightAsHemi();
-        return this.setLightAsPoint();
+        case Light.ENV:
+            return this.setLightAsEnv();
+        default:
+            return this.setLightAsPoint();
+        };
+
     },
 
     getLightType: function () {
+
         if ( this.isDirectionLight() )
             return Light.DIRECTION;
         else if ( this.isSpotLight() )
             return Light.SPOT;
         else if ( this.isHemiLight() )
             return Light.HEMI;
+        else if ( this.isEnvLight() )
+            return Light.ENV;
+
         return Light.POINT;
     },
 
@@ -275,6 +288,12 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
         this._ground[ 3 ] = 1.0;
     },
 
+    setLightAsEnv: function () {
+        Vec4.set( 0.0, 0.0, 1.0, 0.0, this._position );
+        this._spotCutoff = 180;
+        this._ground[ 3 ] = 0.0;
+    },
+
     setLightNumber: function ( unit ) {
         this._lightUnit = unit;
     },
@@ -289,11 +308,14 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     },
 
     isDirectionLight: function () {
-        return this._position[ 3 ] === 0.0 && this._ground[ 3 ] < 0.0;
+        return this._position[ 3 ] === 0.0 && this._ground[ 3 ] === -1.0;
     },
 
     isHemiLight: function () {
-        return this._ground[ 3 ] >= 0.0;
+        return this._ground[ 3 ] === 1.0;
+    },
+    isEnvLight: function () {
+        return this._ground[ 3 ] === 0.0;
     },
 
     // matrix is current model view, which can mean:
