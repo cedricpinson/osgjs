@@ -267,9 +267,49 @@ HemiLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
     }
 } );
 
+var EnvLight = function () {
+    NodeLights.apply( this );
+};
+
+EnvLight.prototype = MACROUTILS.objectInherit( NodeLights.prototype, {
+
+    type: 'EnvLight',
+
+    validInputs: [
+        'normal',
+        'eyeVector',
+
+        'lightposition',
+
+        'lightmatrix',
+
+        'lighted',
+        'lightEyeDir',
+        'lightNDL'
+    ],
+
+    computeShader: function () {
+
+        return shaderUtils.callFunction(
+            'computeEnvLightShading',
+            this._outputs.color, [ this._inputs.normal,
+                this._inputs.eyeVector,
+
+                this._inputs.lightposition,
+
+                this._inputs.lightmatrix,
+
+                this._inputs.lightEyeDir,
+                this._inputs.lightNDL,
+                this._inputs.lighted
+            ] );
+    }
+} );
+
 module.exports = {
     PointLight: PointLight,
     SpotLight: SpotLight,
     SunLight: SunLight,
-    HemiLight: HemiLight
+    HemiLight: HemiLight,
+    EnvLight: EnvLight
 };
