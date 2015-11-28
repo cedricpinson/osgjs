@@ -41,7 +41,7 @@ var Light = function ( lightNumber, disable ) {
 
     this._lightUnit = lightNumber;
 
-    this._invMatrix = new Matrix.create();
+    this._invMatrix = Matrix.create();
 
     this._enable = !disable;
 

@@ -1,5 +1,4 @@
 'use strict';
-var Matrix = require( 'osg/Matrix' );
 var Object = require( 'osg/Object' );
 var Plane = require( 'osg/Plane' );
 var MACROUTILS = require( 'osg/Utils' );
@@ -324,19 +323,6 @@ Polytope.prototype = MACROUTILS.objectInherit( Object.prototype, {
             selectorMask <<= 1;
         }
         return true;
-    },
-
-
-    /** Transform the clipping set by matrix.  Note, this operations carries out
-     * the calculation of the inverse of the matrix since a plane must
-     * be multiplied by the inverse transposed to transform it. This
-     * makes this operation expensive.  If the inverse has been already
-     * calculated elsewhere then use transformProvidingInverse() instead.
-     * See http://www.worldserver.com/turk/computergraphics/NormalTransformations.pdf*/
-    transform: function ( matrix ) {
-        var inverse = new Matrix();
-        inverse.invert( matrix );
-        this.transformProvidingInverse( inverse );
     },
 
     /** Transform the clipping set by provide a pre inverted matrix.

@@ -28,7 +28,7 @@ UpdateRttCameraCallback.prototype = {
 
 var perspectiveMatrixFromVRFieldOfView = function ( fov, zNear, zFar ) {
 
-    var matrix = new Matrix.create();
+    var matrix = Matrix.create();
 
     var degToRad = Math.PI / 180.0;
     var upTan = Math.tan( fov.upDegrees * degToRad );
@@ -166,10 +166,10 @@ var getHMDOptions = function ( hmdDevice ) {
 
 var WebVR = {};
 
-WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride ) {
+WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldFactorOverride ) {
 
     var root = rootOverride || new Node();
-    var worldFactor = 1.0;
+    var worldFactor = worldFactorOverride !== undefined ? worldFactor : 1.0;
 
     var hmd = getHMDOptions( HMDdevice );
 
