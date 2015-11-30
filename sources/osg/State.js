@@ -211,7 +211,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var mul = program._uniformsCache[ mu.getName() ];
             if ( mul ) {
                 // TODO check to remove the copy, it should not be a problem at all
-                Matrix.copy( matrix, mu.getArray() );
+                Matrix.copy( matrix, mu.getInternalArray() );
                 mu.apply( this.getGraphicContext(), mul );
             }
 
@@ -244,7 +244,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                     Matrix.inverse( normal, normal );
                     Matrix.transpose( normal, normal );
 
-                    Matrix.copy( normal, mu.getArray() );
+                    Matrix.copy( normal, mu.getInternalArray() );
                     mu.apply( this.getGraphicContext(), mul );
                 }
             }
@@ -265,7 +265,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var mul = program._uniformsCache[ mu.getName() ];
         if ( mul ) {
 
-            Matrix.copy( matrix, mu.getArray() );
+            Matrix.copy( matrix, mu.getInternalArray() );
             mu.apply( this.getGraphicContext(), mul );
 
         }

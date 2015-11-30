@@ -117,12 +117,11 @@ ShadowTexture.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
         // update Uniforms
         var uniformMap = this.getOrCreateUniforms( texUnit );
-        uniformMap.ViewMatrix.setArray( this._viewMatrix );
-        uniformMap.ProjectionMatrix.setArray( this._projectionMatrix );
-        uniformMap.DepthRange.setArray( this._depthRange );
-        uniformMap.MapSize.setArray( this._mapSize );
+        uniformMap.ViewMatrix.setInternalArray( this._viewMatrix );
+        uniformMap.ProjectionMatrix.setInternalArray( this._projectionMatrix );
+        uniformMap.DepthRange.setInternalArray( this._depthRange );
+        uniformMap.MapSize.setInternalArray( this._mapSize );
 
-        this._dirty = false;
     },
 
     getHash: function () {

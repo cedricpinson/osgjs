@@ -46,7 +46,7 @@ Uniform.prototype = {
     },
 
     set: function ( array ) {
-        Notify.log( 'deprecated use setArray instead' );
+        Notify.log( 'deprecated use setInternalArray instead' );
         this._data = array;
     },
 
@@ -57,11 +57,16 @@ Uniform.prototype = {
             gl[ this._glCall ]( location, this._data );
     },
 
-    setArray: function ( array ) {
+    // set the internal array use but the uniform
+    // the setFloat/setVecX/setMatrixX will be copied to the
+    // internal array. Consider using this function as an optimization
+    // to avoid copy. It's possible inside StateAttribute code but it's
+    // safer to not do that in users code unless you what you are doing
+    setInternalArray: function ( array ) {
         this._data = array;
     },
 
-    getArray: function () {
+    getInternalArray: function () {
         return this._data;
     },
 
@@ -142,7 +147,7 @@ var createUniformX = function ( data, uniformName, defaultConstructor, glSignatu
     if ( !Array.isArray( value ) && value.byteLength === undefined )
         value = [ value ];
 
-    uniform.setArray( value );
+    uniform.setInternalArray( value );
     uniform._glCall = glSignature;
     uniform._type = type;
     uniform._isMatrix = Boolean( isMatrix );

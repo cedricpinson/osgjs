@@ -304,8 +304,8 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
         var uniformMap = this.getOrCreateUniforms();
 
-        var matrixArray = uniformMap.matrix.getArray();
-        var invMatrixArray = uniformMap.invMatrix.getArray();
+        var matrixArray = uniformMap.matrix.getInternalArray();
+        var invMatrixArray = uniformMap.invMatrix.getInternalArray();
 
         Matrix.copy( matrix, matrixArray );
         Matrix.copy( matrix, invMatrixArray );
@@ -324,22 +324,22 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
         var uniformMap = this.getOrCreateUniforms();
 
-        uniformMap.position.setArray( this._position );
+        uniformMap.position.setInternalArray( this._position );
 
         if ( this.isSpotLight() ) {
             var spotsize = Math.cos( this._spotCutoff * Math.PI / 180.0 );
             uniformMap.spotCutOff.setFloat( spotsize );
             uniformMap.spotBlend.setFloat( ( 1.0 - spotsize ) * this._spotBlend );
-            uniformMap.direction.setArray( this._direction );
+            uniformMap.direction.setInternalArray( this._direction );
         }
 
         if ( this.isHemiLight() )
-            uniformMap.ground.setArray( this._ground );
+            uniformMap.ground.setInternalArray( this._ground );
 
-        uniformMap.attenuation.setArray( this._attenuation );
-        uniformMap.diffuse.setArray( this._diffuse );
-        uniformMap.specular.setArray( this._specular );
-        uniformMap.ambient.setArray( this._ambient );
+        uniformMap.attenuation.setInternalArray( this._attenuation );
+        uniformMap.diffuse.setInternalArray( this._diffuse );
+        uniformMap.specular.setInternalArray( this._specular );
+        uniformMap.ambient.setInternalArray( this._ambient );
     }
 
 } ), 'osg', 'Light' );
