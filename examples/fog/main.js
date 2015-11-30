@@ -69,7 +69,7 @@
         var gui = new window.dat.GUI();
 
         var param = {
-            density: density.getArray()[ 0 ]
+            density: density.getInternalArray()[ 0 ]
         };
 
         gui.add( param, 'density', 0, 0.006 ).onChange( function ( value ) {

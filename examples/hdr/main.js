@@ -382,7 +382,7 @@
                 // overwrite matrix, remove translate so environment is always at camera origin
                 osg.Matrix.setTrans( nv.getCurrentModelViewMatrix(), 0, 0, 0 );
                 var m = nv.getCurrentModelViewMatrix();
-                osg.Matrix.copy( m, cubemapTransform.getArray() );
+                osg.Matrix.copy( m, cubemapTransform.getInternalArray() );
                 return true;
             };
         };

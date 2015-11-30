@@ -76,7 +76,7 @@
                 folder.open();
 
                 var param = {
-                    factor: factor.getArray()[ 0 ]
+                    factor: factor.getInternalArray()[ 0 ]
                 };
 
                 var factorCtrl = folder.add( param, 'factor', 0, 0.05 );

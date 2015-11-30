@@ -144,8 +144,8 @@
 
                 var bloom = {
                     scene: [ 'Budapest.jpg', 'Beaumaris.jpg', 'Seattle.jpg' ],
-                    threshold: threshold.getArray()[ 0 ],
-                    factor: factor.getArray()[ 0 ]
+                    threshold: threshold.getInternalArray()[ 0 ],
+                    factor: factor.getInternalArray()[ 0 ]
                 };
 
                 var sceneCtrl = folder.add( bloom, 'scene', bloom.scene );

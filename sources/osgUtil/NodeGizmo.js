@@ -284,7 +284,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         return function ( hit ) {
 
             if ( this._hoverNode )
-                this._hoverNode.getStateSet().getUniform( 'uColor' ).setArray( this._keepHoverColor );
+                this._hoverNode.getStateSet().getUniform( 'uColor' ).setInternalArray( this._keepHoverColor );
             if ( !hit ) {
                 this._hoverNode = null;
                 return;
@@ -302,8 +302,8 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
             var unif = node.getStateSet().getUniform( 'uColor' );
             this._hoverNode = node;
-            this._keepHoverColor = unif.getArray();
-            unif.setArray( hoverColor );
+            this._keepHoverColor = unif.getInternalArray();
+            unif.setInternalArray( hoverColor );
         };
     } )(),
 

@@ -240,15 +240,15 @@
                 folder.open();
                 var param = {
                     'scene': Object.keys( scenes )[ 0 ],
-                    'tonemapping': methods[ method.getArray()[ 0 ] - 1 ],
-                    'gamma': gamma.getArray()[ 0 ],
-                    'exposure': exposure.getArray()[ 0 ],
-                    'brightness': brightness.getArray()[ 0 ],
-                    'contrast': contrast.getArray()[ 0 ],
-                    'saturation': saturation.getArray()[ 0 ],
-                    'locality': locality.getArray()[ 0 ],
-                    'middleGrey': middleGrey.getArray()[ 0 ],
-                    'whitePoint': whitePoint.getArray()[ 0 ]
+                    'tonemapping': methods[ method.getInternalArray()[ 0 ] - 1 ],
+                    'gamma': gamma.getInternalArray()[ 0 ],
+                    'exposure': exposure.getInternalArray()[ 0 ],
+                    'brightness': brightness.getInternalArray()[ 0 ],
+                    'contrast': contrast.getInternalArray()[ 0 ],
+                    'saturation': saturation.getInternalArray()[ 0 ],
+                    'locality': locality.getInternalArray()[ 0 ],
+                    'middleGrey': middleGrey.getInternalArray()[ 0 ],
+                    'whitePoint': whitePoint.getInternalArray()[ 0 ]
                 };
 
                 var sceneCtrl = folder.add( param, 'scene', Object.keys( scenes ) );
