@@ -866,11 +866,13 @@ var WebGLStateCache = function ( gl, cache, record, asyncCmd ) {
             this._stateCache[ 'CURRENT_PROGRAM' ] = program;
 
             // TODO: UNIFORM Cache Program reset and start
-            //if (!this._programUniformCache[ program ]) = this._uniformCache;
-            this._uniformCache = {};
+            if ( !this._programUniformCache.has( program ) ) {
+                this._programUniformCache.set( program, new WeakMap() );
+            }
+            this._uniformCache = this._programUniformCache.get( program );
 
             //this._programUniformCache[ program ] = this._uniformCache;
-            this._programUniformCache.set( program, this._uniformCache );
+            //this._programUniformCache.set( program, this._uniformCache );
 
             if ( this._sync ) {
                 this._gl.useProgram( program );
@@ -892,11 +894,16 @@ var WebGLStateCache = function ( gl, cache, record, asyncCmd ) {
             if ( !this._uniformCache ) {
                 return true; // no program binded
             }
-
             //var program = this._stateCache[ 'CURRENT_PROGRAM' ];
             //if ( !program ) return true;
 
-            if ( arrayCompare( this._uniformCache[ location ], v ) ) return true;
+            var oldV = this._uniformCache.get( location );
+            if ( arrayCompare( oldV, v ) ) {
+                return true;
+            };
+
+            // todo array stack
+            this._uniformCache.set( location, v.slice( 0 ) );
 
             return false;
 
