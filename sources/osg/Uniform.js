@@ -33,7 +33,7 @@ Uniform.prototype = {
     },
 
     dirty: function () {
-        Notify.log( 'deprecated no need anymore' );
+        Notify.log( 'deprecated dont use Uniform.dirty anymore' );
     },
 
     getType: function () {
@@ -41,13 +41,17 @@ Uniform.prototype = {
     },
 
     get: function () {
-        Notify.log( 'deprecated use getArray instead' );
+        Notify.log( 'deprecated use getInternalArray instead' );
         return this._data;
     },
 
     set: function ( array ) {
-        Notify.log( 'deprecated use setInternalArray instead' );
-        this._data = array;
+        Notify.log( 'deprecated use setInternalArray or setFloat/setInt instead' );
+        var value = array;
+        if ( !Array.isArray( value ) && value.byteLength === undefined )
+            this._data[ 0 ] = value;
+        else
+            this._data = array;
     },
 
     apply: function ( gl, location ) {
@@ -132,6 +136,11 @@ Uniform.prototype.setVec3 = Uniform.prototype.setFloat3;
 Uniform.prototype.setVec4 = Uniform.prototype.setFloat4;
 Uniform.prototype.setMatrix4 = Uniform.prototype.setFloat16;
 Uniform.prototype.setMatrix3 = Uniform.prototype.setFloat9;
+Uniform.prototype.setInt = Uniform.prototype.setFloat;
+Uniform.prototype.setInt1 = Uniform.prototype.setFloat1;
+Uniform.prototype.setInt2 = Uniform.prototype.setFloat2;
+Uniform.prototype.setInt3 = Uniform.prototype.setFloat3;
+Uniform.prototype.setInt4 = Uniform.prototype.setFloat4;
 
 
 var createUniformX = function ( data, uniformName, defaultConstructor, glSignature, type, isMatrix ) {
