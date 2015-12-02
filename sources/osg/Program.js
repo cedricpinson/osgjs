@@ -94,14 +94,6 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
         return new Program();
     },
 
-    dirty: function () {
-        this._dirty = true;
-    },
-
-    isDirty: function () {
-        return this._dirty;
-    },
-
     setVertexShader: function ( vs ) {
         this._vertex = vs;
         this._nullProgram = false;
@@ -142,7 +134,7 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
             this.setGraphicContext( state.getGraphicContext() );
         }
         var gl = this._gl;
-        if ( !this._program || this.isDirty() ) {
+        if ( !this._program || this._dirty ) {
 
             var compileClean;
 
