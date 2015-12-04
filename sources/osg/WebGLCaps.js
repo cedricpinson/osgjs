@@ -53,7 +53,12 @@ WebGLCaps.instance = function () {
 
         }
 
-        var gl = WebGLUtils.setupWebGL( c );
+        // not necessary, but for some reasons it crashed on chromium vr build
+        var opt = {
+            antialias: false
+        };
+
+        var gl = WebGLUtils.setupWebGL( c, opt );
 
         WebGLCaps._instance = new WebGLCaps();
         if ( gl ) {
