@@ -92,16 +92,31 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
     },
 
     cullAndDraw: function () {
+
         this.cull();
         this.draw();
+
     },
 
     cull: function () {
+
 
         var camera = this.getCamera();
         var view = camera.getView();
 
         this._cullVisitor.setFrameStamp( this._frameStamp );
+
+
+        if ( !this._firstFrames ) this._firstFrames = 0;
+
+        this._firstFrames++;
+        if ( this._firstFrames >= 100 ) {
+            this._cullVisitor.cullCached();
+            return;
+        }
+        //this._firstFrames = 0;
+
+
 
         // this part of code should be called for each view
         // right now, we dont support multi view
@@ -113,6 +128,10 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         this._cullVisitor.setRenderStage( this._renderStage );
 
         this._cullVisitor.pushStateSet( camera.getStateSet() );
+
+        // camera cache
+        this._cullVisitor.cacheCamera( camera );
+
 
         // save cullSettings
         this._previousCullsettings.reset();
@@ -187,7 +206,9 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
         var state = this.getState();
 
         // important because cache are used in cullvisitor
-        state.resetCacheFrame();
+        if ( this._firstFrames < 100 ) {
+            state.resetCacheFrame();
+        }
 
         this._renderStage.setCamera( this._camera );
         this._renderStage.draw( state );
