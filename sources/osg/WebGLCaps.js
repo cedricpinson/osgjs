@@ -58,7 +58,7 @@ WebGLCaps.instance = function () {
             antialias: false
         };
 
-        var gl = WebGLUtils.setupWebGL( c, opt );
+        var gl = WebGLUtils.setupWebGL( c, opt, function () {} );
 
         WebGLCaps._instance = new WebGLCaps();
         if ( gl ) {
