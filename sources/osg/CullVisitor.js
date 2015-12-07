@@ -60,6 +60,10 @@ var CullVisitor = function () {
 
     this._renderer = undefined;
     this._renderStageType = RenderStage;
+
+
+    // one Camera, one Geom List, one Leaf, one Matrix
+    this._cameraList = [];
 };
 
 /** @lends CullVisitor.prototype */
@@ -154,6 +158,8 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
 
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
+
+        this._cameraIndex = 0;
     },
 
     getCurrentRenderBin: function () {
@@ -278,14 +284,16 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
         var lastViewMatrix = this.getCurrentModelViewMatrix();
         Matrix.mult( lastViewMatrix, camera.getViewMatrix(), modelview );
 
+
     } else {
 
         // absolute
         Matrix.copy( camera.getViewMatrix(), modelview );
         Matrix.copy( camera.getProjectionMatrix(), projection );
 
-    }
 
+    }
+    this.cacheCamera( camera, this.getCurrentModelViewMatrix() );
 
     // save current state of the camera
     var previousZnear = this._computedNear;
@@ -375,7 +383,11 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
 
     if ( stateset ) this.popStateSet();
 
+
+    // update view ?
+
 };
+
 
 
 CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
@@ -576,12 +588,15 @@ CullVisitor.prototype[ Geometry.typeID ] = ( function () {
 
         } else {
 
+            var wm = this.getCurrentModelWorldMatrix();
+            this.cacheGeom( node, leaf, wm );
+
             leaf.init( this._currentStateGraph,
                 node,
                 this.getCurrentProjectionMatrix(),
                 this.getCurrentViewMatrix(),
                 this.getCurrentModelViewMatrix(),
-                this.getCurrentModelWorldMatrix(),
+                wm,
                 depth );
 
             leafs.push( leaf );
@@ -599,5 +614,84 @@ CullVisitor.prototype[ RigGeometry.typeID ] = CullVisitor.prototype[ Geometry.ty
 CullVisitor.prototype[ MorphGeometry.typeID ] = CullVisitor.prototype[ Geometry.typeID ];
 
 CullVisitor.prototype[ Bone.typeID ] = CullVisitor.prototype[ MatrixTransform.typeID ];
+
+
+CullVisitor.prototype.cacheCamera = function ( camera, modelview ) {
+
+    // CULLCACHE
+    var cachedCamera;
+    if ( this._cameraIndex === 0 || !this._cameraList[ this._cameraIndex ] ) {
+
+        cachedCamera = {
+            camera: camera,
+
+            view: camera.getViewMatrix(),
+            modelview: modelview,
+
+            // underCached
+            geomList: [],
+            leafList: [],
+            worldMatrixList: []
+        };
+        this._cameraList[ this._cameraIndex ] = cachedCamera;
+    } else {
+
+        cachedCamera = this._cameraList[ this._cameraIndex ];
+        cachedCamera.camera = camera;
+        cachedCamera.view = camera.getViewMatrix();
+        cachedCamera.geomList.length = 0;
+        cachedCamera.leafList.length = 0;
+        cachedCamera.worldMatrixList.length = 0;
+
+    }
+
+    this._currentCachedCamera = cachedCamera;
+    this._cameraIndex++;
+    // CULLCACHE
+
+};
+
+// static geom version
+// no intermediary nodes updates
+// if intermediary update, need to store matrixtransformnodes
+CullVisitor.prototype.cullCached = function () {
+
+    // todo update Near/Far
+
+    for ( var i = 0, l = this._cameraList.length; i < l; i++ ) {
+        var currentCachedCamera = this._cameraList[ i ];
+        //var camera = currentCachedCamera.camera;
+
+        var view = currentCachedCamera.camera.view;
+        //var world = currentCachedCamera.camera.world;
+
+        for ( var k = 0, lg = currentCachedCamera.leafList.length; k < lg; k++ ) {
+
+
+            var leaf = currentCachedCamera.leafList[ k ];
+            //var geom = currentCachedCamera.geomList[ k ];
+            //var worldMat = currentCachedCamera.worldMatrixList[ k ];
+
+            if ( view ) leaf._view = view;
+            leaf._modelView = Matrix.mult( leaf._view, leaf._modelWorld, leaf._modelView );
+
+        }
+    }
+
+}
+
+CullVisitor.prototype.cacheGeom = function ( node, leaf ) {
+
+    // CULLCACHE
+    this._currentCachedCamera.geomList.push( node );
+    this._currentCachedCamera.leafList.push( leaf );
+    this._currentCachedCamera.worldMatrixList.push( this.getCurrentModelWorldMatrix() );
+    // CULLCACHE
+
+};
+
+
+
+
 
 module.exports = CullVisitor;
