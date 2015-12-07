@@ -1098,16 +1098,18 @@
             //var model = new ModelLoader( 'models/cerberus/' );
 
             var modelPromises = [];
-            modelsPBR.forEach( function ( modelString, index ) {
+            if ( window.useExternalModels ) {
+                modelsPBR.forEach( function ( modelString, index ) {
 
-                var model = new ModelLoader( 'models/' + modelString + '/' );
-                var promise = model.load();
-                modelPromises.push( promise );
-                promise.then( function () {
-                    this._modelsPBR[ index ] = model;
+                    var model = new ModelLoader( 'models/' + modelString + '/' );
+                    var promise = model.load();
+                    modelPromises.push( promise );
+                    promise.then( function () {
+                        this._modelsPBR[ index ] = model;
+                    }.bind( this ) );
+
                 }.bind( this ) );
-
-            }.bind( this ) );
+            }
 
             var promise = this.readEnvConfig( environment + 'config.json' );
             promise.then( function ( config ) {

@@ -30,5 +30,5 @@ void main(void) {
     osg_FragTangent = Tangent;
     osg_FragTexCoord0 = TexCoord0;
 
-    gl_Position = ProjectionMatrix * ModelViewMatrix * vec4(Vertex,1.0);
+    gl_Position = ProjectionMatrix * (ModelViewMatrix * vec4(Vertex,1.0));
 }
