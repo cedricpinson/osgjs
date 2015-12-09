@@ -7,7 +7,6 @@ var OptionsDefault = {
     'fullscreen': true,
     'enableFrustumCulling': false,
     'stats': false, // display canvas with stats for the viewer
-    'statsNoGraph': false, // display only text
     'scrollwheel': true,
     'webgl2': false
 };

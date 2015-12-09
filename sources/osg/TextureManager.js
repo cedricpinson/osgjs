@@ -1,6 +1,5 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
-var Stats = require( 'osg/Stats' );
 var Timer = require( 'osg/Timer' );
 
 
@@ -176,9 +175,7 @@ TextureObjectSet.prototype = {
             elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
         }
         this._orphanedTextureObjects.splice( 0, i );
-        availableTime -= elapsedTime;
-        return availableTime;
-        //Notify.info( 'TextureManager: released ' + nbTextures + ' with ' + (nbTextures*size/(1024*1024)) + ' MB' );
+        return availableTime - elapsedTime;
     },
 
     flushAllDeletedTextureObjects: function ( gl ) {
@@ -196,7 +193,6 @@ TextureObjectSet.prototype = {
 
 var TextureManager = function () {
     this._textureSetMap = {};
-    this._stats = new Stats( 'Texture' );
 };
 
 TextureManager.prototype = {
@@ -218,7 +214,7 @@ TextureManager.prototype = {
         return textureObject;
     },
 
-    updateStats: function ( frameNumber ) {
+    updateStats: function ( frameNumber, rStats ) {
         var totalUsed = 0;
         var totalUnused = 0;
         window.Object.keys( this._textureSetMap ).forEach( function ( key ) {
@@ -230,13 +226,10 @@ TextureManager.prototype = {
             totalUnused += nbUnused * size;
         }, this );
 
-        this._stats.setAttribute( frameNumber, 'Texture used', totalUsed );
-        this._stats.setAttribute( frameNumber, 'Texture allocated', totalUnused );
-        this._stats.setAttribute( frameNumber, 'Texture total', totalUsed + totalUnused );
-    },
-
-    getStats: function () {
-        return this._stats;
+        var MB = 1024*1024;
+        rStats( 'textureused' ).set( totalUsed/MB );
+        rStats( 'texturereserved' ).set( totalUnused/MB );
+        rStats( 'texturetotal' ).set( ( totalUsed + totalUnused )/MB );
     },
 
     reportStats: function () {
@@ -247,9 +240,9 @@ TextureManager.prototype = {
             var nb = this._textureSetMap[ key ].getUsedTextureObjects().length;
             size *= nb;
             total += size;
-            Notify.notice( '' + size + ' MB with ' + nb + ' texture of ' + profile._width + 'x' + profile._height + ' ' + profile._internalFormat );
+            Notify.notice( String( size ) + ' MB with ' + nb + ' texture of ' + profile._width + 'x' + profile._height + ' ' + profile._internalFormat );
         }, this );
-        Notify.notice( '' + total + ' MB in total' );
+        Notify.notice( String( total ) + ' MB in total' );
     },
 
     flushAllDeletedTextureObjects: function ( gl ) {
@@ -258,8 +251,9 @@ TextureManager.prototype = {
         }, this );
     },
 
-    flushDeletedTextureObjects: function ( gl, availableTime ) {
+    flushDeletedTextureObjects: function ( gl, availableTimeArg ) {
         var key;
+        var availableTime = availableTimeArg;
         for ( var i = 0, j = window.Object.keys( this._textureSetMap ).length; i < j && availableTime > 0.0; i++ ) {
             key = window.Object.keys( this._textureSetMap )[ i ];
             availableTime = this._textureSetMap[ key ].flushDeletedTextureObjects( gl, availableTime );
