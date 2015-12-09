@@ -43,4 +43,17 @@ module.exports = function () {
 
     } );
 
+    QUnit.test( 'Image.isReady', function () {
+
+        var fakeImage = {
+            complete: true,
+            naturalWidth: 1024,
+            isReady: function () {
+                return true;
+            }
+        };
+        var n = new Image( fakeImage );
+        ok( n.isReady(), 'check wrapped HTML Image ' );
+    } );
+
 };

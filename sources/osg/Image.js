@@ -1,9 +1,10 @@
 'use strict';
+var Notify = require( 'osg/Notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
 
 
-var Image = function ( image ) {
+var ImageObject = function ( image ) {
     Object.call( this );
 
     this._imageObject = undefined;
@@ -20,7 +21,7 @@ var Image = function ( image ) {
     this._isGreyscale = undefined;
 };
 
-Image.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+ImageObject.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
 
     dirty: function () {
         this._isGreyscale = undefined;
@@ -36,7 +37,7 @@ Image.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     getImage: function () {
-        return ( this._imageObject instanceof Image ) ? this._imageObject.getImage() : this._imageObject;
+        return ( this._imageObject instanceof ImageObject ) ? this._imageObject.getImage() : this._imageObject;
     },
 
     getURL: function () {
@@ -48,7 +49,7 @@ Image.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     useOrCreateImage: function ( img ) {
-        return ( img instanceof( Image ) === false ) ? new Image( img ) : img;
+        return ( img instanceof( ImageObject ) === false ) ? new ImageObject( img ) : img;
     },
 
     setImage: function ( img ) {
@@ -173,8 +174,10 @@ Image.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     isReady: function () {
 
         // image is a osgImage
-        if ( this._imageObject && this._imageObject.isReady )
+        if ( this._imageObject && this._imageObject instanceof ImageObject ) {
             return this._imageObject.isReady();
+        }
+
 
         // image are ready for static data
         if ( this.isCanvas() ||
@@ -188,6 +191,7 @@ Image.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 if ( image.naturalWidth !== undefined && image.naturalWidth === 0 ) {
                     return false;
                 }
+
                 return true;
             }
         }
@@ -196,8 +200,24 @@ Image.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             if ( this.getWidth() !== 0 ) return true;
         }
 
+        // here means we have something but we don't know what
+        // Check if the object is not a image
+        // by "feature" detect it
+        var imageTry = this.getImage();
+        if ( imageTry.complete ) {
+            if ( imageTry.naturalWidth !== undefined && imageTry.naturalWidth === 0 ) {
+                return false;
+            }
+            return true;
+        }
+
+        // It's not something we recognise
+        /*develblock:start*/
+        Notify.warn( 'Warning can\'t detect image object ', false, true );
+        /*develblock:end*/
         return false;
     },
+
     getMipmap: function () {
         return this._mipmap;
     },
@@ -212,6 +232,6 @@ Image.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     }
 } ), 'osg', 'Image' );
 
-MACROUTILS.setTypeID( Image );
+MACROUTILS.setTypeID( ImageObject );
 
-module.exports = Image;
+module.exports = ImageObject;
