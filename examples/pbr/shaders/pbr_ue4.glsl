@@ -10,8 +10,8 @@
 // http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
 float linRoughnessToMipmap( float roughnessLinear )
 {
-    return roughnessLinear;
-    return pow( roughnessLinear, 1.0/1.5 ); //sqrt(roughnessLinear);
+    //return roughnessLinear;
+    return sqrt(roughnessLinear);
 }
 
 vec3 prefilterEnvMap( float roughnessLinear, const in vec3 R )
@@ -38,7 +38,7 @@ vec3 prefilterEnvMap( float roughnessLinear, const in vec3 R )
 
 vec2 integrateBRDF( float r, float NoV )
 {
-    vec4 rgba = texture2D( uIntegrateBRDF, vec2(r, NoV) );
+    vec4 rgba = texture2D( uIntegrateBRDF, vec2(NoV, r ) );
 
     const float div = 1.0/65535.0;
     float b = (rgba[3] * 65280.0 + rgba[2] * 255.0);
