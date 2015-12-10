@@ -647,15 +647,20 @@ BasicAnimationManager.prototype = MACROUTILS.objectInherit( BaseObject.prototype
 
         anim.duration = anim.originalDuration + lerpDuration;
 
+        var firstKey = anim.firstKeyTime;
+        var animDuration = anim.originalDuration;
+
         for ( var i = 0, nbChannels = channels.length; i < nbChannels; ++i ) {
             var ch = channels[ i ].channel;
+
+            // compare first and last key and detect if we can loop the channel or not
+            // it uses an arbitrary epsilon
+            if ( Math.abs( ch.start - firstKey ) > 0.01 || Math.abs( ch.duration - animDuration ) > 0.01 )
+                continue;
 
             // update channel end time
             if ( ch.originalEnd === undefined )
                 ch.originalEnd = ch.end;
-
-            if ( ch.originalEnd !== anim.originalDuration )
-                continue;
 
             ch.end = ch.originalEnd + lerpDuration;
 
