@@ -223,17 +223,31 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         if ( this.getScene().getSceneData() )
             this.getScene().getSceneData().getBound();
 
-        var stats = this._stats;
 
         if ( this.getCamera() ) {
 
+            var stats = this._stats;
+            var renderer = this.getCamera().getRenderer();
+
             if ( stats ) stats.rStats( 'cull' ).start();
-            this.getCamera().getRenderer().cull();
+            renderer.cull();
             if ( stats ) stats.rStats( 'cull' ).end();
 
             if ( stats ) stats.rStats( 'render' ).start();
-            this.getCamera().getRenderer().draw();
+            renderer.draw();
             if ( stats ) stats.rStats( 'render' ).end();
+
+            if ( stats ) {
+                var cullVisitor = renderer.getCullVisitor();
+                stats.rStats( 'cullcamera' ).set( cullVisitor._numCamera );
+                stats.rStats( 'cullmatrixtransform' ).set( cullVisitor._numMatrixTransform );
+                stats.rStats( 'cullprojection' ).set( cullVisitor._numProjection );
+                stats.rStats( 'cullnode' ).set( cullVisitor._numNode );
+                stats.rStats( 'cullightsource' ).set( cullVisitor._numLightSource );
+                stats.rStats( 'cullgeometry' ).set( cullVisitor._numGeometry );
+
+                stats.rStats( 'pushstateset' ).set( renderer.getState()._numPushStateSet );
+            }
 
         }
 
@@ -247,7 +261,11 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         if ( stats ) stats.rStats( 'update' ).start();
 
         // update the scene
+        this._updateVisitor.resetStats();
         this.getScene().updateSceneGraph( this._updateVisitor );
+
+        if ( stats ) stats.rStats( 'updatecallback' ).set( this._updateVisitor._numUpdateCallback );
+
         // Remove ExpiredSubgraphs from DatabasePager
         this.getDatabasePager().releaseGLExpiredSubgraphs( 0.005 );
         // In OSG this.is deferred until the draw traversal, to handle multiple contexts
@@ -297,7 +315,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         var stats = this._stats;
         var rStats = stats ? stats.rStats : undefined;
 
-         // update texture stats
+        // update texture stats
         if ( rStats ) {
             Texture.getTextureManager( this.getGraphicContext() ).updateStats( frameNumber, rStats );
         }

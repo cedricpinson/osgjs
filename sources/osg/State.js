@@ -66,6 +66,7 @@ var State = function ( shaderGeneratorProxy ) {
     // inject a default program to initialize the stack Program
     this.applyAttribute( new Program() );
 
+    this._numPushStateSet = 0;
 };
 
 State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
@@ -98,6 +99,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     pushStateSet: function ( stateset ) {
+        this._numPushStateSet++;
         this.stateSets.push( stateset );
 
         if ( stateset.attributeMap ) {
@@ -189,6 +191,9 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         this._modelViewMatrix = this._projectionMatrix = undefined;
     },
 
+    resetStats: function () {
+        this._numPushStateSet = 0;
+    },
 
     // apply program if needed
     applyProgram: function ( program ) {

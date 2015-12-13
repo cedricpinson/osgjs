@@ -103,6 +103,9 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
         this._cullVisitor.setFrameStamp( this._frameStamp );
 
+        // reset stats
+        this._cullVisitor.resetStats();
+
         // this part of code should be called for each view
         // right now, we dont support multi view
         this._stateGraph.clean();
@@ -188,6 +191,9 @@ Renderer.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Ob
 
         // important because cache are used in cullvisitor
         state.resetCacheFrame();
+
+        // reset stats counter
+        state.resetStats();
 
         this._renderStage.setCamera( this._camera );
         this._renderStage.draw( state );

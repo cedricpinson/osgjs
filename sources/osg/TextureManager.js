@@ -226,10 +226,10 @@ TextureManager.prototype = {
             totalUnused += nbUnused * size;
         }, this );
 
-        var MB = 1024*1024;
-        rStats( 'textureused' ).set( totalUsed/MB );
-        rStats( 'texturereserved' ).set( totalUnused/MB );
-        rStats( 'texturetotal' ).set( ( totalUsed + totalUnused )/MB );
+        var MB = 1024 * 1024;
+        rStats( 'textureused' ).set( totalUsed / MB );
+        rStats( 'texturereserved' ).set( totalUnused / MB );
+        rStats( 'texturetotal' ).set( ( totalUsed + totalUnused ) / MB );
     },
 
     reportStats: function () {

@@ -60,6 +60,14 @@ var CullVisitor = function () {
 
     this._renderer = undefined;
     this._renderStageType = RenderStage;
+
+    this._numCamera = 0;
+    this._numMatrixTransform = 0;
+    this._numProjection = 0;
+    this._numNode = 0;
+    this._numLightSource = 0;
+    this._numGeometry = 0;
+
 };
 
 /** @lends CullVisitor.prototype */
@@ -74,6 +82,15 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
 
     getComputedFar: function () {
         return this._computedFar;
+    },
+
+    resetStats: function () {
+        this._numCamera = 0;
+        this._numMatrixTransform = 0;
+        this._numProjection = 0;
+        this._numNode = 0;
+        this._numLightSource = 0;
+        this._numGeometry = 0;
     },
 
     handleCullCallbacksAndTraverse: function ( node ) {
@@ -258,11 +275,11 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
 } ) );
 
 
-
 // Camera cull visitor call
 // ANY CHANGE, any change : double check in rendere Camera code
 // for the first camera
 CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
+    this._numCamera++;
 
     var stateset = camera.getStateSet();
     if ( stateset ) this.pushStateSet( stateset );
@@ -379,6 +396,8 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
 
 
 CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
+    this._numMatrixTransform++;
+
     // Camera and lights must enlarge node parent bounding boxes for this not to cull
     if ( this.isCulled( node, this.nodePath ) ) {
         return;
@@ -400,7 +419,6 @@ CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
     this.pushModelViewMatrix( matrix );
 
 
-
     var stateset = node.getStateSet();
 
     if ( stateset ) this.pushStateSet( stateset );
@@ -417,6 +435,8 @@ CullVisitor.prototype[ MatrixTransform.typeID ] = function ( node ) {
 };
 
 CullVisitor.prototype[ Projection.typeID ] = function ( node ) {
+    this._numProjection++;
+
     var lastMatrixStack = this.getCurrentProjectionMatrix();
     var matrix = this._reservedMatrixStack.get();
     Matrix.mult( lastMatrixStack, node.getProjectionMatrix(), matrix );
@@ -436,7 +456,7 @@ CullVisitor.prototype[ Projection.typeID ] = function ( node ) {
 // as there's isn't any in osgjs
 // so frustumCulling is done here
 CullVisitor.prototype[ Node.typeID ] = function ( node ) {
-
+    this._numNode++;
 
     // Camera and lights must enlarge node parent bounding boxes for this not to cull
     if ( this.isCulled( node, this.nodePath ) ) {
@@ -465,6 +485,7 @@ CullVisitor.prototype[ PagedLOD.typeID ] = CullVisitor.prototype[ Node.typeID ];
 
 
 CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
+    this._numLightSource++;
 
     var stateset = node.getStateSet();
     if ( stateset ) this.pushStateSet( stateset );
@@ -533,9 +554,12 @@ var prePopGeometry = function ( cull, node ) {
 };
 
 CullVisitor.prototype[ Geometry.typeID ] = ( function () {
+
     var tempVec = Vec3.create();
     var loggedOnce = false;
     return function ( node ) {
+
+        this._numGeometry++;
 
         var modelview = this.getCurrentModelViewMatrix();
         var bb = node.getBoundingBox();
