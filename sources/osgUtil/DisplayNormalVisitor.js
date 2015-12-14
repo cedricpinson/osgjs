@@ -123,7 +123,7 @@ DisplayNormalVisitor.ShaderGeneratorCompilerOffsetTangent = ShaderGeneratorCompi
 
 DisplayNormalVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
     setScale: function ( scale ) {
-        this._unifScale.set( scale );
+        this._unifScale.setFloat( scale );
     },
     setTangentVisibility: function ( bool ) {
         this._tangentStateSet.setAttribute( new Depth( bool ? Depth.LESS : Depth.NEVER ) );
