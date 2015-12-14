@@ -226,6 +226,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     setCastsShadowDrawTraversalMask: function ( mask ) {
         this._castsShadowDrawTraversalMask = mask;
     },
+
     getCastsShadowDrawTraversalMask: function () {
         return this._castsDrawShadowTraversalMask;
     },
@@ -233,6 +234,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     setCastsShadowBoundsTraversalMask: function ( mask ) {
         this._castsShadowBoundsTraversalMask = mask;
     },
+
     getCastsShadowBoundsTraversalMask: function () {
         return this._castsShadowBoundsTraversalMask;
     },
@@ -241,32 +243,34 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     getBias: function () {
         return this._shadowReceiveAttribute.getBias();
     },
+
     setBias: function ( value ) {
         this._shadowReceiveAttribute.setBias( value );
-
-        this._casterStateSet.getUniformList()[ 'bias' ].getUniform().set( value );
-
+        this._casterStateSet.getUniformList()[ 'bias' ].getUniform().setFloat( value );
     },
 
     getExponent0: function () {
         return this._shadowReceiveAttribute.getExponent0();
     },
+
     setExponent0: function ( value ) {
         this._shadowReceiveAttribute.setExponent0( value );
-        this._casterStateSet.getUniformList()[ 'exponent0' ].getUniform().set( value );
+        this._casterStateSet.getUniformList()[ 'exponent0' ].getUniform().setFloat( value );
     },
 
     getExponent1: function () {
         return this._shadowReceiveAttribute.getExponent1();
     },
+
     setExponent1: function ( value ) {
         this._shadowReceiveAttribute.setExponent1( value );
-        this._casterStateSet.getUniformList()[ 'exponent1' ].getUniform().set( value );
+        this._casterStateSet.getUniformList()[ 'exponent1' ].getUniform().setFloat( value );
     },
 
     getEpsilonVSM: function () {
         return this._shadowReceiveAttribute.getEpsilonVSM();
     },
+
     setEpsilonVSM: function ( value ) {
         this._shadowReceiveAttribute.setEpsilonVSM( value );
     },
@@ -274,6 +278,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     getKernelSizePCF: function () {
         return this._shadowReceiveAttribute.getKernelSizePCF();
     },
+
     setKernelSizePCF: function ( value ) {
         this._shadowReceiveAttribute.setKernelSizePCF( value );
     },
@@ -281,6 +286,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     getFakePCF: function () {
         return this._shadowReceiveAttribute.getFakePCF();
     },
+
     setFakePCF: function ( value ) {
         if ( this._shadowReceiveAttribute.getFakePCF() !== value ) {
             this._shadowReceiveAttribute.setFakePCF( value );
@@ -291,6 +297,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     getRotateOffset: function () {
         return this._shadowReceiveAttribute.getRotateOffset();
     },
+
     setRotateOffset: function ( value ) {
         if ( this._shadowReceiveAttribute.getRotateOffset() !== value ) {
             this._shadowReceiveAttribute.setRotateOffset( value );
@@ -327,6 +334,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         }
 
     },
+
     /** initialize the ShadowedScene and local cached data structures.*/
     init: function () {
 
@@ -507,9 +515,8 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this._textureMagFilter = texFilterMag;
         this._textureMinFilter = texFilterMin;
 
-        //this._texture.dirty();
-
     },
+
     // internal texture allocation
     // handle any change like resize, filter param, etc.
     initTexture: function () {
@@ -852,7 +859,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         this._depthRange[ 3 ] = 1.0 / ( this._depthRange[ 2 ] );
 
         var castUniforms = this._casterStateSet.getUniformList();
-        castUniforms[ 'Shadow_DepthRange' ].getUniform().set( this._depthRange );
+        castUniforms[ 'Shadow_DepthRange' ].getUniform().setVec4( this._depthRange );
 
         this._texture.setViewMatrix( this._viewMatrix );
         this._texture.setProjectionMatrix( this._projectionMatrix );
@@ -869,7 +876,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         var castUniforms = this._casterStateSet.getUniformList();
 
-        castUniforms[ 'Shadow_DepthRange' ].getUniform().set( this._depthRange );
+        castUniforms[ 'Shadow_DepthRange' ].getUniform().setVec4( this._depthRange );
         this._texture.setDepthRange( this._depthRange );
 
         var camera = this._cameraShadow;
@@ -884,10 +891,10 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
 
         this._filledOnce = true;
     },
+
     // Defines the frustum from light param.
     //
     cullShadowCasting: function ( cullVisitor ) {
-
 
         var bbox;
 
@@ -898,7 +905,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             this.getShadowedScene().accept( this._removeNodesNeverCastingVisitor );
 
         }
-
 
         this._computeBoundsVisitor.setTraversalMask( this._castsShadowBoundsTraversalMask );
         this._computeBoundsVisitor.reset();
@@ -945,7 +951,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
             }
 
             return;
-
         }
 
 
@@ -963,7 +968,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         // (as in clamped too tight projection)
         var needNearFar = this._castsShadowDrawTraversalMask === this._castsShadowBoundsTraversalMask;
         this._cameraShadow.setComputeNearFar( needNearFar );
-
 
 
         // do RTT from the camera traversal mimicking light pos/orient

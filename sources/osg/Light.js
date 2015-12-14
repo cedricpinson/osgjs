@@ -13,12 +13,10 @@ var Notify = require( 'osg/Notify' );
 // see http://www.glprogramming.com/red/chapter05.html
 
 
-var Light = function ( lightNumber, disable ) {
+var Light = function ( lightNum, disable ) {
     StateAttribute.call( this );
 
-    if ( lightNumber === undefined ) {
-        lightNumber = 0;
-    }
+    var lightNumber = lightNum !== undefined ? lightNum : 0;
 
     this._ambient = Vec4.createAndSet( 0.2, 0.2, 0.2, 1.0 );
     this._diffuse = Vec4.createAndSet( 0.8, 0.8, 0.8, 1.0 );
@@ -44,8 +42,6 @@ var Light = function ( lightNumber, disable ) {
     this._invMatrix = Matrix.create();
 
     this._enable = !disable;
-
-    this.dirty();
 
 };
 
@@ -84,22 +80,21 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
         if ( obj.uniforms[ typeMember ] ) return obj.uniforms[ typeMember ];
 
         var uniformList = {
-            'ambient': 'createFloat4',
-            'diffuse': 'createFloat4',
-            'specular': 'createFloat4',
+            ambient: 'createFloat4',
+            diffuse: 'createFloat4',
+            specular: 'createFloat4',
 
-            'attenuation': 'createFloat4',
-            'position': 'createFloat4',
-            'direction': 'createFloat3',
+            attenuation: 'createFloat4',
+            position: 'createFloat4',
+            direction: 'createFloat3',
 
-            'spotCutOff': 'createFloat1',
-            'spotBlend': 'createFloat1',
+            spotCutOff: 'createFloat1',
+            spotBlend: 'createFloat1',
 
-            'ground': 'createFloat3',
+            ground: 'createFloat4',
 
-            'matrix': 'createMatrix4',
-            'invMatrix': 'createMatrix4'
-
+            matrix: 'createMatrix4',
+            invMatrix: 'createMatrix4'
         };
 
         var uniforms = {};
@@ -122,40 +117,43 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     isEnabled: function () {
         return this._enable;
     },
+
     setEnabled: function ( bool ) {
         this._enable = bool;
-        this.dirty();
     },
+
     // Deprecated methods, should be removed in the future
     isEnable: function () {
         Notify.log( 'Light.isEnable() is deprecated, use isEnabled instead' );
         return this.isEnabled();
     },
+
     setEnable: function ( bool ) {
         Notify.log( 'Light.setEnable() is deprecated, use setEnabled instead' );
         this.setEnabled( bool );
     },
+
     // colors
     setAmbient: function ( a ) {
         Vec4.copy( a, this._ambient );
-        this.dirty();
     },
+
     getAmbient: function () {
         return this._ambient;
     },
 
     setDiffuse: function ( a ) {
         Vec4.copy( a, this._diffuse );
-        this.dirty();
     },
+
     getDiffuse: function () {
         return this._diffuse;
     },
 
     setSpecular: function ( a ) {
         Vec4.copy( a, this._specular );
-        this.dirty();
     },
+
     getSpecular: function () {
         return this._specular;
     },
@@ -166,8 +164,8 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // see creating lightsources http://www.glprogramming.com/red/chapter05.html
     setPosition: function ( a ) {
         Vec4.copy( a, this._position );
-        this.dirty();
     },
+
     getPosition: function () {
         return this._position;
     },
@@ -175,8 +173,8 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // unused for directional
     setDirection: function ( a ) {
         Vec3.copy( a, this._direction );
-        this.dirty();
     },
+
     getDirection: function () {
         return this._direction;
     },
@@ -184,16 +182,16 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
 
     setSpotCutoff: function ( a ) {
         this._spotCutoff = a;
-        this.dirty();
     },
+
     getSpotCutoff: function () {
         return this._spotCutoff;
     },
 
     setSpotBlend: function ( a ) {
         this._spotBlend = a;
-        this.dirty();
     },
+
     getSpotBlend: function () {
         return this._spotBlend;
     },
@@ -201,8 +199,8 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // set/get the color of the ground
     setGround: function ( a ) {
         Vec3.copy( a, this._ground );
-        this.dirty();
     },
+
     getGround: function () {
         return this._ground;
     },
@@ -210,24 +208,24 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // attenuation coeff
     setConstantAttenuation: function ( value ) {
         this._attenuation[ 0 ] = value;
-        this.dirty();
     },
+
     getConstantAttenuation: function () {
         return this._attenuation[ 0 ];
     },
 
     setLinearAttenuation: function ( value ) {
         this._attenuation[ 1 ] = value;
-        this.dirty();
     },
+
     getLinearAttenuation: function () {
         return this._attenuation[ 1 ];
     },
 
     setQuadraticAttenuation: function ( value ) {
         this._attenuation[ 2 ] = value;
-        this.dirty();
     },
+
     getQuadraticAttenuation: function () {
         return this._attenuation[ 2 ];
     },
@@ -257,33 +255,28 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
         Vec3.set( 0.0, 0.0, -1.0, this._direction );
         this._ground[ 3 ] = -1.0;
         this._spotCutoff = 90;
-        this.dirty();
     },
 
     setLightAsPoint: function () {
         Vec4.set( 0.0, 0.0, 0.0, 1.0, this._position );
         Vec3.set( 0.0, 0.0, -1.0, this._direction );
         this._ground[ 3 ] = -1.0;
-        this.dirty();
     },
 
     setLightAsDirection: function () {
         Vec4.set( 0.0, 0.0, 1.0, 0.0, this._position );
         this._spotCutoff = 180;
         this._ground[ 3 ] = -1.0;
-        this.dirty();
     },
 
     setLightAsHemi: function () {
         Vec4.set( 0.0, 0.0, 1.0, 0.0, this._position );
         this._spotCutoff = 180;
         this._ground[ 3 ] = 1.0;
-        this.dirty();
     },
 
     setLightNumber: function ( unit ) {
         this._lightUnit = unit;
-        this.dirty();
     },
 
     getLightNumber: function () {
@@ -307,63 +300,46 @@ Light.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( State
     // world (node refAbsolute)
     // world+camera (camera is refAbsolute)
     // world+camera+camera+... (camera relative...)
-    applyPositionedUniform: function ( matrix /*, state*/ ) {
+    applyPositionedUniform: function ( matrix ) {
 
         var uniformMap = this.getOrCreateUniforms();
-        Matrix.copy( matrix, uniformMap.matrix.get() );
-        uniformMap.matrix.dirty();
 
-        Matrix.copy( matrix, uniformMap.invMatrix.get() );
-        uniformMap.invMatrix.get()[ 12 ] = 0;
-        uniformMap.invMatrix.get()[ 13 ] = 0;
-        uniformMap.invMatrix.get()[ 14 ] = 0;
+        var matrixArray = uniformMap.matrix.getInternalArray();
+        var invMatrixArray = uniformMap.invMatrix.getInternalArray();
 
-        Matrix.inverse( uniformMap.invMatrix.get(), uniformMap.invMatrix.get() );
-        Matrix.transpose( uniformMap.invMatrix.get(), uniformMap.invMatrix.get() );
+        Matrix.copy( matrix, matrixArray );
+        Matrix.copy( matrix, invMatrixArray );
 
-        uniformMap.invMatrix.dirty();
+        invMatrixArray[ 12 ] = 0.0;
+        invMatrixArray[ 13 ] = 0.0;
+        invMatrixArray[ 14 ] = 0.0;
+
+        Matrix.inverse( invMatrixArray, invMatrixArray );
+        Matrix.transpose( invMatrixArray, invMatrixArray );
     },
 
-    apply: function ( /*state*/) {
+    apply: function () {
 
-        if ( !this._enable )
-            return;
+        if ( !this._enable ) return;
 
         var uniformMap = this.getOrCreateUniforms();
 
-        Vec4.copy( this._position, uniformMap.position.get() );
-        uniformMap.position.dirty();
+        uniformMap.position.setInternalArray( this._position );
 
         if ( this.isSpotLight() ) {
             var spotsize = Math.cos( this._spotCutoff * Math.PI / 180.0 );
-            uniformMap.spotCutOff.get()[ 0 ] = spotsize;
-            uniformMap.spotCutOff.dirty();
-
-            uniformMap.spotBlend.get()[ 0 ] = ( 1.0 - spotsize ) * this._spotBlend;
-            uniformMap.spotBlend.dirty();
-
-            Vec3.copy( this._direction, uniformMap.direction.get() );
-            uniformMap.direction.dirty();
-        }
-        if ( this.isHemiLight() ) {
-            Vec3.copy( this._ground, uniformMap.ground.get() );
-            uniformMap.ground.dirty();
+            uniformMap.spotCutOff.setFloat( spotsize );
+            uniformMap.spotBlend.setFloat( ( 1.0 - spotsize ) * this._spotBlend );
+            uniformMap.direction.setInternalArray( this._direction );
         }
 
-        Vec4.copy( this._attenuation, uniformMap.attenuation.get() );
-        uniformMap.attenuation.dirty();
+        if ( this.isHemiLight() )
+            uniformMap.ground.setInternalArray( this._ground );
 
-        Vec4.copy( this._diffuse, uniformMap.diffuse.get() );
-        uniformMap.diffuse.dirty();
-
-        Vec4.copy( this._specular, uniformMap.specular.get() );
-        uniformMap.specular.dirty();
-
-        Vec4.copy( this._ambient, uniformMap.ambient.get() );
-        uniformMap.ambient.dirty();
-
-
-        this.setDirty( false );
+        uniformMap.attenuation.setInternalArray( this._attenuation );
+        uniformMap.diffuse.setInternalArray( this._diffuse );
+        uniformMap.specular.setInternalArray( this._specular );
+        uniformMap.ambient.setInternalArray( this._ambient );
     }
 
 } ), 'osg', 'Light' );

@@ -167,7 +167,7 @@ ShaderGenerator.prototype = {
                 for ( var j = 0, m = attributeUniformMapKeys.length; j < m; j++ ) {
                     var name = attributeUniformMapKeys[ j ];
                     var uniform = attributeUniformMap[ name ];
-                    uniforms[ uniform.name ] = uniform;
+                    uniforms[ uniform.getName() ] = uniform;
                 }
             }
         }
@@ -184,7 +184,7 @@ ShaderGenerator.prototype = {
                     for ( var t = 0, tl = texUniformMapKeys.length; t < tl; t++ ) {
                         var tname = texUniformMapKeys[ t ];
                         var tuniform = texUniformMap[ tname ];
-                        uniforms[ tuniform.name ] = tuniform;
+                        uniforms[ tuniform.getName() ] = tuniform;
                     }
                 }
             }

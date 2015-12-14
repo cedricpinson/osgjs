@@ -58,7 +58,6 @@
             createShadowMatrix( [ 0, 0, 1, 5 ], [ x, y, h, 1 ],
                 this.matrix );
             node.lightShadow.setPosition( [ x, y, h, 0 ] );
-            node.lightShadow.dirty();
             node.traverse( nv );
         }
     };
@@ -209,10 +208,9 @@
             this.shadowScene.setMatrix( worldMatrix );
             var shadowView = osg.Matrix.mult( this.camera.getViewMatrix(), worldMatrix, [] );
 
-            this.projectionShadow.set( shadowProj );
-            this.modelviewShadow.set( shadowView );
+            this.projectionShadow.setMatrix4( shadowProj );
+            this.modelviewShadow.setMatrix4( shadowView );
             node.lightShadow.setPosition( [ x, y, h, 0 ] );
-            node.lightShadow.dirty();
             node.traverse( nv );
         }
     };
@@ -605,10 +603,9 @@
             this.shadowScene.setMatrix( worldMatrix );
             var shadowView = osg.Matrix.mult( this.camera.getViewMatrix(), worldMatrix, [] );
 
-            this.projectionShadow.set( shadowProj );
-            this.modelviewShadow.set( shadowView );
+            this.projectionShadow.setMatrix4( shadowProj );
+            this.modelviewShadow.setMatrix4( shadowView );
             node.lightShadow.setPosition( [ x, y, h, 0 ] );
-            node.lightShadow.dirty();
             node.traverse( nv );
         }
     };

@@ -6,9 +6,14 @@ var NodeVisitor = require( 'osg/NodeVisitor' );
 var UpdateVisitor = function () {
     NodeVisitor.call( this );
     this.visitorType = NodeVisitor.UPDATE_VISITOR;
+    this._numUpdateCallback = 0;
 };
 
 UpdateVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
+
+    resetStats: function () {
+        this._numUpdateCallback = 0;
+    },
 
     apply: function ( node ) {
 
@@ -21,15 +26,19 @@ UpdateVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         if ( stateSet ) {
             var updateCallbackList = stateSet.getUpdateCallbackList();
 
-            if ( updateCallbackList.length )
-                for ( var i = 0, l = updateCallbackList.length; i < l; i++ )
-                    updateCallbackList[ i ].update( stateSet, this );
+            var numStateSetUpdateCallback = updateCallbackList.length;
+            if ( numStateSetUpdateCallback )
+                this._numUpdateCallback += numStateSetUpdateCallback;
+            for ( var i = 0, l = numStateSetUpdateCallback; i < l; i++ )
+                updateCallbackList[ i ].update( stateSet, this );
         }
 
         // handle callback in nodes
         var ncs = node.getUpdateCallbackList();
-        if ( ncs.length )
-            for ( var j = 0, m = ncs.length; j < m; j++ ) {
+        var numUpdateCallback = ncs.length;
+        if ( numUpdateCallback )
+            for ( var j = 0, m = numUpdateCallback; j < m; j++ ) {
+                this._numUpdateCallback++;
                 if ( !ncs[ j ].update( node, this ) ) {
                     return;
                 }

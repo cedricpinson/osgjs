@@ -128,9 +128,10 @@ WebGLCaps.prototype = {
                 'ANGLE_instanced_arrays'
             ];
 
+            var dummyFunction = function () {};
             var ext = WebGLCaps._instance.getWebGLExtensions();
             for ( var i = 0, l = nativeExtension.length; i < l; i++ ) {
-                ext[ nativeExtension[ i ] ] = function () {};
+                ext[ nativeExtension[ i ] ] = dummyFunction;
             }
         }
 

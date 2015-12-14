@@ -5,10 +5,10 @@
     var osg = OSG.osg;
     var osgUtil = OSG.osgUtil;
 
-    /*  
+    /*
         This effect simulate the visual effect produced by camera lens.
         Lens used in optics have a different indice of refraction for different wavelengths
-        As wavelengths are what we perceive as colors, we can see "fringes" of color along 
+        As wavelengths are what we perceive as colors, we can see "fringes" of color along
         boundaries that separate dark and bright parts.
     */
     window.getPostSceneChromaticAberration = function () {
@@ -52,10 +52,10 @@
 
                 '   gl_FragColor = vec4(r, g, b, 1.0);',
 
-                '}',
+                '}'
             ].join( '\n' ), {
-                'input_texture': inputTexture,
-                'factor': factor,
+                input_texture: inputTexture,
+                factor: factor
             } );
 
         var effect = {
@@ -76,13 +76,13 @@
                 folder.open();
 
                 var param = {
-                    'factor': factor.get()[ 0 ],
+                    factor: factor.getInternalArray()[ 0 ]
                 };
 
                 var factorCtrl = folder.add( param, 'factor', 0, 0.05 );
 
                 factorCtrl.onChange( function ( value ) {
-                    factor.set( value );
+                    factor.setFloat( value );
                 } );
             }
         };

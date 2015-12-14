@@ -33,40 +33,52 @@ var Program = function ( vShader, fShader ) {
 
     if ( fShader )
         this.setFragmentShader( fShader );
+
+    this._dirty = true;
 };
 
 // static cache of glPrograms flagged for deletion, which will actually
 // be deleted in the correct GL context.
 Program._sDeletedGLProgramCache = new window.Map();
 
-// static method to delete Program 
+// static method to delete Program
 Program.deleteGLProgram = function ( gl, program ) {
+
     if ( !Program._sDeletedGLProgramCache.has( gl ) )
         Program._sDeletedGLProgramCache.set( gl, [] );
+
     Program._sDeletedGLProgramCache.get( gl ).push( program );
 };
+
 // static method to flush all the cached glPrograms which need to be deleted in the GL context specified
 Program.flushDeletedGLPrograms = function ( gl, availableTime ) {
+
     // if no time available don't try to flush objects.
     if ( availableTime <= 0.0 ) return availableTime;
+
     if ( !Program._sDeletedGLProgramCache.has( gl ) ) return availableTime;
+
     var elapsedTime = 0.0;
     var beginTime = Timer.instance().tick();
     var deleteList = Program._sDeletedGLProgramCache.get( gl );
     var numPrograms = deleteList.length;
+
     for ( var i = numPrograms - 1; i >= 0 && elapsedTime < availableTime; i-- ) {
         gl.deleteProgram( deleteList[ i ] );
         deleteList.splice( i, 1 );
         elapsedTime = Timer.instance().deltaS( beginTime, Timer.instance().tick() );
     }
-    availableTime -= elapsedTime;
-    return availableTime;
+
+    return availableTime - elapsedTime;
 };
 
 Program.flushAllDeletedGLPrograms = function ( gl ) {
+
     if ( !Program._sDeletedGLProgramCache.has( gl ) ) return;
+
     var deleteList = Program._sDeletedGLProgramCache.get( gl );
     var numPrograms = deleteList.length;
+
     for ( var i = numPrograms - 1; i >= 0; i-- ) {
         gl.deleteProgram( deleteList[ i ] );
         deleteList.splice( i, 1 );
@@ -122,7 +134,7 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
             this.setGraphicContext( state.getGraphicContext() );
         }
         var gl = this._gl;
-        if ( !this._program || this.isDirty() ) {
+        if ( !this._program || this._dirty ) {
 
             var compileClean;
 
@@ -197,7 +209,7 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
             this.cacheAttributeList( gl, this._vertex.text );
 
-            this.setDirty( false );
+            this._dirty = false;
         }
 
         state.applyProgram( this._program );

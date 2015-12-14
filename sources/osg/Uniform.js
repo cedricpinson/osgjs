@@ -1,5 +1,5 @@
 'use strict';
-var MACROUTILS = require( 'osg/Utils' );
+var Notify = require( 'osg/Notify' );
 var Matrix = require( 'osg/Matrix' );
 var Vec2 = require( 'osg/Vec2' );
 var Vec3 = require( 'osg/Vec3' );
@@ -10,11 +10,12 @@ var Vec4 = require( 'osg/Vec4' );
  * Uniform manage variable used in glsl shader.
  * @class Uniform
  */
-var Uniform = function () {
-    this.transpose = false;
-    this._dirty = true;
-    this.name = '';
-    this.type = undefined;
+var Uniform = function ( name ) {
+    this._transpose = false;
+    this._glCall = '';
+    this._name = name;
+    this._type = undefined;
+    this._isMatrix = false;
 };
 
 Uniform.isUniform = function ( obj ) {
@@ -26,395 +27,231 @@ Uniform.isUniform = function ( obj ) {
 
 /** @lends Uniform.prototype */
 Uniform.prototype = {
+
     getName: function () {
-        return this.name;
-    },
-    getType: function () {
-        return this.type;
+        return this._name;
     },
 
-    get: function () { // call dirty if you update this array outside
-        return this.data;
-    },
-    set: function ( array ) {
-        this.data = array;
-        this.dirty();
-    },
     dirty: function () {
-        this._dirty = true;
+        Notify.log( 'deprecated dont use Uniform.dirty anymore' );
     },
+
+    getType: function () {
+        return this._type;
+    },
+
+    get: function () {
+        Notify.log( 'deprecated use getInternalArray instead' );
+        return this._data;
+    },
+
+    set: function ( array ) {
+        Notify.log( 'deprecated use setInternalArray or setFloat/setInt instead' );
+        var value = array;
+        if ( !Array.isArray( value ) && value.byteLength === undefined )
+            this._data[ 0 ] = value;
+        else
+            this._data = array;
+    },
+
     apply: function ( gl, location ) {
-        if ( this._dirty ) {
-            this.update.call( this.glData, this.data );
-            this._dirty = false;
-        }
-        this.glCall( gl, location, this.glData );
-    },
-    applyMatrix: function ( gl, location ) {
-        if ( this._dirty ) {
-            this.update.call( this.glData, this.data );
-            this._dirty = false;
-        }
-        this.glCall( gl, location, this.transpose, this.glData );
-    },
-    update: function ( array ) {
-        for ( var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
-            this[ i ] = array[ i ];
-        }
+        if ( this._isMatrix )
+            gl[ this._glCall ]( location, this._transpose, this._data );
+        else
+            gl[ this._glCall ]( location, this._data );
     },
 
-    _updateArray: function ( array ) {
-        for ( var i = 0, l = array.length; i < l; ++i ) { // FF not traced maybe short
-            this[ i ] = array[ i ];
-        }
+    // set the internal array use but the uniform
+    // the setFloat/setVecX/setMatrixX will be copied to the
+    // internal array. Consider using this function as an optimization
+    // to avoid copy. It's possible inside StateAttribute code but it's
+    // safer to not do that in users code unless you what you are doing
+    setInternalArray: function ( array ) {
+        this._data = array;
     },
 
-    _updateFloat1: function ( f ) {
-        this[ 0 ] = f[ 0 ];
+    getInternalArray: function () {
+        return this._data;
     },
-    _updateFloat2: function ( f ) {
-        this[ 0 ] = f[ 0 ];
-        this[ 1 ] = f[ 1 ];
+
+    setFloat1: function ( f ) {
+        this._data[ 0 ] = f[ 0 ];
     },
-    _updateFloat3: function ( f ) {
-        this[ 0 ] = f[ 0 ];
-        this[ 1 ] = f[ 1 ];
-        this[ 2 ] = f[ 2 ];
+
+    setFloat: function ( f ) {
+        this._data[ 0 ] = f;
     },
-    _updateFloat4: function ( f ) {
-        this[ 0 ] = f[ 0 ];
-        this[ 1 ] = f[ 1 ];
-        this[ 2 ] = f[ 2 ];
-        this[ 3 ] = f[ 3 ];
+
+    setFloat2: function ( f ) {
+        this._data[ 0 ] = f[ 0 ];
+        this._data[ 1 ] = f[ 1 ];
     },
-    _updateFloat9: function ( f ) {
-        this[ 0 ] = f[ 0 ];
-        this[ 1 ] = f[ 1 ];
-        this[ 2 ] = f[ 2 ];
-        this[ 3 ] = f[ 3 ];
-        this[ 4 ] = f[ 4 ];
-        this[ 5 ] = f[ 5 ];
-        this[ 6 ] = f[ 6 ];
-        this[ 7 ] = f[ 7 ];
-        this[ 8 ] = f[ 8 ];
+
+    setFloat3: function ( f ) {
+        this._data[ 0 ] = f[ 0 ];
+        this._data[ 1 ] = f[ 1 ];
+        this._data[ 2 ] = f[ 2 ];
     },
-    _updateFloat16: function ( f ) {
-        this[ 0 ] = f[ 0 ];
-        this[ 1 ] = f[ 1 ];
-        this[ 2 ] = f[ 2 ];
-        this[ 3 ] = f[ 3 ];
-        this[ 4 ] = f[ 4 ];
-        this[ 5 ] = f[ 5 ];
-        this[ 6 ] = f[ 6 ];
-        this[ 7 ] = f[ 7 ];
-        this[ 8 ] = f[ 8 ];
-        this[ 9 ] = f[ 9 ];
-        this[ 10 ] = f[ 10 ];
-        this[ 11 ] = f[ 11 ];
-        this[ 12 ] = f[ 12 ];
-        this[ 13 ] = f[ 13 ];
-        this[ 14 ] = f[ 14 ];
-        this[ 15 ] = f[ 15 ];
+
+    setFloat4: function ( f ) {
+        this._data[ 0 ] = f[ 0 ];
+        this._data[ 1 ] = f[ 1 ];
+        this._data[ 2 ] = f[ 2 ];
+        this._data[ 3 ] = f[ 3 ];
+    },
+
+    setFloat9: function ( f ) {
+        this._data[ 0 ] = f[ 0 ];
+        this._data[ 1 ] = f[ 1 ];
+        this._data[ 2 ] = f[ 2 ];
+        this._data[ 3 ] = f[ 3 ];
+        this._data[ 4 ] = f[ 4 ];
+        this._data[ 5 ] = f[ 5 ];
+        this._data[ 6 ] = f[ 6 ];
+        this._data[ 7 ] = f[ 7 ];
+        this._data[ 8 ] = f[ 8 ];
+    },
+
+    setFloat16: function ( f ) {
+        this._data[ 0 ] = f[ 0 ];
+        this._data[ 1 ] = f[ 1 ];
+        this._data[ 2 ] = f[ 2 ];
+        this._data[ 3 ] = f[ 3 ];
+        this._data[ 4 ] = f[ 4 ];
+        this._data[ 5 ] = f[ 5 ];
+        this._data[ 6 ] = f[ 6 ];
+        this._data[ 7 ] = f[ 7 ];
+        this._data[ 8 ] = f[ 8 ];
+        this._data[ 9 ] = f[ 9 ];
+        this._data[ 10 ] = f[ 10 ];
+        this._data[ 11 ] = f[ 11 ];
+        this._data[ 12 ] = f[ 12 ];
+        this._data[ 13 ] = f[ 13 ];
+        this._data[ 14 ] = f[ 14 ];
+        this._data[ 15 ] = f[ 15 ];
     }
 };
+Uniform.prototype.setVec2 = Uniform.prototype.setFloat2;
+Uniform.prototype.setVec3 = Uniform.prototype.setFloat3;
+Uniform.prototype.setVec4 = Uniform.prototype.setFloat4;
+Uniform.prototype.setMatrix4 = Uniform.prototype.setFloat16;
+Uniform.prototype.setMatrix3 = Uniform.prototype.setFloat9;
+Uniform.prototype.setInt = Uniform.prototype.setFloat;
+Uniform.prototype.setInt1 = Uniform.prototype.setFloat1;
+Uniform.prototype.setInt2 = Uniform.prototype.setFloat2;
+Uniform.prototype.setInt3 = Uniform.prototype.setFloat3;
+Uniform.prototype.setInt4 = Uniform.prototype.setFloat4;
 
-Uniform.createFloat1 = function ( data, uniformName ) {
+
+var createUniformX = function ( data, uniformName, defaultConstructor, glSignature, type, isMatrix ) {
     var value = data;
     var name = uniformName;
     if ( name === undefined ) {
         name = value;
-        value = [ 0 ];
+        value = defaultConstructor();
     }
-    var uniform = new Uniform();
+    var uniform = new Uniform( name );
 
-    // if we aleardy have an array because called from array version then dont generate
-    // an array of array
-    if ( !Array.isArray( value ) )
+    // if argument is not an array or typed array, create one
+    if ( !Array.isArray( value ) && value.byteLength === undefined )
         value = [ value ];
 
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, glData ) {
-        gl.uniform1fv( location, glData );
-    };
-    uniform.glData = new MACROUTILS.Float32Array( uniform.data );
-    uniform.update = Uniform.prototype._updateFloat1;
-    uniform.set = function ( value ) {
-        if ( value.length === undefined ) {
-            this.data[ 0 ] = value;
-        } else {
-            this.data = value;
-        }
-        this.dirty();
-    };
-
-    uniform.name = name;
-    uniform.type = 'float';
+    uniform.setInternalArray( value );
+    uniform._glCall = glSignature;
+    uniform._type = type;
+    uniform._isMatrix = Boolean( isMatrix );
     return uniform;
 };
-Uniform.createFloat = Uniform.createFloat1;
-Uniform[ 'float' ] = Uniform.createFloat1;
-Uniform.createFloatArray = function ( array, name ) {
-    var u = Uniform.createFloat.call( this, array, name );
-    u.update = Uniform.prototype._updateArray;
-    return u;
+
+var constructorFloat = function () {
+    return [ 0.0 ];
 };
 
-Uniform.createFloat2 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = Vec2.create();
-    }
-    var uniform = new Uniform();
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, glData ) {
-        gl.uniform2fv( location, glData );
-    };
-    uniform.glData = new MACROUTILS.Float32Array( uniform.data );
-    uniform.update = Uniform.prototype._updateFloat2;
-    uniform.name = name;
-    uniform.type = 'vec2';
-    return uniform;
-};
-Uniform.vec2 = Uniform.createFloat2;
-Uniform.createFloat2Array = function ( array, name ) {
-    var u = Uniform.createFloat2.call( this, array, name );
-    u.update = Uniform.prototype._updateArray;
-    return u;
+var constructorInt = function () {
+    return [ 0 ];
 };
 
-Uniform.createFloat3 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = Vec3.create();
-    }
-    var uniform = new Uniform();
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, glData ) {
-        gl.uniform3fv( location, glData );
-    };
-    uniform.glData = new MACROUTILS.Float32Array( uniform.data );
-    uniform.update = Uniform.prototype._updateFloat3;
-    uniform.name = name;
-    uniform.type = 'vec3';
-    return uniform;
-};
-Uniform.vec3 = Uniform.createFloat3;
-Uniform.createFloat3Array = function ( array, name ) {
-    var u = Uniform.createFloat3.call( this, array, name );
-    u.update = Uniform.prototype._updateArray;
-    return u;
+var constructorInt2 = function () {
+    return [ 0, 0 ];
 };
 
-Uniform.createFloat4 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = Vec4.create();
-    }
-    var uniform = new Uniform();
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, glData ) {
-        gl.uniform4fv( location, glData );
-    };
-    uniform.glData = new MACROUTILS.Float32Array( uniform.data );
-    uniform.update = Uniform.prototype._updateFloat4;
-    uniform.name = name;
-    uniform.type = 'vec4';
-    return uniform;
+var constructorInt3 = function () {
+    return [ 0, 0, 0 ];
 };
-Uniform.vec4 = Uniform.createFloat4;
-Uniform.createFloat4Array = function ( array, name ) {
-    var u = Uniform.createFloat4.call( this, array, name );
-    u.update = Uniform.prototype._updateArray;
-    return u;
+
+var constructorInt4 = function () {
+    return [ 0, 0, 0, 0 ];
+};
+
+var constructorMat2 = function () {
+    return Vec4.createAndSet( 1.0, 0.0, 0.0, 1.0 );
+};
+
+var constructorMat3 = function () {
+    return [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ];
+};
+
+// works also for float array but data must be given
+Uniform.createFloat1 = function ( data, uniformName ) {
+    return createUniformX( data, uniformName, constructorFloat, 'uniform1fv', 'float' );
 };
 
 Uniform.createInt1 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = [ 0 ];
-    }
-    var uniform = new Uniform();
-
-    // if we aleardy have an array because called from array version then dont generate
-    // an array of array
-    if ( !Array.isArray( value ) )
-        value = [ value ];
-
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, glData ) {
-        gl.uniform1iv( location, glData );
-    };
-    uniform.set = function ( value ) {
-        if ( value.length === undefined ) {
-            this.data[ 0 ] = value;
-        } else {
-            this.data = value;
-        }
-        this.dirty();
-    };
-
-    uniform.glData = new MACROUTILS.Int32Array( uniform.data );
-    uniform.name = name;
-    uniform.type = 'int';
-    return uniform;
-};
-Uniform[ 'int' ] = Uniform.createInt1;
-Uniform.createInt = Uniform.createInt1;
-Uniform.createIntArray = function ( array, name ) {
-    var u = Uniform.createInt.call( this, array, name );
-    u.update = Uniform.prototype._updateArray;
-    return u;
+    return createUniformX( data, uniformName, constructorInt, 'uniform1iv', 'int' );
 };
 
+Uniform.createFloat2 = function ( data, uniformName ) {
+    return createUniformX( data, uniformName, Vec2.create, 'uniform2fv', 'vec2' );
+};
 
 Uniform.createInt2 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = [ 0, 0 ];
-    }
-    var uniform = new Uniform();
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, glData ) {
-        gl.uniform2iv( location, glData );
-    };
-    uniform.glData = new MACROUTILS.Int32Array( uniform.data );
-    uniform.name = name;
-    uniform.type = 'vec2i';
-    return uniform;
+    return createUniformX( data, uniformName, constructorInt2, 'uniform2iv', 'vec2i' );
 };
-Uniform.vec2i = Uniform.createInt2;
-Uniform.createInt2Array = function ( array, name ) {
-    var u = Uniform.createInt2.call( this, array, name );
-    u.update = Uniform.prototype._updateArray;
-    return u;
+
+Uniform.createFloat3 = function ( data, uniformName ) {
+    return createUniformX( data, uniformName, Vec3.create, 'uniform3fv', 'vec3' );
 };
 
 Uniform.createInt3 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = [ 0, 0, 0 ];
-    }
-    var uniform = new Uniform();
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, glData ) {
-        gl.uniform3iv( location, glData );
-    };
-    uniform.glData = new MACROUTILS.Int32Array( uniform.data );
-    uniform.name = name;
-    uniform.type = 'vec3i';
-    return uniform;
+    return createUniformX( data, uniformName, constructorInt3, 'uniform3iv', 'vec3i' );
 };
-Uniform.vec3i = Uniform.createInt3;
-Uniform.createInt3Array = function ( array, name ) {
-    var u = Uniform.createInt3.call( this, array, name );
-    u.update = Uniform.prototype._updateArray;
-    return u;
+
+Uniform.createFloat4 = function ( data, uniformName ) {
+    return createUniformX( data, uniformName, Vec4.create, 'uniform4fv', 'vec4' );
 };
 
 Uniform.createInt4 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = [ 0, 0, 0, 0 ];
-    }
-    var uniform = new Uniform();
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, glData ) {
-        gl.uniform4iv( location, glData );
-    };
-    uniform.glData = new MACROUTILS.Int32Array( uniform.data );
-    uniform.name = name;
-    uniform.type = 'vec4i';
-    return uniform;
-};
-Uniform.vec4i = Uniform.createInt4;
-
-Uniform.createInt4Array = function ( array, name ) {
-    var u = Uniform.createInt4.call( this, array, name );
-    u.update = Uniform.prototype._updateArray;
-    return u;
+    return createUniformX( data, uniformName, constructorInt4, 'uniform4iv', 'vec4i' );
 };
 
 Uniform.createMatrix2 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = Vec4.createAndSet( 1.0, 0.0, 0.0, 1.0 );
-    }
-    var uniform = new Uniform();
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, transpose, glData ) {
-        gl.uniformMatrix2fv( location, transpose, glData );
-    };
-    uniform.apply = uniform.applyMatrix;
-    uniform.transpose = false;
-    uniform.glData = new MACROUTILS.Float32Array( uniform.data );
-    uniform.update = Uniform.prototype._updateFloat4;
-    uniform.name = name;
-    uniform.type = 'mat2';
-    return uniform;
+    return createUniformX( data, uniformName, constructorMat2, 'uniformMatrix2fv', 'mat2', true );
 };
-Uniform.createMat2 = Uniform.createMatrix2;
-Uniform.mat2 = Uniform.createMat2;
 
 Uniform.createMatrix3 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ];
-    }
-    var uniform = new Uniform();
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, transpose, glData ) {
-        gl.uniformMatrix3fv( location, transpose, glData );
-    };
-    uniform.apply = uniform.applyMatrix;
-    uniform.transpose = false;
-    uniform.glData = new MACROUTILS.Float32Array( uniform.data );
-    uniform.update = Uniform.prototype._updateFloat9;
-    uniform.name = name;
-    uniform.type = 'mat3';
-    return uniform;
+    return createUniformX( data, uniformName, constructorMat3, 'uniformMatrix3fv', 'mat3', true );
 };
-Uniform.createMat3 = Uniform.createMatrix3;
-Uniform.mat3 = Uniform.createMatrix3;
 
 Uniform.createMatrix4 = function ( data, uniformName ) {
-    var value = data;
-    var name = uniformName;
-    if ( name === undefined ) {
-        name = value;
-        value = Matrix.create();
-    }
-    var uniform = new Uniform();
-    uniform.data = value;
-    uniform.glCall = function ( gl, location, transpose, glData ) {
-        gl.uniformMatrix4fv( location, transpose, glData );
-    };
-    uniform.apply = uniform.applyMatrix;
-    uniform.transpose = false;
-    uniform.glData = new MACROUTILS.Float32Array( uniform.data );
-    uniform.update = Uniform.prototype._updateFloat16;
-    uniform.name = name;
-    uniform.type = 'mat4';
-    return uniform;
+    return createUniformX( data, uniformName, Matrix.create, 'uniformMatrix4fv', 'mat4', true );
 };
-Uniform.createMat4 = Uniform.createMatrix4;
-Uniform.mat4 = Uniform.createMatrix4;
+
+// alias
+Uniform.float = Uniform.createFloatArray = Uniform.createFloat = Uniform.createFloat1;
+Uniform.int = Uniform.createIntArray = Uniform.createInt = Uniform.createInt1;
+
+Uniform.vec2 = Uniform.createFloat2Array = Uniform.createFloat2;
+Uniform.vec2i = Uniform.createInt2Array = Uniform.createInt2;
+
+
+Uniform.vec3 = Uniform.createFloat3Array = Uniform.createFloat3;
+Uniform.vec3i = Uniform.createInt3Array = Uniform.createInt3;
+
+Uniform.vec4 = Uniform.createFloat4Array = Uniform.createFloat4;
+Uniform.vec4i = Uniform.createInt4Array = Uniform.createInt4;
+
+Uniform.mat2 = Uniform.createMat2 = Uniform.createMatrix2;
+Uniform.mat3 = Uniform.createMat3 = Uniform.createMatrix3;
+Uniform.mat4 = Uniform.createMat4 = Uniform.createMatrix4;
 
 module.exports = Uniform;

@@ -234,19 +234,16 @@ module.exports = function () {
         console.time( 'time' );
 
         var nCount = 20;
+        var s = Timer.now();
         for ( var n = 0; n < nCount; n++ ) {
             viewer.frame();
         }
+        var result = Timer.now() - s;
 
         console.timeEnd( 'time' );
         console.profileEnd();
 
-        var frameNum = viewer.getFrameStamp().getFrameNumber();
-
-        reportStats( viewer.getViewerStats().getAveragedAttribute( frameNum - nCount, frameNum, 'Update duration' ) * 1000.0, 'perf Only Update' );
-        reportStats( viewer.getViewerStats().getAveragedAttribute( frameNum - nCount, frameNum, 'Cull duration' ) * 1000.0, 'perf Only Cull' );
-        reportStats( viewer.getViewerStats().getAveragedAttribute( frameNum - nCount, frameNum, 'Draw duration' ) * 1000.0, 'perf Only Draw' );
-        reportStats( viewer.getViewerStats().getAveragedAttribute( frameNum - nCount, frameNum, 'Frame duration' ) * 1000.0, 'perf Frame' );
+        reportStats( result, 'perf Frame' );
 
     } );
 };

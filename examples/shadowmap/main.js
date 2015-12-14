@@ -262,7 +262,6 @@
                     // l.setPosition( lightPos );
                     osg.Vec3.copy( lightPos, l.getPosition() );
 
-                    l.dirty();
                 }
             }
 
@@ -625,7 +624,6 @@
             var val = this._config[ 'lightAmbient' ] ? 0.6 : 0.0;
             while ( l-- ) {
                 this._lights[ l ].setAmbient( [ val, val, val, 1.0 ] );
-                this._lights[ l ].dirty();
             }
 
         },

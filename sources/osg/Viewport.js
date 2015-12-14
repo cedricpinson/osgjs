@@ -7,55 +7,48 @@ var Notify = require( 'osg/Notify' );
 var Viewport = function ( x, y, w, h ) {
     StateAttribute.call( this );
 
-    if ( x === undefined ) {
-        x = 0;
-    }
-    if ( y === undefined ) {
-        y = 0;
-    }
-    if ( w === undefined ) {
-        w = 800;
-    }
-    if ( h === undefined ) {
-        h = 600;
-    }
-
-    this._x = x;
-    this._y = y;
-    this._width = w;
-    this._height = h;
-    this._dirty = true;
+    this._x = x !== undefined ? x : 0;
+    this._y = y !== undefined ? y : 0;
+    this._width = w !== undefined ? w : 800;
+    this._height = h !== undefined ? h : 600;
 };
 
 Viewport.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+
     attributeType: 'Viewport',
+
     cloneType: function () {
         return new Viewport();
     },
+
     apply: function ( state ) {
         var gl = state.getGraphicContext();
         gl.viewport( this._x, this._y, this._width, this._height );
-        this._dirty = false;
     },
+
     setViewport: function ( x, y, width, height ) {
         this._x = x;
         this._y = y;
         this._width = width;
         this._height = height;
-        this.dirty();
     },
+
     x: function () {
         return this._x;
     },
+
     y: function () {
         return this._y;
     },
+
     width: function () {
         return this._width;
     },
+
     height: function () {
         return this._height;
     },
+
     computeWindowMatrix: ( function () {
         var translate = Matrix.create();
         var scale = Matrix.create();
@@ -76,6 +69,7 @@ Viewport.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
 
         };
     } )()
+
 } ), 'osg', 'Viewport' );
 
 module.exports = Viewport;

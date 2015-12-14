@@ -37,7 +37,7 @@ module.exports = function () {
         basicAnimationManager._registerAnimations();
 
 
-        console.log( 'nb animations ' + Object.keys( basicAnimationManager._animationsUpdateCallback ).length );
+        // console.log( 'nb animations ' + Object.keys( basicAnimationManager._animationsUpdateCallback ).length );
 
         //
         var time = 0.0;
@@ -77,8 +77,7 @@ module.exports = function () {
         console.profileEnd();
         timed = Timer.instance().tick() - timed;
 
-        console.log( fakeResult );
-
+        module.fakeResult = fakeResult; // keep the variable on a scope to avoid JIT otimimization and remove code
         reportStats( timed, 'Animation Loop' );
 
     } );

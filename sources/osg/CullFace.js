@@ -9,10 +9,7 @@ var StateAttribute = require( 'osg/StateAttribute' );
  */
 var CullFace = function ( mode ) {
     StateAttribute.call( this );
-    if ( mode === undefined ) {
-        mode = CullFace.BACK;
-    }
-    this.setMode( mode );
+    this.setMode( mode !== undefined ? mode : CullFace.BACK );
 };
 
 CullFace.DISABLE = 0x0;
@@ -22,19 +19,23 @@ CullFace.FRONT_AND_BACK = 0x0408;
 
 /** @lends CullFace.prototype */
 CullFace.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( StateAttribute.prototype, {
+
     attributeType: 'CullFace',
+
     cloneType: function () {
         return new CullFace();
     },
+
     setMode: function ( mode ) {
-        if ( typeof mode === 'string' ) {
-            mode = CullFace[ mode ];
-        }
-        this._mode = mode;
+        var value = mode;
+        if ( typeof value === 'string' ) value = CullFace[ value ];
+        this._mode = value;
     },
+
     getMode: function () {
         return this._mode;
     },
+
     apply: function ( state ) {
         var gl = state.getGraphicContext();
         if ( this._mode === CullFace.DISABLE ) {
@@ -43,7 +44,7 @@ CullFace.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( St
             gl.enable( gl.CULL_FACE );
             gl.cullFace( this._mode );
         }
-        this._dirty = false;
+
     }
 } ), 'osg', 'CullFace' );
 

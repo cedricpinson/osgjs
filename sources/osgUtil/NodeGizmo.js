@@ -1,6 +1,7 @@
 'use strict';
 var Node = require( 'osg/Node' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
+var Notify = require( 'osg/Notify' );
 var Depth = require( 'osg/Depth' );
 var BlendFunc = require( 'osg/BlendFunc' );
 var CullFace = require( 'osg/CullFace' );
@@ -172,9 +173,11 @@ NodeGizmo.PICK_XYZ = NodeGizmo.PICK_X | NodeGizmo.PICK_Y | NodeGizmo.PICK_Z;
 NodeGizmo.PICK_GIZMO = NodeGizmo.PICK_ARC | NodeGizmo.PICK_ARROW | NodeGizmo.PICK_PLANE;
 
 NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
+
     setTraversalMask: function ( tmask ) {
         this._tmask = tmask;
     },
+
     init: function () {
         this.getOrCreateStateSet().setAttributeAndModes( new Depth( Depth.DISABLE ) );
         this.getOrCreateStateSet().setAttributeAndModes( new CullFace( CullFace.DISABLE ) );
@@ -199,6 +202,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         canvas.addEventListener( 'mouseup', this.onMouseUp.bind( this ) );
         canvas.addEventListener( 'mouseout', this.onMouseUp.bind( this ) );
     },
+
     attachToNodePath: function ( nodepath ) {
         var node;
         if ( nodepath ) {
@@ -219,6 +223,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         this._attachedNode = node;
         this.updateGizmoMask();
     },
+
     attachToMatrixTransform: function ( node ) {
         if ( !node ) {
             this._attachedNode = null;
@@ -231,12 +236,17 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         this._attachedNode = node;
         this.updateGizmoMask();
     },
-    attachToGeometry: function ( node ) {
+
+    attachToGeometry: function ( argNode ) {
+
+        var node = argNode;
+
         if ( !node ) {
             this._attachedNode = null;
             this.setNodeMask( 0x0 );
             return;
         }
+
         // insert MatrixTransform node before geometry node
         var pr = node.getParents();
         if ( pr[ 0 ].editMask === undefined ) {
@@ -255,6 +265,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         this._attachedNode = node;
         this.updateGizmoMask();
     },
+
     updateGizmoMask: function () {
         if ( !this._attachedNode ) {
             this.setNodeMask( 0x0 );
@@ -266,29 +277,36 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         this._rotateNode.setNodeMask( mask & NodeGizmo.PICK_ARC ? NodeGizmo.PICK_ARC : 0x0 );
         this._planeNode.setNodeMask( mask & NodeGizmo.PICK_PLANE ? NodeGizmo.PICK_PLANE : 0x0 );
     },
-    onNodeHovered: function ( hit ) {
-        if ( this._hoverNode )
-            this._hoverNode.getStateSet().getUniform( 'uColor' ).set( this._keepHoverColor );
-        if ( !hit ) {
-            this._hoverNode = null;
-            return;
-        }
 
-        // stop at the first X/Y/Z matrix node
-        var np = hit.nodepath;
-        var i = np.length - 1;
-        var node = np[ i ];
-        while ( node._nbAxis === undefined ) {
-            if ( i === 0 )
+    onNodeHovered: ( function () {
+        var hoverColor = Vec4.createAndSet( 1.0, 1.0, 0.0, 1.0 );
+
+        return function ( hit ) {
+
+            if ( this._hoverNode )
+                this._hoverNode.getStateSet().getUniform( 'uColor' ).setInternalArray( this._keepHoverColor );
+            if ( !hit ) {
+                this._hoverNode = null;
                 return;
-            node = np[ --i ];
-        }
+            }
 
-        var unif = node.getStateSet().getUniform( 'uColor' );
-        this._hoverNode = node;
-        this._keepHoverColor = unif.get();
-        unif.set( Vec4.createAndSet( 1.0, 1.0, 0.0, 1.0 ) );
-    },
+            // stop at the first X/Y/Z matrix node
+            var np = hit.nodepath;
+            var i = np.length - 1;
+            var node = np[ i ];
+            while ( node._nbAxis === undefined ) {
+                if ( i === 0 )
+                    return;
+                node = np[ --i ];
+            }
+
+            var unif = node.getStateSet().getUniform( 'uColor' );
+            this._hoverNode = node;
+            this._keepHoverColor = unif.getInternalArray();
+            unif.setInternalArray( hoverColor );
+        };
+    } )(),
+
     initNodeRotate: function () {
         var drawArcXYZ = GizmoGeometry.createTorusGeometry( 1.0, 0.01, 6, 64, Math.PI * 2 );
         var drawArc = GizmoGeometry.createTorusGeometry( 1.0, 0.01, 6, 64, Math.PI );
@@ -344,6 +362,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         rotate.addChild( showAngle );
         return rotate;
     },
+
     initNodeTranslate: function () {
         var aHeight = 1.5;
         var aConeHeight = 0.3;
@@ -406,6 +425,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         translate.addChild( mtZ );
         return translate;
     },
+
     initNodeTranslatePlane: function () {
         var mtPlane = new MatrixTransform();
         Matrix.makeTranslate( 0.5, 0.5, 0.0, mtPlane.getMatrix() );
@@ -444,6 +464,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         plane.addChild( mtZ );
         return plane;
     },
+
     updateArcRotation: ( function () {
         var quat = Quat.create();
         var quatx = Quat.makeRotate( -Math.PI * 0.5, 0.0, 1.0, 0.0, Quat.create() );
@@ -475,6 +496,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             arcs[ 3 ].dirtyBound();
         };
     } )(),
+
     getTransformType: function ( node ) {
         var n = node;
         while ( n.parents.length > 0 ) {
@@ -484,6 +506,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         }
         return TransformEnums.RELATIVE_RF;
     },
+
     updateGizmo: ( function () {
         var eye = Vec3.create();
         var trVec = Vec3.create();
@@ -556,6 +579,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
                 Matrix.copy( this._hoverNode.getMatrix(), this._showAngle.getMatrix() );
         };
     } )(),
+
     computeNearestIntersection: ( function () {
         var sortByRatio = function ( a, b ) {
             return a.ratio - b.ratio;
@@ -579,40 +603,59 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             return hits[ 0 ];
         };
     } )(),
+
     setOnlyGizmoPicking: function () {
         // enable picking only for the gizmo
         this._viewer.getCamera().addChild( this );
         this._viewer.getSceneData().setNodeMask( 0x0 );
         this.setNodeMask( ~0x0 );
     },
+
     setOnlyScenePicking: function () {
         this._viewer.getCamera().removeChild( this );
         this._viewer.getSceneData().setNodeMask( ~0x0 );
         this.setNodeMask( NodeGizmo.NO_PICK );
     },
+
     pickGizmo: function ( e, tmask ) {
         this.setOnlyGizmoPicking();
         var hit = this.computeNearestIntersection( e, tmask );
         this.setOnlyScenePicking();
         return hit;
     },
-    getCanvasPositionFromWorldPoint: function ( worldPoint, out ) {
-        var cam = this._viewer.getCamera();
+
+    getCanvasPositionFromWorldPoint: ( function () {
         var mat = Matrix.create();
-        if ( cam.getViewport() ) cam.getViewport().computeWindowMatrix( mat );
-        Matrix.preMult( mat, cam.getProjectionMatrix() );
-        if ( this.getReferenceFrame() === TransformEnums.RELATIVE_RF )
-            Matrix.preMult( mat, cam.getViewMatrix() );
 
-        var screenPoint = out || Vec3.create();
-        Matrix.transformVec3( mat, worldPoint, screenPoint );
+        return function ( worldPoint, out ) {
+            var cam = this._viewer.getCamera();
 
-        // canvas to webgl coord
-        var canvas = this._canvas;
-        out[ 0 ] = out[ 0 ] / ( canvas.width / canvas.clientWidth );
-        out[ 1 ] = canvas.clientHeight - out[ 1 ] / ( canvas.height / canvas.clientHeight );
-        return out;
-    },
+            var screenPoint = out;
+            if ( !out ) {
+                Notify.warn( 'deprecated, use out argument for result ' );
+                screenPoint = Vec3.create();
+            }
+
+            if ( cam.getViewport() ) {
+                cam.getViewport().computeWindowMatrix( mat );
+            } else {
+                Matrix.makeIdentity( mat );
+            }
+
+            Matrix.preMult( mat, cam.getProjectionMatrix() );
+            if ( this.getReferenceFrame() === TransformEnums.RELATIVE_RF )
+                Matrix.preMult( mat, cam.getViewMatrix() );
+
+            Matrix.transformVec3( mat, worldPoint, screenPoint );
+
+            // canvas to webgl coord
+            var canvas = this._canvas;
+            screenPoint[ 0 ] = screenPoint[ 0 ] / ( canvas.width / canvas.clientWidth );
+            screenPoint[ 1 ] = canvas.clientHeight - screenPoint[ 1 ] / ( canvas.height / canvas.clientHeight );
+            return screenPoint;
+        };
+    } )(),
+
     onMouseDown: function ( e ) {
         getCanvasCoord( this._downCanvasCoord, e );
         if ( !this._hoverNode || !this._attachedNode )
@@ -637,6 +680,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             this.startPlaneEdit( e );
         }
     },
+
     saveEditMatrices: function () {
         Matrix.copy( this._attachedNode.getMatrix(), this._editLocal );
         // save the world translation
@@ -648,6 +692,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         this._editWorldScaleRot[ 12 ] = this._editWorldScaleRot[ 13 ] = this._editWorldScaleRot[ 14 ] = 0.0;
         Matrix.inverse( this._editWorldScaleRot, this._editInvWorldScaleRot );
     },
+
     startRotateEdit: function ( e ) {
         var gizmoMat = this._rotateNode.getWorldMatrices()[ 0 ];
 
@@ -680,11 +725,12 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         this._showAngle.setNodeMask( NodeGizmo.NO_PICK );
         hit.point[ 2 ] = 0.0;
         var stateAngle = this._showAngle.getStateSet();
-        stateAngle.getUniform( 'uAngle' ).set( 0.0 );
-        stateAngle.getUniform( 'uBase' ).set( Vec3.normalize( hit.point, hit.point ) );
+        stateAngle.getUniform( 'uAngle' ).setFloat( 0.0 );
+        stateAngle.getUniform( 'uBase' ).setVec3( Vec3.normalize( hit.point, hit.point ) );
 
         getCanvasCoord( this._editLineOrigin, e );
     },
+
     startTranslateEdit: function ( e ) {
         var origin = this._editLineOrigin;
         var dir = this._editLineDirection;
@@ -709,6 +755,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         getCanvasCoord( offset, e );
         Vec2.sub( offset, origin, offset );
     },
+
     startPlaneEdit: function ( e ) {
         var origin = this._editLineOrigin; // just used to determine the 2d offset
 
@@ -723,6 +770,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         getCanvasCoord( offset, e );
         Vec2.sub( offset, origin, offset );
     },
+
     drawLineCanvasDebug: function ( x1, y1, x2, y2 ) {
         this._debugNode.setNodeMask( NodeGizmo.NO_PICK );
         var buffer = this._debugNode.getChildren()[ 0 ].getAttributes().Vertex;
@@ -732,6 +780,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         buffer.getElements()[ 3 ] = ( ( ( this._canvas.clientHeight - y2 ) / this._canvas.clientHeight ) ) * 2 - 1.0;
         buffer.dirty();
     },
+
     pickAndSelect: function ( e ) {
         this.setNodeMask( 0x0 );
         var hit = this.computeNearestIntersection( e, this._tmask );
@@ -740,6 +789,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         else
             this.attachToNodePath( hit ? hit.nodepath : hit );
     },
+
     onMouseUp: function ( e ) {
         var smk = this._viewer._eventProxy.StandardMouseKeyboard;
         if ( smk._enable === false ) {
@@ -760,6 +810,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             return;
         this.updateGizmoMask();
     },
+
     onMouseMove: function ( e ) {
         if ( !this._attachedNode )
             return;
@@ -779,6 +830,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         else if ( par === this._planeNode )
             this.updatePlaneEdit( e );
     },
+
     updateRotateEdit: ( function () {
         var mrot = Matrix.create();
         var vec = Vec2.create();
@@ -805,7 +857,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             else if ( nbAxis === 2 )
                 Matrix.makeRotate( -angle, 0.0, 0.0, 1.0, mrot );
 
-            this._showAngle.getOrCreateStateSet().getUniform( 'uAngle' ).set( nbAxis === 0 ? -angle : angle );
+            this._showAngle.getOrCreateStateSet().getUniform( 'uAngle' ).setFloat( nbAxis === 0 ? -angle : angle );
 
             if ( !this._rotateInLocal ) {
                 Matrix.postMult( this._editInvWorldScaleRot, mrot );
@@ -817,6 +869,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             this._attachedNode.dirtyBound();
         };
     } )(),
+
     updateTranslateEdit: ( function () {
         var vec = Vec2.create();
         var tra = Vec2.create();
@@ -862,6 +915,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             this._attachedNode.dirtyBound();
         };
     } )(),
+
     updatePlaneEdit: function ( e ) {
         var vec = Vec3.create();
         getCanvasCoord( vec, e );
@@ -873,7 +927,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( canvas.height / canvas.clientHeight );
 
 
-        // project 2D point on the 3d plane        
+        // project 2D point on the 3d plane
         this._lsi.reset();
         this._lsi.setTestPlane( true );
         this._lsi.set( Vec3.set( coordx, coordy, 0.0, this._origIntersect ), Vec3.set( coordx, coordy, 1.0, this._dstIntersect ) );
@@ -892,6 +946,7 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
 
         this._attachedNode.dirtyBound();
     }
+
 } );
 
 module.exports = NodeGizmo;

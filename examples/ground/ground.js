@@ -118,12 +118,12 @@
         },
 
         setColor: function ( color ) {
-            this._color.set( color );
+            this._color.setInternalArray( color );
         },
 
         getColor: function () {
-            return this._color.get();
-        },
+            return this._color.getInternalArray();
+        }
 
     } ), 'osgUtil', 'Ground' );
 } )();

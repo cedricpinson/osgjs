@@ -46,7 +46,7 @@ var CustomCompiler;
 
             return projMat;
 
-        },
+        }
 
     } );
 

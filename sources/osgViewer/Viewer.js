@@ -2,13 +2,12 @@
 var Notify = require( 'osg/Notify' );
 var Matrix = require( 'osg/Matrix' );
 var Options = require( 'osg/Options' );
-var Stats = require( 'osg/Stats' );
 var Timer = require( 'osg/Timer' );
 var UpdateVisitor = require( 'osg/UpdateVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
 var Texture = require( 'osg/Texture' );
 var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
-var CanvasStats = require( 'osgViewer/CanvasStats' );
+var createStats = require( 'osgViewer/createStats' );
 var EventProxy = require( 'osgViewer/eventProxy/EventProxy' );
 var View = require( 'osgViewer/View' );
 var WebGLUtils = require( 'osgViewer/webgl-utils' );
@@ -93,10 +92,8 @@ var OptionsURL = ( function () {
 var Viewer = function ( canvas, userOptions, error ) {
     View.call( this );
 
-    this._startFrameTick = undefined;
     this._startTick = Timer.instance().tick();
-    this._stats = new Stats( 'Viewer' );
-    this._canvasStats = undefined;
+    this._stats = undefined;
     this._done = false;
 
     var options = this.initOptions( userOptions );
@@ -209,170 +206,12 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         return this.getCamera().getRenderer().getState();
     },
 
-    initStats: function ( options, canvas ) {
+    initStats: function ( options ) {
 
         if ( !options.getBoolean( 'stats' ) )
             return;
 
-        var maxMS = 20;
-        var stepMS = 2;
-        //var fontsize = 14;
-
-        if ( options.statsMaxMS !== undefined ) {
-            maxMS = parseInt( options.statsMaxMS, 10 );
-        }
-        if ( options.statsStepMS !== undefined ) {
-            stepMS = parseInt( options.statsStepMS, 10 );
-        }
-
-        var createDomElements = function ( elementToAppend ) {
-            var id = Math.floor( Math.random() * 1000 );
-
-            var gridID = 'StatsCanvasGrid' + id.toString();
-            var statsCanvasID = 'StatsCanvas' + id.toString();
-            var statsCanvasTextID = 'StatsCanvasText' + id.toString();
-
-            var dom = [
-                '<div style="top: 0; position: absolute; width: 300px; height: 150px; z-index: 10;">',
-                '<div style="position: relative;">',
-                options.getBoolean( 'statsNoGraph' ) ? '' : '<canvas id="' + gridID + '" width="300" height="150" style="z-index:-1; position: absolute; background: rgba(14,14,14,0.8); " ></canvas>',
-                options.getBoolean( 'statsNoGraph' ) ? '' : '<canvas id="' + statsCanvasID + '" width="300" height="150" style="z-index:8; position: absolute;" ></canvas>',
-                '<canvas id="' + statsCanvasTextID + '" width="300" height="150" style="z-index:9; position: absolute;" ></canvas>',
-                '</div>',
-
-                '</div>'
-            ].join( '\n' );
-
-
-            var parent;
-
-            if ( elementToAppend === undefined ) {
-                parent = document.body;
-            } else {
-                parent = elementToAppend;
-            }
-
-            var mydiv = document.createElement( 'div' );
-            mydiv.innerHTML = dom;
-            parent.appendChild( mydiv );
-
-            if ( options.getBoolean( 'statsNoGraph' ) ) {
-                return {
-                    text: document.getElementById( statsCanvasTextID )
-                };
-            }
-
-            var grid = document.getElementById( gridID );
-            var ctx = grid.getContext( '2d' );
-            ctx.clearRect( 0, 0, grid.width, grid.height );
-
-            var step = Math.floor( maxMS / stepMS ).toFixed( 0 );
-            var r = grid.height / step;
-            ctx.strokeStyle = 'rgb(70,70,70)';
-            for ( var i = 0, l = step; i < l; i++ ) {
-                ctx.beginPath();
-                ctx.moveTo( 0, i * r );
-                ctx.lineTo( grid.width, i * r );
-                ctx.stroke();
-            }
-
-            return {
-                graph: document.getElementById( statsCanvasID ),
-                text: document.getElementById( statsCanvasTextID )
-            };
-        };
-
-        var elementToAttach = canvas.parentNode;
-        var domStats = createDomElements( elementToAttach );
-        var canvasStats = new CanvasStats( domStats.graph, domStats.text );
-
-        canvasStats.addLayer( '#ff0fff', 65,
-            function ( /*t*/) {
-                var fn = this.getFrameStamp().getFrameNumber() - 1;
-                var value = this.getViewerStats().getAveragedAttribute( fn - 25, fn, 'Frame rate' );
-                return value;
-            }.bind( this ),
-            function ( a ) {
-                return 'FrameRate: ' + ( a ).toFixed( 0 ) + ' fps';
-            } );
-
-        canvasStats.addLayer( '#ffff00', maxMS,
-            function ( /*t*/) {
-                var fn = this.getFrameStamp().getFrameNumber() - 1;
-                var value = this.getViewerStats().getAttribute( fn, 'Frame duration' );
-                return value * 1000.0;
-            }.bind( this ),
-            function ( a ) {
-                return 'FrameTime: ' + a.toFixed( 2 ) + ' ms';
-            } );
-
-        canvasStats.addLayer( '#d07b1f', maxMS,
-            function ( /*t*/) {
-                var fn = this.getFrameStamp().getFrameNumber() - 1;
-                var value = this.getViewerStats().getAttribute( fn, 'Update duration' );
-                return value * 1000.0;
-            }.bind( this ),
-            function ( a ) {
-                return 'UpdateTime: ' + a.toFixed( 2 ) + ' ms';
-            } );
-
-        canvasStats.addLayer( '#73e0ff', maxMS,
-            function ( /*t*/) {
-                var fn = this.getFrameStamp().getFrameNumber() - 1;
-                var value = this.getViewerStats().getAttribute( fn, 'Cull duration' );
-                return value * 1000.0;
-            }.bind( this ),
-            function ( a ) {
-                return 'CullTime: ' + a.toFixed( 2 ) + ' ms';
-            } );
-
-        canvasStats.addLayer( '#ff0000', maxMS,
-            function ( /*t*/) {
-                var fn = this.getFrameStamp().getFrameNumber() - 1;
-                var value = this.getViewerStats().getAttribute( fn, 'Draw duration' );
-                return value * 1000.0;
-            }.bind( this ),
-            function ( a ) {
-                return 'DrawTime: ' + a.toFixed( 2 ) + ' ms';
-            } );
-
-        canvasStats.addLayer( '#f0f000', 256,
-            function ( /*t*/) {
-                var fn = this.getFrameStamp().getFrameNumber() - 1;
-                var stats = Texture.getTextureManager( this.getGraphicContext() ).getStats();
-                var value = stats.getAttribute( fn, 'Texture used' );
-                return value / ( 1024 * 1024 );
-            }.bind( this ),
-            function ( a ) {
-                return 'Texture used: ' + a.toFixed( 2 ) + ' MB';
-            } );
-
-        canvasStats.addLayer( '#f00f00', 256,
-            function ( /*t*/) {
-                var fn = this.getFrameStamp().getFrameNumber() - 1;
-                var stats = Texture.getTextureManager( this.getGraphicContext() ).getStats();
-                var value = stats.getAttribute( fn, 'Texture total' );
-                return value / ( 1024 * 1024 );
-            }.bind( this ),
-            function ( a ) {
-                return 'Texture total: ' + a.toFixed( 2 ) + ' MB';
-            } );
-
-        if ( window.performance && window.performance.memory && window.performance.memory.totalJSHeapSize ) {
-            canvasStats.addLayer( '#00ff00',
-                window.performance.memory.totalJSHeapSize,
-                function ( /*t*/) {
-                    var fn = this.getFrameStamp().getFrameNumber() - 1;
-                    var value = this.getViewerStats().getAttribute( fn, 'Heap size' );
-                    return value;
-                }.bind( this ),
-                function ( a ) {
-                    var v = a / ( 1024 * 1024 );
-                    return 'Memory : ' + v.toFixed( 2 ) + ' Mb';
-                } );
-        }
-        this._canvasStats = canvasStats;
-
+        this._stats = createStats();
     },
 
     getViewerStats: function () {
@@ -381,39 +220,59 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
     renderingTraversal: function () {
 
-        var frameNumber = this.getFrameStamp().getFrameNumber();
-
         if ( this.getScene().getSceneData() )
             this.getScene().getSceneData().getBound();
 
+
         if ( this.getCamera() ) {
 
-            var tick0 = Timer.instance().tick();
-            this.getCamera().getRenderer().cull();
+            var stats = this._stats;
+            var renderer = this.getCamera().getRenderer();
 
-            var tick1 = Timer.instance().tick();
-            this.getViewerStats().setAttribute( frameNumber, 'Cull duration', Timer.instance().deltaS( tick0, tick1 ) );
+            if ( stats ) stats.rStats( 'cull' ).start();
+            renderer.cull();
+            if ( stats ) stats.rStats( 'cull' ).end();
 
-            this.getCamera().getRenderer().draw();
+            if ( stats ) stats.rStats( 'render' ).start();
+            renderer.draw();
+            if ( stats ) stats.rStats( 'render' ).end();
 
-            var tick2 = Timer.instance().tick();
-            this.getViewerStats().setAttribute( frameNumber, 'Draw duration', Timer.instance().deltaS( tick1, tick2 ) );
+            if ( stats ) {
+                var cullVisitor = renderer.getCullVisitor();
+                stats.rStats( 'cullcamera' ).set( cullVisitor._numCamera );
+                stats.rStats( 'cullmatrixtransform' ).set( cullVisitor._numMatrixTransform );
+                stats.rStats( 'cullprojection' ).set( cullVisitor._numProjection );
+                stats.rStats( 'cullnode' ).set( cullVisitor._numNode );
+                stats.rStats( 'cullightsource' ).set( cullVisitor._numLightSource );
+                stats.rStats( 'cullgeometry' ).set( cullVisitor._numGeometry );
+
+                stats.rStats( 'pushstateset' ).set( renderer.getState()._numPushStateSet );
+            }
+
         }
+
     },
 
 
     updateTraversal: function () {
 
-        var startTraversal = Timer.instance().tick();
+        var stats = this._stats;
+
+        if ( stats ) stats.rStats( 'update' ).start();
+
         // update the scene
+        this._updateVisitor.resetStats();
         this.getScene().updateSceneGraph( this._updateVisitor );
+
+        if ( stats ) stats.rStats( 'updatecallback' ).set( this._updateVisitor._numUpdateCallback );
+
         // Remove ExpiredSubgraphs from DatabasePager
         this.getDatabasePager().releaseGLExpiredSubgraphs( 0.005 );
         // In OSG this.is deferred until the draw traversal, to handle multiple contexts
         this.flushDeletedGLObjects( 0.005 );
-        var deltaS = Timer.instance().deltaS( startTraversal, Timer.instance().tick() );
 
-        this.getViewerStats().setAttribute( this.getFrameStamp().getFrameNumber(), 'Update duration', deltaS );
+        if ( stats ) stats.rStats( 'update' ).end();
+
     },
 
     advance: function ( simulationTime ) {
@@ -424,7 +283,6 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
             sTime = Number.MAX_VALUE;
 
         var frameStamp = this._frameStamp;
-        var previousReferenceTime = frameStamp.getReferenceTime();
         var previousFrameNumber = frameStamp.getFrameNumber();
 
         frameStamp.setFrameNumber( previousFrameNumber + 1 );
@@ -436,31 +294,37 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         frameStamp.setSimulationTime( sTime === Number.MAX_VALUE ? deltaS : sTime ); // set simul time
         frameStamp.setDeltaTime( frameStamp.getSimulationTime() - lastSimulationTime ); // compute delta since last tick
 
-        var deltaFrameTime = frameStamp.getReferenceTime() - previousReferenceTime;
-        if ( deltaFrameTime !== 0.0 )
-            this.getViewerStats().setAttribute( previousFrameNumber, 'Frame rate', 1.0 / deltaFrameTime );
     },
 
     beginFrame: function () {
-        this._startFrameTick = Timer.instance().tick();
+
+        var stats = this._stats;
+
+        if ( stats ) stats.rStats( 'frame' ).start();
+        if ( stats ) stats.glS.start();
+
+        if ( stats ) stats.rStats( 'rAF' ).tick();
+        if ( stats ) stats.rStats( 'FPS' ).frame();
+
     },
+
     endFrame: function () {
 
         var frameNumber = this.getFrameStamp().getFrameNumber();
 
-        if ( window.performance &&
-            window.performance.memory &&
-            window.performance.memory.usedJSHeapSize ) {
-            var mem = window.performance.memory.usedJSHeapSize;
-            this.getViewerStats().setAttribute( frameNumber, 'Heap size', mem );
+        var stats = this._stats;
+        var rStats = stats ? stats.rStats : undefined;
+
+        // update texture stats
+        if ( rStats ) {
+            Texture.getTextureManager( this.getGraphicContext() ).updateStats( frameNumber, rStats );
         }
 
-        this.getViewerStats().setAttribute( frameNumber, 'Frame duration', Timer.instance().deltaS( this._startFrameTick, Timer.instance().tick() ) );
+        if ( rStats ) rStats( 'frame' ).end();
 
-        if ( this._canvasStats ) { // update ui stats
-            Texture.getTextureManager( this.getGraphicContext() ).updateStats( frameNumber );
-            this._canvasStats.update();
-        }
+        if ( rStats ) rStats( 'rStats' ).start();
+        if ( rStats ) rStats().update();
+        if ( rStats ) rStats( 'rStats' ).end();
 
     },
 

@@ -531,7 +531,7 @@ Composer.Filter.PingPong.prototype = MACROUTILS.objectInherit( Composer.Filter.C
         if ( uniforms ) {
             keys = window.Object.keys( uniforms );
             for ( k = 0, l = keys.length; k < l; k++ ) {
-                unif = uniforms[ keys[ k ] ];
+                unif = uniforms[ keys[ k ] ].getUniform();
                 st0.addUniform( unif );
                 st1.addUniform( unif );
             }
@@ -793,12 +793,10 @@ Composer.Filter.BilateralHBlur.prototype = MACROUTILS.objectInherit( Composer.Fi
         this.dirty();
     },
     setPixelSize: function ( value ) {
-        this._pixelSize.get()[ 0 ] = value;
-        this._pixelSize.dirty();
+        this._pixelSize.setFloat( value );
     },
     setRadius: function ( radius ) {
-        this._radius.get()[ 0 ] = radius; // *2.0;
-        this._radius.dirty();
+        this._radius.setFloat( radius ); // *2.0;
     },
     getUVOffset: function ( value ) {
         return 'vec2(0.0, float(' + value + ') * pixelSize )/RenderSize[1];';
@@ -1053,14 +1051,10 @@ Composer.Filter.SobelFilter = function () {
 
 Composer.Filter.SobelFilter.prototype = MACROUTILS.objectInherit( Composer.Filter.prototype, {
     setColor: function ( color ) {
-        this._color.get()[ 0 ] = color[ 0 ];
-        this._color.get()[ 1 ] = color[ 1 ];
-        this._color.get()[ 2 ] = color[ 2 ];
-        this._color.dirty();
+        this._color.setVec3( color );
     },
     setFactor: function ( f ) {
-        this._factor.get()[ 0 ] = f;
-        this._factor.dirty();
+        this._factor.setFloat( f );
     },
     build: function () {
         var stateSet = this._stateSet;
@@ -1285,8 +1279,7 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
     },
     setAngleLimit: function ( value ) {
         var uniform = this._stateSet.getUniform( 'AngleLimit' );
-        uniform.get()[ 0 ] = value;
-        uniform.dirty();
+        uniform.setFloat( value );
     },
     setNbSamples: function ( value ) {
         if ( value === this._nbSamples ) {
@@ -1297,13 +1290,11 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
     },
     setRadius: function ( value ) {
         var uniform = this._stateSet.getUniform( 'Radius' );
-        uniform.get()[ 0 ] = value;
-        uniform.dirty();
+        uniform.setFloat( value );
     },
     setPower: function ( value ) {
         var uniform = this._stateSet.getUniform( 'Power' );
-        uniform.get()[ 0 ] = value;
-        uniform.dirty();
+        uniform.setFloat( value );
     },
     build: function () {
         var stateSet = this._stateSet;
@@ -1333,8 +1324,7 @@ Composer.Filter.SSAO.prototype = MACROUTILS.objectInherit( Composer.Filter.proto
             uniform = Uniform.createFloat2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ), 'noiseSampling' );
             stateSet.addUniform( uniform );
         } else {
-            uniform.set( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
-            uniform.dirty();
+            uniform.setVec2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
         }
         var vertexShader = [
             '',
@@ -1474,8 +1464,7 @@ Composer.Filter.SSAO8.prototype = MACROUTILS.objectInherit( Composer.Filter.SSAO
             uniform = Uniform.createFloat2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ), 'noiseSampling' );
             stateSet.addUniform( uniform );
         } else {
-            uniform.set( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
-            uniform.dirty();
+            uniform.setVec2( Vec2.createAndSet( this._size[ 0 ] / this._noiseTextureSize, this._size[ 1 ] / this._noiseTextureSize ) );
         }
         var vertexShader = [
             '',
