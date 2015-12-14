@@ -13,6 +13,7 @@ var ShaderGeneratorProxy = function () {
     this.addShaderGenerator( 'debugNormal', new DisplayNormalVisitor.ShaderGeneratorCompilerOffsetNormal() );
     this.addShaderGenerator( 'debugTangent', new DisplayNormalVisitor.ShaderGeneratorCompilerOffsetTangent() );
     this.addShaderGenerator( 'debugGeometry', new DisplayGeometryVisitor.ShaderGeneratorCompilerColorGeometry() );
+    this.addShaderGenerator( 'debugSkinning', new DisplayGeometryVisitor.ShaderGeneratorCompilerColorSkinning() );
 
     return this;
 };
