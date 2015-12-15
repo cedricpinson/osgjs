@@ -401,26 +401,22 @@
 
         updateEnvironmentBrightness: function () {
             var b = this._config.brightness;
-            this._envBrightnessUniform.get()[ 0 ] = b;
-            this._envBrightnessUniform.dirty();
+            this._envBrightnessUniform.setFloat( b );
         },
 
         updateNormalAA: function () {
             var aa = this._config.normalAA ? 1 : 0;
-            this._normalAA.get()[ 0 ] = aa;
-            this._normalAA.dirty();
+            this._normalAA.setInt( aa );
         },
 
         updateSpecularPeak: function () {
             var aa = this._config.specularPeak ? 1 : 0;
-            this._specularPeak.get()[ 0 ] = aa;
-            this._specularPeak.dirty();
+            this._specularPeak.setInt( aa );
         },
 
         updateOcclusionHorizon: function () {
             var aa = this._config.occlusionHorizon ? 1 : 0;
-            this._occlusionHorizon.get()[ 0 ] = aa;
-            this._occlusionHorizon.dirty();
+            this._occlusionHorizon.setInt( aa );
         },
 
         updateCameraPreset: function () {
@@ -471,9 +467,8 @@
                     // add a rotation, because environment has the convention y up
                     var rotateYtoZ = osg.Matrix.makeRotate( Math.PI / 2, 1, 0, 0, osg.Matrix.create() );
 
-                    osg.Matrix.mult( m, rotateYtoZ, environmentTransform.get() );
+                    osg.Matrix.mult( m, rotateYtoZ, environmentTransform.getInternalArray() );
                     //osg.Matrix.copy( m, environmentTransform.get() );
-                    environmentTransform.dirty();
                     return true;
                 };
             };
@@ -1250,7 +1245,6 @@
                 this._uniformHammersleySequence[ nbSamples ] = uniformHammersley;
             }
             var uniformHammerslay = this._uniformHammersleySequence[ nbSamples ];
-            uniformHammerslay.dirty();
 
 
             this._shaders.forEach( function ( config ) {
