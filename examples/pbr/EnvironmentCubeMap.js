@@ -4,6 +4,7 @@ window.EnvironmentCubeMap = ( function () {
     var P = window.P;
     var OSG = window.OSG;
     var osg = OSG.osg;
+    var osgDB = OSG.osgDB;
     var osgShader = OSG.osgShader;
 
     var shaderProcessor = new osgShader.ShaderProcessor();
@@ -94,11 +95,12 @@ window.EnvironmentCubeMap = ( function () {
 
             var defer = P.defer();
 
-            var xhr = new XMLHttpRequest();
+            var input = new osgDB.Input();
+            input.requestFile( this._file, {
+                responseType: 'arraybuffer'
+            } ).then( function ( inputArray ) {
 
-            var error = function () {};
-            var load = function () {
-                var data = xhr.response;
+                var data = input._unzipTypedArray( inputArray );
 
                 var maxLevel = Math.log( this._size ) / Math.LN2;
                 var offset = 0;
@@ -151,21 +153,17 @@ window.EnvironmentCubeMap = ( function () {
 
                 defer.resolve();
 
-            }.bind( this );
+            }.bind( this ) );
 
-            xhr.addEventListener( 'error', error, false );
-            xhr.addEventListener( 'load', function ( event ) {
-                if ( xhr.status !== 200 ) {
-                    error( event );
-                    return;
-                }
-                load.call( event );
+            // xhr.addEventListener( 'error', error, false );
+            // xhr.addEventListener( 'load', function ( event ) {
+            //     if ( xhr.status !== 200 ) {
+            //         error( event );
+            //         return;
+            //     }
+            //     load.call( event );
 
-            }, false );
-
-            xhr.open( 'GET', this._file, true );
-            xhr.responseType = 'arraybuffer';
-            xhr.send( null );
+            // }, false );
 
             return defer.promise;
 
