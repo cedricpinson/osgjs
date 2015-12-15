@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Textured quad example</title>
+    <title>Physical Based Rendering</title>
     <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
 
     <style type="text/css">
@@ -14,15 +14,24 @@
     </style>
 
     <!-- Javascript -->
+    <script type="text/javascript">
+    window.useExternalModels = false;
+    </script>
     <script type="text/javascript" src="../vendors/core.js"></script>
     <script type="text/javascript" src="../vendors/rStats.js"></script>
     <script type="text/javascript" src="../vendors/rStats.extras.js"></script>
     <script type="text/javascript" src="../vendors/jquery-2.1.1.js"></script>
     <script type="text/javascript" src="../vendors/bluebird.js"></script>
     <script type="text/javascript" src="../vendors/hammer.js"></script>
-    <script type="text/javascript" src="../vendors/leap.js"></script>
     <script type="text/javascript" src="../vendors/dat.gui.js"></script>
+    <script type="text/javascript" src="../vendors/gunzip.min.js"></script>
     <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+    <script type="text/javascript" src="IntegrateBRDF.js"></script>
+    <script type="text/javascript" src="ModelLoader.js"></script>
+    <script type="text/javascript" src="EnvironmentCubeMap.js"></script>
+    <script type="text/javascript" src="EnvironmentSphericalHarmonics.js"></script>
+    <script type="text/javascript" src="EnvironmentPanorama.js"></script>
+    <script type="text/javascript" src="Environment.js"></script>
     <script type="text/javascript" src="main.js"></script>
 
 </head>
@@ -30,7 +39,7 @@
 
 
 <body class="osgjs-theme-dark">
-
+  <!-- <div id="loading">Loading</div> -->
   <div id="ViewContainer" class="osgjs-fullpage">
     <!-- very important change the size of the parent element instead-->
     <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
@@ -44,8 +53,11 @@
     </a>
 
     <div class="osgjs-description">
-      Example to show how to do EarlyZ pass, to avoid overdraw<br>
-      run the example with ?stats=1 to see fps difference
+      Physical Based Rendering prototype<br>
+      <div id="model-description">
+          Environment: <a href="http://www.hdri-hub.com">hdri-hub</a> built with <a href="https://github.com/cedricpinson/envtools">envtools</a><br>
+          Models Credits: <span id="model-list"></span>
+      </div>
     </div>
 
   </div>

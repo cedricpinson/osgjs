@@ -3,6 +3,10 @@
 title: SDK Examples
 samples:
     -
+        title: PBR
+        image: assets/img/pbr.jpg
+        link: examples/pbr
+    -
         title: Animation
         image: assets/img/animation.jpg
         link: examples/animation
@@ -26,10 +30,6 @@ samples:
         title: Dualcam
         image: assets/img/dualcam.jpg
         link: examples/dualcam
-    -
-        title: EarlyZ
-        image: assets/img/earlyz.jpg
-        link: examples/earlyz
     -
         title: Frustum Culling
         image: assets/img/frustum-culling.jpg
