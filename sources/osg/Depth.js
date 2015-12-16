@@ -33,8 +33,8 @@ Depth.NEVER = 0x0200;
 Depth.LESS = 0x0201;
 Depth.EQUAL = 0x0202;
 Depth.LEQUAL = 0x0203;
-Depth.GREATE = 0x0204;
-Depth.NOTEQU = 0x0205;
+Depth.GREATER = 0x0204;
+Depth.NOTEQUAL = 0x0205;
 Depth.GEQUAL = 0x0206;
 Depth.ALWAYS = 0x0207;
 
