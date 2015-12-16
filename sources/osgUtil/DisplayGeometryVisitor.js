@@ -173,8 +173,8 @@ GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prot
                     st.setShaderGeneratorName( 'debugGeometry' );
                 }
 
-            } else if ( node._originalStateSet ) {
-                node.setStateSet( node._originalStateSet );
+            } else if ( node._originalStateSet !== undefined ) {
+                node.setStateSet( node._originalStateSet || undefined );
             }
 
         }
