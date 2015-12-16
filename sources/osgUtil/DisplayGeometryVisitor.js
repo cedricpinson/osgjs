@@ -2,11 +2,13 @@
 var MACROUTILS = require( 'osg/Utils' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var Geometry = require( 'osg/Geometry' );
+var RigGeometry = require( 'osgAnimation/RigGeometry' );
 var Uniform = require( 'osg/Uniform' );
 var StateSet = require( 'osg/StateSet' );
 var Vec3 = require( 'osg/Vec3' );
 var ShaderGenerator = require( 'osgShader/ShaderGenerator' );
 var Compiler = require( 'osgShader/Compiler' );
+var BufferArray = require( 'osg/BufferArray' );
 
 
 ////////////////////////
@@ -61,7 +63,7 @@ CompilerColorSkinning.prototype = MACROUTILS.objectInherit( Compiler.prototype, 
         var frag = this.getNode( 'glFragColor' );
 
         this.getNode( 'SetAlpha' ).inputs( {
-            color: this.getOrCreateVarying( 'vec3', 'vColorBone' ),
+            color: this.getOrCreateVarying( 'vec3', 'vBonesColor' ),
             alpha: this.createVariable( 'float' ).setValue( '1.0' )
         } ).outputs( {
             color: frag
@@ -71,22 +73,8 @@ CompilerColorSkinning.prototype = MACROUTILS.objectInherit( Compiler.prototype, 
     },
     declareVertexTransforms: function ( glPosition ) {
 
-        var color = this.getOrCreateVarying( 'vec3', 'vColorBone' );
-
-        this.getNode( 'InlineCode' ).code( [
-            '#define RAND_F(id) fract(sin(id * 45.233) * 43758.5453)',
-            '#define GEN_COLOR(id) vec3(RAND_F(id+2.16), RAND_F(id*57.27), RAND_F(id*0.874))',
-            '%color = %weights.x*GEN_COLOR(%bones.x+%rand);',
-            '%color += %weights.y*GEN_COLOR(%bones.y+%rand);',
-            '%color += %weights.z*GEN_COLOR(%bones.z+%rand);',
-            '%color += %weights.a*GEN_COLOR(%bones.a+%rand);'
-        ].join( '\n' ) ).inputs( {
-            bones: this.getOrCreateAttribute( 'vec4', 'Bones' ),
-            weights: this.getOrCreateAttribute( 'vec4', 'Weights' ),
-            rand: this.getOrCreateUniform( 'float', 'uDebugRandom' )
-        } ).outputs( {
-            color: color
-        } );
+        var color = this.getOrCreateVarying( 'vec3', 'vBonesColor' );
+        this.getNode( 'SetFromNode' ).inputs( this.getOrCreateAttribute( 'vec3', 'BonesColor' ) ).outputs( color );
 
         return Compiler.prototype.declareVertexTransformShadeless.call( this, glPosition );
     }
@@ -137,7 +125,7 @@ GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prot
 
         if ( node instanceof Geometry ) {
 
-            if ( this._debugColor || this._debugSkinning ) {
+            if ( this._debugColor || ( this._debugSkinning && node instanceof RigGeometry ) ) {
 
                 if ( node._originalStateSet === undefined )
                     node._originalStateSet = node.getStateSet() || null;
@@ -146,8 +134,40 @@ GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prot
                 node.setStateSet( st );
 
                 if ( this._debugSkinning ) {
-                    st.addUniform( Uniform.createFloat1( Math.random(), 'uDebugRandom' ) );
                     st.setShaderGeneratorName( 'debugSkinning' );
+
+                    // a bone can be shared between several rigs so we use the instanceID to get unique color
+                    var vList = node.getVertexAttributeList();
+                    if ( !vList.BonesColor ) {
+                        var eltBones = vList.Bones.getElements();
+                        var eltWeights = vList.Weights.getElements();
+
+                        var bones = node._rigTransformImplementation._bones;
+                        var nbBones = eltBones.length / 4;
+
+                        var bonesColor = new Float32Array( nbBones * 3 );
+
+                        for ( var i = 0; i < nbBones; ++i ) {
+                            var idb = i * 4;
+                            var c0 = bones[ eltBones[ idb ] ].getOrCreateDebugColor();
+                            var c1 = bones[ eltBones[ idb + 1 ] ].getOrCreateDebugColor();
+                            var c2 = bones[ eltBones[ idb + 2 ] ].getOrCreateDebugColor();
+                            var c3 = bones[ eltBones[ idb + 3 ] ].getOrCreateDebugColor();
+
+                            var w0 = eltWeights[ idb ];
+                            var w1 = eltWeights[ idb + 1 ];
+                            var w2 = eltWeights[ idb + 2 ];
+                            var w3 = eltWeights[ idb + 3 ];
+
+                            var idc = i * 3;
+                            bonesColor[ idc ] = w0 * c0[ 0 ] + w1 * c1[ 0 ] + w2 * c2[ 0 ] + w3 * c3[ 0 ];
+                            bonesColor[ idc + 1 ] = w0 * c0[ 1 ] + w1 * c1[ 1 ] + w2 * c2[ 1 ] + w3 * c3[ 1 ];
+                            bonesColor[ idc + 2 ] = w0 * c0[ 2 ] + w1 * c1[ 2 ] + w2 * c2[ 2 ] + w3 * c3[ 2 ];
+                        }
+
+                        vList.BonesColor = new BufferArray( BufferArray.ARRAY_BUFFER, bonesColor, 3 );
+                    }
+
                 } else {
                     st.addUniform( Uniform.createFloat3( Vec3.createAndSet( Math.random(), Math.random(), Math.random() ), 'uColorDebug' ) );
                     st.setShaderGeneratorName( 'debugGeometry' );
