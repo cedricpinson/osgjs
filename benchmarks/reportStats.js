@@ -1,30 +1,12 @@
 'use strict';
 
-module.exports = ( function () {
+module.exports = function ( timed, perfTarget, msg ) {
 
-    var reportStats = function () {
+    var logMsg = msg;
+    if ( logMsg === undefined ) {
+        logMsg = 'perf' + ( perfTarget ? ' of ' + perfTarget : '' ) + ' is: ' + ( timed ).toFixed() + ' ms';
+    }
 
-        if ( !navigator )
-            return true;
+    ok( true, logMsg );
 
-        if ( navigator.userAgent.indexOf( 'PhantomJS' ) !== -1 )
-            return true;
-
-        return false;
-
-    };
-
-    var benchmarkOk = function ( timed, perfTarget, msg ) {
-
-        var isCli = reportStats();
-        var logMsg = msg;
-        if ( logMsg === undefined ) {
-            logMsg = 'perf' + ( perfTarget ? ' of ' + perfTarget : '' ) + ' is: ' + ( timed ).toFixed() + ' ms';
-        }
-
-        ok( isCli, logMsg );
-
-    };
-
-    return benchmarkOk;
-} )();
+};

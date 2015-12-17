@@ -234,11 +234,11 @@ module.exports = function () {
         console.time( 'time' );
 
         var nCount = 20;
-        var s = Timer.now();
+        var s = Timer.instance().tick();
         for ( var n = 0; n < nCount; n++ ) {
             viewer.frame();
         }
-        var result = Timer.now() - s;
+        var result = Timer.instance().tick() - s;
 
         console.timeEnd( 'time' );
         console.profileEnd();
