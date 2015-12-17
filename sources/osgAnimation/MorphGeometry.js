@@ -66,13 +66,24 @@ MorphGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
         return this._targetWeights;
     },
 
-    mergeChildrenVertexAttributeList: function () {
+    computeBoundingBox: function ( boundingBox ) {
+        Geometry.prototype.computeBoundingBox.call( this, boundingBox );
 
-        var target;
+        // expand bb with targets
+        // Note : if the morphs have many many targets it can be done more smartly in
+        // the UpdateMorph on each frame by just taking into account the "active morphs"
+        for ( var i = 0, l = this._targets.length; i < l; i++ ) {
+            this._targets[ i ].computeBoundingBox( boundingBox );
+        }
+
+        return boundingBox;
+    },
+
+    mergeChildrenVertexAttributeList: function () {
 
         for ( var i = 0, l = this._targets.length; i < l; i++ ) {
 
-            target = this._targets[ i ];
+            var target = this._targets[ i ];
 
             // change BufferArray to BufferArrayProxy
             var attributeList = target.getVertexAttributeList();
