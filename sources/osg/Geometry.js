@@ -2,7 +2,6 @@
 var MACROUTILS = require( 'osg/Utils' );
 var BoundingBox = require( 'osg/BoundingBox' );
 var Node = require( 'osg/Node' );
-var Vec3 = require( 'osg/Vec3' );
 
 
 /**
@@ -145,18 +144,42 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
     computeBoundingBox: function ( boundingBox ) {
 
         var vertexArray = this.getVertexAttributeList().Vertex;
-        var v = Vec3.create();
-        if ( vertexArray !== undefined &&
-            vertexArray.getElements() !== undefined &&
-            vertexArray.getItemSize() > 2 ) {
+        if ( vertexArray && vertexArray.getElements() && vertexArray.getItemSize() > 2 ) {
             var vertexes = vertexArray.getElements();
-            Vec3.init( v );
-            for ( var idx = 0, l = vertexes.length; idx < l; idx += 3 ) {
-                v[ 0 ] = vertexes[ idx ];
-                v[ 1 ] = vertexes[ idx + 1 ];
-                v[ 2 ] = vertexes[ idx + 2 ];
-                boundingBox.expandByVec3( v );
+            var itemSize = vertexArray.getItemSize();
+
+            var min = boundingBox.getMin();
+            var max = boundingBox.getMax();
+
+            var minx = min[ 0 ];
+            var miny = min[ 1 ];
+            var minz = min[ 2 ];
+            var maxx = max[ 0 ];
+            var maxy = max[ 1 ];
+            var maxz = max[ 2 ];
+
+            // if the box is un-initialized min=Inf and max=-Inf
+            // we can't simply write if(x > min) [...] else (x < max) [...]
+            // most of the time the else condition is run so it's a kinda useless
+            // optimization anyway
+            for ( var idx = 0, l = vertexes.length; idx < l; idx += itemSize ) {
+                var v1 = vertexes[ idx ];
+                var v2 = vertexes[ idx + 1 ];
+                var v3 = vertexes[ idx + 2 ];
+                if ( v1 < minx ) minx = v1;
+                if ( v1 > maxx ) maxx = v1;
+                if ( v2 < miny ) miny = v2;
+                if ( v2 > maxy ) maxy = v2;
+                if ( v3 < minz ) minz = v3;
+                if ( v3 > maxz ) maxz = v3;
             }
+
+            min[ 0 ] = minx;
+            min[ 1 ] = miny;
+            min[ 2 ] = minz;
+            max[ 0 ] = maxx;
+            max[ 1 ] = maxy;
+            max[ 2 ] = maxz;
         }
         return boundingBox;
     },

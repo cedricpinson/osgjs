@@ -57,6 +57,9 @@ TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleIntersec
             var b1 = Vec3.dot( diff, edge2 );
             var c = Vec3.length2( diff );
             var det = Math.abs( a00 * a11 - a01 * a01 );
+            if ( det < 1e-10 )
+                return;
+
             var s = a01 * b1 - a11 * b0;
             var t = a01 * b0 - a00 * b1;
             var sqrDistance;

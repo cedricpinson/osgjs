@@ -8,20 +8,24 @@ var SphereIntersector = function () {
     this._center = Vec3.create();
     this._iCenter = Vec3.create();
     this._radius = 1.0;
+    this._iRadius = 1.0;
     this._intersections = [];
 };
 
 SphereIntersector.prototype = {
     set: function ( center, radius ) {
+        // we copy iCenter and iRadius in case setCurrentTransformation is never called
         Vec3.copy( center, this._center );
-        this._radius = radius;
+        Vec3.copy( center, this._iCenter );
+        this._radius = this._iRadius = radius;
         this.reset();
     },
     setCenter: function ( center ) {
         Vec3.copy( center, this._center );
+        Vec3.copy( center, this._iCenter );
     },
     setRadius: function ( radius ) {
-        this._radius = radius;
+        this._radius = this._iRadius = radius;
     },
     reset: function () {
         // Clear the intersections vector
@@ -34,7 +38,7 @@ SphereIntersector.prototype = {
     // Intersection Sphere/Sphere 
     intersects: function ( bsphere ) {
         if ( !bsphere.valid() ) return false;
-        var r = this._radius + bsphere.radius();
+        var r = this._iRadius + bsphere.radius();
         return Vec3.distance2( this._iCenter, bsphere.center() ) <= r * r;
     },
 
@@ -43,35 +47,39 @@ SphereIntersector.prototype = {
         var ti = new TriangleSphereIntersector();
 
         return function ( iv, node ) {
+
             var kdtree = node.getShape();
-            if ( kdtree ) {
-                // Use KDTREES
-                return kdtree.intersectSphere( this._iCenter, this._radius, this._intersections, iv.nodePath );
-            } else {
-                ti.setNodePath( iv.nodePath );
-                ti.set( this._iCenter, this._radius );
-                ti.apply( node );
-                var l = ti._intersections.length;
-                if ( l > 0 ) {
-                    // Intersection/s exists
-                    for ( var i = 0; i < l; i++ ) {
-                        this._intersections.push( ti._intersections[ i ] );
-                    }
-                    return true;
+            if ( kdtree )
+                return kdtree.intersectSphere( this._iCenter, this._iRadius, this._intersections, iv.nodePath );
+
+            ti.setNodePath( iv.nodePath );
+            ti.set( this._iCenter, this._iRadius );
+            ti.apply( node );
+            var l = ti._intersections.length;
+            if ( l > 0 ) {
+                // Intersection/s exists
+                for ( var i = 0; i < l; i++ ) {
+                    this._intersections.push( ti._intersections[ i ] );
                 }
-                // No intersection found
-                return false;
+                return true;
             }
+
+            // No intersection found
             return false;
         };
     } )(),
     getIntersections: function () {
         return this._intersections;
     },
-    setCurrentTransformation: function ( matrix ) {
-        Matrix.inverse( matrix, matrix );
-        Matrix.transformVec3( matrix, this._center, this._iCenter );
-    }
+    setCurrentTransformation: ( function () {
+        var tmp = Vec3.create();
+
+        return function ( matrix ) {
+            Matrix.inverse( matrix, matrix );
+            Matrix.transformVec3( matrix, this._center, this._iCenter );
+            this._iRadius = this._radius * Matrix.getScale( matrix, tmp )[ 0 ];
+        };
+    } )()
 };
 
 module.exports = SphereIntersector;
