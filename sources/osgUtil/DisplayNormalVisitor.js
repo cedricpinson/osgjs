@@ -50,12 +50,14 @@ CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
 
         vertexOffset = this.createVariable( 'vec3', 'vertexOffset' );
 
-        var str = '%out = %offset == 1.0 ? %vertex + normalize(%vecOffset.xyz) * %scale : %vertex;';
+        // normalize len (divide scale of worldmat, don't work for non uniform scale, but work enough for debug)
+        var str = '%out = %offset == 1.0 ? %vertex + normalize(%vecOffset.xyz) * %scale / %world[0][0] : %vertex;';
         this.getNode( 'InlineCode' ).code( str ).inputs( {
             offset: this.getOrCreateAttribute( 'float', 'Offset' ),
             vecOffset: this._getOffsetVec(),
             vertex: Compiler.prototype.getOrCreateVertexAttribute.call( this ),
-            scale: this.getOrCreateUniform( 'float', 'uScale' )
+            scale: this.getOrCreateUniform( 'float', 'uScale' ),
+            world: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' )
         } ).outputs( {
             out: vertexOffset
         } );
