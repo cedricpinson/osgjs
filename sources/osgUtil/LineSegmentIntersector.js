@@ -15,13 +15,17 @@ var LineSegmentIntersector = function () {
 LineSegmentIntersector.prototype = {
     set: function ( start, end ) {
         Vec3.copy( start, this._start );
+        Vec3.copy( start, this._iStart );
         Vec3.copy( end, this._end );
+        Vec3.copy( end, this._iEnd );
     },
     setStart: function ( start ) {
         Vec3.copy( start, this._start );
+        Vec3.copy( start, this._iStart );
     },
     setEnd: function ( end ) {
         Vec3.copy( end, this._end );
+        Vec3.copy( end, this._iEnd );
     },
     reset: function () {
         // Clear the intersections vector

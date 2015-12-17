@@ -192,7 +192,7 @@
             myReservedMatrixStack.reset();
             osg.Matrix.transformVec3( osg.computeLocalToWorld( hits[ 0 ].nodepath.slice( 1 ), true, myReservedMatrixStack.get() ), point, worldPoint );
 
-            si.set( worldPoint, 5.0 );
+            si.set( worldPoint, viewer.getSceneData().getBound().radius() * 0.1 );
             var iv = new osgUtil.IntersectionVisitor();
             iv.setIntersector( si );
             viewer.getSceneData().accept( iv );

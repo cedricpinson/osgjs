@@ -37,6 +37,8 @@ PolytopeIntersector.prototype = {
         this._referencePlane[ 1 ] = polytope[ polytope.length - 1 ][ 1 ];
         this._referencePlane[ 2 ] = polytope[ polytope.length - 1 ][ 2 ];
         this._referencePlane[ 3 ] = polytope[ polytope.length - 1 ][ 3 ];
+        // TODO initialize _iPolytope or _iReferencePlane in case there is no transform in the graph?
+        // same as setCurrentTransformation with matrix identity
     },
 
     setPolytopeFromWindowCoordinates: function ( xMin, yMin, xMax, yMax ) {
