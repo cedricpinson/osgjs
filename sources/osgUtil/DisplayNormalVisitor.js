@@ -41,7 +41,7 @@ CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
 
         return [ frag ];
     },
-    _getOffsetVec: function () {
+    _getDirectionVec: function () {
         return this.getOrCreateNormalAttribute();
     },
     getOrCreateVertexAttribute: function () {
@@ -51,10 +51,10 @@ CompilerOffsetNormal.prototype = MACROUTILS.objectInherit( Compiler.prototype, {
         vertexOffset = this.createVariable( 'vec3', 'vertexOffset' );
 
         // normalize len (divide scale of worldmat, don't work for non uniform scale, but work enough for debug)
-        var str = '%out = %offset == 1.0 ? %vertex + normalize(%vecOffset.xyz) * %scale / %world[0][0] : %vertex;';
+        var str = '%out = %offset == 1.0 ? %vertex + normalize(%direction.xyz) * %scale / length(%world[0].xyz) : %vertex;';
         this.getNode( 'InlineCode' ).code( str ).inputs( {
             offset: this.getOrCreateAttribute( 'float', 'Offset' ),
-            vecOffset: this._getOffsetVec(),
+            direction: this._getDirectionVec(),
             vertex: Compiler.prototype.getOrCreateVertexAttribute.call( this ),
             scale: this.getOrCreateUniform( 'float', 'uScale' ),
             world: this.getOrCreateUniform( 'mat4', 'ModelWorldMatrix' )
@@ -84,7 +84,7 @@ CompilerOffsetTangent.prototype = MACROUTILS.objectInherit( CompilerOffsetNormal
     getFragmentShaderName: function () {
         return 'CompilerOffsetTangent';
     },
-    _getOffsetVec: function () {
+    _getDirectionVec: function () {
         return this.getOrCreateTangentAttribute();
     }
 } );
