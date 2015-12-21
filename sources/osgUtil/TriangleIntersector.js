@@ -136,6 +136,7 @@ TriangleIntersector.prototype = {
             // GC TriangleIntersection & Point
             this._intersections.push( {
                 ratio: r,
+                backface: det < 0.0,
                 nodepath: this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
                 TriangleIntersection: new TriangleIntersection( this._index - 1, normal.slice( 0 ), r0, v0.slice( 0 ), r1, v1.slice( 0 ), r2, v2.slice( 0 ) ),
                 point: Vec3.createAndSet( interX, interY, interZ )
