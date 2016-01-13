@@ -95,7 +95,6 @@ var ShaderGeneratorCompilerOffsetTangent = function () {
 };
 ShaderGeneratorCompilerOffsetTangent.prototype = ShaderGenerator.prototype;
 
-
 ////////////////////////
 // DISPLAY NORMAL VISITOR
 ////////////////////////
@@ -108,13 +107,13 @@ var DisplayNormalVisitor = function () {
     var ns = this._normalStateSet = new StateSet();
     ns.addUniform( Uniform.createFloat3( Vec3.createAndSet( 1.0, 0.0, 0.0 ), 'uColorDebug' ) );
     ns.addUniform( this._unifScale );
-    ns.setAttribute( new Depth( Depth.NEVER ) );
+    ns.setAttributeAndModes( new Depth( Depth.NEVER ) );
     ns.setShaderGeneratorName( 'debugNormal' );
 
     var ts = this._tangentStateSet = new StateSet();
     ts.addUniform( Uniform.createFloat3( Vec3.createAndSet( 0.0, 1.0, 0.0 ), 'uColorDebug' ) );
     ts.addUniform( this._unifScale );
-    ts.setAttribute( new Depth( Depth.NEVER ) );
+    ts.setAttributeAndModes( new Depth( Depth.NEVER ) );
     ts.setShaderGeneratorName( 'debugTangent' );
 };
 
@@ -128,10 +127,10 @@ DisplayNormalVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype
         this._unifScale.setFloat( scale );
     },
     setTangentVisibility: function ( bool ) {
-        this._tangentStateSet.setAttribute( new Depth( bool ? Depth.LESS : Depth.NEVER ) );
+        this._tangentStateSet.setAttributeAndModes( new Depth( bool ? Depth.LESS : Depth.NEVER ) );
     },
     setNormalVisibility: function ( bool ) {
-        this._normalStateSet.setAttribute( new Depth( bool ? Depth.LESS : Depth.NEVER ) );
+        this._normalStateSet.setAttributeAndModes( new Depth( bool ? Depth.LESS : Depth.NEVER ) );
     },
     apply: function ( node ) {
         var list = node.getUpdateCallbackList();

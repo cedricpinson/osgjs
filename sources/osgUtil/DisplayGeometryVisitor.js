@@ -9,6 +9,10 @@ var Vec3 = require( 'osg/Vec3' );
 var ShaderGenerator = require( 'osgShader/ShaderGenerator' );
 var Compiler = require( 'osgShader/Compiler' );
 var BufferArray = require( 'osg/BufferArray' );
+var DrawArrays = require( 'osg/DrawArrays' );
+var PrimitiveSet = require( 'osg/PrimitiveSet' );
+var MatrixTransform = require( 'osg/MatrixTransform' );
+var Depth = require( 'osg/Depth' );
 
 
 ////////////////////////
@@ -86,7 +90,6 @@ var ShaderGeneratorCompilerColorSkinning = function () {
 };
 ShaderGeneratorCompilerColorSkinning.prototype = ShaderGenerator.prototype;
 
-
 ///////////////////////////
 // DISPLAY GEOMETRY VISITOR
 ///////////////////////////
@@ -95,6 +98,9 @@ var GeometryColorDebugVisitor = function () {
     NodeVisitor.call( this );
     this._debugColor = true;
     this._debugSkinning = false;
+
+    this._stCenter = new StateSet(); // state set of center crosses
+    this._stCenter.setShaderGeneratorName( 'debugGeometry' );
 };
 
 GeometryColorDebugVisitor.CompilerColorGeometry = CompilerColorGeometry;
@@ -105,22 +111,25 @@ GeometryColorDebugVisitor.ShaderGeneratorCompilerColorSkinning = ShaderGenerator
 
 GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
     setGeometryDebug: function ( node ) {
+        this._stCenter.setAttributeAndModes( new Depth( Depth.ALWAYS ) );
         this._debugColor = true;
         this._debugSkinning = false;
         this.apply( node );
     },
     setSkinningDebug: function ( node ) {
+        this._stCenter.setAttributeAndModes( new Depth( Depth.NEVER ) );
         this._debugColor = false;
         this._debugSkinning = true;
         this.apply( node );
     },
     disableDebug: function ( node ) {
+        this._stCenter.setAttributeAndModes( new Depth( Depth.NEVER ) );
         this._debugColor = false;
         this._debugSkinning = false;
         this.apply( node );
     },
     apply: function ( node ) {
-        if ( node._isNormalDebug )
+        if ( node._isNormalDebug || node._isCenterDebug )
             return;
 
         if ( node instanceof Geometry ) {
@@ -169,8 +178,43 @@ GeometryColorDebugVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prot
                     }
 
                 } else {
-                    st.addUniform( Uniform.createFloat3( Vec3.createAndSet( Math.random(), Math.random(), Math.random() ), 'uColorDebug' ) );
+
+                    var color = Vec3.createAndSet( Math.random(), Math.random(), Math.random() );
+                    st.addUniform( Uniform.createFloat3( color, 'uColorDebug' ) );
                     st.setShaderGeneratorName( 'debugGeometry' );
+
+                    // draw crosses
+                    var bb = node.getBound();
+
+                    var verts = new Float32Array( 18 );
+                    var off = bb.radius() * 0.1;
+                    verts[ 0 ] = off;
+                    verts[ 3 ] = -off;
+
+                    verts[ 7 ] = off;
+                    verts[ 10 ] = -off;
+
+                    verts[ 14 ] = off;
+                    verts[ 17 ] = -off;
+
+                    var geo = new Geometry();
+                    geo.getAttributes().Vertex = new BufferArray( BufferArray.ARRAY_BUFFER, verts, 3 );
+                    var primitive = new DrawArrays( PrimitiveSet.LINES, 0, 6 );
+                    geo.getPrimitives().push( primitive );
+
+                    var mt = new MatrixTransform();
+                    var center = bb.center();
+                    mt.getMatrix()[ 12 ] = center[ 0 ];
+                    mt.getMatrix()[ 13 ] = center[ 1 ];
+                    mt.getMatrix()[ 14 ] = center[ 2 ];
+
+                    mt.addChild( geo );
+                    this.nodePath[ this.nodePath.length - 2 ].addChild( mt );
+                    color = Vec3.createAndSet( color[ 0 ] * 0.8, color[ 1 ] * 0.8, color[ 2 ] * 0.8 );
+                    geo.getOrCreateStateSet().addUniform( Uniform.createFloat3( color, 'uColorDebug' ) );
+                    mt.setStateSet( this._stCenter );
+
+                    mt._isCenterDebug = true;
                 }
 
             } else if ( node._originalStateSet !== undefined ) {
