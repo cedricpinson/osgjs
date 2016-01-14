@@ -42,10 +42,6 @@ var RigGeometry = function () {
     // It's a way to make every RigGeometry unique (in term of stateSet stack)
     this._stateSetAnimation = new StateSet();
 
-    // invalid/no bound by default
-    this.boundingSphereComputed = true;
-    this._boundingBoxComputed = true;
-
     this._needToComputeMatrix = true;
 
 };
@@ -70,6 +66,61 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
     getNeedToComputeMatrix: function () {
         return this._needToComputeMatrix;
+    },
+
+    computeBoundingBox: function ( boundingBox ) {
+
+        var vertexArray = this.getVertexAttributeList().Vertex;
+        var weightsArray = this.getVertexAttributeList().Weights;
+        // mainly copy paste of geometry computeBoundingBox code, except we only 
+        // take into account the non-influenced vertices
+
+        // we do that only for the non-influenced vertices because the rigged ones
+        // can't be statically computed (full moving bbox of rigs should be computed externally
+        // through bones or cpu rigged colision mesh, etc)
+        // bbox is important for culling (near/far)
+
+        if ( vertexArray && weightsArray && vertexArray.getElements() && vertexArray.getItemSize() > 2 ) {
+
+            var weights = weightsArray.getElements();
+            var vertexes = vertexArray.getElements();
+            var itemSize = vertexArray.getItemSize();
+
+            var min = boundingBox.getMin();
+            var max = boundingBox.getMax();
+
+            var minx = min[ 0 ];
+            var miny = min[ 1 ];
+            var minz = min[ 2 ];
+            var maxx = max[ 0 ];
+            var maxy = max[ 1 ];
+            var maxz = max[ 2 ];
+
+            for ( var idx = 0, idb = 0, l = vertexes.length; idx < l; idx += itemSize, idb += 4 ) {
+
+                if ( weights[ idx ] !== 0.0 || weights[ idx + 1 ] !== 0.0 || weights[ idx + 2 ] !== 0.0 || weights[ idx + 3 ] !== 0.0 )
+                    continue;
+
+                var v1 = vertexes[ idx ];
+                var v2 = vertexes[ idx + 1 ];
+                var v3 = vertexes[ idx + 2 ];
+                if ( v1 < minx ) minx = v1;
+                if ( v1 > maxx ) maxx = v1;
+                if ( v2 < miny ) miny = v2;
+                if ( v2 > maxy ) maxy = v2;
+                if ( v3 < minz ) minz = v3;
+                if ( v3 > maxz ) maxz = v3;
+            }
+
+            min[ 0 ] = minx;
+            min[ 1 ] = miny;
+            min[ 2 ] = minz;
+            max[ 0 ] = maxx;
+            max[ 1 ] = maxy;
+            max[ 2 ] = maxz;
+        }
+
+        return boundingBox;
     },
 
     computeMatrixFromRootSkeleton: function () {
