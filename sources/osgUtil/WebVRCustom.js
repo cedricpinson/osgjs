@@ -199,7 +199,7 @@ WebVRCustom.createScene = function ( viewer, rttScene, HMDconfig, rootOverride, 
         canvasSize[ 1 ] = canvas.height;
     }
 
-    var worldFactor = worldFactorOverride !== undefined ? worldFactor : 1.0;
+    var worldFactor = worldFactorOverride !== undefined ? worldFactorOverride : 1.0;
     var webVRUniforms = {};
     var webVRMatrices = {};
     setupWebVR( worldFactor, HMD, webVRUniforms, webVRMatrices );
