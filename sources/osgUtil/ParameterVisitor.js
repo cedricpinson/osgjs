@@ -335,6 +335,7 @@ ParameterVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         this.getUniformList( program.getVertexShader().getText(), uniformMap );
         this.getUniformList( program.getFragmentShader().getText(), uniformMap );
 
+        var i = 0;
 
         var keys = window.Object.keys( uniformMap );
 
@@ -364,7 +365,7 @@ ParameterVisitor.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
         this.findExistingUniform( node, uniformMap );
 
         var addedSlider = false;
-        for ( var i = 0; i < keys.length; i++ ) {
+        for ( i = 0; i < keys.length; i++ ) {
             var k = keys[ i ];
             var entry = uniformMap[ k ];
             var type = entry.type;
