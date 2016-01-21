@@ -71,6 +71,8 @@ osgWrapper.StateSet = function ( input, stateSet ) {
         stateSet.setRenderingHint( jsonObj.RenderingHint );
     }
 
+    var promiseArray = [];
+
     var createAttribute = function ( jsonAttribute ) {
         var promise = input.setJSON( jsonAttribute ).readObject();
         if ( promise.isRejected() ) // sometimes we have some empty objects
@@ -78,8 +80,6 @@ osgWrapper.StateSet = function ( input, stateSet ) {
         promiseArray.push( promise );
         promise.then( stateSet.setAttributeAndModes.bind( stateSet ) );
     };
-
-    var promiseArray = [];
 
     if ( jsonObj.AttributeList !== undefined ) {
         for ( var i = 0, l = jsonObj.AttributeList.length; i < l; i++ ) {
