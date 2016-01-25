@@ -69,6 +69,7 @@
 
             // basic setup
             this._viewer.setSceneData( this._root );
+            this._viewer.getManipulator().setNode( this._root );
             this._viewer.getManipulator().computeHomePosition();
 
 
@@ -77,7 +78,8 @@
         },
 
         initDatGUI: function () {
-            this._gui = new window.dat.GUI();
+            if ( window.dat )
+                this._gui = new window.dat.GUI();
         },
 
         getRootNode: function () {
