@@ -8,6 +8,7 @@ var Shader = require( 'osg/Shader' );
 var Shape = require( 'osg/Shape' );
 var Texture = require( 'osg/Texture' );
 var Transform = require( 'osg/Transform' );
+var Uniform = require( 'osg/Uniform' );
 var Vec4 = require( 'osg/Vec4' );
 var Viewport = require( 'osg/Viewport' );
 var Composer = require( 'osgUtil/Composer' );
@@ -39,24 +40,26 @@ var perspectiveMatrixFromVRFieldOfView = function ( fov, zNear, zFar ) {
     var xScale = 2.0 / ( leftTan + rightTan );
     var yScale = 2.0 / ( upTan + downTan );
 
+    // http://mozvr.github.io/webvr-spec/webvr.html
+    // (with ndc normalized)
     matrix[ 0 ] = xScale;
-    matrix[ 4 ] = 0.0;
-    matrix[ 8 ] = -( leftTan - rightTan ) * xScale * 0.5;
-    matrix[ 12 ] = 0.0;
-
     matrix[ 1 ] = 0.0;
-    matrix[ 5 ] = yScale;
-    matrix[ 9 ] = ( upTan - downTan ) * yScale * 0.5;
-    matrix[ 13 ] = 0.0;
-
     matrix[ 2 ] = 0.0;
-    matrix[ 6 ] = 0.0;
-    matrix[ 10 ] = zFar / ( zNear - zFar );
-    matrix[ 14 ] = ( zFar * zNear ) / ( zNear - zFar );
-
     matrix[ 3 ] = 0.0;
+
+    matrix[ 4 ] = 0.0;
+    matrix[ 5 ] = yScale;
+    matrix[ 6 ] = 0.0;
     matrix[ 7 ] = 0.0;
+
+    matrix[ 8 ] = -( ( leftTan - rightTan ) * xScale * 0.5 );
+    matrix[ 9 ] = ( ( upTan - downTan ) * yScale * 0.5 );
+    matrix[ 10 ] = -( zNear + zFar ) / ( zFar - zNear );
     matrix[ 11 ] = -1.0;
+
+    matrix[ 12 ] = 0.0;
+    matrix[ 13 ] = 0.0;
+    matrix[ 14 ] = -( 2.0 * zFar * zNear ) / ( zFar - zNear );
     matrix[ 15 ] = 0.0;
 
     return matrix;
@@ -77,14 +80,14 @@ var getAssembleShader = function () {
         '   precision highp float;',
         '#endif',
         'varying vec2 FragTexCoord0;',
-        'uniform sampler2D Texture0;',
-        'uniform sampler2D Texture1;',
+        'uniform sampler2D TextureLeft;',
+        'uniform sampler2D TextureRight;',
 
         'void main() {',
         '   if (FragTexCoord0.x < 0.5)',
-        '       gl_FragColor = texture2D(Texture0, vec2(FragTexCoord0.x * 2.0, FragTexCoord0.y));',
+        '       gl_FragColor = texture2D(TextureLeft, vec2(FragTexCoord0.x * 2.0, FragTexCoord0.y));',
         '   else',
-        '       gl_FragColor = texture2D(Texture1, vec2(FragTexCoord0.x * 2.0 - 1.0, FragTexCoord0.y));',
+        '       gl_FragColor = texture2D(TextureRight, vec2(FragTexCoord0.x * 2.0 - 1.0, FragTexCoord0.y));',
         '}',
     ].join( '\n' );
 
@@ -104,6 +107,8 @@ var createCameraCanvas = function ( leftEyeTexture, rightEyeTexture, viewport ) 
     Matrix.makeOrtho( 0.0, 1.0, 0.0, 1.0, -5.0, 5.0, orthoCamera.getProjectionMatrix() );
 
     var stateSet = orthoCamera.getOrCreateStateSet();
+    stateSet.addUniform( Uniform.createInt( 0, 'TextureLeft' ) );
+    stateSet.addUniform( Uniform.createInt( 1, 'TextureRight' ) );
     stateSet.setTextureAttributeAndModes( 0, leftEyeTexture );
     stateSet.setTextureAttributeAndModes( 1, rightEyeTexture );
     stateSet.setAttributeAndModes( getAssembleShader() );
@@ -169,15 +174,15 @@ var WebVR = {};
 WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldFactorOverride ) {
 
     var root = rootOverride || new Node();
-    var worldFactor = worldFactorOverride !== undefined ? worldFactor : 1.0;
+    var worldFactor = worldFactorOverride !== undefined ? worldFactorOverride : 1.0;
 
     var hmd = getHMDOptions( HMDdevice );
 
     // Compute projections and view matrices for both eyes
-    var projectionLeft = perspectiveMatrixFromVRFieldOfView( hmd.fovLeft, 0.1, 1000 );
-    var projectionRight = perspectiveMatrixFromVRFieldOfView( hmd.fovRight, 0.1, 1000 );
-    var viewLeft = Matrix.makeTranslate( worldFactor * hmd.eyeOffsetLeft.x, hmd.eyeOffsetLeft.y, hmd.eyeOffsetLeft.z, Matrix.create() );
-    var viewRight = Matrix.makeTranslate( worldFactor * hmd.eyeOffsetRight.x, hmd.eyeOffsetRight.y, hmd.eyeOffsetRight.z, Matrix.create() );
+    var projectionLeft = perspectiveMatrixFromVRFieldOfView( hmd.fovLeft, 0.1, 1000.0 );
+    var projectionRight = perspectiveMatrixFromVRFieldOfView( hmd.fovRight, 0.1, 1000.0 );
+    var viewLeft = Matrix.makeTranslate( -worldFactor * hmd.eyeOffsetLeft.x, hmd.eyeOffsetLeft.y, hmd.eyeOffsetLeft.z, Matrix.create() );
+    var viewRight = Matrix.makeTranslate( -worldFactor * hmd.eyeOffsetRight.x, hmd.eyeOffsetRight.y, hmd.eyeOffsetRight.z, Matrix.create() );
 
     // Each eye is rendered on a texture whose width is half of the final combined texture
     var eyeTextureSize = {
