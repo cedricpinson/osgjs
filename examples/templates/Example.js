@@ -130,13 +130,13 @@
             var shaderNames = shadersFilenames || this._shaderNames;
             var shaders = shaderNames.map( function ( arg ) {
                 return arg;
-            }.bind( this ) );
+            } );
 
 
             var promises = [];
             shaders.forEach( function ( shader ) {
                 promises.push( P.resolve( $.get( shader ) ) );
-            }.bind( this ) );
+            } );
 
             P.all( promises ).then( function ( args ) {
 
@@ -149,7 +149,9 @@
 
                 defer.resolve();
 
-            }.bind( this ) );
+            }.bind( this ) ).catch( function ( error ) {
+                defer.reject( error );
+            } );
 
             return defer.promise;
 
