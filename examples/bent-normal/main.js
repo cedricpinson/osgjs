@@ -11,8 +11,6 @@
     var $ = window.$;
     var ExampleOSGJS = window.ExampleOSGJS;
 
-    var shaderProcessor = new osgShader.ShaderProcessor();
-
     var Example = function () {
 
         ExampleOSGJS.call( this );
@@ -23,54 +21,30 @@
 
     Example.prototype = osg.objectInherit( ExampleOSGJS.prototype, {
 
-        readShaders: function () {
-            return P.resolve( true );
-            var defer = P.defer();
-
-            var shaderNames = [
-                'vertex.glsl',
-                'fragment.glsl'
-            ];
-
-
-            var shaders = shaderNames.map( function ( arg ) {
-                return this._shaderPath + arg;
-            }.bind( this ) );
-
-
-            var promises = [];
-            shaders.forEach( function ( shader ) {
-                promises.push( P.resolve( $.get( shader ) ) );
-            } );
-
-
-            P.all( promises ).then( function ( args ) {
-
-                var shaderNameContent = {};
-                shaderNames.forEach( function ( name, idx ) {
-                    shaderNameContent[ name ] = args[ idx ];
-                } );
-
-                shaderProcessor.addShaders( shaderNameContent );
-
-                defer.resolve();
-
-            } );
-
-            return defer.promise;
-        },
-
         createScene: function () {
-            osgDB.readNodeURL( 'model/file.osgjs' ).then( function ( node ) {
-                this._root.addChild( node );
+
+            this.readShaders( [
+                'shaders/vertex.glsl',
+                'shaders/fragment.glsl'
+
+            ] ).then( function () {
+
+                var prg = this.createShader( 'shaders/vertex.glsl', undefined, 'shaders/fragment.glsl' );
+                osgDB.readNodeURL( 'model/file.osgjs' ).then( function ( node ) {
+
+                    node.getOrCreateStateSet().setAttributeAndModes( prg );
+                    node.getOrCreateStateSet().addUniform( osg.Uniform.createInt1( 0, 'normalMap' ) );
+
+                    this._root.addChild( node );
+                }.bind( this ) );
+
             }.bind( this ) );
+
         },
 
         run: function () {
 
-            this.readShaders().then( function () {
-                ExampleOSGJS.prototype.run.call( this );
-            }.bind( this ) );
+            ExampleOSGJS.prototype.run.call( this );
 
         }
 
