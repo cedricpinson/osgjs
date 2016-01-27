@@ -5,7 +5,9 @@
     var osg = OSG.osg;
     var osgDB = OSG.osgDB;
     var osgUtil = OSG.osgUtil;
+    var osgGA = OSG.osgGA;
     var ExampleOSGJS = window.ExampleOSGJS;
+    var Hammer = window.Hammer;
     var $ = window.$;
 
     var Example = function () {
@@ -54,12 +56,12 @@
                 if ( !this._vrNode ) {
                     if ( navigator.getVRDisplays ) {
 
-                        viewer._eventProxy.WebVR.setEnable( true );
+                        viewer.getEventProxy().WebVR.setEnable( true );
                         this._vrNode = osgUtil.WebVR.createScene( viewer, this._modelNode, viewer._eventProxy.WebVR.getHmd() );
 
                     } else {
 
-                        viewer._eventProxy.DeviceOrientation.setEnable( true );
+                        viewer.getEventProxy().DeviceOrientation.setEnable( true );
                         this._vrNode = osgUtil.WebVRCustom.createScene( viewer, this._modelNode, {
                             isCardboard: true,
                             vResolution: this._canvas.height,
@@ -153,7 +155,27 @@
             }.bind( this ) );
 
             this.getRootNode().addChild( root );
+            this._manipulator = new osgGA.FirstPersonManipulator();
+            this._viewer.setManipulator( this._manipulator );
 
+            this.initTouch();
+
+        },
+
+        touch: function ( e ) {
+            // assume the first touch in the 1/4 of the top canvas is a google cardboard touch
+            console.log( 'cardboard touch' );
+            this._manipulator.getForwardInterpolator().setTarget( 1 );
+        },
+
+        unTouch: function ( e ) {
+            console.log( 'cardboard unTouch' );
+            this._manipulator.getForwardInterpolator().setTarget( 0 );
+        },
+
+        initTouch: function () {
+            this._canvas.addEventListener( 'touchstart', this.touch.bind( this ), false );
+            this._canvas.addEventListener( 'touchend', this.unTouch.bind( this ), false );
         }
 
     } );
