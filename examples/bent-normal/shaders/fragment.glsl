@@ -14,7 +14,8 @@ void main(void) {
     vec2 uv = osg_FragTexCoord0.xy;
 
     vec3 normalTexel = texture2D( normalMap, uv ).rgb;
-    vec3 realNormal = textureNormal( normalTexel );
+//    vec3 realNormal = textureNormal( normalTexel );
+    vec3 realNormal = normalTexel;
 
     vec3 lightDirection = normalize( vec3( 0.5, 0.5, 1.0) );
     vec3 result = vec3(0.1) + dot(realNormal, lightDirection) * vec3( 0.8 );
