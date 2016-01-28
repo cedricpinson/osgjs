@@ -2,6 +2,7 @@
 var Notify = require( 'osg/Notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Object = require( 'osg/Object' );
+var MatrixTransform = require( 'osg/MatrixTransform' );
 
 
 /**
@@ -10,6 +11,25 @@ var Object = require( 'osg/Object' );
  */
 var AnimationUpdateCallback = function () {
     Object.call( this );
+};
+
+// check if the path is animated, it could be elsewhere though
+AnimationUpdateCallback.checkPathIsAnimated = function ( path ) {
+
+    for ( var i = 0, nbNodes = path.length; i < nbNodes; ++i ) {
+        var node = path[ i ];
+
+        if ( node instanceof MatrixTransform ) {
+            var ups = node.getUpdateCallbackList();
+            for ( var j = 0, nbUp = ups.length; j < nbUp; ++j ) {
+                if ( ups[ j ] instanceof AnimationUpdateCallback )
+                    return true;
+            }
+        }
+
+    }
+
+    return false;
 };
 
 /** @lends AnimationUpdateCallback.prototype */
