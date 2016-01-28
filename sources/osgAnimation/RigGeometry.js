@@ -7,6 +7,8 @@ var StateSet = require( 'osg/StateSet' );
 var MorphGeometry = require( 'osgAnimation/MorphGeometry' );
 var UpdateRigGeometry = require( 'osgAnimation/UpdateRigGeometry' );
 var RigTransformHardware = require( 'osgAnimation/RigTransformHardware' );
+var AnimationUpdateCallback = require( 'osgAnimation/AnimationUpdateCallback' );
+var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
 
 
 // RigGeometry is a Geometry deformed by bones
@@ -28,8 +30,11 @@ var RigGeometry = function () {
 
     this.setUpdateCallback( new UpdateRigGeometry() );
 
-    //this._geometry = undefined;
+    // handle matrixFromSkeletonToGeometry and invMatrixFromSkeletonToGeometry computation
     this._root = undefined;
+    this._pathToRoot = undefined;
+    this._isAnimatedPath = false;
+
     this._boneNameID = {};
 
     this._matrixFromSkeletonToGeometry = Matrix.create();
@@ -58,6 +63,11 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
     setSkeleton: function ( root ) {
         this._root = root;
+    },
+
+    setPathToSkeleton: function ( path ) {
+        this._pathToRoot = path;
+        this._isAnimatedPath = AnimationUpdateCallback.checkPathIsAnimated( path );
     },
 
     setNeedToComputeMatrix: function ( needToComputeMatrix ) {
@@ -130,14 +140,12 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             return;
         }
 
-        var mtxList = this.getParents()[ 0 ].getWorldMatrices( this._root );
-        var invNotRoot = Matrix.create();
-
-        Matrix.inverse( this._root.getMatrix(), invNotRoot );
-        Matrix.mult( invNotRoot, mtxList[ 0 ], this._matrixFromSkeletonToGeometry );
+        Matrix.makeIdentity( this._matrixFromSkeletonToGeometry );
+        ComputeMatrixFromNodePath.computeLocalToWorld( this._pathToRoot, true, this._matrixFromSkeletonToGeometry );
         Matrix.inverse( this._matrixFromSkeletonToGeometry, this._invMatrixFromSkeletonToGeometry );
 
-        this._needToComputeMatrix = false;
+        if ( !this._isAnimatedPath )
+            this._needToComputeMatrix = false;
     },
 
     getMatrixFromSkeletonToGeometry: function () {
