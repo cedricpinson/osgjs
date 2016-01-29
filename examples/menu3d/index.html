@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Menu</title>
+
+    <link rel="stylesheet" type="text/css" href="../templates/css/base.css">
+
+    <style type="text/css">
+    /* Custom CSS goes here */
+    <!-- #ViewContainer { -->
+    <!--   position: absolute; -->
+    <!-- } -->
+    <!-- #View { -->
+    <!--   display: block; -->
+    <!-- } -->
+    </style>
+
+
+    <!-- Javascript -->
+    <!-- Dependencies -->
+    <script type="text/javascript" src="../vendors/core.js"></script>
+    <script type="text/javascript" src="../vendors/rStats.js"></script>
+    <script type="text/javascript" src="../vendors/rStats.extras.js"></script>
+    <script type="text/javascript" src="../vendors/jquery-2.1.1.js"></script>
+    <script type="text/javascript" src="../vendors/dat.gui.js"></script>
+    <script type="text/javascript" src="../vendors/bluebird.js"></script>
+    <script type="text/javascript" src="../vendors/hammer.js"></script>
+    <script type="text/javascript" src="../vendors/leap.js"></script>
+    <!-- OGSJ main library -->
+    <script type="text/javascript" src="../../builds/dist/OSG.js"></script>
+
+    <!-- Example Base Class -->
+    <script type="text/javascript" src="../templates/Example.js"></script>
+
+    <!-- User/Example code-->
+    <!-- <script type="text/javascript" src="camera.js"></script> -->
+    <script type="text/javascript" src="main.js"></script>
+
+</head>
+
+
+
+<body class="osgjs-theme-dark">
+
+  <div id="ViewContainer" class="osgjs-fullpage">
+    <!-- very important change the size of the parent element instead-->
+    <canvas id="View" style="height:100%;width:100%;" oncontextmenu="return false;"></canvas>
+  </div>
+
+  <div id="orientation" style='position: absolute; font-size:48px'>
+  </div>
+
+</body>
+
+</html>
