@@ -35,8 +35,14 @@
                 var imageData = new Float32Array( data );
                 var image = new osg.Image();
                 image.setImage( imageData );
+
                 image.setWidth( 586 );
                 image.setHeight( 574 );
+
+                image.setWidth(  1247 ); //1820 x 2004
+                image.setHeight( 1209 );
+                // image.setWidth( 470 ); // 470 x  386
+                // image.setHeight( 386 );
 
                 var texture = new osg.Texture();
                 texture.setImage( image, 'RGBA' );
