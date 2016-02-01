@@ -20,8 +20,12 @@ var UpdateMorph = function () {
     this._gpuMorphed = []; // size of this._targets, for each target a bool states if it's gpu morphed or not
 };
 
-var WEIGHT_EFFECTIVE_EPS = 0.05; // in case we have more than 4 morphs, we can skip low effective weights
-var WEIGHT_CPU_EPS = 0.05; // in case we have to fallback on cpu computing we can skip nearly useless computing
+var EFFECTIVE_EPS = 0.05; // in case we have more than 4 morphs, we can skip low effective weights
+
+// for sorting
+var funcWeights = function ( a, b ) {
+    return Math.abs( b.value ) - Math.abs( a.value );
+};
 
 UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.prototype, {
 
@@ -114,13 +118,18 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
 
         var targets = this._targets;
         for ( var j = 0, nb = targets.length; j < nb; ++j ) {
+
+            // ignore gpu morphed targets
+            if ( gpuMorphed[ j ] === true )
+                continue;
+
             var weight = targets[ j ].value;
-            if ( gpuMorphed[ j ] === true ) continue; // ignore gpu morphed targets
-            if ( Math.abs( weight ) < WEIGHT_CPU_EPS ) continue;
+            if ( Math.abs( weight ) < EFFECTIVE_EPS )
+                continue;
 
             weight /= extraWeightSum;
 
-            var morphElts = attrs[ attName + '_' + j ].getElements();
+            var morphElts = attrs[ attName + '_' + j ].getInitialBufferArray().getElements();
             for ( i = 0; i < nbVertex; ++i ) {
 
                 var k = i * itemSize;
@@ -141,9 +150,15 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
         var sum = 0.0;
         var targets = this._targets;
         for ( var i = 0, nb = targets.length; i < nb; ++i ) {
+
+            // ignore gpu morphed targets
+            if ( gpuMorphed[ i ] === true )
+                continue;
+
             var weight = targets[ i ].value;
-            if ( gpuMorphed[ i ] === true ) continue; // ignore gpu morphed targets
-            if ( Math.abs( weight ) < WEIGHT_CPU_EPS ) continue;
+            if ( Math.abs( weight ) < EFFECTIVE_EPS )
+                continue;
+
             sum += weight;
         }
         // check comment in _morphBufferArrayCPU (avoid near zero value)
@@ -213,26 +228,20 @@ UpdateMorph.prototype = MACROUTILS.objectInherit( AnimationUpdateCallback.protot
         gpuMorphed.length = nbTargets;
         for ( i = 0; i < nbTargets; ++i ) gpuMorphed[ i ] = false;
 
-        // remap VA morph by skipping useless weights, also check if we need to cpu morphed the remaining targets
-        var extraMorphCPU = false;
-        var nbActiveTarget = 0;
-        for ( i = 0; i < nbTargets; ++i ) {
+        var sortedTargets = targets.slice( 0 ).sort( funcWeights );
 
-            var weight = targets[ i ].value;
-            if ( Math.abs( weight ) < WEIGHT_EFFECTIVE_EPS ) continue;
-
-            if ( nbActiveTarget === 4 ) {
-                // more than 4 targets, we compute all the extra targets influence and merge in the last 4th morphs targets
-                gpuMorphed[ indexMap[ 3 ] ] = false;
-                extraMorphCPU = true;
-                break;
-            }
-            gpuMorphed[ i ] = true;
-            indexMap[ nbActiveTarget ] = i;
-            weights[ nbActiveTarget++ ] = weight;
+        for ( i = 0; i < 4; ++i ) {
+            var ti = targets.indexOf( sortedTargets[ i ] );
+            gpuMorphed[ ti ] = true;
+            indexMap[ i ] = ti;
+            weights[ i ] = sortedTargets[ i ].value;
         }
 
-        this._remapBufferArrays( indexMap );
+        // check more than 4 targets, we compute all the extra targets influence and merge in the last 4th morphs targets
+        var extraMorphCPU = Math.abs( sortedTargets[ 4 ].value ) >= EFFECTIVE_EPS;
+        gpuMorphed[ indexMap[ 3 ] ] = !extraMorphCPU;
+
+        this._remapBufferArrays();
         if ( extraMorphCPU ) {
             this._morphBufferArrayCPU();
         }
