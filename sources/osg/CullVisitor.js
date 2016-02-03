@@ -9,8 +9,10 @@ var Matrix = require( 'osg/Matrix' );
 var MatrixTransform = require( 'osg/MatrixTransform' );
 var Projection = require( 'osg/Projection' );
 var LightSource = require( 'osg/LightSource' );
+var osgPool = require( 'osgUtil/osgPool' );
 var Geometry = require( 'osg/Geometry' );
 var RenderLeaf = require( 'osg/RenderLeaf' );
+var RenderBin = require( 'osg/RenderBin' );
 var RenderStage = require( 'osg/RenderStage' );
 var Node = require( 'osg/Node' );
 var Lod = require( 'osg/Lod' );
@@ -49,6 +51,8 @@ var CullVisitor = function () {
 
     this._reserveLeafStack = [ new RenderLeaf() ];
     this._reserveLeafStackCurrent = 0;
+
+    this._reserveRenderStageStacks = {};
 
     this._reserveCullSettingsStack = [ new CullSettings() ];
     this._reserveCullSettingsStackCurrent = 0;
@@ -169,6 +173,14 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
         this.resetCullSettingsStack();
         this._reserveCullSettingsStackCurrent = 0;
 
+        // renderstage / renderbin pools
+        var resetStages = window.Object.keys( this._reserveRenderStageStacks );
+        for ( var i = 0, l = resetStages.length; i < l; i++ ) {
+            var key = resetStages[ i ];
+            this._reserveRenderStageStacks[ key ].reset();
+        }
+        RenderBin.resetStack();
+
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
     },
@@ -238,6 +250,22 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
 
     apply: function ( node ) {
         this[ node.typeID ]( node );
+    },
+
+    createOrReuseRenderStage: function ( classInstance ) {
+
+        var type = !classInstance ? 'RenderStage' : classInstance.className();
+        var classCtor = !classInstance ? RenderStage : classInstance.constructor;
+
+        var stack;
+        if ( this._reserveRenderStageStacks[ type ] ) {
+            stack = this._reserveRenderStageStacks[ type ];
+        } else {
+            stack = new osgPool.OsgObjectMemoryStack( classCtor );
+            this._reserveRenderStageStacks[ type ] = stack;
+        }
+        return stack.get().init();
+
     },
 
     createOrReuseRenderLeaf: function () {
@@ -348,11 +376,11 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
         var previousStage = renderBin.getStage();
 
         // use render to texture stage
-        var rtts = this._rootRenderStage ? this._rootRenderStage.cloneType() : new RenderStage();
+        var rtts = this.createOrReuseRenderStage( this._rootRenderStage );
+
         rtts.setCamera( camera );
         rtts.setClearDepth( camera.getClearDepth() );
         rtts.setClearColor( camera.getClearColor() );
-
         rtts.setClearMask( camera.getClearMask() );
 
         var vp;

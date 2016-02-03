@@ -23,12 +23,19 @@ osgPool.OsgObjectMemoryPool = function ( ObjectClassName ) {
             this._memPool.push( obj );
         },
         get: function () {
-            if ( this._memPool.length > 0 ) return this._memPool.pop();
+            if ( this._memPool.length > 0 ) {
+                return this._memPool.pop();
+            }
             this.grow();
             return this.get();
         },
-        grow: function ( sizeAdd ) {
-            if ( sizeAdd === undefined ) sizeAdd = ( this._memPool.length > 0 ) ? this._memPool.length * 2 : 20;
+        grow: function ( sizeAddParam ) {
+            var sizeAdd;
+            if ( sizeAddParam === undefined ) {
+                sizeAdd = ( this._memPool.length > 0 ) ? this._memPool.length * 2 : 20;
+            } else {
+                sizeAdd = sizeAddParam;
+            }
             var i = this._memPool.length;
             while ( i++ < sizeAdd ) this._memPool.push( new ObjectClassName() );
             return this;
@@ -37,9 +44,6 @@ osgPool.OsgObjectMemoryPool = function ( ObjectClassName ) {
 };
 
 /*
- *  TODO: the same for  TypedArrays.
- *  TODO: Add stats reports for developper per application  finer calibration (max, min, average)
- *  TODO: Debug Mode: check if not putting object twice, etc.
  *  USAGE: osg.memoryPools.arrayPool = new OsgArrayMemoryPool();
  *  mymatrix = osg.memoryPools.arrayPool.get(16);
  *  // do use matrix, etc..
@@ -66,10 +70,31 @@ osgPool.OsgArrayMemoryPool = function () {
             return this.get();
         },
         grow: function ( arraySize, sizeAdd ) {
-            if ( sizeAdd === undefined ) sizeAdd = ( this._memPool.length > 0 ) ? this._memPool.length * 2 : 20;
+            if ( sizeAdd === undefined ) sizeAdd = ( this._memPool.length > 0 ) ? this._memPool.length * 2 : 5;
             var i = this._memPool.length;
             while ( i++ < sizeAdd ) this._memPool.push( new Array( arraySize ) );
             return this;
+        }
+    };
+};
+/*
+ *  USAGE: osg.memoryPools.OsgObjectMemoryStack = new OsgArrayMemoryStack(ctor);
+ *         For a stack of object that you reset each frame.
+ */
+osgPool.OsgObjectMemoryStack = function ( ObjectClassName ) {
+    return {
+        _current: 0,
+        _memPool: [ new ObjectClassName() ],
+        reset: function () {
+            this._current = 0;
+            return this;
+        },
+        get: function () {
+            var obj = this._memPool[ this._current++ ];
+            if ( this._current >= this._memPool.length ) {
+                this._memPool.push( new ObjectClassName() );
+            }
+            return obj;
         }
     };
 };
