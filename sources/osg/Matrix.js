@@ -1322,9 +1322,9 @@ var Matrix = {
             // OSG_INFO << '_clampProjectionMatrix widening znear and zfar to '<<znear<<' '<<zfar<<std::endl;
         }
 
-        if ( Math.abs( Matrix.get( projection, 0, 3 ) ) < epsilon &&
-            Math.abs( Matrix.get( projection, 1, 3 ) ) < epsilon &&
-            Math.abs( Matrix.get( projection, 2, 3 ) ) < epsilon ) {
+        if ( Math.abs( projection[ 3 ] ) < epsilon &&
+            Math.abs( projection[ 7 ] ) < epsilon &&
+            Math.abs( projection[ 11 ] ) < epsilon ) {
             // OSG_INFO << 'Orthographic matrix before clamping'<<projection<<std::endl;
 
             var deltaSpan = ( zfar - znear ) * 0.02;
@@ -1338,8 +1338,8 @@ var Matrix = {
             znear = desiredZnear;
             zfar = desiredZfar;
 
-            Matrix.set( projection, 2, 2, -2.0 / ( desiredZfar - desiredZnear ) );
-            Matrix.set( projection, 3, 2, -( desiredZfar + desiredZnear ) / ( desiredZfar - desiredZnear ) );
+            projection[ 10 ] = -2.0 / ( desiredZfar - desiredZnear );
+            projection[ 14 ] = -( desiredZfar + desiredZnear ) / ( desiredZfar - desiredZnear );
 
             // OSG_INFO << 'Orthographic matrix after clamping '<<projection<<std::endl;
         } else {
@@ -1366,22 +1366,29 @@ var Matrix = {
             znear = desiredZnear;
             zfar = desiredZfar;
 
-            var m22 = Matrix.get( projection, 2, 2 );
-            var m32 = Matrix.get( projection, 3, 2 );
-            var m23 = Matrix.get( projection, 2, 3 );
-            var m33 = Matrix.get( projection, 3, 3 );
+            var m22 = projection[ 10 ];
+            var m32 = projection[ 14 ];
+            var m23 = projection[ 11 ];
+            var m33 = projection[ 15 ];
             var transNearPlane = ( -desiredZnear * m22 + m32 ) / ( -desiredZnear * m23 + m33 );
             var transFarPlane = ( -desiredZfar * m22 + m32 ) / ( -desiredZfar * m23 + m33 );
 
             var ratio = Math.abs( 2.0 / ( transNearPlane - transFarPlane ) );
             var center = -( transNearPlane + transFarPlane ) / 2.0;
 
-            var matrix = [ 1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, ratio, 0.0,
-                0.0, 0.0, center * ratio, 1.0
-            ];
-            Matrix.postMult( matrix, projection );
+            var centerRatio = center * ratio;
+            projection[ 2 ] = projection[ 2 ] * ratio + projection[ 3 ] * centerRatio;
+            projection[ 6 ] = projection[ 6 ] * ratio + projection[ 7 ] * centerRatio;
+            projection[ 10 ] = m22 * ratio + m23 * centerRatio;
+            projection[ 14 ] = m32 * ratio + m33 * centerRatio;
+            // same as
+            // var matrix = [ 1.0, 0.0, 0.0, 0.0,
+            //     0.0, 1.0, 0.0, 0.0,
+            //     0.0, 0.0, ratio, 0.0,
+            //     0.0, 0.0, center * ratio, 1.0
+            // ];
+            // Matrix.postMult( matrix, projection );
+
             // OSG_INFO << 'Persepective matrix after clamping'<<projection<<std::endl;
         }
         if ( resultNearFar !== undefined ) {
