@@ -71,7 +71,6 @@ window.addEventListener( 'load',
 
                     // that's where we actually update the light
                     l.setDirection( lightDir );
-                    l.dirty();
 
                 }
                 node.traverse( nv );
