@@ -23,14 +23,31 @@ Transform.prototype = MACROUTILS.objectInherit( Node.prototype, {
         return this.referenceFrame;
     },
 
+    computeBoundingBox: ( function () {
+        var matrix = Matrix.create();
+        return function ( bbox ) {
 
-    computeBound: ( function () {
+            Node.prototype.computeBoundingBox.call( this, bbox );
+            if ( !bbox.valid() ) {
+                return bbox;
+            }
+
+            Matrix.makeIdentity( matrix );
+            // local to local world (not Global World)
+            this.computeLocalToWorldMatrix( matrix );
+            Matrix.transformBoundingBox( matrix, bbox, bbox );
+            return bbox;
+        };
+    } )(),
+
+    computeBoundingSphere: ( function () {
         var matrix = Matrix.create();
         return function ( bSphere ) {
-            Node.prototype.computeBound.call( this, bSphere );
+            Node.prototype.computeBoundingSphere.call( this, bSphere );
             if ( !bSphere.valid() ) {
                 return bSphere;
             }
+
             Matrix.makeIdentity( matrix );
             // local to local world (not Global World)
             this.computeLocalToWorldMatrix( matrix );

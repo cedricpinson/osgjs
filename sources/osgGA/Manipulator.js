@@ -1,6 +1,5 @@
 'use strict';
 var BoundingSphere = require( 'osg/BoundingSphere' );
-var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
 var Matrix = require( 'osg/Matrix' );
 
 
@@ -29,22 +28,19 @@ Manipulator.prototype = {
         this._node = node;
     },
     getHomeBound: function ( useBoundingBox ) {
-        if ( !this._node )
+        var node = this._node;
+        if ( !node )
             return;
 
-        var bs;
         if ( useBoundingBox || this._flags & Manipulator.COMPUTE_HOME_USING_BBOX ) {
-            bs = new BoundingSphere();
-            var visitor = new ComputeBoundsVisitor();
-            this._node.accept( visitor );
-            var bb = visitor.getBoundingBox();
-
+            var bs = new BoundingSphere();
+            var bb = node.getBoundingBox();
             if ( bb.valid() )
                 bs.expandByBoundingBox( bb );
-        } else {
-            bs = this._node.getBound();
+            return bs;
         }
-        return bs;
+
+        return node.getBound();
     },
     getHomeDistance: function ( bs ) {
         var frustum = this._frustum;

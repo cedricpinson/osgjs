@@ -24,16 +24,19 @@ var Node = function () {
     this.nodeMask = ~0;
     /*jshint bitwise: true */
 
-    this.boundingSphere = new BoundingSphere();
-    this.boundingSphereComputed = false;
+    this._boundingSphere = new BoundingSphere();
+    this._boundingSphereComputed = false;
+
+    this._boundingBox = new BoundingBox();
+    this._boundingBoxComputed = false;
+
     this._updateCallbacks = [];
     this._cullCallback = undefined;
     this._cullingActive = true;
     this._numChildrenWithCullingDisabled = 0;
 
     // it's a tmp object for internal use, do not use
-    this._boundingBox = new BoundingBox();
-
+    this._tmpBox = new BoundingBox();
 };
 
 /** @lends Node.prototype */
@@ -59,8 +62,10 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         }
     },
     dirtyBound: function () {
-        if ( this.boundingSphereComputed === true ) {
-            this.boundingSphereComputed = false;
+        if ( this._boundingSphereComputed === true ) {
+            this._boundingSphereComputed = false;
+            this._boundingBoxComputed = false;
+
             for ( var i = 0, l = this.parents.length; i < l; i++ ) {
                 this.parents[ i ].dirtyBound();
             }
@@ -228,16 +233,44 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         }
     },
 
-    getBound: function () {
-        if ( !this.boundingSphereComputed ) {
-            this.computeBound( this.boundingSphere );
-            this.boundingSphereComputed = true;
+    getBoundingBox: function () {
+        if ( !this._boundingBoxComputed ) {
+            this.computeBoundingBox( this._boundingBox );
+            this._boundingBoxComputed = true;
         }
-        return this.boundingSphere;
+        return this._boundingBox;
+    },
+
+    computeBoundingBox: function ( bbox ) {
+
+        var l = this.children.length;
+        bbox.init();
+        if ( l === 0 ) return bbox;
+
+        for ( var i = 0; i < l; i++ ) {
+            var cc = this.children[ i ];
+            if ( cc.referenceFrame === undefined || cc.referenceFrame === TransformEnums.RELATIVE_RF ) {
+                bbox.expandByBoundingBox( cc.getBoundingBox() );
+            }
+        }
+
+        return bbox;
+    },
+
+    getBoundingSphere: function () {
+        return this.getBound();
+    },
+
+    getBound: function () {
+        if ( !this._boundingSphereComputed ) {
+            this.computeBoundingSphere( this._boundingSphere );
+            this._boundingSphereComputed = true;
+        }
+        return this._boundingSphere;
     },
 
 
-    computeBound: function ( bSphere ) {
+    computeBoundingSphere: function ( bSphere ) {
 
         var l = this.children.length;
 
@@ -245,7 +278,7 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         if ( l === 0 ) return bSphere;
 
         var cc, i;
-        var bb = this._boundingBox;
+        var bb = this._tmpBox;
         bb.init();
         for ( i = 0; i < l; i++ ) {
             cc = this.children[ i ];

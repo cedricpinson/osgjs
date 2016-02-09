@@ -1,6 +1,5 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
-var BoundingBox = require( 'osg/BoundingBox' );
 var Node = require( 'osg/Node' );
 
 
@@ -12,8 +11,7 @@ var Geometry = function () {
     Node.call( this );
     this.primitives = [];
     this.attributes = {};
-    this._boundingBox = new BoundingBox();
-    this._boundingBoxComputed = false;
+
     this.cacheAttributeList = {};
     this._shape = null;
 };
@@ -36,12 +34,6 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
                 }
             }
         }
-    },
-    dirtyBound: function () {
-        if ( this._boundingBoxComputed === true ) {
-            this._boundingBoxComputed = false;
-        }
-        Node.prototype.dirtyBound.call( this );
     },
 
     dirty: function () {
@@ -128,14 +120,6 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
         /*jshint unused: false */
     },
 
-    getBoundingBox: function () {
-        if ( !this._boundingBoxComputed ) {
-            this.computeBoundingBox( this._boundingBox );
-            this._boundingBoxComputed = true;
-        }
-        return this._boundingBox;
-    },
-
     setBound: function ( bb ) {
         this._boundingBox = bb;
         this._boundingBoxComputed = true;
@@ -184,7 +168,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
         return boundingBox;
     },
 
-    computeBound: function ( boundingSphere ) {
+    computeBoundingSphere: function ( boundingSphere ) {
         boundingSphere.init();
         var bb = this.getBoundingBox();
         boundingSphere.expandByBoundingBox( bb );
