@@ -5,6 +5,7 @@ var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
 var IntersectionVisitor = require( 'osgUtil/IntersectionVisitor' );
 var LineSegmentIntersector = require( 'osgUtil/LineSegmentIntersector' );
 var PolytopeIntersector = require( 'osgUtil/PolytopeIntersector' );
+var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
 var Matrix = require( 'osg/Matrix' );
 var Vec2 = require( 'osg/Vec2' );
 var Vec3 = require( 'osg/Vec3' );
@@ -29,7 +30,9 @@ var CADManipulator = function () {
     this._tmpHomePosition = Vec3.create();
     this._intersectionVisitor = new IntersectionVisitor();
     this._lineSegmentIntersector = new LineSegmentIntersector();
-    this._polytopeIntersector = new PolytopeIntersector();
+    this._polytopeIntersector = undefined;
+    this._usePolytopeIntersector = false;
+    this._dimensionMask = ( 1 << 2 );
     this.init();
 };
 
@@ -271,6 +274,15 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         this._distance = d;
     },
 
+    // If set to true, intersections are computed against points and lines
+    setUsePolytopeIntersector: function ( upi ) {
+        this._usePolytopeIntersector = upi;
+    },
+
+    getUsePolytopeIntersector: function () {
+        return this._usePolytopeIntersector;
+    },
+
     getDistance: function () {
         return this._distance;
     },
@@ -299,7 +311,10 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         return this._lineSegmentIntersector;
     },
 
-    getPolytopeIntersector: function () {
+    getOrCreatePolytopeIntersector: function () {
+        if ( this._polytopeIntersector === undefined ) {
+            this._polytopeIntesector = new PolytopeIntersector();
+        }
         return this._polytopeIntersector;
     },
 
@@ -410,6 +425,98 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     },
     getInverseMatrix: function () {
         return this._inverseMatrix;
+    },
+
+    computeIntersections: ( function () {
+        var hits = [];
+        return function ( pos ) {
+            var viewer = this._camera._view;
+
+            var cam = this._camera;
+            var width = cam.getViewport().width();
+            var height = cam.getViewport().height();
+            this._rotate.setWidth( width );
+            this._rotate.setHeight( height );
+            this._pan.setWidth( width );
+            this._pan.setHeight( height );
+
+            var point, matrix, pTrans;
+            if ( ( this._dimensionMask & ( 1 << 2 ) ) !== 0 ) {
+                hits = viewer.computeIntersections( pos[ 0 ], pos[ 1 ] );
+
+                if ( hits.length > 0 ) {
+                    point = hits[ 0 ].point;
+                    hits[ 0 ].nodepath.shift();
+                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodepath );
+                    pTrans = Matrix.transformVec3( matrix, point, [] );
+                    this.setPivotPoint( pTrans );
+                }
+            }
+
+            if ( hits.length === 0 && this._usePolytopeIntersector ) {
+                var pi = this.getOrCreatePolytopeIntersector();
+                pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE );
+                pi.setPolytopeFromWindowCoordinates( pos[ 0 ] - 5, pos[ 1 ] - 5, pos[ 0 ] + 5, pos[ 1 ] + 5 );
+                pi.setDimensionMask( PolytopeIntersector.DimZero | PolytopeIntersector.DimOne );
+                var iv = this._intersectionVisitor;
+                iv.setIntersector( pi );
+                viewer.getCamera().accept( iv );
+                hits = pi.getIntersections();
+                hits.sort( function ( a, b ) {
+                    return a._distance - b._distance;
+                } );
+                if ( hits.length > 0 ) {
+                    point = hits[ 0 ]._center;
+                    hits[ 0 ].nodePath.shift();
+                    matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodePath );
+                    pTrans = Matrix.transformVec3( matrix, point, [] );
+                    this.setPivotPoint( pTrans );
+                }
+            }
+        };
+    } )(),
+
+    getPositionRelativeToCanvas: ( function () {
+        var offset = Vec2.create();
+        var pos = Vec2.create();
+        return function ( x, y ) {
+            var canvas = this._camera._graphicContext.canvas;
+            this.getOffsetRect( canvas, offset );
+            var ratioX = canvas.width / canvas.clientWidth;
+            var ratioY = canvas.height / canvas.clientHeight;
+            pos[ 0 ] = ( x - offset[ 1 ] ) * ratioX;
+            pos[ 1 ] = ( canvas.clientHeight - ( y - offset[ 0 ] ) ) * ratioY;
+            return pos;
+        };
+    } )(),
+
+    getCanvasCenter: ( function () {
+        var offset = Vec2.create();
+        var pos = Vec2.create();
+        return function () {
+            var canvas = this._camera._graphicContext.canvas;
+            this.getOffsetRect( canvas, offset );
+            var ratioX = canvas.width / canvas.clientWidth;
+            var ratioY = canvas.height / canvas.clientHeight;
+            pos[ 0 ] = ( canvas.clientWidth / 2 ) * ratioX;
+            pos[ 1 ] = ( canvas.clientHeight / 2 ) * ratioY;
+            return pos;
+        };
+    } )(),
+
+    getOffsetRect: function ( elem, offset ) {
+        var box = elem.getBoundingClientRect();
+        var body = document.body;
+        var docElem = document.documentElement;
+        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop;
+        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft;
+        var clientTop = docElem.clientTop || body.clientTop || 0;
+        var clientLeft = docElem.clientLeft || body.clientLeft || 0;
+        var top = box.top + scrollTop - clientTop;
+        var left = box.left + scrollLeft - clientLeft;
+        offset[ 0 ] = Math.round( top );
+        offset[ 1 ] = Math.round( left );
+        return offset;
     }
 
 } );

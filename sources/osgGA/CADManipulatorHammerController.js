@@ -1,10 +1,5 @@
 'use strict';
 var Notify = require( 'osg/Notify' );
-var PolytopeIntersector = require( 'osgUtil/PolytopeIntersector' );
-var Matrix = require( 'osg/Matrix' );
-var Vec2 = require( 'osg/Vec2' );
-var Vec3 = require( 'osg/Vec3' );
-var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
 
 var CADManipulatorHammerController = function ( manipulator ) {
     this._manipulator = manipulator;
@@ -24,8 +19,7 @@ CADManipulatorHammerController.prototype = {
         this._lastScale = 0;
         this._nbPointerLast = 0; // to check if we the number of pointers has changed
 
-        this._dimensionMask = ( 1 << 2 );
-        this._lastPos = Vec2.create(); // to set the pivot for rotation
+        this._lastPos = undefined; // to set the pivot for rotation
     },
     setEventProxy: function ( proxy ) {
         if ( proxy === undefined || ( proxy !== undefined && proxy === this._eventProxy ) ) {
@@ -59,95 +53,37 @@ CADManipulatorHammerController.prototype = {
             posThreshold: 300
         } );
 
-        this._cbPanStart = ( function () {
-            var origIntersect = Vec3.create();
-            var dstIntersect = Vec3.create();
+        this._cbPanStart = function ( event ) {
+            var manipulator = self._manipulator;
+            if ( !manipulator || self._transformStarted || event.pointerType === 'mouse' ) {
+                return;
+            }
+            var gesture = event;
+            self._dragStarted = true;
+            self._nbPointerLast = computeTouches( gesture );
 
-            return function ( event ) {
-                var manipulator = self._manipulator;
-                if ( !manipulator || self._transformStarted || event.pointerType === 'mouse' ) {
-                    return;
-                }
-                var gesture = event;
-                self._dragStarted = true;
-                self._nbPointerLast = computeTouches( gesture );
-
-                var pos;
-                if ( self._nbPointerLast === 2 ) {
-                    pos = self.getPositionRelativeToCanvas( gesture );
-                    self._lastPos = pos;
+            var pos;
+            if ( self._nbPointerLast === 2 ) {
+                pos = manipulator.getPositionRelativeToCanvas( event.center.x, event.center.y );
+                self._lastPos = pos;
+            } else {
+                if ( self._lastPos === undefined ) {
+                    pos = manipulator.getCanvasCenter();
                 } else {
-                    if ( self._lastPos.length === 0 ) {
-                        pos = self.getCanvasCenter( gesture );
-                    } else {
-                        pos = self._lastPos;
-                    }
+                    pos = self._lastPos;
                 }
+            }
 
-                var hits = [];
-                var cam = manipulator.getCamera();
-                var point, matrix, pTrans;
+            manipulator.computeIntersections( pos );
 
-                var width = cam.getViewport().width();
-                var height = cam.getViewport().height();
-                manipulator.getRotateInterpolator().setWidth( width );
-                manipulator.getRotateInterpolator().setHeight( height );
-                manipulator.getPanInterpolator().setWidth( width );
-                manipulator.getPanInterpolator().setHeight( height );
-
-                var iv = manipulator.getIntersectionVisitor();
-                if ( ( self._dimensionMask & ( 1 << 2 ) ) !== 0 ) {
-                    var lsi = manipulator.getLineSegmentIntersector();
-                    lsi.reset();
-
-                    lsi.set( Vec3.set( pos[ 0 ], pos[ 1 ], 0.0, origIntersect ), Vec3.set( pos[ 0 ], pos[ 1 ], 1.0, dstIntersect ) );
-                    iv.setIntersector( lsi );
-                    cam.accept( iv );
-                    hits = lsi.getIntersections();
-
-                    if ( hits.length > 0 ) {
-                        hits.sort( function ( a, b ) {
-                            return a.ratio - b.ratio;
-                        } );
-                        point = hits[ 0 ].point;
-                        hits[ 0 ].nodepath.shift();
-                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodepath );
-                        pTrans = Matrix.transformVec3( matrix, point, [] );
-                        manipulator.setPivotPoint( pTrans );
-                    }
-                }
-                if ( hits.length === 0 ) {
-                    var pi = manipulator.getPolytopeIntersector();
-                    pi.reset();
-
-                    pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE );
-                    pi.setPolytopeFromWindowCoordinates( pos[ 0 ] - 5, pos[ 1 ] - 5, pos[ 0 ] + 5, pos[ 1 ] + 5 );
-                    pi.setDimensionMask( PolytopeIntersector.DimZero | PolytopeIntersector.DimOne );
-
-                    iv.setIntersector( pi );
-                    cam.accept( iv );
-                    hits = pi.getIntersections();
-                    hits.sort( function ( a, b ) {
-                        return a._distance - b._distance;
-                    } );
-                    if ( hits.length > 0 ) {
-                        point = hits[ 0 ]._center;
-                        hits[ 0 ].nodePath.shift();
-                        matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodePath );
-                        pTrans = Matrix.transformVec3( matrix, point, [] );
-                        manipulator.setPivotPoint( pTrans );
-                    }
-                }
-
-                if ( self._nbPointerLast === 2 ) {
-                    manipulator.getPanInterpolator().reset();
-                    manipulator.getPanInterpolator().set( event.center.x * self._panFactorX, event.center.y * self._panFactorY );
-                } else {
-                    manipulator.getRotateInterpolator().reset();
-                }
-                Notify.debug( 'drag start, ' + dragCB( gesture ) );
-            };
-        } )();
+            if ( self._nbPointerLast === 2 ) {
+                manipulator.getPanInterpolator().reset();
+                manipulator.getPanInterpolator().set( event.center.x * self._panFactorX, event.center.y * self._panFactorY );
+            } else {
+                manipulator.getRotateInterpolator().reset();
+            }
+            Notify.debug( 'drag start, ' + dragCB( gesture ) );
+        };
 
         this._cbPanMove = function ( event ) {
             var manipulator = self._manipulator;
@@ -231,7 +167,7 @@ CADManipulatorHammerController.prototype = {
             }
             var gesture = event;
 
-            var pos = self.getPositionRelativeToCanvas( gesture );
+            var pos = manipulator.getPositionRelativeToCanvas( event.center.x, event.center.y );
             self._lastPos = pos;
 
             manipulator.getZoomInterpolator().set( 0.0 );
@@ -262,61 +198,6 @@ CADManipulatorHammerController.prototype = {
     },
     setManipulator: function ( manipulator ) {
         this._manipulator = manipulator;
-    },
-
-    getPositionRelativeToCanvas: function ( ev ) {
-        var offset = Vec2.create();
-        var canvas = this._eventProxy.element;
-        this.getOffsetRect( canvas, offset );
-        var ratioX = canvas.width / canvas.clientWidth;
-        var ratioY = canvas.height / canvas.clientHeight;
-        var clientX, clientY;
-        if ( 'ontouchstart' in window ) {
-            if ( 'center' in ev ) {
-                clientX = ev.center.x;
-                clientY = ev.center.y;
-            } else {
-                clientX = ev.pointers[ 0 ].clientX;
-                clientY = ev.pointers[ 0 ].clientY;
-            }
-        } else {
-            clientX = ev.clientX;
-            clientY = ev.clientY;
-        }
-
-        var pos = Vec2.create();
-        pos[ 0 ] = ( clientX - offset[ 1 ] ) * ratioX;
-        pos[ 1 ] = ( canvas.clientHeight - ( clientY - offset[ 0 ] ) ) * ratioY;
-        return pos;
-    },
-
-    getCanvasCenter: function () {
-        var offset = Vec2.create();
-        var canvas = this._eventProxy.element;
-        this.getOffsetRect( canvas, offset );
-
-        var ratioX = canvas.width / canvas.clientWidth;
-        var ratioY = canvas.height / canvas.clientHeight;
-
-        var pos = Vec2.create();
-        pos[ 0 ] = ( canvas.clientWidth / 2 ) * ratioX;
-        pos[ 1 ] = ( canvas.clientHeight / 2 ) * ratioY;
-        return pos;
-    },
-
-    getOffsetRect: function ( elem, pos ) {
-        var box = elem.getBoundingClientRect();
-        var body = document.body;
-        var docElem = document.documentElement;
-        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop;
-        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft;
-        var clientTop = docElem.clientTop || body.clientTop || 0;
-        var clientLeft = docElem.clientLeft || body.clientLeft || 0;
-        var top = box.top + scrollTop - clientTop;
-        var left = box.left + scrollLeft - clientLeft;
-        pos[ 0 ] = Math.round( top );
-        pos[ 1 ] = Math.round( left );
-        return pos;
     }
 };
 

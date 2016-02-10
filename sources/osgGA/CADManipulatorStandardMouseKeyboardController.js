@@ -1,9 +1,5 @@
 'use strict';
 var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
-var PolytopeIntersector = require( 'osgUtil/PolytopeIntersector' );
-var Matrix = require( 'osg/Matrix' );
-var Vec2 = require( 'osg/Vec2' );
-var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
 
 var CADManipulatorStandardMouseKeyboardController = function ( manipulator ) {
     this._manipulator = manipulator;
@@ -17,7 +13,6 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
         this._rotateKey = 65; // a
         this._zoomKey = 83; // s
         this._panKey = 68; // d
-        this._dimensionMask = ( 1 << 2 );
         this._mode = undefined;
     },
     getMode: function () {
@@ -35,46 +30,15 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
     setDimensionMask: function ( dimMask ) {
         this._dimensionMask = dimMask;
     },
-    getPositionRelativeToCanvas: function ( ev ) {
-        var offset = Vec2.create();
-        var viewer = this._eventProxy._viewer;
-        var canvas = viewer._camera._graphicContext.canvas;
-        this.getOffsetRect( canvas, offset );
-        var ratioX = canvas.width / canvas.clientWidth;
-        var ratioY = canvas.height / canvas.clientHeight;
-        var clientX, clientY;
-
-        clientX = ev.clientX;
-        clientY = ev.clientY;
-
-        var pos = Vec2.create();
-        pos[ 0 ] = ( clientX - offset[ 1 ] ) * ratioX;
-        pos[ 1 ] = ( canvas.clientHeight - ( clientY - offset[ 0 ] ) ) * ratioY;
-        return pos;
-    },
-
-    getOffsetRect: function ( elem, pos ) {
-        var box = elem.getBoundingClientRect();
-        var body = document.body;
-        var docElem = document.documentElement;
-        var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop;
-        var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft;
-        var clientTop = docElem.clientTop || body.clientTop || 0;
-        var clientLeft = docElem.clientLeft || body.clientLeft || 0;
-        var top = box.top + scrollTop - clientTop;
-        var left = box.left + scrollLeft - clientLeft;
-        pos[ 0 ] = Math.round( top );
-        pos[ 1 ] = Math.round( left );
-        return pos;
-    },
 
     mousemove: function ( ev ) {
         if ( this._buttonup === true ) {
             return;
         }
-        var pos = this.getPositionRelativeToCanvas( ev );
 
         var manipulator = this._manipulator;
+        var pos = manipulator.getPositionRelativeToCanvas( ev.clientX, ev.clientY );
+
         if ( isNaN( pos[ 0 ] ) === false && isNaN( pos[ 1 ] ) === false ) {
 
             var mode = this.getMode();
@@ -86,7 +50,7 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
 
             } else if ( mode === OrbitManipulator.Zoom ) {
                 var zoom = manipulator.getZoomInterpolator();
-                this.computeIntersections( pos );
+                manipulator.computeIntersections( pos );
 
                 if ( zoom.isReset() ) {
                     zoom._start = pos[ 1 ];
@@ -120,16 +84,9 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
 
         this.pushButton();
 
-        var cam = this._eventProxy._viewer.getCamera();
-        var width = cam.getViewport().width();
-        var height = cam.getViewport().height();
-        manipulator.getRotateInterpolator().setWidth( width );
-        manipulator.getRotateInterpolator().setHeight( height );
-        manipulator.getPanInterpolator().setWidth( width );
-        manipulator.getPanInterpolator().setHeight( height );
-
-        var pos = this.getPositionRelativeToCanvas( ev );
-        this.computeIntersections( pos );
+        //var pos = this.getPositionRelativeToCanvas( ev );
+        var pos = manipulator.getPositionRelativeToCanvas( ev.clientX, ev.clientY );
+        manipulator.computeIntersections( pos );
 
         mode = this.getMode();
         if ( mode === OrbitManipulator.Rotate ) {
@@ -161,8 +118,9 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
             timer = setTimeout( function () {
                 that._timer = false;
             }, 200 );
-            var pos = this.getPositionRelativeToCanvas( ev );
-            this.computeIntersections( pos );
+            //var pos = this.getPositionRelativeToCanvas( ev );
+            var pos = manipulator.getPositionRelativeToCanvas( ev.clientX, ev.clientY );
+            manipulator.computeIntersections( pos );
         }
     },
 
@@ -173,8 +131,9 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
         manipulator.getZoomInterpolator().set( 0.0 );
         var zoomTarget = manipulator.getZoomInterpolator().getTarget()[ 0 ] - 10; // Default interval 10
         manipulator.getZoomInterpolator().setTarget( zoomTarget );
-        var pos = this.getPositionRelativeToCanvas( ev );
-        this.computeIntersections( pos );
+        //var pos = this.getPositionRelativeToCanvas( ev );
+        var pos = manipulator.getPositionRelativeToCanvas( ev.clientX, ev.clientY );
+        manipulator.computeIntersections( pos );
     },
 
     pushButton: function () {
@@ -221,45 +180,6 @@ CADManipulatorStandardMouseKeyboardController.prototype = {
         }
         this.setMode( undefined );
     },
-
-    computeIntersections: function ( pos ) {
-        var manipulator = this._manipulator;
-        var viewer = this._eventProxy._viewer;
-        var hits = [];
-        var point, matrix, pTrans;
-        if ( ( this._dimensionMask & ( 1 << 2 ) ) !== 0 ) {
-            hits = viewer.computeIntersections( pos[ 0 ], pos[ 1 ] );
-
-            if ( hits.length > 0 ) {
-                point = hits[ 0 ].point;
-                hits[ 0 ].nodepath.shift();
-                matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodepath );
-                pTrans = Matrix.transformVec3( matrix, point, [] );
-                manipulator.setPivotPoint( pTrans );
-            }
-        }
-        if ( hits.length === 0 ) {
-            var pi = manipulator.getPolytopeIntersector();
-
-            pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE );
-            pi.setPolytopeFromWindowCoordinates( pos[ 0 ] - 5, pos[ 1 ] - 5, pos[ 0 ] + 5, pos[ 1 ] + 5 );
-            pi.setDimensionMask( PolytopeIntersector.DimZero | PolytopeIntersector.DimOne );
-            var iv = manipulator.getIntersectionVisitor();
-            iv.setIntersector( pi );
-            viewer.getCamera().accept( iv );
-            hits = pi.getIntersections();
-            hits.sort( function ( a, b ) {
-                return a._distance - b._distance;
-            } );
-            if ( hits.length > 0 ) {
-                point = hits[ 0 ]._center;
-                hits[ 0 ].nodePath.shift();
-                matrix = ComputeMatrixFromNodePath.computeLocalToWorld( hits[ 0 ].nodePath );
-                pTrans = Matrix.transformVec3( matrix, point, [] );
-                manipulator.setPivotPoint( pTrans );
-            }
-        }
-    }
 
 };
 
