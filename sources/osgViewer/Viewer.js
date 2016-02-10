@@ -223,7 +223,6 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         if ( this.getScene().getSceneData() )
             this.getScene().getSceneData().getBound();
 
-
         if ( this.getCamera() ) {
 
             var stats = this._stats;
@@ -330,6 +329,29 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
 
     checkNeedToDoFrame: function () {
         return this._requestContinousUpdate || this._requestRedraw;
+    },
+
+    /// particular case
+    superSample: function ( frameCallback ) {
+
+        // make sure we're on the same spot.
+
+        if ( this.getCamera() ) {
+
+            var renderer = this.getCamera().getRenderer();
+
+            var i = 0;
+
+            while ( frameCallback( i++ ) ) {
+
+                this.getScene().updateSceneGraph( this._updateVisitor );
+                renderer.cull();
+                renderer.draw();
+
+            }
+
+        }
+
     },
 
     frame: function () {
