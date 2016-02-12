@@ -202,6 +202,10 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         //this._done = false;
     },
 
+    getUpdateVisitor: function () {
+        return this._updateVisitor;
+    },
+
     getState: function () {
         return this.getCamera().getRenderer().getState();
     },
