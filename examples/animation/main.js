@@ -43,7 +43,7 @@
     HideBBVisitor.prototype = osg.objectInherit( osg.NodeVisitor.prototype, {
         apply: function ( node ) {
             if ( node instanceof osgAnimation.RigGeometry ) {
-                node.boundingSphereComputed = true;
+                node._boundingSphereComputed = true;
                 node._boundingBoxComputed = true;
             } else if ( node instanceof osg.Geometry ) {
                 var parents = node.getParents();

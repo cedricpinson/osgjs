@@ -40,6 +40,10 @@ module.exports = function () {
         mockup.near( visitor.getBoundingBox().corner( 0 ), [ 7.5, -2.5, -2.5 ], 'Check Min of bounding box' );
         mockup.near( visitor.getBoundingBox().corner( 7 ), [ 12.5, 2.5, 2.5 ], 'Check Max of bounding box' );
 
+        // getBoundingBox don't skip the 0 nodemask
+        mockup.near( root.getBoundingBox().corner( 0 ), [ -12.5, -2.5, -2.5 ], 'Check Min of bounding box with getBoundingBox' );
+        mockup.near( root.getBoundingBox().corner( 7 ), [ 12.5, 2.5, 2.5 ], 'Check Max of bounding box getBoundingBox' );
+
     } );
 
 
@@ -71,6 +75,10 @@ module.exports = function () {
 
         mockup.near( visitor.getBoundingBox().corner( 0 ), [ -22.5, -2.5, -2.5 ], 'Check Min of bounding box' );
         mockup.near( visitor.getBoundingBox().corner( 7 ), [ -17.5, 2.5, 2.5 ], 'Check Max of bounding box' );
+
+        // all the nodemask are active so same result as the visitor method
+        mockup.near( root.getBoundingBox().corner( 0 ), [ -22.5, -2.5, -2.5 ], 'Check Min of bounding box with getBoundingBox' );
+        mockup.near( root.getBoundingBox().corner( 7 ), [ -17.5, 2.5, 2.5 ], 'Check Max of bounding box getBoundingBox' );
 
     } );
 

@@ -56,17 +56,17 @@ Lod.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Node.pr
         this._centerMode = centerMode;
     },
 
-    computeBound: function ( bsphere ) {
+    computeBoundingSphere: function ( bsphere ) {
         if ( this._centerMode === Lod.USER_DEFINED_CENTER && this._radius >= 0.0 ) {
             bsphere.set( this._userDefinedCenter, this._radius );
             return bsphere;
         } else if ( this._centerMode === Lod.UNION_OF_BOUNDING_SPHERE_AND_USER_DEFINED && this._radius >= 0.0 ) {
             bsphere.set( this._userDefinedCenter, this._radius );
             var bs = new BoundingSphere();
-            bsphere.expandByBoundingSphere( Node.prototype.computeBound.call( this, bs ) );
+            bsphere.expandByBoundingSphere( Node.prototype.computeBoundingSphere.call( this, bs ) );
             return bsphere;
         } else {
-            Node.prototype.computeBound.call( this, bsphere );
+            Node.prototype.computeBoundingSphere.call( this, bsphere );
             return bsphere;
         }
     },

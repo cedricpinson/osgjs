@@ -28,7 +28,7 @@ module.exports = function () {
 
             var o = ReaderParser.parseSceneGraph( mockup.getBoxScene() );
             o.getBound();
-            var bbTestSceneGraphTest = ( mockup.checkNear( o.boundingSphere.radius(), 2.41421, 0.00001 ) );
+            var bbTestSceneGraphTest = ( mockup.checkNear( o._boundingSphere.radius(), 2.41421, 0.00001 ) );
             ok( bbTestSceneGraphTest, 'Box.js tested  ->  bounding sphere scene graph test' );
         } )();
 
