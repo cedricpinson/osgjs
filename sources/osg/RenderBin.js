@@ -4,6 +4,7 @@ var Notify = require( 'osg/Notify' );
 var Object = require( 'osg/Object' );
 var osgMath = require( 'osg/Math' );
 
+
 /**
  * RenderBin base class. Renderbin contains geometries to be rendered as a group,
  * renderbins are rendered once each.  They can improve efficiency or
@@ -17,31 +18,25 @@ var RenderBin = function ( sortMode ) {
 
     this._leafs = [];
     this.positionedAttribute = [];
-    this._renderStage = undefined;
-    this._bins = {};
     this.stateGraphList = [];
-    this._parent = undefined;
-    this._binNum = 0;
 
-    this._sorted = false;
-    this._sortMode = sortMode !== undefined ? sortMode : RenderBin.defaultSortMode;
-
-    this._drawCallback = undefined;
+    RenderBin.prototype.init.call( this, sortMode );
 };
 
 RenderBin.SORT_BY_STATE = 0;
 RenderBin.SORT_BACK_TO_FRONT = 1;
 RenderBin.SORT_FRONT_TO_BACK = 2;
 
+
 // change it at runtime for default RenderBin if needed
 RenderBin.defaultSortMode = RenderBin.SORT_BY_STATE;
 
 RenderBin.BinPrototypes = {
     RenderBin: function () {
-        return new RenderBin();
+        return RenderBin.getOrCreate().init();
     },
     DepthSortedBin: function () {
-        return new RenderBin( RenderBin.SORT_BACK_TO_FRONT );
+        return RenderBin.getOrCreate().init( RenderBin.SORT_BACK_TO_FRONT );
     }
 };
 
@@ -61,6 +56,25 @@ var sortBinNumberFunction = function ( a, b ) {
 
 
 RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
+
+    init: function ( sortMode ) {
+
+        this._leafs.length = 0;
+        this.positionedAttribute.length = 0;
+        this._renderStage = undefined;
+        this._bins = {};
+        this.stateGraphList.length = 0;
+        this._parent = undefined;
+        this._binNum = 0;
+
+        this._sorted = false;
+        this._sortMode = sortMode !== undefined ? sortMode : RenderBin.defaultSortMode;
+
+        this._drawCallback = undefined;
+
+        return this;
+    },
+
     _createRenderBin: function ( binName ) {
 
         // default render bin constructor
@@ -285,5 +299,23 @@ RenderBin.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( O
         return previousLeaf;
     }
 } ), 'osg', 'RenderBin' );
+
+
+RenderBin.getOrCreate = function () {
+
+    var l = RenderBin._reservedStack[ RenderBin._reservedStackCurrent++ ];
+    if ( RenderBin._reservedStackCurrent === RenderBin._reservedStack.length ) {
+        RenderBin._reservedStack.push( new RenderBin() );
+    }
+    return l;
+
+};
+
+RenderBin.resetStack = function () {
+    RenderBin._reservedStackCurrent = 0;
+};
+
+RenderBin._reservedStack = [ new RenderBin() ];
+RenderBin._reservedStackCurrent = 0;
 
 module.exports = RenderBin;

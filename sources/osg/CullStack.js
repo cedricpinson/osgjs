@@ -133,9 +133,14 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
         }
         return this._viewportStack[ this._viewportStack.length - 1 ];
     },
-    getLookVectorLocal: function () {
-        var m = this.getCurrentModelViewMatrix();
-        return Vec3.createAndSet( -m[ 2 ], -m[ 6 ], -m[ 10 ] );
+    getLookVectorLocal: function ( outLookVector ) {
+        if ( !outLookVector ) {
+            Notify.warn( 'no matrix destination !' );
+            outLookVector = Vec3.create();
+        }
+
+        var lookVectorLocal = this.getCurrentModelViewMatrix();
+        return Vec3.set( -lookVectorLocal[ 2 ], -lookVectorLocal[ 6 ], -lookVectorLocal[ 10 ], outLookVector );
     },
     pushViewport: function ( vp ) {
         this._viewportStack.push( vp );
@@ -235,68 +240,75 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
 
 
 
-    pushModelViewMatrix: function ( matrix ) {
+    pushModelViewMatrix: ( function () {
+        var lookVector = Vec3.create();
+        return function ( matrix ) {
 
-        // When pushing a matrix, it can be a transform or camera. To compute
-        // differents matrix type in shader ( ViewMatrix/ModelWorldMatrix/ModelViewMatrix )
-        // we track camera node when using pushModelViewMatrix
-        // To detect a camera, we check on the nodepath the type of the node and if the
-        // camera is relatif or absolute.
-        // When we detect an absolute camera we keep it's index to get it when needed to
-        // compute the World/View matrix
-        // There is an exception for the root camera, the root camera is not pushed on the
-        // CullVisitor but only its matrixes, so to handle this we compute the inverse camera
-        // when the nodepath has a lenght of 0
-        // To avoid to compute too much inverse matrix, we keep a cache of them during the
-        // traverse and store the result under the instanceID key, except for the root we use
-        // the special id '-1'
-        var np = this.getNodePath();
-        var length = np.length;
-        if ( !length ) { // root
-            var matInverse = this._reservedMatrixStack.get();
-            Matrix.inverse( matrix, matInverse );
-            this._cameraMatrixInverse[ -1 ] = matInverse;
-        } else {
-            var index = length - 1;
-            if ( np[ index ].getTypeID() === Camera.getTypeID() && np[ index ].getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
-                this._cameraIndexStack.push( index );
-                this._cameraModelViewIndexStack.push( this._modelViewMatrixStack.length );
+            // When pushing a matrix, it can be a transform or camera. To compute
+            // differents matrix type in shader ( ViewMatrix/ModelWorldMatrix/ModelViewMatrix )
+            // we track camera node when using pushModelViewMatrix
+            // To detect a camera, we check on the nodepath the type of the node and if the
+            // camera is relatif or absolute.
+            // When we detect an absolute camera we keep it's index to get it when needed to
+            // compute the World/View matrix
+            // Th    ere is an exception for the root camera, the root camera is not pushed on the
+            // CullVisitor but only its matrixes, so to handle this we compute the inverse camera
+            // when the nodepath has a lenght of 0
+            // To avoid to compute too much inverse matrix, we keep a cache of them during the
+            // traverse and store the result under the instanceID key, except for the root we use
+            // the special id '-1'
+            var np = this.getNodePath();
+            var length = np.length;
+            if ( !length ) { // root
+                var matInverse = this._reservedMatrixStack.get();
+                Matrix.inverse( matrix, matInverse );
+                this._cameraMatrixInverse[ -1 ] = matInverse;
+            } else {
+                var index = length - 1;
+                if ( np[ index ].getTypeID() === Camera.getTypeID() && np[ index ].getReferenceFrame() === TransformEnums.ABSOLUTE_RF ) {
+                    this._cameraIndexStack.push( index );
+                    this._cameraModelViewIndexStack.push( this._modelViewMatrixStack.length );
+                }
             }
-        }
 
-        this._modelViewMatrixStack.push( matrix );
-        var lookVector = this.getLookVectorLocal();
+            this._modelViewMatrixStack.push( matrix );
+            this.getLookVectorLocal( lookVector );
 
-        /*jshint bitwise: false */
-        this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
-        this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
-        /*jshint bitwise: true */
+            /*jshint bitwise: false */
+            this._bbCornerFar = ( lookVector[ 0 ] >= 0 ? 1 : 0 ) | ( lookVector[ 1 ] >= 0 ? 2 : 0 ) | ( lookVector[ 2 ] >= 0 ? 4 : 0 );
+            this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
+            /*jshint bitwise: true */
 
-    },
-    popModelViewMatrix: function () {
+        };
+    } )(),
+    popModelViewMatrix: ( function () {
+        var lookVector = Vec3.create();
 
-        // if same index it's a camera and we have to pop it
-        var np = this.getNodePath();
-        var index = np.length - 1;
-        if ( this._cameraIndexStack.length && index === this._cameraIndexStack[ this._cameraIndexStack.length - 1 ] ) {
-            this._cameraIndexStack.pop();
-            this._cameraModelViewIndexStack.pop();
-        }
+        return function () {
 
-        this._modelViewMatrixStack.pop();
-        var lookVector;
-        if ( this._modelViewMatrixStack.length !== 0 ) {
-            lookVector = this.getLookVectorLocal();
-        } else {
-            lookVector = Vec3.createAndSet( 0.0, 0.0, -1.0 );
-        }
+            // if same index it's a camera and we have to pop it
+            var np = this.getNodePath();
+            var index = np.length - 1;
+            if ( this._cameraIndexStack.length && index === this._cameraIndexStack[ this._cameraIndexStack.length - 1 ] ) {
+                this._cameraIndexStack.pop();
+                this._cameraModelViewIndexStack.pop();
+            }
 
-        /*jshint bitwise: false */
-        this._bbCornerFar = ( lookVector[ 0 ] >= 0.0 ? 1.0 : 0.0 ) | ( lookVector[ 1 ] >= 0 ? 2.0 : 0.0 ) | ( lookVector[ 2 ] >= 0 ? 4.0 : 0.0 );
-        this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
-        /*jshint bitwise: true */
+            this._modelViewMatrixStack.pop();
 
-    },
+            if ( this._modelViewMatrixStack.length !== 0 ) {
+                this.getLookVectorLocal( lookVector );
+            } else {
+                Vec3.set( 0.0, 0.0, -1.0, lookVector );
+            }
+
+            /*jshint bitwise: false */
+            this._bbCornerFar = ( lookVector[ 0 ] >= 0.0 ? 1.0 : 0.0 ) | ( lookVector[ 1 ] >= 0 ? 2.0 : 0.0 ) | ( lookVector[ 2 ] >= 0 ? 4.0 : 0.0 );
+            this._bbCornerNear = ( ~this._bbCornerFar ) & 7;
+            /*jshint bitwise: true */
+        };
+    } )(),
+
     pushProjectionMatrix: function ( matrix ) {
         this._projectionMatrixStack.push( matrix );
 
