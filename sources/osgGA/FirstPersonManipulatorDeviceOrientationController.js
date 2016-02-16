@@ -3,7 +3,7 @@ var Quat = require( 'osg/Quat' );
 
 var degtorad = Math.PI / 180.0; // Degree-to-Radian conversion
 
-var setQuatFromEuler = function ( quat, x, y, z, order ) {
+var makeRotateFromEuler = function ( x, y, z, order, quat ) {
 
     // http://www.mathworks.com/matlabcentral/fileexchange/
     // 20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
@@ -59,24 +59,55 @@ var setQuatFromEuler = function ( quat, x, y, z, order ) {
         quat[ 3 ] = c1 * c2 * c3 + s1 * s2 * s3;
 
     }
+    return quat;
 };
 
-var computeQuaternion = ( function () {
+
+var FirstPersonManipulatorDeviceOrientationController = function ( manipulator ) {
+    this._manipulator = manipulator;
+    this.init();
+};
+
+FirstPersonManipulatorDeviceOrientationController.computeQuaternion = ( function () {
 
     var screenTransform = Quat.create();
     var worldTransform = Quat.createAndSet( -Math.sqrt( 0.5 ), 0.0, 0.0, Math.sqrt( 0.5 ) ); // - PI/2 around the x-axis
-    var minusHalfAngle = 0;
+
+    // but on ios alpha is relative to the first question:
+    //
+    // http://www.html5rocks.com/en/tutorials/device/orientation/
+    // For most browsers, alpha returns the compass heading, so when the device is pointed
+    // north, alpha is zero. With Mobile Safari, alpha is based on the direction the
+    // device was pointing when device orientation was first requested. The compass
+    // heading is available in the webkitCompassHeading parameter.
 
     return function ( quat, deviceOrientation, screenOrientation ) {
 
         var alpha = deviceOrientation.alpha * degtorad;
         var beta = deviceOrientation.beta * degtorad;
         var gamma = deviceOrientation.gamma * degtorad;
+
+        // If the user goes in landscape mode, he rotates his device with a certain angle
+        // around the Z axis counterclockwise and the DeviceOrientation contains this
+        // rotation To compensate this, we apply a rotation of the same angle in the
+        // opposite way
+
         var screenAngle = screenOrientation * degtorad;
 
-        setQuatFromEuler( quat, beta, alpha, -gamma, 'YXZ' );
+        // alpha is heading -> X
+        // beta             -> Z Up
+        // Gamma            -> Y view direction
+        makeRotateFromEuler( beta, alpha, -gamma, 'YXZ', quat );
+        // equivalent to
+        // var rotateX = Matrix.makeRotate( beta, 1,0,0, Matrix.create() );
+        // var rotateY = Matrix.makeRotate( alpha, 0,1,0, Matrix.create() );
+        // var rotateZ = Matrix.makeRotate( -gamma, 0,0,1, Matrix.create() );
+        // var result = Matrix.create();
+        // Matrix.mult( rotateY, rotateX, result );
+        // Matrix.mult( result, rotateZ, result );
+        // Matrix.getRotate( result, quat );
 
-        minusHalfAngle = -screenAngle / 2.0;
+        var minusHalfAngle = -screenAngle / 2.0;
         screenTransform[ 1 ] = Math.sin( minusHalfAngle );
         screenTransform[ 3 ] = Math.cos( minusHalfAngle );
 
@@ -92,25 +123,18 @@ var computeQuaternion = ( function () {
 
 } )();
 
-var FirstPersonManipulatorDeviceOrientationController = function ( manipulator ) {
-    this._manipulator = manipulator;
-    this.init();
-};
-
 FirstPersonManipulatorDeviceOrientationController.prototype = {
+
     init: function () {
         this._stepFactor = 1.0; // meaning radius*stepFactor to move
         this._quat = Quat.create();
     },
+
     update: function ( deviceOrientation, screenOrientation ) {
 
-        // If the user goes in landscape mode, he rotates his device with a certain angle
-        // around the Z axis counterclockwise and the DeviceOrientation contains this rotation
-        // To compensate this, we apply a rotation of the same angle in the opposite way
-
-        computeQuaternion( this._quat, deviceOrientation, screenOrientation );
+        FirstPersonManipulatorDeviceOrientationController.computeQuaternion( this._quat, deviceOrientation, screenOrientation );
         this._manipulator.setRotationBaseFromQuat( this._quat );
-    },
+    }
 
 };
 

@@ -66,7 +66,6 @@ var Quat = {
         return result;
     },
 
-
     // http://physicsforgames.blogspot.fr/2010/02/quaternions.html
     // called quatBlend
     //

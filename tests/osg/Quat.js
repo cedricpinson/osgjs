@@ -167,4 +167,6 @@ module.exports = function () {
         Quat.transformVec3( [ 0, 0.707107, 0, 0.707107 ], v, v );
         mockup.near( v, [ 3.0, 2.0, -1.0 ] );
     } );
+
+
 };
