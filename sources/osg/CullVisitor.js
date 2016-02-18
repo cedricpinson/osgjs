@@ -10,8 +10,10 @@ var MatrixTransform = require( 'osg/MatrixTransform' );
 var AutoTransform = require( 'osg/AutoTransform' );
 var Projection = require( 'osg/Projection' );
 var LightSource = require( 'osg/LightSource' );
+var osgPool = require( 'osgUtil/osgPool' );
 var Geometry = require( 'osg/Geometry' );
 var RenderLeaf = require( 'osg/RenderLeaf' );
+var RenderBin = require( 'osg/RenderBin' );
 var RenderStage = require( 'osg/RenderStage' );
 var Node = require( 'osg/Node' );
 var Lod = require( 'osg/Lod' );
@@ -50,6 +52,8 @@ var CullVisitor = function () {
 
     this._reserveLeafStack = [ new RenderLeaf() ];
     this._reserveLeafStackCurrent = 0;
+
+    this._reserveRenderStageStacks = {};
 
     this._reserveCullSettingsStack = [ new CullSettings() ];
     this._reserveCullSettingsStackCurrent = 0;
@@ -170,6 +174,14 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
         this.resetCullSettingsStack();
         this._reserveCullSettingsStackCurrent = 0;
 
+        // renderstage / renderbin pools
+        var resetStages = window.Object.keys( this._reserveRenderStageStacks );
+        for ( var i = 0, l = resetStages.length; i < l; i++ ) {
+            var key = resetStages[ i ];
+            this._reserveRenderStageStacks[ key ].reset();
+        }
+        RenderBin.resetStack();
+
         this._computedNear = Number.POSITIVE_INFINITY;
         this._computedFar = Number.NEGATIVE_INFINITY;
     },
@@ -241,6 +253,22 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
         this[ node.typeID ]( node );
     },
 
+    createOrReuseRenderStage: function ( classInstance ) {
+
+        var type = !classInstance ? 'RenderStage' : classInstance.className();
+        var classCtor = !classInstance ? RenderStage : classInstance.constructor;
+
+        var stack;
+        if ( this._reserveRenderStageStacks[ type ] ) {
+            stack = this._reserveRenderStageStacks[ type ];
+        } else {
+            stack = new osgPool.OsgObjectMemoryStack( classCtor );
+            this._reserveRenderStageStacks[ type ] = stack;
+        }
+        return stack.get().init();
+
+    },
+
     createOrReuseRenderLeaf: function () {
         var l = this._reserveLeafStack[ this._reserveLeafStackCurrent++ ];
         if ( this._reserveLeafStackCurrent === this._reserveLeafStack.length ) {
@@ -270,8 +298,82 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
         for ( var i = 0, j = this._reserveCullSettingsStackCurrent; i <= j; i++ ) {
             this._reserveCullSettingsStack[ i ].reset();
         }
-    }
+    },
 
+    // function call after the push state in the geometry apply function
+    // the idea is to avoid heavy copy-paste for the rigGeometry apply
+    // since the only difference is that we want to push an additional state
+    // Maybe it will be useful when we'll add morph target geometry or something...
+    postPushGeometry: function ( cull, node ) {
+
+        var sourceGeometry;
+        var geometryStateSetAnimation;
+
+        if ( node instanceof RigGeometry ) {
+
+            geometryStateSetAnimation = node.getStateSetAnimation();
+            if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
+
+            sourceGeometry = node.getSourceGeometry();
+
+            if ( sourceGeometry instanceof MorphGeometry ) {
+
+                geometryStateSetAnimation = sourceGeometry.getStateSetAnimation();
+                if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
+
+            }
+
+        } else if ( node instanceof MorphGeometry ) {
+
+            geometryStateSetAnimation = node.getStateSetAnimation();
+            if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
+
+        }
+
+    },
+
+    // same comment as above (postPushGeometry)
+    prePopGeometry: function ( cull, node ) {
+
+        if ( node instanceof RigGeometry ) {
+
+            var sourceGeometry = node.getSourceGeometry();
+
+            if ( sourceGeometry instanceof MorphGeometry ) {
+
+                if ( sourceGeometry.getStateSetAnimation() ) cull.popStateSet();
+
+            }
+
+            if ( node.getStateSetAnimation() ) cull.popStateSet();
+
+        } else if ( node instanceof MorphGeometry && node.getStateSetAnimation() ) {
+
+            cull.popStateSet();
+
+        }
+
+    },
+
+    pushLeaf: function ( node, depth ) {
+        var leafs = this._currentStateGraph.leafs;
+        if ( leafs.length === 0 ) {
+            this._currentRenderBin.addStateGraph( this._currentStateGraph );
+        }
+
+        var leaf = this.createOrReuseRenderLeaf();
+
+        leaf.init( this._currentStateGraph,
+            node,
+            this.getCurrentProjectionMatrix(),
+            this.getCurrentViewMatrix(),
+            this.getCurrentModelViewMatrix(),
+            this.getCurrentModelWorldMatrix(),
+            depth );
+
+        leafs.push( leaf );
+
+    }
 
 } ) );
 
@@ -349,11 +451,11 @@ CullVisitor.prototype[ Camera.typeID ] = function ( camera ) {
         var previousStage = renderBin.getStage();
 
         // use render to texture stage
-        var rtts = this._rootRenderStage ? this._rootRenderStage.cloneType() : new RenderStage();
+        var rtts = this.createOrReuseRenderStage( this._rootRenderStage );
+
         rtts.setCamera( camera );
         rtts.setClearDepth( camera.getClearDepth() );
         rtts.setClearColor( camera.getClearColor() );
-
         rtts.setClearMask( camera.getClearMask() );
 
         var vp;
@@ -495,61 +597,6 @@ CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
     if ( stateset ) this.popStateSet();
 };
 
-// function call after the push state in the geometry apply function
-// the idea is to avoid heavy copy-paste for the rigGeometry apply
-// since the only difference is that we want to push an additional state
-// Maybe it will be useful when we'll add morph target geometry or something...
-var postPushGeometry = function ( cull, node ) {
-
-    var sourceGeometry;
-    var geometryStateSetAnimation;
-
-    if ( node instanceof RigGeometry ) {
-
-        geometryStateSetAnimation = node.getStateSetAnimation();
-        if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
-
-        sourceGeometry = node.getSourceGeometry();
-
-        if ( sourceGeometry instanceof MorphGeometry ) {
-
-            geometryStateSetAnimation = sourceGeometry.getStateSetAnimation();
-            if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
-
-        }
-
-    } else if ( node instanceof MorphGeometry ) {
-
-        geometryStateSetAnimation = node.getStateSetAnimation();
-        if ( geometryStateSetAnimation ) cull.pushStateSet( geometryStateSetAnimation );
-
-    }
-
-};
-
-// same comment as above (postPushGeometry)
-var prePopGeometry = function ( cull, node ) {
-
-    if ( node instanceof RigGeometry ) {
-
-        var sourceGeometry = node.getSourceGeometry();
-
-        if ( sourceGeometry instanceof MorphGeometry ) {
-
-            if ( sourceGeometry.getStateSetAnimation() ) cull.popStateSet();
-
-        }
-
-        if ( node.getStateSetAnimation() ) cull.popStateSet();
-
-    } else if ( node instanceof MorphGeometry && node.getStateSetAnimation() ) {
-
-        cull.popStateSet();
-
-    }
-
-};
-
 CullVisitor.prototype[ Geometry.typeID ] = ( function () {
 
     var tempVec = Vec3.create();
@@ -576,14 +623,8 @@ CullVisitor.prototype[ Geometry.typeID ] = ( function () {
         var stateset = node.getStateSet();
         if ( stateset ) this.pushStateSet( stateset );
 
-        postPushGeometry( this, node );
+        this.postPushGeometry( this, node );
 
-        var leafs = this._currentStateGraph.leafs;
-        if ( leafs.length === 0 ) {
-            this._currentRenderBin.addStateGraph( this._currentStateGraph );
-        }
-
-        var leaf = this.createOrReuseRenderLeaf();
         var depth = 0;
         if ( bb.valid() ) {
             depth = this.distance( bb.center( tempVec ), modelview );
@@ -597,18 +638,11 @@ CullVisitor.prototype[ Geometry.typeID ] = ( function () {
 
         } else {
 
-            leaf.init( this._currentStateGraph,
-                node,
-                this.getCurrentProjectionMatrix(),
-                this.getCurrentViewMatrix(),
-                this.getCurrentModelViewMatrix(),
-                this.getCurrentModelWorldMatrix(),
-                depth );
+            this.pushLeaf( node, depth );
 
-            leafs.push( leaf );
         }
 
-        prePopGeometry( this, node );
+        this.prePopGeometry( this, node );
         if ( stateset ) this.popStateSet();
     };
 } )();

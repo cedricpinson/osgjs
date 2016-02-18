@@ -15,8 +15,8 @@ var OrbitManipulatorWebVRController = require( 'osgGA/OrbitManipulatorWebVRContr
  *  OrbitManipulator
  *  @class
  */
-var OrbitManipulator = function () {
-    Manipulator.call( this );
+var OrbitManipulator = function ( flags ) {
+    Manipulator.call( this, flags );
     this._homePosition = Vec3.create();
     this._frustum = {};
     this.init();

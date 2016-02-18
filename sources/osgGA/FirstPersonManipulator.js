@@ -21,8 +21,8 @@ var FirstPersonManipulatorStandardMouseKeyboardController = require( 'osgGA/Firs
  *  FirstPersonManipulator
  *  @class
  */
-var FirstPersonManipulator = function () {
-    Manipulator.call( this );
+var FirstPersonManipulator = function ( flags ) {
+    Manipulator.call( this, flags );
     this.init();
 };
 

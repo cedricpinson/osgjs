@@ -88,6 +88,7 @@ var ShadowMap = function ( settings ) {
     this._textureMagFilter = undefined;
     this._textureMinFilter = undefined;
     this._textureSize = 256;
+    this._renderSize = [ this._textureSize, this._textureSize ];
 
     this._receivingStateset = undefined;
 
@@ -95,8 +96,11 @@ var ShadowMap = function ( settings ) {
     this._casterStateSet.addUniform( Uniform.createFloat1( 0, 'exponent0' ) );
     this._casterStateSet.addUniform( Uniform.createFloat1( 0, 'exponent1' ) );
     this._casterStateSet.addUniform( Uniform.createFloat1( 0.005, 'bias' ) );
-    this._casterStateSet.addUniform( Uniform.createFloat1( 1.0 / this._textureSize, 'texelSize' ) );
-    this._casterStateSet.addUniform( Uniform.createFloat2( [ this._textureSize, this._textureSize ], 'RenderSize' ) );
+
+    this._texelSizeUniform = Uniform.createFloat1( 1.0 / this._textureSize, 'texelSize' );
+    this._casterStateSet.addUniform( this._texelSizeUniform );
+
+    this._casterStateSet.addUniform( Uniform.createFloat2( this._renderSize, 'RenderSize' ) );
 
     // make sure no unintended blend happens
     // if casting semi-transparent (alphablend material with full opaque pixels) shadow
@@ -529,11 +533,15 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         }
 
 
+        this._texture.setTextureSize( this._textureSize, this._textureSize );
+        this._texelSizeUniform.setFloat( 1.0 / this._textureSize );
+        this._renderSize[ 0 ] = this._textureSize;
+        this._renderSize[ 1 ] = this._textureSize;
+
         var textureFormat;
         // luminance Float format ?
         textureFormat = Texture.RGBA;
 
-        this._texture.setTextureSize( this._textureSize, this._textureSize );
         this.setTextureFiltering();
         this._texture.setInternalFormat( textureFormat );
 
@@ -559,6 +567,7 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
         if ( mapSize === this._textureSize ) return;
 
         this._textureSize = mapSize;
+
         this.dirty();
     },
 

@@ -101,17 +101,14 @@ BoundingBox.prototype = MACROUTILS.objectLibraryClass( {
         return Math.sqrt( this.radius2() );
     },
 
-    radius2: ( function () {
-        var cache = Vec3.create();
-        return function () {
-            var min = this._min;
-            var max = this._max;
-            cache[ 0 ] = max[ 0 ] - min[ 0 ];
-            cache[ 1 ] = max[ 1 ] - min[ 1 ];
-            cache[ 2 ] = max[ 2 ] - min[ 2 ];
-            return 0.25 * ( cache[ 0 ] * cache[ 0 ] + cache[ 1 ] * cache[ 1 ] + cache[ 2 ] * cache[ 2 ] );
-        };
-    } )(),
+    radius2: function () {
+        var min = this._min;
+        var max = this._max;
+        var dx = max[ 0 ] - min[ 0 ];
+        var dy = max[ 1 ] - min[ 1 ];
+        var dz = max[ 2 ] - min[ 2 ];
+        return 0.25 * ( dx * dx + dy * dy + dz * dz );
+    },
 
     getMin: function () {
         return this._min;
