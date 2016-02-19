@@ -315,7 +315,7 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
 
     getOrCreatePolytopeIntersector: function () {
         if ( this._polytopeIntersector === undefined ) {
-            this._polytopeIntesector = new PolytopeIntersector();
+            this._polytopeIntersector = new PolytopeIntersector();
         }
         return this._polytopeIntersector;
     },

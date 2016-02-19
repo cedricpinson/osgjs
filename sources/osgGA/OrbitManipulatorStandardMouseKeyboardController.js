@@ -49,11 +49,11 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
             } else if ( mode === OrbitManipulatorEnums.ZOOM ) {
                 var zoom = manipulator.getZoomInterpolator();
                 if ( zoom.isReset() ) {
-                    zoom._start = pos[ 1 ];
+                    zoom.setStart( pos[ 1 ] );
                     zoom.set( 0.0 );
                 }
-                var dy = pos[ 1 ] - zoom._start;
-                zoom._start = pos[ 1 ];
+                var dy = pos[ 1 ] - zoom.getStart();
+                zoom.setStart( pos[ 1 ] );
                 var v = zoom.getTarget()[ 0 ];
                 zoom.setTarget( v - dy / 20.0 );
             }
@@ -89,7 +89,7 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
             manipulator.getPanInterpolator().reset();
             manipulator.getPanInterpolator().set( pos[ 0 ], pos[ 1 ] );
         } else if ( mode === OrbitManipulatorEnums.ZOOM ) {
-            manipulator.getZoomInterpolator()._start = pos[ 1 ];
+            manipulator.getZoomInterpolator().setStart( pos[ 1 ] );
             manipulator.getZoomInterpolator().set( 0.0 );
         }
         ev.preventDefault();

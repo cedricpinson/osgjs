@@ -84,6 +84,12 @@ OrbitManipulator.Interpolator.prototype = {
     },
     getDelta: function () {
         return this._delta;
+    },
+    getStart: function () {
+        return this._start;
+    },
+    setStart: function ( start ) {
+        this._start = start;
     }
 };
 

@@ -129,7 +129,7 @@ OrbitManipulatorLeapMotionController.prototype = {
 
             if ( mode === 'zoom' || mode === 'zoom-twohands' ) {
                 if ( zoom.isReset() ) {
-                    zoom._start = 1.0;
+                    zoom.setStart( 1.0 );
                     zoom.set( 0.0 );
                 }
             }
