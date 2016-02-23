@@ -91,6 +91,9 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
         var r = /ERROR: [\d]+:([\d]+): (.+)/gmi;
         // split sources in indexable per line array
         var lines = source.split( '\n' );
+        var linesLength = lines.length;
+        if ( linesLength === 0 ) return;
+
         var i, m;
 
         // IE reporting is not the same
@@ -108,25 +111,32 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
             // get error line
             var line = parseInt( m[ 1 ] );
 
+            if ( line > linesLength ) continue;
             // webgl error report.
             Notify.error( 'ERROR ' + m[ 2 ] + ' in line ' + line, false, true );
 
+            var minLine = Math.max( 0, line - 7 );
+            var maxLine = Math.max( 0, line - 2 );
             // for context
             // log surrounding line priori to error with bof check
-            for ( i = 2; i < 7 && ( 0 < line - i ); i++ ) {
-                Notify.log( lines[ line - i ].replace( /^[ \t]+/g, '' ), false, true );
+            for ( i = minLine; i <= maxLine; i++ ) {
+                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ), false, true );
             }
 
             // Warn adds a lovely /!\ icon in front of the culprit line
-            Notify.warn( lines[ line - 1 ].replace( /^[ \t]+/g, '' ), false, true );
+            maxLine = Math.max( 0, line - 1 );
+            Notify.error( lines[ maxLine ].replace( /^[ \t]+/g, '' ), false, true );
 
+            minLine = Math.min( linesLength, line );
+            maxLine = Math.min( linesLength, line + 5 );
             // for context
             // surrounding line posterior to error (with eof check)
-            for ( i = 0; i < 5 && ( lines.length > line + i ); i++ ) {
-                Notify.log( lines[ line + i ].replace( /^[ \t]+/g, '' ), false, true );
+            for ( i = minLine; i < maxLine; i++ ) {
+                Notify.warn( lines[ i ].replace( /^[ \t]+/g, '' ), false, true );
             }
         }
     },
+
     compile: function ( gl ) {
         if ( !this._gl ) this.setGraphicContext( gl );
         this.shader = gl.createShader( this.type );
@@ -146,7 +156,7 @@ Shader.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
                 newText += i + ' ' + splittedText[ i ] + '\n';
             }
             // still logging whole source but folded
-            Notify.log( 'can\'t compile shader:\n' + newText, true );
+            Notify.debug( 'can\'t compile shader:\n' + newText, true );
 
             return false;
         }
