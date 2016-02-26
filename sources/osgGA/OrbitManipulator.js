@@ -28,6 +28,7 @@ OrbitManipulator.Interpolator = function ( size, delay ) {
     this._delta = new Array( size );
     this._delay = ( delay !== undefined ) ? delay : 0.15;
     this._reset = false;
+    this._start = 0.0;
     this.reset();
 };
 OrbitManipulator.Interpolator.prototype = {
@@ -83,6 +84,12 @@ OrbitManipulator.Interpolator.prototype = {
     },
     getDelta: function () {
         return this._delta;
+    },
+    getStart: function () {
+        return this._start;
+    },
+    setStart: function ( start ) {
+        this._start = start;
     }
 };
 

@@ -1,22 +1,19 @@
 'use strict';
-var osgMath = require( 'osg/Math' );
-var OrbitManipulatorEnums = require( 'osgGA/OrbitManipulatorEnums' );
+var OrbitManipulator = require( 'osgGA/OrbitManipulator' );
 
-
-var OrbitManipulatorStandardMouseKeyboardController = function ( manipulator ) {
+var CADManipulatorStandardMouseKeyboardController = function ( manipulator ) {
     this._manipulator = manipulator;
+    this._timer = false;
     this.init();
 };
 
-OrbitManipulatorStandardMouseKeyboardController.prototype = {
+CADManipulatorStandardMouseKeyboardController.prototype = {
     init: function () {
         this.releaseButton();
         this._rotateKey = 65; // a
         this._zoomKey = 83; // s
         this._panKey = 68; // d
-
         this._mode = undefined;
-        this._delay = 0.15;
     },
     getMode: function () {
         return this._mode;
@@ -30,24 +27,31 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
     setManipulator: function ( manipulator ) {
         this._manipulator = manipulator;
     },
+    setDimensionMask: function ( dimMask ) {
+        this._dimensionMask = dimMask;
+    },
+
     mousemove: function ( ev ) {
         if ( this._buttonup === true ) {
             return;
         }
-        var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
+
         var manipulator = this._manipulator;
-        if ( osgMath.isNaN( pos[ 0 ] ) === false && osgMath.isNaN( pos[ 1 ] ) === false ) {
+        var pos = manipulator.getPositionRelativeToCanvas( ev.clientX, ev.clientY );
+
+        if ( isNaN( pos[ 0 ] ) === false && isNaN( pos[ 1 ] ) === false ) {
 
             var mode = this.getMode();
-            if ( mode === OrbitManipulatorEnums.ROTATE ) {
-                manipulator.getRotateInterpolator().setDelay( this._delay );
+            if ( mode === OrbitManipulator.Rotate ) {
                 manipulator.getRotateInterpolator().setTarget( pos[ 0 ], pos[ 1 ] );
 
-            } else if ( mode === OrbitManipulatorEnums.PAN ) {
+            } else if ( mode === OrbitManipulator.Pan ) {
                 manipulator.getPanInterpolator().setTarget( pos[ 0 ], pos[ 1 ] );
 
-            } else if ( mode === OrbitManipulatorEnums.ZOOM ) {
+            } else if ( mode === OrbitManipulator.Zoom ) {
                 var zoom = manipulator.getZoomInterpolator();
+                manipulator.computeIntersections( pos );
+
                 if ( zoom.isReset() ) {
                     zoom.setStart( pos[ 1 ] );
                     zoom.set( 0.0 );
@@ -67,28 +71,31 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
         if ( mode === undefined ) {
             if ( ev.button === 0 ) {
                 if ( ev.shiftKey ) {
-                    this.setMode( OrbitManipulatorEnums.PAN );
+                    this.setMode( OrbitManipulator.Pan );
                 } else if ( ev.ctrlKey ) {
-                    this.setMode( OrbitManipulatorEnums.ZOOM );
+                    this.setMode( OrbitManipulator.Zoom );
                 } else {
-                    this.setMode( OrbitManipulatorEnums.ROTATE );
+                    this.setMode( OrbitManipulator.Rotate );
                 }
             } else {
-                this.setMode( OrbitManipulatorEnums.PAN );
+                this.setMode( OrbitManipulator.Pan );
             }
         }
 
         this.pushButton();
 
-        var pos = this._eventProxy.getPositionRelativeToCanvas( ev );
+        //var pos = this.getPositionRelativeToCanvas( ev );
+        var pos = manipulator.getPositionRelativeToCanvas( ev.clientX, ev.clientY );
+        manipulator.computeIntersections( pos );
+
         mode = this.getMode();
-        if ( mode === OrbitManipulatorEnums.ROTATE ) {
+        if ( mode === OrbitManipulator.Rotate ) {
             manipulator.getRotateInterpolator().reset();
             manipulator.getRotateInterpolator().set( pos[ 0 ], pos[ 1 ] );
-        } else if ( mode === OrbitManipulatorEnums.PAN ) {
+        } else if ( mode === OrbitManipulator.Pan ) {
             manipulator.getPanInterpolator().reset();
             manipulator.getPanInterpolator().set( pos[ 0 ], pos[ 1 ] );
-        } else if ( mode === OrbitManipulatorEnums.ZOOM ) {
+        } else if ( mode === OrbitManipulator.Zoom ) {
             manipulator.getZoomInterpolator().setStart( pos[ 1 ] );
             manipulator.getZoomInterpolator().set( 0.0 );
         }
@@ -98,15 +105,35 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
         this.releaseButton();
         this.setMode( undefined );
     },
-    mouseout: function ( /*ev */) {
-        this.releaseButton();
-        this.setMode( undefined );
-    },
     mousewheel: function ( ev, intDelta /*, deltaX, deltaY */ ) {
         var manipulator = this._manipulator;
         ev.preventDefault();
         var zoomTarget = manipulator.getZoomInterpolator().getTarget()[ 0 ] - intDelta;
         manipulator.getZoomInterpolator().setTarget( zoomTarget );
+        var timer;
+        if ( this._timer === false ) {
+            this._timer = true;
+            var that = this;
+            clearTimeout( timer );
+            timer = setTimeout( function () {
+                that._timer = false;
+            }, 200 );
+            //var pos = this.getPositionRelativeToCanvas( ev );
+            var pos = manipulator.getPositionRelativeToCanvas( ev.clientX, ev.clientY );
+            manipulator.computeIntersections( pos );
+        }
+    },
+
+    dblclick: function ( ev ) {
+        var manipulator = this._manipulator;
+        ev.preventDefault();
+
+        manipulator.getZoomInterpolator().set( 0.0 );
+        var zoomTarget = manipulator.getZoomInterpolator().getTarget()[ 0 ] - 10; // Default interval 10
+        manipulator.getZoomInterpolator().setTarget( zoomTarget );
+        //var pos = this.getPositionRelativeToCanvas( ev );
+        var pos = manipulator.getPositionRelativeToCanvas( ev.clientX, ev.clientY );
+        manipulator.computeIntersections( pos );
     },
 
     pushButton: function () {
@@ -120,21 +147,22 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
         if ( ev.keyCode === 32 ) {
             this._manipulator.computeHomePosition();
             ev.preventDefault();
+
         } else if ( ev.keyCode === this._panKey &&
-            this.getMode() !== OrbitManipulatorEnums.PAN ) {
-            this.setMode( OrbitManipulatorEnums.PAN );
+            this.getMode() !== OrbitManipulator.Pan ) {
+            this.setMode( OrbitManipulator.Pan );
             this._manipulator.getPanInterpolator().reset();
             this.pushButton();
             ev.preventDefault();
         } else if ( ev.keyCode === this._zoomKey &&
-            this.getMode() !== OrbitManipulatorEnums.ZOOM ) {
-            this.setMode( OrbitManipulatorEnums.ZOOM );
+            this.getMode() !== OrbitManipulator.Zoom ) {
+            this.setMode( OrbitManipulator.Zoom );
             this._manipulator.getZoomInterpolator().reset();
             this.pushButton();
             ev.preventDefault();
         } else if ( ev.keyCode === this._rotateKey &&
-            this.getMode() !== OrbitManipulatorEnums.ROTATE ) {
-            this.setMode( OrbitManipulatorEnums.ROTATE );
+            this.getMode() !== OrbitManipulator.Rotate ) {
+            this.setMode( OrbitManipulator.Rotate );
             this._manipulator.getRotateInterpolator().reset();
             this.pushButton();
             ev.preventDefault();
@@ -151,7 +179,8 @@ OrbitManipulatorStandardMouseKeyboardController.prototype = {
             this.mouseup( ev );
         }
         this.setMode( undefined );
-    }
+    },
 
 };
-module.exports = OrbitManipulatorStandardMouseKeyboardController;
+
+module.exports = CADManipulatorStandardMouseKeyboardController;
