@@ -31,10 +31,7 @@
             if ( window.screenfull ) {
                 document.addEventListener( window.screenfull.raw.fullscreenchange, function () {
                     console.log( 'toggle VR mode' );
-
-                    this.toggleVR( {
-                        vrDisplay: this._viewer._eventProxy.WebVR.getHmd()
-                    } );
+                    this.toggleVR();
                 }.bind( this ) );
             }
 
@@ -43,6 +40,8 @@
         toggleVR: function () {
 
             var viewer = this._viewer;
+
+            viewer.setPresentVR( !this._vrState );
 
             // Enable VR
             if ( !this._vrState ) {
@@ -53,7 +52,7 @@
                 // If no vrNode (first time vr is toggled), create one
                 // The modelNode will be attached to it
                 if ( !this._vrNode ) {
-                    if ( navigator.getVRDevices || navigator.mozGetVRDevices ) {
+                    if ( navigator.getVRDisplays ) {
 
                         viewer._eventProxy.WebVR.setEnable( true );
                         this._vrNode = osgUtil.WebVR.createScene( viewer, this._modelNode, viewer._eventProxy.WebVR.getHmd() );
@@ -93,25 +92,21 @@
 
         requestFullScreenVR: function () {
 
-            if ( !navigator.getVRDevices && !navigator.mozGetVRDevices )
-                osg.warn( 'WebVR Api is not supported by your navigator' );
-
-            if ( window.screenfull ) {
-                window.screenfull.request( this._canvas, {
-                    vrDisplay: this._viewer._eventProxy.WebVR.getHmd()
-                } );
+            if ( !navigator.getVRDisplays && window.screenfull ) {
+                window.screenfull.request( this._canvas );
 
             } else {
-                // no fullscreen use the canvas
+                // no fullscreen use the canvas or webvr
                 this.toggleVR();
             }
+
             $( '#button-enter-fullscreen' ).hide();
             $( '#button-exit-fullscreen' ).show();
         },
 
         exitFullScreenVR: function () {
 
-            if ( window.screenfull ) {
+            if ( !navigator.getVRDisplays && window.screenfull ) {
                 window.screenfull.exit();
             } else {
                 this.toggleVR();
@@ -123,9 +118,7 @@
             if ( window.screenfull && window.screenfull.enabled ) {
                 document.addEventListener( window.screenfull.raw.fullscreenchange, function () {
                     console.log( 'Am I fullscreen? ' + ( window.screenfull.isFullscreen ? 'Yes' : 'No' ) );
-                    this.toggleVR( {
-                        vrDisplay: this._viewer._eventProxy.WebVR.getHmd()
-                    } );
+                    this.toggleVR();
                 } );
             }
         },

@@ -5,11 +5,14 @@ var Quat = require( 'osg/Quat' );
 
 var WebVR = function ( viewer ) {
     this._viewer = viewer;
+
     this._type = 'WebVR';
     this._enable = false;
     this._hmd = undefined;
     this._sensor = undefined;
+
     this._quat = Quat.create();
+    this._lastPose = undefined; // so that we can pass it to the submitFrame call
 };
 
 WebVR.prototype = {
@@ -24,38 +27,18 @@ WebVR.prototype = {
 
     init: function () {
 
+        if ( !navigator.getVRDisplays )
+            return;
+
         var self = this;
-
-        var vrDeviceCallback = function ( vrDevices ) {
-
-            var i;
-
-            // First, find a HMD -- just use the first one we find
-            for ( i = 0; i < vrDevices.length; ++i ) {
-                if ( vrDevices[ i ] instanceof window.HMDVRDevice ) {
-                    self._hmd = vrDevices[ i ];
-                    break;
-                }
+        navigator.getVRDisplays().then( function ( displays ) {
+            if ( displays.length > 0 ) {
+                self._hmd = displays[ 0 ];
+                Notify.log( 'Found a VR display' );
+                // currently it's the event proxy webvr that has the responsability of detecting vr devices
+                self._viewer.setVRDisplay( self._hmd );
             }
-
-            // Then, find a sensor corresponding to the same hardwareUnitId
-            for ( i = 0; i < vrDevices.length; ++i ) {
-                if ( vrDevices[ i ] instanceof window.PositionSensorVRDevice && vrDevices[ i ].hardwareUnitId === self._hmd.hardwareUnitId ) {
-                    self._sensor = vrDevices[ i ];
-                    break;
-                }
-            }
-
-            if ( self._hmd && self._sensor )
-                Notify.log( 'Found a HMD and Sensor' );
-        };
-
-        if ( navigator.getVRDevices ) {
-            navigator.getVRDevices().then( vrDeviceCallback );
-        } else if ( navigator.mozGetVRDevices ) {
-            navigator.mozGetVRDevices( vrDeviceCallback );
-        }
-
+        } );
     },
 
     getManipulatorController: function () {
@@ -73,7 +56,7 @@ WebVR.prototype = {
         if ( !manipulator.getControllerList()[ this._type ] )
             return false;
 
-        if ( !this._hmd || !this._sensor )
+        if ( !this._hmd )
             return false;
 
         return true;
@@ -87,29 +70,25 @@ WebVR.prototype = {
         var manipulatorAdapter = this.getManipulatorController();
 
         // update the manipulator with the rotation of the device
-        if ( manipulatorAdapter.update ) {
+        if ( !manipulatorAdapter.update )
+            return;
 
-            var quat = this._sensor.getState().orientation;
+        if ( !this._hmd.capabilities.hasOrientation )
+            return;
 
-            // If no real oculus is detected, navigators (vr builds of FF and Chrome) simulate a fake oculus
-            // On firefox, this fake oculus returns a wrong quaternion: [0, 0, 0, 0]
-            // So we detect and set this quaternion to a neutral value: [0, 0, 0, 1]
-            // UPDATE : it looks like that sometimes no quaternion is returned
-            if ( !quat ) {
-                Quat.init( this._quat );
-            } else {
-                if ( quat.x === 0.0 && quat.y === 0.0 && quat.y === 0.0 && quat.w === 0.0 )
-                    quat.w = 1.0;
-                // On oculus the up vector is [0,1,0]
-                // On osgjs the up vector is [0,0,1]
-                this._quat[ 0 ] = quat.x;
-                this._quat[ 1 ] = -quat.z;
-                this._quat[ 2 ] = quat.y;
-                this._quat[ 3 ] = quat.w;
-            }
+        this._lastPose = this._hmd.getPose(); // if no prediction, call this._hmd.getImmediatePose()
 
-            manipulatorAdapter.update( this._quat );
-        }
+        var quat = this._lastPose.orientation;
+        if ( !quat ) return;
+
+        // On oculus the up vector is [0,1,0]
+        // On osgjs the up vector is [0,0,1]
+        this._quat[ 0 ] = quat[ 0 ];
+        this._quat[ 1 ] = -quat[ 2 ];
+        this._quat[ 2 ] = quat[ 1 ];
+        this._quat[ 3 ] = quat[ 3 ];
+
+        manipulatorAdapter.update( this._quat );
     },
 
     getHmd: function () {
