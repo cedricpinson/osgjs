@@ -74,30 +74,42 @@ LineSegmentIntersector.prototype = {
         };
     } )(),
 
-    intersect: function ( iv, node ) {
-        var kdtree = node.getShape();
-        if ( kdtree ) {
-            // Use KDTREES
-            return kdtree.intersectRay( this._iStart, this._iEnd, this._intersections, iv.nodePath );
-        } else {
-            // Use the TriangleIntersector
-            var ti = new TriangleIntersector();
+    intersect: ( function () {
+
+        var ti = new TriangleIntersector();
+
+        return function ( iv, node ) {
+
+            var kdtree = node.getShape();
+            if ( kdtree )
+                return kdtree.intersectRay( this._iStart, this._iEnd, this._intersections, iv.nodePath );
+
+            ti.reset();
             ti.setNodePath( iv.nodePath );
             ti.set( this._iStart, this._iEnd );
-            ti.apply( node );
-            var l = ti._intersections.length;
-            if ( l > 0 ) {
-                // Intersection/s exists
-                for ( var i = 0; i < l; i++ ) {
-                    this._intersections.push( ti._intersections[ i ] );
-                }
-                return true;
+
+            // handle rig transformed vertices
+            if ( node.computeTransformedVertices ) {
+                var vList = node.getVertexAttributeList();
+                var originVerts = vList.Vertex.getElements();
+                vList.Vertex.setElements( node.computeTransformedVertices() );
+
+                ti.apply( node );
+
+                vList.Vertex.setElements( originVerts );
+            } else {
+                ti.apply( node );
             }
-            // No intersection found
-            return false;
-        }
-        return false;
-    },
+
+            var l = ti._intersections.length;
+            for ( var i = 0; i < l; i++ ) {
+                this._intersections.push( ti._intersections[ i ] );
+            }
+
+            return l > 0;
+        };
+    } )(),
+
     getIntersections: function () {
         return this._intersections;
     },

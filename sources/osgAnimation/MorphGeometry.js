@@ -17,6 +17,8 @@ var StateAttribute = require( 'osg/StateAttribute' );
 var MorphGeometry = function () {
     Geometry.call( this );
 
+    this._shape = null; // by default no kdtree/shape for morph
+
     this._targets = []; // Target list (Geometry)
     this._stateSetAnimation = new StateSet(); // StateSet to handle morphAttribute
     this._targetWeights = new Float32Array( 4 ); // Fixed length array feed by UpdateMorph

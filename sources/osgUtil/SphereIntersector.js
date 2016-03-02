@@ -52,25 +52,36 @@ SphereIntersector.prototype = {
             if ( kdtree )
                 return kdtree.intersectSphere( this._iCenter, this._iRadius, this._intersections, iv.nodePath );
 
+            ti.reset();
             ti.setNodePath( iv.nodePath );
             ti.set( this._iCenter, this._iRadius );
-            ti.apply( node );
-            var l = ti._intersections.length;
-            if ( l > 0 ) {
-                // Intersection/s exists
-                for ( var i = 0; i < l; i++ ) {
-                    this._intersections.push( ti._intersections[ i ] );
-                }
-                return true;
+
+            // handle rig transformed vertices
+            if ( node.computeTransformedVertices ) {
+                var vList = node.getVertexAttributeList();
+                var originVerts = vList.Vertex.getElements();
+                vList.Vertex.setElements( node.computeTransformedVertices() );
+
+                ti.apply( node );
+
+                vList.Vertex.setElements( originVerts );
+            } else {
+                ti.apply( node );
             }
 
-            // No intersection found
-            return false;
+            var l = ti._intersections.length;
+            for ( var i = 0; i < l; i++ ) {
+                this._intersections.push( ti._intersections[ i ] );
+            }
+
+            return l > 0;
         };
     } )(),
+
     getIntersections: function () {
         return this._intersections;
     },
+
     setCurrentTransformation: ( function () {
         var tmp = Vec3.create();
 

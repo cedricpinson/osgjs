@@ -1,5 +1,6 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
+var Vec3 = require( 'osg/Vec3' );
 var Geometry = require( 'osg/Geometry' );
 var Notify = require( 'osg/Notify' );
 var Matrix = require( 'osg/Matrix' );
@@ -27,6 +28,8 @@ var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
 var RigGeometry = function () {
 
     Geometry.call( this );
+
+    this._shape = null; // by default no kdtree/shape for rig
 
     this.setUpdateCallback( new UpdateRigGeometry() );
 
@@ -193,6 +196,224 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
     update: function () {
         this._rigTransformImplementation.update( this );
+    },
+
+    computeTransformedVertex: function ( id, out ) {
+        out = out || Vec3.create();
+
+        var vList = this.getVertexAttributeList();
+        var verts = vList.Vertex.getElements();
+        var vWeights = vList.Weights.getElements();
+        var vBones = vList.Bones.getElements();
+
+        var x = verts[ id * 3 ];
+        var y = verts[ id * 3 + 1 ];
+        var z = verts[ id * 3 + 2 ];
+
+        var id4 = id * 4;
+
+        var palette = this._rigTransformImplementation._skinningAttribute.getMatrixPalette();
+        var m0 = 0.0;
+        var m1 = 0.0;
+        var m2 = 0.0;
+        var m4 = 0.0;
+        var m5 = 0.0;
+        var m6 = 0.0;
+        var m8 = 0.0;
+        var m9 = 0.0;
+        var m10 = 0.0;
+        var m12 = 0.0;
+        var m13 = 0.0;
+        var m14 = 0.0;
+        var m15 = 0.0;
+
+        var doSkin = false;
+        for ( var i = 0; i < 4; ++i ) {
+            var w = vWeights[ id4 + i ];
+            if ( w === 0.0 )
+                continue;
+
+            var idBone = vBones[ id4 + i ] * 12;
+
+            m0 += palette[ idBone + 0 ] * w;
+            m4 += palette[ idBone + 1 ] * w;
+            m8 += palette[ idBone + 2 ] * w;
+            m12 += palette[ idBone + 3 ] * w;
+
+            m1 += palette[ idBone + 4 ] * w;
+            m5 += palette[ idBone + 5 ] * w;
+            m9 += palette[ idBone + 6 ] * w;
+            m13 += palette[ idBone + 7 ] * w;
+
+            m2 += palette[ idBone + 8 ] * w;
+            m6 += palette[ idBone + 9 ] * w;
+            m10 += palette[ idBone + 10 ] * w;
+            m14 += palette[ idBone + 11 ] * w;
+
+            m15 += w;
+            doSkin = true;
+        }
+
+        if ( !doSkin ) {
+            out[ 0 ] = x;
+            out[ 1 ] = y;
+            out[ 2 ] = z;
+        }
+
+        var d = 1.0 / m15;
+        out[ 0 ] = ( m0 * x + m4 * y + m8 * z + m12 ) * d;
+        out[ 1 ] = ( m1 * x + m5 * y + m9 * z + m13 ) * d;
+        out[ 2 ] = ( m2 * x + m6 * y + m10 * z + m14 ) * d;
+
+        return out;
+    },
+
+    computeTransformedVertices: function () {
+
+        // obviously slow as it can't rely on kdTree AND we transform everything cpu side
+
+        var vList = this.getVertexAttributeList();
+        var verts = vList.Vertex.getElements();
+        var vWeights = vList.Weights.getElements();
+        var vBones = vList.Bones.getElements();
+
+        var riggedVerts = this._riggedVerts || new Float32Array( verts.length );
+
+        // /!\ if the geometry has several parents inside a skeleton
+        // it might not work as it will just take the last compute matrix palette
+        var palette = this._rigTransformImplementation._skinningAttribute.getMatrixPalette();
+
+        // verbose... but fast
+        for ( var idv = 0, idr = 0, len = verts.length; idv < len; idv += 3, idr += 4 ) {
+
+            var m0 = 0.0;
+            var m1 = 0.0;
+            var m2 = 0.0;
+
+            var m4 = 0.0;
+            var m5 = 0.0;
+            var m6 = 0.0;
+
+            var m8 = 0.0;
+            var m9 = 0.0;
+            var m10 = 0.0;
+
+            var m12 = 0.0;
+            var m13 = 0.0;
+            var m14 = 0.0;
+            var m15 = 0.0;
+
+            var doSkin = false;
+
+            var w = vWeights[ idr ];
+            var idBone;
+            if ( w !== 0.0 ) {
+                idBone = vBones[ idr ] * 12;
+                m0 += palette[ idBone + 0 ] * w;
+                m4 += palette[ idBone + 1 ] * w;
+                m8 += palette[ idBone + 2 ] * w;
+                m12 += palette[ idBone + 3 ] * w;
+
+                m1 += palette[ idBone + 4 ] * w;
+                m5 += palette[ idBone + 5 ] * w;
+                m9 += palette[ idBone + 6 ] * w;
+                m13 += palette[ idBone + 7 ] * w;
+
+                m2 += palette[ idBone + 8 ] * w;
+                m6 += palette[ idBone + 9 ] * w;
+                m10 += palette[ idBone + 10 ] * w;
+                m14 += palette[ idBone + 11 ] * w;
+
+                m15 += w;
+                doSkin = true;
+            }
+
+            w = vWeights[ idr + 1 ];
+            if ( w !== 0.0 ) {
+                idBone = vBones[ idr + 1 ] * 12;
+                m0 += palette[ idBone + 0 ] * w;
+                m4 += palette[ idBone + 1 ] * w;
+                m8 += palette[ idBone + 2 ] * w;
+                m12 += palette[ idBone + 3 ] * w;
+
+                m1 += palette[ idBone + 4 ] * w;
+                m5 += palette[ idBone + 5 ] * w;
+                m9 += palette[ idBone + 6 ] * w;
+                m13 += palette[ idBone + 7 ] * w;
+
+                m2 += palette[ idBone + 8 ] * w;
+                m6 += palette[ idBone + 9 ] * w;
+                m10 += palette[ idBone + 10 ] * w;
+                m14 += palette[ idBone + 11 ] * w;
+
+                m15 += w;
+                doSkin = true;
+            }
+
+            w = vWeights[ idr + 2 ];
+            if ( w !== 0.0 ) {
+                idBone = vBones[ idr + 2 ] * 12;
+
+                m0 += palette[ idBone + 0 ] * w;
+                m4 += palette[ idBone + 1 ] * w;
+                m8 += palette[ idBone + 2 ] * w;
+                m12 += palette[ idBone + 3 ] * w;
+
+                m1 += palette[ idBone + 4 ] * w;
+                m5 += palette[ idBone + 5 ] * w;
+                m9 += palette[ idBone + 6 ] * w;
+                m13 += palette[ idBone + 7 ] * w;
+
+                m2 += palette[ idBone + 8 ] * w;
+                m6 += palette[ idBone + 9 ] * w;
+                m10 += palette[ idBone + 10 ] * w;
+                m14 += palette[ idBone + 11 ] * w;
+
+                doSkin = true;
+
+            }
+
+            w = vWeights[ idr + 3 ];
+            if ( w !== 0.0 ) {
+                idBone = vBones[ idr + 3 ] * 12;
+
+                m0 += palette[ idBone + 0 ] * w;
+                m4 += palette[ idBone + 1 ] * w;
+                m8 += palette[ idBone + 2 ] * w;
+                m12 += palette[ idBone + 3 ] * w;
+
+                m1 += palette[ idBone + 4 ] * w;
+                m5 += palette[ idBone + 5 ] * w;
+                m9 += palette[ idBone + 6 ] * w;
+                m13 += palette[ idBone + 7 ] * w;
+
+                m2 += palette[ idBone + 8 ] * w;
+                m6 += palette[ idBone + 9 ] * w;
+                m10 += palette[ idBone + 10 ] * w;
+                m14 += palette[ idBone + 11 ] * w;
+
+                m15 += w;
+                doSkin = true;
+            }
+
+            var x = verts[ idv ];
+            var y = verts[ idv + 1 ];
+            var z = verts[ idv + 2 ];
+
+            if ( !doSkin ) {
+                riggedVerts[ idv ] = x;
+                riggedVerts[ idv + 1 ] = y;
+                riggedVerts[ idv + 2 ] = z;
+                continue;
+            }
+
+            var d = 1.0 / m15;
+            riggedVerts[ idv ] = ( m0 * x + m4 * y + m8 * z + m12 ) * d;
+            riggedVerts[ idv + 1 ] = ( m1 * x + m5 * y + m9 * z + m13 ) * d;
+            riggedVerts[ idv + 2 ] = ( m2 * x + m6 * y + m10 * z + m14 ) * d;
+        }
+
+        return riggedVerts;
     }
 
 } ), 'osgAnimation', 'RigGeometry' );
