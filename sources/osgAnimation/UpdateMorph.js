@@ -20,7 +20,7 @@ var UpdateMorph = function () {
     this._gpuMorphed = []; // size of this._targets, for each target a bool states if it's gpu morphed or not
 };
 
-var EFFECTIVE_EPS = 0.05; // in case we have more than 4 morphs, we can skip low effective weights
+var EFFECTIVE_EPS = MorphGeometry.EFFECTIVE_EPS; // in case we have more than 4 morphs, we can skip low effective weights
 
 // for sorting
 var funcWeights = function ( a, b ) {

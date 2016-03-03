@@ -202,13 +202,23 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         out = out || Vec3.create();
 
         var vList = this.getVertexAttributeList();
-        var verts = vList.Vertex.getElements();
         var vWeights = vList.Weights.getElements();
         var vBones = vList.Bones.getElements();
 
-        var x = verts[ id * 3 ];
-        var y = verts[ id * 3 + 1 ];
-        var z = verts[ id * 3 + 2 ];
+        var x = 0.0;
+        var y = 0.0;
+        var z = 0.0;
+        if ( this._geometry.computeTransformedVertex ) {
+            this._geometry.computeTransformedVertex( id, out );
+            x = out[ 0 ];
+            y = out[ 1 ];
+            z = out[ 2 ];
+        } else {
+            var verts = vList.Vertex.getElements();
+            x = verts[ id * 3 ];
+            y = verts[ id * 3 + 1 ];
+            z = verts[ id * 3 + 2 ];
+        }
 
         var id4 = id * 4;
 
@@ -273,7 +283,7 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         // obviously slow as it can't rely on kdTree AND we transform everything cpu side
 
         var vList = this.getVertexAttributeList();
-        var verts = vList.Vertex.getElements();
+        var verts = this._geometry.computeTransformedVertices ? this._geometry.computeTransformedVertices() : vList.Vertex.getElements();
         var vWeights = vList.Weights.getElements();
         var vBones = vList.Bones.getElements();
 
