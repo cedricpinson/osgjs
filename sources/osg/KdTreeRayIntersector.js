@@ -67,23 +67,26 @@ KdTreeRayIntersector.prototype = {
 
                 for ( var i = istart; i < iend; ++i ) {
                     var id = i * 3;
-                    var iv0 = triangles[ id ] * 3;
-                    var iv1 = triangles[ id + 1 ] * 3;
-                    var iv2 = triangles[ id + 2 ] * 3;
+                    var iv0 = triangles[ id ];
+                    var iv1 = triangles[ id + 1 ];
+                    var iv2 = triangles[ id + 2 ];
 
-                    v0[ 0 ] = vertices[ iv0 ];
-                    v0[ 1 ] = vertices[ iv0 + 1 ];
-                    v0[ 2 ] = vertices[ iv0 + 2 ];
+                    var j = iv0 * 3;
+                    v0[ 0 ] = vertices[ j ];
+                    v0[ 1 ] = vertices[ j + 1 ];
+                    v0[ 2 ] = vertices[ j + 2 ];
 
-                    v1[ 0 ] = vertices[ iv1 ];
-                    v1[ 1 ] = vertices[ iv1 + 1 ];
-                    v1[ 2 ] = vertices[ iv1 + 2 ];
+                    j = iv1 * 3;
+                    v1[ 0 ] = vertices[ j ];
+                    v1[ 1 ] = vertices[ j + 1 ];
+                    v1[ 2 ] = vertices[ j + 2 ];
 
-                    v2[ 0 ] = vertices[ iv2 ];
-                    v2[ 1 ] = vertices[ iv2 + 1 ];
-                    v2[ 2 ] = vertices[ iv2 + 2 ];
+                    j = iv2 * 3;
+                    v2[ 0 ] = vertices[ j ];
+                    v2[ 1 ] = vertices[ j + 1 ];
+                    v2[ 2 ] = vertices[ j + 2 ];
 
-                    intersector.intersect( v0, v1, v2 );
+                    intersector.intersect( v0, v1, v2, iv0, iv1, iv2 );
                 }
             } else {
                 var s = node._nodeRayStart;

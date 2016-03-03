@@ -3,15 +3,16 @@ var Vec3 = require( 'osg/Vec3' );
 var TriangleIndexFunctor = require( 'osg/TriangleIndexFunctor' );
 var Notify = require( 'osg/Notify' );
 
-var TriangleIntersection = function ( index, normal, r1, v1, r2, v2, r3, v3 ) {
-    this.index = index;
+var TriangleIntersection = function ( normal, i1, i2, i3, r1, r2, r3 ) {
     this.normal = normal;
+
+    this.i1 = i1;
+    this.i2 = i2;
+    this.i3 = i3;
+
     this.r1 = r1;
-    this.v1 = v1;
     this.r2 = r2;
-    this.v2 = v2;
     this.r3 = r3;
-    this.v3 = v3;
 };
 
 var TriangleIntersector = function () {
@@ -22,11 +23,13 @@ var TriangleIntersector = function () {
 
     this._intersections = [];
     this._nodePath = [];
-    this._index = 0;
     this._dir = Vec3.create();
 };
 
 TriangleIntersector.prototype = {
+    reset: function () {
+        this._intersections.length = 0;
+    },
     setNodePath: function ( np ) {
         this._nodePath = np;
     },
@@ -63,16 +66,18 @@ TriangleIntersector.prototype = {
                 v1[ 0 ] = vertices[ j ];
                 v1[ 1 ] = vertices[ j + 1 ];
                 v1[ 2 ] = vertices[ j + 2 ];
+
                 j = i2 * 3;
                 v2[ 0 ] = vertices[ j ];
                 v2[ 1 ] = vertices[ j + 1 ];
                 v2[ 2 ] = vertices[ j + 2 ];
+
                 j = i3 * 3;
                 v3[ 0 ] = vertices[ j ];
                 v3[ 1 ] = vertices[ j + 1 ];
                 v3[ 2 ] = vertices[ j + 2 ];
-                self.intersect( v1, v2, v3 );
 
+                self.intersect( v1, v2, v3, i1, i2, i3 );
             };
             tif.init( node, cb );
             tif.apply();
@@ -90,9 +95,8 @@ TriangleIntersector.prototype = {
         var qvec = Vec3.create();
         var epsilon = 1E-20;
 
-        return function ( v0, v1, v2 ) {
+        return function ( v0, v1, v2, i0, i1, i2 ) {
 
-            this._index++;
             var d = this._dir;
 
             Vec3.sub( v2, v0, e2 );
@@ -138,7 +142,7 @@ TriangleIntersector.prototype = {
                 ratio: r,
                 backface: det < 0.0,
                 nodepath: this._nodePath.slice( 0 ), // Note: If you are computing intersections from a viewer the first node is the camera of the viewer
-                TriangleIntersection: new TriangleIntersection( this._index - 1, normal.slice( 0 ), r0, v0.slice( 0 ), r1, v1.slice( 0 ), r2, v2.slice( 0 ) ),
+                TriangleIntersection: new TriangleIntersection( normal.slice( 0 ), i0, i1, i2, r0, r1, r2 ),
                 point: Vec3.createAndSet( interX, interY, interZ )
             } );
             this.hit = true;
