@@ -316,6 +316,8 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
     getOrCreatePolytopeIntersector: function () {
         if ( this._polytopeIntersector === undefined ) {
             this._polytopeIntersector = new PolytopeIntersector();
+            this._polytopeIntersector.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE );
+            this._polytopeIntersector.setDimensionMask( PolytopeIntersector.DimZero | PolytopeIntersector.DimOne );
         }
         return this._polytopeIntersector;
     },
@@ -463,9 +465,8 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
 
             if ( hits.length === 0 && this._usePolytopeIntersector ) {
                 var pi = this.getOrCreatePolytopeIntersector();
-                pi.setIntersectionLimit( PolytopeIntersector.LIMIT_ONE_PER_DRAWABLE );
+                pi.reset();
                 pi.setPolytopeFromWindowCoordinates( pos[ 0 ] - 5, pos[ 1 ] - 5, pos[ 0 ] + 5, pos[ 1 ] + 5 );
-                pi.setDimensionMask( PolytopeIntersector.DimZero | PolytopeIntersector.DimOne );
                 var iv = this._intersectionVisitor;
                 iv.setIntersector( pi );
                 viewer.getCamera().accept( iv );
