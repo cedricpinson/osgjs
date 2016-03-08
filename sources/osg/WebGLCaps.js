@@ -241,6 +241,11 @@ WebGLCaps.prototype = {
     hasFloatRTT: function ( gl ) {
         return this._webGLExtensions[ 'OES_texture_float' ] && this.checkSupportRTT( gl, Texture.FLOAT, Texture.NEAREST );
     },
+    queryPrecision: function ( gl, shaderType, precision ) {
+        var answer = gl.getShaderPrecisionFormat( shaderType, precision );
+        if ( !answer ) return false;
+        return answer.precision !== 0;
+    },
     initWebGLParameters: function ( gl ) {
         if ( !gl ) return;
         var limits = [
@@ -275,20 +280,20 @@ WebGLCaps.prototype = {
         }
 
         //shader precisions for float
-        if ( gl.getShaderPrecisionFormat( gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision !== 0 ) {
+        if ( this.queryPrecision( gl, gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ) ) {
             params.MAX_SHADER_PRECISION_FLOAT = 'high';
-        } else if ( gl.getShaderPrecisionFormat( gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision !== 0 ) {
+        } else if ( this.queryPrecision( gl, gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ) ) {
             params.MAX_SHADER_PRECISION_FLOAT = 'medium';
-        } else if ( gl.getShaderPrecisionFormat( gl.FRAGMENT_SHADER, gl.LOW_FLOAT ).precision !== 0 ) {
+        } else if ( this.queryPrecision( gl, gl.FRAGMENT_SHADER, gl.LOW_FLOAT ) ) {
             params.MAX_SHADER_PRECISION_FLOAT = 'low';
         }
 
         //shader precisions for float
-        if ( gl.getShaderPrecisionFormat( gl.FRAGMENT_SHADER, gl.HIGH_INT ).precision !== 0 ) {
+        if ( this.queryPrecision( gl, gl.FRAGMENT_SHADER, gl.HIGH_INT ) ) {
             params.MAX_SHADER_PRECISION_INT = 'high';
-        } else if ( gl.getShaderPrecisionFormat( gl.FRAGMENT_SHADER, gl.MEDIUM_INT ).precision !== 0 ) {
+        } else if ( this.queryPrecision( gl, gl.FRAGMENT_SHADER, gl.MEDIUM_INT ) ) {
             params.MAX_SHADER_PRECISION_INT = 'medium';
-        } else if ( gl.getShaderPrecisionFormat( gl.FRAGMENT_SHADER, gl.LOW_INT ).precision !== 0 ) {
+        } else if ( this.queryPrecision( gl, gl.FRAGMENT_SHADER, gl.LOW_INT ) ) {
             params.MAX_SHADER_PRECISION_INT = 'low';
         }
 
