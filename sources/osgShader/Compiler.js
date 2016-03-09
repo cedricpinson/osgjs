@@ -771,8 +771,19 @@ Compiler.prototype = {
             float: shadowedOutput
         } ).setShadowAttribute( shadow );
 
+        // allow overwrite by inheriting compiler
+        // where shadow inputs ( NDotL notably)
+        // can be used for non standard shadows
+        return this.connectShadowLightNode( lightedOutput, shadowedOutput, shadowInputs );
+
+    },
+
+    connectShadowLightNode: function ( lightedOutput, shadowedOutput ) {
+
         var lightAndShadowTempOutput = this.createVariable( 'vec3', 'lightAndShadowTempOutput' );
+
         this.getNode( 'Mult' ).inputs( lightedOutput, shadowedOutput ).outputs( lightAndShadowTempOutput );
+
         return lightAndShadowTempOutput;
 
     },
