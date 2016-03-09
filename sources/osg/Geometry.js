@@ -13,7 +13,7 @@ var Geometry = function () {
     this.attributes = {};
 
     this.cacheAttributeList = {};
-    this._shape = null;
+    this._shape = undefined; // null means the kdTree builder will skip the kdTree creation
 };
 
 /** @lends Geometry.prototype */

@@ -4,12 +4,12 @@ var Vec3 = require( 'osg/Vec3' );
 var TriangleIntersector = require( 'osgUtil/TriangleIntersector' );
 var Notify = require( 'osg/Notify' );
 
-var TriangleIntersection = function ( index, normal, v1, v2, v3 ) {
-    this.index = index;
+var TriangleIntersection = function ( normal, i1, i2, i3 ) {
     this.normal = normal;
-    this.v1 = v1;
-    this.v2 = v2;
-    this.v3 = v3;
+
+    this.i1 = i1;
+    this.i2 = i2;
+    this.i3 = i3;
 };
 
 var TriangleSphereIntersector = function () {
@@ -41,8 +41,7 @@ TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleIntersec
         var edge1 = Vec3.create();
         var edge2 = Vec3.create();
         var diff = Vec3.create();
-        return function ( v1, v2, v3 ) {
-            this._index++;
+        return function ( v1, v2, v3, i1, i2, i3 ) {
 
             // sphere is a 'volume' here (so if the triangle is inside the ball it will intersects)
 
@@ -231,7 +230,7 @@ TriangleSphereIntersector.prototype = MACROUTILS.objectInherit( TriangleIntersec
             this._intersections.push( {
                 ratio: Math.sqrt( sqrDistance ),
                 nodepath: this._nodePath.slice( 0 ),
-                TriangleIntersection: new TriangleIntersection( this._index - 1, normal, v1.slice( 0 ), v2.slice( 0 ), v2.slice( 0 ) ),
+                TriangleIntersection: new TriangleIntersection( normal, i1, i2, i3 ),
                 point: closest,
                 zone: zone
             } );
