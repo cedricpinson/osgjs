@@ -1,6 +1,6 @@
 'use strict';
 var P = require( 'bluebird' );
-
+var TransformEnums = require( 'osg/TransformEnums' );
 
 var osgWrapper = {};
 
@@ -244,6 +244,8 @@ osgWrapper.LightSource = function ( input, node ) {
         var light = args[ 0 ];
         //var lightsource = args[ 1 ];
         node.setLight( light );
+        if ( jsonObj.ReferenceFrame === 'ABSOLUTE_RF' )
+            node.setReferenceFrame( TransformEnums.ABSOLUTE_RF );
         return node;
     } );
 };
