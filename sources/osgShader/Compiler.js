@@ -774,11 +774,11 @@ Compiler.prototype = {
         // allow overwrite by inheriting compiler
         // where shadow inputs ( NDotL notably)
         // can be used for non standard shadows
-        return this.connectShadowLightNode( lightedOutput, shadowedOutput, shadowInputs );
+        return this.connectShadowLightNode( light, lightedOutput, shadowedOutput, shadowInputs );
 
     },
 
-    connectShadowLightNode: function ( lightedOutput, shadowedOutput ) {
+    connectShadowLightNode: function ( light, lightedOutput, shadowedOutput ) {
 
         var lightAndShadowTempOutput = this.createVariable( 'vec3', 'lightAndShadowTempOutput' );
 
