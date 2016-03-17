@@ -142,7 +142,6 @@ RenderLeaf.prototype = {
                     // for example if insert/remove StateSet has been used
                     var hash = state.getStateSetStackHash();
                     if ( previousHash !== hash ) {
-                        this._parent.moveStateGraph( state, undefined, this._parent.parent );
                         state.applyStateSet( this._parent.stateset );
                         previousHash = hash;
                     }
