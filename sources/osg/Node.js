@@ -65,7 +65,7 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         }
     },
     dirtyBound: function () {
-        if ( this._boundingSphereComputed === true ) {
+        if ( this._boundingSphereComputed === true || this._boundingBoxComputed === true ) {
             this._boundingSphereComputed = false;
             this._boundingBoxComputed = false;
 
