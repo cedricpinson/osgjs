@@ -71,11 +71,9 @@
 // looks like derivative is broken on some mac + intel cg ...
 #ifdef GL_OES_standard_derivatives
 
-     float deriv = dFdx(shadowReceiverZ);
-
-     shadowBiasPCF.x +=  deriv * shadowMapSize.z;
-     shadowBiasPCF.y +=  deriv * shadowMapSize.w;
-
+    shadowBiasPCF.x = clamp(dFdx(shadowReceiverZ)* shadowMapSize.z, -1.0, 1.0 );
+    shadowBiasPCF.y = clamp(dFdy(shadowReceiverZ)* shadowMapSize.w, -1.0, 1.0 );
+    
 #endif
 
 
