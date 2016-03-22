@@ -55,7 +55,7 @@
             var characterSizeModes = {
                 OBJECT_COORDS: osgText.Text.OBJECT_COORDS,
                 SCREEN_COORDS: osgText.Text.SCREEN_COORDS,
-                SCREEN_SIZE_CAPPED: osgText.Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT,
+                SCREEN_SIZE_CAPPED: osgText.Text.OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT
             }
             var fonts = [ 'monospace', 'Andale Mono', 'Arial', 'Comic Sans MS', 'Courier New', ' Lucida Console', 'Impact, fantasy' ];
             var that = this;
@@ -80,7 +80,7 @@
                 that.changeLayout( value );
             } );
 
-            var alignmentController = this.gui.add( this.params, 'alignment', alignments );
+            var alignmentController = this.gui.add( this.params, 'alignment', Object.keys( alignments ) );
             alignmentController.onChange( function ( value ) {
                 that.changeAlignment( value );
             } );
@@ -95,7 +95,7 @@
                 that.changeCharacterSize( value );
             } );
 
-            var characterSizeModeController = this.gui.add( this.params, 'characterSizeMode', characterSizeModes );
+            var characterSizeModeController = this.gui.add( this.params, 'characterSizeMode', Object.keys( characterSizeModes ) );
             characterSizeModeController.onChange( function ( value ) {
                 that.changeCharacterSizeMode( value );
             } );
@@ -280,6 +280,27 @@
             this._scene.accept( tv );
         },
 
+        onMouseClick: function ( canvas, viewer, ev ) {
+            var ratioX = canvas.width / canvas.clientWidth;
+            var ratioY = canvas.height / canvas.clientHeight;
+
+            var hits = this.viewer.computeIntersections( ev.clientX * ratioX, ( canvas.clientHeight - ev.clientY ) * ratioY );
+
+            hits.sort( function ( a, b ) {
+                return a.ratio - b.ratio;
+            } );
+
+            if ( hits.length === 0 )
+                return;
+            // search in the node path the text node
+            for ( var i = 0; i < hits[ 0 ].nodepath.length; i++ ) {
+                if ( hits[ 0 ].nodepath[ i ] instanceof osgText.Text ) {
+                    osg.log( 'Text picked: ' + hits[ 0 ].nodepath[ i ].getText() );
+                    return;
+                }
+            }
+        },
+
         run: function () {
 
             this.initGui();
@@ -306,6 +327,8 @@
             this.viewer.getManipulator().setDistance( this._scene.getBound().radius() * 1.5 );
             this.viewer.getManipulator().setTarget( this._scene.getBound().center() );
             this.viewer.run();
+            // Check if autorotate and autoscale works with picking
+            canvas.addEventListener( 'click', this.onMouseClick.bind( this, canvas, this.viewer ), true );
         }
     };
 

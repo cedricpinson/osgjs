@@ -6,8 +6,6 @@ var Vec3 = require( 'osg/Vec3' );
 var Vec4 = require( 'osg/Vec4' );
 var Quat = require( 'osg/Quat' );
 var Matrix = require( 'osg/Matrix' );
-var StateAttribute = require( 'osg/StateAttribute' );
-var BillboardAttribute = require( 'osg/BillboardAttribute' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var TransformEnums = require( 'osg/TransformEnums' );
 var Node = require( 'osg/Node' );
@@ -113,19 +111,6 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
     setAutoRotateToScreen: function ( value ) {
         this._autoRotateToScreen = value;
-        if ( !this._billboardAttribute ) {
-            this._billboardAttribute = new BillboardAttribute();
-        }
-        var stateset = this.getOrCreateStateSet();
-        if ( value ) {
-            // Temporary hack because StateAttribute.ON does not work right now
-            this._billboardAttribute.setEnabled( true );
-            stateset.setAttributeAndModes( this._billboardAttribute, StateAttribute.ON );
-        } else {
-            // Temporary hack because StateAttribute.OFF does not work right now
-            this._billboardAttribute.setEnabled( false );
-            stateset.setAttributeAndModes( this._billboardAttribute, StateAttribute.OFF );
-        }
     },
 
     getAutoRotateToScreen: function () {
@@ -211,25 +196,25 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
 
         return function ( visitor ) {
             if ( visitor.getVisitorType() === NodeVisitor.CULL_VISITOR ) {
-                // TODO only recalculate scale if needed.
-                if ( this._autoScaleToScreen ) {
-                    var width = visitor.getViewport().width();
-                    var height = visitor.getViewport().height();
-                    var projMat = visitor.getCurrentProjectionMatrix();
-                    var position = this._position;
-                    var doUpdate = this._firstTimeToInitEyePoint;
 
-                    if ( !this._firstTimeToInitEyePoint ) {
-                        if ( width !== this._previousWidth || height !== this._previousHeight ) {
-                            doUpdate = true;
-                        } else if ( !Matrix.equal( projMat, this._previousProjection ) ) {
-                            doUpdate = true;
-                        } else if ( !Vec3.equal( position, this._previousPosition ) ) {
-                            doUpdate = true;
-                        }
+                var width = visitor.getViewport().width();
+                var height = visitor.getViewport().height();
+                var projMat = visitor.getCurrentProjectionMatrix();
+                var position = this._position;
+                var doUpdate = this._firstTimeToInitEyePoint;
+
+                if ( !this._firstTimeToInitEyePoint ) {
+                    if ( width !== this._previousWidth || height !== this._previousHeight ) {
+                        doUpdate = true;
+                    } else if ( !Matrix.equal( projMat, this._previousProjection ) ) {
+                        doUpdate = true;
+                    } else if ( !Vec3.equal( position, this._previousPosition ) ) {
+                        doUpdate = true;
                     }
-                    this._firstTimeToInitEyePoint = false;
-                    if ( doUpdate ) {
+                }
+                this._firstTimeToInitEyePoint = false;
+                if ( doUpdate ) {
+                    if ( this._autoScaleToScreen ) {
                         var modelViewMat = visitor.getCurrentModelViewMatrix();
                         var viewport = visitor.getViewport();
                         var psvector = this.computePixelSizeVector( viewport, projMat, modelViewMat );
@@ -266,6 +251,12 @@ AutoTransform.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInheri
                             }
                         }
                         this.setScale( size );
+                    }
+                    if ( this._autoRotateToScreen ) {
+                        var rotation = Quat.create();
+                        var modelView = visitor.getCurrentModelViewMatrix();
+                        Matrix.getRotate( modelView, rotation );
+                        this.setRotation( Quat.inverse( rotation, rotation ) );
                     }
                     this._previousWidth = width;
                     this._previousHeight = height;

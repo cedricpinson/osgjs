@@ -650,7 +650,7 @@ var Matrix = {
     } )(),
 
     preMultRotate: function ( matrix, quat ) {
-        if ( Quat.zeroRotation( quat ) )
+        if ( quat[ 0 ] === 0.0 && quat[ 1 ] === 0.0 && quat[ 2 ] === 0.0 && quat[ 3 ] === 1.0 )
             return;
         var r = Matrix.create();
         Matrix.makeRotateFromQuat( r, quat );
@@ -658,7 +658,7 @@ var Matrix = {
     },
 
     postMultRotate: function ( matrix, quat ) {
-        if ( Quat.zeroRotation( quat ) )
+        if ( quat[ 0 ] === 0.0 && quat[ 1 ] === 0.0 && quat[ 2 ] === 0.0 && quat[ 3 ] === 1.0 )
             return;
         var r = Matrix.create();
         Matrix.makeRotateFromQuat( r, quat );
