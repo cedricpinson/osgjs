@@ -7,7 +7,7 @@ module.exports = function () {
 
     QUnit.module( 'osg' );
 
-    QUnit.asyncTest( 'Image.isGreyScale grey image', function () {
+    QUnit.asyncTest( 'Image.isGreyScale grey image', 1, function () {
 
 
         var test = function ( img ) {
@@ -25,7 +25,7 @@ module.exports = function () {
 
     } );
 
-    QUnit.asyncTest( 'Image.isGreyScale color image', function () {
+    QUnit.asyncTest( 'Image.isGreyScale color image', 1, function () {
 
 
         var test = function ( img ) {
