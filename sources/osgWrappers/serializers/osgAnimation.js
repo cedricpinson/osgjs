@@ -420,6 +420,10 @@ osgAnimationWrapper.RigGeometry = function ( input, rigGeom ) {
         }
     }
 
+    // not sure if it's normal but rig geometry don't have UniqueID
+    if ( rigGeom._uniqueID === undefined )
+        rigGeom._uniqueID = sourceGeometry.UniqueID;
+
     return P.all( [ rigPromise, geomPromise ] ).then( function () {
 
         rigGeom.mergeChildrenData();

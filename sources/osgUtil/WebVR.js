@@ -132,43 +132,6 @@ var createCameraRtt = function ( texture, projection ) {
     return camera;
 };
 
-var getHMDOptions = function ( hmdDevice ) {
-
-    // http://mozvr.github.io/webvr-spec/webvr.html
-    var left = hmdDevice.getEyeParameters( 'left' );
-    var right = hmdDevice.getEyeParameters( 'right' );
-
-    var hmd = {
-        fovLeft: left.recommendedFieldOfView,
-        fovRight: right.recommendedFieldOfView,
-        eyeOffsetLeft: left.eyeTranslation,
-        eyeOffsetRight: right.eyeTranslation,
-        rttResolution: {
-            width: left.renderRect.width,
-            height: left.renderRect.height
-        },
-    };
-
-    // On Mac (FF+Chromium), the Left and Right angles of both eyes are inverted
-    // Left Eye must see more to the Left than to the Right (Left angle > Right angle)
-    // Right Eye must see more to the Right than to the Left (Right angle > Left angle)
-    // This is because of the nose blocking the view
-    var swapLeftAndRight = function ( fov ) {
-        var temp = fov.leftDegrees;
-        fov.leftDegrees = fov.rightDegrees;
-        fov.rightDegrees = temp;
-    };
-
-    if ( hmd.fovLeft.leftDegrees < hmd.fovLeft.rightDegrees ) {
-        swapLeftAndRight( hmd.fovLeft );
-    }
-    if ( hmd.fovRight.rightDegrees < hmd.fovRight.leftDegrees ) {
-        swapLeftAndRight( hmd.fovRight );
-    }
-
-    return hmd;
-};
-
 var WebVR = {};
 
 WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldFactorOverride ) {
@@ -176,18 +139,19 @@ WebVR.createScene = function ( viewer, rttScene, HMDdevice, rootOverride, worldF
     var root = rootOverride || new Node();
     var worldFactor = worldFactorOverride !== undefined ? worldFactorOverride : 1.0;
 
-    var hmd = getHMDOptions( HMDdevice );
+    var left = HMDdevice.getEyeParameters( 'left' );
+    var right = HMDdevice.getEyeParameters( 'right' );
 
     // Compute projections and view matrices for both eyes
-    var projectionLeft = perspectiveMatrixFromVRFieldOfView( hmd.fovLeft, 0.1, 1000.0 );
-    var projectionRight = perspectiveMatrixFromVRFieldOfView( hmd.fovRight, 0.1, 1000.0 );
-    var viewLeft = Matrix.makeTranslate( -worldFactor * hmd.eyeOffsetLeft.x, hmd.eyeOffsetLeft.y, hmd.eyeOffsetLeft.z, Matrix.create() );
-    var viewRight = Matrix.makeTranslate( -worldFactor * hmd.eyeOffsetRight.x, hmd.eyeOffsetRight.y, hmd.eyeOffsetRight.z, Matrix.create() );
+    var projectionLeft = perspectiveMatrixFromVRFieldOfView( left.fieldOfView, 0.1, 1000.0 );
+    var projectionRight = perspectiveMatrixFromVRFieldOfView( right.fieldOfView, 0.1, 1000.0 );
+    var viewLeft = Matrix.makeTranslate( -worldFactor * left.offset[ 0 ], left.offset[ 1 ], left.offset[ 2 ], Matrix.create() );
+    var viewRight = Matrix.makeTranslate( -worldFactor * right.offset[ 0 ], right.offset[ 1 ], right.offset[ 2 ], Matrix.create() );
 
     // Each eye is rendered on a texture whose width is half of the final combined texture
     var eyeTextureSize = {
-        width: hmd.rttResolution.width,
-        height: hmd.rttResolution.height
+        width: Math.max( left.renderWidth, right.renderWidth ),
+        height: Math.max( left.renderHeight, right.renderHeight )
     };
 
     var leftEyeTexture = createTexture( eyeTextureSize );

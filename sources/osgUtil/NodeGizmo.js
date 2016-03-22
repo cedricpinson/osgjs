@@ -537,13 +537,13 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             } else {
                 // normalize gizmo size relative to screen size
                 var proj = this._viewer.getCamera().getProjectionMatrix();
-                var scaleFov = Math.min( proj[ 0 ], proj[ 5 ] * 0.5 );
+                var scaleFov = this._canvas.clientWidth * 0.023 * proj[ 0 ];
                 this._manipulator.getEyePosition( eye );
                 // while we are editing we don't normalize the gizmo
                 // it gives a better depth feedback, especially if we are editing a geometry that has
                 // a constant screen size (for example an icon)
                 this._lastDistToEye = this._isEditing ? this._lastDistToEye : Vec3.distance( eye, trVec );
-                scaleFactor = this._lastDistToEye / ( 10 * scaleFov );
+                scaleFactor *= this._lastDistToEye / scaleFov;
             }
             Matrix.makeScale( scaleFactor, scaleFactor, scaleFactor, scGiz );
 
@@ -590,9 +590,10 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             getCanvasCoord( coord, e );
 
             // canvas to webgl coord
+            var viewer = this._viewer;
             var canvas = this._canvas;
-            var x = coord[ 0 ] * ( canvas.width / canvas.clientWidth );
-            var y = ( canvas.clientHeight - coord[ 1 ] ) * ( canvas.height / canvas.clientHeight );
+            var x = coord[ 0 ] * ( viewer._canvasWidth / canvas.clientWidth );
+            var y = ( canvas.clientHeight - coord[ 1 ] ) * ( viewer._canvasHeight / canvas.clientHeight );
 
             var hits = this._viewer.computeIntersections( x, y, tmask );
 
@@ -649,9 +650,10 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
             Matrix.transformVec3( mat, worldPoint, screenPoint );
 
             // canvas to webgl coord
+            var viewer = this._viewer;
             var canvas = this._canvas;
-            screenPoint[ 0 ] = screenPoint[ 0 ] / ( canvas.width / canvas.clientWidth );
-            screenPoint[ 1 ] = canvas.clientHeight - screenPoint[ 1 ] / ( canvas.height / canvas.clientHeight );
+            screenPoint[ 0 ] = screenPoint[ 0 ] / ( viewer._canvasWidth / canvas.clientWidth );
+            screenPoint[ 1 ] = canvas.clientHeight - screenPoint[ 1 ] / ( viewer._canvasHeight / canvas.clientHeight );
             return screenPoint;
         };
     } )(),
@@ -891,9 +893,10 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
                 this.drawLineCanvasDebug( origin[ 0 ], origin[ 1 ], vec[ 0 ], vec[ 1 ] );
 
             // canvas to webgl coord
+            var viewer = this._viewer;
             var canvas = this._canvas;
-            var coordx = vec[ 0 ] * ( canvas.width / canvas.clientWidth );
-            var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( canvas.height / canvas.clientHeight );
+            var coordx = vec[ 0 ] * ( viewer._canvasWidth / canvas.clientWidth );
+            var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( viewer._canvasHeight / canvas.clientHeight );
 
             // project 2D point on the 3d line
             this._lsi.reset();
@@ -922,9 +925,10 @@ NodeGizmo.prototype = MACROUTILS.objectInherit( MatrixTransform.prototype, {
         Vec2.sub( vec, this._editOffset, vec );
 
         // canvas to webgl coord
+        var viewer = this._viewer;
         var canvas = this._canvas;
-        var coordx = vec[ 0 ] * ( canvas.width / canvas.clientWidth );
-        var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( canvas.height / canvas.clientHeight );
+        var coordx = vec[ 0 ] * ( viewer._canvasWidth / canvas.clientWidth );
+        var coordy = ( canvas.clientHeight - vec[ 1 ] ) * ( viewer._canvasHeight / canvas.clientHeight );
 
 
         // project 2D point on the 3d plane

@@ -21,6 +21,7 @@ var NodeVisitor = require( 'tests/osg/NodeVisitor' );
 var PagedLOD = require( 'tests/osg/PagedLOD' );
 var Plane = require( 'tests/osg/Plane' );
 var Quat = require( 'tests/osg/Quat' );
+var Shader = require( 'tests/osg/Shader' );
 var State = require( 'tests/osg/State' );
 var StateSet = require( 'tests/osg/StateSet' );
 var Texture = require( 'tests/osg/Texture' );
@@ -57,6 +58,7 @@ module.exports = function () {
     Plane();
     PagedLOD();
     Quat();
+    Shader();
     State();
     StateSet();
     Texture();

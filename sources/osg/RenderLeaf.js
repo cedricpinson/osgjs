@@ -1,4 +1,5 @@
 'use strict';
+var StateGraph = require( 'osg/StateGraph' );
 
 var CacheUniformApply = function ( state, program ) {
     this.modelWorldUniform = program._uniformsCache[ state.modelWorldMatrix.getName() ];
@@ -111,47 +112,92 @@ RenderLeaf.prototype = {
 
             var prevRenderGraph;
             var prevRenderGraphParent;
-            var rg;
+            var curRenderGraph = this._parent;
+            var curRenderGraphParent = curRenderGraph.parent;
+            var curRenderGraphStateSet = curRenderGraph.stateset;
+
+            // When rendering a RenderLeaf we try to limit the state change
+            // to do that Graph of State is created during the culling pass.
+            // this graph contains nodes of StateGraph type see the class StateGraph
+            //
+            // So to limit switching of StateSet we check where are the common parent
+            // between previous RenderLeaf and this current.
+            //
+            // There are 3 cases when there is a prev / current render leaf
+            //
+            //
+            // pRG: previousRenderGraph
+            // cRG: currentRenderGraph
+            // pRL: previousRenderLeaf
+            // cRL: currentRenderLeaf
+            // each RG contains a StateSet
+            //
+            //          A                        B                       C
+            // +-----+     +-----+            +-----+                 +-----+
+            // | pRG |     | cRG |         +--+ RG  +--+              | RG  |
+            // +--+--+     +--+--+         |  +-----+  |              +--+--+
+            //    |           |            |           |                 |
+            // +--v--+     +--v--+      +--v--+     +--v--+           +--v--+
+            // | pRG |     | cRG |      | pRG |     | cRG |        +--+ RG  +--+
+            // +--+--+     +--+--+      +--+--+     +--+--+        |  +-----+  |
+            //    |           |            |           |           |           |
+            // +--v--+     +--v--+      +--v--+     +--v--+     +--v--+     +--v--+
+            // | pRL |     | cRL |      | pRL |     | cRL |     | pRL |     | cRL |
+            // +-----+     +-----+      +-----+     +-----+     +-----+     +-----+
+            //
+            //
+            // Case A
+            // no common parent StateGraphNode we need to
+            // popStateSet until we find the common parent and then
+            // pushStateSet from the common parent to the current
+            // RenderLeaf
+            //
+            // Case B
+            // common parent StateGraphNode so we apply the current stateSet
+            //
+            // Case C
+            // the StateGraphNode is common to the previous RenderLeaf so we dont need
+            // to do anything except if we used an insertStateSet
+            //
 
             if ( previousLeaf !== undefined ) {
 
                 // apply state if required.
                 prevRenderGraph = previousLeaf._parent;
                 prevRenderGraphParent = prevRenderGraph.parent;
-                rg = this._parent;
 
-                if ( prevRenderGraphParent !== rg.parent ) {
+                if ( prevRenderGraphParent !== curRenderGraphParent ) {
 
-                    rg.moveStateGraph( state, prevRenderGraphParent, rg.parent );
+                    // Case A
+                    StateGraph.moveStateGraph( state, prevRenderGraphParent, curRenderGraphParent );
 
-                    // send state changes and matrix changes to OpenGL.
-
-                    state.applyStateSet( rg.stateset );
+                    state.applyStateSet( curRenderGraphStateSet );
                     previousHash = state.getStateSetStackHash();
 
-                } else if ( rg !== prevRenderGraph ) {
+                } else if ( curRenderGraph !== prevRenderGraph ) {
 
-                    // send state changes and matrix changes to OpenGL.
-                    state.applyStateSet( rg.stateset );
+                    // Case B
+                    state.applyStateSet( curRenderGraphStateSet );
                     previousHash = state.getStateSetStackHash();
 
                 } else {
+
+                    // Case C
 
                     // in osg we call apply but actually we dont need
                     // except if the stateSetStack changed.
                     // for example if insert/remove StateSet has been used
                     var hash = state.getStateSetStackHash();
                     if ( previousHash !== hash ) {
-                        this._parent.moveStateGraph( state, undefined, this._parent.parent );
-                        state.applyStateSet( this._parent.stateset );
+                        state.applyStateSet( curRenderGraphStateSet );
                         previousHash = hash;
                     }
                 }
 
             } else {
 
-                this._parent.moveStateGraph( state, undefined, this._parent.parent );
-                state.applyStateSet( this._parent.stateset );
+                StateGraph.moveStateGraph( state, undefined, curRenderGraphParent );
+                state.applyStateSet( curRenderGraphStateSet );
                 previousHash = state.getStateSetStackHash();
 
             }

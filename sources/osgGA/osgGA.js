@@ -1,5 +1,8 @@
 'use strict';
 var Hammer = require( 'hammer' );
+var CADManipulator = require( 'osgGA/CADManipulator' );
+var CADManipulatorStandardMouseKeyboardController = require( 'osgGA/CADManipulatorStandardMouseKeyboardController' );
+var CADManipulatorHammerController = require( 'osgGA/CADManipulatorHammerController' );
 var FirstPersonManipulator = require( 'osgGA/FirstPersonManipulator' );
 var FirstPersonManipulatorDeviceOrientationController = require( 'osgGA/FirstPersonManipulatorDeviceOrientationController' );
 var FirstPersonManipulatorHammerController = require( 'osgGA/FirstPersonManipulatorHammerController' );
@@ -21,6 +24,13 @@ var osgGA = {};
 
 Hammer.NO_MOUSEEVENTS = true; // disable hammer js mouse events
 
+osgGA.CADManipulator = CADManipulator;
+osgGA.getCADManipulatorStandardMouseKeyboardController = function () {
+    return CADManipulatorStandardMouseKeyboardController;
+};
+osgGA.getCADManipulatorHammerController = function () {
+    return CADManipulatorHammerController;
+};
 osgGA.FirstPersonManipulator = FirstPersonManipulator;
 osgGA.getFirstPersonDeviceOrientationController = function () {
     return FirstPersonManipulatorDeviceOrientationController;

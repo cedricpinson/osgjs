@@ -17,7 +17,8 @@ KdTreeBuilder.prototype = MACROUTILS.objectInherit( NodeVisitor.prototype, {
     apply: function ( node ) {
         if ( node.getShape ) {
             var shape = node.getShape();
-            if ( shape === null ) { // we test if the kdTree is already built
+            // we test if the kdTree is already built and if we can build it (null means we skip it)
+            if ( shape === undefined ) {
                 var kdTree = new KdTree();
                 if ( kdTree.build( this._buildOptions, node ) ) {
                     node.setShape( kdTree );

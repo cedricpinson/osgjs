@@ -39,6 +39,9 @@ var Node = function () {
     this._tmpBox = new BoundingBox();
 };
 
+Node._reservedMatrixStack = new MatrixMemoryPool();
+var nodeGetMat = Node._reservedMatrixStack.get.bind( Node._reservedMatrixStack );
+
 /** @lends Node.prototype */
 Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object.prototype, {
     /**
@@ -333,11 +336,11 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
 
     },
 
-    // same as getWorldMatrix GC: Perf WIN
+    // same as getWorldMatrices GC: Perf WIN
     getWorldMatrix: function ( halt, matrix ) {
 
         // pass allocator on master
-        var matrixList = this.getWorldMatrix( halt, Node._reservedMatrixStack.get );
+        var matrixList = this.getWorldMatrices( halt, nodeGetMat );
 
         if ( matrixList.length === 0 ) {
 
@@ -404,6 +407,5 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
 } ), 'osg', 'Node' );
 MACROUTILS.setTypeID( Node );
 
-Node._reservedMatrixStack = new MatrixMemoryPool();
 
 module.exports = Node;
