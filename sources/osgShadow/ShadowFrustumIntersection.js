@@ -10,7 +10,7 @@ var MatrixTransform = require( 'osg/MatrixTransform' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var Plane = require( 'osg/Plane' );
 var MACROUTILS = require( 'osg/Utils' );
-require( 'osg/Vec3' );
+
 /**
  * [ComputeFrustumBoundsVisitor get a scene bounds limited by a light and camera frustum]
  */
