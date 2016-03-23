@@ -15,8 +15,8 @@ var OrbitManipulatorWebVRController = require( 'osgGA/OrbitManipulatorWebVRContr
  *  OrbitManipulator
  *  @class
  */
-var OrbitManipulator = function ( flags ) {
-    Manipulator.call( this, flags );
+var OrbitManipulator = function ( boundStrategy ) {
+    Manipulator.call( this, boundStrategy );
     this._homePosition = Vec3.create();
     this._frustum = {};
     this.init();
@@ -214,8 +214,8 @@ OrbitManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
             this._distance = Vec3.distance( eye, center );
         };
     } )(),
-    computeHomePosition: function ( useBoundingBox ) {
-        var bs = this.getHomeBound( useBoundingBox );
+    computeHomePosition: function ( boundStrategy ) {
+        var bs = this.getHomeBound( boundStrategy );
         if ( !bs ) return;
         this.setDistance( this.getHomeDistance( bs ) );
         this.setTarget( bs.center() );

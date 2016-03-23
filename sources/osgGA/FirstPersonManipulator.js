@@ -21,8 +21,8 @@ var FirstPersonManipulatorStandardMouseKeyboardController = require( 'osgGA/Firs
  *  FirstPersonManipulator
  *  @class
  */
-var FirstPersonManipulator = function ( flags ) {
-    Manipulator.call( this, flags );
+var FirstPersonManipulator = function ( boundStrategy ) {
+    Manipulator.call( this, boundStrategy );
     this.init();
 };
 
@@ -31,8 +31,8 @@ FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'WebVR', 'Dev
 
 /** @lends FirstPersonManipulator.prototype */
 FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
-    computeHomePosition: function ( useBoundingBox ) {
-        var bs = this.getHomeBound( useBoundingBox );
+    computeHomePosition: function ( boundStrategy ) {
+        var bs = this.getHomeBound( boundStrategy );
         if ( !bs ) return;
 
         this._distance = this.getHomeDistance( bs );

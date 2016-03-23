@@ -133,6 +133,9 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             max[ 2 ] = maxz;
         }
 
+        if ( this._geometry instanceof MorphGeometry )
+            boundingBox.expandByBoundingBox( this._geometry.getBoundingBox() );
+
         return boundingBox;
     },
 

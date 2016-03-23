@@ -65,7 +65,7 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         }
     },
     dirtyBound: function () {
-        if ( this._boundingSphereComputed === true ) {
+        if ( this._boundingSphereComputed === true || this._boundingBoxComputed === true ) {
             this._boundingSphereComputed = false;
             this._boundingBoxComputed = false;
 
@@ -246,17 +246,14 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
 
     computeBoundingBox: function ( bbox ) {
 
-        var l = this.children.length;
-        bbox.init();
-        if ( l === 0 ) return bbox;
+        // circular dependency... not sure if the global visitor instance should be instancied here
+        var ComputeBoundsVisitor = require( 'osg/ComputeBoundsVisitor' );
+        var cbv = ComputeBoundsVisitor.instance = ComputeBoundsVisitor.instance || new ComputeBoundsVisitor();
+        cbv.setNodeMaskOverride( ~0x0 ); // traverse everything to be consistent with computeBoundingSphere
+        cbv.reset();
 
-        for ( var i = 0; i < l; i++ ) {
-            var cc = this.children[ i ];
-            if ( cc.referenceFrame === undefined || cc.referenceFrame === TransformEnums.RELATIVE_RF ) {
-                bbox.expandByBoundingBox( cc.getBoundingBox() );
-            }
-        }
-
+        cbv.apply( this );
+        bbox.copy( cbv.getBoundingBox() );
         return bbox;
     },
 
@@ -271,7 +268,6 @@ Node.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Object
         }
         return this._boundingSphere;
     },
-
 
     computeBoundingSphere: function ( bSphere ) {
 
