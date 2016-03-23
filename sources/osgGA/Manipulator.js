@@ -1,14 +1,14 @@
 'use strict';
 var BoundingSphere = require( 'osg/BoundingSphere' );
 var Matrix = require( 'osg/Matrix' );
+var Notify = require( 'osg/Notify' );
 
 
 // Base class for Camera / User manipulator
-// flags is a bitfield use to enable options
-var Manipulator = function ( flags ) {
-    this._flags = flags;
-    if ( this._flags === undefined )
-        this._flags = Manipulator.DEFAULT_SETTINGS;
+var Manipulator = function ( boundStrategy ) {
+    this._boundStrategy = boundStrategy;
+    if ( this._boundStrategy === undefined )
+        this._boundStrategy = Manipulator.COMPUTE_HOME_USING_SPHERE;
 
     this._controllerList = {};
     this._inverseMatrix = Matrix.create();
@@ -27,16 +27,31 @@ Manipulator.prototype = {
     setNode: function ( node ) {
         this._node = node;
     },
-    getHomeBound: function ( useBoundingBox ) {
+    getHomeBound: function ( overrideStrat ) {
         var node = this._node;
         if ( !node )
             return;
 
-        if ( useBoundingBox || this._flags & Manipulator.COMPUTE_HOME_USING_BBOX ) {
+        var type = overrideStrat !== undefined ? overrideStrat : this._boundStrategy;
+
+        if ( type === true || type === false ) {
+            Notify.warn( 'Manipulator.getHomeBound with boolean is deprecated, pass a type instead' );
+            type = type ? Manipulator.COMPUTE_HOME_USING_BBOX : Manipulator.COMPUTE_HOME_USING_SPHERE;
+        }
+
+        if ( type & Manipulator.COMPUTE_HOME_USING_BBOX ) {
             var bs = new BoundingSphere();
             var bb = node.getBoundingBox();
             if ( bb.valid() )
                 bs.expandByBoundingBox( bb );
+
+            // minimum between sphere and box
+            if ( type & Manipulator.COMPUTE_HOME_USING_SPHERE ) {
+                var boundSphere = node.getBound();
+                if ( boundSphere.radius() < bs.radius() )
+                    return boundSphere;
+            }
+
             return bs;
         }
 
@@ -66,7 +81,8 @@ Manipulator.prototype = {
     }
 };
 
-Manipulator.COMPUTE_HOME_USING_BBOX = 0x02;
-Manipulator.DEFAULT_SETTINGS = 0;
+// flags
+Manipulator.COMPUTE_HOME_USING_SPHERE = 1 << 0;
+Manipulator.COMPUTE_HOME_USING_BBOX = 1 << 1;
 
 module.exports = Manipulator;

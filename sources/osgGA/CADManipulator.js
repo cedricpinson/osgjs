@@ -200,9 +200,9 @@ CADManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
         var s = Vec3.create();
         var u = Vec3.create();
         var result = Matrix.create();
-        return function ( useBoundingBox ) {
+        return function ( boundStrategy ) {
 
-            var bs = this.getHomeBound( useBoundingBox );
+            var bs = this.getHomeBound( boundStrategy );
             if ( !bs ) return;
             this.setDistance( this.getHomeDistance( bs ) );
             this.setTarget( bs.center() );

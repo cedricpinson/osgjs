@@ -74,8 +74,8 @@ SwitchManipulator.prototype = {
             return manipulator.getInverseMatrix();
         }
     },
-    getHomeBound: function ( useBoundingBox ) {
-        return this.getCurrentManipulator().getHomeBound( useBoundingBox );
+    getHomeBound: function ( boundStrategy ) {
+        return this.getCurrentManipulator().getHomeBound( boundStrategy );
     },
     getHomeDistance: function ( bs ) {
         return this.getCurrentManipulator().getHomeDistance( bs );
