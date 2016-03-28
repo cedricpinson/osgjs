@@ -127,6 +127,8 @@ WebGLCaps.prototype = {
 
         this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
 
+        Texture = require( 'osg/Texture' );
+
         if ( this._isGL2 ) {
 
             // osgjs code is webgl1, so we fake webgl2 capabilities

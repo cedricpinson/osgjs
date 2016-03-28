@@ -189,6 +189,10 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     // invalidate those informations
     resetCacheFrame: function () {
         this._modelViewMatrix = this._projectionMatrix = undefined;
+
+        this.currentIndexVBO = undefined;
+        this.currentVAO = undefined;
+
     },
 
     resetStats: function () {
@@ -681,14 +685,18 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     setIndexArray: function ( array ) {
+
         var gl = this._graphicContext;
+
         if ( this.currentIndexVBO !== array ) {
             array.bind( gl );
             this.currentIndexVBO = array;
         }
+
         if ( array.isDirty() ) {
             array.compile( gl );
         }
+
     },
 
     lazyDisablingOfVertexAttributes: function () {
@@ -744,6 +752,19 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             uniform.setFloat( 0.0 );
         }
         uniform.apply( gl, program._uniformsCache.ArrayColorEnabled );
+
+    },
+
+    setVertexAttribArrayForce: function ( attrib, array, normalize, glParam ) {
+
+        var gl = glParam || this._graphicContext;
+
+        array.bind( gl );
+        array.dirty();
+        array.compile( gl );
+
+        gl.enableVertexAttribArray( attrib );
+        gl.vertexAttribPointer( attrib, array.getItemSize(), array.getType(), normalize, 0, 0 );
 
     },
 

@@ -1,6 +1,8 @@
 'use strict';
 var MACROUTILS = require( 'osg/Utils' );
 var Node = require( 'osg/Node' );
+var Notify = require( 'osg/Notify' );
+var WebGLCaps = require( 'osg/WebGLCaps' );
 
 
 /**
@@ -8,12 +10,23 @@ var Node = require( 'osg/Node' );
  * @class Geometry
  */
 var Geometry = function () {
+
     Node.call( this );
     this.primitives = [];
     this.attributes = {};
 
-    this.cacheAttributeList = {};
-    this._shape = undefined; // null means the kdTree builder will skip the kdTree creation
+    // function is generated for each Shader Program ID
+    // which generates a a special "draw"
+    // TODO: could be upon hash of combination of attributes
+    // (as multiple shader Programs can use same combination of attributes)
+    // if GPU supports VAO it's VAO object
+    // if GPU doesn't it's a generated function
+    this._cacheAttributeList = {};
+    this._cacheVertexAttributeList = {};
+
+    // null means the kdTree builder will skip the kdTree creation
+    this._shape = undefined;
+
 };
 
 /** @lends Geometry.prototype */
@@ -37,7 +50,7 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
     },
 
     dirty: function () {
-        this.cacheAttributeList = {};
+        this._cacheAttributeList = {};
     },
     getPrimitives: function () {
         return this.primitives;
@@ -59,24 +72,197 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
         return this.primitives;
     },
 
-    drawImplementation: function ( state ) {
+    drawCallVAO: function ( state, vao, listVA ) {
+
+        var j, m;
+
+        var gl = state.getGraphicContext();
+
+        if ( state._currentVAO !== vao ) {
+
+            this._extVAO.bindVertexArrayOES( vao );
+
+            for ( j = 0, m = listVA.length; j < m; j++ ) {
+                if ( listVA[ j ].isDirty() )
+                    listVA[ j ].compile();
+            }
+        }
+
+        var primitives = this.primitives;
+
+        var p;
+
+        // now primitives where just IB differs
+        // TODO: find what's the usage of that thing of multiple IB?
+        // cannot think of anything that makes sense
+        // strip + primitives restart ? why no degenerate tri ?
+        for ( j = 0, m = primitives.length; j < m; ++j ) {
+
+            p = primitives[ j ];
+            if ( p.getCount() === 0 ) continue;
+            if ( p.getIndices ) {
+
+                var ib = p.getIndices();
+
+                // problem with cache on skfb (not osgjs)
+                //state.setIndexArray( ib );
+                //if ( ib !== state.currentIndexVBO ) {
+                ib.bind( gl );
+                if ( ib.isDirty() ) {
+                    ib.compile( gl );
+                }
+                state.currentIndexVBO = ib;
+                //}
+
+                p.drawElements( state, gl );
+            } else {
+                p.draw( state, gl );
+            }
+        }
+
+        //this._extVAO.bindVertexArrayOES( null );
+        state._currentVAO = vao;
+    },
+
+    drawImplementationVAO: function ( state ) {
+
         var program = state.getLastProgramApplied();
         var prgID = program.getInstanceID();
-        if ( this.cacheAttributeList[ prgID ] === undefined ) {
+        var vao = this._cacheAttributeList[ prgID ];
+
+        // first call 
+        if ( !vao ) {
             var attribute;
 
             var attributesCacheKeys = program._attributesCache.getKeys();
             var attributesCacheMap = program._attributesCache;
-
             var geometryVertexAttributes = this.getVertexAttributeList();
+
+
+            var i, l, j, m, key, attr, primitives;
+
+            var valid = false,
+                attrBin;
+            var gl = state.getGraphicContext();
+
+            var listVA = [];
+
+            state.lazyDisablingOfVertexAttributes();
+
+            // check Buffer validity 
+            for ( i = 0, l = attributesCacheKeys.length; i < l; i++ ) {
+
+                key = attributesCacheKeys[ i ];
+                attribute = attributesCacheMap[ key ];
+                attr = geometryVertexAttributes[ key ];
+
+                if ( attr === undefined ) {
+                    continue;
+                }
+
+                attrBin = this.attributes[ key ];
+                if ( attrBin.getBufferArray ) attrBin = attrBin.getBufferArray();
+
+                // don't display the geometry if missing data
+                if ( !attrBin.isValid() ) {
+
+                    valid = false;
+                    // TODO warning ? 
+                    //this._cacheAttributeList[ prgID ] = null;
+                    return;
+                }
+
+                if ( vao && attrBin.isDirty() ) {
+                    attrBin.compile( gl );
+                }
+
+                listVA.push( attrBin );
+
+                valid = true;
+            }
+
+            primitives = this.primitives;
+
+            if ( valid ) {
+                valid = false;
+                for ( j = 0, m = primitives.length; j < m; ++j ) {
+                    if ( primitives[ j ].getCount() !== 0 ) {
+                        valid = true;
+                        break;
+                    }
+                }
+            }
+
+            if ( !valid ) {
+                // TODO warning ? 
+                //this._cacheAttributeList[ prgID ] = null;
+                return;
+            }
+
+            this._cacheVertexAttributeList[ prgID ] = listVA;
+
+            state.applyDisablingOfVertexAttributes();
+            vao = this._extVAO.createVertexArrayOES();
+
+            // Start setting up VAO  
+            this._extVAO.bindVertexArrayOES( vao );
+
+            for ( i = 0, l = attributesCacheKeys.length; i < l; i++ ) {
+
+                key = attributesCacheKeys[ i ];
+                attribute = attributesCacheMap[ key ];
+                attr = geometryVertexAttributes[ key ];
+
+                if ( attr === undefined ) {
+                    continue;
+                }
+
+                attrBin = this.attributes[ key ];
+                if ( attrBin.getBufferArray ) attrBin = attrBin.getBufferArray();
+
+                //  no caching.
+                state.setVertexAttribArrayForce( attribute, attrBin, false, gl );
+
+            }
+
+            // Finished setting up VAO  
+            this._extVAO.bindVertexArrayOES( null );
+
+            /*develblock:start*/
+            if ( !this._extVAO.isVertexArrayOES( vao ) ) {
+                Notify.error( 'VAO broken' );
+            }
+            /*develblock:end*/
+
+            this._cacheAttributeList[ prgID ] = vao;
+        }
+
+        this.drawCallVAO( state, vao, this._cacheVertexAttributeList[ prgID ] );
+    },
+
+    drawImplementationBasic: function ( state ) {
+        var program = state.getLastProgramApplied();
+        var prgID = program.getInstanceID();
+
+
+        if ( this._cacheAttributeList[ prgID ] === undefined ) {
+
+            var attribute;
+
+            var attributesCacheKeys = program._attributesCache.getKeys();
+            var attributesCacheMap = program._attributesCache;
+            var geometryVertexAttributes = this.getVertexAttributeList();
+
+            var i, l, j, m, key, attr, primitives;
+
             var generated = '//generated by Geometry::implementation\n';
             generated += 'state.lazyDisablingOfVertexAttributes();\n';
             generated += 'var attr;\n';
 
-            for ( var i = 0, l = attributesCacheKeys.length; i < l; i++ ) {
-                var key = attributesCacheKeys[ i ];
+            for ( i = 0, l = attributesCacheKeys.length; i < l; i++ ) {
+                key = attributesCacheKeys[ i ];
                 attribute = attributesCacheMap[ key ];
-                var attr = geometryVertexAttributes[ key ];
+                attr = geometryVertexAttributes[ key ];
                 if ( attr === undefined ) {
                     continue;
                 }
@@ -88,17 +274,27 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
                 generated += 'state.setVertexAttribArray(' + attribute + ', attr, false);\n';
             }
             generated += 'state.applyDisablingOfVertexAttributes();\n';
-            var primitives = this.primitives;
+            primitives = this.primitives;
             generated += 'var primitives = this.primitives;\n';
-            for ( var j = 0, m = primitives.length; j < m; ++j ) {
+            for ( j = 0, m = primitives.length; j < m; ++j ) {
                 generated += 'primitives[' + j + '].draw(state);\n';
             }
 
             /*jshint evil: true */
-            this.cacheAttributeList[ prgID ] = new Function( 'state', generated );
+            this._cacheAttributeList[ prgID ] = new Function( 'state', generated );
             /*jshint evil: false */
+
         }
-        this.cacheAttributeList[ prgID ].call( this, state );
+
+        this._cacheAttributeList[ prgID ].call( this, state );
+    },
+
+    drawImplementation: function () {
+        // not a 'require' time closure function
+        // because complex require circular dependencies
+        this._extVAO = WebGLCaps.instance().getWebGLExtension( 'OES_vertex_array_object' );
+
+        this.drawImplementation = this._extVAO ? this.drawImplementationVAO : this.drawImplementationBasic;
     },
 
     // for testing disabling drawing

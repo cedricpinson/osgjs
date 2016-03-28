@@ -39,6 +39,12 @@ DrawElements.prototype = {
         var gl = state.getGraphicContext();
         gl.drawElements( this.mode, this.count, this.uType, this.offset );
     },
+    drawElements: function ( state, glParam ) {
+        if ( this.count === 0 )
+            return;
+        var gl = glParam || state.getGraphicContext();
+        gl.drawElements( this.mode, this.count, this.uType, this.offset );
+    },
     setIndices: function ( indices ) {
         this.indices = indices;
         var elts = indices.getElements();
