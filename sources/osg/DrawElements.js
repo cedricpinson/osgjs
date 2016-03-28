@@ -36,6 +36,9 @@ DrawElements.prototype = {
         if ( this.count === 0 )
             return;
         state.setIndexArray( this.indices );
+        this.drawElements( state );
+    },
+    drawElements: function ( state ) {
         var gl = state.getGraphicContext();
         gl.drawElements( this.mode, this.count, this.uType, this.offset );
     },

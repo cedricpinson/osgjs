@@ -8,7 +8,7 @@ var StateAttribute = require( 'osg/StateAttribute' );
 var Stack = require( 'osg/Stack' );
 var Uniform = require( 'osg/Uniform' );
 var MACROUTILS = require( 'osg/Utils' );
-
+var WebGLCaps = require( 'osg/WebGLCaps' );
 
 var State = function ( shaderGeneratorProxy ) {
     Object.call( this );
@@ -19,7 +19,9 @@ var State = function ( shaderGeneratorProxy ) {
     if ( shaderGeneratorProxy === undefined )
         console.break();
 
-    this.currentVBO = null;
+    this._currentVAO = null;
+    this._currentIndexVBO = null;
+
     this.vertexAttribList = [];
     this.stateSets = new Stack();
     this._shaderGeneratorNames = new Stack();
@@ -77,6 +79,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     setGraphicContext: function ( graphicContext ) {
         this._graphicContext = graphicContext;
+        this._extVAO = WebGLCaps.instance( graphicContext ).getWebGLExtension( 'OES_vertex_array_object' );
     },
 
     getGraphicContext: function () {
@@ -681,14 +684,18 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     setIndexArray: function ( array ) {
+
         var gl = this._graphicContext;
-        if ( this.currentIndexVBO !== array ) {
+
+        if ( this._currentIndexVBO !== array ) {
             array.bind( gl );
-            this.currentIndexVBO = array;
+            this._currentIndexVBO = array;
         }
+
         if ( array.isDirty() ) {
             array.compile( gl );
         }
+
     },
 
     lazyDisablingOfVertexAttributes: function () {
@@ -701,7 +708,50 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         }
     },
 
+    enableVertexColor: function () {
+
+        var program = this.attributeMap.Program.lastApplied;
+
+        if ( !program._uniformsCache.ArrayColorEnabled ||
+            !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
+
+        // update uniform
+        var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
+
+        var previousColorEnabled = this._previousColorAttribPair[ program.getInstanceID() ];
+
+        if ( !previousColorEnabled ) {
+            uniform.setFloat( 1.0 );
+            uniform.apply( this.getGraphicContext(), program._uniformsCache.ArrayColorEnabled );
+            this._previousColorAttribPair[ program.getInstanceID() ] = true;
+        }
+
+    },
+
+
+    disableVertexColor: function () {
+
+        var program = this.attributeMap.Program.lastApplied;
+
+        if ( !program._uniformsCache.ArrayColorEnabled ||
+            !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
+
+        // update uniform
+        var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
+
+        var previousColorEnabled = this._previousColorAttribPair[ program.getInstanceID() ];
+
+        if ( previousColorEnabled ) {
+            uniform.setFloat( 0.0 );
+            uniform.apply( this.getGraphicContext(), program._uniformsCache.ArrayColorEnabled );
+            this._previousColorAttribPair[ program.getInstanceID() ] = false;
+        }
+
+    },
+
+
     applyDisablingOfVertexAttributes: function () {
+
         var keys = this.vertexAttribMap._keys;
         for ( var i = 0, l = keys.length; i < l; i++ ) {
             if ( this.vertexAttribMap._disable[ keys[ i ] ] === true ) {
@@ -711,43 +761,49 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 this.vertexAttribMap[ attr ] = false;
             }
         }
+    },
 
-        var program = this.attributeMap.Program.lastApplied;
+    clearVertexAttribCache: function () {
 
-        if ( !program._uniformsCache.ArrayColorEnabled ||
-            !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
-
-
-        var gl = this.getGraphicContext();
-
-        var hasColorAttrib = false;
-
-        // check if we have colorAttribute on the current geometry
-        var color = program._attributesCache.Color;
-        hasColorAttrib = this.vertexAttribMap[ color ];
-
-
-        // check per program
-        var previousColorAttrib = this._previousColorAttribPair[ program.getInstanceID() ];
-
-        // no change with the same program -> exit
-        if ( previousColorAttrib === hasColorAttrib ) return;
-
-        this._previousColorAttribPair[ program.getInstanceID() ] = hasColorAttrib;
-
-        // update uniform
-        var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
-
-        if ( hasColorAttrib ) {
-            uniform.setFloat( 1.0 );
-        } else {
-            uniform.setFloat( 0.0 );
+        var vertexAttribMap = this.vertexAttribMap;
+        var keys = vertexAttribMap._keys;
+        for ( var i = 0, l = keys.length; i < l; i++ ) {
+            var attr = keys[ i ];
+            vertexAttribMap[ attr ] = undefined;
+            vertexAttribMap._disable[ attr ] = false;
         }
-        uniform.apply( gl, program._uniformsCache.ArrayColorEnabled );
+
+        this.vertexAttribMap._disable.length = 0;
+        this.vertexAttribMap._keys.length = 0;
 
     },
 
+    /**
+     *  set a vertex array object.
+     *  return true if binded the vao and false
+     *  if was already binded
+     */
+    setVertexArrayObject: function ( vao ) {
+
+        if ( this._currentVAO !== vao ) {
+
+            this._extVAO.bindVertexArrayOES( vao );
+            this._currentVAO = vao;
+
+            // disable cache to force a re enable of array
+            if ( !vao ) this.clearVertexAttribCache();
+
+            // disable currentIndexVBO to force to bind indexArray from Geometry
+            // if there is a change of vao
+            this._currentIndexVBO = undefined;
+
+            return true;
+        }
+        return false;
+    },
+
     setVertexAttribArray: function ( attrib, array, normalize ) {
+
         var vertexAttribMap = this.vertexAttribMap;
         vertexAttribMap._disable[ attrib ] = false;
         var gl = this._graphicContext;
