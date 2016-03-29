@@ -181,7 +181,7 @@ CullStack.prototype = MACROUTILS.objectInherit( CullSettings.prototype, {
     isVerticesCulled: function ( vertices ) {
         if ( !this._enableFrustumCulling )
             return false;
-        return this.getCurrentCullingSet().isVeritcesCulled( vertices );
+        return this.getCurrentCullingSet().isVerticesCulled( vertices );
     },
 
     isBoundingBoxCulled: function ( bb ) {
