@@ -108,6 +108,10 @@ Input.prototype = {
         if ( typeof this._defaultOptions.prefixURL === 'string' &&
             this._defaultOptions.prefixURL.length > 0 ) {
 
+            if(url.indexOf(this._defaultOptions.prefixURL) === 0) {
+                return url;
+            }
+
             return this._defaultOptions.prefixURL + url;
         }
 
@@ -171,6 +175,7 @@ Input.prototype = {
         // crossOrigin does not work for inline data image
         var isInlineImage = ( url.substring( 0, checkInlineImage.length ) === checkInlineImage );
         var img = new window.Image();
+        img.crossOrigin = "Anonymous";
         img.onerror = function () {
             Notify.warn( 'warning use white texture as fallback instead of ' + url );
             image.setImage( Input.imageFallback );
@@ -406,10 +411,14 @@ Input.prototype = {
         if ( options === undefined )
             options = this.getOptions();
         if ( options.initializeBufferArray )
-            return options.initializeBufferArray.call( this, vb, type, buf );
+            return options.initializeBufferArray.call( this, vb, type, buf, options );
 
         var url = vb.File;
         var defer = P.defer();
+        if(options.rewriteFileUrl) {
+            url = options.rewriteFileUrl(url)
+        }
+
         this.readBinaryArrayURL( url ).then( function ( array ) {
 
             var typedArray;
