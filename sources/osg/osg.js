@@ -73,6 +73,7 @@ var Viewport = require( 'osg/Viewport' );
 var osgPool = require( 'osgUtil/osgPool' );
 var TransformEnums = require( 'osg/TransformEnums' );
 var Timer = require( 'osg/Timer' );
+var TimerGPU = require( 'osg/TimerGPU' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
 
 
@@ -157,6 +158,7 @@ osg.memoryPools = osgPool.memoryPools;
 osg.Transform.RELATIVE_RF = TransformEnums.RELATIVE_RF;
 osg.Transform.ABSOLUTE_RF = TransformEnums.ABSOLUTE_RF;
 osg.Timer = Timer;
+osg.TimerGPU = TimerGPU;
 osg.WebGLCaps = WebGLCaps;
 
 
