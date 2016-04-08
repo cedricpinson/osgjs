@@ -1,4 +1,5 @@
 'use strict';
+var Light = require( 'osg/Light' );
 var Notify = require( 'osg/Notify' );
 var MACROUTILS = require( 'osg/Utils' );
 var Uniform = require( 'osg/Uniform' );
@@ -831,16 +832,28 @@ Compiler.prototype = {
         inputsShadow = MACROUTILS.objectMix( inputsShadow, shadowVarying );
         return inputsShadow;
     },
-    // Shared var between lights and shadows
-    createCommonLightingVars: function ( materials, enumLights, numLights ) {
 
-        if ( numLights === 0 )
-            return {};
+    // Shared var between all lights and shadows
+    // useful for compilers overriding default compiler
+    /*jshint -W098*/
+    createCommonLightingVars: function ( materials, enumLights ) {
+        return {};
+    },
+    /*jshint +W098*/
 
-        var lighted = this.createVariable( 'bool', 'lighted' );
-        var lightPos = this.createVariable( 'vec3', 'lightEyePos' );
-        var lightDir = this.createVariable( 'vec3', 'lightEyeDir' );
-        var lightNDL = this.createVariable( 'float', 'lightNDL' );
+    // Shared var between each light and its respective shadow
+    createLightAndShadowVars: function ( materials, enumLights, lightNum ) {
+
+        var type = this._lights[ lightNum ].getLightType();
+
+        var lighted = this.createVariable( 'bool', 'lighted' + lightNum );
+        var lightPos;
+        if ( type === Light.SPOT || type === Light.POINT ) {
+            lightPos = this.createVariable( 'vec3', 'lightEyePos' + lightNum );
+        }
+        var lightDir = this.createVariable( 'vec3', 'lightEyeDir' + lightNum );
+        var lightNDL = this.createVariable( 'float', 'lightNDL' + lightNum );
+
 
         return {
             lighted: lighted,
@@ -863,9 +876,10 @@ Compiler.prototype = {
             HEMI: 'HemiLight'
         };
 
-        var lightOutShadowIn = this.createCommonLightingVars( materials, enumToNodeName, this._lights.length );
 
         var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material, 'material' );
+        var sharedLightingVars = this.createCommonLightingVars( materials, enumToNodeName );
+
         for ( var i = 0; i < this._lights.length; i++ ) {
 
             var light = this._lights[ i ];
@@ -876,10 +890,12 @@ Compiler.prototype = {
             // create uniforms from stateAttribute and mix them with materials
             // to pass the result as input for light node
             var lightUniforms = this.getOrCreateStateAttributeUniforms( this._lights[ i ], 'light' );
+            var lightOutShadowIn = this.createLightAndShadowVars( materials, enumToNodeName, i );
 
             var inputs = MACROUTILS.objectMix( {}, lightUniforms );
             inputs = MACROUTILS.objectMix( inputs, materialUniforms );
             inputs = MACROUTILS.objectMix( inputs, materials );
+            inputs = MACROUTILS.objectMix( inputs, sharedLightingVars );
             inputs = MACROUTILS.objectMix( inputs, lightOutShadowIn );
 
             if ( !inputs.normal )
