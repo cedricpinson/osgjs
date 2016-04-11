@@ -162,12 +162,15 @@ ShaderGenerator.prototype = {
             var at = attributeList[ i ];
             if ( at.getOrCreateUniforms ) {
                 var attributeUniformMap = at.getOrCreateUniforms();
-                var attributeUniformMapKeys = attributeUniformMap.getKeys();
+                // It could happen that uniforms are declared conditionally
+                if ( attributeUniformMap !== undefined ) {
+                    var attributeUniformMapKeys = attributeUniformMap.getKeys();
 
-                for ( var j = 0, m = attributeUniformMapKeys.length; j < m; j++ ) {
-                    var name = attributeUniformMapKeys[ j ];
-                    var uniform = attributeUniformMap[ name ];
-                    uniforms[ uniform.getName() ] = uniform;
+                    for ( var j = 0, m = attributeUniformMapKeys.length; j < m; j++ ) {
+                        var name = attributeUniformMapKeys[ j ];
+                        var uniform = attributeUniformMap[ name ];
+                        uniforms[ uniform.getName() ] = uniform;
+                    }
                 }
             }
         }
