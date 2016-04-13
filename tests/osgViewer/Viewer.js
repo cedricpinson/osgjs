@@ -4,7 +4,6 @@ var mockup = require( 'tests/mockup/mockup' );
 var Viewer = require( 'osgViewer/Viewer' );
 var Shape = require( 'osg/Shape' );
 
-
 module.exports = function () {
 
     QUnit.module( 'osgViewer' );
@@ -72,5 +71,52 @@ module.exports = function () {
             mockup.removeCanvas( canvas );
 
         } )();
+
+
+        // test context lost
+        ( function () {
+
+            var canvas = mockup.createCanvas();
+            var viewer = new Viewer( canvas );
+
+            viewer.setContextLostCallback( function () {
+                ok( true, 'detected contextLost Lost' );
+            } );
+
+            window.cancelAnimationFrame = function () {
+                ok( true, 'context lost does cancel render loop' );
+            };
+
+            viewer.init();
+
+            var createScene = function () {
+                return Shape.createTexturedBoxGeometry( 0, 0, 0,
+                    10, 10, 10 );
+            };
+            viewer.setupManipulator();
+            viewer.setSceneData( createScene() );
+            viewer.getCamera().getRenderer().draw = function () {}; // do nothing
+
+            var renderCount = 0;
+
+            viewer.beginFrame = function () {
+                renderCount++;
+            };
+
+            viewer.setDone( false );
+            viewer.requestRedraw();
+            viewer.frame();
+
+            viewer.contextLost();
+
+            viewer.frame();
+            ok( renderCount === 1, 'no render after context Lost' );
+
+        } )();
+
+
+
+
     } );
+
 };
