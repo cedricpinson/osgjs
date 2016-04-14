@@ -15,7 +15,10 @@ var TimerGPU = function ( gl ) {
 
         var ext = gl.getExtension( 'EXT_disjoint_timer_query' );
         if ( !ext ) return this;
+
         // https://github.com/KhronosGroup/WebGL/blob/master/sdk/tests/conformance/extensions/ext-disjoint-timer-query.html#L102
+        // run the page if strange results
+        // to validate you gpu/browser has correct gpu queries support
         this._hasTimeElapsed = ext.getQueryEXT( ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
         this._hasTimeStamp = ext.getQueryEXT( ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
 
@@ -54,7 +57,7 @@ var TimerGPU = function ( gl ) {
     this._waitingQueries = {};
     // cumulative average on N frame
     // reset & restart every N frames
-    this._frameAverageCount = 100;
+    this._frameAverageCount = 30;
 };
 
 TimerGPU.instance = function ( gl ) {
@@ -79,10 +82,12 @@ TimerGPU.prototype = {
     setFrameAverageCount: function ( val ) {
         this._frameAverageCount = val;
     },
+
     // when timing same thing
     // but under new conditions
     reset: function ( queryID ) {
 
+        this._timingCountQuery[ queryID ] = 0;
         this._averageTimerQuery[ queryID ] = 0.0;
         this._resultCountQuery[ queryID ] = 0;
 
@@ -239,17 +244,24 @@ TimerGPU.prototype = {
 
         if ( timeElapsed === 0 ) return undefined;
 
+
         this._resultCountQuery[ queryID ]++;
 
         // store results
         var lastTime = this._averageTimerQuery[ queryID ];
         var resultCount = this._resultCountQuery[ queryID ];
 
-        // restart cumulative average every 100 frames
+        // restart cumulative average every frameAveragecount frames
         if ( resultCount > this._frameAverageCount ) {
-            this._resultCountQuery[ queryID ] = 1;
+
+            this.reset( queryID );
+            // we have one result
+            this._resultCountQuery[ queryID ]++;
             lastTime = 0;
+
         }
+
+
         var cumulativeAverage;
         if ( lastTime === 0 ) {
             cumulativeAverage = timeElapsed;
