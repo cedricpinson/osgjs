@@ -162,6 +162,11 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
 
     draw: function ( state, previousRenderLeaf ) {
 
+        if ( this.camera && this.camera.getInitialDrawCallback() ) {
+            // if we have a camera with a final callback invoke it.
+            this.camera.getInitialDrawCallback()( state );
+        }
+
         var previousLeaf = this.drawPreRenderStages( state, previousRenderLeaf );
 
         previousLeaf = this.drawImplementation( state, previousLeaf );
@@ -169,12 +174,8 @@ RenderStage.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         previousLeaf = this.drawPostRenderStages( state, previousLeaf );
 
         if ( this.camera && this.camera.getFinalDrawCallback() ) {
-
             // if we have a camera with a final callback invoke it.
-            var cb = this.camera.getFinalDrawCallback();
-
-            cb( state );
-
+            this.camera.getFinalDrawCallback()( state );
         }
 
         return previousLeaf;
