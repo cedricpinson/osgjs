@@ -115,6 +115,8 @@ var Viewer = function ( canvas, userOptions, error ) {
 
     this._hmd = null;
     this._useVR = false; // if we use custom requestAnimationFrame
+
+    this._contextLost = false;
 };
 
 
@@ -193,12 +195,31 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         return gl;
     },
 
+    setContextLostCallback: function ( cb ) {
+        this._contextLostCallback = cb;
+        // just in case callback registration
+        // happens after the context lost 
+        if ( this._contextLost ) {
+            cb();
+        }
+    },
+
     contextLost: function () {
         Notify.log( 'webgl context lost' );
+        if ( this._contextLostCallback ) {
+            this._contextLostCallback();
+        }
+        this._contextLost = true;
         window.cancelAnimationFrame( this._requestID );
     },
+
     contextRestored: function () {
         Notify.log( 'webgl context restored, but not supported - reload the page' );
+        // Supporting it implies to have
+        // reloaded all your resources:
+        // textures, vertex/index buffers, shaders, frame buffers
+        // so only set it back if you happen to have restored the context
+        // this._contextLost = false;
     },
 
     init: function () {
@@ -340,6 +361,10 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
     },
 
     frame: function () {
+
+        // _contextLost check for code calling viewer::frame directly
+        // (likely force preload gl resource or direct render control )
+        if ( this._contextLost ) return;
 
         this.beginFrame();
 
