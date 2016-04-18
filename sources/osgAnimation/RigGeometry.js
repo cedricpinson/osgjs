@@ -81,6 +81,17 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         return this._needToComputeMatrix;
     },
 
+    getBoundingBox: function () {
+        // transform the bounding box with _invMatrixFromSkeletonToGeometry, calls to setNeedToComputeMatrix will recompute the bounding box
+        // in practice this should rarely (or never) be called, to improved that we'd need two bounding box (the geometry in cache and the transformed one)
+        if ( !this._boundingBoxComputed && this._needToComputeMatrix === false ) {
+            this.computeBoundingBox( this._boundingBox );
+            Matrix.transformBoundingBox( this._invMatrixFromSkeletonToGeometry, this._boundingBox, this._boundingBox );
+            this._boundingBoxComputed = true;
+        }
+        return this._boundingBox;
+    },
+
     computeBoundingBox: function ( boundingBox ) {
 
         var vertexArray = this.getVertexAttributeList().Vertex;
