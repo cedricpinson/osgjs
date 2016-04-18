@@ -17,7 +17,7 @@
     "eslint-plugin-private-variables": "^0.1.2",
     "extend": "*",
     "glob": "*",
-    "grunt": "<1.0",
+    "grunt": "> 1.0.0",
     "grunt-contrib-clean": "*",
     "grunt-contrib-copy": "*",
     "grunt-contrib-jshint": "*",
