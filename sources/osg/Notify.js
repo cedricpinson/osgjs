@@ -1,4 +1,5 @@
 'use strict';
+
 var Notify = {};
 
 Notify.DEBUG = 0;
@@ -130,6 +131,20 @@ Notify.reportWebGLError = false;
 
 Notify.setConsole = function ( replacement ) {
     Notify.console = replacement;
+};
+
+// for debug
+Notify.printMatrix = function ( m, rowMajor ) {
+    if ( rowMajor ) {
+        console.table( [ m.slice( 0, 4 ), m.slice( 4, 8 ), m.slice( 8, 12 ), m.slice( 12, 16 ) ] );
+    } else {
+        console.table( [
+            [ m[ 0 ], m[ 4 ], m[ 8 ], m[ 12 ] ],
+            [ m[ 1 ], m[ 5 ], m[ 9 ], m[ 13 ] ],
+            [ m[ 2 ], m[ 6 ], m[ 10 ], m[ 14 ] ],
+            [ m[ 3 ], m[ 7 ], m[ 11 ], m[ 15 ] ]
+        ] );
+    }
 };
 
 module.exports = Notify;
