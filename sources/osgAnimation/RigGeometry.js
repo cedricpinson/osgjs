@@ -81,22 +81,11 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         return this._needToComputeMatrix;
     },
 
-    getBoundingBox: function () {
-        // transform the bounding box with _invMatrixFromSkeletonToGeometry, calls to setNeedToComputeMatrix will recompute the bounding box
-        // in practice this should rarely (or never) be called, to improved that we'd need two bounding box (the geometry in cache and the transformed one)
-        if ( !this._boundingBoxComputed && this._needToComputeMatrix === false ) {
-            this.computeBoundingBox( this._boundingBox );
-            Matrix.transformBoundingBox( this._invMatrixFromSkeletonToGeometry, this._boundingBox, this._boundingBox );
-            this._boundingBoxComputed = true;
-        }
-        return this._boundingBox;
-    },
-
     computeBoundingBox: function ( boundingBox ) {
 
         var vertexArray = this.getVertexAttributeList().Vertex;
         var weightsArray = this.getVertexAttributeList().Weights;
-        // mainly copy paste of geometry computeBoundingBox code, except we only 
+        // mainly copy paste of geometry computeBoundingBox code, except we only
         // take into account the non-influenced vertices
 
         // we do that only for the non-influenced vertices because the rigged ones
@@ -143,9 +132,6 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             max[ 1 ] = maxy;
             max[ 2 ] = maxz;
         }
-
-        if ( this._geometry instanceof MorphGeometry )
-            boundingBox.expandByBoundingBox( this._geometry.getBoundingBox() );
 
         return boundingBox;
     },
