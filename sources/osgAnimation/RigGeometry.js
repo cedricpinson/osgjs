@@ -10,6 +10,7 @@ var UpdateRigGeometry = require( 'osgAnimation/UpdateRigGeometry' );
 var RigTransformHardware = require( 'osgAnimation/RigTransformHardware' );
 var AnimationUpdateCallback = require( 'osgAnimation/AnimationUpdateCallback' );
 var ComputeMatrixFromNodePath = require( 'osg/ComputeMatrixFromNodePath' );
+var BoundingBox = require( 'osg/BoundingBox' );
 
 
 // RigGeometry is a Geometry deformed by bones
@@ -32,6 +33,8 @@ var RigGeometry = function () {
     this._shape = null; // by default no kdtree/shape for rig
 
     this.setUpdateCallback( new UpdateRigGeometry() );
+
+    this._transformBoundingBox = new BoundingBox();
 
     // handle matrixFromSkeletonToGeometry and invMatrixFromSkeletonToGeometry computation
     this._root = undefined;
@@ -81,15 +84,21 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         return this._needToComputeMatrix;
     },
 
+    transformBoundingBox: function () {
+        // the valid test is important as many rig will be invalid (in the case all the vertex are rigged)
+        // the transformBoundingBox will transform the Infinity into NaN
+        if ( this._boundingBox.valid() )
+            Matrix.transformBoundingBox( this._invMatrixFromSkeletonToGeometry, this._boundingBox, this._transformBoundingBox );
+    },
+
     getBoundingBox: function () {
-        // transform the bounding box with _invMatrixFromSkeletonToGeometry, calls to setNeedToComputeMatrix will recompute the bounding box
-        // in practice this should rarely (or never) be called, to improved that we'd need two bounding box (the geometry in cache and the transformed one)
-        if ( !this._boundingBoxComputed && this._needToComputeMatrix === false ) {
+        if ( !this._boundingBoxComputed ) {
             this.computeBoundingBox( this._boundingBox );
-            Matrix.transformBoundingBox( this._invMatrixFromSkeletonToGeometry, this._boundingBox, this._boundingBox );
             this._boundingBoxComputed = true;
+            this.transformBoundingBox();
         }
-        return this._boundingBox;
+
+        return this._transformBoundingBox;
     },
 
     computeBoundingBox: function ( boundingBox ) {
@@ -160,6 +169,13 @@ RigGeometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
         Matrix.makeIdentity( this._matrixFromSkeletonToGeometry );
         ComputeMatrixFromNodePath.computeLocalToWorld( this._pathToRoot, true, this._matrixFromSkeletonToGeometry );
         Matrix.inverse( this._matrixFromSkeletonToGeometry, this._invMatrixFromSkeletonToGeometry );
+
+        // inv matrix updated, so we update the local box too
+        this.transformBoundingBox();
+        // we notify the parents of the change (we don't call dirtyBound because we don't want to recompute the geometry bounding box)
+        for ( var i = 0, l = this.parents.length; i < l; i++ ) {
+            this.parents[ i ].dirtyBound();
+        }
 
         if ( !this._isAnimatedPath )
             this._needToComputeMatrix = false;
