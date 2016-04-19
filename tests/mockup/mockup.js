@@ -110,6 +110,7 @@ var createFakeRenderer = function () {
         bufferData: function () {},
         bindBuffer: function () {},
         blendFunc: function () {},
+        getExtension: function () {},
         getShaderPrecisionFormat: function () {
             return {
                 precision: 1

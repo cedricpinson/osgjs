@@ -74,11 +74,7 @@ View.prototype = {
 
     initWebGLCaps: function ( gl ) {
 
-        var glCaps = WebGLCaps.instance();
-
-        if ( glCaps ) {
-            glCaps.initWebGLExtensions( gl );
-        }
+        WebGLCaps.instance( gl );
 
     },
 
