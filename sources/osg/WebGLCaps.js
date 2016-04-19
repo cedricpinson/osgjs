@@ -31,9 +31,10 @@ var WebGLCaps = function () {
     this._webGLParameters[ 'NUM_COMPRESSED_TEXTURE_FORMATS' ] = 0;
     this._webGLParameters[ 'MAX_SHADER_PRECISION_FLOAT' ] = 'none';
     this._webGLParameters[ 'MAX_SHADER_PRECISION_INT' ] = 'none';
+
 };
 
-WebGLCaps.instance = function () {
+WebGLCaps.instance = function ( glParam ) {
 
     if ( !WebGLCaps._instance ) {
 
@@ -58,7 +59,7 @@ WebGLCaps.instance = function () {
             antialias: false
         };
 
-        var gl = WebGLUtils.setupWebGL( c, opt, function () {} );
+        var gl = glParam || WebGLUtils.setupWebGL( c, opt, function () {} );
 
         WebGLCaps._instance = new WebGLCaps();
         if ( gl ) {
@@ -82,12 +83,36 @@ WebGLCaps.instance = function () {
         }
 
         //delete c;
-
     }
+
+    // webgl caps called with a different context
+    // than the one we draw in, will result on hard crash
+    if ( glParam && glParam !== WebGLCaps._instance.getContext() ) {
+        WebGLCaps._instance.initContextDependant( glParam );
+    }
+
     return WebGLCaps._instance;
 };
 
 WebGLCaps.prototype = {
+    getContext: function () {
+        return this._gl;
+    },
+    initContextDependant: function ( gl ) {
+
+        // store context in case of multiple context
+        this._gl = gl;
+
+        // get extensions
+        this.initWebGLExtensions( gl );
+
+        // get float support
+        this.hasLinearHalfFloatRTT( gl );
+        this.hasLinearFloatRTT( gl );
+        this.hasHalfFloatRTT( gl );
+        this.hasFloatRTT( gl );
+
+    },
     init: function ( gl ) {
 
         // get capabilites
@@ -98,8 +123,7 @@ WebGLCaps.prototype = {
         this.initPlatformSupport();
         this.initBugDB();
 
-        // get extension
-        this.initWebGLExtensions( gl );
+        this.initContextDependant( gl );
 
         this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
 
@@ -142,6 +166,7 @@ WebGLCaps.prototype = {
         this.hasFloatRTT( gl );
 
     },
+
     isWebGL2: function () {
         return this._isGL2;
     },
