@@ -65,6 +65,7 @@ UpdateOffsetCamera.prototype = {
 };
 
 var setupWebVR = function ( worldFactor, HMD, webVRUniforms, webVRMatrices ) {
+
     var aspect = HMD.hResolution / ( 2.0 * HMD.vResolution );
     var r = -1.0 - ( 4.0 * ( HMD.hScreenSize * 0.25 - HMD.lensSeparationDistance * 0.5 ) / HMD.hScreenSize );
     var distScale = ( HMD.distortionK[ 0 ] + HMD.distortionK[ 1 ] * Math.pow( r, 2 ) + HMD.distortionK[ 2 ] * Math.pow( r, 4 ) + HMD.distortionK[ 3 ] * Math.pow( r, 6 ) );

@@ -29,11 +29,11 @@ var FirstPersonManipulator = function ( boundStrategy ) {
 FirstPersonManipulator.AvailableControllerList = [ 'StandardMouseKeyboard', 'WebVR', 'DeviceOrientation', 'Hammer' ];
 FirstPersonManipulator.ControllerList = [ 'StandardMouseKeyboard', 'WebVR', 'DeviceOrientation', 'Hammer' ];
 
-/** @lends FirstPersonManipulator.prototype */
 FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototype, {
+
     computeHomePosition: function ( boundStrategy ) {
         var bs = this.getHomeBound( boundStrategy );
-        if ( !bs ) return;
+        if ( !bs || !bs.valid() ) return;
 
         this._distance = this.getHomeDistance( bs );
         var cen = bs.center();
@@ -41,6 +41,7 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
         Vec3.add( cen, this._eye, this._eye );
         this.setTarget( cen );
     },
+
     init: function () {
         this._direction = Vec3.createAndSet( 0.0, 1.0, 0.0 );
         this._eye = Vec3.createAndSet( 0.0, 25.0, 10.0 );
@@ -222,6 +223,7 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             Matrix.makeLookAt( this._eye, this._target, this._up, this._inverseMatrix );
         };
     } )(),
+
     setRotationBaseFromQuat: function ( quat ) {
         Matrix.makeRotateFromQuat( quat, this._rotBase );
     },
@@ -252,7 +254,8 @@ FirstPersonManipulator.prototype = MACROUTILS.objectInherit( Manipulator.prototy
             Vec3.mult( tmp, distance, tmp );
             Vec3.add( this._eye, tmp, this._eye );
         };
-    } )(),
+    } )()
+
 } );
 
 FirstPersonManipulator.DeviceOrientation = FirstPersonManipulatorDeviceOrientationController;

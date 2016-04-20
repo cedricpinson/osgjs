@@ -557,11 +557,18 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
                 device.update( frameStamp );
         } );
     },
+
     setManipulator: function ( manipulator ) {
+
         if ( this._manipulator )
             this.removeEventProxy();
+
+        if ( !manipulator.getCamera() )
+            manipulator.setCamera( this.getCamera() );
+
         View.prototype.setManipulator.call( this, manipulator );
     },
+
     removeEventProxy: function () {
         var list = this._eventProxy;
         var keys = window.Object.keys( list );
@@ -571,6 +578,7 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
                 device.remove();
         } );
     },
+
     getEventProxy: function () {
         return this._eventProxy;
     }
