@@ -681,14 +681,18 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
     },
 
     setIndexArray: function ( array ) {
+
         var gl = this._graphicContext;
+
         if ( this.currentIndexVBO !== array ) {
             array.bind( gl );
             this.currentIndexVBO = array;
         }
+
         if ( array.isDirty() ) {
             array.compile( gl );
         }
+
     },
 
     lazyDisablingOfVertexAttributes: function () {
@@ -701,31 +705,21 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         }
     },
 
-    applyDisablingOfVertexAttributes: function () {
-        var keys = this.vertexAttribMap._keys;
-        for ( var i = 0, l = keys.length; i < l; i++ ) {
-            if ( this.vertexAttribMap._disable[ keys[ i ] ] === true ) {
-                var attr = keys[ i ];
-                this._graphicContext.disableVertexAttribArray( attr );
-                this.vertexAttribMap._disable[ attr ] = false;
-                this.vertexAttribMap[ attr ] = false;
-            }
-        }
+    applyVertexAttributeUniforms: function ( colorAttrib ) {
 
         var program = this.attributeMap.Program.lastApplied;
 
         if ( !program._uniformsCache.ArrayColorEnabled ||
             !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
 
-
-        var gl = this.getGraphicContext();
-
         var hasColorAttrib = false;
-
-        // check if we have colorAttribute on the current geometry
-        var color = program._attributesCache.Color;
-        hasColorAttrib = this.vertexAttribMap[ color ];
-
+        if ( !colorAttrib ) {
+            hasColorAttrib = colorAttrib;
+        } else {
+            // check if we have colorAttribute on the current geometry
+            var color = program._attributesCache.Color;
+            hasColorAttrib = this.vertexAttribMap[ color ];
+        }
 
         // check per program
         var previousColorAttrib = this._previousColorAttribPair[ program.getInstanceID() ];
@@ -738,16 +732,52 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         // update uniform
         var uniform = this.uniforms.ArrayColorEnabled.globalDefault;
 
-        if ( hasColorAttrib ) {
+        if ( this._previousColorAttribPair[ program.getInstanceID() ] ) {
             uniform.setFloat( 1.0 );
         } else {
             uniform.setFloat( 0.0 );
         }
+
+        var gl = this._graphicContext;
         uniform.apply( gl, program._uniformsCache.ArrayColorEnabled );
 
     },
 
+    applyDisablingOfVertexAttributes: function () {
+
+        var keys = this.vertexAttribMap._keys;
+        for ( var i = 0, l = keys.length; i < l; i++ ) {
+            if ( this.vertexAttribMap._disable[ keys[ i ] ] === true ) {
+                var attr = keys[ i ];
+                this._graphicContext.disableVertexAttribArray( attr );
+                this.vertexAttribMap._disable[ attr ] = false;
+                this.vertexAttribMap[ attr ] = false;
+            }
+        }
+        this.applyVertexAttributeUniforms();
+    },
+
+    clearAndDisableVertexAttribCache: function ( gl ) {
+
+        var vertexAttribMap = this.vertexAttribMap;
+        var keys = vertexAttribMap._keys;
+        for ( var i = 0, l = keys.length; i < l; i++ ) {
+            var attr = keys[ i ];
+
+            if ( vertexAttribMap[ attr ] ) {
+                gl.disableVertexAttribArray( attr );
+            }
+            vertexAttribMap[ attr ] = undefined;
+            vertexAttribMap._disable[ attr ] = false;
+        }
+
+        this.vertexAttribMap._disable.length = 0;
+        this.vertexAttribMap._keys.length = 0;
+
+    },
+
     setVertexAttribArray: function ( attrib, array, normalize ) {
+
         var vertexAttribMap = this.vertexAttribMap;
         vertexAttribMap._disable[ attrib ] = false;
         var gl = this._graphicContext;

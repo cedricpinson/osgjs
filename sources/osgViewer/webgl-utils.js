@@ -182,8 +182,7 @@ var WebGLUtils = function () {
  */
 if ( !window.requestAnimationFrame ) {
     window.requestAnimationFrame = ( function () {
-        return window.requestAnimationFrame ||
-            window.webkitRequestAnimationFrame ||
+        return window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame ||
             window.oRequestAnimationFrame ||
             window.msRequestAnimationFrame ||
