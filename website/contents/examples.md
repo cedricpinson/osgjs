@@ -27,9 +27,9 @@ samples:
         image: assets/img/cubemap.jpg
         link: examples/cubemap
     -
-        title: Dualcam
+        title: WebVR
         image: assets/img/dualcam.jpg
-        link: examples/dualcam
+        link: examples/webVR
     -
         title: Frustum Culling
         image: assets/img/frustum-culling.jpg
@@ -103,10 +103,6 @@ samples:
         image: assets/img/shadow.jpg
         link: examples/shadow
     -
-        title: SSAO
-        image: assets/img/ssao.jpg
-        link: examples/ssao
-    -
         title: Text 2D
         image: assets/img/text2D.jpg
         link: examples/text2D
@@ -114,4 +110,5 @@ samples:
         title: Texture Video
         image: assets/img/texture-video.jpg
         link: examples/texture-video
+
 ---
