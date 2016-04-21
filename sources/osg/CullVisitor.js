@@ -593,7 +593,13 @@ CullVisitor.prototype[ LightSource.typeID ] = function ( node ) {
     if ( stateset ) this.pushStateSet( stateset );
 
     var light = node.getLight();
-    if ( light ) this.addPositionedAttribute( this.getCurrentModelViewMatrix(), light );
+    if ( light ) {
+        if ( node.getReferenceFrame() === TransformEnums.RELATIVE_RF )
+            this.addPositionedAttribute( this.getCurrentModelViewMatrix(), light );
+        else
+            this.addPositionedAttribute( null, light );
+    }
+
 
     this.handleCullCallbacksAndTraverse( node );
 
