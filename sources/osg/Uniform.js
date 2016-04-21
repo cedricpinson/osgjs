@@ -65,7 +65,7 @@ Uniform.prototype = {
     // the setFloat/setVecX/setMatrixX will be copied to the
     // internal array. Consider using this function as an optimization
     // to avoid copy. It's possible inside StateAttribute code but it's
-    // safer to not do that in users code unless you what you are doing
+    // safer to not do that in users code unless you know what you are doing
     setInternalArray: function ( array ) {
         this._data = array;
     },
