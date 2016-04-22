@@ -439,9 +439,9 @@ Viewer.prototype = MACROUTILS.objectInherit( View.prototype, {
         this._useVR = bool;
 
         if ( bool ) {
-            this._hmd.requestPresent( {
+            this._hmd.requestPresent( [ {
                 source: this.getGraphicContext().canvas
-            } );
+            } ] );
         } else {
             this._hmd.exitPresent();
         }
