@@ -84,8 +84,7 @@ module.exports = {
             // shaders
             test: /\.(frag|vert|glsl)$/,
             loader: 'raw-loader'
-        }
-                 ]
+        } ]
     },
     devtool: 'source-map',
     plugins: [
