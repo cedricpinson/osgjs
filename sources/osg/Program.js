@@ -216,12 +216,13 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
     },
 
     cacheUniformList: function ( gl, str ) {
+
         var r = str.match( /uniform\s+\w+\s+\w+((\s)?\[(.*?)\])?/g );
         var map = this._uniformsCache;
         if ( r !== null ) {
             for ( var i = 0, l = r.length; i < l; i++ ) {
                 var uniform = r[ i ].match( /uniform\s+\w+\s+(\w+)/ )[ 1 ];
-                var uniformName = r[ i ].match( /uniform\s+\w+\s+(\w+((\s)?\[(.*?)\])?)/ )[ 1 ];
+                var uniformName = r[ i ].match( /uniform\s+\w+\s+(\w+)(\s?\[.*?\])?/ )[ 1 ];
                 var location = gl.getUniformLocation( this._program, uniform );
                 if ( location !== undefined && location !== null ) {
                     if ( map[ uniformName ] === undefined ) {
@@ -231,6 +232,7 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
                 }
             }
         }
+
     },
 
     cacheAttributeList: function ( gl, str ) {
