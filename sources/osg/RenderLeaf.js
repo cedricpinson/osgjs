@@ -37,7 +37,9 @@ CacheUniformApply.prototype = {
 
         // I am the evil, so please bother someone else
         /*jshint evil: true */
-        var func = new Function( 'state', 'modelview', 'modelworld', 'view', 'projection', functionStr.join( '\n' ) );
+        // name the function
+        // http://stackoverflow.com/questions/5905492/dynamic-function-name-in-javascript
+        var func = ( new Function( 'state', 'modelview', 'modelworld', 'view', 'projection', 'return function RenderLeafApplyMatrixUniformCache( state, modelview, modelworld, view, projection ) { ' + functionStr.join( '\n' ) + '}' ) )();
         /*jshint evil: false */
 
         this.apply = func;

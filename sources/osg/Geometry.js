@@ -268,10 +268,12 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
         }
 
         var generated;
+        var functionName;
 
         if ( !extVAO ) {
 
             generated = vertexAttributeSetup.concat( primitiveSetup ).join( '\n' );
+            functionName = 'GeometryDrawImplementationCache';
 
         } else {
 
@@ -308,10 +310,13 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
             generated = vaoSetup.concat( primitiveSetup ).join( '\n' );
 
             this._vao[ prgID ] = vao;
+            functionName = 'GeometryDrawImplementationCacheVAO';
         }
 
         /*jshint evil: true */
-        drawCommand = new Function( 'state', generated );
+        // name the function
+        // http://stackoverflow.com/questions/5905492/dynamic-function-name-in-javascript
+        drawCommand = ( new Function( 'state', 'return function ' + functionName + '( state ) { ' + generated + '}' ) )();
         /*jshint evil: false */
 
 
