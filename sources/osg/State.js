@@ -209,28 +209,30 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         var normal = Matrix.create();
 
-        return function StateApplyModelViewMatrix ( matrix ) {
+        return function StateApplyModelViewMatrix( matrix ) {
 
             if ( this._modelViewMatrix === matrix ) return false;
 
             var program = this.getLastProgramApplied();
-
+            var uniformCache = program._uniformsCache;
             var mu = this.modelViewMatrix;
-            var mul = program._uniformsCache[ mu.getName() ];
+            var mul = uniformCache.ModelViewMatrix;
+            var gc = this.getGraphicContext();
             if ( mul ) {
 
                 mu.setInternalArray( matrix );
-                mu.apply( this.getGraphicContext(), mul );
+                mu.apply( gc, mul );
             }
 
             var sendNormal;
             if ( this._modelViewMatrix ) {
-                sendNormal = false;
+
                 // check if we need to push normal
                 // test rotation component, if not diff
                 // we dont need to send normal
+                var m2 = this._modelViewMatrix;
                 for ( var i = 0; i < 11; i++ ) {
-                    if ( matrix[ i ] !== this._modelViewMatrix[ i ] ) {
+                    if ( matrix[ i ] !== m2[ i ] ) {
                         sendNormal = true;
                         break;
                     }
@@ -241,16 +243,110 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
             if ( sendNormal ) {
                 mu = this.normalMatrix;
-                mul = program._uniformsCache[ mu.getName() ];
+                mul = uniformCache.NormalMatrix;
                 if ( mul ) {
-                    Matrix.copy( matrix, normal );
 
-                    normal[ 12 ] = 0.0;
-                    normal[ 13 ] = 0.0;
-                    normal[ 14 ] = 0.0;
+                    normal[ 0 ] = matrix[ 0 ];
+                    normal[ 1 ] = matrix[ 1 ];
+                    normal[ 2 ] = matrix[ 2 ];
+                    normal[ 4 ] = matrix[ 4 ];
+                    normal[ 5 ] = matrix[ 5 ];
+                    normal[ 6 ] = matrix[ 6 ];
+                    normal[ 8 ] = matrix[ 8 ];
+                    normal[ 9 ] = matrix[ 9 ];
+                    normal[ 10 ] = matrix[ 10 ];
 
                     Matrix.inverse( normal, normal );
                     Matrix.transpose( normal, normal );
+
+                    mu.setInternalArray( normal );
+                    mu.apply( gc, mul );
+                }
+            }
+
+            this._modelViewMatrix = matrix;
+            return true;
+        };
+    } )(),
+
+
+    applyModelViewMatrixEperiment: ( function () {
+
+        var normal = Matrix.create();
+
+        var checkMatrix = function ( m0, m1 ) {
+            if ( m0[ 0 ] !== m1[ 0 ] ) return true;
+            if ( m0[ 1 ] !== m1[ 1 ] ) return true;
+            if ( m0[ 2 ] !== m1[ 2 ] ) return true;
+            if ( m0[ 4 ] !== m1[ 4 ] ) return true;
+            if ( m0[ 5 ] !== m1[ 5 ] ) return true;
+            if ( m0[ 6 ] !== m1[ 6 ] ) return true;
+            if ( m0[ 8 ] !== m1[ 8 ] ) return true;
+            if ( m0[ 9 ] !== m1[ 9 ] ) return true;
+            if ( m0[ 10 ] !== m1[ 10 ] ) return true;
+            return false;
+        };
+
+        var epsilon = 1e-6;
+        var scaleEpsilonMax = 1.0 + epsilon;
+        var scaleEpsilonMin = 1.0 - epsilon;
+
+        return function StateApplyModelViewMatrix( matrix ) {
+            if ( this._modelViewMatrix === matrix ) return false;
+
+            var program = this.getLastProgramApplied();
+
+            var mu = this.modelViewMatrix;
+            var mul = program._uniformsCache.ModelViewMatrix;
+            if ( mul ) {
+
+                mu.setInternalArray( matrix );
+                mu.apply( this.getGraphicContext(), mul );
+            }
+
+            var sendNormal = true;
+            if ( this._modelViewMatrix ) {
+                sendNormal = checkMatrix( matrix, this._modelViewMatrix );
+                // check if we need to push normal
+                // test rotation component, if not diff
+                // we dont need to send normal
+                // for ( var i = 0; i < 11; i++ ) {
+                //     if ( matrix[ i ] !== this._modelViewMatrix[ i ] ) {
+                //         sendNormal = true;
+                //         break;
+                //     }
+                // }
+            }
+
+            if ( sendNormal ) {
+                mu = this.normalMatrix;
+                mul = program._uniformsCache.NormalMatrix;
+                if ( mul ) {
+
+                    // Matrix.copy( matrix, normal );
+                    normal[ 0 ] = matrix[ 0 ];
+                    normal[ 1 ] = matrix[ 1 ];
+                    normal[ 2 ] = matrix[ 2 ];
+                    normal[ 4 ] = matrix[ 4 ];
+                    normal[ 5 ] = matrix[ 5 ];
+                    normal[ 6 ] = matrix[ 6 ];
+                    normal[ 8 ] = matrix[ 8 ];
+                    normal[ 9 ] = matrix[ 9 ];
+                    normal[ 10 ] = matrix[ 10 ];
+
+                    // check for scaling
+                    var xlen = normal[ 0 ] * normal[ 0 ] + normal[ 4 ] * normal[ 4 ] + normal[ 8 ] * normal[ 8 ];
+                    var ylen = normal[ 1 ] * normal[ 1 ] + normal[ 5 ] * normal[ 5 ] + normal[ 9 ] * normal[ 9 ];
+                    var zlen = normal[ 2 ] * normal[ 2 ] + normal[ 6 ] * normal[ 6 ] + normal[ 10 ] * normal[ 10 ];
+
+                    // http://www.gamedev.net/topic/637192-detect-non-uniform-scaling-in-matrix/
+                    if ( xlen > scaleEpsilonMax || xlen < scaleEpsilonMin ||
+                        ylen > scaleEpsilonMax || ylen < scaleEpsilonMin ||
+                        zlen > scaleEpsilonMax || zlen < scaleEpsilonMin ) {
+
+                        Matrix.inverse( normal, normal );
+                        Matrix.transpose( normal, normal );
+                    }
 
                     mu.setInternalArray( normal );
                     mu.apply( this.getGraphicContext(), mul );
