@@ -1774,48 +1774,8 @@ Compiler.prototype = {
 
         var materialUniforms = this.getOrCreateStateAttributeUniforms( this._material );
 
-
-        // diffuse color
-        var diffuseColor = this.getDiffuseColorFromTextures();
-
-        if ( diffuseColor === undefined ) {
-
-            diffuseColor = materialUniforms.diffuse;
-
-        } else {
-
-            this.getNode( 'InlineCode' ).code( '%color.rgb *= %diffuse.rgb;' ).inputs( {
-                diffuse: materialUniforms.diffuse
-            } ).outputs( {
-                color: diffuseColor
-            } );
-        }
-
         // vertex color needs to be computed to diffuse
-        diffuseColor = this.getVertexColor( diffuseColor );
-
-
-        // compute alpha
-        var alpha = this.createVariable( 'float' );
-
-        var textureTexel = this.getFirstValidTexture();
-
-        var alphaCompute;
-        if ( textureTexel ) // use alpha of the first valid texture if has texture
-            alphaCompute = '%alpha = %color.a * %texelAlpha.a;';
-        else
-            alphaCompute = '%alpha = %color.a;';
-
-        // Discard fragments totally transparents when rendering billboards
-        if ( this._isBillboard )
-            alphaCompute += 'if ( %alpha == 0.0) discard;';
-
-        this.getNode( 'InlineCode' ).code( alphaCompute ).inputs( {
-            color: materialUniforms.diffuse,
-            texelAlpha: textureTexel
-        } ).outputs( {
-            alpha: alpha
-        } );
+        var diffuseColor = this.getVertexColor( materialUniforms.diffuse );
 
         // 2 codes path
         // if we have light we compute a subgraph that will generate
@@ -1843,12 +1803,39 @@ Compiler.prototype = {
             this.getNode( 'Add' ).inputs( finalColor, materialUniforms.emission ).outputs( outputDiffEm );
             finalColor = outputDiffEm;
         }
+        // finalColor = primary color * texture color
+        var textureColor = this.getDiffuseColorFromTextures();
+        if ( textureColor !== undefined ) {
+            this.getNode( 'InlineCode' ).code( '%color.rgb *= %texture.rgb;' ).inputs( {
+                texture: textureColor
+            } ).outputs( {
+                color: finalColor
+            } );
+        }
 
+        // compute alpha
+        var alpha = this.createVariable( 'float' );
+        var textureTexel = this.getFirstValidTexture();
+        var alphaCompute;
+        if ( textureTexel ) // use alpha of the first valid texture if has texture
+            alphaCompute = '%alpha = %color.a * %texelAlpha.a;';
+        else
+            alphaCompute = '%alpha = %color.a;';
+
+        // Discard fragments totally transparents when rendering billboards
+        if ( this._isBillboard )
+            alphaCompute += 'if ( %alpha == 0.0) discard;';
+
+        this.getNode( 'InlineCode' ).code( alphaCompute ).inputs( {
+            color: materialUniforms.diffuse,
+            texelAlpha: textureTexel
+        } ).outputs( {
+            alpha: alpha
+        } );
         // premult alpha
         finalColor = this.getPremultAlpha( finalColor, alpha );
 
         var fragColor = this.getNode( 'glFragColor' );
-
 
         // todo add gamma corrected color, but it would also
         // mean to handle correctly srgb texture. So it should be done
