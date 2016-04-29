@@ -213,7 +213,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
             var program = this.getLastProgramApplied();
 
             var mu = this.modelViewMatrix;
-            var mul = program._uniformsCache[ mu.getName() ];
+            var mul = program.getUniformsCache()[ mu.getName() ];
             if ( mul ) {
 
                 mu.setInternalArray( matrix );
@@ -238,7 +238,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
             if ( sendNormal ) {
                 mu = this.normalMatrix;
-                mul = program._uniformsCache[ mu.getName() ];
+                mul = program.getUniformsCache()[ mu.getName() ];
                 if ( mul ) {
                     Matrix.copy( matrix, normal );
 
@@ -267,7 +267,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var program = this.getLastProgramApplied();
         var mu = this.projectionMatrix;
 
-        var mul = program._uniformsCache[ mu.getName() ];
+        var mul = program.getUniformsCache()[ mu.getName() ];
         if ( mul ) {
 
             mu.setInternalArray( matrix );
@@ -714,8 +714,8 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         var program = this.attributeMap.Program.lastApplied;
 
-        if ( !program._uniformsCache.ArrayColorEnabled ||
-            !program._attributesCache.Color ) return; // no color uniform or attribute used, exit
+        if ( !program.getUniformsCache().ArrayColorEnabled ||
+            !program.getAttributesCache().Color ) return; // no color uniform or attribute used, exit
 
 
         var gl = this.getGraphicContext();
@@ -723,7 +723,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         var hasColorAttrib = false;
 
         // check if we have colorAttribute on the current geometry
-        var color = program._attributesCache.Color;
+        var color = program.getAttributesCache.Color;
         hasColorAttrib = this.vertexAttribMap[ color ];
 
 
@@ -743,7 +743,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
         } else {
             uniform.setFloat( 0.0 );
         }
-        uniform.apply( gl, program._uniformsCache.ArrayColorEnabled );
+        uniform.apply( gl, program.getUniformsCache().ArrayColorEnabled );
 
     },
 
@@ -892,7 +892,7 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
                 this._cacheUniformsForCustomProgram( program, activeUniformsList );
             }
 
-            var programUniformMap = program._uniformsCache;
+            var programUniformMap = program.getUniformsCache();
             var programUniformKeys = programUniformMap.getKeys();
             var uniformMapStackContent = this.uniforms;
 
@@ -997,12 +997,11 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
     _cacheUniformsForGeneratedProgram: function ( program ) {
 
-        var foreignUniforms = this._computeForeignUniforms( program._uniformsCache, program.activeUniforms );
-        program.foreignUniforms = foreignUniforms;
-
+        var foreignUniforms = this._computeForeignUniforms( program.getUniformsCache(), program.getActiveUniforms() );
+        program.setForeignUniforms( foreignUniforms );
 
         // remove uniforms listed by attributes (getActiveUniforms) but not required by the program
-        this._removeUniformsNotRequiredByProgram( program.activeUniforms, program._uniformsCache );
+        this._removeUniformsNotRequiredByProgram( program.getActiveUniforms(), program.getUniformsCache() );
 
     },
 
@@ -1015,15 +1014,15 @@ State.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( Objec
 
         // typically the following code will be executed once on the first execution of generated program
 
-        var foreignUniformKeys = program.foreignUniforms;
+        var foreignUniformKeys = program.getForeignUniforms();
         if ( !foreignUniformKeys ) {
             this._cacheUniformsForGeneratedProgram( program );
-            foreignUniformKeys = program.foreignUniforms;
+            foreignUniformKeys = program.getForeignUniforms();
         }
 
 
-        var programUniformMap = program._uniformsCache;
-        var activeUniformMap = program.activeUniforms;
+        var programUniformMap = program.getUniformsCache();
+        var activeUniformMap = program.getActiveUniforms();
 
 
         // apply active uniforms
