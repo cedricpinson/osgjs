@@ -356,87 +356,87 @@ Geometry.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( No
 
     drawImplementation: function ( state ) {
 
-            var program = state.getLastProgramApplied();
-            var prgID = program.getInstanceID();
+        var program = state.getLastProgramApplied();
+        var prgID = program.getInstanceID();
 
-            var cachedDraw = this._cacheDrawCall[ prgID ];
+        var cachedDraw = this._cacheDrawCall[ prgID ];
 
-            // most of the time we should use vao
-            if ( this._extVAO && !this._vao[ prgID ] ) state.setVertexArrayObject( null );
+        // most of the time we should use vao
+        if ( this._extVAO && !this._vao[ prgID ] ) state.setVertexArrayObject( null );
 
-            if ( cachedDraw === undefined ) {
+        if ( cachedDraw === undefined ) {
 
-                if ( !this._primitives.length ) return;
+            if ( !this._primitives.length ) return;
 
-                // no cache for this combination of vertex attributes
-                // compute new Draw Call
+            // no cache for this combination of vertex attributes
+            // compute new Draw Call
 
-                if ( this._extVAO === undefined && Geometry.enableVAO ) { // will be null if not supported
-                    var extVAO = WebGLCaps.instance( state.getGraphicContext() ).getWebGLExtension( 'OES_vertex_array_object' );
-                    this._extVAO = extVAO;
-                }
-
-                cachedDraw = this.generateDrawCommand( state, program, prgID );
+            if ( this._extVAO === undefined && Geometry.enableVAO ) { // will be null if not supported
+                var extVAO = WebGLCaps.instance( state.getGraphicContext() ).getWebGLExtension( 'OES_vertex_array_object' );
+                this._extVAO = extVAO;
             }
 
-            cachedDraw.call( this, state );
-
-        },
-
-        setBound: function ( bb ) {
-            this._boundingBox = bb;
-            this._boundingBoxComputed = true;
-        },
-
-        computeBoundingBox: function ( boundingBox ) {
-
-            var vertexArray = this.getVertexAttributeList().Vertex;
-            if ( vertexArray && vertexArray.getElements() && vertexArray.getItemSize() > 2 ) {
-                var vertexes = vertexArray.getElements();
-                var itemSize = vertexArray.getItemSize();
-
-                var min = boundingBox.getMin();
-                var max = boundingBox.getMax();
-
-                var minx = min[ 0 ];
-                var miny = min[ 1 ];
-                var minz = min[ 2 ];
-                var maxx = max[ 0 ];
-                var maxy = max[ 1 ];
-                var maxz = max[ 2 ];
-
-                // if the box is un-initialized min=Inf and max=-Inf
-                // we can't simply write if(x > min) [...] else (x < max) [...]
-                // most of the time the else condition is run so it's a kinda useless
-                // optimization anyway
-                for ( var idx = 0, l = vertexes.length; idx < l; idx += itemSize ) {
-                    var v1 = vertexes[ idx ];
-                    var v2 = vertexes[ idx + 1 ];
-                    var v3 = vertexes[ idx + 2 ];
-                    if ( v1 < minx ) minx = v1;
-                    if ( v1 > maxx ) maxx = v1;
-                    if ( v2 < miny ) miny = v2;
-                    if ( v2 > maxy ) maxy = v2;
-                    if ( v3 < minz ) minz = v3;
-                    if ( v3 > maxz ) maxz = v3;
-                }
-
-                min[ 0 ] = minx;
-                min[ 1 ] = miny;
-                min[ 2 ] = minz;
-                max[ 0 ] = maxx;
-                max[ 1 ] = maxy;
-                max[ 2 ] = maxz;
-            }
-            return boundingBox;
-        },
-
-        computeBoundingSphere: function ( boundingSphere ) {
-            boundingSphere.init();
-            var bb = this.getBoundingBox();
-            boundingSphere.expandByBoundingBox( bb );
-            return boundingSphere;
+            cachedDraw = this.generateDrawCommand( state, program, prgID );
         }
+
+        cachedDraw.call( this, state );
+
+    },
+
+    setBound: function ( bb ) {
+        this._boundingBox = bb;
+        this._boundingBoxComputed = true;
+    },
+
+    computeBoundingBox: function ( boundingBox ) {
+
+        var vertexArray = this.getVertexAttributeList().Vertex;
+        if ( vertexArray && vertexArray.getElements() && vertexArray.getItemSize() > 2 ) {
+            var vertexes = vertexArray.getElements();
+            var itemSize = vertexArray.getItemSize();
+
+            var min = boundingBox.getMin();
+            var max = boundingBox.getMax();
+
+            var minx = min[ 0 ];
+            var miny = min[ 1 ];
+            var minz = min[ 2 ];
+            var maxx = max[ 0 ];
+            var maxy = max[ 1 ];
+            var maxz = max[ 2 ];
+
+            // if the box is un-initialized min=Inf and max=-Inf
+            // we can't simply write if(x > min) [...] else (x < max) [...]
+            // most of the time the else condition is run so it's a kinda useless
+            // optimization anyway
+            for ( var idx = 0, l = vertexes.length; idx < l; idx += itemSize ) {
+                var v1 = vertexes[ idx ];
+                var v2 = vertexes[ idx + 1 ];
+                var v3 = vertexes[ idx + 2 ];
+                if ( v1 < minx ) minx = v1;
+                if ( v1 > maxx ) maxx = v1;
+                if ( v2 < miny ) miny = v2;
+                if ( v2 > maxy ) maxy = v2;
+                if ( v3 < minz ) minz = v3;
+                if ( v3 > maxz ) maxz = v3;
+            }
+
+            min[ 0 ] = minx;
+            min[ 1 ] = miny;
+            min[ 2 ] = minz;
+            max[ 0 ] = maxx;
+            max[ 1 ] = maxy;
+            max[ 2 ] = maxz;
+        }
+        return boundingBox;
+    },
+
+    computeBoundingSphere: function ( boundingSphere ) {
+        boundingSphere.init();
+        var bb = this.getBoundingBox();
+        boundingSphere.expandByBoundingBox( bb );
+        return boundingSphere;
+    }
 
 
 } ), 'osg', 'Geometry' );
