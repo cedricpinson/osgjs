@@ -38,6 +38,7 @@ var BufferArray = function ( target, elements, itemSize, preserveArrayType ) {
 
     // initialized by setElements
     this._type = undefined;
+    this._normalize = false;
 
     if ( elements !== undefined ) {
         var typedArray = elements;
@@ -114,6 +115,14 @@ BufferArray.prototype = MACROUTILS.objectInherit( GLObject.prototype, {
             BufferArray.deleteGLBufferArray( this._gl, this._buffer );
         }
         this._buffer = undefined;
+    },
+
+    setNormalize: function ( normalize ) {
+        this._normalize = normalize;
+    },
+
+    getNormalize: function () {
+        return this._normalize;
     },
 
     bind: function ( gl ) {
