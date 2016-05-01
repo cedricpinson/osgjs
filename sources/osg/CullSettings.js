@@ -39,7 +39,8 @@ CullSettings.prototype = {
         this._settingsSourceOverrider = this;
         //LOD bias for the CullVisitor to use
         this._LODScale = 1.0;
-
+        // Custom clampProjectionMatrix
+        this._clampProjectionMatrixCallback = undefined;
     },
 
     setCullSettings: function ( settings ) {
@@ -47,6 +48,7 @@ CullSettings.prototype = {
         this._nearFarRatio = settings._nearFarRatio;
         this._enableFrustumCulling = settings._enableFrustumCulling;
         this._settingsSourceOverrider = settings._settingsSourceOverrider;
+        this._clampProjectionMatrixCallback = settings._clampProjectionMatrixCallback;
     },
 
     setNearFarRatio: function ( ratio ) {
@@ -71,6 +73,14 @@ CullSettings.prototype = {
 
     getSettingSourceOverrider: function () {
         return this._settingsSourceOverrider;
+    },
+
+    setClampProjectionMatrixCallback: function ( callback ) {
+        this._clampProjectionMatrixCallback = callback;
+    },
+
+    getClampProjectionMatrixCallback: function () {
+        return this._clampProjectionMatrixCallback;
     },
 
     setLODScale: function ( scale ) {

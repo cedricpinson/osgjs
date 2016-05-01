@@ -233,7 +233,11 @@ CullVisitor.prototype = MACROUTILS.objectInherit( CullStack.prototype, MACROUTIL
     popProjectionMatrix: function () {
         if ( this._computeNearFar === true && this._computedFar >= this._computedNear ) {
             var m = this.getCurrentProjectionMatrix();
-            Matrix.clampProjectionMatrix( m, this._computedNear, this._computedFar, this._nearFarRatio );
+            if ( this._clampProjectionMatrixCallback !== undefined ) {
+                this._clampProjectionMatrixCallback( m, this._computedNear, this._computedFar, this._nearFarRatio );
+            } else {
+                Matrix.clampProjectionMatrix( m, this._computedNear, this._computedFar, this._nearFarRatio );
+            }
         }
         CullStack.prototype.popProjectionMatrix.call( this );
     },
