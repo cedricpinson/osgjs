@@ -35,6 +35,8 @@ var Program = function ( vShader, fShader ) {
         this.setFragmentShader( fShader );
 
     this._dirty = true;
+    this._activeUniforms = undefined;
+    this._foreignUniforms = undefined;
 };
 
 // static cache of glPrograms flagged for deletion, which will actually
@@ -124,6 +126,38 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
             Program.deleteGLProgram( this._gl, this._program );
         }
         this._program = undefined;
+    },
+
+    setActiveUniforms: function ( activeUniforms ) {
+        this._activeUniforms = activeUniforms;
+    },
+
+    getActiveUniforms: function () {
+        return this._activeUniforms;
+    },
+
+    setForeignUniforms: function ( foreignUniforms ) {
+        this._foreignUniforms = foreignUniforms;
+    },
+
+    getForeignUniforms: function () {
+        return this._foreignUniforms;
+    },
+
+    setUniformsCache: function ( uniformsCache ) {
+        this._uniformsCache = uniformsCache;
+    },
+
+    getUniformsCache: function () {
+        return this._uniformsCache;
+    },
+
+    setAttributesCache: function ( attributesCache ) {
+        this._attributesCache = attributesCache;
+    },
+
+    getAttributesCache: function () {
+        return this._attributesCache;
     },
 
     apply: function ( state ) {

@@ -212,6 +212,8 @@ ShaderGenerator.prototype = {
 
             var cache = this._cache.get( hash );
             if ( cache !== undefined ) {
+                // Uniforms could be different between cached hashes, so we need to get the active uniforms for this cached program.
+                cache.setActiveUniforms( this.getActiveUniforms( state, attributes, textureAttributes ) );
                 return cache;
             }
 
@@ -239,7 +241,7 @@ ShaderGenerator.prototype = {
                 new Shader( Shader.FRAGMENT_SHADER, fragmentshader ) );
 
             program.hash = hash;
-            program.activeUniforms = this.getActiveUniforms( state, attributes, textureAttributes );
+            program.setActiveUniforms( this.getActiveUniforms( state, attributes, textureAttributes ) );
             program.generated = true;
 
             this._cache.set( hash, program );
