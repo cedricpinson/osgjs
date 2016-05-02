@@ -7,7 +7,7 @@
   "description": "OpenSceneGraph implementation in javascript",
   "license": "MIT",
   "author": "Cedric Pinson <trigrou@trigrou.com> (http://cedricpinson.com)",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "contributors": [
     "Tuan.kuranes <tuan.kuranes@gmail.com>",
     "Matt Fontaine <tehqin@gmail.com>"
