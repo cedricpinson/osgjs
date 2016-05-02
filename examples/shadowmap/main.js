@@ -1230,16 +1230,18 @@
 
         perfLog: function ( average, queryID ) {
             // average is in nanosecond (ns)
-            // we show it in microsecond (us), not millisecond (ms)
-            this._config[ queryID ] = average / 1000.0;
+            // but displayed in (ms)
+            this._config[ queryID ] = average / 10e6;
         },
         resetPerfTimer: function () {
             if ( this._timerGPU.isEnabled() ) {
                 // any change, any,
                 // and we reset timers average
-                this._timerGPU.reset( 'shadowPass (us)' );
-                this._timerGPU.reset( 'mainPass (us)' );
-                this._config[ 'shadowPass (us)' ] = 0.0;
+                if ( this._timerGPU.supportInterleaveQuery() ) {
+                    this._timerGPU.reset( 'shadowPass (ms)' );
+                }
+                this._timerGPU.reset( 'mainPass (ms)' );
+                this._config[ 'shadowPass (ms)' ] = 0.0;
             }
         },
         initPerfTiming: function () {
@@ -1259,13 +1261,19 @@
 
                 var st = this._shadowTechnique[ 0 ];
 
-                st.getCamera().setInitialDrawCallback( function () {
-                    this._timerGPU.start( 'shadowPass (ms)' );
-                }.bind( this ) );
+                if ( this._timerGPU.supportInterleaveQuery() ) {
 
-                st.getCamera().setFinalDrawCallback( function () {
-                    this._timerGPU.end( 'shadowPass (ms)' );
-                }.bind( this ) );
+                    st.getCamera().setInitialDrawCallback( function () {
+                        this._timerGPU.start( 'shadowPass (ms)' );
+                    }.bind( this ) );
+
+                    if ( this._timerGPU.supportInterleaveQuery() ) {
+                        st.getCamera().setFinalDrawCallback( function () {
+                            this._timerGPU.end( 'shadowPass (ms)' );
+                        }.bind( this ) );
+                    }
+
+                }
 
             }
 

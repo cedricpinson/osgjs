@@ -22,14 +22,14 @@ var TimerGPU = function ( gl ) {
         this._hasTimeElapsed = ext.getQueryEXT( ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
         this._hasTimeStamp = ext.getQueryEXT( ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT ) >= 30;
 
-        if ( !this._hasTimeElapsed && !this.hasTimeStamp ) {
+        if ( !this._hasTimeElapsed && !this._hasTimeStamp ) {
             return this;
         }
 
         // no timestamp means not start/end absolute time
         // which means each start must be followed by a end
         // BEFORE any other start (of other queryID)
-        if ( !this.hasTimeStamp ) {
+        if ( !this._hasTimeStamp ) {
             Notify.warn( 'Warning: do not use interleaved GPU query' );
         }
 
@@ -53,7 +53,7 @@ var TimerGPU = function ( gl ) {
     this._resultCountQuery = {};
     // cumulative average
     this._averageTimerQuery = {};
-    // query waiting async results from GPU 
+    // query waiting async results from GPU
     this._waitingQueries = {};
     // cumulative average on N frame
     // reset & restart every N frames
@@ -91,6 +91,10 @@ TimerGPU.prototype = {
         this._averageTimerQuery[ queryID ] = 0.0;
         this._resultCountQuery[ queryID ] = 0;
 
+    },
+
+    supportInterleaveQuery: function () {
+        return this._hasTimeStamp;
     },
 
     // many browser doesn't yet have
@@ -159,7 +163,7 @@ TimerGPU.prototype = {
 
     },
     /*
-     * stop query recording   (if running) 
+     * stop query recording   (if running)
      * polls for results
      */
     end: function ( queryID ) {
