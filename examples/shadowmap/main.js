@@ -54,6 +54,9 @@
             'shadowStatic': false,
             'disableShadows': false,
             'basicScene': false,
+            'shadowPass (ms)': 0.001,
+            'mainPass (ms)': 0.001,
+
             logCamLight: function () {
                 var example = this[ 'exampleObj' ];
                 var cam = example._viewer._manipulator;
@@ -394,6 +397,8 @@
 
             controller = gui.add( this._config, 'fov' ).min( 0.0 ).max( 180.0 );
             controller.onChange( this.updateShadow.bind( this ) );
+
+
 
             // controller = gui.add( this._config, 'logCamLight' );
 
@@ -796,11 +801,14 @@
             this._previousRTT = this._config[ 'debugRTT' ];
             this._updateRTT = false;
         },
+
         /*
          * try to minimize update cost and code size
          * with a single callback for all ui user changes
          */
         updateShadow: function () {
+
+            this.resetPerfTimer();
 
             if ( this._config[ 'disableShadows' ] !== this._previousDisable ) {
                 if ( this._config[ 'disableShadows' ] ) {
@@ -1213,6 +1221,69 @@
             //shadowMap.init();
 
         },
+        cameraPerfStart: function () {
+            this._timerGPU.start( 'mainPass (ms)' );
+        },
+        cameraPerfEnd: function () {
+            this._timerGPU.end( 'mainPass (ms)' );
+        },
+
+        perfLog: function ( average, queryID ) {
+            // average is in nanosecond (ns)
+            // but displayed in (ms)
+            this._config[ queryID ] = average / 10e6;
+        },
+        resetPerfTimer: function () {
+            if ( this._timerGPU.isEnabled() ) {
+                // any change, any,
+                // and we reset timers average
+                if ( this._timerGPU.supportInterleaveQuery() ) {
+                    this._timerGPU.reset( 'shadowPass (ms)' );
+                }
+                this._timerGPU.reset( 'mainPass (ms)' );
+                this._config[ 'shadowPass (ms)' ] = 0.0;
+            }
+        },
+        initPerfTiming: function () {
+
+
+            this._timerGPU = osg.TimerGPU.instance( this._glContext );
+
+            if ( !this._timerGPU.isEnabled() ) return;
+
+            this._timerGPU.setCallback(
+                this.perfLog.bind( this )
+            );
+
+
+            // perf on 1st shadow map
+            if ( this._lights.length > 0 ) {
+
+                var st = this._shadowTechnique[ 0 ];
+
+                if ( this._timerGPU.supportInterleaveQuery() ) {
+
+                    st.getCamera().setInitialDrawCallback( function () {
+                        this._timerGPU.start( 'shadowPass (ms)' );
+                    }.bind( this ) );
+
+                    if ( this._timerGPU.supportInterleaveQuery() ) {
+                        st.getCamera().setFinalDrawCallback( function () {
+                            this._timerGPU.end( 'shadowPass (ms)' );
+                        }.bind( this ) );
+                    }
+
+                }
+
+            }
+
+            this._viewer.getCamera().setInitialDrawCallback( this.cameraPerfStart.bind( this ) );
+            this._viewer.getCamera().setFinalDrawCallback( this.cameraPerfEnd.bind( this ) );
+
+            this._gui.add( this._config, 'shadowPass (ms)' ).listen();
+            this._gui.add( this._config, 'mainPass (ms)' ).listen();
+
+        },
         /*
          * main sample scene shadow code using OSG interface
          */
@@ -1323,6 +1394,8 @@
             }
 
             this.initDatGUI();
+            this.initPerfTiming();
+
         }
     };
     // execute loaded code when ready

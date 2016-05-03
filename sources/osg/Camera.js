@@ -65,17 +65,36 @@ Camera.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
             this._renderer = renderer;
         },
 
+        // Set the final draw callback for custom operations
+        // to be done after the drawing of
+        // the camera's subgraph and pre render stages.
+        setFinalDrawCallback: function ( cb ) {
+
+            this._finalDrawCallback = cb;
+
+        },
+
         getFinalDrawCallback: function () {
 
             return this._finalDrawCallback;
 
         },
 
-        setFinalDrawCallback: function ( cb ) {
+        // Set the initial draw callback for custom operations
+        // to be done before the drawing of
+        // the camera's subgraph and pre render stages.
+        setInitialDrawCallback: function ( cb ) {
 
-            this._finalDrawCallback = cb;
+            this._initialDrawCallback = cb;
 
         },
+
+        getInitialDrawCallback: function () {
+
+            return this._initialDrawCallback;
+
+        },
+
 
         getAttachments: function () {
             return this._attachments;
