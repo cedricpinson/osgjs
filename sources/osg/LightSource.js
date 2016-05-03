@@ -28,17 +28,23 @@ LightSource.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit(
     getReferenceFrame: function () {
         return this._referenceFrame;
     },
-    computeBound: function ( bsphere ) {
-        Node.prototype.computeBound.call( this, bsphere );
-        if ( this._light !== undefined && this._referenceFrame === TransformEnums.RELATIVE_RF ) {
-            var position = this._light.getPosition();
-            if ( position[ 3 ] !== 0.0 ) {
-                var div = 1.0 / position[ 3 ];
-                bsphere.expandByVec3( Vec3.createAndSet( position[ 0 ] * div, position[ 1 ] * div, position[ 2 ] * div ) );
+    computeBoundingSphere: ( function () {
+        var tmp = Vec3.create();
+
+        return function ( bsphere ) {
+            Node.prototype.computeBoundingSphere.call( this, bsphere );
+
+            if ( this._light !== undefined && this._referenceFrame === TransformEnums.RELATIVE_RF ) {
+                var position = this._light.getPosition();
+
+                if ( position[ 3 ] !== 0.0 ) {
+                    bsphere.expandByVec3( Vec3.mult( position, 1.0 / position[ 3 ], tmp ) );
+                }
             }
-        }
-        return bsphere;
-    }
+
+            return bsphere;
+        };
+    } )()
 
 } ), 'osg', 'LightSource' );
 
