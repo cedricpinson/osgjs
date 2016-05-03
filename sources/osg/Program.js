@@ -27,6 +27,9 @@ var Program = function ( vShader, fShader ) {
 
     this._uniformsCache = undefined;
     this._attributesCache = undefined;
+    this._activeUniforms = undefined;
+    this._foreignUniforms = undefined;
+    this._trackAttributes = undefined;
 
     if ( vShader )
         this.setVertexShader( vShader );
@@ -113,6 +116,46 @@ Program.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( GLO
 
     getProgram: function () {
         return this._program;
+    },
+
+    setActiveUniforms: function ( activeUniforms ) {
+        this._activeUniforms = activeUniforms;
+    },
+
+    getActiveUniforms: function () {
+        return this._activeUniforms;
+    },
+
+    setForeignUniforms: function ( foreignUniforms ) {
+        this._foreignUniforms = foreignUniforms;
+    },
+
+    getForeignUniforms: function () {
+        return this._foreignUniforms;
+    },
+
+    setUniformsCache: function ( uniformsCache ) {
+        this._uniformsCache = uniformsCache;
+    },
+
+    getUniformsCache: function () {
+        return this._uniformsCache;
+    },
+
+    setAttributesCache: function ( attributesCache ) {
+        this._attributesCache = attributesCache;
+    },
+
+    getAttributesCache: function () {
+        return this._attributesCache;
+    },
+
+    setTrackAttributes: function ( trackAttributes ) {
+        this._trackAttributes = trackAttributes;
+    },
+
+    getTrackAttributes: function () {
+        return this._trackAttributes;
     },
 
     releaseGLObjects: function () {
