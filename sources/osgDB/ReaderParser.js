@@ -178,14 +178,11 @@ ReaderParser.parseSceneGraphDeprecated = function ( node ) {
     var primitives = node.primitives || node.Primitives || undefined;
     var attributes = node.attributes || node.Attributes || undefined;
     if ( primitives || attributes ) {
-        newnode = new Geometry();
 
-        setName( newnode, node );
-
-        MACROUTILS.extend( newnode, node ); // we should not do that
-        node = newnode;
-        node.primitives = primitives; // we should not do that
-        node.attributes = attributes; // we should not do that
+        var geom = new Geometry();
+        setName( geom, node );
+        geom.stateset = node.stateset;
+        node = geom;
 
         for ( var p = 0, lp = primitives.length; p < lp; p++ ) {
             var mode = primitives[ p ].mode;
@@ -197,21 +194,23 @@ ReaderParser.parseSceneGraphDeprecated = function ( node ) {
                 } else {
                     mode = PrimitiveSet[ mode ];
                 }
-                primitives[ p ] = new DrawElements( mode, array );
+                geom.getPrimitiveSetList().push( new DrawElements( mode, array ) );
             } else {
                 mode = PrimitiveSet[ mode ];
                 var first = primitives[ p ].first;
                 var count = primitives[ p ].count;
-                primitives[ p ] = new DrawArrays( mode, first, count );
+
+                geom.getPrimitiveSetList().push( new DrawArrays( mode, first, count ) );
             }
         }
 
-        for ( var key in attributes ) {
-            if ( attributes.hasOwnProperty( key ) ) {
-                var attributeArray = attributes[ key ];
-                attributes[ key ] = new BufferArray( attributeArray.type, attributeArray.elements, attributeArray.itemSize );
-            }
+        var attrKeys = window.Object.keys( attributes );
+        for ( var i = 0, li = attrKeys.length; i < li; i++ ) {
+            var key = attrKeys[ i ];
+            var attributeArray = attributes[ key ];
+            geom.getVertexAttributeList()[ key ] = new BufferArray( attributeArray.type, attributeArray.elements, attributeArray.itemSize );
         }
+
     }
 
     var stateset = getFieldBackwardCompatible( 'StateSet', node );

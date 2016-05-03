@@ -31,34 +31,45 @@ var WebGLCaps = function () {
     this._webGLParameters[ 'NUM_COMPRESSED_TEXTURE_FORMATS' ] = 0;
     this._webGLParameters[ 'MAX_SHADER_PRECISION_FLOAT' ] = 'none';
     this._webGLParameters[ 'MAX_SHADER_PRECISION_INT' ] = 'none';
+
+    // for multiple context
+    // allow checking we're on the good one
+    this._gl = undefined;
+
 };
 
-WebGLCaps.instance = function () {
+WebGLCaps.instance = function ( glParam ) {
+
 
     if ( !WebGLCaps._instance ) {
 
-        var c = document.createElement( 'canvas' );
-
-        c.width = 32;
-        c.height = 32;
-
-        // make sure we don't break webglinspector
-        // with our webglcaps canvas
-        var webglInspector = typeof window !== undefined && window.gli;
         var oldWebGLInspector;
-        if ( webglInspector ) {
+        var gl = glParam;
 
-            oldWebGLInspector = window.gli.host.inspectContext;
-            window.gli.host.inspectContext = false;
+        if ( !gl ) {
+
+            // make sure we don't break webglinspector
+            // with our webglcaps canvas
+            var webglInspector = typeof window !== undefined && window.gli;
+
+            if ( webglInspector ) {
+
+                oldWebGLInspector = window.gli.host.inspectContext;
+                window.gli.host.inspectContext = false;
+
+            }
+
+            var c = document.createElement( 'canvas' );
+            c.width = 32;
+            c.height = 32;
+            // not necessary, but for some reasons it crashed on chromium vr build
+            var opt = {
+                antialias: false
+            };
+
+            gl = WebGLUtils.setupWebGL( c, opt, function () {} );
 
         }
-
-        // not necessary, but for some reasons it crashed on chromium vr build
-        var opt = {
-            antialias: false
-        };
-
-        var gl = WebGLUtils.setupWebGL( c, opt, function () {} );
 
         WebGLCaps._instance = new WebGLCaps();
         if ( gl ) {
@@ -75,19 +86,52 @@ WebGLCaps.instance = function () {
 
         }
 
-        if ( webglInspector ) {
+        if ( oldWebGLInspector ) {
 
             window.gli.host.inspectContext = oldWebGLInspector;
 
         }
 
         //delete c;
+    }
+
+    if ( glParam && glParam !== WebGLCaps._instance.getContext() ) {
+
+        // webgl caps called with a different context
+        // than the one we draw in, will result on hard crash
+        // when using extension from another context
+        WebGLCaps._instance.initContextDependant( glParam );
 
     }
+
     return WebGLCaps._instance;
 };
 
 WebGLCaps.prototype = {
+
+    getContext: function () {
+        return this._gl;
+    },
+
+    initContextDependant: function ( gl ) {
+
+        // store context in case of multiple context
+        this._gl = gl;
+
+        // Takes care of circular dependencies on Texture
+        Texture = require( 'osg/Texture' );
+
+        // get extensions
+        this.initWebGLExtensions( gl );
+
+        // get float support
+        this.hasLinearHalfFloatRTT( gl );
+        this.hasLinearFloatRTT( gl );
+        this.hasHalfFloatRTT( gl );
+        this.hasFloatRTT( gl );
+
+    },
+
     init: function ( gl ) {
 
         // get capabilites
@@ -98,8 +142,7 @@ WebGLCaps.prototype = {
         this.initPlatformSupport();
         this.initBugDB();
 
-        // get extension
-        this.initWebGLExtensions( gl );
+        this.initContextDependant( gl );
 
         this._isGL2 = typeof window.WebGL2RenderingContext !== 'undefined' && gl instanceof window.WebGL2RenderingContext;
 
@@ -135,13 +178,8 @@ WebGLCaps.prototype = {
             }
         }
 
-        // get float support
-        this.hasLinearHalfFloatRTT( gl );
-        this.hasLinearFloatRTT( gl );
-        this.hasHalfFloatRTT( gl );
-        this.hasFloatRTT( gl );
-
     },
+
     isWebGL2: function () {
         return this._isGL2;
     },

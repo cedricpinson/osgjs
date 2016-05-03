@@ -13,6 +13,7 @@ var Vec4 = require( 'osg/Vec4' );
 var Uniform = function ( name ) {
     this._transpose = false;
     this._glCall = '';
+    this._cache = undefined;
     this._name = name;
     this._type = undefined;
     this._isMatrix = false;
@@ -54,11 +55,15 @@ Uniform.prototype = {
             this._data = array;
     },
 
-    apply: function ( gl, location ) {
+    apply: function UniformApply( gl, location ) {
+
+        if ( !this._cache )
+            this._cache = gl[ this._glCall ];
+
         if ( this._isMatrix )
-            gl[ this._glCall ]( location, this._transpose, this._data );
+            this._cache.call( gl, location, this._transpose, this._data );
         else
-            gl[ this._glCall ]( location, this._data );
+            this._cache.call( gl, location, this._data );
     },
 
     // set the internal array use but the uniform

@@ -2,7 +2,7 @@
 var QUnit = require( 'qunit' );
 var Texture = require( 'osg/Texture' );
 var WebGLCaps = require( 'osg/WebGLCaps' );
-
+var mockup = require( 'tests/mockup/mockup' );
 
 module.exports = function () {
 
@@ -10,12 +10,13 @@ module.exports = function () {
 
     QUnit.test( 'WebGLCaps', function () {
 
-        var webglCaps = WebGLCaps.instance();
 
-        //var canvas = createCanvas();
-        //var gl = canvas.getContext();
+        var canvas = mockup.createCanvas( true );
+        var gl = canvas.getContext();
+        var webglCaps = WebGLCaps.instance( gl );
 
         webglCaps.getWebGLExtensions()[ 'OES_texture_float' ] = true;
+        console.log( 'Texture' + Texture.FLOAT + ',' + Texture.NEAREST );
         webglCaps._checkRTT[ Texture.FLOAT + ',' + Texture.NEAREST ] = true;
 
         ok( webglCaps.hasFloatRTT(), 'float detect' );
