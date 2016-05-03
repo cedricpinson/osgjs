@@ -8,6 +8,7 @@ var shadows = require( 'osgShader/node/shadows' );
 var operations = require( 'osgShader/node/operations' );
 var textures = require( 'osgShader/node/textures' );
 var morph = require( 'osgShader/node/morph' );
+var billboard = require( 'osgShader/node/billboard' );
 
 var Factory = function () {
 
@@ -21,6 +22,7 @@ var Factory = function () {
     this.registerNodes( morph );
     this.registerNodes( shadows );
     this.registerNodes( operations );
+    this.registerNodes( billboard );
 };
 
 Factory.prototype = {

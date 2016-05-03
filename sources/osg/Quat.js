@@ -43,6 +43,9 @@ var Quat = {
         return a[ 0 ] * a[ 0 ] + a[ 1 ] * a[ 1 ] + a[ 2 ] * a[ 2 ] + a[ 3 ] * a[ 3 ];
     },
 
+    zeroRotation: function ( q ) {
+        return q[ 0 ] === 0.0 && q[ 1 ] === 0.0 && q[ 2 ] === 0.0 && q[ 3 ] === 1.0;
+    },
 
     length: function ( a ) {
         return Math.sqrt( a[ 0 ] * a[ 0 ] + a[ 1 ] * a[ 1 ] + a[ 2 ] * a[ 2 ] + a[ 3 ] * a[ 3 ] );
