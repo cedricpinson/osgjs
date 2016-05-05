@@ -3,7 +3,7 @@ var BoundingBox = require( 'osg/BoundingBox' );
 var Geometry = require( 'osg/Geometry' );
 var Matrix = require( 'osg/Matrix' );
 var MatrixMemoryPool = require( 'osg/MatrixMemoryPool' );
-var MatrixTransform = require( 'osg/MatrixTransform' );
+var Transform = require( 'osg/Transform' );
 var NodeVisitor = require( 'osg/NodeVisitor' );
 var MACROUTILS = require( 'osg/Utils' );
 
@@ -56,7 +56,7 @@ ComputeBoundsVisitor.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objec
 
     apply: function ( node ) {
 
-        if ( node instanceof MatrixTransform ) {
+        if ( node instanceof Transform ) {
             this.applyTransform( node );
             return;
 

@@ -129,8 +129,10 @@ var Vec3 = {
         r[ 1 ] = a[ 1 ] + ( b[ 1 ] - a[ 1 ] ) * t;
         r[ 2 ] = a[ 2 ] + ( b[ 2 ] - a[ 2 ] ) * t;
         return r;
+    },
+    equal: function ( a, b ) {
+        return a[ 0 ] === b[ 0 ] && a[ 1 ] === b[ 1 ] && a[ 2 ] === b[ 2 ];
     }
-
 };
 
 Vec3.zero = Vec3.create();
