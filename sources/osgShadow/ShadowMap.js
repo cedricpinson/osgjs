@@ -404,7 +404,6 @@ ShadowMap.prototype = MACROUTILS.objectLibraryClass( MACROUTILS.objectInherit( S
     _preventTextureBindingDuringShadowCasting: function () {
 
         // prevent unnecessary texture bindings on all texture unit
-        // TODO: actually get the real max texture unit from webglCaps
         var shouldGetMaxTextureUnits = WebGLCaps.instance().getWebGLParameter( 'MAX_TEXTURE_IMAGE_UNITS' );
         for ( var k = 0; k < shouldGetMaxTextureUnits; k++ ) {
             // bind  null texture which OSGJS will not bind,
